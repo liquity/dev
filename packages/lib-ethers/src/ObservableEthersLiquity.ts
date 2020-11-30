@@ -74,34 +74,34 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     onTroveChanged: (trove: TroveWithPendingRewards) => void,
     address = this.requireAddress()
   ) {
-    const { CDPCreated, CDPUpdated } = this.contracts.cdpManager.filters;
-    const cdpEventFilters = [CDPCreated(address), CDPUpdated(address)];
+    const { TroveCreated, TroveUpdated } = this.contracts.troveManager.filters;
+    const troveEventFilters = [TroveCreated(address), TroveUpdated(address)];
 
     const troveListener = debounce((blockTag: number) => {
       this.readableLiquity.getTroveWithoutRewards(address, { blockTag }).then(onTroveChanged);
     });
 
-    cdpEventFilters.forEach(filter => this.contracts.cdpManager.on(filter, troveListener));
+    troveEventFilters.forEach(filter => this.contracts.troveManager.on(filter, troveListener));
 
     return () => {
-      cdpEventFilters.forEach(filter =>
-        this.contracts.cdpManager.removeListener(filter, troveListener)
+      troveEventFilters.forEach(filter =>
+        this.contracts.troveManager.removeListener(filter, troveListener)
       );
     };
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
-    const { CDPUpdated } = this.contracts.cdpManager.filters;
-    const cdpUpdated = CDPUpdated();
+    const { TroveUpdated } = this.contracts.troveManager.filters;
+    const troveUpdated = TroveUpdated();
 
-    const cdpUpdatedListener = debounce((blockTag: number) => {
+    const troveUpdatedListener = debounce((blockTag: number) => {
       this.readableLiquity.getNumberOfTroves({ blockTag }).then(onNumberOfTrovesChanged);
     });
 
-    this.contracts.cdpManager.on(cdpUpdated, cdpUpdatedListener);
+    this.contracts.troveManager.on(troveUpdated, troveUpdatedListener);
 
     return () => {
-      this.contracts.cdpManager.removeListener(cdpUpdated, cdpUpdatedListener);
+      this.contracts.troveManager.removeListener(troveUpdated, troveUpdatedListener);
     };
   }
 
@@ -121,17 +121,17 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   }
 
   watchTotal(onTotalChanged: (total: Trove) => void) {
-    const { CDPUpdated } = this.contracts.cdpManager.filters;
-    const cdpUpdated = CDPUpdated();
+    const { TroveUpdated } = this.contracts.troveManager.filters;
+    const troveUpdated = TroveUpdated();
 
     const totalListener = debounce((blockTag: number) => {
       this.readableLiquity.getTotal({ blockTag }).then(onTotalChanged);
     });
 
-    this.contracts.cdpManager.on(cdpUpdated, totalListener);
+    this.contracts.troveManager.on(troveUpdated, totalListener);
 
     return () => {
-      this.contracts.cdpManager.removeListener(cdpUpdated, totalListener);
+      this.contracts.troveManager.removeListener(troveUpdated, totalListener);
     };
   }
 
@@ -169,7 +169,7 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   }
 
   watchQuiInStabilityPool(onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) {
-    const { Transfer } = this.contracts.clvToken.filters;
+    const { Transfer } = this.contracts.lusdToken.filters;
 
     const transferQuiFromStabilityPool = Transfer(this.contracts.stabilityPool.address);
     const transferQuiToStabilityPool = Transfer(null, this.contracts.stabilityPool.address);
@@ -181,17 +181,17 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     });
 
     stabilityPoolQuiFilters.forEach(filter =>
-      this.contracts.clvToken.on(filter, stabilityPoolQuiListener)
+      this.contracts.lusdToken.on(filter, stabilityPoolQuiListener)
     );
 
     return () =>
       stabilityPoolQuiFilters.forEach(filter =>
-        this.contracts.clvToken.removeListener(filter, stabilityPoolQuiListener)
+        this.contracts.lusdToken.removeListener(filter, stabilityPoolQuiListener)
       );
   }
 
   watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address = this.requireAddress()) {
-    const { Transfer } = this.contracts.clvToken.filters;
+    const { Transfer } = this.contracts.lusdToken.filters;
     const transferQuiFromUser = Transfer(address);
     const transferQuiToUser = Transfer(null, address);
 
@@ -201,11 +201,11 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
       this.readableLiquity.getQuiBalance(address, { blockTag }).then(onQuiBalanceChanged);
     });
 
-    quiTransferFilters.forEach(filter => this.contracts.clvToken.on(filter, quiTransferListener));
+    quiTransferFilters.forEach(filter => this.contracts.lusdToken.on(filter, quiTransferListener));
 
     return () =>
       quiTransferFilters.forEach(filter =>
-        this.contracts.clvToken.removeListener(filter, quiTransferListener)
+        this.contracts.lusdToken.removeListener(filter, quiTransferListener)
       );
   }
 }

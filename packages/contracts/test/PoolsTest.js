@@ -28,8 +28,8 @@ contract('StabilityPool', async accounts => {
     assert.equal(recordedETHBalance, 0)
   })
 
-  it('getTotalCLVDeposits(): gets the recorded CLV balance', async () => {
-    const recordedETHBalance = await stabilityPool.getTotalCLVDeposits()
+  it('getTotalLUSDDeposits(): gets the recorded LUSD balance', async () => {
+    const recordedETHBalance = await stabilityPool.getTotalLUSDDeposits()
     assert.equal(recordedETHBalance, 0)
   })
 })
@@ -49,30 +49,30 @@ contract('ActivePool', async accounts => {
     assert.equal(recordedETHBalance, 0)
   })
 
-  it('getCLVDebt(): gets the recorded CLV balance', async () => {
-    const recordedETHBalance = await activePool.getCLVDebt()
+  it('getLUSDDebt(): gets the recorded LUSD balance', async () => {
+    const recordedETHBalance = await activePool.getLUSDDebt()
     assert.equal(recordedETHBalance, 0)
   })
  
-  it('increaseCLV(): increases the recorded CLV balance by the correct amount', async () => {
-    const recordedCLV_balanceBefore = await activePool.getCLVDebt()
-    assert.equal(recordedCLV_balanceBefore, 0)
+  it('increaseLUSD(): increases the recorded LUSD balance by the correct amount', async () => {
+    const recordedLUSD_balanceBefore = await activePool.getLUSDDebt()
+    assert.equal(recordedLUSD_balanceBefore, 0)
 
-    await activePool.increaseCLVDebt(100, { from: mockBorrowerOperationsAddress })
-    const recordedCLV_balanceAfter = await activePool.getCLVDebt()
-    assert.equal(recordedCLV_balanceAfter, 100)
+    await activePool.increaseLUSDDebt(100, { from: mockBorrowerOperationsAddress })
+    const recordedLUSD_balanceAfter = await activePool.getLUSDDebt()
+    assert.equal(recordedLUSD_balanceAfter, 100)
   })
   // Decrease
-  it('decreaseCLV(): decreases the recorded CLV balance by the correct amount', async () => {
+  it('decreaseLUSD(): decreases the recorded LUSD balance by the correct amount', async () => {
     // start the pool on 100 wei
-    await activePool.increaseCLVDebt(100, { from: mockBorrowerOperationsAddress })
+    await activePool.increaseLUSDDebt(100, { from: mockBorrowerOperationsAddress })
 
-    const recordedCLV_balanceBefore = await activePool.getCLVDebt()
-    assert.equal(recordedCLV_balanceBefore, 100)
+    const recordedLUSD_balanceBefore = await activePool.getLUSDDebt()
+    assert.equal(recordedLUSD_balanceBefore, 100)
 
-    await activePool.decreaseCLVDebt(100, { from: mockBorrowerOperationsAddress })
-    const recordedCLV_balanceAfter = await activePool.getCLVDebt()
-    assert.equal(recordedCLV_balanceAfter, 0)
+    await activePool.decreaseLUSDDebt(100, { from: mockBorrowerOperationsAddress })
+    const recordedLUSD_balanceAfter = await activePool.getLUSDDebt()
+    assert.equal(recordedLUSD_balanceAfter, 0)
   })
 
   // send raw ether
@@ -103,41 +103,41 @@ contract('DefaultPool', async accounts => {
  
   let defaultPool
 
-  const [owner, mockCDPManagerAddress, mockActivePoolAddress, alice] = accounts;
+  const [owner, mockTroveManagerAddress, mockActivePoolAddress, alice] = accounts;
   beforeEach(async () => {
     defaultPool = await DefaultPool.new()
-    await defaultPool.setAddresses(mockCDPManagerAddress, mockActivePoolAddress)
+    await defaultPool.setAddresses(mockTroveManagerAddress, mockActivePoolAddress)
   })
 
-  it('getETH(): gets the recorded CLV balance', async () => {
+  it('getETH(): gets the recorded LUSD balance', async () => {
     const recordedETHBalance = await defaultPool.getETH()
     assert.equal(recordedETHBalance, 0)
   })
 
-  it('getCLVDebt(): gets the recorded CLV balance', async () => {
-    const recordedETHBalance = await defaultPool.getCLVDebt()
+  it('getLUSDDebt(): gets the recorded LUSD balance', async () => {
+    const recordedETHBalance = await defaultPool.getLUSDDebt()
     assert.equal(recordedETHBalance, 0)
   })
  
-  it('increaseCLV(): increases the recorded CLV balance by the correct amount', async () => {
-    const recordedCLV_balanceBefore = await defaultPool.getCLVDebt()
-    assert.equal(recordedCLV_balanceBefore, 0)
+  it('increaseLUSD(): increases the recorded LUSD balance by the correct amount', async () => {
+    const recordedLUSD_balanceBefore = await defaultPool.getLUSDDebt()
+    assert.equal(recordedLUSD_balanceBefore, 0)
 
-    await defaultPool.increaseCLVDebt(100, { from: mockCDPManagerAddress })
-    const recordedCLV_balanceAfter = await defaultPool.getCLVDebt()
-    assert.equal(recordedCLV_balanceAfter, 100)
+    await defaultPool.increaseLUSDDebt(100, { from: mockTroveManagerAddress })
+    const recordedLUSD_balanceAfter = await defaultPool.getLUSDDebt()
+    assert.equal(recordedLUSD_balanceAfter, 100)
   })
   
-  it('decreaseCLV(): decreases the recorded CLV balance by the correct amount', async () => {
+  it('decreaseLUSD(): decreases the recorded LUSD balance by the correct amount', async () => {
     // start the pool on 100 wei
-    await defaultPool.increaseCLVDebt(100, { from: mockCDPManagerAddress })
+    await defaultPool.increaseLUSDDebt(100, { from: mockTroveManagerAddress })
 
-    const recordedCLV_balanceBefore = await defaultPool.getCLVDebt()
-    assert.equal(recordedCLV_balanceBefore, 100)
+    const recordedLUSD_balanceBefore = await defaultPool.getLUSDDebt()
+    assert.equal(recordedLUSD_balanceBefore, 100)
 
-    await defaultPool.decreaseCLVDebt(100, { from: mockCDPManagerAddress })
-    const recordedCLV_balanceAfter = await defaultPool.getCLVDebt()
-    assert.equal(recordedCLV_balanceAfter, 0)
+    await defaultPool.decreaseLUSDDebt(100, { from: mockTroveManagerAddress })
+    const recordedLUSD_balanceAfter = await defaultPool.getLUSDDebt()
+    assert.equal(recordedLUSD_balanceAfter, 0)
   })
 
   // send raw ether
@@ -153,7 +153,7 @@ contract('DefaultPool', async accounts => {
     assert.equal(defaultPool_BalanceBeforeTx, dec(2, 'ether'))
     
     //send ether from pool to alice
-    await defaultPool.sendETH(alice, dec(1, 'ether'), { from: mockCDPManagerAddress })
+    await defaultPool.sendETH(alice, dec(1, 'ether'), { from: mockTroveManagerAddress })
     const defaultPool_BalanceAfterTx = web3.utils.toBN(await web3.eth.getBalance(defaultPool.address))
     const alice_Balance_AfterTx = web3.utils.toBN(await web3.eth.getBalance(alice))
 

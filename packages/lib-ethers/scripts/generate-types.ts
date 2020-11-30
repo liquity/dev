@@ -5,18 +5,18 @@ import { Interface, ParamType } from "@ethersproject/abi";
 
 import ActivePool from "../../contracts/artifacts/ActivePool.json";
 import BorrowerOperations from "../../contracts/artifacts/BorrowerOperations.json";
-import CDPManager from "../../contracts/artifacts/CDPManager.json";
-import CLVToken from "../../contracts/artifacts/CLVToken.json";
+import TroveManager from "../../contracts/artifacts/TroveManager.json";
+import LUSDToken from "../../contracts/artifacts/LUSDToken.json";
 import CommunityIssuance from "../../contracts/artifacts/CommunityIssuance.json";
 import DefaultPool from "../../contracts/artifacts/DefaultPool.json";
-import GrowthToken from "../../contracts/artifacts/GrowthToken.json";
+import LQTYToken from "../../contracts/artifacts/LQTYToken.json";
 import HintHelpers from "../../contracts/artifacts/HintHelpers.json";
 import LockupContractFactory from "../../contracts/artifacts/LockupContractFactory.json";
 import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
-import MultiCDPGetter from "../../contracts/artifacts/MultiCDPGetter.json";
+import MultiTroveGetter from "../../contracts/artifacts/MultiTroveGetter.json";
 import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
 import PriceFeedTestnet from "../../contracts/artifacts/PriceFeedTestnet.json";
-import SortedCDPs from "../../contracts/artifacts/SortedCDPs.json";
+import SortedTroves from "../../contracts/artifacts/SortedTroves.json";
 import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
 import CollSurplusPool from "../../contracts/artifacts/CollSurplusPool.json";
 
@@ -121,18 +121,18 @@ const declareInterface = ({
 const contractArtifacts = [
   ActivePool,
   BorrowerOperations,
-  CDPManager,
-  CLVToken,
+  TroveManager,
+  LUSDToken,
   CommunityIssuance,
   DefaultPool,
-  GrowthToken,
+  LQTYToken,
   HintHelpers,
   LockupContractFactory,
   LQTYStaking,
-  MultiCDPGetter,
+  MultiTroveGetter,
   PriceFeed,
   PriceFeedTestnet,
-  SortedCDPs,
+  SortedTroves,
   StabilityPool,
   CollSurplusPool
 ];

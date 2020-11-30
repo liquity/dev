@@ -46,7 +46,7 @@ const deployContracts = async (
     borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations", {
       ...overrides
     }),
-    cdpManager: await deployContract(deployer, getContractFactory, "CDPManager", { ...overrides }),
+    troveManager: await deployContract(deployer, getContractFactory, "TroveManager", { ...overrides }),
     collSurplusPool: await deployContract(deployer, getContractFactory, "CollSurplusPool", {
       ...overrides
     }),
@@ -64,7 +64,7 @@ const deployContracts = async (
     lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
     priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
     priceFeedTestnet: await deployContract(deployer, getContractFactory, "PriceFeedTestnet", { ...overrides }),
-    sortedCDPs: await deployContract(deployer, getContractFactory, "SortedCDPs", { ...overrides }),
+    sortedTroves: await deployContract(deployer, getContractFactory, "SortedTroves", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
     })
@@ -72,32 +72,32 @@ const deployContracts = async (
 
   return {
     ...addresses,
-    clvToken: await deployContract(
+    lusdToken: await deployContract(
       deployer,
       getContractFactory,
-      "CLVToken",
-      addresses.cdpManager,
+      "LUSDToken",
+      addresses.troveManager,
       addresses.stabilityPool,
       addresses.borrowerOperations,
       { ...overrides }
     ),
 
-    growthToken: await deployContract(
+    lqtyToken: await deployContract(
       deployer,
       getContractFactory,
-      "GrowthToken",
+      "LQTYToken",
       addresses.communityIssuance,
       addresses.lqtyStaking,
       addresses.lockupContractFactory,
       { ...overrides }
     ),
 
-    multiCDPgetter: await deployContract(
+    multiTrovegetter: await deployContract(
       deployer,
       getContractFactory,
-      "MultiCDPGetter",
-      addresses.cdpManager,
-      addresses.sortedCDPs,
+      "MultiTroveGetter",
+      addresses.troveManager,
+      addresses.sortedTroves,
       { ...overrides }
     )
   };
@@ -107,18 +107,18 @@ const connectContracts = async (
   {
     activePool,
     borrowerOperations,
-    cdpManager,
-    clvToken,
+    troveManager,
+    lusdToken,
     collSurplusPool,
     communityIssuance,
     defaultPool,
-    growthToken,
+    lqtyToken,
     hintHelpers,
     lockupContractFactory,
     lqtyStaking,
     priceFeed,
     priceFeedTestnet,
-    sortedCDPs,
+    sortedTroves,
     stabilityPool
   }: LiquityContracts,
   deployer: Signer,
@@ -133,7 +133,7 @@ const connectContracts = async (
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce =>
-      sortedCDPs.setParams(1e6, cdpManager.address, borrowerOperations.address, {
+      sortedTroves.setParams(1e6, troveManager.address, borrowerOperations.address, {
         ...overrides,
         nonce
       }),
@@ -151,29 +151,29 @@ const connectContracts = async (
       ),
 
     nonce =>
-      cdpManager.setAddresses(
+      troveManager.setAddresses(
         borrowerOperations.address,
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
         collSurplusPool.address,
         priceFeed.address,
-        clvToken.address,
-        sortedCDPs.address,
+        lusdToken.address,
+        sortedTroves.address,
         lqtyStaking.address,
         { ...overrides, nonce }
       ),
 
     nonce =>
       borrowerOperations.setAddresses(
-        cdpManager.address,
+        troveManager.address,
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
         collSurplusPool.address,
         priceFeed.address,
-        sortedCDPs.address,
-        clvToken.address,
+        sortedTroves.address,
+        lusdToken.address,
         lqtyStaking.address,
         { ...overrides, nonce }
       ),
@@ -181,10 +181,10 @@ const connectContracts = async (
     nonce =>
       stabilityPool.setAddresses(
         borrowerOperations.address,
-        cdpManager.address,
+        troveManager.address,
         activePool.address,
-        clvToken.address,
-        sortedCDPs.address,
+        lusdToken.address,
+        sortedTroves.address,
         priceFeed.address,
         communityIssuance.address,
         { ...overrides, nonce }
@@ -193,14 +193,14 @@ const connectContracts = async (
     nonce =>
       activePool.setAddresses(
         borrowerOperations.address,
-        cdpManager.address,
+        troveManager.address,
         stabilityPool.address,
         defaultPool.address,
         { ...overrides, nonce }
       ),
 
     nonce =>
-      defaultPool.setAddresses(cdpManager.address, activePool.address, {
+      defaultPool.setAddresses(troveManager.address, activePool.address, {
         ...overrides,
         nonce
       }),
@@ -208,35 +208,35 @@ const connectContracts = async (
     nonce =>
       collSurplusPool.setAddresses(
         borrowerOperations.address,
-        cdpManager.address,
+        troveManager.address,
         activePool.address,
         { ...overrides, nonce }
       ),
 
     nonce =>
-      hintHelpers.setAddresses(sortedCDPs.address, cdpManager.address, {
+      hintHelpers.setAddresses(sortedTroves.address, troveManager.address, {
         ...overrides,
         nonce
       }),
 
     nonce =>
       lqtyStaking.setAddresses(
-        growthToken.address,
-        clvToken.address,
-        cdpManager.address,
+        lqtyToken.address,
+        lusdToken.address,
+        troveManager.address,
         borrowerOperations.address,
         activePool.address,
         { ...overrides, nonce }
       ),
 
     nonce =>
-      lockupContractFactory.setGrowthTokenAddress(growthToken.address, {
+      lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, {
         ...overrides,
         nonce
       }),
 
     nonce =>
-      communityIssuance.setAddresses(growthToken.address, stabilityPool.address, {
+      communityIssuance.setAddresses(lqtyToken.address, stabilityPool.address, {
         ...overrides,
         nonce
       })

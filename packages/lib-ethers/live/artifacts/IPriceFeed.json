@@ -7,11 +7,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         }
       ],
-      "name": "CDPManagerAddressChanged",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {
@@ -177,7 +177,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         },
         {

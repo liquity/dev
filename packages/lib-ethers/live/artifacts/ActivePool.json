@@ -20,11 +20,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         }
       ],
-      "name": "CDPManagerAddressChanged",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {
@@ -37,7 +37,7 @@
           "type": "uint256"
         }
       ],
-      "name": "CLVBalanceUpdated",
+      "name": "LUSDBalanceUpdated",
       "type": "event"
     },
     {
@@ -138,7 +138,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "cdpManagerAddress",
+      "name": "troveManagerAddress",
       "outputs": [
         {
           "internalType": "address",
@@ -159,7 +159,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseCLVDebt",
+      "name": "decreaseLUSDDebt",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -183,7 +183,7 @@
     {
       "constant": true,
       "inputs": [],
-      "name": "getCLVDebt",
+      "name": "getLUSDDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -234,7 +234,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseCLVDebt",
+      "name": "increaseLUSDDebt",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -315,7 +315,7 @@
         },
         {
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         },
         {

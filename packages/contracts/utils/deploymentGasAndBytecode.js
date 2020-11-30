@@ -1,8 +1,8 @@
 // Buidler script
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
-const CDPManager = artifacts.require("./CDPManager.sol")
+const SortedTroves = artifacts.require("./SortedTroves.sol")
+const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
+const LUSDToken = artifacts.require("./LUSDToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
@@ -10,7 +10,7 @@ const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
 const LQTYStaking = artifacts.require("./LQTY/LQTYStaking.sol")
-const GrowthToken = artifacts.require("./LQTY/GrowthToken.sol")
+const LQTYToken = artifacts.require("./LQTY/LQTYToken.sol")
 const LockupContractFactory = artifacts.require("./LQTY/LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./LQTY/CommunityIssuance.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
@@ -20,17 +20,17 @@ const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const MathTester = artifacts.require("./MathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
-const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
+const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
+const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
 const dh = require("./deploymentHelpers.js")
 
 const coreContractABIs = [
   BorrowerOperations,
   PriceFeed,
-  CLVToken,
-  SortedCDPs,
-  CDPManager,
+  LUSDToken,
+  SortedTroves,
+  TroveManager,
   ActivePool,
   StabilityPool,
   DefaultPool,
@@ -40,7 +40,7 @@ const coreContractABIs = [
 
 const LQTYContractABIs = [
   LQTYStaking,
-  GrowthToken,
+  LQTYToken,
   LockupContractFactory,
   CommunityIssuance
 ]
@@ -51,8 +51,8 @@ const TesterContractABIs  = [
   DefaultPoolTester,
   MathTester,
   BorrowerOperationsTester,
-  CDPManagerTester,
-  CLVTokenTester,
+  TroveManagerTester,
+  LUSDTokenTester,
 ]
 
 const getGasFromContractDeployment = async (contractObject, name) => {

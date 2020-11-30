@@ -14,7 +14,7 @@ const toBN = th.toBN
  * gains are non-zero, occur when they should, and are in correct proportion to the user's stake. 
  *
  * Specific ETH/LUSD gain values will depend on the final fee schedule used, and the final choices for
- * parameters BETA and MINUTE_DECAY_FACTORin the CDPManager, which are still TBD based on economic
+ * parameters BETA and MINUTE_DECAY_FACTORin the TroveManager, which are still TBD based on economic
  * modelling.
  * 
  */ 
@@ -25,7 +25,7 @@ contract('Fee arithmetic tests', async accounts => {
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 
   let borrowerOperations
-  let growthToken
+  let lqtyToken
   let lqtyStaking
   
   beforeEach(async () => {
@@ -33,16 +33,16 @@ contract('Fee arithmetic tests', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
 
     priceFeed = contracts.priceFeed
-    clvToken = contracts.clvToken
-    sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    lusdToken = contracts.lusdToken
+    sortedTroves = contracts.sortedTroves
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
 
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
     lqtyStaking = LQTYContracts.lqtyStaking
     
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
@@ -51,22 +51,22 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("ETH fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
-    // console.log(`A lqty bal: ${await growthToken.balanceOf(A)}`)
+    // console.log(`A lqty bal: ${await lqtyToken.balanceOf(A)}`)
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(100, 18), {from: A})
 
     // Check ETH fee per unit staked is zero
@@ -75,7 +75,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee emitted in event is non-zero
     const emittedETHFee = toBN((await th.getEmittedRedemptionValues(redemptionTx))[3])
@@ -91,17 +91,17 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("ETH fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // Check ETH fee per unit staked is zero
     const F_ETH_Before = await lqtyStaking.F_ETH()
@@ -109,7 +109,7 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee emitted in event is non-zero
     const emittedETHFee = toBN((await th.getEmittedRedemptionValues(redemptionTx))[3])
@@ -121,20 +121,20 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("LUSD fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(100, 18), {from: A})
 
     // Check LUSD fee per unit staked is zero
@@ -143,14 +143,14 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // Check base rate is now non-zero
-    const baseRate = await cdpManager.baseRate()
+    const baseRate = await troveManager.baseRate()
     assert.isTrue(baseRate.gt(toBN('0')))
 
     // D draws debt
-    const tx = await borrowerOperations.withdrawCLV(dec(27, 18), D, {from: D})
+    const tx = await borrowerOperations.withdrawLUSD(dec(27, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(tx))
@@ -166,17 +166,17 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("LUSD fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // Check LUSD fee per unit staked is zero
     const F_LUSD_Before = await lqtyStaking.F_ETH()
@@ -184,14 +184,14 @@ contract('Fee arithmetic tests', async accounts => {
 
     // B redeems
     await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // Check base rate is now non-zero
-    const baseRate = await cdpManager.baseRate()
+    const baseRate = await troveManager.baseRate()
     assert.isTrue(baseRate.gt(toBN('0')))
 
     // D draws debt
-    const tx = await borrowerOperations.withdrawCLV(dec(27, 18), D, {from: D})
+    const tx = await borrowerOperations.withdrawLUSD(dec(27, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(tx))
@@ -204,25 +204,25 @@ contract('Fee arithmetic tests', async accounts => {
 
 
   it("LQTY Staking: A single staker earns all ETH and LQTY fees that occur", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(100, 18), {from: A})
 
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
@@ -230,21 +230,21 @@ contract('Fee arithmetic tests', async accounts => {
 
      // C redeems
      const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
     // D draws debt
-    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), D, {from: D})
+    const borrowingTx_1 = await borrowerOperations.withdrawLUSD(dec(104, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
     assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
 
     // B draws debt
-    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), B, {from: B})
+    const borrowingTx_2 = await borrowerOperations.withdrawLUSD(dec(17, 18), B, {from: B})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
@@ -254,13 +254,13 @@ contract('Fee arithmetic tests', async accounts => {
     const expectedTotalLUSDGain = emittedLUSDFee_1.add(emittedLUSDFee_2)
 
     const A_ETHBalance_Before = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_Before = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_Before = toBN(await lusdToken.balanceOf(A))
 
     // A un-stakes
     await lqtyStaking.unstake(dec(100, 18), {from: A, gasPrice: 0})
 
     const A_ETHBalance_After = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_After = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_After = toBN(await lusdToken.balanceOf(A))
 
 
     const A_ETHGain = A_ETHBalance_After.sub(A_ETHBalance_Before)
@@ -271,25 +271,25 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("stake(): Top-up sends out all accumulated ETH and LUSD gains to the staker", async () => { 
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
@@ -297,21 +297,21 @@ contract('Fee arithmetic tests', async accounts => {
 
      // C redeems
      const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
     // D draws debt
-    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), D, {from: D})
+    const borrowingTx_1 = await borrowerOperations.withdrawLUSD(dec(104, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
     assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
 
     // B draws debt
-    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), B, {from: B})
+    const borrowingTx_2 = await borrowerOperations.withdrawLUSD(dec(17, 18), B, {from: B})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
@@ -321,13 +321,13 @@ contract('Fee arithmetic tests', async accounts => {
     const expectedTotalLUSDGain = emittedLUSDFee_1.add(emittedLUSDFee_2)
 
     const A_ETHBalance_Before = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_Before = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_Before = toBN(await lusdToken.balanceOf(A))
 
     // A tops up
     await lqtyStaking.stake(dec(50, 18), {from: A, gasPrice: 0})
 
     const A_ETHBalance_After = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_After = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_After = toBN(await lusdToken.balanceOf(A))
 
     const A_ETHGain = A_ETHBalance_After.sub(A_ETHBalance_Before)
     const A_LUSDGain = A_LUSDBalance_After.sub(A_LUSDBalance_Before)
@@ -337,25 +337,25 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("getPendingETHGain(): Returns the staker's correct pending ETH gain", async () => { 
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
@@ -363,7 +363,7 @@ contract('Fee arithmetic tests', async accounts => {
 
      // C redeems
      const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -377,25 +377,25 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("getPendingLUSDGain(): Returns the staker's correct pending LUSD gain", async () => { 
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
 
     // A makes stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await clvToken.balanceOf(B), dec(100, 18))
+    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
@@ -403,21 +403,21 @@ contract('Fee arithmetic tests', async accounts => {
 
      // C redeems
      const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await clvToken.balanceOf(C), dec(200, 18))
+     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
     // D draws debt
-    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), D, {from: D})
+    const borrowingTx_1 = await borrowerOperations.withdrawLUSD(dec(104, 18), D, {from: D})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
     assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
 
     // B draws debt
-    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), B, {from: B})
+    const borrowingTx_2 = await borrowerOperations.withdrawLUSD(dec(17, 18), B, {from: B})
     
     // Check LUSD fee value in event is non-zero
     const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
@@ -431,35 +431,35 @@ contract('Fee arithmetic tests', async accounts => {
 
   // - multi depositors, several rewards
   it("LQTY Staking: Multiple stakers earn the correct share of all ETH and LQTY fees, based on their stake size", async () => {
-    await borrowerOperations.openLoan(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openLoan(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openLoan(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openLoan(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
-    await borrowerOperations.openLoan(dec(400, 18), E, {from: E, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), E, {from: E, value: dec(10, 'ether')})  
 
-    await borrowerOperations.openLoan(dec(1000, 18), F, {from: F, value: dec(10, 'ether')})  
-    await borrowerOperations.openLoan(dec(1000, 18), G, {from: G, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), F, {from: F, value: dec(10, 'ether')})  
+    await borrowerOperations.openTrove(dec(1000, 18), G, {from: G, value: dec(10, 'ether')})  
   
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // Owner transfers LQTY to staker A, B, C
-    await growthToken.transfer(A, dec(100, 18), {from: owner})
-    await growthToken.transfer(B, dec(200, 18), {from: owner})
-    await growthToken.transfer(C, dec(300, 18), {from: owner})
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(B, dec(200, 18), {from: owner})
+    await lqtyToken.transfer(C, dec(300, 18), {from: owner})
 
     // A, B, C make stake
-    await growthToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
-    await growthToken.approve(lqtyStaking.address, dec(200, 18), {from: B})
-    await growthToken.approve(lqtyStaking.address, dec(300, 18), {from: C})
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await lqtyToken.approve(lqtyStaking.address, dec(200, 18), {from: B})
+    await lqtyToken.approve(lqtyStaking.address, dec(300, 18), {from: C})
     await lqtyStaking.stake(dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(200, 18), {from: B})
     await lqtyStaking.stake(dec(300, 18), {from: C})
 
     // Confirm staking contract holds 600 LQTY
-    // console.log(`lqty staking LQTY bal: ${await growthToken.balanceOf(lqtyStaking.address)}`)
-    assert.equal(await growthToken.balanceOf(lqtyStaking.address), dec(600, 18))
+    // console.log(`lqty staking LQTY bal: ${await lqtyToken.balanceOf(lqtyStaking.address)}`)
+    assert.equal(await lqtyToken.balanceOf(lqtyStaking.address), dec(600, 18))
     assert.equal(await lqtyStaking.totalLQTYStaked(), dec(600, 18))
 
     // F redeems
@@ -473,22 +473,22 @@ contract('Fee arithmetic tests', async accounts => {
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
     // F draws debt
-    const borrowingTx_1 = await borrowerOperations.withdrawCLV(dec(104, 18), F, {from: F})
+    const borrowingTx_1 = await borrowerOperations.withdrawLUSD(dec(104, 18), F, {from: F})
     const emittedLUSDFee_1 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_1))
     assert.isTrue(emittedLUSDFee_1.gt(toBN('0')))
 
     // G draws debt
-    const borrowingTx_2 = await borrowerOperations.withdrawCLV(dec(17, 18), G, {from: G})
+    const borrowingTx_2 = await borrowerOperations.withdrawLUSD(dec(17, 18), G, {from: G})
     const emittedLUSDFee_2 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_2))
     assert.isTrue(emittedLUSDFee_2.gt(toBN('0')))
 
     // D obtains LQTY from owner and makes a stake
-    await growthToken.transfer(D, dec(50, 18), {from: owner})
-    await growthToken.approve(lqtyStaking.address, dec(50, 18), {from: D})
+    await lqtyToken.transfer(D, dec(50, 18), {from: owner})
+    await lqtyToken.approve(lqtyStaking.address, dec(50, 18), {from: D})
     await lqtyStaking.stake(dec(50, 18), {from: D})
 
     // Confirm staking contract holds 650 LQTY
-    assert.equal(await growthToken.balanceOf(lqtyStaking.address), dec(650, 18))
+    assert.equal(await lqtyToken.balanceOf(lqtyStaking.address), dec(650, 18))
     assert.equal(await lqtyStaking.totalLQTYStaked(), dec(650, 18))
 
      // G redeems
@@ -497,7 +497,7 @@ contract('Fee arithmetic tests', async accounts => {
      assert.isTrue(emittedETHFee_3.gt(toBN('0')))
 
      // G draws debt
-    const borrowingTx_3 = await borrowerOperations.withdrawCLV(dec(17, 18), G, {from: G})
+    const borrowingTx_3 = await borrowerOperations.withdrawLUSD(dec(17, 18), G, {from: G})
     const emittedLUSDFee_3 = toBN(th.getLUSDFeeFromLUSDBorrowingEvent(borrowingTx_3))
     assert.isTrue(emittedLUSDFee_3.gt(toBN('0')))
      
@@ -547,13 +547,13 @@ contract('Fee arithmetic tests', async accounts => {
 
 
     const A_ETHBalance_Before = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_Before = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_Before = toBN(await lusdToken.balanceOf(A))
     const B_ETHBalance_Before = toBN(await web3.eth.getBalance(B))
-    const B_LUSDBalance_Before = toBN(await clvToken.balanceOf(B))
+    const B_LUSDBalance_Before = toBN(await lusdToken.balanceOf(B))
     const C_ETHBalance_Before = toBN(await web3.eth.getBalance(C))
-    const C_LUSDBalance_Before = toBN(await clvToken.balanceOf(C))
+    const C_LUSDBalance_Before = toBN(await lusdToken.balanceOf(C))
     const D_ETHBalance_Before = toBN(await web3.eth.getBalance(D))
-    const D_LUSDBalance_Before = toBN(await clvToken.balanceOf(D))
+    const D_LUSDBalance_Before = toBN(await lusdToken.balanceOf(D))
 
     // A-D un-stake
     const unstake_A = await lqtyStaking.unstake(dec(100, 18), {from: A, gasPrice: 0})
@@ -564,18 +564,18 @@ contract('Fee arithmetic tests', async accounts => {
     // Confirm all depositors could withdraw
 
     //Confirm pool Size is now 0
-    assert.equal((await growthToken.balanceOf(lqtyStaking.address)), '0')
+    assert.equal((await lqtyToken.balanceOf(lqtyStaking.address)), '0')
     assert.equal((await lqtyStaking.totalLQTYStaked()), '0')
 
     // Get A-D ETH and LUSD balances
     const A_ETHBalance_After = toBN(await web3.eth.getBalance(A))
-    const A_LUSDBalance_After = toBN(await clvToken.balanceOf(A))
+    const A_LUSDBalance_After = toBN(await lusdToken.balanceOf(A))
     const B_ETHBalance_After = toBN(await web3.eth.getBalance(B))
-    const B_LUSDBalance_After = toBN(await clvToken.balanceOf(B))
+    const B_LUSDBalance_After = toBN(await lusdToken.balanceOf(B))
     const C_ETHBalance_After = toBN(await web3.eth.getBalance(C))
-    const C_LUSDBalance_After = toBN(await clvToken.balanceOf(C))
+    const C_LUSDBalance_After = toBN(await lusdToken.balanceOf(C))
     const D_ETHBalance_After = toBN(await web3.eth.getBalance(D))
-    const D_LUSDBalance_After = toBN(await clvToken.balanceOf(D))
+    const D_LUSDBalance_After = toBN(await lusdToken.balanceOf(D))
 
     // Get ETH and LUSD gains
     const A_ETHGain = A_ETHBalance_After.sub(A_ETHBalance_Before)

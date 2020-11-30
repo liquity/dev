@@ -12,19 +12,19 @@ import {
 
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
-import cdpManagerAbi from "../abi/CDPManager.json";
-import clvTokenAbi from "../abi/CLVToken.json";
+import troveManagerAbi from "../abi/TroveManager.json";
+import lusdTokenAbi from "../abi/LUSDToken.json";
 import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
-import growthTokenAbi from "../abi/GrowthToken.json";
+import lqtyTokenAbi from "../abi/LQTYToken.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
-import multiCDPgetterAbi from "../abi/MultiCDPGetter.json";
+import multiTrovegetterAbi from "../abi/MultiTroveGetter.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
-import sortedCDPsAbi from "../abi/SortedCDPs.json";
+import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 
 import dev from "../deployments/dev.json";
@@ -36,37 +36,37 @@ import ropsten from "../deployments/ropsten.json";
 import {
   ActivePool,
   BorrowerOperations,
-  CDPManager,
-  CLVToken,
+  TroveManager,
+  LUSDToken,
   CollSurplusPool,
   CommunityIssuance,
   DefaultPool,
-  GrowthToken,
+  LQTYToken,
   HintHelpers,
   LockupContractFactory,
   LQTYStaking,
-  MultiCDPGetter,
+  MultiTroveGetter,
   PriceFeed,
   PriceFeedTestnet,
-  SortedCDPs,
+  SortedTroves,
   StabilityPool
 } from "../types";
 
 export const abi: { [name: string]: JsonFragment[] } = {
   activePool: activePoolAbi,
   borrowerOperations: borrowerOperationsAbi,
-  cdpManager: cdpManagerAbi,
-  clvToken: clvTokenAbi,
+  troveManager: troveManagerAbi,
+  lusdToken: lusdTokenAbi,
   communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
-  growthToken: growthTokenAbi,
+  lqtyToken: lqtyTokenAbi,
   hintHelpers: hintHelpersAbi,
   lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
-  multiCDPgetter: multiCDPgetterAbi,
+  multiTrovegetter: multiTrovegetterAbi,
   priceFeed: priceFeedAbi,
   priceFeedTestnet: priceFeedTestnetAbi,
-  sortedCDPs: sortedCDPsAbi,
+  sortedTroves: sortedTrovesAbi,
   stabilityPool: stabilityPoolAbi,
   collSurplusPool: collSurplusPoolAbi
 };
@@ -158,19 +158,19 @@ export class LiquityContract extends Contract {
 export interface LiquityContractAddresses {
   activePool: string;
   borrowerOperations: string;
-  cdpManager: string;
-  clvToken: string;
+  troveManager: string;
+  lusdToken: string;
   collSurplusPool: string;
   communityIssuance: string;
   defaultPool: string;
-  growthToken: string;
+  lqtyToken: string;
   hintHelpers: string;
   lockupContractFactory: string;
   lqtyStaking: string;
-  multiCDPgetter: string;
+  multiTrovegetter: string;
   priceFeed: string;
   priceFeedTestnet: string;
-  sortedCDPs: string;
+  sortedTroves: string;
   stabilityPool: string;
 }
 
@@ -179,38 +179,38 @@ export interface LiquityContracts {
 
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
-  cdpManager: CDPManager;
-  clvToken: CLVToken;
+  troveManager: TroveManager;
+  lusdToken: LUSDToken;
   collSurplusPool: CollSurplusPool;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
-  growthToken: GrowthToken;
+  lqtyToken: LQTYToken;
   hintHelpers: HintHelpers;
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
-  multiCDPgetter: MultiCDPGetter;
+  multiTrovegetter: MultiTroveGetter;
   priceFeed: PriceFeed;
   priceFeedTestnet: PriceFeedTestnet;
-  sortedCDPs: SortedCDPs;
+  sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
 }
 
 export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
   activePool: contracts.activePool.address,
   borrowerOperations: contracts.borrowerOperations.address,
-  cdpManager: contracts.cdpManager.address,
-  clvToken: contracts.clvToken.address,
+  troveManager: contracts.troveManager.address,
+  lusdToken: contracts.lusdToken.address,
   collSurplusPool: contracts.collSurplusPool.address,
   communityIssuance: contracts.communityIssuance.address,
   defaultPool: contracts.defaultPool.address,
-  growthToken: contracts.growthToken.address,
+  lqtyToken: contracts.lqtyToken.address,
   hintHelpers: contracts.hintHelpers.address,
   lockupContractFactory: contracts.lockupContractFactory.address,
   lqtyStaking: contracts.lqtyStaking.address,
-  multiCDPgetter: contracts.multiCDPgetter.address,
+  multiTrovegetter: contracts.multiTrovegetter.address,
   priceFeed: contracts.priceFeed.address,
   priceFeedTestnet: contracts.priceFeedTestnet.address,
-  sortedCDPs: contracts.sortedCDPs.address,
+  sortedTroves: contracts.sortedTroves.address,
   stabilityPool: contracts.stabilityPool.address
 });
 
@@ -232,9 +232,9 @@ export const connectToContracts = (
     signerOrProvider
   ),
 
-  cdpManager: create<CDPManager>(addresses.cdpManager, cdpManagerAbi, signerOrProvider),
+  troveManager: create<TroveManager>(addresses.troveManager, troveManagerAbi, signerOrProvider),
 
-  clvToken: create<CLVToken>(addresses.clvToken, clvTokenAbi, signerOrProvider),
+  lusdToken: create<LUSDToken>(addresses.lusdToken, lusdTokenAbi, signerOrProvider),
 
   collSurplusPool: create<CollSurplusPool>(
     addresses.collSurplusPool,
@@ -250,7 +250,7 @@ export const connectToContracts = (
 
   defaultPool: create<DefaultPool>(addresses.defaultPool, defaultPoolAbi, signerOrProvider),
 
-  growthToken: create<GrowthToken>(addresses.growthToken, growthTokenAbi, signerOrProvider),
+  lqtyToken: create<LQTYToken>(addresses.lqtyToken, lqtyTokenAbi, signerOrProvider),
 
   hintHelpers: create<HintHelpers>(addresses.hintHelpers, hintHelpersAbi, signerOrProvider),
 
@@ -262,17 +262,17 @@ export const connectToContracts = (
 
   lqtyStaking: create<LQTYStaking>(addresses.lqtyStaking, lqtyStakingAbi, signerOrProvider),
 
-  multiCDPgetter: create<MultiCDPGetter>(
-    addresses.multiCDPgetter,
-    multiCDPgetterAbi,
+  multiTrovegetter: create<MultiTroveGetter>(
+    addresses.multiTrovegetter,
+    multiTrovegetterAbi,
     signerOrProvider
   ),
 
   priceFeed: create<PriceFeed>(addresses.priceFeed, priceFeedAbi, signerOrProvider),
-
+  
   priceFeedTestnet: create<PriceFeedTestnet>(addresses.priceFeedTestnet, priceFeedTestnetAbi, signerOrProvider),
 
-  sortedCDPs: create<SortedCDPs>(addresses.sortedCDPs, sortedCDPsAbi, signerOrProvider),
+  sortedTroves: create<SortedTroves>(addresses.sortedTroves, sortedTrovesAbi, signerOrProvider),
 
   stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
 });

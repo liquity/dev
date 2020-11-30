@@ -7,10 +7,9 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   const [owner, alice, bob] = accounts;
   let contracts
   let priceFeed
-  let priceFeedTestnet
-  let clvToken
-  let sortedCDPs
-  let cdpManager
+  let lusdToken
+  let sortedTroves
+  let troveManager
   let activePool
   let stabilityPool
   let defaultPool
@@ -18,19 +17,18 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   let lqtyStaking
   let communityIssuance
-  let growthToken 
+  let lqtyToken 
 
   before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
-    contracts = await deploymentHelper.deployCLVToken(contracts)
+    contracts = await deploymentHelper.deployLUSDToken(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
-    priceFeedTestnet = contracts.priceFeedTestnet
-    clvToken = contracts.clvToken
-    sortedCDPs = contracts.sortedCDPs
-    cdpManager = contracts.cdpManager
+    priceFeed = contracts.priceFeedTestnet
+    lusdToken = contracts.lusdToken
+    sortedTroves = contracts.sortedTroves
+    troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
@@ -38,7 +36,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
     lqtyStaking = LQTYContracts.lqtyStaking
     communityIssuance = LQTYContracts.communityIssuance
-    growthToken = LQTYContracts.growthToken
+    lqtyToken = LQTYContracts.lqtyToken
   })
 
   const testSetAddresses = async (contract, numberOfAddresses) => {
@@ -53,9 +51,9 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     await th.assertRevert(contract.setAddresses(...params, { from: owner }))
   }
 
-  describe('CDPManager', async accounts => {
+  describe('TroveManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(cdpManager, 9)
+      await testSetAddresses(troveManager, 9)
     })
   })
 
@@ -83,18 +81,18 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     })
   })
 
-  describe('SortedCDPs', async accounts => {
+  describe('SortedTroves', async accounts => {
     it("setParams(): reverts when called by non-owner", async () => {
       const params = [10000001, bob, bob]
       // Attempt call from alice
-      await th.assertRevert(sortedCDPs.setParams(...params, { from: alice }))
+      await th.assertRevert(sortedTroves.setParams(...params, { from: alice }))
 
       // Owner can successfully set params
-      const txOwner = await sortedCDPs.setParams(...params, { from: owner })
+      const txOwner = await sortedTroves.setParams(...params, { from: owner })
       assert.isTrue(txOwner.receipt.status)
 
       // fails if called twice
-      await th.assertRevert(sortedCDPs.setParams(...params, { from: owner }))
+      await th.assertRevert(sortedTroves.setParams(...params, { from: owner }))
     })
   })
 
@@ -113,7 +111,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('CommunityIssuance', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      const params = [growthToken.address,stabilityPool.address]
+      const params = [lqtyToken.address,stabilityPool.address]
       await th.assertRevert(communityIssuance.setAddresses(...params, { from: alice }))
 
       // Owner can successfully set any address

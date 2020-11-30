@@ -70,7 +70,7 @@ export function updateTrove(
   _debt: BigInt,
   stake: BigInt,
   snapshotETH: BigInt,
-  snapshotCLVDebt: BigInt
+  snapshotLUSDDebt: BigInt
 ): void {
   let trove = getCurrentTroveOfOwner(_borrower);
   let newCollateral = decimalize(_coll);
@@ -117,10 +117,10 @@ export function updateTrove(
   trove.rawDebt = _debt;
   trove.rawStake = stake;
   trove.rawSnapshotOfTotalRedistributedCollateral = snapshotETH;
-  trove.rawSnapshotOfTotalRedistributedDebt = snapshotCLVDebt;
+  trove.rawSnapshotOfTotalRedistributedDebt = snapshotLUSDDebt;
 
   if (stake != BIGINT_ZERO) {
-    trove.collateralRatioSortKey = (_debt * BIGINT_SCALING_FACTOR) / stake - snapshotCLVDebt;
+    trove.collateralRatioSortKey = (_debt * BIGINT_SCALING_FACTOR) / stake - snapshotLUSDDebt;
   } else {
     trove.collateralRatioSortKey = null;
   }

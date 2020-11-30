@@ -6,9 +6,9 @@ import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/IStabilityPool.sol';
 import './Interfaces/IPool.sol';
 import './Interfaces/IBorrowerOperations.sol';
-import './Interfaces/ICDPManager.sol';
-import './Interfaces/ICLVToken.sol';
-import './Interfaces/ISortedCDPs.sol';
+import './Interfaces/ITroveManager.sol';
+import './Interfaces/ILUSDToken.sol';
+import './Interfaces/ISortedTroves.sol';
 import './Interfaces/IPriceFeed.sol';
 import "./Interfaces/ICommunityIssuance.sol";
 import "./Dependencies/LiquityBase.sol";
@@ -134,15 +134,15 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     IBorrowerOperations public borrowerOperations;
 
-    ICDPManager public cdpManager;
+    ITroveManager public troveManager;
 
-    ICLVToken public clvToken;
+    ILUSDToken public lusdToken;
 
     IPool public activePool;
     address public activePoolAddress;
 
     // Needed to check if there are pending liquidations
-    ISortedCDPs public sortedCDPs;
+    ISortedTroves public sortedTroves;
     IPriceFeed public priceFeed;
 
     ICommunityIssuance public communityIssuance;
@@ -150,8 +150,8 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     uint256 internal ETH;  // deposited ether tracker
 
-    // Tracker for CLV held in the pool. Changes when users deposit/withdraw, and when CDP debt is offset.
-    uint256 internal totalCLVDeposits;
+    // Tracker for LUSD held in the pool. Changes when users deposit/withdraw, and when Trove debt is offset.
+    uint256 internal totalLUSDDeposits;
 
    // --- Data structures ---
 
@@ -181,7 +181,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     mapping (address => Snapshots) public frontEndSnapshots; // front end address -> snapshots struct
 
     /*  Product 'P': Running product by which to multiply an initial deposit, in order to find the current compounded deposit,
-    * after a series of liquidations have occurred, each of which cancel some CLV debt with the deposit.
+    * after a series of liquidations have occurred, each of which cancel some LUSD debt with the deposit.
     * 
     * During its lifetime, a deposit's value evolves from d_t to d_t * P / P_t , where P_t
     * is the snapshot of P taken at the instant the deposit was made. 18-digit decimal.  
@@ -217,16 +217,16 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     uint public lastLQTYError;
     // Error trackers for the error correction in the offset calculation
     uint public lastETHError_Offset;
-    uint public lastCLVLossError_Offset;
+    uint public lastLUSDLossError_Offset;
 
     // --- Contract setters ---
 
     function setAddresses(
         address _borrowerOperationsAddress,
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _activePoolAddress,
-        address _clvTokenAddress,
-        address _sortedCDPsAddress,
+        address _lusdTokenAddress,
+        address _sortedTrovesAddress,
         address _priceFeedAddress,
         address _communityIssuanceAddress
     )
@@ -235,20 +235,20 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         onlyOwner
     {
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
-        cdpManager = ICDPManager(_cdpManagerAddress);
+        troveManager = ITroveManager(_troveManagerAddress);
         activePool = IPool(_activePoolAddress);
         activePoolAddress = _activePoolAddress;
-        clvToken = ICLVToken(_clvTokenAddress);
-        sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
+        lusdToken = ILUSDToken(_lusdTokenAddress);
+        sortedTroves = ISortedTroves(_sortedTrovesAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         communityIssuanceAddress = _communityIssuanceAddress;
         communityIssuance = ICommunityIssuance(_communityIssuanceAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-        emit CDPManagerAddressChanged(_cdpManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
-        emit CLVTokenAddressChanged(_clvTokenAddress);
-        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
+        emit LUSDTokenAddressChanged(_lusdTokenAddress);
+        emit SortedTrovesAddressChanged(_sortedTrovesAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit CommunityIssuanceAddressChanged(_communityIssuanceAddress);
 
@@ -261,8 +261,8 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         return ETH;
     }
 
-    function getTotalCLVDeposits() external view override returns (uint) {
-        return totalCLVDeposits;
+    function getTotalLUSDDeposits() external view override returns (uint) {
+        return totalLUSDDeposits;
     }
 
     // --- External Depositor Functions ---
@@ -286,8 +286,8 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
         if (initialDeposit == 0) {_setFrontEndTag(msg.sender, _frontEndTag);}
         uint depositorETHGain = getDepositorETHGain(msg.sender);
-        uint compoundedCLVDeposit = getCompoundedCLVDeposit(msg.sender);
-        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
+        uint compoundedLUSDDeposit = getCompoundedLUSDDeposit(msg.sender);
+        uint LUSDLoss = initialDeposit.sub(compoundedLUSDDeposit); // Needed only for event log
 
         // First pay out any LQTY gains
         address frontEnd = deposits[msg.sender].frontEndTag;
@@ -299,15 +299,15 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
-        _sendCLVtoStabilityPool(msg.sender, _amount);
+        _sendLUSDtoStabilityPool(msg.sender, _amount);
 
-        uint newDeposit = compoundedCLVDeposit.add(_amount);
+        uint newDeposit = compoundedLUSDDeposit.add(_amount);
         _updateDepositAndSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
 
         _sendETHGainToDepositor(depositorETHGain);
 
-        emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss); // CLV Loss required for event log
+        emit ETHGainWithdrawn(msg.sender, depositorETHGain, LUSDLoss); // LUSD Loss required for event log
     }
 
     /*  withdrawFromSP():
@@ -329,9 +329,9 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
         uint depositorETHGain = getDepositorETHGain(msg.sender);
 
-        uint compoundedCLVDeposit = getCompoundedCLVDeposit(msg.sender);
-        uint CLVtoWithdraw = LiquityMath._min(_amount, compoundedCLVDeposit);
-        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
+        uint compoundedLUSDDeposit = getCompoundedLUSDDeposit(msg.sender);
+        uint LUSDtoWithdraw = LiquityMath._min(_amount, compoundedLUSDDeposit);
+        uint LUSDLoss = initialDeposit.sub(compoundedLUSDDeposit); // Needed only for event log
 
         // First pay out any LQTY gains
         address frontEnd = deposits[msg.sender].frontEndTag;
@@ -339,20 +339,20 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
-        uint newFrontEndStake = compoundedFrontEndStake.sub(CLVtoWithdraw);
+        uint newFrontEndStake = compoundedFrontEndStake.sub(LUSDtoWithdraw);
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
-        _sendCLVToDepositor(msg.sender, CLVtoWithdraw);
+        _sendLUSDToDepositor(msg.sender, LUSDtoWithdraw);
 
         // Update deposit
-        uint newDeposit = compoundedCLVDeposit.sub(CLVtoWithdraw);
+        uint newDeposit = compoundedLUSDDeposit.sub(LUSDtoWithdraw);
         _updateDepositAndSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
 
         _sendETHGainToDepositor(depositorETHGain);
 
-        emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss);  // CLV Loss required for event log
+        emit ETHGainWithdrawn(msg.sender, depositorETHGain, LUSDLoss);  // LUSD Loss required for event log
     }
 
     /* withdrawETHGainToTrove:
@@ -372,8 +372,8 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
         uint depositorETHGain = getDepositorETHGain(msg.sender);
 
-        uint compoundedCLVDeposit = getCompoundedCLVDeposit(msg.sender);
-        uint CLVLoss = initialDeposit.sub(compoundedCLVDeposit); // Needed only for event log
+        uint compoundedLUSDDeposit = getCompoundedLUSDDeposit(msg.sender);
+        uint LUSDLoss = initialDeposit.sub(compoundedLUSDDeposit); // Needed only for event log
 
         // First pay out any LQTY gains
         address frontEnd = deposits[msg.sender].frontEndTag;
@@ -385,13 +385,13 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
-        _updateDepositAndSnapshots(msg.sender, compoundedCLVDeposit);
+        _updateDepositAndSnapshots(msg.sender, compoundedLUSDDeposit);
 
-        /* Emit events before transferring ETH gain to CDP.
+        /* Emit events before transferring ETH gain to Trove.
          This lets the event log make more sense (i.e. so it appears that first the ETH gain is withdrawn
-        and then it is deposited into the CDP, not the other way around). */
-        emit ETHGainWithdrawn(msg.sender, depositorETHGain, CLVLoss);
-        emit UserDepositChanged(msg.sender, compoundedCLVDeposit);
+        and then it is deposited into the Trove, not the other way around). */
+        emit ETHGainWithdrawn(msg.sender, depositorETHGain, LUSDLoss);
+        emit UserDepositChanged(msg.sender, compoundedLUSDDeposit);
 
         ETH = ETH.sub(depositorETHGain);
         emit ETHBalanceUpdated(ETH);
@@ -408,26 +408,26 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function _updateG(uint _LQTYIssuance) internal {
-        uint totalCLV = totalCLVDeposits; // cached to save an SLOAD
+        uint totalLUSD = totalLUSDDeposits; // cached to save an SLOAD
 
         /* 
         * When total deposits is 0, G is not updated. In this case, the LQTY issued can not be obtained by later 
         * depositors - it is missed out on, and remains in the balanceof the CommunityIssuance contract. 
         */
-        if (totalCLV == 0) {return;}
+        if (totalLUSD == 0) {return;}
 
         uint LQTYPerUnitStaked;
-        LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalCLV);
+        LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalLUSD);
 
         uint marginalLQTYGain = LQTYPerUnitStaked.mul(P);
         epochToScaleToG[currentEpoch][currentScale] = epochToScaleToG[currentEpoch][currentScale].add(marginalLQTYGain);
     }
 
-    function _computeLQTYPerUnitStaked(uint _LQTYIssuance, uint _totalCLVDeposits) internal returns (uint) {
+    function _computeLQTYPerUnitStaked(uint _LQTYIssuance, uint _totalLUSDDeposits) internal returns (uint) {
         uint LQTYNumerator = _LQTYIssuance.mul(1e18).add(lastLQTYError);
 
-        uint LQTYPerUnitStaked = LQTYNumerator.div(_totalCLVDeposits);
-        lastLQTYError = LQTYNumerator.sub(LQTYPerUnitStaked.mul(_totalCLVDeposits));
+        uint LQTYPerUnitStaked = LQTYNumerator.div(_totalLUSDDeposits);
+        lastLQTYError = LQTYNumerator.sub(LQTYPerUnitStaked.mul(_totalLUSDDeposits));
 
         return LQTYPerUnitStaked;
     }
@@ -435,21 +435,21 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     // --- Liquidation functions ---
 
     /* 
-    * Cancel out the specified debt against the CLV contained in the Stability Pool (as far as possible)
-    * and transfers the CDP's ETH collateral from ActivePool to StabilityPool.
-    * Only called by liquidation functions in the CDPManager. 
+    * Cancel out the specified debt against the LUSD contained in the Stability Pool (as far as possible)
+    * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
+    * Only called by liquidation functions in the TroveManager. 
     */
     function offset(uint _debtToOffset, uint _collToAdd) external payable override {
-        _requireCallerIsCDPManager();
-        uint totalCLV = totalCLVDeposits; // cached to save an SLOAD
-        if (totalCLV == 0 || _debtToOffset == 0) { return; }
+        _requireCallerIsTroveManager();
+        uint totalLUSD = totalLUSDDeposits; // cached to save an SLOAD
+        if (totalLUSD == 0 || _debtToOffset == 0) { return; }
 
         _triggerLQTYIssuance();
 
         (uint ETHGainPerUnitStaked,
-            uint CLVLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalCLV);
+            uint LUSDLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalLUSD);
 
-        _updateRewardSumAndProduct(ETHGainPerUnitStaked, CLVLossPerUnitStaked);  // updates S and P
+        _updateRewardSumAndProduct(ETHGainPerUnitStaked, LUSDLossPerUnitStaked);  // updates S and P
 
         _moveOffsetCollAndDebt(_collToAdd, _debtToOffset);
     }
@@ -459,47 +459,47 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     function _computeRewardsPerUnitStaked(
         uint _collToAdd,
         uint _debtToOffset,
-        uint _totalCLVDeposits
+        uint _totalLUSDDeposits
     )
         internal
-        returns (uint ETHGainPerUnitStaked, uint CLVLossPerUnitStaked)
+        returns (uint ETHGainPerUnitStaked, uint LUSDLossPerUnitStaked)
     {
-        uint CLVLossNumerator = _debtToOffset.mul(1e18).sub(lastCLVLossError_Offset);
+        uint LUSDLossNumerator = _debtToOffset.mul(1e18).sub(lastLUSDLossError_Offset);
         uint ETHNumerator = _collToAdd.mul(1e18).add(lastETHError_Offset);
 
         /*
-        * Compute the CLV and ETH rewards. Uses a "feedback" error correction, to keep
+        * Compute the LUSD and ETH rewards. Uses a "feedback" error correction, to keep
         * the cumulative error in the P and S state variables low.
         */
-        if (_debtToOffset >= _totalCLVDeposits) {
-            CLVLossPerUnitStaked = 1e18;
-            lastCLVLossError_Offset = 0;
+        if (_debtToOffset >= _totalLUSDDeposits) {
+            LUSDLossPerUnitStaked = 1e18;
+            lastLUSDLossError_Offset = 0;
         } else {
             /* 
-            * Add 1 to make error in quotient positive. We want "slightly too much" CLV loss,
-            * which ensures the error in any given compoundedCLVDeposit favors the Stability Pool. 
+            * Add 1 to make error in quotient positive. We want "slightly too much" LUSD loss,
+            * which ensures the error in any given compoundedLUSDDeposit favors the Stability Pool. 
             */
-            CLVLossPerUnitStaked = (CLVLossNumerator.div(_totalCLVDeposits)).add(1); 
-            lastCLVLossError_Offset = (CLVLossPerUnitStaked.mul(_totalCLVDeposits)).sub(CLVLossNumerator);
+            LUSDLossPerUnitStaked = (LUSDLossNumerator.div(_totalLUSDDeposits)).add(1); 
+            lastLUSDLossError_Offset = (LUSDLossPerUnitStaked.mul(_totalLUSDDeposits)).sub(LUSDLossNumerator);
         }
 
-        ETHGainPerUnitStaked = ETHNumerator.div(_totalCLVDeposits);
-        lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(_totalCLVDeposits));
+        ETHGainPerUnitStaked = ETHNumerator.div(_totalLUSDDeposits);
+        lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(_totalLUSDDeposits));
 
-        return (ETHGainPerUnitStaked, CLVLossPerUnitStaked);
+        return (ETHGainPerUnitStaked, LUSDLossPerUnitStaked);
     }
 
     // Update the Stability Pool reward sum S and product P
-    function _updateRewardSumAndProduct(uint _ETHGainPerUnitStaked, uint _CLVLossPerUnitStaked) internal {
+    function _updateRewardSumAndProduct(uint _ETHGainPerUnitStaked, uint _LUSDLossPerUnitStaked) internal {
         uint currentP = P;
         uint newP;
 
-        assert(_CLVLossPerUnitStaked <= 1e18);
+        assert(_LUSDLossPerUnitStaked <= 1e18);
         /*
-        * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool CLV in the liquidation. 
-        * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - CLVLossPerUnitStaked)
+        * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool LUSD in the liquidation. 
+        * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - LUSDLossPerUnitStaked)
         */
-        uint newProductFactor = _CLVLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_CLVLossPerUnitStaked);
+        uint newProductFactor = _LUSDLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_LUSDLossPerUnitStaked);
 
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
@@ -536,20 +536,20 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {
-        // Cancel the liquidated CLV debt with the CLV in the stability pool
-        activePool.decreaseCLVDebt(_debtToOffset);
-        _decreaseCLV(_debtToOffset);
+        // Cancel the liquidated LUSD debt with the LUSD in the stability pool
+        activePool.decreaseLUSDDebt(_debtToOffset);
+        _decreaseLUSD(_debtToOffset);
 
         // Burn the debt that was successfully offset
-        clvToken.burn(address(this), _debtToOffset);
+        lusdToken.burn(address(this), _debtToOffset);
 
         activePool.sendETH(address(this), _collToAdd); 
     }
 
-    function _decreaseCLV(uint _amount) internal {
-        uint newTotalCLVDeposits = totalCLVDeposits.sub(_amount);
-        totalCLVDeposits = newTotalCLVDeposits;
-        emit CLVBalanceUpdated(newTotalCLVDeposits);
+    function _decreaseLUSD(uint _amount) internal {
+        uint newTotalLUSDDeposits = totalLUSDDeposits.sub(_amount);
+        totalLUSDDeposits = newTotalLUSDDeposits;
+        emit LUSDBalanceUpdated(newTotalLUSDDeposits);
     }
 
     // --- Reward calculator functions for depositor and front end ---
@@ -659,7 +659,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     * Return the user's compounded deposit. Given by the formula:  d = d0 * P/P(0)
     * where P(0) is the depositor's snapshot of the product P, taken when they last updated their deposit.
     */
-    function getCompoundedCLVDeposit(address _depositor) public view override returns (uint) {
+    function getCompoundedLUSDDeposit(address _depositor) public view override returns (uint) {
         uint initialDeposit = deposits[_depositor].initialValue;
         if (initialDeposit == 0) { return 0; }
 
@@ -731,14 +731,14 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         return compoundedStake;
     }
 
-    // --- Sender functions for CLV deposit, ETH gains and LQTY gains ---
+    // --- Sender functions for LUSD deposit, ETH gains and LQTY gains ---
 
-    // Transfer the CLV tokens from the user to the Stability Pool's address, and update its recorded CLV
-    function _sendCLVtoStabilityPool(address _address, uint _amount) internal {
-        clvToken.sendToPool(_address, address(this), _amount);
-        uint newTotalCLVDeposits = totalCLVDeposits.add(_amount);
-        totalCLVDeposits = newTotalCLVDeposits;
-        emit CLVBalanceUpdated(newTotalCLVDeposits);
+    // Transfer the LUSD tokens from the user to the Stability Pool's address, and update its recorded LUSD
+    function _sendLUSDtoStabilityPool(address _address, uint _amount) internal {
+        lusdToken.sendToPool(_address, address(this), _amount);
+        uint newTotalLUSDDeposits = totalLUSDDeposits.add(_amount);
+        totalLUSDDeposits = newTotalLUSDDeposits;
+        emit LUSDBalanceUpdated(newTotalLUSDDeposits);
     }
 
     function _sendETHGainToDepositor(uint _amount) internal {
@@ -752,10 +752,10 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         require(success, "StabilityPool: sending ETH failed");
     }
 
-    // Send CLV to user and decrease CLV in Pool
-    function _sendCLVToDepositor(address _depositor, uint CLVWithdrawal) internal {
-        clvToken.returnFromPool(address(this), _depositor, CLVWithdrawal);
-        _decreaseCLV(CLVWithdrawal);
+    // Send LUSD to user and decrease LUSD in Pool
+    function _sendLUSDToDepositor(address _depositor, uint LUSDWithdrawal) internal {
+        lusdToken.returnFromPool(address(this), _depositor, LUSDWithdrawal);
+        _decreaseLUSD(LUSDWithdrawal);
     }
 
     // --- External Front End functions ---
@@ -852,14 +852,14 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         require( msg.sender == activePoolAddress, "StabilityPool: Caller is not ActivePool");
     }
 
-    function _requireCallerIsCDPManager() internal view {
-        require(msg.sender == address(cdpManager), "StabilityPool: Caller is not CDPManager");
+    function _requireCallerIsTroveManager() internal view {
+        require(msg.sender == address(troveManager), "StabilityPool: Caller is not TroveManager");
     }
 
     function _requireNoUnderCollateralizedTroves() internal view {
         uint price = priceFeed.getPrice();
-        address lowestTrove = sortedCDPs.getLast();
-        uint ICR = cdpManager.getCurrentICR(lowestTrove, price);
+        address lowestTrove = sortedTroves.getLast();
+        uint ICR = troveManager.getCurrentICR(lowestTrove, price);
         require(ICR >= MCR, "StabilityPool: Cannot withdraw while there are troves with ICR < MCR");
     }
 
@@ -877,7 +877,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     }
 
     function _requireUserHasTrove(address _depositor) internal view {
-        require(cdpManager.getCDPStatus(_depositor) == 1, "StabilityPool: caller must have an active trove to withdraw ETHGain to");
+        require(troveManager.getTroveStatus(_depositor) == 1, "StabilityPool: caller must have an active trove to withdraw ETHGain to");
     }
 
     function _requireUserHasETHGain(address _depositor) internal view {

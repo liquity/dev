@@ -161,17 +161,21 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 
 ### Directories
 
+- `packages/decimal/` - Library for manipulating 18-digit fixed-point decimal bignumbers.
 - `packages/dev-frontend/` - Liquity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
 - `packages/frontend/` - The front-end React app for the user-facing web interface
+- `packages/fuzzer/` - A very simple, purpose-built tool based on Liquity middleware for randomly interacting with the system
 - `packages/lib-base/` - Common interfaces and classes shared by the other `lib-` packages
 - `packages/lib-ethers/` - [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions
 - `packages/lib-react/` - Components and hooks that React-based apps can use to view Liquity contract state
 - `packages/lib-subgraph/` - [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state
+- `packages/providers/` - Subclassed Ethers providers used by the frontend
 - `packages/subgraph/` - [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history
 - `packages/contracts/` - The backend development folder, contains the Buidler project, contracts and tests
 - `packages/contracts/contracts/` - The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
 - `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
+- `packages/contracts/fuzzTests/` - Echidna tests, and naive "random operation" tests 
 - `packages/contracts/migrations/` - contains Buidler script for deploying the smart contracts to the blockchain
 - `packages/contracts/utils/` - external Buidler and node scripts - deployment helpers, gas calculators, etc
 - `packages/contracts/mathProofs/` - core mathematical proofs of Liquity properties, and a derivation of the scalable Stability Pool staking formula
@@ -214,7 +218,7 @@ Thus only LQTY made freely available in this first year is the LQTY that is publ
 
 ### Lockup Implementation and admin transfer restriction
 
-A `LockupContractFactory` is used to deploy `OneYearLockupContracts` in the first year. During the first year, the `GrowthToken` checks that any transfer from the Liquity admin address is to a valid `OneYearLockupContract` that is registered in and was deployed through the `LockupContractFactory`.
+A `LockupContractFactory` is used to deploy `OneYearLockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Liquity admin address is to a valid `OneYearLockupContract` that is registered in and was deployed through the `LockupContractFactory`.
 
 After the first year, anyone may deploy `CustomDurationLockupContracts` via the factory.
 
@@ -224,10 +228,10 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 1. Liquity admin deploys `LockupContractFactory`
 2. Liquity admin deploys `CommunityIssuance`
 3. Liquity admin deploys `LQTYStaking` 
-4. Liquity admin deploys `GrowthToken`, which upon deployment:
+4. Liquity admin deploys `LQTYToken`, which upon deployment:
 - Stores the `CommunityIssuance` and `LockupContractFactory` addresses
 - Mints LQTY tokens to `CommunityIssuance` and the Liquity admin address
-5. Liquity admin sets `GrowthToken` address in `LockupContractFactory`, `CommunityIssuance`, and `LQTYStaking`
+5. Liquity admin sets `LQTYToken` address in `LockupContractFactory`, `CommunityIssuance`, and `LQTYStaking`
 
 #### Deploy and fund Lockup Contracts
 6. Liquity admin tells `LockupContractFactory` to deploy a `OneYearLockupContract` for each (beneficiary, entitlement) pair, including one for the Liquity admin address
@@ -237,8 +241,8 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 #### Deploy Liquity Core
 9. Liquity admin deploys the Liquity core system
 11. Liquity admin connects Liquity core system internally (with setters)
-12. Liquity admin connects `LQTYStaking` to Liquity core contracts and `GrowthToken`
-12. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `GrowthToken`
+12. Liquity admin connects `LQTYStaking` to Liquity core contracts and `LQTYToken`
+12. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `LQTYToken`
 
 #### During one year lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners’ `OneYearLockupContracts`, as per their vesting schedules
@@ -253,7 +257,7 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 #### Post-lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
 
-_NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `GrowthToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
+_NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `LQTYToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
 
 _The current code does not utilize a multi-sig. It implements the launch architecture outlined above._
 
@@ -269,7 +273,7 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Sta
 
 ### Core Smart Contracts
 
-`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their trove: loan creation, ETH top-up / withdrawal, stablecoin issuance and repayment. It also sends borrowing fees to the `LQTYStaking` contract. BorrowerOperations functions call in to TroveManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to the various Pools, telling them to move Ether/Tokens between Pools or between Pool <> user, where necessary.
+`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their trove: trove creation, ETH top-up / withdrawal, stablecoin issuance and repayment. It also sends borrowing fees to the `LQTYStaking` contract. BorrowerOperations functions call in to TroveManager, telling it to update trove state, where necessary. BorrowerOperations functions also call in to the various Pools, telling them to move Ether/Tokens between Pools or between Pool <> user, where necessary.
 
 `TroveManager.sol` - contains functionality for liquidations and redemptions. It sends redemption fees to the `LQTYStaking` contract. Also contains the state of each trove - i.e. a record of the trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to PooManager to tell it to move Ether/tokens between Pools, where necessary.
 
@@ -293,7 +297,7 @@ Along with `StabilityPool.sol`, these contracts hold Ether and/or tokens for the
 
 `ActivePool.sol` - holds the total Ether balance and records the total stablecoin debt of the active troves.
 
-`DefaultPool.sol` - holds the total Ether balance and records the total stablecoin debt of the liquidated loans that are pending redistribution to active troves. If a trove has pending ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
+`DefaultPool.sol` - holds the total Ether balance and records the total stablecoin debt of the liquidated troves that are pending redistribution to active troves. If a trove has pending ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
 
 `CollSurplusPool.sol` - holds the ETH surplus from troves that have been fully redeemed from. Sends the surplus back to the owning borrower, when told to do so by `BorrowerOperations.sol`.
 
@@ -308,7 +312,7 @@ Liquity functions that require the most current ETH:USD price data fetch the pri
 **TODO: To be updated**
 Currently, provisional plans are to use the Chainlink ETH:USD reference contract for the price data source, however, other options are under consideration.
 
-The current `PriceFeed.sol` contract has a `getPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. The `PriceFeedTest.sol` contains additionally, a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price if the address passed in to `setAddresses()` of the PriceFeedTestnet contract was `address(0)`.
+The current `PriceFeed.sol` contract has a `getPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. The `PriceFeedTestnet.sol` contains additionally, a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price if the address passed in to `setAddresses()` of the PriceFeedTestnet contract was `address(0)`, otherwise `setPrice()` is disabled and the contract's `getPrice()` returns based on the Ropsten AggregatorV3.
 
 ### Keeping a sorted list of troves ordered by ICR
 
@@ -349,29 +353,29 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 
 **Borrower Operations**
 
-| Function                    | ETH quantity                        | Path                                       |
-|-----------------------------|-------------------------------------|--------------------------------------------|
-| openLoan                    | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
-| addColl                     | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
-| withdrawColl                | _collWithdrawal parameter           | ActivePool->msg.sender                     |
-| adjustLoan: adding ETH      | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
-| adjustLoan: withdrawing ETH | _collWithdrawal parameter           | ActivePool->msg.sender                     |
-| closeLoan                   | _amount parameter                   | ActivePool->msg.sender                     |
-| claimRedeemedCollateral     | CollSurplusPool.balance[msg.sender] | CollSurplusPool->msg.sender                |
+| Function                     | ETH quantity                        | Path                                       |
+|------------------------------|-------------------------------------|--------------------------------------------|
+| openTrove                    | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
+| addColl                      | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
+| withdrawColl                 | _collWithdrawal parameter           | ActivePool->msg.sender                     |
+| adjustTrove: adding ETH      | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
+| adjustTrove: withdrawing ETH | _collWithdrawal parameter           | ActivePool->msg.sender                     |
+| closeTrove                   | _amount parameter                   | ActivePool->msg.sender                     |
+| claimRedeemedCollateral      | CollSurplusPool.balance[msg.sender] | CollSurplusPool->msg.sender                |
 
 **Trove Manager**
 
-| Function                              | ETH quantity                           | Path                          |
-|---------------------------------------|----------------------------------------|-------------------------------|
-| liquidate (offset)                    | collateral to be offset                | ActivePool->StabilityPool     |
-| liquidate (redistribution)            | collateral to be redistributed         | ActivePool->DefaultPool       |
-| liquidateCDPs (offset)                | collateral to be offset                | ActivePool->StabilityPool     |
-| liquidateCDPs (redistribution)        | collateral to be redistributed         | ActivePool->DefaultPool       |
-| batchLiquidateTroves (offset)         | collateral to be offset                | ActivePool->StabilityPool     |
-| batchLiquidateTroves (redistribution) | collateral to be redistributed         | ActivePool->DefaultPool       |
-| redeemCollateral                      | collateral to be swapped with redeemer | ActivePool->msg.sender        |
-| redeemCollateral                      | redemption fee                         | ActivePool->msg.sender        |
-| redeemCollateral                      | trove's collateral surplus             | ActivePool -> CollSurplusPool |
+| Function                                | ETH quantity                           | Path                          |
+|-----------------------------------------|----------------------------------------|-------------------------------|
+| liquidate (offset)                      | collateral to be offset                | ActivePool->StabilityPool     |
+| liquidate (redistribution)              | collateral to be redistributed         | ActivePool->DefaultPool       |
+| liquidateTroves (offset)                | collateral to be offset                | ActivePool->StabilityPool     |
+| liquidateTroves (redistribution)        | collateral to be redistributed         | ActivePool->DefaultPool       |
+| batchLiquidateTroves (offset)           | collateral to be offset                | ActivePool->StabilityPool     |
+| batchLiquidateTroves (redistribution).  | collateral to be redistributed         | ActivePool->DefaultPool       |
+| redeemCollateral                        | collateral to be swapped with redeemer | ActivePool->msg.sender        |
+| redeemCollateral                        | redemption fee                         | ActivePool->msg.sender        |
+| redeemCollateral                        | trove's collateral surplus             | ActivePool -> CollSurplusPool |
 
 **Pool Manager**
 
@@ -379,7 +383,7 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 |------------------------|----------------------------------|-------------------------------------------------|
 | provideToSP            | depositor's accumulated ETH gain | StabilityPool -> msg.sender                     |
 | withdrawFromSP         | depositor's accumulated ETH gain | StabilityPool -> msg.sender                     |
-| withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool ->BorrowerOperations ->ActivePool |
+| withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool -> BorrowerOperations ->ActivePool |
 
 ### Flow of LUSD tokens in Liquity
 
@@ -393,25 +397,25 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 
 **Borrower Operations**
 
-| Function                     | LUSD Quantity | ERC20 Operation                      |
-|------------------------------|---------------|--------------------------------------|
-| openLoan                     | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
-|                              | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
-| withdrawLUSD                 | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
-|                              | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
-| repayLUSD                    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
-| adjustLoan: withdrawing LUSD | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
-|                              | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
-| adjustLoan: repaying LUSD    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
-| closeLoan                    | Repaid LUSD   | ERC20._burn(msg.sender, _LUSDAmount) |
+| Function                      | LUSD Quantity | ERC20 Operation                      |
+|-------------------------------|---------------|--------------------------------------|
+| openTrove                     | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
+|                               | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+| withdrawLUSD                  | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
+|                               | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+| repayLUSD                     | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
+| adjustTrove: withdrawing LUSD | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
+|                               | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+| adjustTrove: repaying LUSD    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
+| closeTrove                    | Repaid LUSD   | ERC20._burn(msg.sender, _LUSDAmount) |
 
 **Trove Manager**
 
 | Function                 | LUSD Quantity            | ERC20 Operation                                  |
 |--------------------------|--------------------------|--------------------------------------------------|
 | liquidate (offset)       | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
-| liquidateCDPs (offset)   | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
-| liquidateTroves (offset) | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
+| liquidateTroves (offset)   | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
+| batchLiquidateTroves (offset) | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
 | redeemCollateral         | LUSD to redeem           | LUSD._burn(msg.sender, _LUSD)                    |
 
 **Pool Manager**
@@ -668,7 +672,7 @@ The intentions behind this formula are:
 
 ### Gas compensation schedule
 
-When a borrower opens a loan, an additional 10 LUSD debt is issued, and 10 LUSD is minted and sent to a dedicated externally owned account (EOA) for gas compensation - the "gas address".
+When a borrower opens a trove, an additional 10 LUSD debt is issued, and 10 LUSD is minted and sent to a dedicated externally owned account (EOA) for gas compensation - the "gas address".
 
 When a borrower closes their active trove, this gas compensation is refunded: 10 LUSD is burned from the gas address's balance, and the corresponding 10 LUSD debt on the trove is cancelled.
 
@@ -991,7 +995,7 @@ The Liquity implementation relies on some important system properties and mathem
 
 In particular, we have:
 
-- Proofs that trove ordering is maintained throughout a series of liquidations and new loan issuances
+- Proofs that trove ordering is maintained throughout a series of liquidations and new trove openings
 - A derivation of a formula and implementation for a highly scalable (O(1) complexity) reward distribution in the Stability Pool, involving compounding and decreasing stakes.
 
 PDFs of these can be found in https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs

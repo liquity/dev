@@ -5,10 +5,10 @@ pragma solidity 0.6.11;
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/console.sol";
-import "../Interfaces/IGrowthToken.sol";
+import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/LiquityMath.sol";
-import "../Interfaces/ICLVToken.sol";
+import "../Interfaces/ILUSDToken.sol";
 
 contract LQTYStaking is ILQTYStaking, Ownable {
     using SafeMath for uint;
@@ -29,18 +29,18 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         uint F_LUSD_Snapshot;
     }
     
-    IGrowthToken public growthToken;
-    ICLVToken public clvToken;
+    ILQTYToken public lqtyToken;
+    ILUSDToken public lusdToken;
 
-    address public cdpManagerAddress;
+    address public troveManagerAddress;
     address public borrowerOperationsAddress;
     address public activePoolAddress;
 
     // --- Events ---
 
-    event GrowthTokenAddressSet(address _growthTokenAddress);
-    event CLVTokenAddressSet(address _clvTokenAddress);
-    event CDPManagerAddressSet(address _cdpManager);
+    event LQTYTokenAddressSet(address _lqtyTokenAddress);
+    event LUSDTokenAddressSet(address _lusdTokenAddress);
+    event TroveManagerAddressSet(address _troveManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
 
@@ -48,9 +48,9 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     function setAddresses
     (
-        address _growthTokenAddress,
-        address _clvTokenAddress,
-        address _cdpManagerAddress, 
+        address _lqtyTokenAddress,
+        address _lusdTokenAddress,
+        address _troveManagerAddress, 
         address _borrowerOperationsAddress,
         address _activePoolAddress
     ) 
@@ -58,15 +58,15 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         onlyOwner 
         override 
     {
-        growthToken = IGrowthToken(_growthTokenAddress);
-        clvToken = ICLVToken(_clvTokenAddress);
-        cdpManagerAddress = _cdpManagerAddress;
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
+        lusdToken = ILUSDToken(_lusdTokenAddress);
+        troveManagerAddress = _troveManagerAddress;
         borrowerOperationsAddress = _borrowerOperationsAddress;
         activePoolAddress = _activePoolAddress;
 
-        emit GrowthTokenAddressSet(_growthTokenAddress);
-        emit GrowthTokenAddressSet(_clvTokenAddress);
-        emit CDPManagerAddressSet(_cdpManagerAddress);
+        emit LQTYTokenAddressSet(_lqtyTokenAddress);
+        emit LQTYTokenAddressSet(_lusdTokenAddress);
+        emit TroveManagerAddressSet(_troveManagerAddress);
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
         emit ActivePoolAddressSet(_activePoolAddress);
 
@@ -92,10 +92,10 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
 
         // Transfer LQTY from caller to this contract
-        growthToken.sendToLQTYStaking(msg.sender, _LQTYamount);
+        lqtyToken.sendToLQTYStaking(msg.sender, _LQTYamount);
 
         // Send accumulated LUSD and ETH gains to the caller
-        clvToken.transfer(msg.sender, LUSDGain);
+        lusdToken.transfer(msg.sender, LUSDGain);
         _sendETHGainToUser(ETHGain);
     }
 
@@ -118,17 +118,17 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);  
 
         // Transfer unstaked LQTY to user
-        growthToken.transfer(msg.sender, LQTYToWithdraw);
+        lqtyToken.transfer(msg.sender, LQTYToWithdraw);
 
         // Send accumulated LUSD and ETH gains to the caller
-        clvToken.transfer(msg.sender, LUSDGain);
+        lusdToken.transfer(msg.sender, LUSDGain);
         _sendETHGainToUser(ETHGain);
     }
 
     // --- Reward-per-unit-staked increase functions. Called by Liquity core contracts ---
 
     function increaseF_ETH(uint _ETHFee) external override {
-        _requireCallerIsCDPManager();
+        _requireCallerIsTroveManager();
         uint ETHFeePerLQTYStaked;
      
         if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = _ETHFee.mul(1e18).div(totalLQTYStaked);}
@@ -181,8 +181,8 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsCDPManager() internal view {
-        require(msg.sender == cdpManagerAddress, "LQTYStaking: caller is not CDPM");
+    function _requireCallerIsTroveManager() internal view {
+        require(msg.sender == troveManagerAddress, "LQTYStaking: caller is not TroveM");
     }
 
     function _requireCallerIsBorrowerOperations() internal view {

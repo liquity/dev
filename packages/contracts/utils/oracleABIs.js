@@ -375,11 +375,11 @@ const TestnetPriceFeedABI =  [
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_cdpManagerAddress",
+        "name": "_troveManagerAddress",
         "type": "address"
       }
     ],
-    "name": "CDPManagerAddressChanged",
+    "name": "TroveManagerAddressChanged",
     "type": "event"
   },
   {
@@ -417,7 +417,7 @@ const TestnetPriceFeedABI =  [
   {
     "constant": true,
     "inputs": [],
-    "name": "cdpManagerAddress",
+    "name": "troveManagerAddress",
     "outputs": [
       {
         "internalType": "address",
@@ -533,11 +533,11 @@ const TestnetPriceFeedABI =  [
     "inputs": [
       {
         "internalType": "address",
-        "name": "_cdpManagerAddress",
+        "name": "_troveManagerAddress",
         "type": "address"
       }
     ],
-    "name": "setCDPManagerAddress",
+    "name": "setTroveManagerAddress",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",

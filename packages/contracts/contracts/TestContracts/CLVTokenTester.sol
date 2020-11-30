@@ -2,15 +2,15 @@
 
 pragma solidity 0.6.11;
 
-import "../CLVToken.sol";
+import "../LUSDToken.sol";
 
-contract CLVTokenTester is CLVToken {
+contract LUSDTokenTester is LUSDToken {
     
     constructor( 
-        address _cdpManagerAddress,
+        address _troveManagerAddress,
         address _stabilityPoolAddress,
         address _borrowerOperationsAddress
-    ) public CLVToken(_cdpManagerAddress,
+    ) public LUSDToken(_troveManagerAddress,
                       _stabilityPoolAddress,
                       _borrowerOperationsAddress) {}
     

@@ -6,7 +6,7 @@ import "../LQTY/CommunityIssuance.sol";
 
 contract CommunityIssuanceTester is CommunityIssuance {
     function obtainLQTY(uint _amount) external {
-        growthToken.transfer(msg.sender, _amount);
+        lqtyToken.transfer(msg.sender, _amount);
     }
 
     function setDeploymentTime() external {

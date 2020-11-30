@@ -51,7 +51,7 @@ const timeValues = testHelpers.TimeValues
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const assertRevert = th.assertRevert
 
-contract('Growth Token', async accounts => {
+contract('LQTY Token', async accounts => {
   const [owner, A, B, C, D] = accounts
 
   // the second account our buidlerenv creates (for EOA A)
@@ -60,7 +60,7 @@ contract('Growth Token', async accounts => {
 
 
   let contracts
-  let growthTokenTester
+  let lqtyTokenTester
   let lqtyStaking
   let communityIssuance
   
@@ -70,20 +70,20 @@ contract('Growth Token', async accounts => {
 
   const mintToABC = async () => {
       // mint some tokens
-      await growthTokenTester.unprotectedMint(A, dec(150, 18))
-      await growthTokenTester.unprotectedMint(B, dec(100, 18))
-      await growthTokenTester.unprotectedMint(C, dec(50, 18))
+      await lqtyTokenTester.unprotectedMint(A, dec(150, 18))
+      await lqtyTokenTester.unprotectedMint(B, dec(100, 18))
+      await lqtyTokenTester.unprotectedMint(C, dec(50, 18))
   }
 beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
 
     lqtyStaking = LQTYContracts.lqtyStaking
-    growthTokenTester = LQTYContracts.growthToken
+    lqtyTokenTester = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
 
-    tokenName = await growthTokenTester.name()
-    tokenVersion = await growthTokenTester.version()
+    tokenName = await lqtyTokenTester.name()
+    tokenVersion = await lqtyTokenTester.version()
     chainId = await web3.eth.getChainId()
 
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
@@ -94,9 +94,9 @@ beforeEach(async () => {
   it('balanceOf(): gets the balance of the account', async () => {
     await mintToABC()
 
-    const A_Balance = (await growthTokenTester.balanceOf(A))
-    const B_Balance = (await growthTokenTester.balanceOf(B))
-    const C_Balance = (await growthTokenTester.balanceOf(C))
+    const A_Balance = (await lqtyTokenTester.balanceOf(A))
+    const B_Balance = (await lqtyTokenTester.balanceOf(B))
+    const C_Balance = (await lqtyTokenTester.balanceOf(C))
 
     assert.equal(A_Balance, dec(150, 18))
     assert.equal(B_Balance, dec(100, 18))
@@ -104,39 +104,39 @@ beforeEach(async () => {
   })
 
   it('totalSupply(): gets the total supply', async () => {
-    const total = (await growthTokenTester.totalSupply()).toString()
+    const total = (await lqtyTokenTester.totalSupply()).toString()
     /* Total supply should be 100 million, with a rounding error of 1e-18, due to splitting the initial supply
     between CommunityIssuance and the Liquity admin address */
     assert.equal(getDifference(total,  dec(100, 24)), 1) 
   })
 
   it("name(): returns the token's name", async () => {
-    const name = await growthTokenTester.name()
+    const name = await lqtyTokenTester.name()
     assert.equal(name, "LQTY")
   })
 
   it("symbol(): returns the token's symbol", async () => {
-    const symbol = await growthTokenTester.symbol()
+    const symbol = await lqtyTokenTester.symbol()
     assert.equal(symbol, "LQTY")
   })
 
   it("version(): returns the token contract's version", async () => {
-    const version = await growthTokenTester.version()
+    const version = await lqtyTokenTester.version()
     assert.equal(version, "1")
   })
 
   it("decimal(): returns the number of decimal digits used", async () => {
-    const decimals = await growthTokenTester.decimals()
+    const decimals = await lqtyTokenTester.decimals()
     assert.equal(decimals, "18")
   })
 
   it("allowance(): returns an account's spending allowance for another account's balance", async () => {
     await mintToABC()
 
-    await growthTokenTester.approve(A, dec(100, 18), {from: B})
+    await lqtyTokenTester.approve(A, dec(100, 18), {from: B})
 
-    const allowance_A = await growthTokenTester.allowance(B, A)
-    const allowance_D = await growthTokenTester.allowance(B, D)
+    const allowance_A = await lqtyTokenTester.allowance(B, A)
+    const allowance_D = await lqtyTokenTester.allowance(B, D)
 
     assert.equal(allowance_A, dec(100, 18))
     assert.equal(allowance_D, '0')
@@ -145,145 +145,145 @@ beforeEach(async () => {
   it("approve(): approves an account to spend the specified ammount", async () => {
     await mintToABC()
 
-    const allowance_A_before = await growthTokenTester.allowance(B, A)
+    const allowance_A_before = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_before, '0')
 
-    await growthTokenTester.approve(A, dec(100, 18), {from: B})
+    await lqtyTokenTester.approve(A, dec(100, 18), {from: B})
 
-    const allowance_A_after = await growthTokenTester.allowance(B, A)
+    const allowance_A_after = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_after, dec(100, 18))
 
     // B attempts to approve more than his balance - check it reverts
-    const txPromise = growthTokenTester.approve(C, dec(1000, 18), {from: B})
+    const txPromise = lqtyTokenTester.approve(C, dec(1000, 18), {from: B})
     assertRevert(txPromise)
   })
 
   it("approve(): reverts when spender param is address(0)", async () => {
     await mintToABC()
 
-    const txPromise = growthTokenTester.approve(ZERO_ADDRESS, dec(100, 18), {from: B})
+    const txPromise = lqtyTokenTester.approve(ZERO_ADDRESS, dec(100, 18), {from: B})
     assertRevert(txPromise)
   })
 
   it("approve(): reverts when owner param is address(0)", async () => {
     await mintToABC()
 
-    const txPromise =  growthTokenTester.callInternalApprove(ZERO_ADDRESS, A, dec(100, 18), {from: B})
+    const txPromise =  lqtyTokenTester.callInternalApprove(ZERO_ADDRESS, A, dec(100, 18), {from: B})
     assertRevert(txPromise)
   })
 
   it("transferFrom(): successfully transfers from an account which is it approved to transfer from", async () => {
     await mintToABC()
 
-    const allowance_A_0 = await growthTokenTester.allowance(B, A)
+    const allowance_A_0 = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_0, '0')
 
-    await growthTokenTester.approve(A, dec(50, 18), {from: B})
+    await lqtyTokenTester.approve(A, dec(50, 18), {from: B})
 
     // Check A's allowance of B's funds has increased
-    const allowance_A_1= await growthTokenTester.allowance(B, A)
+    const allowance_A_1= await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_1, dec(50, 18))
 
-    assert.equal(await growthTokenTester.balanceOf(C), dec(50, 18))
+    assert.equal(await lqtyTokenTester.balanceOf(C), dec(50, 18))
 
     // A transfers from B to C, using up her allowance
-    await growthTokenTester.transferFrom(B, C, dec(50, 18), {from: A})
-    assert.equal(await growthTokenTester.balanceOf(C), dec(100, 18))
+    await lqtyTokenTester.transferFrom(B, C, dec(50, 18), {from: A})
+    assert.equal(await lqtyTokenTester.balanceOf(C), dec(100, 18))
 
      // Check A's allowance of B's funds has decreased
-    const allowance_A_2= await growthTokenTester.allowance(B, A)
+    const allowance_A_2= await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_2, '0')
 
     // Check B's balance has decreased
-    assert.equal(await growthTokenTester.balanceOf(B), dec(50, 18))
+    assert.equal(await lqtyTokenTester.balanceOf(B), dec(50, 18))
 
     // A tries to transfer more tokens from B's account to C than she's allowed
-    const txPromise = growthTokenTester.transferFrom(B, C, dec(50, 18), {from: A})
+    const txPromise = lqtyTokenTester.transferFrom(B, C, dec(50, 18), {from: A})
     assertRevert(txPromise)
   })
 
   it("transfer(): increases the recipient's balance by the correct amount", async () => {
     await mintToABC()
 
-    assert.equal(await growthTokenTester.balanceOf(A), dec(150, 18))
+    assert.equal(await lqtyTokenTester.balanceOf(A), dec(150, 18))
 
-    await growthTokenTester.transfer(A, dec(37, 18), {from: B})
+    await lqtyTokenTester.transfer(A, dec(37, 18), {from: B})
 
-    assert.equal(await growthTokenTester.balanceOf(A), dec(187, 18))
+    assert.equal(await lqtyTokenTester.balanceOf(A), dec(187, 18))
   })
 
   it("transfer(): reverts if amount exceeds sender's balance", async () => {
     await mintToABC()
 
-    assert.equal(await growthTokenTester.balanceOf(B), dec(100, 18))
+    assert.equal(await lqtyTokenTester.balanceOf(B), dec(100, 18))
 
-    const txPromise = growthTokenTester.transfer(A, dec(101, 18), {from: B})
+    const txPromise = lqtyTokenTester.transfer(A, dec(101, 18), {from: B})
     assertRevert(txPromise)
   })
 
   it('transfer(): transferring to a blacklisted address reverts', async () => {
     await mintToABC()
 
-    await assertRevert(growthTokenTester.transfer(growthTokenTester.address, 1, { from: A }))
-    await assertRevert(growthTokenTester.transfer(ZERO_ADDRESS, 1, { from: A }))
-    await assertRevert(growthTokenTester.transfer(communityIssuance.address, 1, { from: A }))
-    await assertRevert(growthTokenTester.transfer(lqtyStaking.address, 1, { from: A }))
+    await assertRevert(lqtyTokenTester.transfer(lqtyTokenTester.address, 1, { from: A }))
+    await assertRevert(lqtyTokenTester.transfer(ZERO_ADDRESS, 1, { from: A }))
+    await assertRevert(lqtyTokenTester.transfer(communityIssuance.address, 1, { from: A }))
+    await assertRevert(lqtyTokenTester.transfer(lqtyStaking.address, 1, { from: A }))
   })
 
   it("increaseAllowance(): increases an account's allowance by the correct amount", async () => {
-    const allowance_A_Before = await growthTokenTester.allowance(B, A)
+    const allowance_A_Before = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_Before, '0')
 
-    await growthTokenTester.increaseAllowance(A, dec(100, 18), {from: B} )
+    await lqtyTokenTester.increaseAllowance(A, dec(100, 18), {from: B} )
 
-    const allowance_A_After = await growthTokenTester.allowance(B, A)
+    const allowance_A_After = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_After, dec(100, 18))
   })
 
   it('sendToLQTYStaking(): changes balances of LQTYStaking and calling account by the correct amounts', async () => {
      // mint some tokens to A
-     await growthTokenTester.unprotectedMint(A, dec(150, 18))
+     await lqtyTokenTester.unprotectedMint(A, dec(150, 18))
     
     // Check caller and LQTYStaking balance before
-    const A_BalanceBefore = await growthTokenTester.balanceOf(A)
+    const A_BalanceBefore = await lqtyTokenTester.balanceOf(A)
     assert.equal(A_BalanceBefore, dec(150,  18))
-    const lqtyStakingBalanceBefore = await growthTokenTester.balanceOf(lqtyStaking.address)
+    const lqtyStakingBalanceBefore = await lqtyTokenTester.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStakingBalanceBefore, '0')
 
-    await growthTokenTester.unprotectedSendToLQTYStaking(A, dec(37, 18))
+    await lqtyTokenTester.unprotectedSendToLQTYStaking(A, dec(37, 18))
 
     // Check caller and LQTYStaking balance before
-    const A_BalanceAfter = await growthTokenTester.balanceOf(A)
+    const A_BalanceAfter = await lqtyTokenTester.balanceOf(A)
     assert.equal(A_BalanceAfter, dec(113, 18))
-    const lqtyStakingBalanceAfter = await growthTokenTester.balanceOf(lqtyStaking.address)
+    const lqtyStakingBalanceAfter = await lqtyTokenTester.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStakingBalanceAfter, dec(37,  18))
   })
 
   it('transfer(): LQTY token can not be sent to blacklisted addresses', async () => {
      // mint some tokens to A
-     await growthTokenTester.unprotectedMint(A, dec(150, 18))
-    assert.equal(await growthTokenTester.balanceOf(A), dec(150,  18))
+     await lqtyTokenTester.unprotectedMint(A, dec(150, 18))
+    assert.equal(await lqtyTokenTester.balanceOf(A), dec(150,  18))
 
     // Check LQTY tokens can't be sent to blacklisted addresses
-    await assertRevert(growthTokenTester.transfer(growthTokenTester.address, dec(1, 18), { from: A }))
-    await assertRevert(growthTokenTester.transfer(ZERO_ADDRESS, dec(1, 18), { from: A }))
-    await assertRevert(growthTokenTester.transfer(communityIssuance.address, dec(1, 18), { from: A }))
-    await assertRevert(growthTokenTester.transfer(lqtyStaking.address, dec(1, 18), { from: A }))
+    await assertRevert(lqtyTokenTester.transfer(lqtyTokenTester.address, dec(1, 18), { from: A }))
+    await assertRevert(lqtyTokenTester.transfer(ZERO_ADDRESS, dec(1, 18), { from: A }))
+    await assertRevert(lqtyTokenTester.transfer(communityIssuance.address, dec(1, 18), { from: A }))
+    await assertRevert(lqtyTokenTester.transfer(lqtyStaking.address, dec(1, 18), { from: A }))
   })
 
   // EIP2612 tests
 
   it('Initializes PERMIT_TYPEHASH correctly', async () => {
-    assert.equal(await growthTokenTester.permitTypeHash(), PERMIT_TYPEHASH)
+    assert.equal(await lqtyTokenTester.permitTypeHash(), PERMIT_TYPEHASH)
   })
 
   it('Initializes DOMAIN_SEPARATOR correctly', async () => {
-    assert.equal(await growthTokenTester.domainSeparator(), 
-    getDomainSeparator(tokenName, growthTokenTester.address, chainId, tokenVersion))
+    assert.equal(await lqtyTokenTester.domainSeparator(), 
+    getDomainSeparator(tokenName, lqtyTokenTester.address, chainId, tokenVersion))
   })
 
   it('Initial nonce for a given address is 0', async function () {
-    assert.equal(toBN(await growthTokenTester.nonces(A)).toString(), '0');
+    assert.equal(toBN(await lqtyTokenTester.nonces(A)).toString(), '0');
   });
   
   it('permits and emits an Approval event (replay protected)', async () => {
@@ -295,11 +295,11 @@ beforeEach(async () => {
     }
 
     const deadline = 100000000000000
-    const nonce = await growthTokenTester.nonces(approve.owner)
+    const nonce = await lqtyTokenTester.nonces(approve.owner)
    
     // Get the EIP712 digest
     const digest = getPermitDigest(
-      tokenName, growthTokenTester.address, 
+      tokenName, lqtyTokenTester.address, 
       chainId, tokenVersion, 
       approve.owner, approve.spender,
       approve.value, nonce, deadline
@@ -308,7 +308,7 @@ beforeEach(async () => {
     const { v, r, s } = sign(digest, A_PrivateKey)
     
     // Approve it
-    const receipt = await growthTokenTester.permit(
+    const receipt = await lqtyTokenTester.permit(
       approve.owner, approve.spender, approve.value, 
       deadline, v, hexlify(r), hexlify(s)
     )
@@ -316,16 +316,16 @@ beforeEach(async () => {
 
     // Check that approval was successful
     assert.equal(event.event, 'Approval')
-    assert.equal(await growthTokenTester.nonces(approve.owner), 1)
-    assert.equal(await growthTokenTester.allowance(approve.owner, approve.spender), approve.value)
+    assert.equal(await lqtyTokenTester.nonces(approve.owner), 1)
+    assert.equal(await lqtyTokenTester.allowance(approve.owner, approve.spender), approve.value)
     
     // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
-    assertRevert(growthTokenTester.permit(
+    assertRevert(lqtyTokenTester.permit(
       approve.owner, approve.spender, approve.value, 
       deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
    
     // Check that the zero address fails
-    assertRevert(growthTokenTester.permit('0x0000000000000000000000000000000000000000', 
+    assertRevert(lqtyTokenTester.permit('0x0000000000000000000000000000000000000000', 
       approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
   })
 })

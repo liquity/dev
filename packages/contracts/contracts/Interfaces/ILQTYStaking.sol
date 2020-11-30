@@ -6,9 +6,9 @@ interface ILQTYStaking {
 
     function setAddresses
     (
-        address _growthTokenAddress,
-        address _clvTokenAddress,
-        address _cdpManagerAddress, 
+        address _lqtyTokenAddress,
+        address _lusdTokenAddress,
+        address _troveManagerAddress, 
         address _borrowerOperationsAddress,
         address _activePoolAddress
     )  external;

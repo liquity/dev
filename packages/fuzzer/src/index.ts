@@ -258,7 +258,7 @@ yargs
       [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
 
       if (firstTroveOwner !== funder.address) {
-        throw new Error("didn't manage to hoist Funder's Trove to head of SortedCDPs");
+        throw new Error("didn't manage to hoist Funder's Trove to head of SortedTroves");
       }
 
       await deployerLiquity.setPrice(0.001);

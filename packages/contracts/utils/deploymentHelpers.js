@@ -1,9 +1,9 @@
 
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
-const CDPManager = artifacts.require("./CDPManager.sol")
+const SortedTroves = artifacts.require("./SortedTroves.sol")
+const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
-const CLVToken = artifacts.require("./CLVToken.sol")
+const LUSDToken = artifacts.require("./LUSDToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
@@ -13,10 +13,10 @@ const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
 
 const LQTYStaking = artifacts.require("./LQTYStaking.sol")
-const GrowthToken = artifacts.require("./GrowthToken.sol")
+const LQTYToken = artifacts.require("./LQTYToken.sol")
 const LockupContractFactory = artifacts.require("./LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
-const GrowthTokenTester = artifacts.require("./GrowthTokenTester.sol")
+const LQTYTokenTester = artifacts.require("./LQTYTokenTester.sol")
 const CommunityIssuanceTester = artifacts.require("./CommunityIssuanceTester.sol")
 
 const StabilityPoolTester = artifacts.require("./StabilityPoolTester.sol")
@@ -24,8 +24,8 @@ const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
-const CDPManagerTester = artifacts.require("./CDPManagerTester.sol")
-const CLVTokenTester = artifacts.require("./CLVTokenTester.sol")
+const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
+const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
 /* "Liquity core" consists of all contracts in the core Liquity system.
 
@@ -69,8 +69,8 @@ class DeploymentHelper {
   static async deployLiquityCoreBuidler() {
     const priceFeed = await PriceFeed.new()
     const priceFeedTestnet = await PriceFeedTestnet.new()
-    const sortedCDPs = await SortedCDPs.new()
-    const cdpManager = await CDPManager.new()
+    const sortedTroves = await SortedTroves.new()
+    const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
@@ -78,17 +78,17 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-    const clvToken = await CLVToken.new(
-      cdpManager.address,
+    const lusdToken = await LUSDToken.new(
+      troveManager.address,
       stabilityPool.address,
       borrowerOperations.address
     )
-    CLVToken.setAsDeployed(clvToken)
+    LUSDToken.setAsDeployed(lusdToken)
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
     PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
-    SortedCDPs.setAsDeployed(sortedCDPs)
-    CDPManager.setAsDeployed(cdpManager)
+    SortedTroves.setAsDeployed(sortedTroves)
+    TroveManager.setAsDeployed(troveManager)
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
     CollSurplusPool.setAsDeployed(collSurplusPool)
@@ -99,9 +99,9 @@ class DeploymentHelper {
     const coreContracts = {
       priceFeed,
       priceFeedTestnet,
-      clvToken,
-      sortedCDPs,
-      cdpManager,
+      lusdToken,
+      sortedTroves,
+      troveManager,
       activePool,
       stabilityPool,
       defaultPool,
@@ -119,8 +119,7 @@ class DeploymentHelper {
     // Contract without testers (yet)
     testerContracts.priceFeed = await PriceFeed.new()
     testerContracts.priceFeedTestnet = await PriceFeedTestnet.new()
-    testerContracts.sortedCDPs = await SortedCDPs.new()
-
+    testerContracts.sortedTroves = await SortedTroves.new()
     // Actual tester contracts
     testerContracts.communityIssuance = await CommunityIssuanceTester.new()
     testerContracts.stabilityPool = await StabilityPoolTester.new()
@@ -130,11 +129,11 @@ class DeploymentHelper {
     testerContracts.collSurplusPool = await CollSurplusPool.new()
     testerContracts.math = await LiquityMathTester.new()
     testerContracts.borrowerOperations = await BorrowerOperationsTester.new()
-    testerContracts.cdpManager = await CDPManagerTester.new()
+    testerContracts.troveManager = await TroveManagerTester.new()
     testerContracts.functionCaller = await FunctionCaller.new()
     testerContracts.hintHelpers = await HintHelpers.new()
-    testerContracts.clvToken =  await CLVTokenTester.new(
-      testerContracts.cdpManager.address,
+    testerContracts.lusdToken =  await LUSDTokenTester.new(
+      testerContracts.troveManager.address,
       testerContracts.stabilityPool.address,
       testerContracts.borrowerOperations.address
     )
@@ -150,19 +149,19 @@ class DeploymentHelper {
     LockupContractFactory.setAsDeployed(lockupContractFactory)
     CommunityIssuance.setAsDeployed(communityIssuance)
 
-    // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
-    const growthToken = await GrowthToken.new(
+    // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor 
+    const lqtyToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
     )
-    GrowthToken.setAsDeployed(growthToken)
+    LQTYToken.setAsDeployed(lqtyToken)
 
     const LQTYContracts = {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
-      growthToken
+      lqtyToken
     }
     return LQTYContracts
   }
@@ -176,19 +175,19 @@ class DeploymentHelper {
     LockupContractFactory.setAsDeployed(lockupContractFactory)
     CommunityIssuanceTester.setAsDeployed(communityIssuance)
 
-    // Deploy Growth Token, passing Community Issuance and Factory addresses to the constructor 
-    const growthToken = await GrowthTokenTester.new(
+    // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor 
+    const lqtyToken = await LQTYTokenTester.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
     )
-    GrowthTokenTester.setAsDeployed(growthToken)
+    LQTYTokenTester.setAsDeployed(lqtyToken)
 
     const LQTYContracts = {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
-      growthToken
+      lqtyToken
     }
     return LQTYContracts
   }
@@ -196,8 +195,8 @@ class DeploymentHelper {
   static async deployLiquityCoreTruffle() {
     const priceFeed = await PriceFeed.new()
     const priceFeedTestnet = await PriceFeedTestnet.new()
-    const sortedCDPs = await SortedCDPs.new()
-    const cdpManager = await CDPManager.new()
+    const sortedTroves = await SortedTroves.new()
+    const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
     const defaultPool = await DefaultPool.new()
@@ -205,17 +204,17 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-    const clvToken = await CLVToken.new(
-      cdpManager.address,
+    const lusdToken = await LUSDToken.new(
+      troveManager.address,
       stabilityPool.address,
       borrowerOperations.address
     )
     const coreContracts = {
       priceFeed,
       priceFeedTestnet,
-      clvToken,
-      sortedCDPs,
-      cdpManager,
+      lusdToken,
+      sortedTroves,
+      troveManager,
       activePool,
       stabilityPool,
       defaultPool,
@@ -232,9 +231,9 @@ class DeploymentHelper {
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
 
-    /* Deploy Growth Token, passing Community Issuance,  LQTYStaking, and Factory addresses 
+    /* Deploy LQTY Token, passing Community Issuance,  LQTYStaking, and Factory addresses 
     to the constructor  */
-    const growthToken = await GrowthToken.new(
+    const lqtyToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
       lockupContractFactory.address
@@ -244,14 +243,14 @@ class DeploymentHelper {
       lqtyStaking,
       lockupContractFactory,
       communityIssuance,
-      growthToken
+      lqtyToken
     }
     return LQTYContracts
   }
 
-  static async deployCLVToken(contracts) {
-    contracts.clvToken = await CLVToken.new(
-      contracts.cdpManager.address,
+  static async deployLUSDToken(contracts) {
+    contracts.lusdToken = await LUSDToken.new(
+      contracts.troveManager.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
     )
@@ -261,16 +260,16 @@ class DeploymentHelper {
   // Connect contracts to their dependencies
   static async connectCoreContracts(contracts, LQTYContracts) {
 
-    // set CDPManager addr in SortedCDPs
-    await contracts.sortedCDPs.setParams(
+    // set TroveManager addr in SortedTroves
+    await contracts.sortedTroves.setParams(
       maxBytes32,
-      contracts.cdpManager.address,
+      contracts.troveManager.address,
       contracts.borrowerOperations.address
     )
 
     // set contract addresses in the FunctionCaller 
-    await contracts.functionCaller.setCDPManagerAddress(contracts.cdpManager.address)
-    await contracts.functionCaller.setSortedCDPsAddress(contracts.sortedCDPs.address)
+    await contracts.functionCaller.setTroveManagerAddress(contracts.troveManager.address)
+    await contracts.functionCaller.setSortedTrovesAddress(contracts.sortedTroves.address)
 
     // set contract addresses in PriceFeed
     await contracts.priceFeed.setAddresses(
@@ -282,84 +281,84 @@ class DeploymentHelper {
       ZERO_ADDRESS,
     )
 
-    // set contracts in the CDP Manager
-    await contracts.cdpManager.setAddresses(
+    // set contracts in the Trove Manager
+    await contracts.troveManager.setAddresses(
       contracts.borrowerOperations.address,
       contracts.activePool.address,
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
       contracts.collSurplusPool.address,
       contracts.priceFeed.address,
-      contracts.clvToken.address,
-      contracts.sortedCDPs.address,
+      contracts.lusdToken.address,
+      contracts.sortedTroves.address,
       LQTYContracts.lqtyStaking.address
     )
 
     // set contracts in BorrowerOperations 
     await contracts.borrowerOperations.setAddresses(
-      contracts.cdpManager.address,
+      contracts.troveManager.address,
       contracts.activePool.address,
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
       contracts.collSurplusPool.address,
       contracts.priceFeed.address,
-      contracts.sortedCDPs.address,
-      contracts.clvToken.address,
+      contracts.sortedTroves.address,
+      contracts.lusdToken.address,
       LQTYContracts.lqtyStaking.address
     )
 
     // set contracts in the Pools
     await contracts.stabilityPool.setAddresses(
       contracts.borrowerOperations.address,
-      contracts.cdpManager.address,
+      contracts.troveManager.address,
       contracts.activePool.address,
-      contracts.clvToken.address,
-      contracts.sortedCDPs.address,
+      contracts.lusdToken.address,
+      contracts.sortedTroves.address,
       contracts.priceFeed.address,
       LQTYContracts.communityIssuance.address
     )
 
     await contracts.activePool.setAddresses(
       contracts.borrowerOperations.address,
-      contracts.cdpManager.address,
+      contracts.troveManager.address,
       contracts.stabilityPool.address,
       contracts.defaultPool.address
     )
 
     await contracts.defaultPool.setAddresses(
-      contracts.cdpManager.address,
+      contracts.troveManager.address,
       contracts.activePool.address,
     )
 
     await contracts.collSurplusPool.setAddresses(
       contracts.borrowerOperations.address,
-      contracts.cdpManager.address,
+      contracts.troveManager.address,
       contracts.activePool.address,
     )
 
     // set contracts in HintHelpers
     await contracts.hintHelpers.setAddresses(
-      contracts.sortedCDPs.address,
-      contracts.cdpManager.address
+      contracts.sortedTroves.address,
+      contracts.troveManager.address
     )
   }
 
   static async connectLQTYContracts(LQTYContracts) {
-    // Set GrowthToken address in LCF
-    await LQTYContracts.lockupContractFactory.setGrowthTokenAddress(LQTYContracts.growthToken.address)
+    // Set LQTYToken address in LCF
+    await LQTYContracts.lockupContractFactory.setLQTYTokenAddress(LQTYContracts.lqtyToken.address)
   }
 
   static async connectLQTYContractsToCore(LQTYContracts, coreContracts) {
     await LQTYContracts.lqtyStaking.setAddresses(
-      LQTYContracts.growthToken.address,
-      coreContracts.clvToken.address,
-      coreContracts.cdpManager.address, 
+      LQTYContracts.lqtyToken.address,
+      coreContracts.lusdToken.address,
+      coreContracts.troveManager.address, 
       coreContracts.borrowerOperations.address,
       coreContracts.activePool.address
     )
    
     await LQTYContracts.communityIssuance.setAddresses(
-      LQTYContracts.growthToken.address,
+      LQTYContracts.lqtyToken.address,
       coreContracts.stabilityPool.address
     )
   }

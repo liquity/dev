@@ -2,8 +2,8 @@
 
 pragma solidity 0.6.11;
 
-import '../Interfaces/ICDPManager.sol';
-import '../Interfaces/ISortedCDPs.sol';
+import '../Interfaces/ITroveManager.sol';
+import '../Interfaces/ISortedTroves.sol';
 import '../Interfaces/IPriceFeed.sol';
 import '../Dependencies/LiquityMath.sol';
 
@@ -11,25 +11,25 @@ import '../Dependencies/LiquityMath.sol';
 Not part of the Liquity application. */
 contract FunctionCaller {
 
-    ICDPManager cdpManager;
-    address public cdpManagerAddress;
+    ITroveManager troveManager;
+    address public troveManagerAddress;
 
-    ISortedCDPs sortedCDPs;
-    address public sortedCDPsAddress;
+    ISortedTroves sortedTroves;
+    address public sortedTrovesAddress;
 
     IPriceFeed priceFeed;
     address public priceFeedAddress;
 
     // --- Dependency setters ---
 
-    function setCDPManagerAddress(address _cdpManagerAddress) external {
-        cdpManagerAddress = _cdpManagerAddress;
-        cdpManager = ICDPManager(_cdpManagerAddress);
+    function setTroveManagerAddress(address _troveManagerAddress) external {
+        troveManagerAddress = _troveManagerAddress;
+        troveManager = ITroveManager(_troveManagerAddress);
     }
     
-    function setSortedCDPsAddress(address _sortedCDPsAddress) external {
-        cdpManagerAddress = _sortedCDPsAddress;
-        sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
+    function setSortedTrovesAddress(address _sortedTrovesAddress) external {
+        troveManagerAddress = _sortedTrovesAddress;
+        sortedTroves = ISortedTroves(_sortedTrovesAddress);
     }
 
      function setPriceFeedAddress(address _priceFeedAddress) external {
@@ -39,11 +39,11 @@ contract FunctionCaller {
 
     // --- Non-view wrapper functions used for calculating gas ---
     
-    function cdpManager_getCurrentICR(address _address, uint _price) external returns (uint) {
-        return cdpManager.getCurrentICR(_address, _price);  
+    function troveManager_getCurrentICR(address _address, uint _price) external returns (uint) {
+        return troveManager.getCurrentICR(_address, _price);  
     }
 
-    function sortedCDPs_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) external returns (address, address) {
-        return sortedCDPs.findInsertPosition(_ICR, _price, _prevId, _nextId);
+    function sortedTroves_findInsertPosition(uint _ICR, uint _price, address _prevId, address _nextId) external returns (address, address) {
+        return sortedTroves.findInsertPosition(_ICR, _price, _prevId, _nextId);
     }
 }

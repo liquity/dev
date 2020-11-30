@@ -20,11 +20,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newCDPManagerAddress",
+          "name": "_newTroveManagerAddress",
           "type": "address"
         }
       ],
-      "name": "CDPManagerAddressChanged",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {
@@ -72,11 +72,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
-      "name": "SortedCDPsAddressChanged",
+      "name": "SortedTrovesAddressChanged",
       "type": "event"
     },
     {
@@ -118,7 +118,7 @@
           "type": "address"
         }
       ],
-      "name": "adjustLoan",
+      "name": "adjustTrove",
       "outputs": [],
       "payable": true,
       "stateMutability": "payable",
@@ -127,7 +127,7 @@
     {
       "constant": false,
       "inputs": [],
-      "name": "closeLoan",
+      "name": "closeTrove",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -159,7 +159,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_CLVAmount",
+          "name": "_LUSDAmount",
           "type": "uint256"
         },
         {
@@ -168,7 +168,7 @@
           "type": "address"
         }
       ],
-      "name": "openLoan",
+      "name": "openTrove",
       "outputs": [],
       "payable": true,
       "stateMutability": "payable",
@@ -188,7 +188,7 @@
           "type": "address"
         }
       ],
-      "name": "repayCLV",
+      "name": "repayLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -199,7 +199,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_cdpManagerAddress",
+          "name": "_troveManagerAddress",
           "type": "address"
         },
         {
@@ -224,7 +224,7 @@
         },
         {
           "internalType": "address",
-          "name": "_sortedCDPsAddress",
+          "name": "_sortedTrovesAddress",
           "type": "address"
         }
       ],
@@ -248,7 +248,7 @@
           "type": "address"
         }
       ],
-      "name": "withdrawCLV",
+      "name": "withdrawLUSD",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",

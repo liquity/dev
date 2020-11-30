@@ -39,8 +39,8 @@ contract('CollSUrplusPool', async accounts => {
 
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
-    await borrowerOperations.openLoan(dec(50, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
+    await borrowerOperations.openTrove(dec(50, 18), B, { from: B, value: dec(1, 'ether') })
 
     // At ETH:USD = 100, this redemption should leave 50% coll surplus for B, i.e. 0.5 ether
     await th.redeemCollateralAndGetTxObject(A, contracts, dec(50, 18))
@@ -62,10 +62,10 @@ contract('CollSUrplusPool', async accounts => {
 
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openLoan(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
-    // open loan from NonPayable proxy contract
-    const openLoanData = th.getTransactionData('openLoan(uint256,address)', [web3.utils.toHex(dec(50, 18)), B])
-    await nonPayable.forward(borrowerOperations.address, openLoanData, { value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
+    // open trove from NonPayable proxy contract
+    const openTroveData = th.getTransactionData('openTrove(uint256,address)', [web3.utils.toHex(dec(50, 18)), B])
+    await nonPayable.forward(borrowerOperations.address, openTroveData, { value: dec(1, 'ether') })
     // At ETH:USD = 100, this redemption should leave 50% coll surplus for B, i.e. 0.5 ether
     await th.redeemCollateralAndGetTxObject(A, contracts, dec(50, 18))
 
@@ -79,8 +79,8 @@ contract('CollSUrplusPool', async accounts => {
     await th.assertRevert(web3.eth.sendTransaction({ from: A, to: collSurplusPool.address, value: 1 }), 'CollSurplusPool: Caller is not Active Pool')
   })
 
-  it('CollSurplusPool: accountSurplus: reverts if caller is not CDP Manager', async () => {
-    await th.assertRevert(collSurplusPool.accountSurplus(A, 1), 'CollSurplusPool: Caller is not CDPManager')
+  it('CollSurplusPool: accountSurplus: reverts if caller is not Trove Manager', async () => {
+    await th.assertRevert(collSurplusPool.accountSurplus(A, 1), 'CollSurplusPool: Caller is not TroveManager')
   })
 })
 
