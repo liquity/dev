@@ -359,7 +359,7 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | withdrawColl                 | _collWithdrawal parameter           | ActivePool->msg.sender                     |
 | adjustTrove: adding ETH      | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
 | adjustTrove: withdrawing ETH | _collWithdrawal parameter           | ActivePool->msg.sender                     |
-| closeTrove                   | _amount parameter                   | ActivePool->msg.sender                     |
+| closeTrove                   | All remaining                       | ActivePool->msg.sender                     |
 | claimRedeemedCollateral      | CollSurplusPool.balance[msg.sender] | CollSurplusPool->msg.sender                |
 
 **Trove Manager**
@@ -376,13 +376,13 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | redeemCollateral                        | redemption fee                         | ActivePool->msg.sender        |
 | redeemCollateral                        | trove's collateral surplus             | ActivePool -> CollSurplusPool |
 
-**Pool Manager**
+**Stability Pool**
 
-| Function               | ETH quantity                     | Path                                            |
-|------------------------|----------------------------------|-------------------------------------------------|
-| provideToSP            | depositor's accumulated ETH gain | StabilityPool -> msg.sender                     |
-| withdrawFromSP         | depositor's accumulated ETH gain | StabilityPool -> msg.sender                     |
-| withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool -> BorrowerOperations ->ActivePool |
+| Function               | ETH quantity                     | Path                                              |
+|------------------------|----------------------------------|---------------------------------------------------|
+| provideToSP            | depositor's accumulated ETH gain | StabilityPool -> msg.sender                       |
+| withdrawFromSP         | depositor's accumulated ETH gain | StabilityPool -> msg.sender                       |
+| withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool -> BorrowerOperations -> ActivePool |
 
 ### Flow of LUSD tokens in Liquity
 
@@ -406,7 +406,7 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | adjustTrove: withdrawing LUSD | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
 |                               | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
 | adjustTrove: repaying LUSD    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
-| closeTrove                    | Repaid LUSD   | ERC20._burn(msg.sender, _LUSDAmount) |
+| closeTrove                    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount) |
 
 **Trove Manager**
 
@@ -417,7 +417,7 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | liquidateTroves (offset) | LUSD to offset with debt | LUSD._burn(stabilityPoolAddress, _debtToOffset); |
 | redeemCollateral         | LUSD to redeem           | LUSD._burn(msg.sender, _LUSD)                    |
 
-**Pool Manager**
+**Stability Pool**
 
 | Function       | LUSD Quantity    | ERC20 Operation                                             |
 |----------------|------------------|-------------------------------------------------------------|
