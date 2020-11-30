@@ -161,12 +161,15 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 
 ### Directories
 
+- `packages/decimal/` - Library for manipulating 18-digit fixed-point decimal bignumbers.
 - `packages/dev-frontend/` - Liquity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
 - `packages/frontend/` - The front-end React app for the user-facing web interface
+- `packages/fuzzer/` - A very simple, purpose-built tool based on Liquity middleware for randomly interacting with the system
 - `packages/lib-base/` - Common interfaces and classes shared by the other `lib-` packages
 - `packages/lib-ethers/` - [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions
 - `packages/lib-react/` - Components and hooks that React-based apps can use to view Liquity contract state
 - `packages/lib-subgraph/` - [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state
+- `packages/providers/` - Subclassed Ethers providers used by the frontend
 - `packages/subgraph/` - [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history
 - `packages/contracts/` - The backend development folder, contains the Buidler project, contracts and tests
 - `packages/contracts/contracts/` - The core back end smart contracts written in Solidity
