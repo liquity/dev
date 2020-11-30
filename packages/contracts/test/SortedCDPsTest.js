@@ -9,7 +9,7 @@ const mv = testHelpers.MoneyValues
 contract('CDPManager', async accounts => {
   
   const assertSortedListIsOrdered = async (contracts) => {
-    const price = await contracts.priceFeed.getPrice()
+    const price = await contracts.priceFeedTestnet.getPrice()
 
     let trove = await contracts.sortedCDPs.getLast()
     while (trove !== (await contracts.sortedCDPs.getFirst())) {

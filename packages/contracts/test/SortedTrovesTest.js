@@ -9,7 +9,7 @@ const mv = testHelpers.MoneyValues
 contract('TroveManager', async accounts => {
   
   const assertSortedListIsOrdered = async (contracts) => {
-    const price = await contracts.priceFeed.getPrice()
+    const price = await contracts.priceFeedTestnet.getPrice()
 
     let trove = await contracts.sortedTroves.getLast()
     while (trove !== (await contracts.sortedTroves.getFirst())) {
@@ -49,7 +49,7 @@ contract('TroveManager', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager

@@ -289,7 +289,7 @@ class DeploymentHelper {
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
       contracts.collSurplusPool.address,
-      contracts.priceFeed.address,
+      contracts.priceFeedTestnet.address,
       contracts.lusdToken.address,
       contracts.sortedTroves.address,
       LQTYContracts.lqtyStaking.address
@@ -302,7 +302,7 @@ class DeploymentHelper {
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
       contracts.collSurplusPool.address,
-      contracts.priceFeed.address,
+      contracts.priceFeedTestnet.address,
       contracts.sortedTroves.address,
       contracts.lusdToken.address,
       LQTYContracts.lqtyStaking.address
@@ -315,7 +315,7 @@ class DeploymentHelper {
       contracts.activePool.address,
       contracts.lusdToken.address,
       contracts.sortedTroves.address,
-      contracts.priceFeed.address,
+      contracts.priceFeedTestnet.address,
       LQTYContracts.communityIssuance.address
     )
 
