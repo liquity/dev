@@ -245,15 +245,15 @@ contract('TroveManager', async accounts => {
      const CR_201 = '2010000000000000000'
      const CRPercent_201 = Number(web3.utils.fromWei(CR_201, 'ether')) * 100
  
-    //  const hintAddress_201 = await functionCaller.troveManager_getApproxHint(CR_201, sqrtLength * 10)
+      //  const hintAddress_201 = await functionCaller.troveManager_getApproxHint(CR_201, sqrtLength * 10)
      ;({ hintAddress, latestRandomSeed } = await hintHelpers.getApproxHint(CR_201, sqrtLength * 10, price, latestRandomSeed))
      const ICR_hintAddress_201 = await troveManager.getCurrentICR(hintAddress, price)
      const ICRPercent_hintAddress_201 = Number(web3.utils.fromWei(ICR_hintAddress_201, 'ether')) * 100
      
      // check the hint position is at most sqrtLength positions away from the correct position
-     ICR_Difference_201 = (ICRPercent_hintAddress_201 - CRPercent_201)
-     assert.isBelow(ICR_Difference_201, sqrtLength)
-  })
+      ICR_Difference_201 = (ICRPercent_hintAddress_201 - CRPercent_201)
+      assert.isBelow(ICR_Difference_201, sqrtLength)
+    })
 
   /* Pass 100 random collateral ratios to getApproxHint(). For each, check whether the returned hint address is within 
   sqrt(length) positions of where a Trove with that CR should be inserted. */
@@ -274,9 +274,9 @@ contract('TroveManager', async accounts => {
   //     const ICRPercent_hintAddress = Number(web3.utils.fromWei(ICR_hintAddress, 'ether')) * 100
       
       // check the hint position is at most sqrtLength positions away from the correct position
-      ICR_Difference_201 = (ICRPercent_hintAddress_201 - CRPercent_201)
-      assert.isBelow(ICR_Difference_201, sqrtLength)
-    })
+      // ICR_Difference_201 = (ICRPercent_hintAddress_201 - CRPercent_201)
+      // assert.isBelow(ICR_Difference_201, sqrtLength)
+    // })
 
     /* Pass 100 random collateral ratios to getApproxHint(). For each, check whether the returned hint address is within 
     sqrt(length) positions of where a CDP with that CR should be inserted. */
@@ -310,42 +310,42 @@ contract('TroveManager', async accounts => {
 
       let hintAddress
 
-    // const hintAddress_Max = await functionCaller.troveManager_getApproxHint(CR_Max, sqrtLength * 10)
-    ;({ hintAddress, latestRandomSeed } = await hintHelpers.getApproxHint(CR_Max, sqrtLength * 10, price, latestRandomSeed))
+      // const hintAddress_Max = await functionCaller.troveManager_getApproxHint(CR_Max, sqrtLength * 10)
+      ;({ hintAddress, latestRandomSeed } = await hintHelpers.getApproxHint(CR_Max, sqrtLength * 10, price, latestRandomSeed))
 
-    const ICR_hintAddress_Max = await troveManager.getCurrentICR(hintAddress, price)
-    const ICRPercent_hintAddress_Max = Number(web3.utils.fromWei(ICR_hintAddress_Max, 'ether')) * 100
+      const ICR_hintAddress_Max = await troveManager.getCurrentICR(hintAddress, price)
+      const ICRPercent_hintAddress_Max = Number(web3.utils.fromWei(ICR_hintAddress_Max, 'ether')) * 100
 
-     const firstTrove = await sortedTroves.getFirst()
-     const ICR_FirstTrove = await troveManager.getCurrentICR(firstTrove, price)
-     const ICRPercent_FirstTrove = Number(web3.utils.fromWei(ICR_FirstTrove, 'ether')) * 100
- 
-     // check the hint position is at most sqrtLength positions away from the correct position
-     ICR_Difference_Max = (ICRPercent_hintAddress_Max - ICRPercent_FirstTrove)
-     assert.isBelow(ICR_Difference_Max, sqrtLength)
-  })
+      const firstTrove = await sortedTroves.getFirst()
+      const ICR_FirstTrove = await troveManager.getCurrentICR(firstTrove, price)
+      const ICRPercent_FirstTrove = Number(web3.utils.fromWei(ICR_FirstTrove, 'ether')) * 100
+  
+      // check the hint position is at most sqrtLength positions away from the correct position
+      ICR_Difference_Max = (ICRPercent_hintAddress_Max - ICRPercent_FirstTrove)
+      assert.isBelow(ICR_Difference_Max, sqrtLength)
+    })
 
-  it("getApproxHint(): returns the tail of the list if the CR is lower than ICR of any Trove", async () => {
-    const sqrtLength = Math.ceil(Math.sqrt(numAccounts))
+    it("getApproxHint(): returns the tail of the list if the CR is lower than ICR of any Trove", async () => {
+      const sqrtLength = Math.ceil(Math.sqrt(numAccounts))
 
       // CR = MCR
       const CR_Min = '1100000000000000000'
 
       let hintAddress
 
-    //  const hintAddress_Min = await functionCaller.troveManager_getApproxHint(CR_Min, sqrtLength * 10)
-    ;({ hintAddress, latestRandomSeed } = await hintHelpers.getApproxHint(CR_Min, sqrtLength * 10, price, latestRandomSeed))
-    const ICR_hintAddress_Min = await troveManager.getCurrentICR(hintAddress, price)
-    const ICRPercent_hintAddress_Min = Number(web3.utils.fromWei(ICR_hintAddress_Min, 'ether')) * 100
+      //  const hintAddress_Min = await functionCaller.troveManager_getApproxHint(CR_Min, sqrtLength * 10)
+      ;({ hintAddress, latestRandomSeed } = await hintHelpers.getApproxHint(CR_Min, sqrtLength * 10, price, latestRandomSeed))
+      const ICR_hintAddress_Min = await troveManager.getCurrentICR(hintAddress, price)
+      const ICRPercent_hintAddress_Min = Number(web3.utils.fromWei(ICR_hintAddress_Min, 'ether')) * 100
 
-     const lastTrove = await sortedTroves.getLast()
-     const ICR_LastTrove = await troveManager.getCurrentICR(lastTrove, price)
-     const ICRPercent_LastTrove = Number(web3.utils.fromWei(ICR_LastTrove, 'ether')) * 100
- 
-     // check the hint position is at most sqrtLength positions away from the correct position
-     ICR_Difference_Min = (ICRPercent_hintAddress_Min - ICRPercent_LastTrove)
-     assert.isBelow(ICR_Difference_Min, sqrtLength)
-  })
+      const lastTrove = await sortedTroves.getLast()
+      const ICR_LastTrove = await troveManager.getCurrentICR(lastTrove, price)
+      const ICRPercent_LastTrove = Number(web3.utils.fromWei(ICR_LastTrove, 'ether')) * 100
+  
+      // check the hint position is at most sqrtLength positions away from the correct position
+      ICR_Difference_Min = (ICRPercent_hintAddress_Min - ICRPercent_LastTrove)
+      assert.isBelow(ICR_Difference_Min, sqrtLength)
+    })
 })
 
 // Gas usage:  See gas costs spreadsheet. Cost per trial = 10k-ish.
