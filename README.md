@@ -139,11 +139,11 @@ The partially redeemed trove is re-inserted into the sorted list of troves, and 
 
 ### Full redemption
 
-A trove is defined as “fully redeemed from” when the redemption has caused (debt-10) of its debt to absorb (debt-10) LUSD.Then, its 10 LUSD gas compensation is cancelled with it’s remaining 10 debt: the gas compensation is burned from the gas address, and the 10 debt is zero’d.
+A trove is defined as “fully redeemed from” when the redemption has caused (debt-10) of its debt to absorb (debt-10) LUSD. Then, its 10 LUSD gas compensation is cancelled with its remaining 10 debt: the gas compensation is burned from the gas address, and the 10 debt is zero’d.
 
 Before closing, we must handle the trove’s **collateral surplus**: that is, the excess ETH collateral remaining after redemption, due to its initial over-collateralization.
 
-This collateral surplus is send to the `CollSurplusPool` , and the borrower can reclaim it later. The trove is then fully closed.
+This collateral surplus is sent to the `CollSurplusPool`, and the borrower can reclaim it later. The trove is then fully closed.
 
 ### Redemptions create a price floor
 
