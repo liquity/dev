@@ -968,12 +968,9 @@ class TestHelper {
       const tx = await txPromise
     } catch (err) {
       assert.include(err.message, "revert")
-      // TODO !!!
-      /*
       if (message) {
         assert.include(err.message, message)
       }
-      */
     }
   }
 

@@ -63,7 +63,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
          assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -75,7 +75,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert" )
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -87,7 +87,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -99,7 +99,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -111,7 +111,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -123,8 +123,8 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         const txAlice = await troveManager.addTroveOwnerToArray(bob, { from: alice })
         
       } catch (err) {
-         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -136,8 +136,8 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         const txAlice = await troveManager.setTroveStatus(bob, 1, { from: alice })
         
       } catch (err) {
-         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -148,8 +148,8 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         const txAlice = await troveManager.increaseTroveColl(bob, 100, { from: alice })
         
       } catch (err) {
-         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -160,8 +160,8 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         const txAlice = await troveManager.decreaseTroveColl(bob, 100, { from: alice })
         
       } catch (err) {
-         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -172,8 +172,8 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         const txAlice = await troveManager.increaseTroveDebt(bob, 100, { from: alice })
         
       } catch (err) {
-         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
 
@@ -184,8 +184,8 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         const txAlice = await troveManager.decreaseTroveDebt(bob, 100, { from: alice })
         
       } catch (err) {
-         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        assert.include(err.message, "revert")
+        assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
   })
@@ -361,7 +361,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is neither TroveManager nor StabilityPool")
+        assert.include(err.message, "Caller is neither TroveManager nor StabilityPool")
       }
     })
   })
