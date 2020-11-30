@@ -28,7 +28,7 @@ contract MultiCDPGetter {
     }
 
     function getMultipleSortedTroves(int _startIdx, uint _count)
-        external view returns (CombinedCDPData[] memory _cdps)
+        external view returns (CombinedCDPData[] memory _troves)
     {
         uint startIdx;
         bool descend;
@@ -44,7 +44,7 @@ contract MultiCDPGetter {
         uint sortedTrovesSize = sortedTroves.getSize();
 
         if (startIdx >= sortedTrovesSize) {
-            _cdps = new CombinedCDPData[](0);
+            _troves = new CombinedCDPData[](0);
         } else {
             uint maxCount = sortedTrovesSize - startIdx;
 
@@ -53,15 +53,15 @@ contract MultiCDPGetter {
             }
 
             if (descend) {
-                _cdps = _getMultipleSortedTrovesFromHead(startIdx, _count);
+                _troves = _getMultipleSortedTrovesFromHead(startIdx, _count);
             } else {
-                _cdps = _getMultipleSortedTrovesFromTail(startIdx, _count);
+                _troves = _getMultipleSortedTrovesFromTail(startIdx, _count);
             }
         }
     }
 
     function _getMultipleSortedTrovesFromHead(uint _startIdx, uint _count)
-        internal view returns (CombinedCDPData[] memory _cdps)
+        internal view returns (CombinedCDPData[] memory _troves)
     {
         address currentCDPowner = sortedTroves.getFirst();
 
@@ -69,20 +69,20 @@ contract MultiCDPGetter {
             currentCDPowner = sortedTroves.getNext(currentCDPowner);
         }
 
-        _cdps = new CombinedCDPData[](_count);
+        _troves = new CombinedCDPData[](_count);
 
         for (uint idx = 0; idx < _count; ++idx) {
-            _cdps[idx].owner = currentCDPowner;
+            _troves[idx].owner = currentCDPowner;
             (
-                _cdps[idx].debt,
-                _cdps[idx].coll,
-                _cdps[idx].stake,
+                _troves[idx].debt,
+                _troves[idx].coll,
+                _troves[idx].stake,
                 /* status */,
                 /* arrayIndex */
             ) = troveManager.Troves(currentCDPowner);
             (
-                _cdps[idx].snapshotETH,
-                _cdps[idx].snapshotLUSDDebt
+                _troves[idx].snapshotETH,
+                _troves[idx].snapshotLUSDDebt
             ) = troveManager.rewardSnapshots(currentCDPowner);
 
             currentCDPowner = sortedTroves.getNext(currentCDPowner);
@@ -90,7 +90,7 @@ contract MultiCDPGetter {
     }
 
     function _getMultipleSortedTrovesFromTail(uint _startIdx, uint _count)
-        internal view returns (CombinedCDPData[] memory _cdps)
+        internal view returns (CombinedCDPData[] memory _troves)
     {
         address currentCDPowner = sortedTroves.getLast();
 
@@ -98,20 +98,20 @@ contract MultiCDPGetter {
             currentCDPowner = sortedTroves.getPrev(currentCDPowner);
         }
 
-        _cdps = new CombinedCDPData[](_count);
+        _troves = new CombinedCDPData[](_count);
 
         for (uint idx = 0; idx < _count; ++idx) {
-            _cdps[idx].owner = currentCDPowner;
+            _troves[idx].owner = currentCDPowner;
             (
-                _cdps[idx].debt,
-                _cdps[idx].coll,
-                _cdps[idx].stake,
+                _troves[idx].debt,
+                _troves[idx].coll,
+                _troves[idx].stake,
                 /* status */,
                 /* arrayIndex */
             ) = troveManager.Troves(currentCDPowner);
             (
-                _cdps[idx].snapshotETH,
-                _cdps[idx].snapshotLUSDDebt
+                _troves[idx].snapshotETH,
+                _troves[idx].snapshotLUSDDebt
             ) = troveManager.rewardSnapshots(currentCDPowner);
 
             currentCDPowner = sortedTroves.getPrev(currentCDPowner);
