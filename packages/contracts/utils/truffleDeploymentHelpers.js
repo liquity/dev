@@ -2,6 +2,7 @@
 const SortedCDPs = artifacts.require("./SortedCDPs.sol")
 const CDPManager = artifacts.require("./CDPManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
+const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
 const CLVToken = artifacts.require("./CLVToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
@@ -10,6 +11,7 @@ const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
 const deployLiquity = async () => {
+  const priceFeedTestnet = await PriceFeedTestnet.new()
   const priceFeed = await PriceFeed.new()
   const sortedCDPs = await SortedCDPs.new()
   const cdpManager = await CDPManager.new()
@@ -25,6 +27,7 @@ const deployLiquity = async () => {
   )
   DefaultPool.setAsDeployed(defaultPool)
   PriceFeed.setAsDeployed(priceFeed)
+  PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
   CLVToken.setAsDeployed(clvToken)
   SortedCDPs.setAsDeployed(sortedCDPs)
   CDPManager.setAsDeployed(cdpManager)
@@ -35,6 +38,7 @@ const deployLiquity = async () => {
 
   const contracts = {
     priceFeed,
+    priceFeedTestnet,
     clvToken,
     sortedCDPs,
     cdpManager,
@@ -51,6 +55,7 @@ const getAddresses = (contracts) => {
   return {
     BorrowerOperations: contracts.borrowerOperations.address,
     PriceFeed: contracts.priceFeed.address,
+    PriceFeedTestnet: contracts.priceFeedTestnet.address,
     CLVToken: contracts.clvToken.address,
     SortedCDPs: contracts.sortedCDPs.address,
     CDPManager: contracts.cdpManager.address,

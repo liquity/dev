@@ -43,7 +43,7 @@ contract('CDPManager', async accounts => {
     )
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
@@ -62,6 +62,8 @@ contract('CDPManager', async accounts => {
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+    priceFeed.setPrice(dec(200, 18))
   })
 
   it('liquidate(): closes a CDP that has ICR < MCR', async () => {

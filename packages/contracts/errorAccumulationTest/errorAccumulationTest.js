@@ -22,7 +22,7 @@ contract('CDPManager', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
     
     clvToken = contracts.clvToken
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
     activePool = contracts.activePool
@@ -38,6 +38,8 @@ contract('CDPManager', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+    await priceFeed.setPrice(dec(200, 18))
   })
 
   // --- Check accumulation from repeatedly applying rewards ---

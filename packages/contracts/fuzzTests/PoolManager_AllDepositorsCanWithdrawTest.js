@@ -135,7 +135,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
       stabilityPool = contracts.stabilityPool
-      priceFeed = contracts.priceFeed
+      priceFeed = contracts.priceFeedTestnet
       clvToken = contracts.clvToken
       stabilityPool = contracts.stabilityPool
       cdpManager = contracts.cdpManager
@@ -144,6 +144,8 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+      await priceFeed.setPrice(dec(200, 18))
     })
 
     // mixed deposits/liquidations

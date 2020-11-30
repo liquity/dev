@@ -7,6 +7,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   const [owner, alice, bob] = accounts;
   let contracts
   let priceFeed
+  let priceFeedTestnet
   let clvToken
   let sortedCDPs
   let cdpManager
@@ -26,6 +27,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
+    priceFeedTestnet = contracts.priceFeedTestnet
     clvToken = contracts.clvToken
     sortedCDPs = contracts.sortedCDPs
     cdpManager = contracts.cdpManager
@@ -101,6 +103,13 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
       await testSetAddresses(priceFeed, 2)
     })
   })
+
+  describe('PriceFeedTestnet', async accounts => {
+    it("setAddresses(): reverts when called by non-owner", async () => {
+      await testSetAddresses(priceFeedTestnet, 2)
+    })
+  })
+
 
   describe('CommunityIssuance', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {

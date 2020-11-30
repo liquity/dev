@@ -5,6 +5,7 @@ pragma solidity 0.6.11;
 import "./Interfaces/ICDPManager.sol";
 import "./Interfaces/IPriceFeedTestnet.sol";
 import "./Dependencies/AggregatorV2V3Interface.sol";
+
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -13,7 +14,7 @@ contract PriceFeedTestnet is Ownable, IPriceFeedTestnet {
     using SafeMath for uint256;
 
     uint256 constant DIGITS = 1e18;
-    uint256 public price = 200 * DIGITS;
+    //uint256 public price = 200 * DIGITS;
 
     address public cdpManagerAddress;
     address public priceAggregatorAddress;
