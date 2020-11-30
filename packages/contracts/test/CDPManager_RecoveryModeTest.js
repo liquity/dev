@@ -2727,12 +2727,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     That leaves 50 LUSD in the Pool to absorb exactly half of Carol's debt (100) */
     const liquidationTx = await troveManager.liquidateCDPs(10)
 
-    const [liquidatedDebt, liquidatedColl, collGasComp, clvGasComp] = th.getEmittedLiquidationValues(liquidationTx)
+    const [liquidatedDebt, liquidatedColl, collGasComp, lusdGasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
     assert.equal(liquidatedDebt.toString(), '253000000000000000000')
     assert.equal(liquidatedColl.toString(), '2487500000000000000') // 2.5*0.995
     assert.equal(collGasComp.toString(), dec(125, 14)) // 0.5% of 2.5
-    assert.equal(clvGasComp.toString(), dec(20, 18)) // partially liquidated trove doesn’t count here
+    assert.equal(lusdGasComp.toString(), dec(20, 18)) // partially liquidated trove doesn’t count here
   })
 
   it("liquidateCDPs() with a partial liquidation: ICR of partially liquidated trove does not change", async () => {
@@ -3101,12 +3101,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const trovesToLiquidate = [alice, bob, carol]
     const liquidationTx = await troveManager.batchLiquidateTroves(trovesToLiquidate)
 
-    const [liquidatedDebt, liquidatedColl, collGasComp, clvGasComp] = th.getEmittedLiquidationValues(liquidationTx)
+    const [liquidatedDebt, liquidatedColl, collGasComp, lusdGasComp] = th.getEmittedLiquidationValues(liquidationTx)
 
     assert.equal(liquidatedDebt.toString(), '253000000000000000000')
     assert.equal(liquidatedColl.toString(), '2487500000000000000') // 2.5*0.995
     assert.equal(collGasComp.toString(), dec(125, 14)) // 0.5% of 2.5
-    assert.equal(clvGasComp.toString(), dec(20, 18)) // partially liquidated trove doesn’t count here
+    assert.equal(lusdGasComp.toString(), dec(20, 18)) // partially liquidated trove doesn’t count here
   })
 
   it("batchLiquidateTroves() with a partial liquidation: ICR of partially liquidated trove does not change", async () => {

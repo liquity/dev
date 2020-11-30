@@ -294,9 +294,9 @@ class TestHelper {
         const liquidatedDebt = liquidationTx.logs[i].args[0]
         const liquidatedColl = liquidationTx.logs[i].args[1]
         const collGasComp = liquidationTx.logs[i].args[2]
-        const clvGasComp = liquidationTx.logs[i].args[3]
+        const lusdGasComp = liquidationTx.logs[i].args[3]
 
-        return [liquidatedDebt, liquidatedColl, collGasComp, clvGasComp]
+        return [liquidatedDebt, liquidatedColl, collGasComp, lusdGasComp]
       }
     }
     throw ("The transaction logs do not contain a liquidation event")

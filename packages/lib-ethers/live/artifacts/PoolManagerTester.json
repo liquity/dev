@@ -394,7 +394,7 @@
           "type": "uint256"
         }
       ],
-      "name": "clvBurn",
+      "name": "lusdBurn",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -414,7 +414,7 @@
           "type": "uint256"
         }
       ],
-      "name": "clvMint",
+      "name": "lusdMint",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -439,7 +439,7 @@
           "type": "uint256"
         }
       ],
-      "name": "clvReturnFromPool",
+      "name": "lusdReturnFromPool",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
@@ -464,7 +464,7 @@
           "type": "uint256"
         }
       ],
-      "name": "clvSendToPool",
+      "name": "lusdSendToPool",
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
