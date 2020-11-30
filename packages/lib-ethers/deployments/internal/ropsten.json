@@ -15,7 +15,8 @@
     "priceFeed": "0x9b5b1e076f5321314FaD499b3a847e5833492F10",
     "sortedTroves": "0x0b9965bc54cB6FC0b84D09CB1143AAdc26141A74",
     "stabilityPool": "0xB181a8cDA30c68F6a9b998471dc45a086879E8aC",
-    "collSurplusPool": ""
+    "collSurplusPool": "",
+    "priceFeedTestnet": ""
   },
   "version": "1fe9301410a48ff1a8f3173d87d850621c561a2f",
   "deploymentDate": 1603706601486,
