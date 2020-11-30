@@ -21,7 +21,7 @@ interface ITroveManager {
 
     event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
 
-    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+    event SortedTrovesAddressChanged(address _sortedTrovesAddress);
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
@@ -41,7 +41,7 @@ interface ITroveManager {
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _lusdTokenAddress,
-        address _sortedCDPsAddress,
+        address _sortedTrovesAddress,
         address _lqtyStakingAddress
     ) external;
 
@@ -53,7 +53,7 @@ interface ITroveManager {
 
     function liquidate(address _borrower) external;
 
-    function liquidateCDPs(uint _n) external;
+    function liquidateTroves(uint _n) external;
 
     function batchLiquidateTroves(address[] calldata _troveArray) external;
 

@@ -17,7 +17,7 @@ contract('Gas compensation tests', async accounts => {
 
   let priceFeed
   let lusdToken
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let activePool
   let stabilityPool
@@ -48,7 +48,7 @@ contract('Gas compensation tests', async accounts => {
 
     priceFeed = contracts.priceFeed
     lusdToken = contracts.lusdToken
-    sortedCDPs = contracts.sortedCDPs
+    sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
@@ -356,7 +356,7 @@ contract('Gas compensation tests', async accounts => {
     -> Expect 0.5% of collaterall to be sent to liquidator, as gas compensation */
 
     // Check collateral value in USD is < $10
-    const aliceColl = (await troveManager.CDPs(alice))[1]
+    const aliceColl = (await troveManager.Troves(alice))[1]
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price_1))
     assert.isTrue(aliceCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
@@ -389,7 +389,7 @@ contract('Gas compensation tests', async accounts => {
     -> Expect 0.5% of collaterall to be sent to liquidator, as gas compensation */
 
     // Check collateral value in USD is < $10
-    const bobColl = (await troveManager.CDPs(bob))[1]
+    const bobColl = (await troveManager.Troves(bob))[1]
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price_2))
     assert.isTrue(bobCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
@@ -422,7 +422,7 @@ contract('Gas compensation tests', async accounts => {
     -> Expect 0.5% of collaterall to be sent to liquidator, as gas compensation */
 
     // Check collateral value in USD is < $10
-    const carolColl = (await troveManager.CDPs(carol))[1]
+    const carolColl = (await troveManager.Troves(carol))[1]
     const carolCollValueInUSD = (await borrowerOperationsTester.getUSDValue(carolColl, price_3))
     assert.isTrue(carolCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
@@ -477,7 +477,7 @@ contract('Gas compensation tests', async accounts => {
     and (1 - 0.05000025000125001) = 0.94999974999875 ETH remainder liquidated */
 
     // Check collateral value in USD is > $10
-    const aliceColl = (await troveManager.CDPs(alice))[1]
+    const aliceColl = (await troveManager.Troves(alice))[1]
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price_1))
     assert.isTrue(aliceCollValueInUSD.gt(th.toBN(dec(10, 18))))
 
@@ -525,7 +525,7 @@ contract('Gas compensation tests', async accounts => {
     and (15 - 0.666666666666666666) ETH remainder liquidated */
 
     // Check collateral value in USD is > $10
-    const bobColl = (await troveManager.CDPs(bob))[1]
+    const bobColl = (await troveManager.Troves(bob))[1]
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price_2))
     assert.isTrue(bobCollValueInUSD.gt(th.toBN(dec(10, 18))))
 
@@ -592,7 +592,7 @@ contract('Gas compensation tests', async accounts => {
     and (10.001 - 0.050005) ETH remainder liquidated */
 
     // Check value of 0.5% of collateral in USD is > $10
-    const aliceColl = (await troveManager.CDPs(alice))[1]
+    const aliceColl = (await troveManager.Troves(alice))[1]
     const _0pt5percent_aliceColl = aliceColl.div(web3.utils.toBN('200'))
     const aliceCollFractionInUSD = (await borrowerOperationsTester.getUSDValue(_0pt5percent_aliceColl, price_1))
 
@@ -635,7 +635,7 @@ contract('Gas compensation tests', async accounts => {
    and (37.5 - 0.1875 ETH) ETH remainder liquidated */
 
     // Check value of 0.5% of collateral in USD is > $10
-    const bobColl = (await troveManager.CDPs(bob))[1]
+    const bobColl = (await troveManager.Troves(bob))[1]
     const _0pt5percent_bobColl = bobColl.div(web3.utils.toBN('200'))
     const bobCollFractionInUSD = (await borrowerOperationsTester.getUSDValue(_0pt5percent_bobColl, price_1))
 
@@ -698,8 +698,8 @@ contract('Gas compensation tests', async accounts => {
     -> Expect 0.5% of collaterall to be sent to liquidator, as gas compensation */
 
     // Check collateral value in USD is < $10
-    const aliceColl = (await troveManager.CDPs(alice))[1]
-    const aliceDebt = (await troveManager.CDPs(alice))[0]
+    const aliceColl = (await troveManager.Troves(alice))[1]
+    const aliceDebt = (await troveManager.Troves(alice))[0]
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price_1))
     assert.isTrue(aliceCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
@@ -730,8 +730,8 @@ contract('Gas compensation tests', async accounts => {
     -> Expect 0.5% of collaterall to be sent to liquidator, as gas compensation */
 
     // Check collateral value in USD is < $10
-    const bobColl = (await troveManager.CDPs(bob))[1]
-    const bobDebt = (await troveManager.CDPs(bob))[0]
+    const bobColl = (await troveManager.Troves(bob))[1]
+    const bobDebt = (await troveManager.Troves(bob))[0]
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price_2))
     assert.isTrue(bobCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
@@ -785,8 +785,8 @@ contract('Gas compensation tests', async accounts => {
     and (1 - 0.05000025000125001) = 0.94999974999875 ETH remainder liquidated */
 
     // Check collateral value in USD is > $10
-    const aliceColl = (await troveManager.CDPs(alice))[1]
-    const aliceDebt = (await troveManager.CDPs(alice))[0]
+    const aliceColl = (await troveManager.Troves(alice))[1]
+    const aliceDebt = (await troveManager.Troves(alice))[0]
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price_1))
     assert.isTrue(aliceCollValueInUSD.gt(th.toBN(dec(10, 18))))
 
@@ -828,8 +828,8 @@ contract('Gas compensation tests', async accounts => {
     and (15 - 0.666666666666666666) ETH remainder liquidated */
 
     // Check collateral value in USD is > $10
-    const bobColl = (await troveManager.CDPs(bob))[1]
-    const bobDebt = (await troveManager.CDPs(bob))[0]
+    const bobColl = (await troveManager.Troves(bob))[1]
+    const bobDebt = (await troveManager.Troves(bob))[0]
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price_2))
     assert.isTrue(bobCollValueInUSD.gt(th.toBN(dec(10, 18))))
 
@@ -891,8 +891,8 @@ contract('Gas compensation tests', async accounts => {
     and (10.001 - 0.050005) ETH remainder liquidated */
 
     // Check value of 0.5% of collateral in USD is > $10
-    const aliceColl = (await troveManager.CDPs(alice))[1]
-    const aliceDebt = (await troveManager.CDPs(alice))[0]
+    const aliceColl = (await troveManager.Troves(alice))[1]
+    const aliceDebt = (await troveManager.Troves(alice))[0]
     const _0pt5percent_aliceColl = aliceColl.div(web3.utils.toBN('200'))
     const aliceCollFractionInUSD = (await borrowerOperationsTester.getUSDValue(_0pt5percent_aliceColl, price_1))
 
@@ -929,8 +929,8 @@ contract('Gas compensation tests', async accounts => {
    and (37.5 - 0.1875 ETH) ETH remainder liquidated */
 
     // Check value of 0.5% of collateral in USD is > $10
-    const bobColl = (await troveManager.CDPs(bob))[1]
-    const bobDebt = (await troveManager.CDPs(bob))[0]
+    const bobColl = (await troveManager.Troves(bob))[1]
+    const bobDebt = (await troveManager.Troves(bob))[0]
     const _0pt5percent_bobColl = bobColl.div(web3.utils.toBN('200'))
     const bobCollFractionInUSD = (await borrowerOperationsTester.getUSDValue(_0pt5percent_bobColl, price_1))
 
@@ -960,8 +960,8 @@ contract('Gas compensation tests', async accounts => {
   })
 
 
-  // liquidateCDPs - full offset
-  it('liquidateCDPs(): full offset.  Compensates the correct amount, and liquidates the remainder', async () => {
+  // liquidateTroves - full offset
+  it('liquidateTroves(): full offset.  Compensates the correct amount, and liquidates the remainder', async () => {
     await priceFeed.setPrice(dec(1000, 18))
 
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
@@ -1000,10 +1000,10 @@ contract('Gas compensation tests', async accounts => {
 
 
     // --- Check value of of A's collateral is < $10, and value of B,C,D collateral are > $10  ---
-    const aliceColl = (await troveManager.CDPs(alice))[1]
-    const bobColl = (await troveManager.CDPs(bob))[1]
-    const carolColl = (await troveManager.CDPs(carol))[1]
-    const dennisColl = (await troveManager.CDPs(dennis))[1]
+    const aliceColl = (await troveManager.Troves(alice))[1]
+    const bobColl = (await troveManager.Troves(bob))[1]
+    const carolColl = (await troveManager.Troves(carol))[1]
+    const dennisColl = (await troveManager.Troves(dennis))[1]
 
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price))
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price))
@@ -1059,7 +1059,7 @@ contract('Gas compensation tests', async accounts => {
     // Liquidate troves A-D
 
     const liquidatorBalance_before = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidateCDPs(4, { from: liquidator, gasPrice: 0 })
+    await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
     const liquidatorBalance_after = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check LUSD in SP has decreased
@@ -1075,8 +1075,8 @@ contract('Gas compensation tests', async accounts => {
     assert.equal(expectedLiquidatedColl, ETHinSP)
   })
 
-  // liquidateCDPs - full redistribution
-  it('liquidateCDPs(): full redistribution. Compensates the correct amount, and liquidates the remainder', async () => {
+  // liquidateTroves - full redistribution
+  it('liquidateTroves(): full redistribution. Compensates the correct amount, and liquidates the remainder', async () => {
     await priceFeed.setPrice(dec(1000, 18))
 
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
@@ -1103,10 +1103,10 @@ contract('Gas compensation tests', async accounts => {
     assert.isTrue((await troveManager.getCurrentICR(dennis, price)).lt(mv._MCR))
 
     // --- Check value of of A's collateral is < $10, and value of B,C,D collateral are > $10  ---
-    const aliceColl = (await troveManager.CDPs(alice))[1]
-    const bobColl = (await troveManager.CDPs(bob))[1]
-    const carolColl = (await troveManager.CDPs(carol))[1]
-    const dennisColl = (await troveManager.CDPs(dennis))[1]
+    const aliceColl = (await troveManager.Troves(alice))[1]
+    const bobColl = (await troveManager.Troves(bob))[1]
+    const carolColl = (await troveManager.Troves(carol))[1]
+    const dennisColl = (await troveManager.Troves(dennis))[1]
 
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price))
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price))
@@ -1161,7 +1161,7 @@ contract('Gas compensation tests', async accounts => {
 
     // Liquidate troves A-D
     const liquidatorBalance_before = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidateCDPs(4, { from: liquidator, gasPrice: 0 })
+    await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
     const liquidatorBalance_after = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check LUSD in DefaultPool has decreased
@@ -1179,7 +1179,7 @@ contract('Gas compensation tests', async accounts => {
   })
 
   //  --- event emission in liquidation sequence ---
-  it('liquidateCDPs(): full offset. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
+  it('liquidateTroves(): full offset. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
     await priceFeed.setPrice(dec(1000, 18))
 
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
@@ -1218,10 +1218,10 @@ contract('Gas compensation tests', async accounts => {
 
 
     // --- Check value of of A's collateral is < $10, and value of B,C,D collateral are > $10  ---
-    const aliceColl = (await troveManager.CDPs(alice))[1]
-    const bobColl = (await troveManager.CDPs(bob))[1]
-    const carolColl = (await troveManager.CDPs(carol))[1]
-    const dennisColl = (await troveManager.CDPs(dennis))[1]
+    const aliceColl = (await troveManager.Troves(alice))[1]
+    const bobColl = (await troveManager.Troves(bob))[1]
+    const carolColl = (await troveManager.Troves(carol))[1]
+    const dennisColl = (await troveManager.Troves(dennis))[1]
 
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price))
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price))
@@ -1278,7 +1278,7 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedDebt = '14646000000000000000000'
 
     // Liquidate troves A-D
-    const liquidationTxData = await troveManager.liquidateCDPs(4, { from: liquidator, gasPrice: 0 })
+    const liquidationTxData = await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
 
     // Get data from the liquidation event logs
     const loggedLiquidatedDebt = liquidationTxData.logs[4].args[0]
@@ -1290,7 +1290,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedGasComp, loggedGasCompensation), 1000)
   })
 
-  it('liquidateCDPs(): full redistribution. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
+  it('liquidateTroves(): full redistribution. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
     await priceFeed.setPrice(dec(1000, 18))
 
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(1, 24) })
@@ -1317,10 +1317,10 @@ contract('Gas compensation tests', async accounts => {
     assert.isTrue((await troveManager.getCurrentICR(dennis, price)).lt(mv._MCR))
 
     // --- Check value of of A's collateral is < $10, and value of B,C,D collateral are > $10  ---
-    const aliceColl = (await troveManager.CDPs(alice))[1]
-    const bobColl = (await troveManager.CDPs(bob))[1]
-    const carolColl = (await troveManager.CDPs(carol))[1]
-    const dennisColl = (await troveManager.CDPs(dennis))[1]
+    const aliceColl = (await troveManager.Troves(alice))[1]
+    const bobColl = (await troveManager.Troves(bob))[1]
+    const carolColl = (await troveManager.Troves(carol))[1]
+    const dennisColl = (await troveManager.Troves(dennis))[1]
 
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price))
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price))
@@ -1374,7 +1374,7 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedDebt = '14646000000000000000000'
 
     // Liquidate troves A-D
-    const liquidationTxData = await troveManager.liquidateCDPs(4, { from: liquidator, gasPrice: 0 })
+    const liquidationTxData = await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
 
     // Get data from the liquidation event logs
     const loggedLiquidatedDebt = liquidationTxData.logs[4].args[0]
@@ -1404,7 +1404,7 @@ contract('Gas compensation tests', async accounts => {
     }
 
     const initialPrice = await priceFeed.getPrice()
-    const firstColl = (await troveManager.CDPs(_10_accounts[0]))[1]
+    const firstColl = (await troveManager.Troves(_10_accounts[0]))[1]
 
     // Vary price 200-210
     let price = 200
@@ -1414,12 +1414,12 @@ contract('Gas compensation tests', async accounts => {
       await priceFeed.setPrice(priceString)
 
       const ICRList = []
-      const coll_firstTrove = (await troveManager.CDPs(_10_accounts[0]))[1]
+      const coll_firstTrove = (await troveManager.Troves(_10_accounts[0]))[1]
       const gasComp_firstTrove = (await troveManagerTester.getCollGasCompensation(coll_firstTrove)).toString()
 
       for (account of _10_accounts) {
         // Check gas compensation is the same for all troves
-        const coll = (await troveManager.CDPs(account))[1]
+        const coll = (await troveManager.Troves(account))[1]
         const gasCompensation = (await troveManagerTester.getCollGasCompensation(coll)).toString()
 
         assert.equal(gasCompensation, gasComp_firstTrove)

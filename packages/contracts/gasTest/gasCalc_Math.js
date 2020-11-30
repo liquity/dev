@@ -28,7 +28,7 @@ contract('Gas costs for math functions', async accounts => {
 
     priceFeed = contracts.priceFeed
     lusdToken = contracts.lusdToken
-    sortedCDPs = contracts.sortedCDPs
+    sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool

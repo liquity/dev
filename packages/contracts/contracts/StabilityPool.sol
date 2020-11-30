@@ -8,7 +8,7 @@ import './Interfaces/IPool.sol';
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/ITroveManager.sol';
 import './Interfaces/ILUSDToken.sol';
-import './Interfaces/ISortedCDPs.sol';
+import './Interfaces/ISortedTroves.sol';
 import './Interfaces/IPriceFeed.sol';
 import "./Interfaces/ICommunityIssuance.sol";
 import "./Dependencies/LiquityBase.sol";
@@ -142,7 +142,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     address public activePoolAddress;
 
     // Needed to check if there are pending liquidations
-    ISortedCDPs public sortedCDPs;
+    ISortedTroves public sortedTroves;
     IPriceFeed public priceFeed;
 
     ICommunityIssuance public communityIssuance;
@@ -226,7 +226,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         address _troveManagerAddress,
         address _activePoolAddress,
         address _lusdTokenAddress,
-        address _sortedCDPsAddress,
+        address _sortedTrovesAddress,
         address _priceFeedAddress,
         address _communityIssuanceAddress
     )
@@ -239,7 +239,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         activePool = IPool(_activePoolAddress);
         activePoolAddress = _activePoolAddress;
         lusdToken = ILUSDToken(_lusdTokenAddress);
-        sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
+        sortedTroves = ISortedTroves(_sortedTrovesAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         communityIssuanceAddress = _communityIssuanceAddress;
         communityIssuance = ICommunityIssuance(_communityIssuanceAddress);
@@ -248,7 +248,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         emit TroveManagerAddressChanged(_troveManagerAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
-        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
+        emit SortedTrovesAddressChanged(_sortedTrovesAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit CommunityIssuanceAddressChanged(_communityIssuanceAddress);
 
@@ -858,7 +858,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     function _requireNoUnderCollateralizedTroves() internal view {
         uint price = priceFeed.getPrice();
-        address lowestTrove = sortedCDPs.getLast();
+        address lowestTrove = sortedTroves.getLast();
         uint ICR = troveManager.getCurrentICR(lowestTrove, price);
         require(ICR >= MCR, "StabilityPool: Cannot withdraw while there are troves with ICR < MCR");
     }

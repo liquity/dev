@@ -22,7 +22,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
   let priceFeed
   let lusdToken
   let stabilityPool
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let borrowerOperations
   let lqtyToken
@@ -47,7 +47,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       priceFeed = contracts.priceFeed
       lusdToken = contracts.lusdToken
       stabilityPool = contracts.stabilityPool
-      sortedCDPs = contracts.sortedCDPs
+      sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager
       stabilityPool = contracts.stabilityPool
       borrowerOperations = contracts.borrowerOperations
@@ -298,7 +298,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await troveManager.checkRecoveryMode())
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       // Confirm SP dropped from 600 to 300
       assert.isAtMost(getDifference(await stabilityPool.getTotalLUSDDeposits(), dec(300, 18)), 1000)
@@ -663,7 +663,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
       const txL1 = await troveManager.liquidate(defaulter_1, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
       assert.isTrue(txL1.receipt.status)
 
       // Check scale is 0
@@ -678,7 +678,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 2 liquidated
       const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isFalse(await sortedTroves.contains(defaulter_2))
       assert.isTrue(txL2.receipt.status)
 
       // Check scale is 1
@@ -693,7 +693,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 3 liquidated
       const txL3 = await troveManager.liquidate(defaulter_3, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_3))
+      assert.isFalse(await sortedTroves.contains(defaulter_3))
       assert.isTrue(txL3.receipt.status)
 
       // Check scale is 1
@@ -708,7 +708,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 4 liquidated
       const txL4 = await troveManager.liquidate(defaulter_4, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_4))
+      assert.isFalse(await sortedTroves.contains(defaulter_4))
       assert.isTrue(txL4.receipt.status)
 
       // Check scale is 2
@@ -723,7 +723,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 5 liquidated
       const txL5 = await troveManager.liquidate(defaulter_5, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_5))
+      assert.isFalse(await sortedTroves.contains(defaulter_5))
       assert.isTrue(txL5.receipt.status)
 
       // Check scale is 2
@@ -738,7 +738,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 6 liquidated
       const txL6 = await troveManager.liquidate(defaulter_6, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_6))
+      assert.isFalse(await sortedTroves.contains(defaulter_6))
       assert.isTrue(txL6.receipt.status)
 
       // Check scale is 3
@@ -976,7 +976,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // LIQUIDATION 1
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(500, 18))
 
@@ -1034,7 +1034,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // LIQUIDATION 2
       await troveManager.liquidate(defaulter_2)
-      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isFalse(await sortedTroves.contains(defaulter_2))
 
       assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(600, 18))
 
@@ -1110,7 +1110,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // LIQUIDATION 3
       await troveManager.liquidate(defaulter_3)
-      assert.isFalse(await sortedCDPs.contains(defaulter_3))
+      assert.isFalse(await sortedTroves.contains(defaulter_3))
 
       assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(900, 18))
 
@@ -1344,7 +1344,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
       const txL1 = await troveManager.liquidate(defaulter_1, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
       assert.isTrue(txL1.receipt.status)
 
       // Check scale is 0
@@ -1359,7 +1359,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 2 liquidated
       const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isFalse(await sortedTroves.contains(defaulter_2))
       assert.isTrue(txL2.receipt.status)
 
       // Check scale is 1
@@ -1374,7 +1374,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 3 liquidated
       const txL3 = await troveManager.liquidate(defaulter_3, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_3))
+      assert.isFalse(await sortedTroves.contains(defaulter_3))
       assert.isTrue(txL3.receipt.status)
 
       // Check scale is 1
@@ -1389,7 +1389,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Defaulter 4 liquidated
       const txL4 = await troveManager.liquidate(defaulter_4, { from: owner });
-      assert.isFalse(await sortedCDPs.contains(defaulter_4))
+      assert.isFalse(await sortedTroves.contains(defaulter_4))
       assert.isTrue(txL4.receipt.status)
 
       // Check scale is 2

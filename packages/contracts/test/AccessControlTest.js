@@ -18,7 +18,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   const [owner, alice, bob, carol] = accounts;
   let priceFeed
   let lusdToken
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let nameRegistry
   let activePool
@@ -33,7 +33,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
     priceFeed = coreContracts.priceFeed
     lusdToken = coreContracts.lusdToken
-    sortedCDPs = coreContracts.sortedCDPs
+    sortedTroves = coreContracts.sortedTroves
     troveManager = coreContracts.troveManager
     nameRegistry = coreContracts.nameRegistry
     activePool = coreContracts.activePool
@@ -366,13 +366,13 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
   })
 
-  describe('SortedCDPs', async accounts => {
+  describe('SortedTroves', async accounts => {
     // --- onlyBorrowerOperations ---
     //     insert
     it("insert(): reverts when called by an account that is not BorrowerOps or CDPM", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedCDPs.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        const txAlice = await sortedTroves.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -385,7 +385,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("remove(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedCDPs.remove(bob, { from: alice })
+        const txAlice = await sortedTroves.remove(bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -398,7 +398,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("reinsert(): reverts when called by an account that is neither BorrowerOps nor TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedCDPs.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        const txAlice = await sortedTroves.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")

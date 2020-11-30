@@ -14,7 +14,7 @@ interface IStabilityPool {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
-    event SortedCDPsAddressChanged(address _newSortedCDPsAddress);
+    event SortedTrovesAddressChanged(address _newSortedTrovesAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
 
@@ -43,7 +43,7 @@ interface IStabilityPool {
         address _troveManagerAddress,
         address _activePoolAddress,
         address _lusdTokenAddress,
-        address _sortedCDPsAddress,
+        address _sortedTrovesAddress,
         address _priceFeedAddress,
         address _communityIssuanceAddress
     ) external;

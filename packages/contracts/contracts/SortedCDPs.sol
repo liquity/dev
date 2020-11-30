@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import "./Interfaces/ISortedCDPs.sol";
+import "./Interfaces/ISortedTroves.sol";
 import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Dependencies/SafeMath.sol";
@@ -12,15 +12,15 @@ import "./Dependencies/console.sol";
 /* 
 * A sorted doubly linked list with nodes sorted in descending order.
 * 
-* Nodes map to active CDPs in the system - the ID property is the address of a CDP owner. 
+* Nodes map to active Troves in the system - the ID property is the address of a CDP owner. 
 * Nodes are ordered according to their current individual collateral ratio (ICR).
 * 
 * The list optionally accepts insert position hints.
 * 
-* ICRs are computed dynamically at runtime, and not stored on the Node. This is because ICRs of active CDPs 
+* ICRs are computed dynamically at runtime, and not stored on the Node. This is because ICRs of active Troves 
 * change dynamically as liquidation events occur.
 * 
-* The list relies on the fact that liquidation events preserve ordering: a liquidation decreases the ICRs of all active CDPs, 
+* The list relies on the fact that liquidation events preserve ordering: a liquidation decreases the ICRs of all active Troves, 
 * but maintains their order. A node inserted based on current ICR will maintain the correct position, 
 * relative to it's peers, as rewards accumulate, as long as it's raw collateral and debt have not changed.
 * Thus, Nodes remain sorted by current ICR.
@@ -41,7 +41,7 @@ import "./Dependencies/console.sol";
 *
 * - Public functions with parameters have been made internal to save gas, and given an external wrapper function for external access
 */
-contract SortedCDPs is Ownable, ISortedCDPs {
+contract SortedTroves is Ownable, ISortedTroves {
     using SafeMath for uint256;
 
     event TroveManagerAddressChanged(address _newCDPlManagerAddress);
@@ -73,7 +73,7 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     // --- Dependency setters --- 
 
     function setParams(uint256 _size, address _TroveManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
-        require(_size > 0, "SortedCDPs: Size can’t be zero");
+        require(_size > 0, "SortedTroves: Size can’t be zero");
 
         data.maxSize = _size;
 
@@ -389,11 +389,11 @@ contract SortedCDPs is Ownable, ISortedCDPs {
     // --- 'require' functions ---
 
     function _requireCallerIsTroveManager() internal view {
-        require(msg.sender == TroveManagerAddress, "SortedCDPs: Caller is not the TroveManager");
+        require(msg.sender == TroveManagerAddress, "SortedTroves: Caller is not the TroveManager");
     }
 
     function _requireCallerIsBOorCDPM() internal view {
         require(msg.sender == borrowerOperationsAddress || msg.sender == TroveManagerAddress,
-                "SortedCDPs: Caller is neither BO nor CDPM");
+                "SortedTroves: Caller is neither BO nor CDPM");
     }
 }

@@ -24,13 +24,13 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
   let lusdToken
   let troveManager
   let stabilityPool
-  let sortedCDPs
+  let sortedTroves
   let borrowerOperations
 
   const skyrocketPriceAndCheckAllTrovesSafe = async () => {
         // price skyrockets, therefore no undercollateralized troes
         await priceFeed.setPrice(dec(1000, 18));
-        const lowestICR = await troveManager.getCurrentICR(await sortedCDPs.getLast(), dec(1000, 18))
+        const lowestICR = await troveManager.getCurrentICR(await sortedTroves.getLast(), dec(1000, 18))
         assert.isTrue(lowestICR.gt(toBN(dec(110, 16))))
   }
 
@@ -40,8 +40,8 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     const randomDefaulterIndex = Math.floor(Math.random() * (remainingDefaulters.length))
     const randomDefaulter = remainingDefaulters[randomDefaulterIndex]
 
-    const liquidatedLUSD = (await troveManager.CDPs(randomDefaulter))[0]
-    const liquidatedETH = (await troveManager.CDPs(randomDefaulter))[1]
+    const liquidatedLUSD = (await troveManager.Troves(randomDefaulter))[0]
+    const liquidatedETH = (await troveManager.Troves(randomDefaulter))[1]
 
     const price = await priceFeed.getPrice()
     const ICR = (await troveManager.getCurrentICR(randomDefaulter, price)).toString()
@@ -103,27 +103,27 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
   }
 
   const systemContainsTroveUnder110 = async (price) => {
-    const lowestICR = await troveManager.getCurrentICR(await sortedCDPs.getLast(), price)
+    const lowestICR = await troveManager.getCurrentICR(await sortedTroves.getLast(), price)
     console.log(`lowestICR: ${lowestICR}, lowestICR.lt(dec(110, 16)): ${lowestICR.lt(toBN(dec(110, 16)))}`)
     return lowestICR.lt(dec(110, 16))
   }
 
   const systemContainsTroveUnder100 = async (price) => {
-    const lowestICR = await troveManager.getCurrentICR(await sortedCDPs.getLast(), price)
+    const lowestICR = await troveManager.getCurrentICR(await sortedTroves.getLast(), price)
     console.log(`lowestICR: ${lowestICR}, lowestICR.lt(dec(100, 16)): ${lowestICR.lt(toBN(dec(100, 16)))}`)
     return lowestICR.lt(dec(100, 16))
   }
 
   const getTotalDebtFromUndercollateralizedTroves = async (n, price) => {
     let totalDebt = ZERO
-    let trove = await sortedCDPs.getLast()
+    let trove = await sortedTroves.getLast()
 
     for (let i = 0; i < n; i++) {
       const ICR = await troveManager.getCurrentICR(trove, price)
       const debt = ICR.lt(toBN(dec(110, 16))) ? (await troveManager.getEntireDebtAndColl(trove))[0] : ZERO
 
       totalDebt = totalDebt.add(debt)
-      trove = await sortedCDPs.getPrev(trove)
+      trove = await sortedTroves.getPrev(trove)
     }
 
     return totalDebt
@@ -136,7 +136,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     * and sends to lowest trove owner, who then closes their trove.
     *
     * - If system contains troves with ICR < 110, whale simply draws and makes an SP deposit 
-    * equal to the debt of the last 50 troves, before a liquidateCDPs tx hits the last 50 troves.
+    * equal to the debt of the last 50 troves, before a liquidateTroves tx hits the last 50 troves.
     *
     * The intent is to avoid the system entering an endless loop where the SP is empty and debt is being forever liquidated/recycled 
     * between active troves, and the existence of some under-collateralized troves blocks all SP depositors from withdrawing.
@@ -145,7 +145,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     * we first need to put the system in a state with no under-collateralized troves (which are supposed to block SP withdrawals).
     */
     while(await systemContainsTroveUnder100(price) && await troveManager.checkRecoveryMode()) {
-      const lowestTrove = await sortedCDPs.getLast()
+      const lowestTrove = await sortedTroves.getLast()
       const lastTroveDebt = (await troveManager.getEntireDebtAndColl(trove))[0]
       await borrowerOperations.adjustTrove(0 , lastTroveDebt, true, whale, {from: whale})
       await lusdToken.transfer(lowestTrove, lowestTroveDebt, {from: whale})
@@ -160,7 +160,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
         await stabilityPool.provideToSP(debtLowest50Troves, {from: whale})
       }
       
-      await troveManager.liquidateCDPs(50)
+      await troveManager.liquidateTroves(50)
     }
   }
 
@@ -226,7 +226,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       stabilityPool = contracts.stabilityPool
       troveManager = contracts.troveManager
       borrowerOperations = contracts.borrowerOperations
-      sortedCDPs = contracts.sortedCDPs
+      sortedTroves = contracts.sortedTroves
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)

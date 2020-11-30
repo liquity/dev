@@ -19,7 +19,7 @@ interface IBorrowerOperations {
 
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
 
-    event SortedCDPsAddressChanged(address _sortedCDPsAddress);
+    event SortedTrovesAddressChanged(address _sortedTrovesAddress);
 
     event LUSDTokenAddressChanged(address _lusdTokenAddress);
 
@@ -36,7 +36,7 @@ interface IBorrowerOperations {
         address _stabilityPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
-        address _sortedCDPsAddress,
+        address _sortedTrovesAddress,
         address _lusdTokenAddress,
         address _lqtyStakingAddress
     ) external;

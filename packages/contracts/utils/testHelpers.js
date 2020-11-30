@@ -205,13 +205,13 @@ class TestHelper {
   }
 
   static async logActiveAccounts(contracts, n) {
-    const count = await contracts.sortedCDPs.getSize()
+    const count = await contracts.sortedTroves.getSize()
     const price = await contracts.priceFeed.getPrice()
 
     n = (typeof n == 'undefined') ? count : n
 
-    let account = await contracts.sortedCDPs.getLast()
-    const head = await contracts.sortedCDPs.getFirst()
+    let account = await contracts.sortedTroves.getLast()
+    const head = await contracts.sortedTroves.getFirst()
 
     console.log(`Total active accounts: ${count}`)
     console.log(`First ${n} accounts, in ascending ICR order:`)
@@ -219,15 +219,15 @@ class TestHelper {
     let i = 0
     while (i < n) {
       const squeezedAddr = this.squeezeAddr(account)
-      const coll = (await contracts.troveManager.CDPs(account))[1]
-      const debt = (await contracts.troveManager.CDPs(account))[0]
+      const coll = (await contracts.troveManager.Troves(account))[1]
+      const debt = (await contracts.troveManager.Troves(account))[0]
       const ICR = await contracts.troveManager.getCurrentICR(account, price)
 
       console.log(`Acct: ${squeezedAddr}  coll:${coll}  debt: ${debt}  ICR: ${ICR}`)
 
       if (account == head) { break; }
 
-      account = await contracts.sortedCDPs.getPrev(account)
+      account = await contracts.sortedTroves.getPrev(account)
 
       i++
     }
@@ -245,8 +245,8 @@ class TestHelper {
       const account = accounts[i]
 
       const squeezedAddr = this.squeezeAddr(account)
-      const coll = (await troveManager.CDPs(account))[1]
-      const debt = (await troveManager.CDPs(account))[0]
+      const coll = (await troveManager.Troves(account))[1]
+      const debt = (await troveManager.Troves(account))[0]
       const ICR = await troveManager.getCurrentICR(account, price)
 
       console.log(`Acct: ${squeezedAddr}  coll:${coll}  debt: ${debt}  ICR: ${ICR}`)
@@ -370,15 +370,15 @@ class TestHelper {
     } = await contracts.hintHelpers.getApproxHint(newICR, 50, price, this.latestRandomSeed)
     this.latestRandomSeed = latestRandomSeed
 
-    const exactFullListHint = (await contracts.sortedCDPs.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
+    const exactFullListHint = (await contracts.sortedTroves.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
 
     return exactFullListHint
   }
 
   static async getEntireCollAndDebt(contracts, account) {
     // console.log(`account: ${account}`)
-    const rawColl = (await contracts.troveManager.CDPs(account))[1]
-    const rawDebt = (await contracts.troveManager.CDPs(account))[0]
+    const rawColl = (await contracts.troveManager.Troves(account))[1]
+    const rawDebt = (await contracts.troveManager.Troves(account))[0]
     const pendingETHReward = await contracts.troveManager.getPendingETHReward(account)
     const pendingLUSDDebtReward = await contracts.troveManager.getPendingLUSDDebtReward(account)
     const entireColl = rawColl.add(pendingETHReward)
@@ -426,8 +426,8 @@ class TestHelper {
   static async getCollAndDebtFromAdjustment(contracts, account, ETHChange, LUSDChange) {
     const { entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
 
-    // const coll = (await contracts.troveManager.CDPs(account))[1]
-    // const debt = (await contracts.troveManager.CDPs(account))[0]
+    // const coll = (await contracts.troveManager.Troves(account))[1]
+    // const debt = (await contracts.troveManager.Troves(account))[0]
 
     const newColl = entireColl.add(ETHChange)
     const newDebt = entireDebt.add(LUSDChange)
@@ -809,7 +809,7 @@ class TestHelper {
     } = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50, price, this.latestRandomSeed)
     this.latestRandomSeed = latestRandomSeed
 
-    const exactPartialRedemptionHint = (await contracts.sortedCDPs.findInsertPosition(partialRedemptionNewICR,
+    const exactPartialRedemptionHint = (await contracts.sortedTroves.findInsertPosition(partialRedemptionNewICR,
       price,
       approxPartialRedemptionHint,
       approxPartialRedemptionHint))[0]
@@ -827,7 +827,7 @@ class TestHelper {
 
   // --- Composite functions ---
 
-  static async makeCDPsIncreasingICR(accounts, contracts) {
+  static async makeTrovesIncreasingICR(accounts, contracts) {
     const price = await contracts.priceFeed.getPrice()
 
     let amountFinney = 2000

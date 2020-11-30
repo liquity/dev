@@ -2,12 +2,12 @@
 
 pragma solidity 0.6.11;
 
-// Common interface for the SortedCDPs Doubly Linked List.
-interface ISortedCDPs {
+// Common interface for the SortedTroves Doubly Linked List.
+interface ISortedTroves {
 
     // --- Events ---
     
-    event SortedCDPsAddressChanged(address _sortedDoublyLLAddress);
+    event SortedTrovesAddressChanged(address _sortedDoublyLLAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
     // --- Functions ---

@@ -35,8 +35,8 @@ contract EchidnaProxy {
         troveManager.liquidate(_user);
     }
 
-    function liquidateCDPsPrx(uint _n) external {
-        troveManager.liquidateCDPs(_n);
+    function liquidateTrovesPrx(uint _n) external {
+        troveManager.liquidateTroves(_n);
     }
 
     function batchLiquidateTrovesPrx(address[] calldata _troveArray) external {

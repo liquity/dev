@@ -11,11 +11,11 @@ contract('TroveManager', async accounts => {
   const assertSortedListIsOrdered = async (contracts) => {
     const price = await contracts.priceFeed.getPrice()
 
-    let trove = await contracts.sortedCDPs.getLast()
-    while (trove !== (await contracts.sortedCDPs.getFirst())) {
+    let trove = await contracts.sortedTroves.getLast()
+    while (trove !== (await contracts.sortedTroves.getFirst())) {
       
       // Get the adjacent upper trove ("prev" moves up the list, from lower ICR -> higher ICR)
-      const prevTrove = await contracts.sortedCDPs.getPrev(trove)
+      const prevTrove = await contracts.sortedTroves.getPrev(trove)
      
       const troveICR = await contracts.troveManager.getCurrentICR(trove, price)
       const prevTroveICR = await contracts.troveManager.getCurrentICR(prevTrove, price)
@@ -35,7 +35,7 @@ contract('TroveManager', async accounts => {
 
   let priceFeed
   let lusdToken
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let nameRegistry
   let activePool
@@ -51,7 +51,7 @@ contract('TroveManager', async accounts => {
 
     priceFeed = contracts.priceFeed
     lusdToken = contracts.lusdToken
-    sortedCDPs = contracts.sortedCDPs
+    sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
@@ -74,14 +74,14 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('98908089089', carol, { from: carol, value: '23082308092385098009809' })
 
     // Confirm trove statuses became active
-    assert.equal((await troveManager.CDPs(alice))[3], '1')
-    assert.equal((await troveManager.CDPs(bob))[3], '1')
-    assert.equal((await troveManager.CDPs(carol))[3], '1')
+    assert.equal((await troveManager.Troves(alice))[3], '1')
+    assert.equal((await troveManager.Troves(bob))[3], '1')
+    assert.equal((await troveManager.Troves(carol))[3], '1')
 
     // Check sorted list contains troves
-    assert.isTrue(await sortedCDPs.contains(alice))
-    assert.isTrue(await sortedCDPs.contains(bob))
-    assert.isTrue(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(alice))
+    assert.isTrue(await sortedTroves.contains(bob))
+    assert.isTrue(await sortedTroves.contains(carol))
   })
 
   it('contains(): returns false for addresses that have not opened troves', async () => {
@@ -90,12 +90,12 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('98908089089', carol, { from: carol, value: '23082308092385098009809' })
 
     // Confirm troves have non-existent status
-    assert.equal((await troveManager.CDPs(dennis))[3], '0')
-    assert.equal((await troveManager.CDPs(erin))[3], '0')
+    assert.equal((await troveManager.Troves(dennis))[3], '0')
+    assert.equal((await troveManager.Troves(erin))[3], '0')
 
     // Check sorted list do not contain troves
-    assert.isFalse(await sortedCDPs.contains(dennis))
-    assert.isFalse(await sortedCDPs.contains(erin))
+    assert.isFalse(await sortedTroves.contains(dennis))
+    assert.isFalse(await sortedTroves.contains(erin))
   })
 
   it('contains(): returns false for addresses that opened and then closed a trove', async () => {
@@ -111,14 +111,14 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.closeTrove({ from:carol })
 
     // Confirm trove statuses became closed
-    assert.equal((await troveManager.CDPs(alice))[3], '2')
-    assert.equal((await troveManager.CDPs(bob))[3], '2')
-    assert.equal((await troveManager.CDPs(carol))[3], '2')
+    assert.equal((await troveManager.Troves(alice))[3], '2')
+    assert.equal((await troveManager.Troves(bob))[3], '2')
+    assert.equal((await troveManager.Troves(carol))[3], '2')
 
     // Check sorted list does not contain troves
-    assert.isFalse(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
   })
 
   // true for addresses that opened -> closed -> opened a trove
@@ -135,50 +135,50 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.closeTrove({ from:carol })
 
     // Confirm trove statuses became closed
-    assert.equal((await troveManager.CDPs(alice))[3], '2')
-    assert.equal((await troveManager.CDPs(bob))[3], '2')
-    assert.equal((await troveManager.CDPs(carol))[3], '2')
+    assert.equal((await troveManager.Troves(alice))[3], '2')
+    assert.equal((await troveManager.Troves(bob))[3], '2')
+    assert.equal((await troveManager.Troves(carol))[3], '2')
 
     await borrowerOperations.openTrove('234234', alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove('9999', bob, { from: bob, value: dec(5, 'ether') })
     await borrowerOperations.openTrove('1', carol, { from: carol, value: '23082308092385098009809' })
 
      // Confirm trove statuses became open again
-     assert.equal((await troveManager.CDPs(alice))[3], '1')
-     assert.equal((await troveManager.CDPs(bob))[3], '1')
-     assert.equal((await troveManager.CDPs(carol))[3], '1')
+     assert.equal((await troveManager.Troves(alice))[3], '1')
+     assert.equal((await troveManager.Troves(bob))[3], '1')
+     assert.equal((await troveManager.Troves(carol))[3], '1')
 
     // Check sorted list does  contain troves
-    assert.isTrue(await sortedCDPs.contains(alice))
-    assert.isTrue(await sortedCDPs.contains(bob))
-    assert.isTrue(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(alice))
+    assert.isTrue(await sortedTroves.contains(bob))
+    assert.isTrue(await sortedTroves.contains(carol))
   })
 
   // false when list size is 0
   it('contains(): returns false when there are no troves in the system', async () => {
-    assert.isFalse(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
   })
 
   // true when list size is 1 and the trove the only one in system
   it('contains(): true when list size is 1 and the trove the only one in system', async () => {
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     
-    assert.isTrue(await sortedCDPs.contains(alice))
+    assert.isTrue(await sortedTroves.contains(alice))
   })
 
   // false when list size is 1 and trove is not in the system
   it('contains(): false when list size is 1 and trove is not in the system', async () => {
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     
-    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedTroves.contains(bob))
   })
 
   // --- getMaxSize ---
 
   it("getMaxSize(): Returns the maximum list size", async () => {
-    const max = await sortedCDPs.getMaxSize()
+    const max = await sortedTroves.getMaxSize()
     assert.equal(web3.utils.toHex(max), th.maxBytes32)
   })
 
@@ -202,7 +202,7 @@ contract('TroveManager', async accounts => {
     const targetICR = dec(3, 18) 
 
     // Pass addresses that loosely bound the right postiion
-    const hints = await sortedCDPs.findInsertPosition(targetICR, price, A, E)
+    const hints = await sortedTroves.findInsertPosition(targetICR, price, A, E)
 
     // Expect the exact correct insert hints have been returned
     assert.equal(hints[0], B )
@@ -233,7 +233,7 @@ contract('TroveManager', async accounts => {
     await assertSortedListIsOrdered(contracts)
 
     await borrowerOperations.openTrove(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(defaulter_1))
+    assert.isTrue(await sortedTroves.contains(defaulter_1))
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -241,7 +241,7 @@ contract('TroveManager', async accounts => {
 
     // Liquidate a trove
     await troveManager.liquidate(defaulter_1)
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
 
     // Check troves are ordered
     await assertSortedListIsOrdered(contracts)

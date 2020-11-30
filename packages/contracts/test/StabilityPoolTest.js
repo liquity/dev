@@ -28,7 +28,7 @@ contract('StabilityPool', async accounts => {
   let contracts
   let priceFeed
   let lusdToken
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let activePool
   let stabilityPool
@@ -50,7 +50,7 @@ contract('StabilityPool', async accounts => {
 
       priceFeed = contracts.priceFeed
       lusdToken = contracts.lusdToken
-      sortedCDPs = contracts.sortedCDPs
+      sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager
       activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool
@@ -148,7 +148,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(50, 'ether') })
       await borrowerOperations.withdrawLUSD('2000000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('2000000000000000000000', frontEnd_1, { from: whale })
-      // 2 CDPs opened, each withdraws 160 LUSD
+      // 2 Troves opened, each withdraws 160 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_1, { from: defaulter_1 })
@@ -158,10 +158,10 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(100, alice, { from: alice })
 
-      // price drops: defaulter's CDPs fall below MCR, whale doesn't
+      // price drops: defaulter's Troves fall below MCR, whale doesn't
       await priceFeed.setPrice('100000000000000000000');
 
-      // CDPs are closed
+      // Troves are closed
       await troveManager.liquidate(defaulter_1, { from: owner })
       await troveManager.liquidate(defaulter_2, { from: owner });
 
@@ -200,7 +200,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD('1850000000000000000000', alice, { from: whale })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 3 CDPs opened. Two users withdraw 160 LUSD each
+      // 3 Troves opened. Two users withdraw 160 LUSD each
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
@@ -221,7 +221,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(alice_Snapshot_S_0, 0)
       assert.equal(alice_Snapshot_P_0, '1000000000000000000')
 
-      // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 LUSD drawn are closed
@@ -347,8 +347,8 @@ contract('StabilityPool', async accounts => {
       // Defaulters are liquidated
       await troveManager.liquidate(defaulter_1)
       await troveManager.liquidate(defaulter_2)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
-      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_2))
 
 
       const alice_LUSDDeposit_Before = (await stabilityPool.getCompoundedLUSDDeposit(alice)).toString()
@@ -412,8 +412,8 @@ contract('StabilityPool', async accounts => {
       // Defaulters are liquidated
       await troveManager.liquidate(defaulter_1)
       await troveManager.liquidate(defaulter_2)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
-      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_2))
 
       const activeDebt_Before = (await activePool.getLUSDDebt()).toString()
       const defaultedDebt_Before = (await defaultPool.getLUSDDebt()).toString()
@@ -459,17 +459,17 @@ contract('StabilityPool', async accounts => {
       const price = await priceFeed.getPrice()
 
       // Get debt, collateral and ICR of all existing troves
-      const whale_Debt_Before = (await troveManager.CDPs(whale))[0].toString()
-      const alice_Debt_Before = (await troveManager.CDPs(alice))[0].toString()
-      const bob_Debt_Before = (await troveManager.CDPs(bob))[0].toString()
-      const carol_Debt_Before = (await troveManager.CDPs(carol))[0].toString()
-      const dennis_Debt_Before = (await troveManager.CDPs(dennis))[0].toString()
+      const whale_Debt_Before = (await troveManager.Troves(whale))[0].toString()
+      const alice_Debt_Before = (await troveManager.Troves(alice))[0].toString()
+      const bob_Debt_Before = (await troveManager.Troves(bob))[0].toString()
+      const carol_Debt_Before = (await troveManager.Troves(carol))[0].toString()
+      const dennis_Debt_Before = (await troveManager.Troves(dennis))[0].toString()
 
-      const whale_Coll_Before = (await troveManager.CDPs(whale))[1].toString()
-      const alice_Coll_Before = (await troveManager.CDPs(alice))[1].toString()
-      const bob_Coll_Before = (await troveManager.CDPs(bob))[1].toString()
-      const carol_Coll_Before = (await troveManager.CDPs(carol))[1].toString()
-      const dennis_Coll_Before = (await troveManager.CDPs(dennis))[1].toString()
+      const whale_Coll_Before = (await troveManager.Troves(whale))[1].toString()
+      const alice_Coll_Before = (await troveManager.Troves(alice))[1].toString()
+      const bob_Coll_Before = (await troveManager.Troves(bob))[1].toString()
+      const carol_Coll_Before = (await troveManager.Troves(carol))[1].toString()
+      const dennis_Coll_Before = (await troveManager.Troves(dennis))[1].toString()
 
       const whale_ICR_Before = (await troveManager.getCurrentICR(whale, price)).toString()
       const alice_ICR_Before = (await troveManager.getCurrentICR(alice, price)).toString()
@@ -481,17 +481,17 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: dennis })
       assert.equal((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(100, 18))
 
-      const whale_Debt_After = (await troveManager.CDPs(whale))[0].toString()
-      const alice_Debt_After = (await troveManager.CDPs(alice))[0].toString()
-      const bob_Debt_After = (await troveManager.CDPs(bob))[0].toString()
-      const carol_Debt_After = (await troveManager.CDPs(carol))[0].toString()
-      const dennis_Debt_After = (await troveManager.CDPs(dennis))[0].toString()
+      const whale_Debt_After = (await troveManager.Troves(whale))[0].toString()
+      const alice_Debt_After = (await troveManager.Troves(alice))[0].toString()
+      const bob_Debt_After = (await troveManager.Troves(bob))[0].toString()
+      const carol_Debt_After = (await troveManager.Troves(carol))[0].toString()
+      const dennis_Debt_After = (await troveManager.Troves(dennis))[0].toString()
 
-      const whale_Coll_After = (await troveManager.CDPs(whale))[1].toString()
-      const alice_Coll_After = (await troveManager.CDPs(alice))[1].toString()
-      const bob_Coll_After = (await troveManager.CDPs(bob))[1].toString()
-      const carol_Coll_After = (await troveManager.CDPs(carol))[1].toString()
-      const dennis_Coll_After = (await troveManager.CDPs(dennis))[1].toString()
+      const whale_Coll_After = (await troveManager.Troves(whale))[1].toString()
+      const alice_Coll_After = (await troveManager.Troves(alice))[1].toString()
+      const bob_Coll_After = (await troveManager.Troves(bob))[1].toString()
+      const carol_Coll_After = (await troveManager.Troves(carol))[1].toString()
+      const dennis_Coll_After = (await troveManager.Troves(dennis))[1].toString()
 
       const whale_ICR_After = (await troveManager.getCurrentICR(whale, price)).toString()
       const alice_ICR_After = (await troveManager.getCurrentICR(alice, price)).toString()
@@ -531,7 +531,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: bob })
 
       // Confirm Bob has an active trove in the system
-      assert.isTrue(await sortedCDPs.contains(bob))
+      assert.isTrue(await sortedTroves.contains(bob))
       assert.equal((await troveManager.getCDPStatus(bob)).toString(), '1')  // Confirm Bob's trove status is active
 
       // Confirm Bob has a Stability deposit
@@ -545,7 +545,7 @@ contract('StabilityPool', async accounts => {
       await troveManager.liquidate(bob)
 
       // Check Bob's trove has been removed from the system
-      assert.isFalse(await sortedCDPs.contains(bob))
+      assert.isFalse(await sortedTroves.contains(bob))
       assert.equal((await troveManager.getCDPStatus(bob)).toString(), '2')  // check Bob's trove status is closed
     })
 
@@ -1428,7 +1428,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD('1850000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 2 CDPs opened, 160 LUSD withdrawn
+      // 2 Troves opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_1, { from: defaulter_1 })
@@ -1441,7 +1441,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD(dec(150, 18), alice, { from: alice })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
-      // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 LUSD drawn are closed
@@ -1481,7 +1481,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD('1850000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 2 CDPs opened, 160 LUSD withdrawn
+      // 2 Troves opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_1, { from: defaulter_1 })
@@ -1497,7 +1497,7 @@ contract('StabilityPool', async accounts => {
       const SP_LUSD_Before = await stabilityPool.getTotalLUSDDeposits()
       assert.equal(SP_LUSD_Before, dec(2000, 18))
 
-      // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 LUSD drawn are closed
@@ -1524,7 +1524,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD('1850000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 2 CDPs opened, 160 LUSD withdrawn
+      // 2 Troves opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_1, { from: defaulter_1 })
@@ -1540,7 +1540,7 @@ contract('StabilityPool', async accounts => {
       const SP_LUSD_Before = await stabilityPool.getTotalLUSDDeposits()
       assert.equal(SP_LUSD_Before, dec(2000, 18))
 
-      // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 170 LUSD drawn are closed
@@ -1576,7 +1576,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove('1850000000000000000000', whale, { from: whale, value: dec(50, 'ether') })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 2 CDPs opened, 180 LUSD debt
+      // 2 Troves opened, 180 LUSD debt
       await borrowerOperations.openTrove(dec(170, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(dec(170, 18), defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
@@ -1586,7 +1586,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(dec(150, 18), alice, { from: alice, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
-      // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 LUSD drawn are closed
@@ -1625,7 +1625,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.withdrawLUSD('1850000000000000000000', whale, { from: whale })
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
-      // 2 CDPs opened, 160 LUSD withdrawn
+      // 2 Troves opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_1, { from: defaulter_1 })
@@ -1645,7 +1645,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(alice_snapshot_S_Before, 0)
       assert.equal(alice_snapshot_P_Before, '1000000000000000000')
 
-      // price drops: defaulters' CDPs fall below MCR, alice and whale CDP remain active
+      // price drops: defaulters' Troves fall below MCR, alice and whale CDP remain active
       await priceFeed.setPrice('100000000000000000000');
 
       // 2 users with CDP with 180 LUSD drawn are closed
@@ -1814,8 +1814,8 @@ contract('StabilityPool', async accounts => {
       // Defaulters are liquidated
       await troveManager.liquidate(defaulter_1)
       await troveManager.liquidate(defaulter_2)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
-      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_2))
 
       const alice_LUSDDeposit_Before = (await stabilityPool.getCompoundedLUSDDeposit(alice)).toString()
       const bob_LUSDDeposit_Before = (await stabilityPool.getCompoundedLUSDDeposit(bob)).toString()
@@ -1870,8 +1870,8 @@ contract('StabilityPool', async accounts => {
       // Defaulters are liquidated
       await troveManager.liquidate(defaulter_1)
       await troveManager.liquidate(defaulter_2)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
-      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_2))
 
       const activeDebt_Before = (await activePool.getLUSDDebt()).toString()
       const defaultedDebt_Before = (await defaultPool.getLUSDDebt()).toString()
@@ -1916,15 +1916,15 @@ contract('StabilityPool', async accounts => {
       const price = await priceFeed.getPrice()
 
       // Get debt, collateral and ICR of all existing troves
-      const whale_Debt_Before = (await troveManager.CDPs(whale))[0].toString()
-      const alice_Debt_Before = (await troveManager.CDPs(alice))[0].toString()
-      const bob_Debt_Before = (await troveManager.CDPs(bob))[0].toString()
-      const carol_Debt_Before = (await troveManager.CDPs(carol))[0].toString()
+      const whale_Debt_Before = (await troveManager.Troves(whale))[0].toString()
+      const alice_Debt_Before = (await troveManager.Troves(alice))[0].toString()
+      const bob_Debt_Before = (await troveManager.Troves(bob))[0].toString()
+      const carol_Debt_Before = (await troveManager.Troves(carol))[0].toString()
 
-      const whale_Coll_Before = (await troveManager.CDPs(whale))[1].toString()
-      const alice_Coll_Before = (await troveManager.CDPs(alice))[1].toString()
-      const bob_Coll_Before = (await troveManager.CDPs(bob))[1].toString()
-      const carol_Coll_Before = (await troveManager.CDPs(carol))[1].toString()
+      const whale_Coll_Before = (await troveManager.Troves(whale))[1].toString()
+      const alice_Coll_Before = (await troveManager.Troves(alice))[1].toString()
+      const bob_Coll_Before = (await troveManager.Troves(bob))[1].toString()
+      const carol_Coll_Before = (await troveManager.Troves(carol))[1].toString()
 
       const whale_ICR_Before = (await troveManager.getCurrentICR(whale, price)).toString()
       const alice_ICR_Before = (await troveManager.getCurrentICR(alice, price)).toString()
@@ -1936,15 +1936,15 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.withdrawFromSP(dec(300, 18), { from: carol })
       assert.equal(((await stabilityPool.deposits(carol))[0]).toString(), '0')
 
-      const whale_Debt_After = (await troveManager.CDPs(whale))[0].toString()
-      const alice_Debt_After = (await troveManager.CDPs(alice))[0].toString()
-      const bob_Debt_After = (await troveManager.CDPs(bob))[0].toString()
-      const carol_Debt_After = (await troveManager.CDPs(carol))[0].toString()
+      const whale_Debt_After = (await troveManager.Troves(whale))[0].toString()
+      const alice_Debt_After = (await troveManager.Troves(alice))[0].toString()
+      const bob_Debt_After = (await troveManager.Troves(bob))[0].toString()
+      const carol_Debt_After = (await troveManager.Troves(carol))[0].toString()
 
-      const whale_Coll_After = (await troveManager.CDPs(whale))[1].toString()
-      const alice_Coll_After = (await troveManager.CDPs(alice))[1].toString()
-      const bob_Coll_After = (await troveManager.CDPs(bob))[1].toString()
-      const carol_Coll_After = (await troveManager.CDPs(carol))[1].toString()
+      const whale_Coll_After = (await troveManager.Troves(whale))[1].toString()
+      const alice_Coll_After = (await troveManager.Troves(alice))[1].toString()
+      const bob_Coll_After = (await troveManager.Troves(bob))[1].toString()
+      const carol_Coll_After = (await troveManager.Troves(carol))[1].toString()
 
       const whale_ICR_After = (await troveManager.getCurrentICR(whale, price)).toString()
       const alice_ICR_After = (await troveManager.getCurrentICR(alice, price)).toString()
@@ -2026,7 +2026,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(dennis_ETHGain, '0')
 
       const dennis_ETHBalance_Before = (web3.eth.getBalance(dennis)).toString()
-      const dennis_Collateral_Before = ((await troveManager.CDPs(dennis))[1]).toString()
+      const dennis_Collateral_Before = ((await troveManager.Troves(dennis))[1]).toString()
       const ETHinSP_Before = (await stabilityPool.getETH()).toString()
 
       // Dennis withdraws his full deposit and ETHGain to his account
@@ -2034,7 +2034,7 @@ contract('StabilityPool', async accounts => {
 
       // Check withdrawal does not alter Dennis' ETH balance or his trove's collateral
       const dennis_ETHBalance_After = (web3.eth.getBalance(dennis)).toString()
-      const dennis_Collateral_After = ((await troveManager.CDPs(dennis))[1]).toString()
+      const dennis_Collateral_After = ((await troveManager.Troves(dennis))[1]).toString()
       const ETHinSP_After = (await stabilityPool.getETH()).toString()
 
       assert.equal(dennis_ETHBalance_Before, dennis_ETHBalance_After)
@@ -2169,7 +2169,7 @@ contract('StabilityPool', async accounts => {
 
       // Liquidate defaulter 1
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       const alice_LUSD_Balance_Before = await lusdToken.balanceOf(alice)
       const bob_LUSD_Balance_Before = await lusdToken.balanceOf(bob)
@@ -2256,7 +2256,7 @@ contract('StabilityPool', async accounts => {
 
       // Liquidate defaulter 1. Empties the Pool
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       const LUSDinSP = (await stabilityPool.getTotalLUSDDeposits()).toString()
       assert.equal(LUSDinSP, '0')
@@ -2277,7 +2277,7 @@ contract('StabilityPool', async accounts => {
 
       // Liquidation 2
       await troveManager.liquidate(defaulter_2)
-      assert.isFalse(await sortedCDPs.contains(defaulter_2))
+      assert.isFalse(await sortedTroves.contains(defaulter_2))
 
       // Check Alice and Bob have not received ETH gain from liquidation 2 while their deposit was 0
       const alice_ETHGain_2 = (await stabilityPool.getDepositorETHGain(alice)).toString()
@@ -2288,7 +2288,7 @@ contract('StabilityPool', async accounts => {
 
       // Liquidation 3
       await troveManager.liquidate(defaulter_3)
-      assert.isFalse(await sortedCDPs.contains(defaulter_3))
+      assert.isFalse(await sortedTroves.contains(defaulter_3))
 
       // Check Alice and Bob have not received ETH gain from liquidation 3 while their deposit was 0
       const alice_ETHGain_3 = (await stabilityPool.getDepositorETHGain(alice)).toString()
@@ -2808,7 +2808,7 @@ contract('StabilityPool', async accounts => {
       assert.isFalse(await troveManager.checkRecoveryMode())
 
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       // A successfully withraws deposit and all gains
       await stabilityPool.withdrawFromSP(dec(200, 18), { from: A })
@@ -2848,7 +2848,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await troveManager.checkRecoveryMode())
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       const txAlice = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
       assert.isTrue(txAlice.receipt.status)
@@ -2876,7 +2876,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
       // check Alice's CDP recorded ETH Before:
-      const aliceCDP_Before = await troveManager.CDPs(alice)
+      const aliceCDP_Before = await troveManager.Troves(alice)
       const aliceCDP_ETH_Before = aliceCDP_Before[1]
       assert.equal(aliceCDP_ETH_Before, dec(10, 'ether'))
 
@@ -2905,7 +2905,7 @@ contract('StabilityPool', async accounts => {
       assert.isAtMost(th.getDifference(alice_deposit_afterDefault, expectedCompoundedDeposit_A), 1000)
 
       // check alice's CDP recorded ETH has increased by the expected reward amount
-      const aliceCDP_After = await troveManager.CDPs(alice)
+      const aliceCDP_After = await troveManager.Troves(alice)
       const aliceCDP_ETH_After = aliceCDP_After[1]
 
       const CDP_ETH_Increase = (aliceCDP_ETH_After.sub(aliceCDP_ETH_Before)).toString()
@@ -2930,7 +2930,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
       // check alice's CDP recorded ETH Before:
-      const aliceCDP_Before = await troveManager.CDPs(alice)
+      const aliceCDP_Before = await troveManager.Troves(alice)
       const aliceCDP_ETH_Before = aliceCDP_Before[1]
       assert.equal(aliceCDP_ETH_Before, dec(10, 'ether'))
 
@@ -3074,27 +3074,27 @@ contract('StabilityPool', async accounts => {
       const expectedNewCollateral = (toBN(dec(1, 18))).add(liquidatedColl.div(toBN('6')))
 
       await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      aliceColl = (await troveManager.CDPs(alice))[1]
+      aliceColl = (await troveManager.Troves(alice))[1]
       assert.isAtMost(th.getDifference(aliceColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      bobColl = (await troveManager.CDPs(bob))[1]
+      bobColl = (await troveManager.Troves(bob))[1]
       assert.isAtMost(th.getDifference(bobColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(carol, { from: carol })
-      carolColl = (await troveManager.CDPs(carol))[1]
+      carolColl = (await troveManager.Troves(carol))[1]
       assert.isAtMost(th.getDifference(carolColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
-      dennisColl = (await troveManager.CDPs(dennis))[1]
+      dennisColl = (await troveManager.Troves(dennis))[1]
       assert.isAtMost(th.getDifference(dennisColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(erin, { from: erin })
-      erinColl = (await troveManager.CDPs(erin))[1]
+      erinColl = (await troveManager.Troves(erin))[1]
       assert.isAtMost(th.getDifference(erinColl, expectedNewCollateral), 100)
 
       await stabilityPool.withdrawETHGainToTrove(flyn, { from: flyn })
-      flynColl = (await troveManager.CDPs(flyn))[1]
+      flynColl = (await troveManager.Troves(flyn))[1]
       assert.isAtMost(th.getDifference(flynColl, expectedNewCollateral), 100)
 
     })
@@ -3125,14 +3125,14 @@ contract('StabilityPool', async accounts => {
       // Check defaulter 1 has ICR: 100% < ICR < 110%.
       assert.isTrue(await th.ICRbetween100and110(defaulter_1, troveManager, price))
 
-      const alice_Collateral_Before = (await troveManager.CDPs(alice))[1]
-      const bob_Collateral_Before = (await troveManager.CDPs(bob))[1]
-      const carol_Collateral_Before = (await troveManager.CDPs(carol))[1]
+      const alice_Collateral_Before = (await troveManager.Troves(alice))[1]
+      const bob_Collateral_Before = (await troveManager.Troves(bob))[1]
+      const carol_Collateral_Before = (await troveManager.Troves(carol))[1]
 
       // Liquidate defaulter 1
-      assert.isTrue(await sortedCDPs.contains(defaulter_1))
+      assert.isTrue(await sortedTroves.contains(defaulter_1))
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       const alice_ETHGain_Before = await stabilityPool.getDepositorETHGain(alice)
       const bob_ETHGain_Before = await stabilityPool.getDepositorETHGain(bob)
@@ -3148,9 +3148,9 @@ contract('StabilityPool', async accounts => {
       const bob_expectedColalteral = (bob_Collateral_Before.add(bob_ETHGain_Before)).toString()
       const carol_expectedCollateral = (carol_Collateral_Before.add(carol_ETHGain_Before)).toString()
 
-      const alice_Collateral_After = (await troveManager.CDPs(alice))[1]
-      const bob_Collateral_After = (await troveManager.CDPs(bob))[1]
-      const carol_Collateral_After = (await troveManager.CDPs(carol))[1]
+      const alice_Collateral_After = (await troveManager.Troves(alice))[1]
+      const bob_Collateral_After = (await troveManager.Troves(bob))[1]
+      const carol_Collateral_After = (await troveManager.Troves(carol))[1]
 
       assert.equal(alice_expectedCollateral, alice_Collateral_After)
       assert.equal(bob_expectedColalteral, bob_Collateral_After)
@@ -3181,7 +3181,7 @@ contract('StabilityPool', async accounts => {
 
       //Liquidate defaulter 1
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       // D attempts to withdraw his ETH gain to CDP
       try {
@@ -3210,7 +3210,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await troveManager.checkRecoveryMode())
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       const G_Before = await stabilityPool.epochToScaleToG(0, 0)
 
@@ -3256,7 +3256,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await troveManager.checkRecoveryMode())
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
@@ -3302,7 +3302,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await troveManager.checkRecoveryMode())
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       // Get A, B, C LQTY balance before
       const A_LQTYBalance_Before = await lqtyToken.balanceOf(A)
@@ -3350,7 +3350,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await troveManager.checkRecoveryMode())
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       // Get front ends' LQTY balance before
       const F1_LQTYBalance_Before = await lqtyToken.balanceOf(frontEnd_1)
@@ -3402,7 +3402,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await troveManager.checkRecoveryMode())
       await troveManager.liquidate(defaulter_1)
-      assert.isFalse(await sortedCDPs.contains(defaulter_1))
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 

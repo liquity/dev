@@ -1,5 +1,5 @@
 
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const SortedTroves = artifacts.require("./SortedTroves.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
 const LUSDToken = artifacts.require("./LUSDToken.sol")
@@ -67,7 +67,7 @@ class DeploymentHelper {
 
   static async deployLiquityCoreBuidler() {
     const priceFeed = await PriceFeed.new()
-    const sortedCDPs = await SortedCDPs.new()
+    const sortedTroves = await SortedTroves.new()
     const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
@@ -84,7 +84,7 @@ class DeploymentHelper {
     LUSDToken.setAsDeployed(lusdToken)
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeed.setAsDeployed(priceFeed)
-    SortedCDPs.setAsDeployed(sortedCDPs)
+    SortedTroves.setAsDeployed(sortedTroves)
     TroveManager.setAsDeployed(troveManager)
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
@@ -96,7 +96,7 @@ class DeploymentHelper {
     const coreContracts = {
       priceFeed,
       lusdToken,
-      sortedCDPs,
+      sortedTroves,
       troveManager,
       activePool,
       stabilityPool,
@@ -114,7 +114,7 @@ class DeploymentHelper {
 
     // Contract without testers (yet)
     testerContracts.priceFeed = await PriceFeed.new()
-    testerContracts.sortedCDPs = await SortedCDPs.new()
+    testerContracts.sortedTroves = await SortedTroves.new()
 
     // Actual tester contracts
     testerContracts.communityIssuance = await CommunityIssuanceTester.new()
@@ -190,7 +190,7 @@ class DeploymentHelper {
 
   static async deployLiquityCoreTruffle() {
     const priceFeed = await PriceFeed.new()
-    const sortedCDPs = await SortedCDPs.new()
+    const sortedTroves = await SortedTroves.new()
     const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
@@ -207,7 +207,7 @@ class DeploymentHelper {
     const coreContracts = {
       priceFeed,
       lusdToken,
-      sortedCDPs,
+      sortedTroves,
       troveManager,
       activePool,
       stabilityPool,
@@ -254,8 +254,8 @@ class DeploymentHelper {
   // Connect contracts to their dependencies
   static async connectCoreContracts(contracts, LQTYContracts) {
 
-    // set TroveManager addr in SortedCDPs
-    await contracts.sortedCDPs.setParams(
+    // set TroveManager addr in SortedTroves
+    await contracts.sortedTroves.setParams(
       maxBytes32,
       contracts.troveManager.address,
       contracts.borrowerOperations.address
@@ -263,7 +263,7 @@ class DeploymentHelper {
 
     // set contract addresses in the FunctionCaller 
     await contracts.functionCaller.setTroveManagerAddress(contracts.troveManager.address)
-    await contracts.functionCaller.setSortedCDPsAddress(contracts.sortedCDPs.address)
+    await contracts.functionCaller.setSortedTrovesAddress(contracts.sortedTroves.address)
 
     // set contract addresses in PriceFeed
     await contracts.priceFeed.setAddresses(
@@ -281,7 +281,7 @@ class DeploymentHelper {
       contracts.collSurplusPool.address,
       contracts.priceFeed.address,
       contracts.lusdToken.address,
-      contracts.sortedCDPs.address,
+      contracts.sortedTroves.address,
       LQTYContracts.lqtyStaking.address
     )
 
@@ -293,7 +293,7 @@ class DeploymentHelper {
       contracts.stabilityPool.address,
       contracts.collSurplusPool.address,
       contracts.priceFeed.address,
-      contracts.sortedCDPs.address,
+      contracts.sortedTroves.address,
       contracts.lusdToken.address,
       LQTYContracts.lqtyStaking.address
     )
@@ -304,7 +304,7 @@ class DeploymentHelper {
       contracts.troveManager.address,
       contracts.activePool.address,
       contracts.lusdToken.address,
-      contracts.sortedCDPs.address,
+      contracts.sortedTroves.address,
       contracts.priceFeed.address,
       LQTYContracts.communityIssuance.address
     )
@@ -330,7 +330,7 @@ class DeploymentHelper {
     // set contracts in HintHelpers
     await contracts.hintHelpers.setAddresses(
       contracts.priceFeed.address,
-      contracts.sortedCDPs.address,
+      contracts.sortedTroves.address,
       contracts.troveManager.address
     )
   }

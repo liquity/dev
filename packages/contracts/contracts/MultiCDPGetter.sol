@@ -4,7 +4,7 @@ pragma solidity 0.6.11;
 pragma experimental ABIEncoderV2;
 
 import "./TroveManager.sol";
-import "./SortedCDPs.sol";
+import "./SortedTroves.sol";
 
 /*  Helper contract for grabbing CDP data for the front end. Not part of the core Liquity system. */
 contract MultiCDPGetter {
@@ -19,15 +19,15 @@ contract MultiCDPGetter {
         uint snapshotLUSDDebt;
     }
 
-    TroveManager public troveManager; // XXX CDPs missing from ITroveManager?
-    ISortedCDPs public sortedCDPs;
+    TroveManager public troveManager; // XXX Troves missing from ITroveManager?
+    ISortedTroves public sortedTroves;
 
-    constructor(TroveManager _troveManager, ISortedCDPs _sortedCDPs) public {
+    constructor(TroveManager _troveManager, ISortedTroves _sortedTroves) public {
         troveManager = _troveManager;
-        sortedCDPs = _sortedCDPs;
+        sortedTroves = _sortedTroves;
     }
 
-    function getMultipleSortedCDPs(int _startIdx, uint _count)
+    function getMultipleSortedTroves(int _startIdx, uint _count)
         external view returns (CombinedCDPData[] memory _cdps)
     {
         uint startIdx;
@@ -41,32 +41,32 @@ contract MultiCDPGetter {
             descend = false;
         }
 
-        uint sortedCDPsSize = sortedCDPs.getSize();
+        uint sortedTrovesSize = sortedTroves.getSize();
 
-        if (startIdx >= sortedCDPsSize) {
+        if (startIdx >= sortedTrovesSize) {
             _cdps = new CombinedCDPData[](0);
         } else {
-            uint maxCount = sortedCDPsSize - startIdx;
+            uint maxCount = sortedTrovesSize - startIdx;
 
             if (_count > maxCount) {
                 _count = maxCount;
             }
 
             if (descend) {
-                _cdps = _getMultipleSortedCDPsFromHead(startIdx, _count);
+                _cdps = _getMultipleSortedTrovesFromHead(startIdx, _count);
             } else {
-                _cdps = _getMultipleSortedCDPsFromTail(startIdx, _count);
+                _cdps = _getMultipleSortedTrovesFromTail(startIdx, _count);
             }
         }
     }
 
-    function _getMultipleSortedCDPsFromHead(uint _startIdx, uint _count)
+    function _getMultipleSortedTrovesFromHead(uint _startIdx, uint _count)
         internal view returns (CombinedCDPData[] memory _cdps)
     {
-        address currentCDPowner = sortedCDPs.getFirst();
+        address currentCDPowner = sortedTroves.getFirst();
 
         for (uint idx = 0; idx < _startIdx; ++idx) {
-            currentCDPowner = sortedCDPs.getNext(currentCDPowner);
+            currentCDPowner = sortedTroves.getNext(currentCDPowner);
         }
 
         _cdps = new CombinedCDPData[](_count);
@@ -79,23 +79,23 @@ contract MultiCDPGetter {
                 _cdps[idx].stake,
                 /* status */,
                 /* arrayIndex */
-            ) = troveManager.CDPs(currentCDPowner);
+            ) = troveManager.Troves(currentCDPowner);
             (
                 _cdps[idx].snapshotETH,
                 _cdps[idx].snapshotLUSDDebt
             ) = troveManager.rewardSnapshots(currentCDPowner);
 
-            currentCDPowner = sortedCDPs.getNext(currentCDPowner);
+            currentCDPowner = sortedTroves.getNext(currentCDPowner);
         }
     }
 
-    function _getMultipleSortedCDPsFromTail(uint _startIdx, uint _count)
+    function _getMultipleSortedTrovesFromTail(uint _startIdx, uint _count)
         internal view returns (CombinedCDPData[] memory _cdps)
     {
-        address currentCDPowner = sortedCDPs.getLast();
+        address currentCDPowner = sortedTroves.getLast();
 
         for (uint idx = 0; idx < _startIdx; ++idx) {
-            currentCDPowner = sortedCDPs.getPrev(currentCDPowner);
+            currentCDPowner = sortedTroves.getPrev(currentCDPowner);
         }
 
         _cdps = new CombinedCDPData[](_count);
@@ -108,13 +108,13 @@ contract MultiCDPGetter {
                 _cdps[idx].stake,
                 /* status */,
                 /* arrayIndex */
-            ) = troveManager.CDPs(currentCDPowner);
+            ) = troveManager.Troves(currentCDPowner);
             (
                 _cdps[idx].snapshotETH,
                 _cdps[idx].snapshotLUSDDebt
             ) = troveManager.rewardSnapshots(currentCDPowner);
 
-            currentCDPowner = sortedCDPs.getPrev(currentCDPowner);
+            currentCDPowner = sortedTroves.getPrev(currentCDPowner);
         }
     }
 }

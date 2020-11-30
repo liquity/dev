@@ -21,7 +21,7 @@ contract('Gas cost tests', async accounts => {
   let priceFeed
   let lusdToken
 
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let activePool
   let stabilityPool
@@ -37,7 +37,7 @@ contract('Gas cost tests', async accounts => {
 
     priceFeed = contracts.priceFeed
     lusdToken = contracts.lusdToken
-    sortedCDPs = contracts.sortedCDPs
+    sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
@@ -55,25 +55,25 @@ contract('Gas cost tests', async accounts => {
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
-  // --- liquidateCDPs RECOVERY MODE - pure redistribution ---
+  // --- liquidateTroves RECOVERY MODE - pure redistribution ---
 
   // 1 trove
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 1. Pure redistribution, Recovery Mode'
+    const message = 'liquidateTroves(). n = 1. Pure redistribution, Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //1 accts open CDP with 1 ether and withdraw 100 LUSD
     const _1_Defaulter = accounts.slice(1, 2)
     await th.openTrove_allAccounts(_1_Defaulter, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _1_Defaulter) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _1_Defaulter) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
@@ -81,22 +81,22 @@ contract('Gas cost tests', async accounts => {
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(1, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check defaulters' troves have been closed
-    for (account of _1_Defaulter) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _1_Defaulter) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -106,43 +106,43 @@ contract('Gas cost tests', async accounts => {
 
   // 2 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 2. Pure redistribution. Recovery Mode'
+    const message = 'liquidateTroves(). n = 2. Pure redistribution. Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //2 accts open CDP with 1 ether and withdraw 100 LUSD
     const _2_Defaulters = accounts.slice(1, 3)
     await th.openTrove_allAccounts(_2_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _2_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _2_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(2, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(2, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check defaulters' troves have been closed
-    for (account of _2_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _2_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -152,43 +152,43 @@ contract('Gas cost tests', async accounts => {
 
   // 3 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 3. Pure redistribution. Recovery Mode'
+    const message = 'liquidateTroves(). n = 3. Pure redistribution. Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //3 accts open CDP with 1 ether and withdraw 100 LUSD
     const _3_Defaulters = accounts.slice(1, 4)
     await th.openTrove_allAccounts(_3_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _3_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _3_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(3, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(3, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check defaulters' troves have been closed
-    for (account of _3_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _3_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -198,43 +198,43 @@ contract('Gas cost tests', async accounts => {
 
   // 5 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 5. Pure redistribution. Recovery Mode'
+    const message = 'liquidateTroves(). n = 5. Pure redistribution. Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //5 accts open CDP with 1 ether and withdraw 100 LUSD
     const _5_Defaulters = accounts.slice(1, 6)
     await th.openTrove_allAccounts(_5_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _5_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _5_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(5, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(5, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check defaulters' troves have been closed
-    for (account of _5_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _5_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -244,43 +244,43 @@ contract('Gas cost tests', async accounts => {
 
   // 10 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 10. Pure redistribution. Recovery Mode'
+    const message = 'liquidateTroves(). n = 10. Pure redistribution. Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //10 accts open CDP with 1 ether and withdraw 100 LUSD
     const _10_Defaulters = accounts.slice(1, 11)
     await th.openTrove_allAccounts(_10_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _10_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _10_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(10, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(10, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check defaulters' troves have been closed
-    for (account of _10_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _10_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -290,43 +290,43 @@ contract('Gas cost tests', async accounts => {
 
   //20 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 20. Pure redistribution. Recovery Mode'
+    const message = 'liquidateTroves(). n = 20. Pure redistribution. Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 90 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //20 accts open CDP with 1 ether and withdraw 100 LUSD
     const _20_Defaulters = accounts.slice(1, 21)
     await th.openTrove_allAccounts(_20_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _20_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _20_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(20, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(20, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check defaulters' troves have been closed
-    for (account of _20_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _20_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -336,43 +336,43 @@ contract('Gas cost tests', async accounts => {
 
   // 30 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 30. Pure redistribution. Recovery Mode'
+    const message = 'liquidateTroves(). n = 30. Pure redistribution. Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 90 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //30 accts open CDP with 1 ether and withdraw 100 LUSD
     const _30_Defaulters = accounts.slice(1, 31)
     await th.openTrove_allAccounts(_30_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _30_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _30_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(30, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check defaulters' troves have been closed
-    for (account of _30_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _30_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -382,43 +382,43 @@ contract('Gas cost tests', async accounts => {
 
   // 40 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 40. Pure redistribution. Recovery Mode'
+    const message = 'liquidateTroves(). n = 40. Pure redistribution. Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 90 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //40 accts open CDP with 1 ether and withdraw 100 LUSD
     const _40_Defaulters = accounts.slice(1, 41)
     await th.openTrove_allAccounts(_40_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _40_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _40_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(40, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(40, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
     // Check defaulters' troves have been closed
-    for (account of _40_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _40_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -428,28 +428,28 @@ contract('Gas cost tests', async accounts => {
 
   // 45 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 45. Pure redistribution. Recovery Mode'
+    const message = 'liquidateTroves(). n = 45. Pure redistribution. Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //45 accts open CDP with 1 ether and withdraw 100 LUSD
     const _45_Defaulters = accounts.slice(1, 46)
     await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _45_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _45_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 100 LUSD
     await borrowerOperations.openTrove(dec(100, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
     await priceFeed.setPrice(dec(100, 18))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
 
     // Check Recovery Mode is true
     assert.isTrue(await troveManager.checkRecoveryMode())
@@ -457,14 +457,14 @@ contract('Gas cost tests', async accounts => {
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    const tx = await troveManager.liquidateCDPs(45, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(45, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check defaulters' troves have been closed
-    for (account of _45_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _45_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -472,14 +472,14 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  // --- liquidate CDPs --- RECOVERY MODE --- Full offset, NO pending distribution rewards ----
+  // --- liquidate Troves --- RECOVERY MODE --- Full offset, NO pending distribution rewards ----
 
   // 1 trove
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 1. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -495,7 +495,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_1_Defaulter, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _1_Defaulter) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _1_Defaulter) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -513,18 +513,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(1, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _1_Defaulter) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _1_Defaulter) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -539,10 +539,10 @@ contract('Gas cost tests', async accounts => {
 
   // 2 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 2. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -558,7 +558,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_2_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _2_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _2_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -573,18 +573,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(2, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(2, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _2_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _2_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -600,10 +600,10 @@ contract('Gas cost tests', async accounts => {
 
   // 3 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 3. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 3. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -619,7 +619,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_3_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _3_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _3_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -634,18 +634,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(3, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(3, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _3_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _3_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -660,10 +660,10 @@ contract('Gas cost tests', async accounts => {
 
   // 5 troves 
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 5. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 5. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -679,7 +679,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_5_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _5_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _5_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -694,18 +694,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(5, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(5, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _5_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _5_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -721,10 +721,10 @@ contract('Gas cost tests', async accounts => {
 
   // 10 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 10. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 10. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -740,7 +740,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_10_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _10_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _10_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -755,18 +755,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(10, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(10, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _10_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _10_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -781,10 +781,10 @@ contract('Gas cost tests', async accounts => {
 
   // 20 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 20. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 20. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -800,7 +800,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_20_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _20_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _20_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -815,18 +815,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(20, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(20, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _20_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _20_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -842,10 +842,10 @@ contract('Gas cost tests', async accounts => {
 
   // 30 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 30. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -861,7 +861,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_30_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _30_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _30_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -876,18 +876,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(30, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _30_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _30_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -902,10 +902,10 @@ contract('Gas cost tests', async accounts => {
 
   // 40 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 40. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 40. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -921,7 +921,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_40_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _40_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _40_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -936,18 +936,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(40, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(40, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _40_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _40_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -962,10 +962,10 @@ contract('Gas cost tests', async accounts => {
 
   // 45 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 45. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 45. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
     const whale = accounts[999]
@@ -981,7 +981,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _45_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _45_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
     await priceFeed.setPrice(dec(120, 18))
@@ -996,18 +996,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(45, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(45, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _45_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _45_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1020,30 +1020,30 @@ contract('Gas cost tests', async accounts => {
     th.appendData({ gas: gas }, message, data)
   })
 
-  // --- liquidate CDPs --- RECOVERY MODE --- Full offset, HAS pending distribution rewards ----
+  // --- liquidate Troves --- RECOVERY MODE --- Full offset, HAS pending distribution rewards ----
 
   // 1 trove
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 1. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 1. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //1 acct opens CDP with 1 ether and withdraw 100 LUSD
     const _1_Defaulter = accounts.slice(1, 2)
     await th.openTrove_allAccounts(_1_Defaulter, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _1_Defaulter) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _1_Defaulter) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1071,18 +1071,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(1, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(1, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // // Check CDPs are closed
-    for (account of _1_Defaulter) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // // Check Troves are closed
+    for (account of _1_Defaulter) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1097,26 +1097,26 @@ contract('Gas cost tests', async accounts => {
 
   // 2 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 2. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 2. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //2 accts open CDP with 1 ether and withdraw 100 LUSD
     const _2_Defaulters = accounts.slice(1, 3)
     await th.openTrove_allAccounts(_2_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _2_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _2_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1144,18 +1144,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(2, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(2, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check CDPs are closed
-    for (account of _2_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // Check Troves are closed
+    for (account of _2_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1171,26 +1171,26 @@ contract('Gas cost tests', async accounts => {
 
   // 3 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 3. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 3. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //3 accts open CDP with 1 ether and withdraw 100 LUSD
     const _3_Defaulters = accounts.slice(1, 4)
     await th.openTrove_allAccounts(_3_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _3_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _3_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1218,18 +1218,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(3, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(3, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check CDPs are closed
-    for (account of _3_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // Check Troves are closed
+    for (account of _3_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1244,26 +1244,26 @@ contract('Gas cost tests', async accounts => {
 
   // 5 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 5. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 5. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //5 accts open CDP with 1 ether and withdraw 100 LUSD
     const _5_Defaulters = accounts.slice(1, 6)
     await th.openTrove_allAccounts(_5_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _5_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _5_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1291,18 +1291,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(5, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(5, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check CDPs are closed
-    for (account of _5_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // Check Troves are closed
+    for (account of _5_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1317,26 +1317,26 @@ contract('Gas cost tests', async accounts => {
 
   // 10 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 10. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 10. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //10 accts open CDP with 1 ether and withdraw 100 LUSD
     const _10_Defaulters = accounts.slice(1, 11)
     await th.openTrove_allAccounts(_10_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _10_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _10_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1364,18 +1364,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(10, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(10, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check CDPs are closed
-    for (account of _10_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // Check Troves are closed
+    for (account of _10_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1390,26 +1390,26 @@ contract('Gas cost tests', async accounts => {
 
   // 20 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 20. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 20. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //20 accts open CDP with 1 ether and withdraw 100 LUSD
     const _20_Defaulters = accounts.slice(1, 21)
     await th.openTrove_allAccounts(_20_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _20_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _20_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1437,18 +1437,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(20, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(20, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check CDPs are closed
-    for (account of _20_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // Check Troves are closed
+    for (account of _20_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1463,26 +1463,26 @@ contract('Gas cost tests', async accounts => {
 
   // 30 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 30. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 30. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //30 accts open CDP with 1 ether and withdraw 100 LUSD
     const _30_Defaulters = accounts.slice(1, 31)
     await th.openTrove_allAccounts(_30_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _30_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _30_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1510,18 +1510,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(30, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(30, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check CDPs are closed
-    for (account of _30_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // Check Troves are closed
+    for (account of _30_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1536,26 +1536,26 @@ contract('Gas cost tests', async accounts => {
 
   // 40 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 40. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 40. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //40 accts open CDP with 1 ether and withdraw 100 LUSD
     const _40_Defaulters = accounts.slice(1, 41)
     await th.openTrove_allAccounts(_40_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _40_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _40_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1583,18 +1583,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(40, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(40, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check CDPs are closed
-    for (account of _40_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // Check Troves are closed
+    for (account of _40_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1609,26 +1609,26 @@ contract('Gas cost tests', async accounts => {
 
   // 45 troves
   it("", async () => {
-    const message = 'liquidateCDPs(). n = 45. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
+    const message = 'liquidateTroves(). n = 45. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
     // 10 accts each open CDP with 10 ether, withdraw 900 LUSD
     await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     //45 accts open CDP with 1 ether and withdraw 100 LUSD
     const _45_Defaulters = accounts.slice(1, 46)
     await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(1, 'ether'), dec(100, 18))
 
     // Check all defaulters are active
-    for (account of _45_Defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _45_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 opens with 1 ether and withdraws 110 LUSD
     await borrowerOperations.openTrove(dec(110, 18), accounts[500], { from: accounts[500], value: dec(1, 'ether') })
-    assert.isTrue(await sortedCDPs.contains(accounts[500]))
+    assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
     await troveManager.liquidate(accounts[500], { from: accounts[0] })
-    assert.isFalse(await sortedCDPs.contains(accounts[500]))
+    assert.isFalse(await sortedTroves.contains(accounts[500]))
     await priceFeed.setPrice(dec(200, 18))
 
     // Check all defaulters have pending rewards 
@@ -1656,18 +1656,18 @@ contract('Gas cost tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
     // Liquidate troves
-    const tx = await troveManager.liquidateCDPs(45, { from: accounts[0] })
+    const tx = await troveManager.liquidateTroves(45, { from: accounts[0] })
     assert.isTrue(tx.receipt.status)
 
     // Check Recovery Mode is true after liquidations
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check CDPs are closed
-    for (account of _45_Defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    // Check Troves are closed
+    for (account of _45_Defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     // Check initial troves with starting 10E/90LUSD, and whale's trove, are still open
-    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedCDPs.contains(account)) }
-    assert.isTrue(await sortedCDPs.contains(whale))
+    for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
+    assert.isTrue(await sortedTroves.contains(whale))
 
     //Check LUSD in SP has decreased but is still > 0
     const LUSDinSP_After = await stabilityPool.getTotalLUSDDeposits()
@@ -1699,7 +1699,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_10_defaulters, contracts, dec(1, 'ether'), dec(170, 18))
 
     // Check all defaulters active
-    for (account of _10_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _10_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
@@ -1712,7 +1712,7 @@ contract('Gas cost tests', async accounts => {
     const tx = await troveManager.batchLiquidateTroves(_10_defaulters, { from: accounts[0] })
 
     // Check all defaulters liquidated
-    for (account of _10_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _10_defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -1736,7 +1736,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_40_defaulters, contracts, dec(1, 'ether'), dec(170, 18))
 
     // Check all defaulters active
-    for (account of _40_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _40_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
@@ -1749,7 +1749,7 @@ contract('Gas cost tests', async accounts => {
     const tx = await troveManager.batchLiquidateTroves(_40_defaulters, { from: accounts[0] })
 
     // check all defaulters liquidated
-    for (account of _40_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _40_defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -1772,7 +1772,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_45_defaulters, contracts, dec(1, 'ether'), dec(170, 18))
 
     // check all defaulters active
-    for (account of _45_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _45_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
@@ -1785,7 +1785,7 @@ contract('Gas cost tests', async accounts => {
     const tx = await troveManager.batchLiquidateTroves(_45_defaulters, { from: accounts[0] })
 
     // check all defaulters liquidated
-    for (account of _45_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _45_defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -1809,7 +1809,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_50_defaulters, contracts, dec(1, 'ether'), dec(170, 18))
 
     // check all defaulters active
-    for (account of _50_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _50_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
@@ -1822,7 +1822,7 @@ contract('Gas cost tests', async accounts => {
     const tx = await troveManager.batchLiquidateTroves(_50_defaulters, { from: accounts[0] })
 
     // check all defaulters liquidated
-    for (account of _50_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _50_defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -1848,7 +1848,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_10_defaulters, contracts, dec(1, 'ether'), dec(170, 18))
 
     // Check all defaulters active
-    for (account of _10_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _10_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
@@ -1867,7 +1867,7 @@ contract('Gas cost tests', async accounts => {
     const tx = await troveManager.batchLiquidateTroves(_10_defaulters, { from: accounts[0] })
 
     // Check all defaulters liquidated
-    for (account of _10_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _10_defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -1892,7 +1892,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_40_defaulters, contracts, dec(1, 'ether'), dec(170, 18))
 
     // Check all defaulters active
-    for (account of _40_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _40_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
@@ -1912,7 +1912,7 @@ contract('Gas cost tests', async accounts => {
     const tx = await troveManager.batchLiquidateTroves(_40_defaulters, { from: accounts[0] })
 
     // check all defaulters liquidated
-    for (account of _40_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _40_defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -1935,7 +1935,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_45_defaulters, contracts, dec(1, 'ether'), dec(170, 18))
 
     // check all defaulters active
-    for (account of _45_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _45_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
@@ -1955,7 +1955,7 @@ contract('Gas cost tests', async accounts => {
     const tx = await troveManager.batchLiquidateTroves(_45_defaulters, { from: accounts[0] })
 
     // check all defaulters liquidated
-    for (account of _45_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _45_defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -1978,7 +1978,7 @@ contract('Gas cost tests', async accounts => {
     await th.openTrove_allAccounts(_50_defaulters, contracts, dec(1, 'ether'), dec(170, 18))
 
     // check all defaulters active
-    for (account of _50_defaulters) { assert.isTrue(await sortedCDPs.contains(account)) }
+    for (account of _50_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Account 500 is liquidated, creates pending distribution rewards for all
     await priceFeed.setPrice(dec(100, 18))
@@ -1998,7 +1998,7 @@ contract('Gas cost tests', async accounts => {
     const tx = await troveManager.batchLiquidateTroves(_50_defaulters, { from: accounts[0] })
 
     // check all defaulters liquidated
-    for (account of _50_defaulters) { assert.isFalse(await sortedCDPs.contains(account)) }
+    for (account of _50_defaulters) { assert.isFalse(await sortedTroves.contains(account)) }
 
     const gas = th.gasUsed(tx)
     th.logGas(gas, message)
@@ -2009,9 +2009,9 @@ contract('Gas cost tests', async accounts => {
 
 
   it("Export test data", async () => {
-    fs.writeFile('gasTest/outputs/liquidateCDPsGasData.csv', data, (err) => {
+    fs.writeFile('gasTest/outputs/liquidateTrovesGasData.csv', data, (err) => {
       if (err) { console.log(err) } else {
-        console.log("LiquidateCDPs() gas test data written to gasTest/outputs/liquidateCDPsGasData.csv")
+        console.log("LiquidateTroves() gas test data written to gasTest/outputs/liquidateTrovesGasData.csv")
       }
     })
   })

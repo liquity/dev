@@ -10,7 +10,7 @@ import "../StabilityPool.sol";
 import "../CollSurplusPool.sol";
 import "../LUSDToken.sol";
 import "../PriceFeed.sol";
-import "../SortedCDPs.sol";
+import "../SortedTroves.sol";
 import "./EchidnaProxy.sol";
 //import "../Dependencies/console.sol";
 
@@ -36,7 +36,7 @@ contract EchidnaTester {
     CollSurplusPool public collSurplusPool;
     LUSDToken public lusdToken;
     PriceFeed priceFeed;
-    SortedCDPs sortedCDPs;
+    SortedTroves sortedTroves;
 
     EchidnaProxy[NUMBER_OF_ACTORS] public echidnaProxies;
 
@@ -55,18 +55,18 @@ contract EchidnaTester {
         );
         collSurplusPool = new CollSurplusPool();
         priceFeed = new PriceFeed();
-        sortedCDPs = new SortedCDPs();
+        sortedTroves = new SortedTroves();
 
-        troveManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(lusdToken), address(sortedCDPs), address(0));
+        troveManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(lusdToken), address(sortedTroves), address(0));
        
-        borrowerOperations.setAddresses(address(troveManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedCDPs), address(lusdToken), address(0));
+        borrowerOperations.setAddresses(address(troveManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedTroves), address(lusdToken), address(0));
         activePool.setAddresses(address(borrowerOperations), address(troveManager), address(stabilityPool), address(defaultPool));
         defaultPool.setAddresses(address(troveManager), address(activePool));
         
-        stabilityPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool), address(lusdToken), address(sortedCDPs), address(priceFeed), address(0));
+        stabilityPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool), address(lusdToken), address(sortedTroves), address(priceFeed), address(0));
         collSurplusPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool));
         priceFeed.setAddresses(address(troveManager), address(0), address(0));
-        sortedCDPs.setParams(1e18, address(troveManager), address(borrowerOperations));
+        sortedTroves.setParams(1e18, address(troveManager), address(borrowerOperations));
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
             echidnaProxies[i] = new EchidnaProxy(troveManager, borrowerOperations, stabilityPool, lusdToken);
@@ -93,9 +93,9 @@ contract EchidnaTester {
         echidnaProxies[actor].liquidatePrx(_user);
     }
 
-    function liquidateCDPsExt(uint _i, uint _n) external {
+    function liquidateTrovesExt(uint _i, uint _n) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].liquidateCDPsPrx(_n);
+        echidnaProxies[actor].liquidateTrovesPrx(_n);
     }
 
     function batchLiquidateTrovesExt(uint _i, address[] calldata _troveArray) external {
@@ -285,8 +285,8 @@ contract EchidnaTester {
     function echidna_troves_order() external view returns(bool) {
         uint price = priceFeed.getPrice();
 
-        address currentTrove = sortedCDPs.getFirst();
-        address nextTrove = sortedCDPs.getNext(currentTrove);
+        address currentTrove = sortedTroves.getFirst();
+        address nextTrove = sortedTroves.getNext(currentTrove);
 
         while (currentTrove != address(0) && nextTrove != address(0)) {
             if (troveManager.getCurrentICR(nextTrove, price) > troveManager.getCurrentICR(currentTrove, price)) {
@@ -296,7 +296,7 @@ contract EchidnaTester {
             //else return false;
 
             currentTrove = nextTrove;
-            nextTrove = sortedCDPs.getNext(currentTrove);
+            nextTrove = sortedTroves.getNext(currentTrove);
         }
 
         return true;
@@ -308,7 +308,7 @@ contract EchidnaTester {
      * Stake > 0
      */
     function echidna_trove_properties() public view returns(bool) {
-        address currentTrove = sortedCDPs.getFirst();
+        address currentTrove = sortedTroves.getFirst();
         while (currentTrove != address(0)) {
             // Status
             if (TroveManager.Status(troveManager.getCDPStatus(currentTrove)) != TroveManager.Status.active) {
@@ -331,7 +331,7 @@ contract EchidnaTester {
             // Uncomment to check that the condition is meaningful
             //else return false;
 
-            currentTrove = sortedCDPs.getNext(currentTrove);
+            currentTrove = sortedTroves.getNext(currentTrove);
         }
         return true;
     }
@@ -365,7 +365,7 @@ contract EchidnaTester {
             return false;
         }
 
-        if (address(sortedCDPs).balance > 0) {
+        if (address(sortedTroves).balance > 0) {
             return false;
         }
 
@@ -396,11 +396,11 @@ contract EchidnaTester {
         }
 
         uint stabilityPoolBalance = stabilityPool.getTotalLUSDDeposits();
-        address currentTrove = sortedCDPs.getFirst();
+        address currentTrove = sortedTroves.getFirst();
         uint trovesBalance;
         while (currentTrove != address(0)) {
             trovesBalance += lusdToken.balanceOf(address(currentTrove));
-            currentTrove = sortedCDPs.getNext(currentTrove);
+            currentTrove = sortedTroves.getNext(currentTrove);
         }
         // we cannot state equality because tranfers are made to external addresses too
         if (totalSupply <= stabilityPoolBalance + trovesBalance + gasPoolBalance) {

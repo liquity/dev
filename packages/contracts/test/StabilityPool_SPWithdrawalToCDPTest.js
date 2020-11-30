@@ -29,7 +29,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
 
   let priceFeed
   let lusdToken
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let activePool
   let stabilityPool
@@ -56,7 +56,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to CDP - reward calcul
   
       priceFeed = contracts.priceFeed
       lusdToken = contracts.lusdToken
-      sortedCDPs = contracts.sortedCDPs
+      sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager
       activePool = contracts.activePool
       stabilityPool = contracts.stabilityPool

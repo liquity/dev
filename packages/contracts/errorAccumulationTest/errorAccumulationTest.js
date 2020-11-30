@@ -23,7 +23,7 @@ contract('TroveManager', async accounts => {
     
     lusdToken = contracts.lusdToken
     priceFeed = contracts.priceFeed
-    sortedCDPs = contracts.sortedCDPs
+    sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
@@ -214,10 +214,10 @@ contract('TroveManager', async accounts => {
 
   // --- Error accumulation from repeated Liquidations  - pure distribution, empty SP  ---
 
-  //  50 CDPs added 
+  //  50 Troves added 
   //  1 whale, supports TCR
   //  price drops
-  //  loop: CDPs are liquidated. Coll and debt difference between (activePool - defaultPool) is
+  //  loop: Troves are liquidated. Coll and debt difference between (activePool - defaultPool) is
 
   it("11 accounts. 10 liquidations. Check (ActivePool - DefaultPool) differences", async () => {
     await borrowerOperations.openTrove(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
@@ -847,7 +847,7 @@ contract('TroveManager', async accounts => {
 
   // Loop over account range, alternately liquidating a CDP and opening a new trove
   for (i = 1; i < 10; i++) {
-    const stakeOfCDPToLiquidate = (await troveManager.CDPs(accounts[i]))[2]
+    const stakeOfCDPToLiquidate = (await troveManager.Troves(accounts[i]))[2]
     
     const newEntrantColl = web3.utils.toBN(dec(2, 18))
     
@@ -865,7 +865,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   
     // Grab new stake and totalStakes on-chain
-    const newStake = (await troveManager.CDPs(accounts[999 - i]))[2] 
+    const newStake = (await troveManager.Troves(accounts[999 - i]))[2] 
     const totalStakes = await troveManager.totalStakes()
     
     stakeDifference = offchainStake.sub(newStake)
@@ -903,7 +903,7 @@ contract('TroveManager', async accounts => {
 
   // Loop over account range, alternately liquidating a CDP and opening a new trove
   for (i = 1; i < 10; i++) {
-    const stakeOfCDPToLiquidate = (await troveManager.CDPs(accounts[i]))[2]
+    const stakeOfCDPToLiquidate = (await troveManager.Troves(accounts[i]))[2]
     
     const newEntrantColl = web3.utils.toBN(randAmountInWei(1, 100))
     
@@ -921,7 +921,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   
     // Grab new stake and totalStakes on-chain
-    const newStake = (await troveManager.CDPs(accounts[999 - i]))[2] 
+    const newStake = (await troveManager.Troves(accounts[999 - i]))[2] 
     const totalStakes = await troveManager.totalStakes()
     
     stakeDifference = offchainStake.sub(newStake)
@@ -960,7 +960,7 @@ it("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and totalS
 
   // Loop over account range, alternately liquidating a CDP and opening a new trove
   for (i = 1; i < 100; i++) {
-    const stakeOfCDPToLiquidate = (await troveManager.CDPs(accounts[i]))[2]
+    const stakeOfCDPToLiquidate = (await troveManager.Troves(accounts[i]))[2]
     
     const newEntrantColl = web3.utils.toBN(randAmountInWei(12, 73422))
     
@@ -978,7 +978,7 @@ it("100 accounts. 100x liquidate -> addColl. Random coll. Check stake and totalS
     await borrowerOperations.addColl(accounts[999 - i], accounts[999 - i], {from: accounts[999 - i], value: newEntrantColl })
   
     // Grab new stake and totalStakes on-chain
-    const newStake = (await troveManager.CDPs(accounts[999 - i]))[2] 
+    const newStake = (await troveManager.Troves(accounts[999 - i]))[2] 
     const totalStakes = await troveManager.totalStakes()
     
     stakeDifference = offchainStake.sub(newStake)

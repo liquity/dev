@@ -8,7 +8,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let contracts
   let priceFeed
   let lusdToken
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let activePool
   let stabilityPool
@@ -27,7 +27,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
     priceFeed = contracts.priceFeed
     lusdToken = contracts.lusdToken
-    sortedCDPs = contracts.sortedCDPs
+    sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
@@ -81,18 +81,18 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     })
   })
 
-  describe('SortedCDPs', async accounts => {
+  describe('SortedTroves', async accounts => {
     it("setParams(): reverts when called by non-owner", async () => {
       const params = [10000001, bob, bob]
       // Attempt call from alice
-      await th.assertRevert(sortedCDPs.setParams(...params, { from: alice }))
+      await th.assertRevert(sortedTroves.setParams(...params, { from: alice }))
 
       // Owner can successfully set params
-      const txOwner = await sortedCDPs.setParams(...params, { from: owner })
+      const txOwner = await sortedTroves.setParams(...params, { from: owner })
       assert.isTrue(txOwner.receipt.status)
 
       // fails if called twice
-      await th.assertRevert(sortedCDPs.setParams(...params, { from: owner }))
+      await th.assertRevert(sortedTroves.setParams(...params, { from: owner }))
     })
   })
 

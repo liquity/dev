@@ -30,7 +30,7 @@ contract('TroveManager', async accounts => {
 
   let priceFeed
   let lusdToken
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let activePool
   let stabilityPool
@@ -53,7 +53,7 @@ contract('TroveManager', async accounts => {
 
     priceFeed = contracts.priceFeed
     lusdToken = contracts.lusdToken
-    sortedCDPs = contracts.sortedCDPs
+    sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool
     stabilityPool = contracts.stabilityPool
@@ -101,9 +101,9 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(alice, { from: owner });
 
     // check the CDP is successfully closed, and removed from sortedList
-    const status = (await troveManager.CDPs(alice))[3]
+    const status = (await troveManager.Troves(alice))[3]
     assert.equal(status, 2)  // status enum  2 corresponds to "Closed"
-    const alice_CDP_isInSortedList = await sortedCDPs.contains(alice)
+    const alice_CDP_isInSortedList = await sortedTroves.contains(alice)
     assert.isFalse(alice_CDP_isInSortedList)
   })
 
@@ -242,7 +242,7 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(carol)
 
     // Check Carol no longer has an active trove
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     // Check length of array has decreased by 1
     const arrayLength_After = await troveManager.getCDPOwnersCount()
@@ -267,11 +267,11 @@ contract('TroveManager', async accounts => {
     assert.equal(trove_4, dennis)
 
     // Check correct indices recorded on the active trove structs
-    const whale_arrayIndex = (await troveManager.CDPs(whale))[4]
-    const alice_arrayIndex = (await troveManager.CDPs(alice))[4]
-    const bob_arrayIndex = (await troveManager.CDPs(bob))[4]
-    const dennis_arrayIndex = (await troveManager.CDPs(dennis))[4]
-    const erin_arrayIndex = (await troveManager.CDPs(erin))[4]
+    const whale_arrayIndex = (await troveManager.Troves(whale))[4]
+    const alice_arrayIndex = (await troveManager.Troves(alice))[4]
+    const bob_arrayIndex = (await troveManager.Troves(bob))[4]
+    const dennis_arrayIndex = (await troveManager.Troves(dennis))[4]
+    const erin_arrayIndex = (await troveManager.Troves(erin))[4]
 
     // [W, A, B, E, D] 
     assert.equal(whale_arrayIndex, 0)
@@ -336,9 +336,9 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // close Carol's CDP.  
-    assert.isTrue(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(carol))
     await troveManager.liquidate(carol, { from: owner });
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     /* Alice and Bob have the same active stakes. totalStakes in the system is (10 + 10) = 20 ether.
     
@@ -363,9 +363,9 @@ contract('TroveManager', async accounts => {
     const price = await priceFeed.getPrice()
 
     // close Bob's CDP 
-    assert.isTrue(await sortedCDPs.contains(bob))
+    assert.isTrue(await sortedTroves.contains(bob))
     await troveManager.liquidate(bob, { from: owner });
-    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedTroves.contains(bob))
 
     /* Alice now has all the active stake. totalStakes in the system is now 10 ether.
    
@@ -418,10 +418,10 @@ contract('TroveManager', async accounts => {
     const activeTrovesCount_After = await troveManager.getCDPOwnersCount()
     assert.equal(activeTrovesCount_After, 1)
 
-    const alice_isInSortedList = await sortedCDPs.contains(alice)
+    const alice_isInSortedList = await sortedTroves.contains(alice)
     assert.isFalse(alice_isInSortedList)
 
-    const bob_isInSortedList = await sortedCDPs.contains(bob)
+    const bob_isInSortedList = await sortedTroves.contains(bob)
     assert.isTrue(bob_isInSortedList)
   })
 
@@ -431,7 +431,7 @@ contract('TroveManager', async accounts => {
 
     assert.equal(await troveManager.getCDPStatus(carol), 0) // check trove non-existent
 
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await troveManager.checkRecoveryMode());
@@ -451,7 +451,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(180, 18), bob, { from: bob, value: dec(10, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
-    assert.isTrue(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(carol))
 
     // price drops, Carol ICR falls below MCR
     await priceFeed.setPrice(dec(100, 18))
@@ -460,7 +460,7 @@ contract('TroveManager', async accounts => {
     const txCarol_L1 = await troveManager.liquidate(carol)
     assert.isTrue(txCarol_L1.receipt.status)
 
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     assert.equal(await troveManager.getCDPStatus(carol), 2)  // check trove closed
 
@@ -482,7 +482,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(180, 18), bob, { from: bob, value: dec(10, 'ether') })
 
     const TCR_Before = (await troveManager.getTCR()).toString()
-    const listSize_Before = (await sortedCDPs.getSize()).toString()
+    const listSize_Before = (await sortedTroves.getSize()).toString()
 
     const price = await priceFeed.getPrice()
 
@@ -497,11 +497,11 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(bob)
 
     // Check bob active, check whale active
-    assert.isTrue((await sortedCDPs.contains(bob)))
-    assert.isTrue((await sortedCDPs.contains(whale)))
+    assert.isTrue((await sortedTroves.contains(bob)))
+    assert.isTrue((await sortedTroves.contains(whale)))
 
     const TCR_After = (await troveManager.getTCR()).toString()
-    const listSize_After = (await sortedCDPs.getSize()).toString()
+    const listSize_After = (await sortedTroves.getSize()).toString()
 
     assert.equal(TCR_Before, TCR_After)
     assert.equal(listSize_Before, listSize_After)
@@ -524,10 +524,10 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
     await borrowerOperations.openTrove('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
-    assert.isTrue((await sortedCDPs.contains(defaulter_1)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_2)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_3)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_4)))
+    assert.isTrue((await sortedTroves.contains(defaulter_1)))
+    assert.isTrue((await sortedTroves.contains(defaulter_2)))
+    assert.isTrue((await sortedTroves.contains(defaulter_3)))
+    assert.isTrue((await sortedTroves.contains(defaulter_4)))
 
     // Price drop
     await priceFeed.setPrice(dec(100, 18))
@@ -537,16 +537,16 @@ contract('TroveManager', async accounts => {
 
     // All defaulters liquidated
     await troveManager.liquidate(defaulter_1)
-    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
+    assert.isFalse((await sortedTroves.contains(defaulter_1)))
 
     await troveManager.liquidate(defaulter_2)
-    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
+    assert.isFalse((await sortedTroves.contains(defaulter_2)))
 
     await troveManager.liquidate(defaulter_3)
-    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
+    assert.isFalse((await sortedTroves.contains(defaulter_3)))
 
     await troveManager.liquidate(defaulter_4)
-    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
+    assert.isFalse((await sortedTroves.contains(defaulter_4)))
 
     // Price bounces back
     await priceFeed.setPrice(dec(200, 18))
@@ -571,10 +571,10 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
     await borrowerOperations.openTrove('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
-    assert.isTrue((await sortedCDPs.contains(defaulter_1)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_2)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_3)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_4)))
+    assert.isTrue((await sortedTroves.contains(defaulter_1)))
+    assert.isTrue((await sortedTroves.contains(defaulter_2)))
+    assert.isTrue((await sortedTroves.contains(defaulter_3)))
+    assert.isTrue((await sortedTroves.contains(defaulter_4)))
 
     await priceFeed.setPrice(dec(100, 18))
 
@@ -585,22 +585,22 @@ contract('TroveManager', async accounts => {
 
     // Check TCR improves with each liquidation that is offset with Pool
     await troveManager.liquidate(defaulter_1)
-    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
+    assert.isFalse((await sortedTroves.contains(defaulter_1)))
     const TCR_2 = await troveManager.getTCR()
     assert.isTrue(TCR_2.gte(TCR_1))
 
     await troveManager.liquidate(defaulter_2)
-    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
+    assert.isFalse((await sortedTroves.contains(defaulter_2)))
     const TCR_3 = await troveManager.getTCR()
     assert.isTrue(TCR_3.gte(TCR_2))
 
     await troveManager.liquidate(defaulter_3)
-    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
+    assert.isFalse((await sortedTroves.contains(defaulter_3)))
     const TCR_4 = await troveManager.getTCR()
     assert.isTrue(TCR_4.gte(TCR_4))
 
     await troveManager.liquidate(defaulter_4)
-    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
+    assert.isFalse((await sortedTroves.contains(defaulter_4)))
     const TCR_5 = await troveManager.getTCR()
     assert.isTrue(TCR_5.gte(TCR_5))
   })
@@ -618,10 +618,10 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
     await borrowerOperations.openTrove('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
-    assert.isTrue((await sortedCDPs.contains(defaulter_1)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_2)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_3)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_4)))
+    assert.isTrue((await sortedTroves.contains(defaulter_1)))
+    assert.isTrue((await sortedTroves.contains(defaulter_2)))
+    assert.isTrue((await sortedTroves.contains(defaulter_3)))
+    assert.isTrue((await sortedTroves.contains(defaulter_4)))
 
     await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
@@ -641,7 +641,7 @@ contract('TroveManager', async accounts => {
     // Check TCR does not decrease with each liquidation 
     const liquidationTx_1 = await troveManager.liquidate(defaulter_1)
     const [liquidatedDebt_1, liquidatedColl_1, gasComp_1] = th.getEmittedLiquidationValues(liquidationTx_1)
-    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
+    assert.isFalse((await sortedTroves.contains(defaulter_1)))
     const TCR_1 = await troveManager.getTCR()
 
     // Expect only change to TCR to be due to the issued gas compensation
@@ -654,7 +654,7 @@ contract('TroveManager', async accounts => {
 
     const liquidationTx_2 = await troveManager.liquidate(defaulter_2)
     const [liquidatedDebt_2, liquidatedColl_2, gasComp_2] = th.getEmittedLiquidationValues(liquidationTx_2)
-    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
+    assert.isFalse((await sortedTroves.contains(defaulter_2)))
 
     const TCR_2 = await troveManager.getTCR()
 
@@ -668,7 +668,7 @@ contract('TroveManager', async accounts => {
 
     const liquidationTx_3 = await troveManager.liquidate(defaulter_3)
     const [liquidatedDebt_3, liquidatedColl_3, gasComp_3] = th.getEmittedLiquidationValues(liquidationTx_3)
-    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
+    assert.isFalse((await sortedTroves.contains(defaulter_3)))
 
     const TCR_3 = await troveManager.getTCR()
 
@@ -684,7 +684,7 @@ contract('TroveManager', async accounts => {
 
     const liquidationTx_4 = await troveManager.liquidate(defaulter_4)
     const [liquidatedDebt_4, liquidatedColl_4, gasComp_4] = th.getEmittedLiquidationValues(liquidationTx_4)
-    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
+    assert.isFalse((await sortedTroves.contains(defaulter_4)))
 
     const TCR_4 = await troveManager.getTCR()
 
@@ -715,7 +715,7 @@ contract('TroveManager', async accounts => {
     const liquidationTX_C = await troveManager.liquidate(carol)
     const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTX_C)
 
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(carol))
     // Check Dennis' SP deposit has absorbed Carol's debt, and he has received her liquidated ETH
     const dennis_Deposit_Before = (await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString()
     const dennis_ETHGain_Before = (await stabilityPool.getDepositorETHGain(dennis)).toString()
@@ -753,7 +753,7 @@ contract('TroveManager', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
     const liquidationTX_C = await troveManager.liquidate(carol)
     const [liquidatedDebt, liquidatedColl, gasComp] = th.getEmittedLiquidationValues(liquidationTX_C)
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     // price bounces back - Bob's trove is >110% ICR again
     await priceFeed.setPrice(dec(200, 18))
@@ -773,7 +773,7 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(bob)
 
     // Confirm Bob's trove is still active
-    assert.isTrue(await sortedCDPs.contains(bob))
+    assert.isTrue(await sortedTroves.contains(bob))
 
     // Check Bob' SP deposit does not change after liquidation attempt
     const bob_Deposit_After = (await stabilityPool.getCompoundedLUSDDeposit(bob)).toString()
@@ -811,8 +811,8 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(bob)
 
     // Confirm Bob's trove has been closed
-    assert.isFalse(await sortedCDPs.contains(bob))
-    const bob_Trove_Status = ((await troveManager.CDPs(bob))[3]).toString()
+    assert.isFalse(await sortedTroves.contains(bob))
+    const bob_Trove_Status = ((await troveManager.Troves(bob))[3]).toString()
     assert.equal(bob_Trove_Status, 2) // check closed
 
     /* Alice's LUSD Loss = (300 / 400) * 210 = 157.5 LUSD
@@ -842,7 +842,7 @@ contract('TroveManager', async accounts => {
     assert.equal((await lusdToken.balanceOf(carol)).toString(), dec(100, 18))
 
     // Check sortedList size
-    assert.equal((await sortedCDPs.getSize()).toString(), '4')
+    assert.equal((await sortedTroves.getSize()).toString(), '4')
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await troveManager.checkRecoveryMode());
@@ -862,12 +862,12 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(carol)
 
     // Confirm A, B, C closed
-    assert.isFalse(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     // Check sortedList size reduced to 1
-    assert.equal((await sortedCDPs.getSize()).toString(), '1')
+    assert.equal((await sortedTroves.getSize()).toString(), '1')
 
     // Confirm token balances have not changed
     assert.equal((await lusdToken.balanceOf(alice)).toString(), dec(300, 18))
@@ -935,8 +935,8 @@ contract('TroveManager', async accounts => {
 
     /* Though Bob's true ICR (including pending rewards) is below the MCR, 
     check that Bob's raw coll and debt has not changed, and that his "raw" ICR is above the MCR */
-    const bob_Coll = (await troveManager.CDPs(bob))[1]
-    const bob_Debt = (await troveManager.CDPs(bob))[0]
+    const bob_Coll = (await troveManager.Troves(bob))[1]
+    const bob_Debt = (await troveManager.Troves(bob))[0]
 
     const bob_rawICR = bob_Coll.mul(toBN(dec(100, 18))).div(bob_Debt)
     assert.isTrue(bob_rawICR.gte(mv._MCR))
@@ -952,14 +952,14 @@ contract('TroveManager', async accounts => {
 
     /* Check Alice stays active, Carol gets liquidated, and Bob gets liquidated 
    (because his pending rewards bring his ICR < MCR) */
-    assert.isTrue(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     // Check trove statuses - A active (1),  B and C closed (2)
-    assert.equal((await troveManager.CDPs(alice))[3].toString(), '1')
-    assert.equal((await troveManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(carol))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(alice))[3].toString(), '1')
+    assert.equal((await troveManager.Troves(bob))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(carol))[3].toString(), '2')
   })
 
   it("liquidate(): when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
@@ -987,7 +987,7 @@ contract('TroveManager', async accounts => {
 
     // Liquidate trove
     await troveManager.liquidate(defaulter_1)
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
 
     const G_After = await stabilityPool.epochToScaleToG(0, 0)
 
@@ -1029,7 +1029,7 @@ contract('TroveManager', async accounts => {
 
     // liquidate trove
     await troveManager.liquidate(defaulter_1)
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
 
     const G_After = await stabilityPool.epochToScaleToG(0, 0)
 
@@ -1037,13 +1037,13 @@ contract('TroveManager', async accounts => {
     assert.isTrue(G_After.eq(G_Before))
   })
 
-  // --- liquidateCDPs() ---
+  // --- liquidateTroves() ---
 
-  it('liquidateCDPs(): closes every CDP with ICR < MCR, when n > number of undercollateralized troves', async () => {
+  it('liquidateTroves(): closes every CDP with ICR < MCR, when n > number of undercollateralized troves', async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(dec(490, 18), whale, { from: whale, value: dec(100, 'ether') })
 
-    // create 5 CDPs with varying ICRs
+    // create 5 Troves with varying ICRs
     await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
     await borrowerOperations.openTrove(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(290, 18), carol, { from: carol, value: dec(3, 'ether') })
@@ -1083,27 +1083,27 @@ contract('TroveManager', async accounts => {
     assert.isTrue((await troveManager.getCurrentICR(whale, price)).gte(mv._MCR))
 
     // Liquidate 5 troves
-    await troveManager.liquidateCDPs(5);
+    await troveManager.liquidateTroves(5);
 
     // Confirm troves A-E have been removed from the system
-    assert.isFalse(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
-    assert.isFalse(await sortedCDPs.contains(carol))
-    assert.isFalse(await sortedCDPs.contains(erin))
-    assert.isFalse(await sortedCDPs.contains(flyn))
+    assert.isFalse(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
+    assert.isFalse(await sortedTroves.contains(erin))
+    assert.isFalse(await sortedTroves.contains(flyn))
 
     // Check all troves A-E are now closed
-    assert.equal((await troveManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(carol))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(erin))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(flyn))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(alice))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(bob))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(carol))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(erin))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(flyn))[3].toString(), '2')
 
     // Check sorted list has been reduced to length 4 
-    assert.equal((await sortedCDPs.getSize()).toString(), '4')
+    assert.equal((await sortedTroves.getSize()).toString(), '4')
   })
 
-  it('liquidateCDPs(): liquidates  up to the requested number of undercollateralized troves', async () => {
+  it('liquidateTroves(): liquidates  up to the requested number of undercollateralized troves', async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // --- SETUP --- 
@@ -1122,7 +1122,7 @@ contract('TroveManager', async accounts => {
     // Confirm system is not in Recovery Mode
     assert.isFalse(await troveManager.checkRecoveryMode());
 
-    await troveManager.liquidateCDPs(3)
+    await troveManager.liquidateTroves(3)
 
     const CDPOwnersArrayLength = await troveManager.getCDPOwnersCount()
     assert.equal(CDPOwnersArrayLength, '3')
@@ -1137,9 +1137,9 @@ contract('TroveManager', async accounts => {
     assert.equal(carolCDPStatus, '2')
 
     //  Check Alice, Bob, and Carol's trove are no longer in the sorted list
-    const alice_isInSortedList = await sortedCDPs.contains(alice)
-    const bob_isInSortedList = await sortedCDPs.contains(bob)
-    const carol_isInSortedList = await sortedCDPs.contains(carol)
+    const alice_isInSortedList = await sortedTroves.contains(alice)
+    const bob_isInSortedList = await sortedTroves.contains(bob)
+    const carol_isInSortedList = await sortedTroves.contains(carol)
 
     assert.isFalse(alice_isInSortedList)
     assert.isFalse(bob_isInSortedList)
@@ -1153,14 +1153,14 @@ contract('TroveManager', async accounts => {
     assert.equal(erinCDPStatus, '1')
 
     // Check Dennis, Erin still in sorted list
-    const dennis_isInSortedList = await sortedCDPs.contains(dennis)
-    const erin_isInSortedList = await sortedCDPs.contains(erin)
+    const dennis_isInSortedList = await sortedTroves.contains(dennis)
+    const erin_isInSortedList = await sortedTroves.contains(erin)
 
     assert.isTrue(dennis_isInSortedList)
     assert.isTrue(erin_isInSortedList)
   })
 
-  it('liquidateCDPs(): does nothing if all troves have ICR > 110%', async () => {
+  it('liquidateTroves(): does nothing if all troves have ICR > 110%', async () => {
 
     const LUSDwithdrawal_A = await th.getActualDebtFromComposite(dec(90, 18), contracts)
     const LUSDwithdrawal_B = await th.getActualDebtFromComposite(dec(20, 18), contracts)
@@ -1174,13 +1174,13 @@ contract('TroveManager', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
 
-    assert.isTrue((await sortedCDPs.contains(whale)))
-    assert.isTrue((await sortedCDPs.contains(alice)))
-    assert.isTrue((await sortedCDPs.contains(bob)))
-    assert.isTrue((await sortedCDPs.contains(carol)))
+    assert.isTrue((await sortedTroves.contains(whale)))
+    assert.isTrue((await sortedTroves.contains(alice)))
+    assert.isTrue((await sortedTroves.contains(bob)))
+    assert.isTrue((await sortedTroves.contains(carol)))
 
     const TCR_Before = (await troveManager.getTCR()).toString()
-    const listSize_Before = (await sortedCDPs.getSize()).toString()
+    const listSize_Before = (await sortedTroves.getSize()).toString()
 
     assert.isTrue((await troveManager.getCurrentICR(whale, price)).gte(mv._MCR))
     assert.isTrue((await troveManager.getCurrentICR(alice, price)).gte(mv._MCR))
@@ -1191,22 +1191,22 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Attempt liqudation sequence
-    await troveManager.liquidateCDPs(10)
+    await troveManager.liquidateTroves(10)
 
     // Check all troves remain active
-    assert.isTrue((await sortedCDPs.contains(whale)))
-    assert.isTrue((await sortedCDPs.contains(alice)))
-    assert.isTrue((await sortedCDPs.contains(bob)))
-    assert.isTrue((await sortedCDPs.contains(carol)))
+    assert.isTrue((await sortedTroves.contains(whale)))
+    assert.isTrue((await sortedTroves.contains(alice)))
+    assert.isTrue((await sortedTroves.contains(bob)))
+    assert.isTrue((await sortedTroves.contains(carol)))
 
     const TCR_After = (await troveManager.getTCR()).toString()
-    const listSize_After = (await sortedCDPs.getSize()).toString()
+    const listSize_After = (await sortedTroves.getSize()).toString()
 
     assert.equal(TCR_Before, TCR_After)
     assert.equal(listSize_Before, listSize_After)
   })
 
-  it("liquidateCDPs(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
+  it("liquidateTroves(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
     await borrowerOperations.openTrove(dec(40, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove('80500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 LUSD, 1 ETH
     await borrowerOperations.openTrove(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
@@ -1251,8 +1251,8 @@ contract('TroveManager', async accounts => {
     assert.isTrue(carol_ICR_After.lte(mv._MCR))
 
     /* Though Bob's true ICR (including pending rewards) is below the MCR, check that Bob's raw coll and debt has not changed */
-    const bob_Coll = (await troveManager.CDPs(bob))[1]
-    const bob_Debt = (await troveManager.CDPs(bob))[0]
+    const bob_Coll = (await troveManager.Troves(bob))[1]
+    const bob_Debt = (await troveManager.Troves(bob))[0]
 
     const bob_rawICR = bob_Coll.mul(toBN(dec(100, 18))).div(bob_Debt)
     assert.isTrue(bob_rawICR.gte(mv._MCR))
@@ -1264,20 +1264,20 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     //liquidate A, B, C
-    await troveManager.liquidateCDPs(10)
+    await troveManager.liquidateTroves(10)
 
     // Check A stays active, B and C get liquidated
-    assert.isTrue(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     // check trove statuses - A active (1),  B and C closed (2)
-    assert.equal((await troveManager.CDPs(alice))[3].toString(), '1')
-    assert.equal((await troveManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(carol))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(alice))[3].toString(), '1')
+    assert.equal((await troveManager.Troves(bob))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(carol))[3].toString(), '2')
   })
 
-  it("liquidateCDPs(): does nothing if n = 0", async () => {
+  it("liquidateTroves(): does nothing if n = 0", async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
@@ -1300,13 +1300,13 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Liquidation with n = 0
-    await troveManager.liquidateCDPs(0)
+    await troveManager.liquidateTroves(0)
 
     // Check all troves are still in the system
-    assert.isTrue(await sortedCDPs.contains(whale))
-    assert.isTrue(await sortedCDPs.contains(alice))
-    assert.isTrue(await sortedCDPs.contains(bob))
-    assert.isTrue(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(whale))
+    assert.isTrue(await sortedTroves.contains(alice))
+    assert.isTrue(await sortedTroves.contains(bob))
+    assert.isTrue(await sortedTroves.contains(carol))
 
     const TCR_After = (await troveManager.getTCR()).toString()
 
@@ -1314,7 +1314,7 @@ contract('TroveManager', async accounts => {
     assert.equal(TCR_Before, TCR_After)
   })
 
-  it("liquidateCDPs():  liquidates troves with ICR < MCR", async () => {
+  it("liquidateTroves():  liquidates troves with ICR < MCR", async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
 
     // A, B, C open troves that will remain active when price drops to 100
@@ -1337,7 +1337,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('93000000000000000000', flyn, { from: flyn, value: dec(1, 'ether') })
 
     // Check list size is 7
-    assert.equal((await sortedCDPs.getSize()).toString(), '7')
+    assert.equal((await sortedTroves.getSize()).toString(), '7')
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1364,24 +1364,24 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     //Liquidate sequence
-    await troveManager.liquidateCDPs(10)
+    await troveManager.liquidateTroves(10)
 
     // check list size reduced to 4
-    assert.equal((await sortedCDPs.getSize()).toString(), '4')
+    assert.equal((await sortedTroves.getSize()).toString(), '4')
 
     // Check Whale and A, B, C remain in the system
-    assert.isTrue(await sortedCDPs.contains(whale))
-    assert.isTrue(await sortedCDPs.contains(alice))
-    assert.isTrue(await sortedCDPs.contains(bob))
-    assert.isTrue(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(whale))
+    assert.isTrue(await sortedTroves.contains(alice))
+    assert.isTrue(await sortedTroves.contains(bob))
+    assert.isTrue(await sortedTroves.contains(carol))
 
     // Check D, E, F have been removed
-    assert.isFalse(await sortedCDPs.contains(dennis))
-    assert.isFalse(await sortedCDPs.contains(erin))
-    assert.isFalse(await sortedCDPs.contains(flyn))
+    assert.isFalse(await sortedTroves.contains(dennis))
+    assert.isFalse(await sortedTroves.contains(erin))
+    assert.isFalse(await sortedTroves.contains(flyn))
   })
 
-  it("liquidateCDPs(): does not affect the liquidated user's token balances", async () => {
+  it("liquidateTroves(): does not affect the liquidated user's token balances", async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
 
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(100, 18), contracts)
@@ -1394,7 +1394,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(C_LUSDWithdrawal, flyn, { from: flyn, value: dec(1, 'ether') })
 
     // Check list size is 4
-    assert.equal((await sortedCDPs.getSize()).toString(), '4')
+    assert.equal((await sortedTroves.getSize()).toString(), '4')
 
     // Check token balances before
     assert.equal((await lusdToken.balanceOf(dennis)).toString(), A_LUSDWithdrawal)
@@ -1409,18 +1409,18 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     //Liquidate sequence
-    await troveManager.liquidateCDPs(10)
+    await troveManager.liquidateTroves(10)
 
     // check list size reduced to 1
-    assert.equal((await sortedCDPs.getSize()).toString(), '1')
+    assert.equal((await sortedTroves.getSize()).toString(), '1')
 
     // Check Whale remains in the system
-    assert.isTrue(await sortedCDPs.contains(whale))
+    assert.isTrue(await sortedTroves.contains(whale))
 
     // Check D, E, F have been removed
-    assert.isFalse(await sortedCDPs.contains(dennis))
-    assert.isFalse(await sortedCDPs.contains(erin))
-    assert.isFalse(await sortedCDPs.contains(flyn))
+    assert.isFalse(await sortedTroves.contains(dennis))
+    assert.isFalse(await sortedTroves.contains(erin))
+    assert.isFalse(await sortedTroves.contains(flyn))
 
     // Check token balances of users whose troves were liquidated, have not changed
     assert.equal((await lusdToken.balanceOf(dennis)).toString(), A_LUSDWithdrawal)
@@ -1428,7 +1428,7 @@ contract('TroveManager', async accounts => {
     assert.equal((await lusdToken.balanceOf(flyn)).toString(), C_LUSDWithdrawal)
   })
 
-  it("liquidateCDPs(): A liquidation sequence containing Pool offsets increases the TCR", async () => {
+  it("liquidateTroves(): A liquidation sequence containing Pool offsets increases the TCR", async () => {
     // Whale provides 500 LUSD to SP
     await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await stabilityPool.provideToSP(dec(500, 18), ZERO_ADDRESS, { from: whale })
@@ -1443,12 +1443,12 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
     await borrowerOperations.openTrove('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
-    assert.isTrue((await sortedCDPs.contains(defaulter_1)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_2)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_3)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_4)))
+    assert.isTrue((await sortedTroves.contains(defaulter_1)))
+    assert.isTrue((await sortedTroves.contains(defaulter_2)))
+    assert.isTrue((await sortedTroves.contains(defaulter_3)))
+    assert.isTrue((await sortedTroves.contains(defaulter_4)))
 
-    assert.equal((await sortedCDPs.getSize()).toString(), '9')
+    assert.equal((await sortedTroves.getSize()).toString(), '9')
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1462,26 +1462,26 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Liquidate troves
-    await troveManager.liquidateCDPs(10)
+    await troveManager.liquidateTroves(10)
 
     // Check pool has been emptied by the liquidations
     assert.equal((await stabilityPool.getTotalLUSDDeposits()).toString(), '0')
 
     // Check all defaulters have been liquidated
-    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
+    assert.isFalse((await sortedTroves.contains(defaulter_1)))
+    assert.isFalse((await sortedTroves.contains(defaulter_2)))
+    assert.isFalse((await sortedTroves.contains(defaulter_3)))
+    assert.isFalse((await sortedTroves.contains(defaulter_4)))
 
     // check system sized reduced to 5 troves
-    assert.equal((await sortedCDPs.getSize()).toString(), '5')
+    assert.equal((await sortedTroves.getSize()).toString(), '5')
 
     // Check that the liquidation sequence has improved the TCR
     const TCR_After = await troveManager.getTCR()
     assert.isTrue(TCR_After.gte(TCR_Before))
   })
 
-  it("liquidateCDPs(): A liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
+  it("liquidateTroves(): A liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
     await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(7, 'ether') })
@@ -1493,12 +1493,12 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('318000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
     await borrowerOperations.openTrove('470000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
-    assert.isTrue((await sortedCDPs.contains(defaulter_1)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_2)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_3)))
-    assert.isTrue((await sortedCDPs.contains(defaulter_4)))
+    assert.isTrue((await sortedTroves.contains(defaulter_1)))
+    assert.isTrue((await sortedTroves.contains(defaulter_2)))
+    assert.isTrue((await sortedTroves.contains(defaulter_3)))
+    assert.isTrue((await sortedTroves.contains(defaulter_4)))
 
-    assert.equal((await sortedCDPs.getSize()).toString(), '9')
+    assert.equal((await sortedTroves.getSize()).toString(), '9')
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1514,16 +1514,16 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Liquidate
-    await troveManager.liquidateCDPs(10)
+    await troveManager.liquidateTroves(10)
 
     // Check all defaulters have been liquidated
-    assert.isFalse((await sortedCDPs.contains(defaulter_1)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_2)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_3)))
-    assert.isFalse((await sortedCDPs.contains(defaulter_4)))
+    assert.isFalse((await sortedTroves.contains(defaulter_1)))
+    assert.isFalse((await sortedTroves.contains(defaulter_2)))
+    assert.isFalse((await sortedTroves.contains(defaulter_3)))
+    assert.isFalse((await sortedTroves.contains(defaulter_4)))
 
     // check system sized reduced to 5 troves
-    assert.equal((await sortedCDPs.getSize()).toString(), '5')
+    assert.equal((await sortedTroves.getSize()).toString(), '5')
 
     // Check that the liquidation sequence has reduced the TCR
     const TCR_After = await troveManager.getTCR()
@@ -1533,7 +1533,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(TCR_After.gte(TCR_Before.mul(toBN(995)).div(toBN(1000))))
   })
 
-  it("liquidateCDPs(): Liquidating troves with SP deposits correctly impacts their SP deposit and ETH gain", async () => {
+  it("liquidateTroves(): Liquidating troves with SP deposits correctly impacts their SP deposit and ETH gain", async () => {
     // Whale provides 400 LUSD to the SP
     await borrowerOperations.openTrove(dec(400, 18), whale, { from: whale, value: dec(100, 'ether') })
     await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: whale })
@@ -1546,7 +1546,7 @@ contract('TroveManager', async accounts => {
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
     await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: bob })
 
-    assert.equal((await sortedCDPs.getSize()).toString(), '4')
+    assert.equal((await sortedTroves.getSize()).toString(), '4')
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1558,15 +1558,15 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Liquidate
-    await troveManager.liquidateCDPs(10)
+    await troveManager.liquidateTroves(10)
 
     // Check all defaulters have been liquidated
-    assert.isFalse((await sortedCDPs.contains(alice)))
-    assert.isFalse((await sortedCDPs.contains(bob)))
-    assert.isFalse((await sortedCDPs.contains(carol)))
+    assert.isFalse((await sortedTroves.contains(alice)))
+    assert.isFalse((await sortedTroves.contains(bob)))
+    assert.isFalse((await sortedTroves.contains(carol)))
 
     // check system sized reduced to 1 troves
-    assert.equal((await sortedCDPs.getSize()).toString(), '1')
+    assert.equal((await sortedTroves.getSize()).toString(), '1')
 
     /* Prior to liquidation, SP deposits were:
     Whale: 400 LUSD
@@ -1621,7 +1621,7 @@ contract('TroveManager', async accounts => {
     assert.isAtMost(th.getDifference(total_ETHinSP, dec(4975, 15)), 1000)
   })
 
-  it("liquidateCDPs(): when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
+  it("liquidateTroves(): when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
@@ -1646,9 +1646,9 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Liquidate troves
-    await troveManager.liquidateCDPs(2)
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
-    assert.isFalse(await sortedCDPs.contains(defaulter_2))
+    await troveManager.liquidateTroves(2)
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_2))
 
     const G_After = await stabilityPool.epochToScaleToG(0, 0)
 
@@ -1656,7 +1656,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it("liquidateCDPs(): when SP is empty, doesn't update G", async () => {
+  it("liquidateTroves(): when SP is empty, doesn't update G", async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
@@ -1690,9 +1690,9 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode())
 
     // liquidate troves
-    await troveManager.liquidateCDPs(2)
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
-    assert.isFalse(await sortedCDPs.contains(defaulter_2))
+    await troveManager.liquidateTroves(2)
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_2))
 
     const G_After = await stabilityPool.epochToScaleToG(0, 0)
 
@@ -1714,7 +1714,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     // Check full sorted list size is 6
-    assert.equal((await sortedCDPs.getSize()).toString(), '6')
+    assert.equal((await sortedTroves.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
     await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
@@ -1744,17 +1744,17 @@ contract('TroveManager', async accounts => {
     await troveManager.batchLiquidateTroves(liquidationArray);
 
     // Confirm troves A-C have been removed from the system
-    assert.isFalse(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     // Check all troves A-C are now closed
-    assert.equal((await troveManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(carol))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(alice))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(bob))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(carol))[3].toString(), '2')
 
     // Check sorted list has been reduced to length 3
-    assert.equal((await sortedCDPs.getSize()).toString(), '3')
+    assert.equal((await sortedTroves.getSize()).toString(), '3')
   })
 
   it('batchLiquidateTroves(): does not liquidate troves that are not in the given array', async () => {
@@ -1768,7 +1768,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(500, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     // Check full sorted list size is 6
-    assert.equal((await sortedCDPs.getSize()).toString(), '6')
+    assert.equal((await sortedTroves.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
     await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
@@ -1793,25 +1793,25 @@ contract('TroveManager', async accounts => {
     await troveManager.batchLiquidateTroves(liquidationArray);
 
     // Confirm troves A-B have been removed from the system
-    assert.isFalse(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
 
     // Check all troves A-B are now closed
-    assert.equal((await troveManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(bob))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(alice))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(bob))[3].toString(), '2')
 
     // Confirm troves C-E remain in the system
-    assert.isTrue(await sortedCDPs.contains(carol))
-    assert.isTrue(await sortedCDPs.contains(dennis))
-    assert.isTrue(await sortedCDPs.contains(erin))
+    assert.isTrue(await sortedTroves.contains(carol))
+    assert.isTrue(await sortedTroves.contains(dennis))
+    assert.isTrue(await sortedTroves.contains(erin))
 
     // Check all troves C-E are still active
-    assert.equal((await troveManager.CDPs(carol))[3].toString(), '1')
-    assert.equal((await troveManager.CDPs(dennis))[3].toString(), '1')
-    assert.equal((await troveManager.CDPs(erin))[3].toString(), '1')
+    assert.equal((await troveManager.Troves(carol))[3].toString(), '1')
+    assert.equal((await troveManager.Troves(dennis))[3].toString(), '1')
+    assert.equal((await troveManager.Troves(erin))[3].toString(), '1')
 
     // Check sorted list has been reduced to length 4
-    assert.equal((await sortedCDPs.getSize()).toString(), '4')
+    assert.equal((await sortedTroves.getSize()).toString(), '4')
   })
 
   it('batchLiquidateTroves(): does not close troves with ICR >= MCR in the given array', async () => {
@@ -1826,7 +1826,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     // Check full sorted list size is 6
-    assert.equal((await sortedCDPs.getSize()).toString(), '6')
+    assert.equal((await sortedTroves.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
     await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
@@ -1856,17 +1856,17 @@ contract('TroveManager', async accounts => {
     await troveManager.batchLiquidateTroves(liquidationArray);
 
     // Confirm troves D-E and whale remain in the system
-    assert.isTrue(await sortedCDPs.contains(dennis))
-    assert.isTrue(await sortedCDPs.contains(erin))
-    assert.isTrue(await sortedCDPs.contains(whale))
+    assert.isTrue(await sortedTroves.contains(dennis))
+    assert.isTrue(await sortedTroves.contains(erin))
+    assert.isTrue(await sortedTroves.contains(whale))
 
     // Check all troves D-E and whale remain active
-    assert.equal((await troveManager.CDPs(dennis))[3].toString(), '1')
-    assert.equal((await troveManager.CDPs(erin))[3].toString(), '1')
-    assert.isTrue(await sortedCDPs.contains(whale))
+    assert.equal((await troveManager.Troves(dennis))[3].toString(), '1')
+    assert.equal((await troveManager.Troves(erin))[3].toString(), '1')
+    assert.isTrue(await sortedTroves.contains(whale))
 
     // Check sorted list has been reduced to length 3
-    assert.equal((await sortedCDPs.getSize()).toString(), '3')
+    assert.equal((await sortedTroves.getSize()).toString(), '3')
   })
 
   it('batchLiquidateTroves(): reverts if array is empty', async () => {
@@ -1880,7 +1880,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     // Check full sorted list size is 6
-    assert.equal((await sortedCDPs.getSize()).toString(), '6')
+    assert.equal((await sortedTroves.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
     await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
@@ -1915,7 +1915,7 @@ contract('TroveManager', async accounts => {
     assert.equal(await troveManager.getCDPStatus(carol), 0) // check trove non-existent
 
     // Check full sorted list size is 6
-    assert.equal((await sortedCDPs.getSize()).toString(), '5')
+    assert.equal((await sortedTroves.getSize()).toString(), '5')
 
     // Whale puts some tokens in Stability Pool
     await stabilityPool.provideToSP(dec(500, 18), ZERO_ADDRESS, { from: whale })
@@ -1945,19 +1945,19 @@ contract('TroveManager', async accounts => {
     await troveManager.batchLiquidateTroves(liquidationArray);
 
     // Confirm troves A-B have been removed from the system
-    assert.isFalse(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
 
     // Check all troves A-B are now closed
-    assert.equal((await troveManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(bob))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(alice))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(bob))[3].toString(), '2')
 
     // Check sorted list has been reduced to length 3
-    assert.equal((await sortedCDPs.getSize()).toString(), '3')
+    assert.equal((await sortedTroves.getSize()).toString(), '3')
 
     // Confirm trove C non-existent
-    assert.isFalse(await sortedCDPs.contains(carol))
-    assert.equal((await troveManager.CDPs(carol))[3].toString(), '0')
+    assert.isFalse(await sortedTroves.contains(carol))
+    assert.equal((await troveManager.Troves(carol))[3].toString(), '0')
 
     // Check Stability pool has only been reduced by A-B
     assert.equal((await stabilityPool.getTotalLUSDDeposits()).toString(), dec(150, 18))
@@ -1976,10 +1976,10 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
     await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
-    assert.isTrue(await sortedCDPs.contains(carol))
+    assert.isTrue(await sortedTroves.contains(carol))
 
     // Check full sorted list size is 6
-    assert.equal((await sortedCDPs.getSize()).toString(), '6')
+    assert.equal((await sortedTroves.getSize()).toString(), '6')
 
     // Whale puts some tokens in Stability Pool
     await stabilityPool.provideToSP(dec(500, 18), ZERO_ADDRESS, { from: whale })
@@ -1994,7 +1994,7 @@ contract('TroveManager', async accounts => {
     const txCarolClose = await borrowerOperations.closeTrove({ from: carol })
     assert.isTrue(txCarolClose.receipt.status)
 
-    assert.isFalse(await sortedCDPs.contains(carol))
+    assert.isFalse(await sortedTroves.contains(carol))
 
     assert.equal(await troveManager.getCDPStatus(carol), 2)  // check trove closed
 
@@ -2017,16 +2017,16 @@ contract('TroveManager', async accounts => {
     await troveManager.batchLiquidateTroves(liquidationArray);
 
     // Confirm troves A-B have been removed from the system
-    assert.isFalse(await sortedCDPs.contains(alice))
-    assert.isFalse(await sortedCDPs.contains(bob))
+    assert.isFalse(await sortedTroves.contains(alice))
+    assert.isFalse(await sortedTroves.contains(bob))
 
     // Check all troves A-C are now closed
-    assert.equal((await troveManager.CDPs(alice))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(bob))[3].toString(), '2')
-    assert.equal((await troveManager.CDPs(carol))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(alice))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(bob))[3].toString(), '2')
+    assert.equal((await troveManager.Troves(carol))[3].toString(), '2')
 
     // Check sorted list has been reduced to length 3
-    assert.equal((await sortedCDPs.getSize()).toString(), '3')
+    assert.equal((await sortedTroves.getSize()).toString(), '3')
 
     // Check Stability pool has only been reduced by A-B
     assert.equal((await stabilityPool.getTotalLUSDDeposits()).toString(), dec(150, 18))
@@ -2061,8 +2061,8 @@ contract('TroveManager', async accounts => {
 
     // Liquidate troves
     await troveManager.batchLiquidateTroves([defaulter_1, defaulter_2])
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
-    assert.isFalse(await sortedCDPs.contains(defaulter_2))
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_2))
 
     const G_After = await stabilityPool.epochToScaleToG(0, 0)
 
@@ -2105,8 +2105,8 @@ contract('TroveManager', async accounts => {
 
     // liquidate troves
     await troveManager.batchLiquidateTroves([defaulter_1, defaulter_2])
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
-    assert.isFalse(await sortedCDPs.contains(defaulter_2))
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_2))
 
     const G_After = await stabilityPool.epochToScaleToG(0, 0)
 
@@ -2140,7 +2140,7 @@ contract('TroveManager', async accounts => {
     assert.equal(partialRedemptionHintICR, '6333333333333333333')
   });
 
-  it('redeemCollateral(): cancels the provided LUSD with debt from CDPs with the lowest ICRs and sends an equivalent amount of Ether', async () => {
+  it('redeemCollateral(): cancels the provided LUSD with debt from Troves with the lowest ICRs and sends an equivalent amount of Ether', async () => {
     // --- SETUP ---
 
     await borrowerOperations.openTrove(dec(5, 18), alice, { from: alice, value: dec(1, 'ether') })
@@ -2167,7 +2167,7 @@ contract('TroveManager', async accounts => {
 
     // We don't need to use getApproxHint for this test, since it's not the subject of this
     // test case, and the list is very small, so the correct position is quickly found
-    const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+    const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
       partialRedemptionHintICR,
       price,
       dennis,
@@ -2190,9 +2190,9 @@ contract('TroveManager', async accounts => {
 
     const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
 
-    const alice_CDP_After = await troveManager.CDPs(alice)
-    const bob_CDP_After = await troveManager.CDPs(bob)
-    const carol_CDP_After = await troveManager.CDPs(carol)
+    const alice_CDP_After = await troveManager.Troves(alice)
+    const bob_CDP_After = await troveManager.Troves(bob)
+    const carol_CDP_After = await troveManager.Troves(carol)
 
     const alice_debt_After = alice_CDP_After[0].toString()
     const bob_debt_After = bob_CDP_After[0].toString()
@@ -2335,7 +2335,7 @@ contract('TroveManager', async accounts => {
       partialRedemptionHintICR
     } = await hintHelpers.getRedemptionHints(dec(20, 18), price)
 
-    const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+    const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
       partialRedemptionHintICR,
       price,
       dennis,
@@ -2349,7 +2349,7 @@ contract('TroveManager', async accounts => {
         partialRedemptionHintICR
       } = await hintHelpers.getRedemptionHints(dec(1, 18), price)
 
-      const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+      const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
         partialRedemptionHintICR,
         price,
         dennis,
@@ -2416,7 +2416,7 @@ contract('TroveManager', async accounts => {
     await priceFeed.setPrice(price)
 
     // Liquidate Bob's CDP
-    await troveManager.liquidateCDPs(1)
+    await troveManager.liquidateTroves(1)
 
     // --- TEST --- 
 
@@ -2448,7 +2448,7 @@ contract('TroveManager', async accounts => {
     assert.equal(carol_LUSDBalance_After, '0')
   })
 
-  it("redeemCollateral(): doesn't touch CDPs with ICR < 110%", async () => {
+  it("redeemCollateral(): doesn't touch Troves with ICR < 110%", async () => {
     // --- SETUP ---
 
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
@@ -2472,11 +2472,11 @@ contract('TroveManager', async accounts => {
     );
 
     // Alice's CDP was cleared of debt
-    const { debt: alice_Debt_After } = await troveManager.CDPs(alice)
+    const { debt: alice_Debt_After } = await troveManager.Troves(alice)
     assert.equal(alice_Debt_After, '0')
 
     // Bob's CDP was left untouched
-    const { debt: bob_Debt_After } = await troveManager.CDPs(bob)
+    const { debt: bob_Debt_After } = await troveManager.Troves(bob)
     assert.equal(bob_Debt_After, dec(110, 18))
   });
 
@@ -2496,15 +2496,15 @@ contract('TroveManager', async accounts => {
     const price = '110' + _18_zeros
     await priceFeed.setPrice(price)
 
-    const orderOfCDPs = [];
-    let current = await sortedCDPs.getFirst();
+    const orderOfTroves = [];
+    let current = await sortedTroves.getFirst();
 
     while (current !== '0x0000000000000000000000000000000000000000') {
-      orderOfCDPs.push(current);
-      current = await sortedCDPs.getNext(current);
+      orderOfTroves.push(current);
+      current = await sortedTroves.getNext(current);
     }
 
-    assert.deepEqual(orderOfCDPs, [carol, bob, alice, dennis]);
+    assert.deepEqual(orderOfTroves, [carol, bob, alice, dennis]);
 
     // --- TEST --- 
 
@@ -2518,16 +2518,16 @@ contract('TroveManager', async accounts => {
       { from: dennis }
     );
 
-    const { debt: alice_Debt_After } = await troveManager.CDPs(alice)
+    const { debt: alice_Debt_After } = await troveManager.Troves(alice)
     assert.equal(alice_Debt_After, '0')
 
-    const { debt: bob_Debt_After } = await troveManager.CDPs(bob)
+    const { debt: bob_Debt_After } = await troveManager.Troves(bob)
     assert.equal(bob_Debt_After, '0')
 
-    const { debt: carol_Debt_After } = await troveManager.CDPs(carol)
+    const { debt: carol_Debt_After } = await troveManager.Troves(carol)
     assert.equal(carol_Debt_After, '0')
 
-    const { debt: dennis_Debt_After } = await troveManager.CDPs(dennis)
+    const { debt: dennis_Debt_After } = await troveManager.Troves(dennis)
     assert.equal(dennis_Debt_After, '101' + _18_zeros)
   });
 
@@ -2574,11 +2574,11 @@ contract('TroveManager', async accounts => {
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
 
-    assert.isTrue(await sortedCDPs.contains(flyn))
+    assert.isTrue(await sortedTroves.contains(flyn))
 
     // Liquidate Flyn
     await troveManager.liquidate(flyn)
-    assert.isFalse(await sortedCDPs.contains(flyn))
+    assert.isFalse(await sortedTroves.contains(flyn))
 
     // Price bounces back, bringing B, C, D back above MCR
     await priceFeed.setPrice(dec(200, 18))
@@ -2658,7 +2658,7 @@ contract('TroveManager', async accounts => {
       partialRedemptionHintICR
     } = await hintHelpers.getRedemptionHints(dec(400, 18), price)
 
-    const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+    const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
       partialRedemptionHintICR,
       price,
       erin,
@@ -2724,7 +2724,7 @@ contract('TroveManager', async accounts => {
         partialRedemptionHintICR
       } = await hintHelpers.getRedemptionHints(dec(1000, 18), price))
 
-      const { 0: partialRedemptionHint_1 } = await sortedCDPs.findInsertPosition(
+      const { 0: partialRedemptionHint_1 } = await sortedTroves.findInsertPosition(
         partialRedemptionHintICR,
         price,
         erin,
@@ -2752,7 +2752,7 @@ contract('TroveManager', async accounts => {
         partialRedemptionHintICR
       } = await hintHelpers.getRedemptionHints('401000000000000000000', price))
 
-      const { 0: partialRedemptionHint_2 } = await sortedCDPs.findInsertPosition(
+      const { 0: partialRedemptionHint_2 } = await sortedTroves.findInsertPosition(
         partialRedemptionHintICR,
         price,
         erin,
@@ -2778,7 +2778,7 @@ contract('TroveManager', async accounts => {
         partialRedemptionHintICR
       } = await hintHelpers.getRedemptionHints('239482309000000000000000000', price))
 
-      const { 0: partialRedemptionHint_3 } = await sortedCDPs.findInsertPosition(
+      const { 0: partialRedemptionHint_3 } = await sortedTroves.findInsertPosition(
         partialRedemptionHintICR,
         price,
         erin,
@@ -2806,7 +2806,7 @@ contract('TroveManager', async accounts => {
         partialRedemptionHintICR
       } = await hintHelpers.getRedemptionHints('239482309000000000000000000', price))
 
-      const { 0: partialRedemptionHint_4 } = await sortedCDPs.findInsertPosition(
+      const { 0: partialRedemptionHint_4 } = await sortedTroves.findInsertPosition(
         partialRedemptionHintICR,
         price,
         erin,
@@ -2860,7 +2860,7 @@ contract('TroveManager', async accounts => {
       partialRedemptionHintICR
     } = await hintHelpers.getRedemptionHints(_120_LUSD, price))
 
-    const { 0: partialRedemptionHint_1 } = await sortedCDPs.findInsertPosition(
+    const { 0: partialRedemptionHint_1 } = await sortedTroves.findInsertPosition(
       partialRedemptionHintICR,
       price,
       erin,
@@ -2890,7 +2890,7 @@ contract('TroveManager', async accounts => {
       partialRedemptionHintICR
     } = await hintHelpers.getRedemptionHints(_373_LUSD, price))
 
-    const { 0: partialRedemptionHint_2 } = await sortedCDPs.findInsertPosition(
+    const { 0: partialRedemptionHint_2 } = await sortedTroves.findInsertPosition(
       partialRedemptionHintICR,
       price,
       flyn,
@@ -2919,7 +2919,7 @@ contract('TroveManager', async accounts => {
       partialRedemptionHintICR
     } = await hintHelpers.getRedemptionHints(_950_LUSD, price))
 
-    const { 0: partialRedemptionHint_3 } = await sortedCDPs.findInsertPosition(
+    const { 0: partialRedemptionHint_3 } = await sortedTroves.findInsertPosition(
       partialRedemptionHintICR,
       price,
       graham,
@@ -2960,7 +2960,7 @@ contract('TroveManager', async accounts => {
       partialRedemptionHintICR
     } = await hintHelpers.getRedemptionHints(dec(100, 18), price)
 
-    const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+    const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
       partialRedemptionHintICR,
       price,
       bob,
@@ -3000,7 +3000,7 @@ contract('TroveManager', async accounts => {
       partialRedemptionHintICR
     } = await hintHelpers.getRedemptionHints('101000000000000000000', price)
 
-    const { 0: partialRedemptionHint } = await sortedCDPs.findInsertPosition(
+    const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
       partialRedemptionHintICR,
       price,
       bob,
@@ -3340,12 +3340,12 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(whale, contracts, dec(360, 18), { gasPrice: 0 })
 
     // Check A, B, C have been closed
-    assert.isFalse(await sortedCDPs.contains(A))
-    assert.isFalse(await sortedCDPs.contains(B))
-    assert.isFalse(await sortedCDPs.contains(C))
+    assert.isFalse(await sortedTroves.contains(A))
+    assert.isFalse(await sortedTroves.contains(B))
+    assert.isFalse(await sortedTroves.contains(C))
 
     // Check D remains active
-    assert.isTrue(await sortedCDPs.contains(D))
+    assert.isTrue(await sortedTroves.contains(D))
   })
 
   const redeemCollateral3Full1Partial = async () => {
@@ -3379,12 +3379,12 @@ contract('TroveManager', async accounts => {
     await th.redeemCollateral(whale, contracts, dec(360, 18), { gasPrice: 0 })
 
     // Check A, B, C have been closed
-    assert.isFalse(await sortedCDPs.contains(A))
-    assert.isFalse(await sortedCDPs.contains(B))
-    assert.isFalse(await sortedCDPs.contains(C))
+    assert.isFalse(await sortedTroves.contains(A))
+    assert.isFalse(await sortedTroves.contains(B))
+    assert.isFalse(await sortedTroves.contains(C))
 
     // Check D stays active
-    assert.isTrue(await sortedCDPs.contains(D))
+    assert.isTrue(await sortedTroves.contains(D))
     
     /*
     At ETH:USD price of 200, with full redemptions from A, B, C:
@@ -3484,7 +3484,7 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(defaulter_1)
 
     // Confirm defaulter_1 liquidated
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
 
     // Confirm there are no pending rewards from liquidation
     const current_L_LUSDDebt = await troveManager.L_LUSDDebt()
@@ -3513,7 +3513,7 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(defaulter_1)
 
     // Confirm defaulter_1 liquidated
-    assert.isFalse(await sortedCDPs.contains(defaulter_1))
+    assert.isFalse(await sortedTroves.contains(defaulter_1))
 
     // Confirm there are no pending rewards from liquidation
     const current_L_ETH = await troveManager.L_ETH()

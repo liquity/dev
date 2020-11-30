@@ -1,6 +1,6 @@
 // Buidler-Truffle fixture for deployment to Buidler EVM
 
-const SortedCDPs = artifacts.require("./SortedCDPs.sol")
+const SortedTroves = artifacts.require("./SortedTroves.sol")
 const ActivePool = artifacts.require("./ActivePool.sol")
 const DefaultPool = artifacts.require("./DefaultPool.sol")
 const StabilityPool = artifacts.require("./StabilityPool.sol")
@@ -18,7 +18,7 @@ const connectContracts = deploymentHelpers.connectContracts
 module.exports = async () => {
   const borrowerOperations = await BorrowerOperations.new()
   const priceFeed = await PriceFeed.new()
-  const sortedCDPs = await SortedCDPs.new()
+  const sortedTroves = await SortedTroves.new()
   const troveManager = await TroveManager.new()
   const activePool = await ActivePool.new()
   const stabilityPool = await StabilityPool.new()
@@ -31,7 +31,7 @@ module.exports = async () => {
   )
   BorrowerOperations.setAsDeployed(borrowerOperations)
   PriceFeed.setAsDeployed(priceFeed)
-  SortedCDPs.setAsDeployed(sortedCDPs)
+  SortedTroves.setAsDeployed(sortedTroves)
   TroveManager.setAsDeployed(troveManager)
   ActivePool.setAsDeployed(activePool)
   StabilityPool.setAsDeployed(stabilityPool)
@@ -43,7 +43,7 @@ module.exports = async () => {
     borrowerOperations,
     priceFeed,
     lusdToken,
-    sortedCDPs,
+    sortedTroves,
     troveManager,
     activePool,
     stabilityPool,

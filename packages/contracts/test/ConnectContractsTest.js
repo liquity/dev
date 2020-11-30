@@ -4,7 +4,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   const [owner] = accounts;
   let priceFeed
   let lusdToken
-  let sortedCDPs
+  let sortedTroves
   let troveManager
   let activePool
   let stabilityPool
@@ -22,7 +22,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
     priceFeed = coreContracts.priceFeed
     lusdToken = coreContracts.lusdToken
-    sortedCDPs = coreContracts.sortedCDPs
+    sortedTroves = coreContracts.sortedTroves
     troveManager = coreContracts.troveManager
     activePool = coreContracts.activePool
     stabilityPool = coreContracts.stabilityPool
@@ -56,12 +56,12 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(lusdTokenAddress, recordedClvTokenAddress)
   })
 
-  it('Sets the correct SortedCDPs address in TroveManager', async () => {
-    const sortedCDPsAddress = sortedCDPs.address
+  it('Sets the correct SortedTroves address in TroveManager', async () => {
+    const sortedTrovesAddress = sortedTroves.address
 
-    const recordedSortedCDPsAddress = await troveManager.sortedCDPs()
+    const recordedSortedTrovesAddress = await troveManager.sortedTroves()
 
-    assert.equal(sortedCDPsAddress, recordedSortedCDPsAddress)
+    assert.equal(sortedTrovesAddress, recordedSortedTrovesAddress)
   })
 
   it('Sets the correct BorrowerOperations address in TroveManager', async () => {
@@ -188,17 +188,17 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(activePoolAddress, recordedActivePoolAddress)
   })
 
-  it('Sets the correct TroveManager address in SortedCDPs', async () => {
+  it('Sets the correct TroveManager address in SortedTroves', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
-    const recordedBorrowerOperationsAddress = await sortedCDPs.borrowerOperationsAddress()
+    const recordedBorrowerOperationsAddress = await sortedTroves.borrowerOperationsAddress()
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  it('Sets the correct BorrowerOperations address in SortedCDPs', async () => {
+  it('Sets the correct BorrowerOperations address in SortedTroves', async () => {
     const troveManagerAddress = troveManager.address
 
-    const recordedTroveManagerAddress = await sortedCDPs.TroveManagerAddress()
+    const recordedTroveManagerAddress = await sortedTroves.TroveManagerAddress()
     assert.equal(troveManagerAddress, recordedTroveManagerAddress)
   })
 
@@ -220,12 +220,12 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(priceFeedAddress, recordedPriceFeedAddress)
   })
 
-  // setSortedCDPs in BO
-  it('Sets the correct SortedCDPs address in BorrowerOperations', async () => {
-    const sortedCDPsAddress = sortedCDPs.address
+  // setSortedTroves in BO
+  it('Sets the correct SortedTroves address in BorrowerOperations', async () => {
+    const sortedTrovesAddress = sortedTroves.address
 
-    const recordedSortedCDPsAddress = await borrowerOperations.sortedCDPs()
-    assert.equal(sortedCDPsAddress, recordedSortedCDPsAddress)
+    const recordedSortedTrovesAddress = await borrowerOperations.sortedTroves()
+    assert.equal(sortedTrovesAddress, recordedSortedTrovesAddress)
   })
 
   // setActivePool in BO

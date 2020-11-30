@@ -9,7 +9,7 @@ import "./Interfaces/IPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import './Interfaces/ILUSDToken.sol';
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/ISortedCDPs.sol";
+import "./Interfaces/ISortedTroves.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
@@ -36,8 +36,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     ILUSDToken public lusdToken;
 
-    // A doubly linked list of CDPs, sorted by their sorted by their collateral ratios
-    ISortedCDPs public sortedCDPs;
+    // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
+    ISortedTroves public sortedTroves;
 
     /* --- Variable container structs  ---
 
@@ -81,7 +81,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         address _stabilityPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
-        address _sortedCDPsAddress,
+        address _sortedTrovesAddress,
         address _lusdTokenAddress,
         address _lqtyStakingAddress
     )
@@ -95,7 +95,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         stabilityPoolAddress = _stabilityPoolAddress;
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
-        sortedCDPs = ISortedCDPs(_sortedCDPsAddress);
+        sortedTroves = ISortedTroves(_sortedTrovesAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
         lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
@@ -107,7 +107,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
-        emit SortedCDPsAddressChanged(_sortedCDPsAddress);
+        emit SortedTrovesAddressChanged(_sortedTrovesAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
@@ -146,7 +146,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         troveManager.updateCDPRewardSnapshots(msg.sender);
         uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
 
-        sortedCDPs.insert(msg.sender, ICR, price, _hint, _hint);
+        sortedTroves.insert(msg.sender, ICR, price, _hint, _hint);
         uint arrayIndex = troveManager.addCDPOwnerToArray(msg.sender);
         emit CDPCreated(msg.sender, arrayIndex);
 
@@ -246,7 +246,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
 
         // Re-insert trove it in the sorted list
-        sortedCDPs.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
+        sortedTroves.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
   
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);

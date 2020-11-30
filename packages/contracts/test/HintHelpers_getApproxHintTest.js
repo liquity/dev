@@ -11,7 +11,7 @@ contract('TroveManager', async accounts => {
  
   const [owner] = accounts;
     let priceFeed
-    let sortedCDPs
+    let sortedTroves
     let troveManager
     let borrowerOperations
     let hintHelpers
@@ -25,16 +25,16 @@ contract('TroveManager', async accounts => {
   1.5 ether, and rising by 0.01 ether per CDP.  Hence, the ICR of account (i + 1) is always 1% greater than the ICR of account i. 
  */
 
- // Open CDPs in parallel, then withdraw LUSD in parallel
- const makeCDPsInParallel = async (accounts, n) => {
+ // Open Troves in parallel, then withdraw LUSD in parallel
+ const makeTrovesInParallel = async (accounts, n) => {
   activeAccounts = accounts.slice(0,n)
   // console.log(`number of accounts used is: ${activeAccounts.length}`)
-  // console.time("makeCDPsInParallel")
+  // console.time("makeTrovesInParallel")
   const openCDPpromises = activeAccounts.map((account, index) => openCDP(account, index))
   await Promise.all(openCDPpromises)
   const withdrawLUSDpromises = activeAccounts.map(account => withdrawLUSDfromCDP(account))
   await Promise.all(withdrawLUSDpromises)
-  // console.timeEnd("makeCDPsInParallel")
+  // console.timeEnd("makeTrovesInParallel")
  }
 
  const openCDP = async (account, index) => {
@@ -48,13 +48,13 @@ contract('TroveManager', async accounts => {
  }
 
  // Sequentially add coll and withdraw LUSD, 1 account at a time
-   const makeCDPsInSequence = async (accounts, n) => {
+   const makeTrovesInSequence = async (accounts, n) => {
     activeAccounts = accounts.slice(0,n)
     // console.log(`number of accounts used is: ${activeAccounts.length}`)
 
     let amountFinney = 2000
 
-    // console.time('makeCDPsInSequence')
+    // console.time('makeTrovesInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
       await borrowerOperations.openTrove(0, account, { from: account, value: coll })
@@ -62,7 +62,7 @@ contract('TroveManager', async accounts => {
   
       amountFinney += 10
     }
-    // console.timeEnd('makeCDPsInSequence')
+    // console.timeEnd('makeTrovesInSequence')
   }
 
   before(async () => {
@@ -70,7 +70,7 @@ contract('TroveManager', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
     priceFeed = contracts.priceFeed
-    sortedCDPs = contracts.sortedCDPs
+    sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
@@ -82,8 +82,8 @@ contract('TroveManager', async accounts => {
     numAccounts = 10
     price = await priceFeed.getPrice()
 
-    await makeCDPsInSequence(accounts, numAccounts) 
-    // await makeCDPsInParallel(accounts, numAccounts)  
+    await makeTrovesInSequence(accounts, numAccounts) 
+    // await makeTrovesInParallel(accounts, numAccounts)  
   })
 
   it("setup: makes accounts with ICRs increasing by 1% consecutively", async () => {
@@ -114,7 +114,7 @@ contract('TroveManager', async accounts => {
   it("getApproxHint(): returns the address of a CDP within sqrt(length) positions of the correct insert position", async () => {
     const sqrtLength = Math.ceil(Math.sqrt(numAccounts))
 
-    /* As per the setup, the ICRs of CDPs are monotonic and seperated by 1% intervals. Therefore, the difference in ICR between 
+    /* As per the setup, the ICRs of Troves are monotonic and seperated by 1% intervals. Therefore, the difference in ICR between 
     the given CR and the ICR of the hint address equals the number of positions between the hint address and the correct insert position 
     for a CDP with the given CR. */
 
@@ -211,7 +211,7 @@ contract('TroveManager', async accounts => {
     const ICR_hintAddress_Max = await troveManager.getCurrentICR(hintAddress, price)
     const ICRPercent_hintAddress_Max = Number(web3.utils.fromWei(ICR_hintAddress_Max, 'ether')) * 100
 
-     const firstCDP = await sortedCDPs.getFirst()
+     const firstCDP = await sortedTroves.getFirst()
      const ICR_FirstCDP = await troveManager.getCurrentICR(firstCDP, price)
      const ICRPercent_FirstCDP = Number(web3.utils.fromWei(ICR_FirstCDP, 'ether')) * 100
  
@@ -233,7 +233,7 @@ contract('TroveManager', async accounts => {
     const ICR_hintAddress_Min = await troveManager.getCurrentICR(hintAddress, price)
     const ICRPercent_hintAddress_Min = Number(web3.utils.fromWei(ICR_hintAddress_Min, 'ether')) * 100
 
-     const lastCDP = await sortedCDPs.getLast()
+     const lastCDP = await sortedTroves.getLast()
      const ICR_LastCDP = await troveManager.getCurrentICR(lastCDP, price)
      const ICRPercent_LastCDP = Number(web3.utils.fromWei(ICR_LastCDP, 'ether')) * 100
  
