@@ -105,19 +105,11 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     };
   }
 
-  watchPrice(onPriceChanged: (price: Decimal) => void) {
-    const { PriceUpdated } = this.contracts.priceFeed.filters;
-    const priceUpdated = PriceUpdated();
-
-    const priceUpdatedListener = debounce((blockTag: number) => {
-      this.readableLiquity.getPrice({ blockTag }).then(onPriceChanged);
-    });
-
-    this.contracts.priceFeed.on(priceUpdated, priceUpdatedListener);
-
-    return () => {
-      this.contracts.priceFeed.removeListener(priceUpdated, priceUpdatedListener);
-    };
+  watchPrice(_onPriceChanged: (price: Decimal) => void): () => void {
+    // TODO revisit
+    // We no longer have our own PriceUpdated events. If we want to implement this in an event-based
+    // manner, we'll need to listen to aggregator events directly. Or we could do polling.
+    throw new Error("Method not implemented.");
   }
 
   watchTotal(onTotalChanged: (total: Trove) => void) {
