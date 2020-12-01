@@ -91,7 +91,7 @@ const deployContracts = async (
       { ...overrides }
     ),
 
-    multiTrovegetter: await deployContract(
+    multiTroveGetter: await deployContract(
       deployer,
       getContractFactory,
       "MultiTroveGetter",
