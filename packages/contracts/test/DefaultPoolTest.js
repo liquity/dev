@@ -14,15 +14,15 @@ contract('DefaultPool', async accounts => {
   beforeEach('Deploy contracts', async () => {
     defaultPool = await DefaultPool.new()
     nonPayable = await NonPayable.new()
-    await defaultPool.setAddresses(nonPayable.address, owner)
+    await defaultPool.setAddresses(owner, owner)
   })
 
   it('sendETH(): fails if receiver cannot receive ETH', async () => {
     const amount = dec(1, 'ether')
+
     await web3.eth.sendTransaction({ to: defaultPool.address, from: owner, value: amount })
-    // send ETH from NonPayable proxy contract
-    const txData = th.getTransactionData('sendETH(address,uint256)', [accounts[0], web3.utils.toHex(amount)])
-    await th.assertRevert(nonPayable.forward(defaultPool.address, txData), 'DefaultPool: sending ETH failed')
+
+    await th.assertRevert(defaultPool.sendETH(nonPayable.address, amount, { from: owner }), 'DefaultPool: sending ETH failed')
   })
 })
 
