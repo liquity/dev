@@ -23,6 +23,9 @@ contract PriceFeed is Ownable, IPriceFeed {
     address public priceAggregatorAddress;
     AggregatorV3Interface public priceAggregator;
 
+    // Use to convert an 8-digit precision uint -> 18-digit precision uint
+    uint constant public DECIMAL_PRECISION_CONVERTER = 1e10;  
+
     // --- Dependency setters ---
 
     function setAddresses(
@@ -38,19 +41,18 @@ contract PriceFeed is Ownable, IPriceFeed {
     }
 
     /**
-     * Returns the latest price
+     * Returns the latest price obtained from the Chainlink ETH:USD aggregator reference contract.
      * https://docs.chain.link/docs/get-the-latest-price
      */
-    function getPrice() public view override
-    returns (uint) {
-        (uint80 roundID, int response,
+    function getPrice() public view override returns (uint) {
+        (uint80 roundID, int priceAnswer,
         uint startedAt, uint timeStamp,
         uint80 answeredInRound) = priceAggregator.latestRoundData();
-        // If the round is not complete yet, timestamp is 0
-        require(timeStamp > 0 && timeStamp <= block.timestamp, "Bad timestamp");
-        require(response >= 0, "Negative price");
-        // decimals = priceAggregator.decimals();
-        uint price = uint256(response);
-        return price.mul(1e10);
+        
+        require(timeStamp > 0 && timeStamp <= block.timestamp, "PriceFeed: price timestamp from aggregator is 0, or in future");
+        require(priceAnswer >= 0, "PriceFeed: price answer from aggregator is negative");
+       
+        uint price = uint256(priceAnswer).mul(DECIMAL_PRECISION_CONVERTER);
+        return price;
     }
 }
