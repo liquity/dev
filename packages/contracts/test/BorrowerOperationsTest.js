@@ -2188,6 +2188,33 @@ contract('BorrowerOperations', async accounts => {
     await assertRevert(borrowerOperations.adjustTrove(dec(1, 'ether'), dec(100, 18), true, alice, { from: alice, value: dec(3, 'ether') }), 'BorrowerOperations: Cannot withdraw and add coll')
   })
 
+  it.only("adjustTrove(): Reverts if requested coll withdrawal is greater than trove's collateral", async () => { 
+    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec (100, 18), bob, { from: bob, value: dec(1, 'ether') })
+
+    // Requested coll withdrawal > coll in the trove
+    const txPromise_B = borrowerOperations.adjustTrove(dec(37, 'ether'), 0 , false, bob, {from: bob})
+    const txPromise_A = borrowerOperations.adjustTrove('1000000000000000001', 0 , false, alice, {from: alice})
+
+    assertRevert(txPromise_A)
+    assertRevert(txPromise_B)
+  })
+
+  // --- Internal _adjustTrove() ---
+
+  it.only("Internal _adjustTrove(): reverts when _borrower param is not the msg.sender", async () => {
+    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec (100, 18), bob, { from: bob, value: dec(1, 'ether') })
+
+    const txPromise_A = borrowerOperations.callInternalAdjustLoan(alice, dec(1, 18),  dec(1, 18), true, alice, {from: bob} )
+    const txPromise_B = borrowerOperations.callInternalAdjustLoan(bob, dec(1, 18),  dec(1, 18), true, alice, {from: owner} )
+    const txPromise_C = borrowerOperations.callInternalAdjustLoan(carol, dec(1, 18),  dec(1, 18), true, alice, {from: bob} )
+  
+    assertRevert(txPromise_A)
+    assertRevert(txPromise_B)
+    assertRevert(txPromise_C)
+  })
+
   // --- closeTrove() ---
 
   it("closeTrove(): reverts when calling address does not have active trove", async () => {

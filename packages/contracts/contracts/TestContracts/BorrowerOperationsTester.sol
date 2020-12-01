@@ -44,6 +44,19 @@ contract BorrowerOperationsTester is BorrowerOperations {
         return _getUSDValue(_coll, _price);
     }
 
+    function callInternalAdjustLoan
+    (
+        address _borrower, 
+        uint _collWithdrawal, 
+        uint _debtChange, 
+        bool _isDebtIncrease, 
+        address _hint) 
+        external 
+    {
+        _adjustTrove(_borrower, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+    }
+
+
     // Payable fallback function
     receive() external payable { }
 }

@@ -54,6 +54,19 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     await th.openTrove_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
   })
 
+  describe('BorrowerOperations', async accounts => { 
+    it.only("moveETHGainToTrove(): reverts when called by an account that is not StabilityPool", async () => {
+      // Attempt call from alice
+      try {
+        const tx1= await borrowerOperations.moveETHGainToTrove(bob, bob, { from: bob })
+        
+      } catch (err) {
+         assert.include(err.message, "revert")
+        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+      }
+    })
+  })
+
   describe('TroveManager', async accounts => {
     // applyPendingRewards
     it("applyPendingRewards(): reverts when called by an account that is not BorrowerOperations", async () => {
