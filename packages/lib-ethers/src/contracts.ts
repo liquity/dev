@@ -171,8 +171,6 @@ export interface LiquityContractAddresses {
 }
 
 export interface LiquityContracts {
-  [name: string]: TypeSafeContract<LiquityContract>;
-
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
   troveManager: TroveManager;
