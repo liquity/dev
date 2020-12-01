@@ -73,8 +73,7 @@ contract('BorrowerOperations', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
-    await priceFeed.setPrice(dec(200, 18))
-    
+  
     LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
   })
 
@@ -3478,7 +3477,6 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(200, 18))
       const price = await priceFeed.getPrice()
-
 
       // --- TEST ---
       const collChange = 0

@@ -65,8 +65,6 @@ contract('StabilityPool', async accounts => {
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
-      await priceFeed.setPrice(dec(200, 18))
-
       // Register 3 front ends
       await th.registerFrontEnds(frontEnds, stabilityPool)
     })

@@ -195,8 +195,8 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(590, 18), D, { from: D, value: dec(10, 'ether') }) //  | 
     await borrowerOperations.openTrove(dec(790, 18), E, { from: E, value: dec(10, 'ether') }) //  Lowest ICR
 
-    console.log(`B ICR: ${await troveManager.getCurrentICR(B, price)}`)
-    console.log(`C ICR: ${await troveManager.getCurrentICR(C, price)}`)
+    // console.log(`B ICR: ${await troveManager.getCurrentICR(B, price)}`)
+    // console.log(`C ICR: ${await troveManager.getCurrentICR(C, price)}`)
 
     // Expect a trove with ICR 300% to be inserted between B and C
     const targetICR = dec(3, 18) 

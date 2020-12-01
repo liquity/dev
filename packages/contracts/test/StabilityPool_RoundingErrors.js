@@ -32,8 +32,6 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
 
     const contractAddresses = getAddresses(contracts)
     await connectContracts(contracts, contractAddresses)
-    
-    await priceFeed.setPrice(dec(200, 18))
   })
 
   // skipped to not slow down CI

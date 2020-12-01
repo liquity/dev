@@ -19,8 +19,6 @@ import "./Dependencies/console.sol";
 contract PriceFeed is Ownable, IPriceFeed {
     using SafeMath for uint256;
 
-    uint256 constant DIGITS = 1e18;
-
     // Mainnet Chainlink aggregator
     address public priceAggregatorAddress;
     AggregatorV3Interface public priceAggregator;
@@ -34,12 +32,8 @@ contract PriceFeed is Ownable, IPriceFeed {
         override
         onlyOwner
     {
-        // Mainnet Chainlink address setter
-        // require(_priceAggregatorAddress != address(0), 
-        //        "Must set a price aggregator address");
         priceAggregatorAddress = _priceAggregatorAddress;
         priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
-
         _renounceOwnership();
     }
 
@@ -47,21 +41,16 @@ contract PriceFeed is Ownable, IPriceFeed {
      * Returns the latest price
      * https://docs.chain.link/docs/get-the-latest-price
      */
-    function getLatestPrice() public view override
-    returns (uint price, uint8 decimals) {
+    function getPrice() public view override
+    returns (uint) {
         (uint80 roundID, int response,
         uint startedAt, uint timeStamp,
         uint80 answeredInRound) = priceAggregator.latestRoundData();
         // If the round is not complete yet, timestamp is 0
         require(timeStamp > 0 && timeStamp <= block.timestamp, "Bad timestamp");
-        require(price >= 0, "Negative price");
-        decimals = priceAggregator.decimals();
-        price = uint256(response);
-    }
-
-    function getPrice() external view override returns (uint256) {
-        (uint scaled, uint8 dec) = getLatestPrice();
-        scaled = scaled.mul(1e10);
-        return scaled;
+        require(response >= 0, "Negative price");
+        // decimals = priceAggregator.decimals();
+        uint price = uint256(response);
+        return price.mul(1e10);
     }
 }

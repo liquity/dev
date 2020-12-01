@@ -61,7 +61,7 @@ The stablecoin tokens are economically geared towards maintaining value of 1 LUS
 
 3. The system algorithmically controls the generation of LUSD through a variable issuance fee.
 
-After opening a trove with some Ether, users may issue ("borrow") tokens such that the collateral ratio of their trove remains above 110%. A user with $1000 worth of ETH in a trove can issue up to $909.09 worth of trove.
+After opening a trove with some Ether, users may issue ("borrow") tokens such that the collateral ratio of their trove remains above 110%. A user with $1000 worth of ETH in a trove can issue up to 909.09 LUSD.
 
 The tokens are freely exchangeable - anyone with an Ethereum address can send or receive LUSD tokens, whether they have an open trove or not. The tokens are burned upon repayment of a trove's debt.
 
