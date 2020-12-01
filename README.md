@@ -139,11 +139,11 @@ The partially redeemed trove is re-inserted into the sorted list of troves, and 
 
 ### Full redemption
 
-A trove is defined as “fully redeemed from” when the redemption has caused (debt-10) of its debt to absorb (debt-10) LUSD.Then, its 10 LUSD gas compensation is cancelled with it’s remaining 10 debt: the gas compensation is burned from the gas address, and the 10 debt is zero’d.
+A trove is defined as “fully redeemed from” when the redemption has caused (debt-10) of its debt to absorb (debt-10) LUSD. Then, its 10 LUSD gas compensation is cancelled with its remaining 10 debt: the gas compensation is burned from the gas address, and the 10 debt is zero’d.
 
 Before closing, we must handle the trove’s **collateral surplus**: that is, the excess ETH collateral remaining after redemption, due to its initial over-collateralization.
 
-This collateral surplus is send to the `CollSurplusPool` , and the borrower can reclaim it later. The trove is then fully closed.
+This collateral surplus is sent to the `CollSurplusPool`, and the borrower can reclaim it later. The trove is then fully closed.
 
 ### Redemptions create a price floor
 
@@ -285,9 +285,7 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Sta
 
 `SortedTroves.sol` - a doubly linked list that stores addresses of trove owners, sorted by their individual collateral ratio (ICR). It inserts and re-inserts troves at the correct position, based on their ICR.
 
-**TODO: Description of PriceFeed.sol to be eventually updated.**
-
-`PriceFeed.sol` - Contains functionality for obtaining the current ETH:USD price, which the system uses for calculating collateral ratios. Currently, the price is a state variable that can be manually set by the admin. The PriceFeed contract will eventually store no price data, and when called from within other Liquity contracts, will automatically pull the current and decentralized ETH:USD price data from the Chainlink contract.
+`PriceFeed.sol` - Contains functionality for obtaining the current ETH:USD price, which the system uses for calculating collateral ratios.
 
 `HintHelpers.sol` - Helper contract, containing the read-only functionality for calculation of accurate hints to be supplied to borrower operations and redemptions.
 
@@ -307,10 +305,7 @@ Along with `StabilityPool.sol`, these contracts hold Ether and/or tokens for the
 
 ### PriceFeed and Oracle
 
-Liquity functions that require the most current ETH:USD price data fetch the price dynamically, as needed, via the core `PriceFeed.sol` contract.
-
-**TODO: To be updated**
-Currently, provisional plans are to use the Chainlink ETH:USD reference contract for the price data source, however, other options are under consideration.
+Liquity functions that require the most current ETH:USD price data fetch the price dynamically, as needed, via the core `PriceFeed.sol` contract using the Chainlink ETH:USD reference contract for the price data source, however, other options are under consideration.
 
 The current `PriceFeed.sol` contract has a `getPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. The `PriceFeedTestnet.sol` contains additionally, a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price if the address passed in to `setAddresses()` of the PriceFeedTestnet contract was `address(0)`, otherwise `setPrice()` is disabled and the contract's `getPrice()` returns based on the Ropsten AggregatorV3.
 

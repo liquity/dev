@@ -21,8 +21,8 @@ import lqtyTokenAbi from "../abi/LQTYToken.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
-import multiTrovegetterAbi from "../abi/MultiTroveGetter.json";
-import priceFeedAbi from "../abi/PriceFeed.json";
+import multiTroveGetterAbi from "../abi/MultiTroveGetter.json";
+// import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
@@ -46,30 +46,11 @@ import {
   LockupContractFactory,
   LQTYStaking,
   MultiTroveGetter,
-  PriceFeed,
+  // PriceFeed,
   PriceFeedTestnet,
   SortedTroves,
   StabilityPool
 } from "../types";
-
-export const abi: { [name: string]: JsonFragment[] } = {
-  activePool: activePoolAbi,
-  borrowerOperations: borrowerOperationsAbi,
-  troveManager: troveManagerAbi,
-  lusdToken: lusdTokenAbi,
-  communityIssuance: communityIssuanceAbi,
-  defaultPool: defaultPoolAbi,
-  lqtyToken: lqtyTokenAbi,
-  hintHelpers: hintHelpersAbi,
-  lockupContractFactory: lockupContractFactoryAbi,
-  lqtyStaking: lqtyStakingAbi,
-  multiTrovegetter: multiTrovegetterAbi,
-  priceFeed: priceFeedAbi,
-  priceFeedTestnet: priceFeedTestnetAbi,
-  sortedTroves: sortedTrovesAbi,
-  stabilityPool: stabilityPoolAbi,
-  collSurplusPool: collSurplusPoolAbi
-};
 
 export interface TypedLogDescription<T> extends Omit<LogDescription, "args"> {
   args: T;
@@ -132,7 +113,7 @@ const buildEstimatedFunctions = <T>(
     ])
   );
 
-export class LiquityContract extends Contract {
+class LiquityContract extends Contract {
   // readonly estimateAndCall: Record<string, EstimatedContractFunction>;
   readonly estimateAndPopulate: Record<string, EstimatedContractFunction<PopulatedTransaction>>;
 
@@ -155,28 +136,9 @@ export class LiquityContract extends Contract {
   }
 }
 
-export interface LiquityContractAddresses {
-  activePool: string;
-  borrowerOperations: string;
-  troveManager: string;
-  lusdToken: string;
-  collSurplusPool: string;
-  communityIssuance: string;
-  defaultPool: string;
-  lqtyToken: string;
-  hintHelpers: string;
-  lockupContractFactory: string;
-  lqtyStaking: string;
-  multiTrovegetter: string;
-  // priceFeed: string;
-  priceFeedTestnet: string;
-  sortedTroves: string;
-  stabilityPool: string;
-}
+export type TypedLiquityContract<T = unknown> = TypedContract<LiquityContract, T>;
 
 export interface LiquityContracts {
-  [name: string]: TypeSafeContract<LiquityContract>;
-
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
   troveManager: TroveManager;
@@ -188,94 +150,59 @@ export interface LiquityContracts {
   hintHelpers: HintHelpers;
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
-  multiTrovegetter: MultiTroveGetter;
+  multiTroveGetter: MultiTroveGetter;
   // priceFeed: PriceFeed;
   priceFeedTestnet: PriceFeedTestnet;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
 }
 
-export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses => ({
-  activePool: contracts.activePool.address,
-  borrowerOperations: contracts.borrowerOperations.address,
-  troveManager: contracts.troveManager.address,
-  lusdToken: contracts.lusdToken.address,
-  collSurplusPool: contracts.collSurplusPool.address,
-  communityIssuance: contracts.communityIssuance.address,
-  defaultPool: contracts.defaultPool.address,
-  lqtyToken: contracts.lqtyToken.address,
-  hintHelpers: contracts.hintHelpers.address,
-  lockupContractFactory: contracts.lockupContractFactory.address,
-  lqtyStaking: contracts.lqtyStaking.address,
-  multiTrovegetter: contracts.multiTrovegetter.address,
-  // priceFeed: contracts.priceFeed.address,
-  priceFeedTestnet: contracts.priceFeedTestnet.address,
-  sortedTroves: contracts.sortedTroves.address,
-  stabilityPool: contracts.stabilityPool.address
-});
+export type LiquityContractsKey = keyof LiquityContracts;
+export type LiquityContractAddresses = Record<LiquityContractsKey, string>;
+export type LiquityContractAbis = Record<LiquityContractsKey, JsonFragment[]>;
 
-const create = <T extends TypedContract<LiquityContract, unknown>>(
-  address: string,
-  contractInterface: ContractInterface,
-  signerOrProvider: Signer | Provider
-) => (new LiquityContract(address, contractInterface, signerOrProvider) as unknown) as T;
+export const abi: LiquityContractAbis = {
+  activePool: activePoolAbi,
+  borrowerOperations: borrowerOperationsAbi,
+  troveManager: troveManagerAbi,
+  lusdToken: lusdTokenAbi,
+  communityIssuance: communityIssuanceAbi,
+  defaultPool: defaultPoolAbi,
+  lqtyToken: lqtyTokenAbi,
+  hintHelpers: hintHelpersAbi,
+  lockupContractFactory: lockupContractFactoryAbi,
+  lqtyStaking: lqtyStakingAbi,
+  multiTroveGetter: multiTroveGetterAbi,
+  // priceFeed: priceFeedAbi,
+  priceFeedTestnet: priceFeedTestnetAbi,
+  sortedTroves: sortedTrovesAbi,
+  stabilityPool: stabilityPoolAbi,
+  collSurplusPool: collSurplusPoolAbi
+};
+
+const mapLiquityContracts = <T, U>(
+  contracts: Record<LiquityContractsKey, T>,
+  f: (t: T, key: LiquityContractsKey) => U
+) =>
+  Object.fromEntries(
+    Object.entries(contracts).map(([key, t]) => [key, f(t, key as LiquityContractsKey)])
+  ) as Record<LiquityContractsKey, U>;
 
 export const connectToContracts = (
   addresses: LiquityContractAddresses,
   signerOrProvider: Signer | Provider
-): LiquityContracts => ({
-  activePool: create<ActivePool>(addresses.activePool, activePoolAbi, signerOrProvider),
+) =>
+  mapLiquityContracts(
+    addresses,
+    (address, key) =>
+      new LiquityContract(address, abi[key], signerOrProvider) as TypedLiquityContract
+  ) as LiquityContracts;
 
-  borrowerOperations: create<BorrowerOperations>(
-    addresses.borrowerOperations,
-    borrowerOperationsAbi,
-    signerOrProvider
-  ),
-
-  troveManager: create<TroveManager>(addresses.troveManager, troveManagerAbi, signerOrProvider),
-
-  lusdToken: create<LUSDToken>(addresses.lusdToken, lusdTokenAbi, signerOrProvider),
-
-  collSurplusPool: create<CollSurplusPool>(
-    addresses.collSurplusPool,
-    collSurplusPoolAbi,
-    signerOrProvider
-  ),
-
-  communityIssuance: create<CommunityIssuance>(
-    addresses.communityIssuance,
-    communityIssuanceAbi,
-    signerOrProvider
-  ),
-
-  defaultPool: create<DefaultPool>(addresses.defaultPool, defaultPoolAbi, signerOrProvider),
-
-  lqtyToken: create<LQTYToken>(addresses.lqtyToken, lqtyTokenAbi, signerOrProvider),
-
-  hintHelpers: create<HintHelpers>(addresses.hintHelpers, hintHelpersAbi, signerOrProvider),
-
-  lockupContractFactory: create<LockupContractFactory>(
-    addresses.lockupContractFactory,
-    lockupContractFactoryAbi,
-    signerOrProvider
-  ),
-
-  lqtyStaking: create<LQTYStaking>(addresses.lqtyStaking, lqtyStakingAbi, signerOrProvider),
-
-  multiTrovegetter: create<MultiTroveGetter>(
-    addresses.multiTrovegetter,
-    multiTrovegetterAbi,
-    signerOrProvider
-  ),
-
-  // priceFeed: create<PriceFeed>(addresses.priceFeed, priceFeedAbi, signerOrProvider),
-  
-  priceFeedTestnet: create<PriceFeedTestnet>(addresses.priceFeedTestnet, priceFeedTestnetAbi, signerOrProvider),
-
-  sortedTroves: create<SortedTroves>(addresses.sortedTroves, sortedTrovesAbi, signerOrProvider),
-
-  stabilityPool: create<StabilityPool>(addresses.stabilityPool, stabilityPoolAbi, signerOrProvider)
-});
+export const addressesOf = (contracts: LiquityContracts) =>
+  mapLiquityContracts(
+    contracts as Record<LiquityContractsKey, TypedLiquityContract>,
+    contract => contract.address
+  );
 
 export type LiquityDeployment = {
   addresses: LiquityContractAddresses;
