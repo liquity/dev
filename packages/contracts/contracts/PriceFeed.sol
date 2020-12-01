@@ -9,12 +9,7 @@ import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
 /*
-*
-* Placeholder PriceFeed for development and testing.
-*
-* Will eventually be replaced by a contract that fetches the current price from the Chainlink ETH:USD aggregator
-* reference contract, and does not save price in a state variable.
-*
+* PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference contract.
 */
 contract PriceFeed is Ownable, IPriceFeed {
     using SafeMath for uint256;
