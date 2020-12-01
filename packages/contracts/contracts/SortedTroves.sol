@@ -202,14 +202,14 @@ contract SortedTroves is Ownable, ISortedTroves {
         _requireCallerIsBOorTroveM();
         // List must contain the node
         require(contains(_id), "SortedTroves: List does not contain the id");
+        // ICR must be non-zero
+        require(_newICR > 0, "SortedTroves: ICR must be positive");
 
         // Remove node from the list
         _remove(_id);
 
-        if (_newICR > 0) {
-            // Insert node if it has a non-zero ICR
-            _insert(_id, _newICR, _price, _prevId, _nextId);
-        }
+        // Insert node
+        _insert(_id, _newICR, _price, _prevId, _nextId);
     }
 
     /*
