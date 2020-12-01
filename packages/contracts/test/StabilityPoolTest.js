@@ -6,6 +6,8 @@ const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
+const NonPayable = artifacts.require('NonPayable.sol')
+
 const ZERO = toBN('0')
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const maxBytes32 = th.maxBytes32
@@ -320,6 +322,46 @@ contract('StabilityPool', async accounts => {
       } catch (error) {
         assert.include(error.message, "revert")
       }
+    })
+
+    it("provideToSP(): reverts if cannot receive ETH Gain", async () => {
+      // --- SETUP ---
+      // Whale deposits 1850 LUSD in StabilityPool
+      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+      await borrowerOperations.withdrawLUSD(dec(2100, 18), alice, { from: whale })
+      await stabilityPool.provideToSP(dec(1850, 18), frontEnd_1, { from: whale })
+
+      // Defaulter Troves opened, withdraw 160 LUSD each
+      await borrowerOperations.openTrove(0, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(0, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
+      await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(160, 18), defaulter_2, { from: defaulter_2 })
+
+      // --- TEST ---
+
+      const nonPayable = await NonPayable.new()
+      await lusdToken.transfer(nonPayable.address, dec(250, 18), { from: whale })
+
+      // NonPayable makes deposit #1: 150 LUSD
+      const txData1 = th.getTransactionData('provideToSP(uint256,address)', [web3.utils.toHex(dec(150, 18)), frontEnd_1])
+      const tx1 = await nonPayable.forward(stabilityPool.address, txData1)
+
+      const gain_0 = await stabilityPool.getDepositorETHGain(nonPayable.address)
+      assert.isTrue(gain_0.eq(toBN(0)), 'NonPayable should not have accumulated gains')
+
+      // price drops: defaulters' Troves fall below MCR, nonPayable and whale Trove remain active
+      await priceFeed.setPrice('100000000000000000000');
+
+      // 2 users with Trove with 160 LUSD drawn are closed
+      await troveManager.liquidate(defaulter_1, { from: owner }) // 170 LUSD closed
+      await troveManager.liquidate(defaulter_2, { from: owner }) // 170 LUSD closed
+
+      const gain_1 = await stabilityPool.getDepositorETHGain(nonPayable.address)
+      assert.isTrue(gain_1.gt(toBN(0)), 'NonPayable should have some accumulated gains')
+
+      // NonPayable tries to make deposit #2: 100LUSD
+      const txData2 = th.getTransactionData('provideToSP(uint256,address)', [web3.utils.toHex(dec(100, 18)), frontEnd_1])
+      await th.assertRevert(nonPayable.forward(stabilityPool.address, txData2), 'StabilityPool: sending ETH failed')
     })
 
     it("provideToSP(): doesn't impact other users' deposits or ETH gains", async () => {
