@@ -434,7 +434,7 @@ export class PopulatableEthersLiquity
 
   async setPrice(price: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.priceFeed.estimateAndPopulate.setPrice(
+      await this.contracts.priceFeedTestnet.estimateAndPopulate.setPrice(
         { ...overrides },
         id,
         Decimal.from(price).bigNumber

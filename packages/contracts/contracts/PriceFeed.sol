@@ -2,64 +2,56 @@
 
 pragma solidity 0.6.11;
 
-import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IPriceFeed.sol";
-import "./Interfaces/IDeployedAggregator.sol";
-import "./Interfaces/AggregatorInterface.sol";
+import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
 
 /*
-*
-* Placeholder PriceFeed for development and testing.
-*
-* Will eventually be replaced by a contract that fetches the current price from the Chainlink ETH:USD aggregator
-* reference contract, and does not save price in a state variable.
-*
+* PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference contract.
 */
 contract PriceFeed is Ownable, IPriceFeed {
     using SafeMath for uint256;
 
-    uint256 public price = 200 * 1e18;  // initial ETH:USD price of 200
+    // Mainnet Chainlink aggregator
+    AggregatorV3Interface public priceAggregator;
 
-    address public troveManagerAddress;
-    address public priceAggregatorAddress; // unused  
-    address public priceAggregatorAddressTestnet; // unused
-
-    event PriceUpdated(uint256 _newPrice);
-    event TroveManagerAddressChanged(address _troveManagerAddress);
+    // Use to convert to 18-digit precision uints
+    uint constant public TARGET_DIGITS = 18;  
 
     // --- Dependency setters ---
 
     function setAddresses(
-        address _troveManagerAddress,
-        address _priceAggregatorAddress, // passed 0x0 in tests
-        address _priceAggregatorAddressTestnet // passed 0x0 in tests
+        address _priceAggregatorAddress
     )
         external
-        override
         onlyOwner
     {
-        troveManagerAddress = _troveManagerAddress;
-        priceAggregatorAddress = _priceAggregatorAddress;
-        priceAggregatorAddressTestnet = _priceAggregatorAddressTestnet;
-      
-        emit TroveManagerAddressChanged(_troveManagerAddress);
-
+        priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
         _renounceOwnership();
     }
 
-    // --- Functions ---
-
-    function getPrice() external view override returns (uint256) {
+    /**
+     * Returns the latest price obtained from the Chainlink ETH:USD aggregator reference contract.
+     * https://docs.chain.link/docs/get-the-latest-price
+     */
+    function getPrice() public view override returns (uint) {
+        (, int priceAnswer,, uint timeStamp,) = priceAggregator.latestRoundData();
+    
+        require(timeStamp > 0 && timeStamp <= block.timestamp, "PriceFeed: price timestamp from aggregator is 0, or in future");
+        require(priceAnswer >= 0, "PriceFeed: price answer from aggregator is negative");
+        
+        uint8 answerDigits = priceAggregator.decimals();
+        uint price = uint256(priceAnswer);
+        
+        // currently the Aggregator returns an 8-digit precision, but we handle the case of future changes
+        if (answerDigits > TARGET_DIGITS) { 
+            price = price.div(10 ** (answerDigits - TARGET_DIGITS));
+        }
+        else if (answerDigits < TARGET_DIGITS) {
+            price = price.mul(10 ** (TARGET_DIGITS - answerDigits));
+        } 
         return price;
-    }
-
-    // Manual external price setter.
-    function setPrice(uint256 _price) external override returns (bool) {
-        price = _price;
-        emit PriceUpdated(price);
-        return true;
     }
 }

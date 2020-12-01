@@ -60,7 +60,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       contracts.troveManager = await TroveManagerTester.new()
       contracts = await deploymentHelper.deployLUSDToken(contracts)
   
-      priceFeed = contracts.priceFeed
+      priceFeed = contracts.priceFeedTestnet
       lusdToken = contracts.lusdToken
       sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager
@@ -1403,6 +1403,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await priceFeed.setPrice(dec(200, 18))
       const txA = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
       await priceFeed.setPrice(dec(100, 18))
+
       // Bob deposits 100 LUSD
       await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
@@ -1648,6 +1649,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const txA = await stabilityPool.withdrawFromSP(dec(10, 18), { from: A })
       const txB = await stabilityPool.withdrawFromSP(dec(10, 18), { from: B })
       await priceFeed.setPrice(dec(100, 18))
+      
       assert.isTrue(txA.receipt.status)
       assert.isTrue(txB.receipt.status)
 
@@ -1687,6 +1689,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const txC = await stabilityPool.withdrawFromSP(dec(10, 18), { from: C })
       const txD = await stabilityPool.withdrawFromSP(dec(10, 18), { from: D })
       await priceFeed.setPrice(dec(100, 18))
+      
       assert.isTrue(txC.receipt.status)
       assert.isTrue(txD.receipt.status)
 
@@ -1756,7 +1759,6 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(100, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
 
-
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
       const txL1 = await troveManager.liquidate(defaulter_1, { from: owner });
       assert.isTrue(txL1.receipt.status)
@@ -1805,7 +1807,6 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // ETH:USD price is $2 billion per ETH
       await priceFeed.setPrice(dec(2, 27));
-      const price = await priceFeed.getPrice()
 
       const depositors = [alice, bob]
       for (account of depositors) {

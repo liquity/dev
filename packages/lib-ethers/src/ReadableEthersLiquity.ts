@@ -66,7 +66,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getPrice(overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.priceFeed.getPrice({ ...overrides }));
+    return new Decimal(await this.contracts.priceFeedTestnet.getPrice({ ...overrides }));
   }
 
   async getTotal(overrides?: EthersCallOverrides) {

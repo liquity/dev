@@ -90,8 +90,6 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     liquidatedAccountsDict,
     currentDepositorsDict,
   ) => {
-
-
     const randomSelection = Math.floor(Math.random() * 2)
 
     if (randomSelection === 0) {
@@ -166,7 +164,6 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
   const attemptWithdrawAllDeposits = async (currentDepositors) => {
     // First, liquidate all remaining undercollateralized troves, so that SP depositors may withdraw
-    const price = await priceFeed.getPrice()
 
     console.log("\n")
     console.log("--- Attempt to withdraw all deposits ---")
@@ -202,8 +199,6 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
                      SP LUSD deposits tracker after: ${LUSDinSPAfter}
                      SP LUSD balance after: ${LUSDBalanceSPAfter}
                      `)
-
-
       // Check each deposit can be withdrawn
       assert.isTrue(withdrawalTx.receipt.status)
       assert.equal(depositAfter, '0')
@@ -221,7 +216,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
       stabilityPool = contracts.stabilityPool
-      priceFeed = contracts.priceFeed
+      priceFeed = contracts.priceFeedTestnet
       lusdToken = contracts.lusdToken
       stabilityPool = contracts.stabilityPool
       troveManager = contracts.troveManager
