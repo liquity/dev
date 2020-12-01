@@ -9,7 +9,7 @@ import "../DefaultPool.sol";
 import "../StabilityPool.sol";
 import "../CollSurplusPool.sol";
 import "../LUSDToken.sol";
-import "../PriceFeed.sol";
+import "./PriceFeedTestnet.sol";
 import "../SortedTroves.sol";
 import "./EchidnaProxy.sol";
 //import "../Dependencies/console.sol";
@@ -35,7 +35,7 @@ contract EchidnaTester {
     StabilityPool public stabilityPool;
     CollSurplusPool public collSurplusPool;
     LUSDToken public lusdToken;
-    PriceFeed priceFeed;
+    PriceFeedTestnet priceFeedTestnet;
     SortedTroves sortedTroves;
 
     EchidnaProxy[NUMBER_OF_ACTORS] public echidnaProxies;
@@ -53,19 +53,36 @@ contract EchidnaTester {
             address(stabilityPool),
             address(borrowerOperations)
         );
+
         collSurplusPool = new CollSurplusPool();
-        priceFeed = new PriceFeed();
+        priceFeedTestnet = new PriceFeedTestnet();
+
         sortedTroves = new SortedTroves();
 
-        troveManager.setAddresses(address(borrowerOperations), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(lusdToken), address(sortedTroves), address(0));
+        troveManager.setAddresses(address(borrowerOperations), 
+            address(activePool), address(defaultPool), 
+            address(stabilityPool), address(collSurplusPool), 
+            address(priceFeedTestnet), address(lusdToken), 
+            address(sortedTroves), address(0));
        
-        borrowerOperations.setAddresses(address(troveManager), address(activePool), address(defaultPool), address(stabilityPool), address(collSurplusPool), address(priceFeed), address(sortedTroves), address(lusdToken), address(0));
-        activePool.setAddresses(address(borrowerOperations), address(troveManager), address(stabilityPool), address(defaultPool));
+        borrowerOperations.setAddresses(address(troveManager), 
+            address(activePool), address(defaultPool), 
+            address(stabilityPool), address(collSurplusPool), 
+            address(priceFeedTestnet), address(sortedTroves), 
+            address(lusdToken), address(0));
+
+        activePool.setAddresses(address(borrowerOperations), 
+            address(troveManager), address(stabilityPool), address(defaultPool));
+
         defaultPool.setAddresses(address(troveManager), address(activePool));
         
-        stabilityPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool), address(lusdToken), address(sortedTroves), address(priceFeed), address(0));
-        collSurplusPool.setAddresses(address(borrowerOperations), address(troveManager), address(activePool));
-        priceFeed.setAddresses(address(troveManager), address(0), address(0));
+        stabilityPool.setAddresses(address(borrowerOperations), 
+            address(troveManager), address(activePool), address(lusdToken), 
+            address(sortedTroves), address(priceFeedTestnet), address(0));
+
+        collSurplusPool.setAddresses(address(borrowerOperations), 
+             address(troveManager), address(activePool));
+    
         sortedTroves.setParams(1e18, address(troveManager), address(borrowerOperations));
 
         for (uint i = 0; i < NUMBER_OF_ACTORS; i++) {
@@ -83,7 +100,7 @@ contract EchidnaTester {
         GAS_POOL_ADDRESS = troveManager.GAS_POOL_ADDRESS();
 
         // TODO:
-        priceFeed.setPrice(1e22);
+        priceFeedTestnet.setPrice(1e22);
     }
 
     // TroveManager
@@ -117,7 +134,7 @@ contract EchidnaTester {
     // Borrower Operations
 
     function getAdjustedETH(uint actorBalance, uint _ETH, uint ratio) internal view returns (uint) {
-        uint price = priceFeed.getPrice();
+        uint price = priceFeedTestnet.getPrice();
         require(price > 0);
         uint minETH = ratio.mul(LUSD_GAS_COMPENSATION).div(price);
         require(actorBalance > minETH);
@@ -126,7 +143,7 @@ contract EchidnaTester {
     }
 
     function getAdjustedLUSD(uint ETH, uint _LUSDAmount, uint ratio) internal view returns (uint) {
-        uint price = priceFeed.getPrice();
+        uint price = priceFeedTestnet.getPrice();
         uint LUSDAmount = _LUSDAmount;
         uint compositeDebt = LUSDAmount.add(LUSD_GAS_COMPENSATION);
         uint ICR = LiquityMath._computeCR(ETH, compositeDebt, price);
@@ -259,7 +276,7 @@ contract EchidnaTester {
     // PriceFeed
 
     function setPriceExt(uint256 _price) external {
-        bool result = priceFeed.setPrice(_price);
+        bool result = priceFeedTestnet.setPrice(_price);
         assert(result);
     }
 
@@ -283,7 +300,7 @@ contract EchidnaTester {
     }
 
     function echidna_troves_order() external view returns(bool) {
-        uint price = priceFeed.getPrice();
+        uint price = priceFeedTestnet.getPrice();
 
         address currentTrove = sortedTroves.getFirst();
         address nextTrove = sortedTroves.getNext(currentTrove);
@@ -360,11 +377,11 @@ contract EchidnaTester {
         if (address(lusdToken).balance > 0) {
             return false;
         }
-
-        if (address(priceFeed).balance > 0) {
+    
+        if (address(priceFeedTestnet).balance > 0) {
             return false;
         }
-
+        
         if (address(sortedTroves).balance > 0) {
             return false;
         }
@@ -374,7 +391,8 @@ contract EchidnaTester {
 
     // TODO: What should we do with this? Should it be allowed? Should it be a canary?
     function echidna_price() public view returns(bool) {
-        uint price = priceFeed.getPrice();
+        uint price = priceFeedTestnet.getPrice();
+        
         if (price == 0) {
             return false;
         }

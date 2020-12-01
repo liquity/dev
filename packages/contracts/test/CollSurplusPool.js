@@ -9,7 +9,7 @@ const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
 
-contract('CollSUrplusPool', async accounts => {
+contract('CollSurplusPool', async accounts => {
   const [
     owner,
     A, B, C, D, E] = accounts;
@@ -24,7 +24,7 @@ contract('CollSUrplusPool', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     collSurplusPool = contracts.collSurplusPool
     borrowerOperations = contracts.borrowerOperations
 
@@ -50,11 +50,11 @@ contract('CollSUrplusPool', async accounts => {
   })
 
   it("CollSurplusPool: claimColl(): Reverts if caller is not Borrower Operations", async () => {
-    await th.assertRevert(collSurplusPool.claimColl(A, { from: A }), 'CollSurplus: Caller is not Borrower Operations')
+    await th.assertRevert(collSurplusPool.claimColl(A, { from: A }), 'CollSurplusPool: Caller is not Borrower Operations')
   })
 
   it("CollSurplusPool: claimColl(): Reverts if nothing to claim", async () => {
-    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(A), 'CollSurplus: No collateral available to claim')
+    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(A), 'CollSurplusPool: No collateral available to claim')
   })
 
   it("CollSurplusPool: claimColl(): Reverts if owner cannot receive ETH surplus", async () => {
@@ -72,7 +72,7 @@ contract('CollSUrplusPool', async accounts => {
     const ETH_2 = await collSurplusPool.getETH()
     assert.equal(ETH_2, dec(5, 17))
 
-    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(B), 'CollSurplus: sending ETH failed')
+    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(nonPayable.address), 'CollSurplusPool: sending ETH failed')
   })
 
   it('CollSurplusPool: reverts trying to send ETH to it', async () => {

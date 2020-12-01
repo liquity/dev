@@ -1,4 +1,4 @@
-import { JsonFragment, LogDescription, Result } from "@ethersproject/abi";
+import { JsonFragment, LogDescription } from "@ethersproject/abi";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Provider, Log } from "@ethersproject/abstract-provider";
@@ -22,7 +22,8 @@ import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiTroveGetterAbi from "../abi/MultiTroveGetter.json";
-import priceFeedAbi from "../abi/PriceFeed.json";
+// import priceFeedAbi from "../abi/PriceFeed.json";
+import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 
@@ -45,7 +46,8 @@ import {
   LockupContractFactory,
   LQTYStaking,
   MultiTroveGetter,
-  PriceFeed,
+  // PriceFeed,
+  PriceFeedTestnet,
   SortedTroves,
   StabilityPool
 } from "../types";
@@ -149,7 +151,8 @@ export interface LiquityContracts {
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
   multiTroveGetter: MultiTroveGetter;
-  priceFeed: PriceFeed;
+  // priceFeed: PriceFeed;
+  priceFeedTestnet: PriceFeedTestnet;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
 }
@@ -170,7 +173,8 @@ export const abi: LiquityContractAbis = {
   lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
   multiTroveGetter: multiTroveGetterAbi,
-  priceFeed: priceFeedAbi,
+  // priceFeed: priceFeedAbi,
+  priceFeedTestnet: priceFeedTestnetAbi,
   sortedTroves: sortedTrovesAbi,
   stabilityPool: stabilityPoolAbi,
   collSurplusPool: collSurplusPoolAbi

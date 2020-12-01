@@ -439,7 +439,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
     * Only called by liquidation functions in the TroveManager. 
     */
-    function offset(uint _debtToOffset, uint _collToAdd) external payable override {
+    function offset(uint _debtToOffset, uint _collToAdd) external override {
         _requireCallerIsTroveManager();
         uint totalLUSD = totalLUSDDeposits; // cached to save an SLOAD
         if (totalLUSD == 0 || _debtToOffset == 0) { return; }

@@ -6,7 +6,7 @@ import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "
 
 let silent = true;
 
-const ropstenAggregator = "0x8468b2bDCE073A157E560AA4D9CcF6dB1DB98507";
+const kovanAggregator = "0x9326BFA02ADD2366b30bacB125260Af641031331";
 
 export const setSilent = (s: boolean) => {
   silent = s;
@@ -62,7 +62,8 @@ const deployContracts = async (
       { ...overrides }
     ),
     lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
-    priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
+    // priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
+    priceFeedTestnet: await deployContract(deployer, getContractFactory, "PriceFeedTestnet", { ...overrides }),
     sortedTroves: await deployContract(deployer, getContractFactory, "SortedTroves", { ...overrides }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
@@ -115,7 +116,8 @@ const connectContracts = async (
     hintHelpers,
     lockupContractFactory,
     lqtyStaking,
-    priceFeed,
+    // priceFeed,
+    priceFeedTestnet,
     sortedTroves,
     stabilityPool
   }: LiquityContracts,
@@ -136,16 +138,11 @@ const connectContracts = async (
         nonce
       }),
 
-    nonce =>
-      priceFeed.setAddresses(
-        troveManager.address,
-        AddressZero,
-        network.name === "ropsten" ? ropstenAggregator : AddressZero,
-        {
-          ...overrides,
-          nonce
-        }
-      ),
+    // nonce =>
+    //   priceFeedTestnet.setAddresses(
+    //     network.name === "kovan" ? kovanAggregator : AddressZero,,
+    //     { ...overrides, nonce }
+    //   ),
 
     nonce =>
       troveManager.setAddresses(
@@ -154,7 +151,7 @@ const connectContracts = async (
         defaultPool.address,
         stabilityPool.address,
         collSurplusPool.address,
-        priceFeed.address,
+        priceFeedTestnet.address,
         lusdToken.address,
         sortedTroves.address,
         lqtyStaking.address,
@@ -168,7 +165,7 @@ const connectContracts = async (
         defaultPool.address,
         stabilityPool.address,
         collSurplusPool.address,
-        priceFeed.address,
+        priceFeedTestnet.address,
         sortedTroves.address,
         lusdToken.address,
         lqtyStaking.address,
@@ -182,7 +179,7 @@ const connectContracts = async (
         activePool.address,
         lusdToken.address,
         sortedTroves.address,
-        priceFeed.address,
+        priceFeedTestnet.address,
         communityIssuance.address,
         { ...overrides, nonce }
       ),

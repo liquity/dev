@@ -54,7 +54,7 @@ interface IStabilityPool {
 
     function registerFrontEnd(uint _kickbackRate) external;
 
-    function offset(uint _debt, uint _coll) external payable;
+    function offset(uint _debt, uint _coll) external;
 
     function getETH() external view returns (uint);
     function getTotalLUSDDeposits() external view returns (uint);

@@ -6,7 +6,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   const [owner, alice, bob] = accounts;
   let contracts
-  let priceFeed
   let lusdToken
   let sortedTroves
   let troveManager
@@ -25,7 +24,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     contracts = await deploymentHelper.deployLUSDToken(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
@@ -93,12 +91,6 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
       // fails if called twice
       await th.assertRevert(sortedTroves.setParams(...params, { from: owner }))
-    })
-  })
-
-  describe('PriceFeed', async accounts => {
-    it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(priceFeed, 3)
     })
   })
 

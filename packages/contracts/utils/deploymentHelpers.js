@@ -1,7 +1,7 @@
 
 const SortedTroves = artifacts.require("./SortedTroves.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
-const PriceFeed = artifacts.require("./PriceFeed.sol")
+const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
 const LUSDToken = artifacts.require("./LUSDToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
@@ -66,7 +66,7 @@ class DeploymentHelper {
   }
 
   static async deployLiquityCoreBuidler() {
-    const priceFeed = await PriceFeed.new()
+    const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedTroves = await SortedTroves.new()
     const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
@@ -83,7 +83,7 @@ class DeploymentHelper {
     )
     LUSDToken.setAsDeployed(lusdToken)
     DefaultPool.setAsDeployed(defaultPool)
-    PriceFeed.setAsDeployed(priceFeed)
+    PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
     SortedTroves.setAsDeployed(sortedTroves)
     TroveManager.setAsDeployed(troveManager)
     ActivePool.setAsDeployed(activePool)
@@ -94,7 +94,7 @@ class DeploymentHelper {
     HintHelpers.setAsDeployed(hintHelpers)
 
     const coreContracts = {
-      priceFeed,
+      priceFeedTestnet,
       lusdToken,
       sortedTroves,
       troveManager,
@@ -113,9 +113,8 @@ class DeploymentHelper {
     const testerContracts = {}
 
     // Contract without testers (yet)
-    testerContracts.priceFeed = await PriceFeed.new()
+    testerContracts.priceFeedTestnet = await PriceFeedTestnet.new()
     testerContracts.sortedTroves = await SortedTroves.new()
-
     // Actual tester contracts
     testerContracts.communityIssuance = await CommunityIssuanceTester.new()
     testerContracts.stabilityPool = await StabilityPoolTester.new()
@@ -189,7 +188,7 @@ class DeploymentHelper {
   }
 
   static async deployLiquityCoreTruffle() {
-    const priceFeed = await PriceFeed.new()
+    const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedTroves = await SortedTroves.new()
     const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
@@ -205,7 +204,7 @@ class DeploymentHelper {
       borrowerOperations.address
     )
     const coreContracts = {
-      priceFeed,
+      priceFeedTestnet,
       lusdToken,
       sortedTroves,
       troveManager,
@@ -265,13 +264,6 @@ class DeploymentHelper {
     await contracts.functionCaller.setTroveManagerAddress(contracts.troveManager.address)
     await contracts.functionCaller.setSortedTrovesAddress(contracts.sortedTroves.address)
 
-    // set contract addresses in PriceFeed
-    await contracts.priceFeed.setAddresses(
-      contracts.troveManager.address,
-      ZERO_ADDRESS,
-      ZERO_ADDRESS
-    )
-
     // set contracts in the Trove Manager
     await contracts.troveManager.setAddresses(
       contracts.borrowerOperations.address,
@@ -279,7 +271,7 @@ class DeploymentHelper {
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
       contracts.collSurplusPool.address,
-      contracts.priceFeed.address,
+      contracts.priceFeedTestnet.address,
       contracts.lusdToken.address,
       contracts.sortedTroves.address,
       LQTYContracts.lqtyStaking.address
@@ -292,7 +284,7 @@ class DeploymentHelper {
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
       contracts.collSurplusPool.address,
-      contracts.priceFeed.address,
+      contracts.priceFeedTestnet.address,
       contracts.sortedTroves.address,
       contracts.lusdToken.address,
       LQTYContracts.lqtyStaking.address
@@ -305,7 +297,7 @@ class DeploymentHelper {
       contracts.activePool.address,
       contracts.lusdToken.address,
       contracts.sortedTroves.address,
-      contracts.priceFeed.address,
+      contracts.priceFeedTestnet.address,
       LQTYContracts.communityIssuance.address
     )
 

@@ -55,7 +55,7 @@ contract('BorrowerOperations', async accounts => {
     contracts = await deploymentHelper.deployLUSDToken(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
@@ -73,7 +73,7 @@ contract('BorrowerOperations', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
-
+  
     LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
   })
 
@@ -3504,7 +3504,6 @@ contract('BorrowerOperations', async accounts => {
 
       await priceFeed.setPrice(dec(200, 18))
       const price = await priceFeed.getPrice()
-
 
       // --- TEST ---
       const collChange = 0

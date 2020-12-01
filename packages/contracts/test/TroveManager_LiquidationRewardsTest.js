@@ -32,7 +32,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
 
-    priceFeed = contracts.priceFeed
+    priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
@@ -304,7 +304,6 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
-    const price = await priceFeed.getPrice()
 
     // Liquidate A
     // console.log(`ICR A: ${await troveManager.getCurrentICR(A, price)}`)
@@ -370,7 +369,6 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
-    const price = await priceFeed.getPrice()
 
     // Check entireColl for each trove:
     const A_entireColl_0 = (await th.getEntireCollAndDebt(contracts, A)).entireColl
