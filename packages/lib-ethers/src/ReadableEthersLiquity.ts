@@ -108,7 +108,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
-    const troves = await this.contracts.multiTrovegetter.getMultipleSortedTroves(
+    const troves = await this.contracts.multiTroveGetter.getMultipleSortedTroves(
       -(startIdx + 1),
       numberOfTroves,
       { ...overrides }
@@ -118,7 +118,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
-    const troves = await this.contracts.multiTrovegetter.getMultipleSortedTroves(
+    const troves = await this.contracts.multiTroveGetter.getMultipleSortedTroves(
       startIdx,
       numberOfTroves,
       { ...overrides }

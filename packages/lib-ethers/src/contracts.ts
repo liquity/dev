@@ -21,7 +21,7 @@ import lqtyTokenAbi from "../abi/LQTYToken.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
-import multiTrovegetterAbi from "../abi/MultiTroveGetter.json";
+import multiTroveGetterAbi from "../abi/MultiTroveGetter.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
@@ -63,7 +63,7 @@ export const abi: { [name: string]: JsonFragment[] } = {
   hintHelpers: hintHelpersAbi,
   lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
-  multiTrovegetter: multiTrovegetterAbi,
+  multiTroveGetter: multiTroveGetterAbi,
   priceFeed: priceFeedAbi,
   priceFeedTestnet: priceFeedTestnetAbi,
   sortedTroves: sortedTrovesAbi,
@@ -167,7 +167,7 @@ export interface LiquityContractAddresses {
   hintHelpers: string;
   lockupContractFactory: string;
   lqtyStaking: string;
-  multiTrovegetter: string;
+  multiTroveGetter: string;
   // priceFeed: string;
   priceFeedTestnet: string;
   sortedTroves: string;
@@ -188,7 +188,7 @@ export interface LiquityContracts {
   hintHelpers: HintHelpers;
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
-  multiTrovegetter: MultiTroveGetter;
+  multiTroveGetter: MultiTroveGetter;
   // priceFeed: PriceFeed;
   priceFeedTestnet: PriceFeedTestnet;
   sortedTroves: SortedTroves;
@@ -207,7 +207,7 @@ export const addressesOf = (contracts: LiquityContracts): LiquityContractAddress
   hintHelpers: contracts.hintHelpers.address,
   lockupContractFactory: contracts.lockupContractFactory.address,
   lqtyStaking: contracts.lqtyStaking.address,
-  multiTrovegetter: contracts.multiTrovegetter.address,
+  multiTroveGetter: contracts.multiTroveGetter.address,
   // priceFeed: contracts.priceFeed.address,
   priceFeedTestnet: contracts.priceFeedTestnet.address,
   sortedTroves: contracts.sortedTroves.address,
@@ -262,9 +262,9 @@ export const connectToContracts = (
 
   lqtyStaking: create<LQTYStaking>(addresses.lqtyStaking, lqtyStakingAbi, signerOrProvider),
 
-  multiTrovegetter: create<MultiTroveGetter>(
-    addresses.multiTrovegetter,
-    multiTrovegetterAbi,
+  multiTroveGetter: create<MultiTroveGetter>(
+    addresses.multiTroveGetter,
+    multiTroveGetterAbi,
     signerOrProvider
   ),
 

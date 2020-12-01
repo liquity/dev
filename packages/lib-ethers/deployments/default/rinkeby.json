@@ -10,7 +10,7 @@
     "hintHelpers": "0xD386E5cB77Bce95821EbF81B855818c7Cd2BFdFa",
     "lockupContractFactory": "",
     "lqtyStaking": "",
-    "multiTrovegetter": "0x374B2FdfD8019d3880d46c1A45Aa3c3d59BA89c5",
+    "multiTroveGetter": "0x374B2FdfD8019d3880d46c1A45Aa3c3d59BA89c5",
     "poolManager": "0x5dAdbC2eD0C652357DF04B484F2A10E2B2457632",
     "priceFeed": "0x332AC0d04Fd4906A76Ad6C52B6055a187809325c",
     "sortedTroves": "0x376FbE72F997ad8D67558d9D96bB1c6dDFB11EE9",
