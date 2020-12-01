@@ -559,7 +559,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal(alice_ICR, '1333333333333333333')
     assert.equal(dennis_ICR, '1333333333333333333')
 
-    console.log(`TCR: ${await troveManager.getTCR()}`)
+    // console.log(`TCR: ${await troveManager.getTCR()}`)
     // Liquidate Bob
     await troveManager.liquidate(bob, { from: owner })
 

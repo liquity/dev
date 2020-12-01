@@ -1,7 +1,6 @@
 
 const SortedTroves = artifacts.require("./SortedTroves.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
-const PriceFeed = artifacts.require("./PriceFeed.sol")
 const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
 const LUSDToken = artifacts.require("./LUSDToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
@@ -67,7 +66,6 @@ class DeploymentHelper {
   }
 
   static async deployLiquityCoreBuidler() {
-    const priceFeed = await PriceFeed.new()
     const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedTroves = await SortedTroves.new()
     const troveManager = await TroveManager.new()
@@ -85,7 +83,6 @@ class DeploymentHelper {
     )
     LUSDToken.setAsDeployed(lusdToken)
     DefaultPool.setAsDeployed(defaultPool)
-    PriceFeed.setAsDeployed(priceFeed)
     PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
     SortedTroves.setAsDeployed(sortedTroves)
     TroveManager.setAsDeployed(troveManager)
@@ -97,7 +94,6 @@ class DeploymentHelper {
     HintHelpers.setAsDeployed(hintHelpers)
 
     const coreContracts = {
-      priceFeed,
       priceFeedTestnet,
       lusdToken,
       sortedTroves,
@@ -117,7 +113,6 @@ class DeploymentHelper {
     const testerContracts = {}
 
     // Contract without testers (yet)
-    testerContracts.priceFeed = await PriceFeed.new()
     testerContracts.priceFeedTestnet = await PriceFeedTestnet.new()
     testerContracts.sortedTroves = await SortedTroves.new()
     // Actual tester contracts
@@ -193,7 +188,6 @@ class DeploymentHelper {
   }
 
   static async deployLiquityCoreTruffle() {
-    const priceFeed = await PriceFeed.new()
     const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedTroves = await SortedTroves.new()
     const troveManager = await TroveManager.new()
@@ -210,7 +204,6 @@ class DeploymentHelper {
       borrowerOperations.address
     )
     const coreContracts = {
-      priceFeed,
       priceFeedTestnet,
       lusdToken,
       sortedTroves,
@@ -270,16 +263,6 @@ class DeploymentHelper {
     // set contract addresses in the FunctionCaller 
     await contracts.functionCaller.setTroveManagerAddress(contracts.troveManager.address)
     await contracts.functionCaller.setSortedTrovesAddress(contracts.sortedTroves.address)
-
-    // set contract addresses in PriceFeed
-    await contracts.priceFeed.setAddresses(
-      ZERO_ADDRESS,
-    )
-
-    // set contract addresses in PriceFeedTestnet
-    await contracts.priceFeedTestnet.setAddresses(
-      ZERO_ADDRESS,
-    )
 
     // set contracts in the Trove Manager
     await contracts.troveManager.setAddresses(

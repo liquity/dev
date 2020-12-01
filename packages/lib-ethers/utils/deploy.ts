@@ -139,16 +139,10 @@ const connectContracts = async (
       }),
 
     // nonce =>
-    //   priceFeed.setAddresses(
-    //     AddressZero,
+    //   priceFeedTestnet.setAddresses(
+    //     network.name === "kovan" ? kovanAggregator : AddressZero,,
     //     { ...overrides, nonce }
     //   ),
-
-    nonce =>
-      priceFeedTestnet.setAddresses(
-        network.name === "kovan" ? kovanAggregator : AddressZero,
-        { ...overrides, nonce }
-      ),
 
     nonce =>
       troveManager.setAddresses(
