@@ -22,7 +22,7 @@ import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiTroveGetterAbi from "../abi/MultiTroveGetter.json";
-import priceFeedAbi from "../abi/PriceFeed.json";
+// import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
@@ -46,7 +46,7 @@ import {
   LockupContractFactory,
   LQTYStaking,
   MultiTroveGetter,
-  PriceFeed,
+  // PriceFeed,
   PriceFeedTestnet,
   SortedTroves,
   StabilityPool
@@ -151,6 +151,7 @@ export interface LiquityContracts {
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
   multiTroveGetter: MultiTroveGetter;
+  // priceFeed: PriceFeed;
   priceFeedTestnet: PriceFeedTestnet;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
@@ -172,6 +173,7 @@ export const abi: LiquityContractAbis = {
   lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
   multiTroveGetter: multiTroveGetterAbi,
+  // priceFeed: priceFeedAbi,
   priceFeedTestnet: priceFeedTestnetAbi,
   sortedTroves: sortedTrovesAbi,
   stabilityPool: stabilityPoolAbi,

@@ -9,6 +9,4 @@ interface IPriceFeed {
     ) external;
 
     function getPrice() external view returns (uint);
-    
-    function getLatestPrice() external view returns (uint, uint8);  
 }

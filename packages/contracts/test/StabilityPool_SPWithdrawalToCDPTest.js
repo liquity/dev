@@ -66,8 +66,6 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
-
-      await priceFeed.setPrice(dec(200, 18))
     })
 
     // --- withdrawETHGainToTrove() ---
@@ -733,8 +731,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // Increasing the price for a moment to avoid pending liquidations to block withdrawal
       await priceFeed.setPrice(dec(200, 18))
       const txD = await stabilityPool.withdrawFromSP(dec(5000, 18), { from: dennis })
+      
       await priceFeed.setPrice(dec(100, 18))
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
+      
       assert.isAtMost(th.getDifference((await lusdToken.balanceOf(dennis)).toString(), '276923076923077000000'), 1000000000)
       // 3*0.995 * 400/975
       assert.isAtMost(th.getDifference(dennis_ETHWithdrawn, '1224615384615384661'), 1000000000)

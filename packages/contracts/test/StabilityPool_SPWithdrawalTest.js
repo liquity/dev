@@ -72,8 +72,6 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
-
-      await priceFeed.setPrice(dec(200, 18))
     })
 
     // --- Compounding tests ---
@@ -1405,6 +1403,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await priceFeed.setPrice(dec(200, 18))
       const txA = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
       await priceFeed.setPrice(dec(100, 18))
+
       // Bob deposits 100 LUSD
       await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
@@ -1650,6 +1649,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const txA = await stabilityPool.withdrawFromSP(dec(10, 18), { from: A })
       const txB = await stabilityPool.withdrawFromSP(dec(10, 18), { from: B })
       await priceFeed.setPrice(dec(100, 18))
+      
       assert.isTrue(txA.receipt.status)
       assert.isTrue(txB.receipt.status)
 
@@ -1689,6 +1689,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       const txC = await stabilityPool.withdrawFromSP(dec(10, 18), { from: C })
       const txD = await stabilityPool.withdrawFromSP(dec(10, 18), { from: D })
       await priceFeed.setPrice(dec(100, 18))
+      
       assert.isTrue(txC.receipt.status)
       assert.isTrue(txD.receipt.status)
 
