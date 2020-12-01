@@ -307,7 +307,7 @@ Along with `StabilityPool.sol`, these contracts hold Ether and/or tokens for the
 
 Liquity functions that require the most current ETH:USD price data fetch the price dynamically, as needed, via the core `PriceFeed.sol` contract using the Chainlink ETH:USD reference contract for the price data source, however, other options are under consideration.
 
-The current `PriceFeed.sol` contract has a `getPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. The `PriceFeedTestnet.sol` contains additionally, a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price if the address passed in to `setAddresses()` of the PriceFeedTestnet contract was `address(0)`, otherwise `setPrice()` is disabled and the contract's `getPrice()` returns based on the Ropsten AggregatorV3.
+The current `PriceFeed.sol` contract has a `getPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. The `PriceFeedTestnet.sol` contains additionally, a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price.
 
 ### Keeping a sorted list of troves ordered by ICR
 
