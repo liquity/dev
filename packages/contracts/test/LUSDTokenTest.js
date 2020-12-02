@@ -280,7 +280,21 @@ contract('LUSDToken', async accounts => {
       await assertRevert(lusdTokenTester.transfer(stabilityPool.address, 1, { from: alice }))
       await assertRevert(lusdTokenTester.transfer(borrowerOperations.address, 1, { from: alice }))
     })
-    
+
+    it('decreaseAllowance(): decreases allowance by the expected amount', async () => {
+      await lusdTokenTester.approve(bob, dec(3, 18), { from: alice })
+      assert.equal((await lusdTokenTester.allowance(alice, bob)).toString(), dec(3, 18))
+      await lusdTokenTester.decreaseAllowance(bob, dec(1, 18), { from: alice })
+      assert.equal((await lusdTokenTester.allowance(alice, bob)).toString(), dec(2, 18))
+    })
+
+    it('decreaseAllowance(): fails trying to decrease more than previously allowed', async () => {
+      await lusdTokenTester.approve(bob, dec(3, 18), { from: alice })
+      assert.equal((await lusdTokenTester.allowance(alice, bob)).toString(), dec(3, 18))
+      await assertRevert(lusdTokenTester.decreaseAllowance(bob, dec(4, 18), { from: alice }), 'ERC20: decreased allowance below zero')
+      assert.equal((await lusdTokenTester.allowance(alice, bob)).toString(), dec(3, 18))
+    })
+
     // EIP2612 tests
 
     it('Initializes PERMIT_TYPEHASH correctly', async () => {
