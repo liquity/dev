@@ -253,7 +253,7 @@ contract('TroveManager', async accounts => {
       })
     })
 
-    context('when params are wrongly set', () => {
+    context('when params are properly set', () => {
       beforeEach('set params', async() => {
         await sortedTroves.setParams(2, sortedTrovesTester.address, sortedTrovesTester.address)
       })
@@ -291,6 +291,14 @@ contract('TroveManager', async accounts => {
         await th.assertRevert(sortedTrovesTester.reInsert(alice, 0, 1, alice, alice), 'SortedTroves: ICR must be positive')
         assert.isTrue(await sortedTroves.contains(alice), 'list should contain element')
       })
+
+      it('findInsertPosition(): No prevId for hint - ascend list starting from nextId, result is after the tail', async () => {
+        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
+        const pos = await sortedTroves.findInsertPosition(1, 1, th.ZERO_ADDRESS, alice)
+        assert.equal(pos[0], alice, 'prevId result should be nextId param')
+        assert.equal(pos[1], th.ZERO_ADDRESS, 'nextId result should be zero')
+      })
+
     })
   })
 })
