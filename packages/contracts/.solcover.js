@@ -7,10 +7,8 @@ module.exports = {
 
   // Improve performance by skipping statements and functions. Tool still checks lines of code and branches:
   // https://github.com/sc-forks/solidity-coverage/blob/master/docs/advanced.md
-  measureStatementCoverage: false,
-  measureFunctionCoverage: false,
-
-  testfiles: "test/LUSDTokenTest.js",
+  //measureStatementCoverage: false,
+  //measureFunctionCoverage: false,
 
   skipFiles: [
     "TestContracts/",
@@ -19,6 +17,7 @@ module.exports = {
     "Interfaces/",
     "Dependencies/Context.sol",
     "Dependencies/IERC20.sol",
+    "Dependencies/IERC2612.sol",
     "Dependencies/Math.sol",
     "Dependencies/Ownable.sol",
     "Dependencies/SafeMath.sol",
