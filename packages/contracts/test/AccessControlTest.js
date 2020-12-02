@@ -7,6 +7,7 @@ const timeValues = testHelpers.TimeValues
 
 const dec = th.dec
 const toBN = th.toBN
+const assertRevert = th.assertRevert
 
 /* The majority of access control tests are contained in this file. However, tests for restrictions 
 on the Liquity admin address's capabilities during the first year are found in:
@@ -27,6 +28,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   let functionCaller
   let borrowerOperations
 
+  
   before(async () => {
     const coreContracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts()
@@ -52,6 +54,12 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
     await th.openTrove_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
+
+    const expectedCISupplyCap = '33333333333333333333333333' // 100mil / 3
+
+    // Check CI has been properly funded
+    const bal = await lqtyToken.balanceOf(communityIssuance.address)
+    assert.equal(bal, expectedCISupplyCap)
   })
 
   describe('BorrowerOperations', async accounts => { 
@@ -128,7 +136,6 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
 
-
     // addTroveOwnerToArray
     it("addTroveOwnerToArray(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
@@ -140,7 +147,6 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         // assert.include(err.message, "Caller is not the BorrowerOperations contract")
       }
     })
-
 
     // setTroveStatus
     it("setTroveStatus(): reverts when called by an account that is not BorrowerOperations", async () => {
@@ -608,6 +614,26 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       }
     })
   })
+
+  describe('CommunityIssuance', async accounts => {
+    it.only("sendLQTY(): reverts when caller is not the StabilityPool", async () => {
+      const tx1 = communityIssuance.sendLQTY(alice, dec(100, 18), {from: alice})
+      const tx2 = communityIssuance.sendLQTY(bob, dec(100, 18), {from: alice})
+      const tx3 = communityIssuance.sendLQTY(stabilityPool.address, dec(100, 18), {from: alice})
+     
+      assertRevert(tx1)
+      assertRevert(tx2)
+      assertRevert(tx3)
+    })
+
+    it.only("issueLQTY(): reverts when caller is not the StabilityPool", async () => {
+      const tx1 = communityIssuance.issueLQTY({from: alice})
+
+      assertRevert(tx1)
+    })
+  })
+
+  
 })
 
 

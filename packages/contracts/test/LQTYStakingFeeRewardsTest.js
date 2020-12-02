@@ -3,12 +3,15 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
 
+const NonPayable = artifacts.require("./NonPayable.sol")
+
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 const dec = th.dec
+const assertRevert = th.assertRevert
 
 const toBN = th.toBN
-
+const ZERO = th.toBN('0')
 
 /* NOTE: These tests do not test for specific ETH and LUSD gain values. They only test that the 
  * gains are non-zero, occur when they should, and are in correct proportion to the user's stake. 
@@ -27,11 +30,13 @@ contract('Fee arithmetic tests', async accounts => {
   let borrowerOperations
   let lqtyToken
   let lqtyStaking
+  let nonPayable
   
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
 
+    nonPayable = await NonPayable.new() 
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
@@ -597,5 +602,46 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedETHGain_D, D_ETHGain), 1000)
     assert.isAtMost(th.getDifference(expectedLUSDGain_D, D_LUSDGain), 1000)
   })
-  // - all depositors can leave pool
+ 
+  it("unStake(): reverts if caller has ETH gains and can't receive ETH",  async () => {
+    await borrowerOperations.openTrove(dec(1000, 18), whale, {from: whale, value: dec(100, 'ether')})  
+    await borrowerOperations.openTrove(dec(100, 18), A, {from: A, value: dec(7, 'ether')})  
+    await borrowerOperations.openTrove(dec(200, 18), B, {from: B, value: dec(9, 'ether')})  
+    await borrowerOperations.openTrove(dec(300, 18), C, {from: C, value: dec(8, 'ether')})  
+    await borrowerOperations.openTrove(dec(400, 18), D, {from: D, value: dec(10, 'ether')})  
+
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+    // Owner transfers LQTY to staker A and the non-payable proxy
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    await lqtyToken.transfer(nonPayable.address, dec(100, 18), {from: owner})
+
+    //  A makes stake
+    const A_stakeTx = await lqtyStaking.stake(dec(100, 18), {from: A})
+    assert.isTrue(A_stakeTx.receipt.status)
+
+    //  A tells proxy to make a stake
+    const proxystakeTxData = await th.getTransactionData('stake(uint256)', ['0x56bc75e2d63100000'])  // proxy stakes 100 LQTY
+    const proxyStakeTxPromise = nonPayable.forward(lqtyStaking.address, proxystakeTxData, {from: A})
+
+    // Expect this tx to revert: stake() tries to send nonPayable proxy's accumulated ETH gain (albeit 0),
+    // but nonPayable proxy can not accept ETH - therefore stake() reverts.
+    assertRevert(proxyStakeTxPromise)
+  })
+
+  it("receive(): reverts when it receives ETH from an address that is not the Active Pool",  async () => { 
+    const ethSendTxPromise1 = web3.eth.sendTransaction({to: lqtyStaking.address, from: A, value: dec(1, 'ether')})
+    const ethSendTxPromise2 = web3.eth.sendTransaction({to: lqtyStaking.address, from: owner, value: dec(1, 'ether')})
+
+    assertRevert(ethSendTxPromise1)
+    assertRevert(ethSendTxPromise2)
+  })
+
+  it("unstake(): reverts if user has no stake",  async () => {  
+    const unstakeTxPromise1 = lqtyStaking.unstake(1, {from: A})
+    const unstakeTxPromise2 = lqtyStaking.unstake(1, {from: owner})
+
+    assertRevert(unstakeTxPromise1)
+    assertRevert(unstakeTxPromise2)
+  })
 })
