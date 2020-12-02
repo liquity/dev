@@ -8,7 +8,7 @@ const th = testHelpers.TestHelper
 const dec = th.dec
 const mv = testHelpers.MoneyValues
 
-contract('TroveManager', async accounts => {
+contract('SortedTroves', async accounts => {
   
   const assertSortedListIsOrdered = async (contracts) => {
     const price = await contracts.priceFeedTestnet.getPrice()
