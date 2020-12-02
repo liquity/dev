@@ -74,9 +74,9 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
   }
 
-  const { addresses, version: contractsVersion, deploymentDate } = deployment;
+  const { addresses, version: contractsVersion, deploymentDate, priceFeedIsTestnet } = deployment;
   const signer = provider.getSigner(account);
-  const contracts = connectToContracts(addresses, signer);
+  const contracts = connectToContracts(addresses, priceFeedIsTestnet, signer);
   const liquity = EthersLiquity.from(contracts, signer, account);
   const devChain = chainId === DEV_CHAIN_ID;
   const oracleAvailable = chainId === 3;

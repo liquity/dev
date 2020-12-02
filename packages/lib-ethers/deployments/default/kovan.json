@@ -18,6 +18,7 @@
     "collSurplusPool": "",
     "priceFeedTestnet": ""
   },
+  "priceFeedIsTestnet": true,
   "version": "1fe9301410a48ff1a8f3173d87d850621c561a2f",
   "deploymentDate": 1603706183057,
   "abiHash": "1222c9f972feddbb08667e79ee7806858ae1989a"

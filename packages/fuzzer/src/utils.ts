@@ -4,7 +4,7 @@ import { Wallet } from "@ethersproject/wallet";
 
 import { Decimal, Decimalish, Difference, Percent } from "@liquity/decimal";
 import { Trove, TroveWithPendingRewards, ReadableLiquity } from "@liquity/lib-base";
-import { EthersLiquity as Liquity, LiquityContractAddresses } from "@liquity/lib-ethers";
+import { EthersLiquity as Liquity, LiquityDeployment } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 export const createRandomWallets = (numberOfWallets: number, provider: Provider) => {
@@ -24,12 +24,7 @@ export const createRandomTrove = (price: Decimal) => {
   if (Math.random() < 0.5) {
     collateral = Decimal.from(randomValue);
 
-    const maxDebt = parseInt(
-      price
-        .mul(collateral)
-        .div(1.1)
-        .toString(0)
-    );
+    const maxDebt = parseInt(price.mul(collateral).div(1.1).toString(0));
 
     debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
   } else {
@@ -256,5 +251,5 @@ const truncateLastDigits = (n: number) => {
   }
 };
 
-export const connectUsers = (users: Signer[], addresses: LiquityContractAddresses) =>
-  Promise.all(users.map(user => Liquity.connect(addresses, user)));
+export const connectUsers = (users: Signer[], deployment: LiquityDeployment) =>
+  Promise.all(users.map(user => Liquity.connect(deployment, user)));

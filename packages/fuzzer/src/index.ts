@@ -41,8 +41,6 @@ if (!deployment) {
   throw new Error("Must deploy to dev chain first");
 }
 
-const { addresses } = deployment;
-
 yargs
   .scriptName("yarn fuzzer")
 
@@ -57,7 +55,7 @@ yargs
       }
     },
     async ({ troves }) => {
-      const deployerLiquity = await Liquity.connect(addresses, deployer);
+      const deployerLiquity = await Liquity.connect(deployment, deployer);
 
       const price = await deployerLiquity.getPrice();
       const priceAsNumber = parseFloat(price.toString(4));
@@ -70,7 +68,7 @@ yargs
         const collateral = 999 * Math.random() + 1;
         const debt = (priceAsNumber * collateral) / (3 * Math.random() + 1.11) + 10;
 
-        const liquity = await Liquity.connect(addresses, user);
+        const liquity = await Liquity.connect(deployment, user);
 
         await funder.sendTransaction({
           to: userAddress,
@@ -124,7 +122,7 @@ yargs
 
       const [deployerLiquity, funderLiquity, ...randomLiquities] = await connectUsers(
         [deployer, funder, ...randomUsers],
-        addresses
+        deployment
       );
 
       const fixture = await Fixture.setup(deployerLiquity, funderLiquity, funder);
@@ -200,7 +198,7 @@ yargs
     "End chaos and restore order by liquidating every Trove except the Funder's.",
     {},
     async () => {
-      const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder], addresses);
+      const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder], deployment);
 
       const initialPrice = await deployerLiquity.getPrice();
       let initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
@@ -224,7 +222,7 @@ yargs
 
         if (quiBalance.lt(trove.debt)) {
           const [randomUser] = createRandomWallets(1, provider);
-          const randomLiquity = await Liquity.connect(addresses, randomUser);
+          const randomLiquity = await Liquity.connect(deployment, randomUser);
 
           const quiNeeded = trove.debt.sub(quiBalance);
           const tempTrove = new Trove({
@@ -300,7 +298,7 @@ yargs
   )
 
   .command("check-sorting", "Check if Troves are sorted by ICR.", {}, async () => {
-    const deployerLiquity = await Liquity.connect(addresses, deployer);
+    const deployerLiquity = await Liquity.connect(deployment, deployer);
     const price = await deployerLiquity.getPrice();
     const listOfTroves = await getListOfTroves(deployerLiquity);
 
@@ -310,7 +308,7 @@ yargs
   })
 
   .command("check-subgraph", "Check that subgraph data matches layer 1.", {}, async () => {
-    const deployerLiquity = await Liquity.connect(addresses, deployer);
+    const deployerLiquity = await Liquity.connect(deployment, deployer);
 
     await checkSubgraph(subgraph, deployerLiquity);
 
@@ -318,7 +316,7 @@ yargs
   })
 
   .command("dump-troves", "Dump list of Troves.", {}, async () => {
-    const deployerLiquity = await Liquity.connect(addresses, deployer);
+    const deployerLiquity = await Liquity.connect(deployment, deployer);
 
     const listOfTroves = await getListOfTroves(deployerLiquity);
     const price = await deployerLiquity.getPrice();

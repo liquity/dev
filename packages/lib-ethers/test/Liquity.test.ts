@@ -18,7 +18,7 @@ import {
 
 import { deployAndSetupContracts } from "../utils/deploy";
 import { HintHelpers } from "../types";
-import { LiquityContracts, LiquityContractAddresses, addressesOf } from "../src/contracts";
+import { LiquityContracts, LiquityDeployment } from "../src/contracts";
 import { PopulatableEthersLiquity, redeemMaxIterations } from "../src/PopulatableEthersLiquity";
 import { EthersLiquity } from "../src/EthersLiquity";
 
@@ -50,20 +50,20 @@ describe("EthersLiquity", () => {
   let user: Signer;
   let otherUsers: Signer[];
 
-  let addresses: LiquityContractAddresses;
+  let deployment: LiquityDeployment;
 
   let deployerLiquity: EthersLiquity;
   let liquity: EthersLiquity;
   let otherLiquities: EthersLiquity[];
 
   const connectUsers = (users: Signer[]) =>
-    Promise.all(users.map(user => EthersLiquity.connect(addresses, user)));
+    Promise.all(users.map(user => EthersLiquity.connect(deployment, user)));
 
   const openTroves = (users: Signer[], troves: Trove[]) =>
     troves
       .map((trove, i) => () =>
         Promise.all([
-          EthersLiquity.connect(addresses, users[i]),
+          EthersLiquity.connect(deployment, users[i]),
           sendTo(users[i], trove.collateral).then(tx => tx.wait())
         ]).then(([liquity]) => liquity.openTrove(trove, {}, { gasPrice: 0 }))
       )
@@ -86,9 +86,9 @@ describe("EthersLiquity", () => {
 
   before(async () => {
     [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
-    addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+    deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
 
-    liquity = await EthersLiquity.connect(addresses, user);
+    liquity = await EthersLiquity.connect(deployment, user);
     expect(liquity).to.be.an.instanceOf(EthersLiquity);
   });
 
@@ -246,7 +246,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should close the Trove after another user creates a Trove", async () => {
-      const funderLiquity = await EthersLiquity.connect(addresses, funder);
+      const funderLiquity = await EthersLiquity.connect(deployment, funder);
       await funderLiquity.openTrove(new Trove({ collateral: 1, debt: 10 }));
 
       await liquity.closeTrove();
@@ -331,7 +331,7 @@ describe("EthersLiquity", () => {
 
   describe("StabilityPool", () => {
     before(async () => {
-      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
 
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
@@ -436,7 +436,8 @@ describe("EthersLiquity", () => {
     describe("when non-empty in recovery mode", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
-        addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+
         const otherUsersSubset = otherUsers.slice(0, 2);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
@@ -488,7 +489,8 @@ describe("EthersLiquity", () => {
     describe("when people overstay", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
-        addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+        deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+
         const otherUsersSubset = otherUsers.slice(0, 5);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
           deployer,
@@ -548,7 +550,8 @@ describe("EthersLiquity", () => {
   describe("Redemption", () => {
     before(async () => {
       // Deploy new instances of the contracts, for a clean slate
-      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+
       const otherUsersSubset = otherUsers.slice(0, 3);
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
@@ -614,7 +617,7 @@ describe("EthersLiquity", () => {
       }
 
       // Deploy new instances of the contracts, for a clean slate
-      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
       const otherUsersSubset = otherUsers.slice(0, redeemMaxIterations);
       expect(otherUsersSubset).to.have.length(redeemMaxIterations);
 
@@ -657,7 +660,7 @@ describe("EthersLiquity", () => {
         this.skip();
       }
 
-      addresses = addressesOf(await deployAndSetupContracts(deployer, ethers.getContractFactory));
+      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
 
       [rudeUser, ...fiveOtherUsers] = otherUsers.slice(0, 6);
 

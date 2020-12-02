@@ -28,7 +28,7 @@ import {
   transactableFrom
 } from "@liquity/lib-base";
 
-import { LiquityContracts } from "./contracts";
+import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
 import { EthersTransactionOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
 
@@ -433,8 +433,12 @@ export class PopulatableEthersLiquity
   }
 
   async setPrice(price: Decimalish, overrides?: EthersTransactionOverrides) {
+    if (!priceFeedIsTestnet(this.contracts.priceFeed)) {
+      throw new Error("setPrice() unavailable on this deployment of Liquity");
+    }
+
     return this.wrapSimpleTransaction(
-      await this.contracts.priceFeedTestnet.estimateAndPopulate.setPrice(
+      await this.contracts.priceFeed.estimateAndPopulate.setPrice(
         { ...overrides },
         id,
         Decimal.from(price).bigNumber
