@@ -3,6 +3,7 @@ const testHelpers = require("../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
+const assertRevert = th.assertRevert
 const mv = testHelpers.MoneyValues
 
 contract('TroveManager - in Recovery Mode', async accounts => {
@@ -1328,6 +1329,34 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     // Check TCR and list size have not changed
     assert.equal(TCR_Before, TCR_After)
     assert.equal(listSize_Before, listSize_After)
+  })
+
+  it("liquidate(): does nothing if trove ICR >= TCR, and SP covers trove's debt", async () => { 
+    await borrowerOperations.openTrove(dec(110, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(120, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(130, 18), C, { from: C, value: dec(1, 'ether') })
+    
+    // C fills SP with 130 LUSD
+    await stabilityPool.provideToSP(dec(130, 18), ZERO_ADDRESS, {from: C})
+
+    await priceFeed.setPrice(dec(150, 18))
+    const price = await priceFeed.getPrice()
+    assert.isTrue(await troveManager.checkRecoveryMode())
+
+    const TCR = await troveManager.getTCR()
+
+    const ICR_A = await troveManager.getCurrentICR(A, price)
+    const ICR_C = await troveManager.getCurrentICR(C, price)
+
+    assert.isTrue(ICR_A.gt(TCR))
+    const A_liqTxPromise = troveManager.liquidate(A)
+    
+    assertRevert(A_liqTxPromise)
+
+    // Check C, with ICR < TCR, can be liquidated
+    assert.isTrue(ICR_C.lt(TCR))
+    const liqTxC = await troveManager.liquidate(C)
+    assert.isTrue(liqTxC.receipt.status)
   })
 
   it("liquidate(): reverts if trove is non-existent", async () => {
@@ -2766,6 +2795,8 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const ICR_C_After = await troveManager.getCurrentICR(carol, price)
     assert.equal(ICR_C_Before.toString(), ICR_C_After)
   })
+
+  // TODO: LiquidateTroves tests that involve troves with ICR > TCR
 
   // --- batchLiquidateTroves() ---
 
