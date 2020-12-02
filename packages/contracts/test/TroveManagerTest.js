@@ -3725,7 +3725,7 @@ contract('TroveManager', async accounts => {
 
   // --- Internal removeTroveOwner ---
 
-  it.only("Internal _removeTroveOwner(): Reverts if trove has been closed", async () => { 
+  it("Internal _removeTroveOwner(): Reverts if trove has been closed", async () => { 
     await borrowerOperations.openTrove(dec(1, 18), C, { from: C, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
    

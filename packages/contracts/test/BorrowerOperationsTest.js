@@ -2188,7 +2188,7 @@ contract('BorrowerOperations', async accounts => {
     await assertRevert(borrowerOperations.adjustTrove(dec(1, 'ether'), dec(100, 18), true, alice, { from: alice, value: dec(3, 'ether') }), 'BorrowerOperations: Cannot withdraw and add coll')
   })
 
-  it.only("adjustTrove(): Reverts if requested coll withdrawal is greater than trove's collateral", async () => { 
+  it("adjustTrove(): Reverts if requested coll withdrawal is greater than trove's collateral", async () => { 
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec (100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
@@ -2202,7 +2202,7 @@ contract('BorrowerOperations', async accounts => {
 
   // --- Internal _adjustTrove() ---
 
-  it.only("Internal _adjustTrove(): reverts when _borrower param is not the msg.sender", async () => {
+  it("Internal _adjustTrove(): reverts when _borrower param is not the msg.sender", async () => {
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec (100, 18), bob, { from: bob, value: dec(1, 'ether') })
 

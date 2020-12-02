@@ -55,7 +55,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('BorrowerOperations', async accounts => { 
-    it.only("moveETHGainToTrove(): reverts when called by an account that is not StabilityPool", async () => {
+    it("moveETHGainToTrove(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
         const tx1= await borrowerOperations.moveETHGainToTrove(bob, bob, { from: bob })
