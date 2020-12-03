@@ -65,11 +65,14 @@ contract('LUSDToken', async accounts => {
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
-      chainId = await web3.eth.getChainId()
     
       const contracts = await deploymentHelper.deployTesterContractsBuidler()
  
       lusdTokenTester = contracts.lusdToken
+      // for some reason this doesn’t work with coverage network
+      //chainId = await web3.eth.getChainId()
+      chainId = await lusdTokenTester.getChainId()
+
       stabilityPool = contracts.stabilityPool
       troveManager = contracts.stabilityPool
       borrowerOperations = contracts.borrowerOperations
@@ -280,7 +283,21 @@ contract('LUSDToken', async accounts => {
       await assertRevert(lusdTokenTester.transfer(stabilityPool.address, 1, { from: alice }))
       await assertRevert(lusdTokenTester.transfer(borrowerOperations.address, 1, { from: alice }))
     })
-    
+
+    it('decreaseAllowance(): decreases allowance by the expected amount', async () => {
+      await lusdTokenTester.approve(bob, dec(3, 18), { from: alice })
+      assert.equal((await lusdTokenTester.allowance(alice, bob)).toString(), dec(3, 18))
+      await lusdTokenTester.decreaseAllowance(bob, dec(1, 18), { from: alice })
+      assert.equal((await lusdTokenTester.allowance(alice, bob)).toString(), dec(2, 18))
+    })
+
+    it('decreaseAllowance(): fails trying to decrease more than previously allowed', async () => {
+      await lusdTokenTester.approve(bob, dec(3, 18), { from: alice })
+      assert.equal((await lusdTokenTester.allowance(alice, bob)).toString(), dec(3, 18))
+      await assertRevert(lusdTokenTester.decreaseAllowance(bob, dec(4, 18), { from: alice }), 'ERC20: decreased allowance below zero')
+      assert.equal((await lusdTokenTester.allowance(alice, bob)).toString(), dec(3, 18))
+    })
+
     // EIP2612 tests
 
     it('Initializes PERMIT_TYPEHASH correctly', async () => {
@@ -296,17 +313,16 @@ contract('LUSDToken', async accounts => {
       assert.equal(toBN(await lusdTokenTester.nonces(alice)).toString(), '0');
     });
     
-    it('permits and emits an Approval event (replay protected)', async () => {
-      // Create the approval tx data
-      const approve = {
-        owner: alice,
-        spender: bob,
-        value: 1,
-      }
+    // Create the approval tx data
+    const approve = {
+      owner: alice,
+      spender: bob,
+      value: 1,
+    }
 
-      const deadline = 100000000000000
+    const buildPermitTx = async (deadline) => {
       const nonce = await lusdTokenTester.nonces(approve.owner)
-     
+      
       // Get the EIP712 digest
       const digest = getPermitDigest(
         tokenName, lusdTokenTester.address, 
@@ -314,14 +330,23 @@ contract('LUSDToken', async accounts => {
         approve.owner, approve.spender,
         approve.value, nonce, deadline
       )
-     
+      
       const { v, r, s } = sign(digest, alicePrivateKey)
       
-      // Approve it
-      const receipt = await lusdTokenTester.permit(
+      const tx = lusdTokenTester.permit(
         approve.owner, approve.spender, approve.value, 
         deadline, v, hexlify(r), hexlify(s)
       )
+
+      return { v, r, s, tx }
+    }
+
+    it('permits and emits an Approval event (replay protected)', async () => {
+      const deadline = 100000000000000
+
+      // Approve it
+      const { v, r, s, tx } = await buildPermitTx(deadline)
+      const receipt = await tx
       const event = receipt.logs[0]
 
       // Check that approval was successful
@@ -337,6 +362,49 @@ contract('LUSDToken', async accounts => {
       // Check that the zero address fails
       assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
         approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
+    })
+
+    it('permits and emits an Approval event (replay protected), with infinite deadline', async () => {
+      const deadline = 0
+
+      // Approve it
+      const { v, r, s, tx } = await buildPermitTx(deadline)
+      const receipt = await tx
+      const event = receipt.logs[0]
+
+      // Check that approval was successful
+      assert.equal(event.event, 'Approval')
+      assert.equal(await lusdTokenTester.nonces(approve.owner), 1)
+      assert.equal(await lusdTokenTester.allowance(approve.owner, approve.spender), approve.value)
+      
+      // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
+      assertRevert(lusdTokenTester.permit(
+        approve.owner, approve.spender, approve.value, 
+        deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
+     
+      // Check that the zero address fails
+      assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
+        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
+    })
+
+    it('permits(): fails with expired deadline', async () => {
+      const deadline = 1
+
+      const { v, r, s, tx } = await buildPermitTx(deadline)
+      await assertRevert(tx, 'LUSD: Signature has expired')
+    })
+
+    it('permits(): fails with the wrong signature', async () => {
+      const deadline = 100000000000000
+
+      const { v, r, s } = await buildPermitTx(deadline)
+
+      const tx = lusdTokenTester.permit(
+        carol, approve.spender, approve.value,
+        deadline, v, hexlify(r), hexlify(s)
+      )
+
+      await assertRevert(tx, 'LUSD: Recovered address from the sig is not the owner')
     })
   })
 })
