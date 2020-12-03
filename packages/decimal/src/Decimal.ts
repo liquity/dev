@@ -1,3 +1,5 @@
+import assert from "assert";
+
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 
 const MAX_UINT_256 = BigNumber.from(
@@ -18,6 +20,8 @@ export class Decimal {
 
   static readonly INFINITY = new Decimal(MAX_UINT_256);
   static readonly ZERO = Decimal.from(0);
+  static readonly HALF = Decimal.from(0.5);
+  static readonly ONE = Decimal.from(1);
 
   readonly bigNumber: BigNumber;
 
@@ -197,6 +201,36 @@ export class Decimal {
     return new Decimal(this.bigNumber.mul(multiplier.bigNumber).div(divider.bigNumber));
   }
 
+  private static roundedMul(x: BigNumber, y: BigNumber) {
+    return x.mul(y).add(Decimal.HALF.bigNumber).div(Decimal.DIGITS);
+  }
+
+  pow(exponent: number) {
+    assert(Number.isInteger(exponent));
+    assert(0 <= exponent && exponent <= 0xffffffff); // Ensure we're safe to use bitwise ops
+
+    if (exponent === 0) {
+      return Decimal.ONE;
+    }
+
+    if (exponent === 1) {
+      return this;
+    }
+
+    let x = this.bigNumber;
+    let y = Decimal.DIGITS;
+
+    for (; exponent > 1; exponent >>>= 1) {
+      if (exponent & 1) {
+        y = Decimal.roundedMul(x, y);
+      }
+
+      x = Decimal.roundedMul(x, x);
+    }
+
+    return new Decimal(Decimal.roundedMul(x, y));
+  }
+
   get isZero() {
     return this.bigNumber.isZero();
   }
@@ -254,7 +288,7 @@ export class Difference {
   }
 
   static between(d1: Decimalish | undefined, d2: Decimalish | undefined) {
-    if (!d1 || !d2) {
+    if (d1 === undefined || d2 === undefined) {
       return new Difference(undefined);
     }
 
