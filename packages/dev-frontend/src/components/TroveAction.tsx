@@ -19,10 +19,10 @@ type TroveActionProps = {
 const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
 const ccrPercent = new Percent(Trove.CRITICAL_COLLATERAL_RATIO).toString(0);
 
-const select = ({ price, total, quiBalance, numberOfTroves }: LiquityStoreState) => ({
+const select = ({ price, total, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
   price,
   total,
-  quiBalance,
+  lusdBalance,
   numberOfTroves
 });
 
@@ -32,7 +32,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   changePending,
   dispatch
 }) => {
-  const { numberOfTroves, price, quiBalance, total } = useLiquitySelector(select);
+  const { numberOfTroves, price, lusdBalance, total } = useLiquitySelector(select);
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -77,7 +77,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         [
           [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
           [
-            quiBalance.add(Trove.GAS_COMPENSATION_DEPOSIT).gte(original.debt),
+            lusdBalance.add(Trove.GAS_COMPENSATION_DEPOSIT).gte(original.debt),
             `You don't have enough ${COIN}`
           ]
         ]
@@ -109,11 +109,11 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             )
           : (collateralDifference
               ? collateralDifference.positive
-                ? liquity.depositEther
-                : liquity.withdrawEther
+                ? liquity.depositCollateral
+                : liquity.withdrawCollateral
               : debtDifference!.positive
-              ? liquity.borrowQui
-              : liquity.repayQui
+              ? liquity.borrowLUSD
+              : liquity.repayLUSD
             ).bind(liquity, (collateralDifference ?? debtDifference)!.absoluteValue!, {
               trove: original,
               price,
@@ -142,7 +142,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             : []),
           ...(debtDifference?.negative
             ? ([
-                [quiBalance.gte(debtDifference.absoluteValue!), `You don't have enough ${COIN}`]
+                [lusdBalance.gte(debtDifference.absoluteValue!), `You don't have enough ${COIN}`]
               ] as const)
             : [])
         ]

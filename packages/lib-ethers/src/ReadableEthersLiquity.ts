@@ -99,11 +99,11 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return new StabilityDeposit({ deposit, depositAfterLoss, pendingCollateralGain });
   }
 
-  async getQuiInStabilityPool(overrides?: EthersCallOverrides) {
+  async getLUSDInStabilityPool(overrides?: EthersCallOverrides) {
     return new Decimal(await this.contracts.stabilityPool.getTotalLUSDDeposits({ ...overrides }));
   }
 
-  async getQuiBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getLUSDBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
     return new Decimal(await this.contracts.lusdToken.balanceOf(address, { ...overrides }));
   }
 

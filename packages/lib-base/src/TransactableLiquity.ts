@@ -37,13 +37,13 @@ export type LiquidationDetails = {
   partiallyLiquidated?: string;
 
   totalLiquidated: Trove;
-  tokenGasCompensation: Decimal;
+  lusdGasCompensation: Decimal;
   collateralGasCompensation: Decimal;
 };
 
 export type RedemptionDetails = {
-  attemptedTokenAmount: Decimal;
-  actualTokenAmount: Decimal;
+  attemptedLUSDAmount: Decimal;
+  actualLUSDAmount: Decimal;
   collateralReceived: Decimal;
   fee: Decimal;
 };
@@ -52,10 +52,10 @@ export interface TransactableLiquity {
   openTrove(trove: Trove): Promise<void>;
   closeTrove(): Promise<void>;
 
-  depositEther(depositedEther: Decimalish): Promise<void>;
-  withdrawEther(withdrawnEther: Decimalish): Promise<void>;
-  borrowQui(borrowedQui: Decimalish): Promise<void>;
-  repayQui(repaidQui: Decimalish): Promise<void>;
+  depositCollateral(amount: Decimalish): Promise<void>;
+  withdrawCollateral(amount: Decimalish): Promise<void>;
+  borrowLUSD(amount: Decimalish): Promise<void>;
+  repayLUSD(amount: Decimalish): Promise<void>;
   changeTrove(change: TroveChange): Promise<void>;
 
   setPrice(price: Decimalish): Promise<void>;
@@ -64,13 +64,13 @@ export interface TransactableLiquity {
   liquidate(address: string): Promise<LiquidationDetails>;
   liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;
 
-  depositQuiInStabilityPool(depositedQui: Decimalish, frontEndTag?: string): Promise<void>;
-  withdrawQuiFromStabilityPool(withdrawnQui: Decimalish): Promise<void>;
+  depositLUSDInStabilityPool(amount: Decimalish, frontEndTag?: string): Promise<void>;
+  withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<void>;
   transferCollateralGainToTrove(): Promise<void>;
 
-  sendQui(toAddress: string, amount: Decimalish): Promise<void>;
+  sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
 
-  redeemCollateral(exchangedQui: Decimalish): Promise<RedemptionDetails>;
+  redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
 }
 
 type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (

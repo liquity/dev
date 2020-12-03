@@ -53,8 +53,8 @@ export class Fixture {
     return new Fixture(deployerLiquity, funderLiquity, funder, price, numberOfTroves);
   }
 
-  private async sendQuiFromFunder(toAddress: string, amount: Decimalish) {
-    while ((await this.funderLiquity.getQuiBalance()).lt(amount)) {
+  private async sendLUSDFromFunder(toAddress: string, amount: Decimalish) {
+    while ((await this.funderLiquity.getLUSDBalance()).lt(amount)) {
       const trove = await this.funderLiquity.getTrove();
       const finalTrove = trove.add({ collateral: 10000, debt: 1000000 });
 
@@ -65,7 +65,7 @@ export class Fixture {
       });
     }
 
-    await this.funderLiquity.sendQui(toAddress, amount);
+    await this.funderLiquity.sendLUSD(toAddress, amount);
   }
 
   async setRandomPrice() {
@@ -77,8 +77,8 @@ export class Fixture {
   }
 
   async liquidateRandomNumberOfTroves() {
-    const quiInStabilityPoolBefore = await this.deployerLiquity.getQuiInStabilityPool();
-    console.log(`// Stability Pool balance: ${quiInStabilityPoolBefore}`);
+    const lusdInStabilityPoolBefore = await this.deployerLiquity.getLUSDInStabilityPool();
+    console.log(`// Stability Pool balance: ${lusdInStabilityPoolBefore}`);
 
     const trovesBefore = await getListOfTroveOwners(this.deployerLiquity);
 
@@ -98,8 +98,8 @@ export class Fixture {
     this.numberOfTroves -= liquidatedTroves.length;
     this.totalNumberOfLiquidations += liquidatedTroves.length;
 
-    const quiInStabilityPoolAfter = await this.deployerLiquity.getQuiInStabilityPool();
-    console.log(`// Stability Pool balance: ${quiInStabilityPoolAfter}`);
+    const lusdInStabilityPoolAfter = await this.deployerLiquity.getLUSDInStabilityPool();
+    console.log(`// Stability Pool balance: ${lusdInStabilityPoolAfter}`);
   }
 
   async openRandomTrove(userAddress: string, liquity: Liquity) {
@@ -143,7 +143,7 @@ export class Fixture {
 
     while (total.collateralRatioIsBelowCritical(this.price)) {
       // Cannot close Trove during recovery mode
-      await this.funderLiquity.depositEther(benford(50000), {
+      await this.funderLiquity.depositCollateral(benford(50000), {
         price: this.price,
         numberOfTroves: this.numberOfTroves
       });
@@ -151,7 +151,7 @@ export class Fixture {
       total = await liquity.getTotal();
     }
 
-    await this.sendQuiFromFunder(userAddress, trove.debt);
+    await this.sendLUSDFromFunder(userAddress, trove.debt);
 
     console.log(`[${shortenAddress(userAddress)}] closeTrove()`);
     await liquity.closeTrove({ gasPrice: 0 });
@@ -160,30 +160,30 @@ export class Fixture {
   }
 
   async redeemRandomAmount(userAddress: string, liquity: Liquity) {
-    const exchangedQui = benford(100000);
+    const amount = benford(100000);
 
-    await this.sendQuiFromFunder(userAddress, exchangedQui);
+    await this.sendLUSDFromFunder(userAddress, amount);
 
-    console.log(`[${shortenAddress(userAddress)}] redeemCollateral(${exchangedQui})`);
-    await liquity.redeemCollateral(
-      exchangedQui,
+    console.log(`[${shortenAddress(userAddress)}] redeemLUSD(${amount})`);
+    await liquity.redeemLUSD(
+      amount,
       { price: this.price, numberOfTroves: this.numberOfTroves },
       { gasPrice: 0 }
     );
   }
 
   async depositRandomAmountInStabilityPool(userAddress: string, liquity: Liquity) {
-    const depositedQui = benford(10000);
+    const amount = benford(10000);
 
-    await this.sendQuiFromFunder(userAddress, depositedQui);
+    await this.sendLUSDFromFunder(userAddress, amount);
 
-    console.log(`[${shortenAddress(userAddress)}] depositQuiInStabilityPool(${depositedQui})`);
+    console.log(`[${shortenAddress(userAddress)}] depositLUSDInStabilityPool(${amount})`);
 
-    await liquity.depositQuiInStabilityPool(depositedQui, undefined, { gasPrice: 0 });
+    await liquity.depositLUSDInStabilityPool(amount, undefined, { gasPrice: 0 });
   }
 
-  async sweepQui(liquity: Liquity) {
-    const quiBalance = await liquity.getQuiBalance();
-    await liquity.sendQui(await this.funder.getAddress(), quiBalance, { gasPrice: 0 });
+  async sweepLUSD(liquity: Liquity) {
+    const lusdBalance = await liquity.getLUSDBalance();
+    await liquity.sendLUSD(await this.funder.getAddress(), lusdBalance, { gasPrice: 0 });
   }
 }

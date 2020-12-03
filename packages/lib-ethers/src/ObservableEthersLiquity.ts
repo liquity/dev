@@ -160,44 +160,47 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     };
   }
 
-  watchQuiInStabilityPool(onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void) {
+  watchLUSDInStabilityPool(onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void) {
     const { Transfer } = this.contracts.lusdToken.filters;
 
-    const transferQuiFromStabilityPool = Transfer(this.contracts.stabilityPool.address);
-    const transferQuiToStabilityPool = Transfer(null, this.contracts.stabilityPool.address);
+    const transferLUSDFromStabilityPool = Transfer(this.contracts.stabilityPool.address);
+    const transferLUSDToStabilityPool = Transfer(null, this.contracts.stabilityPool.address);
 
-    const stabilityPoolQuiFilters = [transferQuiFromStabilityPool, transferQuiToStabilityPool];
+    const stabilityPoolLUSDFilters = [transferLUSDFromStabilityPool, transferLUSDToStabilityPool];
 
-    const stabilityPoolQuiListener = debounce((blockTag: number) => {
-      this.readableLiquity.getQuiInStabilityPool({ blockTag }).then(onQuiInStabilityPoolChanged);
+    const stabilityPoolLUSDListener = debounce((blockTag: number) => {
+      this.readableLiquity.getLUSDInStabilityPool({ blockTag }).then(onLUSDInStabilityPoolChanged);
     });
 
-    stabilityPoolQuiFilters.forEach(filter =>
-      this.contracts.lusdToken.on(filter, stabilityPoolQuiListener)
+    stabilityPoolLUSDFilters.forEach(filter =>
+      this.contracts.lusdToken.on(filter, stabilityPoolLUSDListener)
     );
 
     return () =>
-      stabilityPoolQuiFilters.forEach(filter =>
-        this.contracts.lusdToken.removeListener(filter, stabilityPoolQuiListener)
+      stabilityPoolLUSDFilters.forEach(filter =>
+        this.contracts.lusdToken.removeListener(filter, stabilityPoolLUSDListener)
       );
   }
 
-  watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address = this.requireAddress()) {
+  watchLUSDBalance(
+    onLUSDBalanceChanged: (balance: Decimal) => void,
+    address = this.requireAddress()
+  ) {
     const { Transfer } = this.contracts.lusdToken.filters;
-    const transferQuiFromUser = Transfer(address);
-    const transferQuiToUser = Transfer(null, address);
+    const transferLUSDFromUser = Transfer(address);
+    const transferLUSDToUser = Transfer(null, address);
 
-    const quiTransferFilters = [transferQuiFromUser, transferQuiToUser];
+    const lusdTransferFilters = [transferLUSDFromUser, transferLUSDToUser];
 
-    const quiTransferListener = debounce((blockTag: number) => {
-      this.readableLiquity.getQuiBalance(address, { blockTag }).then(onQuiBalanceChanged);
+    const lusdTransferListener = debounce((blockTag: number) => {
+      this.readableLiquity.getLUSDBalance(address, { blockTag }).then(onLUSDBalanceChanged);
     });
 
-    quiTransferFilters.forEach(filter => this.contracts.lusdToken.on(filter, quiTransferListener));
+    lusdTransferFilters.forEach(filter => this.contracts.lusdToken.on(filter, lusdTransferListener));
 
     return () =>
-      quiTransferFilters.forEach(filter =>
-        this.contracts.lusdToken.removeListener(filter, quiTransferListener)
+      lusdTransferFilters.forEach(filter =>
+        this.contracts.lusdToken.removeListener(filter, lusdTransferListener)
       );
   }
 }

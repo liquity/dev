@@ -8,20 +8,20 @@ import { useLiquitySelector } from "@liquity/lib-react";
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN } from "../strings";
 
-const selectBalances = ({ accountBalance, quiBalance }: LiquityStoreState) => ({
+const selectBalances = ({ accountBalance, lusdBalance }: LiquityStoreState) => ({
   accountBalance,
-  quiBalance
+  lusdBalance
 });
 
 const Balances: React.FC = () => {
-  const { accountBalance, quiBalance } = useLiquitySelector(selectBalances);
+  const { accountBalance, lusdBalance } = useLiquitySelector(selectBalances);
 
   return (
     <Box sx={{ mb: 3 }}>
       <Heading>My Account Balances</Heading>
       <Text>ETH: {accountBalance.prettify(4)}</Text>
       <Text>
-        {COIN}: {quiBalance.prettify()}
+        {COIN}: {lusdBalance.prettify()}
       </Text>
     </Box>
   );
@@ -39,19 +39,19 @@ type SystemStatsProps = {
   showBalances?: boolean;
 };
 
-const select = ({ numberOfTroves, price, total, quiInStabilityPool }: LiquityStoreState) => ({
+const select = ({ numberOfTroves, price, total, lusdInStabilityPool }: LiquityStoreState) => ({
   numberOfTroves,
   price,
   total,
-  quiInStabilityPool
+  lusdInStabilityPool
 });
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
   const { contractsVersion, deploymentDate } = useLiquity();
-  const { numberOfTroves, price, quiInStabilityPool, total } = useLiquitySelector(select);
+  const { numberOfTroves, price, lusdInStabilityPool, total } = useLiquitySelector(select);
 
-  const quiInStabilityPoolPct =
-    total.debt.nonZero && new Percent(quiInStabilityPool.div(total.debt));
+  const lusdInStabilityPoolPct =
+    total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
 
   return (
@@ -64,9 +64,9 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Text>
         Total {COIN} supply: {total.debt.shorten()}
       </Text>
-      {quiInStabilityPoolPct && (
+      {lusdInStabilityPoolPct && (
         <Text>
-          Fraction of {COIN} in Stability Pool: {quiInStabilityPoolPct.toString(1)}
+          Fraction of {COIN} in Stability Pool: {lusdInStabilityPoolPct.toString(1)}
         </Text>
       )}
       <Text>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Text>

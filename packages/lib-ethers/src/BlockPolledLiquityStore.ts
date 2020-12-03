@@ -41,14 +41,14 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
   private get(blockTag?: number): Promise<LiquityStoreBaseState> {
     return promiseAllValues({
       accountBalance: this.provider.getBalance(this.account, blockTag).then(decimalify),
-      quiBalance: this.liquity.getQuiBalance(this.account, { blockTag }),
+      lusdBalance: this.liquity.getLUSDBalance(this.account, { blockTag }),
       price: this.liquity.getPrice({ blockTag }),
       numberOfTroves: this.liquity.getNumberOfTroves({ blockTag }),
       troveWithoutRewards: this.liquity.getTroveWithoutRewards(this.account, { blockTag }),
       totalRedistributed: this.liquity.getTotalRedistributed({ blockTag }),
       deposit: this.liquity.getStabilityDeposit(this.account, { blockTag }),
       total: this.liquity.getTotal({ blockTag }),
-      quiInStabilityPool: this.liquity.getQuiInStabilityPool({ blockTag })
+      lusdInStabilityPool: this.liquity.getLUSDInStabilityPool({ blockTag })
     });
   }
 

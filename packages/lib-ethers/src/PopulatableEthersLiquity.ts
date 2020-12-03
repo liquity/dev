@@ -37,7 +37,7 @@ enum TroveManagerOperation {
   liquidateInNormalMode,
   liquidateInRecoveryMode,
   partiallyLiquidateInRecoveryMode,
-  redeemCollateral
+  redeemLUSD
 }
 
 // With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
@@ -201,7 +201,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
               args: { _LUSDGasCompensation, _collGasCompensation, _liquidatedColl, _liquidatedDebt }
             }) => ({
               collateralGasCompensation: new Decimal(_collGasCompensation),
-              tokenGasCompensation: new Decimal(_LUSDGasCompensation),
+              lusdGasCompensation: new Decimal(_LUSDGasCompensation),
 
               totalLiquidated: new Trove({
                 collateral: new Decimal(_liquidatedColl),
@@ -228,8 +228,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           ({
             args: { _ETHSent, _ETHFee, _actualLUSDAmount, _attemptedLUSDAmount }
           }): RedemptionDetails => ({
-            attemptedTokenAmount: new Decimal(_attemptedLUSDAmount),
-            actualTokenAmount: new Decimal(_actualLUSDAmount),
+            attemptedLUSDAmount: new Decimal(_attemptedLUSDAmount),
+            actualLUSDAmount: new Decimal(_actualLUSDAmount),
             collateralReceived: new Decimal(_ETHSent),
             fee: new Decimal(_ETHFee)
           })
@@ -301,7 +301,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   }
 
   protected async findRedemptionHints(
-    exchangedQui: Decimal,
+    amount: Decimal,
     { price, ...rest }: HintedTransactionOptionalParams = {}
   ): Promise<[string, string, Decimal]> {
     price = price ?? (await this.readableLiquity.getPrice());
@@ -309,7 +309,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await this.contracts.hintHelpers.getRedemptionHints(exchangedQui.bigNumber, price.bigNumber);
+    } = await this.contracts.hintHelpers.getRedemptionHints(amount.bigNumber, price.bigNumber);
 
     const collateralRatio = new Decimal(partialRedemptionHintICR);
 
@@ -360,46 +360,46 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async depositEther(
-    depositedEther: Decimalish,
+  async depositCollateral(
+    amount: Decimalish,
     optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
     const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.addCollateral(depositedEther);
+    const finalTrove = trove.addCollateral(amount);
 
     return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
   }
 
-  async withdrawEther(
-    withdrawnEther: Decimalish,
+  async withdrawCollateral(
+    amount: Decimalish,
     optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
     const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.subtractCollateral(withdrawnEther);
+    const finalTrove = trove.subtractCollateral(amount);
 
     return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
   }
 
-  async borrowQui(
-    borrowedQui: Decimalish,
+  async borrowLUSD(
+    amount: Decimalish,
     optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
     const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.addDebt(borrowedQui);
+    const finalTrove = trove.addDebt(amount);
 
     return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
   }
 
-  async repayQui(
-    repaidQui: Decimalish,
+  async repayLUSD(
+    amount: Decimalish,
     optionalParams: TroveChangeOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
     const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.subtractDebt(repaidQui);
+    const finalTrove = trove.subtractDebt(amount);
 
     return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
   }
@@ -471,8 +471,8 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async depositQuiInStabilityPool(
-    depositedQui: Decimalish,
+  async depositLUSDInStabilityPool(
+    amount: Decimalish,
     frontEndTag = AddressZero,
     overrides?: EthersTransactionOverrides
   ) {
@@ -480,21 +480,18 @@ export class PopulatableEthersLiquity
       await this.contracts.stabilityPool.estimateAndPopulate.provideToSP(
         { ...overrides },
         id,
-        Decimal.from(depositedQui).bigNumber,
+        Decimal.from(amount).bigNumber,
         frontEndTag
       )
     );
   }
 
-  async withdrawQuiFromStabilityPool(
-    withdrawnQui: Decimalish,
-    overrides?: EthersTransactionOverrides
-  ) {
+  async withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
         id,
-        Decimal.from(withdrawnQui).bigNumber
+        Decimal.from(amount).bigNumber
       )
     );
   }
@@ -518,7 +515,7 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async sendQui(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
+  async sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
       await this.contracts.lusdToken.estimateAndPopulate.transfer(
         { ...overrides },
@@ -529,24 +526,24 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async redeemCollateral(
-    exchangedQui: Decimalish,
+  async redeemLUSD(
+    amount: Decimalish,
     optionalParams: HintedTransactionOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    exchangedQui = Decimal.from(exchangedQui);
+    amount = Decimal.from(amount);
 
     const [
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintICR
-    ] = await this.findRedemptionHints(exchangedQui, optionalParams);
+    ] = await this.findRedemptionHints(amount, optionalParams);
 
     return this.wrapRedemption(
       await this.contracts.troveManager.estimateAndPopulate.redeemCollateral(
         { ...overrides },
         addGasForPotentialLastFeeOperationTimeUpdate,
-        exchangedQui.bigNumber,
+        amount.bigNumber,
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintICR.bigNumber,

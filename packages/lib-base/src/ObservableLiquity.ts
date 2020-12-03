@@ -24,9 +24,9 @@ export interface ObservableLiquity {
     address?: string
   ): () => void;
 
-  watchQuiInStabilityPool(
-    onQuiInStabilityPoolChanged: (quiInStabilityPool: Decimal) => void
+  watchLUSDInStabilityPool(
+    onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void
   ): () => void;
 
-  watchQuiBalance(onQuiBalanceChanged: (balance: Decimal) => void, address?: string): () => void;
+  watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void;
 }

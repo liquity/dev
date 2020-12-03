@@ -84,8 +84,8 @@ yargs
         numberOfTroves++;
 
         if (i % 4 === 0) {
-          const quiBalance = await liquity.getQuiBalance();
-          await liquity.depositQuiInStabilityPool(quiBalance);
+          const lusdBalance = await liquity.getLUSDBalance();
+          await liquity.depositLUSDInStabilityPool(lusdBalance);
         }
 
         if (i % 10 === 0) {
@@ -164,7 +164,7 @@ yargs
             }
           }
 
-          await fixture.sweepQui(liquity);
+          await fixture.sweepLUSD(liquity);
 
           const listOfTroves = await getListOfTroves(deployerLiquity);
           await checkTroveOrdering(deployerLiquity, price, listOfTroves, previousListOfTroves);
@@ -209,7 +209,7 @@ yargs
         let trove = await funderLiquity.getTrove();
 
         if (trove.debt.isZero) {
-          await funderLiquity.borrowQui(1, {
+          await funderLiquity.borrowLUSD(1, {
             trove,
             price: initialPrice,
             numberOfTroves: initialNumberOfTroves
@@ -218,16 +218,16 @@ yargs
           trove = await funderLiquity.getTrove();
         }
 
-        const quiBalance = await funderLiquity.getQuiBalance();
+        const lusdBalance = await funderLiquity.getLUSDBalance();
 
-        if (quiBalance.lt(trove.debt)) {
+        if (lusdBalance.lt(trove.debt)) {
           const [randomUser] = createRandomWallets(1, provider);
           const randomLiquity = await Liquity.connect(deployment, randomUser);
 
-          const quiNeeded = trove.debt.sub(quiBalance);
+          const lusdNeeded = trove.debt.sub(lusdBalance);
           const tempTrove = new Trove({
-            collateral: quiNeeded.div(initialPrice).mul(3),
-            debt: quiNeeded
+            collateral: lusdNeeded.div(initialPrice).mul(3),
+            debt: lusdNeeded
           });
 
           await funder.sendTransaction({
@@ -243,10 +243,10 @@ yargs
 
           initialNumberOfTroves++;
 
-          await randomLiquity.sendQui(funder.address, quiNeeded, { gasPrice: 0 });
+          await randomLiquity.sendLUSD(funder.address, lusdNeeded, { gasPrice: 0 });
         }
 
-        await funderLiquity.repayQui(trove.debt, {
+        await funderLiquity.repayLUSD(trove.debt, {
           trove,
           price: initialPrice,
           numberOfTroves: initialNumberOfTroves

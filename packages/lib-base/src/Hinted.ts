@@ -20,8 +20,13 @@ type AddParams<T, K extends keyof T, U extends unknown[]> = {
   [P in K]: T[P] extends (...args: infer A) => infer R ? (...args: [...A, ...U]) => R : never;
 };
 
-type SimpleHintedMethod = "openTrove" | "redeemCollateral";
-type TroveChangeMethod = "depositEther" | "withdrawEther" | "borrowQui" | "repayQui" | "changeTrove";
+type SimpleHintedMethod = "openTrove" | "redeemLUSD";
+type TroveChangeMethod =
+  | "depositCollateral"
+  | "withdrawCollateral"
+  | "borrowLUSD"
+  | "repayLUSD"
+  | "changeTrove";
 type CollateralGainTransferMethod = "transferCollateralGainToTrove";
 
 type HintedMethod = SimpleHintedMethod | TroveChangeMethod | CollateralGainTransferMethod;
