@@ -102,13 +102,13 @@ contract SortedTroves is Ownable, ISortedTroves {
     
     function _insert(address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) internal {
         // List must not be full
-        require(!isFull(), "SortedTroves: List is full");
+        require(!isFull());  
         // List must not already contain node
-        require(!contains(_id), "SortedTroves: List already contains the node");
+        require(!contains(_id));  
         // Node id must not be null
-        require(_id != address(0), "SortedTroves: Id cannot be zero");
+        require(_id != address(0));  
         // ICR must be non-zero
-        require(_ICR > 0, "SortedTroves: ICR must be positive");
+        require(_ICR > 0); 
 
         address prevId = _prevId; 
         address nextId = _nextId; 
@@ -157,7 +157,7 @@ contract SortedTroves is Ownable, ISortedTroves {
      */
     function _remove(address _id) internal {
         // List must contain the node
-        require(contains(_id), "SortedTroves: List does not contain the id");
+        require(contains(_id)); 
 
         if (data.size > 1) { 
             // List contains more than a single node
@@ -201,15 +201,15 @@ contract SortedTroves is Ownable, ISortedTroves {
     function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external override {
         _requireCallerIsBOorTroveM();
         // List must contain the node
-        require(contains(_id), "SortedTroves: List does not contain the id");
-        // ICR must be non-zero
-        require(_newICR > 0, "SortedTroves: ICR must be positive");
+        require(contains(_id));
 
         // Remove node from the list
         _remove(_id);
 
-        // Insert node
-        _insert(_id, _newICR, _price, _prevId, _nextId);
+        if (_newICR > 0) {
+            // Insert node if it has a non-zero ICR
+            _insert(_id, _newICR, _price, _prevId, _nextId);
+        }
     }
 
     /*

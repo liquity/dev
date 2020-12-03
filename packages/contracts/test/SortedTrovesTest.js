@@ -285,7 +285,7 @@ contract('SortedTroves', async accounts => {
         await th.assertRevert(sortedTrovesTester.reInsert(alice, 1, 1, alice, alice), 'SortedTroves: List does not contain the id')
       })
 
-      it('reInsert(): fails if new ICR is zero', async () => {
+      it.skip('reInsert(): fails if new ICR is zero', async () => {
         await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
         assert.isTrue(await sortedTroves.contains(alice), 'list should contain element')
         await th.assertRevert(sortedTrovesTester.reInsert(alice, 0, 1, alice, alice), 'SortedTroves: ICR must be positive')
