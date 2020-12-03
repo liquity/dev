@@ -336,6 +336,8 @@ Thus, nodes need only be re-inserted to the sorted list upon a trove operation -
 
 ### Flow of Ether in Liquity
 
+![Flow of Ether](images/ETH_flows.svg)
+
 Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, Ether is transferred in one of three ways:
 
 - From a user to a Pool
