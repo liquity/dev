@@ -382,6 +382,13 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | withdrawFromSP         | depositor's accumulated ETH gain | StabilityPool -> msg.sender                       |
 | withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool -> BorrowerOperations -> ActivePool |
 
+**LQTY Staking**
+
+| Function    | ETH quantity                                   | Path                     |
+|-------------|------------------------------------------------|--------------------------|
+| stake       | staker's accumulated ETH gain from system fees | LQTYStaking ->msg.sender |
+| unstake     | staker's accumulated ETH gain from system fees | LQTYStaking ->msg.sender |
+
 ### Flow of LUSD tokens in Liquity
 
 When a user issues debt from their trove, LUSD tokens are minted to their own address, and a debt is recorded on the trove. Conversely, when they repay their trove’s LUSD debt, LUSD is burned from their address, and the debt on their trove is reduced.
@@ -422,6 +429,12 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | provideToSP    | deposit / top-up | LUSD. _transfer(msg.sender, stabilityPoolAddress, _amount); |
 | withdrawFromSP | withdrawal       | LUSD. _transfer(stabilityPoolAddress, msg.sender, _amount); |
 
+**LQTY Staking**
+
+| Function | LUSD Quantity                                   | ERC20 Operation                                           |
+|----------|-------------------------------------------------|-----------------------------------------------------------|
+| stake    | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
+| unstake  | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
 
 ### Flow of LQTY Tokens in Liquity
 
