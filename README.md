@@ -369,8 +369,8 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | batchLiquidateTroves (offset)           | collateral to be offset                | ActivePool->StabilityPool     |
 | batchLiquidateTroves (redistribution).  | collateral to be redistributed         | ActivePool->DefaultPool       |
 | redeemCollateral                        | collateral to be swapped with redeemer | ActivePool->msg.sender        |
-| redeemCollateral                        | redemption fee                         | ActivePool->msg.sender        |
-| redeemCollateral                        | trove's collateral surplus             | ActivePool -> CollSurplusPool |
+| redeemCollateral                        | redemption fee                         | ActivePool->LQTYStaking       |
+| redeemCollateral                        | trove's collateral surplus             | ActivePool->CollSurplusPool |
 
 **Stability Pool**
 
