@@ -626,22 +626,22 @@ contract('Fee arithmetic tests', async accounts => {
 
     // Expect this tx to revert: stake() tries to send nonPayable proxy's accumulated ETH gain (albeit 0),
     // but nonPayable proxy can not accept ETH - therefore stake() reverts.
-    assertRevert(proxyStakeTxPromise)
+    await assertRevert(proxyStakeTxPromise)
   })
 
   it("receive(): reverts when it receives ETH from an address that is not the Active Pool",  async () => { 
     const ethSendTxPromise1 = web3.eth.sendTransaction({to: lqtyStaking.address, from: A, value: dec(1, 'ether')})
     const ethSendTxPromise2 = web3.eth.sendTransaction({to: lqtyStaking.address, from: owner, value: dec(1, 'ether')})
 
-    assertRevert(ethSendTxPromise1)
-    assertRevert(ethSendTxPromise2)
+    await assertRevert(ethSendTxPromise1)
+    await assertRevert(ethSendTxPromise2)
   })
 
   it("unstake(): reverts if user has no stake",  async () => {  
     const unstakeTxPromise1 = lqtyStaking.unstake(1, {from: A})
     const unstakeTxPromise2 = lqtyStaking.unstake(1, {from: owner})
 
-    assertRevert(unstakeTxPromise1)
-    assertRevert(unstakeTxPromise2)
+    await assertRevert(unstakeTxPromise1)
+    await assertRevert(unstakeTxPromise2)
   })
 })
