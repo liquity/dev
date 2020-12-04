@@ -3,15 +3,24 @@
 \usepackage{lmodern}
 \usepackage{blindtext}
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{relsize} %bigger math symbols
 \usepackage{bm} %bolder text
 \usepackage{ulem} %Fixes underlining line break issue
 \usepackage[a4paper, inner=1.7cm, outer=2.7cm, top=3cm, bottom=3cm, bindingoffset=1.2cm]{geometry}
 \usepackage{tcolorbox}
 \usepackage{graphicx}
+\usepackage{svg}
 \usepackage{wrapfig}
 \usepackage{enumitem}
 \newlist{terms}{description}{1}
+
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+
 \begin{document}
 \title{\textbf{Efficient Order-Preserving Redistribution of Troves}}
 \date{November 2020}
@@ -56,6 +65,8 @@ Collateral and debt shares from liquidations are proportional to the \textit{ent
 \begin{equation} \label{eq:proportional}
   (x_i, y_i) = \left(\frac{c_i}{C} \cdot c_k, \frac{c_i}{C} \cdot d_k\right)
 \end{equation}
+where $C=\sum c_j$ is the total collateral in the system.
+
 The rewards compound across multiple redistribution events.
 
 \section{Trove Ordering}
@@ -69,20 +80,20 @@ It is easy to prove that a redistribution in proportion to the collateral of the
 
 \subsection{Scalable Reward Distribution with Fixed Stakes} \label{sec:strawman}
 
-A naive “push” based implementation of the redistribution (“strawman approach”), where rewards don’t compound, would iterate over all participants and compute the debt and collateral shares  for each recipient $j$ separately whenever the system distributes such rewards. Thus, at a reward event $t$, every recipient would receive the following reward share:
+A naive “push” based implementation of the redistribution (“strawman approach”), where rewards don’t compound, would iterate over all participants and compute the debt and collateral shares  for each recipient $i$ separately whenever the system distributes such rewards. Thus, at a reward event $t$, every recipient would receive the following reward share:
 
 \begin{equation} 
-    r_{j,t}=s_j \cdot \frac{R_t}{S_t}
+    r_{i,t}=s_i \cdot \frac{R_t}{S_t}
 \end{equation}
 
-where $R_t$ is the reward distributed at $t$, $r_{j,t}$ the reward share of recipient $j$, $s_j$ the stake of recipient $j$, and $S_t$ the sum of the stakes of all recipients, i.e. $\sum s_i$.
+where $R_t$ is the reward distributed at $t$, $r_{i,t}$ the reward share of recipient $i$, $s_i$ the stake of recipient $i$, and $S_t$ the sum of the stakes of all recipients, i.e. $\sum s_j$.
 
-Note that $s_j$ does not depend on $t$, and is thus fixed throughout multiple reward events.  \\
+Note that $s_i$ does not depend on $t$, and is thus fixed throughout multiple reward events. The sum of $s_i$ may vary over time because the set of them may change, stakes entering or leaving the set, but each amount $s_i$ is fixed while it’s in the set. \\
 
-Based on this prerequisite, $\cite{Batog}$ suggests a scalable $O(1)$ method of distributing such rewards by deferring the reward computation. The total reward share of $j$ from all reward events that occur between time $t_1$ and $t_2$ can be written as a sum of its reward shares with the (fixed) stake $s_j$ being factored out:
+Based on this prerequisite, $\cite{Batog}$ suggests a scalable $O(1)$ method of distributing such rewards by deferring the reward computation. The total reward share of $i$ from all reward events that occur between time $t_1$ and $t_2$ can be written as a sum of its reward shares with the (fixed) stake $s_i$ being factored out:
 
 \begin{equation}
-    \sum\limits_{t=t_1+1}^{t_2} r_{j,t} = s_j \cdot \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{S_t}
+    \sum\limits_{t=t_1+1}^{t_2} r_{i,t} = s_i \cdot \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{S_t}
 \end{equation}
 
 Let $Q_t$ denote the sum of all rewards per total staked amount up to instant $t$:
@@ -91,28 +102,28 @@ Let $Q_t$ denote the sum of all rewards per total staked amount up to instant $t
    Q_t = \sum\limits_{k=0}^{t}\frac{R_t}{S_t}
 \end{equation}
 
-Assuming stake $s_j$ is deposited at moment $t_1$ and then
+Assuming stake $s_i$ is deposited at moment $t_1$ and then
 withdrawn at moment $t_2 > t_1$, we can use the sum $Q_t$ to
-compute the total reward share for participant $j$ since
+compute the total reward share for participant $i$ since
 
 
 \begin{equation} 
-    r_j = s_j \cdot \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{S_t}
+    r_i = s_i \cdot \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{S_t}
 \end{equation}
 
 can be written as
 
 \begin{equation} 
-    r_j = s_j \cdot (Q_{t_2} - Q_{t_1})
+    r_i = s_i \cdot (Q_{t_2} - Q_{t_1})
 \end{equation}
 
 As $Q_t$ is monotonic, we can simply track the current (latest)
 value of $Q$ as a running sum, and snapshot it whenever we expect it to be required for a later computation, i.e. whenever a participant changes their stake.
 
-To compute the total (accumulated) reward for participant $j$, we can then use following formula:
+To compute the total (accumulated) reward for participant $i$, we can then use following formula:
 
 \begin{equation} 
-    r_j = s_j \cdot (Q - Q_{t_1})
+    r_i = s_i \cdot (Q - Q_{t_1})
 \end{equation}
 
 \bigskip
@@ -143,78 +154,50 @@ By extending the original formula from $\cite{Batog}$, we can thus express the c
 \begin{equation}
     r_i=
         \begin{cases} 
-            c_j \cdot (Q - Q_{t_1}) & for \;C_\emptyset = 0\\
+            c_i \cdot (Q - Q_{t_1}) & for \;C_\emptyset = 0\\
             c_i \cdot \frac{S_\emptyset} {\;C_\emptyset} \cdot (Q - Q_{t_1}) & for \;C_\emptyset>0
         \end{cases}
 \end{equation}
 
 Note that $r_i$ can stand for the collateral or the debt share of a recipient trove since both of them can be represented as "rewards" through $R_t$.
 
-\section{Outline of the Proof}
+\section{System Order Evolution}
+
 As mentioned above, we aim to prove that the corrected stake approach leaves the ordering of the troves by collateral ratio unchanged throughout all liquidations, regardless of any borrowers that change their troves' collateral between liquidation events.
 
 Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be  ensured that redistributions do not break trove ordering.
 
 To break up the proof, we introduce the notion of \textit{system order}. 
 
-\subsection{System Order Evolution}
-In general, a system of troves increases from order $N$ to order $N+1$ when the following sequence of events occurs:
+\begin{definition}[System Order]
+  A system of troves has an order, N. When the first trove is created, the system order equals 1.
+
+  The order of a system remains constant throughout the following event sequence:
 
 \begin{itemize}
   \item 1 or more new troves are created 
   \item 1 or more troves are subsequently liquidated
 \end{itemize}
+\end{definition}
 
-We capture the system order in a system evolution function:
+\begin{definition}[System order evolution]
+  The first trove creation event after a series of liquidations triggers a system evolution, and the system order increases by 1.
+\end{definition}
+
+\includegraphics[width=\linewidth]{System_order_evolution_generic.png}
+
+We capture the system order increase from order $N$ to order $N+1$  in a system evolution function:
 
 \begin{equation} 
     f(\Gamma_N)=\Gamma_{N+1}
 \end{equation}
 
 \bigskip
-Let $\Gamma_0$ define a system of troves with no past liquidations.\\
-
 Let $\Gamma_1$ define a system of troves with past liquidations, in which all active troves have received reward shares from all past liquidations. $\Gamma_1$ is a first-order system, and contains only stakes of first-order troves. Each first-order stake $s_i$ is equal to it’s collateral $c_i$, and \textit{S} $= \sum s_i = \sum c_i$.\\
 
 Let $\Gamma_2$ define an evolution of $\Gamma_1$, i.e. $\Gamma_2 = f(\Gamma_1)$. $\Gamma_2$ is a system with past liquidations, with \textit{S} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added troves $j$. $\Gamma_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
 
 In general, $\Gamma_n$ is a system with $n$ sequential pairs, each consisting of a trove creation period and a liquidation period. Troves created in a given trove creation period $t$ have experienced only those liquidations that occurred in liquidation period $t$ or greater.
-
-
-\subsection*{Core Lemma}
-We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the liquidation of a trove $k$ that was created in $\Gamma_0$, no subsequent liquidations in $\Gamma_2$, and exactly one trove $j$ that was created in $\Gamma_1$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
-
-%Formal notation becomes unwieldy
-%$\forall{\{\Gamma_2, i,j,k| k \in$ $\Gamma_0, k \notin$ $\Gamma_1 }}: 
-% (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$)
-
-%\begin{itemize}
-%  \item Proof: $\gamma_1=\gamma_2$. $1^{st}$ order, M past liquidations. %Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
-%\end{itemize}
-
-
-\subsection*{Generalizations}
-\begin{itemize}
-  %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
-  
-  \item Proof: We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the liquidation of a trove $k$ that was created in $\Gamma_0$ and exactly one trove $j$ that was created in $\Gamma_1$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
-  
-  %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
-  
-  \item Proof: We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the liquidation of a trove $k$ that was created in $\Gamma_0$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
-  
-  \item Proof: For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
-  
-  \item Proof: For every $N^{th}$ order system $\Gamma_N$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
-    
-  %\item Show $2^{nd}$ order system is equivalent to first order 
-  
-  %\item Show that $n^{th}$ order system is equivalent to first order
-\end{itemize}
-
-\subsection*{Core Proof}
-For every system $\Gamma_N$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{N+1}$, the corrected stake approach maintains maintains $\gamma_i > \gamma_j$.
-
 
 \subsection{At First-Order, Stake Equals Initial Collateral}
 
@@ -230,12 +213,59 @@ for all $s_i$, $c_i$ in an $\Gamma_1$ system.
 
 The corrected stake effectively models the fresh trove’s collateral $c_i$ as a total collateral, which includes ‘virtual’ accumulated rewards. The corrected stake earns rewards for the trove as if the trove was first-order, and had been in the system from the beginning - thus maintaining proportional reward growth.\\
 
-We now prove that ICR equality is maintained with rewards proportional to corrected stakes - starting with the simplest case, and progressively generalizing.
+\subsection{Outline of the Proof}
+
+We first prove that ICR equality is maintained with rewards proportional to corrected stakes - starting with the simplest case, and progressively generalizing, and finally we prove that order is maintained too.
+
+\begin{itemize}
+  \item Lemma. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+
+    \includegraphics[width=\linewidth]{System_order_evolution_1.png}
+
+  \item Lemma. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of liquidations $P$, such that $|P| > 1$ and $j \notin P$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+
+    \includegraphics[width=\linewidth]{System_order_evolution_2.png}
+
+  \item Lemma. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$ and $N \cap P = \emptyset$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+
+    \includegraphics[width=\linewidth]{System_order_evolution_3.png}
+
+  \item Theorem. In a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events
+
+  \item Lemma. For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+
+  \item Proposition. For every $N^{th}$ order system $\Gamma_N$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+
+  \item Corollary. In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.
+
+  \item Theorem. For every system $\Gamma_N$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{N+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
+\end{itemize}
+
 
 \section{Corrected Stake Approach Preserves Equality}
 
-\subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations}
 
+%\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
+%Formal notation becomes unwieldy
+%$\forall{\{\Gamma_2, i,j,k| k \in$ $\Gamma_0, k \notin$ $\Gamma_1 }}: 
+% (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$)
+
+%\begin{itemize}
+%  \item Proof: $\gamma_1=\gamma_2$. $1^{st}$ order, M past liquidations. %Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
+  %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
+  %\item Show $2^{nd}$ order system is equivalent to first order 
+
+  %\item Show that $n^{th}$ order system is equivalent to first order
+%\end{itemize}
+
+
+%\subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations}
+
+\begin{lemma}
+Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations
+\end{lemma}
+
+\begin{proof}
 We consider the following event sequence:
 
 \begin{itemize}
@@ -548,18 +578,27 @@ Thus:
     ICR_{F \; After}=ICR_{G \; After}
 \end{equation}
 
-\bigskip
-QED.
+\end{proof}
 
-\subsection{EXTENSION PROOF. Arbitrary Number of Liquidation Events At Current System Order}
+%\subsection{EXTENSION PROOF. Arbitrary Number of Liquidation Events At Current System Order}
+\begin{lemma}
+Arbitrary Number of Liquidation Events At Current System Order
+\end{lemma}
 
+\begin{proof}
 If instead of a single liquidation event at a given system order, we have $P$ liquidation events, it is clear that ICR equality holds across all $P$ events:\\
 
 Since ICR equality holds across one liquidation event, it will hold across the next, and thus hold for all.\\
 
 Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual trove reward term $x_i$ given in 4) depends only on reward sizes and the total stakes.
+\end{proof}
 
-\subsection{EXTENSION PROOF. Arbitrary Number of troves Added Between Liquidation Events}
+%\subsection{EXTENSION PROOF. Arbitrary Number of troves Added Between Liquidation Events}
+\begin{lemma}
+Arbitrary Number of troves Added Between Liquidation Events
+\end{lemma}
+
+\begin{proof}
 
 With $N$ second-order troves added between consecutive liquidation events, the stake $s_F$ of any given second-order trove is given by 1): 
 
@@ -573,15 +612,23 @@ The snapshots of the system state after the last liquidation event ($S_\emptyset
 Thus, $s_F$ in the N second-order troves case is equal to $s_F$ in the single second-order trove case.\\
 
 As such, the logic of the Main Proof applies - and ICR equality between a second-order trove and first-order trove holds across a liquidation event, no matter how many fresh troves are added in between.
+\end{proof}
 
-\subsection{CONCLUSION 1}
+%\subsection{CONCLUSION 1}
+\begin{theorem}
+In a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events
+\end{theorem}
 
-\bigskip
-Combining Main Proof with Extensions 1 \& 2 yields the following conclusion:\\
+\begin{proof}
+Combining the previous 3 lemmas, this follows immediately.
+\end{proof}
 
-\uline{In a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.}\\
+%\subsection{2nd Order Systems Collapse to 1st Order}
+\begin{lemma}
+2nd Order Systems Collapse to 1st Order
+\end{lemma}
 
-\subsection{2nd Order Systems Collapse to 1st Order}
+\begin{proof}
 We now show that a second-order system is equivalent to a first-order system.\\
 
 Consider a hypothetical first order $trove_1$ and an actual second order $trove_2$. Let both troves have identical ICR, and also let $trove_1$’s total collateral and debt equal $trove_2$’s initial collateral and initial debt respectively:
@@ -611,8 +658,14 @@ Therefore any second order system is equivalent to a first order system that con
 \begin{equation} 
     \Gamma_2=\Gamma_1
 \end{equation}
+\end{proof}
 
-\subsection{N’th Order Systems Collapse to 1st Order}
+%\subsection{N’th Order Systems Collapse to 1st Order}
+\begin{proposition}
+N’th Order Systems Collapse to 1st Order
+\end{proposition}
+
+\begin{proof}
 We prove it by induction. We have already proved for $n=1$ that $\Gamma_1=\Gamma_2$.
 Now we show that if it’s true for $n-1$ then it’s true for $n$, i.e.:
 
@@ -638,15 +691,23 @@ So, for every $N$, $\Gamma_N = \Gamma_{N-1}$, and for the transitive property of
 \begin{equation}
     \Gamma_N=\Gamma_1
 \end{equation}
+\end{proof}
 
 \bigskip
 Having shown all nth order systems are equivalent to a first order system, we now extend our previous conclusion to nth order systems:
 
-\subsection{CONCLUSION 2}
-
-\uline{In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.}
+%\subsection{CONCLUSION 2}
+\begin{corollary}
+  In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.
+\end{corollary}
 
 \section{Corrected Stake Approach Preserves Order}
+
+\begin{theorem}
+  For every system $\Gamma_N$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{N+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
+\end{theorem}
+
+\begin{proof}
 Here we show that ICR ordering is preserved with corrected stakes across a liquidation event.\\
 
 We make use of the first-order equivalence result, namely, that with corrected stakes:
@@ -908,5 +969,6 @@ Finally, taking the reciprocal of \ref{eq:c}, yields:
 \end{equation}
 
 Thus, ordering of active troves by ICR is preserved across a reward event that is proportional to the collateral of the active troves.
+\end{proof}
 
 \end{document}
