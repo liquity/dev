@@ -39,20 +39,38 @@ type SystemStatsProps = {
   showBalances?: boolean;
 };
 
-const select = ({ numberOfTroves, price, total, lusdInStabilityPool }: LiquityStoreState) => ({
+const select = ({
   numberOfTroves,
   price,
   total,
-  lusdInStabilityPool
+  lusdInStabilityPool,
+  borrowingFeeFactor,
+  redemptionFeeFactor
+}: LiquityStoreState) => ({
+  numberOfTroves,
+  price,
+  total,
+  lusdInStabilityPool,
+  borrowingFeeFactor,
+  redemptionFeeFactor
 });
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
   const { contractsVersion, deploymentDate } = useLiquity();
-  const { numberOfTroves, price, lusdInStabilityPool, total } = useLiquitySelector(select);
+  const {
+    numberOfTroves,
+    price,
+    lusdInStabilityPool,
+    total,
+    borrowingFeeFactor,
+    redemptionFeeFactor
+  } = useLiquitySelector(select);
 
   const lusdInStabilityPoolPct =
     total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
+  const borrowingFeePct = new Percent(borrowingFeeFactor);
+  const redemptionFeePct = new Percent(redemptionFeeFactor);
 
   return (
     <Card {...{ variant }}>
@@ -60,7 +78,10 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
 
       <Heading>Liquity System</Heading>
 
-      <Text>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
+      <Text>Borrowing fee: {borrowingFeePct.toString(2)}</Text>
+      <Text>Redemption fee: {redemptionFeePct.toString(2)}</Text>
+
+      <Text sx={{ mt: 2 }}>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
       <Text>
         Total {COIN} supply: {total.debt.shorten()}
       </Text>
