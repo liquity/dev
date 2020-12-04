@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { Percent } from "@liquity/decimal";
-import { LiquityStoreState, Trove } from "@liquity/lib-base";
+import { LiquityStoreState, Trove, TroveChange } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -12,6 +12,8 @@ import { COIN } from "../strings";
 type TroveActionProps = {
   original: Trove;
   edited: Trove;
+  afterFee: Trove;
+  change: TroveChange;
   changePending: boolean;
   dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
@@ -29,6 +31,8 @@ const select = ({ price, total, lusdBalance, numberOfTroves }: LiquityStoreState
 export const TroveAction: React.FC<TroveActionProps> = ({
   original,
   edited,
+  afterFee,
+  change: { collateralDifference, debtDifference },
   changePending,
   dispatch
 }) => {
@@ -39,7 +43,6 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
-  const { collateralDifference, debtDifference } = original.whatChanged(edited);
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
@@ -135,7 +138,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
                   `Can't borrow ${COIN} during recovery mode`
                 ],
                 [
-                  !total.subtract(original).add(edited).collateralRatioIsBelowCritical(price),
+                  !total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price),
                   `Total collateral ratio would fall below ${ccrPercent}`
                 ]
               ] as const)
@@ -161,7 +164,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         id={myTransactionId}
         requires={[
           [
-            !edited.collateralRatioIsBelowMinimum(price),
+            !afterFee.collateralRatioIsBelowMinimum(price),
             `Collateral ratio must be at least ${mcrPercent}`
           ],
           [

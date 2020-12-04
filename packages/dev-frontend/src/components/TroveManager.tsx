@@ -2,7 +2,7 @@ import React from "react";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 import { LiquityStoreState, Trove } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer } from "@liquity/lib-react";
+import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
@@ -111,17 +111,25 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
   }
 };
 
+const select = ({ borrowingFeeFactor }: LiquityStoreState) => ({ borrowingFeeFactor });
+
 export const TroveManager: React.FC = () => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
+  const { borrowingFeeFactor } = useLiquitySelector(select);
+
+  const change = original.whatChanged(edited);
+  const fee = (original.isEmpty
+    ? edited.debt.gt(Trove.GAS_COMPENSATION_DEPOSIT)
+      ? edited.debt.sub(Trove.GAS_COMPENSATION_DEPOSIT)
+      : undefined
+    : change.debtDifference?.positive?.absoluteValue
+  )?.mul(borrowingFeeFactor);
+  const afterFee = edited.addDebt(fee ?? 0);
 
   return (
     <>
-      <TroveEditor
-        title={original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
-        {...{ original, edited, changePending, dispatch }}
-      />
-
-      <TroveAction {...{ original, edited, changePending, dispatch }} />
+      <TroveEditor {...{ original, edited, afterFee, fee, change, changePending, dispatch }} />
+      <TroveAction {...{ original, edited, afterFee, change, changePending, dispatch }} />
     </>
   );
 };
