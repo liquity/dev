@@ -59,7 +59,7 @@ Let $\gamma_i$ denote the individual collateral ratio (ICR) of a trove $i$, i.e.
 
 If $\gamma_i$ falls below a minimum threshold $\delta$, the trove is subject to liquidation. As long as there are sufficient LUSD tokens in the Stability Pool, the system can use them to repay the liquidated debt. 
 
-If the Stability Pool is empty, the trove's collateral and debt are redistributed to all active troves in the system as part of the liquidation process (a trove is called \textit{active} as long as it has not been liquidated or closed by their owner). Every existing borrower with an open trove thus receives a share of both the collateral and the debt of the liquidated trove.
+If the Stability Pool is empty, the trove's collateral and debt are redistributed to all active troves in the system as part of the liquidation process (a trove is called \textit{active} as long as it has not been liquidated, or closed by their owner or by a redemption). Every existing borrower with an active trove thus receives a share of both the collateral and the debt of the liquidated trove.
 
 Collateral and debt shares from liquidations are proportional to the \textit{entire} collateral of the recipient troves, i.e. taking into account accumulated “rewards” from prior liquidations. Thus, in the event of a redistribution of a trove $k$, an active trove $i$ receives the following collateral and debt shares $x_i,y_i$:  
 \begin{equation} \label{eq:proportional}
