@@ -144,7 +144,7 @@ const troveWithoutRewards = new Query<
   }
 );
 
-const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves, TrovesVariables>(
+const troves = new Query<[string, TroveWithPendingRewards][], Troves, TrovesVariables>(
   gql`
     query Troves($orderDirection: OrderDirection!, $startIdx: Int!, $numberOfTroves: Int!) {
       troves(
@@ -164,9 +164,7 @@ const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves,
     ${troveRawFields}
   `,
   ({ data: { troves } }) =>
-    troves.map(
-      ({ owner: { id }, ...rawFields }) => [getAddress(id), troveFromRawFields(rawFields)] as const
-    )
+    troves.map(({ owner: { id }, ...rawFields }) => [getAddress(id), troveFromRawFields(rawFields)])
 );
 
 const blockNumberDummy = new Query<void, BlockNumberDummy, BlockNumberDummyVariables>(

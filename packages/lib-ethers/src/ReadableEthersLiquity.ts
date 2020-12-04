@@ -131,21 +131,20 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 type Resolved<T> = T extends Promise<infer U> ? U : T;
 type MultipleSortedTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSortedTroves"]>>;
 
-const mapMultipleSortedTrovesToTroves = (troves: MultipleSortedTroves) =>
-  troves.map(
-    ({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) =>
-      [
-        owner,
+const mapMultipleSortedTrovesToTroves = (
+  troves: MultipleSortedTroves
+): [string, TroveWithPendingRewards][] =>
+  troves.map(({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) => [
+    owner,
 
-        new TroveWithPendingRewards({
-          collateral: new Decimal(coll),
-          debt: new Decimal(debt),
-          stake: new Decimal(stake),
+    new TroveWithPendingRewards({
+      collateral: new Decimal(coll),
+      debt: new Decimal(debt),
+      stake: new Decimal(stake),
 
-          snapshotOfTotalRedistributed: {
-            collateral: new Decimal(snapshotETH),
-            debt: new Decimal(snapshotLUSDDebt)
-          }
-        })
-      ] as const
-  );
+      snapshotOfTotalRedistributed: {
+        collateral: new Decimal(snapshotETH),
+        debt: new Decimal(snapshotLUSDDebt)
+      }
+    })
+  ]);

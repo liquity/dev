@@ -25,10 +25,10 @@ export interface ReadableLiquity {
   getLastTroves(
     startIdx: number,
     numberOfTroves: number
-  ): Promise<(readonly [string, TroveWithPendingRewards])[]>;
+  ): Promise<[string, TroveWithPendingRewards][]>;
 
   getFirstTroves(
     startIdx: number,
     numberOfTroves: number
-  ): Promise<(readonly [string, TroveWithPendingRewards])[]>;
+  ): Promise<[string, TroveWithPendingRewards][]>;
 }
