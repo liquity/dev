@@ -32,6 +32,11 @@ export type SuccessfulReceipt<R = unknown, D = unknown> = {
 export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
 export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
 
+export type TroveChangeDetails = {
+  newTrove: Trove;
+  fee: Decimal;
+};
+
 export type LiquidationDetails = {
   fullyLiquidated: string[];
   partiallyLiquidated?: string;
@@ -49,14 +54,14 @@ export type RedemptionDetails = {
 };
 
 export interface TransactableLiquity {
-  openTrove(trove: Trove): Promise<void>;
+  openTrove(trove: Trove): Promise<TroveChangeDetails>;
   closeTrove(): Promise<void>;
 
-  depositCollateral(amount: Decimalish): Promise<void>;
-  withdrawCollateral(amount: Decimalish): Promise<void>;
-  borrowLUSD(amount: Decimalish): Promise<void>;
-  repayLUSD(amount: Decimalish): Promise<void>;
-  changeTrove(change: TroveChange): Promise<void>;
+  depositCollateral(amount: Decimalish): Promise<TroveChangeDetails>;
+  withdrawCollateral(amount: Decimalish): Promise<TroveChangeDetails>;
+  borrowLUSD(amount: Decimalish): Promise<TroveChangeDetails>;
+  repayLUSD(amount: Decimalish): Promise<TroveChangeDetails>;
+  changeTrove(change: TroveChange): Promise<TroveChangeDetails>;
 
   setPrice(price: Decimalish): Promise<void>;
   // updatePrice(): Promise<void>;

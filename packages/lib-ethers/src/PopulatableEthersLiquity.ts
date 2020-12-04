@@ -25,7 +25,8 @@ import {
   TransactableLiquity,
   PopulatedLiquityTransaction,
   sendableFrom,
-  transactableFrom
+  transactableFrom,
+  TroveChangeDetails
 } from "@liquity/lib-base";
 
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
@@ -176,6 +177,30 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
   protected wrapSimpleTransaction(rawPopulatedTransaction: PopulatedTransaction) {
     return new PopulatedEthersTransaction(rawPopulatedTransaction, noDetails, this.signer);
+  }
+
+  protected wrapTroveChange(rawPopulatedTransaction: PopulatedTransaction) {
+    return new PopulatedEthersTransaction(
+      rawPopulatedTransaction,
+      ({ logs }: TransactionReceipt): TroveChangeDetails => {
+        const [newTrove] = this.contracts.borrowerOperations
+          .extractEvents(logs, "TroveUpdated")
+          .map(
+            ({ args: { _coll, _debt } }) =>
+              new Trove({ collateral: new Decimal(_coll), debt: new Decimal(_debt) })
+          );
+
+        const [fee] = this.contracts.borrowerOperations
+          .extractEvents(logs, "LUSDBorrowingFeePaid")
+          .map(({ args: { _LUSDFee } }) => new Decimal(_LUSDFee));
+
+        return {
+          newTrove,
+          fee
+        };
+      },
+      this.signer
+    );
   }
 
   protected wrapLiquidation(rawPopulatedTransaction: PopulatedTransaction) {
@@ -344,7 +369,7 @@ export class PopulatableEthersLiquity
       );
     }
 
-    return this.wrapSimpleTransaction(
+    return this.wrapTroveChange(
       await this.contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: trove.collateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
@@ -414,7 +439,7 @@ export class PopulatableEthersLiquity
     const finalTrove = initialTrove.apply(change);
     const isDebtIncrease = !!change.debtDifference?.positive;
 
-    return this.wrapSimpleTransaction(
+    return this.wrapTroveChange(
       await this.contracts.borrowerOperations.estimateAndPopulate.adjustTrove(
         {
           ...overrides,
