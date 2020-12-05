@@ -616,7 +616,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('CommunityIssuance', async accounts => {
-    it.only("sendLQTY(): reverts when caller is not the StabilityPool", async () => {
+    it("sendLQTY(): reverts when caller is not the StabilityPool", async () => {
       const tx1 = communityIssuance.sendLQTY(alice, dec(100, 18), {from: alice})
       const tx2 = communityIssuance.sendLQTY(bob, dec(100, 18), {from: alice})
       const tx3 = communityIssuance.sendLQTY(stabilityPool.address, dec(100, 18), {from: alice})
@@ -626,7 +626,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       assertRevert(tx3)
     })
 
-    it.only("issueLQTY(): reverts when caller is not the StabilityPool", async () => {
+    it("issueLQTY(): reverts when caller is not the StabilityPool", async () => {
       const tx1 = communityIssuance.issueLQTY({from: alice})
 
       assertRevert(tx1)

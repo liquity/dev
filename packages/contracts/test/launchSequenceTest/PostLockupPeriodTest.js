@@ -720,7 +720,7 @@ contract('After the initial lockup period has passed', async accounts => {
   })
 
   describe('Locking CDLCs', async accounts => {
-    it("LQTY deployer can lock CDLCs they deployed through the Factory", async () => {
+    it("lockCustomDurationContracts(): LQTY deployer can lock CDLCs they deployed through the Factory", async () => {
       const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
       const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
       const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, dec(3, 24), SECONDS_IN_ONE_MONTH, { from: liquityAG })
@@ -750,7 +750,7 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isTrue(await CDLC_C.active())
     })
 
-    it("An externally owned account can lock CDLCs they deployed through the Factory", async () => {
+    it("lockCustomDurationContracts(): An externally owned account can lock CDLCs they deployed through the Factory", async () => {
       // D, E, F each deploy a CDLC
       const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, dec(1, 24), SECONDS_IN_ONE_MONTH, { from: D })
       const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, dec(2, 24), SECONDS_IN_ONE_MONTH, { from: E })
@@ -779,6 +779,46 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isTrue(await CDLC_A.active())
       assert.isTrue(await CDLC_B.active())
       assert.isTrue(await CDLC_C.active())
+    })
+  
+    it("lockCustomDurationContracts(): Locking through the factory reverts when caller is not the deployer", async () => {
+      // Deploy 2 OYLCs
+      const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, LQTYEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, LQTYEntitlement_B, SECONDS_IN_ONE_MONTH,  { from: C })
+
+      // Grab contracts from deployment tx events
+      const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
+      const CDLC_B = await th.getCDLCFromDeploymentTx(deployedCDLCtx_B)
+
+      // LQTY deployer transfers LQTY to both OYLCs
+      await lqtyToken.transfer(CDLC_A.address, LQTYEntitlement_A, { from: liquityAG })
+      await lqtyToken.transfer(CDLC_B.address, LQTYEntitlement_B, { from: liquityAG })
+
+      // Check OYLC is inactive
+      assert.isFalse(await CDLC_A.active())
+      assert.isFalse(await CDLC_B.active())
+
+      const variousAccounts = [A, B, D, E, F, G]
+
+      // Various EOAs try to lock OYLC_A via Factory
+      for (account of variousAccounts) {
+        try {
+          const lockingAttemptTx = await lockupContractFactory.lockCustomDurationContracts([CDLC_A.address], { from: account })
+          assert.isFalse(lockingAttemptTx.receipt.status)
+        } catch (error) {
+          assert.include(error.message, "LCF: customDurationLockupContract was not deployed by the caller")
+        }
+      }
+
+      // Various EOAs try to lock OYLC_B via Factory
+      for (account of variousAccounts) {
+        try {
+          const lockingAttemptTx = await lockupContractFactory.lockCustomDurationContracts([CDLC_B.address], { from: account })
+          assert.isFalse(lockingAttemptTx.receipt.status)
+        } catch (error) {
+          assert.include(error.message, "revert")
+        }
+      }
     })
   })
 
@@ -968,8 +1008,6 @@ contract('After the initial lockup period has passed', async accounts => {
         }
       }
     })
-
-
   })
 
 })
