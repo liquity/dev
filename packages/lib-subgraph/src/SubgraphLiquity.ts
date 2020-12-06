@@ -12,7 +12,8 @@ import {
   ObservableLiquity,
   TroveWithPendingRewards,
   Trove,
-  StabilityDeposit
+  StabilityDeposit,
+  Fees
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
@@ -299,5 +300,9 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
       }
       return;
     }
+  }
+
+  getFees(): Promise<Fees> {
+    throw new Error("Method not implemented.");
   }
 }

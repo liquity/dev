@@ -13,7 +13,9 @@ import {
   LiquityReceipt,
   SuccessfulReceipt,
   SentLiquityTransaction,
-  ReadableLiquity
+  ReadableLiquity,
+  TroveChange,
+  TroveAdjustment
 } from "@liquity/lib-base";
 
 import { deployAndSetupContracts } from "../utils/deploy";
@@ -27,19 +29,27 @@ const provider = ethers.provider;
 chai.use(chaiAsPromised);
 chai.use(chaiSpies);
 
-function assertSucceeded<T extends LiquityReceipt>(
-  receipt: T
-): asserts receipt is Extract<T, SuccessfulReceipt> {
-  assert.strictEqual(receipt.status, "succeeded");
+function assertStrictEqual<T, U extends T>(
+  actual: T,
+  expected: U,
+  message?: string
+): asserts actual is U {
+  assert.strictEqual(actual, expected, message);
 }
 
 const waitForSuccess = async <T extends LiquityReceipt>(
   tx: Promise<SentLiquityTransaction<unknown, T>>
-): Promise<Extract<T, SuccessfulReceipt>> => {
+) => {
   const receipt = await (await tx).waitForReceipt();
-  assertSucceeded(receipt);
+  assertStrictEqual(receipt.status, "succeeded" as const);
 
-  return receipt;
+  return receipt as Extract<T, SuccessfulReceipt>;
+};
+
+const getAdjustment = <T>(change: TroveChange<T> | undefined): TroveAdjustment<T> => {
+  assertStrictEqual(change?.type, "adjustment" as const);
+
+  return change.params;
 };
 
 // TODO make the testcases isolated
@@ -65,7 +75,9 @@ describe("EthersLiquity", () => {
         Promise.all([
           EthersLiquity.connect(deployment, users[i]),
           sendTo(users[i], trove.collateral).then(tx => tx.wait())
-        ]).then(([liquity]) => liquity.openTrove(trove, {}, { gasPrice: 0 }))
+        ]).then(([liquity]) => {
+          liquity.openTrove(trove, {}, { gasPrice: 0 });
+        })
       )
       .reduce((a, b) => a.then(b), Promise.resolve());
 
@@ -292,26 +304,26 @@ describe("EthersLiquity", () => {
     });
 
     it("should repay some debt and withdraw some collateral at the same time", async () => {
-      let trove = await liquity.getTrove();
-      const finalTrove = new Trove({ collateral: 1.5, debt: 50 });
+      await liquity.adjustTrove({ repayLUSD: 60, withdrawCollateral: 0.5 }, undefined, {
+        gasPrice: 0
+      });
 
-      await liquity.changeTrove(trove.whatChanged(finalTrove), undefined, { gasPrice: 0 });
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
+      expect(trove).to.deep.equal(new Trove({ collateral: 1.5, debt: 50 }));
+
       const ethBalance = new Decimal(await user.getBalance());
-
-      expect(trove).to.deep.equal(finalTrove);
       expect(`${ethBalance}`).to.equal("100.5");
     });
 
     it("should borrow more and deposit some collateral at the same time", async () => {
-      let trove = await liquity.getTrove();
-      const finalTrove = new Trove({ collateral: 2, debt: 110 });
+      await liquity.adjustTrove({ borrowLUSD: 60, depositCollateral: 0.5 }, undefined, {
+        gasPrice: 0
+      });
 
-      await liquity.changeTrove(trove.whatChanged(finalTrove), undefined, { gasPrice: 0 });
-      trove = await liquity.getTrove();
+      const trove = await liquity.getTrove();
+      expect(trove).to.deep.equal(new Trove({ collateral: 2, debt: 110 }));
+
       const ethBalance = new Decimal(await user.getBalance());
-
-      expect(trove).to.deep.equal(finalTrove);
       expect(`${ethBalance}`).to.equal("99.5");
     });
   });
@@ -709,10 +721,10 @@ describe("EthersLiquity", () => {
 
       // First, we want to test a non-borrowing case, to make sure we're not passing due to any
       // extra gas we add to cover a potential lastFeeOperationTime update
-      const troveChange = trove.whatChanged(newTrove);
-      expect(troveChange.debtDifference?.positive).to.be.undefined;
+      const adjustment = getAdjustment(trove.whatChanged(newTrove));
+      expect(adjustment.borrowLUSD).to.be.undefined;
 
-      const tx = await liquity.populate.changeTrove(trove.whatChanged(newTrove));
+      const tx = await liquity.populate.adjustTrove(adjustment);
       const originalGasEstimate = await provider.estimateGas(tx.rawPopulatedTransaction);
 
       // A terribly rude user interferes
@@ -733,10 +745,10 @@ describe("EthersLiquity", () => {
       const newTrove = troveWithICRBetween(troves[1], troves[2]);
 
       // Make sure we're borrowing
-      const troveChange = trove.whatChanged(newTrove);
-      expect(troveChange.debtDifference?.positive).to.not.be.undefined;
+      const adjustment = getAdjustment(trove.whatChanged(newTrove));
+      expect(adjustment.borrowLUSD).to.not.be.undefined;
 
-      const tx = await liquity.populate.changeTrove(trove.whatChanged(newTrove));
+      const tx = await liquity.populate.adjustTrove(adjustment);
       const originalGasEstimate = await provider.estimateGas(tx.rawPopulatedTransaction);
 
       // A terribly rude user interferes again

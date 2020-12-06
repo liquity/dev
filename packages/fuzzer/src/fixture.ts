@@ -55,14 +55,10 @@ export class Fixture {
 
   private async sendLUSDFromFunder(toAddress: string, amount: Decimalish) {
     while ((await this.funderLiquity.getLUSDBalance()).lt(amount)) {
-      const trove = await this.funderLiquity.getTrove();
-      const finalTrove = trove.add({ collateral: 10000, debt: 1000000 });
-
-      await this.funderLiquity.changeTrove(trove.whatChanged(finalTrove), {
-        trove,
-        price: this.price,
-        numberOfTroves: this.numberOfTroves
-      });
+      await this.funderLiquity.adjustTrove(
+        { depositCollateral: 10000, borrowLUSD: 1000000 },
+        { price: this.price, numberOfTroves: this.numberOfTroves }
+      );
     }
 
     await this.funderLiquity.sendLUSD(toAddress, amount);

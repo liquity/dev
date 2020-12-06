@@ -8,11 +8,11 @@ export type HintedTransactionOptionalParams = {
   numberOfTroves?: number;
 };
 
-export type TroveChangeOptionalParams = HintedTransactionOptionalParams & {
+export type TroveAdjustmentOptionalParams = HintedTransactionOptionalParams & {
   trove?: Trove;
 };
 
-export type CollateralGainTransferOptionalParams = TroveChangeOptionalParams & {
+export type CollateralGainTransferOptionalParams = TroveAdjustmentOptionalParams & {
   deposit?: StabilityDeposit;
 };
 
@@ -21,20 +21,20 @@ type AddParams<T, K extends keyof T, U extends unknown[]> = {
 };
 
 type SimpleHintedMethod = "openTrove" | "redeemLUSD";
-type TroveChangeMethod =
+type TroveAdjustmentMethod =
   | "depositCollateral"
   | "withdrawCollateral"
   | "borrowLUSD"
   | "repayLUSD"
-  | "changeTrove";
+  | "adjustTrove";
 type CollateralGainTransferMethod = "transferCollateralGainToTrove";
 
-type HintedMethod = SimpleHintedMethod | TroveChangeMethod | CollateralGainTransferMethod;
+type HintedMethod = SimpleHintedMethod | TroveAdjustmentMethod | CollateralGainTransferMethod;
 type Hintable = { [P in HintedMethod]: (...args: never[]) => unknown };
 
 export type Hinted<T extends Hintable> = T &
   AddParams<T, SimpleHintedMethod, [optionalParams?: HintedTransactionOptionalParams]> &
-  AddParams<T, TroveChangeMethod, [optionalParams?: TroveChangeOptionalParams]> &
+  AddParams<T, TroveAdjustmentMethod, [optionalParams?: TroveAdjustmentOptionalParams]> &
   AddParams<
     T,
     CollateralGainTransferMethod,

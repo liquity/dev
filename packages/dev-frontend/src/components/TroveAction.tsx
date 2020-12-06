@@ -105,7 +105,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             `${debtDifference!.absoluteValue!.prettify()} ${COIN}`,
 
         collateralDifference && debtDifference
-          ? liquity.changeTrove.bind(
+          ? liquity.adjustTrove.bind(
               liquity,
               { collateralDifference, debtDifference },
               { trove: original, price, numberOfTroves }

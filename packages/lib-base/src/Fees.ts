@@ -61,7 +61,7 @@ export class Fees {
     redeemedFractionOfSupply = Decimal.from(redeemedFractionOfSupply);
     let baseRate = this.baseRate(when);
 
-    if (!redeemedFractionOfSupply.eq(Decimal.ZERO)) {
+    if (redeemedFractionOfSupply.nonZero) {
       baseRate = redeemedFractionOfSupply.div(this.beta).add(baseRate);
     }
 

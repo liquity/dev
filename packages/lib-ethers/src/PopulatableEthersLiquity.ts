@@ -11,10 +11,10 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 import {
   Trove,
   TroveWithPendingRewards,
-  TroveChange,
+  TroveAdjustment,
   ReadableLiquity,
   HintedTransactionOptionalParams,
-  TroveChangeOptionalParams,
+  TroveAdjustmentOptionalParams,
   CollateralGainTransferOptionalParams,
   Hinted,
   LiquityReceipt,
@@ -26,7 +26,9 @@ import {
   PopulatedLiquityTransaction,
   sendableFrom,
   transactableFrom,
-  TroveChangeDetails
+  TroveChangeDetails,
+  troveAdjustment,
+  normalizeTroveAdjustment
 } from "@liquity/lib-base";
 
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
@@ -387,70 +389,56 @@ export class PopulatableEthersLiquity
 
   async depositCollateral(
     amount: Decimalish,
-    optionalParams: TroveChangeOptionalParams = {},
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.addCollateral(amount);
-
-    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
+    return this.adjustTrove({ depositCollateral: amount }, optionalParams, overrides);
   }
 
   async withdrawCollateral(
     amount: Decimalish,
-    optionalParams: TroveChangeOptionalParams = {},
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.subtractCollateral(amount);
-
-    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
+    return this.adjustTrove({ withdrawCollateral: amount }, optionalParams, overrides);
   }
 
   async borrowLUSD(
     amount: Decimalish,
-    optionalParams: TroveChangeOptionalParams = {},
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.addDebt(amount);
-
-    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
+    return this.adjustTrove({ borrowLUSD: amount }, optionalParams, overrides);
   }
 
   async repayLUSD(
     amount: Decimalish,
-    optionalParams: TroveChangeOptionalParams = {},
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.subtractDebt(amount);
-
-    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
+    return this.adjustTrove({ repayLUSD: amount }, optionalParams, overrides);
   }
 
-  async changeTrove(
-    change: TroveChange,
-    optionalParams: TroveChangeOptionalParams = {},
+  async adjustTrove(
+    params: TroveAdjustment<Decimalish>,
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
+    const normalizedParams = normalizeTroveAdjustment(params);
     const { trove, ...hintOptionalParams } = optionalParams;
     const initialTrove = trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = initialTrove.apply(change);
-    const isDebtIncrease = !!change.debtDifference?.positive;
+    const finalTrove = initialTrove.apply(troveAdjustment(normalizedParams));
+    const isDebtIncrease = !!normalizedParams.borrowLUSD;
 
     return this.wrapTroveChange(
       await this.contracts.borrowerOperations.estimateAndPopulate.adjustTrove(
-        {
-          ...overrides,
-          value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
-        },
+        { value: normalizedParams.depositCollateral?.bigNumber, ...overrides },
         compose(
           isDebtIncrease ? addGasForPotentialLastFeeOperationTimeUpdate : id,
           addGasForPotentialListTraversal
         ),
-        change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
-        change.debtDifference?.absoluteValue?.bigNumber || 0,
+        normalizedParams.withdrawCollateral?.bigNumber ?? 0,
+        (normalizedParams.borrowLUSD ?? normalizedParams.repayLUSD)?.bigNumber ?? 0,
         isDebtIncrease,
         await this.findHint(finalTrove, hintOptionalParams)
       )
