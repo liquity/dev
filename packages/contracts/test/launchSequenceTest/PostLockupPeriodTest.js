@@ -20,8 +20,9 @@ contract('After the initial lockup period has passed', async accounts => {
   const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
   const SECONDS_IN_ONE_YEAR = timeValues.SECONDS_IN_ONE_YEAR
   const maxBytes32 = th.maxBytes32
-  
+
   let LQTYContracts
+  let coreContracts
 
   // OYLCs for team members on vesting schedules
   let OYLC_T1
@@ -54,13 +55,17 @@ contract('After the initial lockup period has passed', async accounts => {
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    LQTYContracts = await deploymentHelper.deployLQTYContracts()
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+    coreContracts = await deploymentHelper.deployLiquityCore()
 
     lqtyStaking = LQTYContracts.lqtyStaking
     lqtyToken = LQTYContracts.lqtyToken
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
+
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
     // Deploy 3 OYLCs for team members on vesting schedules
     const deployedOYLCtx_T1 = await lockupContractFactory.deployOneYearLockupContract(teamMember_1, teamMemberInitialEntitlement_1, { from: liquityAG })
@@ -717,6 +722,167 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.equal(await lqtyToken.balanceOf(CDLCAddress_B), dec(2, 24))
       assert.equal(await lqtyToken.balanceOf(CDLCAddress_C), dec(3, 24))
     })
+
+    // ---- TODO -- include liquityAG in one of the tested EOAs
+
+    it("Anyone can transfer to an EOA", async () => {
+      // Start D, E, LiqAG with some LQTY
+      await lqtyToken.unprotectedMint(D, dec(1, 24))
+      await lqtyToken.unprotectedMint(E, dec(2, 24))
+      await lqtyToken.unprotectedMint(liquityAG, dec(3, 24))
+
+      // LQTY holders transfer to other transfer to EOAs
+      const LQTYtransferTx_1 = await lqtyToken.transfer(A, dec(1, 18), { from: D })
+      const LQTYtransferTx_2 = await lqtyToken.transfer(liquityAG, dec(1, 18), { from: E })
+      const LQTYtransferTx_3 = await lqtyToken.transfer(F, dec(1, 18), { from: liquityAG })
+
+      assert.isTrue(LQTYtransferTx_1.receipt.status)
+      assert.isTrue(LQTYtransferTx_2.receipt.status)
+      assert.isTrue(LQTYtransferTx_3.receipt.status)
+    })
+
+    it("Anyone can approve any EOA or to spend their LQTY", async () => {
+      // EOAs approve EOAs to spend LQTY
+      const LQTYapproveTx_1 = await lqtyToken.approve(A, dec(1, 18), { from: liquityAG })
+      const LQTYapproveTx_2 = await lqtyToken.approve(B, dec(1, 18), { from: G })
+      const LQTYapproveTx_3 = await lqtyToken.approve(liquityAG, dec(1, 18), { from: F })
+      await assert.isTrue(LQTYapproveTx_1.receipt.status)
+      await assert.isTrue(LQTYapproveTx_2.receipt.status)
+      await assert.isTrue(LQTYapproveTx_3.receipt.status)
+    })
+
+    it("Anyone can increaseAllowance for any EOA or Liquity contract", async () => {
+      // Anyone can increaseAllowance of EOAs to spend LQTY
+      const LQTYIncreaseAllowanceTx_1 = await lqtyToken.increaseAllowance(A, dec(1, 18), { from: liquityAG })
+      const LQTYIncreaseAllowanceTx_2 = await lqtyToken.increaseAllowance(B, dec(1, 18), { from: G })
+      const LQTYIncreaseAllowanceTx_3 = await lqtyToken.increaseAllowance(liquityAG, dec(1, 18), { from: F })
+      await assert.isTrue(LQTYIncreaseAllowanceTx_1.receipt.status)
+      await assert.isTrue(LQTYIncreaseAllowanceTx_2.receipt.status)
+      await assert.isTrue(LQTYIncreaseAllowanceTx_3.receipt.status)
+
+      // Increase allowance of Liquity contracts from F
+      for (const contract of Object.keys(coreContracts)) {
+        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      }
+
+      // Increase allowance of Liquity contracts from liquity AG
+      for (const contract of Object.keys(coreContracts)) {
+        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      }
+
+      // Increase allowance of LQTY contracts from F
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      }
+
+      // Increase allowance of LQTT contracts from liquity AG
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      }
+    })
+
+    it("Anyone can decreaseAllowance for any EOA or Liquity contract", async () => {
+      //First, increase allowance of A, B LiqAG and core contracts
+      const LQTYapproveTx_1 = await lqtyToken.approve(A, dec(1, 18), { from: liquityAG })
+      const LQTYapproveTx_2 = await lqtyToken.approve(B, dec(1, 18), { from: G })
+      const LQTYapproveTx_3 = await lqtyToken.approve(liquityAG, dec(1, 18), { from: F })
+      await assert.isTrue(LQTYapproveTx_1.receipt.status)
+      await assert.isTrue(LQTYapproveTx_2.receipt.status)
+      await assert.isTrue(LQTYapproveTx_3.receipt.status)
+
+      // --- SETUP ---
+
+      // IncreaseAllowance of core contracts, from F
+      for (const contract of Object.keys(coreContracts)) {
+        const LQTYtransferTx = await lqtyToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(LQTYtransferTx.receipt.status)
+      }
+
+      // IncreaseAllowance of core contracts, from liquityAG
+      for (const contract of Object.keys(coreContracts)) {
+        const LQTYtransferTx = await lqtyToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: liquityAG})
+        await assert.isTrue(LQTYtransferTx.receipt.status)
+      }
+
+      // Increase allowance of LQTY contracts from F
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      }
+
+      // Increase allowance of LQTT contracts from liquity AG
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      }
+
+      // --- TEST ---
+
+      // Decrease allowance of A, B, liquityAG
+      const LQTYDecreaseAllowanceTx_1 = await lqtyToken.decreaseAllowance(A, dec(1, 18), { from: liquityAG })
+      const LQTYDecreaseAllowanceTx_2 = await lqtyToken.decreaseAllowance(B, dec(1, 18), { from: G })
+      const LQTYDecreaseAllowanceTx_3 = await lqtyToken.decreaseAllowance(liquityAG, dec(1, 18), { from: F })
+      await assert.isTrue(LQTYDecreaseAllowanceTx_1.receipt.status)
+      await assert.isTrue(LQTYDecreaseAllowanceTx_2.receipt.status)
+      await assert.isTrue(LQTYDecreaseAllowanceTx_3.receipt.status)
+
+      // Decrease allowance of core contracts, from F
+      for (const contract of Object.keys(coreContracts)) {
+        const LQTYDecreaseAllowanceTx = await lqtyToken.decreaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(LQTYDecreaseAllowanceTx.receipt.status)
+      }
+
+      // Decrease allowance of core contracts from liquityAG
+      for (const contract of Object.keys(coreContracts)) {
+        const LQTYDecreaseAllowanceTx = await lqtyToken.decreaseAllowance(coreContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assert.isTrue(LQTYDecreaseAllowanceTx.receipt.status)
+      }
+
+      // Decrease allowance of LQTY contracts from F
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYIncreaseAllowanceTx = await lqtyToken.decreaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      }
+
+      // Decrease allowance of LQTY contracts from liquity AG
+      for (const contract of Object.keys(LQTYContracts)) {
+        const LQTYIncreaseAllowanceTx = await lqtyToken.decreaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: liquityAG })
+        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      }
+    })
+
+    it("Anyone can be the sender in a transferFrom() call", async () => {
+      // Fund B, C
+      await lqtyToken.unprotectedMint(B, dec(1, 18))
+      await lqtyToken.unprotectedMint(C, dec(1, 18))
+ 
+      // LiqAG, B, C approve F, G, LiqAG respectively
+      await lqtyToken.approve(F, dec(1, 18), { from: liquityAG })
+      await lqtyToken.approve(G, dec(1, 18), { from: B })
+      await lqtyToken.approve(liquityAG, dec(1, 18), { from: C })
+
+      // Approved addresses transfer from the address they're approved for
+      const LQTYtransferFromTx_1 = await lqtyToken.transferFrom(liquityAG, F, dec(1, 18), { from: F })
+      const LQTYtransferFromTx_2 = await lqtyToken.transferFrom(B, liquityAG, dec(1, 18), { from: G })
+      const LQTYtransferFromTx_3 = await lqtyToken.transferFrom(C, A, dec(1, 18), { from: liquityAG })
+      await assert.isTrue(LQTYtransferFromTx_1.receipt.status)
+      await assert.isTrue(LQTYtransferFromTx_2.receipt.status)
+      await assert.isTrue(LQTYtransferFromTx_3.receipt.status)
+    })
+
+    it("Anyone can stake their LQTY in the staking contract", async () => {
+      // Fund F
+      await lqtyToken.unprotectedMint(F, dec(1, 18))
+
+      const LQTYStakingTx_1 = await lqtyStaking.stake(dec(1, 18), { from: F })
+      const LQTYStakingTx_2 = await lqtyStaking.stake(dec(1, 18), { from: liquityAG })
+      await assert.isTrue(LQTYStakingTx_1.receipt.status)
+      await assert.isTrue(LQTYStakingTx_2.receipt.status)
+    })
   })
 
   describe('Locking CDLCs', async accounts => {
@@ -780,11 +946,11 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.isTrue(await CDLC_B.active())
       assert.isTrue(await CDLC_C.active())
     })
-  
+
     it("lockCustomDurationContracts(): Locking through the factory reverts when caller is not the deployer", async () => {
       // Deploy 2 OYLCs
       const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, LQTYEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
-      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, LQTYEntitlement_B, SECONDS_IN_ONE_MONTH,  { from: C })
+      const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, LQTYEntitlement_B, SECONDS_IN_ONE_MONTH, { from: C })
 
       // Grab contracts from deployment tx events
       const CDLC_A = await th.getCDLCFromDeploymentTx(deployedCDLCtx_A)
