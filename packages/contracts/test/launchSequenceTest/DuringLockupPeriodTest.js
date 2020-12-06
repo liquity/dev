@@ -473,7 +473,7 @@ contract('During the initial lockup period', async accounts => {
       assert.equal(registeredLQTYTokenAddr, ZERO_ADDRESS)
 
       const tx = LCFNew.deployOneYearLockupContract(A, dec(1, 18), { from: F })
-      assertRevert(tx, "LCF: LQTY Address is not set")
+      await assertRevert(tx)
     })
 
     it("deployCustomDurationLockupContract(): reverts when LQTY token address is not set", async () => {
@@ -488,7 +488,7 @@ contract('During the initial lockup period', async accounts => {
       assert.equal(registeredLQTYTokenAddr, ZERO_ADDRESS)
 
       const tx = LCFNew.deployCustomDurationLockupContract(A, dec(1, 18), SECONDS_IN_ONE_MONTH, { from: F })
-      assertRevert(tx, "LCF: LQTY Address is not set")
+      await assertRevert(tx)
     })
 
     // Reverts when lockOYLCs called on non-OYLCs
@@ -521,10 +521,10 @@ contract('During the initial lockup period', async accounts => {
 
       // Check address lists with invalid OYLC addresses revert
       const txInvalidOYLC = lockupContractFactory.lockOneYearContracts(factoryOYLCsPlusInvalidOYLC, { from: F })
-      assertRevert(txInvalidOYLC)
+      await assertRevert(txInvalidOYLC)
 
       const txEOA = lockupContractFactory.lockOneYearContracts(factoryOYLCsPlusEOA, { from: F })
-      assertRevert(txEOA)
+      await assertRevert(txEOA)
 
       const txFactoryOYLCs = await lockupContractFactory.lockOneYearContracts(factoryOYLCs, { from: F })
       assert.isTrue(txFactoryOYLCs.receipt.status)
@@ -559,10 +559,10 @@ contract('During the initial lockup period', async accounts => {
       const factoryCDLCsPlusEOA = [CDLC_A.address, CDLC_B.address, E, CDLC_C.address]
 
       const txInvalidCDLC = lockupContractFactory.lockCustomDurationContracts(factoryCDLCsPlusInvalidCDLC, { from: F })
-      assertRevert(txInvalidCDLC)
+      await assertRevert(txInvalidCDLC)
 
       const txEOA = lockupContractFactory.lockCustomDurationContracts(factoryCDLCsPlusEOA, { from: F })
-      assertRevert(txEOA)
+      await assertRevert(txEOA)
 
       const txFactoryCDLCs = await lockupContractFactory.lockCustomDurationContracts(factoryCDLCs, { from: F })
       assert.isTrue(txFactoryCDLCs.receipt.status)

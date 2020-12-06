@@ -152,24 +152,20 @@ beforeEach(async () => {
 
     const allowance_A_after = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_after, dec(100, 18))
-
-    // B attempts to approve more than his balance - check it reverts
-    const txPromise = lqtyTokenTester.approve(C, dec(1000, 18), {from: B})
-    assertRevert(txPromise)
   })
 
   it("approve(): reverts when spender param is address(0)", async () => {
     await mintToABC()
 
     const txPromise = lqtyTokenTester.approve(ZERO_ADDRESS, dec(100, 18), {from: B})
-    assertRevert(txPromise)
+    await assertRevert(txPromise)
   })
 
   it("approve(): reverts when owner param is address(0)", async () => {
     await mintToABC()
 
     const txPromise =  lqtyTokenTester.callInternalApprove(ZERO_ADDRESS, A, dec(100, 18), {from: B})
-    assertRevert(txPromise)
+    await assertRevert(txPromise)
   })
 
   it("transferFrom(): successfully transfers from an account which is it approved to transfer from", async () => {
@@ -199,7 +195,7 @@ beforeEach(async () => {
 
     // A tries to transfer more tokens from B's account to C than she's allowed
     const txPromise = lqtyTokenTester.transferFrom(B, C, dec(50, 18), {from: A})
-    assertRevert(txPromise)
+    await assertRevert(txPromise)
   })
 
   it("transfer(): increases the recipient's balance by the correct amount", async () => {
@@ -218,7 +214,7 @@ beforeEach(async () => {
     assert.equal(await lqtyTokenTester.balanceOf(B), dec(100, 18))
 
     const txPromise = lqtyTokenTester.transfer(A, dec(101, 18), {from: B})
-    assertRevert(txPromise)
+    await assertRevert(txPromise)
   })
 
   it('transfer(): transferring to a blacklisted address reverts', async () => {
@@ -320,12 +316,12 @@ beforeEach(async () => {
     assert.equal(await lqtyTokenTester.allowance(approve.owner, approve.spender), approve.value)
     
     // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
-    assertRevert(lqtyTokenTester.permit(
+    await assertRevert(lqtyTokenTester.permit(
       approve.owner, approve.spender, approve.value, 
       deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
    
     // Check that the zero address fails
-    assertRevert(lqtyTokenTester.permit('0x0000000000000000000000000000000000000000', 
+    await assertRevert(lqtyTokenTester.permit('0x0000000000000000000000000000000000000000', 
       approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
   })
 })
