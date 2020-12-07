@@ -230,7 +230,7 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 
     \includegraphics[width=\linewidth]{System_order_evolution_3.png}
 
-  \item Theorem \ref{result:4}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$ and $N \cap P = \emptyset$. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+  \item Theorem \ref{result:4}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
     In other words, in a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
 
     \includegraphics[width=\linewidth]{System_order_evolution_4.png}
@@ -457,11 +457,11 @@ We define the collateral and debt rewards earned by trove $j$ and trove $i$ in t
 \bigskip
 where
 
-\begin{equation} 
+\begin{equation} \label{eq:20_a}
     a=\frac{c_k+x_k}{S}
 \end{equation}
 
-\begin{equation} 
+\begin{equation} \label{eq:20_b}
     b=\frac{d_k+y_k}{S}
 \end{equation}
 
@@ -600,12 +600,13 @@ The snapshots of the system state after the last liquidation event ($S_\emptyset
 
 Thus, $s_j$ in the N second-order troves case is equal to $s_j$ in the single second-order trove case.\\
 
-As such, the logic of the proof of Lemma \ref{result:1} applies - and ICR equality between a second-order trove and first-order trove holds across a liquidation event, no matter how many fresh troves are added in between.
+As such, the logic of the proof of Lemma \ref{result:1} applies - and ICR equality between a second-order trove and first-order trove holds across a liquidation event, no matter how many fresh troves are added in between.\\
+The fact that the liquidated trove is first or second order doesn’t have any impact on that proof either: it would only vary the amounts $x_k$ and $y_k$ in \ref{eq:20_a} and \ref{eq:20_b}, which may be even zero if $k$ is the last created trove, but we don’t make any assumption on those amounts along the proof.
 \end{proof}
 
 %\subsection{CONCLUSION 1}
 \begin{theorem} \label{result:4}
-We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$ and $N \cap P = \emptyset$. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
 In other words, in a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
 \end{theorem}
 
