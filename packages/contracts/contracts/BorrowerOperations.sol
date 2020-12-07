@@ -51,6 +51,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         bool isCollIncrease;
         uint debt;
         uint coll;
+        uint oldICR;
         uint newICR;
         uint LUSDFee;
         uint newDebt;
@@ -204,12 +205,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
         require(msg.sender == _borrower || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
         require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: There must be either a collateral change or a debt change");
+        _requireTroveisActive(_borrower);
 
         LocalVariables_adjustTrove memory L;
-
-        _requireTroveisActive(_borrower);
-        if (isWithdrawal) {_requireNotInRecoveryMode();}
-
         L.price = priceFeed.getPrice();
 
         troveManager.applyPendingRewards(_borrower);
@@ -232,15 +230,19 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         L.debt = troveManager.getTroveDebt(_borrower);
         L.coll = troveManager.getTroveColl(_borrower);
-
+        L.oldICR = LiquityMath._computeCR(L.coll, L.debt, L.price);
         L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
 
-        if (isWithdrawal) {_requireICRisAboveMCR(L.newICR);}
-        if (_isDebtIncrease && _debtChange > 0) {
-            _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+        if (isWithdrawal) { 
+            if (_checkRecoveryMode()) {
+                require(L.newICR >= L.oldICR, "BorrowerOps: Cannot decrease your ICR in RecoveryMode");
+            } else {
+                _requireICRisAboveMCR(L.newICR); 
+                _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+            }
         }
-        if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
-        if (!_isDebtIncrease && _debtChange > 0) {_requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange);}
+        if (!L.isCollIncrease) { _requireCollAmountIsWithdrawable(L.coll, L.collChange); }
+        if (!_isDebtIncrease && _debtChange > 0) { _requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange); }
 
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
         L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
