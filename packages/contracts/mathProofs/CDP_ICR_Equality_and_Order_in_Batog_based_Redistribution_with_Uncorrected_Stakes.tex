@@ -74,7 +74,7 @@ To ensure that the troves can be reliably accessed using a linked list, it is cr
 
 The ordering is maintained if $\forall{E_k,i,j}: (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$), where $\gamma_i'$ and $\gamma_j'$ is the ICR of troves $i$ and $j$ after $E_k$.
 
-It is easy to prove that a redistribution in proportion to the collateral of the recipient trove as described by equation \ref{eq:proportional} troves maintains ordering. See \ref{sec:appendix} Appendix.
+It is easy to prove that a redistribution in proportion to the collateral of the recipient trove as described by equation (\ref{eq:proportional}) troves maintains ordering. See \ref{sec:appendix} Appendix.
 
 \section{Efficient Reward Distribution}
 
@@ -226,19 +226,22 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 
     \includegraphics[width=\linewidth]{System_order_evolution_2.png}
 
-  \item Lemma \ref{result:3}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$ and $N \cap P = \emptyset$. For any trove $i$ in $\Gamma_1$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  \item Lemma \ref{result:3}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by a some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 
     \includegraphics[width=\linewidth]{System_order_evolution_3.png}
 
-  \item Theorem \ref{result:4}. In a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events
+  \item Theorem \ref{result:4}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$ and $N \cap P = \emptyset$. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+    In other words, in a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
+
+    \includegraphics[width=\linewidth]{System_order_evolution_4.png}
 
   \item Lemma \ref{result:5}. For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 
-  \item Proposition \ref{result:6}. For every $N^{th}$ order system $\Gamma_N$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  \item Proposition \ref{result:6}. For every $n^{th}$ order system $\Gamma_n$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 
   \item Corollary \ref{result:7}. In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.
 
-  \item Theorem \ref{result:8}. For every system $\Gamma_N$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{N+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
+  \item Theorem \ref{result:8}. For every system $\Gamma_n$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{n+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
 \end{itemize}
 
 
@@ -261,8 +264,7 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 
 %\subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations}
 
-\begin{lemma}\label{result:1}
-Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations
+\begin{lemma}\label{result:1} We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
 
 \begin{proof}
@@ -379,60 +381,60 @@ to:
 (Note that it can also be proved that that $X_n=L_m$ and therefore $C_\emptyset=C_n+L_m=C_{n+m}$)
 
 \bigskip
-Now, a fresh trove is added, $i$, with collateral $c_i$.  Let the ICR of trove $i$ equal the ICR of an active first-order trove $j$.\\
+Now, a fresh trove is added, $j$, with collateral $c_j$.  Let the ICR of trove $j$ equal the ICR of an active first-order trove $i$.\\
 
-Now, trove $k$ liquidates. Upon liquidation, the second-order trove $i$ and the first-order trove $j$ earn the following collateral rewards:
+Now, trove $k$ liquidates. Upon liquidation, the second-order trove $j$ and the first-order trove $i$ earn the following collateral rewards:
 
 \begin{equation} \label{eq:10}
-    \gamma_i=\gamma_j
+    \gamma_j=\gamma_i
 \end{equation}
 
 \begin{equation} 
-    \gamma_i=\frac{c_\mathsmaller{i}}{d_\mathsmaller{i}}
+    \gamma_j=\frac{c_\mathsmaller{j}}{d_\mathsmaller{j}}
 \end{equation}
 
 \begin{equation} 
-    \gamma_j=\frac{c_\mathsmaller{j}+x_\mathsmaller{j}}{d_\mathsmaller{j}+y_\mathsmaller{j}}
+    \gamma_i=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}}
 \end{equation}
 
 \bigskip
-Where $c_i$, $d_i$ and $c_j$, $d_j$ are the collateral and debt values of trove $i$ and trove $j$ respectively.\\
+Where $c_j$, $d_j$ and $c_i$, $d_i$ are the collateral and debt values of trove $j$ and trove $i$ respectively.\\
 
-$x_j$, $y_j$ are the respective accumulated collateral and debt rewards for trove $j$ earned by its stake over its lifetime.\\
+$x_i$, $y_i$ are the respective accumulated collateral and debt rewards for trove $i$ earned by its stake over its lifetime.\\
 
 The ICR equality identity (\ref{eq:10}) yields the following relation:
 
 \begin{equation} 
-        c_i=\frac{d_\mathsmaller{i}}{d_\mathsmaller{j}+y_\mathsmaller{j}}(c_\mathsmaller{j}+x_\mathsmaller{j})
+        c_j=\frac{d_\mathsmaller{j}}{d_\mathsmaller{i}+y_\mathsmaller{i}}(c_\mathsmaller{i}+x_\mathsmaller{i})
 \end{equation}
 
 \bigskip
 i.e.
 
 \begin{equation} \label{eq:14}
-    c_i=k(c_\mathsmaller{j}+x_\mathsmaller{j})
+    c_j=k(c_\mathsmaller{i}+x_\mathsmaller{i})
 \end{equation}
 
 \bigskip
 where
 
 \begin{equation} \label{eq:15}
-    k=\frac{d_\mathsmaller{i}}{d_\mathsmaller{j}+y_\mathsmaller{j}}
+    k=\frac{d_\mathsmaller{j}}{d_\mathsmaller{i}+y_\mathsmaller{i}}
 \end{equation}
 
 
 \bigskip
-Trove $i$’s stake $s_i$ is given by the corrected stake rule (\ref{eq:2}), that is:
+Trove $j$’s stake $s_j$ is given by the corrected stake rule (\ref{eq:2}), that is:
 
 \begin{equation} 
-    s_i=\frac{c_\mathsmaller{i} \cdot S_\emptyset}{C_\emptyset}
+    s_j=\frac{c_\mathsmaller{j} \cdot S_\emptyset}{C_\emptyset}
 \end{equation}
 
 \bigskip
 Which by (\ref{eq:8}) and (\ref{eq:9}) gives:
 
 \begin{equation} \label{eq:17}
-    s_i=\frac{c_i \cdot C_n}{C_n+X_n}
+    s_j=\frac{c_j \cdot C_n}{C_n+X_n}
 \end{equation}
 
 \bigskip
@@ -440,25 +442,15 @@ Now, a new liquidation occurs: trove $k$ liquidates. The system becomes second-o
 
 The event causes trove $k$’s collateral and debt ($c_k$ and $d_k$) to be redistributed between all active troves, proportional to their stake.\\
 
-For simplicity, let :
-
-\begin{equation} 
-    a=\frac{c_k+x_k}{S}
-\end{equation}
-
-\begin{equation} 
-    b=\frac{d_k+y_k}{S}
-\end{equation}
-
 \bigskip
-We define the collateral and debt rewards earned by trove $i$ and trove $j$ in the reward event:
+We define the collateral and debt rewards earned by trove $j$ and trove $i$ in the reward event:
 
 \begin{equation} \label{eq:20}
     \begin{split}
-        r_{c\mathsmaller{i}}=as_\mathsmaller{i}\\
-        r_{d\mathsmaller{i}}=bs_\mathsmaller{i}\\
         r_{c\mathsmaller{j}}=as_\mathsmaller{j}\\
-        r_{d\mathsmaller{j}}=bs_\mathsmaller{j}
+        r_{d\mathsmaller{j}}=bs_\mathsmaller{j}\\
+        r_{c\mathsmaller{i}}=as_\mathsmaller{i}\\
+        r_{d\mathsmaller{i}}=bs_\mathsmaller{i}
     \end{split}
 \end{equation}
 
@@ -474,158 +466,156 @@ where
 \end{equation}
 
 \bigskip
-And since $s_\mathsmaller{j}$ is a first-order stake:
+And since $s_\mathsmaller{i}$ is a first-order stake:
 
 \begin{equation} \label{eq:21}
-    s_\mathsmaller{j}=c_\mathsmaller{j}
+    s_\mathsmaller{i}=c_\mathsmaller{i}
 \end{equation}
 
 \bigskip
-To show ICR equivalence after the reward event, we must first obtain $s_i$ as a linear function of $c_j$. Recall our definition of trove $i$’s stake from (\ref{eq:17}):
+To show ICR equivalence after the reward event, we must first obtain $s_j$ as a linear function of $c_i$. Recall our definition of trove $j$’s stake from (\ref{eq:17}):
 
 \begin{equation} 
-    s_\mathsmaller{i}=\frac{c_\mathsmaller{i} \cdot C_n}{(C_n+X_n)}
+    s_\mathsmaller{j}=\frac{c_\mathsmaller{j} \cdot C_n}{C_n+X_n}
 \end{equation}
 
 \bigskip
 Now, substituting in the expression for i’s collateral, (\ref{eq:14}), we obtain:
 
 \begin{equation} 
-    s_\mathsmaller{i}=\frac{k(c_\mathsmaller{j}+x_\mathsmaller{j})C_n}{C_n+X_n}
+    s_\mathsmaller{j}=\frac{k(c_\mathsmaller{i}+x_\mathsmaller{i})C_n}{C_n+X_n}
 \end{equation}
 
 
 \bigskip
-Substituting in the expressions for accumulated reward $x_i$ from (\ref{eq:45}), and total accumulated reward $X_n$ from (\ref{eq:47}):
+Substituting in the expressions for accumulated reward $x_j$ from (\ref{eq:45}), and total accumulated reward $X_n$ from (\ref{eq:47}):
 
 \begin{equation} 
-    s_\mathsmaller{i}=\frac{k(c_j+Hc_j)C_n}{C_n+HC_n}
+    s_\mathsmaller{j}=\frac{k(c_i+Hc_i)C_n}{C_n+HC_n}
 \end{equation}
 
 \bigskip
 And factorizing:
 
 \begin{equation} 
-    s_i=\frac{kc_j(C_n+HC_n)}{(C_n+HC_n)}
+    s_j=\frac{kc_i(C_n+HC_n)}{C_n+HC_n}
 \end{equation}
 
 \bigskip
 Canceling yields:
 
 \begin{equation} \label{eq:29}
-    s_i=kc_j
+    s_j=kc_i
 \end{equation}
 
 \bigskip
-We now compare ICRs of trove $i$ and trove $j$, after liquidation of trove $k$, respectively $\gamma_{i}'$ and $\gamma_{j}'$.
+We now compare ICRs of trove $j$ and trove $i$, after liquidation of trove $k$, respectively $\gamma_{j}'$ and $\gamma_{i}'$.
 
 \begin{equation} 
-    \gamma_{i}'=\frac{c_\mathsmaller{i}+r_{c\mathsmaller{i}}}{d_\mathsmaller{i}+r_{d\mathsmaller{i}}}
+    \gamma_{j}'=\frac{c_\mathsmaller{j}+r_{c\mathsmaller{j}}}{d_\mathsmaller{j}+r_{d\mathsmaller{j}}}
 \end{equation}
 
 \begin{equation} 
-    \gamma_{j}'=\frac{c_\mathsmaller{j}+x_\mathsmaller{j}+r_{c\mathsmaller{j}}}{d_\mathsmaller{j}+y_\mathsmaller{j}+r_{d\mathsmaller{j}}}
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+r_{c\mathsmaller{i}}}{d_\mathsmaller{i}+y_\mathsmaller{i}+r_{d\mathsmaller{i}}}
 \end{equation}
 
 \bigskip
 Using (\ref{eq:20}), the individual rewards as functions of stakes:
 
 \begin{equation} 
-    \gamma_{i}'=\frac{c_i+as_i}{d_i+bs_i}
+    \gamma_{j}'=\frac{c_j+as_j}{d_j+bs_j}
 \end{equation}
 
 \begin{equation} 
-    \gamma_{j}'=\frac{c_\mathsmaller{j}+x_\mathsmaller{j}+as_\mathsmaller{j}}{d_\mathsmaller{j}+y_\mathsmaller{j}+bs_\mathsmaller{j}}
-\end{equation}
-
-\bigskip
-Now, substituting our definitions for $s_\mathsmaller{j}$ (\ref{eq:21}) and $s_i$ (\ref{eq:29}):
-
-\begin{equation} 
-    \gamma_{i}'=\frac{c_\mathsmaller{i}+akc_\mathsmaller{j}}{d_\mathsmaller{i}+bkc_\mathsmaller{j}}
-\end{equation}
-
-\begin{equation} 
-    \gamma_{j}'=\frac{c_\mathsmaller{j}+x_\mathsmaller{j}+ac_\mathsmaller{j}}{d_\mathsmaller{j}+y_\mathsmaller{j}+bc_\mathsmaller{j}}
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+as_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bs_\mathsmaller{i}}
 \end{equation}
 
 \bigskip
-Using identities (\ref{eq:14}) for $c_i$, and (\ref{eq:15}) for $d_i$:
+Now, substituting our definitions for $s_\mathsmaller{i}$ (\ref{eq:21}) and $s_j$ (\ref{eq:29}):
 
 \begin{equation} 
-    \gamma_{i}'=\frac{k(c_\mathsmaller{j} + x_\mathsmaller{j}+ac_\mathsmaller{j})}{k(d_\mathsmaller{j}+y_\mathsmaller{j}+bc_\mathsmaller{j})}
+    \gamma_{j}'=\frac{c_\mathsmaller{j}+akc_\mathsmaller{i}}{d_\mathsmaller{j}+bkc_\mathsmaller{i}}
 \end{equation}
 
 \begin{equation} 
-    \gamma_{j}'=\frac{c_\mathsmaller{j}+x_\mathsmaller{j}+ac_\mathsmaller{j}}{d_\mathsmaller{j}+y_\mathsmaller{j}+bc_\mathsmaller{j}}
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
+\end{equation}
+
+\bigskip
+Using identities (\ref{eq:14}) for $c_j$, and (\ref{eq:15}) for $d_j$:
+
+\begin{equation} 
+    \gamma_{j}'=\frac{k(c_\mathsmaller{i} + x_\mathsmaller{i}+ac_\mathsmaller{i})}{k(d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i})}
+\end{equation}
+
+\begin{equation} 
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
 \end{equation}
 
 \bigskip
 Canceling $k$:
 
 \begin{equation} 
-        \gamma_{i}'=\frac{c_\mathsmaller{j} + x_\mathsmaller{j}+ac_\mathsmaller{j}}{d_\mathsmaller{j}+y_\mathsmaller{j}+bc_\mathsmaller{j}}
+        \gamma_{j}'=\frac{c_\mathsmaller{i} + x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
 \end{equation}
 
 \begin{equation} 
-    \gamma_{j}'=\frac{c_\mathsmaller{j}+x_\mathsmaller{j}+ac_\mathsmaller{j}}{d_\mathsmaller{j}+y_\mathsmaller{j}+bc_\mathsmaller{j}}
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
 \end{equation}
 
 \bigskip
 Thus:
 
 \begin{equation} 
-    \gamma_{i}'=\gamma_{j}'
+    \gamma_{j}'=\gamma_{i}'
 \end{equation}
 
 \end{proof}
 
 %\subsection{EXTENSION PROOF. Arbitrary Number of Liquidation Events At Current System Order}
-\begin{lemma} \label{result:2}
-Arbitrary Number of Liquidation Events At Current System Order
+\begin{lemma} \label{result:2} We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of liquidations $P$, such that $|P| > 1$ and $j \notin P$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
 
 \begin{proof}
-If instead of a single liquidation event at a given system order, we have $P$ liquidation events, it is clear that ICR equality holds across all $P$ events:\\
+If instead of a single liquidation event at a given system order, we have now a set of $P$ liquidation events, of arbitrary size $> 1$, it is clear that ICR equality holds across all $P$ events:\\
 
 Since ICR equality holds across one liquidation event, it will hold across the next, and thus hold for all.\\
 
-Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual trove reward term $x_i$ given in 4) depends only on reward sizes and the total stakes.
+Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual trove reward term given in (\ref{eq:20}) depends only on reward sizes and stakes.
 \end{proof}
 
 %\subsection{EXTENSION PROOF. Arbitrary Number of troves Added Between Liquidation Events}
-\begin{lemma} \label{result:3}
-Arbitrary Number of troves Added Between Liquidation Events
+\begin{lemma} \label{result:3} We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$ and $N \cap P = \emptyset$. For any trove $i$ in $\Gamma_1$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
 
 \begin{proof}
-
-With $N$ second-order troves added between consecutive liquidation events, the stake $s_i$ of any given second-order trove is given by \ref{eq:2}:
+With $N$ second-order troves added between consecutive liquidation events, the stake $s_j$ of any given second-order trove is given by (\ref{eq:2}):
 
 \begin{equation} 
-    s_i=\frac{c_i \cdot S_\emptyset}{C_\emptyset}
+    s_j=\frac{c_j \cdot S_\emptyset}{C_\emptyset}
 \end{equation}
 
 \bigskip
-The snapshots of the system state after the last liquidation event ($S_\emptyset$, $C_\emptyset$) remain constant until the next liquidation. It is clear that all $N$ second-order stakes $s_i$ have been corrected by the same constant factor.\\
+The snapshots of the system state after the last liquidation event ($S_\emptyset$, $C_\emptyset$) remain constant until the next liquidation. It is clear that all $N$ second-order stakes $s_j$ have been corrected by the same constant factor.\\
 
-Thus, $s_i$ in the N second-order troves case is equal to $s_i$ in the single second-order trove case.\\
+Thus, $s_j$ in the N second-order troves case is equal to $s_j$ in the single second-order trove case.\\
 
-As such, the logic of the Main Proof applies - and ICR equality between a second-order trove and first-order trove holds across a liquidation event, no matter how many fresh troves are added in between.
+As such, the logic of the proof of Lemma \ref{result:1} applies - and ICR equality between a second-order trove and first-order trove holds across a liquidation event, no matter how many fresh troves are added in between.
 \end{proof}
 
 %\subsection{CONCLUSION 1}
 \begin{theorem} \label{result:4}
-In a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events
+We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$ and $N \cap P = \emptyset$. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+In other words, in a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
 \end{theorem}
 
 \begin{proof}
-Combining the previous 3 lemmas, this follows immediately.
+  Proofs of Lemmas \ref{result:2} and \ref{result:3} can be applied independently to extend Lemma \ref{result:1} into this general result.
 \end{proof}
 
 %\subsection{2nd Order Systems Collapse to 1st Order}
 \begin{lemma} \label{result:5}
-2nd Order Systems Collapse to 1st Order
+  For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 \end{lemma}
 
 \begin{proof}
@@ -644,7 +634,7 @@ Consider a hypothetical first order trove $i$ and an actual second order trove $
 \bigskip
 Clearly, the ratio  $k = \frac{d_j}{d_i+y_i} = 1$.\\
 
-We substitute $k=1$ into the second-order system expression for $s_i$, from equation \ref{eq:29}, to yield:
+We substitute $k=1$ into the second-order system expression for $s_i$, from equation (\ref{eq:29}), to yield:
 
 \begin{equation} 
     s_j=c_i
@@ -662,12 +652,13 @@ Therefore any second order system is equivalent to a first order system that con
 
 %\subsection{N’th Order Systems Collapse to 1st Order}
 \begin{proposition} \label{result:6}
-N’th Order Systems Collapse to 1st Order
+  For every $n^{th}$ order system $\Gamma_n$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 \end{proposition}
 
 \begin{proof}
-We prove it by induction. We have already proved for $n=1$ that $\Gamma_i=\Gamma_j$.
-Now we show that if it’s true for $n-1$ then it’s true for $n$, i.e.:
+  We prove it by induction.\\
+  We have already proved for $n=1$ in previous lemma: $\Gamma_1=\Gamma_2$.\\
+  Now we show that if it’s true for $n-1$ then it’s true for $n$, i.e.:
 
 \begin{equation}
     \Gamma_{n-1} = \Gamma_n \Rightarrow \Gamma_n = \Gamma_{n+1}
@@ -676,25 +667,25 @@ Now we show that if it’s true for $n-1$ then it’s true for $n$, i.e.:
 Recall our system evolution function: 
 
 \begin{equation} 
-    f(\Gamma_N)=\Gamma_{N+1}
+    f(\Gamma_n)=\Gamma_{n+1}
 \end{equation}
 
 Therefore:
 
 \begin{equation} 
-    \Gamma_{N+1} = f(\Gamma_N) = f(\Gamma_{n-1}) = \Gamma_N
+    \Gamma_{n+1} = f(\Gamma_n) = f(\Gamma_{n-1}) = \Gamma_n
 \end{equation}
 
 \bigskip
-So, for every $N$, $\Gamma_N = \Gamma_{N-1}$, and for the transitive property of equivalence, we finally have:
+So, for every $n > 1$, $\Gamma_n = \Gamma_{n-1}$, and for the transitive property of equivalence, we finally have:
 
 \begin{equation}
-    \Gamma_N=\Gamma_1
+    \Gamma_n=\Gamma_1
 \end{equation}
 \end{proof}
 
 \bigskip
-Having shown all nth order systems are equivalent to a first order system, we now extend our previous conclusion to nth order systems:
+Having shown all $n^{th}$ order systems are equivalent to a first order system, we now extend our previous conclusion to $n^{th}$ order systems:
 
 %\subsection{CONCLUSION 2}
 \begin{corollary} \label{result:7}
@@ -704,7 +695,7 @@ Having shown all nth order systems are equivalent to a first order system, we no
 \section{Corrected Stake Approach Preserves Order}
 
 \begin{theorem} \label{result:8}
-  For every system $\Gamma_N$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{N+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
+  For every system $\Gamma_n$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{n+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
 \end{theorem}
 
 \begin{proof}
@@ -713,14 +704,14 @@ Here we show that ICR ordering is preserved with corrected stakes across a liqui
 We make use of the first-order equivalence result, namely, that with corrected stakes:
 
 \begin{equation} 
-    \Gamma_N = \Gamma_1
+    \Gamma_n = \Gamma_1
 \end{equation}
 
 i.e:\\
 
-Any N’th order system of troves is equivalent to a first-order system of troves. For a given fresh trove with stake $s_i$ and collateral $c_i$, the stake $s_i$ is equivalent to some hypothetical first-order stake $c_j$ which has accumulated collateral reward $x_j = (c_i - c_j)$ and debt reward $y_j = (d_i - d_j)$.\\
+Any $n^{th}$ order system of troves is equivalent to a first-order system of troves. For a given fresh trove with stake $s_i$ and collateral $c_i$, the stake $s_i$ is equivalent to some hypothetical first-order stake $c_j$ which has accumulated collateral reward $x_j = (c_i - c_j)$ and debt reward $y_j = (d_i - d_j)$.\\
 
-Due to this equivalence between first and N’th-order systems, if ordering is preserved for first-order systems, it is preserved for N’th order systems.\\
+Due to this equivalence between first and $n^{th}$-order systems, if ordering is preserved for first-order systems, it is preserved for $n^{th}$ order systems.\\
 
 Now consider a first-order system of troves, with stakes equal to their initial collateral.\\
 
@@ -881,7 +872,7 @@ Then taking reciprocals, finally yields:
 \end{equation}
 
 \bigskip
-Therefore, trove ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in N’th order systems.
+Therefore, trove ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in $n^{th}$ order systems.
 
 \bigskip
 
@@ -944,7 +935,7 @@ Let $a = \frac{c_k}{C}$ and $b = \frac{d_k}{C}$. Substituting the rewards, this 
   \gamma_j' = \frac{c_j + a \cdot c_j}{d_j + b \cdot c_j} 
 \end{equation}
 
-The equations \ref{eq:97} and \ref{eq:98} can be rewritten as:
+The equations (\ref{eq:97}) and (\ref{eq:98}) can be rewritten as:
 \begin{equation} \label{eq:a}
   \frac{1}{\gamma_i'} = \left(\frac{d_i}{c_i}+b\right) \cdot \frac{1}{1 + a}  
 \end{equation}
@@ -953,17 +944,17 @@ The equations \ref{eq:97} and \ref{eq:98} can be rewritten as:
   \frac{1}{\gamma_j'} = \left(\frac{d_j}{c_j}+b\right) \cdot \frac{1}{1 + a}  
 \end{equation}
 
-Taking the reciprocal of inequality \ref{eq:92}:
+Taking the reciprocal of inequality (\ref{eq:92}):
 \begin{equation}
   \frac{d_i}{c_i} < \frac{d_j}{c_j}
 \end{equation}
 
-and applying it to equations \ref{eq:a} and \ref{eq:b}, canceling out common constants, yields:
+and applying it to equations (\ref{eq:a}) and (\ref{eq:b}), canceling out common constants, yields:
 \begin{equation} \label{eq:c}
   \frac{1}{\gamma_i'} < \frac{1}{\gamma_j'}
 \end{equation}
 
-Finally, taking the reciprocal of \ref{eq:c}, yields:
+Finally, taking the reciprocal of (\ref{eq:c}), yields:
 \begin{equation}
   \gamma_i' > \gamma_j'
 \end{equation}
