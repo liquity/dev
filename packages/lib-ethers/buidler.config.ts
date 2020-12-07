@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
-import { sha1 } from "object-hash";
 
 import { Wallet } from "@ethersproject/wallet";
 
@@ -11,7 +10,7 @@ import { NetworkConfig } from "@nomiclabs/buidler/types";
 import { Decimal } from "@liquity/decimal";
 
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
-import { abi, addressesOf, LiquityDeployment } from "./src/contracts";
+import { connectToContracts, LiquityDeployment, priceFeedIsTestnet } from "./src/contracts";
 
 import accounts from "./accounts.json";
 
@@ -50,6 +49,16 @@ const infuraNetwork = (name: string): { [name: string]: NetworkConfig } => ({
   }
 });
 
+// https://docs.chain.link/docs/ethereum-addresses
+const aggregatorAddress = {
+  mainnet: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+  kovan: "0x9326BFA02ADD2366b30bacB125260Af641031331",
+  rinkeby: "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
+};
+
+const hasAggregator = (network: string): network is keyof typeof aggregatorAddress =>
+  network in aggregatorAddress;
+
 const config: BuidlerConfig = {
   defaultNetwork: "buidlerevm",
   networks: {
@@ -69,7 +78,8 @@ const config: BuidlerConfig = {
     ...infuraNetwork("ropsten"),
     ...infuraNetwork("rinkeby"),
     ...infuraNetwork("goerli"),
-    ...infuraNetwork("kovan")
+    ...infuraNetwork("kovan"),
+    ...infuraNetwork("mainnet")
   },
   paths: useLiveVersion
     ? {
@@ -85,6 +95,7 @@ const config: BuidlerConfig = {
 type DeployParams = {
   channel: string;
   gasPrice?: number;
+  useRealPriceFeed?: boolean;
 };
 
 const defaultChannel = process.env.CHANNEL || "default";
@@ -92,24 +103,54 @@ const defaultChannel = process.env.CHANNEL || "default";
 task("deploy", "Deploys the contracts to the network")
   .addOptionalParam("channel", "Deployment channel to deploy into", defaultChannel, types.string)
   .addOptionalParam("gasPrice", "Price to pay for 1 gas [Gwei]", undefined, types.float)
-  .setAction(async ({ channel, gasPrice }: DeployParams, bre) => {
+  .addOptionalParam(
+    "useRealPriceFeed",
+    "Deploy the production version of PriceFeed and connect it to Chainlink",
+    undefined,
+    types.boolean
+  )
+  .setAction(async ({ channel, gasPrice, useRealPriceFeed }: DeployParams, bre) => {
     const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).bigNumber };
     const [deployer] = await bre.ethers.getSigners();
 
+    useRealPriceFeed ??= bre.network.name === "mainnet";
+
+    if (useRealPriceFeed && !hasAggregator(bre.network.name)) {
+      throw new Error(`Aggregator unavailable on ${bre.network.name}`);
+    }
+
     setSilent(false);
 
-    const contracts = await deployAndSetupContracts(
-      deployer,
-      bre.ethers.getContractFactory,
-      overrides
-    );
-
     const deployment: LiquityDeployment = {
-      addresses: addressesOf(contracts),
-      version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim(),
-      deploymentDate: new Date().getTime(),
-      abiHash: sha1(abi)
+      ...(await deployAndSetupContracts(
+        deployer,
+        bre.ethers.getContractFactory,
+        !useRealPriceFeed,
+        overrides
+      )),
+      version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim()
     };
+
+    if (useRealPriceFeed) {
+      const contracts = connectToContracts(
+        deployment.addresses,
+        deployment.priceFeedIsTestnet,
+        deployer
+      );
+
+      if (!priceFeedIsTestnet(contracts.priceFeed) && hasAggregator(bre.network.name)) {
+        console.log(
+          `Hooking up PriceFeed with aggregator at ${aggregatorAddress[bre.network.name]} ...`
+        );
+
+        const tx = await contracts.priceFeed.setAddresses(
+          aggregatorAddress[bre.network.name],
+          overrides
+        );
+
+        await tx.wait();
+      }
+    }
 
     fs.mkdirSync(path.join("deployments", channel), { recursive: true });
 

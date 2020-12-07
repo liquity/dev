@@ -16,10 +16,10 @@ type StabilityDepositActionProps = {
   setChangePending: (isPending: boolean) => void;
 };
 
-const select = ({ trove, price, quiBalance, numberOfTroves }: LiquityStoreState) => ({
+const select = ({ trove, price, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
   trove,
   price,
-  quiBalance,
+  lusdBalance,
   numberOfTroves
 });
 
@@ -29,7 +29,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   setChangePending
 }) => {
-  const { trove, price, quiBalance, numberOfTroves } = useLiquitySelector(select);
+  const { trove, price, lusdBalance, numberOfTroves } = useLiquitySelector(select);
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -60,8 +60,8 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
                   ? ` & withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""
               }`,
-              liquity.depositQuiInStabilityPool.bind(liquity, difference.absoluteValue!, undefined),
-              [[quiBalance.gte(difference.absoluteValue!), `You don't have enough ${COIN}`]]
+              liquity.depositLUSDInStabilityPool.bind(liquity, difference.absoluteValue!, undefined),
+              [[lusdBalance.gte(difference.absoluteValue!), `You don't have enough ${COIN}`]]
             ]
           ] as const)
         : ([
@@ -71,14 +71,14 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
                   ? ` & ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
                   : ""
               }`,
-              liquity.withdrawQuiFromStabilityPool.bind(liquity, difference.absoluteValue!),
+              liquity.withdrawLUSDFromStabilityPool.bind(liquity, difference.absoluteValue!),
               []
             ]
           ] as const)
       : ([
           [
             `Withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`,
-            liquity.withdrawQuiFromStabilityPool.bind(liquity, 0),
+            liquity.withdrawLUSDFromStabilityPool.bind(liquity, 0),
             []
           ],
           ...(!trove.isEmpty

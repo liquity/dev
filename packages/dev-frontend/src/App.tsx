@@ -60,6 +60,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   // For console tinkering ;-)
   Object.assign(window, {
+    account,
     provider,
     contracts,
     addresses: addressesOf(contracts),

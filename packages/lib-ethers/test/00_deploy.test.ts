@@ -13,9 +13,10 @@ describe("utils/deploy", () => {
   });
 
   it("should deploy and setup the contracts", async () => {
-    const contracts = await deployAndSetupContracts(deployer, ethers.getContractFactory);
-    for (const contract of Object.values(contracts)) {
-      expect(contract.address).to.match(/^0x[0-9-a-fA-F]{40}$/);
-    }
+    const { addresses } = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+
+    Object.values(addresses).forEach(address => {
+      expect(address).to.match(/^0x[0-9-a-fA-F]{40}$/);
+    });
   });
 });

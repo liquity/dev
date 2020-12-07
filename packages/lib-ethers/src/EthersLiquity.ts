@@ -2,7 +2,7 @@ import { Signer } from "@ethersproject/abstract-signer";
 
 import { glue } from "@liquity/lib-base";
 
-import { LiquityContractAddresses, connectToContracts, LiquityContracts } from "./contracts";
+import { connectToContracts, LiquityContracts, LiquityDeployment } from "./contracts";
 import {
   PopulatableEthersLiquity,
   SendableEthersLiquity,
@@ -41,8 +41,9 @@ export class EthersLiquity extends glue(
     return new EthersLiquity(readable, observable, populatable);
   }
 
-  static async connect(addresses: LiquityContractAddresses, signer: Signer) {
-    const contracts = connectToContracts(addresses, signer);
+  static async connect(deployment: LiquityDeployment, signer: Signer) {
+    const { addresses, priceFeedIsTestnet } = deployment;
+    const contracts = connectToContracts(addresses, priceFeedIsTestnet, signer);
     const userAddress = await signer.getAddress();
 
     return EthersLiquity.from(contracts, signer, userAddress);

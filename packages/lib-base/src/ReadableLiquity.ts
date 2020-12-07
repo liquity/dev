@@ -18,9 +18,9 @@ export interface ReadableLiquity {
 
   getStabilityDeposit(address?: string): Promise<StabilityDeposit>;
 
-  getQuiInStabilityPool(): Promise<Decimal>;
+  getLUSDInStabilityPool(): Promise<Decimal>;
 
-  getQuiBalance(address?: string): Promise<Decimal>;
+  getLUSDBalance(address?: string): Promise<Decimal>;
 
   getLastTroves(
     startIdx: number,

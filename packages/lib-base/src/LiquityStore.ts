@@ -7,9 +7,9 @@ import { Trove, TroveWithPendingRewards } from "./Trove";
 export type LiquityStoreBaseState = {
   numberOfTroves: number;
   accountBalance: Decimal;
-  quiBalance: Decimal;
+  lusdBalance: Decimal;
   price: Decimal;
-  quiInStabilityPool: Decimal;
+  lusdInStabilityPool: Decimal;
   total: Trove;
   totalRedistributed: Trove;
   troveWithoutRewards: TroveWithPendingRewards;
@@ -75,9 +75,9 @@ export abstract class LiquityStore<T = unknown> {
   private reduce({
     numberOfTroves,
     accountBalance,
-    quiBalance,
+    lusdBalance,
     price,
-    quiInStabilityPool,
+    lusdInStabilityPool,
     total,
     totalRedistributed,
     troveWithoutRewards,
@@ -100,15 +100,15 @@ export abstract class LiquityStore<T = unknown> {
         accountBalance
       ),
 
-      quiBalance: this.updateIfChanged(eq, "quiBalance", this.baseState.quiBalance, quiBalance),
+      lusdBalance: this.updateIfChanged(eq, "lusdBalance", this.baseState.lusdBalance, lusdBalance),
 
       price: this.updateIfChanged(eq, "price", this.baseState.price, price),
 
-      quiInStabilityPool: this.updateIfChanged(
+      lusdInStabilityPool: this.updateIfChanged(
         eq,
-        "quiInStabilityPool",
-        this.baseState.quiInStabilityPool,
-        quiInStabilityPool
+        "lusdInStabilityPool",
+        this.baseState.lusdInStabilityPool,
+        lusdInStabilityPool
       ),
 
       total: this.updateIfChanged(equals, "total", this.baseState.total, total),

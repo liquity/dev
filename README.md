@@ -336,6 +336,8 @@ Thus, nodes need only be re-inserted to the sorted list upon a trove operation -
 
 ### Flow of Ether in Liquity
 
+![Flow of Ether](images/ETH_flows.svg)
+
 Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, Ether is transferred in one of three ways:
 
 - From a user to a Pool
@@ -369,8 +371,8 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | batchLiquidateTroves (offset)           | collateral to be offset                | ActivePool->StabilityPool     |
 | batchLiquidateTroves (redistribution).  | collateral to be redistributed         | ActivePool->DefaultPool       |
 | redeemCollateral                        | collateral to be swapped with redeemer | ActivePool->msg.sender        |
-| redeemCollateral                        | redemption fee                         | ActivePool->msg.sender        |
-| redeemCollateral                        | trove's collateral surplus             | ActivePool -> CollSurplusPool |
+| redeemCollateral                        | redemption fee                         | ActivePool->LQTYStaking       |
+| redeemCollateral                        | trove's collateral surplus             | ActivePool->CollSurplusPool |
 
 **Stability Pool**
 
@@ -379,6 +381,13 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | provideToSP            | depositor's accumulated ETH gain | StabilityPool -> msg.sender                       |
 | withdrawFromSP         | depositor's accumulated ETH gain | StabilityPool -> msg.sender                       |
 | withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool -> BorrowerOperations -> ActivePool |
+
+**LQTY Staking**
+
+| Function    | ETH quantity                                   | Path                     |
+|-------------|------------------------------------------------|--------------------------|
+| stake       | staker's accumulated ETH gain from system fees | LQTYStaking ->msg.sender |
+| unstake     | staker's accumulated ETH gain from system fees | LQTYStaking ->msg.sender |
 
 ### Flow of LUSD tokens in Liquity
 
@@ -420,6 +429,12 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | provideToSP    | deposit / top-up | LUSD. _transfer(msg.sender, stabilityPoolAddress, _amount); |
 | withdrawFromSP | withdrawal       | LUSD. _transfer(stabilityPoolAddress, msg.sender, _amount); |
 
+**LQTY Staking**
+
+| Function | LUSD Quantity                                   | ERC20 Operation                                           |
+|----------|-------------------------------------------------|-----------------------------------------------------------|
+| stake    | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
+| unstake  | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
 
 ### Flow of LQTY Tokens in Liquity
 

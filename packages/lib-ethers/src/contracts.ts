@@ -22,7 +22,7 @@ import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiTroveGetterAbi from "../abi/MultiTroveGetter.json";
-// import priceFeedAbi from "../abi/PriceFeed.json";
+import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
@@ -46,7 +46,7 @@ import {
   LockupContractFactory,
   LQTYStaking,
   MultiTroveGetter,
-  // PriceFeed,
+  PriceFeed,
   PriceFeedTestnet,
   SortedTroves,
   StabilityPool
@@ -151,17 +151,20 @@ export interface LiquityContracts {
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
   multiTroveGetter: MultiTroveGetter;
-  // priceFeed: PriceFeed;
-  priceFeedTestnet: PriceFeedTestnet;
+  priceFeed: PriceFeed | PriceFeedTestnet;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
 }
+
+export const priceFeedIsTestnet = (
+  priceFeed: PriceFeed | PriceFeedTestnet
+): priceFeed is PriceFeedTestnet => "setPrice" in priceFeed;
 
 export type LiquityContractsKey = keyof LiquityContracts;
 export type LiquityContractAddresses = Record<LiquityContractsKey, string>;
 export type LiquityContractAbis = Record<LiquityContractsKey, JsonFragment[]>;
 
-export const abi: LiquityContractAbis = {
+const getAbi = (priceFeedIsTestnet: boolean): LiquityContractAbis => ({
   activePool: activePoolAbi,
   borrowerOperations: borrowerOperationsAbi,
   troveManager: troveManagerAbi,
@@ -173,12 +176,11 @@ export const abi: LiquityContractAbis = {
   lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
   multiTroveGetter: multiTroveGetterAbi,
-  // priceFeed: priceFeedAbi,
-  priceFeedTestnet: priceFeedTestnetAbi,
+  priceFeed: priceFeedIsTestnet ? priceFeedTestnetAbi : priceFeedAbi,
   sortedTroves: sortedTrovesAbi,
   stabilityPool: stabilityPoolAbi,
   collSurplusPool: collSurplusPoolAbi
-};
+});
 
 const mapLiquityContracts = <T, U>(
   contracts: Record<LiquityContractsKey, T>,
@@ -190,13 +192,17 @@ const mapLiquityContracts = <T, U>(
 
 export const connectToContracts = (
   addresses: LiquityContractAddresses,
+  priceFeedIsTestnet: boolean,
   signerOrProvider: Signer | Provider
-) =>
-  mapLiquityContracts(
+) => {
+  const abi = getAbi(priceFeedIsTestnet);
+
+  return mapLiquityContracts(
     addresses,
     (address, key) =>
       new LiquityContract(address, abi[key], signerOrProvider) as TypedLiquityContract
   ) as LiquityContracts;
+};
 
 export const addressesOf = (contracts: LiquityContracts) =>
   mapLiquityContracts(
@@ -206,9 +212,9 @@ export const addressesOf = (contracts: LiquityContracts) =>
 
 export type LiquityDeployment = {
   addresses: LiquityContractAddresses;
+  priceFeedIsTestnet: boolean;
   version: string;
   deploymentDate: number;
-  abiHash: string;
 };
 
 export const DEV_CHAIN_ID = 17;

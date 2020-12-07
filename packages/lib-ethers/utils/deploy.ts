@@ -1,12 +1,15 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction, ContractFactory, Overrides } from "@ethersproject/contracts";
-import { AddressZero } from "@ethersproject/constants";
 
-import { LiquityContractAddresses, LiquityContracts, connectToContracts } from "../src/contracts";
+import {
+  LiquityContractAddresses,
+  LiquityContracts,
+  LiquityDeployment,
+  connectToContracts,
+  addressesOf
+} from "../src/contracts";
 
 let silent = true;
-
-const kovanAggregator = "0x9326BFA02ADD2366b30bacB125260Af641031331";
 
 export const setSilent = (s: boolean) => {
   silent = s;
@@ -39,6 +42,7 @@ const deployContract = async (
 const deployContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
+  priceFeedIsTestnet = true,
   overrides?: Overrides
 ): Promise<LiquityContractAddresses> => {
   const addresses = {
@@ -46,7 +50,9 @@ const deployContracts = async (
     borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations", {
       ...overrides
     }),
-    troveManager: await deployContract(deployer, getContractFactory, "TroveManager", { ...overrides }),
+    troveManager: await deployContract(deployer, getContractFactory, "TroveManager", {
+      ...overrides
+    }),
     collSurplusPool: await deployContract(deployer, getContractFactory, "CollSurplusPool", {
       ...overrides
     }),
@@ -62,9 +68,15 @@ const deployContracts = async (
       { ...overrides }
     ),
     lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
-    // priceFeed: await deployContract(deployer, getContractFactory, "PriceFeed", { ...overrides }),
-    priceFeedTestnet: await deployContract(deployer, getContractFactory, "PriceFeedTestnet", { ...overrides }),
-    sortedTroves: await deployContract(deployer, getContractFactory, "SortedTroves", { ...overrides }),
+    priceFeed: await deployContract(
+      deployer,
+      getContractFactory,
+      priceFeedIsTestnet ? "PriceFeedTestnet" : "PriceFeed",
+      { ...overrides }
+    ),
+    sortedTroves: await deployContract(deployer, getContractFactory, "SortedTroves", {
+      ...overrides
+    }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
     })
@@ -116,8 +128,7 @@ const connectContracts = async (
     hintHelpers,
     lockupContractFactory,
     lqtyStaking,
-    // priceFeed,
-    priceFeedTestnet,
+    priceFeed,
     sortedTroves,
     stabilityPool
   }: LiquityContracts,
@@ -129,7 +140,6 @@ const connectContracts = async (
   }
 
   const txCount = await deployer.provider.getTransactionCount(deployer.getAddress());
-  const network = await deployer.provider.getNetwork();
 
   const connections: ((nonce: number) => Promise<ContractTransaction>)[] = [
     nonce =>
@@ -138,12 +148,6 @@ const connectContracts = async (
         nonce
       }),
 
-    // nonce =>
-    //   priceFeedTestnet.setAddresses(
-    //     network.name === "kovan" ? kovanAggregator : AddressZero,,
-    //     { ...overrides, nonce }
-    //   ),
-
     nonce =>
       troveManager.setAddresses(
         borrowerOperations.address,
@@ -151,7 +155,7 @@ const connectContracts = async (
         defaultPool.address,
         stabilityPool.address,
         collSurplusPool.address,
-        priceFeedTestnet.address,
+        priceFeed.address,
         lusdToken.address,
         sortedTroves.address,
         lqtyStaking.address,
@@ -165,7 +169,7 @@ const connectContracts = async (
         defaultPool.address,
         stabilityPool.address,
         collSurplusPool.address,
-        priceFeedTestnet.address,
+        priceFeed.address,
         sortedTroves.address,
         lusdToken.address,
         lqtyStaking.address,
@@ -179,7 +183,7 @@ const connectContracts = async (
         activePool.address,
         lusdToken.address,
         sortedTroves.address,
-        priceFeedTestnet.address,
+        priceFeed.address,
         communityIssuance.address,
         { ...overrides, nonce }
       ),
@@ -245,21 +249,32 @@ const connectContracts = async (
 export const deployAndSetupContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
+  priceFeedIsTestnet = true,
   overrides?: Overrides
-): Promise<LiquityContracts> => {
+): Promise<LiquityDeployment> => {
   if (!deployer.provider) {
     throw new Error("Signer must have a provider.");
   }
 
   silent || (console.log("Deploying contracts..."), console.log());
-  const addresses = await deployContracts(deployer, getContractFactory, overrides);
-  const contracts = connectToContracts(addresses, deployer);
+
+  const addresses = await deployContracts(
+    deployer,
+    getContractFactory,
+    priceFeedIsTestnet,
+    overrides
+  );
+
+  const contracts = connectToContracts(addresses, priceFeedIsTestnet, deployer);
 
   silent || console.log("Connecting contracts...");
+
   await connectContracts(contracts, deployer, overrides);
 
-  // silent || console.log("Activating CommunityIssuance contract...");
-  // await (await contracts.communityIssuance.activateContract({ ...overrides })).wait();
-
-  return contracts;
+  return {
+    addresses: addressesOf(contracts),
+    priceFeedIsTestnet,
+    version: "unknown",
+    deploymentDate: new Date().getTime()
+  };
 };
