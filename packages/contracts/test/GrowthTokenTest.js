@@ -8,39 +8,10 @@ const { pack } = require('@ethersproject/solidity');
 const { hexlify } = require("@ethersproject/bytes");
 const { ecsign } = require('ethereumjs-util');
 
-const sign = (digest, privateKey) => {
-  return ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKey.slice(2), 'hex'))
-}
 
-const PERMIT_TYPEHASH = keccak256(
-  toUtf8Bytes('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)')
-)
+// the second account our buidlerenv creates (for EOA A)
+// from https://github.com/liquity/dev/blob/main/packages/contracts/buidlerAccountsList2k.js#L3
 
-// Gets the EIP712 domain separator
-const getDomainSeparator = (name, contractAddress, chainId, version)  => {
-  return keccak256(defaultAbiCoder.encode(['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'], 
-  [ 
-    keccak256(toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
-    keccak256(toUtf8Bytes(name)), 
-    keccak256(toUtf8Bytes(version)),
-    parseInt(chainId), contractAddress.toLowerCase()
-  ]))
-}
-
-// Returns the EIP712 hash which should be signed by the user
-// in order to make a call to `permit`
-const getPermitDigest = ( name, address, chainId, version,
-                          owner, spender, value , 
-                          nonce, deadline ) => {
-
-  const DOMAIN_SEPARATOR = getDomainSeparator(name, address, chainId, version)
-  return keccak256(pack(['bytes1', 'bytes1', 'bytes32', 'bytes32'],
-    ['0x19', '0x01', DOMAIN_SEPARATOR, 
-      keccak256(defaultAbiCoder.encode(
-        ['bytes32', 'address', 'address', 'uint256', 'uint256', 'uint256'],
-        [PERMIT_TYPEHASH, owner, spender, value, nonce, deadline])),
-    ]))
-}
 
 const th = testHelpers.TestHelper
 const toBN = th.toBN
@@ -54,27 +25,87 @@ const assertRevert = th.assertRevert
 contract('LQTY Token', async accounts => {
   const [owner, A, B, C, D] = accounts
 
-  // the second account our buidlerenv creates (for EOA A)
-  // from https://github.com/liquity/dev/blob/main/packages/contracts/buidlerAccountsList2k.js#L3
-  const A_PrivateKey = '0xeaa445c85f7b438dEd6e831d06a4eD0CEBDc2f8527f84Fcda6EBB5fCfAd4C0e9'
+  // Create the approval tx data, for use in permit()
+  const approve = {
+    owner: A,
+    spender: B,
+    value: 1,
+  }
 
+  const A_PrivateKey = '0xeaa445c85f7b438dEd6e831d06a4eD0CEBDc2f8527f84Fcda6EBB5fCfAd4C0e9'
 
   let contracts
   let lqtyTokenTester
   let lqtyStaking
   let communityIssuance
-  
+
   let tokenName
   let tokenVersion
   let chainId
 
-  const mintToABC = async () => {
-      // mint some tokens
-      await lqtyTokenTester.unprotectedMint(A, dec(150, 18))
-      await lqtyTokenTester.unprotectedMint(B, dec(100, 18))
-      await lqtyTokenTester.unprotectedMint(C, dec(50, 18))
+  const sign = (digest, privateKey) => {
+    return ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKey.slice(2), 'hex'))
   }
-beforeEach(async () => {
+
+  const PERMIT_TYPEHASH = keccak256(
+    toUtf8Bytes('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)')
+  )
+
+  // Gets the EIP712 domain separator
+  const getDomainSeparator = (name, contractAddress, chainId, version) => {
+    return keccak256(defaultAbiCoder.encode(['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+      [
+        keccak256(toUtf8Bytes('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)')),
+        keccak256(toUtf8Bytes(name)),
+        keccak256(toUtf8Bytes(version)),
+        parseInt(chainId), contractAddress.toLowerCase()
+      ]))
+  }
+
+  // Returns the EIP712 hash which should be signed by the user
+  // in order to make a call to `permit`
+  const getPermitDigest = (name, address, chainId, version,
+    owner, spender, value,
+    nonce, deadline) => {
+
+    const DOMAIN_SEPARATOR = getDomainSeparator(name, address, chainId, version)
+    return keccak256(pack(['bytes1', 'bytes1', 'bytes32', 'bytes32'],
+      ['0x19', '0x01', DOMAIN_SEPARATOR,
+        keccak256(defaultAbiCoder.encode(
+          ['bytes32', 'address', 'address', 'uint256', 'uint256', 'uint256'],
+          [PERMIT_TYPEHASH, owner, spender, value, nonce, deadline])),
+      ]))
+  }
+
+  const mintToABC = async () => {
+    // mint some tokens
+    await lqtyTokenTester.unprotectedMint(A, dec(150, 18))
+    await lqtyTokenTester.unprotectedMint(B, dec(100, 18))
+    await lqtyTokenTester.unprotectedMint(C, dec(50, 18))
+  }
+
+  const buildPermitTx = async (deadline) => {
+    const nonce = await lqtyTokenTester.nonces(approve.owner)
+
+    // Get the EIP712 digest
+    const digest = getPermitDigest(
+      tokenName, lqtyTokenTester.address,
+      chainId, tokenVersion,
+      approve.owner, approve.spender,
+      approve.value, nonce, deadline
+    )
+
+    const { v, r, s } = sign(digest, A_PrivateKey)
+
+    const tx = lqtyTokenTester.permit(
+      approve.owner, approve.spender, approve.value,
+      deadline, v, hexlify(r), hexlify(s)
+    )
+
+    return { v, r, s, tx }
+  }
+
+  beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
 
@@ -84,7 +115,7 @@ beforeEach(async () => {
 
     tokenName = await lqtyTokenTester.name()
     tokenVersion = await lqtyTokenTester.version()
-    chainId = await web3.eth.getChainId()
+    chainId = await lqtyTokenTester.getChainId()
 
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -107,7 +138,7 @@ beforeEach(async () => {
     const total = (await lqtyTokenTester.totalSupply()).toString()
     /* Total supply should be 100 million, with a rounding error of 1e-18, due to splitting the initial supply
     between CommunityIssuance and the Liquity admin address */
-    assert.equal(getDifference(total,  dec(100, 24)), 1) 
+    assert.equal(getDifference(total, dec(100, 24)), 1)
   })
 
   it("name(): returns the token's name", async () => {
@@ -133,7 +164,7 @@ beforeEach(async () => {
   it("allowance(): returns an account's spending allowance for another account's balance", async () => {
     await mintToABC()
 
-    await lqtyTokenTester.approve(A, dec(100, 18), {from: B})
+    await lqtyTokenTester.approve(A, dec(100, 18), { from: B })
 
     const allowance_A = await lqtyTokenTester.allowance(B, A)
     const allowance_D = await lqtyTokenTester.allowance(B, D)
@@ -148,7 +179,7 @@ beforeEach(async () => {
     const allowance_A_before = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_before, '0')
 
-    await lqtyTokenTester.approve(A, dec(100, 18), {from: B})
+    await lqtyTokenTester.approve(A, dec(100, 18), { from: B })
 
     const allowance_A_after = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_after, dec(100, 18))
@@ -157,44 +188,44 @@ beforeEach(async () => {
   it("approve(): reverts when spender param is address(0)", async () => {
     await mintToABC()
 
-    const txPromise = lqtyTokenTester.approve(ZERO_ADDRESS, dec(100, 18), {from: B})
+    const txPromise = lqtyTokenTester.approve(ZERO_ADDRESS, dec(100, 18), { from: B })
     await assertRevert(txPromise)
   })
 
   it("approve(): reverts when owner param is address(0)", async () => {
     await mintToABC()
 
-    const txPromise =  lqtyTokenTester.callInternalApprove(ZERO_ADDRESS, A, dec(100, 18), {from: B})
+    const txPromise = lqtyTokenTester.callInternalApprove(ZERO_ADDRESS, A, dec(100, 18), { from: B })
     await assertRevert(txPromise)
   })
 
-  it("transferFrom(): successfully transfers from an account which is it approved to transfer from", async () => {
+  it("transferFrom(): successfully transfers from an account which it is approved to transfer from", async () => {
     await mintToABC()
 
     const allowance_A_0 = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_0, '0')
 
-    await lqtyTokenTester.approve(A, dec(50, 18), {from: B})
+    await lqtyTokenTester.approve(A, dec(50, 18), { from: B })
 
     // Check A's allowance of B's funds has increased
-    const allowance_A_1= await lqtyTokenTester.allowance(B, A)
+    const allowance_A_1 = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_1, dec(50, 18))
 
     assert.equal(await lqtyTokenTester.balanceOf(C), dec(50, 18))
 
     // A transfers from B to C, using up her allowance
-    await lqtyTokenTester.transferFrom(B, C, dec(50, 18), {from: A})
+    await lqtyTokenTester.transferFrom(B, C, dec(50, 18), { from: A })
     assert.equal(await lqtyTokenTester.balanceOf(C), dec(100, 18))
 
-     // Check A's allowance of B's funds has decreased
-    const allowance_A_2= await lqtyTokenTester.allowance(B, A)
+    // Check A's allowance of B's funds has decreased
+    const allowance_A_2 = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_2, '0')
 
     // Check B's balance has decreased
     assert.equal(await lqtyTokenTester.balanceOf(B), dec(50, 18))
 
     // A tries to transfer more tokens from B's account to C than she's allowed
-    const txPromise = lqtyTokenTester.transferFrom(B, C, dec(50, 18), {from: A})
+    const txPromise = lqtyTokenTester.transferFrom(B, C, dec(50, 18), { from: A })
     await assertRevert(txPromise)
   })
 
@@ -203,21 +234,21 @@ beforeEach(async () => {
 
     assert.equal(await lqtyTokenTester.balanceOf(A), dec(150, 18))
 
-    await lqtyTokenTester.transfer(A, dec(37, 18), {from: B})
+    await lqtyTokenTester.transfer(A, dec(37, 18), { from: B })
 
     assert.equal(await lqtyTokenTester.balanceOf(A), dec(187, 18))
   })
 
-  it("transfer(): reverts if amount exceeds sender's balance", async () => {
+  it("transfer(): reverts when amount exceeds sender's balance", async () => {
     await mintToABC()
 
     assert.equal(await lqtyTokenTester.balanceOf(B), dec(100, 18))
 
-    const txPromise = lqtyTokenTester.transfer(A, dec(101, 18), {from: B})
+    const txPromise = lqtyTokenTester.transfer(A, dec(101, 18), { from: B })
     await assertRevert(txPromise)
   })
 
-  it('transfer(): transferring to a blacklisted address reverts', async () => {
+  it('transfer(): transfer to a blacklisted address reverts', async () => {
     await mintToABC()
 
     await assertRevert(lqtyTokenTester.transfer(lqtyTokenTester.address, 1, { from: A }))
@@ -226,23 +257,59 @@ beforeEach(async () => {
     await assertRevert(lqtyTokenTester.transfer(lqtyStaking.address, 1, { from: A }))
   })
 
+  it('transfer(): transfer to or from the zero-address reverts', async () => {
+    await mintToABC()
+
+    const txPromiseFromZero = lqtyTokenTester.callInternalTransfer(ZERO_ADDRESS, A, dec(100, 18), { from: B })
+    const txPromiseToZero = lqtyTokenTester.callInternalTransfer(A, ZERO_ADDRESS, dec(100, 18), { from: B })
+    await assertRevert(txPromiseFromZero)
+    await assertRevert(txPromiseToZero)
+  })
+
+  it('mint(): issues correct amount of tokens to the given address', async () => {
+    const A_balanceBefore = await lqtyTokenTester.balanceOf(A)
+    assert.equal(A_balanceBefore, '0')
+
+    await lqtyTokenTester.unprotectedMint(A, dec(100, 18))
+
+    const A_BalanceAfter = await lqtyTokenTester.balanceOf(A)
+    assert.equal(A_BalanceAfter, dec(100, 18))
+  })
+
+  it('mint(): reverts when beneficiary is address(0)', async () => {
+    const tx = lqtyTokenTester.unprotectedMint(ZERO_ADDRESS, 100)
+    await assertRevert(tx)
+  })
+
   it("increaseAllowance(): increases an account's allowance by the correct amount", async () => {
     const allowance_A_Before = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_Before, '0')
 
-    await lqtyTokenTester.increaseAllowance(A, dec(100, 18), {from: B} )
+    await lqtyTokenTester.increaseAllowance(A, dec(100, 18), { from: B })
 
     const allowance_A_After = await lqtyTokenTester.allowance(B, A)
     assert.equal(allowance_A_After, dec(100, 18))
   })
 
+  it("decreaseAllowance(): decreases an account's allowance by the correct amount", async () => {
+    await lqtyTokenTester.increaseAllowance(A, dec(100, 18), { from: B })
+
+    const A_allowance = await lqtyTokenTester.allowance(B, A)
+    assert.equal(A_allowance, dec(100, 18))
+
+    await lqtyTokenTester.decreaseAllowance(A, dec(100, 18), { from: B })
+
+    const A_allowanceAfterDecrease = await lqtyTokenTester.allowance(B, A)
+    assert.equal(A_allowanceAfterDecrease, '0')
+  })
+
   it('sendToLQTYStaking(): changes balances of LQTYStaking and calling account by the correct amounts', async () => {
-     // mint some tokens to A
-     await lqtyTokenTester.unprotectedMint(A, dec(150, 18))
-    
+    // mint some tokens to A
+    await lqtyTokenTester.unprotectedMint(A, dec(150, 18))
+
     // Check caller and LQTYStaking balance before
     const A_BalanceBefore = await lqtyTokenTester.balanceOf(A)
-    assert.equal(A_BalanceBefore, dec(150,  18))
+    assert.equal(A_BalanceBefore, dec(150, 18))
     const lqtyStakingBalanceBefore = await lqtyTokenTester.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStakingBalanceBefore, '0')
 
@@ -252,19 +319,7 @@ beforeEach(async () => {
     const A_BalanceAfter = await lqtyTokenTester.balanceOf(A)
     assert.equal(A_BalanceAfter, dec(113, 18))
     const lqtyStakingBalanceAfter = await lqtyTokenTester.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStakingBalanceAfter, dec(37,  18))
-  })
-
-  it('transfer(): LQTY token can not be sent to blacklisted addresses', async () => {
-     // mint some tokens to A
-     await lqtyTokenTester.unprotectedMint(A, dec(150, 18))
-    assert.equal(await lqtyTokenTester.balanceOf(A), dec(150,  18))
-
-    // Check LQTY tokens can't be sent to blacklisted addresses
-    await assertRevert(lqtyTokenTester.transfer(lqtyTokenTester.address, dec(1, 18), { from: A }))
-    await assertRevert(lqtyTokenTester.transfer(ZERO_ADDRESS, dec(1, 18), { from: A }))
-    await assertRevert(lqtyTokenTester.transfer(communityIssuance.address, dec(1, 18), { from: A }))
-    await assertRevert(lqtyTokenTester.transfer(lqtyStaking.address, dec(1, 18), { from: A }))
+    assert.equal(lqtyStakingBalanceAfter, dec(37, 18))
   })
 
   // EIP2612 tests
@@ -274,55 +329,78 @@ beforeEach(async () => {
   })
 
   it('Initializes DOMAIN_SEPARATOR correctly', async () => {
-    assert.equal(await lqtyTokenTester.domainSeparator(), 
-    getDomainSeparator(tokenName, lqtyTokenTester.address, chainId, tokenVersion))
+    assert.equal(await lqtyTokenTester.domainSeparator(),
+      getDomainSeparator(tokenName, lqtyTokenTester.address, chainId, tokenVersion))
   })
 
   it('Initial nonce for a given address is 0', async function () {
     assert.equal(toBN(await lqtyTokenTester.nonces(A)).toString(), '0');
   });
-  
-  it('permits and emits an Approval event (replay protected)', async () => {
-    // Create the approval tx data
-    const approve = {
-      owner: A,
-      spender: B,
-      value: 1,
-    }
 
+  it('permit(): permits and emits an Approval event (replay protected)', async () => {
     const deadline = 100000000000000
-    const nonce = await lqtyTokenTester.nonces(approve.owner)
-   
-    // Get the EIP712 digest
-    const digest = getPermitDigest(
-      tokenName, lqtyTokenTester.address, 
-      chainId, tokenVersion, 
-      approve.owner, approve.spender,
-      approve.value, nonce, deadline
-    )
-   
-    const { v, r, s } = sign(digest, A_PrivateKey)
-    
+
     // Approve it
-    const receipt = await lqtyTokenTester.permit(
-      approve.owner, approve.spender, approve.value, 
-      deadline, v, hexlify(r), hexlify(s)
-    )
+    const { v, r, s, tx } = await buildPermitTx(deadline)
+    const receipt = await tx
     const event = receipt.logs[0]
 
     // Check that approval was successful
     assert.equal(event.event, 'Approval')
     assert.equal(await lqtyTokenTester.nonces(approve.owner), 1)
     assert.equal(await lqtyTokenTester.allowance(approve.owner, approve.spender), approve.value)
-    
+
     // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
     await assertRevert(lqtyTokenTester.permit(
-      approve.owner, approve.spender, approve.value, 
-      deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
-   
+      approve.owner, approve.spender, approve.value,
+      deadline, v, r, s), 'LQTY: Recovered address from the sig is not the owner')
+
     // Check that the zero address fails
-    await assertRevert(lqtyTokenTester.permit('0x0000000000000000000000000000000000000000', 
-      approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
+    await assertRevert(lqtyTokenTester.permit('0x0000000000000000000000000000000000000000',
+      approve.spender, approve.value, deadline, '0x99', r, s), 'LQTY: Recovered address from the sig is not the owner')
+  })
+
+  it('permit(): permits and emits an Approval event (replay protected), with infinite deadline', async () => {
+    const deadline = 0
+
+    // Approve it
+    const { v, r, s, tx } = await buildPermitTx(deadline)
+    const receipt = await tx
+    const event = receipt.logs[0]
+
+    // Check that approval was successful
+    assert.equal(event.event, 'Approval')
+    assert.equal(await lqtyTokenTester.nonces(approve.owner), 1)
+    assert.equal(await lqtyTokenTester.allowance(approve.owner, approve.spender), approve.value)
+
+    // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
+    assertRevert(lqtyTokenTester.permit(
+      approve.owner, approve.spender, approve.value,
+      deadline, v, r, s), 'LQTY: Recovered address from the sig is not the owner')
+
+    // Check that the zero address fails
+    assertRevert(lqtyTokenTester.permit('0x0000000000000000000000000000000000000000',
+      approve.spender, approve.value, deadline, '0x99', r, s), 'LQTY: Recovered address from the sig is not the owner')
+  })
+
+  it('permit(): fails with expired deadline', async () => {
+    const deadline = 1
+
+    const { v, r, s, tx } = await buildPermitTx(deadline)
+    await assertRevert(tx, 'LQTY: Signature has expired')
+  })
+
+  it('permit(): fails with the wrong signature', async () => {
+    const deadline = 100000000000000
+
+    const { v, r, s } = await buildPermitTx(deadline)
+
+    const tx = lqtyTokenTester.permit(
+      C, approve.spender, approve.value,  // Carol is passed as spender param, rather than Bob
+      deadline, v, hexlify(r), hexlify(s)
+    )
+
+    await assertRevert(tx, 'LQTY: Recovered address from the sig is not the owner')
   })
 })
 
