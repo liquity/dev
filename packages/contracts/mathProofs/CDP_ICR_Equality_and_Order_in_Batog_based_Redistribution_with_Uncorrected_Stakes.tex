@@ -381,9 +381,7 @@ to:
 (Note that it can also be proved that that $X_n=L_m$ and therefore $C_\emptyset=C_n+L_m=C_{n+m}$)
 
 \bigskip
-Now, a fresh trove is added, $j$, with collateral $c_j$.  Let the ICR of trove $j$ equal the ICR of an active first-order trove $i$.\\
-
-Now, trove $k$ liquidates. Upon liquidation, the second-order trove $j$ and the first-order trove $i$ earn the following collateral rewards:
+Now, a fresh trove is added, $j$, with collateral $c_j$ (and the system becomes second-order). Let the ICR of trove $j$ equal the ICR of an active first-order trove $i$.\\
 
 \begin{equation} \label{eq:10}
     \gamma_j=\gamma_i
@@ -412,14 +410,14 @@ The ICR equality identity (\ref{eq:10}) yields the following relation:
 i.e.
 
 \begin{equation} \label{eq:14}
-    c_j=k(c_\mathsmaller{i}+x_\mathsmaller{i})
+    c_j=\lambda(c_\mathsmaller{i}+x_\mathsmaller{i})
 \end{equation}
 
 \bigskip
 where
 
 \begin{equation} \label{eq:15}
-    k=\frac{d_\mathsmaller{j}}{d_\mathsmaller{i}+y_\mathsmaller{i}}
+    \lambda=\frac{d_\mathsmaller{j}}{d_\mathsmaller{i}+y_\mathsmaller{i}}
 \end{equation}
 
 
@@ -438,12 +436,7 @@ Which by (\ref{eq:8}) and (\ref{eq:9}) gives:
 \end{equation}
 
 \bigskip
-Now, a new liquidation occurs: trove $k$ liquidates. The system becomes second-order.\\
-
-The event causes trove $k$’s collateral and debt ($c_k$ and $d_k$) to be redistributed between all active troves, proportional to their stake.\\
-
-\bigskip
-We define the collateral and debt rewards earned by trove $j$ and trove $i$ in the reward event:
+Now, trove $k$ liquidates. Upon liquidation, the second-order trove $j$ and the first-order trove $i$ earn the following rewards:
 
 \begin{equation} \label{eq:20}
     \begin{split}
@@ -483,7 +476,7 @@ To show ICR equivalence after the reward event, we must first obtain $s_j$ as a 
 Now, substituting in the expression for i’s collateral, (\ref{eq:14}), we obtain:
 
 \begin{equation} 
-    s_\mathsmaller{j}=\frac{k(c_\mathsmaller{i}+x_\mathsmaller{i})C_n}{C_n+X_n}
+    s_\mathsmaller{j}=\frac{\lambda(c_\mathsmaller{i}+x_\mathsmaller{i})C_n}{C_n+X_n}
 \end{equation}
 
 
@@ -491,21 +484,21 @@ Now, substituting in the expression for i’s collateral, (\ref{eq:14}), we obta
 Substituting in the expressions for accumulated reward $x_j$ from (\ref{eq:45}), and total accumulated reward $X_n$ from (\ref{eq:47}):
 
 \begin{equation} 
-    s_\mathsmaller{j}=\frac{k(c_i+Hc_i)C_n}{C_n+HC_n}
+    s_\mathsmaller{j}=\frac{\lambda(c_i+Hc_i)C_n}{C_n+HC_n}
 \end{equation}
 
 \bigskip
 And factorizing:
 
 \begin{equation} 
-    s_j=\frac{kc_i(C_n+HC_n)}{C_n+HC_n}
+    s_j=\frac{\lambda c_i(C_n+HC_n)}{C_n+HC_n}
 \end{equation}
 
 \bigskip
 Canceling yields:
 
 \begin{equation} \label{eq:29}
-    s_j=kc_i
+    s_j=\lambda c_i
 \end{equation}
 
 \bigskip
@@ -534,7 +527,7 @@ Using (\ref{eq:20}), the individual rewards as functions of stakes:
 Now, substituting our definitions for $s_\mathsmaller{i}$ (\ref{eq:21}) and $s_j$ (\ref{eq:29}):
 
 \begin{equation} 
-    \gamma_{j}'=\frac{c_\mathsmaller{j}+akc_\mathsmaller{i}}{d_\mathsmaller{j}+bkc_\mathsmaller{i}}
+    \gamma_{j}'=\frac{c_\mathsmaller{j}+a\lambda c_\mathsmaller{i}}{d_\mathsmaller{j}+b\lambda c_\mathsmaller{i}}
 \end{equation}
 
 \begin{equation} 
@@ -545,7 +538,7 @@ Now, substituting our definitions for $s_\mathsmaller{i}$ (\ref{eq:21}) and $s_j
 Using identities (\ref{eq:14}) for $c_j$, and (\ref{eq:15}) for $d_j$:
 
 \begin{equation} 
-    \gamma_{j}'=\frac{k(c_\mathsmaller{i} + x_\mathsmaller{i}+ac_\mathsmaller{i})}{k(d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i})}
+    \gamma_{j}'=\frac{\lambda(c_\mathsmaller{i} + x_\mathsmaller{i}+ac_\mathsmaller{i})}{\lambda(d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i})}
 \end{equation}
 
 \begin{equation} 
@@ -553,7 +546,7 @@ Using identities (\ref{eq:14}) for $c_j$, and (\ref{eq:15}) for $d_j$:
 \end{equation}
 
 \bigskip
-Canceling $k$:
+Canceling $\lambda$:
 
 \begin{equation} 
         \gamma_{j}'=\frac{c_\mathsmaller{i} + x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
@@ -634,9 +627,9 @@ Consider a hypothetical first order trove $i$ and an actual second order trove $
 \end{equation}
 
 \bigskip
-Clearly, the ratio  $k = \frac{d_j}{d_i+y_i} = 1$.\\
+Clearly, the ratio  $\lambda = \frac{d_j}{d_i+y_i} = 1$.\\
 
-We substitute $k=1$ into the second-order system expression for $s_i$, from equation (\ref{eq:29}), to yield:
+We substitute $\lambda=1$ into the second-order system expression for $s_i$, from equation (\ref{eq:29}), to yield:
 
 \begin{equation} 
     s_j=c_i
