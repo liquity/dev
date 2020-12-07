@@ -159,7 +159,9 @@ By extending the original formula from $\cite{Batog}$, we can thus express the c
         \end{cases}
 \end{equation}
 
-Note that $r_i$ can stand for the collateral or the debt share of a recipient trove since both of them can be represented as "rewards" through $R_t$.
+Note that $r_i$ can stand for the collateral or the debt share of a recipient trove since both of them can be represented as "rewards" through $R_t$. \\
+
+The intuition behind the choice of corrected stake is that the corrected stake effectively models the fresh trove’s collateral $c_i$ as a total collateral, which includes ‘virtual’ accumulated rewards. The corrected stake earns rewards for the trove as if the trove had been in the system from the beginning - thus maintaining proportional reward growth.\\
 
 \section{System Order Evolution}
 
@@ -201,19 +203,17 @@ Let $\Gamma_2$ define an evolution of $\Gamma_1$, i.e. $\Gamma_2 = f(\Gamma_1)$.
 
 In general, $\Gamma_n$ is a system with $n$ sequential pairs, each consisting of a trove creation period and a liquidation period. Troves created in a given trove creation period $t$ have experienced only those liquidations that occurred in liquidation period $t$ or greater.
 
-\subsection{At First-Order, Stake Equals Initial Collateral}
-
+\begin{proposition}
+  At first-order, stake equals initial collateral
+\end{proposition}
+\begin{proof}
 For first-order systems, all troves were added before any liquidation events occurred. The snapshot $C_\emptyset$ is equal to 0. Therefore:
 
-\begin{equation} 
+\begin{equation}
     s_i=c_i
 \end{equation}
 for all $s_i$, $c_i$ in an $\Gamma_1$ system.
-
-\subsection{Intuition Behind Choice of Corrected Stake}
-
-
-The corrected stake effectively models the fresh trove’s collateral $c_i$ as a total collateral, which includes ‘virtual’ accumulated rewards. The corrected stake earns rewards for the trove as if the trove was first-order, and had been in the system from the beginning - thus maintaining proportional reward growth.\\
+\end{proof}
 
 \section{Outline of the Proof}
 
