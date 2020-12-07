@@ -170,7 +170,7 @@ Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistri
 To break up the proof, we introduce the notion of \textit{system order}. 
 
 \begin{definition}[System Order]
-  A system of troves has an order, N. When the first trove is created, the system order equals 1.
+  A system of troves has an order, $n$, and we label it $\Gamma_n$. When the first trove is created, the system order equals 1.
 
   The order of a system remains constant throughout the following event sequence:
 
@@ -184,12 +184,14 @@ To break up the proof, we introduce the notion of \textit{system order}.
   The first trove creation event after a series of liquidations triggers a system evolution, and the system order increases by 1.
 \end{definition}
 
+It can be represented graphically in the following way, where circles correspond to trove creations and squares to liquidation events:
+
 \includegraphics[width=\linewidth]{System_order_evolution_generic.png}
 
-We capture the system order increase from order $N$ to order $N+1$  in a system evolution function:
+We capture the system order increase from order $n$ to order $n+1$  in a system evolution function:
 
 \begin{equation} 
-    f(\Gamma_N)=\Gamma_{N+1}
+    f(\Gamma_n)=\Gamma_{n+1}
 \end{equation}
 
 \bigskip
@@ -268,17 +270,9 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 \end{lemma}
 
 \begin{proof}
-We consider the following event sequence:
+A first-order system of $n+m$ troves undergoes $m$ trove liquidations, before evolving to second-order.\\
 
-\begin{itemize}
-  \item $n+m$ troves are created
-  \item $m$ troves are liquidated
-  \item A fresh trove is created
-  \item An old trove is liquidated
-\end{itemize}
-
-\bigskip
-In other words, a first-order system of $n+m$ troves undergoes $m$ trove liquidations, before evolving to second-order.\\
+    \includegraphics[width=\linewidth]{System_order_evolution_1_proof.png}
 
 Consider the $m$ past liquidations from the point of view of an active first-order trove $i$. As per (\ref{eq:2}), the stake of trove $i$ is $s_i = c_i$.\\
 
