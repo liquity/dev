@@ -585,7 +585,8 @@ Liquidation events do not alter the stakes that earn shares of liquidated collat
 \end{proof}
 
 %\subsection{EXTENSION PROOF. Arbitrary Number of troves Added Between Liquidation Events}
-\begin{lemma} \label{result:3} We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$ and $N \cap P = \emptyset$. For any trove $i$ in $\Gamma_1$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+\begin{lemma} \label{result:3}
+  We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by a some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
 
 \begin{proof}
