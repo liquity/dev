@@ -1,3 +1,5 @@
+import assert from "assert";
+
 import { Decimal, Decimalish } from "@liquity/decimal";
 
 interface Trovish {
@@ -89,6 +91,12 @@ const normalize = (params: Record<string, Decimalish | undefined>): Record<strin
       .map(([k, v]): [string, Decimal] => [k, Decimal.from(v)])
       .filter(([, v]) => v.nonZero)
   );
+
+export const normalizeTroveCreation: (
+  params: TroveCreation<Decimalish>
+) => TroveCreation<Decimal> = (normalize as unknown) as (
+  params: TroveCreation<Decimalish>
+) => TroveCreation<Decimal>;
 
 export const normalizeTroveAdjustment: (
   params: TroveAdjustment<Decimalish>
@@ -283,7 +291,7 @@ export class Trove {
       }
 
       case "closure":
-        return new Trove();
+        return emptyTrove;
 
       case "adjustment": {
         const { depositCollateral, withdrawCollateral, borrowLUSD, repayLUSD } = change.params;
@@ -298,7 +306,29 @@ export class Trove {
       }
     }
   }
+
+  static create(params: TroveCreation<Decimalish>, borrowingFee?: Decimalish): Trove {
+    return emptyTrove.apply(troveCreation(params), borrowingFee);
+  }
+
+  static recreate(that: Trove, borrowingFee?: Decimalish): TroveCreation<Decimal> {
+    const change = emptyTrove.whatChanged(that, borrowingFee);
+    assert(change?.type === "creation");
+    return change.params;
+  }
+
+  adjust(params: TroveAdjustment<Decimalish>, borrowingFee?: Decimalish): Trove {
+    return this.apply(troveAdjustment(params), borrowingFee);
+  }
+
+  adjustTo(that: Trove, borrowingFee?: Decimalish): TroveAdjustment<Decimal> {
+    const change = this.whatChanged(that, borrowingFee);
+    assert(change?.type === "adjustment");
+    return change.params;
+  }
 }
+
+export const emptyTrove = new Trove({ collateral: 0, debt: 0 });
 
 interface TrovishWithPendingRewards extends Trovish {
   readonly stake?: Decimalish;

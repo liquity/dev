@@ -12,6 +12,7 @@ import {
   ObservableLiquity,
   TroveWithPendingRewards,
   Trove,
+  emptyTrove,
   StabilityDeposit,
   Fees
 } from "@liquity/lib-base";
@@ -66,7 +67,7 @@ const totalRedistributed = new Query<Trove, Global>(queryGlobal, ({ data: { glob
       debt: decimalify(rawTotalRedistributedDebt)
     });
   } else {
-    return new Trove();
+    return emptyTrove;
   }
 });
 
@@ -83,7 +84,7 @@ const total = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
       debt: totalDebt
     });
   } else {
-    return new Trove();
+    return emptyTrove;
   }
 });
 

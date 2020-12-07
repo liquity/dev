@@ -38,7 +38,7 @@ export class Fees {
     );
   }
 
-  private baseRate(when: Date) {
+  baseRate(when: Date): Decimal {
     const millisecondsSinceLastFeeOperation = Math.max(
       when.getTime() - this.lastFeeOperation.getTime(),
       0 // Clamp negative elapsed time to 0, in case the client's time is in the past.

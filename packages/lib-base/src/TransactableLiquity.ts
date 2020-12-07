@@ -1,7 +1,7 @@
 import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { proxify } from "./utils";
-import { Trove, TroveAdjustment } from "./Trove";
+import { Trove, TroveAdjustment, TroveCreation } from "./Trove";
 
 export type PopulatedLiquityTransaction<
   P = unknown,
@@ -54,7 +54,7 @@ export type RedemptionDetails = {
 };
 
 export interface TransactableLiquity {
-  openTrove(trove: Trove): Promise<TroveChangeDetails>;
+  openTrove(params: TroveCreation<Decimalish>): Promise<TroveChangeDetails>;
   closeTrove(): Promise<void>;
 
   depositCollateral(amount: Decimalish): Promise<TroveChangeDetails>;

@@ -2,9 +2,7 @@ import assert from "assert";
 import { describe, it } from "mocha";
 import fc from "fast-check";
 
-import { Trove } from "../src/Trove";
-
-const empty = new Trove();
+import { Trove, emptyTrove } from "../src/Trove";
 
 const arbitraryTrove = () =>
   fc
@@ -21,7 +19,7 @@ describe("Trove", () => {
   it("applying diff of `b` from empty to `a` should always yield `a`", () => {
     fc.assert(
       fc.property(arbitraryTrove(), arbitraryTrove(), (a, b) =>
-        a.apply(empty.whatChanged(b)).equals(a)
+        a.apply(emptyTrove.whatChanged(b)).equals(a)
       )
     );
   });
@@ -29,7 +27,7 @@ describe("Trove", () => {
   it("applying diff of empty from `b` to `a` should always yield empty", () => {
     fc.assert(
       fc.property(arbitraryTrove(), arbitraryTrove(), (a, b) =>
-        a.apply(b.whatChanged(empty)).equals(empty)
+        a.apply(b.whatChanged(emptyTrove)).equals(emptyTrove)
       )
     );
   });
