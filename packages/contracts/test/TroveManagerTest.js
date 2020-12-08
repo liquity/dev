@@ -6,6 +6,7 @@ const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 const th = testHelpers.TestHelper
 const dec = th.dec
 const toBN = th.toBN
+const assertRevert = th.assertRevert
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
@@ -1206,6 +1207,7 @@ contract('TroveManager', async accounts => {
     assert.equal(listSize_Before, listSize_After)
   })
 
+  
   it("liquidateTroves(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
     await borrowerOperations.openTrove(dec(40, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove('80500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 LUSD, 1 ETH
@@ -2545,7 +2547,7 @@ contract('TroveManager', async accounts => {
 
     // Erin attempts to redeem with _amount = 0
     const redemptionTxPromise = troveManager.redeemCollateral(0, erin, erin, 0, 0, { from: erin })
-    await th.assertRevert(redemptionTxPromise, "TroveManager: Amount must be greater than zero")
+    await assertRevert(redemptionTxPromise, "TroveManager: Amount must be greater than zero")
   })
 
   it("redeemCollateral(): doesn't affect the Stability Pool deposits or ETH gain of redeemed-from troves", async () => {
@@ -3418,7 +3420,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(D_balanceAfter.eq(D_balanceBefore))
 
     // D is not closed, so cannot open trove
-    await th.assertRevert(borrowerOperations.openTrove(D, ZERO_ADDRESS, { from: D, value: dec(10, 18) }), 'BorrowerOps: Trove is active')
+    await assertRevert(borrowerOperations.openTrove(D, ZERO_ADDRESS, { from: D, value: dec(10, 18) }), 'BorrowerOps: Trove is active')
   }
 
   it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to claim", async () => {
@@ -3429,7 +3431,7 @@ contract('TroveManager', async accounts => {
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
     // CollSurplusPool endpoint cannot be called directly
-    await th.assertRevert(collSurplusPool.claimColl(A), 'CollSurplusPool: Caller is not Borrower Operations')
+    await assertRevert(collSurplusPool.claimColl(A), 'CollSurplusPool: Caller is not Borrower Operations')
 
     await borrowerOperations.claimRedeemedCollateral(A)
     await borrowerOperations.claimRedeemedCollateral(B)
@@ -3719,6 +3721,23 @@ contract('TroveManager', async accounts => {
     assert.equal(A_Status, '1')  // active
     assert.equal(B_Status, '2')  // closed
     assert.equal(C_Status, '0')  // non-existent
+  })
+
+  // --- Internal removeTroveOwner ---
+
+  it("Internal _removeTroveOwner(): Reverts if trove has been closed", async () => { 
+    await borrowerOperations.openTrove(dec(1, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+   
+    // B closes, leaves 2 troves in system
+    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.closeTrove({from: B})
+
+    /* Call the external tester function that directly accesses the internal _removeTroveOwner() function.
+     Try to remove B */
+    const txPromise_B = troveManager.callInternalRemoveTroveOwner(B)
+
+    assertRevert(txPromise_B)
   })
 })
 
