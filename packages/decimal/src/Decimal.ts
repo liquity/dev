@@ -235,6 +235,12 @@ export class Decimal {
     return this.bigNumber.isZero();
   }
 
+  get zero() {
+    if (this.isZero) {
+      return this;
+    }
+  }
+
   get nonZero() {
     if (!this.isZero) {
       return this;

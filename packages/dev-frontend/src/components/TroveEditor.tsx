@@ -15,7 +15,7 @@ type TroveEditorProps = {
   edited: Trove;
   afterFee: Trove;
   fee?: Decimal;
-  change: TroveChange;
+  change?: TroveChange<Decimal>;
   changePending: boolean;
   dispatch: (
     action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
@@ -29,7 +29,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   edited,
   afterFee,
   fee,
-  change: { collateralDifference, debtDifference },
+  change,
   changePending,
   dispatch
 }) => {
@@ -37,10 +37,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   const editingState = useState<string>();
 
-  const isChanged = collateralDifference !== undefined || debtDifference !== undefined;
-
-  const pendingCollateral = original.collateral.nonZero && collateralDifference;
-  const pendingDebt = original.debt.nonZero && debtDifference;
+  const pendingCollateral =
+    original.collateral.nonZero && Difference.between(edited.collateral, original.collateral);
+  const pendingDebt = original.debt.nonZero && Difference.between(edited.debt, original.debt);
 
   const collateralRatio =
     (edited.collateral.nonZero || edited.debt.nonZero) && afterFee.collateralRatio(price);
@@ -55,7 +54,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
     <Card>
       <Heading>
         {original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
-        {isChanged && !changePending && (
+        {change && !changePending && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}

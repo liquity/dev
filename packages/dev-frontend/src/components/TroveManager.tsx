@@ -92,39 +92,35 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
         stateChange: { troveWithoutRewards: changeCommitted }
       } = action;
 
-      let newState = {
-        ...state,
-        original: trove,
-        edited:
-          !original.isEmpty && edited.isEmpty ? edited : trove.apply(original.whatChanged(edited))
-      };
+      const newState = { ...state, original: trove };
 
-      if ((changePending || original.isEmpty) && changeCommitted) {
-        newState = revert(newState);
-        if (changePending) {
-          newState = finishChange(newState);
-        }
+      if (changePending && changeCommitted) {
+        return finishChange(revert(newState));
       }
 
-      return newState;
+      const change = original.whatChanged(edited);
+
+      if (
+        (change?.type === "creation" && !trove.isEmpty) ||
+        (change?.type === "closure" && trove.isEmpty)
+      ) {
+        return revert(newState);
+      }
+
+      return { ...newState, edited: trove.apply(change) };
     }
   }
 };
 
-const select = ({ borrowingFeeFactor }: LiquityStoreState) => ({ borrowingFeeFactor });
+const select = ({ fees }: LiquityStoreState) => ({ fees });
 
 export const TroveManager: React.FC = () => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
-  const { borrowingFeeFactor } = useLiquitySelector(select);
+  const { fees } = useLiquitySelector(select);
 
   const change = original.whatChanged(edited);
-  const fee = (original.isEmpty
-    ? edited.debt.gt(Trove.GAS_COMPENSATION_DEPOSIT)
-      ? edited.debt.sub(Trove.GAS_COMPENSATION_DEPOSIT)
-      : undefined
-    : change.debtDifference?.positive?.absoluteValue
-  )?.mul(borrowingFeeFactor);
-  const afterFee = edited.addDebt(fee ?? 0);
+  const afterFee = original.apply(change, fees.borrowingFeeFactor());
+  const fee = afterFee.subtract(edited).debt.nonZero;
 
   return (
     <>
