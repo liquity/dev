@@ -4,6 +4,7 @@
 \usepackage{blindtext}
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage{tikz-cd}
 \usepackage{relsize} %bigger math symbols
 \usepackage{bm} %bolder text
 \usepackage{ulem} %Fixes underlining line break issue
@@ -172,29 +173,24 @@ Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistri
 To break up the proof, we introduce the notion of \textit{system order}. 
 
 \begin{definition}[System Order]
-  A system of troves has an order, $n$, and we label it $\Gamma_n$. When the first trove is created, the system order equals 1.
-
-  The order of a system remains constant throughout the following event sequence:
-
-\begin{itemize}
-  \item 1 or more new troves are created 
-  \item 1 or more troves are subsequently liquidated
-\end{itemize}
+  We define the order $n$ of a system of troves as the number of trove creations that are either the first one or immediately preceded by a liquidation. We usually denote a system of order $n$ by $\Gamma_n$.\\
 \end{definition}
+Thus, when the first trove is created, the system order equals 1. The first trove creation event after a series of liquidations triggers a system evolution, and the system order increases by 1.
 
 \begin{definition}[System order evolution]
-  The first trove creation event after a series of liquidations triggers a system evolution, and the system order increases by 1.
+  Given a system of troves $\Gamma_n$ of order $n$, whose last event has been a liquidation, we define a “system order evolution”, $f$, as a sequence of events in the following order:
+  \begin{itemize}
+  \item 1 or more new troves are created
+  \item 0 or more troves are subsequently liquidated
+  \end{itemize}
+  This sequence of events produces a new system $\Gamma_{n+1} = f(\Gamma_n)$ of order $n+1$.
 \end{definition}
 
 It can be represented graphically in the following way, where circles correspond to trove creations and squares to liquidation events:
 
 \includegraphics[width=\linewidth]{System_order_evolution_generic.png}
 
-We capture the system order increase from order $n$ to order $n+1$  in a system evolution function:
-
-\begin{equation} 
-    f(\Gamma_n)=\Gamma_{n+1}
-\end{equation}
+Note that the order of a system remains constant throughout the event sequence of a system order evolution after the first creation event, and therefore the definition is consistent.
 
 \bigskip
 Let $\Gamma_1$ define a system of troves with past liquidations, in which all active troves have received reward shares from all past liquidations. $\Gamma_1$ is a first-order system, and contains only stakes of first-order troves. Each first-order stake $s_i$ is equal to its collateral $c_i$, and \textit{S} $= \sum s_i = \sum c_i$.\\
@@ -213,6 +209,48 @@ For first-order systems, all troves were added before any liquidation events occ
     s_i=c_i
 \end{equation}
 for all $s_i$, $c_i$ in an $\Gamma_1$ system.
+\end{proof}
+
+\begin{definition}[System equivalence]
+  Given two system of troves $\Gamma$ and $\Gamma'$, we say that they are equivalent, $\Gamma \equiv \Gamma'$, if there exists a bijection $\eta: \Gamma \rightarrow \Gamma'$ between the troves in the system such that $ \forall i \in \Gamma$, if $j = \eta(i)$, $c_i = c_j$ and $d_i = d_j$, where $c_i$ and $c_j$ are collaterals, $d_i$ and $d_j$ are debts, and both include accumulated rewards.
+\end{definition}
+
+Note that the systems may not be identical, in particular there could be equivalent troves belonging to different orders and with different stakes.
+
+\begin{proposition}
+  The relationship of “system equivalence” defined above is indeed an equivalence relation in the mathematical sense, i.e., it’s reflexive, symmetric and transitive.
+\end{proposition}
+\begin{proof}
+  Follows immediately from the definition from a bijection.
+\end{proof}
+
+\begin{definition}[Equivalent system order evolution]
+  Given two equivalent system of troves $\Gamma \equiv \Gamma'$ and a transformation for the first one $f$, we define an equivalent system order evolution $f'$ over $\Gamma'$ as the following sequence of events:
+  \begin{itemize}
+  \item The exact same new troves of $f$ are created
+  \item For each liquidation $i \in \Gamma$ of $f$, the trove $j = \eta(i) \in \Gamma'$ is liquidated.
+  \end{itemize}
+
+\end{definition}
+
+\begin{proposition} \label{proposition:equivalent_evolution}
+  Given two equivalent systems of troves $\Gamma \equiv \Gamma'$, and a system order evolution $f$ for the first one, and the equivalent evolution defined above:
+\begin{equation}
+  f(\Gamma) \equiv f'(\Gamma')
+\end{equation}
+\end{proposition}
+
+Graphically:
+\[
+  \begin{tikzcd}
+    \Gamma \arrow{r}{\equiv} \arrow[swap]{d}{f} & \Gamma' \arrow{d}{f'} \\
+    f(\Gamma) \arrow{r}{\equiv} & f'(\Gamma')
+  \end{tikzcd}
+\]
+
+\begin{proof}
+  For the first step of the evolution, the bijection is kept naturally by tying the new identical troves together.\\
+  The second step, liquidations, will remove troves from each system, and in a way that for each $i \in \Gamma$ removed, its image $\eta(i) \in \Gamma'$ is removed too. So the bijection will be maintained too.
 \end{proof}
 
 \section{Outline of the Proof}
@@ -237,11 +275,11 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 
     \includegraphics[width=\linewidth]{System_order_evolution_4.png}
 
-  \item Lemma \ref{result:5}. For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  \item Lemma \ref{result:5}. For every $2^{nd}$-order system $\Gamma_2$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 
-  \item Proposition \ref{result:6}. For every $n^{th}$ order system $\Gamma_n$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  \item Proposition \ref{result:6}. For every $n^{th}$-order system $\Gamma_n$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 
-  \item Corollary \ref{result:7}. In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.
+  \item Corollary \ref{result:7}. In an $n^{th}$-order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$-order trove and $n^{th}$-order trove holds across $P$ liquidation events.
 
   \item Theorem \ref{result:8}. For every system $\Gamma_n$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{n+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
 \end{itemize}
@@ -250,17 +288,17 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 \section{Corrected Stake Approach Preserves Equality}
 
 
-%\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: Q new stakes, P subsequent liquidations
+%\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$-order, M past liquidations %Evolves to $2^{nd}$-order: Q new stakes, P subsequent liquidations
 %Formal notation becomes unwieldy
 %$\forall{\{\Gamma_2, i,j,k| k \in$ $\Gamma_0, k \notin$ $\Gamma_1 }}: 
 % (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$)
 
 %\begin{itemize}
-%  \item Proof: $\gamma_1=\gamma_2$. $1^{st}$ order, M past liquidations. %Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
-  %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
-  %\item Show $2^{nd}$ order system is equivalent to first-order 
+%  \item Proof: $\gamma_1=\gamma_2$. $1^{st}$-order, M past liquidations. %Evolves to $2^{nd}$-order: 1 new stake, 1 subsequent liquidation
+  %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$-order, M past liquidations %Evolves to $2^{nd}$-order: 1 new stake, P subsequent liquidations
+  %\item Show $2^{nd}$-order system is equivalent to first-order 
 
-  %\item Show that $n^{th}$ order system is equivalent to first-order
+  %\item Show that $n^{th}$-order system is equivalent to first-order
 %\end{itemize}
 
 
@@ -593,7 +631,7 @@ In other words, in a second-order system with $M$ previous liquidations, and $N$
 
 %\subsection{2nd Order Systems Collapse to 1st Order}
 \begin{lemma} \label{result:5}
-  For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  For every $2^{nd}$-order system $\Gamma_2$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 \end{lemma}
 
 \begin{proof}
@@ -624,50 +662,51 @@ Thus, any second-order stake is equivalent to some hypothetical first-order stak
 Therefore any second-order system is equivalent to a first-order system that contains only first-order stakes which have experienced all liquidations. We write:
 
 \begin{equation} 
-    \Gamma_2=\Gamma_1
+    \Gamma_2 \equiv \Gamma_1
 \end{equation}
 \end{proof}
 
 %\subsection{N’th Order Systems Collapse to 1st Order}
 \begin{proposition} \label{result:6}
-  For every $n^{th}$ order system $\Gamma_n$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  For every $n^{th}$-order system $\Gamma_n$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 \end{proposition}
 
 \begin{proof}
-  We prove it by induction.\\
-  We have already proved for $n=1$ in previous lemma: $\Gamma_1=\Gamma_2$.\\
-  Now we show that if it’s true for $n-1$ then it’s true for $n$, i.e.:
+  We prove first by induction that for any $n^{th}$-order system $\Gamma_n$ there exits an equivalent $(n-1)^{th}$-order system $\Gamma_{n-1}$.\\
+  We have already proved it for $n=2$ in previous lemma (it doesn’t make sense for $n=1$).\\
+  Now we show that if it’s true for $n$ then it’s true for $n+1$, i.e.:
 
 \begin{equation}
-    \Gamma_{n-1} = \Gamma_n \Rightarrow \Gamma_n = \Gamma_{n+1}
+  \forall \Gamma_n\ \exists \Gamma_{n-1}\ s.t.\ \Gamma_n \equiv \Gamma_{n-1} \Rightarrow \forall \Gamma_{n+1}\ \exists \Gamma_n\ s.t.\ \Gamma_{n+1} \equiv \Gamma_n
 \end{equation}
 
-Recall our system evolution function: 
+Let $\Gamma_{n+1}$ an $(n+1)^{th}$-order system, and let $\Gamma_n$ an $n^{th}$-order system and $f$ a system order evolution that originate $\Gamma_{n+1}$, i.e.:
 
-\begin{equation} 
-    f(\Gamma_n)=\Gamma_{n+1}
+\begin{equation}
+  \Gamma_{n+1} = f(\Gamma_n)
 \end{equation}
 
-Therefore:
-
-\begin{equation} 
-    \Gamma_{n+1} = f(\Gamma_n) = f(\Gamma_{n-1}) = \Gamma_n
+We are assuming that there is $(n-1)^{th}$-order system $\Gamma_{n-1}$ such that $\Gamma_n \equiv \Gamma_{n-1}$. By proposition \ref{proposition:equivalent_evolution}, we can define an evolution $f'$ such that: $f(\Gamma_n) \equiv f'(\Gamma_{n-1})$. Therefore:
+\begin{equation}
+    \Gamma_{n+1} = f(\Gamma_n) \equiv f'(\Gamma_{n-1})
 \end{equation}
+
+And by the definition of $f'$, $ \Gamma_n := f'(\Gamma_{n-1})$ is an $n^{th}$-order system.
 
 \bigskip
-So, for every $n > 1$, $\Gamma_n = \Gamma_{n-1}$, and for the transitive property of equivalence, we finally have:
+So, for every $n > 1$, if $\Gamma_n$ is an $n^{th}$-order system, there is an $(n-1)^{th}$-order system $\Gamma_{n-1}$ such that $\Gamma_n \equiv \Gamma_{n-1}$, and for the transitive property of equivalence, we finally can descend to find a first-order system $\Gamma_1$ such that:
 
 \begin{equation}
-    \Gamma_n=\Gamma_1
+    \Gamma_n \equiv \Gamma_1
 \end{equation}
 \end{proof}
 
 \bigskip
-Having shown all $n^{th}$ order systems are equivalent to a first-order system, we now extend our previous conclusion to $n^{th}$ order systems:
+Having shown all $n^{th}$-order systems are equivalent to a first-order system, we now extend our previous conclusion to $n^{th}$-order systems:
 
 %\subsection{CONCLUSION 2}
 \begin{corollary} \label{result:7}
-  In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.
+  In an $n^{th}$-order system with $M$ previous liquidations, and $N$ $n^{th}$-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$-order trove and $n^{th}$-order trove holds across $P$ liquidation events.
 \end{corollary}
 
 \section{Corrected Stake Approach Preserves Order}
@@ -679,17 +718,17 @@ Having shown all $n^{th}$ order systems are equivalent to a first-order system, 
 \begin{proof}
 Here we show that ICR ordering is preserved with corrected stakes across a liquidation event.\\
 
-We make use of the first-order equivalence result, namely, that with corrected stakes:
+We make use of the first-order equivalence result \ref{result:6}, namely, that with corrected stakes:
 
 \begin{equation} 
-    \Gamma_n = \Gamma_1
+    \Gamma_n \equiv \Gamma_1
 \end{equation}
 
 i.e:\\
 
-Any $n^{th}$ order system of troves is equivalent to a first-order system of troves. For a given fresh trove with stake $s_i$ and collateral $c_i$, the stake $s_i$ is equivalent to some hypothetical first-order stake $c_j$ which has accumulated collateral reward $x_j = (c_i - c_j)$ and debt reward $y_j = (d_i - d_j)$.\\
+Any $n^{th}$-order system of troves is equivalent to a first-order system of troves. For a given fresh trove with stake $s_i$ and collateral $c_i$, the stake $s_i$ is equivalent to some hypothetical first-order stake $c_j$ which has accumulated collateral reward $x_j = (c_i - c_j)$ and debt reward $y_j = (d_i - d_j)$.\\
 
-Due to this equivalence between first and $n^{th}$-order systems, if ordering is preserved for first-order systems, it is preserved for $n^{th}$ order systems.\\
+Due to this equivalence between first and $n^{th}$-order systems, if ordering is preserved for first-order systems, it is preserved for $n^{th}$-order systems.\\
 
 Now consider a first-order system of troves, with stakes equal to their initial collateral.\\
 
@@ -850,7 +889,7 @@ Then taking reciprocals, finally yields:
 \end{equation}
 
 \bigskip
-Therefore, trove ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in $n^{th}$ order systems.
+Therefore, trove ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in $n^{th}$-order systems.
 
 \bigskip
 
