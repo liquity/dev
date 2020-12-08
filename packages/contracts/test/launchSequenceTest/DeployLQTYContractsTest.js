@@ -152,7 +152,6 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
           coreContracts.stabilityPool.address,
           { from: liquityAG }
         );
-        assert.isFalse(tx.receipt.status)
       
         // Check it gives the expected error message for a failed Solidity 'assert'
       } catch (err) {
