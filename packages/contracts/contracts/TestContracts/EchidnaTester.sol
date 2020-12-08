@@ -402,7 +402,7 @@ contract EchidnaTester {
         return true;
     }
 
-    // total LUSD matches
+    // Total LUSD matches
     function echidna_LUSD_global_balances() public view returns(bool) {
         uint totalSupply = lusdToken.totalSupply();
         uint gasPoolBalance = lusdToken.balanceOf(GAS_POOL_ADDRESS);

@@ -33,7 +33,18 @@ contract LQTYTokenTester is LQTYToken {
         _transfer(_sender, lqtyStakingAddress, _amount);
     }
 
-     function callInternalApprove(address owner, address spender, uint256 amount) external returns (bool) {
+    function callInternalApprove(address owner, address spender, uint256 amount) external returns (bool) {
         _approve(owner, spender, amount);
+    }
+
+    function callInternalTransfer(address sender, address recipient, uint256 amount) external returns (bool) {
+        _transfer(sender, recipient, amount);
+    }
+
+    function getChainId() external pure returns (uint256 chainID) {
+        //return _chainID(); // it’s private
+        assembly {
+            chainID := chainid()
+        }
     }
 }
