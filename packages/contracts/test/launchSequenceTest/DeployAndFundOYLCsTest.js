@@ -1,3 +1,5 @@
+
+ 
 const OneYearLockupContract = artifacts.require("./OneYearLockupContract.sol")
 const CustomDurationLockupContract = artifacts.require("./CustomDurationLockupContract.sol")
 
@@ -6,7 +8,7 @@ const testHelpers = require("../../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
-const dec = th.dec
+const { dec, toBN, assertRevert } = th
 
 contract('Deploying and funding One Year Lockup Contracts', async accounts => {
   const [liquityAG, A, B, C, D, E, F, G, H, I, J] = accounts;
@@ -22,7 +24,7 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
   const LQTYEntitlement_D = dec(4, 24)
   const LQTYEntitlement_E = dec(5, 24)
 
-  before(async () => {
+  beforeEach(async () => {
     // Deploy all contracts from the first account
     LQTYContracts = await deploymentHelper.deployLQTYContracts()
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
@@ -32,6 +34,8 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
   })
+
+  // --- OYLCs ---
 
   describe('Deploying OYLCs', async accounts => {
     it("LQTY Deployer can deploy OYLCs through the Factory", async () => {
@@ -529,7 +533,7 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       assert.equal(lockupTxTimestamp_2, lockupStartTime_E)
     })
 
-    it("Locking reverts if caller is not the deployer", async () => {
+    it("Locking through the factory reverts when caller is not the deployer", async () => {
       // Deploy 2 OYLCs
       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: C })
@@ -540,9 +544,11 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
 
       // LQTY deployer transfers LQTY to both OYLCs
       await lqtyToken.transfer(OYLC_A.address, LQTYEntitlement_A, { from: liquityAG })
+      await lqtyToken.transfer(OYLC_B.address, LQTYEntitlement_B, { from: liquityAG })
 
       // Check OYLC is inactive
       assert.isFalse(await OYLC_A.active())
+      assert.isFalse(await OYLC_B.active())
 
       const variousAccounts = [A, B, D, E, F, G, H, I, J]
 
@@ -556,8 +562,8 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
         }
       }
 
-       // Various EOAs try to lock OYLC_B via Factory
-       for (account of variousAccounts) {
+      // Various EOAs try to lock OYLC_B via Factory
+      for (account of variousAccounts) {
         try {
           const lockingAttemptTx = await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: account })
           assert.isFalse(lockingAttemptTx.receipt.status)
@@ -566,47 +572,64 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
         }
       }
     })
-  })
 
-  describe('Deploying CDLCs', async accounts => {
-    it("No one can deploy CDLCs through the factory", async () => {
-      try {
-        const deployedCDLCtx_A = await lockupContractFactory.deployCustomDurationLockupContract(A, LQTYEntitlement_A, SECONDS_IN_ONE_MONTH, { from: liquityAG })
-        assert.isFalse(deployedCDLCtx_A.receipt.status)
-      } catch (error) {
-        assert.include(error.message, "revert")
-      }
+    it("Locking reverts when contract is already locked & active", async () => {
+      // Deploy 2 OYLCs
+      const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: C })
 
-      try {
-        const deployedCDLCtx_B = await lockupContractFactory.deployCustomDurationLockupContract(B, LQTYEntitlement_B, SECONDS_IN_ONE_MONTH, { from: B })
-        assert.isFalse(deployedCDLCtx_B.receipt.status)
-      } catch (error) {
-        assert.include(error.message, "revert")
-      }
+      // Grab contracts from deployment tx events
+      const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
+      const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
-      try {
-        const deployedCDLCtx_C = await lockupContractFactory.deployCustomDurationLockupContract(C, LQTYEntitlement_C, SECONDS_IN_ONE_MONTH, { from: G })
-        assert.isFalse(deployedCDLCtx_C.receipt.status)
-      } catch (error) {
-        assert.include(error.message, "revert")
-      }
+      // LQTY deployer transfers LQTY to both OYLCs
+      await lqtyToken.transfer(OYLC_A.address, LQTYEntitlement_A, { from: liquityAG })
+      await lqtyToken.transfer(OYLC_B.address, LQTYEntitlement_B, { from: liquityAG })
+
+      // Check OYLCs are inactive
+      assert.isFalse(await OYLC_A.active())
+      assert.isFalse(await OYLC_B.active())
+
+      // Lock contracts by deployers
+      await lockupContractFactory.lockOneYearContracts([OYLC_A.address], {from: liquityAG})
+      await lockupContractFactory.lockOneYearContracts([OYLC_B.address], {from: C})
+
+      // Check OYLCs are active
+      assert.isTrue(await OYLC_A.active())
+      assert.isTrue(await OYLC_B.active())
+
+      // Deployers again call lockContract() 
+      const txAPromise = lockupContractFactory.lockOneYearContracts([OYLC_A.address], {from: liquityAG})
+      const txBPromise = lockupContractFactory.lockOneYearContracts([OYLC_B.address], {from: C})
+
+      await assertRevert(txAPromise)
+      await assertRevert(txBPromise)
     })
 
-    it("Anyone can deploy CDLCs directly", async () => {
-      // Various EOAs deploy CDLCs
-      const CDLC_A = await CustomDurationLockupContract.new(lqtyToken.address, A, LQTYEntitlement_A, SECONDS_IN_ONE_MONTH, { from: D })
-      const CDLC_A_txReceipt = await web3.eth.getTransactionReceipt(CDLC_A.transactionHash)
+    it("Locking reverts when contract balance < beneficiary entitlement", async () => {
+      // Deploy 2 OYLCs
+      const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
+      const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: C })
 
-      const CDLC_B = await CustomDurationLockupContract.new(lqtyToken.address, B, LQTYEntitlement_B, SECONDS_IN_ONE_MONTH, { from: E })
-      const CDLC_B_txReceipt = await web3.eth.getTransactionReceipt(CDLC_B.transactionHash)
+      // Grab contracts from deployment tx events
+      const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
+      const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
 
-      const CDLC_C = await CustomDurationLockupContract.new(lqtyToken.address, C, LQTYEntitlement_C, SECONDS_IN_ONE_MONTH, { from: F })
-      const CDLC_C_txReceipt = await web3.eth.getTransactionReceipt(CDLC_C.transactionHash)
+      // LQTY deployer transfers insufficient LQTY to both OYLCs
+      await lqtyToken.transfer(OYLC_A.address, toBN(LQTYEntitlement_A).sub(toBN('1')), { from: liquityAG })
+      await lqtyToken.transfer(OYLC_B.address, toBN(LQTYEntitlement_B).sub(toBN('1')), { from: liquityAG })
 
-      // Check deployment succeeded
-      assert.isTrue(CDLC_A_txReceipt.status)
-      assert.isTrue(CDLC_B_txReceipt.status)
-      assert.isTrue(CDLC_C_txReceipt.status)
+      // Check OYLCs are inactive
+      assert.isFalse(await OYLC_A.active())
+      assert.isFalse(await OYLC_B.active())
+
+      // Deployers attempts to locks contracts through factory - expect it fails, insufficient funds
+      const txAPromise = lockupContractFactory.lockOneYearContracts([OYLC_A.address], {from: liquityAG})
+      const txBPromise = lockupContractFactory.lockOneYearContracts([OYLC_B.address], {from: C})
+      await assertRevert(txAPromise, "LQTY balance of this OYLC must cover the initial entitlement")
+      await assertRevert(txBPromise, "LQTY balance of this OYLC must cover the initial entitlement")
     })
   })
+  
+
 })
