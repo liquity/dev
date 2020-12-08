@@ -204,7 +204,7 @@ Let $\Gamma_2$ define an evolution of $\Gamma_1$, i.e. $\Gamma_2 = f(\Gamma_1)$.
 In general, $\Gamma_n$ is a system with $n$ sequential pairs, each consisting of a trove creation period and a liquidation period. Troves created in a given trove creation period $t$ have experienced only those liquidations that occurred in liquidation period $t$ or greater.
 
 \begin{proposition}
-  At first-order, stake equals initial collateral
+  At first-order, stake equals initial collateral.
 \end{proposition}
 \begin{proof}
 For first-order systems, all troves were added before any liquidation events occurred. The snapshot $C_\emptyset$ is equal to 0. Therefore:
@@ -228,18 +228,18 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 
     \includegraphics[width=\linewidth]{System_order_evolution_2.png}
 
-  \item Lemma \ref{result:3}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by a some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  \item Lemma \ref{result:3}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 
     \includegraphics[width=\linewidth]{System_order_evolution_3.png}
 
-  \item Theorem \ref{result:4}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
-    In other words, in a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
+  \item Theorem \ref{result:4}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+    In other words, in a second-order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between any first-order trove and corresponding second-order trove with the same ICR holds across $P$ subsequent liquidation events.
 
     \includegraphics[width=\linewidth]{System_order_evolution_4.png}
 
-  \item Lemma \ref{result:5}. For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  \item Lemma \ref{result:5}. For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 
-  \item Proposition \ref{result:6}. For every $n^{th}$ order system $\Gamma_n$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  \item Proposition \ref{result:6}. For every $n^{th}$ order system $\Gamma_n$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 
   \item Corollary \ref{result:7}. In an $n^{th}$ order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$ order trove and $n^{th}$ order trove holds across $P$ liquidation events.
 
@@ -258,13 +258,13 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 %\begin{itemize}
 %  \item Proof: $\gamma_1=\gamma_2$. $1^{st}$ order, M past liquidations. %Evolves to $2^{nd}$ order: 1 new stake, 1 subsequent liquidation
   %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$ order, M past liquidations %Evolves to $2^{nd}$ order: 1 new stake, P subsequent liquidations
-  %\item Show $2^{nd}$ order system is equivalent to first order 
+  %\item Show $2^{nd}$ order system is equivalent to first-order 
 
-  %\item Show that $n^{th}$ order system is equivalent to first order
+  %\item Show that $n^{th}$ order system is equivalent to first-order
 %\end{itemize}
 
 
-%\subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second Order System with $m$ Past Liquidations}
+%\subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second-Order System with $m$ Past Liquidations}
 
 \begin{lemma}\label{result:1} We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
@@ -540,18 +540,7 @@ Using identities (\ref{eq:14}) for $c_j$, and (\ref{eq:15}) for $d_j$:
 \end{equation}
 
 \bigskip
-Canceling $\lambda$:
-
-\begin{equation} 
-        \gamma_{j}'=\frac{c_\mathsmaller{i} + x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
-\end{equation}
-
-\begin{equation} 
-    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
-\end{equation}
-
-\bigskip
-Thus:
+Thus, canceling $\lambda$:
 
 \begin{equation} 
     \gamma_{j}'=\gamma_{i}'
@@ -573,7 +562,7 @@ Liquidation events do not alter the stakes that earn shares of liquidated collat
 
 %\subsection{EXTENSION PROOF. Arbitrary Number of troves Added Between Liquidation Events}
 \begin{lemma} \label{result:3}
-  We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by a some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
 
 \begin{proof}
@@ -589,13 +578,13 @@ The snapshots of the system state after the last liquidation event ($S_\emptyset
 Thus, $s_j$ in the N second-order troves case is equal to $s_j$ in the single second-order trove case.\\
 
 As such, the logic of the proof of Lemma \ref{result:1} applies - and ICR equality between a second-order trove and first-order trove holds across a liquidation event, no matter how many fresh troves are added in between.\\
-The fact that the liquidated trove is first or second order doesn’t have any impact on that proof either: it would only vary the amounts $x_k$ and $y_k$ in \ref{eq:20_a} and \ref{eq:20_b}, which may be even zero if $k$ is the last created trove, but we don’t make any assumption on those amounts along the proof.
+The fact that the liquidated trove is first or second-order doesn’t have any impact on that proof either: it would only vary the amounts $x_k$ and $y_k$ in \ref{eq:20_a} and \ref{eq:20_b}, which may be even zero if $k$ is the last created trove, but we don’t make any assumption on those amounts along the proof.
 \end{proof}
 
 %\subsection{CONCLUSION 1}
 \begin{theorem} \label{result:4}
-We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set of creations $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
-In other words, in a second order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
+We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+In other words, in a second-order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
 \end{theorem}
 
 \begin{proof}
@@ -604,13 +593,13 @@ In other words, in a second order system with $M$ previous liquidations, and $N$
 
 %\subsection{2nd Order Systems Collapse to 1st Order}
 \begin{lemma} \label{result:5}
-  For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  For every $2^{nd}$ order system $\Gamma_2$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 \end{lemma}
 
 \begin{proof}
 We now show that a second-order system is equivalent to a first-order system.\\
 
-Consider a hypothetical first order trove $i$ and an actual second order trove $j$. Let both troves have identical ICR, and also let trove $i$’s total collateral and debt equal trove $j$’s initial collateral and initial debt respectively:
+Consider a hypothetical first-order trove $i$ and an actual second-order trove $j$. Let both troves have identical ICR, and also let trove $i$’s total collateral and debt equal trove $j$’s initial collateral and initial debt respectively:
 
 \begin{equation} 
     c_i+x_i=c_j
@@ -632,7 +621,7 @@ We substitute $\lambda=1$ into the second-order system expression for $s_i$, fro
 \bigskip
 Thus, any second-order stake is equivalent to some hypothetical first-order stake $s_i=c_i$, which has accumulated collateral reward $x_i=(c_j-c_i)$ and debt reward $y_i=(d_j-d_i)$.\\
 
-Therefore any second order system is equivalent to a first order system that contains only first-order stakes which have experienced all liquidations. We write:
+Therefore any second-order system is equivalent to a first-order system that contains only first-order stakes which have experienced all liquidations. We write:
 
 \begin{equation} 
     \Gamma_2=\Gamma_1
@@ -641,7 +630,7 @@ Therefore any second order system is equivalent to a first order system that con
 
 %\subsection{N’th Order Systems Collapse to 1st Order}
 \begin{proposition} \label{result:6}
-  For every $n^{th}$ order system $\Gamma_n$ there exists an equivalent first order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+  For every $n^{th}$ order system $\Gamma_n$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
 \end{proposition}
 
 \begin{proof}
@@ -674,7 +663,7 @@ So, for every $n > 1$, $\Gamma_n = \Gamma_{n-1}$, and for the transitive propert
 \end{proof}
 
 \bigskip
-Having shown all $n^{th}$ order systems are equivalent to a first order system, we now extend our previous conclusion to $n^{th}$ order systems:
+Having shown all $n^{th}$ order systems are equivalent to a first-order system, we now extend our previous conclusion to $n^{th}$ order systems:
 
 %\subsection{CONCLUSION 2}
 \begin{corollary} \label{result:7}
