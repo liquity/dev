@@ -1930,7 +1930,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.adjustTrove(0, 0, true, alice, { from: alice, value: dec(1, 'ether') })
 
     const debtAfter = ((await troveManager.Troves(alice))[0]).toString()
-    const collAfter = ((await troveManager.Troves(alice))[1]).toString()
+    // const collAfter = ((await troveManager.Troves(alice))[1]).toString()
     const activePoolDebtAfter = (await activePool.getLUSDDebt()).toString()
 
     assert.equal(debtAfter, debtBefore)
@@ -1950,10 +1950,6 @@ contract('BorrowerOperations', async accounts => {
 
     // Alice adjusts trove. Coll and debt increase(+1 ETH, +50LUSD)
     await borrowerOperations.adjustTrove(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
-
-    // TODO?
-    // Bob attempts a collDeposit and a debtIncrease that would otherwise by itself 
-    // bring the TCR below the CCR, but the collDeposit prevents this from happening
 
     const debtAfter = ((await troveManager.Troves(alice))[0]).toString()
     const collAfter = ((await troveManager.Troves(alice))[1]).toString()
@@ -1982,6 +1978,24 @@ contract('BorrowerOperations', async accounts => {
 
     assert.equal(debtAfter, dec(60, 18))
     assert.equal(collAfter, dec(500, 'finney'))
+  })
+
+  it("adjustTrove(): in Recovery Mode updates borrower's debt and coll with a decrease in both, improving the ICR", async () => {
+    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+
+    assert.isFalse(await troveManager.checkRecoveryMode())
+
+    const txAlice = await borrowerOperations.adjustTrove(0, dec(50, 18), true, alice, { from: alice, value: dec(1, 'ether') })
+    assert.isTrue(txAlice.receipt.status)
+
+    await priceFeed.setPrice(dec(100, 18)) // trigger 50% drop in ETH price
+
+    assert.isTrue(await troveManager.checkRecoveryMode())
+
+    // Alice adjusts trove coll and debt decrease (-0.005 ETH, -50LUSD)
+    const txAlice2 = await borrowerOperations.adjustTrove(dec(5, 'finney'), dec(50, 18), false, alice, { from: alice })
+    assert.isTrue(txAlice2.receipt.status)
   })
 
   it("adjustTrove(): updates borrower's debt and coll with coll increase, debt decrease", async () => {
