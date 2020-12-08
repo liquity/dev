@@ -276,25 +276,25 @@ A first-order system of $n+m$ troves undergoes $m$ trove liquidations, before ev
 
 Consider the $m$ past liquidations from the point of view of an active first-order trove $i$. As per (\ref{eq:2}), the stake of trove $i$ is $s_i = c_i$.\\
 
-Let’s define the reward from liquidating trove $k$ received by trove $i$ as the pair $R_i^k = (x_i^k, y_i^k)$ where $x_i^k$ is the share of trove $k$’s collateral received by trove $i$ and $y_i^k$ is the share trove $k$’s debt absorbed by trove $i$.\\
+Let’s the reward from liquidating trove $k$ received by trove $i$ be the pair $R_i^k = (x_i^k, y_i^k)$ where $x_i^k$ is the share of trove $k$’s collateral assigned to trove $i$, and $y_i^k$ is the share of trove $k$’s debt assigned to trove $i$.\\
 
-Let’s call $x_i$ the total accumulated collateral from rewards earned by trove $i$. At the end of the first-order stage this is the sum of its collateral rewards from $m$ past liquidations.\\
+Let $x_i$ be the total accumulated collateral from rewards earned by trove $i$. At the end of the first-order stage this is the sum of its collateral rewards from $m$ past liquidations.\\
 
-(For simplicity, let’s assume that troves $n+1, ..., n+m$ are the liquidated troves, in that order, and $1, ..., n$ are those that remain)\\
+(For simplicity, let’s assume that troves $n+1, ..., n+m$ are the liquidated troves, in that order, and $1, ..., n$ are those that remain )\\
 
-For a remaining trove:\\
+For a trove that remains in the system, its total accumulated collateral from rewards is:\\
 
 \begin{equation} \label{eq:collreward}
   x_i = x_i^{n+1} + ... + x_i^{n+m} = \sum_{k=n+1}^{n+m}x_i^k = \sum_{j=1}^{m}x_i^{n+j}
 \end{equation}
 
-For a liquidated trove the sum would be truncated at the previous liquidated trove: \\
+For a trove liquidated in the sequence, its reward sum is truncated at the previous liquidated trove \\
 
 \begin{equation}
   x_i = x_i^{n+1} + ... + x_i^{i-1} = \sum_{k=n+1}^{i-1}x_i^k
 \end{equation}
 
-With each liquidation, $c_j$ collateral is removed from the system. Again, as per (\ref{eq:2}), stake equals collateral. Thus, the $S$ numerator in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated trove.\\ 
+With each liquidation j, $c_j$ collateral is removed from the system. As per (\ref{eq:2}), stake equals collateral. Thus, the total stakes denominator $S$ in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated trove.\\ 
 
 
 Let
@@ -311,15 +311,16 @@ and
 \end{equation}
 
 \bigskip
-We now sum all reward events, noting that the liquidated trove’s collateral is removed from the $S$ denominator at each reward. Getting back to (\ref{eq:collreward}), note that for each previous liquidated trove $n+j$, the share of collateral that corresponds to trove $i$ is: \\
+Consider the collateral reward for active trove $i$, received from the single liquidation of trove $n + j$: 
+ \\
 
 \begin{equation} 
   x_i^j = \frac{c_i}{C_{n+m}-L_j}(c_{n+j}+x_{n+j})
 \end{equation}
 
-The denominator $C_{n+m}-L_j$ corresponds to the fact that the amount of total initial stakes has been reduced by the amount of liquidated collateral from  troves until $j$, $L_j$. The collateral to redistribute is $c_{n+j}+x_{n+j}$, which corresponds to the initial collateral of the liquidated trove, $c_{n+j}$, plus the collateral it has earned from previous liquidations, $x_{n+j}$. \\
+The denominator $C_{n+m}-L_j$ corresponds to the fact that the initial total stakes has been reduced by the amount of liquidated collateral from  troves up to and including $j$, that is, $L_j$. The collateral to redistribute is $c_{n+j}+x_{n+j}$, which corresponds to the initial collateral of the liquidated trove, $c_{n+j}$, plus the collateral it has earned from previous liquidations, $x_{n+j}$. \\
 
-Therefore:\\
+We now sum all reward events, noting that the total liquidated collateral is removed from the denominator at each reward. This yields the total collateral reward for active trove $i$:\\
 
 \begin{equation} 
     x_i=c_i\left[\frac{c_{n+1}+x_{n+1}}{C_{n+m}-L_1}+\frac{c_{n+2}+x_{n+2}}{C_{n+m}-L_2}+\frac{c_{n+3}+x_{n+3}}{C_{n+m}-L_3}+...+\frac{c_{n+m}+x_{n+m}}{C_{n+m}-L_m}\right]
