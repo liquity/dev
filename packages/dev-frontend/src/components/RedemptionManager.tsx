@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
-import { Decimal } from "@liquity/decimal";
+import { Decimal, Percent } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -93,7 +93,9 @@ export const RedemptionManager: React.FC = () => {
 
   const edited = amount.nonZero !== undefined;
   const ethAmount = amount.div(price);
-  const fee = ethAmount.nonZero?.mul(fees.redemptionFeeFactor(amount.div(total.debt)));
+  const feeFactor = fees.redemptionFeeFactor(amount.div(total.debt));
+  const feePct = new Percent(feeFactor);
+  const fee = ethAmount.nonZero?.mul(feeFactor);
 
   return (
     <>
@@ -135,7 +137,15 @@ export const RedemptionManager: React.FC = () => {
           ></EditableRow>
 
           {fee && (
-            <StaticRow label="Fee" inputId="redemption-fee" amount={fee.toString(4)} unit="ETH" />
+            <StaticRow
+              label="Fee"
+              inputId="redemption-fee"
+              amount={fee.toString(4)}
+              color="danger"
+              pendingAmount={feePct.toString(2)}
+              pendingColor="danger"
+              unit="ETH"
+            />
           )}
         </Box>
       </Card>

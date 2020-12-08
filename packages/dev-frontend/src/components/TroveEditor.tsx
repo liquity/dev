@@ -14,7 +14,7 @@ type TroveEditorProps = {
   original: Trove;
   edited: Trove;
   afterFee: Trove;
-  fee?: Decimal;
+  feeFactor: Decimal;
   change?: TroveChange<Decimal>;
   changePending: boolean;
   dispatch: (
@@ -28,7 +28,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   original,
   edited,
   afterFee,
-  fee,
+  feeFactor,
   change,
   changePending,
   dispatch
@@ -37,18 +37,18 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   const editingState = useState<string>();
 
-  const pendingCollateral =
-    original.collateral.nonZero && Difference.between(edited.collateral, original.collateral);
-  const pendingDebt = original.debt.nonZero && Difference.between(edited.debt, original.debt);
+  const fee = afterFee.subtract(edited).debt.nonZero;
+  const feePct = new Percent(feeFactor);
 
-  const collateralRatio =
-    (edited.collateral.nonZero || edited.debt.nonZero) && afterFee.collateralRatio(price);
+  const pendingCollateral = Difference.between(edited.collateral, original.collateral.nonZero)
+    .nonZero;
+  const pendingDebt = Difference.between(edited.debt, original.debt.nonZero).nonZero;
+
+  const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
+  const collateralRatio = !afterFee.isEmpty ? afterFee.collateralRatio(price) : undefined;
   const collateralRatioPct = new Percent(collateralRatio || { toString: () => "N/A" });
-  const collateralRatioChange = Difference.between(
-    afterFee.collateralRatio(price),
-    original.collateralRatio(price).finite
-  );
-  const collateralRatioChangePct = new Percent(collateralRatioChange);
+  const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
+  const collateralRatioChangePct = collateralRatioChange && new Percent(collateralRatioChange);
 
   return (
     <Card>
@@ -101,6 +101,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
             label="Fee"
             inputId="trove-borrowing-fee"
             amount={fee.toString(2)}
+            color="danger"
+            pendingAmount={feePct.toString(2)}
+            pendingColor="danger"
             unit={COIN}
           />
         )}
@@ -118,7 +121,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
               ? "success"
               : collateralRatio?.gt(Trove.MINIMUM_COLLATERAL_RATIO)
               ? "warning"
-              : "danger"
+              : collateralRatio?.lte(Trove.MINIMUM_COLLATERAL_RATIO)
+              ? "danger"
+              : "muted"
           }
           pendingAmount={
             collateralRatioChange.positive?.absoluteValue?.gt(10)
