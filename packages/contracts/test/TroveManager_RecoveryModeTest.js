@@ -1346,17 +1346,29 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const TCR = await troveManager.getTCR()
 
     const ICR_A = await troveManager.getCurrentICR(A, price)
+    const ICR_B = await troveManager.getCurrentICR(B, price)
     const ICR_C = await troveManager.getCurrentICR(C, price)
 
+    console.log(`TCR: ${TCR}`)
+    console.log(`ICR_A: ${ICR_A}`)
+    console.log(`ICR_B: ${ICR_B}`)
+    console.log(`ICR_C: ${ICR_C}`)
+
     assert.isTrue(ICR_A.gt(TCR))
-    const A_liqTxPromise = troveManager.liquidate(A)
-    
-    assertRevert(A_liqTxPromise)
+    const liqTxA = await troveManager.liquidate(A)
+    assert.isTrue(liqTxA.receipt.status)
+  
+    // Check liquidation of A does nothing - trove remains in system
+    assert.isTrue(await sortedTroves.contains(A))
+    assert.equal(await troveManager.getTroveStatus(A), 1) // Status 1 -> active
 
     // Check C, with ICR < TCR, can be liquidated
     assert.isTrue(ICR_C.lt(TCR))
     const liqTxC = await troveManager.liquidate(C)
     assert.isTrue(liqTxC.receipt.status)
+
+    assert.isFalse(await sortedTroves.contains(C))
+    assert.equal(await troveManager.getTroveStatus(C), 2) // Status 0 -> closed
   })
 
   it("liquidate(): reverts if trove is non-existent", async () => {
@@ -1561,7 +1573,6 @@ contract('TroveManager - in Recovery Mode', async accounts => {
   })
 
   // --- liquidateTroves ---
-
 
   it("liquidateTroves(): With all ICRs > 110%, Liquidates Troves until system leaves recovery mode", async () => {
     // make 8 Troves accordingly

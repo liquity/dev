@@ -145,20 +145,16 @@ contract('LUSDToken', async accounts => {
 
       const allowance_A_after = await lusdTokenTester.allowance(bob, alice)
       assert.equal(allowance_A_after, 100)
-
-      // Bob attempts to approve more than his balance - check it reverts
-      const txPromise = lusdTokenTester.approve(carol, 100, {from: bob})
-      assertRevert(txPromise)
     })
 
     it("approve(): reverts when spender param is address(0)", async () => {
       const txPromise = lusdTokenTester.approve(ZERO_ADDRESS, 100, {from: bob})
-      assertRevert(txPromise)
+      await assertRevert(txPromise)
     })
 
     it("approve(): reverts when owner param is address(0)", async () => {
       const txPromise = lusdTokenTester.callInternalApprove(ZERO_ADDRESS, alice, dec(1000, 18), {from: bob})
-      assertRevert(txPromise)
+      await assertRevert(txPromise)
     })
 
     it("transferFrom(): successfully transfers from an account which is it approved to transfer from", async () => {
@@ -187,7 +183,7 @@ contract('LUSDToken', async accounts => {
 
       // Alice tries to transfer more tokens from bob's account to carol than she's allowed
       const txPromise = lusdTokenTester.transferFrom(bob, carol, 50, {from: alice})
-      assertRevert(txPromise)
+      await assertRevert(txPromise)
     })
 
     it("transfer(): increases the recipient's balance by the correct amount", async () => {
@@ -202,7 +198,7 @@ contract('LUSDToken', async accounts => {
       assert.equal(await lusdTokenTester.balanceOf(bob), 100)
 
       const txPromise = lusdTokenTester.transfer(alice, 101, {from: bob})
-      assertRevert(txPromise)
+      await assertRevert(txPromise)
     })
 
     it('transfer(): transferring to a blacklisted address reverts', async () => {
@@ -355,12 +351,12 @@ contract('LUSDToken', async accounts => {
       assert.equal(await lusdTokenTester.allowance(approve.owner, approve.spender), approve.value)
       
       // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
-      assertRevert(lusdTokenTester.permit(
+      await assertRevert(lusdTokenTester.permit(
         approve.owner, approve.spender, approve.value, 
         deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
      
       // Check that the zero address fails
-      assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
+      await assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
         approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
     })
 
@@ -378,12 +374,12 @@ contract('LUSDToken', async accounts => {
       assert.equal(await lusdTokenTester.allowance(approve.owner, approve.spender), approve.value)
       
       // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
-      assertRevert(lusdTokenTester.permit(
+      await assertRevert(lusdTokenTester.permit(
         approve.owner, approve.spender, approve.value, 
         deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
      
       // Check that the zero address fails
-      assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
+      await assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
         approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
     })
 
