@@ -34,8 +34,6 @@ dataSources:
           handler: handleBorrowerOperationsAddressChanged
         - event: StabilityPoolAddressChanged(address)
           handler: handleStabilityPoolAddressChanged
-        - event: PriceFeedAddressChanged(address)
-          handler: handlePriceFeedAddressChanged
         - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleTroveUpdated
         - event: TroveLiquidated(indexed address,uint256,uint256,uint8)
@@ -95,24 +93,3 @@ templates:
           handler: handleUserDepositChanged
         - event: ETHGainWithdrawn(indexed address,uint256,uint256)
           handler: handleETHGainWithdrawn
-  - name: PriceFeed
-    kind: ethereum/contract
-    network: ropsten
-    source:
-      abi: PriceFeed
-    mapping:
-      file: ./src/mappings/PriceFeed.ts
-      language: wasm/assemblyscript
-      kind: ethereum/events
-      apiVersion: 0.0.4
-      entities:
-        - Global
-        - Transaction
-        - PriceChange
-        - SystemState
-      abis:
-        - name: PriceFeed
-          file: ../lib-ethers/abi/PriceFeed.json
-      eventHandlers:
-        - event: PriceUpdated(uint256)
-          handler: handlePriceUpdated

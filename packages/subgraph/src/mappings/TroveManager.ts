@@ -5,10 +5,9 @@ import {
   Liquidation,
   Redemption,
   BorrowerOperationsAddressChanged,
-  StabilityPoolAddressChanged,
-  PriceFeedAddressChanged
+  StabilityPoolAddressChanged
 } from "../../generated/TroveManager/TroveManager";
-import { BorrowerOperations, StabilityPool, PriceFeed } from "../../generated/templates";
+import { BorrowerOperations, StabilityPool } from "../../generated/templates";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
@@ -27,10 +26,6 @@ export function handleBorrowerOperationsAddressChanged(
 
 export function handleStabilityPoolAddressChanged(event: StabilityPoolAddressChanged): void {
   StabilityPool.create(event.params._stabilityPoolAddress);
-}
-
-export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {
-  PriceFeed.create(event.params._newPriceFeedAddress);
 }
 
 export function handleTroveUpdated(event: TroveUpdated): void {
