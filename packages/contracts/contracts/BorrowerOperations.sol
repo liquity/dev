@@ -234,11 +234,13 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
 
         if (isWithdrawal) { 
-            if (_checkRecoveryMode()) {
-                require(L.newICR >= L.oldICR, "BorrowerOps: Cannot decrease your ICR in RecoveryMode");
+            if (!_checkRecoveryMode()) {
+                _requireICRisAboveMCR(L.newICR);
+                if (_isDebtIncrease) { // collateral withdrawals that would trigger Recovery Mode are permitted, debt increases not
+                    _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+                }
             } else {
-                _requireICRisAboveMCR(L.newICR); 
-                _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+                require(L.newICR >= L.oldICR, "BorrowerOps: Cannot decrease your Trove's ICR in Recovery Mode");
             }
         }
         if (!L.isCollIncrease) { _requireCollAmountIsWithdrawable(L.coll, L.collChange); }
