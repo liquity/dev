@@ -57,7 +57,11 @@
     "test:dev-frontend:run": "yarn workspace @liquity/dev-frontend test --watchAll=false --forceExit --detectOpenHandles",
     "test:dev-frontend:stop-dev-chain": "yarn stop-dev-chain",
     "test-live": "run-s test-live:*",
-    "test-live:lib-ethers": "yarn workspace @liquity/lib-ethers test-live"
+    "test-live:lib-ethers": "yarn workspace @liquity/lib-ethers test-live",
+    "coverage": "run-s coverage:*",
+    "coverage:contracts": "yarn workspace @liquity/contracts coverage",
+    "coveralls": "run-s coveralls:*",
+    "coveralls:contracts": "yarn workspace @liquity/contracts coveralls"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5",
