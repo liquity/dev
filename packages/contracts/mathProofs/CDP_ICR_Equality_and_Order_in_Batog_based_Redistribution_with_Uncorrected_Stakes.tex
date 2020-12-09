@@ -225,7 +225,7 @@ Note that the systems may not be identical, in particular there could be equival
 \end{proof}
 
 \begin{definition}[Equivalent system order evolution]
-  Given two equivalent system of troves $\Gamma \equiv \Gamma'$ and a transformation for the first one $f$, we define an equivalent system order evolution $f'$ over $\Gamma'$ as the following sequence of events:
+  Given two equivalent system of troves $\Gamma \equiv \Gamma'$ and a evolution for the first one $f$, we define an equivalent system order evolution $f'$ over $\Gamma'$ as the following sequence of events:
   \begin{itemize}
   \item The exact same new troves of $f$ are created
   \item For each liquidation $i \in \Gamma$ of $f$, the trove $j = \eta(i) \in \Gamma'$ is liquidated.
@@ -258,19 +258,19 @@ Graphically:
 We first prove that ICR equality is maintained with rewards proportional to corrected stakes - starting with the simplest case, and progressively generalizing, and finally we prove that order is maintained too.
 
 \begin{itemize}
-  \item Lemma \ref{result:1}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  \item Lemma \ref{result:1}. We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 
     \includegraphics[width=\linewidth]{System_order_evolution_1.png}
 
-  \item Lemma \ref{result:2}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of liquidations $P$, such that $|P| > 1$ and $j \notin P$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  \item Lemma \ref{result:2}. We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of liquidations $P$, such that $|P| > 1$ and $j \notin P$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 
     \includegraphics[width=\linewidth]{System_order_evolution_2.png}
 
-  \item Lemma \ref{result:3}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  \item Lemma \ref{result:3}. We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 
     \includegraphics[width=\linewidth]{System_order_evolution_3.png}
 
-  \item Theorem \ref{result:4}. We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+  \item Theorem \ref{result:4}. We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
     In other words, in a second-order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between any first-order trove and corresponding second-order trove with the same ICR holds across $P$ subsequent liquidation events.
 
     \includegraphics[width=\linewidth]{System_order_evolution_4.png}
@@ -304,7 +304,7 @@ We first prove that ICR equality is maintained with rewards proportional to corr
 
 %\subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second-Order System with $m$ Past Liquidations}
 
-\begin{lemma}\label{result:1} We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+\begin{lemma}\label{result:1} We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
 
 \begin{proof}
@@ -587,7 +587,7 @@ Thus, canceling $\lambda$:
 \end{proof}
 
 %\subsection{EXTENSION PROOF. Arbitrary Number of Liquidation Events At Current System Order}
-\begin{lemma} \label{result:2} We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of liquidations $P$, such that $|P| > 1$ and $j \notin P$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+\begin{lemma} \label{result:2} We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of liquidations $P$, such that $|P| > 1$ and $j \notin P$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
 
 \begin{proof}
@@ -600,7 +600,7 @@ Liquidation events do not alter the stakes that earn shares of liquidated collat
 
 %\subsection{EXTENSION PROOF. Arbitrary Number of troves Added Between Liquidation Events}
 \begin{lemma} \label{result:3}
-  We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+  We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
 \end{lemma}
 
 \begin{proof}
@@ -621,7 +621,7 @@ The fact that the liquidated trove is first or second-order doesn’t have any i
 
 %\subsection{CONCLUSION 1}
 \begin{theorem} \label{result:4}
-We consider a system transition $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
 In other words, in a second-order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
 \end{theorem}
 
