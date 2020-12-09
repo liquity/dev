@@ -357,11 +357,17 @@ contract('LUSDToken', async accounts => {
      
       // Check that the zero address fails
       await assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
-        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
+        approve.spender, approve.value, deadline, '0x99', r, s), 
+        'LUSD: Recovered address from the sig is not the owner')
+
+      // Check that the zero deadline fails
+      await assertRevert(lusdTokenTester.permit(
+        approve.owner, approve.spender, approve.value, 0, '0x99', r, s), 
+        'LUSD: Zero deadline is not valid')
     })
 
     it('permits and emits an Approval event (replay protected), with infinite deadline', async () => {
-      const deadline = 0
+      const deadline = 100000000000000
 
       // Approve it
       const { v, r, s, tx } = await buildPermitTx(deadline)
