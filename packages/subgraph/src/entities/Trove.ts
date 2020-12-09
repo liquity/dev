@@ -8,12 +8,11 @@ import { calculateCollateralRatio } from "../utils/collateralRatio";
 import { isLiquidation, isRedemption } from "../types/TroveOperation";
 
 import {
-  getChangeSequenceNumber,
   increaseNumberOfLiquidatedTroves,
   increaseNumberOfOpenTroves,
   increaseNumberOfTrovesClosedByOwner
 } from "./Global";
-import { initChange, finishChange } from "./Change";
+import { beginChange, initChange, finishChange } from "./Change";
 import { getCurrentPrice, updateSystemStateByTroveChange } from "./SystemState";
 import { getCurrentLiquidation } from "./Liquidation";
 import { getCurrentRedemption } from "./Redemption";
@@ -50,7 +49,7 @@ function closeCurrentTroveOfOwner(_user: Address): void {
 }
 
 function createTroveChange(event: ethereum.Event): TroveChange {
-  let sequenceNumber = getChangeSequenceNumber();
+  let sequenceNumber = beginChange(event);
   let troveChange = new TroveChange(sequenceNumber.toString());
   initChange(troveChange, event, sequenceNumber);
 

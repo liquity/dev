@@ -5,7 +5,8 @@ import {
   Liquidation,
   Redemption,
   BorrowerOperationsAddressChanged,
-  StabilityPoolAddressChanged
+  StabilityPoolAddressChanged,
+  PriceFeedAddressChanged
 } from "../../generated/TroveManager/TroveManager";
 import { BorrowerOperations, StabilityPool } from "../../generated/templates";
 
@@ -16,7 +17,7 @@ import { getTroveOperationFromTroveManagerOperation } from "../types/TroveOperat
 import { finishCurrentLiquidation } from "../entities/Liquidation";
 import { finishCurrentRedemption } from "../entities/Redemption";
 import { updateTrove } from "../entities/Trove";
-import { updateTotalRedistributed } from "../entities/Global";
+import { updatePriceFeedAddress, updateTotalRedistributed } from "../entities/Global";
 
 export function handleBorrowerOperationsAddressChanged(
   event: BorrowerOperationsAddressChanged
@@ -26,6 +27,10 @@ export function handleBorrowerOperationsAddressChanged(
 
 export function handleStabilityPoolAddressChanged(event: StabilityPoolAddressChanged): void {
   StabilityPool.create(event.params._stabilityPoolAddress);
+}
+
+export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {
+  updatePriceFeedAddress(event.params._newPriceFeedAddress);
 }
 
 export function handleTroveUpdated(event: TroveUpdated): void {

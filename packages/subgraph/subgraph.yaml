@@ -21,6 +21,7 @@ dataSources:
         - Global
         - User
         - Transaction
+        - PriceChange
         - Trove
         - TroveChange
         - Redemption
@@ -29,11 +30,15 @@ dataSources:
       abis:
         - name: TroveManager
           file: ../lib-ethers/abi/TroveManager.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: BorrowerOperationsAddressChanged(address)
           handler: handleBorrowerOperationsAddressChanged
         - event: StabilityPoolAddressChanged(address)
           handler: handleStabilityPoolAddressChanged
+        - event: PriceFeedAddressChanged(address)
+          handler: handlePriceFeedAddressChanged
         - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleTroveUpdated
         - event: TroveLiquidated(indexed address,uint256,uint256,uint8)
@@ -57,6 +62,7 @@ templates:
         - Global
         - User
         - Transaction
+        - PriceChange
         - Trove
         - TroveChange
         - SystemState
@@ -65,6 +71,8 @@ templates:
           file: ../lib-ethers/abi/BorrowerOperations.json
         - name: TroveManager
           file: ../lib-ethers/abi/TroveManager.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleTroveUpdated
@@ -82,12 +90,15 @@ templates:
         - Global
         - User
         - Transaction
+        - PriceChange
         - StabilityDeposit
         - StabilityDepositChange
         - SystemState
       abis:
         - name: StabilityPool
           file: ../lib-ethers/abi/StabilityPool.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: UserDepositChanged(indexed address,uint256)
           handler: handleUserDepositChanged
