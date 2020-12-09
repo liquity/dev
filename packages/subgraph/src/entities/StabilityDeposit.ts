@@ -4,8 +4,7 @@ import { StabilityDepositChange, StabilityDeposit } from "../../generated/schema
 
 import { decimalize, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
 
-import { getChangeSequenceNumber } from "./Global";
-import { initChange, finishChange } from "./Change";
+import { beginChange, initChange, finishChange } from "./Change";
 import { getUser } from "./User";
 import { updateSystemStateByStabilityDepositChange } from "./SystemState";
 
@@ -43,7 +42,7 @@ function closeCurrentStabilityDepositOfOwner(_user: Address): void {
 }
 
 function createStabilityDepositChange(event: ethereum.Event): StabilityDepositChange {
-  let sequenceNumber = getChangeSequenceNumber();
+  let sequenceNumber = beginChange(event);
   let stabilityDepositChange = new StabilityDepositChange(sequenceNumber.toString());
   initChange(stabilityDepositChange, event, sequenceNumber);
 
