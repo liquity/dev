@@ -1,7 +1,7 @@
 import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { proxify } from "./utils";
-import { Trove, TroveChange } from "./Trove";
+import { Trove, TroveAdjustment, TroveClosure, TroveCreation } from "./Trove";
 
 export type PopulatedLiquityTransaction<
   P = unknown,
@@ -32,6 +32,19 @@ export type SuccessfulReceipt<R = unknown, D = unknown> = {
 export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
 export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
 
+export type TroveChangeWithFees<T> = {
+  params: T;
+  newTrove: Trove;
+  fee: Decimal;
+};
+
+export type TroveCreationDetails = TroveChangeWithFees<TroveCreation<Decimal>>;
+export type TroveAdjustmentDetails = TroveChangeWithFees<TroveAdjustment<Decimal>>;
+
+export type TroveClosureDetails = {
+  params: TroveClosure<Decimal>;
+};
+
 export type LiquidationDetails = {
   fullyLiquidated: string[];
   partiallyLiquidated?: string;
@@ -48,25 +61,29 @@ export type RedemptionDetails = {
   fee: Decimal;
 };
 
-export interface TransactableLiquity {
-  openTrove(trove: Trove): Promise<void>;
-  closeTrove(): Promise<void>;
+export type CollateralGainTransferDetails = {
+  collateralGain: Decimal;
+  newTrove: Trove;
+};
 
-  depositCollateral(amount: Decimalish): Promise<void>;
-  withdrawCollateral(amount: Decimalish): Promise<void>;
-  borrowLUSD(amount: Decimalish): Promise<void>;
-  repayLUSD(amount: Decimalish): Promise<void>;
-  changeTrove(change: TroveChange): Promise<void>;
+export interface TransactableLiquity {
+  openTrove(params: TroveCreation<Decimalish>): Promise<TroveCreationDetails>;
+  closeTrove(): Promise<TroveClosureDetails>;
+
+  depositCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
+  withdrawCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
+  borrowLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
+  repayLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
+  adjustTrove(params: TroveAdjustment<Decimalish>): Promise<TroveAdjustmentDetails>;
 
   setPrice(price: Decimalish): Promise<void>;
-  // updatePrice(): Promise<void>;
 
   liquidate(address: string): Promise<LiquidationDetails>;
   liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;
 
   depositLUSDInStabilityPool(amount: Decimalish, frontEndTag?: string): Promise<void>;
   withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<void>;
-  transferCollateralGainToTrove(): Promise<void>;
+  transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
   sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
 

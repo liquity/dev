@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Text, Flex, Label, Input } from "theme-ui";
+import { Icon } from "./Icon";
 
 type RowProps = {
   label: string;
@@ -58,12 +59,21 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
         </Text>
 
         <Text sx={{ fontSize: 2 }} color={pendingColor}>
-          {pendingAmount &&
-            `${pendingAmount
-              .replace("++", "▲▲")
-              .replace("--", "▼▼")
-              .replace("+", "▲ ")
-              .replace("-", "▼ ")}`}
+          {pendingAmount === "++" ? (
+            <Icon name="angle-double-up" />
+          ) : pendingAmount === "--" ? (
+            <Icon name="angle-double-down" />
+          ) : pendingAmount?.startsWith("+") ? (
+            <>
+              <Icon name="angle-up" /> {pendingAmount.substr(1)}
+            </>
+          ) : pendingAmount?.startsWith("-") ? (
+            <>
+              <Icon name="angle-down" /> {pendingAmount.substr(1)}
+            </>
+          ) : (
+            pendingAmount
+          )}
         </Text>
       </Flex>
     </Label>
@@ -104,10 +114,6 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
 
-  useEffect(() => {
-    setInvalid(false);
-  }, [editedAmount]);
-
   return (
     <Row {...{ label, labelFor: inputId, unit }}>
       {editing === inputId ? (
@@ -122,11 +128,15 @@ export const EditableRow: React.FC<EditableRowProps> = ({
           onChange={e => {
             try {
               setEditedAmount(e.target.value);
+              setInvalid(false);
             } catch {
               setInvalid(true);
             }
           }}
-          onBlur={() => setEditing(undefined)}
+          onBlur={() => {
+            setEditing(undefined);
+            setInvalid(false);
+          }}
         />
       ) : (
         <StaticAmounts

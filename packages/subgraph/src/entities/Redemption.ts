@@ -17,7 +17,7 @@ export function getCurrentRedemption(event: ethereum.Event): Redemption {
     let newRedemption = new Redemption(sequenceNumber.toString());
 
     newRedemption.sequenceNumber = sequenceNumber;
-    newRedemption.transaction = getTransaction(event.transaction, event.block).id;
+    newRedemption.transaction = getTransaction(event).id;
     newRedemption.redeemer = getUser(event.transaction.from).id;
     newRedemption.tokensAttemptedToRedeem = DECIMAL_ZERO;
     newRedemption.tokensActuallyRedeemed = DECIMAL_ZERO;
