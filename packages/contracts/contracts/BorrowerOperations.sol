@@ -5,7 +5,8 @@ pragma solidity 0.6.11;
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/ILUSDToken.sol";
-import "./Interfaces/IPool.sol";
+import "./Interfaces/IActivePool.sol";
+import "./Interfaces/IDefaultPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import './Interfaces/ILUSDToken.sol';
 import "./Interfaces/IPriceFeed.sol";
@@ -21,9 +22,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     ITroveManager public troveManager;
 
-    IPool public activePool;
+    IActivePool public activePool;
 
-    IPool public defaultPool;
+    IDefaultPool public defaultPool;
 
     address stabilityPoolAddress;
 
@@ -90,8 +91,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         onlyOwner
     {
         troveManager = ITroveManager(_troveManagerAddress);
-        activePool = IPool(_activePoolAddress);
-        defaultPool = IPool(_defaultPoolAddress);
+        activePool = IActivePool(_activePoolAddress);
+        defaultPool = IDefaultPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);

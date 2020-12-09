@@ -3,7 +3,8 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/ITroveManager.sol";
-import "./Interfaces/IPool.sol";
+import "./Interfaces/IDefaultPool.sol";
+import "./Interfaces/IActivePool.sol";
 import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
@@ -20,9 +21,9 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     address public borrowerOperationsAddress;
 
-    IPool public activePool;
+    IActivePool public activePool;
 
-    IPool public defaultPool;
+    IDefaultPool public defaultPool;
 
     IStabilityPool public stabilityPool;
 
@@ -212,8 +213,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         onlyOwner
     {
         borrowerOperationsAddress = _borrowerOperationsAddress;
-        activePool = IPool(_activePoolAddress);
-        defaultPool = IPool(_defaultPoolAddress);
+        activePool = IActivePool(_activePoolAddress);
+        defaultPool = IDefaultPool(_defaultPoolAddress);
         stabilityPool = IStabilityPool(_stabilityPoolAddress);
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
@@ -777,7 +778,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     function _movePendingTroveRewardsToActivePool(uint _LUSD, uint _ETH) internal {
         defaultPool.decreaseLUSDDebt(_LUSD);
         activePool.increaseLUSDDebt(_LUSD);
-        defaultPool.sendETH(address(activePool), _ETH);
+        defaultPool.sendETHToActivePool(_ETH);
     }
 
     // --- Redemption functions ---
