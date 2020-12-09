@@ -173,7 +173,7 @@ Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistri
 To break up the proof, we introduce the notion of \textit{system order}. 
 
 \begin{definition}[System Order]
-  We define the order $n$ of a system of troves as the number of trove creations that are either the first one or immediately preceded by a liquidation. We usually denote a system of order $n$ by $\Gamma_n$.\\
+  We define the order $n$ of a system of troves as the number of trove creations that are either the first one or immediately preceded by a liquidation, with no other liquidations and/or trove creation in between. We usually denote a system of order $n$ by $\Gamma_n$.
 \end{definition}
 Thus, when the first trove is created, the system order equals 1. The first trove creation event after a series of liquidations triggers a system evolution, and the system order increases by 1.
 
