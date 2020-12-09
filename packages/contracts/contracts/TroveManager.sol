@@ -541,6 +541,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
             }  else break;  // break if the loop reaches a Trove with ICR >= MCR
 
+            // Break the loop if it reaches the first Trove in the sorted list
+            if (L.user == sortedTroves.getFirst()) { break; }
             L.i++;
         }
     }
@@ -574,8 +576,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
             } else break;  // break if the loop reaches a Trove with ICR >= MCR
 
-            // Break the loop if it reaches the first Trove in the sorted list
-            if (L.user == sortedTroves.getFirst()) { break; }
             L.i++;
         }
     }
