@@ -12,7 +12,9 @@ import {
   ObservableLiquity,
   TroveWithPendingRewards,
   Trove,
-  StabilityDeposit
+  emptyTrove,
+  StabilityDeposit,
+  Fees
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
@@ -65,7 +67,7 @@ const totalRedistributed = new Query<Trove, Global>(queryGlobal, ({ data: { glob
       debt: decimalify(rawTotalRedistributedDebt)
     });
   } else {
-    return new Trove();
+    return emptyTrove;
   }
 });
 
@@ -82,7 +84,7 @@ const total = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
       debt: totalDebt
     });
   } else {
-    return new Trove();
+    return emptyTrove;
   }
 });
 
@@ -144,7 +146,7 @@ const troveWithoutRewards = new Query<
   }
 );
 
-const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves, TrovesVariables>(
+const troves = new Query<[string, TroveWithPendingRewards][], Troves, TrovesVariables>(
   gql`
     query Troves($orderDirection: OrderDirection!, $startIdx: Int!, $numberOfTroves: Int!) {
       troves(
@@ -164,9 +166,7 @@ const troves = new Query<(readonly [string, TroveWithPendingRewards])[], Troves,
     ${troveRawFields}
   `,
   ({ data: { troves } }) =>
-    troves.map(
-      ({ owner: { id }, ...rawFields }) => [getAddress(id), troveFromRawFields(rawFields)] as const
-    )
+    troves.map(({ owner: { id }, ...rawFields }) => [getAddress(id), troveFromRawFields(rawFields)])
 );
 
 const blockNumberDummy = new Query<void, BlockNumberDummy, BlockNumberDummyVariables>(
@@ -301,5 +301,9 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
       }
       return;
     }
+  }
+
+  getFees(): Promise<Fees> {
+    throw new Error("Method not implemented.");
   }
 }

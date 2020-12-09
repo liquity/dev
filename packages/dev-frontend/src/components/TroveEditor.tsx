@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Percent, Difference, Decimalish } from "@liquity/decimal";
-import { Trove, LiquityStoreState } from "@liquity/lib-base";
+import { Percent, Difference, Decimalish, Decimal } from "@liquity/decimal";
+import { Trove, LiquityStoreState, TroveChange } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { EditableRow, StaticRow } from "./Editor";
@@ -11,9 +11,11 @@ import { Icon } from "./Icon";
 import { COIN } from "../strings";
 
 type TroveEditorProps = {
-  title: string;
   original: Trove;
   edited: Trove;
+  afterFee: Trove;
+  feeFactor: Decimal;
+  change?: TroveChange<Decimal>;
   changePending: boolean;
   dispatch: (
     action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
@@ -23,9 +25,11 @@ type TroveEditorProps = {
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
-  title,
   original,
   edited,
+  afterFee,
+  feeFactor,
+  change,
   changePending,
   dispatch
 }) => {
@@ -33,26 +37,24 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   const editingState = useState<string>();
 
-  const { collateralDifference, debtDifference } = original.whatChanged(edited);
-  const isChanged = collateralDifference !== undefined || debtDifference !== undefined;
+  const fee = afterFee.subtract(edited).debt.nonZero;
+  const feePct = new Percent(feeFactor);
 
-  const pendingCollateral = original.collateral.nonZero && collateralDifference;
-  const pendingDebt = original.debt.nonZero && debtDifference;
+  const pendingCollateral = Difference.between(edited.collateral, original.collateral.nonZero)
+    .nonZero;
+  const pendingDebt = Difference.between(edited.debt, original.debt.nonZero).nonZero;
 
-  const collateralRatio =
-    (edited.collateral.nonZero || edited.debt.nonZero) && edited.collateralRatio(price);
+  const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
+  const collateralRatio = !afterFee.isEmpty ? afterFee.collateralRatio(price) : undefined;
   const collateralRatioPct = new Percent(collateralRatio || { toString: () => "N/A" });
-  const collateralRatioChange = Difference.between(
-    edited.collateralRatio(price),
-    original.collateralRatio(price).finite
-  );
-  const collateralRatioChangePct = new Percent(collateralRatioChange);
+  const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
+  const collateralRatioChangePct = collateralRatioChange && new Percent(collateralRatioChange);
 
   return (
     <Card>
       <Heading>
-        {title}
-        {isChanged && !changePending && (
+        {original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
+        {change && !changePending && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
@@ -94,6 +96,18 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           }
         />
 
+        {fee && (
+          <StaticRow
+            label="Fee"
+            inputId="trove-borrowing-fee"
+            amount={fee.toString(2)}
+            color="danger"
+            pendingAmount={feePct.toString(2)}
+            pendingColor="danger"
+            unit={COIN}
+          />
+        )}
+
         <StaticRow
           label="Collateral ratio"
           inputId="trove-collateral-ratio"
@@ -107,7 +121,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
               ? "success"
               : collateralRatio?.gt(Trove.MINIMUM_COLLATERAL_RATIO)
               ? "warning"
-              : "danger"
+              : collateralRatio?.lte(Trove.MINIMUM_COLLATERAL_RATIO)
+              ? "danger"
+              : "muted"
           }
           pendingAmount={
             collateralRatioChange.positive?.absoluteValue?.gt(10)

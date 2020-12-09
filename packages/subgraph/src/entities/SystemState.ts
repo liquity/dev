@@ -1,4 +1,4 @@
-import { ethereum, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { ethereum, BigDecimal } from "@graphprotocol/graph-ts";
 
 import {
   SystemState,
@@ -17,8 +17,10 @@ import {
   isRecoveryModeLiquidation
 } from "../types/TroveOperation";
 
-import { getGlobal, getSystemStateSequenceNumber, getChangeSequenceNumber } from "./Global";
-import { initChange, finishChange } from "./Change";
+import { getPrice } from "../calls/PriceFeed";
+
+import { getGlobal, getSystemStateSequenceNumber, getPriceFeedAddress } from "./Global";
+import { beginChange, initChange, finishChange } from "./Change";
 
 export function getCurrentSystemState(): SystemState {
   let currentSystemStateId = getGlobal().currentSystemState;
@@ -56,6 +58,8 @@ export function bumpSystemState(systemState: SystemState): void {
   global.save();
 }
 
+// To make sure this returns the latest price, a Transaction entity should be created for the
+// triggering event beforehand, either directly or indirectly through creating a Change entity
 export function getCurrentPrice(): BigDecimal {
   let currentSystemState = getCurrentSystemState();
 
@@ -63,7 +67,7 @@ export function getCurrentPrice(): BigDecimal {
 }
 
 function createPriceChange(event: ethereum.Event): PriceChange {
-  let sequenceNumber = getChangeSequenceNumber();
+  let sequenceNumber = beginChange(event);
   let priceChange = new PriceChange(sequenceNumber.toString());
   initChange(priceChange, event, sequenceNumber);
 
@@ -75,19 +79,25 @@ function finishPriceChange(priceChange: PriceChange): void {
   priceChange.save();
 }
 
-// export function updatePrice(event: ethereum.Event, _newPrice: BigInt): void {
-//   let priceChange = createPriceChange(event);
+/*
+ * Call the PriceFeed to get the latest price, and update the SystemState through a PriceChange
+ * if it has changed.
+ */
+export function checkPrice(event: ethereum.Event): void {
+  let systemState = getCurrentSystemState();
+  let oldPrice = systemState.price;
+  let newPrice = decimalize(getPrice(getPriceFeedAddress()));
 
-//   let systemState = getCurrentSystemState();
-//   let oldPrice = systemState.price;
-//   let newPrice = decimalize(_newPrice);
+  if (newPrice != oldPrice) {
+    let priceChange = createPriceChange(event);
 
-//   systemState.price = newPrice;
-//   bumpSystemState(systemState);
+    systemState.price = newPrice;
+    bumpSystemState(systemState);
 
-//   priceChange.priceChange = newPrice - oldPrice;
-//   finishPriceChange(priceChange);
-// }
+    priceChange.priceChange = newPrice - oldPrice;
+    finishPriceChange(priceChange);
+  }
+}
 
 function tryToOffsetWithTokensFromStabilityPool(
   systemState: SystemState,

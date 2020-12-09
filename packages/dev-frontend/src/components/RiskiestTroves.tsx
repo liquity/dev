@@ -275,7 +275,8 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                             [
                               trove.collateralRatioIsBelowMinimum(price),
                               "Collateral ratio not low enough"
-                            ]
+                            ],
+                            [numberOfTroves > 1, "Can't liquidate when only one Trove exists"]
                           ]}
                           send={liquity.send.liquidate.bind(liquity.send, owner)}
                           numberOfConfirmationsToWait={1}

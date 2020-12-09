@@ -1,8 +1,10 @@
 import { describe, it } from "mocha";
 import { expect } from "chai";
+import fc from "fast-check";
+
 import { BigNumber } from "@ethersproject/bignumber";
 
-import { Decimal } from "../src/Decimal";
+import { Decimal, Difference } from "../src/Decimal";
 
 describe("Decimal", () => {
   describe(".from()", () => {
@@ -171,31 +173,32 @@ describe("Decimal", () => {
 
   describe(".mul()", () => {
     it("should multiply", () => {
-      expect(
-        Decimal.from(2)
-          .mul(3)
-          .toString()
-      ).to.equal("6");
+      expect(Decimal.from(2).mul(3).toString()).to.equal("6");
     });
   });
 
   describe(".div()", () => {
     it("should divide", () => {
-      expect(
-        Decimal.from(3)
-          .div(2)
-          .toString()
-      ).to.equal("1.5");
+      expect(Decimal.from(3).div(2).toString()).to.equal("1.5");
     });
   });
 
   describe(".mulDiv()", () => {
     it("should multiply then divide", () => {
-      expect(
-        Decimal.from(2)
-          .mulDiv(3, 2)
-          .toString()
-      ).to.equal("3");
+      expect(Decimal.from(2).mulDiv(3, 2).toString()).to.equal("3");
+    });
+  });
+
+  describe(".pow()", () => {
+    it("should be roughly the same as Math.pow()", () => {
+      fc.assert(
+        fc.property(
+          fc.float(),
+          fc.integer({ min: 0, max: 0xffffffff }),
+          (x, y) =>
+            !!Difference.between(Math.pow(x, y), Decimal.from(x).pow(y)).absoluteValue?.lt(1e-10)
+        )
+      );
     });
   });
 
