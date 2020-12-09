@@ -79,8 +79,8 @@ export function updateTrove(
     return;
   }
 
-  let price = getCurrentPrice();
   let troveChange = createTroveChange(event);
+  let price = getCurrentPrice();
 
   troveChange.trove = trove.id;
   troveChange.troveOperation = operation;

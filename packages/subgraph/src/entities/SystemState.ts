@@ -58,6 +58,8 @@ export function bumpSystemState(systemState: SystemState): void {
   global.save();
 }
 
+// To make sure this returns the latest price, a Transaction entity should be created for the
+// triggering event beforehand, either directly or indirectly through creating a Change entity
 export function getCurrentPrice(): BigDecimal {
   let currentSystemState = getCurrentSystemState();
 
