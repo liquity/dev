@@ -600,7 +600,7 @@ describe("EthersLiquity", () => {
     });
   });
 
-  describe.skip("Redemption, gas checks", function () {
+  describe("Redemption, gas checks", function () {
     this.timeout("5m");
 
     before(async function () {
@@ -641,7 +641,7 @@ describe("EthersLiquity", () => {
     });
   });
 
-  describe.skip("Gas estimation", () => {
+  describe("Gas estimation", () => {
     const troveWithICRBetween = (a: Trove, b: Trove) => a.add(b).multiply(0.5);
 
     let rudeUser: Signer;
