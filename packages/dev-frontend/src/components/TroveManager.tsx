@@ -2,7 +2,7 @@ import React from "react";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 import { LiquityStoreState, Trove } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer } from "@liquity/lib-react";
+import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
@@ -92,36 +92,40 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
         stateChange: { troveWithoutRewards: changeCommitted }
       } = action;
 
-      let newState = {
-        ...state,
-        original: trove,
-        edited:
-          !original.isEmpty && edited.isEmpty ? edited : trove.apply(original.whatChanged(edited))
-      };
+      const newState = { ...state, original: trove };
 
-      if ((changePending || original.isEmpty) && changeCommitted) {
-        newState = revert(newState);
-        if (changePending) {
-          newState = finishChange(newState);
-        }
+      if (changePending && changeCommitted) {
+        return finishChange(revert(newState));
       }
 
-      return newState;
+      const change = original.whatChanged(edited);
+
+      if (
+        (change?.type === "creation" && !trove.isEmpty) ||
+        (change?.type === "closure" && trove.isEmpty)
+      ) {
+        return revert(newState);
+      }
+
+      return { ...newState, edited: trove.apply(change) };
     }
   }
 };
 
+const select = ({ fees }: LiquityStoreState) => ({ fees });
+
 export const TroveManager: React.FC = () => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
+  const { fees } = useLiquitySelector(select);
+
+  const change = original.whatChanged(edited);
+  const feeFactor = fees.borrowingFeeFactor();
+  const afterFee = original.apply(change, feeFactor);
 
   return (
     <>
-      <TroveEditor
-        title={original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
-        {...{ original, edited, changePending, dispatch }}
-      />
-
-      <TroveAction {...{ original, edited, changePending, dispatch }} />
+      <TroveEditor {...{ original, edited, afterFee, feeFactor, change, changePending, dispatch }} />
+      <TroveAction {...{ original, edited, afterFee, change, changePending, dispatch }} />
     </>
   );
 };

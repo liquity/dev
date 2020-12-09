@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
-import { Decimal } from "@liquity/decimal";
+import { Decimal, Percent } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
-import { EditableRow } from "./Editor";
+import { EditableRow, StaticRow } from "./Editor";
 import { Icon } from "./Icon";
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN } from "../strings";
@@ -82,16 +82,20 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   );
 };
 
-const selectPrice = ({ price }: LiquityStoreState) => price;
+const select = ({ price, fees, total }: LiquityStoreState) => ({ price, fees, total });
 
 export const RedemptionManager: React.FC = () => {
-  const price = useLiquitySelector(selectPrice);
+  const { price, fees, total } = useLiquitySelector(select);
   const [amount, setAmount] = useState(Decimal.ZERO);
   const [changePending, setChangePending] = useState(false);
 
   const editingState = useState<string>();
 
   const edited = amount.nonZero !== undefined;
+  const ethAmount = amount.div(price);
+  const feeFactor = fees.redemptionFeeFactor(amount.div(total.debt));
+  const feePct = new Percent(feeFactor);
+  const fee = ethAmount.nonZero?.mul(feeFactor);
 
   return (
     <>
@@ -128,9 +132,21 @@ export const RedemptionManager: React.FC = () => {
             amount={amount.div(price).prettify(4)}
             unit="ETH"
             {...{ editingState }}
-            editedAmount={amount.div(price).toString(4)}
+            editedAmount={ethAmount.toString(4)}
             setEditedAmount={amount => setAmount(Decimal.from(amount).mul(price))}
           ></EditableRow>
+
+          {fee && (
+            <StaticRow
+              label="Fee"
+              inputId="redemption-fee"
+              amount={fee.toString(4)}
+              color="danger"
+              pendingAmount={feePct.toString(2)}
+              pendingColor="danger"
+              unit="ETH"
+            />
+          )}
         </Box>
       </Card>
 

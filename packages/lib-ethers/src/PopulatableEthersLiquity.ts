@@ -11,10 +11,10 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 import {
   Trove,
   TroveWithPendingRewards,
-  TroveChange,
+  TroveAdjustment,
   ReadableLiquity,
-  HintedTransactionOptionalParams,
-  TroveChangeOptionalParams,
+  HintedMethodOptionalParams,
+  TroveAdjustmentOptionalParams,
   CollateralGainTransferOptionalParams,
   Hinted,
   LiquityReceipt,
@@ -25,7 +25,12 @@ import {
   TransactableLiquity,
   PopulatedLiquityTransaction,
   sendableFrom,
-  transactableFrom
+  transactableFrom,
+  TroveChangeDetails,
+  normalizeTroveAdjustment,
+  TroveCreation,
+  normalizeTroveCreation,
+  TroveCreationOptionalParams
 } from "@liquity/lib-base";
 
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
@@ -178,6 +183,30 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return new PopulatedEthersTransaction(rawPopulatedTransaction, noDetails, this.signer);
   }
 
+  protected wrapTroveChange(rawPopulatedTransaction: PopulatedTransaction) {
+    return new PopulatedEthersTransaction(
+      rawPopulatedTransaction,
+      ({ logs }: TransactionReceipt): TroveChangeDetails => {
+        const [newTrove] = this.contracts.borrowerOperations
+          .extractEvents(logs, "TroveUpdated")
+          .map(
+            ({ args: { _coll, _debt } }) =>
+              new Trove({ collateral: new Decimal(_coll), debt: new Decimal(_debt) })
+          );
+
+        const [fee] = this.contracts.borrowerOperations
+          .extractEvents(logs, "LUSDBorrowingFeePaid")
+          .map(({ args: { _LUSDFee } }) => new Decimal(_LUSDFee));
+
+        return {
+          newTrove,
+          fee
+        };
+      },
+      this.signer
+    );
+  }
+
   protected wrapLiquidation(rawPopulatedTransaction: PopulatedTransaction) {
     return new PopulatedEthersTransaction(
       rawPopulatedTransaction,
@@ -240,7 +269,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
   private async findHintForCollateralRatio(
     collateralRatio: Decimal,
-    optionalParams: HintedTransactionOptionalParams
+    optionalParams: HintedMethodOptionalParams
   ) {
     const [price, numberOfTroves] = await Promise.all([
       optionalParams.price ?? this.readableLiquity.getPrice(),
@@ -290,7 +319,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return hint;
   }
 
-  protected async findHint(trove: Trove, { price, ...rest }: HintedTransactionOptionalParams = {}) {
+  protected async findHint(trove: Trove, { price, ...rest }: HintedMethodOptionalParams = {}) {
     if (trove instanceof TroveWithPendingRewards) {
       throw new Error("Rewards must be applied to this Trove");
     }
@@ -302,7 +331,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
   protected async findRedemptionHints(
     amount: Decimal,
-    { price, ...rest }: HintedTransactionOptionalParams = {}
+    { price, ...rest }: HintedMethodOptionalParams = {}
   ): Promise<[string, string, Decimal]> {
     price = price ?? (await this.readableLiquity.getPrice());
 
@@ -333,23 +362,24 @@ export class PopulatableEthersLiquity
       PopulatedTransaction
     > {
   async openTrove(
-    trove: Trove,
-    optionalParams?: HintedTransactionOptionalParams,
+    params: TroveCreation<Decimalish>,
+    optionalParams: TroveCreationOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    if (trove.debt.lt(Trove.GAS_COMPENSATION_DEPOSIT)) {
-      throw new Error(
-        `Trove must have at least ${Trove.GAS_COMPENSATION_DEPOSIT} debt ` +
-          "(used as gas compensation deposit)"
-      );
-    }
+    const normalized = normalizeTroveCreation(params);
+    const { depositCollateral, borrowLUSD } = normalized;
 
-    return this.wrapSimpleTransaction(
+    let { fees, ...hintOptionalParams } = optionalParams;
+    fees = fees ?? (borrowLUSD && (await this.readableLiquity.getFees()));
+
+    const newTrove = Trove.create(normalized, fees?.borrowingFeeFactor());
+
+    return this.wrapTroveChange(
       await this.contracts.borrowerOperations.estimateAndPopulate.openTrove(
-        { value: trove.collateral.bigNumber, ...overrides },
+        { value: depositCollateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
-        trove.netDebt.bigNumber,
-        await this.findHint(trove, optionalParams)
+        borrowLUSD?.bigNumber ?? 0,
+        await this.findHint(newTrove, hintOptionalParams)
       )
     );
   }
@@ -362,71 +392,63 @@ export class PopulatableEthersLiquity
 
   async depositCollateral(
     amount: Decimalish,
-    optionalParams: TroveChangeOptionalParams = {},
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.addCollateral(amount);
-
-    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
+    return this.adjustTrove({ depositCollateral: amount }, optionalParams, overrides);
   }
 
   async withdrawCollateral(
     amount: Decimalish,
-    optionalParams: TroveChangeOptionalParams = {},
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.subtractCollateral(amount);
-
-    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
+    return this.adjustTrove({ withdrawCollateral: amount }, optionalParams, overrides);
   }
 
   async borrowLUSD(
     amount: Decimalish,
-    optionalParams: TroveChangeOptionalParams = {},
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.addDebt(amount);
-
-    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
+    return this.adjustTrove({ borrowLUSD: amount }, optionalParams, overrides);
   }
 
   async repayLUSD(
     amount: Decimalish,
-    optionalParams: TroveChangeOptionalParams = {},
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const trove = optionalParams.trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = trove.subtractDebt(amount);
-
-    return this.changeTrove(trove.whatChanged(finalTrove), { trove, ...optionalParams }, overrides);
+    return this.adjustTrove({ repayLUSD: amount }, optionalParams, overrides);
   }
 
-  async changeTrove(
-    change: TroveChange,
-    optionalParams: TroveChangeOptionalParams = {},
+  async adjustTrove(
+    params: TroveAdjustment<Decimalish>,
+    optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
-    const { trove, ...hintOptionalParams } = optionalParams;
-    const initialTrove = trove ?? (await this.readableLiquity.getTrove());
-    const finalTrove = initialTrove.apply(change);
-    const isDebtIncrease = !!change.debtDifference?.positive;
+    const normalized = normalizeTroveAdjustment(params);
+    const { depositCollateral, withdrawCollateral, borrowLUSD, repayLUSD } = normalized;
 
-    return this.wrapSimpleTransaction(
+    let { trove, fees, ...hintOptionalParams } = optionalParams;
+
+    [trove, fees] = await Promise.all([
+      trove ?? this.readableLiquity.getTrove(),
+      fees ?? (borrowLUSD && this.readableLiquity.getFees())
+    ]);
+
+    const finalTrove = trove.adjust(normalized, fees?.borrowingFeeFactor());
+
+    return this.wrapTroveChange(
       await this.contracts.borrowerOperations.estimateAndPopulate.adjustTrove(
-        {
-          ...overrides,
-          value: change.collateralDifference?.positive?.absoluteValue?.bigNumber
-        },
+        { value: depositCollateral?.bigNumber, ...overrides },
         compose(
-          isDebtIncrease ? addGasForPotentialLastFeeOperationTimeUpdate : id,
+          borrowLUSD ? addGasForPotentialLastFeeOperationTimeUpdate : id,
           addGasForPotentialListTraversal
         ),
-        change.collateralDifference?.negative?.absoluteValue?.bigNumber || 0,
-        change.debtDifference?.absoluteValue?.bigNumber || 0,
-        isDebtIncrease,
+        withdrawCollateral?.bigNumber ?? 0,
+        (borrowLUSD ?? repayLUSD)?.bigNumber ?? 0,
+        !!borrowLUSD,
         await this.findHint(finalTrove, hintOptionalParams)
       )
     );
@@ -528,7 +550,7 @@ export class PopulatableEthersLiquity
 
   async redeemLUSD(
     amount: Decimalish,
-    optionalParams: HintedTransactionOptionalParams = {},
+    optionalParams: HintedMethodOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
     amount = Decimal.from(amount);

@@ -127,9 +127,7 @@ yargs
 
       const fixture = await Fixture.setup(deployerLiquity, funderLiquity, funder);
 
-      let previousListOfTroves:
-        | (readonly [string, TroveWithPendingRewards])[]
-        | undefined = undefined;
+      let previousListOfTroves: [string, TroveWithPendingRewards][] | undefined = undefined;
 
       console.log();
       console.log("// Keys");

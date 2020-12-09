@@ -2,6 +2,7 @@ import { Decimal } from "@liquity/decimal";
 
 import { Trove, TroveWithPendingRewards } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
+import { Fees } from "./Fees";
 
 export interface ReadableLiquity {
   getTotalRedistributed(): Promise<Trove>;
@@ -25,10 +26,12 @@ export interface ReadableLiquity {
   getLastTroves(
     startIdx: number,
     numberOfTroves: number
-  ): Promise<(readonly [string, TroveWithPendingRewards])[]>;
+  ): Promise<[string, TroveWithPendingRewards][]>;
 
   getFirstTroves(
     startIdx: number,
     numberOfTroves: number
-  ): Promise<(readonly [string, TroveWithPendingRewards])[]>;
+  ): Promise<[string, TroveWithPendingRewards][]>;
+
+  getFees(): Promise<Fees>;
 }
