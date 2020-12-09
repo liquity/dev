@@ -239,7 +239,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         if (_isDebtIncrease && _debtChange > 0) {
             _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
         }
-        if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
+        /*
+         * We don’t check that the withdrawn coll isn’t greater than the current collateral in the trove because it would fail previously in:
+         * - _getNewICRFromTroveChange, due to SafeMath
+         * - _requireICRisAboveMCR
+         */
         if (!_isDebtIncrease && _debtChange > 0) {_requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange);}
 
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
@@ -410,13 +414,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function _requireLUSDRepaymentAllowed(uint _currentDebt, uint _debtRepayment) internal pure {
         require(_debtRepayment <= _currentDebt.sub(LUSD_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the Trove's debt");
-    }
-
-    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
-        internal
-        pure
-    {
-        require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
     }
 
     function _requireCallerIsStabilityPool() internal view {
