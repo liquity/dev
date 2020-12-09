@@ -151,7 +151,6 @@ contract LUSDToken is ILUSDToken {
         external 
         override 
     {            
-        require(deadline != 0, "LUSD: Zero deadline is not valid");
         require(deadline >= now, 'LUSD: Signature has expired');
         bytes32 digest = keccak256(abi.encodePacked(uint16(0x1901), 
                          domainSeparator(), keccak256(abi.encode(
