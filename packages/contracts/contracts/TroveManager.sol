@@ -812,6 +812,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
             _removeStake(_borrower);
             _closeTrove(_borrower);
             _redeemCloseTrove(_borrower, LUSD_GAS_COMPENSATION, newColl);
+            emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.redeemCollateral);
 
         } else {
             uint newNICR = LiquityMath._computeNominalCR(newColl, newDebt);
@@ -829,13 +830,15 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
             Troves[_borrower].debt = newDebt;
             Troves[_borrower].coll = newColl;
             _updateStakeAndTotalStakes(_borrower);
+
+            emit TroveUpdated(
+                _borrower,
+                newDebt, newColl,
+                Troves[_borrower].stake,
+                TroveManagerOperation.redeemCollateral
+            );
         }
-        emit TroveUpdated(
-            _borrower,
-            newDebt, newColl,
-            Troves[_borrower].stake,
-            TroveManagerOperation.redeemCollateral
-        );
+      
         return V;
     }
 

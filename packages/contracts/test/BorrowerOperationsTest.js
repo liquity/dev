@@ -2580,6 +2580,62 @@ contract('BorrowerOperations', async accounts => {
   })
 
   // --- openTrove() ---
+
+  it("openTrove(): emits a TroveUpdated event with the correct collateral and debt", async () => { 
+    const txA = await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    const txB = await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    const txC = await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+
+    const A_emittedDebt = th.getEventArgByName(txA, "TroveUpdated", "_debt")
+    const A_emittedColl = th.getEventArgByName(txA, "TroveUpdated", "_coll")
+    const B_emittedDebt = th.getEventArgByName(txB, "TroveUpdated", "_debt")
+    const B_emittedColl = th.getEventArgByName(txB, "TroveUpdated", "_coll")
+    const C_emittedDebt = th.getEventArgByName(txC, "TroveUpdated", "_debt")
+    const C_emittedColl = th.getEventArgByName(txC, "TroveUpdated", "_coll")
+
+    // Check emitted debts include 10 LUSD gas comp
+    assert.equal(A_emittedDebt, dec(40, 18))
+    assert.equal(B_emittedDebt, dec(50, 18))
+    assert.equal(C_emittedDebt, dec(60, 18))
+ 
+    // Check coll values are 1 ETH
+    for (const coll of [A_emittedColl, B_emittedColl, C_emittedColl] ) {
+      assert.equal(coll, dec(1, 18))
+    }
+    
+    // Redemption occurs, increasing baseRate
+    await th.redeemCollateral(A, contracts, dec(30, 18))
+    assert.isTrue((await troveManager.baseRate()).gt(toBN('0')))
+
+    const LUSDGasComp = toBN(dec(10, 18))
+    const D_drawnDebt = toBN(dec(60, 18))
+    const E_drawnDebt = toBN(dec(70, 18))
+    
+    const txD = await borrowerOperations.openTrove(D_drawnDebt, D, { from: D, value: dec(1, 'ether') })
+    const txE = await borrowerOperations.openTrove(E_drawnDebt, E, { from: E, value: dec(1, 'ether') })
+
+    const D_emittedDebt = toBN(th.getEventArgByName(txD, "TroveUpdated", "_debt"))
+    const D_emittedFee = toBN(th.getEventArgByName(txD, "LUSDBorrowingFeePaid", "_LUSDFee"))
+    const D_emittedColl = th.getEventArgByName(txD, "TroveUpdated", "_coll")
+    
+    const E_emittedDebt = th.getEventArgByName(txE, "TroveUpdated", "_debt")
+    const E_emittedFee = toBN(th.getEventArgByName(txE, "LUSDBorrowingFeePaid", "_LUSDFee"))
+    const E_emittedColl = th.getEventArgByName(txE, "TroveUpdated", "_coll")
+
+    // Expected emitted debt is the debt issuance request + gas comp + fee
+    const D_expectedEmittedDebt = D_drawnDebt.add(LUSDGasComp).add(D_emittedFee)
+    const E_expectedEmittedDebt = E_drawnDebt.add(LUSDGasComp).add(E_emittedFee)
+
+    // Check emitted debts include 10 LUSD gas comp
+    assert.isTrue(D_expectedEmittedDebt.eq(D_emittedDebt))
+    assert.isTrue(E_expectedEmittedDebt.eq(E_emittedDebt))
+
+    // Check coll values are 1 ETH
+    for (const coll of [D_emittedColl, E_emittedColl] ) {
+      assert.equal(coll, dec(1, 18))
+    }
+  })
+
   it("openTrove(): decays a non-zero base rate", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 

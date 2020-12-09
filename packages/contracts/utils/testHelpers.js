@@ -364,6 +364,21 @@ class TestHelper {
     throw (`The transaction logs do not contain event ${eventName} and arg ${argName}`)
   }
 
+  static getAllEventsByName(tx, eventName) {
+    const events = []
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === eventName) {
+        events.push(tx.logs[i])
+      }
+    }
+    return events
+  }
+
+  static getDebtAndCollFromTroveUpdatedEvents(troveUpdatedEvents, address) {
+    const event = troveUpdatedEvents.filter(event => event.args[0] === address)[0]
+    return [event.args[1], event.args[2]]
+  }
+
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
     return compositeDebt

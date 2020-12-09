@@ -167,7 +167,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // Move the LUSD gas compensation to the Gas Pool
         _withdrawLUSD(gasPoolAddress, LUSD_GAS_COMPENSATION, LUSD_GAS_COMPENSATION);
 
-        emit TroveUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openTrove);
+        emit TroveUpdated(msg.sender, compositeDebt, msg.value, stake, BorrowerOperation.openTrove);
         emit LUSDBorrowingFeePaid(msg.sender, LUSDFee);
     }
 
