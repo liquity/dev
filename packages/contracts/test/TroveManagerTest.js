@@ -2509,17 +2509,30 @@ contract('TroveManager', async accounts => {
     assert.deepEqual(orderOfTroves, [carol, bob, alice, dennis]);
 
     // --- TEST --- 
+    const TCR = (await troveManager.getTCR())
+    assert.isTrue(TCR < 1100000000000000000)
+    await assertRevert(troveManager.redeemCollateral(
+      '270' + _18_zeros,
+      carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
+      // last Trove with ICR == 110% (which would be Alice's)
+      '0x0000000000000000000000000000000000000000',
+      0, 
+      0, 
+      { from: dennis }
+    ), "TroveManager: Cannot redeem when TCR < MCR")
+    
+    await borrowerOperations.openTrove('0', whale, { from: whale, value: dec(100, 'ether') })
 
     await troveManager.redeemCollateral(
       '270' + _18_zeros,
       carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
       // last Trove with ICR == 110% (which would be Alice's)
       '0x0000000000000000000000000000000000000000',
-      0,
-      0,
+      0, 
+      0, 
       { from: dennis }
-    );
-
+    )
+    
     const { debt: alice_Debt_After } = await troveManager.Troves(alice)
     assert.equal(alice_Debt_After, '0')
 
