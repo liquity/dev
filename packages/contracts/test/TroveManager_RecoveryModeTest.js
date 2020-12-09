@@ -2848,7 +2848,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(TCR_Before.lt(_150percent))
 
     /* 
-   After the price drop and prior to any liquidations, ICR should be:
+    After the price drop and prior to any liquidations, ICR should be:
 
     Trove         ICR
     Alice       182%
@@ -2873,17 +2873,126 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isTrue(erin_ICR.lt(_150percent))
     assert.isTrue(freddy_ICR.lt(_150percent))
 
-    /* Liquidations should occur from the lowest ICR Trove upwards, i.e. 
-    1) Freddy, 2) Elisa, 3) Dennis.
-
-    After liquidating Freddy and Elisa, the the TCR of the system rises above the CCR, to 154%.  
-   (see calculations in Google Sheet)
+    /* After liquidating Bob and Carol, the the TCR of the system rises above the CCR, to 154%.  
+    (see calculations in Google Sheet)
 
     Liquidations continue until all Troves with ICR < MCR have been closed. 
     Only Alice should remain active - all others should be closed. */
 
     // call batchLiquidateTroves
     await troveManager.batchLiquidateTroves([alice, bob, carol, dennis, erin, freddy]);
+
+    // check system is no longer in Recovery Mode
+    const recoveryMode_After = await troveManager.checkRecoveryMode()
+    assert.isFalse(recoveryMode_After)
+
+    // After liquidation, TCR should rise to above 150%. 
+    const TCR_After = await troveManager.getTCR()
+    assert.isTrue(TCR_After.gt(_150percent))
+
+    // get all Troves
+    const alice_Trove = await troveManager.Troves(alice)
+    const bob_Trove = await troveManager.Troves(bob)
+    const carol_Trove = await troveManager.Troves(carol)
+    const dennis_Trove = await troveManager.Troves(dennis)
+    const erin_Trove = await troveManager.Troves(erin)
+    const freddy_Trove = await troveManager.Troves(freddy)
+
+    // check that Alice's Trove remains active
+    assert.equal(alice_Trove[3], 1)
+    assert.isTrue(await sortedTroves.contains(alice))
+
+    // check all other Troves are closed
+    assert.equal(bob_Trove[3], 2)
+    assert.equal(carol_Trove[3], 2)
+    assert.equal(dennis_Trove[3], 2)
+    assert.equal(erin_Trove[3], 2)
+    assert.equal(freddy_Trove[3], 2)
+
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
+    assert.isFalse(await sortedTroves.contains(dennis))
+    assert.isFalse(await sortedTroves.contains(erin))
+    assert.isFalse(await sortedTroves.contains(freddy))
+  })
+
+  it("batchLiquidateTroves(): Liquidates all troves with ICR < 110%, transitioning Recovery -> Normal Mode", async () => {
+    /* This is essentially the same test as before, but changing the order of the batch,
+     * now the remaining trove (alice) goes at the end.
+     * This way alice will be skipped in a different part of the code, as in the previous test,
+     * when attempting alice the system was in Recovery mode, while in this test,
+     * when attempting alice the system has gone back to Normal mode
+     * (see function `_getTotalFromBatchLiquidate_RecoveryMode`)
+     */
+    // make 6 Troves accordingly
+    // --- SETUP ---
+
+    await borrowerOperations.openTrove(0, alice, { from: alice, value: _30_Ether })
+    await borrowerOperations.openTrove(0, bob, { from: bob, value: _3_Ether })
+    await borrowerOperations.openTrove(0, carol, { from: carol, value: _3_Ether })
+    await borrowerOperations.openTrove(0, dennis, { from: dennis, value: _3_Ether })
+    await borrowerOperations.openTrove(0, erin, { from: erin, value: _3_Ether })
+    await borrowerOperations.openTrove(0, freddy, { from: freddy, value: _3_Ether })
+
+    // Alice withdraws 1400 LUSD, the others each withdraw 240 LUSD
+    await borrowerOperations.withdrawLUSD('1400000000000000000000', alice, { from: alice })  // 1410 LUSD -> ICR = 426%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob }) //  250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', carol, { from: carol }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', dennis, { from: dennis }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', erin, { from: erin }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', freddy, { from: freddy }) // 250 LUSD -> ICR = 240%
+
+    // Alice deposits 1400 LUSD to Stability Pool
+    await stabilityPool.provideToSP('1400000000000000000000', ZERO_ADDRESS, { from: alice })
+
+    // price drops to 1ETH:85LUSD, reducing TCR below 150%
+    await priceFeed.setPrice('85000000000000000000')
+    const price = await priceFeed.getPrice()
+
+    // check Recovery Mode kicks in
+
+    const recoveryMode_Before = await troveManager.checkRecoveryMode()
+    assert.isTrue(recoveryMode_Before)
+
+    // check TCR < 150%
+    const _150percent = web3.utils.toBN('1500000000000000000')
+    const TCR_Before = await troveManager.getTCR()
+    assert.isTrue(TCR_Before.lt(_150percent))
+
+    /*
+    After the price drop and prior to any liquidations, ICR should be:
+
+    Trove         ICR
+    Alice       182%
+    Bob         102%
+    Carol       102%
+    Dennis      102%
+    Elisa       102%
+    Freddy      102%
+    */
+    const alice_ICR = await troveManager.getCurrentICR(alice, price)
+    const bob_ICR = await troveManager.getCurrentICR(bob, price)
+    const carol_ICR = await troveManager.getCurrentICR(carol, price)
+    const dennis_ICR = await troveManager.getCurrentICR(dennis, price)
+    const erin_ICR = await troveManager.getCurrentICR(erin, price)
+    const freddy_ICR = await troveManager.getCurrentICR(freddy, price)
+
+    // Alice should have ICR > 150%
+    assert.isTrue(alice_ICR.gt(_150percent))
+    // All other Troves should have ICR < 150%
+    assert.isTrue(carol_ICR.lt(_150percent))
+    assert.isTrue(dennis_ICR.lt(_150percent))
+    assert.isTrue(erin_ICR.lt(_150percent))
+    assert.isTrue(freddy_ICR.lt(_150percent))
+
+    /* After liquidating Bob and Carol, the the TCR of the system rises above the CCR, to 154%.  
+    (see calculations in Google Sheet)
+
+    Liquidations continue until all Troves with ICR < MCR have been closed. 
+    Only Alice should remain active - all others should be closed. */
+
+    // call batchLiquidateTroves
+    await troveManager.batchLiquidateTroves([bob, carol, dennis, erin, freddy, alice]);
 
     // check system is no longer in Recovery Mode
     const recoveryMode_After = await troveManager.checkRecoveryMode()
