@@ -120,7 +120,8 @@ export const TroveAction: React.FC<TroveActionProps> = ({
           liquity.closeTrove.bind(liquity),
           [
             [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
-            [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`]
+            [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`],
+            [numberOfTroves > 1, "Can't close when no other Trove exists"]
           ]
         ] as const)
       : ([
