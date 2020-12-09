@@ -26,11 +26,13 @@ import {
   PopulatedLiquityTransaction,
   sendableFrom,
   transactableFrom,
-  TroveChangeDetails,
   normalizeTroveAdjustment,
   TroveCreation,
   normalizeTroveCreation,
-  TroveCreationOptionalParams
+  TroveCreationOptionalParams,
+  TroveChangeWithFees,
+  TroveClosureDetails,
+  CollateralGainTransferDetails
 } from "@liquity/lib-base";
 
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
@@ -183,26 +185,61 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return new PopulatedEthersTransaction(rawPopulatedTransaction, noDetails, this.signer);
   }
 
-  protected wrapTroveChange(rawPopulatedTransaction: PopulatedTransaction) {
+  protected wrapTroveChangeWithFees<T>(params: T, rawPopulatedTransaction: PopulatedTransaction) {
     return new PopulatedEthersTransaction(
       rawPopulatedTransaction,
-      ({ logs }: TransactionReceipt): TroveChangeDetails => {
-        const [newTrove] = this.contracts.borrowerOperations
-          .extractEvents(logs, "TroveUpdated")
-          .map(
-            ({ args: { _coll, _debt } }) =>
-              new Trove({ collateral: new Decimal(_coll), debt: new Decimal(_debt) })
-          );
+
+      ({ logs }): TroveChangeWithFees<T> => {
+        const isOpenLoan = this.contracts.borrowerOperations.extractEvents(logs, "TroveCreated")
+          .length;
+
+        const [newTrove] = this.contracts.borrowerOperations.extractEvents(logs, "TroveUpdated").map(
+          ({ args: { _coll, _debt } }) =>
+            new Trove({
+              collateral: new Decimal(_coll),
+              // Temporary workaround for event bug:
+              // https://github.com/liquity/dev/issues/140#issuecomment-740541889
+              debt: new Decimal(_debt).add(isOpenLoan ? Trove.GAS_COMPENSATION_DEPOSIT : 0)
+            })
+        );
 
         const [fee] = this.contracts.borrowerOperations
           .extractEvents(logs, "LUSDBorrowingFeePaid")
           .map(({ args: { _LUSDFee } }) => new Decimal(_LUSDFee));
 
         return {
+          params,
           newTrove,
           fee
         };
       },
+
+      this.signer
+    );
+  }
+
+  protected async wrapTroveClosure(rawPopulatedTransaction: PopulatedTransaction) {
+    const userAddress = await this.signer.getAddress();
+
+    return new PopulatedEthersTransaction(
+      rawPopulatedTransaction,
+
+      ({ logs }): TroveClosureDetails => {
+        const [repayLUSD] = this.contracts.lusdToken
+          .extractEvents(logs, "Transfer")
+          .filter(({ args: { from, to } }) => from === userAddress && to === AddressZero)
+          .map(({ args: { value } }) => new Decimal(value));
+
+        const [withdrawCollateral] = this.contracts.activePool
+          .extractEvents(logs, "EtherSent")
+          .filter(({ args: { _to } }) => _to === userAddress)
+          .map(({ args: { _amount } }) => new Decimal(_amount));
+
+        return {
+          params: repayLUSD.nonZero ? { withdrawCollateral, repayLUSD } : { withdrawCollateral }
+        };
+      },
+
       this.signer
     );
   }
@@ -210,7 +247,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   protected wrapLiquidation(rawPopulatedTransaction: PopulatedTransaction) {
     return new PopulatedEthersTransaction(
       rawPopulatedTransaction,
-      ({ logs }: TransactionReceipt): LiquidationDetails => {
+
+      ({ logs }): LiquidationDetails => {
         const fullyLiquidated = this.contracts.troveManager
           .extractEvents(logs, "TroveLiquidated")
           .map(({ args: { _borrower } }) => _borrower);
@@ -245,6 +283,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           ...totals
         };
       },
+
       this.signer
     );
   }
@@ -252,6 +291,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   protected wrapRedemption(rawPopulatedTransaction: PopulatedTransaction) {
     return new PopulatedEthersTransaction(
       rawPopulatedTransaction,
+
       ({ logs }) =>
         this.contracts.troveManager.extractEvents(logs, "Redemption").map(
           ({
@@ -263,6 +303,33 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
             fee: new Decimal(_ETHFee)
           })
         )[0],
+
+      this.signer
+    );
+  }
+
+  protected wrapCollateralGainTransfer(rawPopulatedTransaction: PopulatedTransaction) {
+    return new PopulatedEthersTransaction(
+      rawPopulatedTransaction,
+
+      ({ logs }): CollateralGainTransferDetails => {
+        const [collateralGain] = this.contracts.stabilityPool
+          .extractEvents(logs, "ETHGainWithdrawn")
+          .map(({ args: { _ETH } }) => new Decimal(_ETH));
+
+        const [newTrove] = this.contracts.borrowerOperations
+          .extractEvents(logs, "TroveUpdated")
+          .map(
+            ({ args: { _coll, _debt } }) =>
+              new Trove({ collateral: new Decimal(_coll), debt: new Decimal(_debt) })
+          );
+
+        return {
+          collateralGain,
+          newTrove
+        };
+      },
+
       this.signer
     );
   }
@@ -374,7 +441,8 @@ export class PopulatableEthersLiquity
 
     const newTrove = Trove.create(normalized, fees?.borrowingFeeFactor());
 
-    return this.wrapTroveChange(
+    return this.wrapTroveChangeWithFees(
+      normalized,
       await this.contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: depositCollateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
@@ -385,7 +453,7 @@ export class PopulatableEthersLiquity
   }
 
   async closeTrove(overrides?: EthersTransactionOverrides) {
-    return this.wrapSimpleTransaction(
+    return this.wrapTroveClosure(
       await this.contracts.borrowerOperations.estimateAndPopulate.closeTrove({ ...overrides }, id)
     );
   }
@@ -439,7 +507,8 @@ export class PopulatableEthersLiquity
 
     const finalTrove = trove.adjust(normalized, fees?.borrowingFeeFactor());
 
-    return this.wrapTroveChange(
+    return this.wrapTroveChangeWithFees(
+      normalized,
       await this.contracts.borrowerOperations.estimateAndPopulate.adjustTrove(
         { value: depositCollateral?.bigNumber, ...overrides },
         compose(
@@ -467,12 +536,6 @@ export class PopulatableEthersLiquity
       )
     );
   }
-
-  // async updatePrice(overrides?: EthersTransactionOverrides) {
-  //   return this.wrapSimpleTransaction(
-  //     await this.contracts.priceFeed.estimateAndPopulate.updatePrice({ ...overrides }, id)
-  //   );
-  // }
 
   async liquidate(address: string, overrides?: EthersTransactionOverrides) {
     return this.wrapLiquidation(
@@ -528,7 +591,7 @@ export class PopulatableEthersLiquity
       (deposit ?? (await this.readableLiquity.getStabilityDeposit())).pendingCollateralGain
     );
 
-    return this.wrapSimpleTransaction(
+    return this.wrapCollateralGainTransfer(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
         { ...overrides },
         addGasForPotentialListTraversal,

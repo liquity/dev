@@ -111,17 +111,17 @@ const normalize = (params: Record<string, Decimalish | undefined>): Record<strin
       .filter(([, v]) => v.nonZero)
   );
 
-export const normalizeTroveCreation: (
-  params: TroveCreation<Decimalish>
-) => TroveCreation<Decimal> = (normalize as unknown) as (
-  params: TroveCreation<Decimalish>
-) => TroveCreation<Decimal>;
+type Normalizer<T, U> = (params: T) => U;
 
-export const normalizeTroveAdjustment: (
-  params: TroveAdjustment<Decimalish>
-) => TroveAdjustment<Decimal> = (normalize as unknown) as (
-  params: TroveAdjustment<Decimalish>
-) => TroveAdjustment<Decimal>;
+export const normalizeTroveCreation = (normalize as unknown) as Normalizer<
+  TroveCreation<Decimalish>,
+  TroveCreation<Decimal>
+>;
+
+export const normalizeTroveAdjustment = (normalize as unknown) as Normalizer<
+  TroveAdjustment<Decimalish>,
+  TroveAdjustment<Decimal>
+>;
 
 const applyFee = (borrowingFeeFactor: Decimalish, debtIncrease: Decimalish) =>
   Decimal.ONE.add(borrowingFeeFactor).mul(debtIncrease);
