@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Difference } from "@liquity/decimal";
+import { Decimal, Decimalish, Difference } from "@liquity/decimal";
 import { StabilityDeposit } from "@liquity/lib-base";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -11,26 +11,22 @@ import { COIN } from "../strings";
 type StabilityDepositEditorProps = {
   title: string;
   originalDeposit: StabilityDeposit;
-  editedDeposit: StabilityDeposit;
-  setEditedDeposit: (deposit: StabilityDeposit) => void;
+  editedDeposit: Decimal;
   changePending: boolean;
+  dispatch: (action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }) => void;
 };
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   title,
   originalDeposit,
   editedDeposit,
-  setEditedDeposit,
-  changePending
+  changePending,
+  dispatch
 }) => {
   const editingState = useState<string>();
 
-  const pendingDepositChange = Difference.between(
-    editedDeposit.current,
-    originalDeposit.current.nonZero
-  );
-
-  const edited = originalDeposit.calculateDifference(editedDeposit) !== undefined;
+  const pendingDepositChange = Difference.between(editedDeposit, originalDeposit.current.nonZero);
+  const edited = !editedDeposit.eq(originalDeposit.current);
 
   return (
     <Card>
@@ -40,7 +36,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setEditedDeposit(originalDeposit)}
+            onClick={() => dispatch({ type: "revert" })}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -53,15 +49,13 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         <EditableRow
           label="Deposit"
           inputId="deposit-lqty"
-          amount={editedDeposit.current.prettify()}
+          amount={editedDeposit.prettify()}
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
           unit={COIN}
           {...{ editingState }}
-          editedAmount={editedDeposit.current.toString(2)}
-          setEditedAmount={(editedDeposit: string) =>
-            setEditedDeposit(new StabilityDeposit({ initial: editedDeposit }))
-          }
+          editedAmount={editedDeposit.toString(2)}
+          setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
         ></EditableRow>
 
         {!originalDeposit.isEmpty && (

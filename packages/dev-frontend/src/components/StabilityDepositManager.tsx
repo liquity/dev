@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
-import { Transaction, useMyTransactionState } from "./Transaction";
+import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN } from "../strings";
+import { Decimal, Decimalish } from "@liquity/decimal";
 
 type StabilityDepositActionProps = {
   originalDeposit: StabilityDeposit;
-  editedDeposit: StabilityDeposit;
+  editedDeposit: Decimal;
   changePending: boolean;
-  setChangePending: (isPending: boolean) => void;
+  dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
 
 const select = ({ trove, price, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
@@ -23,11 +24,13 @@ const select = ({ trove, price, lusdBalance, numberOfTroves }: LiquityStoreState
   numberOfTroves
 });
 
+type Action = [name: string, send: TransactionFunction, requirements?: [boolean, string][]];
+
 const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   originalDeposit,
   editedDeposit,
   changePending,
-  setChangePending
+  dispatch
 }) => {
   const { trove, price, lusdBalance, numberOfTroves } = useLiquitySelector(select);
   const {
@@ -36,67 +39,63 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
 
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(/^stability-deposit-/);
-  const difference = originalDeposit.calculateDifference(editedDeposit);
+
+  const { depositLUSD, withdrawLUSD } = originalDeposit.whatChanged(editedDeposit) ?? {};
+  const collateralGain = originalDeposit.collateralGain.nonZero;
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
-      setChangePending(true);
+      dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
-      setChangePending(false);
+      dispatch({ type: "finishChange" });
     }
-  }, [myTransactionState.type, setChangePending]);
+  }, [myTransactionState.type, dispatch]);
 
-  if (!difference && originalDeposit.collateralGain.isZero) {
+  if (!depositLUSD && !withdrawLUSD && !collateralGain) {
     return null;
   }
 
-  const actions = [
-    ...(difference
-      ? difference.positive
-        ? ([
-            [
-              `Deposit ${difference.absoluteValue!.prettify()} ${COIN}${
-                originalDeposit.collateralGain.nonZero
-                  ? ` & withdraw ${originalDeposit.collateralGain.prettify(4)} ETH`
-                  : ""
-              }`,
-              liquity.depositLUSDInStabilityPool.bind(liquity, difference.absoluteValue!, undefined),
-              [[lusdBalance.gte(difference.absoluteValue!), `You don't have enough ${COIN}`]]
+  const actions: Action[] = depositLUSD
+    ? [
+        [
+          collateralGain
+            ? `Deposit ${depositLUSD.prettify()} ${COIN} & ` +
+              `withdraw ${collateralGain.prettify(4)} ETH`
+            : `Deposit ${depositLUSD.prettify()} ${COIN}`,
+          liquity.depositLUSDInStabilityPool.bind(liquity, depositLUSD, undefined),
+          [[lusdBalance.gte(depositLUSD), `You don't have enough ${COIN}`]]
+        ]
+      ]
+    : withdrawLUSD
+    ? [
+        [
+          collateralGain
+            ? `Withdraw ${withdrawLUSD.prettify()} ${COIN} & ${collateralGain.prettify(4)} ETH`
+            : `Withdraw ${withdrawLUSD.prettify()} ${COIN}`,
+          liquity.withdrawLUSDFromStabilityPool.bind(liquity, withdrawLUSD)
+        ]
+      ]
+    : collateralGain
+    ? [
+        [
+          `Withdraw ${collateralGain.prettify(4)} ETH`,
+          liquity.withdrawLUSDFromStabilityPool.bind(liquity, 0)
+        ],
+        ...(!trove.isEmpty
+          ? [
+              [
+                `Transfer ${collateralGain.prettify(4)} ETH to Trove`,
+                liquity.transferCollateralGainToTrove.bind(liquity, {
+                  deposit: originalDeposit,
+                  trove,
+                  price,
+                  numberOfTroves
+                })
+              ] as Action
             ]
-          ] as const)
-        : ([
-            [
-              `Withdraw ${difference.absoluteValue!.prettify()} ${COIN}${
-                originalDeposit.collateralGain.nonZero
-                  ? ` & ${originalDeposit.collateralGain.prettify(4)} ETH`
-                  : ""
-              }`,
-              liquity.withdrawLUSDFromStabilityPool.bind(liquity, difference.absoluteValue!),
-              []
-            ]
-          ] as const)
-      : ([
-          [
-            `Withdraw ${originalDeposit.collateralGain.prettify(4)} ETH`,
-            liquity.withdrawLUSDFromStabilityPool.bind(liquity, 0),
-            []
-          ],
-          ...(!trove.isEmpty
-            ? ([
-                [
-                  `Transfer ${originalDeposit.collateralGain.prettify(4)} ETH to Trove`,
-                  liquity.transferCollateralGainToTrove.bind(liquity, {
-                    deposit: originalDeposit,
-                    trove,
-                    price,
-                    numberOfTroves
-                  }),
-                  []
-                ]
-              ] as const)
-            : [])
-        ] as const))
-  ];
+          : [])
+      ]
+    : [];
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex sx={{ mt: [0, 0, 3], flexWrap: "wrap", justifyContent: "center" }}>
@@ -124,41 +123,89 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   );
 };
 
-const selectDeposit = ({ deposit }: LiquityStoreState) => deposit;
+const init = ({ deposit }: LiquityStoreState) => ({
+  originalDeposit: deposit,
+  editedDeposit: deposit.current,
+  changePending: false
+});
 
-export const StabilityDepositManager: React.FC = () => {
-  const deposit = useLiquitySelector(selectDeposit);
-  const [originalDeposit, setOriginalDeposit] = useState(deposit);
-  const [editedDeposit, setEditedDeposit] = useState(deposit);
-  const [changePending, setChangePending] = useState(false);
+type StabilityDepositManagerState = ReturnType<typeof init>;
+type StabilityDepositManagerAction =
+  | LiquityStoreUpdate
+  | { type: "startChange" | "finishChange" | "revert" }
+  | { type: "setDeposit"; newValue: Decimalish };
 
-  useEffect(() => {
-    setOriginalDeposit(deposit);
+const reduceWith = (action: StabilityDepositManagerAction) => (
+  state: StabilityDepositManagerState
+): StabilityDepositManagerState => reduce(state, action);
 
-    if (changePending && !deposit.initial.eq(originalDeposit.initial)) {
-      setEditedDeposit(deposit);
-      setChangePending(false);
-    } else {
-      if (!originalDeposit.isEmpty && editedDeposit.isEmpty) {
-        return;
+const finishChange = reduceWith({ type: "finishChange" });
+const revert = reduceWith({ type: "revert" });
+
+const reduce = (
+  state: StabilityDepositManagerState,
+  action: StabilityDepositManagerAction
+): StabilityDepositManagerState => {
+  // console.log(state);
+  // console.log(action);
+
+  const { originalDeposit, editedDeposit, changePending } = state;
+
+  switch (action.type) {
+    case "startChange":
+      return { ...state, changePending: true };
+
+    case "finishChange":
+      return { ...state, changePending: false };
+
+    case "setDeposit":
+      return { ...state, editedDeposit: Decimal.from(action.newValue) };
+
+    case "revert":
+      return { ...state, editedDeposit: originalDeposit.current };
+
+    case "updateStore": {
+      const {
+        stateChange: { deposit: updatedDeposit }
+      } = action;
+
+      if (!updatedDeposit) {
+        return state;
       }
 
-      const difference = originalDeposit.calculateDifference(editedDeposit);
-      setEditedDeposit(deposit.apply(difference));
+      const newState = { ...state, originalDeposit: updatedDeposit };
+
+      const changeCommitted =
+        !updatedDeposit.initial.eq(originalDeposit.initial) ||
+        updatedDeposit.current.gt(originalDeposit.current) ||
+        updatedDeposit.collateralGain.lt(originalDeposit.collateralGain);
+
+      if (changePending && changeCommitted) {
+        return finishChange(revert(newState));
+      }
+
+      return {
+        ...newState,
+        editedDeposit: updatedDeposit.apply(originalDeposit.whatChanged(editedDeposit))
+      };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deposit]);
+  }
+};
+
+export const StabilityDepositManager: React.FC = () => {
+  const [{ originalDeposit, editedDeposit, changePending }, dispatch] = useLiquityReducer(
+    reduce,
+    init
+  );
 
   return (
     <>
       <StabilityDepositEditor
-        title={deposit.isEmpty ? "Make a Stability Deposit" : "My Stability Deposit"}
-        {...{ originalDeposit, editedDeposit, setEditedDeposit, changePending }}
+        title={originalDeposit.isEmpty ? "Make a Stability Deposit" : "My Stability Deposit"}
+        {...{ originalDeposit, editedDeposit, changePending, dispatch }}
       />
 
-      <StabilityDepositAction
-        {...{ originalDeposit, editedDeposit, changePending, setChangePending }}
-      />
+      <StabilityDepositAction {...{ originalDeposit, editedDeposit, changePending, dispatch }} />
     </>
   );
 };
