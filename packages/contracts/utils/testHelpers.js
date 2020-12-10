@@ -980,6 +980,15 @@ class TestHelper {
     }
   }
 
+  static async assertAssert(txPromise, message = undefined) {
+    try {
+      const tx = await txPromise
+      assert.isFalse(tx.receipt.status) // when this assert fails, the expected revert didn't occur, i.e. the tx succeeded
+    } catch (err) {
+      assert.include(err.message, "invalid opcode")
+    }
+  }
+
   static async forceSendEth(from, receiver, value) {
     const destructible = await Destructible.new()
     await web3.eth.sendTransaction({ to: destructible.address, from, value })
