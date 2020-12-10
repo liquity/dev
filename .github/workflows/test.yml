@@ -64,6 +64,7 @@ jobs:
         working-directory: ./packages/dev-frontend
   coverage:
     runs-on: ubuntu-latest
+    if: ${{ contains(github.ref, 'coverage') }}
     continue-on-error: true
 
     steps:
