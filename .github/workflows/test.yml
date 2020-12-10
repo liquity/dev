@@ -64,7 +64,7 @@ jobs:
         working-directory: ./packages/dev-frontend
   coverage:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.ref, 'coverage') }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'coverage') }}
     continue-on-error: true
 
     steps:
