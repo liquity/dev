@@ -523,6 +523,12 @@ export class PopulatableEthersLiquity
     );
   }
 
+  async claimRedeemedCollateral(address: string, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.borrowerOperations.estimateAndPopulate.claimRedeemedCollateral({ ...overrides }, id, address)
+    );
+  }
+
   async setPrice(price: Decimalish, overrides?: EthersTransactionOverrides) {
     if (!priceFeedIsTestnet(this.contracts.priceFeed)) {
       throw new Error("setPrice() unavailable on this deployment of Liquity");

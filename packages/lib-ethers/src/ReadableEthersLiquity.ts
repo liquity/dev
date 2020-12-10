@@ -114,6 +114,10 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return new Decimal(await this.contracts.lusdToken.balanceOf(address, { ...overrides }));
   }
 
+  async getCollateralSurplusBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+    return new Decimal(await this.contracts.collSurplusPool.getCollateral(address, { ...overrides }));
+  }
+
   async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
     const troves = await this.contracts.multiTroveGetter.getMultipleSortedTroves(
       -(startIdx + 1),
