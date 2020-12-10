@@ -26,8 +26,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   const editingState = useState<string>();
 
   const pendingDepositChange = Difference.between(
-    editedDeposit.depositAfterLoss,
-    originalDeposit.depositAfterLoss.nonZero
+    editedDeposit.current,
+    originalDeposit.current.nonZero
   );
 
   const edited = originalDeposit.calculateDifference(editedDeposit) !== undefined;
@@ -53,14 +53,14 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         <EditableRow
           label="Deposit"
           inputId="deposit-lqty"
-          amount={editedDeposit.depositAfterLoss.prettify()}
+          amount={editedDeposit.current.prettify()}
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
           unit={COIN}
           {...{ editingState }}
-          editedAmount={editedDeposit.depositAfterLoss.toString(2)}
+          editedAmount={editedDeposit.current.toString(2)}
           setEditedAmount={(editedDeposit: string) =>
-            setEditedDeposit(new StabilityDeposit({ deposit: editedDeposit }))
+            setEditedDeposit(new StabilityDeposit({ initial: editedDeposit }))
           }
         ></EditableRow>
 
@@ -68,8 +68,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           <StaticRow
             label="Gain"
             inputId="deposit-gain"
-            amount={originalDeposit.pendingCollateralGain.prettify(4)}
-            color={originalDeposit.pendingCollateralGain.nonZero && "success"}
+            amount={originalDeposit.collateralGain.prettify(4)}
+            color={originalDeposit.collateralGain.nonZero && "success"}
             unit="ETH"
           />
         )}

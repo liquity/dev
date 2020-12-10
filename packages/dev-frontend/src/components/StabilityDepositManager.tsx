@@ -46,7 +46,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     }
   }, [myTransactionState.type, setChangePending]);
 
-  if (!difference && originalDeposit.pendingCollateralGain.isZero) {
+  if (!difference && originalDeposit.collateralGain.isZero) {
     return null;
   }
 
@@ -56,8 +56,8 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
         ? ([
             [
               `Deposit ${difference.absoluteValue!.prettify()} ${COIN}${
-                originalDeposit.pendingCollateralGain.nonZero
-                  ? ` & withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
+                originalDeposit.collateralGain.nonZero
+                  ? ` & withdraw ${originalDeposit.collateralGain.prettify(4)} ETH`
                   : ""
               }`,
               liquity.depositLUSDInStabilityPool.bind(liquity, difference.absoluteValue!, undefined),
@@ -67,8 +67,8 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
         : ([
             [
               `Withdraw ${difference.absoluteValue!.prettify()} ${COIN}${
-                originalDeposit.pendingCollateralGain.nonZero
-                  ? ` & ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`
+                originalDeposit.collateralGain.nonZero
+                  ? ` & ${originalDeposit.collateralGain.prettify(4)} ETH`
                   : ""
               }`,
               liquity.withdrawLUSDFromStabilityPool.bind(liquity, difference.absoluteValue!),
@@ -77,14 +77,14 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
           ] as const)
       : ([
           [
-            `Withdraw ${originalDeposit.pendingCollateralGain.prettify(4)} ETH`,
+            `Withdraw ${originalDeposit.collateralGain.prettify(4)} ETH`,
             liquity.withdrawLUSDFromStabilityPool.bind(liquity, 0),
             []
           ],
           ...(!trove.isEmpty
             ? ([
                 [
-                  `Transfer ${originalDeposit.pendingCollateralGain.prettify(4)} ETH to Trove`,
+                  `Transfer ${originalDeposit.collateralGain.prettify(4)} ETH to Trove`,
                   liquity.transferCollateralGainToTrove.bind(liquity, {
                     deposit: originalDeposit,
                     trove,
@@ -135,7 +135,7 @@ export const StabilityDepositManager: React.FC = () => {
   useEffect(() => {
     setOriginalDeposit(deposit);
 
-    if (changePending && !deposit.deposit.eq(originalDeposit.deposit)) {
+    if (changePending && !deposit.initial.eq(originalDeposit.initial)) {
       setEditedDeposit(deposit);
       setChangePending(false);
     } else {

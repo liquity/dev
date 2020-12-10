@@ -2,68 +2,64 @@ import { Decimal, Decimalish, Difference } from "@liquity/decimal";
 
 // yeah, sounds stupid...
 interface StabilityDepositish {
-  readonly deposit?: Decimalish;
-  readonly depositAfterLoss?: Decimalish;
-  readonly pendingCollateralGain?: Decimalish;
+  readonly initial?: Decimalish;
+  readonly current?: Decimalish;
+  readonly collateralGain?: Decimalish;
 }
 
 export class StabilityDeposit {
-  readonly deposit: Decimal;
-  readonly depositAfterLoss: Decimal;
-  readonly pendingCollateralGain: Decimal;
+  readonly initial: Decimal;
+  readonly current: Decimal;
+  readonly collateralGain: Decimal;
 
   get isEmpty(): boolean {
-    return this.deposit.isZero && this.depositAfterLoss.isZero && this.pendingCollateralGain.isZero;
+    return this.initial.isZero && this.current.isZero && this.collateralGain.isZero;
   }
 
-  constructor({
-    deposit = 0,
-    depositAfterLoss = deposit,
-    pendingCollateralGain = 0
-  }: StabilityDepositish) {
-    this.deposit = Decimal.from(deposit);
-    this.depositAfterLoss = Decimal.from(depositAfterLoss);
-    this.pendingCollateralGain = Decimal.from(pendingCollateralGain);
+  constructor({ initial = 0, current = initial, collateralGain = 0 }: StabilityDepositish) {
+    this.initial = Decimal.from(initial);
+    this.current = Decimal.from(current);
+    this.collateralGain = Decimal.from(collateralGain);
 
-    if (this.depositAfterLoss.gt(this.deposit)) {
-      throw new Error("depositAfterLoss can't be greater than deposit");
+    if (this.current.gt(this.initial)) {
+      throw new Error("current can't be greater than initial");
     }
   }
 
   toString(): string {
     return (
-      "{\n" +
-      `  deposit: ${this.deposit},\n` +
-      `  depositAfterLoss: ${this.depositAfterLoss},\n` +
-      `  pendingCollateralGain: ${this.pendingCollateralGain}\n` +
-      "}"
+      `{ initial: ${this.initial}` +
+      `, current: ${this.current}` +
+      `, collateralGain: ${this.collateralGain} }`
     );
   }
 
   equals(that: StabilityDeposit): boolean {
     return (
-      this.deposit.eq(that.deposit) &&
-      this.depositAfterLoss.eq(that.depositAfterLoss) &&
-      this.pendingCollateralGain.eq(that.pendingCollateralGain)
+      this.initial.eq(that.initial) &&
+      this.current.eq(that.current) &&
+      this.collateralGain.eq(that.collateralGain)
     );
   }
 
   calculateDifference(that: StabilityDeposit): Difference | undefined {
-    if (!that.depositAfterLoss.eq(this.depositAfterLoss)) {
-      return Difference.between(that.depositAfterLoss, this.depositAfterLoss);
+    if (!that.current.eq(this.current)) {
+      return Difference.between(that.current, this.current);
     }
   }
 
   apply(difference?: Difference): StabilityDeposit {
     if (difference?.positive) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return new StabilityDeposit({ deposit: this.depositAfterLoss.add(difference.absoluteValue!) });
+      return new StabilityDeposit({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        initial: this.current.add(difference.absoluteValue!)
+      });
     } else if (difference?.negative) {
       return new StabilityDeposit({
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        deposit: difference.absoluteValue!.lt(this.depositAfterLoss)
+        initial: difference.absoluteValue!.lt(this.current)
           ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            this.depositAfterLoss.sub(difference.absoluteValue!)
+            this.current.sub(difference.absoluteValue!)
           : 0
       });
     } else {

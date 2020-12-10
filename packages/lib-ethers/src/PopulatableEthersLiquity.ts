@@ -588,7 +588,7 @@ export class PopulatableEthersLiquity
     const { deposit, trove, ...hintOptionalParams } = optionalParams;
     const initialTrove = trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = initialTrove.addCollateral(
-      (deposit ?? (await this.readableLiquity.getStabilityDeposit())).pendingCollateralGain
+      (deposit ?? (await this.readableLiquity.getStabilityDeposit())).collateralGain
     );
 
     return this.wrapCollateralGainTransfer(
