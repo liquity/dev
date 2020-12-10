@@ -41,7 +41,7 @@ contract MockAggregator is AggregatorV3Interface {
         } else if (_path == 4) { // zero timestamp
             return (0, 1, 0, 0, 0);
         } else if (_path == 5) { // negative price
-            return (0, -1, 0, 1, 0);
+            return (0, -5, 0, 1, 0);
         }
     }
 

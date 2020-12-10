@@ -9,11 +9,9 @@ const th = testHelpers.TestHelper
 const dec = th.dec
 const assertRevert = th.assertRevert
 
-const kovanAggregatorAddress = "0x9326BFA02ADD2366b30bacB125260Af641031331"
-
 contract('PriceFeed: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
 
-    const [owner, alice, bob, carol] = accounts;
+    const [owner, alice] = accounts;
     let priceFeedTestnet
     let priceFeed
     let zeroAddressPriceFeed
@@ -23,7 +21,7 @@ contract('PriceFeed: Liquity functions with the caller restricted to Liquity con
         priceFeedTestnet = await PriceFeedTestnet.new()
         PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
 
-        priceFeed = await PriceFeed.new(kovanAggregatorAddress)
+        priceFeed = await PriceFeed.new()
         PriceFeed.setAsDeployed(priceFeed)
 
         zeroAddressPriceFeed = await PriceFeed.new()
@@ -53,16 +51,20 @@ contract('PriceFeed: Liquity functions with the caller restricted to Liquity con
             }
         })
         it("setAddresses should fail whe called by nonOwner", async () => {
-            
-            await assertRevert(priceFeed.setAddresses(kovanAggregatorAddress, { from: alice }))
-
+            await assertRevert(
+                priceFeed.setAddresses(mockAggregator.address, { from: alice }),
+                "Ownable: caller is not the owner"
+            )
         })
         it("setAddresses should fail after being called once by owner", async () => {
             // Owner can successfully set any address
             const txOwner = await priceFeed.setAddresses(mockAggregator.address, { from: owner })
             assert.isTrue(txOwner.receipt.status)      
             
-            await assertRevert(priceFeed.setAddresses(kovanAggregatorAddress, { from: owner }))
+            await assertRevert(
+                priceFeed.setAddresses(mockAggregator.address, { from: owner }),
+                "Ownable: caller is not the owner"    
+            )
         })
         it("getPrice should work regardless how many decimals returned by aggregator", async () => {
             var price = await priceFeed.getPrice()
@@ -75,12 +77,18 @@ contract('PriceFeed: Liquity functions with the caller restricted to Liquity con
             assert.equal(price, 10000)
         })
         it("getPrice should revert with bad timestamp", async () => {
-            await mockAggregator.setPath(4) // zero timestamp
-            await assertRevert(priceFeed.getPrice())
+            await mockAggregator.setPath(4) 
+            await assertRevert(
+                priceFeed.getPrice(),
+                "PriceFeed: price timestamp from aggregator is 0, or in future"
+            )
         })
         it("getPrice should revert with negative price", async () => {
-            await mockAggregator.setPath(5) // zero timestamp
-            await assertRevert(priceFeed.getPrice())
+            await mockAggregator.setPath(5) 
+            await assertRevert(
+                priceFeed.getPrice(),
+                "PriceFeed: price answer from aggregator is negative"
+            )
         })
     })
 })
