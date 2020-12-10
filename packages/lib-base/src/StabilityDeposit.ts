@@ -1,4 +1,4 @@
-import { Decimal, Decimalish, Difference } from "@liquity/decimal";
+import { Decimal, Decimalish } from "@liquity/decimal";
 
 // yeah, sounds stupid...
 interface StabilityDepositish {
@@ -6,6 +6,10 @@ interface StabilityDepositish {
   readonly current?: Decimalish;
   readonly collateralGain?: Decimalish;
 }
+
+type StabilityDepositChange<T> =
+  | { depositLUSD: T; withdrawLUSD?: undefined }
+  | { depositLUSD?: undefined; withdrawLUSD: T; withdrawAllLUSD: boolean };
 
 export class StabilityDeposit {
   readonly initial: Decimal;
@@ -42,28 +46,29 @@ export class StabilityDeposit {
     );
   }
 
-  calculateDifference(that: StabilityDeposit): Difference | undefined {
-    if (!that.current.eq(this.current)) {
-      return Difference.between(that.current, this.current);
+  whatChanged(that: Decimalish): StabilityDepositChange<Decimal> | undefined {
+    that = Decimal.from(that);
+
+    if (that.lt(this.current)) {
+      return { withdrawLUSD: this.current.sub(that), withdrawAllLUSD: that.isZero };
+    }
+
+    if (that.gt(this.current)) {
+      return { depositLUSD: that.sub(this.current) };
     }
   }
 
-  apply(difference?: Difference): StabilityDeposit {
-    if (difference?.positive) {
-      return new StabilityDeposit({
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        initial: this.current.add(difference.absoluteValue!)
-      });
-    } else if (difference?.negative) {
-      return new StabilityDeposit({
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        initial: difference.absoluteValue!.lt(this.current)
-          ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            this.current.sub(difference.absoluteValue!)
-          : 0
-      });
+  apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal {
+    if (!change) {
+      return this.current;
+    }
+
+    if (change.withdrawLUSD !== undefined) {
+      return change.withdrawAllLUSD || this.current.lte(change.withdrawLUSD)
+        ? Decimal.ZERO
+        : this.current.sub(change.withdrawLUSD);
     } else {
-      return this;
+      return this.current.add(change.depositLUSD);
     }
   }
 }

@@ -12,9 +12,7 @@ const arbitraryDeposit = () =>
 describe("StabilityDeposit", () => {
   it("applying b's diff from a to a should always yield b", () => {
     fc.assert(
-      fc.property(arbitraryDeposit(), arbitraryDeposit(), (a, b) =>
-        a.apply(a.calculateDifference(b)).current.eq(b.current)
-      )
+      fc.property(arbitraryDeposit(), fc.float(), (a, b) => a.apply(a.whatChanged(b)).eq(b))
     );
   });
 });
