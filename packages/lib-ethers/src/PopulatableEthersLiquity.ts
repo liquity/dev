@@ -216,19 +216,13 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return new PopulatedEthersTransaction<TroveChangeWithFees<T>>(
       rawPopulatedTransaction,
 
-      ({ logs }) => {
-        const isOpenLoan = this.contracts.borrowerOperations.extractEvents(logs, "TroveCreated")
-          .length;
-
-        const [newTrove] = this.contracts.borrowerOperations.extractEvents(logs, "TroveUpdated").map(
-          ({ args: { _coll, _debt } }) =>
-            new Trove({
-              collateral: new Decimal(_coll),
-              // Temporary workaround for event bug:
-              // https://github.com/liquity/dev/issues/140#issuecomment-740541889
-              debt: new Decimal(_debt).add(isOpenLoan ? Trove.GAS_COMPENSATION_DEPOSIT : 0)
-            })
-        );
+      ({ logs }): TroveChangeWithFees<T> => {
+        const [newTrove] = this.contracts.borrowerOperations
+          .extractEvents(logs, "TroveUpdated")
+          .map(
+            ({ args: { _coll, _debt } }) =>
+              new Trove({ collateral: new Decimal(_coll), debt: new Decimal(_debt) })
+          );
 
         const [fee] = this.contracts.borrowerOperations
           .extractEvents(logs, "LUSDBorrowingFeePaid")
