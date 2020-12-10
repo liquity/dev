@@ -64,6 +64,7 @@ jobs:
         working-directory: ./packages/dev-frontend
   coverage:
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v2
@@ -84,3 +85,5 @@ jobs:
 
       - run: yarn install --frozen-lockfile
       - run: yarn coverage
+        continue-on-error: true
+      - run: yarn coveralls
