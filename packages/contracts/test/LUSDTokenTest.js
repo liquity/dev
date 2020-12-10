@@ -362,8 +362,8 @@ contract('LUSDToken', async accounts => {
 
       // Check that the zero deadline fails
       await assertRevert(lusdTokenTester.permit(
-        approve.owner, approve.spender, approve.value, 0, '0x99', r, s), 
-        'LUSD: Zero deadline is not valid')
+        approve.owner, approve.spender, approve.value, 0, v, r, s), 
+        'LUSD: Signature has expired')
     })
 
     it('permits and emits an Approval event (replay protected), with infinite deadline', async () => {
