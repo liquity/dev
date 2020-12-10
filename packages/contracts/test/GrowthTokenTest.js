@@ -353,41 +353,18 @@ contract('LQTY Token', async accounts => {
     // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
     await assertRevert(lqtyTokenTester.permit(
       approve.owner, approve.spender, approve.value,
-      deadline, v, r, s), 'LQTY: Recovered address from the sig is not the owner')
+      deadline, v, r, s), 'LQTY: invalid signature')
 
     // Check that the zero address fails
     await assertRevert(lqtyTokenTester.permit('0x0000000000000000000000000000000000000000',
-      approve.spender, approve.value, deadline, '0x99', r, s), 'LQTY: Recovered address from the sig is not the owner')
-  })
-
-  it('permit(): permits and emits an Approval event (replay protected), with infinite deadline', async () => {
-    const deadline = 0
-
-    // Approve it
-    const { v, r, s, tx } = await buildPermitTx(deadline)
-    const receipt = await tx
-    const event = receipt.logs[0]
-
-    // Check that approval was successful
-    assert.equal(event.event, 'Approval')
-    assert.equal(await lqtyTokenTester.nonces(approve.owner), 1)
-    assert.equal(await lqtyTokenTester.allowance(approve.owner, approve.spender), approve.value)
-
-    // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
-    assertRevert(lqtyTokenTester.permit(
-      approve.owner, approve.spender, approve.value,
-      deadline, v, r, s), 'LQTY: Recovered address from the sig is not the owner')
-
-    // Check that the zero address fails
-    assertRevert(lqtyTokenTester.permit('0x0000000000000000000000000000000000000000',
-      approve.spender, approve.value, deadline, '0x99', r, s), 'LQTY: Recovered address from the sig is not the owner')
+      approve.spender, approve.value, deadline, '0x99', r, s), 'LQTY: invalid signature')
   })
 
   it('permit(): fails with expired deadline', async () => {
     const deadline = 1
 
     const { v, r, s, tx } = await buildPermitTx(deadline)
-    await assertRevert(tx, 'LQTY: Signature has expired')
+    await assertRevert(tx, 'LQTY: expired deadline')
   })
 
   it('permit(): fails with the wrong signature', async () => {
@@ -400,7 +377,7 @@ contract('LQTY Token', async accounts => {
       deadline, v, hexlify(r), hexlify(s)
     )
 
-    await assertRevert(tx, 'LQTY: Recovered address from the sig is not the owner')
+    await assertRevert(tx, 'LQTY: invalid signature')
   })
 })
 
