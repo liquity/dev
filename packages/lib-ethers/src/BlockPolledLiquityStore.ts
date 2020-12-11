@@ -50,7 +50,8 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       deposit: this.liquity.getStabilityDeposit(this.account, { blockTag }),
       total: this.liquity.getTotal({ blockTag }),
       lusdInStabilityPool: this.liquity.getLUSDInStabilityPool({ blockTag }),
-      fees: this.liquity.getFees({ blockTag })
+      fees: this.liquity.getFees({ blockTag }),
+      lqtyStake: this.liquity.getLQTYStake(this.account, { blockTag })
     });
   }
 

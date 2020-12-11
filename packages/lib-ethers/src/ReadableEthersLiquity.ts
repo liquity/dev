@@ -3,6 +3,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Decimal } from "@liquity/decimal";
 import {
   Fees,
+  LQTYStake,
   ReadableLiquity,
   StabilityDeposit,
   Trove,
@@ -146,6 +147,18 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     const lastFeeOperation = new Date(1000 * lastFeeOperationTime.toNumber());
 
     return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR, BETA);
+  }
+
+  async getLQTYStake(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+    const [stakedLQTY, collateralGain, lusdGain] = await Promise.all(
+      [
+        this.contracts.lqtyStaking.stakes(address, { ...overrides }),
+        this.contracts.lqtyStaking.getPendingETHGain(address, { ...overrides }),
+        this.contracts.lqtyStaking.getPendingLUSDGain(address, { ...overrides })
+      ].map(getBigNumber => getBigNumber.then(decimalify))
+    );
+
+    return new LQTYStake({ stakedLQTY, collateralGain, lusdGain });
   }
 }
 

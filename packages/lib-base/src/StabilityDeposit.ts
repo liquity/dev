@@ -35,7 +35,12 @@ export class StabilityDeposit {
   }
 
   get isEmpty(): boolean {
-    return this.initialLUSD.isZero && this.currentLUSD.isZero && this.collateralGain.isZero;
+    return (
+      this.initialLUSD.isZero &&
+      this.currentLUSD.isZero &&
+      this.collateralGain.isZero &&
+      this.lqtyReward.isZero
+    );
   }
 
   toString(): string {
@@ -51,19 +56,20 @@ export class StabilityDeposit {
     return (
       this.initialLUSD.eq(that.initialLUSD) &&
       this.currentLUSD.eq(that.currentLUSD) &&
-      this.collateralGain.eq(that.collateralGain)
+      this.collateralGain.eq(that.collateralGain) &&
+      this.lqtyReward.eq(that.lqtyReward)
     );
   }
 
-  whatChanged(that: Decimalish): StabilityDepositChange<Decimal> | undefined {
-    that = Decimal.from(that);
+  whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined {
+    thatLUSD = Decimal.from(thatLUSD);
 
-    if (that.lt(this.currentLUSD)) {
-      return { withdrawLUSD: this.currentLUSD.sub(that), withdrawAllLUSD: that.isZero };
+    if (thatLUSD.lt(this.currentLUSD)) {
+      return { withdrawLUSD: this.currentLUSD.sub(thatLUSD), withdrawAllLUSD: thatLUSD.isZero };
     }
 
-    if (that.gt(this.currentLUSD)) {
-      return { depositLUSD: that.sub(this.currentLUSD) };
+    if (thatLUSD.gt(this.currentLUSD)) {
+      return { depositLUSD: thatLUSD.sub(this.currentLUSD) };
     }
   }
 

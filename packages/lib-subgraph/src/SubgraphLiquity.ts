@@ -14,7 +14,8 @@ import {
   Trove,
   emptyTrove,
   StabilityDeposit,
-  Fees
+  Fees,
+  LQTYStake
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
@@ -308,6 +309,10 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getFees(): Promise<Fees> {
+    throw new Error("Method not implemented.");
+  }
+
+  getLQTYStake(address?: string): Promise<LQTYStake> {
     throw new Error("Method not implemented.");
   }
 }

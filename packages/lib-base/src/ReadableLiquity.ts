@@ -3,6 +3,7 @@ import { Decimal } from "@liquity/decimal";
 import { Trove, TroveWithPendingRewards } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Fees } from "./Fees";
+import { LQTYStake } from "./LQTYStake";
 
 export interface ReadableLiquity {
   getTotalRedistributed(): Promise<Trove>;
@@ -36,4 +37,6 @@ export interface ReadableLiquity {
   ): Promise<[string, TroveWithPendingRewards][]>;
 
   getFees(): Promise<Fees>;
+
+  getLQTYStake(address?: string): Promise<LQTYStake>;
 }

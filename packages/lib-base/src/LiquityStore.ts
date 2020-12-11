@@ -4,6 +4,7 @@ import { Decimal } from "@liquity/decimal";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Trove, TroveWithPendingRewards } from "./Trove";
 import { Fees } from "./Fees";
+import { LQTYStake } from "./LQTYStake";
 
 export type LiquityStoreBaseState = {
   numberOfTroves: number;
@@ -17,6 +18,7 @@ export type LiquityStoreBaseState = {
   troveWithoutRewards: TroveWithPendingRewards;
   deposit: StabilityDeposit;
   fees: Fees;
+  lqtyStake: LQTYStake;
 };
 
 export type LiquityStoreDerivedState = {
@@ -158,7 +160,14 @@ export abstract class LiquityStore<T = unknown> {
 
       deposit: this.updateIfChanged(equals, "deposit", baseState.deposit, baseStateUpdate.deposit),
 
-      fees: this.updateIfChanged(equals, "fees", baseState.fees, baseStateUpdate.fees)
+      fees: this.updateIfChanged(equals, "fees", baseState.fees, baseStateUpdate.fees),
+
+      lqtyStake: this.updateIfChanged(
+        equals,
+        "lqtyStake",
+        baseState.lqtyStake,
+        baseStateUpdate.lqtyStake
+      )
     };
   }
 

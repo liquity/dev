@@ -458,7 +458,7 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async depositCollateral(
+  depositCollateral(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -466,7 +466,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ depositCollateral: amount }, optionalParams, overrides);
   }
 
-  async withdrawCollateral(
+  withdrawCollateral(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -474,7 +474,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ withdrawCollateral: amount }, optionalParams, overrides);
   }
 
-  async borrowLUSD(
+  borrowLUSD(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -482,7 +482,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ borrowLUSD: amount }, optionalParams, overrides);
   }
 
-  async repayLUSD(
+  repayLUSD(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -633,6 +633,26 @@ export class PopulatableEthersLiquity
         partialRedemptionHint,
         partialRedemptionHintICR.bigNumber,
         redeemMaxIterations
+      )
+    );
+  }
+
+  async stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyStaking.estimateAndPopulate.stake(
+        { ...overrides },
+        id,
+        Decimal.from(amount).bigNumber
+      )
+    );
+  }
+
+  async unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyStaking.estimateAndPopulate.unstake(
+        { ...overrides },
+        id,
+        Decimal.from(amount).bigNumber
       )
     );
   }

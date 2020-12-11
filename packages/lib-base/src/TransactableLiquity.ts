@@ -88,6 +88,9 @@ export interface TransactableLiquity {
   sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
 
   redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
+
+  stakeLQTY(amount: Decimalish): Promise<void>;
+  unstakeLQTY(amount: Decimalish): Promise<void>;
 }
 
 type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (
