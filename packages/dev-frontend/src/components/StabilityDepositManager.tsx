@@ -7,7 +7,7 @@ import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liqu
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
 import { useLiquity } from "../hooks/LiquityContext";
-import { COIN } from "../strings";
+import { COIN, GT } from "../strings";
 import { Decimal, Decimalish } from "@liquity/decimal";
 
 type StabilityDepositActionProps = {
@@ -41,7 +41,12 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   const myTransactionState = useMyTransactionState(/^stability-deposit-/);
 
   const { depositLUSD, withdrawLUSD } = originalDeposit.whatChanged(editedDeposit) ?? {};
+
   const collateralGain = originalDeposit.collateralGain.nonZero;
+  const lqtyReward = originalDeposit.lqtyReward.nonZero;
+  const rewards =
+    (collateralGain ?? lqtyReward) &&
+    [collateralGain && "ETH", lqtyReward && GT].filter(x => x).join(" & ");
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
@@ -58,9 +63,8 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   const actions: Action[] = depositLUSD
     ? [
         [
-          collateralGain
-            ? `Deposit ${depositLUSD.prettify()} ${COIN} & ` +
-              `withdraw ${collateralGain.prettify(4)} ETH`
+          rewards
+            ? `Deposit ${depositLUSD.prettify()} ${COIN} & claim ${rewards}`
             : `Deposit ${depositLUSD.prettify()} ${COIN}`,
           liquity.depositLUSDInStabilityPool.bind(liquity, depositLUSD, undefined),
           [[lusdBalance.gte(depositLUSD), `You don't have enough ${COIN}`]]
@@ -69,22 +73,19 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     : withdrawLUSD
     ? [
         [
-          collateralGain
-            ? `Withdraw ${withdrawLUSD.prettify()} ${COIN} & ${collateralGain.prettify(4)} ETH`
+          rewards
+            ? `Withdraw ${withdrawLUSD.prettify()} ${COIN} & claim ${rewards}`
             : `Withdraw ${withdrawLUSD.prettify()} ${COIN}`,
           liquity.withdrawLUSDFromStabilityPool.bind(liquity, withdrawLUSD)
         ]
       ]
-    : collateralGain
+    : rewards
     ? [
-        [
-          `Withdraw ${collateralGain.prettify(4)} ETH`,
-          liquity.withdrawLUSDFromStabilityPool.bind(liquity, 0)
-        ],
-        ...(!trove.isEmpty
+        [`Claim ${rewards}`, liquity.withdrawLUSDFromStabilityPool.bind(liquity, 0)],
+        ...(collateralGain && !trove.isEmpty
           ? [
               [
-                `Transfer ${collateralGain.prettify(4)} ETH to Trove`,
+                lqtyReward ? `Transfer ETH to Trove & claim ${GT}` : `Transfer ETH to Trove`,
                 liquity.transferCollateralGainToTrove.bind(liquity, {
                   deposit: originalDeposit,
                   trove,
