@@ -48,11 +48,12 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       totalRedistributed: this.liquity.getTotalRedistributed({ blockTag }),
       deposit: this.liquity.getStabilityDeposit(this.account, { blockTag }),
       total: this.liquity.getTotal({ blockTag }),
-      lusdInStabilityPool: this.liquity.getLUSDInStabilityPool({ blockTag })
+      lusdInStabilityPool: this.liquity.getLUSDInStabilityPool({ blockTag }),
+      fees: this.liquity.getFees({ blockTag })
     });
   }
 
-  start() {
+  doStart() {
     this.get().then(state => {
       if (!this.loaded) {
         this.load(state, {});

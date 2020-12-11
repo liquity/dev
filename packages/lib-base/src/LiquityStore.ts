@@ -3,6 +3,7 @@ import assert from "assert";
 import { Decimal } from "@liquity/decimal";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Trove, TroveWithPendingRewards } from "./Trove";
+import { Fees } from "./Fees";
 
 export type LiquityStoreBaseState = {
   numberOfTroves: number;
@@ -14,10 +15,13 @@ export type LiquityStoreBaseState = {
   totalRedistributed: Trove;
   troveWithoutRewards: TroveWithPendingRewards;
   deposit: StabilityDeposit;
+  fees: Fees;
 };
 
 export type LiquityStoreDerivedState = {
   trove: Trove;
+  borrowingFeeFactor: Decimal;
+  redemptionFeeFactor: Decimal;
 };
 
 export type LiquityStoreState<T = unknown> = LiquityStoreBaseState & LiquityStoreDerivedState & T;
@@ -31,11 +35,6 @@ export type LiquityStoreListener<T = unknown> = (params: {
 const strictEquals = <T>(a: T, b: T) => a === b;
 const eq = <T extends { eq(that: T): boolean }>(a: T, b: T) => a.eq(b);
 const equals = <T extends { equals(that: T): boolean }>(a: T, b: T) => a.equals(b);
-
-const asserted = <T>(x?: T): T => {
-  assert(x);
-  return x;
-};
 
 const wrap = <A extends unknown[], R>(f: (...args: A) => R) => (...args: A) => f(...args);
 
@@ -52,13 +51,39 @@ export abstract class LiquityStore<T = unknown> {
   private derivedState?: LiquityStoreDerivedState;
   private extraState?: T;
 
+  private updateTimeoutId: ReturnType<typeof setTimeout> | undefined;
   private listeners = new Set<LiquityStoreListener<T>>();
 
   get state(): LiquityStoreState<T> {
     return Object.assign({}, this.baseState, this.derivedState, this.extraState);
   }
 
-  abstract start(): () => void;
+  abstract doStart(): () => void;
+
+  start(): () => void {
+    const doStop = this.doStart();
+
+    return () => {
+      doStop();
+
+      this.cancelUpdateIfScheduled();
+    };
+  }
+
+  private cancelUpdateIfScheduled() {
+    if (this.updateTimeoutId !== undefined) {
+      clearTimeout(this.updateTimeoutId);
+    }
+  }
+
+  private scheduleUpdate() {
+    this.cancelUpdateIfScheduled();
+
+    this.updateTimeoutId = setTimeout(() => {
+      this.updateTimeoutId = undefined;
+      this.update();
+    }, 30000);
+  }
 
   protected logUpdate<U>(name: string, next: U): U {
     if (this.logging) {
@@ -72,83 +97,99 @@ export abstract class LiquityStore<T = unknown> {
     return next !== undefined && !equals(prev, next) ? this.logUpdate(name, next) : prev;
   }
 
-  private reduce({
-    numberOfTroves,
-    accountBalance,
-    lusdBalance,
-    price,
-    lusdInStabilityPool,
-    total,
-    totalRedistributed,
-    troveWithoutRewards,
-    deposit
-  }: Partial<LiquityStoreBaseState>): LiquityStoreBaseState {
-    assert(this.baseState);
-
+  private reduce(
+    baseState: LiquityStoreBaseState,
+    baseStateUpdate: Partial<LiquityStoreBaseState>
+  ): LiquityStoreBaseState {
     return {
       numberOfTroves: this.updateIfChanged(
         strictEquals,
         "numberOfTroves",
-        this.baseState.numberOfTroves,
-        numberOfTroves
+        baseState.numberOfTroves,
+        baseStateUpdate.numberOfTroves
       ),
 
       accountBalance: this.updateIfChanged(
         eq,
         "accountBalance",
-        this.baseState.accountBalance,
-        accountBalance
+        baseState.accountBalance,
+        baseStateUpdate.accountBalance
       ),
 
-      lusdBalance: this.updateIfChanged(eq, "lusdBalance", this.baseState.lusdBalance, lusdBalance),
+      lusdBalance: this.updateIfChanged(
+        eq,
+        "lusdBalance",
+        baseState.lusdBalance,
+        baseStateUpdate.lusdBalance
+      ),
 
-      price: this.updateIfChanged(eq, "price", this.baseState.price, price),
+      price: this.updateIfChanged(eq, "price", baseState.price, baseStateUpdate.price),
 
       lusdInStabilityPool: this.updateIfChanged(
         eq,
         "lusdInStabilityPool",
-        this.baseState.lusdInStabilityPool,
-        lusdInStabilityPool
+        baseState.lusdInStabilityPool,
+        baseStateUpdate.lusdInStabilityPool
       ),
 
-      total: this.updateIfChanged(equals, "total", this.baseState.total, total),
+      total: this.updateIfChanged(equals, "total", baseState.total, baseStateUpdate.total),
 
       totalRedistributed: this.updateIfChanged(
         equals,
         "totalRedistributed",
-        this.baseState.totalRedistributed,
-        totalRedistributed
+        baseState.totalRedistributed,
+        baseStateUpdate.totalRedistributed
       ),
 
       troveWithoutRewards: this.updateIfChanged(
         equals,
         "troveWithoutRewards",
-        this.baseState.troveWithoutRewards,
-        troveWithoutRewards
+        baseState.troveWithoutRewards,
+        baseStateUpdate.troveWithoutRewards
       ),
 
-      deposit: this.updateIfChanged(equals, "deposit", this.baseState.deposit, deposit)
+      deposit: this.updateIfChanged(equals, "deposit", baseState.deposit, baseStateUpdate.deposit),
+
+      fees: this.updateIfChanged(equals, "fees", baseState.fees, baseStateUpdate.fees)
     };
   }
 
   private derive({
     troveWithoutRewards,
-    totalRedistributed
+    totalRedistributed,
+    fees
   }: LiquityStoreBaseState): LiquityStoreDerivedState {
     return {
-      trove: troveWithoutRewards.applyRewards(totalRedistributed)
+      trove: troveWithoutRewards.applyRewards(totalRedistributed),
+      borrowingFeeFactor: fees.borrowingFeeFactor(),
+      redemptionFeeFactor: fees.redemptionFeeFactor()
     };
   }
 
-  private reduceDerived({ trove }: LiquityStoreDerivedState): LiquityStoreDerivedState {
-    assert(this.derivedState);
-
+  private reduceDerived(
+    derivedState: LiquityStoreDerivedState,
+    derivedStateUpdate: LiquityStoreDerivedState
+  ): LiquityStoreDerivedState {
     return {
-      trove: this.updateIfChanged(equals, "trove", this.derivedState.trove, trove)
+      trove: this.updateIfChanged(equals, "trove", derivedState.trove, derivedStateUpdate.trove),
+
+      borrowingFeeFactor: this.updateIfChanged(
+        eq,
+        "borrowingFeeFactor",
+        derivedState.borrowingFeeFactor,
+        derivedStateUpdate.borrowingFeeFactor
+      ),
+
+      redemptionFeeFactor: this.updateIfChanged(
+        eq,
+        "redemptionFeeFactor",
+        derivedState.redemptionFeeFactor,
+        derivedStateUpdate.redemptionFeeFactor
+      )
     };
   }
 
-  protected abstract reduceExtra(oldExtraState: T, extraStateUpdate: Partial<T>): T;
+  protected abstract reduceExtra(extraState: T, extraStateUpdate: Partial<T>): T;
 
   private notify(...args: Parameters<LiquityStoreListener<T>>) {
     [...this.listeners].forEach(listener => listener(...args));
@@ -172,21 +213,34 @@ export abstract class LiquityStore<T = unknown> {
     this.extraState = extraState;
     this.loaded = true;
 
+    this.scheduleUpdate();
+
     if (this.onLoaded) {
       this.onLoaded();
     }
   }
 
   protected update(
-    baseStateUpdate: Partial<LiquityStoreBaseState>,
+    baseStateUpdate?: Partial<LiquityStoreBaseState>,
     extraStateUpdate?: Partial<T>
   ): void {
+    assert(this.baseState && this.derivedState);
+
     const oldState = this.state;
 
-    this.baseState = this.reduce(baseStateUpdate);
-    this.derivedState = this.reduceDerived(this.derive(this.baseState));
-    this.extraState =
-      extraStateUpdate && this.reduceExtra(asserted(this.extraState), extraStateUpdate);
+    if (baseStateUpdate) {
+      this.baseState = this.reduce(this.baseState, baseStateUpdate);
+    }
+
+    // Always running this lets us derive state based on passage of time, like baseRate decay
+    this.derivedState = this.reduceDerived(this.derivedState, this.derive(this.baseState));
+
+    if (extraStateUpdate) {
+      assert(this.extraState);
+      this.extraState = this.reduceExtra(this.extraState, extraStateUpdate);
+    }
+
+    this.scheduleUpdate();
 
     this.notify({
       newState: this.state,

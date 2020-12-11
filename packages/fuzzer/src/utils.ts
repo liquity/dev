@@ -51,7 +51,7 @@ const tinyDifference = Decimal.from("0.000000001");
 
 const sortedByICR = async (
   liquity: ReadableLiquity,
-  listOfTroves: (readonly [string, TroveWithPendingRewards])[],
+  listOfTroves: [string, TroveWithPendingRewards][],
   price: Decimalish
 ) => {
   if (listOfTroves.length < 2) {
@@ -82,8 +82,8 @@ export const listDifference = (listA: string[], listB: string[]) => {
 };
 
 export const listOfTrovesShouldBeEqual = (
-  listA: (readonly [string, TroveWithPendingRewards])[],
-  listB: (readonly [string, TroveWithPendingRewards])[]
+  listA: [string, TroveWithPendingRewards][],
+  listB: [string, TroveWithPendingRewards][]
 ) => {
   if (listA.length !== listB.length) {
     throw new Error("length of trove lists is different");
@@ -107,8 +107,8 @@ export const listOfTrovesShouldBeEqual = (
 export const checkTroveOrdering = async (
   liquity: ReadableLiquity,
   price: Decimal,
-  listOfTroves: (readonly [string, TroveWithPendingRewards])[],
-  previousListOfTroves?: (readonly [string, TroveWithPendingRewards])[]
+  listOfTroves: [string, TroveWithPendingRewards][],
+  previousListOfTroves?: [string, TroveWithPendingRewards][]
 ) => {
   if (!(await sortedByICR(liquity, listOfTroves, price))) {
     if (previousListOfTroves) {
@@ -207,7 +207,7 @@ const troveToString = (
 
 export const dumpTroves = async (
   liquity: ReadableLiquity,
-  listOfTroves: (readonly [string, TroveWithPendingRewards])[],
+  listOfTroves: [string, TroveWithPendingRewards][],
   price: Decimalish
 ) => {
   if (listOfTroves.length === 0) {
