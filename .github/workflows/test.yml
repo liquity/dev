@@ -87,4 +87,8 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn coverage
         continue-on-error: true
-      - run: yarn coveralls
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        path-to-lcov: ./packages/contracts/coverage/lcov.info
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
