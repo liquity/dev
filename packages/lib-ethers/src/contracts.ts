@@ -27,7 +27,7 @@ import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 
-import dev from "../deployments/dev.json";
+import devOrNull from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
 import kovan from "../deployments/kovan.json";
 import rinkeby from "../deployments/rinkeby.json";
@@ -219,18 +219,7 @@ export type LiquityDeployment = {
 
 export const DEV_CHAIN_ID = 17;
 
-type DevDeployment = {
-  dev: LiquityDeployment;
-  [DEV_CHAIN_ID]: LiquityDeployment;
-};
-
-const devDeployment: DevDeployment | {} =
-  dev !== null
-    ? {
-        dev,
-        [DEV_CHAIN_ID]: dev
-      }
-    : {};
+const dev = devOrNull as LiquityDeployment | null;
 
 export const deploymentOnNetwork: {
   [network: string]: LiquityDeployment;
@@ -246,5 +235,5 @@ export const deploymentOnNetwork: {
   5: goerli,
   42: kovan,
 
-  ...devDeployment
+  ...(dev !== null ? { [DEV_CHAIN_ID]: dev, dev } : {})
 };
