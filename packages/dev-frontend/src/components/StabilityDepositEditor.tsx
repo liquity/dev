@@ -6,7 +6,7 @@ import { StabilityDeposit } from "@liquity/lib-base";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Icon } from "./Icon";
-import { COIN } from "../strings";
+import { COIN, GT } from "../strings";
 
 type StabilityDepositEditorProps = {
   title: string;
@@ -59,13 +59,23 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         ></EditableRow>
 
         {!originalDeposit.isEmpty && (
-          <StaticRow
-            label="Gain"
-            inputId="deposit-gain"
-            amount={originalDeposit.collateralGain.prettify(4)}
-            color={originalDeposit.collateralGain.nonZero && "success"}
-            unit="ETH"
-          />
+          <>
+            <StaticRow
+              label="Gain"
+              inputId="deposit-gain"
+              amount={originalDeposit.collateralGain.prettify(4)}
+              color={originalDeposit.collateralGain.nonZero && "success"}
+              unit="ETH"
+            />
+
+            <StaticRow
+              label="Reward"
+              inputId="deposit-reward"
+              amount={originalDeposit.lqtyReward.prettify(2)}
+              color={originalDeposit.lqtyReward.nonZero && "success"}
+              unit={GT}
+            />
+          </>
         )}
       </Box>
     </Card>

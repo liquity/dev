@@ -5,6 +5,7 @@ interface StabilityDepositish {
   readonly initial?: Decimalish;
   readonly current?: Decimalish;
   readonly collateralGain?: Decimalish;
+  readonly lqtyReward?: Decimalish;
 }
 
 type StabilityDepositChange<T> =
@@ -15,26 +16,34 @@ export class StabilityDeposit {
   readonly initial: Decimal;
   readonly current: Decimal;
   readonly collateralGain: Decimal;
+  readonly lqtyReward: Decimal;
 
-  get isEmpty(): boolean {
-    return this.initial.isZero && this.current.isZero && this.collateralGain.isZero;
-  }
-
-  constructor({ initial = 0, current = initial, collateralGain = 0 }: StabilityDepositish) {
+  constructor({
+    initial = 0,
+    current = initial,
+    collateralGain = 0,
+    lqtyReward = 0
+  }: StabilityDepositish) {
     this.initial = Decimal.from(initial);
     this.current = Decimal.from(current);
     this.collateralGain = Decimal.from(collateralGain);
+    this.lqtyReward = Decimal.from(lqtyReward);
 
     if (this.current.gt(this.initial)) {
       throw new Error("current can't be greater than initial");
     }
   }
 
+  get isEmpty(): boolean {
+    return this.initial.isZero && this.current.isZero && this.collateralGain.isZero;
+  }
+
   toString(): string {
     return (
       `{ initial: ${this.initial}` +
       `, current: ${this.current}` +
-      `, collateralGain: ${this.collateralGain} }`
+      `, collateralGain: ${this.collateralGain}` +
+      `, lqtyReward: ${this.lqtyReward} }`
     );
   }
 
