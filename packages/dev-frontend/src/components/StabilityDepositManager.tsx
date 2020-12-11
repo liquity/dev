@@ -12,7 +12,7 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 type StabilityDepositActionProps = {
   originalDeposit: StabilityDeposit;
-  editedDeposit: Decimal;
+  editedLUSD: Decimal;
   changePending: boolean;
   dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
@@ -28,7 +28,7 @@ type Action = [name: string, send: TransactionFunction, requirements?: [boolean,
 
 const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   originalDeposit,
-  editedDeposit,
+  editedLUSD,
   changePending,
   dispatch
 }) => {
@@ -40,7 +40,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(/^stability-deposit-/);
 
-  const { depositLUSD, withdrawLUSD } = originalDeposit.whatChanged(editedDeposit) ?? {};
+  const { depositLUSD, withdrawLUSD } = originalDeposit.whatChanged(editedLUSD) ?? {};
 
   const collateralGain = originalDeposit.collateralGain.nonZero;
   const lqtyReward = originalDeposit.lqtyReward.nonZero;
@@ -126,7 +126,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
 
 const init = ({ deposit }: LiquityStoreState) => ({
   originalDeposit: deposit,
-  editedDeposit: deposit.current,
+  editedLUSD: deposit.currentLUSD,
   changePending: false
 });
 
@@ -150,7 +150,7 @@ const reduce = (
   // console.log(state);
   // console.log(action);
 
-  const { originalDeposit, editedDeposit, changePending } = state;
+  const { originalDeposit, editedLUSD, changePending } = state;
 
   switch (action.type) {
     case "startChange":
@@ -160,10 +160,10 @@ const reduce = (
       return { ...state, changePending: false };
 
     case "setDeposit":
-      return { ...state, editedDeposit: Decimal.from(action.newValue) };
+      return { ...state, editedLUSD: Decimal.from(action.newValue) };
 
     case "revert":
-      return { ...state, editedDeposit: originalDeposit.current };
+      return { ...state, editedLUSD: originalDeposit.currentLUSD };
 
     case "updateStore": {
       const {
@@ -177,8 +177,8 @@ const reduce = (
       const newState = { ...state, originalDeposit: updatedDeposit };
 
       const changeCommitted =
-        !updatedDeposit.initial.eq(originalDeposit.initial) ||
-        updatedDeposit.current.gt(originalDeposit.current) ||
+        !updatedDeposit.initialLUSD.eq(originalDeposit.initialLUSD) ||
+        updatedDeposit.currentLUSD.gt(originalDeposit.currentLUSD) ||
         updatedDeposit.collateralGain.lt(originalDeposit.collateralGain);
 
       if (changePending && changeCommitted) {
@@ -187,26 +187,23 @@ const reduce = (
 
       return {
         ...newState,
-        editedDeposit: updatedDeposit.apply(originalDeposit.whatChanged(editedDeposit))
+        editedLUSD: updatedDeposit.apply(originalDeposit.whatChanged(editedLUSD))
       };
     }
   }
 };
 
 export const StabilityDepositManager: React.FC = () => {
-  const [{ originalDeposit, editedDeposit, changePending }, dispatch] = useLiquityReducer(
-    reduce,
-    init
-  );
+  const [{ originalDeposit, editedLUSD, changePending }, dispatch] = useLiquityReducer(reduce, init);
 
   return (
     <>
       <StabilityDepositEditor
         title={originalDeposit.isEmpty ? "Make a Stability Deposit" : "My Stability Deposit"}
-        {...{ originalDeposit, editedDeposit, changePending, dispatch }}
+        {...{ originalDeposit, editedLUSD, changePending, dispatch }}
       />
 
-      <StabilityDepositAction {...{ originalDeposit, editedDeposit, changePending, dispatch }} />
+      <StabilityDepositAction {...{ originalDeposit, editedLUSD, changePending, dispatch }} />
     </>
   );
 };

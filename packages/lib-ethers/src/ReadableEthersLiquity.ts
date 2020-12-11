@@ -93,7 +93,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getStabilityDeposit(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    const [initial, current, collateralGain, lqtyReward] = await Promise.all(
+    const [initialLUSD, currentLUSD, collateralGain, lqtyReward] = await Promise.all(
       [
         this.contracts.stabilityPool.deposits(address, { ...overrides }).then(d => d.initialValue),
         this.contracts.stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
@@ -102,7 +102,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
-    return new StabilityDeposit({ initial, current, collateralGain, lqtyReward });
+    return new StabilityDeposit({ initialLUSD, currentLUSD, collateralGain, lqtyReward });
   }
 
   async getLUSDInStabilityPool(overrides?: EthersCallOverrides) {

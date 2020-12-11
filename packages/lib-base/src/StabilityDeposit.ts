@@ -2,8 +2,8 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 // yeah, sounds stupid...
 interface StabilityDepositish {
-  readonly initial?: Decimalish;
-  readonly current?: Decimalish;
+  readonly initialLUSD?: Decimalish;
+  readonly currentLUSD?: Decimalish;
   readonly collateralGain?: Decimalish;
   readonly lqtyReward?: Decimalish;
 }
@@ -13,35 +13,35 @@ type StabilityDepositChange<T> =
   | { depositLUSD?: undefined; withdrawLUSD: T; withdrawAllLUSD: boolean };
 
 export class StabilityDeposit {
-  readonly initial: Decimal;
-  readonly current: Decimal;
+  readonly initialLUSD: Decimal;
+  readonly currentLUSD: Decimal;
   readonly collateralGain: Decimal;
   readonly lqtyReward: Decimal;
 
   constructor({
-    initial = 0,
-    current = initial,
+    initialLUSD = 0,
+    currentLUSD = initialLUSD,
     collateralGain = 0,
     lqtyReward = 0
   }: StabilityDepositish) {
-    this.initial = Decimal.from(initial);
-    this.current = Decimal.from(current);
+    this.initialLUSD = Decimal.from(initialLUSD);
+    this.currentLUSD = Decimal.from(currentLUSD);
     this.collateralGain = Decimal.from(collateralGain);
     this.lqtyReward = Decimal.from(lqtyReward);
 
-    if (this.current.gt(this.initial)) {
-      throw new Error("current can't be greater than initial");
+    if (this.currentLUSD.gt(this.initialLUSD)) {
+      throw new Error("currentLUSD can't be greater than initialLUSD");
     }
   }
 
   get isEmpty(): boolean {
-    return this.initial.isZero && this.current.isZero && this.collateralGain.isZero;
+    return this.initialLUSD.isZero && this.currentLUSD.isZero && this.collateralGain.isZero;
   }
 
   toString(): string {
     return (
-      `{ initial: ${this.initial}` +
-      `, current: ${this.current}` +
+      `{ initialLUSD: ${this.initialLUSD}` +
+      `, currentLUSD: ${this.currentLUSD}` +
       `, collateralGain: ${this.collateralGain}` +
       `, lqtyReward: ${this.lqtyReward} }`
     );
@@ -49,8 +49,8 @@ export class StabilityDeposit {
 
   equals(that: StabilityDeposit): boolean {
     return (
-      this.initial.eq(that.initial) &&
-      this.current.eq(that.current) &&
+      this.initialLUSD.eq(that.initialLUSD) &&
+      this.currentLUSD.eq(that.currentLUSD) &&
       this.collateralGain.eq(that.collateralGain)
     );
   }
@@ -58,26 +58,26 @@ export class StabilityDeposit {
   whatChanged(that: Decimalish): StabilityDepositChange<Decimal> | undefined {
     that = Decimal.from(that);
 
-    if (that.lt(this.current)) {
-      return { withdrawLUSD: this.current.sub(that), withdrawAllLUSD: that.isZero };
+    if (that.lt(this.currentLUSD)) {
+      return { withdrawLUSD: this.currentLUSD.sub(that), withdrawAllLUSD: that.isZero };
     }
 
-    if (that.gt(this.current)) {
-      return { depositLUSD: that.sub(this.current) };
+    if (that.gt(this.currentLUSD)) {
+      return { depositLUSD: that.sub(this.currentLUSD) };
     }
   }
 
   apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal {
     if (!change) {
-      return this.current;
+      return this.currentLUSD;
     }
 
     if (change.withdrawLUSD !== undefined) {
-      return change.withdrawAllLUSD || this.current.lte(change.withdrawLUSD)
+      return change.withdrawAllLUSD || this.currentLUSD.lte(change.withdrawLUSD)
         ? Decimal.ZERO
-        : this.current.sub(change.withdrawLUSD);
+        : this.currentLUSD.sub(change.withdrawLUSD);
     } else {
-      return this.current.add(change.depositLUSD);
+      return this.currentLUSD.add(change.depositLUSD);
     }
   }
 }

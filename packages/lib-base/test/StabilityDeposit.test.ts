@@ -5,8 +5,8 @@ import { StabilityDeposit } from "../src/StabilityDeposit";
 
 const arbitraryDeposit = () =>
   fc
-    .record({ initial: fc.float(), current: fc.float(), collateralGain: fc.float() })
-    .filter(({ initial, current }) => initial >= current)
+    .record({ initialLUSD: fc.float(), currentLUSD: fc.float(), collateralGain: fc.float() })
+    .filter(({ initialLUSD, currentLUSD }) => initialLUSD >= currentLUSD)
     .map(depositish => new StabilityDeposit(depositish));
 
 describe("StabilityDeposit", () => {

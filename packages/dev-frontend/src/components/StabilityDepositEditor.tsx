@@ -11,7 +11,7 @@ import { COIN, GT } from "../strings";
 type StabilityDepositEditorProps = {
   title: string;
   originalDeposit: StabilityDeposit;
-  editedDeposit: Decimal;
+  editedLUSD: Decimal;
   changePending: boolean;
   dispatch: (action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }) => void;
 };
@@ -19,14 +19,14 @@ type StabilityDepositEditorProps = {
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   title,
   originalDeposit,
-  editedDeposit,
+  editedLUSD,
   changePending,
   dispatch
 }) => {
   const editingState = useState<string>();
 
-  const pendingDepositChange = Difference.between(editedDeposit, originalDeposit.current.nonZero);
-  const edited = !editedDeposit.eq(originalDeposit.current);
+  const pendingDepositChange = Difference.between(editedLUSD, originalDeposit.currentLUSD.nonZero);
+  const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
 
   return (
     <Card>
@@ -49,12 +49,12 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         <EditableRow
           label="Deposit"
           inputId="deposit-lqty"
-          amount={editedDeposit.prettify()}
+          amount={editedLUSD.prettify()}
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
           unit={COIN}
           {...{ editingState }}
-          editedAmount={editedDeposit.toString(2)}
+          editedAmount={editedLUSD.toString(2)}
           setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
         ></EditableRow>
 
