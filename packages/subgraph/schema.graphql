@@ -78,12 +78,14 @@ type Trove @entity {
 
   collateral: BigDecimal!
   debt: BigDecimal!
+  collSurplus: BigDecimal!
 
   changes: [TroveChange!]! @derivedFrom(field: "trove")
 
   rawCollateral: BigInt!
   rawDebt: BigInt!
   rawStake: BigInt!
+  rawCollSurplus: BigInt!
 
   "The value of total redistributed per-stake collateral the last time rewards were applied"
   rawSnapshotOfTotalRedistributedCollateral: BigInt!
@@ -148,6 +150,7 @@ enum TroveOperation {
   liquidateInRecoveryMode
   partiallyLiquidateInRecoveryMode
   redeemCollateral
+  claimCollSurplus
 }
 
 type TroveChange implements Change @entity {
@@ -170,6 +173,10 @@ type TroveChange implements Change @entity {
 
   collateralRatioBefore: BigDecimal
   collateralRatioAfter: BigDecimal
+
+  collSurplusBefore: BigDecimal!
+  collSurplusChange: BigDecimal!
+  collSurplusAfter: BigDecimal!
 
   liquidation: Liquidation
   redemption: Redemption

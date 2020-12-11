@@ -138,3 +138,46 @@ export function updateTrove(
 
   trove.save();
 }
+
+export function updateTroveClaimColl(
+  event: ethereum.Event,
+  operation: string,
+  _borrower: Address,
+  _collSurplus: BigInt,
+): void {
+  let trove = getCurrentTroveOfOwner(_borrower);
+  let newCollSurplus = decimalize(_collSurplus);
+
+  if (newCollSurplus == trove.collSurplus) {
+    return;
+  }
+
+  let troveChange = createTroveChange(event);
+  let price = getCurrentPrice();
+
+  troveChange.trove = trove.id;
+  troveChange.troveOperation = operation;
+
+  troveChange.collateralBefore = trove.collateral;
+  troveChange.debtBefore = trove.debt;
+  troveChange.collateralRatioBefore = calculateCollateralRatio(trove.collateral, trove.debt, price);
+
+  troveChange.collateralAfter = trove.collateral;
+  troveChange.debtAfter = trove.debt;
+  troveChange.collateralRatioAfter = calculateCollateralRatio(trove.collateral, trove.debt, price);
+
+  troveChange.collateralChange = DECIMAL_ZERO;
+  troveChange.debtChange = DECIMAL_ZERO;
+
+  troveChange.collSurplusBefore = trove.collSurplus;
+  troveChange.collSurplusAfter = newCollSurplus;
+  troveChange.collSurplusChange = troveChange.collSurplusAfter - troveChange.collSurplusBefore;
+
+  updateSystemStateByTroveChange(troveChange);
+  finishTroveChange(troveChange);
+
+  trove.collSurplus = newCollSurplus;
+  trove.rawCollSurplus = _collSurplus;
+
+  trove.save();
+}

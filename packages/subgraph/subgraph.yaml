@@ -104,3 +104,26 @@ templates:
           handler: handleUserDepositChanged
         - event: ETHGainWithdrawn(indexed address,uint256,uint256)
           handler: handleETHGainWithdrawn
+  - name: CollSurplusPool
+    kind: ethereum/contract
+    network: ropsten
+    source:
+      abi: CollSurplusPool
+    mapping:
+      file: ./src/mappings/CollSurplusPool.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - Trove
+        - TroveChange
+        - SystemState
+      abis:
+        - name: CollSurplusPool
+          file: ../lib-ethers/abi/CollSurplusPool.json
+      eventHandlers:
+        - event: CollBalanceUpdated(indexed address,uint256)
+          handler: handleCollSurplusBalanceUpdated
