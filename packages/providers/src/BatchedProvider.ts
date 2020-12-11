@@ -7,7 +7,9 @@ import { Deferrable, resolveProperties } from "@ethersproject/properties";
 
 import { WebSocketAugmentedWeb3Provider } from "./WebSocketAugmentedProvider";
 
-const DEV_CHAIN_ID = 17;
+import dev from "../multicaller/devDeployment.json";
+
+const devOrNull = dev as { chainId: number; address: string } | null;
 
 const multiCallerAddressOnChain: {
   [chainId: number]: string;
@@ -17,7 +19,7 @@ const multiCallerAddressOnChain: {
   5: "0xB845bF75bc3BC73beEFf5451a7a724CF552BDF7C",
   42: "0xaEcb9EA73E58814728b42E7C3AA00073F52acC7F",
 
-  [DEV_CHAIN_ID]: "0x731a10897d267e19B34503aD902d0A29173Ba4B1"
+  ...(devOrNull !== null ? { [devOrNull.chainId]: devOrNull.address } : {})
 };
 
 const multiCallerAbi = [
