@@ -23,6 +23,8 @@ export interface ReadableLiquity {
 
   getLUSDBalance(address?: string): Promise<Decimal>;
 
+  getLQTYBalance(address?: string): Promise<Decimal>;
+
   getLastTroves(
     startIdx: number,
     numberOfTroves: number
