@@ -19,7 +19,11 @@ import {
   faCog,
   faCheck,
   faPlug,
-  faExclamationCircle
+  faExclamationCircle,
+  faAngleUp,
+  faAngleDoubleUp,
+  faAngleDown,
+  faAngleDoubleDown
 } from "@fortawesome/free-solid-svg-icons";
 import { faClipboard } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
@@ -44,7 +48,11 @@ library.add(
   faExternalLinkAlt,
   faCog,
   faPlug,
-  faExclamationCircle
+  faExclamationCircle,
+  faAngleUp,
+  faAngleDoubleUp,
+  faAngleDown,
+  faAngleDoubleDown
 );
 
 const getIcon = (name: IconName): IconProp => {

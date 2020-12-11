@@ -21,6 +21,7 @@ dataSources:
         - Global
         - User
         - Transaction
+        - PriceChange
         - Trove
         - TroveChange
         - Redemption
@@ -29,6 +30,8 @@ dataSources:
       abis:
         - name: TroveManager
           file: ../lib-ethers/abi/TroveManager.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: BorrowerOperationsAddressChanged(address)
           handler: handleBorrowerOperationsAddressChanged
@@ -59,6 +62,7 @@ templates:
         - Global
         - User
         - Transaction
+        - PriceChange
         - Trove
         - TroveChange
         - SystemState
@@ -67,6 +71,8 @@ templates:
           file: ../lib-ethers/abi/BorrowerOperations.json
         - name: TroveManager
           file: ../lib-ethers/abi/TroveManager.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleTroveUpdated
@@ -84,35 +90,17 @@ templates:
         - Global
         - User
         - Transaction
+        - PriceChange
         - StabilityDeposit
         - StabilityDepositChange
         - SystemState
       abis:
         - name: StabilityPool
           file: ../lib-ethers/abi/StabilityPool.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: UserDepositChanged(indexed address,uint256)
           handler: handleUserDepositChanged
         - event: ETHGainWithdrawn(indexed address,uint256,uint256)
           handler: handleETHGainWithdrawn
-  - name: PriceFeed
-    kind: ethereum/contract
-    network: ropsten
-    source:
-      abi: PriceFeed
-    mapping:
-      file: ./src/mappings/PriceFeed.ts
-      language: wasm/assemblyscript
-      kind: ethereum/events
-      apiVersion: 0.0.4
-      entities:
-        - Global
-        - Transaction
-        - PriceChange
-        - SystemState
-      abis:
-        - name: PriceFeed
-          file: ../lib-ethers/abi/PriceFeed.json
-      eventHandlers:
-        - event: PriceUpdated(uint256)
-          handler: handlePriceUpdated

@@ -17,7 +17,7 @@ export function getCurrentLiquidation(event: ethereum.Event): Liquidation {
     let newLiquidation = new Liquidation(sequenceNumber.toString());
 
     newLiquidation.sequenceNumber = sequenceNumber;
-    newLiquidation.transaction = getTransaction(event.transaction, event.block).id;
+    newLiquidation.transaction = getTransaction(event).id;
     newLiquidation.liquidator = getUser(event.transaction.from).id;
     newLiquidation.liquidatedCollateral = DECIMAL_ZERO;
     newLiquidation.liquidatedDebt = DECIMAL_ZERO;

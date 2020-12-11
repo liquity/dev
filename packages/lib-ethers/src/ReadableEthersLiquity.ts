@@ -2,6 +2,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 
 import { Decimal } from "@liquity/decimal";
 import {
+  Fees,
   ReadableLiquity,
   StabilityDeposit,
   Trove,
@@ -11,6 +12,12 @@ import {
 import { MultiTroveGetter } from "../types";
 import { EthersCallOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
+
+// TODO: these are constant in the contracts, so it doesn't make sense to make a call for them,
+// but to avoid having to update them here when we change them in the contracts, we could read
+// them once after deployment and save them to LiquityDeployment.
+const MINUTE_DECAY_FACTOR = Decimal.from("0.999832508430720967");
+const BETA = Decimal.from(2);
 
 enum TroveStatus {
   nonExistent,
@@ -126,26 +133,36 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 
     return mapMultipleSortedTrovesToTroves(troves);
   }
+
+  async getFees(overrides?: EthersCallOverrides) {
+    const [lastFeeOperationTime, baseRateWithoutDecay] = await Promise.all([
+      this.contracts.troveManager.lastFeeOperationTime({ ...overrides }),
+      this.contracts.troveManager.baseRate({ ...overrides }).then(decimalify)
+    ]);
+
+    const lastFeeOperation = new Date(1000 * lastFeeOperationTime.toNumber());
+
+    return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR, BETA);
+  }
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
 type MultipleSortedTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSortedTroves"]>>;
 
-const mapMultipleSortedTrovesToTroves = (troves: MultipleSortedTroves) =>
-  troves.map(
-    ({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) =>
-      [
-        owner,
+const mapMultipleSortedTrovesToTroves = (
+  troves: MultipleSortedTroves
+): [string, TroveWithPendingRewards][] =>
+  troves.map(({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) => [
+    owner,
 
-        new TroveWithPendingRewards({
-          collateral: new Decimal(coll),
-          debt: new Decimal(debt),
-          stake: new Decimal(stake),
+    new TroveWithPendingRewards({
+      collateral: new Decimal(coll),
+      debt: new Decimal(debt),
+      stake: new Decimal(stake),
 
-          snapshotOfTotalRedistributed: {
-            collateral: new Decimal(snapshotETH),
-            debt: new Decimal(snapshotLUSDDebt)
-          }
-        })
-      ] as const
-  );
+      snapshotOfTotalRedistributed: {
+        collateral: new Decimal(snapshotETH),
+        debt: new Decimal(snapshotLUSDDebt)
+      }
+    })
+  ]);

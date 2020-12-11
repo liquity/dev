@@ -8,7 +8,7 @@ import {
   StabilityPoolAddressChanged,
   PriceFeedAddressChanged
 } from "../../generated/TroveManager/TroveManager";
-import { BorrowerOperations, StabilityPool, PriceFeed } from "../../generated/templates";
+import { BorrowerOperations, StabilityPool } from "../../generated/templates";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
@@ -17,7 +17,7 @@ import { getTroveOperationFromTroveManagerOperation } from "../types/TroveOperat
 import { finishCurrentLiquidation } from "../entities/Liquidation";
 import { finishCurrentRedemption } from "../entities/Redemption";
 import { updateTrove } from "../entities/Trove";
-import { updateTotalRedistributed } from "../entities/Global";
+import { updatePriceFeedAddress, updateTotalRedistributed } from "../entities/Global";
 
 export function handleBorrowerOperationsAddressChanged(
   event: BorrowerOperationsAddressChanged
@@ -30,7 +30,7 @@ export function handleStabilityPoolAddressChanged(event: StabilityPoolAddressCha
 }
 
 export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {
-  PriceFeed.create(event.params._newPriceFeedAddress);
+  updatePriceFeedAddress(event.params._newPriceFeedAddress);
 }
 
 export function handleTroveUpdated(event: TroveUpdated): void {
