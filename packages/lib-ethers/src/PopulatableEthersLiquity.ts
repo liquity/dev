@@ -171,8 +171,7 @@ class PopulatedEthersTransaction<T = unknown>
 
 class PopulatableEthersLiquityBase extends EthersLiquityBase {
   protected readonly readableLiquity: ReadableLiquity;
-
-  private readonly signer: Signer;
+  protected readonly signer: Signer;
 
   constructor(contracts: LiquityContracts, readableLiquity: ReadableLiquity, signer: Signer) {
     super(contracts);
@@ -523,9 +522,15 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async claimRedeemedCollateral(address: string, overrides?: EthersTransactionOverrides) {
+  async claimRedeemedCollateral(address?: string, overrides?: EthersTransactionOverrides) {
+    address ??= await this.signer.getAddress();
+
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.claimRedeemedCollateral({ ...overrides }, id, address)
+      await this.contracts.borrowerOperations.estimateAndPopulate.claimRedeemedCollateral(
+        { ...overrides },
+        id,
+        address
+      )
     );
   }
 
