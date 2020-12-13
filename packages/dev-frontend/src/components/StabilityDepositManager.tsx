@@ -44,7 +44,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
 
   const collateralGain = originalDeposit.collateralGain.nonZero;
   const lqtyReward = originalDeposit.lqtyReward.nonZero;
-  const rewards =
+  const gains =
     (collateralGain ?? lqtyReward) &&
     [collateralGain && "ETH", lqtyReward && GT].filter(x => x).join(" & ");
 
@@ -56,15 +56,15 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     }
   }, [myTransactionState.type, dispatch]);
 
-  if (!depositLUSD && !withdrawLUSD && !collateralGain) {
+  if (!depositLUSD && !withdrawLUSD && !gains) {
     return null;
   }
 
   const actions: Action[] = depositLUSD
     ? [
         [
-          rewards
-            ? `Deposit ${depositLUSD.prettify()} ${COIN} & claim ${rewards}`
+          gains
+            ? `Deposit ${depositLUSD.prettify()} ${COIN} & claim ${gains}`
             : `Deposit ${depositLUSD.prettify()} ${COIN}`,
           liquity.depositLUSDInStabilityPool.bind(liquity, depositLUSD, undefined),
           [[lusdBalance.gte(depositLUSD), `You don't have enough ${COIN}`]]
@@ -73,15 +73,15 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     : withdrawLUSD
     ? [
         [
-          rewards
-            ? `Withdraw ${withdrawLUSD.prettify()} ${COIN} & claim ${rewards}`
+          gains
+            ? `Withdraw ${withdrawLUSD.prettify()} ${COIN} & claim ${gains}`
             : `Withdraw ${withdrawLUSD.prettify()} ${COIN}`,
           liquity.withdrawLUSDFromStabilityPool.bind(liquity, withdrawLUSD)
         ]
       ]
-    : rewards
+    : gains
     ? [
-        [`Claim ${rewards}`, liquity.withdrawGainsFromStabilityPool.bind(liquity)],
+        [`Claim ${gains}`, liquity.withdrawGainsFromStabilityPool.bind(liquity)],
         ...(collateralGain && !trove.isEmpty
           ? [
               [
