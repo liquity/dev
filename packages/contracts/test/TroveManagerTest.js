@@ -3098,7 +3098,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(baseRate_2.gt(baseRate_1))
   })
 
-  it("redeemCollateral(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation", async () => {
+  it("redeemCollateral(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation [ @skip-on-coverage ]", async () => {
     await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
