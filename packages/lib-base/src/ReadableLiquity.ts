@@ -39,4 +39,6 @@ export interface ReadableLiquity {
   getFees(): Promise<Fees>;
 
   getLQTYStake(address?: string): Promise<LQTYStake>;
+
+  getTotalStakedLQTY(): Promise<Decimal>;
 }

@@ -160,6 +160,10 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 
     return new LQTYStake({ stakedLQTY, collateralGain, lusdGain });
   }
+
+  async getTotalStakedLQTY(overrides?: EthersCallOverrides) {
+    return new Decimal(await this.contracts.lqtyStaking.totalLQTYStaked({ ...overrides }));
+  }
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;

@@ -19,6 +19,7 @@ export type LiquityStoreBaseState = {
   deposit: StabilityDeposit;
   fees: Fees;
   lqtyStake: LQTYStake;
+  totalStakedLQTY: Decimal;
 };
 
 export type LiquityStoreDerivedState = {
@@ -167,6 +168,13 @@ export abstract class LiquityStore<T = unknown> {
         "lqtyStake",
         baseState.lqtyStake,
         baseStateUpdate.lqtyStake
+      ),
+
+      totalStakedLQTY: this.updateIfChanged(
+        eq,
+        "totalStakedLQTY",
+        baseState.totalStakedLQTY,
+        baseStateUpdate.totalStakedLQTY
       )
     };
   }
