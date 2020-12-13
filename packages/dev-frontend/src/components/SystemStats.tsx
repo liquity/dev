@@ -49,14 +49,16 @@ const select = ({
   total,
   lusdInStabilityPool,
   borrowingFeeFactor,
-  redemptionFeeFactor
+  redemptionFeeFactor,
+  totalStakedLQTY
 }: LiquityStoreState) => ({
   numberOfTroves,
   price,
   total,
   lusdInStabilityPool,
   borrowingFeeFactor,
-  redemptionFeeFactor
+  redemptionFeeFactor,
+  totalStakedLQTY
 });
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
@@ -67,7 +69,8 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     lusdInStabilityPool,
     total,
     borrowingFeeFactor,
-    redemptionFeeFactor
+    redemptionFeeFactor,
+    totalStakedLQTY
   } = useLiquitySelector(select);
 
   const lusdInStabilityPoolPct =
@@ -85,7 +88,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Text>Borrowing fee: {borrowingFeePct.toString(2)}</Text>
       <Text>Redemption fee: {redemptionFeePct.toString(2)}</Text>
 
-      <Text sx={{ mt: 2 }}>Total number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
+      <Text sx={{ mt: 2 }}>Number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
       <Text>
         Total {COIN} supply: {total.debt.shorten()}
       </Text>
@@ -94,6 +97,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
           Fraction of {COIN} in Stability Pool: {lusdInStabilityPoolPct.toString(1)}
         </Text>
       )}
+      <Text>Total staked LQTY: {totalStakedLQTY.shorten()}</Text>
       <Text>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Text>
       {total.collateralRatioIsBelowCritical(price) && (
         <Text color="danger">The system is in recovery mode!</Text>
