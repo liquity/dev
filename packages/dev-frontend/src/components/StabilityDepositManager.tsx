@@ -199,7 +199,7 @@ export const StabilityDepositManager: React.FC = () => {
   return (
     <>
       <StabilityDepositEditor
-        title={originalDeposit.isEmpty ? "Make a Stability Deposit" : "My Stability Deposit"}
+        title={originalDeposit.isEmpty ? "Deposit LUSD to earn ETH & LQTY" : "My Stability Deposit"}
         {...{ originalDeposit, editedLUSD, changePending, dispatch }}
       />
 
