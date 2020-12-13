@@ -65,6 +65,6 @@ export class Fees {
       baseRate = redeemedFractionOfSupply.div(this.beta).add(baseRate);
     }
 
-    return baseRate;
+    return baseRate.lt(Decimal.ONE) ? baseRate : Decimal.ONE;
   }
 }
