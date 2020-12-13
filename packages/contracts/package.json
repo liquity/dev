@@ -13,7 +13,8 @@
     "prepare:compile": "buidler compile",
     "prepare:set-version": "node scripts/set-version.js",
     "test": "buidler test",
-    "coverage": "buidler coverage --network coverage"
+    "coverage": "buidler coverage --network coverage",
+    "coveralls": "cat coverage/lcov.info | coveralls"
   },
   "keywords": [],
   "author": "",

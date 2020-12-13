@@ -196,7 +196,7 @@ describe("Decimal", () => {
           fc.float(),
           fc.integer({ min: 0, max: 0xffffffff }),
           (x, y) =>
-            !!Difference.between(Math.pow(x, y), Decimal.from(x).pow(y)).absoluteValue?.lt(1e-10)
+            !!Difference.between(Math.pow(x, y), Decimal.from(x).pow(y)).absoluteValue?.lt(1e-9)
         )
       );
     });
