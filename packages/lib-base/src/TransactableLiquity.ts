@@ -92,6 +92,7 @@ export interface TransactableLiquity {
 
   stakeLQTY(amount: Decimalish): Promise<void>;
   unstakeLQTY(amount: Decimalish): Promise<void>;
+  withdrawGainsFromStaking(): Promise<void>;
 }
 
 type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (

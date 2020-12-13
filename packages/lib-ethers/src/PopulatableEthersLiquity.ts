@@ -660,6 +660,10 @@ export class PopulatableEthersLiquity
       )
     );
   }
+
+  withdrawGainsFromStaking(overrides?: EthersTransactionOverrides) {
+    return this.unstakeLQTY(Decimal.ZERO, overrides);
+  }
 }
 
 export const SendableEthersLiquity = sendableFrom(PopulatableEthersLiquity);
