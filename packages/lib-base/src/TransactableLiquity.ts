@@ -83,6 +83,7 @@ export interface TransactableLiquity {
 
   depositLUSDInStabilityPool(amount: Decimalish, frontEndTag?: string): Promise<void>;
   withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<void>;
+  withdrawGainsFromStabilityPool(): Promise<void>;
   transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
   sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;

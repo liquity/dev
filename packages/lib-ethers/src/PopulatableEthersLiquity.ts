@@ -581,6 +581,10 @@ export class PopulatableEthersLiquity
     );
   }
 
+  withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides) {
+    return this.withdrawLUSDFromStabilityPool(Decimal.ZERO, overrides);
+  }
+
   async transferCollateralGainToTrove(
     optionalParams: CollateralGainTransferOptionalParams = {},
     overrides?: EthersTransactionOverrides

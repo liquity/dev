@@ -81,7 +81,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
       ]
     : rewards
     ? [
-        [`Claim ${rewards}`, liquity.withdrawLUSDFromStabilityPool.bind(liquity, 0)],
+        [`Claim ${rewards}`, liquity.withdrawGainsFromStabilityPool.bind(liquity)],
         ...(collateralGain && !trove.isEmpty
           ? [
               [
