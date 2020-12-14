@@ -458,7 +458,7 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async depositCollateral(
+  depositCollateral(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -466,7 +466,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ depositCollateral: amount }, optionalParams, overrides);
   }
 
-  async withdrawCollateral(
+  withdrawCollateral(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -474,7 +474,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ withdrawCollateral: amount }, optionalParams, overrides);
   }
 
-  async borrowLUSD(
+  borrowLUSD(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -482,7 +482,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ borrowLUSD: amount }, optionalParams, overrides);
   }
 
-  async repayLUSD(
+  repayLUSD(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -581,6 +581,10 @@ export class PopulatableEthersLiquity
     );
   }
 
+  withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides) {
+    return this.withdrawLUSDFromStabilityPool(Decimal.ZERO, overrides);
+  }
+
   async transferCollateralGainToTrove(
     optionalParams: CollateralGainTransferOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -588,7 +592,7 @@ export class PopulatableEthersLiquity
     const { deposit, trove, ...hintOptionalParams } = optionalParams;
     const initialTrove = trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = initialTrove.addCollateral(
-      (deposit ?? (await this.readableLiquity.getStabilityDeposit())).pendingCollateralGain
+      (deposit ?? (await this.readableLiquity.getStabilityDeposit())).collateralGain
     );
 
     return this.wrapCollateralGainTransfer(
@@ -603,6 +607,17 @@ export class PopulatableEthersLiquity
   async sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
       await this.contracts.lusdToken.estimateAndPopulate.transfer(
+        { ...overrides },
+        id,
+        toAddress,
+        Decimal.from(amount).bigNumber
+      )
+    );
+  }
+
+  async sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyToken.estimateAndPopulate.transfer(
         { ...overrides },
         id,
         toAddress,
@@ -635,6 +650,30 @@ export class PopulatableEthersLiquity
         redeemMaxIterations
       )
     );
+  }
+
+  async stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyStaking.estimateAndPopulate.stake(
+        { ...overrides },
+        id,
+        Decimal.from(amount).bigNumber
+      )
+    );
+  }
+
+  async unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyStaking.estimateAndPopulate.unstake(
+        { ...overrides },
+        id,
+        Decimal.from(amount).bigNumber
+      )
+    );
+  }
+
+  withdrawGainsFromStaking(overrides?: EthersTransactionOverrides) {
+    return this.unstakeLQTY(Decimal.ZERO, overrides);
   }
 }
 

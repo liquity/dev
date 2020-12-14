@@ -24,6 +24,7 @@ import { RedemptionManager } from "./components/RedemptionManager";
 import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
+import { StakingManager } from "./components/StakingManager";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
@@ -88,6 +89,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
           <Container variant="left">
             <TroveManager />
             <StabilityDepositManager />
+            <StakingManager />
             <RedemptionManager />
           </Container>
 

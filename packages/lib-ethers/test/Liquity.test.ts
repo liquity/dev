@@ -381,9 +381,9 @@ describe("EthersLiquity", () => {
 
       expect(deposit).to.deep.equal(
         new StabilityDeposit({
-          deposit: 10,
-          depositAfterLoss: 0,
-          pendingCollateralGain: "0.0569701282051282" // multiplied by 0.995
+          initialLUSD: 10,
+          currentLUSD: 0,
+          collateralGain: "0.0569701282051282" // multiplied by 0.995
         })
       );
     });
@@ -532,7 +532,7 @@ describe("EthersLiquity", () => {
       it("should still be able to withdraw remaining deposit", async () => {
         for (const l of [otherLiquities[0], otherLiquities[1], otherLiquities[2]]) {
           const stabilityDeposit = await l.getStabilityDeposit();
-          await l.withdrawLUSDFromStabilityPool(stabilityDeposit.depositAfterLoss);
+          await l.withdrawLUSDFromStabilityPool(stabilityDeposit.currentLUSD);
         }
       });
     });

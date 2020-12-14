@@ -14,7 +14,8 @@ import {
   Trove,
   emptyTrove,
   StabilityDeposit,
-  Fees
+  Fees,
+  LQTYStake
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
@@ -271,6 +272,10 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     throw new Error("Method not implemented.");
   }
 
+  getLQTYBalance(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
   watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
     throw new Error("Method not implemented.");
   }
@@ -304,6 +309,10 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getFees(): Promise<Fees> {
+    throw new Error("Method not implemented.");
+  }
+
+  getLQTYStake(address?: string): Promise<LQTYStake> {
     throw new Error("Method not implemented.");
   }
 }
