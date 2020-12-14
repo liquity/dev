@@ -315,4 +315,8 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   getLQTYStake(address?: string): Promise<LQTYStake> {
     throw new Error("Method not implemented.");
   }
+
+  getTotalStakedLQTY(): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
 }
