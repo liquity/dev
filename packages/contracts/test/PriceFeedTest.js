@@ -9,7 +9,7 @@ const th = testHelpers.TestHelper
 const dec = th.dec
 const assertRevert = th.assertRevert
 
-contract('PriceFeed: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
+contract('PriceFeed', async accounts => {
 
     const [owner, alice] = accounts;
     let priceFeedTestnet
