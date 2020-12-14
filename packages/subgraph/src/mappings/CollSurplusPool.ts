@@ -2,8 +2,8 @@ import {
   CollBalanceUpdated
 } from "../../generated/templates/CollSurplusPool/CollSurplusPool";
 
-import { updateTroveClaimColl } from "../entities/Trove";
+import { updateUserClaimColl } from "../entities/User";
 
 export function handleCollSurplusBalanceUpdated(event: CollBalanceUpdated): void {
-  updateTroveClaimColl(event, "claimCollSurplus", event.params._account, event.params._newBalance);
+  updateUserClaimColl(event, event.params._account, event.params._newBalance);
 }

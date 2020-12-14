@@ -4,7 +4,8 @@ import {
   SystemState,
   PriceChange,
   TroveChange,
-  StabilityDepositChange
+  StabilityDepositChange,
+  CollSurplusChange
 } from "../../generated/schema";
 
 import { decimalize, DECIMAL_INITIAL_PRICE, DECIMAL_ZERO, DECIMAL_ONE } from "../utils/bignumbers";
@@ -35,6 +36,7 @@ export function getCurrentSystemState(): SystemState {
     newSystemState.totalCollateral = DECIMAL_ZERO;
     newSystemState.totalDebt = DECIMAL_ZERO;
     newSystemState.tokensInStabilityPool = DECIMAL_ZERO;
+    newSystemState.tokensInCollSurplusPool = DECIMAL_ZERO;
     newSystemState.save();
 
     let global = getGlobal();
@@ -156,6 +158,16 @@ export function updateSystemStateByStabilityDepositChange(
   if (operation == "depositTokens" || operation == "withdrawTokens") {
     systemState.tokensInStabilityPool += stabilityDepositChange.depositedAmountChange;
   }
+
+  bumpSystemState(systemState);
+}
+
+export function updateSystemStateByCollSurplusChange(
+  collSurplusChange: CollSurplusChange
+): void {
+  let systemState = getCurrentSystemState();
+
+  systemState.tokensInCollSurplusPool += collSurplusChange.collSurplusChange;
 
   bumpSystemState(systemState);
 }

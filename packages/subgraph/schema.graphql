@@ -44,6 +44,7 @@ type SystemState @entity {
   totalCollateralRatio: BigDecimal
 
   tokensInStabilityPool: BigDecimal!
+  tokensInCollSurplusPool: BigDecimal!
 
   cause: Change @derivedFrom(field: "systemStateAfter")
 }
@@ -61,6 +62,8 @@ type User @entity {
   troves: [Trove!]! @derivedFrom(field: "owner")
   stabilityDeposits: [StabilityDeposit!]! @derivedFrom(field: "owner")
   liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
+  collSurplus: BigDecimal!
+  collSurplusChanges: [CollSurplusChange!]! @derivedFrom(field: "user")
 }
 
 enum TroveStatus {
@@ -78,14 +81,12 @@ type Trove @entity {
 
   collateral: BigDecimal!
   debt: BigDecimal!
-  collSurplus: BigDecimal!
 
   changes: [TroveChange!]! @derivedFrom(field: "trove")
 
   rawCollateral: BigInt!
   rawDebt: BigInt!
   rawStake: BigInt!
-  rawCollSurplus: BigInt!
 
   "The value of total redistributed per-stake collateral the last time rewards were applied"
   rawSnapshotOfTotalRedistributedCollateral: BigInt!
@@ -150,7 +151,6 @@ enum TroveOperation {
   liquidateInRecoveryMode
   partiallyLiquidateInRecoveryMode
   redeemCollateral
-  claimCollSurplus
 }
 
 type TroveChange implements Change @entity {
@@ -173,10 +173,6 @@ type TroveChange implements Change @entity {
 
   collateralRatioBefore: BigDecimal
   collateralRatioAfter: BigDecimal
-
-  collSurplusBefore: BigDecimal!
-  collSurplusChange: BigDecimal!
-  collSurplusAfter: BigDecimal!
 
   liquidation: Liquidation
   redemption: Redemption
@@ -241,4 +237,18 @@ type Redemption @entity {
   partial: Boolean!
 
   troveChanges: [TroveChange!]! @derivedFrom(field: "redemption")
+}
+
+type CollSurplusChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
+
+  user: User!
+
+  collSurplusBefore: BigDecimal!
+  collSurplusChange: BigDecimal!
+  collSurplusAfter: BigDecimal!
 }
