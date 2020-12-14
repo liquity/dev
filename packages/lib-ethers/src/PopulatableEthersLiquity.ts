@@ -615,6 +615,17 @@ export class PopulatableEthersLiquity
     );
   }
 
+  async sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyToken.estimateAndPopulate.transfer(
+        { ...overrides },
+        id,
+        toAddress,
+        Decimal.from(amount).bigNumber
+      )
+    );
+  }
+
   async redeemLUSD(
     amount: Decimalish,
     optionalParams: HintedMethodOptionalParams = {},

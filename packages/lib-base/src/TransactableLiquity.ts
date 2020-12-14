@@ -87,6 +87,7 @@ export interface TransactableLiquity {
   transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
   sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
+  sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
 
   redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
 
