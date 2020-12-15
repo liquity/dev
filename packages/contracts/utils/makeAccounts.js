@@ -24,7 +24,7 @@ const randomChar = (chars) => {
   return chars[idx]
 }
 
-const makeBuidlerAccountsList = (n) => {
+const makeHardhatAccountsList = (n) => {
   accountsDict = {}
   accounts = []
  
@@ -54,7 +54,7 @@ const makeBuidlerAccountsList = (n) => {
 }
 
 // Construct accounts array data
-const arrayList = makeBuidlerAccountsList(80000)
+const arrayList = makeHardhatAccountsList(80000)
 
 // console.log(arrayList)
   fs.appendFile('../accountsList.js', arrayList, (err) => { if (err) console.log(err) })

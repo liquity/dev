@@ -3,7 +3,7 @@ require("@nomiclabs/hardhat-ethers");
 require("solidity-coverage");
 require("hardhat-gas-reporter");
 
-const accounts = require("./buidlerAccountsList2k.js");
+const accounts = require("./hardhatAccountsList2k.js");
 
 const accountsList = accounts.accountsList
 
