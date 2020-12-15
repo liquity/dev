@@ -62,6 +62,8 @@ const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add
 // An extra traversal can take ~12K.
 const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(15000);
 
+const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(40000);
+
 // To get the best entropy available, we'd do something like:
 //
 // const bigRandomNumber = () =>
@@ -135,7 +137,7 @@ class SentEthersTransaction<T = unknown>
   }
 }
 
-class PopulatedEthersTransaction<T = unknown>
+export class PopulatedEthersTransaction<T = unknown>
   implements
     PopulatedLiquityTransaction<
       PopulatedTransaction,
@@ -539,7 +541,11 @@ export class PopulatableEthersLiquity
 
   async liquidate(address: string, overrides?: EthersTransactionOverrides) {
     return this.wrapLiquidation(
-      await this.contracts.troveManager.estimateAndPopulate.liquidate({ ...overrides }, id, address)
+      await this.contracts.troveManager.estimateAndPopulate.liquidate(
+        { ...overrides },
+        addGasForLQTYIssuance,
+        address
+      )
     );
   }
 
@@ -550,7 +556,7 @@ export class PopulatableEthersLiquity
     return this.wrapLiquidation(
       await this.contracts.troveManager.estimateAndPopulate.liquidateTroves(
         { ...overrides },
-        id,
+        addGasForLQTYIssuance,
         maximumNumberOfTrovesToLiquidate
       )
     );
@@ -564,7 +570,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.provideToSP(
         { ...overrides },
-        id,
+        addGasForLQTYIssuance,
         Decimal.from(amount).bigNumber,
         frontEndTag
       )
@@ -575,7 +581,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
-        id,
+        addGasForLQTYIssuance,
         Decimal.from(amount).bigNumber
       )
     );

@@ -21,7 +21,11 @@ import {
 import { deployAndSetupContracts } from "../utils/deploy";
 import { HintHelpers } from "../types";
 import { LiquityContracts, LiquityDeployment } from "../src/contracts";
-import { PopulatableEthersLiquity, redeemMaxIterations } from "../src/PopulatableEthersLiquity";
+import {
+  PopulatableEthersLiquity,
+  PopulatedEthersTransaction,
+  redeemMaxIterations
+} from "../src/PopulatableEthersLiquity";
 import { EthersLiquity } from "../src/EthersLiquity";
 
 const provider = ethers.provider;
@@ -600,7 +604,7 @@ describe("EthersLiquity", () => {
     });
   });
 
-  describe("Redemption, gas checks", function () {
+  describe("Redemption (gas checks)", function () {
     this.timeout("5m");
 
     before(async function () {
@@ -745,6 +749,73 @@ describe("EthersLiquity", () => {
 
       await waitForSuccess(tx.send());
       expect(gasIncrease).to.be.within(15000, 25000);
+    });
+  });
+
+  describe("Gas estimation (LQTY issuance)", () => {
+    const estimate = (tx: PopulatedEthersTransaction) =>
+      provider.estimateGas(tx.rawPopulatedTransaction);
+
+    before(async function () {
+      if (network.name !== "buidlerevm") {
+        this.skip();
+      }
+
+      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+      [deployerLiquity, liquity] = await connectUsers([deployer, user]);
+    });
+
+    it("should include enough gas for issuing LQTY", async function () {
+      this.timeout("1m");
+
+      await liquity.openTrove({ depositCollateral: 1, borrowLUSD: 20 });
+      await liquity.depositLUSDInStabilityPool(19);
+
+      await increaseTime(60);
+
+      // This will issue LQTY for the first time ever. That uses a whole lotta gas, and we don't
+      // want to pack any extra gas to prepare for this case specifically, because it only happens
+      // once.
+      await liquity.withdrawGainsFromStabilityPool();
+
+      const claim = await liquity.populate.withdrawGainsFromStabilityPool();
+      const deposit = await liquity.populate.depositLUSDInStabilityPool(1);
+      const withdraw = await liquity.populate.withdrawLUSDFromStabilityPool(1);
+
+      for (let i = 0; i < 5; ++i) {
+        for (const tx of [claim, deposit, withdraw]) {
+          const gasLimit = tx.rawPopulatedTransaction.gasLimit?.toNumber();
+          const requiredGas = (await estimate(tx)).toNumber();
+
+          expect(gasLimit).to.not.be.undefined;
+          expect(requiredGas).to.be.at.most(gasLimit!);
+        }
+
+        await increaseTime(60);
+      }
+
+      await waitForSuccess(claim.send());
+
+      await deployerLiquity.openTrove({ depositCollateral: 1, borrowLUSD: 171 });
+      await deployerLiquity.depositLUSDInStabilityPool(171);
+      await deployerLiquity.setPrice(199);
+
+      const liquidateTarget = await liquity.populate.liquidate(await deployer.getAddress());
+      const liquidateMultiple = await liquity.populate.liquidateUpTo(40);
+
+      for (let i = 0; i < 5; ++i) {
+        for (const tx of [liquidateTarget, liquidateMultiple]) {
+          const gasLimit = tx.rawPopulatedTransaction.gasLimit?.toNumber();
+          const requiredGas = (await estimate(tx)).toNumber();
+
+          expect(gasLimit).to.not.be.undefined;
+          expect(requiredGas).to.be.at.most(gasLimit!);
+        }
+
+        await increaseTime(60);
+      }
+
+      await waitForSuccess(liquidateMultiple.send());
     });
   });
 });
