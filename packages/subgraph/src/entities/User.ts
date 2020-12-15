@@ -26,10 +26,10 @@ export function getUser(_user: Address): User {
 
 function createCollSurplusChange(event: ethereum.Event): CollSurplusChange {
   let sequenceNumber = beginChange(event);
-  let stabilityDepositChange = new CollSurplusChange(sequenceNumber.toString());
-  initChange(stabilityDepositChange, event, sequenceNumber);
+  let collSurplusChange = new CollSurplusChange(sequenceNumber.toString());
+  initChange(collSurplusChange, event, sequenceNumber);
 
-  return stabilityDepositChange;
+  return collSurplusChange;
 }
 
 function finishCollSurplusChange(stabilityDepositChange: CollSurplusChange): void {
