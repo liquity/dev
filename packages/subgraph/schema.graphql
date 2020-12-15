@@ -44,7 +44,7 @@ type SystemState @entity {
   totalCollateralRatio: BigDecimal
 
   tokensInStabilityPool: BigDecimal!
-  tokensInCollSurplusPool: BigDecimal!
+  collSurplusPoolBalance: BigDecimal!
 
   cause: Change @derivedFrom(field: "systemStateAfter")
 }

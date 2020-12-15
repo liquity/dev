@@ -36,7 +36,7 @@ export function getCurrentSystemState(): SystemState {
     newSystemState.totalCollateral = DECIMAL_ZERO;
     newSystemState.totalDebt = DECIMAL_ZERO;
     newSystemState.tokensInStabilityPool = DECIMAL_ZERO;
-    newSystemState.tokensInCollSurplusPool = DECIMAL_ZERO;
+    newSystemState.collSurplusPoolBalance = DECIMAL_ZERO;
     newSystemState.save();
 
     let global = getGlobal();
@@ -167,7 +167,7 @@ export function updateSystemStateByCollSurplusChange(
 ): void {
   let systemState = getCurrentSystemState();
 
-  systemState.tokensInCollSurplusPool += collSurplusChange.collSurplusChange;
+  systemState.collSurplusPoolBalance += collSurplusChange.collSurplusChange;
 
   bumpSystemState(systemState);
 }
