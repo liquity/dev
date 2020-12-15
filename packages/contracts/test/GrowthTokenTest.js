@@ -107,7 +107,7 @@ contract('LQTY Token', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
 
     lqtyStaking = LQTYContracts.lqtyStaking
     lqtyTokenTester = LQTYContracts.lqtyToken

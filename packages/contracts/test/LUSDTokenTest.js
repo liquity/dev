@@ -66,7 +66,7 @@ contract('LUSDToken', async accounts => {
   describe('Basic token functions', async () => {
     beforeEach(async () => {
     
-      const contracts = await deploymentHelper.deployTesterContractsBuidler()
+      const contracts = await deploymentHelper.deployTesterContractsHardhat()
  
       lusdTokenTester = contracts.lusdToken
       // for some reason this doesn’t work with coverage network

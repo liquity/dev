@@ -1,6 +1,6 @@
 require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-ethers");
-//require("solidity-coverage");
+require("solidity-coverage");
 require("hardhat-gas-reporter");
 
 const accounts = require("./buidlerAccountsList2k.js");
