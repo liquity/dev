@@ -1,6 +1,6 @@
-import { ethereum, Address, BigInt, BigDecimal } from "@graphprotocol/graph-ts";
+import { ethereum, Address, BigInt } from "@graphprotocol/graph-ts";
 
-import { decimalize } from "../utils/bignumbers";
+import { decimalize, DECIMAL_ZERO } from "../utils/bignumbers";
 
 import { beginChange, initChange, finishChange } from "./Change";
 import { updateSystemStateByCollSurplusChange } from "./SystemState";
@@ -17,6 +17,7 @@ export function getUser(_user: Address): User {
 
     newUser.troveCount = 0;
     newUser.stabilityDepositCount = 0;
+    newUser.collSurplus = DECIMAL_ZERO;
     newUser.save();
 
     return newUser;
