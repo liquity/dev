@@ -1,6 +1,10 @@
-import { Address } from "@graphprotocol/graph-ts";
+import { ethereum, Address, BigInt } from "@graphprotocol/graph-ts";
 
-import { User } from "../../generated/schema";
+import { decimalize, DECIMAL_ZERO } from "../utils/bignumbers";
+
+import { beginChange, initChange, finishChange } from "./Change";
+import { updateSystemStateByCollSurplusChange } from "./SystemState";
+import { User, CollSurplusChange } from "../../generated/schema";
 
 export function getUser(_user: Address): User {
   let id = _user.toHexString();
@@ -13,8 +17,48 @@ export function getUser(_user: Address): User {
 
     newUser.troveCount = 0;
     newUser.stabilityDepositCount = 0;
+    newUser.collSurplus = DECIMAL_ZERO;
     newUser.save();
 
     return newUser;
   }
+}
+
+function createCollSurplusChange(event: ethereum.Event): CollSurplusChange {
+  let sequenceNumber = beginChange(event);
+  let collSurplusChange = new CollSurplusChange(sequenceNumber.toString());
+  initChange(collSurplusChange, event, sequenceNumber);
+
+  return collSurplusChange;
+}
+
+function finishCollSurplusChange(stabilityDepositChange: CollSurplusChange): void {
+  finishChange(stabilityDepositChange);
+  stabilityDepositChange.save();
+}
+
+export function updateUserClaimColl(
+  event: ethereum.Event,
+  _borrower: Address,
+  _collSurplus: BigInt,
+): void {
+  let user = getUser(_borrower);
+  let newCollSurplus = decimalize(_collSurplus);
+  if (newCollSurplus == user.collSurplus) {
+    return;
+  }
+
+  let collSurplusChange = createCollSurplusChange(event);
+
+  collSurplusChange.user = user.id;
+
+  collSurplusChange.collSurplusBefore = user.collSurplus;
+  collSurplusChange.collSurplusAfter = newCollSurplus;
+  collSurplusChange.collSurplusChange = collSurplusChange.collSurplusAfter - collSurplusChange.collSurplusBefore;
+
+  updateSystemStateByCollSurplusChange(collSurplusChange);
+  finishCollSurplusChange(collSurplusChange);
+
+  user.collSurplus = newCollSurplus;
+  user.save();
 }

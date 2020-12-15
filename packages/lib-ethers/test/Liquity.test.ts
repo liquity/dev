@@ -578,6 +578,10 @@ describe("EthersLiquity", () => {
     // });
 
     it("should redeem some collateral", async () => {
+      expect(`${await otherLiquities[0].getCollateralSurplusBalance()}`).to.equal("0");
+      expect(`${await otherLiquities[1].getCollateralSurplusBalance()}`).to.equal("0");
+      expect(`${await otherLiquities[2].getCollateralSurplusBalance()}`).to.equal("0");
+
       const details = await liquity.redeemLUSD(55, {}, { gasPrice: 0 });
 
       expect(details).to.deep.equal({
@@ -595,6 +599,32 @@ describe("EthersLiquity", () => {
       expect(`${(await otherLiquities[0].getTrove()).debt}`).to.equal("15");
       expect((await otherLiquities[1].getTrove()).isEmpty).to.be.true;
       expect((await otherLiquities[2].getTrove()).isEmpty).to.be.true;
+    });
+
+    it("should claim the collateral surplus after redemption", async () => {
+      const balanceBefore1 = await provider.getBalance(otherUsers[1].getAddress());
+      const balanceBefore2 = await provider.getBalance(otherUsers[2].getAddress());
+
+      expect(`${await otherLiquities[0].getCollateralSurplusBalance()}`).to.equal("0");
+      const surplus1 = await otherLiquities[1].getCollateralSurplusBalance();
+      // 1 - 20 / 200
+      expect(surplus1.toString()).to.equal("0.9");
+      const surplus2 = await otherLiquities[2].getCollateralSurplusBalance();
+      // 1 - 30 / 200
+      expect(surplus2.toString()).to.equal("0.85");
+
+      // we call it from a “3rd party” to avoid having to account for gas tx fees
+      await liquity.claimRedeemedCollateral(await otherUsers[1].getAddress());
+      await liquity.claimRedeemedCollateral(await otherUsers[2].getAddress());
+
+      expect(`${await otherLiquities[0].getCollateralSurplusBalance()}`).to.equal("0");
+      expect(`${await otherLiquities[1].getCollateralSurplusBalance()}`).to.equal("0");
+      expect(`${await otherLiquities[2].getCollateralSurplusBalance()}`).to.equal("0");
+
+      const balanceAfter1 = await provider.getBalance(otherUsers[1].getAddress());
+      const balanceAfter2 = await provider.getBalance(otherUsers[2].getAddress());
+      expect(balanceAfter1.toString()).to.equal(balanceBefore1.add(surplus1.bigNumber).toString());
+      expect(balanceAfter2.toString()).to.equal(balanceBefore2.add(surplus2.bigNumber).toString());
     });
 
     it("borrowing should have a fee now", async () => {
