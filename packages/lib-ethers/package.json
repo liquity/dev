@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "buidler": "buidler",
+    "hardhat": "hardhat",
     "check-live-version": "ts-node scripts/check-live-version.ts",
     "prepare": "run-s prepare:*",
     "prepare:deployments": "ts-node scripts/copy-deployments.ts",
@@ -15,10 +15,10 @@
     "save-live-version:run": "ts-node scripts/save-live-version.ts",
     "save-live-version:check": "run-s check-live-version",
     "scrape-eth-usd": "ts-node scripts/scrape-eth-usd.ts",
-    "test": "buidler test",
+    "test": "hardhat test",
     "test-live": "run-s test-live:*",
     "test-live:check-version": "run-s check-live-version",
-    "test-live:run": "cross-env USE_LIVE_VERSION=true buidler test"
+    "test-live:run": "cross-env USE_LIVE_VERSION=true hardhat test"
   },
   "peerDependencies": {
     "@liquity/lib-base": "^0.0.1",
@@ -27,7 +27,7 @@
   "devDependencies": {
     "@liquity/decimal": "^0.0.1",
     "@liquity/lib-base": "^0.0.1",
-    "@nomiclabs/buidler": "^1.3.6",
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@types/chai": "^4.2.9",
     "@types/chai-as-promised": "^7.1.2",
     "@types/chai-spies": "^1.0.2",
@@ -35,7 +35,6 @@
     "@types/mocha": "^8.0.3",
     "@types/node": "^14.0.13",
     "@types/sinon-chai": "^3.2.3",
-    "buidler-ethers-v5": "^0.2.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "chai-spies": "^1.0.0",
@@ -43,6 +42,7 @@
     "dotenv": "^8.2.0",
     "ethers": "^5.0.2",
     "fs-extra": "^9.0.1",
+    "hardhat": "^2.0.3",
     "npm-run-all": "^4.1.5",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.3"
