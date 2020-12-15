@@ -3,6 +3,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Decimal } from "@liquity/decimal";
 import {
   Fees,
+  LQTYStake,
   ReadableLiquity,
   StabilityDeposit,
   Trove,
@@ -93,17 +94,16 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   }
 
   async getStabilityDeposit(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    const [depositStruct, depositAfterLoss, pendingCollateralGain] = await Promise.all([
-      this.contracts.stabilityPool.deposits(address, { ...overrides }),
-      this.contracts.stabilityPool
-        .getCompoundedLUSDDeposit(address, { ...overrides })
-        .then(decimalify),
-      this.contracts.stabilityPool.getDepositorETHGain(address, { ...overrides }).then(decimalify)
-    ]);
+    const [initialLUSD, currentLUSD, collateralGain, lqtyReward] = await Promise.all(
+      [
+        this.contracts.stabilityPool.deposits(address, { ...overrides }).then(d => d.initialValue),
+        this.contracts.stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
+        this.contracts.stabilityPool.getDepositorETHGain(address, { ...overrides }),
+        this.contracts.stabilityPool.getDepositorLQTYGain(address, { ...overrides })
+      ].map(getBigNumber => getBigNumber.then(decimalify))
+    );
 
-    const deposit = decimalify(depositStruct.initialValue);
-
-    return new StabilityDeposit({ deposit, depositAfterLoss, pendingCollateralGain });
+    return new StabilityDeposit({ initialLUSD, currentLUSD, collateralGain, lqtyReward });
   }
 
   async getLUSDInStabilityPool(overrides?: EthersCallOverrides) {
@@ -112,6 +112,10 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 
   async getLUSDBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
     return new Decimal(await this.contracts.lusdToken.balanceOf(address, { ...overrides }));
+  }
+
+  async getLQTYBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+    return new Decimal(await this.contracts.lqtyToken.balanceOf(address, { ...overrides }));
   }
 
   async getCollateralSurplusBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
@@ -147,6 +151,22 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     const lastFeeOperation = new Date(1000 * lastFeeOperationTime.toNumber());
 
     return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR, BETA);
+  }
+
+  async getLQTYStake(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+    const [stakedLQTY, collateralGain, lusdGain] = await Promise.all(
+      [
+        this.contracts.lqtyStaking.stakes(address, { ...overrides }),
+        this.contracts.lqtyStaking.getPendingETHGain(address, { ...overrides }),
+        this.contracts.lqtyStaking.getPendingLUSDGain(address, { ...overrides })
+      ].map(getBigNumber => getBigNumber.then(decimalify))
+    );
+
+    return new LQTYStake({ stakedLQTY, collateralGain, lusdGain });
+  }
+
+  async getTotalStakedLQTY(overrides?: EthersCallOverrides) {
+    return new Decimal(await this.contracts.lqtyStaking.totalLQTYStaked({ ...overrides }));
   }
 }
 
