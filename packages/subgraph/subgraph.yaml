@@ -121,11 +121,13 @@ templates:
         - User
         - Transaction
         - Trove
-        - TroveChange
+        - CollSurplusChange
         - SystemState
       abis:
         - name: CollSurplusPool
           file: ../lib-ethers/abi/CollSurplusPool.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: CollBalanceUpdated(indexed address,uint256)
           handler: handleCollSurplusBalanceUpdated
