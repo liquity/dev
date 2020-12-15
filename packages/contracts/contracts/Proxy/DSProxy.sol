@@ -4,7 +4,7 @@
 
 pragma solidity 0.6.11;
 
-import './DSProxyCache.sol';
+import '../Dependencies/DSProxyCache.sol';
 
 // Provides a flexible and updatable auth pattern which is completely
 // separate from application logic. Fine-grained function access can be 
@@ -114,17 +114,13 @@ contract DSProxy  {
 
         // call contract in current context
         assembly {
-            // let succeeded := delegatecall(sub(gas, 5000), _target, add(_data, 0x20), mload(_data), 0, 0)
-            let one := sub(gas, 5000) // compile error here
-            let three := add(_data, 0x20)
-            let four := mload(_data)
-            let succeeded := delegatecall(one, _target, three, four, 0, 0)
-            
-            let size := returndatasize
-
+            let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 0)
+            let size := returndatasize()
             response := mload(0x40)
+
             mstore(0x40, add(response, and(add(add(size, 0x20), 0x1f), not(0x1f))))
             mstore(response, size)
+            
             returndatacopy(add(response, 0x20), 0, size)
 
             switch iszero(succeeded)

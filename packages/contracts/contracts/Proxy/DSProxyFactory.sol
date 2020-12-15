@@ -2,7 +2,8 @@
 
 pragma solidity 0.6.11;
 
-import './DSProxyCache.sol';
+import '../Dependencies/DSProxyCache.sol';
+import './DSProxy.sol';
 
 // This factory deploys new proxy instances through build()
 // Deployed proxy addresses are logged
