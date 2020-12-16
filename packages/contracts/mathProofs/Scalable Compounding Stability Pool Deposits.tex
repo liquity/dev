@@ -32,6 +32,7 @@ This paper presents a method to perform liquidations against the Stability Pool 
 \section{Derivation}
 For a pull-based implementation in Liquity’s Stability Pool, we must factor out the initial deposit, and track reward terms that are independent from the individual deposit values. We derive formulas for a compounding LUSD deposit and corresponding ETH gain as functions of the initial deposit, and involving a product $P$ and a sum $S$: the former is a function of the LUSD losses, and the latter is a function of $P$, the ETH rewards, and the total deposits.
 
+\pagebreak
 \bigskip
 \raggedright %align to the left side
 
@@ -289,9 +290,7 @@ $\_getDepositorETHGain()$
 $\_updateRewardSumAndProduct()$
 
 \section{Acknowledgements}
-We would like to thank Robert Lauko, Bojan Peček and Bingen Eguzkitza for their help with preparing this paper.
-
-Thanks to Onur Solmaz for the helpful discussion on reward distributions.
+We would like to thank Daniel Simon, Robert Lauko, Bingen Eguzkitza and Onur Solmaz for the helpful discussion on reward distributions and Bojan Peček for his help with preparing this paper.
 
 \begin{thebibliography}{9}
 \bibitem{Batog} 
