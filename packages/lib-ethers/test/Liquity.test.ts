@@ -1,10 +1,9 @@
-import { describe, before, it } from "mocha";
 import chai, { expect, assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiSpies from "chai-spies";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
-import { ethers, network } from "@nomiclabs/buidler";
+import { ethers, network } from "hardhat";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 import {

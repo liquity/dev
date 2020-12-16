@@ -4,8 +4,9 @@ import dotenv from "dotenv";
 
 import { Wallet } from "@ethersproject/wallet";
 
-import { task, usePlugin, BuidlerConfig, types } from "@nomiclabs/buidler/config";
-import { NetworkConfig } from "@nomiclabs/buidler/types";
+import { task, HardhatUserConfig, types } from "hardhat/config";
+import { NetworkUserConfig } from "hardhat/types";
+import "@nomiclabs/hardhat-ethers";
 
 import { Decimal } from "@liquity/decimal";
 
@@ -17,8 +18,6 @@ import accounts from "./accounts.json";
 const numAccounts = 100;
 
 dotenv.config();
-
-usePlugin("buidler-ethers-v5");
 
 const useLiveVersionEnv = (process.env.USE_LIVE_VERSION ?? "false").toLowerCase();
 const useLiveVersion = !["false", "no", "0"].includes(useLiveVersionEnv);
@@ -42,7 +41,7 @@ const devChainRichAccount = "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eef
 
 const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
 
-const infuraNetwork = (name: string): { [name: string]: NetworkConfig } => ({
+const infuraNetwork = (name: string): { [name: string]: NetworkUserConfig } => ({
   [name]: {
     url: `https://${name}.infura.io/v3/${infuraApiKey}`,
     accounts: [deployerAccount]
@@ -59,10 +58,9 @@ const aggregatorAddress = {
 const hasAggregator = (network: string): network is keyof typeof aggregatorAddress =>
   network in aggregatorAddress;
 
-const config: BuidlerConfig = {
-  defaultNetwork: "buidlerevm",
+const config: HardhatUserConfig = {
   networks: {
-    buidlerevm: {
+    hardhat: {
       // Let Ethers throw instead of Buidler EVM
       // This is closer to what will happen in production
       throwOnCallFailures: false,
