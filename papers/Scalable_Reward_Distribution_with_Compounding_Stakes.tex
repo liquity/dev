@@ -12,11 +12,8 @@
 \usepackage{enumitem}
 \newlist{terms}{description}{1}
 \begin{document}
-\title{\textbf{Compounding Decreasing LUSD Deposit and Corresponding ETH Gain}}
-\author{Richard Pardoe \thanks{rick@liquity.org}\\[1ex]
-  Robert Lauko \thanks{robert@liquity.org} \hspace{2cm}
-  Bingen Eguzkitza \thanks{bingen@liquity.org}
-}
+\title{\textbf{Scalable Reward Distribution with Compounding Stakes}}
+\author{Richard Pardoe \thanks{rick@liquity.org}}
 \date{December 2020\\v1.0}
 \maketitle
 \begin{abstract}
@@ -31,6 +28,8 @@ The Liquity protocol uses a Stability Pool as its primary mechanism to liquidate
 The fact that liquidated troves decrease all deposits in the Stability Pool leads to an implementation challenge: Due to Ethereum's block gas limit, it becomes impossible to iterate over all deposits in the Stability Pool for a large number of deposits. Such an operation has computational complexity of $O(n)$ and does not scale. 
 
 This paper presents a method to perform liquidations against the Stability Pool in a scalable manner with only $O(1)$ complexity. The method is ``pull-based": Instead of adjusting all stability deposits upon every liquidation, the update is deferred to the moment at which an owner withdraws or tops up their deposit.
+
+The methods presented in this paper are generalizable and can be used for other dApps running on Ethereum.
 
 \section{Derivation}
 For a pull-based implementation in Liquity’s Stability Pool, we must factor out the initial deposit, and track reward terms that are independent from the individual deposit values. We derive formulas for a compounding LUSD deposit and corresponding ETH gain as functions of the initial deposit, and involving a product $P$ and a sum $S$: the former is a function of the LUSD losses, and the latter is a function of $P$, the ETH rewards, and the total deposits.
@@ -292,9 +291,7 @@ $\_getDepositorETHGain()$
 $\_updateRewardSumAndProduct()$
 
 \section{Acknowledgements}
-We would like to thank Bojan Peček for his help with preparing this paper.
-
-Thanks to Onur Solmaz for the helpful discussion on reward distributions.
+We would like to thank Daniel Simon, Robert Lauko, Bingen Eguzkitza and Onur Solmaz for the helpful discussion on reward distributions and Bojan Peček for his help with preparing this paper.
 
 \begin{thebibliography}{9}
 \bibitem{Batog} 
