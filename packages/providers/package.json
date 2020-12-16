@@ -11,12 +11,18 @@
     "prepare:tsc": "tsc --project tsconfig.dist.json"
   },
   "devDependencies": {
-    "ethers": "^5.0.24",
+    "@ethersproject/abstract-provider": "^5.0.0",
+    "@ethersproject/bignumber": "^5.0.0",
+    "@ethersproject/bytes": "^5.0.0",
+    "@ethersproject/contracts": "^5.0.0",
+    "@ethersproject/networks": "^5.0.0",
+    "@ethersproject/properties": "^5.0.0",
+    "@ethersproject/providers": "^5.0.0",
     "npm-run-all": "^4.1.5",
     "ts-node": "^9.1.1",
     "typescript": "^4.0.3"
   },
   "peerDependencies": {
-    "ethers": "^5.0.0-beta.187"
+    "ethers": "^5.0.0"
   }
 }

@@ -5,7 +5,10 @@
     "packages": [
       "packages/*"
     ],
-    "nohoist": []
+    "nohoist": [
+      "**/eth-gas-reporter/@ethersproject/abi",
+      "**/web3-eth-abi/@ethersproject/abi"
+    ]
   },
   "scripts": {
     "build": "run-s build:*",
