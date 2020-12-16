@@ -4,9 +4,9 @@
 
 Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against
 their collateral without paying interest. After locking up ETH as collateral in a smart contract and
-creating an individual position called a "trove", the user can get instant liquidity by minting LQTY,
+creating an individual position called a "trove", the user can get instant liquidity by minting LUSD,
 a USD-pegged stablecoin. Each trove is required to be collateralized at a minimum of 110%. Any
-owner of LQTY can redeem their stablecoins for the underlying collateral at any time. The redemption
+owner of LUSD can redeem their stablecoins for the underlying collateral at any time. The redemption
 mechanism along with algorithmically adjusted fees guarantee a minimum stablecoin value of USD 1.
 
 An unprecedented liquidation mechanism based on incentivized stability deposits and a redistribution
@@ -33,7 +33,12 @@ These are the Liquity components that have been made visible in this repo. They 
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                                                                       |
 | @liquity/dev-frontend | [Liquity Developer UI](https://devui.liquity.org): a bare-bones but functional React app used for interfacing with the smart contracts during development |
+| @liquity/lib-base     | Common interfaces and classes shared by the other `lib-` packages                                                                                         |
+| @liquity/lib-ethers   | [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions                                      |
+| @liquity/lib-react    | Components and hooks that React-based apps can use to view Liquity contract state                                                                         |
+| @liquity/lib-subgraph | [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state               |
 | @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                                                                       |
+| @liquity/subgraph     | [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history                                           |
 
 ## Running the dev-frontend
 
