@@ -317,7 +317,7 @@ contract('LUSDToken', async accounts => {
     }
 
     const buildPermitTx = async (deadline) => {
-      const nonce = await lusdTokenTester.nonces(approve.owner)
+      const nonce = (await lusdTokenTester.nonces(approve.owner)).toString()
       
       // Get the EIP712 digest
       const digest = getPermitDigest(
