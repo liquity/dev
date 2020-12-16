@@ -5,20 +5,7 @@
     "packages": [
       "packages/*"
     ],
-    "nohoist": [
-      "**/mocha",
-      "**/@nomiclabs/*",
-      "**/*buidler*",
-      "**/solidity-coverage",
-      "**/ts-node",
-      "**/typescript",
-      "**/eslint*",
-      "**/@typescript-eslint/*",
-      "**/@graphprotocol/*",
-      "**/jest*",
-      "**/@babel/*",
-      "**/babel*"
-    ]
+    "nohoist": []
   },
   "scripts": {
     "build": "run-s build:*",
