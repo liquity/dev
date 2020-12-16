@@ -29,10 +29,11 @@ The fact that liquidated troves decrease all deposits in the Stability Pool lead
 
 This paper presents a method to perform liquidations against the Stability Pool in a scalable manner with only $O(1)$ complexity. The method is ``pull-based": Instead of adjusting all stability deposits upon every liquidation, the update is deferred to the moment at which an owner withdraws or tops up their deposit.
 
+The methods presented in this paper are generalizable and can be used for other dApps running on Ethereum.
+
 \section{Derivation}
 For a pull-based implementation in Liquity’s Stability Pool, we must factor out the initial deposit, and track reward terms that are independent from the individual deposit values. We derive formulas for a compounding LUSD deposit and corresponding ETH gain as functions of the initial deposit, and involving a product $P$ and a sum $S$: the former is a function of the LUSD losses, and the latter is a function of $P$, the ETH rewards, and the total deposits.
 
-\pagebreak
 \bigskip
 \raggedright %align to the left side
 
