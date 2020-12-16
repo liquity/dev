@@ -340,7 +340,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
             _closeTrove(_borrower);
         }
-        else if (_ICR >= _TCR) {
+        else { // if (_ICR >= _TCR)
             LiquidationValues memory zeroVals;
             return zeroVals;
         }
@@ -424,7 +424,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         * Since ETH gas comp is drawn purely from the *liquidated* portion, the trove is left with the same ICR as before the 
         * liquidation.
         */
-        else if (_entireTroveDebt > _LUSDInStabPool) {
+        else { // if (_entireTroveDebt > _LUSDInStabPool)
             // Remaining debt in the trove is lower-bounded by the trove's gas compensation
             V.partialNewDebt = LiquityMath._max(_entireTroveDebt.sub(_LUSDInStabPool), LUSD_GAS_COMPENSATION);
           
@@ -464,7 +464,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         // Perform the appropriate liquidation sequence - tally the values, and obtain their totals
         if (L.recoveryModeAtStart == true) {
             T = _getTotalsFromLiquidateTrovesSequence_RecoveryMode(L.price, L.LUSDInStabPool, _n);
-        } else if (L.recoveryModeAtStart == false) {
+        } else { // if L.recoveryModeAtStart == false
             T = _getTotalsFromLiquidateTrovesSequence_NormalMode(L.price, L.LUSDInStabPool, _n);
         }
 
@@ -541,9 +541,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
             }  else break;  // break if the loop reaches a Trove with ICR >= MCR
 
-            // Break the loop if it reaches the first Trove in the sorted list
-            if (L.user == sortedTroves.getFirst()) { break; }
-
             L.i++;
         }
     }
@@ -600,7 +597,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         // Perform the appropriate liquidation sequence - tally values and obtain their totals.
         if (L.recoveryModeAtStart == true) {
            T = _getTotalFromBatchLiquidate_RecoveryMode(L.price, L.LUSDInStabPool, _troveArray);
-        } else if (L.recoveryModeAtStart == false) {
+        } else {  //  if L.recoveryModeAtStart == false
             T = _getTotalsFromBatchLiquidate_NormalMode(L.price, L.LUSDInStabPool, _troveArray);
         }
 
@@ -674,7 +671,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
                 // Add liquidation values to their respective running totals
                 T = _addLiquidationValuesToTotals(T, V);
-            }
+            
+            } else continue; // In Normal Mode skip troves with ICR >= MCR  
         }
     }
 
@@ -1135,24 +1133,22 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     function _redistributeDebtAndColl(uint _debt, uint _coll) internal {
         if (_debt == 0) { return; }
 
-        if (totalStakes > 0) {
-            /* 
-            * Add distributed coll and debt rewards-per-unit-staked to the running totals.
-            * Division uses a "feedback" error correction, to keep the cumulative error in
-            * the  L_ETH and L_LUSDDebt state variables low. 
-            */
-            uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
-            uint LUSDDebtNumerator = _debt.mul(1e18).add(lastLUSDDebtError_Redistribution);
+        /* 
+        * Add distributed coll and debt rewards-per-unit-staked to the running totals.
+        * Division uses a "feedback" error correction, to keep the cumulative error in
+        * the  L_ETH and L_LUSDDebt state variables low. 
+        */
+        uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
+        uint LUSDDebtNumerator = _debt.mul(1e18).add(lastLUSDDebtError_Redistribution);
 
-            uint ETHRewardPerUnitStaked = ETHNumerator.div(totalStakes);
-            uint LUSDDebtRewardPerUnitStaked = LUSDDebtNumerator.div(totalStakes);
+        uint ETHRewardPerUnitStaked = ETHNumerator.div(totalStakes);
+        uint LUSDDebtRewardPerUnitStaked = LUSDDebtNumerator.div(totalStakes);
 
-            lastETHError_Redistribution = ETHNumerator.sub(ETHRewardPerUnitStaked.mul(totalStakes));
-            lastLUSDDebtError_Redistribution = LUSDDebtNumerator.sub(LUSDDebtRewardPerUnitStaked.mul(totalStakes));
+        lastETHError_Redistribution = ETHNumerator.sub(ETHRewardPerUnitStaked.mul(totalStakes));
+        lastLUSDDebtError_Redistribution = LUSDDebtNumerator.sub(LUSDDebtRewardPerUnitStaked.mul(totalStakes));
 
-            L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
-            L_LUSDDebt = L_LUSDDebt.add(LUSDDebtRewardPerUnitStaked);
-        }
+        L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
+        L_LUSDDebt = L_LUSDDebt.add(LUSDDebtRewardPerUnitStaked);
 
         // Transfer coll and debt from ActivePool to DefaultPool
         activePool.decreaseLUSDDebt(_debt);
@@ -1211,8 +1207,9 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     }
 
     function _addTroveOwnerToArray(address _borrower) internal returns (uint128 index) {
-        require(TroveOwners.length < 2**128 - 1, "TroveManager: TroveOwners array has maximum size of 2^128 - 1");
-
+        /* Max array size is 2**128 - 1, i.e. ~3e30 troves. No risk of overflow, since troves have minimum 10 LUSD
+        debt. 3e31 LUSD dwarfs the value of all wealth in the world ( which is < 1e15 USD). */
+    
         // Push the Troveowner to the array
         TroveOwners.push(_borrower);
 

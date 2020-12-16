@@ -25,8 +25,6 @@ interface IBorrowerOperations {
 
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
-    event RedeemedCollateralClaimed(address indexed _user);
-
     // --- Functions ---
 
     function setAddresses(

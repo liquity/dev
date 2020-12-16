@@ -23,7 +23,8 @@ import {
   faAngleUp,
   faAngleDoubleUp,
   faAngleDown,
-  faAngleDoubleDown
+  faAngleDoubleDown,
+  faPen
 } from "@fortawesome/free-solid-svg-icons";
 import { faClipboard } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
@@ -52,7 +53,8 @@ library.add(
   faAngleUp,
   faAngleDoubleUp,
   faAngleDown,
-  faAngleDoubleDown
+  faAngleDoubleDown,
+  faPen
 );
 
 const getIcon = (name: IconName): IconProp => {

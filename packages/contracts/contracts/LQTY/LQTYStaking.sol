@@ -15,14 +15,14 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     // --- Data ---
 
-    mapping( address => uint) stakes;
+    mapping( address => uint) public stakes;
     uint public totalLQTYStaked;
 
     uint public F_ETH;  // Running sum of ETH fees per-LQTY-staked
     uint public F_LUSD; // Running sum of LQTY fees per-LQTY-staked
 
     // User snapshots of F_ETH and F_LUSD, taken at the point at which their latest deposit was made
-    mapping (address => Snapshot) snapshots; 
+    mapping (address => Snapshot) public snapshots; 
 
     struct Snapshot {
         uint F_ETH_Snapshot;

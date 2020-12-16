@@ -279,8 +279,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     function claimRedeemedCollateral(address _user) external override {
         // send ETH from CollSurplus Pool to owner
         collSurplusPool.claimColl(_user);
-
-        emit RedeemedCollateralClaimed(_user);
     }
 
     // --- Helper functions ---

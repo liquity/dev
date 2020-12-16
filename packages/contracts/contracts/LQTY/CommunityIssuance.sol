@@ -56,10 +56,6 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
         deploymentTime = block.timestamp;
     }
 
-    function getLQTYSupplyCap() external pure returns (uint) {
-        return LQTYSupplyCap;
-    }
-
     function setAddresses
     (
         address _lqtyTokenAddress, 

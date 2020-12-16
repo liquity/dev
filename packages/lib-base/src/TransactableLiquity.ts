@@ -83,11 +83,17 @@ export interface TransactableLiquity {
 
   depositLUSDInStabilityPool(amount: Decimalish, frontEndTag?: string): Promise<void>;
   withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<void>;
+  withdrawGainsFromStabilityPool(): Promise<void>;
   transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
   sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
+  sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
 
   redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
+
+  stakeLQTY(amount: Decimalish): Promise<void>;
+  unstakeLQTY(amount: Decimalish): Promise<void>;
+  withdrawGainsFromStaking(): Promise<void>;
 }
 
 type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (

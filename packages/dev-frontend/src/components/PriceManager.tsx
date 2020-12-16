@@ -13,7 +13,6 @@ const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const PriceManager: React.FC = () => {
   const {
-    // oracleAvailable,
     liquity: { send: liquity }
   } = useLiquity();
   const price = useLiquitySelector(selectPrice);
@@ -55,21 +54,6 @@ export const PriceManager: React.FC = () => {
             >
               <Button variant="icon">
                 <Icon name="chart-line" size="lg" />
-              </Button>
-            </Transaction>
-
-            <Transaction
-              id="update-price"
-              tooltip="Update from Oracle"
-              tooltipPlacement="bottom"
-              // requires={[[oracleAvailable, "Only available on Ropsten"]]}
-              requires={[[false, "Currently unavailable"]]}
-              // send={liquity.updatePrice.bind(liquity)}
-              send={liquity.setPrice.bind(liquity, 200)}
-              numberOfConfirmationsToWait={1}
-            >
-              <Button variant="icon">
-                <Icon name="redo" size="lg" />
               </Button>
             </Transaction>
           </Flex>

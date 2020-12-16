@@ -8,10 +8,7 @@ const { pack } = require('@ethersproject/solidity');
 const { hexlify } = require("@ethersproject/bytes");
 const { ecsign } = require('ethereumjs-util');
 
-const toBN = testHelpers.TestHelper.toBN
-const assertRevert = testHelpers.TestHelper.assertRevert
-const dec = testHelpers.TestHelper.dec
-const ZERO_ADDRESS = testHelpers.TestHelper.ZERO_ADDRESS
+const { toBN, assertRevert, assertAssert, dec, ZERO_ADDRESS } = testHelpers.TestHelper
 
 const sign = (digest, privateKey) => {
   return ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKey.slice(2), 'hex'))
@@ -149,12 +146,12 @@ contract('LUSDToken', async accounts => {
 
     it("approve(): reverts when spender param is address(0)", async () => {
       const txPromise = lusdTokenTester.approve(ZERO_ADDRESS, 100, {from: bob})
-      await assertRevert(txPromise)
+      await assertAssert(txPromise)
     })
 
     it("approve(): reverts when owner param is address(0)", async () => {
       const txPromise = lusdTokenTester.callInternalApprove(ZERO_ADDRESS, alice, dec(1000, 18), {from: bob})
-      await assertRevert(txPromise)
+      await assertAssert(txPromise)
     })
 
     it("transferFrom(): successfully transfers from an account which is it approved to transfer from", async () => {

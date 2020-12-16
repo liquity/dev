@@ -59,7 +59,7 @@ library LiquityMath {
             if (n % 2 == 0) {
                 x = decMul(x, x);
                 n = n.div(2);
-            } else if (n % 2 != 0) {
+            } else { // if (n % 2 != 0)
                 y = decMul(x, y);
                 x = decMul(x, x);
                 n = (n.sub(1)).div(2);
@@ -80,7 +80,7 @@ library LiquityMath {
             return newCollRatio;
         }
         // Return the maximal value for uint256 if the Trove has a debt of 0. Represents "infinite" CR.
-        else if (_debt == 0) {
+        else { // if (_debt == 0)
             return 2**256 - 1; 
         }
     }
