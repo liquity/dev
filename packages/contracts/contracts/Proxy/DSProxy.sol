@@ -1,6 +1,6 @@
-
 // SPDX-License-Identifier: GPL3
 // Copyright (C) 2017  DappHub, LLC
+// Adapted from https://github.com/dapphub/ds-proxy/blob/4299be40d5a76c02e690db055281d476a460a38b/src/proxy.sol
 
 pragma solidity 0.6.11;
 
@@ -21,14 +21,15 @@ interface DSAuthority {
 // Since the owner of the proxy can be changed, this allows for 
 // dynamic ownership models e.g. a multisig
 contract DSProxy  {
-    
-    DSProxyCache public cache; // global cache for contracts
+    // Ownership of a DSProxy contract is set to an address when it is deployed. 
+    // There is support for authorities based on DSAuth if there is a need for 
+    // ownership of the DSProxy contract to be shared among multiple users.
     DSAuthority  public  authority;  
+    DSProxyCache public  cache; // global cache for contracts
     address      public  owner; 
 
     event LogSetAuthority (address indexed authority);
     event LogSetOwner     (address indexed owner);
-
     // Provides generic function call logging 
     // the indexed fields being queryable by blockchain clients
     event LogNote(
@@ -37,7 +38,7 @@ contract DSProxy  {
         bytes32  indexed  foo, // the first function parameter 
         bytes32  indexed  bar, // the second function parameter
         uint256           wad, // msg.value
-        bytes             fax // msg.data
+        bytes             fax  // msg.data
     ) anonymous;
 
     modifier note {
@@ -52,42 +53,41 @@ contract DSProxy  {
         _;
         emit LogNote(msg.sig, msg.sender, foo, bar, wad, msg.data);
     }
-
     // By default, the auth modifier will restrict function-call access to 
     // the including contract owner and the including contract itself.
     modifier auth {
         require(_isAuthorized(msg.sender, msg.sig), "ds-auth-unauthorized");
         _;
     }
-
-    function setOwner(address owner_)
-        public
-        auth
-    {
-        owner = owner_;
-        emit LogSetOwner(owner);
-    }
-
-    function setAuthority(DSAuthority authority_)
-        public
-        auth
-    {
-        authority = authority_;
-        emit LogSetAuthority(address(authority));
-    }
-    
-    receive() external payable {
-        // do nothing
-    }
     
     constructor(address _cacheAddr) public {
         owner = msg.sender;
-    
         setCache(_cacheAddr);
-
         emit LogSetOwner(msg.sender);
     }
-    
+    receive() external payable { /* do nothing */ }
+
+    function execute(address _target, bytes memory _data)
+        public
+        auth
+        note
+        payable
+        returns (bytes memory response)
+    {   require(_target != address(0), "ds-proxy-target-address-required");
+        // call contract in current context
+        assembly {
+            let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 0)
+            let size := returndatasize()
+            response := mload(0x40)
+            mstore(0x40, add(response, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            mstore(response, size)
+            returndatacopy(add(response, 0x20), 0, size)
+            switch iszero(succeeded)
+            case 1 { // throw if delegatecall failed
+                revert(add(response, 0x20), size)
+            }
+        }
+    }
     // use the proxy to execute calldata _data on contract _code
     function execute(bytes memory _code, bytes memory _data)
         public
@@ -99,39 +99,9 @@ contract DSProxy  {
             // deploy contract & store its address in cache
             target = cache.write(_code);
         }
-
         response = execute(target, _data);
     }
-
-    function execute(address _target, bytes memory _data)
-        public
-        auth
-        note
-        payable
-        returns (bytes memory response)
-    {
-        require(_target != address(0), "ds-proxy-target-address-required");
-
-        // call contract in current context
-        assembly {
-            let succeeded := delegatecall(sub(gas(), 5000), _target, add(_data, 0x20), mload(_data), 0, 0)
-            let size := returndatasize()
-            response := mload(0x40)
-
-            mstore(0x40, add(response, and(add(add(size, 0x20), 0x1f), not(0x1f))))
-            mstore(response, size)
-            
-            returndatacopy(add(response, 0x20), 0, size)
-
-            switch iszero(succeeded)
-            case 1 {
-                // throw if delegatecall failed
-                revert(add(response, 0x20), size)
-            }
-        }
-    }
-
-    //set new cache
+    
     function setCache(address _cacheAddr)
         public
         auth
@@ -142,7 +112,18 @@ contract DSProxy  {
         cache = DSProxyCache(_cacheAddr);  // overwrite cache
         return true;
     }
-
+    function setOwner(address owner_)
+        public
+        auth
+    {   owner = owner_;
+        emit LogSetOwner(owner);
+    }
+    function setAuthority(DSAuthority authority_)
+        public
+        auth
+    {   authority = authority_;
+        emit LogSetAuthority(address(authority));
+    }
     function _isAuthorized(address src, bytes4 sig) internal view returns (bool) {
         if (src == address(this)) {
             return true;
