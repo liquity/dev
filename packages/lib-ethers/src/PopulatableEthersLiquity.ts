@@ -615,7 +615,7 @@ export class PopulatableEthersLiquity
     return this.wrapCollateralGainTransfer(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
         { ...overrides },
-        addGasForPotentialListTraversal,
+        compose(addGasForPotentialListTraversal, addGasForLQTYIssuance),
         await this.findHint(finalTrove, hintOptionalParams)
       )
     );
