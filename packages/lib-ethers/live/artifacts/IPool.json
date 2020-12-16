@@ -19,19 +19,6 @@
       "inputs": [
         {
           "indexed": false,
-          "internalType": "uint256",
-          "name": "_newBalance",
-          "type": "uint256"
-        }
-      ],
-      "name": "LUSDBalanceUpdated",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
           "internalType": "address",
           "name": "_newDefaultPoolAddress",
           "type": "address"
@@ -77,12 +64,12 @@
       "inputs": [
         {
           "indexed": false,
-          "internalType": "address",
-          "name": "_newAddress",
-          "type": "address"
+          "internalType": "uint256",
+          "name": "_newBalance",
+          "type": "uint256"
         }
       ],
-      "name": "PoolManagerAddressChanged",
+      "name": "LUSDBalanceUpdated",
       "type": "event"
     },
     {
@@ -99,7 +86,6 @@
       "type": "event"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "uint256",
@@ -109,27 +95,10 @@
       ],
       "name": "decreaseLUSDDebt",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
-      "inputs": [],
-      "name": "getLUSDDebt",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
       "inputs": [],
       "name": "getETH",
       "outputs": [
@@ -139,14 +108,12 @@
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
-      "name": "getRawETHBalance",
+      "name": "getLUSDDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -154,12 +121,10 @@
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "uint256",
@@ -169,12 +134,10 @@
       ],
       "name": "increaseLUSDDebt",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
@@ -189,7 +152,6 @@
       ],
       "name": "sendETH",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     }

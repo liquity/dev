@@ -20,11 +20,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newTroveManagerAddress",
+          "name": "_collSurplusPoolAddress",
           "type": "address"
         }
       ],
-      "name": "TroveManagerAddressChanged",
+      "name": "CollSurplusPoolAddressChanged",
       "type": "event"
     },
     {
@@ -46,11 +46,24 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newPoolManagerAddress",
+          "name": "_lqtyStakingAddress",
           "type": "address"
         }
       ],
-      "name": "PoolManagerAddressChanged",
+      "name": "LQTYStakingAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_lusdTokenAddress",
+          "type": "address"
+        }
+      ],
+      "name": "LUSDTokenAddressChanged",
       "type": "event"
     },
     {
@@ -70,6 +83,19 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "RedeemedCollateralClaimed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": false,
           "internalType": "address",
           "name": "_sortedTrovesAddress",
@@ -80,13 +106,33 @@
       "type": "event"
     },
     {
-      "constant": false,
+      "anonymous": false,
       "inputs": [
         {
+          "indexed": false,
           "internalType": "address",
-          "name": "_user",
+          "name": "_stabilityPoolAddress",
           "type": "address"
-        },
+        }
+      ],
+      "name": "StabilityPoolAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_newTroveManagerAddress",
+          "type": "address"
+        }
+      ],
+      "name": "TroveManagerAddressChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [
         {
           "internalType": "address",
           "name": "_hint",
@@ -95,12 +141,10 @@
       ],
       "name": "addColl",
       "outputs": [],
-      "payable": true,
       "stateMutability": "payable",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "uint256",
@@ -108,9 +152,14 @@
           "type": "uint256"
         },
         {
-          "internalType": "int256",
+          "internalType": "uint256",
           "name": "_debtChange",
-          "type": "int256"
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isDebtIncrease",
+          "type": "bool"
         },
         {
           "internalType": "address",
@@ -120,21 +169,30 @@
       ],
       "name": "adjustTrove",
       "outputs": [],
-      "payable": true,
       "stateMutability": "payable",
       "type": "function"
     },
     {
-      "constant": false,
-      "inputs": [],
-      "name": "closeTrove",
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "claimRedeemedCollateral",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
+      "inputs": [],
+      "name": "closeTrove",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -150,12 +208,28 @@
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "pure",
       "type": "function"
     },
     {
-      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_hint",
+          "type": "address"
+        }
+      ],
+      "name": "moveETHGainToTrove",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -170,12 +244,10 @@
       ],
       "name": "openTrove",
       "outputs": [],
-      "payable": true,
       "stateMutability": "payable",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "uint256",
@@ -190,21 +262,14 @@
       ],
       "name": "repayLUSD",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
           "name": "_troveManagerAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "_poolManagerAddress",
           "type": "address"
         },
         {
@@ -219,6 +284,16 @@
         },
         {
           "internalType": "address",
+          "name": "_stabilityPoolAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_collSurplusPoolAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
           "name": "_priceFeedAddress",
           "type": "address"
         },
@@ -226,36 +301,24 @@
           "internalType": "address",
           "name": "_sortedTrovesAddress",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lusdTokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lqtyStakingAddress",
+          "type": "address"
         }
       ],
       "name": "setAddresses",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": false,
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "_hint",
-          "type": "address"
-        }
-      ],
-      "name": "withdrawLUSD",
-      "outputs": [],
-      "payable": false,
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "constant": false,
       "inputs": [
         {
           "internalType": "uint256",
@@ -270,7 +333,24 @@
       ],
       "name": "withdrawColl",
       "outputs": [],
-      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_hint",
+          "type": "address"
+        }
+      ],
+      "name": "withdrawLUSD",
+      "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
     }

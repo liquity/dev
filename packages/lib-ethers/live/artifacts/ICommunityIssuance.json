@@ -1,0 +1,84 @@
+{
+  "contractName": "ICommunityIssuance",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_lqtyTokenAddress",
+          "type": "address"
+        }
+      ],
+      "name": "LQTYTokenAddressSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_stabilityPoolAddress",
+          "type": "address"
+        }
+      ],
+      "name": "StabilityPoolAddressSet",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "issueLQTY",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_LQTYamount",
+          "type": "uint256"
+        }
+      ],
+      "name": "sendLQTY",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_lqtyTokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_stabilityPoolAddress",
+          "type": "address"
+        }
+      ],
+      "name": "setAddresses",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
