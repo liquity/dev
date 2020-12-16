@@ -6,7 +6,6 @@
       "packages/*"
     ],
     "nohoist": [
-      "**/eth-gas-reporter/@ethersproject/abi",
       "**/web3-eth-abi/@ethersproject/abi",
       "**/jest*",
       "**/@babel/*",
