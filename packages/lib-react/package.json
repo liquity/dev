@@ -15,7 +15,7 @@
     "react": "^16.13.1"
   },
   "devDependencies": {
-    "@ethersproject/bignumber": "^5.0.1",
+    "@ethersproject/bignumber": "^5.0.12",
     "@liquity/decimal": "^0.0.1",
     "@liquity/lib-base": "^0.0.1",
     "@types/react": "^16.9.52",
