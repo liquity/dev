@@ -682,7 +682,7 @@ describe("EthersLiquity", () => {
     let rudeLiquity: EthersLiquity;
 
     before(async function () {
-      if (network.name !== "buidlerevm") {
+      if (network.name !== "hardhat") {
         this.skip();
       }
 
@@ -786,7 +786,7 @@ describe("EthersLiquity", () => {
       provider.estimateGas(tx.rawPopulatedTransaction);
 
     before(async function () {
-      if (network.name !== "buidlerevm") {
+      if (network.name !== "hardhat") {
         this.skip();
       }
 
