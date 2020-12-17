@@ -18,6 +18,23 @@ export const contractsToInterfaces = (contracts: LiquityContracts) => {
   );
 };
 
+const tryToParseLog = (
+  log: Log,
+  interfaces: { [address: string]: [string, Interface] }
+): [string, LogDescription] | undefined => {
+  if (log.address in interfaces) {
+    try {
+      const [name, iface] = interfaces[log.address];
+      return [name, iface.parseLog(log)];
+    } catch (err) {
+      console.warn("Failed to parse log:");
+      console.warn(log);
+      console.warn("Caught:");
+      console.warn(err);
+    }
+  }
+};
+
 export const parseLogs = (
   logs: Log[],
   interfaces: { [address: string]: [string, Interface] }
@@ -26,9 +43,10 @@ export const parseLogs = (
   const unparsedLogs: Log[] = [];
 
   logs.forEach(log => {
-    if (log.address in interfaces) {
-      const [name, iface] = interfaces[log.address];
-      parsedLogs.push([name, iface.parseLog(log)]);
+    const parsedLog = tryToParseLog(log, interfaces);
+
+    if (parsedLog) {
+      parsedLogs.push(parsedLog);
     } else {
       unparsedLogs.push(log);
     }

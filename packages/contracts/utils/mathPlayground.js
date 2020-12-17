@@ -1,4 +1,4 @@
-// Buidler script for interacting with ABDKMath functions
+// Hardhat script for interacting with ABDKMath functions
 
 const FunctionCaller = artifacts.require("FunctionCaller");
 

@@ -42,6 +42,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     return promiseAllValues({
       accountBalance: this.provider.getBalance(this.account, blockTag).then(decimalify),
       lusdBalance: this.liquity.getLUSDBalance(this.account, { blockTag }),
+      lqtyBalance: this.liquity.getLQTYBalance(this.account, { blockTag }),
       price: this.liquity.getPrice({ blockTag }),
       numberOfTroves: this.liquity.getNumberOfTroves({ blockTag }),
       troveWithoutRewards: this.liquity.getTroveWithoutRewards(this.account, { blockTag }),
@@ -49,7 +50,9 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       deposit: this.liquity.getStabilityDeposit(this.account, { blockTag }),
       total: this.liquity.getTotal({ blockTag }),
       lusdInStabilityPool: this.liquity.getLUSDInStabilityPool({ blockTag }),
-      fees: this.liquity.getFees({ blockTag })
+      fees: this.liquity.getFees({ blockTag }),
+      lqtyStake: this.liquity.getLQTYStake(this.account, { blockTag }),
+      totalStakedLQTY: this.liquity.getTotalStakedLQTY({ blockTag })
     });
   }
 
