@@ -34,7 +34,7 @@ contract('Fee arithmetic tests', async accounts => {
   
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
 
     nonPayable = await NonPayable.new() 
     priceFeed = contracts.priceFeedTestnet
