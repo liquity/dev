@@ -1,9 +1,9 @@
-usePlugin("@nomiclabs/buidler-truffle5");
-usePlugin("@nomiclabs/buidler-ethers");
-usePlugin("solidity-coverage");
-usePlugin("buidler-gas-reporter");
+require("@nomiclabs/hardhat-truffle5");
+require("@nomiclabs/hardhat-ethers");
+require("solidity-coverage");
+require("hardhat-gas-reporter");
 
-const accounts = require("./buidlerAccountsList2k.js");
+const accounts = require("./hardhatAccountsList2k.js");
 
 const accountsList = accounts.accountsList
 
@@ -12,22 +12,21 @@ module.exports = {
         // contracts: "./contracts",
         // artifacts: "./artifacts"
     },
-    solc: {
+    solidity: {
         version: "0.6.11",
-        optimizer: {
-            enabled: true,
-            runs: 100
+        settings: {
+            optimizer: {
+                enabled: true,
+                runs: 100
+            }
         }
     },
     networks: {
-        buidlerevm: {
+        hardhat: {
             accounts: accountsList,
             gas: 10000000,  // tx gas limit
             blockGasLimit: 10000000, 
             gasPrice: 20000000000
-        },
-        coverage: {
-            url: 'http://localhost:8555'
         }
     },
     mocha: { timeout: 12000000 },

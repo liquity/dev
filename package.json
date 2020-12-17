@@ -6,14 +6,7 @@
       "packages/*"
     ],
     "nohoist": [
-      "**/mocha",
-      "**/@nomiclabs/*",
-      "**/*buidler*",
-      "**/solidity-coverage",
-      "**/ts-node",
-      "**/typescript",
-      "**/eslint*",
-      "**/@typescript-eslint/*",
+      "**/web3-eth-abi/@ethersproject/abi",
       "**/@graphprotocol/*",
       "**/jest*",
       "**/@babel/*",
@@ -24,7 +17,7 @@
     "build": "run-s build:*",
     "build:dev-frontend": "yarn workspace @liquity/dev-frontend build",
     "build:subgraph": "yarn workspace @liquity/subgraph build",
-    "deploy": "yarn workspace @liquity/lib-ethers buidler deploy",
+    "deploy": "yarn workspace @liquity/lib-ethers hardhat deploy",
     "fuzzer": "yarn workspace @liquity/fuzzer fuzzer",
     "prepare": "run-s prepare:*",
     "prepare:contracts": "yarn workspace @liquity/contracts prepare",
@@ -59,7 +52,9 @@
     "test:dev-frontend:run": "yarn workspace @liquity/dev-frontend test --watchAll=false --forceExit --detectOpenHandles",
     "test:dev-frontend:stop-dev-chain": "yarn stop-dev-chain",
     "test-live": "run-s test-live:*",
-    "test-live:lib-ethers": "yarn workspace @liquity/lib-ethers test-live"
+    "test-live:lib-ethers": "yarn workspace @liquity/lib-ethers test-live",
+    "coverage": "run-s coverage:*",
+    "coverage:contracts": "yarn workspace @liquity/contracts coverage"
   },
   "devDependencies": {
     "npm-run-all": "^4.1.5",
