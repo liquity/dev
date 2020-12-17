@@ -474,7 +474,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         // Update system snapshots and the final partially liquidated trove, if there is one
         _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl.add(T.totalCollGasCompensation));
-        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, T.partialUpperHint, T. partialLowerHint, L.price);
+        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, T.partialUpperHint, T. partialLowerHint);
 
         L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
         L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
@@ -607,7 +607,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         // Update system snapshots and the final partially liquidated trove, if there is one
         _updateSystemSnapshots_excludeCollRemainder(T.partialNewColl.add(T.totalCollGasCompensation));
-        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, T.partialUpperHint, T. partialLowerHint, L.price);
+        _updatePartiallyLiquidatedTrove(T.partialAddr, T.partialNewDebt, T.partialNewColl, T.partialUpperHint, T. partialLowerHint);
 
         L.liquidatedDebt = T.totalDebtInSequence.sub(T.partialNewDebt);
         L.liquidatedColl = T.totalCollInSequence.sub(T.totalCollGasCompensation).sub(T.partialNewColl);
@@ -736,9 +736,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         uint _newDebt, 
         uint _newColl, 
         address _upperHint,
-        address _lowerHint,
-        uint _price
-    ) 
+        address _lowerHint
+    )
         internal 
     {
         if ( _borrower == address(0)) { return; }
@@ -750,7 +749,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         _updateTroveRewardSnapshots(_borrower);
         _updateStakeAndTotalStakes(_borrower);
 
-        uint ICR = getCurrentICR(_borrower, _price);
+        uint NICR = getNominalICR(_borrower);
 
         /* 
         * Insert to sorted list and add to TroveOwners array. The partially liquidated trove has the same
@@ -758,7 +757,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         * In practice, due to rounding error, its ICR can change slightly - so re-insert, with its previous neighbours
         * as hints.
         */
-        sortedTroves.insert(_borrower, ICR, _price, _upperHint, _lowerHint);
+        sortedTroves.insert(_borrower, NICR, _upperHint, _lowerHint);
         _addTroveOwnerToArray(_borrower);
         emit TroveUpdated(_borrower, _newDebt, _newColl, Troves[_borrower].stake, TroveManagerOperation.partiallyLiquidateInRecoveryMode);
     }
@@ -788,7 +787,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         uint _maxLUSDamount,
         uint _price,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR
+        uint _partialRedemptionHintNICR
     )
         internal returns (SingleRedemptionValues memory V)
     {
@@ -809,17 +808,17 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
             _redeemCloseTrove(_borrower, LUSD_GAS_COMPENSATION, newColl);
 
         } else {
-            uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
+            uint newNICR = LiquityMath._computeNominalCR(newColl, newDebt);
 
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
             // certainly result in running out of gas.
-            if (newICR != _partialRedemptionHintICR) {
+            if (newNICR != _partialRedemptionHintNICR) {
                 V.LUSDLot = 0;
                 V.ETHLot = 0;
                 return V;
             }
 
-            sortedTroves.reInsert(_borrower, newICR, _price, _partialRedemptionHint, _partialRedemptionHint);
+            sortedTroves.reInsert(_borrower, newNICR, _partialRedemptionHint, _partialRedemptionHint);
 
             Troves[_borrower].debt = newDebt;
             Troves[_borrower].coll = newColl;
@@ -973,16 +972,30 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     // --- Helper functions ---
 
 
+    // Return the nominal collateral ratio (ICR) of a given Trove, without the price. Takes a trove's pending coll and debt rewards from redistributions into account.
+    function getNominalICR(address _borrower) public view override returns (uint) {
+        (uint currentETH, uint currentLUSDDebt) = _getCurrentTroveAmounts(_borrower);
+
+        uint NICR = LiquityMath._computeNominalCR(currentETH, currentLUSDDebt);
+        return NICR;
+    }
+
     // Return the current collateral ratio (ICR) of a given Trove. Takes a trove's pending coll and debt rewards from redistributions into account.
     function getCurrentICR(address _borrower, uint _price) public view override returns (uint) {
+        (uint currentETH, uint currentLUSDDebt) = _getCurrentTroveAmounts(_borrower);
+
+        uint ICR = LiquityMath._computeCR(currentETH, currentLUSDDebt, _price);
+        return ICR;
+    }
+
+    function _getCurrentTroveAmounts(address _borrower) internal view returns (uint, uint) {
         uint pendingETHReward = getPendingETHReward(_borrower);
         uint pendingLUSDDebtReward = getPendingLUSDDebtReward(_borrower);
 
         uint currentETH = Troves[_borrower].coll.add(pendingETHReward);
         uint currentLUSDDebt = Troves[_borrower].debt.add(pendingLUSDDebtReward);
 
-        uint ICR = LiquityMath._computeCR(currentETH, currentLUSDDebt, _price);
-        return ICR;
+        return (currentETH, currentLUSDDebt);
     }
 
     function applyPendingRewards(address _borrower) external override {

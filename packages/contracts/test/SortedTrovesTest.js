@@ -24,6 +24,11 @@ contract('SortedTroves', async accounts => {
       
       assert.isTrue(prevTroveICR.gte(troveICR))
 
+      const troveNICR = await contracts.troveManager.getNominalICR(trove)
+      const prevTroveNICR = await contracts.troveManager.getNominalICR(prevTrove)
+      
+      assert.isTrue(prevTroveNICR.gte(troveNICR))
+
       // climb the list
       trove = prevTrove
     }
@@ -175,27 +180,31 @@ contract('SortedTroves', async accounts => {
 
     it("Finds the correct insert position given two addresses that loosely bound the correct position", async () => { 
       await priceFeed.setPrice(dec(100, 18))
-      const price = await priceFeed.getPrice()
 
-      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(5000, 'ether') }) //  Highest ICR (infinite)
-      await borrowerOperations.openTrove(dec(90, 18), A, { from: A, value: dec(10, 'ether') }) //  |  
-      await borrowerOperations.openTrove(dec(190, 18), B, { from: B, value: dec(10, 'ether') }) //  | ICR = 500%
-      await borrowerOperations.openTrove(dec(390, 18), C, { from: C, value: dec(10, 'ether') }) //  | ICR = 250%
-      await borrowerOperations.openTrove(dec(590, 18), D, { from: D, value: dec(10, 'ether') }) //  | 
-      await borrowerOperations.openTrove(dec(790, 18), E, { from: E, value: dec(10, 'ether') }) //  Lowest ICR
+      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(5000, 'ether') }) //  Highest NICR (50,000%)
+      await borrowerOperations.openTrove(dec(90, 18), A, { from: A, value: dec(10, 'ether') }) //  |  NICR = 1,000%
+      await borrowerOperations.openTrove(dec(190, 18), B, { from: B, value: dec(10, 'ether') }) //  | NICR = 500%
+      await borrowerOperations.openTrove(dec(390, 18), C, { from: C, value: dec(10, 'ether') }) //  | NICR = 250%
+      await borrowerOperations.openTrove(dec(590, 18), D, { from: D, value: dec(10, 'ether') }) //  | NICR = 166%
+      await borrowerOperations.openTrove(dec(790, 18), E, { from: E, value: dec(10, 'ether') }) //  Lowest NICR (125%)
 
-      console.log(`B ICR: ${await troveManager.getCurrentICR(B, price)}`)
-      console.log(`C ICR: ${await troveManager.getCurrentICR(C, price)}`)
-
-      // Expect a trove with ICR 300% to be inserted between B and C
-      const targetICR = dec(3, 18) 
+      // Expect a trove with NICR 300% to be inserted between B and C
+      const targetNICR = dec(3, 18)
 
       // Pass addresses that loosely bound the right postiion
-      const hints = await sortedTroves.findInsertPosition(targetICR, price, A, E)
+      const hints = await sortedTroves.findInsertPosition(targetNICR, A, E)
 
       // Expect the exact correct insert hints have been returned
       assert.equal(hints[0], B )
       assert.equal(hints[1], C )
+
+      // The price doesn’t affect the hints
+      await priceFeed.setPrice(dec(500, 18))
+      const hints2 = await sortedTroves.findInsertPosition(targetNICR, A, E)
+
+      // Expect the exact correct insert hints have been returned
+      assert.equal(hints2[0], B )
+      assert.equal(hints2[1], C )
     })
 
     //--- Ordering --- 
@@ -259,22 +268,22 @@ contract('SortedTroves', async accounts => {
       })
 
       it('insert(): fails if list is full', async () => {
-        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
-        await sortedTrovesTester.insert(bob, 1, 1, alice, alice)
-        await th.assertRevert(sortedTrovesTester.insert(carol, 1, 1, alice, alice), 'SortedTroves: List is full')
+        await sortedTrovesTester.insert(alice, 1, alice, alice)
+        await sortedTrovesTester.insert(bob, 1, alice, alice)
+        await th.assertRevert(sortedTrovesTester.insert(carol, 1, alice, alice), 'SortedTroves: List is full')
       })
 
       it('insert(): fails if list already contains the node', async () => {
-        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
-        await th.assertRevert(sortedTrovesTester.insert(alice, 1, 1, alice, alice), 'SortedTroves: List already contains the node')
+        await sortedTrovesTester.insert(alice, 1, alice, alice)
+        await th.assertRevert(sortedTrovesTester.insert(alice, 1, alice, alice), 'SortedTroves: List already contains the node')
       })
 
       it('insert(): fails if id is zero', async () => {
-        await th.assertRevert(sortedTrovesTester.insert(th.ZERO_ADDRESS, 1, 1, alice, alice), 'SortedTroves: Id cannot be zero')
+        await th.assertRevert(sortedTrovesTester.insert(th.ZERO_ADDRESS, 1, alice, alice), 'SortedTroves: Id cannot be zero')
       })
 
-      it('insert(): fails if ICR is zero', async () => {
-        await th.assertRevert(sortedTrovesTester.insert(alice, 0, 1, alice, alice), 'SortedTroves: ICR must be positive')
+      it('insert(): fails if NICR is zero', async () => {
+        await th.assertRevert(sortedTrovesTester.insert(alice, 0, alice, alice), 'SortedTroves: NICR must be positive')
       })
 
       it('remove(): fails if id is not in the list', async () => {
@@ -282,19 +291,19 @@ contract('SortedTroves', async accounts => {
       })
 
       it('reInsert(): fails if list doesn’t contain the node', async () => {
-        await th.assertRevert(sortedTrovesTester.reInsert(alice, 1, 1, alice, alice), 'SortedTroves: List does not contain the id')
+        await th.assertRevert(sortedTrovesTester.reInsert(alice, 1, alice, alice), 'SortedTroves: List does not contain the id')
       })
 
-      it('reInsert(): fails if new ICR is zero', async () => {
-        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
+      it('reInsert(): fails if new NICR is zero', async () => {
+        await sortedTrovesTester.insert(alice, 1, alice, alice)
         assert.isTrue(await sortedTroves.contains(alice), 'list should contain element')
-        await th.assertRevert(sortedTrovesTester.reInsert(alice, 0, 1, alice, alice), 'SortedTroves: ICR must be positive')
+        await th.assertRevert(sortedTrovesTester.reInsert(alice, 0, alice, alice), 'SortedTroves: NICR must be positive')
         assert.isTrue(await sortedTroves.contains(alice), 'list should contain element')
       })
 
       it('findInsertPosition(): No prevId for hint - ascend list starting from nextId, result is after the tail', async () => {
-        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
-        const pos = await sortedTroves.findInsertPosition(1, 1, th.ZERO_ADDRESS, alice)
+        await sortedTrovesTester.insert(alice, 1, alice, alice)
+        const pos = await sortedTroves.findInsertPosition(1, th.ZERO_ADDRESS, alice)
         assert.equal(pos[0], alice, 'prevId result should be nextId param')
         assert.equal(pos[1], th.ZERO_ADDRESS, 'nextId result should be zero')
       })

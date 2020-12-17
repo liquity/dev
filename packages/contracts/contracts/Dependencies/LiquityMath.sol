@@ -8,6 +8,8 @@ import "./console.sol";
 library LiquityMath {
     using SafeMath for uint;
 
+    uint internal constant PRECISION = 1e20;
+
     function _min(uint _a, uint _b) internal pure returns (uint) {
         return (_a < _b) ? _a : _b;
     }
@@ -71,6 +73,16 @@ library LiquityMath {
 
     function _getAbsoluteDifference(uint _a, uint _b) internal pure returns (uint) {
         return (_a >= _b) ? _a.sub(_b) : _b.sub(_a);
+    }
+
+    function _computeNominalCR(uint _coll, uint _debt) internal pure returns (uint) {
+        if (_debt > 0) {
+            return _coll.mul(PRECISION).div(_debt);
+        }
+        // Return the maximal value for uint256 if the Trove has a debt of 0. Represents "infinite" CR.
+        else { // if (_debt == 0)
+            return 2**256 - 1;
+        }
     }
 
     function _computeCR(uint _coll, uint _debt, uint _price) internal pure returns (uint) {

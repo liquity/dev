@@ -130,6 +130,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
         uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
+        uint NICR = LiquityMath._computeNominalCR(msg.value, compositeDebt);
 
         if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
@@ -146,7 +147,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         troveManager.updateTroveRewardSnapshots(msg.sender);
         uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
 
-        sortedTroves.insert(msg.sender, ICR, price, _hint, _hint);
+        sortedTroves.insert(msg.sender, NICR, _hint, _hint);
         uint arrayIndex = troveManager.addTroveOwnerToArray(msg.sender);
         emit TroveCreated(msg.sender, arrayIndex);
 
@@ -246,7 +247,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
 
         // Re-insert trove it in the sorted list
-        sortedTroves.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
+        uint newNICR = _getNewNominalICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
+        sortedTroves.reInsert(_borrower, newNICR, _hint, _hint);
 
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
@@ -424,6 +426,26 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- ICR and TCR checks ---
 
     // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards.
+    function _getNewNominalICRFromTroveChange
+    (
+        uint _coll,
+        uint _debt,
+        uint _collChange,
+        bool _isCollIncrease,
+        uint _debtChange,
+        bool _isDebtIncrease
+    )
+        pure
+        internal
+        returns (uint)
+    {
+        (uint newColl, uint newDebt) = _getNewTroveAmounts(_coll, _debt, _collChange, _isCollIncrease, _debtChange, _isDebtIncrease);
+
+        uint newNICR = LiquityMath._computeNominalCR(newColl, newDebt);
+        return newNICR;
+    }
+
+    // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards.
     function _getNewICRFromTroveChange
     (
         uint _coll,
@@ -438,14 +460,31 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
         returns (uint)
     {
+        (uint newColl, uint newDebt) = _getNewTroveAmounts(_coll, _debt, _collChange, _isCollIncrease, _debtChange, _isDebtIncrease);
+
+        uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
+        return newICR;
+    }
+
+    function _getNewTroveAmounts(
+        uint _coll,
+        uint _debt,
+        uint _collChange,
+        bool _isCollIncrease,
+        uint _debtChange,
+        bool _isDebtIncrease
+    )
+        internal
+        pure
+        returns (uint, uint)
+    {
         uint newColl = _coll;
         uint newDebt = _debt;
 
         newColl = _isCollIncrease ? _coll.add(_collChange) :  _coll.sub(_collChange);
         newDebt = _isDebtIncrease ? _debt.add(_debtChange) : _debt.sub(_debtChange);
 
-        uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
-        return newICR;
+        return (newColl, newDebt);
     }
 
     function _getNewTCRFromTroveChange
