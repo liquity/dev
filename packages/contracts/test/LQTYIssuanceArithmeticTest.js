@@ -48,7 +48,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
     contracts.stabilityPool = await StabilityPool.new()
     contracts = await deploymentHelper.deployLUSDToken(contracts)
 

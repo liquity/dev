@@ -46,8 +46,8 @@ class DeploymentHelper {
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
 
-    if (frameworkPath.includes("buidler")) {
-      return this.deployLiquityCoreBuidler()
+    if (frameworkPath.includes("hardhat")) {
+      return this.deployLiquityCoreHardhat()
     } else if (frameworkPath.includes("truffle")) {
       return this.deployLiquityCoreTruffle()
     }
@@ -58,14 +58,14 @@ class DeploymentHelper {
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
 
-    if (frameworkPath.includes("buidler")) {
-      return this.deployLQTYContractsBuidler()
+    if (frameworkPath.includes("hardhat")) {
+      return this.deployLQTYContractsHardhat()
     } else if (frameworkPath.includes("truffle")) {
       return this.deployLQTYContractsTruffle()
     }
   }
 
-  static async deployLiquityCoreBuidler() {
+  static async deployLiquityCoreHardhat() {
     const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedTroves = await SortedTroves.new()
     const troveManager = await TroveManager.new()
@@ -109,7 +109,7 @@ class DeploymentHelper {
     return coreContracts
   }
 
-  static async deployTesterContractsBuidler() {
+  static async deployTesterContractsHardhat() {
     const testerContracts = {}
 
     // Contract without testers (yet)
@@ -135,7 +135,7 @@ class DeploymentHelper {
     return testerContracts
   }
 
-  static async deployLQTYContractsBuidler() {
+  static async deployLQTYContractsHardhat() {
     const lqtyStaking = await LQTYStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
@@ -161,7 +161,7 @@ class DeploymentHelper {
     return LQTYContracts
   }
 
-  static async deployLQTYTesterContractsBuidler() {
+  static async deployLQTYTesterContractsHardhat() {
     const lqtyStaking = await LQTYStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuanceTester.new()

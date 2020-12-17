@@ -50,8 +50,8 @@ const getPermitDigest = ( name, address, chainId, version,
 contract('LUSDToken', async accounts => {
   const [owner, alice, bob, carol, dennis] = accounts;
 
-  // the second account our buidlerenv creates (for Alice)
-  // from https://github.com/liquity/dev/blob/main/packages/contracts/buidlerAccountsList2k.js#L3
+  // the second account our hardhatenv creates (for Alice)
+  // from https://github.com/liquity/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
   const alicePrivateKey = '0xeaa445c85f7b438dEd6e831d06a4eD0CEBDc2f8527f84Fcda6EBB5fCfAd4C0e9'
 
   let chainId
@@ -66,7 +66,7 @@ contract('LUSDToken', async accounts => {
   describe('Basic token functions', async () => {
     beforeEach(async () => {
     
-      const contracts = await deploymentHelper.deployTesterContractsBuidler()
+      const contracts = await deploymentHelper.deployTesterContractsHardhat()
  
       lusdTokenTester = contracts.lusdToken
       // for some reason this doesn’t work with coverage network
@@ -317,7 +317,7 @@ contract('LUSDToken', async accounts => {
     }
 
     const buildPermitTx = async (deadline) => {
-      const nonce = await lusdTokenTester.nonces(approve.owner)
+      const nonce = (await lusdTokenTester.nonces(approve.owner)).toString()
       
       // Get the EIP712 digest
       const digest = getPermitDigest(

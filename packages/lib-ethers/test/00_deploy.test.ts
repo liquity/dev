@@ -1,7 +1,6 @@
-import { describe, before, it } from "mocha";
 import { expect } from "chai";
 import { Signer } from "@ethersproject/abstract-signer";
-import { ethers } from "@nomiclabs/buidler";
+import { ethers } from "hardhat";
 
 import { deployAndSetupContracts } from "../utils/deploy";
 
