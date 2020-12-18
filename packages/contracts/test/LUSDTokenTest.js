@@ -352,8 +352,8 @@ contract('LUSDToken', async accounts => {
         deadline, v, r, s), 'LUSD: invalid signature')
      
       // Check that the zero address fails
-      await assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
-        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: invalid signature')
+      await assertAssert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000',
+        approve.spender, approve.value, deadline, '0x99', r, s))
     })
 
     it('permits(): fails with expired deadline', async () => {
