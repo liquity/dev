@@ -46,7 +46,8 @@ contract HintHelpers is LiquityBase, Ownable {
 
     function getRedemptionHints(
         uint _LUSDamount, 
-        uint _price
+        uint _price,
+        uint _maxIterations
     )
         external
         view
@@ -61,7 +62,11 @@ contract HintHelpers is LiquityBase, Ownable {
 
         firstRedemptionHint = currentTroveuser;
 
-        while (currentTroveuser != address(0) && remainingLUSD > 0) {
+        if (_maxIterations == 0) {
+            _maxIterations = uint(-1);
+        }
+
+        while (currentTroveuser != address(0) && remainingLUSD > 0 && _maxIterations-- > 0) {
             uint LUSDDebt = _getNetDebt(troveManager.getTroveDebt(currentTroveuser))
                                      .add(troveManager.getPendingLUSDDebtReward(currentTroveuser));
 

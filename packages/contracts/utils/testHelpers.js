@@ -798,7 +798,7 @@ class TestHelper {
   }
 
   static async performRedemptionTx(redeemer, price, contracts, LUSDAmount) {
-    const redemptionhint = await contracts.hintHelpers.getRedemptionHints(LUSDAmount, price)
+    const redemptionhint = await contracts.hintHelpers.getRedemptionHints(LUSDAmount, price, 0)
 
     const firstRedemptionHint = redemptionhint[0]
     const partialRedemptionNewICR = redemptionhint[1]
