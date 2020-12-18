@@ -62,6 +62,8 @@ const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add
 // An extra traversal can take ~12K.
 const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(15000);
 
+const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(40000);
+
 // To get the best entropy available, we'd do something like:
 //
 // const bigRandomNumber = () =>
@@ -135,7 +137,7 @@ class SentEthersTransaction<T = unknown>
   }
 }
 
-class PopulatedEthersTransaction<T = unknown>
+export class PopulatedEthersTransaction<T = unknown>
   implements
     PopulatedLiquityTransaction<
       PopulatedTransaction,
@@ -171,8 +173,7 @@ class PopulatedEthersTransaction<T = unknown>
 
 class PopulatableEthersLiquityBase extends EthersLiquityBase {
   protected readonly readableLiquity: ReadableLiquity;
-
-  private readonly signer: Signer;
+  protected readonly signer: Signer;
 
   constructor(contracts: LiquityContracts, readableLiquity: ReadableLiquity, signer: Signer) {
     super(contracts);
@@ -458,7 +459,7 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async depositCollateral(
+  depositCollateral(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -466,7 +467,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ depositCollateral: amount }, optionalParams, overrides);
   }
 
-  async withdrawCollateral(
+  withdrawCollateral(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -474,7 +475,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ withdrawCollateral: amount }, optionalParams, overrides);
   }
 
-  async borrowLUSD(
+  borrowLUSD(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -482,7 +483,7 @@ export class PopulatableEthersLiquity
     return this.adjustTrove({ borrowLUSD: amount }, optionalParams, overrides);
   }
 
-  async repayLUSD(
+  repayLUSD(
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
@@ -523,6 +524,18 @@ export class PopulatableEthersLiquity
     );
   }
 
+  async claimRedeemedCollateral(address?: string, overrides?: EthersTransactionOverrides) {
+    address ??= await this.signer.getAddress();
+
+    return this.wrapSimpleTransaction(
+      await this.contracts.borrowerOperations.estimateAndPopulate.claimRedeemedCollateral(
+        { ...overrides },
+        id,
+        address
+      )
+    );
+  }
+
   async setPrice(price: Decimalish, overrides?: EthersTransactionOverrides) {
     if (!priceFeedIsTestnet(this.contracts.priceFeed)) {
       throw new Error("setPrice() unavailable on this deployment of Liquity");
@@ -539,7 +552,11 @@ export class PopulatableEthersLiquity
 
   async liquidate(address: string, overrides?: EthersTransactionOverrides) {
     return this.wrapLiquidation(
-      await this.contracts.troveManager.estimateAndPopulate.liquidate({ ...overrides }, id, address)
+      await this.contracts.troveManager.estimateAndPopulate.liquidate(
+        { ...overrides },
+        addGasForLQTYIssuance,
+        address
+      )
     );
   }
 
@@ -550,7 +567,7 @@ export class PopulatableEthersLiquity
     return this.wrapLiquidation(
       await this.contracts.troveManager.estimateAndPopulate.liquidateTroves(
         { ...overrides },
-        id,
+        addGasForLQTYIssuance,
         maximumNumberOfTrovesToLiquidate
       )
     );
@@ -564,7 +581,7 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.provideToSP(
         { ...overrides },
-        id,
+        addGasForLQTYIssuance,
         Decimal.from(amount).bigNumber,
         frontEndTag
       )
@@ -575,10 +592,14 @@ export class PopulatableEthersLiquity
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
-        id,
+        addGasForLQTYIssuance,
         Decimal.from(amount).bigNumber
       )
     );
+  }
+
+  withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides) {
+    return this.withdrawLUSDFromStabilityPool(Decimal.ZERO, overrides);
   }
 
   async transferCollateralGainToTrove(
@@ -588,13 +609,13 @@ export class PopulatableEthersLiquity
     const { deposit, trove, ...hintOptionalParams } = optionalParams;
     const initialTrove = trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = initialTrove.addCollateral(
-      (deposit ?? (await this.readableLiquity.getStabilityDeposit())).pendingCollateralGain
+      (deposit ?? (await this.readableLiquity.getStabilityDeposit())).collateralGain
     );
 
     return this.wrapCollateralGainTransfer(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
         { ...overrides },
-        addGasForPotentialListTraversal,
+        compose(addGasForPotentialListTraversal, addGasForLQTYIssuance),
         await this.findHint(finalTrove, hintOptionalParams)
       )
     );
@@ -603,6 +624,17 @@ export class PopulatableEthersLiquity
   async sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
       await this.contracts.lusdToken.estimateAndPopulate.transfer(
+        { ...overrides },
+        id,
+        toAddress,
+        Decimal.from(amount).bigNumber
+      )
+    );
+  }
+
+  async sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyToken.estimateAndPopulate.transfer(
         { ...overrides },
         id,
         toAddress,
@@ -635,6 +667,30 @@ export class PopulatableEthersLiquity
         redeemMaxIterations
       )
     );
+  }
+
+  async stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyStaking.estimateAndPopulate.stake(
+        { ...overrides },
+        id,
+        Decimal.from(amount).bigNumber
+      )
+    );
+  }
+
+  async unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.lqtyStaking.estimateAndPopulate.unstake(
+        { ...overrides },
+        id,
+        Decimal.from(amount).bigNumber
+      )
+    );
+  }
+
+  withdrawGainsFromStaking(overrides?: EthersTransactionOverrides) {
+    return this.unstakeLQTY(Decimal.ZERO, overrides);
   }
 }
 

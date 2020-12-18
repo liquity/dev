@@ -42,7 +42,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore() 
-      LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+      LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
      
       priceFeed = contracts.priceFeedTestnet
       lusdToken = contracts.lusdToken

@@ -19,7 +19,6 @@ type LiquityContextValue = {
   contracts: LiquityContracts;
   liquity: EthersLiquity;
   devChain: boolean;
-  oracleAvailable: boolean;
   contractsVersion: string;
   deploymentDate: number;
 };
@@ -79,7 +78,6 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   const contracts = connectToContracts(addresses, priceFeedIsTestnet, signer);
   const liquity = EthersLiquity.from(contracts, signer, account);
   const devChain = chainId === DEV_CHAIN_ID;
-  const oracleAvailable = chainId === 3;
 
   return (
     <LiquityContext.Provider
@@ -89,7 +87,6 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         contracts,
         liquity,
         devChain,
-        oracleAvailable,
         contractsVersion,
         deploymentDate
       }}

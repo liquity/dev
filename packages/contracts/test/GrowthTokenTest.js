@@ -9,8 +9,8 @@ const { hexlify } = require("@ethersproject/bytes");
 const { ecsign } = require('ethereumjs-util');
 
 
-// the second account our buidlerenv creates (for EOA A)
-// from https://github.com/liquity/dev/blob/main/packages/contracts/buidlerAccountsList2k.js#L3
+// the second account our hardhatenv creates (for EOA A)
+// from https://github.com/liquity/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
 
 
 const th = testHelpers.TestHelper
@@ -85,7 +85,7 @@ contract('LQTY Token', async accounts => {
   }
 
   const buildPermitTx = async (deadline) => {
-    const nonce = await lqtyTokenTester.nonces(approve.owner)
+    const nonce = (await lqtyTokenTester.nonces(approve.owner)).toString()
 
     // Get the EIP712 digest
     const digest = getPermitDigest(
@@ -107,7 +107,7 @@ contract('LQTY Token', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
 
     lqtyStaking = LQTYContracts.lqtyStaking
     lqtyTokenTester = LQTYContracts.lqtyToken

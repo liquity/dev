@@ -59,7 +59,7 @@ contract('During the initial lockup period', async accounts => {
   beforeEach(async () => {
     // Deploy all contracts from the first account
     coreContracts = await deploymentHelper.deployLiquityCore()
-    LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+    LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
 
     lqtyStaking = LQTYContracts.lqtyStaking
     lqtyToken = LQTYContracts.lqtyToken

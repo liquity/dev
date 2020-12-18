@@ -3,22 +3,22 @@ import path from "path";
 
 import { Interface, ParamType } from "@ethersproject/abi";
 
-import ActivePool from "../../contracts/artifacts/ActivePool.json";
-import BorrowerOperations from "../../contracts/artifacts/BorrowerOperations.json";
-import TroveManager from "../../contracts/artifacts/TroveManager.json";
-import LUSDToken from "../../contracts/artifacts/LUSDToken.json";
-import CommunityIssuance from "../../contracts/artifacts/CommunityIssuance.json";
-import DefaultPool from "../../contracts/artifacts/DefaultPool.json";
-import LQTYToken from "../../contracts/artifacts/LQTYToken.json";
-import HintHelpers from "../../contracts/artifacts/HintHelpers.json";
-import LockupContractFactory from "../../contracts/artifacts/LockupContractFactory.json";
-import LQTYStaking from "../../contracts/artifacts/LQTYStaking.json";
-import MultiTroveGetter from "../../contracts/artifacts/MultiTroveGetter.json";
-import PriceFeed from "../../contracts/artifacts/PriceFeed.json";
-import PriceFeedTestnet from "../../contracts/artifacts/PriceFeedTestnet.json";
-import SortedTroves from "../../contracts/artifacts/SortedTroves.json";
-import StabilityPool from "../../contracts/artifacts/StabilityPool.json";
-import CollSurplusPool from "../../contracts/artifacts/CollSurplusPool.json";
+import ActivePool from "../../contracts/artifacts/contracts/ActivePool.sol/ActivePool.json";
+import BorrowerOperations from "../../contracts/artifacts/contracts/BorrowerOperations.sol/BorrowerOperations.json";
+import TroveManager from "../../contracts/artifacts/contracts/TroveManager.sol/TroveManager.json";
+import LUSDToken from "../../contracts/artifacts/contracts/LUSDToken.sol/LUSDToken.json";
+import CommunityIssuance from "../../contracts/artifacts/contracts/LQTY/CommunityIssuance.sol/CommunityIssuance.json";
+import DefaultPool from "../../contracts/artifacts/contracts/DefaultPool.sol/DefaultPool.json";
+import LQTYToken from "../../contracts/artifacts/contracts/LQTY/LQTYToken.sol/LQTYToken.json";
+import HintHelpers from "../../contracts/artifacts/contracts/HintHelpers.sol/HintHelpers.json";
+import LockupContractFactory from "../../contracts/artifacts/contracts/LQTY/LockupContractFactory.sol/LockupContractFactory.json";
+import LQTYStaking from "../../contracts/artifacts/contracts/LQTY/LQTYStaking.sol/LQTYStaking.json";
+import MultiTroveGetter from "../../contracts/artifacts/contracts/MultiTroveGetter.sol/MultiTroveGetter.json";
+import PriceFeed from "../../contracts/artifacts/contracts/PriceFeed.sol/PriceFeed.json";
+import PriceFeedTestnet from "../../contracts/artifacts/contracts/TestContracts/PriceFeedTestnet.sol/PriceFeedTestnet.json";
+import SortedTroves from "../../contracts/artifacts/contracts/SortedTroves.sol/SortedTroves.json";
+import StabilityPool from "../../contracts/artifacts/contracts/StabilityPool.sol/StabilityPool.json";
+import CollSurplusPool from "../../contracts/artifacts/contracts/CollSurplusPool.sol/CollSurplusPool.json";
 
 const getTupleType = (components: ParamType[], flexible: boolean) => {
   if (components.every(component => component.name)) {

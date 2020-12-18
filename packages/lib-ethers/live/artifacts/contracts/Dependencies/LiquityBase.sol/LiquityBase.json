@@ -1,0 +1,102 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "LiquityBase",
+  "sourceName": "contracts/Dependencies/LiquityBase.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "CCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "GAS_POOL_ADDRESS",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "LUSD_GAS_COMPENSATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "PERCENT_DIVISOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "R_MCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "_100pct",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610155806100206000396000f3fe608060405234801561001057600080fd5b506004361061006d5760003560e01c80630fba7805146100725780632e86bbd8146100965780634870dd9a146100b05780635733d58f146100b857806372fe25aa146100c0578063794e5724146100c8578063f24344e6146100d0575b600080fd5b61007a6100d8565b604080516001600160a01b039092168252519081900360200190f35b61009e6100de565b60408051918252519081900360200190f35b61009e6100ea565b61009e6100ef565b61009e6100fb565b61009e610107565b61009e610113565b6109a581565b678ac7230489e8000081565b60c881565b6714d1120d7b16000081565b670de0b6b3a764000081565b670f43fc2c04ee000081565b6729a2241af62c00008156fea26469706673582212207ee90c10c0692a4b5182f21cc44e6929d296e78a94aec3d7459526000903fccf64736f6c634300060b0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061006d5760003560e01c80630fba7805146100725780632e86bbd8146100965780634870dd9a146100b05780635733d58f146100b857806372fe25aa146100c0578063794e5724146100c8578063f24344e6146100d0575b600080fd5b61007a6100d8565b604080516001600160a01b039092168252519081900360200190f35b61009e6100de565b60408051918252519081900360200190f35b61009e6100ea565b61009e6100ef565b61009e6100fb565b61009e610107565b61009e610113565b6109a581565b678ac7230489e8000081565b60c881565b6714d1120d7b16000081565b670de0b6b3a764000081565b670f43fc2c04ee000081565b6729a2241af62c00008156fea26469706673582212207ee90c10c0692a4b5182f21cc44e6929d296e78a94aec3d7459526000903fccf64736f6c634300060b0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -8,7 +8,7 @@ const DefaultPool = artifacts.require('DefaultPool')
 const StabilityPool = artifacts.require('StabilityPool')
 
 // run with:
-// npx buidler --config buidler.config.echidna.js test fuzzTests/echidna_debug.js
+// npx hardhat --config hardhat.config.echidna.js test fuzzTests/echidna_debug.js
 
 contract('Echidna debugger', async accounts => {
   let echidnaTester

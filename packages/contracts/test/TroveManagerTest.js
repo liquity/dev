@@ -3104,8 +3104,8 @@ contract('TroveManager', async accounts => {
 
     const lastFeeOpTime_1 = await troveManager.lastFeeOperationTime()
 
-    // 50 seconds pass
-    th.fastForwardTime(50, web3.currentProvider)
+    // 45 seconds pass
+    th.fastForwardTime(45, web3.currentProvider)
 
     // Borrower A triggers a fee
     await th.redeemCollateral(A, contracts, dec(1, 18))
@@ -3116,8 +3116,8 @@ contract('TroveManager', async accounts => {
     // since before minimum interval had passed 
     assert.isTrue(lastFeeOpTime_2.eq(lastFeeOpTime_1))
 
-    // 10 seconds passes
-    th.fastForwardTime(10, web3.currentProvider)
+    // 15 seconds passes
+    th.fastForwardTime(15, web3.currentProvider)
 
     // Check that now, at least one hour has passed since lastFeeOpTime_1
     const timeNow = await th.getLatestBlockTimestamp(web3)
