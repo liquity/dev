@@ -406,7 +406,11 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     const {
       firstRedemptionHint,
       partialRedemptionHintICR
-    } = await this.contracts.hintHelpers.getRedemptionHints(amount.bigNumber, price.bigNumber);
+    } = await this.contracts.hintHelpers.getRedemptionHints(
+      amount.bigNumber,
+      price.bigNumber,
+      redeemMaxIterations
+    );
 
     const collateralRatio = new Decimal(partialRedemptionHintICR);
 
