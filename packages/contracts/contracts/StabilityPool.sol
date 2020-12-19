@@ -321,7 +321,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     * If _amount > userDeposit, the user withdraws all of their compounded deposit. 
     */
     function withdrawFromSP(uint _amount) external override {
-        _requireNoUnderCollateralizedTroves();
+        if (_amount !=0) {_requireNoUnderCollateralizedTroves();}
         uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
 
