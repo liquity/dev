@@ -354,30 +354,13 @@ contract('LUSDToken', async accounts => {
      
       // Check that the zero address fails
       await assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
-        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
-    })
+        approve.spender, approve.value, deadline, '0x99', r, s), 
+        'LUSD: Recovered address from the sig is not the owner')
 
-    it('permits and emits an Approval event (replay protected), with infinite deadline', async () => {
-      const deadline = 0
-
-      // Approve it
-      const { v, r, s, tx } = await buildPermitTx(deadline)
-      const receipt = await tx
-      const event = receipt.logs[0]
-
-      // Check that approval was successful
-      assert.equal(event.event, 'Approval')
-      assert.equal(await lusdTokenTester.nonces(approve.owner), 1)
-      assert.equal(await lusdTokenTester.allowance(approve.owner, approve.spender), approve.value)
-      
-      // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
+      // Check that the zero deadline fails
       await assertRevert(lusdTokenTester.permit(
-        approve.owner, approve.spender, approve.value, 
-        deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
-     
-      // Check that the zero address fails
-      await assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
-        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
+        approve.owner, approve.spender, approve.value, 0, v, r, s), 
+        'LUSD: Signature has expired')
     })
 
     it('permits(): fails with expired deadline', async () => {
