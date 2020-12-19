@@ -413,8 +413,9 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         /* 
         * When total deposits is 0, G is not updated. In this case, the LQTY issued can not be obtained by later 
         * depositors - it is missed out on, and remains in the balanceof the CommunityIssuance contract. 
+        *
         */
-        if (totalLUSD == 0) {return;}
+        if (totalLUSD == 0 || _LQTYIssuance == 0) {return;}
 
         uint LQTYPerUnitStaked;
         LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalLUSD);
