@@ -15,6 +15,7 @@ const getProxy = async (acc, registry) => {
     let proxyAddr = await registry.proxies(acc);
     if (proxyAddr === ZERO_ADDRESS) {
         await registry.build({from: acc});
+        console.log('built one')
         proxyAddr = await registry.proxies(acc);
     }
     proxy = await DSProxy.at(proxyAddr);
@@ -29,7 +30,7 @@ contract('Proxy', async accounts => {
     const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
     const [owner, alice] = accounts;
     
-    let contracts;
+    let contracts, borrowerOperations, priceFeed;
     let factory, registry, proxy, script, proxyAddr, web3Proxy;
 
     
@@ -37,11 +38,14 @@ contract('Proxy', async accounts => {
         //Deploy the entire system
         contracts = await deploymentHelper.deployLiquityCore()
         const LQTYContracts = await deploymentHelper.deployLQTYContracts()
-        
+
         await deploymentHelper.connectLQTYContracts(LQTYContracts)
         await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
         await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
         
+        borrowerOperations = contracts.borrowerOperations
+        priceFeed = contracts.priceFeedTestnet
+
         //Deploy the Proxy system
         factory = await ProxyFactory.new()
         ProxyFactory.setAsDeployed(factory)
@@ -49,7 +53,7 @@ contract('Proxy', async accounts => {
         registry = await ProxyRegistry.new(factory.address)
         ProxyRegistry.setAsDeployed(registry)
 
-        script = await ProxyScript.new(contracts.borrowerOperations.address)
+        script = await ProxyScript.new(borrowerOperations.address)
         ProxyScript.setAsDeployed(script)
         
         const proxyInfo = await getProxy(alice, registry)
@@ -61,17 +65,30 @@ contract('Proxy', async accounts => {
     // 2.0167
     describe('PriceFeed internal testing contract', async accounts => { 
         it("", async () => {
+            // this works!
             // await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-            let collToken = ETH_ADDRESS;
-            let depositAmount = web3.utils.toWei('2', 'ether');
             
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(script, 'open'),
-                [ 100 ]
+            // const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(script, 'open'),
+            //     [ 0 ]
+            // );
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(borrowerOperations, 'openTrove'),
+                [ 0, alice ]
             );
-            // assert that new trove created by alice
 
+            await assertRevert(
+                web3Proxy.methods['execute(address,bytes)']
+                (ZERO_ADDRESS, data).send({ from: alice, value: dec(1, 'ether'), gas:10000000 }),
+                "ds-proxy-target-address-required"
+            )
+            
+            // TODO  this reverts
+            // await web3Proxy.methods['execute(address,bytes)']
+            //     (script.address, data).send({ from: alice, value: dec(1, 'ether') });
+            // this also reverts
             await web3Proxy.methods['execute(address,bytes)']
-                (script.address, data).send({ from: alice, value: dec(1, 'ether') });
+                (borrowerOperations.address, data).send({ from: alice, value: dec(1, 'ether'), gas:10000000 });
+            
+            // assert that new trove created by alice
         })
     })
 

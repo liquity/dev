@@ -13,7 +13,7 @@ contract ProxyScript {
     }
 
     function open(uint _amt) external payable {
-        ibo.openTrove{value: msg.value}(_amt, msg.sender);
+        ibo.openTrove{value: msg.value}(_amt, address(0));
     }
 
 }

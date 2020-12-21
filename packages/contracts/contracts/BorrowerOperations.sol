@@ -117,12 +117,19 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Borrower Trove Operations ---
 
     function openTrove(uint _LUSDAmount, address _hint) external payable override {
+        console.log("11111111111111111");
+        
         uint price = priceFeed.getPrice();
-
+        console.log("22222222222222222");
         _requireTroveisNotActive(msg.sender);
+
+        
 
         // Decay the base rate, and calculate the borrowing fee
         troveManager.decayBaseRateFromBorrowing();
+
+        console.log("333333333333333333");
+
         uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
         uint rawDebt = _LUSDAmount.add(LUSDFee);
 
@@ -131,20 +138,22 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         assert(compositeDebt > 0);
         uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
 
+        console.log("44444444444444444");
         if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
             _requireNewTCRisAboveCCR(msg.value, true, compositeDebt, true, price);  // bools: coll increase, debt increase
         }
-
         // Set the trove struct's properties
+        console.log("55555555555555555");
         troveManager.setTroveStatus(msg.sender, 1);
         troveManager.increaseTroveColl(msg.sender, msg.value);
         troveManager.increaseTroveDebt(msg.sender, compositeDebt);
-
+        console.log("6666666666666666");
         troveManager.updateTroveRewardSnapshots(msg.sender);
         uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
+        console.log("6666666666666666");
 
         sortedTroves.insert(msg.sender, ICR, price, _hint, _hint);
         uint arrayIndex = troveManager.addTroveOwnerToArray(msg.sender);
