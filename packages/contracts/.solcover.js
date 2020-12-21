@@ -1,4 +1,4 @@
-const { accountsList } = require("./buidlerAccountsList2k.js");
+const { accountsList } = require("./hardhatAccountsList2k.js");
 // syntax for solcover network (ganache based) is different:
 // https://hardhat.org/plugins/solidity-coverage.html#configuration
 // Link in providerOptions:
