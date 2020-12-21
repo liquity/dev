@@ -4,7 +4,7 @@ pragma solidity 0.6.11;
 
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/IStabilityPool.sol';
-import './Interfaces/IPool.sol';
+import './Interfaces/IActivePool.sol';
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/ITroveManager.sol';
 import './Interfaces/ILUSDToken.sol';
@@ -138,7 +138,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     ILUSDToken public lusdToken;
 
-    IPool public activePool;
+    IActivePool public activePool;
     address public activePoolAddress;
 
     // Needed to check if there are pending liquidations
@@ -236,7 +236,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     {
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
         troveManager = ITroveManager(_troveManagerAddress);
-        activePool = IPool(_activePoolAddress);
+        activePool = IActivePool(_activePoolAddress);
         activePoolAddress = _activePoolAddress;
         lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);

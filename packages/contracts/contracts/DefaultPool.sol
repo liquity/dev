@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import './Interfaces/IPool.sol';
+import './Interfaces/IDefaultPool.sol';
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -14,7 +14,7 @@ import "./Dependencies/console.sol";
  * When a trove makes an operation that applies its pending ETH and LUSD debt, its pending ETH and LUSD debt is moved
  * from the Default Pool to the Active Pool.
  */
-contract DefaultPool is Ownable, IPool {
+contract DefaultPool is Ownable, IDefaultPool {
     using SafeMath for uint256;
 
     address public troveManagerAddress;
@@ -59,12 +59,13 @@ contract DefaultPool is Ownable, IPool {
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) external override {
+    function sendETHToActivePool(uint _amount) external override {
         _requireCallerIsTroveManager();
+        address activePool = activePoolAddress; // cache to save an SLOAD
         ETH = ETH.sub(_amount);
-        emit EtherSent(_account, _amount);
+        emit EtherSent(activePool, _amount);
 
-        (bool success, ) = _account.call{ value: _amount }(""); 
+        (bool success, ) = activePool.call{ value: _amount }("");
         require(success, "DefaultPool: sending ETH failed");
     }
 
