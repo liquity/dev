@@ -542,6 +542,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
             }  else break;  // break if the loop reaches a Trove with ICR >= MCR
 
+            // Break the loop if it reaches the first Trove in the sorted list
+            if (L.user == sortedTroves.getFirst()) { break; }
             L.i++;
         }
     }
@@ -575,8 +577,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
             } else break;  // break if the loop reaches a Trove with ICR >= MCR
 
-            // Break the loop if it reaches the first Trove in the sorted list
-            if (L.user == sortedTroves.getFirst()) { break; }
             L.i++;
         }
     }
@@ -1226,7 +1226,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     * [A B C D E] => [A E C D], and updates E's Trove struct to point to its new array index. 
     */
     function _removeTroveOwner(address _borrower, uint TroveOwnersArrayLength) internal {
-        require(Troves[_borrower].status == Status.closed, "TroveManager: Trove is still active");
+        // It’s set in caller function `_closeTrove`
+        assert(Troves[_borrower].status == Status.closed);
 
         uint128 index = Troves[_borrower].arrayIndex;
         uint length = TroveOwnersArrayLength;
