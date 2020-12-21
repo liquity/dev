@@ -259,11 +259,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('DefaultPool', async accounts => {
-    // sendETH
-    it("sendETH(): reverts when called by an account that is not TroveManager", async () => {
+    // sendETHToActivePool
+    it("sendETHToActivePool(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await defaultPool.sendETH(alice, 100, { from: alice })
+        const txAlice = await defaultPool.sendETHToActivePool(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
