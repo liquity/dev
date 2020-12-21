@@ -1,4 +1,5 @@
 
+//const { Contract } = require('@ethersproject/contracts');
 const DSProxy = artifacts.require("./DSProxy.sol");
 const ProxyScript = artifacts.require("./ProxyScript.sol");
 const ProxyFactory = artifacts.require("./DSProxyFactory.sol");
@@ -46,7 +47,8 @@ contract('Proxy', async accounts => {
         borrowerOperations = contracts.borrowerOperations
         priceFeed = contracts.priceFeedTestnet
 
-        //Deploy the Proxy system
+        // We must deploy DSProxyFactory because we call the build function
+        // inside it in order to create DSproxies on behalf of Trove owners
         factory = await ProxyFactory.new()
         ProxyFactory.setAsDeployed(factory)
 
@@ -61,18 +63,18 @@ contract('Proxy', async accounts => {
         proxyAddr = proxyInfo.proxyAddr;
         
         web3Proxy = new web3.eth.Contract(DSProxy.abi, proxyAddr)
+        //web3Proxy = new Contract(DSProxy.abi, proxyAddr)
     })
-    // 2.0167
-    describe('PriceFeed internal testing contract', async accounts => { 
+    describe('Proxy internal testing contract', async accounts => { 
         it("", async () => {
-            // this works!
+            // this still works xD 
             // await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
             
             // const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(script, 'open'),
             //     [ 0 ]
             // );
             const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(borrowerOperations, 'openTrove'),
-                [ 0, alice ]
+                [ 10000000, contracts.troveManager.address ]
             );
 
             await assertRevert(

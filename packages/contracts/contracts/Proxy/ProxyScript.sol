@@ -6,14 +6,14 @@ import "../Interfaces/IBorrowerOperations.sol";
 
 contract ProxyScript {
 
-    IBorrowerOperations ibo; 
+    address public borrowerOperationsAddress;
     
     constructor (address _borrowerOperationsAddress) public {  
-        ibo = IBorrowerOperations(_borrowerOperationsAddress);        
+        borrowerOperationsAddress = _borrowerOperationsAddress;        
     }
 
     function open(uint _amt) external payable {
-        ibo.openTrove{value: msg.value}(_amt, address(0));
+        IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_amt, address(0));
     }
 
 }

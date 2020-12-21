@@ -20,6 +20,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Connected contract declarations ---
 
     ITroveManager public troveManager;
+    //address immutable troveManagerAddress;
 
     IPool public activePool;
 
@@ -90,6 +91,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         onlyOwner
     {
         troveManager = ITroveManager(_troveManagerAddress);
+        //troveManagerAddress = _troveManagerAddress;
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
@@ -118,27 +120,29 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function openTrove(uint _LUSDAmount, address _hint) external payable override {
         console.log("11111111111111111");
-        
-        uint price = priceFeed.getPrice();
+    
+        uint price = 42424242;
+        //uint price = priceFeed.getPrice();
         console.log("22222222222222222");
-        _requireTroveisNotActive(msg.sender);
-
-        
+        //_requireTroveisNotActive(msg.sender);
 
         // Decay the base rate, and calculate the borrowing fee
-        troveManager.decayBaseRateFromBorrowing();
+        //troveManager.decayBaseRateFromBorrowing();
 
-        console.log("333333333333333333");
+        
 
-        uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
+        uint LUSDFee = ITroveManager(_hint).getBorrowingFee(_LUSDAmount);
+        //uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
         uint rawDebt = _LUSDAmount.add(LUSDFee);
+        console.log("333333333333333333");
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
-        uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
-
         console.log("44444444444444444");
+        uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
+        console.log("55555555555555555");
+        
         if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
         } else {
@@ -146,14 +150,12 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             _requireNewTCRisAboveCCR(msg.value, true, compositeDebt, true, price);  // bools: coll increase, debt increase
         }
         // Set the trove struct's properties
-        console.log("55555555555555555");
         troveManager.setTroveStatus(msg.sender, 1);
         troveManager.increaseTroveColl(msg.sender, msg.value);
         troveManager.increaseTroveDebt(msg.sender, compositeDebt);
-        console.log("6666666666666666");
         troveManager.updateTroveRewardSnapshots(msg.sender);
+
         uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
-        console.log("6666666666666666");
 
         sortedTroves.insert(msg.sender, ICR, price, _hint, _hint);
         uint arrayIndex = troveManager.addTroveOwnerToArray(msg.sender);

@@ -30,8 +30,8 @@ contract DSProxy  {
 
     event LogSetAuthority (address indexed authority);
     event LogSetOwner     (address indexed owner);
+    
     // Provides generic function call logging 
-    // the indexed fields being queryable by blockchain clients
     event LogNote(
         bytes4   indexed  sig, // msg.sig
         address  indexed  guy, // msg.sender
@@ -40,6 +40,9 @@ contract DSProxy  {
         uint256           wad, // msg.value
         bytes             fax  // msg.data
     ) anonymous;
+    // the indexed fields are queryable by blockchain clients
+    // we only log two parameters because the functions in 
+    // this contract only take up to two parameters
 
     modifier note {
         bytes32 foo;
@@ -67,6 +70,20 @@ contract DSProxy  {
     }
     receive() external payable { /* do nothing */ }
 
+    // use the proxy to execute calldata _data on contract _code
+    function execute(bytes memory _code, bytes memory _data)
+        public
+        payable
+        returns (address target, bytes memory response)
+    {
+        target = cache.read(_code);
+        if (target == address(0)) {
+            // deploy contract & store its address in cache
+            target = cache.write(_code);
+        }
+        response = execute(target, _data);
+    }
+
     function execute(address _target, bytes memory _data)
         public
         auth
@@ -87,19 +104,6 @@ contract DSProxy  {
                 revert(add(response, 0x20), size)
             }
         }
-    }
-    // use the proxy to execute calldata _data on contract _code
-    function execute(bytes memory _code, bytes memory _data)
-        public
-        payable
-        returns (address target, bytes memory response)
-    {
-        target = cache.read(_code);
-        if (target == address(0)) {
-            // deploy contract & store its address in cache
-            target = cache.write(_code);
-        }
-        response = execute(target, _data);
     }
     
     function setCache(address _cacheAddr)

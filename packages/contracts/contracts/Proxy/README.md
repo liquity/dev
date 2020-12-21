@@ -1,11 +1,13 @@
 
 # DSProxy
 
-An enabling interface for smart wallets, designed for user's signature pre-approval of various scripts that bundle multiple contract calls within one transaction. This is something that vanilla EOAs cannot do, because they are limited to interacting with only one contract per tranaction. 
+An enabling interface for smart wallets, designed for user's signature pre-approval of various scripts that bundle multiple calls to (potentially) multiple contracts within one transaction. This is something that vanilla EOAs cannot do, because they are limited to interacting with only one contract per tranaction. 
 
-Scripts are implemented in Solidity as functions and multiple scripts are typically combined and deployed together as a single contract. A DSProxy contract can only execute one script in a single transaction.
+Scripts are implemented in Solidity as functions and multiple scripts are typically combined and deployed together as a single contract. A DSProxy can only execute one script in a single transaction, using the bytecode for the contract as well as the calldata for the script they want to execute.
 
-This DSProxy contract can also directly own digital assets long term since the user always has full ownership of the contract and it can be treated as an extension of the user's own ethereum address.
+
+
+This DSProxy contract can also directly own ETH and tokens long term since the user always has full ownership of the contract and it can be treated as an extension of the user's own ethereum address.
 
 There are two contracts to be aware of besides the DSProxy itself:
 
