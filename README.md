@@ -561,7 +561,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a trove to the sorted list.
 
-`getRedemptionHints(uint _LUSDamount, uint _price)`: helper function specifically for redemptions. Returns two hints - the first is positional, the second ensures transaction success (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
+`getRedemptionHints(uint _LUSDamount, uint _price, uint _maxIterations)`: helper function specifically for redemptions. Returns two hints - the first is a positional hint for the first redeemable trove (i.e. trove with the lowest ICR >= MCR), the second is the final ICR of the last trove after being hit by partial redemption, or zero in case of no partial redemption (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)). The number of troves to consider for redemption can be capped by passing a non-zero value as `_maxIterations`, while passing zero will leave it uncapped.
 
 ### Stability Pool Functions - `StabilityPool.sol`
 
@@ -646,17 +646,22 @@ Each BorrowerOperations function that reinserts a troves takes a single hint, as
 
 ### Hints for `redeemCollateral`
 
-`TroveManager::redeemCollateral` as a special case requires two hints. The first hint provides an accurate reinsert position (as described above), and the second hint ensures the transaction succeeds.
+`TroveManager::redeemCollateral` as a special case requires three hints:
+- `_firstRedemptionHint` hints at the position of the first trove that will be redeemed from,
+- `_partialRedemptionHint` hints at the position where the last redeemed trove should be reinserted, if it's partially redeemed,
+- `_partialRedemptionHintICR` ensures that the transaction won't run out of gas if `_partialRedemptionHint` is no longer valid.
 
 **TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
 
+`redeemCollateral` will only redeem from troves that have an ICR >= MCR. In other words, if there are troves at the bottom of the SortedTroves list that are below the minimum collateral ratio (which can happen after an ETH:USD price drop), they will be skipped. To make this more gas-efficient, the position of the first redeemable trove should be passed as `_firstRedemptionHint`.
+
 All troves that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the SortedTroves list.
 
-It’s likely that the last trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The first hint passed to `redeemCollateral` gives the expected reinsert position.
+It’s likely that the last trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The `_partialRedemptionHint` passed to `redeemCollateral` gives the expected reinsert position.
 
 However, if between the off-chain hint computation and on-chain execution a different transaction changes the state of a trove that would otherwise be hit by the redemption sequence, then the off-chain hint computation could end up totally inaccurate. This could lead to the whole redemption sequence reverting due to out-of-gas error.
 
-To mitigate this, a second hint needs to be provided: the expected ICR of the final partially-redeemed-from trove. The on-chain redemption function checks whether, after redemption, the ICR of this trove would equal the ICR hint.
+To mitigate this, another hint needs to be provided: `_partialRedemptionHintICR`, the expected ICR of the final partially-redeemed-from trove. The on-chain redemption function checks whether, after redemption, the ICR of this trove would equal the ICR hint.
 
 If not, the redemption sequence doesn’t perform the final partial redemption, and terminates early. This ensures that the transaction doesn’t revert, and most of the requested LUSD redemption can be fulfilled.
 
