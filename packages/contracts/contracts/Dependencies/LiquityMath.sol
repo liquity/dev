@@ -8,7 +8,12 @@ import "./console.sol";
 library LiquityMath {
     using SafeMath for uint;
 
-    uint internal constant PRECISION = 1e20;
+    /* Precision for Nominal ICR (independent of price). Rational for the value:
+     * - Making it “too high” could lead to overflows.
+     * - Making it “too low” could lead to a zero ICR (there’s an issue in ToB audit about that)
+     * We are quite safe with these value, as it mimics an ETH price of $100 (so, 20 is 18 for the usual decimals and 2 for $100 price).
+     */
+    uint internal constant NICR_PRECISION = 1e20;
 
     function _min(uint _a, uint _b) internal pure returns (uint) {
         return (_a < _b) ? _a : _b;
@@ -77,7 +82,7 @@ library LiquityMath {
 
     function _computeNominalCR(uint _coll, uint _debt) internal pure returns (uint) {
         if (_debt > 0) {
-            return _coll.mul(PRECISION).div(_debt);
+            return _coll.mul(NICR_PRECISION).div(_debt);
         }
         // Return the maximal value for uint256 if the Trove has a debt of 0. Represents "infinite" CR.
         else { // if (_debt == 0)
