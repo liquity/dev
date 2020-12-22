@@ -49,6 +49,7 @@ interface ITroveManager {
 
     function getTroveFromTroveOwnersArray(uint _index) external view returns (address);
 
+    function getNominalICR(address _borrower) external view returns (uint);
     function getCurrentICR(address _borrower, uint _price) external view returns (uint);
 
     function liquidate(address _borrower) external;

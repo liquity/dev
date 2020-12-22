@@ -367,10 +367,10 @@ class TestHelper {
     const {
       hintAddress: approxfullListHint,
       latestRandomSeed
-    } = await contracts.hintHelpers.getApproxHint(newICR, 50, price, this.latestRandomSeed)
+    } = await contracts.hintHelpers.getApproxHint(newICR, 50, this.latestRandomSeed)
     this.latestRandomSeed = latestRandomSeed
 
-    const exactFullListHint = (await contracts.sortedTroves.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
+    const exactFullListHint = (await contracts.sortedTroves.findInsertPosition(newICR, approxfullListHint, approxfullListHint))[0]
 
     return exactFullListHint
   }
@@ -806,11 +806,10 @@ class TestHelper {
     const {
       hintAddress: approxPartialRedemptionHint,
       latestRandomSeed
-    } = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50, price, this.latestRandomSeed)
+    } = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50, this.latestRandomSeed)
     this.latestRandomSeed = latestRandomSeed
 
     const exactPartialRedemptionHint = (await contracts.sortedTroves.findInsertPosition(partialRedemptionNewICR,
-      price,
       approxPartialRedemptionHint,
       approxPartialRedemptionHint))[0]
 

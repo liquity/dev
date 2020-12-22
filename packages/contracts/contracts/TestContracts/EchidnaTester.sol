@@ -300,13 +300,11 @@ contract EchidnaTester {
     }
 
     function echidna_troves_order() external view returns(bool) {
-        uint price = priceFeedTestnet.getPrice();
-
         address currentTrove = sortedTroves.getFirst();
         address nextTrove = sortedTroves.getNext(currentTrove);
 
         while (currentTrove != address(0) && nextTrove != address(0)) {
-            if (troveManager.getCurrentICR(nextTrove, price) > troveManager.getCurrentICR(currentTrove, price)) {
+            if (troveManager.getNominalICR(nextTrove) > troveManager.getNominalICR(currentTrove)) {
                 return false;
             }
             // Uncomment to check that the condition is meaningful

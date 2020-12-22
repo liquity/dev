@@ -179,23 +179,20 @@ describe("EthersLiquity", () => {
         (undefined as unknown) as Signer
       );
 
-      const collateralRatio = Decimal.from("1.5");
-      const price = Decimal.from(200);
+      const nominalCollateralRatio = Decimal.from(0.75);
 
       const params = { depositCollateral: 0.75, borrowLUSD: 90 };
       const trove = Trove.create(params);
-      expect(`${trove.collateralRatio(price)}`).to.equal(`${collateralRatio}`);
+      expect(`${trove.nominalCollateralRatio}`).to.equal(`${nominalCollateralRatio}`);
 
       await fakeLiquity.openTrove(params, {
         numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
-        fees: new Fees(new Date(), 0, 0.99, 1),
-        price
+        fees: new Fees(new Date(), 0, 0.99, 1)
       });
 
       expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.exactly(4);
       expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(
-        collateralRatio.bigNumber,
-        price.bigNumber
+        nominalCollateralRatio.bigNumber
       );
 
       // returned latestRandomSeed should be passed back on the next call
@@ -205,8 +202,7 @@ describe("EthersLiquity", () => {
 
       expect(fakeContracts.sortedTroves.findInsertPosition).to.have.been.called.once;
       expect(fakeContracts.sortedTroves.findInsertPosition).to.have.been.called.with(
-        collateralRatio.bigNumber,
-        price.bigNumber,
+        nominalCollateralRatio.bigNumber,
         "carol"
       );
     });
