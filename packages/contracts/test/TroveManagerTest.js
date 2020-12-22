@@ -2142,6 +2142,26 @@ contract('TroveManager', async accounts => {
     assert.equal(partialRedemptionHintICR, '6333333333333333333')
   });
 
+  it('getRedemptionHints(): returns 0 as partialRedemptionHintICR when reaching _maxIterations', async () => {
+    // --- SETUP ---
+    await borrowerOperations.openTrove('10' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('20' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('30' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('170' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
+
+    const price = await priceFeed.getPrice();
+
+    // --- TEST ---
+
+    // Get hints for a redemption of 170 + 30 + some extra LUSD. At least 3 iterations are needed
+    // for total redemption of the given amount.
+    const {
+      partialRedemptionHintICR
+    } = await hintHelpers.getRedemptionHints('210' + _18_zeros, price, 2) // limit _maxIterations to 2
+
+    assert.equal(partialRedemptionHintICR, '0')
+  });
+
   it('redeemCollateral(): cancels the provided LUSD with debt from Troves with the lowest ICRs and sends an equivalent amount of Ether', async () => {
     // --- SETUP ---
 
