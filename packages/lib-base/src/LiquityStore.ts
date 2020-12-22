@@ -101,6 +101,10 @@ export abstract class LiquityStore<T = unknown> {
     return next !== undefined && !equals(prev, next) ? this.logUpdate(name, next) : prev;
   }
 
+  protected silentlyUpdateIfChanged<U>(equals: (a: U, b: U) => boolean, prev: U, next?: U): U {
+    return next !== undefined && !equals(prev, next) ? next : prev;
+  }
+
   private reduce(
     baseState: LiquityStoreBaseState,
     baseStateUpdate: Partial<LiquityStoreBaseState>
@@ -198,16 +202,14 @@ export abstract class LiquityStore<T = unknown> {
     return {
       trove: this.updateIfChanged(equals, "trove", derivedState.trove, derivedStateUpdate.trove),
 
-      borrowingFeeFactor: this.updateIfChanged(
+      borrowingFeeFactor: this.silentlyUpdateIfChanged(
         eq,
-        "borrowingFeeFactor",
         derivedState.borrowingFeeFactor,
         derivedStateUpdate.borrowingFeeFactor
       ),
 
-      redemptionFeeFactor: this.updateIfChanged(
+      redemptionFeeFactor: this.silentlyUpdateIfChanged(
         eq,
-        "redemptionFeeFactor",
         derivedState.redemptionFeeFactor,
         derivedStateUpdate.redemptionFeeFactor
       )
