@@ -51,3 +51,4 @@ Because the ProxyRegistry caches deployments, it follows that if you either alre
 # Further Reading
 - [Working with DSProxy](https://github.com/makerdao/developerguides/blob/master/devtools/working-with-dsproxy/working-with-dsproxy.md#working-with-dsproxy)
 - [Why DeFi Saver loves DSProxy](https://medium.com/defi-saver/a-short-introduction-to-makers-dsproxy-and-why-we-l-it-c88932595be#:~:text=The%20other%20reason%20why%20we,the%20very%20same%20DSProxy%20contract.)
+- [OpenZeppelin Proxy Design Pattern](https://blog.openzeppelin.com/proxy-patterns/)

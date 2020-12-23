@@ -6,7 +6,7 @@ import "../Interfaces/IBorrowerOperations.sol";
 
 contract ProxyScript {
 
-    address public borrowerOperationsAddress;
+    address immutable borrowerOperationsAddress;
     
     constructor (address _borrowerOperationsAddress) public {  
         borrowerOperationsAddress = _borrowerOperationsAddress;        
@@ -15,5 +15,4 @@ contract ProxyScript {
     function open(uint _amt) external payable {
         IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_amt, address(0));
     }
-
 }

@@ -66,16 +66,17 @@ contract('Proxy', async accounts => {
         //web3Proxy = new Contract(DSProxy.abi, proxyAddr)
     })
     describe('Proxy internal testing contract', async accounts => { 
-        it("", async () => {
+        it("try basic script", async () => {
             // this still works xD 
             // await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
             
-            // const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(script, 'open'),
-            //     [ 0 ]
-            // );
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(borrowerOperations, 'openTrove'),
-                [ 10000000, contracts.troveManager.address ]
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(script, 'open'),
+                [ 0 ]
             );
+            
+            // const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(borrowerOperations, 'openTrove'),
+            //     [ 10000000, contracts.troveManager.address ]
+            // );
 
             await assertRevert(
                 web3Proxy.methods['execute(address,bytes)']
@@ -84,13 +85,22 @@ contract('Proxy', async accounts => {
             )
             
             // TODO  this reverts
-            // await web3Proxy.methods['execute(address,bytes)']
-            //     (script.address, data).send({ from: alice, value: dec(1, 'ether') });
-            // this also reverts
             await web3Proxy.methods['execute(address,bytes)']
-                (borrowerOperations.address, data).send({ from: alice, value: dec(1, 'ether'), gas:10000000 });
-            
+                (script.address, data).send({ from: alice, value: dec(1, 'ether') });
+            // this also reverts
+            // await web3Proxy.methods['execute(address,bytes)']
+            //     (borrowerOperations.address, data).send({ from: alice, value: dec(1, 'ether'), gas:10000000 });
+                
+            const activePool_ETH_After = await contracts.activePool.getETH()
+            const activePool_RawEther_After = await web3.eth.getBalance(contracts.activePool.address)
+            assert.equal(activePool_ETH_After, dec(1, 'ether'))
+            assert.equal(activePool_RawEther_After, dec(1, 'ether'))
             // assert that new trove created by alice
+
+            // assert updating the correct trove properties in TroveManager
+            
+            // changing ETH and debt trackers in ActivePool
+            // and also increasing its raw ETH balance? 
         })
     })
 

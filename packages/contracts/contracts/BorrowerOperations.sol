@@ -121,26 +121,26 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     function openTrove(uint _LUSDAmount, address _hint) external payable override {
         console.log("11111111111111111");
     
-        uint price = 42424242;
-        //uint price = priceFeed.getPrice();
+        //uint price = 42424242;
+        uint price = priceFeed.getPrice();
         console.log("22222222222222222");
-        //_requireTroveisNotActive(msg.sender);
+        
+        _requireTroveisNotActive(msg.sender);
 
         // Decay the base rate, and calculate the borrowing fee
-        //troveManager.decayBaseRateFromBorrowing();
+        troveManager.decayBaseRateFromBorrowing();
 
-        
-
-        uint LUSDFee = ITroveManager(_hint).getBorrowingFee(_LUSDAmount);
-        //uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
+        //uint LUSDFee = ITroveManager(_hint).getBorrowingFee(_LUSDAmount);
+        uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
         uint rawDebt = _LUSDAmount.add(LUSDFee);
         console.log("333333333333333333");
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
-        console.log("44444444444444444");
+        
         uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
+        
         console.log("55555555555555555");
         
         if (_checkRecoveryMode()) {
