@@ -5,7 +5,8 @@ pragma solidity 0.6.11;
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/ILUSDToken.sol";
-import "./Interfaces/IPool.sol";
+import "./Interfaces/IActivePool.sol";
+import "./Interfaces/IDefaultPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import './Interfaces/ILUSDToken.sol';
 import "./Interfaces/IPriceFeed.sol";
@@ -21,9 +22,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     ITroveManager public troveManager;
 
-    IPool public activePool;
+    IActivePool public activePool;
 
-    IPool public defaultPool;
+    IDefaultPool public defaultPool;
 
     address stabilityPoolAddress;
 
@@ -90,8 +91,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         onlyOwner
     {
         troveManager = ITroveManager(_troveManagerAddress);
-        activePool = IPool(_activePoolAddress);
-        defaultPool = IPool(_defaultPoolAddress);
+        activePool = IActivePool(_activePoolAddress);
+        defaultPool = IDefaultPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
@@ -130,6 +131,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
         uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
+        uint NICR = LiquityMath._computeNominalCR(msg.value, compositeDebt);
 
         if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
@@ -146,7 +148,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         troveManager.updateTroveRewardSnapshots(msg.sender);
         uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
 
-        sortedTroves.insert(msg.sender, ICR, price, _hint, _hint);
+        sortedTroves.insert(msg.sender, NICR, _hint, _hint);
         uint arrayIndex = troveManager.addTroveOwnerToArray(msg.sender);
         emit TroveCreated(msg.sender, arrayIndex);
 
@@ -239,14 +241,19 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         if (_isDebtIncrease && _debtChange > 0) {
             _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
         }
-        if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
+        /*
+         * We don’t check that the withdrawn coll isn’t greater than the current collateral in the trove because it would fail previously in:
+         * - _getNewICRFromTroveChange, due to SafeMath
+         * - _requireICRisAboveMCR
+         */
         if (!_isDebtIncrease && _debtChange > 0) {_requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange);}
 
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
         L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
 
         // Re-insert trove it in the sorted list
-        sortedTroves.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
+        uint newNICR = _getNewNominalICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
+        sortedTroves.reInsert(_borrower, newNICR, _hint, _hint);
 
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
@@ -410,18 +417,31 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(_debtRepayment <= _currentDebt.sub(LUSD_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the Trove's debt");
     }
 
-    function _requireCollAmountIsWithdrawable(uint _currentColl, uint _collWithdrawal)
-        internal
-        pure
-    {
-        require(_collWithdrawal <= _currentColl, "BorrowerOps: Insufficient balance for ETH withdrawal");
-    }
-
     function _requireCallerIsStabilityPool() internal view {
         require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
     }
 
     // --- ICR and TCR checks ---
+
+    // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards.
+    function _getNewNominalICRFromTroveChange
+    (
+        uint _coll,
+        uint _debt,
+        uint _collChange,
+        bool _isCollIncrease,
+        uint _debtChange,
+        bool _isDebtIncrease
+    )
+        pure
+        internal
+        returns (uint)
+    {
+        (uint newColl, uint newDebt) = _getNewTroveAmounts(_coll, _debt, _collChange, _isCollIncrease, _debtChange, _isDebtIncrease);
+
+        uint newNICR = LiquityMath._computeNominalCR(newColl, newDebt);
+        return newNICR;
+    }
 
     // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards.
     function _getNewICRFromTroveChange
@@ -438,14 +458,31 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         internal
         returns (uint)
     {
+        (uint newColl, uint newDebt) = _getNewTroveAmounts(_coll, _debt, _collChange, _isCollIncrease, _debtChange, _isDebtIncrease);
+
+        uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
+        return newICR;
+    }
+
+    function _getNewTroveAmounts(
+        uint _coll,
+        uint _debt,
+        uint _collChange,
+        bool _isCollIncrease,
+        uint _debtChange,
+        bool _isDebtIncrease
+    )
+        internal
+        pure
+        returns (uint, uint)
+    {
         uint newColl = _coll;
         uint newDebt = _debt;
 
         newColl = _isCollIncrease ? _coll.add(_collChange) :  _coll.sub(_collChange);
         newDebt = _isDebtIncrease ? _debt.add(_debtChange) : _debt.sub(_debtChange);
 
-        uint newICR = LiquityMath._computeCR(newColl, newDebt, _price);
-        return newICR;
+        return (newColl, newDebt);
     }
 
     function _getNewTCRFromTroveChange

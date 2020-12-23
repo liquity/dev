@@ -2134,15 +2134,15 @@ contract('TroveManager', async accounts => {
     // --- TEST ---
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints('55' + _18_zeros, price, 0)
 
     assert.equal(firstRedemptionHint, carol)
     // Alice trove’s ends up with 0.95 ETH and 5+10 LUSD debt (10 for gas compensation)
-    assert.equal(partialRedemptionHintICR, '6333333333333333333')
+    assert.equal(partialRedemptionHintNICR, '6333333333333333333')
   });
 
-  it('getRedemptionHints(): returns 0 as partialRedemptionHintICR when reaching _maxIterations', async () => {
+  it('getRedemptionHints(): returns 0 as partialRedemptionHintNICR when reaching _maxIterations', async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove('10' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove('20' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
@@ -2156,10 +2156,10 @@ contract('TroveManager', async accounts => {
     // Get hints for a redemption of 170 + 30 + some extra LUSD. At least 3 iterations are needed
     // for total redemption of the given amount.
     const {
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints('210' + _18_zeros, price, 2) // limit _maxIterations to 2
 
-    assert.equal(partialRedemptionHintICR, '0')
+    assert.equal(partialRedemptionHintNICR, '0')
   });
 
   it('redeemCollateral(): cancels the provided LUSD with debt from Troves with the lowest ICRs and sends an equivalent amount of Ether', async () => {
@@ -2184,14 +2184,13 @@ contract('TroveManager', async accounts => {
     // Find hints for redeeming 20 LUSD
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints(dec(20, 18), price, 0)
 
     // We don't need to use getApproxHint for this test, since it's not the subject of this
     // test case, and the list is very small, so the correct position is quickly found
     const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintICR,
-      price,
+      partialRedemptionHintNICR,
       dennis,
       dennis
     )
@@ -2202,7 +2201,7 @@ contract('TroveManager', async accounts => {
       dec(20, 18),
       firstRedemptionHint,
       partialRedemptionHint,
-      partialRedemptionHintICR,
+      partialRedemptionHintNICR,
       0,
       {
         from: dennis,
@@ -2354,12 +2353,11 @@ contract('TroveManager', async accounts => {
 
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints(dec(20, 18), price, 0)
 
     const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintICR,
-      price,
+      partialRedemptionHintNICR,
       dennis,
       dennis
     )
@@ -2368,12 +2366,11 @@ contract('TroveManager', async accounts => {
     {
       const {
         firstRedemptionHint,
-        partialRedemptionHintICR
+        partialRedemptionHintNICR
       } = await hintHelpers.getRedemptionHints(dec(1, 18), price, 0)
 
       const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-        partialRedemptionHintICR,
-        price,
+        partialRedemptionHintNICR,
         dennis,
         dennis
       )
@@ -2383,7 +2380,7 @@ contract('TroveManager', async accounts => {
         dec(1, 18),
         firstRedemptionHint,
         partialRedemptionHint,
-        partialRedemptionHintICR,
+        partialRedemptionHintNICR,
         0,
         { from: alice }
       )
@@ -2394,7 +2391,7 @@ contract('TroveManager', async accounts => {
       dec(20, 18),
       firstRedemptionHint,
       partialRedemptionHint,
-      partialRedemptionHintICR,
+      partialRedemptionHintNICR,
       0,
       {
         from: dennis,
@@ -2677,12 +2674,11 @@ contract('TroveManager', async accounts => {
     // Erin attempts to redeem 400 LUSD
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints(dec(400, 18), price, 0)
 
     const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintICR,
-      price,
+      partialRedemptionHintNICR,
       erin,
       erin
     )
@@ -2691,7 +2687,7 @@ contract('TroveManager', async accounts => {
       dec(400, 18),
       firstRedemptionHint,
       partialRedemptionHint,
-      partialRedemptionHintICR,
+      partialRedemptionHintNICR,
       0,
       { from: erin })
 
@@ -2737,18 +2733,17 @@ contract('TroveManager', async accounts => {
     const price = await priceFeed.getPrice()
 
     let firstRedemptionHint
-    let partialRedemptionHintICR
+    let partialRedemptionHintNICR
 
     // Erin tries to redeem 1000 LUSD
     try {
       ({
         firstRedemptionHint,
-        partialRedemptionHintICR
+        partialRedemptionHintNICR
       } = await hintHelpers.getRedemptionHints(dec(1000, 18), price, 0))
 
       const { 0: partialRedemptionHint_1 } = await sortedTroves.findInsertPosition(
-        partialRedemptionHintICR,
-        price,
+        partialRedemptionHintNICR,
         erin,
         erin
       )
@@ -2757,7 +2752,7 @@ contract('TroveManager', async accounts => {
         dec(1000, 18),
         firstRedemptionHint,
         partialRedemptionHint_1,
-        partialRedemptionHintICR,
+        partialRedemptionHintNICR,
         0,
         { from: erin })
 
@@ -2771,12 +2766,11 @@ contract('TroveManager', async accounts => {
     try {
       ({
         firstRedemptionHint,
-        partialRedemptionHintICR
+        partialRedemptionHintNICR
       } = await hintHelpers.getRedemptionHints('401000000000000000000', price, 0))
 
       const { 0: partialRedemptionHint_2 } = await sortedTroves.findInsertPosition(
-        partialRedemptionHintICR,
-        price,
+        partialRedemptionHintNICR,
         erin,
         erin
       )
@@ -2784,7 +2778,7 @@ contract('TroveManager', async accounts => {
       const redemptionTx = await troveManager.redeemCollateral(
         '401000000000000000000', firstRedemptionHint,
         partialRedemptionHint_2,
-        partialRedemptionHintICR,
+        partialRedemptionHintNICR,
         0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
@@ -2797,12 +2791,11 @@ contract('TroveManager', async accounts => {
     try {
       ({
         firstRedemptionHint,
-        partialRedemptionHintICR
+        partialRedemptionHintNICR
       } = await hintHelpers.getRedemptionHints('239482309000000000000000000', price, 0))
 
       const { 0: partialRedemptionHint_3 } = await sortedTroves.findInsertPosition(
-        partialRedemptionHintICR,
-        price,
+        partialRedemptionHintNICR,
         erin,
         erin
       )
@@ -2810,7 +2803,7 @@ contract('TroveManager', async accounts => {
       const redemptionTx = await troveManager.redeemCollateral(
         '239482309000000000000000000', firstRedemptionHint,
         partialRedemptionHint_3,
-        partialRedemptionHintICR,
+        partialRedemptionHintNICR,
         0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
@@ -2825,12 +2818,11 @@ contract('TroveManager', async accounts => {
     try {
       ({
         firstRedemptionHint,
-        partialRedemptionHintICR
+        partialRedemptionHintNICR
       } = await hintHelpers.getRedemptionHints('239482309000000000000000000', price, 0))
 
       const { 0: partialRedemptionHint_4 } = await sortedTroves.findInsertPosition(
-        partialRedemptionHintICR,
-        price,
+        partialRedemptionHintNICR,
         erin,
         erin
       )
@@ -2838,7 +2830,7 @@ contract('TroveManager', async accounts => {
       const redemptionTx = await troveManager.redeemCollateral(
         maxBytes32, firstRedemptionHint,
         partialRedemptionHint_4,
-        partialRedemptionHintICR,
+        partialRedemptionHintNICR,
         0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
@@ -2873,18 +2865,17 @@ contract('TroveManager', async accounts => {
     assert.equal(activeETH_0, '280000000000000000000');
 
     let firstRedemptionHint
-    let partialRedemptionHintICR
+    let partialRedemptionHintNICR
 
 
     // Erin redeems 120 LUSD
     ({
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints(_120_LUSD, price, 0))
 
     const { 0: partialRedemptionHint_1 } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintICR,
-      price,
+      partialRedemptionHintNICR,
       erin,
       erin
     )
@@ -2893,7 +2884,7 @@ contract('TroveManager', async accounts => {
       _120_LUSD,
       firstRedemptionHint,
       partialRedemptionHint_1,
-      partialRedemptionHintICR,
+      partialRedemptionHintNICR,
       0,
       { from: erin })
 
@@ -2909,12 +2900,11 @@ contract('TroveManager', async accounts => {
     // Flyn redeems 373 LUSD
     ({
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints(_373_LUSD, price, 0))
 
     const { 0: partialRedemptionHint_2 } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintICR,
-      price,
+      partialRedemptionHintNICR,
       flyn,
       flyn
     )
@@ -2923,7 +2913,7 @@ contract('TroveManager', async accounts => {
       _373_LUSD,
       firstRedemptionHint,
       partialRedemptionHint_2,
-      partialRedemptionHintICR,
+      partialRedemptionHintNICR,
       0,
       { from: flyn })
 
@@ -2938,12 +2928,11 @@ contract('TroveManager', async accounts => {
     // Graham redeems 950 LUSD
     ({
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints(_950_LUSD, price, 0))
 
     const { 0: partialRedemptionHint_3 } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintICR,
-      price,
+      partialRedemptionHintNICR,
       graham,
       graham
     )
@@ -2952,7 +2941,7 @@ contract('TroveManager', async accounts => {
       _950_LUSD,
       firstRedemptionHint,
       partialRedemptionHint_3,
-      partialRedemptionHintICR,
+      partialRedemptionHintNICR,
       0,
       { from: graham })
 
@@ -2979,12 +2968,11 @@ contract('TroveManager', async accounts => {
 
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints(dec(100, 18), price, 0)
 
     const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintICR,
-      price,
+      partialRedemptionHintNICR,
       bob,
       bob
     )
@@ -2995,7 +2983,7 @@ contract('TroveManager', async accounts => {
         dec(100, 18),
         firstRedemptionHint,
         partialRedemptionHint,
-        partialRedemptionHintICR,
+        partialRedemptionHintNICR,
         0,
         { from: bob })
     } catch (error) {
@@ -3019,12 +3007,11 @@ contract('TroveManager', async accounts => {
     const price = await priceFeed.getPrice()
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await hintHelpers.getRedemptionHints('101000000000000000000', price, 0)
 
     const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintICR,
-      price,
+      partialRedemptionHintNICR,
       bob,
       bob
     )
@@ -3035,7 +3022,7 @@ contract('TroveManager', async accounts => {
         dec(100, 18),
         firstRedemptionHint,
         partialRedemptionHint,
-        partialRedemptionHintICR,
+        partialRedemptionHintNICR,
         0,
         { from: bob })
     } catch (error) {

@@ -32,7 +32,8 @@ import {
   TroveCreationOptionalParams,
   TroveChangeWithFees,
   TroveClosureDetails,
-  CollateralGainTransferDetails
+  CollateralGainTransferDetails,
+  RedemptionOptionalParams
 } from "@liquity/lib-base";
 
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
@@ -335,16 +336,14 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     );
   }
 
-  private async findHintForCollateralRatio(
-    collateralRatio: Decimal,
+  private async findHintForNominalCollateralRatio(
+    nominalCollateralRatio: Decimal,
     optionalParams: HintedMethodOptionalParams
   ) {
-    const [price, numberOfTroves] = await Promise.all([
-      optionalParams.price ?? this.readableLiquity.getPrice(),
-      optionalParams.numberOfTroves ?? this.readableLiquity.getNumberOfTroves()
-    ]);
+    const numberOfTroves =
+      optionalParams.numberOfTroves ?? (await this.readableLiquity.getNumberOfTroves());
 
-    if (!numberOfTroves || collateralRatio.infinite) {
+    if (!numberOfTroves || nominalCollateralRatio.infinite) {
       return AddressZero;
     }
 
@@ -362,7 +361,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       numberOfTrials: number
     ) =>
       this.contracts.hintHelpers
-        .getApproxHint(collateralRatio.bigNumber, numberOfTrials, price.bigNumber, latestRandomSeed)
+        .getApproxHint(nominalCollateralRatio.bigNumber, numberOfTrials, latestRandomSeed)
         .then(({ latestRandomSeed, ...result }) => ({
           latestRandomSeed,
           results: [...results, result]
@@ -378,8 +377,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     // Picking the second address as hint results in better gas cost, especially when having to
     // traverse the list due to interference
     const [, hint] = await this.contracts.sortedTroves.findInsertPosition(
-      collateralRatio.bigNumber,
-      price.bigNumber,
+      nominalCollateralRatio.bigNumber,
       hintAddress,
       hintAddress
     );
@@ -387,37 +385,35 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return hint;
   }
 
-  protected async findHint(trove: Trove, { price, ...rest }: HintedMethodOptionalParams = {}) {
+  protected async findHint(trove: Trove, optionalParams: HintedMethodOptionalParams = {}) {
     if (trove instanceof TroveWithPendingRewards) {
       throw new Error("Rewards must be applied to this Trove");
     }
 
-    price = price ?? (await this.readableLiquity.getPrice());
-
-    return this.findHintForCollateralRatio(trove.collateralRatio(price), { price, ...rest });
+    return this.findHintForNominalCollateralRatio(trove.nominalCollateralRatio, optionalParams);
   }
 
   protected async findRedemptionHints(
     amount: Decimal,
-    { price, ...rest }: HintedMethodOptionalParams = {}
+    { price, ...hintOptionalParams }: RedemptionOptionalParams = {}
   ): Promise<[string, string, Decimal]> {
     price = price ?? (await this.readableLiquity.getPrice());
 
     const {
       firstRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     } = await this.contracts.hintHelpers.getRedemptionHints(
       amount.bigNumber,
       price.bigNumber,
       redeemMaxIterations
     );
 
-    const collateralRatio = new Decimal(partialRedemptionHintICR);
+    const collateralRatio = new Decimal(partialRedemptionHintNICR);
 
     return [
       firstRedemptionHint,
       collateralRatio.nonZero
-        ? await this.findHintForCollateralRatio(collateralRatio, { price, ...rest })
+        ? await this.findHintForNominalCollateralRatio(collateralRatio, hintOptionalParams)
         : AddressZero,
       collateralRatio
     ];
@@ -649,7 +645,7 @@ export class PopulatableEthersLiquity
 
   async redeemLUSD(
     amount: Decimalish,
-    optionalParams: HintedMethodOptionalParams = {},
+    optionalParams: RedemptionOptionalParams = {},
     overrides?: EthersTransactionOverrides
   ) {
     amount = Decimal.from(amount);

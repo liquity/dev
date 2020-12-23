@@ -17,9 +17,8 @@ type StabilityDepositActionProps = {
   dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
 
-const select = ({ trove, price, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
+const select = ({ trove, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
   trove,
-  price,
   lusdBalance,
   numberOfTroves
 });
@@ -32,7 +31,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   dispatch
 }) => {
-  const { trove, price, lusdBalance, numberOfTroves } = useLiquitySelector(select);
+  const { trove, lusdBalance, numberOfTroves } = useLiquitySelector(select);
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -89,7 +88,6 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
                 liquity.transferCollateralGainToTrove.bind(liquity, {
                   deposit: originalDeposit,
                   trove,
-                  price,
                   numberOfTroves
                 })
               ] as Action

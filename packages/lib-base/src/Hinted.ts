@@ -5,7 +5,6 @@ import { StabilityDeposit } from "./StabilityDeposit";
 import { Fees } from "./Fees";
 
 export type HintedMethodOptionalParams = {
-  price?: Decimal;
   numberOfTroves?: number;
 };
 
@@ -25,27 +24,30 @@ export type CollateralGainTransferOptionalParams = FeelessTroveAdjustmentOptiona
   deposit?: StabilityDeposit;
 };
 
+export type RedemptionOptionalParams = HintedMethodOptionalParams & {
+  price?: Decimal;
+};
+
 type AddParams<T, K extends keyof T, U extends unknown[]> = {
   [P in K]: T[P] extends (...args: infer A) => infer R ? (...args: [...A, ...U]) => R : never;
 };
 
-type SimpleHintedMethod = "redeemLUSD";
 type TroveCreationMethod = "openTrove";
 type FeelessTroveAdjustmentMethod = "depositCollateral" | "withdrawCollateral" | "repayLUSD";
 type TroveAdjustmentMethod = "borrowLUSD" | "adjustTrove";
 type CollateralGainTransferMethod = "transferCollateralGainToTrove";
+type RedemptionMethod = "redeemLUSD";
 
 type HintedMethod =
-  | SimpleHintedMethod
   | TroveCreationMethod
   | FeelessTroveAdjustmentMethod
   | TroveAdjustmentMethod
-  | CollateralGainTransferMethod;
+  | CollateralGainTransferMethod
+  | RedemptionMethod;
 
 type Hintable = { [P in HintedMethod]: (...args: never[]) => unknown };
 
 export type Hinted<T extends Hintable> = T &
-  AddParams<T, SimpleHintedMethod, [optionalParams?: HintedMethodOptionalParams]> &
   AddParams<T, TroveCreationMethod, [optionalParams?: TroveCreationOptionalParams]> &
   AddParams<
     T,
@@ -57,4 +59,5 @@ export type Hinted<T extends Hintable> = T &
     T,
     CollateralGainTransferMethod,
     [optionalParams?: CollateralGainTransferOptionalParams]
-  >;
+  > &
+  AddParams<T, RedemptionMethod, [optionalParams?: RedemptionOptionalParams]>;
