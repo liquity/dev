@@ -84,7 +84,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       issuance_M6 = toBN('41651488815552900').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
     })
 
-    it.only("withdrawFromSP(): reward term G does not update when no LQTY is issued", async () => {
+    it("withdrawFromSP(): reward term G does not update when no LQTY is issued", async () => {
       await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(10, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
 

@@ -2007,7 +2007,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(carol_ICR_Before, carol_ICR_After)
     })
 
-    it.only("withdrawFromSP(): succeeds when amount is 0 and system has an undercollateralized trove", async () => {
+    it("withdrawFromSP(): succeeds when amount is 0 and system has an undercollateralized trove", async () => {
       await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(10, 'ether') })
 
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A })

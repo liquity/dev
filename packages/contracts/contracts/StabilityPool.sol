@@ -755,6 +755,8 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // Send LUSD to user and decrease LUSD in Pool
     function _sendLUSDToDepositor(address _depositor, uint LUSDWithdrawal) internal {
+        if (LUSDWithdrawal == 0) {return;}
+        
         lusdToken.returnFromPool(address(this), _depositor, LUSDWithdrawal);
         _decreaseLUSD(LUSDWithdrawal);
     }
