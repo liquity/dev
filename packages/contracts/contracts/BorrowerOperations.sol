@@ -215,7 +215,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         (L.collChange, L.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
 
         L.rawDebtChange = _debtChange;
-        if (_isDebtIncrease && _debtChange > 0) {
+        if (_isDebtIncrease) {
             // Decay the baseRate and get the fee
             troveManager.decayBaseRateFromBorrowing();
             L.LUSDFee = troveManager.getBorrowingFee(_debtChange);
@@ -236,8 +236,9 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         if (isWithdrawal) { 
             if (!_checkRecoveryMode()) {
                 _requireICRisAboveMCR(L.newICR);
-                if (_isDebtIncrease) { // collateral withdrawals that would trigger Recovery Mode are permitted, debt increases not
-                    _requireNewTCRisAboveCCR(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+                uint newTCR = _getNewTCRFromTroveChange(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+                if (newTCR < CCR) {
+                    (L.collChange, L.rawDebtChange) = _getMaxTroveAdjustment(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
                 }
             } else {
                 require(L.newICR >= L.oldICR, "BorrowerOps: Cannot decrease your Trove's ICR in Recovery Mode");
@@ -470,10 +471,52 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint totalDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
 
         totalColl = _isCollIncrease ? totalColl.add(_collChange) : totalColl.sub(_collChange);
-        totalDebt = _isDebtIncrease ? totalDebt.add(_debtChange) : totalDebt = totalDebt.sub(_debtChange);
+        totalDebt = _isDebtIncrease ? totalDebt.add(_debtChange) : totalDebt.sub(_debtChange);
 
         uint newTCR = LiquityMath._computeCR(totalColl, totalDebt, _price);
         return newTCR;
+    }
+
+    function _getMaxTroveAdjustment
+    (
+        uint _collChange,
+        bool _isCollIncrease,
+        uint _debtChange,
+        bool _isDebtIncrease,
+        uint _price
+    )
+        internal
+        view
+        returns (uint collChange, uint debtChange)
+    {
+        uint totalColl = activePool.getETH().add(defaultPool.getETH());
+        uint totalDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
+        
+        bool isCollChange = _collChange > 0;
+        bool isDebtChange = _debtChange > 0;
+        collChange = _collChange; 
+        debtChange = _debtChange;
+
+        if (!_isDebtIncrease && isDebtChange) {
+            totalDebt = totalDebt.sub(_debtChange); 
+        }
+        if (isCollChange) {
+            if (!_isCollIncrease) {
+                uint maxCollSub = totalColl.mul(_price).sub(totalDebt.mul(CCR)).div(_price);
+                if (_collChange > maxCollSub) {
+                    collChange = maxCollSub;
+                    totalColl = totalColl.sub(collChange);
+                }
+            } else {
+                totalColl = totalColl.add(_collChange);
+            }
+        }
+        if (_isDebtIncrease && isDebtChange) {
+            uint maxDebtMint = totalColl.mul(_price).div(CCR).sub(totalDebt);
+            if (_debtChange > maxDebtMint) {
+                debtChange = maxDebtMint;
+            }
+        }
     }
 
     function getCompositeDebt(uint _debt) external pure override returns (uint) {
