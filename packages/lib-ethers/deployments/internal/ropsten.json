@@ -15,6 +15,7 @@
     "priceFeed": "0x9b5b1e076f5321314FaD499b3a847e5833492F10",
     "sortedTroves": "0x0b9965bc54cB6FC0b84D09CB1143AAdc26141A74",
     "stabilityPool": "0xB181a8cDA30c68F6a9b998471dc45a086879E8aC",
+    "gasPool": "",
     "collSurplusPool": "",
     "priceFeedTestnet": ""
   },

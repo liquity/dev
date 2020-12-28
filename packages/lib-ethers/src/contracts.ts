@@ -26,6 +26,7 @@ import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
+import gasPoolAbi from "../abi/GasPool.json";
 
 import devOrNull from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
@@ -49,7 +50,8 @@ import {
   PriceFeed,
   PriceFeedTestnet,
   SortedTroves,
-  StabilityPool
+  StabilityPool,
+  GasPool
 } from "../types";
 
 export interface TypedLogDescription<T> extends Omit<LogDescription, "args"> {
@@ -66,8 +68,8 @@ type TypeSafeContract<T> = Pick<
   } extends {
     [_ in keyof T]: infer U;
   }
-    ? U
-    : never
+  ? U
+  : never
 >;
 
 type EstimatedContractFunction<R = unknown, A extends unknown[] = unknown[], O = Overrides> = (
@@ -86,8 +88,8 @@ export type TypedContract<T, U> = TypeSafeContract<T> &
 
     readonly estimateAndPopulate: {
       [P in keyof U]: U[P] extends (...args: [...infer A, infer O | undefined]) => unknown
-        ? EstimatedContractFunction<PopulatedTransaction, A, O>
-        : never;
+      ? EstimatedContractFunction<PopulatedTransaction, A, O>
+      : never;
     };
   };
 
@@ -154,6 +156,7 @@ export interface LiquityContracts {
   priceFeed: PriceFeed | PriceFeedTestnet;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
+  gasPool: GasPool;
 }
 
 export const priceFeedIsTestnet = (
@@ -179,6 +182,7 @@ const getAbi = (priceFeedIsTestnet: boolean): LiquityContractAbis => ({
   priceFeed: priceFeedIsTestnet ? priceFeedTestnetAbi : priceFeedAbi,
   sortedTroves: sortedTrovesAbi,
   stabilityPool: stabilityPoolAbi,
+  gasPool: gasPoolAbi,
   collSurplusPool: collSurplusPoolAbi
 });
 
