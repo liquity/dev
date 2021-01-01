@@ -1,7 +1,7 @@
 
 //const { Contract } = require('@ethersproject/contracts');
 const DSProxy = artifacts.require("./DSProxy.sol");
-const ProxyScript = artifacts.require("./ProxyScript.sol");
+const ProxyScript = artifacts.require("./BasicProxy.sol");
 const ProxyFactory = artifacts.require("./DSProxyFactory.sol");
 const ProxyRegistry = artifacts.require("./ProxyRegistry.sol");
 const deploymentHelper = require("../utils/deploymentHelpers.js")
@@ -65,8 +65,11 @@ contract('Proxy', async accounts => {
         web3Proxy = new web3.eth.Contract(DSProxy.abi, proxyAddr)
         //web3Proxy = new Contract(DSProxy.abi, proxyAddr)
     })
-    describe('Proxy internal testing contract', async accounts => { 
-        it("try basic script", async () => {
+    describe('Proxy integration test', async accounts => { 
+        // should fail unauthorized caller closing Trove
+        // should fail caller authorized but not for closing
+        
+        it("should top up deposit with gains", async () => {
             // this still works xD 
             // await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
             
@@ -102,6 +105,10 @@ contract('Proxy', async accounts => {
             // changing ETH and debt trackers in ActivePool
             // and also increasing its raw ETH balance? 
         })
+        // open two troves
+        // price drop, one gets liquidated
+        // withdraw collateral surplus, draw more debt, deposit
+
     })
 
 })

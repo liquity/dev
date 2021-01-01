@@ -22,7 +22,7 @@ contract LiquityBase {
     uint constant public R_MCR = 3000000000000000000; // 300%
 
     // Critical system collateral ratio. If the system's total collateral ratio (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public  CCR = 1500000000000000000; // 150%
+    uint constant public CCR = 1500000000000000000; // 150%
 
     // Amount of LUSD to be locked in gas pool on opening troves
     uint constant public LUSD_GAS_COMPENSATION = 10e18;

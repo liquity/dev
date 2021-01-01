@@ -1,9 +1,10 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL3
+// Adapted from https://github.com/makerdao/proxy-registry/blob/master/src/ProxyRegistry.sol
 
 pragma solidity 0.6.11;
 
-import './DSProxyFactory.sol';
-import './DSProxy.sol';
+import '../Dependencies/DappSys/DSProxyFactory.sol';
+import '../Dependencies/DappSys/DSProxy.sol';
 
 // This Registry deploys new proxy instances through 
 // DSProxyFactory.build(address) and keeps a registry 

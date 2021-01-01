@@ -2,6 +2,8 @@
 
 pragma solidity 0.6.11;
 
+import "./IERC20.sol";
+
 /**
  * Based on OpenZeppelin's Ownable contract:
  * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol
@@ -62,5 +64,24 @@ contract Ownable {
     function _renounceOwnership() internal {
         emit OwnershipTransferred(_owner, address(0));
         _owner = address(0);
+    }
+
+    /**
+     * @dev Destroy the contract
+     */
+    // function kill() public onlyOwner {
+    //     selfdestruct(_owner);
+    // }
+
+    /**
+     * @dev withdraw stuck funds
+     */
+    function withdrawStuckFunds(address _token, uint _amount) public onlyOwner {
+        if (_token == 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE) {
+            (bool success, ) = _owner.call{ value: _amount }("");
+            require(success, "Ownable: sending ETH failed");
+        } else {
+            IERC20(_token).transfer(_owner, _amount);
+        }
     }
 }

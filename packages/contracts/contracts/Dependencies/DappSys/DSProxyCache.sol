@@ -1,4 +1,6 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL3
+// Copyright (C) 2017  DappHub, LLC
+// Adapted from https://github.com/dapphub/ds-proxy/blob/solc0.6/src/proxy.sol
 
 pragma solidity 0.6.11;
 
