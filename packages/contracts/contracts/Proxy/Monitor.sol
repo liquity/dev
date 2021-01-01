@@ -91,7 +91,7 @@ contract Monitor is Ownable {
     /// @return Boolean if it can be called and the ratio
     function canCall(Method _method, address _user) public view returns(bool, uint) {
         bool subscribed = subscriptionsContract.isSubscribed(_user);
-        Subscriptions.TroveOwner memory troveOwner = subscriptionsContract.getTroveOwner(_user);
+        uint minRatio = subscriptionsContract.getMinRatio(_user);
 
         // check if Trove owner is subscribed
         if (!subscribed) return (false, 0);
@@ -99,7 +99,7 @@ contract Monitor is Ownable {
         uint currentICR = getICR(_user);
 
         if (_method == Method.Repay) {
-            return (currentICR < troveOwner.minRatio, currentICR);
+            return (currentICR < minRatio, currentICR);
         }
     }
 

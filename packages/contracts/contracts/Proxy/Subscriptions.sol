@@ -2,7 +2,7 @@
 // Adapted from https://github.com/DecenterApps/defisaver-contracts/
 
 pragma solidity 0.6.11;
-pragma experimental ABIEncoderV2;
+// pragma experimental ABIEncoderV2;
 
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
@@ -31,9 +31,10 @@ contract Subscriptions is Ownable {
     /// @dev Returns subscribtion information about a user
     /// @param _user The actual address that owns the Trove
     /// @return Subscription information about the user if exists
-    function getTroveOwner(address _user) public view returns (TroveOwner memory) {
+    function getMinRatio(address _user) public view returns (uint) {
         SubPosition storage subInfo = subscribersPos[_user];
-        return subscribers[subInfo.arrPos];
+        TroveOwner storage trove = subscribers[subInfo.arrPos];
+        return trove.minRatio;
     }
 
     /// @dev Checks if the user is subscribed
@@ -46,9 +47,9 @@ contract Subscriptions is Ownable {
 
     /// @notice Helper method to return all the subscribed Troves
     /// @return List of all subscribers
-    function getSubscribers() public view returns (TroveOwner[] memory) {
-        return subscribers;
-    }
+    // function getSubscribers() public view returns (TroveOwner[] memory) {
+    //     return subscribers;
+    // }
 
     /// @dev Called by the DSProxy contract which owns the Trove
     /// @notice Adds the users poistion in the list of subscriptions so it can be monitored
