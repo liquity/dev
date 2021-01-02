@@ -21,13 +21,31 @@ export type SentLiquityTransaction<S = unknown, T extends LiquityReceipt = Liqui
 
 export type PendingReceipt = { status: "pending" };
 
+export const pendingReceipt: PendingReceipt = { status: "pending" };
+
 export type FailedReceipt<R = unknown> = { status: "failed"; rawReceipt: R };
+
+export const failedReceipt = <R>(rawReceipt: R): FailedReceipt<R> => ({
+  status: "failed",
+  rawReceipt
+});
 
 export type SuccessfulReceipt<R = unknown, D = unknown> = {
   status: "succeeded";
   rawReceipt: R;
   details: D;
 };
+
+export const successfulReceipt = <R, D>(
+  rawReceipt: R,
+  details: D,
+  toString?: () => string
+): SuccessfulReceipt<R, D> => ({
+  status: "succeeded",
+  rawReceipt,
+  details,
+  ...(toString ? { toString } : {})
+});
 
 export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
 export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
@@ -61,8 +79,16 @@ export type RedemptionDetails = {
   fee: Decimal;
 };
 
-export type CollateralGainTransferDetails = {
+export type StabilityPoolGainsWithdrawalDetails = {
+  lusdLoss: Decimal;
+  newLUSDDeposit: Decimal;
   collateralGain: Decimal;
+  lqtyReward: Decimal;
+};
+
+// export type StabilityDepositChangeDetails = StabilityPoolGainsWithdrawalDetails;
+
+export type CollateralGainTransferDetails = StabilityPoolGainsWithdrawalDetails & {
   newTrove: Trove;
 };
 
