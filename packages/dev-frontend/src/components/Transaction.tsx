@@ -1,19 +1,15 @@
-import React, { useState, useContext, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useContext, useEffect, useCallback } from "react";
 import { Flex, Text, Box } from "theme-ui";
-import { Provider, TransactionResponse } from "@ethersproject/abstract-provider";
+import { Provider, TransactionResponse, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { hexDataSlice, hexDataLength } from "@ethersproject/bytes";
 import { defaultAbiCoder } from "@ethersproject/abi";
 
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-import { SentLiquityTransaction } from "@liquity/lib-base";
-import {
-  EthersTransactionOverrides,
-  parseLogs,
-  logDescriptionToString,
-  contractsToInterfaces
-} from "@liquity/lib-ethers";
+import { EthersTransactionOverrides } from "@liquity/lib-ethers";
+import { SentLiquityTransaction, LiquityReceipt } from "@liquity/lib-base";
+
 import { useLiquity } from "../hooks/LiquityContext";
 import { Tooltip, TooltipProps, Hoverable } from "./Tooltip";
 import { Icon } from "./Icon";
@@ -63,17 +59,14 @@ type TransactionCancelled = {
 };
 
 type TransactionWaitingForConfirmations = {
-  type: "waitingForConfirmations";
+  type: "waitingForConfirmation";
   id: string;
-  tx: TransactionResponse;
-  confirmations: number;
-  numberOfConfirmationsToWait: number;
+  tx: SentTransaction;
 };
 
 type TransactionConfirmed = {
   type: "confirmed";
   id: string;
-  numberOfConfirmationsToWait: number;
 };
 
 type TransactionState =
@@ -126,9 +119,14 @@ type ButtonlikeProps = {
   onClick?: () => void;
 };
 
+type SentTransaction = SentLiquityTransaction<
+  TransactionResponse,
+  LiquityReceipt<TransactionReceipt>
+>;
+
 export type TransactionFunction = (
   overrides?: EthersTransactionOverrides
-) => Promise<SentLiquityTransaction<TransactionResponse>>;
+) => Promise<SentTransaction>;
 
 type TransactionProps<C> = {
   id: string;
@@ -136,7 +134,6 @@ type TransactionProps<C> = {
   tooltipPlacement?: TooltipProps<C>["placement"];
   requires?: readonly (readonly [boolean, string])[];
   send: TransactionFunction;
-  numberOfConfirmationsToWait?: number;
   children: C;
 };
 
@@ -146,14 +143,10 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
   tooltipPlacement,
   requires,
   send,
-  numberOfConfirmationsToWait = 1,
   children
 }: TransactionProps<C>) {
   const [transactionState, setTransactionState] = useTransactionState();
-  const { devChain } = useLiquity();
   const trigger = React.Children.only<C>(children);
-
-  numberOfConfirmationsToWait = devChain ? 1 : numberOfConfirmationsToWait;
 
   const sendTransaction = useCallback(async () => {
     setTransactionState({ type: "waitingForApproval", id });
@@ -166,11 +159,9 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
       });
 
       setTransactionState({
-        type: "waitingForConfirmations",
+        type: "waitingForConfirmation",
         id,
-        tx: tx.rawSentTransaction,
-        confirmations: 0,
-        numberOfConfirmationsToWait
+        tx
       });
     } catch (error) {
       if (hasMessage(error) && error.message.includes("User denied transaction signature")) {
@@ -185,7 +176,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
         });
       }
     }
-  }, [send, id, setTransactionState, numberOfConfirmationsToWait]);
+  }, [send, id, setTransactionState]);
 
   const failureReasons = (requires || [])
     .filter(([requirement]) => !requirement)
@@ -193,7 +184,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
 
   if (
     transactionState.type === "waitingForApproval" ||
-    transactionState.type === "waitingForConfirmations"
+    transactionState.type === "waitingForConfirmation"
   ) {
     failureReasons.push("You must wait for confirmation");
   }
@@ -251,33 +242,26 @@ const Donut = React.memo(
 
 type TransactionProgressDonutProps = {
   state: TransactionState["type"];
-  confirmations?: number;
-  numberOfConfirmationsToWait?: number;
 };
 
-const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({
-  state,
-  confirmations,
-  numberOfConfirmationsToWait
-}) => {
+const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({ state }) => {
   const [value, setValue] = useState(0);
-  const maxValue = numberOfConfirmationsToWait || 1;
-  const targetValue = (confirmations ?? 0) + 1;
+  const maxValue = 1;
 
   useEffect(() => {
     if (state === "confirmed") {
       setTimeout(() => setValue(maxValue), 40);
     } else {
-      setTimeout(() => setValue(targetValue - 1 / 3), 20);
+      setTimeout(() => setValue(maxValue * 0.67), 20);
     }
-  }, [state, targetValue, maxValue]);
+  }, [state]);
 
   return state === "confirmed" ? (
-    <Donut value={value} maxValue={maxValue} {...fastProgress}>
+    <Donut {...{ value, maxValue, ...fastProgress }}>
       <Icon name="check" color="white" size="lg" />
     </Donut>
   ) : state === "failed" || state === "cancelled" ? (
-    <Donut value={0} maxValue={maxValue} {...fastProgress}>
+    <Donut value={0} {...{ maxValue, ...fastProgress }}>
       <Icon name="times" color="white" size="lg" />
     </Donut>
   ) : (
@@ -288,137 +272,87 @@ const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({
 };
 
 export const TransactionMonitor: React.FC = () => {
-  const { provider, contracts, account } = useLiquity();
+  const { provider } = useLiquity();
   const [transactionState, setTransactionState] = useTransactionState();
 
-  const interfaces = useMemo(() => contractsToInterfaces(contracts), [contracts]);
-  const names = useMemo(
-    () => ({
-      [account]: "user",
-      ...Object.fromEntries(Object.entries(interfaces).map(([address, [name]]) => [address, name]))
-    }),
-    [account, interfaces]
-  );
-
   const id = transactionState.type !== "idle" ? transactionState.id : undefined;
-
-  const tx = transactionState.type === "waitingForConfirmations" ? transactionState.tx : undefined;
-
-  const numberOfConfirmationsToWait =
-    transactionState.type === "waitingForConfirmations" || transactionState.type === "confirmed"
-      ? transactionState.numberOfConfirmationsToWait
-      : undefined;
-
-  const confirmations =
-    transactionState.type === "waitingForConfirmations" ? transactionState.confirmations : undefined;
+  const tx = transactionState.type === "waitingForConfirmation" ? transactionState.tx : undefined;
 
   useEffect(() => {
-    if (id && tx && numberOfConfirmationsToWait) {
+    if (id && tx) {
       let cancelled = false;
       let finished = false;
-      let dumpedLogs = false;
-      let confirmations = 0;
 
-      const waitForConfirmations = async () => {
+      const txHash = tx.rawSentTransaction.hash;
+
+      const waitForConfirmation = async () => {
         try {
-          while (confirmations < numberOfConfirmationsToWait) {
-            const receipt = await tx.wait(Math.min(confirmations + 1, numberOfConfirmationsToWait));
+          const receipt = await tx.waitForReceipt();
+
+          if (cancelled) {
+            return;
+          }
+
+          const { confirmations } = receipt.rawReceipt;
+          const blockNumber = receipt.rawReceipt.blockNumber + confirmations - 1;
+          console.log(`Block #${blockNumber} ${confirmations}-confirms tx ${txHash}`);
+
+          if (receipt.status === "succeeded") {
+            console.log(`${receipt}`);
+
+            setTransactionState({
+              type: "confirmed",
+              id
+            });
+          } else {
+            const reason = await tryToGetRevertReason(provider, txHash);
 
             if (cancelled) {
               return;
             }
 
-            if (receipt.blockNumber !== undefined && receipt.confirmations !== undefined) {
-              const blockNumber = receipt.blockNumber + receipt.confirmations - 1;
-              confirmations = receipt.confirmations;
-              console.log(`Block #${blockNumber} ${confirmations}-confirms tx ${tx.hash}`);
+            console.error(`Tx ${txHash} failed`);
+            if (reason) {
+              console.error(`Revert reason: ${reason}`);
             }
 
-            if (receipt.logs && !dumpedLogs) {
-              const [parsedLogs, unparsedLogs] = parseLogs(receipt.logs, interfaces);
-
-              if (parsedLogs.length > 0) {
-                console.log(
-                  `Logs of tx ${tx.hash}:\n` +
-                    parsedLogs
-                      .map(
-                        ([contractName, logDescription]) =>
-                          `  ${contractName}.${logDescriptionToString(logDescription, names)}`
-                      )
-                      .join("\n")
-                );
-              }
-
-              if (unparsedLogs.length > 0) {
-                console.warn("Warning: not all logs were parsed. Unparsed logs:");
-                console.warn(unparsedLogs);
-              }
-
-              dumpedLogs = true;
-            }
-
-            if (confirmations < numberOfConfirmationsToWait) {
-              setTransactionState({
-                type: "waitingForConfirmations",
-                id,
-                tx,
-                numberOfConfirmationsToWait,
-                confirmations
-              });
-            } else {
-              setTransactionState({
-                type: "confirmed",
-                id,
-                numberOfConfirmationsToWait
-              });
-            }
+            setTransactionState({
+              type: "failed",
+              id,
+              error: new Error(reason ? `Reverted: ${reason}` : "Failed")
+            });
           }
         } catch (rawError) {
           if (cancelled) {
             return;
           }
 
-          console.error(`Tx ${tx.hash} failed`);
+          console.error(`Failed to get receipt for tx ${txHash}`);
           console.error(rawError);
-
-          const reason = await tryToGetRevertReason(provider, tx.hash!);
-
-          if (cancelled) {
-            return;
-          }
 
           setTransactionState({
             type: "failed",
             id,
-            error: Error(reason ? `Reverted: ${reason}` : "Failed")
+            error: new Error("Failed")
           });
         }
 
-        console.log(`Finish monitoring tx ${tx.hash}`);
+        console.log(`Finish monitoring tx ${txHash}`);
         finished = true;
       };
 
-      console.log(`Start monitoring tx ${tx.hash}`);
-      waitForConfirmations();
+      console.log(`Start monitoring tx ${txHash}`);
+      waitForConfirmation();
 
       return () => {
         if (!finished) {
           setTransactionState({ type: "idle" });
-          console.log(`Cancel monitoring tx ${tx.hash}`);
+          console.log(`Cancel monitoring tx ${txHash}`);
           cancelled = true;
         }
       };
     }
-  }, [
-    provider,
-    account,
-    interfaces,
-    names,
-    id,
-    tx,
-    numberOfConfirmationsToWait,
-    setTransactionState
-  ]);
+  }, [provider, id, tx, setTransactionState]);
 
   useEffect(() => {
     if (
@@ -466,14 +400,11 @@ export const TransactionMonitor: React.FC = () => {
       }}
     >
       <Box sx={{ mr: 3, width: "40px", height: "40px" }}>
-        <TransactionProgressDonut
-          state={transactionState.type}
-          {...{ confirmations, numberOfConfirmationsToWait }}
-        />
+        <TransactionProgressDonut state={transactionState.type} />
       </Box>
 
       <Text sx={{ fontSize: 3, color: "white" }}>
-        {transactionState.type === "waitingForConfirmations"
+        {transactionState.type === "waitingForConfirmation"
           ? "Waiting for confirmation"
           : transactionState.type === "cancelled"
           ? "Cancelled"

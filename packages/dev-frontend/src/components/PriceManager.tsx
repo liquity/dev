@@ -50,7 +50,6 @@ export const PriceManager: React.FC = () => {
                 }
                 return liquity.setPrice(Decimal.from(editedPrice), overrides);
               }}
-              numberOfConfirmationsToWait={1}
             >
               <Button variant="icon">
                 <Icon name="chart-line" size="lg" />
