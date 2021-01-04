@@ -68,6 +68,16 @@ contract('Proxy', async accounts => {
         )
         SubscripionProxy.setAsDeployed(subscriptionProxy)
         
+        scriptProxy = await SaverProxy.new(borrowerOperations.address)
+        SaverProxy.setAsDeployed(scriptProxy)
+
+        monitor = await Monitor.new(
+            monitorProxy.address, 
+            subscriptions.address, 
+            scriptProxy.address
+        )
+        Monitor.setAsDeployed(monitor)
+        
         // We must deploy DSProxyFactory because we call the build function
         // inside it in order to create DSproxies on behalf of Trove owners
         factory = await ProxyFactory.new()
@@ -75,12 +85,6 @@ contract('Proxy', async accounts => {
 
         registry = await ProxyRegistry.new(factory.address)
         ProxyRegistry.setAsDeployed(registry)
-
-        scriptProxy = await SaverProxy.new(borrowerOperations.address)
-        SaverProxy.setAsDeployed(scriptProxy)
-
-        monitor = await Monitor.new(monitorProxy.address, subscriptions.address, scriptProxy.address)
-        Monitor.setAsDeployed(monitor)
         
         const proxyInfo = await getProxy(alice, registry)
         const proxyAddr = proxyInfo.proxyAddr;
