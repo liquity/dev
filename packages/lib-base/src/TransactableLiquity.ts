@@ -2,6 +2,7 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { proxify } from "./utils";
 import { Trove, TroveAdjustment, TroveClosure, TroveCreation } from "./Trove";
+import { StabilityDepositChange } from "./StabilityDeposit";
 
 export type PopulatedLiquityTransaction<
   P = unknown,
@@ -86,7 +87,9 @@ export type StabilityPoolGainsWithdrawalDetails = {
   lqtyReward: Decimal;
 };
 
-// export type StabilityDepositChangeDetails = StabilityPoolGainsWithdrawalDetails;
+export type StabilityDepositChangeDetails = StabilityPoolGainsWithdrawalDetails & {
+  change: StabilityDepositChange<Decimal>;
+};
 
 export type CollateralGainTransferDetails = StabilityPoolGainsWithdrawalDetails & {
   newTrove: Trove;
@@ -107,9 +110,12 @@ export interface TransactableLiquity {
   liquidate(address: string): Promise<LiquidationDetails>;
   liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;
 
-  depositLUSDInStabilityPool(amount: Decimalish, frontEndTag?: string): Promise<void>;
-  withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<void>;
-  withdrawGainsFromStabilityPool(): Promise<void>;
+  depositLUSDInStabilityPool(
+    amount: Decimalish,
+    frontEndTag?: string
+  ): Promise<StabilityDepositChangeDetails>;
+  withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
+  withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
   transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
   sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;

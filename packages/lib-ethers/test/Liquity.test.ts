@@ -334,7 +334,15 @@ describe("EthersLiquity", () => {
 
     it("should make a small stability deposit", async () => {
       await liquity.openTrove({ depositCollateral: 1, borrowLUSD: 90 });
-      await liquity.depositLUSDInStabilityPool(10);
+      const details = await liquity.depositLUSDInStabilityPool(10);
+
+      expect(details).to.deep.equal({
+        lusdLoss: Decimal.from(0),
+        newLUSDDeposit: Decimal.from(10),
+        collateralGain: Decimal.from(0),
+        lqtyReward: Decimal.from(0),
+        change: { depositLUSD: Decimal.from(10) }
+      });
     });
 
     it("other user should make a Trove with very low ICR", async () => {
@@ -408,15 +416,19 @@ describe("EthersLiquity", () => {
     });
 
     it("should transfer the gains to the Trove", async () => {
-      const { collateralGain, newTrove } = await liquity.transferCollateralGainToTrove();
-      expect(`${collateralGain}`).to.equal("0.0569701282051282");
+      const details = await liquity.transferCollateralGainToTrove();
 
-      expect(newTrove).to.deep.equal(
-        new Trove({
+      expect(details).to.deep.equal({
+        lusdLoss: Decimal.from(10),
+        newLUSDDeposit: Decimal.from(0),
+        collateralGain: Decimal.from("0.0569701282051282"),
+        lqtyReward: Decimal.from(0),
+
+        newTrove: new Trove({
           collateral: "1.222183499999999995", // ~ 1 + 0.2233 * 0.995
           debt: 129
         })
-      );
+      });
 
       const deposit = await liquity.getStabilityDeposit();
       expect(deposit.isEmpty).to.be.true;

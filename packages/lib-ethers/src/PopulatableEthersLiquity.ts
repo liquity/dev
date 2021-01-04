@@ -2,7 +2,12 @@ import assert from "assert";
 
 import { AddressZero } from "@ethersproject/constants";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
-import { Provider, TransactionResponse, TransactionReceipt } from "@ethersproject/abstract-provider";
+import {
+  Provider,
+  TransactionResponse,
+  TransactionReceipt,
+  Log
+} from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Contract, PopulatedTransaction } from "@ethersproject/contracts";
 
@@ -36,7 +41,9 @@ import {
   RedemptionOptionalParams,
   failedReceipt,
   pendingReceipt,
-  successfulReceipt
+  successfulReceipt,
+  StabilityPoolGainsWithdrawalDetails,
+  StabilityDepositChangeDetails
 } from "@liquity/lib-base";
 
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
@@ -206,10 +213,10 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   }
 
   protected wrapTroveChangeWithFees<T>(params: T, rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction(
+    return new PopulatedEthersTransaction<TroveChangeWithFees<T>>(
       rawPopulatedTransaction,
 
-      ({ logs }): TroveChangeWithFees<T> => {
+      ({ logs }) => {
         const isOpenLoan = this.contracts.borrowerOperations.extractEvents(logs, "TroveCreated")
           .length;
 
@@ -242,10 +249,10 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   protected async wrapTroveClosure(rawPopulatedTransaction: PopulatedTransaction) {
     const userAddress = await this.signer.getAddress();
 
-    return new PopulatedEthersTransaction(
+    return new PopulatedEthersTransaction<TroveClosureDetails>(
       rawPopulatedTransaction,
 
-      ({ logs }): TroveClosureDetails => {
+      ({ logs }) => {
         const [repayLUSD] = this.contracts.lusdToken
           .extractEvents(logs, "Transfer")
           .filter(({ args: { from, to } }) => from === userAddress && to === AddressZero)
@@ -267,10 +274,10 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   }
 
   protected wrapLiquidation(rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction(
+    return new PopulatedEthersTransaction<LiquidationDetails>(
       rawPopulatedTransaction,
 
-      ({ logs }): LiquidationDetails => {
+      ({ logs }) => {
         const fullyLiquidated = this.contracts.troveManager
           .extractEvents(logs, "TroveLiquidated")
           .map(({ args: { _borrower } }) => _borrower);
@@ -312,20 +319,95 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   }
 
   protected wrapRedemption(rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction(
+    return new PopulatedEthersTransaction<RedemptionDetails>(
       rawPopulatedTransaction,
 
       ({ logs }) =>
-        this.contracts.troveManager.extractEvents(logs, "Redemption").map(
-          ({
-            args: { _ETHSent, _ETHFee, _actualLUSDAmount, _attemptedLUSDAmount }
-          }): RedemptionDetails => ({
+        this.contracts.troveManager
+          .extractEvents(logs, "Redemption")
+          .map(({ args: { _ETHSent, _ETHFee, _actualLUSDAmount, _attemptedLUSDAmount } }) => ({
             attemptedLUSDAmount: new Decimal(_attemptedLUSDAmount),
             actualLUSDAmount: new Decimal(_actualLUSDAmount),
             collateralReceived: new Decimal(_ETHSent),
             fee: new Decimal(_ETHFee)
-          })
-        )[0],
+          }))[0],
+
+      this.signer,
+      this.contracts
+    );
+  }
+
+  private extractStabilityPoolGainsWithdrawalDetails(
+    logs: Log[]
+  ): StabilityPoolGainsWithdrawalDetails {
+    const [newLUSDDeposit] = this.contracts.stabilityPool
+      .extractEvents(logs, "UserDepositChanged")
+      .map(({ args: { _newDeposit } }) => new Decimal(_newDeposit));
+
+    const [[collateralGain, lusdLoss]] = this.contracts.stabilityPool
+      .extractEvents(logs, "ETHGainWithdrawn")
+      .map(({ args: { _ETH, _LUSDLoss } }) => [new Decimal(_ETH), new Decimal(_LUSDLoss)]);
+
+    const [lqtyReward] = this.contracts.stabilityPool
+      .extractEvents(logs, "LQTYPaidToDepositor")
+      .map(({ args: { _LQTY } }) => new Decimal(_LQTY));
+
+    return {
+      lusdLoss,
+      newLUSDDeposit,
+      collateralGain,
+      lqtyReward
+    };
+  }
+
+  protected wrapStabilityPoolGainsWithdrawal(rawPopulatedTransaction: PopulatedTransaction) {
+    return new PopulatedEthersTransaction<StabilityPoolGainsWithdrawalDetails>(
+      rawPopulatedTransaction,
+      ({ logs }) => this.extractStabilityPoolGainsWithdrawalDetails(logs),
+      this.signer,
+      this.contracts
+    );
+  }
+
+  protected wrapStabilityDepositTopup(
+    change: { depositLUSD: Decimal },
+    rawPopulatedTransaction: PopulatedTransaction
+  ) {
+    return new PopulatedEthersTransaction<StabilityDepositChangeDetails>(
+      rawPopulatedTransaction,
+
+      ({ logs }) => ({
+        ...this.extractStabilityPoolGainsWithdrawalDetails(logs),
+        change
+      }),
+
+      this.signer,
+      this.contracts
+    );
+  }
+
+  protected async wrapStabilityDepositWithdrawal(rawPopulatedTransaction: PopulatedTransaction) {
+    const userAddress = await this.signer.getAddress();
+
+    return new PopulatedEthersTransaction<StabilityDepositChangeDetails>(
+      rawPopulatedTransaction,
+
+      ({ logs }) => {
+        const gainsWithdrawalDetails = this.extractStabilityPoolGainsWithdrawalDetails(logs);
+
+        const [withdrawLUSD] = this.contracts.lusdToken
+          .extractEvents(logs, "Transfer")
+          .filter(
+            ({ args: { from, to } }) =>
+              from === this.contracts.stabilityPool.address && to === userAddress
+          )
+          .map(({ args: { value } }) => new Decimal(value));
+
+        return {
+          ...gainsWithdrawalDetails,
+          change: { withdrawLUSD, withdrawAllLUSD: gainsWithdrawalDetails.newLUSDDeposit.isZero }
+        };
+      },
 
       this.signer,
       this.contracts
@@ -333,22 +415,10 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   }
 
   protected wrapCollateralGainTransfer(rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction(
+    return new PopulatedEthersTransaction<CollateralGainTransferDetails>(
       rawPopulatedTransaction,
 
-      ({ logs }): CollateralGainTransferDetails => {
-        const [newLUSDDeposit] = this.contracts.stabilityPool
-          .extractEvents(logs, "UserDepositChanged")
-          .map(({ args: { _newDeposit } }) => new Decimal(_newDeposit));
-
-        const [[collateralGain, lusdLoss]] = this.contracts.stabilityPool
-          .extractEvents(logs, "ETHGainWithdrawn")
-          .map(({ args: { _ETH, _LUSDLoss } }) => [new Decimal(_ETH), new Decimal(_LUSDLoss)]);
-
-        const [lqtyReward] = this.contracts.stabilityPool
-          .extractEvents(logs, "LQTYPaidToDepositor")
-          .map(({ args: { _LQTY } }) => new Decimal(_LQTY));
-
+      ({ logs }) => {
         const [newTrove] = this.contracts.borrowerOperations
           .extractEvents(logs, "TroveUpdated")
           .map(
@@ -357,10 +427,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           );
 
         return {
-          lusdLoss,
-          newLUSDDeposit,
-          collateralGain,
-          lqtyReward,
+          ...this.extractStabilityPoolGainsWithdrawalDetails(logs),
           newTrove
         };
       },
@@ -608,18 +675,21 @@ export class PopulatableEthersLiquity
     frontEndTag = AddressZero,
     overrides?: EthersTransactionOverrides
   ) {
-    return this.wrapSimpleTransaction(
+    const depositLUSD = Decimal.from(amount);
+
+    return this.wrapStabilityDepositTopup(
+      { depositLUSD },
       await this.contracts.stabilityPool.estimateAndPopulate.provideToSP(
         { ...overrides },
         addGasForLQTYIssuance,
-        Decimal.from(amount).bigNumber,
+        depositLUSD.bigNumber,
         frontEndTag
       )
     );
   }
 
   async withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides) {
-    return this.wrapSimpleTransaction(
+    return this.wrapStabilityDepositWithdrawal(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
         addGasForLQTYIssuance,
@@ -628,8 +698,14 @@ export class PopulatableEthersLiquity
     );
   }
 
-  withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides) {
-    return this.withdrawLUSDFromStabilityPool(Decimal.ZERO, overrides);
+  async withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides) {
+    return this.wrapStabilityPoolGainsWithdrawal(
+      await this.contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
+        { ...overrides },
+        addGasForLQTYIssuance,
+        Decimal.ZERO.bigNumber
+      )
+    );
   }
 
   async transferCollateralGainToTrove(
