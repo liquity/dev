@@ -61,7 +61,7 @@ contract('Proxy', async accounts => {
         guardFactory = await DSGuardFactory.new()
         DSGuardFactory.setAsDeployed(guardFactory)
 
-        subscriptionProxy = await SubscripionProxy.new(
+        subscriptionProxy = await SubscriptionProxy.new(
             guardFactory.address, 
             subscriptions.address, 
             monitorProxy.address
