@@ -170,6 +170,13 @@ class TestHelper {
     return (ICR.gt(MoneyValues._ICR100)) && (ICR.lt(MoneyValues._MCR))
   }
 
+  static async isUndercollateralized(account, troveManager, price) {
+    const ICR = await troveManager.getCurrentICR(account, price)
+    return ICR.lt(MoneyValues._MCR)
+  }
+
+
+
   static toBN(num) {
     return web3.utils.toBN(num)
   }

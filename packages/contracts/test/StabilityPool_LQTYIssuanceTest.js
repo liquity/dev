@@ -84,6 +84,42 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       issuance_M6 = toBN('41651488815552900').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
     })
 
+    it("withdrawFromSP(): reward term G does not update when no LQTY is issued", async () => {
+      await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(10, 'ether') })
+      await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
+
+      const A_initialDeposit = ((await stabilityPool.deposits(A))[0]).toString()
+      assert.equal(A_initialDeposit, dec(100, 18))
+
+      // defaulter opens trove
+      await borrowerOperations.openTrove(dec(89, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    
+      // ETH drops
+      await priceFeed.setPrice(dec(100, 18))
+
+      await th.fastForwardTime(timeValues.MINUTES_IN_ONE_WEEK, web3.currentProvider)
+      
+      // Liquidate d1. Triggers issuance.
+      await troveManager.liquidate(defaulter_1)
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
+
+      // Get G and communityIssuance before
+      const G_Before = await stabilityPool.epochToScaleToG(0,0)
+      const LQTYIssuedBefore = await communityIssuanceTester.totalLQTYIssued()
+      
+      //  A withdraws some deposit. Triggers issuance.
+      const tx = await stabilityPool.withdrawFromSP(10, { from: A, gasPrice: 0 })
+      assert.isTrue(tx.receipt.status)
+
+      // Check G and LQTYIssued do not increase, since <1 minute has passed between issuance triggers
+      const G_After = await stabilityPool.epochToScaleToG(0,0)
+      const LQTYIssuedAfter = await communityIssuanceTester.totalLQTYIssued()
+
+      assert.isTrue(G_After.eq(G_Before))
+      assert.isTrue(LQTYIssuedAfter.eq(LQTYIssuedBefore))
+    })
+
+
     // Simple case: 3 depositors, equal stake. No liquidations. No front-end.
     it("withdrawFromSP(): Depositors with equal initial deposit withdraw correct LQTY gain. No liquidations. No front end.", async () => {
       // Set the deployment time to now
@@ -1440,6 +1476,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.isAtMost(getDifference(expectedLQTYGain_E, LQTYGain_E), 1e15)
       assert.isAtMost(getDifference(expectedLQTYGain_F1, LQTYGain_F1), 1e15)
     })
+  
   })
 })
 

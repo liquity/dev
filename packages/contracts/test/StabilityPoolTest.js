@@ -37,6 +37,7 @@ contract('StabilityPool', async accounts => {
   let defaultPool
   let borrowerOperations
   let lqtyToken
+  let communityIssuance 
 
   let gasPriceInWei
 
@@ -61,7 +62,7 @@ contract('StabilityPool', async accounts => {
       hintHelpers = contracts.hintHelpers
 
       lqtyToken = LQTYContracts.lqtyToken
-      //communityIssuance = LQTYContracts.communityIssuance
+      communityIssuance = LQTYContracts.communityIssuance
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -1414,10 +1415,6 @@ contract('StabilityPool', async accounts => {
       await th.assertRevert(txPromise_F, "StabilityPool: Tag must be a registered front end, or the zero address")
     })
 
-
-
-
-
     // --- withdrawFromSP ---
 
     it("withdrawFromSP(): reverts when user has no active deposit", async () => {
@@ -1446,7 +1443,7 @@ contract('StabilityPool', async accounts => {
       }
     })
 
-    it("withdrawFromSP(): reverts when there is a pending liquidation", async () => {
+    it("withdrawFromSP(): reverts when amount > 0 and system has an undercollateralized trove", async () => {
       await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
 
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
@@ -2009,6 +2006,57 @@ contract('StabilityPool', async accounts => {
       assert.equal(bob_ICR_Before, bob_ICR_After)
       assert.equal(carol_ICR_Before, carol_ICR_After)
     })
+
+    it("withdrawFromSP(): succeeds when amount is 0 and system has an undercollateralized trove", async () => {
+      await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(10, 'ether') })
+
+      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A })
+
+      const A_initialDeposit = ((await stabilityPool.deposits(A))[0]).toString()
+      assert.equal(A_initialDeposit, dec(100, 18))
+
+      // defaulters opens trove
+      await borrowerOperations.openTrove(dec(89, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(dec(89, 18), defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
+
+      // ETH drops, defaulters are in liquidation range
+      await priceFeed.setPrice(dec(100, 18))
+      const price = await priceFeed.getPrice()
+      assert.isTrue(await th.ICRbetween100and110(defaulter_1, troveManager, price))
+
+      await th.fastForwardTime(timeValues.MINUTES_IN_ONE_WEEK, web3.currentProvider)
+      
+      // Liquidate d1
+      await troveManager.liquidate(defaulter_1)
+      assert.isFalse(await sortedTroves.contains(defaulter_1))
+
+      // Check d2 is undercollateralized
+      assert.isTrue(await th.ICRbetween100and110(defaulter_2, troveManager, price))
+      assert.isTrue(await sortedTroves.contains(defaulter_2))
+
+      const A_ETHBalBefore = toBN(await web3.eth.getBalance(A))
+      const A_LQTYBalBefore = await lqtyToken.balanceOf(A)
+
+      // Check Alice has gains to withdraw
+      const A_pendingETHGain = await stabilityPool.getDepositorETHGain(A)
+      const A_pendingLQTYGain = await stabilityPool.getDepositorLQTYGain(A)
+      assert.isTrue(A_pendingETHGain.gt(toBN('0')))
+      assert.isTrue(A_pendingLQTYGain.gt(toBN('0')))
+
+      // Check withdrawal of 0 succeeds
+      const tx = await stabilityPool.withdrawFromSP(0, { from: A, gasPrice: 0 })
+      assert.isTrue(tx.receipt.status)
+
+      const A_ETHBalAfter = toBN(await web3.eth.getBalance(A))
+
+      const A_LQTYBalAfter = await lqtyToken.balanceOf(A)
+      const A_LQTYBalDiff = A_LQTYBalAfter.sub(A_LQTYBalBefore)
+   
+      // Check A's ETH and LQTY balances have increased correctly
+      assert.isTrue(A_ETHBalAfter.sub(A_ETHBalBefore).eq(A_pendingETHGain))
+      assert.isAtMost(th.getDifference(A_LQTYBalDiff, A_pendingLQTYGain), 1000)
+    })
+
 
     it("withdrawFromSP(): withdrawing 0 LUSD doesn't alter the caller's deposit or the total LUSD in the Stability Pool", async () => {
       // --- SETUP ---
