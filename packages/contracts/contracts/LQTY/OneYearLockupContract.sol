@@ -13,12 +13,12 @@ contract OneYearLockupContract is CheckContract {
 
     uint constant public ONE_YEAR_IN_SECONDS = 31536000; 
 
-    address public deployer;
-    address public beneficiary;
+    address public immutable deployer;
+    address public immutable beneficiary;
 
-    ILQTYToken public lqtyToken;
+    ILQTYToken public immutable lqtyToken;
 
-    uint public initialEntitlement;
+    uint public immutable initialEntitlement;
 
     uint public lockupStartTime;
 
