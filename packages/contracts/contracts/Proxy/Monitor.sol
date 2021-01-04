@@ -5,8 +5,8 @@ pragma solidity 0.6.11;
 pragma experimental ABIEncoderV2;
 
 import "../Interfaces/ITroveManager.sol";
+import "../Interfaces/IPriceFeed.sol";
 
-import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 
@@ -19,11 +19,12 @@ contract Monitor is Ownable {
     enum Method { Repay } 
 
     uint public MAX_GAS_PRICE = 400000000000; // 400 gwei
-    uint public REPAY_GAS_COST = 2500000;
+    uint public REPAY_GAS_COST = 2500000; // TODO calculate
 
     Subscriptions public subscriptionsContract;
     MonitorProxy public monitorProxy;
-
+    ITroveManager public troveManager;
+    IPriceFeed public priceFeed;
     address public saverProxy;
     
     // modifier onlyApproved() {
@@ -34,10 +35,20 @@ contract Monitor is Ownable {
     /// @param _monitorProxy actually authorized to call DSProxy
     /// @param _subscriptions Subscriptions contract for Troves
     /// @param _saverProxy Contract that actually does Repay
-    constructor(address _monitorProxy, address _subscriptions, address _saverProxy) public {
+    /// @param _troveManagerAddress TroveManager address
+    /// @param _priceFeedAddress Oracle address
+    constructor(
+        address _monitorProxy, 
+        address _subscriptions, 
+        address _saverProxy,
+        address _troveManagerAddress,
+        address _priceFeedAddress
+    ) public {
         monitorProxy = MonitorProxy(_monitorProxy);
         subscriptionsContract = Subscriptions(_subscriptions);
         saverProxy = _saverProxy;
+        troveManager = ITroveManager(_troveManagerAddress);
+        priceFeed = IPriceFeed(_priceFeedAddress);
     }
 
     /// @notice Calculates gas cost (in Eth) of tx
@@ -51,16 +62,16 @@ contract Monitor is Ownable {
     }
 
     /// @notice Bots call this method to repay for user when conditions are met
-    /// @param _user The actual address that owns the Trove
+    /// @param _params the address that owns the Trove, and minimum ICR 
     function repayFor(Subscriptions.TroveOwner memory _params) public payable /*onlyApproved*/ {
 
-        (bool isAllowed,) = canCall(Method.Repay, _user);
+        (bool isAllowed,) = canCall(Method.Repay, _params.user);
         require(isAllowed); // check if conditions are met
 
         uint256 gasCost = calcGasCost(REPAY_GAS_COST);
  
         monitorProxy.callExecute{value: msg.value}(
-            _user,
+            _params.user,
             saverProxy,
             abi.encodeWithSignature(
                 "repay((address,uint128)),uint256)",
@@ -69,17 +80,10 @@ contract Monitor is Ownable {
         );
     }
 
-    function getICR(address _user) public view returns(uint256) {
-        /* TODO
-        address lendingPoolAddress = ILendingPoolAddressesProvider(AAVE_LENDING_POOL_ADDRESSES).getLendingPool();
-        (,,uint256 totalBorrowsETH,,uint256 availableBorrowsETH,,,) = ILendingPool(lendingPoolAddress).getUserAccountData(_user);
-        if (totalBorrowsETH == 0) return uint256(0);
-        */
-        uint debt = 42;
-        uint coll = 42;
-        uint price = 42;
-        return LiquityMath._computeCR(coll, debt, price);
-
+    function getICR(address _user) public view returns(uint) {
+        uint price = priceFeed.getPrice();
+        uint ICR = troveManager.getCurrentICR(_user, price);
+        return ICR;
     }
 
     /// @notice Checks Repay could be triggered for the Trove

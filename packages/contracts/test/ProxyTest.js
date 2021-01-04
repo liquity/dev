@@ -74,10 +74,12 @@ contract('Proxy', async accounts => {
         monitor = await Monitor.new(
             monitorProxy.address, 
             subscriptions.address, 
-            scriptProxy.address
+            scriptProxy.address,
+            troveManager.address,
+            priceFeed.address
         )
         Monitor.setAsDeployed(monitor)
-        
+
         // We must deploy DSProxyFactory because we call the build function
         // inside it in order to create DSproxies on behalf of Trove owners
         factory = await ProxyFactory.new()

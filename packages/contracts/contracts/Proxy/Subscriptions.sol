@@ -48,7 +48,7 @@ contract Subscriptions is Ownable, ISubscription {
     /// @dev Called by the DSProxy contract which owns the Trove
     /// @notice Adds the users poistion in the list of subscriptions so it can be monitored
     /// @param _minRatio Minimum ratio below which repay is triggered
-    function subscribe(uint128 _minRatio) external {
+    function subscribe(uint128 _minRatio) public virtual override {
         SubPosition storage subInfo = subscribersPos[msg.sender];
 
         TroveOwner memory subscription = TroveOwner({
@@ -73,7 +73,7 @@ contract Subscriptions is Ownable, ISubscription {
 
     /// @notice Called by the users DSProxy
     /// @dev Owner who subscribed cancels his subscription
-    function unsubscribe() external {
+    function unsubscribe() public virtual override {
         _unsubscribe(msg.sender);
     }
 

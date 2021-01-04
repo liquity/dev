@@ -2,8 +2,11 @@
 // Adapted from https://github.com/DecenterApps/defisaver-contracts/
 
 pragma solidity 0.6.11;
+pragma experimental ABIEncoderV2;
 
+import "../Dependencies/DappSys/DSProxy.sol";
 import "../Interfaces/IBorrowerOperations.sol";
+import "./Subscriptions.sol";
 
 contract SaverProxy {
 
@@ -17,12 +20,12 @@ contract SaverProxy {
         IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_amt, address(0));
     }
 
-    function repay(address _user, uint _gasCost) public payable {
+    function repay(Subscriptions.TroveOwner memory _params, uint _gasCost) public payable {
 
-		address lendingPoolCore = ILendingPoolAddressesProvider(AAVE_LENDING_POOL_ADDRESSES).getLendingPoolCore();
+		/*
+        address lendingPoolCore = ILendingPoolAddressesProvider(AAVE_LENDING_POOL_ADDRESSES).getLendingPoolCore();
 		address lendingPool = ILendingPoolAddressesProvider(AAVE_LENDING_POOL_ADDRESSES).getLendingPool();
 		address payable user = payable(getUserAddress());
-
 
         //get how much debt to sell to recover collateralization
 
@@ -49,6 +52,7 @@ contract SaverProxy {
 			approveToken(_data.destAddr, lendingPoolCore);
 			ILendingPool(lendingPool).repay(_data.destAddr, destAmount, payable(address(this)));
 		}
+        */
 	}
 
     /// @notice Returns the owner of the DSProxy that called the contract
