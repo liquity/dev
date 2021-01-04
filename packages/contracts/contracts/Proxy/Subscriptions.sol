@@ -2,13 +2,13 @@
 // Adapted from https://github.com/DecenterApps/defisaver-contracts/
 
 pragma solidity 0.6.11;
-// pragma experimental ABIEncoderV2;
 
+import "../Interfaces/ISubscription.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/console.sol";
 
-contract Subscriptions is Ownable {
+contract Subscriptions is Ownable, ISubscription {
     using SafeMath for uint256;
 
     event Subscribed(address indexed user);
@@ -44,12 +44,6 @@ contract Subscriptions is Ownable {
         SubPosition storage subInfo = subscribersPos[_user];
         return subInfo.subscribed;
     }
-
-    /// @notice Helper method to return all the subscribed Troves
-    /// @return List of all subscribers
-    // function getSubscribers() public view returns (TroveOwner[] memory) {
-    //     return subscribers;
-    // }
 
     /// @dev Called by the DSProxy contract which owns the Trove
     /// @notice Adds the users poistion in the list of subscriptions so it can be monitored

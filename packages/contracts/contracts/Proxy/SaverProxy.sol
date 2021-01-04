@@ -23,6 +23,9 @@ contract SaverProxy {
 		address lendingPool = ILendingPoolAddressesProvider(AAVE_LENDING_POOL_ADDRESSES).getLendingPool();
 		address payable user = payable(getUserAddress());
 
+
+        //get how much debt to sell to recover collateralization
+
 		// redeem collateral
 		address aTokenCollateral = ILendingPool(lendingPoolCore).getReserveATokenAddress(_data.srcAddr);
 		// uint256 maxCollateral = IAToken(aTokenCollateral).balanceOf(address(this)); 

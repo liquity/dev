@@ -4,9 +4,12 @@
 pragma solidity 0.6.11;
 pragma experimental ABIEncoderV2;
 
+import "../Interfaces/ITroveManager.sol";
+
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
+
 import "./Subscriptions.sol";
 import "./MonitorProxy.sol";
 
@@ -49,7 +52,7 @@ contract Monitor is Ownable {
 
     /// @notice Bots call this method to repay for user when conditions are met
     /// @param _user The actual address that owns the Trove
-    function repayFor(TroveData memory _params, address _user) public payable /*onlyApproved*/ {
+    function repayFor(Subscriptions.TroveOwner memory _params) public payable /*onlyApproved*/ {
 
         (bool isAllowed,) = canCall(Method.Repay, _user);
         require(isAllowed); // check if conditions are met
@@ -60,8 +63,8 @@ contract Monitor is Ownable {
             _user,
             saverProxy,
             abi.encodeWithSignature(
-                "repay(address,uint256)",
-                _user, _params, gasCost
+                "repay((address,uint128)),uint256)",
+                _params, gasCost
             )
         );
     }

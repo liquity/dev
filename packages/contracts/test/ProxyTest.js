@@ -1,13 +1,13 @@
 
 const DSProxy = artifacts.require("./DSProxy.sol");
-const ProxyScript = artifacts.require("./SaverProxy.sol");
 const Monitor = artifacts.require("./Monitor.sol");
 const MonitorProxy = artifacts.require("./MonitorProxy.sol");
-
+const SaverProxy = artifacts.require("./SaverProxy.sol");
 const SubscriptionProxy = artifacts.require("./SubscripionProxy.sol");
 const Subscriptions = artifacts.require("./Subscripions.sol");
 const ProxyFactory = artifacts.require("./DSProxyFactory.sol");
 const ProxyRegistry = artifacts.require("./ProxyRegistry.sol");
+const DSGuardFactory = artifacts.require("./DSGuardFactory.sol");
 
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
@@ -20,7 +20,6 @@ const getProxy = async (acc, registry) => {
     let proxyAddr = await registry.proxies(acc);
     if (proxyAddr === ZERO_ADDRESS) {
         await registry.build({from: acc});
-        console.log('built one')
         proxyAddr = await registry.proxies(acc);
     }
     let proxy = await DSProxy.at(proxyAddr);
@@ -34,11 +33,11 @@ const getAbiFunction = (contract, functionName) => {
 
 contract('Proxy', async accounts => {
     const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
-    const [owner, alice] = accounts;
+    const [owner, alice, bob] = accounts;
     
     let monitorProxy, monitor, subscriptionsProxy, subscriptions;
-    let contracts, borrowerOperations, priceFeed;
-    let factory, registry, script, web3Proxy, saver;
+    let contracts, borrowerOperations, troveManager, priceFeed;
+    let factory, guardFactory, registry, scriptProxy, web3Proxy;
 
     before(async () => {
         //Deploy the entire system
@@ -50,11 +49,25 @@ contract('Proxy', async accounts => {
         await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
         
         borrowerOperations = contracts.borrowerOperations
+        troveManager = contracts.troveManager
         priceFeed = contracts.priceFeedTestnet
 
-        factory = await ProxyFactory.new()
-        ProxyFactory.setAsDeployed(factory)
+        monitorProxy = await MonitorProxy.new()
+        MonitorProxy.setAsDeployed(monitorProxy)
+        
+        subscriptions = await Subscriptions.new()
+        Subscriptions.setAsDeployed(subscriptions)
 
+        guardFactory = await DSGuardFactory.new()
+        DSGuardFactory.setAsDeployed(guardFactory)
+
+        subscriptionProxy = await SubscripionProxy.new(
+            guardFactory.address, 
+            subscriptions.address, 
+            monitorProxy.address
+        )
+        SubscripionProxy.setAsDeployed(subscriptionProxy)
+        
         // We must deploy DSProxyFactory because we call the build function
         // inside it in order to create DSproxies on behalf of Trove owners
         factory = await ProxyFactory.new()
@@ -63,22 +76,16 @@ contract('Proxy', async accounts => {
         registry = await ProxyRegistry.new(factory.address)
         ProxyRegistry.setAsDeployed(registry)
 
-        script = await ProxyScript.new(borrowerOperations.address)
-        ProxyScript.setAsDeployed(script)
+        scriptProxy = await SaverProxy.new(borrowerOperations.address)
+        SaverProxy.setAsDeployed(scriptProxy)
 
-        monitor = await Monitor.new()
+        monitor = await Monitor.new(monitorProxy.address, subscriptions.address, scriptProxy.address)
         Monitor.setAsDeployed(monitor)
-        monitorProxy = artifacts.require("./MonitorProxy.sol");
-        subscriptions = artifacts.require("./Subscripions.sol");
-        subscriptionProxy = artifacts.require("./SubscripionProxy.sol");
-        
-
         
         const proxyInfo = await getProxy(alice, registry)
         const proxyAddr = proxyInfo.proxyAddr;
         
         web3Proxy = new web3.eth.Contract(DSProxy.abi, proxyAddr)
-        
     })
 
     describe('Proxy integration test', async accounts => { 
@@ -124,3 +131,37 @@ contract('Proxy', async accounts => {
     })
 
 })
+
+const repayFor = async (cdpId, ethAmount, joinAddr, nextPrice) => {
+    try {
+        const tx = await monitor.methods.repayFor([cdpId, ethAmount, '0', '0', 3000000, '0'], nextPrice, joinAddr, address0, '0x0').send({
+            from: bot.address, gas: 4500000, gasPrice: gasPrice
+        });
+
+        console.log(tx);
+    } catch(err) {
+        console.log(err);
+    }
+}
+
+const repay = async (cdpId, ethAmount, joinAddr, nextPrice) => {
+    try {
+        const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(AutomaticProxyV2, 'automaticRepay'),
+            [[cdpId, ethAmount, '0', '0', 3000000, '0'], joinAddr, address0, '0x0']);
+
+        const tx = await proxy.methods['execute(address,bytes)'](automaticProxyAddress, data).send({
+            from: account.address, gas: 5000000, gasPrice: gasPrice
+        });
+
+        console.log(tx);
+    } catch(err) {
+        console.log(err);
+    }
+}
+
+const canCall = async (method, cdpId, nextPrice) => {
+    const response = await monitor.methods.canCall(method, cdpId, nextPrice).call();
+
+    return response;
+}
+

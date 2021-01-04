@@ -12,12 +12,12 @@ import "../Interfaces/ISubscription.sol";
 contract SubscriptionsProxy {
 
     address public immutable FACTORY_ADDRESS;
-    address public immutable LQTY_SUBSCRIPTION_ADDRESS;
+    address public immutable LQTY_SUBSCRIPTIONS_ADDRESS;
     address public immutable LQTY_MONITOR_PROXY_ADDRESS;
 
-    constructor(address factoryAddress, address subscriptionAddress, address monitorProxyAddress) public {
+    constructor(address factoryAddress, address subscriptionsAddress, address monitorProxyAddress) public {
         FACTORY_ADDRESS = factoryAddress;
-        LQTY_SUBSCRIPTION_ADDRESS = subscriptionAddress;
+        LQTY_SUBSCRIPTIONS_ADDRESS = subscriptionsAddress;
         LQTY_MONITOR_PROXY_ADDRESS = monitorProxyAddress;
     }
 
@@ -57,19 +57,19 @@ contract SubscriptionsProxy {
     /// @param _minRatio Minimum ratio below which repay is triggered
     function subscribe(uint128 _minRatio) public {
         givePermission(LQTY_MONITOR_PROXY_ADDRESS);
-        ISubscription(LQTY_SUBSCRIPTION_ADDRESS).subscribe(_minRatio);
+        ISubscription(LQTY_SUBSCRIPTIONS_ADDRESS).subscribe(_minRatio);
     }
 
     /// @notice Calls subscription contract and updated existing parameters
     /// @dev If subscription is non existent this will create one
     /// @param _minRatio Minimum ratio below which repay is triggered
     function update(uint128 _minRatio) public {
-        ISubscription(LQTY_SUBSCRIPTION_ADDRESS).subscribe(_minRatio);
+        ISubscription(LQTY_SUBSCRIPTIONS_ADDRESS).subscribe(_minRatio);
     }
 
     /// @notice Calls the subscription contract to unsubscribe the caller
     function unsubscribe() public {
         removePermission(LQTY_MONITOR_PROXY_ADDRESS);
-        ISubscription(LQTY_SUBSCRIPTION_ADDRESS).unsubscribe();
+        ISubscription(LQTY_SUBSCRIPTIONS_ADDRESS).unsubscribe();
     }
 }
