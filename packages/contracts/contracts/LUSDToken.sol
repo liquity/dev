@@ -4,6 +4,7 @@ pragma solidity 0.6.11;
 
 import "./Interfaces/ILUSDToken.sol";
 import "./Dependencies/SafeMath.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 /*
 *
@@ -23,7 +24,7 @@ import "./Dependencies/console.sol";
 * 2) sendToPool() and returnFromPool(): functions callable only Liquity core contracts, which move LUSD tokens between Liquity <-> user.
 */
 
-contract LUSDToken is ILUSDToken {
+contract LUSDToken is CheckContract, ILUSDToken {
     using SafeMath for uint256;
     
     uint256 private _totalSupply;
@@ -54,6 +55,10 @@ contract LUSDToken is ILUSDToken {
     ) 
         public 
     {  
+        checkContract(_troveManagerAddress);
+        checkContract(_stabilityPoolAddress);
+        checkContract(_borrowerOperationsAddress);
+
         troveManagerAddress = _troveManagerAddress;
         emit TroveManagerAddressChanged(_troveManagerAddress);
 

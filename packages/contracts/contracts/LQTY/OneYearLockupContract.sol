@@ -2,10 +2,11 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ILQTYToken.sol";
 
-contract OneYearLockupContract {
+contract OneYearLockupContract is CheckContract {
     using SafeMath for uint;
 
     // --- Data ---
@@ -40,6 +41,8 @@ contract OneYearLockupContract {
     )
         public 
     {
+        checkContract(_lqtyTokenAddress);
+
         deployer = msg.sender;
 
         lqtyToken = ILQTYToken(_lqtyTokenAddress);

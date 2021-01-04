@@ -13,9 +13,10 @@ import "./Interfaces/ISortedTroves.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
-contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
+contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOperations {
 
     // --- Connected contract declarations ---
 
@@ -92,6 +93,17 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         override
         onlyOwner
     {
+        checkContract(_troveManagerAddress);
+        checkContract(_activePoolAddress);
+        checkContract(_defaultPoolAddress);
+        checkContract(_stabilityPoolAddress);
+        checkContract(_gasPoolAddress);
+        checkContract(_collSurplusPoolAddress);
+        checkContract(_priceFeedAddress);
+        checkContract(_sortedTrovesAddress);
+        checkContract(_lusdTokenAddress);
+        checkContract(_lqtyStakingAddress);
+
         troveManager = ITroveManager(_troveManagerAddress);
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);

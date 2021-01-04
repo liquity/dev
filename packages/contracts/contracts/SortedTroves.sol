@@ -7,6 +7,7 @@ import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 /* 
@@ -41,7 +42,7 @@ import "./Dependencies/console.sol";
 *
 * - Public functions with parameters have been made internal to save gas, and given an external wrapper function for external access
 */
-contract SortedTroves is Ownable, ISortedTroves {
+contract SortedTroves is Ownable, CheckContract, ISortedTroves {
     using SafeMath for uint256;
 
     event TroveManagerAddressChanged(address _newTrovelManagerAddress);
@@ -50,7 +51,7 @@ contract SortedTroves is Ownable, ISortedTroves {
     address public borrowerOperationsAddress;
 
     ITroveManager public troveManager;
-    address public TroveManagerAddress;
+    address public troveManagerAddress;
 
     // Information for a node in the list
     struct Node {
@@ -72,16 +73,18 @@ contract SortedTroves is Ownable, ISortedTroves {
 
     // --- Dependency setters --- 
 
-    function setParams(uint256 _size, address _TroveManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
+    function setParams(uint256 _size, address _troveManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
         require(_size > 0, "SortedTroves: Size can’t be zero");
+        checkContract(_troveManagerAddress);
+        checkContract(_borrowerOperationsAddress);
 
         data.maxSize = _size;
 
-        TroveManagerAddress = _TroveManagerAddress;
-        troveManager = ITroveManager(_TroveManagerAddress);
+        troveManagerAddress = _troveManagerAddress;
+        troveManager = ITroveManager(_troveManagerAddress);
         borrowerOperationsAddress = _borrowerOperationsAddress;
 
-        emit TroveManagerAddressChanged(_TroveManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
 
         _renounceOwnership();
@@ -389,11 +392,11 @@ contract SortedTroves is Ownable, ISortedTroves {
     // --- 'require' functions ---
 
     function _requireCallerIsTroveManager() internal view {
-        require(msg.sender == TroveManagerAddress, "SortedTroves: Caller is not the TroveManager");
+        require(msg.sender == troveManagerAddress, "SortedTroves: Caller is not the TroveManager");
     }
 
     function _requireCallerIsBOorTroveM() internal view {
-        require(msg.sender == borrowerOperationsAddress || msg.sender == TroveManagerAddress,
+        require(msg.sender == borrowerOperationsAddress || msg.sender == troveManagerAddress,
                 "SortedTroves: Caller is neither BO nor TroveM");
     }
 }

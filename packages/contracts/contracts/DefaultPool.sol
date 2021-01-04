@@ -5,6 +5,7 @@ pragma solidity 0.6.11;
 import './Interfaces/IPool.sol';
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 /* 
@@ -14,7 +15,7 @@ import "./Dependencies/console.sol";
  * When a trove makes an operation that applies its pending ETH and LUSD debt, its pending ETH and LUSD debt is moved
  * from the Default Pool to the Active Pool.
  */
-contract DefaultPool is Ownable, IPool {
+contract DefaultPool is Ownable, CheckContract, IPool {
     using SafeMath for uint256;
 
     address public troveManagerAddress;
@@ -33,6 +34,9 @@ contract DefaultPool is Ownable, IPool {
         external
         onlyOwner
     {
+        checkContract(_troveManagerAddress);
+        checkContract(_activePoolAddress);
+
         troveManagerAddress = _troveManagerAddress;
         activePoolAddress = _activePoolAddress;
 
