@@ -49,7 +49,7 @@ contract SubscriptionsProxy {
         guard.forbid(_contractAddr, address(this), bytes4(keccak256("execute(address,bytes)")));
     }
 
-    function proxyOwner() internal returns(address) {
+    function proxyOwner() internal view returns(address) {
         return DSAuth(address(this)).owner();
     } 
 

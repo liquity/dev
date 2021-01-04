@@ -20,7 +20,7 @@ contract DSProxy is DSAuth {
     
     DSProxyCache public cache; // global cache for contracts
 
-    fallback() external payable { /* do nothing */ }
+    receive() external payable { /* do nothing */ }
     
     function setCache(address _cacheAddr)
         public

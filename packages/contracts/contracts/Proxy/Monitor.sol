@@ -2,6 +2,7 @@
 // Adapted from https://github.com/DecenterApps/defisaver-contracts/
 
 pragma solidity 0.6.11;
+pragma experimental ABIEncoderV2;
 
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/SafeMath.sol";
@@ -48,27 +49,21 @@ contract Monitor is Ownable {
 
     /// @notice Bots call this method to repay for user when conditions are met
     /// @param _user The actual address that owns the Trove
-    function repayFor(
-        // TODO
-        //SaverExchangeCore.ExchangeData memory _exData,
-        address _user
-    ) public payable /*onlyApproved*/ {
+    function repayFor(TroveData memory _params, address _user) public payable /*onlyApproved*/ {
 
-        (bool isAllowed, uint ratioBefore) = canCall(Method.Repay, _user);
+        (bool isAllowed,) = canCall(Method.Repay, _user);
         require(isAllowed); // check if conditions are met
 
         uint256 gasCost = calcGasCost(REPAY_GAS_COST);
-
-        // TODO 
-        // monitorProxy.callExecute{value: msg.value}(
-        //     _user,
-        //     saverProxy,
-        //     abi.encodeWithSignature(
-        //         "repay((address,address,uint256,uint256,uint256,address,address,bytes,uint256),uint256)",
-        //         //_exData,
-        //         gasCost
-        //     )
-        // );
+ 
+        monitorProxy.callExecute{value: msg.value}(
+            _user,
+            saverProxy,
+            abi.encodeWithSignature(
+                "repay(address,uint256)",
+                _user, _params, gasCost
+            )
+        );
     }
 
     function getICR(address _user) public view returns(uint256) {
@@ -100,6 +95,8 @@ contract Monitor is Ownable {
 
         if (_method == Method.Repay) {
             return (currentICR < minRatio, currentICR);
+        } else {
+            return (false, 0);
         }
     }
 
