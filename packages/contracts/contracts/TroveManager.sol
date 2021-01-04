@@ -974,10 +974,10 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         T.ETHToSendToRedeemer = T.totalETHDrawn.sub(T.ETHFee);
 
+        emit Redemption(_LUSDamount, T.totalLUSDToRedeem, T.totalETHDrawn, T.ETHFee);
+
         // Burn the total LUSD that is cancelled with debt, and send the redeemed ETH to msg.sender
         _activePoolRedeemCollateral(msg.sender, T.totalLUSDToRedeem, T.ETHToSendToRedeemer);
-
-        emit Redemption(_LUSDamount, T.totalLUSDToRedeem, T.totalETHDrawn, T.ETHFee);
     }
 
     // Burn the received LUSD, transfer the redeemed ETH to _redeemer and updates the Active Pool
@@ -990,7 +990,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     // --- Helper functions ---
-
 
     // Return the current collateral ratio (ICR) of a given Trove. Takes a trove's pending coll and debt rewards from redistributions into account.
     function getCurrentICR(address _borrower, uint _price) public view override returns (uint) {
