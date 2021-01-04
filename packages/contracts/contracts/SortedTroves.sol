@@ -206,10 +206,10 @@ contract SortedTroves is Ownable, ISortedTroves {
         // Remove node from the list
         _remove(_id);
 
-        if (_newICR > 0) {
-            // Insert node if it has a non-zero ICR
-            _insert(_id, _newICR, _price, _prevId, _nextId);
-        }
+        //Require non-zero ICR
+        require(_newICR > 0);
+            
+        _insert(_id, _newICR, _price, _prevId, _nextId);
     }
 
     /*
