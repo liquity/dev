@@ -2206,8 +2206,8 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec (100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
     // Requested coll withdrawal > coll in the trove
-    const txPromise_B = borrowerOperations.adjustTrove(dec(37, 'ether'), 0 , false, bob, {from: bob})
     const txPromise_A = borrowerOperations.adjustTrove('1000000000000000001', 0 , false, alice, {from: alice})
+    const txPromise_B = borrowerOperations.adjustTrove(dec(37, 'ether'), 0 , false, bob, {from: bob})
 
     await assertRevert(txPromise_A)
     await assertRevert(txPromise_B)
