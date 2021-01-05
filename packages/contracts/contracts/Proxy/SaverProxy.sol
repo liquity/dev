@@ -28,8 +28,8 @@ contract SaverProxy {
         // determine how much debt to sell to recover collateralization to be above minimum
         // _ICR target min coll ratio of user (e.g. 1.5)
     
-        uint d = // user's debt
-        uint c = // user's coll
+        uint d = 42; // user's debt
+        uint c = 42; // user's coll
         uint n = d.mul(_ICR).sub(c).div(_ICR + 1)
 	}
 
