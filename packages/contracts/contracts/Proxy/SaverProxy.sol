@@ -30,7 +30,7 @@ contract SaverProxy {
     
         uint d = 42; // user's debt
         uint c = 42; // user's coll
-        uint n = d.mul(_ICR).sub(c).div(_ICR + 1)
+        uint n = d.mul(_ICR).sub(c).div(_ICR + 1);
 	}
 
     /// @notice Returns the owner of the DSProxy that called the contract
