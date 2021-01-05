@@ -1220,8 +1220,6 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-
-
   it("withdrawLUSD(): increases the Trove's LUSD debt by the correct amount", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
 
@@ -1308,8 +1306,6 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-
-
   //repayLUSD: reduces LUSD debt in Trove
   it("repayLUSD(): reduces the Trove's LUSD debt by the correct amount", async () => {
     await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
@@ -1373,6 +1369,23 @@ contract('BorrowerOperations', async accounts => {
     // Check Alice's debt: 90 (withdrawn) + 10 (gas comp) - 50 (repaid)
     const alice_debt = (await troveManager.Troves(alice))[0].toString()
     assert.equal(alice_debt, dec(50, 18))
+  })
+
+  it("repayLUSD(): Reverts if borrower has insufficient LUSD balance to cover his debt repayment", async () => {
+    await borrowerOperations.openTrove(dec(1000, 18), A, { from: A, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(5, 'ether') })
+ 
+    // Bob transfers some LUSD to carol
+    await lusdToken.transfer(C, dec(51, 18),  {from: B})
+
+    //Confirm B's LUSD balance is less than 50 LUSD
+    const B_LUSDBal = await lusdToken.balanceOf(B)
+    assert.isTrue(B_LUSDBal.lt(toBN(dec(50, 18))))
+
+    const repayLUSDPromise_B = borrowerOperations.repayLUSD(dec(50, 18), B, {from: B})
+     
+    // B attempts to repay 50 LUSD
+    await assertRevert(repayLUSDPromise_B, "BorrowerOps: Caller doesnt have enough LUSD to close their trove")
   })
 
   // --- adjustTrove() ---
@@ -2196,8 +2209,25 @@ contract('BorrowerOperations', async accounts => {
     const txPromise_B = borrowerOperations.adjustTrove(dec(37, 'ether'), 0 , false, bob, {from: bob})
     const txPromise_A = borrowerOperations.adjustTrove('1000000000000000001', 0 , false, alice, {from: alice})
 
-    assertRevert(txPromise_A)
-    assertRevert(txPromise_B)
+    await assertRevert(txPromise_A)
+    await assertRevert(txPromise_B)
+  })
+
+  it("adjustTrove(): Reverts if borrower has insufficient LUSD balance to cover his debt repayment", async () => {
+    await borrowerOperations.openTrove(dec(1000, 18), A, { from: A, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(5, 'ether') })
+ 
+    // Bob transfers some LUSD to carol
+    await lusdToken.transfer(C, dec(51, 18),  {from: B})
+
+    //Confirm B's LUSD balance is less than 50 LUSD
+    const B_LUSDBal = await lusdToken.balanceOf(B)
+    assert.isTrue(B_LUSDBal.lt(toBN(dec(50, 18))))
+
+    const repayLUSDPromise_B = borrowerOperations.adjustTrove(0, dec(50, 18), false, B, {from: B})
+     
+    // B attempts to repay 50 LUSD
+    await assertRevert(repayLUSDPromise_B, "BorrowerOps: Caller doesnt have enough LUSD to close their trove")
   })
 
   // --- Internal _adjustTrove() ---
@@ -2210,9 +2240,9 @@ contract('BorrowerOperations', async accounts => {
     const txPromise_B = borrowerOperations.callInternalAdjustLoan(bob, dec(1, 18),  dec(1, 18), true, alice, {from: owner} )
     const txPromise_C = borrowerOperations.callInternalAdjustLoan(carol, dec(1, 18),  dec(1, 18), true, alice, {from: bob} )
   
-    assertRevert(txPromise_A)
-    assertRevert(txPromise_B)
-    assertRevert(txPromise_C)
+    await assertRevert(txPromise_A)
+    await assertRevert(txPromise_B)
+    await assertRevert(txPromise_C)
   })
 
   // --- closeTrove() ---
@@ -2577,6 +2607,25 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isAtMost(th.getDifference(defaultPool_ETH_afterBobCloses, 0), 100)
     assert.isAtMost(th.getDifference(defaultPool_LUSDDebt_afterBobCloses, 0), 100)
+  })
+
+  it("closeTrove(): reverts if borrower has insufficient LUSD balance to repay his entire debt", async () => {
+    await borrowerOperations.openTrove(dec(1000), A, { from: A, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(dec(100), B, { from: B, value: dec(5, 'ether') })
+ 
+    // Bob transfers some LUSD to carol
+    await lusdToken.transfer(carol, 1,  {from: B})
+
+    //Confirm Bob's LUSD balance is less than his trove debt
+    const B_LUSDBal = await lusdToken.balanceOf(B)
+    const B_troveDebt = (await troveManager.Troves(B))[0]
+    
+    assert.isTrue(B_LUSDBal.lt(B_troveDebt))
+
+    const closeTrovePromise_B = borrowerOperations.closeTrove({from: B})
+    
+    // Check closing trove reverts
+    await assertRevert(closeTrovePromise_B, "BorrowerOps: Caller doesnt have enough LUSD to close their trove")
   })
 
   // --- openTrove() ---
