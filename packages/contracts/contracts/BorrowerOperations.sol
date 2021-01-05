@@ -216,6 +216,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         L.rawDebtChange = _debtChange;
         if (_isDebtIncrease) {
+            require(_debtChange > 0, "BorrowerOps: Debt increase requires positive debtChange");
             // Decay the baseRate and get the fee
             troveManager.decayBaseRateFromBorrowing();
             L.LUSDFee = troveManager.getBorrowingFee(_debtChange);
