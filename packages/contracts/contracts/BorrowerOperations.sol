@@ -20,7 +20,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     // --- Connected contract declarations ---
 
     ITroveManager public troveManager;
-    //address immutable troveManagerAddress;
 
     IPool public activePool;
 
@@ -91,7 +90,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         onlyOwner
     {
         troveManager = ITroveManager(_troveManagerAddress);
-        //troveManagerAddress = _troveManagerAddress;
         activePool = IPool(_activePoolAddress);
         defaultPool = IPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
@@ -120,7 +118,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function openTrove(uint _LUSDAmount, address _hint) external payable override {
         uint price = priceFeed.getPrice();
-        
+
         _requireTroveisNotActive(msg.sender);
 
         // Decay the base rate, and calculate the borrowing fee
@@ -132,19 +130,19 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
         uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
-        
+
         if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
             _requireNewTCRisAboveCCR(msg.value, true, compositeDebt, true, price);  // bools: coll increase, debt increase
         }
-        
+
         // Set the trove struct's properties
         troveManager.setTroveStatus(msg.sender, 1);
         troveManager.increaseTroveColl(msg.sender, msg.value);
         troveManager.increaseTroveDebt(msg.sender, compositeDebt);
-        
+
         troveManager.updateTroveRewardSnapshots(msg.sender);
         uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
 

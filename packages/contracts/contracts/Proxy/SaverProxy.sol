@@ -6,10 +6,12 @@ pragma experimental ABIEncoderV2;
 
 import "../Dependencies/DappSys/DSProxy.sol";
 import "../Interfaces/IBorrowerOperations.sol";
+import "../Interfaces/IStabilityPool.sol";
 import "./Subscriptions.sol";
 
 contract SaverProxy {
 
+    address immutable borrowerOperationsAddress;
     address immutable borrowerOperationsAddress;
     
     constructor (address _borrowerOperationsAddress) public {  
@@ -17,42 +19,18 @@ contract SaverProxy {
     }
 
     function open(uint _amt) external payable {
-        IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_amt, address(0));
+        IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_amt, msg.sender);
     }
 
-    function repay(Subscriptions.TroveOwner memory _params, uint _gasCost) public payable {
+    function repay(Subscriptions.TroveOwner memory _params, uint _ICR, uint _gasCost) public payable {
+        address payable user = payable(getUserAddress());
 
-		/*
-        address lendingPoolCore = ILendingPoolAddressesProvider(AAVE_LENDING_POOL_ADDRESSES).getLendingPoolCore();
-		address lendingPool = ILendingPoolAddressesProvider(AAVE_LENDING_POOL_ADDRESSES).getLendingPool();
-		address payable user = payable(getUserAddress());
-
-        //get how much debt to sell to recover collateralization
-
-		// redeem collateral
-		address aTokenCollateral = ILendingPool(lendingPoolCore).getReserveATokenAddress(_data.srcAddr);
-		// uint256 maxCollateral = IAToken(aTokenCollateral).balanceOf(address(this)); 
-		// don't swap more than maxCollateral
-		// _data.srcAmount = _data.srcAmount > maxCollateral ? maxCollateral : _data.srcAmount;
-		IAToken(aTokenCollateral).redeem(_data.srcAmount);
-
-		uint256 destAmount = _data.srcAmount;
-		if (_data.srcAddr != _data.destAddr) {
-			// swap
-			(, destAmount) = _sell(_data);
-			destAmount -= getFee(destAmount, user, _gasCost, _data.destAddr);
-		} else {
-			destAmount -= getGasCost(destAmount, user, _gasCost, _data.destAddr);
-		}
-
-		// payback
-		if (_data.destAddr == ETH_ADDR) {
-			ILendingPool(lendingPool).repay{value: destAmount}(_data.destAddr, destAmount, payable(address(this)));
-		} else {
-			approveToken(_data.destAddr, lendingPoolCore);
-			ILendingPool(lendingPool).repay(_data.destAddr, destAmount, payable(address(this)));
-		}
-        */
+        // determine how much debt to sell to recover collateralization to be above minimum
+        // _ICR target min coll ratio of user (e.g. 1.5)
+    
+        uint d = // user's debt
+        uint c = // user's coll
+        uint n = d.mul(_ICR).sub(c).div(_ICR + 1)
 	}
 
     /// @notice Returns the owner of the DSProxy that called the contract
