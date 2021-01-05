@@ -51,7 +51,7 @@ contract CustomDurationLockupContract is CheckContract {
         lockupDurationInSeconds = _lockupDurationInSeconds;
     }
 
-    function lockContract() external returns (bool) {
+    function lockContract() external {
         _requireCallerIsLockupDeployer();
         _requireContractIsNotActive();
         _requireLQTYBalanceAtLeastEqualsEntitlement();
@@ -59,7 +59,6 @@ contract CustomDurationLockupContract is CheckContract {
         lockupStartTimeInSeconds = block.timestamp;
         active = true; 
         emit CDLCLocked(lockupStartTimeInSeconds);
-        return true;
     }
 
     function withdrawLQTY() external {
