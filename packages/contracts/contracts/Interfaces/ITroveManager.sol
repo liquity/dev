@@ -88,10 +88,6 @@ interface ITroveManager {
         uint pendingETHReward
     );
 
-    function getEntireSystemColl() external view returns (uint);
-
-    function getEntireSystemDebt() external view returns (uint);
-
     function getTCR() external view returns (uint TCR);
 
     function closeTrove(address _borrower) external;

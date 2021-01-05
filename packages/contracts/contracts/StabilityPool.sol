@@ -4,7 +4,6 @@ pragma solidity 0.6.11;
 
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/IStabilityPool.sol';
-import './Interfaces/IPool.sol';
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/ITroveManager.sol';
 import './Interfaces/ILUSDToken.sol';
@@ -138,7 +137,6 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     ILUSDToken public lusdToken;
 
-    IPool public activePool;
     address public activePoolAddress;
 
     // Needed to check if there are pending liquidations

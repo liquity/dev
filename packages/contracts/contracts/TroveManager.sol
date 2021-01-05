@@ -3,7 +3,6 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/ITroveManager.sol";
-import "./Interfaces/IPool.sol";
 import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
@@ -19,10 +18,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     // --- Connected contract declarations ---
 
     address public borrowerOperationsAddress;
-
-    IPool public activePool;
-
-    IPool public defaultPool;
 
     IStabilityPool public stabilityPool;
 
@@ -502,8 +497,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         L.remainingLUSDInStabPool = _LUSDInStabPool;
         L.backToNormalMode = false;
-        L.entireSystemDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
-        L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
+        L.entireSystemDebt = getEntireSystemDebt();
+        L.entireSystemColl = getEntireSystemColl();
 
         L.i = 0;
         while (L.i < _n) {
@@ -637,8 +632,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         L.remainingLUSDInStabPool = _LUSDInStabPool;
         L.backToNormalMode = false;
-        L.entireSystemDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
-        L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
+        L.entireSystemDebt = getEntireSystemDebt();
+        L.entireSystemColl = getEntireSystemColl();
 
         L.i = 0;
         for (L.i = 0; L.i < _troveArray.length; L.i++) {
@@ -1281,20 +1276,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, price);
 
         return TCR;
-    }
-
-    function getEntireSystemColl() public view override returns (uint entireSystemColl) {
-        uint activeColl = activePool.getETH();
-        uint liquidatedColl = defaultPool.getETH();
-
-        return activeColl.add(liquidatedColl);
-    }
-
-    function getEntireSystemDebt() public view override returns (uint entireSystemDebt) {
-        uint activeDebt = activePool.getLUSDDebt();
-        uint closedDebt = defaultPool.getLUSDDebt();
-
-        return activeDebt.add(closedDebt);
     }
 
     // --- Redemption fee functions ---

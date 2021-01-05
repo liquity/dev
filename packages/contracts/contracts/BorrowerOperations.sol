@@ -21,10 +21,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     ITroveManager public troveManager;
 
-    IPool public activePool;
-
-    IPool public defaultPool;
-
     address stabilityPoolAddress;
 
     ICollSurplusPool collSurplusPool;
@@ -462,8 +458,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         view
         returns (uint)
     {
-        uint totalColl = activePool.getETH().add(defaultPool.getETH());
-        uint totalDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
+        uint totalColl = getEntireSystemColl();
+        uint totalDebt = getEntireSystemDebt();
 
         totalColl = _isCollIncrease ? totalColl.add(_collChange) : totalColl.sub(_collChange);
         totalDebt = _isDebtIncrease ? totalDebt.add(_debtChange) : totalDebt = totalDebt.sub(_debtChange);
