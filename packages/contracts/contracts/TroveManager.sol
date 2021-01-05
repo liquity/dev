@@ -27,6 +27,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     IStabilityPool public stabilityPool;
 
+    address gasPoolAddress;
+
     ICollSurplusPool collSurplusPool;
 
     ILUSDToken public lusdToken;
@@ -202,6 +204,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _gasPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _lusdTokenAddress,
@@ -216,6 +219,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         activePool = IActivePool(_activePoolAddress);
         defaultPool = IDefaultPool(_defaultPoolAddress);
         stabilityPool = IStabilityPool(_stabilityPoolAddress);
+        gasPoolAddress = _gasPoolAddress;
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
@@ -227,6 +231,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit GasPoolAddressChanged(_gasPoolAddress);
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
@@ -765,7 +770,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     function _sendGasCompensation(address _liquidator, uint _LUSD, uint _ETH) internal {
         if (_LUSD > 0) {
-            lusdToken.returnFromPool(GAS_POOL_ADDRESS, _liquidator, _LUSD);
+            lusdToken.returnFromPool(gasPoolAddress, _liquidator, _LUSD);
         }
 
         if (_ETH > 0) {
@@ -842,7 +847,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     * Any surplus ETH left in the trove, is sent to the Coll surplus pool, and can be later claimed by the borrower.
     */ 
     function _redeemCloseTrove(address _borrower, uint _LUSD, uint _ETH) internal {
-        lusdToken.burn(GAS_POOL_ADDRESS, _LUSD);
+        lusdToken.burn(gasPoolAddress, _LUSD);
         // Update Active Pool LUSD, and send ETH to account
         activePool.decreaseLUSDDebt(_LUSD);
 

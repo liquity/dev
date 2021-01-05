@@ -19,6 +19,8 @@ interface ITroveManager {
 
     event StabilityPoolAddressChanged(address _stabilityPoolAddress);
 
+    event GasPoolAddressChanged(address _gasPoolAddress);
+
     event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
 
     event SortedTrovesAddressChanged(address _sortedTrovesAddress);
@@ -38,6 +40,7 @@ interface ITroveManager {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _gasPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _lusdTokenAddress,

@@ -32,7 +32,7 @@ describe("Trove", () => {
 
   it("applying diff of empty from `b` to `a` should always yield empty", () => {
     fc.assert(
-      fc.property(arbitraryTrove(), validNonEmptyTrove(), (a, b) =>
+      fc.property(validNonEmptyTrove(), validNonEmptyTrove(), (a, b) =>
         a.apply(b.whatChanged(emptyTrove)).equals(emptyTrove)
       )
     );

@@ -79,6 +79,9 @@ const deployContracts = async (
     }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
+    }),
+    gasPool: await deployContract(deployer, getContractFactory, "GasPool", {
+      ...overrides
     })
   };
 
@@ -130,7 +133,8 @@ const connectContracts = async (
     lqtyStaking,
     priceFeed,
     sortedTroves,
-    stabilityPool
+    stabilityPool,
+    gasPool
   }: LiquityContracts,
   deployer: Signer,
   overrides?: Overrides
@@ -154,6 +158,7 @@ const connectContracts = async (
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
+        gasPool.address,
         collSurplusPool.address,
         priceFeed.address,
         lusdToken.address,
@@ -168,6 +173,7 @@ const connectContracts = async (
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
+        gasPool.address,
         collSurplusPool.address,
         priceFeed.address,
         sortedTroves.address,

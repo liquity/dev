@@ -28,6 +28,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     address stabilityPoolAddress;
 
+    address gasPoolAddress;
+
     ICollSurplusPool collSurplusPool;
 
     IPriceFeed public priceFeed;
@@ -80,6 +82,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _gasPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _sortedTrovesAddress,
@@ -94,6 +97,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         activePool = IActivePool(_activePoolAddress);
         defaultPool = IDefaultPool(_defaultPoolAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
+        gasPoolAddress = _gasPoolAddress;
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
@@ -105,6 +109,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         emit ActivePoolAddressChanged(_activePoolAddress);
         emit DefaultPoolAddressChanged(_defaultPoolAddress);
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit GasPoolAddressChanged(_gasPoolAddress);
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
@@ -160,7 +165,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _activePoolAddColl(msg.value);
         _withdrawLUSD(msg.sender, _LUSDAmount, rawDebt);
         // Move the LUSD gas compensation to the Gas Pool
-        _withdrawLUSD(GAS_POOL_ADDRESS, LUSD_GAS_COMPENSATION, LUSD_GAS_COMPENSATION);
+        _withdrawLUSD(gasPoolAddress, LUSD_GAS_COMPENSATION, LUSD_GAS_COMPENSATION);
 
         emit TroveUpdated(msg.sender, rawDebt, msg.value, stake, BorrowerOperation.openTrove);
         emit LUSDBorrowingFeePaid(msg.sender, LUSDFee);
@@ -278,7 +283,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         _repayLUSD(msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
         activePool.sendETH(msg.sender, coll);
         // Refund gas compensation
-        _repayLUSD(GAS_POOL_ADDRESS, LUSD_GAS_COMPENSATION);
+        _repayLUSD(gasPoolAddress, LUSD_GAS_COMPENSATION);
 
         emit TroveUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
     }

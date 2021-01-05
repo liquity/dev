@@ -51,13 +51,13 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   describe('TroveManager', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(troveManager, 9)
+      await testSetAddresses(troveManager, 10)
     })
   })
 
   describe('BorrowerOperations', async accounts => {
     it("setAddresses(): reverts when called by non-owner", async () => {
-      await testSetAddresses(borrowerOperations, 9)
+      await testSetAddresses(borrowerOperations, 10)
     })
   })
 

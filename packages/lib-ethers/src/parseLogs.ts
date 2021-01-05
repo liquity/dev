@@ -6,8 +6,6 @@ import { LogDescription, Interface } from "@ethersproject/abi";
 
 import { Decimal } from "@liquity/decimal";
 
-const GAS_POOL_ADDRESS = "0x00000000000000000000000000000000000009A5";
-
 type InterfaceLookup = {
   [address: string]: Interface;
 };
@@ -80,8 +78,6 @@ const prettify = (arg: unknown, nameLookup: NameLookup) => {
   } else if (typeof arg === "string") {
     return arg === AddressZero
       ? "address(0)"
-      : arg === GAS_POOL_ADDRESS
-      ? "gasPool"
       : nameLookup && arg in nameLookup
       ? nameLookup[arg]
       : arg;
