@@ -7,6 +7,7 @@ import "../BorrowerOperations.sol";
 import "../ActivePool.sol";
 import "../DefaultPool.sol";
 import "../StabilityPool.sol";
+import "../GasPool.sol";
 import "../CollSurplusPool.sol";
 import "../LUSDToken.sol";
 import "./PriceFeedTestnet.sol";
@@ -26,13 +27,13 @@ contract EchidnaTester {
     uint private MCR;
     uint private CCR;
     uint private LUSD_GAS_COMPENSATION;
-    address public GAS_POOL_ADDRESS;
 
     TroveManager public troveManager;
     BorrowerOperations public borrowerOperations;
     ActivePool public activePool;
     DefaultPool public defaultPool;
     StabilityPool public stabilityPool;
+    GasPool public gasPool;
     CollSurplusPool public collSurplusPool;
     LUSDToken public lusdToken;
     PriceFeedTestnet priceFeedTestnet;
@@ -48,6 +49,7 @@ contract EchidnaTester {
         activePool = new ActivePool();
         defaultPool = new DefaultPool();
         stabilityPool = new StabilityPool();
+        gasPool = new GasPool();
         lusdToken = new LUSDToken(
             address(troveManager),
             address(stabilityPool),
@@ -61,13 +63,13 @@ contract EchidnaTester {
 
         troveManager.setAddresses(address(borrowerOperations), 
             address(activePool), address(defaultPool), 
-            address(stabilityPool), address(collSurplusPool), 
+            address(stabilityPool), address(gasPool), address(collSurplusPool),
             address(priceFeedTestnet), address(lusdToken), 
             address(sortedTroves), address(0));
        
         borrowerOperations.setAddresses(address(troveManager), 
             address(activePool), address(defaultPool), 
-            address(stabilityPool), address(collSurplusPool), 
+            address(stabilityPool), address(gasPool), address(collSurplusPool),
             address(priceFeedTestnet), address(sortedTroves), 
             address(lusdToken), address(0));
 
@@ -96,8 +98,6 @@ contract EchidnaTester {
         LUSD_GAS_COMPENSATION = borrowerOperations.LUSD_GAS_COMPENSATION();
         require(MCR > 0);
         require(CCR > 0);
-
-        GAS_POOL_ADDRESS = troveManager.GAS_POOL_ADDRESS();
 
         // TODO:
         priceFeedTestnet.setPrice(1e22);
@@ -405,7 +405,7 @@ contract EchidnaTester {
     // Total LUSD matches
     function echidna_LUSD_global_balances() public view returns(bool) {
         uint totalSupply = lusdToken.totalSupply();
-        uint gasPoolBalance = lusdToken.balanceOf(GAS_POOL_ADDRESS);
+        uint gasPoolBalance = lusdToken.balanceOf(address(gasPool));
 
         uint activePoolBalance = activePool.getLUSDDebt();
         uint defaultPoolBalance = defaultPool.getLUSDDebt();
