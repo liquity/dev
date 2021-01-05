@@ -26,6 +26,8 @@ export interface ReadableLiquity {
 
   getLQTYBalance(address?: string): Promise<Decimal>;
 
+  getCollateralSurplusBalance(address?: string): Promise<Decimal>;
+
   getLastTroves(
     startIdx: number,
     numberOfTroves: number
