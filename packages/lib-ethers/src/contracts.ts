@@ -68,8 +68,8 @@ type TypeSafeContract<T> = Pick<
   } extends {
     [_ in keyof T]: infer U;
   }
-  ? U
-  : never
+    ? U
+    : never
 >;
 
 type EstimatedContractFunction<R = unknown, A extends unknown[] = unknown[], O = Overrides> = (
@@ -88,8 +88,8 @@ export type TypedContract<T, U> = TypeSafeContract<T> &
 
     readonly estimateAndPopulate: {
       [P in keyof U]: U[P] extends (...args: [...infer A, infer O | undefined]) => unknown
-      ? EstimatedContractFunction<PopulatedTransaction, A, O>
-      : never;
+        ? EstimatedContractFunction<PopulatedTransaction, A, O>
+        : never;
     };
   };
 

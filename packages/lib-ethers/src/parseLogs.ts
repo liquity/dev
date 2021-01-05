@@ -6,8 +6,6 @@ import { LogDescription, Interface } from "@ethersproject/abi";
 import { Decimal } from "@liquity/decimal";
 import { LiquityContracts } from "./contracts";
 
-const GAS_POOL_ADDRESS = "0x00000000000000000000000000000000000009A5";
-
 export const contractsToInterfaces = (contracts: LiquityContracts) => {
   return Object.entries(contracts).reduce<{ [address: string]: [string, Interface] }>(
     (interfaces, [name, contract]) => ({
@@ -47,13 +45,7 @@ const prettify = (arg: unknown, names?: { [address: string]: string }) => {
       return arg.toString();
     }
   } else if (typeof arg === "string") {
-    return arg === AddressZero
-      ? "address(0)"
-      : arg === GAS_POOL_ADDRESS
-      ? "gasPool"
-      : names && arg in names
-      ? names[arg]
-      : arg;
+    return arg === AddressZero ? "address(0)" : names && arg in names ? names[arg] : arg;
   } else {
     return String(arg);
   }
