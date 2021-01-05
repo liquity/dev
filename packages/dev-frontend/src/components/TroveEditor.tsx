@@ -25,6 +25,7 @@ type TroveEditorProps = {
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
+  children,
   original,
   edited,
   afterFee,
@@ -66,6 +67,8 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
       </Heading>
 
       {changePending && <LoadingOverlay />}
+
+      {children}
 
       <Box>
         <EditableRow

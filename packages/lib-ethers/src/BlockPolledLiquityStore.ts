@@ -43,6 +43,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       accountBalance: this.provider.getBalance(this.account, blockTag).then(decimalify),
       lusdBalance: this.liquity.getLUSDBalance(this.account, { blockTag }),
       lqtyBalance: this.liquity.getLQTYBalance(this.account, { blockTag }),
+      collateralSurplusBalance: this.liquity.getCollateralSurplusBalance(this.account, { blockTag }),
       price: this.liquity.getPrice({ blockTag }),
       numberOfTroves: this.liquity.getNumberOfTroves({ blockTag }),
       troveWithoutRewards: this.liquity.getTroveWithoutRewards(this.account, { blockTag }),
