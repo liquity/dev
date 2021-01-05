@@ -682,9 +682,9 @@ The intentions behind this formula are:
 
 ### Gas compensation schedule
 
-When a borrower opens a trove, an additional 10 LUSD debt is issued, and 10 LUSD is minted and sent to a dedicated externally owned account (EOA) for gas compensation - the "gas address".
+When a borrower opens a trove, an additional 10 LUSD debt is issued, and 10 LUSD is minted and sent to a dedicated contract (`GasPool`) for gas compensation - the "gas pool".
 
-When a borrower closes their active trove, this gas compensation is refunded: 10 LUSD is burned from the gas address's balance, and the corresponding 10 LUSD debt on the trove is cancelled.
+When a borrower closes their active trove, this gas compensation is refunded: 10 LUSD is burned from the gas pool's balance, and the corresponding 10 LUSD debt on the trove is cancelled.
 
 The purpose of the 10 LUSD debt is to provide a minimum level of gas compensation, regardless of the trove's collateral size or the current ETH price.
 
@@ -713,7 +713,7 @@ In a partial liquidation, the ETH gas compensation is 0.5% of the _collateral fr
 
 When a trove is redeemed from, the redemption is made only against (debt - 10), not the entire debt.
 
-But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 LUSD gas compensation is cancelled with its remaining 10 debt. That is, the gas compensation is burned from the gas address, and the 10 debt is zero’d. The ETH collateral surplus from the trove remains in the system, to be later claimed by its owner.
+But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 LUSD gas compensation is cancelled with its remaining 10 debt. That is, the gas compensation is burned from the gas pool, and the 10 debt is zero’d. The ETH collateral surplus from the trove remains in the system, to be later claimed by its owner.
 
 ## Gas compensation Functionality
 
