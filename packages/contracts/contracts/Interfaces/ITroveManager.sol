@@ -57,8 +57,6 @@ interface ITroveManager {
 
     function batchLiquidateTroves(address[] calldata _troveArray) external;
 
-    function checkRecoveryMode() external view returns (bool);
-
     function redeemCollateral(
         uint _LUSDAmount,
         address _firstRedemptionHint,
@@ -87,8 +85,6 @@ interface ITroveManager {
         uint pendingLUSDDebtReward, 
         uint pendingETHReward
     );
-
-    function getTCR() external view returns (uint TCR);
 
     function closeTrove(address _borrower) external;
 
