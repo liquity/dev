@@ -47,10 +47,10 @@ contract EchidnaProxy {
         uint _LUSDAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR,
+        uint _partialRedemptionHintNICR,
         uint _maxIterations
     ) external {
-        troveManager.redeemCollateral(_LUSDAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, _maxIterations);
+        troveManager.redeemCollateral(_LUSDAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintNICR, _maxIterations);
     }
 
     // Borrower Operations

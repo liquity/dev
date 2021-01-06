@@ -67,7 +67,7 @@ interface ITroveManager {
         uint _LUSDAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR,
+        uint _partialRedemptionHintNICR,
         uint _maxIterations
     ) external; 
 

@@ -125,10 +125,10 @@ contract EchidnaTester {
         uint _LUSDAmount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR
+        uint _partialRedemptionHintNICR
     ) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].redeemCollateralPrx(_LUSDAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintICR, 0);
+        echidnaProxies[actor].redeemCollateralPrx(_LUSDAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintNICR, 0);
     }
 
     // Borrower Operations

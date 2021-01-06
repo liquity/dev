@@ -537,7 +537,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 troves, the gas costs per liquidated trove are roughly between 75K-83K, for a batch of 50 troves between 54K-69K.
 
-`redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintICR,  uint _maxIterations)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of troves redeemed from is capped by `_maxIterations`.
+`redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintNICR,  uint _maxIterations)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of troves redeemed from is capped by `_maxIterations`.
 
 `getCurrentICR(address _user, uint _price)`: computes the user’s individual collateral ratio (ICR) based on their total collateral and total LUSD debt. Returns 2^256 -1 if they have 0 debt.
 
@@ -561,7 +561,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a trove to the sorted list.
 
-`getRedemptionHints(uint _LUSDamount, uint _price)`: helper function specifically for redemptions. Returns two hints - the first is positional, the second ensures transaction success (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
+`getRedemptionHints(uint _LUSDamount, uint _price, uint _maxIterations)`: helper function specifically for redemptions. Returns two hints - the first is a positional hint for the first redeemable trove (i.e. trove with the lowest ICR >= MCR), the second is the final nominal ICR of the last trove after being hit by partial redemption, or zero in case of no partial redemption (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)). The number of troves to consider for redemption can be capped by passing a non-zero value as `_maxIterations`, while passing zero will leave it uncapped.
 
 ### Stability Pool Functions - `StabilityPool.sol`
 
@@ -621,7 +621,7 @@ All trove operations take a ‘hint’ argument. The better the ‘hint’ is, t
 
 The `TroveManager::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
 
-`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.  The `_price` parameter is included for ICR calculation.
+`getApproxHint(uint _CR, uint _numTrials, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a nominal collateral ratio of `_CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.
 
 **Trove operation without a hint**
 
@@ -634,29 +634,34 @@ Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` li
 
 1. User performs trove operation in their browser
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
-3. Call `TroveManager::getApproxHint(...)`, passing it the computed collateral ratio. Returns an address close to the correct insert position
-4. Call `SortedTroves::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. 
+3. Call `HintHelpers::getApproxHint(...)`, passing it the computed nominal collateral ratio. Returns an address close to the correct insert position
+4. Call `SortedTroves::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new nominal collateral ratio via `_NICR`. 
 5. Pass the exact position as an argument to the trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
 
 Hints allow cheaper trove operations for the user, at the expense of a slightly longer time to completion, due to the need to await the result of the two read calls in steps 1 and 2 - which may be sent as JSON-RPC requests to Infura, unless the front end operator is running a full Ethereum node.
 
-Each BorrowerOperations function that reinserts a troves takes a single hint, as does `StabilityPool::withdrawFromSPtoTrove(...)`.
+Each BorrowerOperations function that reinserts a trove takes a single hint, as does `StabilityPool::withdrawFromSPtoTrove(...)`.
 
 ### Hints for `redeemCollateral`
 
-`TroveManager::redeemCollateral` as a special case requires two hints. The first hint provides an accurate reinsert position (as described above), and the second hint ensures the transaction succeeds.
+`TroveManager::redeemCollateral` as a special case requires three hints:
+- `_firstRedemptionHint` hints at the position of the first trove that will be redeemed from,
+- `_partialRedemptionHint` hints at the position where the last redeemed trove should be reinserted, if it's partially redeemed,
+- `_partialRedemptionHintNICR` ensures that the transaction won't run out of gas if `_partialRedemptionHint` is no longer valid.
 
 **TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
 
+`redeemCollateral` will only redeem from troves that have an ICR >= MCR. In other words, if there are troves at the bottom of the SortedTroves list that are below the minimum collateral ratio (which can happen after an ETH:USD price drop), they will be skipped. To make this more gas-efficient, the position of the first redeemable trove should be passed as `_firstRedemptionHint`.
+
 All troves that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the SortedTroves list.
 
-It’s likely that the last trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The first hint passed to `redeemCollateral` gives the expected reinsert position.
+It’s likely that the last trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The `_partialRedemptionHint` passed to `redeemCollateral` gives the expected reinsert position.
 
 However, if between the off-chain hint computation and on-chain execution a different transaction changes the state of a trove that would otherwise be hit by the redemption sequence, then the off-chain hint computation could end up totally inaccurate. This could lead to the whole redemption sequence reverting due to out-of-gas error.
 
-To mitigate this, a second hint needs to be provided: the expected ICR of the final partially-redeemed-from trove. The on-chain redemption function checks whether, after redemption, the ICR of this trove would equal the ICR hint.
+To mitigate this, another hint needs to be provided: `_partialRedemptionHintNICR`, the expected nominal ICR of the final partially-redeemed-from trove. The on-chain redemption function checks whether, after redemption, the nominal ICR of this trove would equal the nominal ICR hint.
 
 If not, the redemption sequence doesn’t perform the final partial redemption, and terminates early. This ensures that the transaction doesn’t revert, and most of the requested LUSD redemption can be fulfilled.
 
@@ -1029,6 +1034,8 @@ _**Entire collateral:**_ the sum of a trove’s active collateral plus its pendi
 _**Entire debt:**_ the sum of a trove’s active debt plus its pending debt rewards accumulated from distributions
 
 _**Individual collateral ratio (ICR):**_ a trove's ICR is the ratio of the dollar value of its entire collateral at the current ETH:USD price, to its entire debt
+
+**Nominal collateral ratio (nominal ICR, NICR):** a trove's nominal ICR is the ratio its entire collateral (in ETH) to its entire debt, without factoring in the current ETH:USD price.
 
 _**Total active collateral:**_ the sum of active collateral over all troves. Equal to the ETH in the ActivePool.
 
