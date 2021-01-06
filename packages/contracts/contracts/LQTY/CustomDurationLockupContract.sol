@@ -10,15 +10,15 @@ contract CustomDurationLockupContract is CheckContract {
     using SafeMath for uint;
 
     // --- Data ---
-    address public deployer;
-    address public beneficiary;
+    address public immutable deployer;
+    address public immutable beneficiary;
 
-    ILQTYToken public lqtyToken;
+    ILQTYToken public immutable lqtyToken;
 
-    uint public initialEntitlement;
+    uint public immutable initialEntitlement;
 
     uint public lockupStartTimeInSeconds;
-    uint public lockupDurationInSeconds;
+    uint public immutable lockupDurationInSeconds;
 
     // TODO: use an enum for {inactive, active, ended} ? Make a lockup contract non-reusable after
     // full withdrawal.

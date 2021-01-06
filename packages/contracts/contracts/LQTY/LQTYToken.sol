@@ -68,13 +68,13 @@ contract LQTYToken is CheckContract, ILQTYToken {
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
     uint internal _100_MILLION = 1e26;  // non-constant, for use with SafeMath
 
-    uint public deploymentStartTime;
-    address public deployer;
+    uint public immutable deploymentStartTime;
+    address public immutable deployer;
 
     address public immutable communityIssuanceAddress;
     address public immutable lqtyStakingAddress;
 
-    ILockupContractFactory public lockupContractFactory;
+    ILockupContractFactory public immutable lockupContractFactory;
 
     // --- Events ---
 

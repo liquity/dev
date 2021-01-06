@@ -44,7 +44,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
     address public stabilityPoolAddress;
 
     uint public totalLQTYIssued;
-    uint public deploymentTime;
+    uint public immutable deploymentTime;
 
     // --- Events ---
 

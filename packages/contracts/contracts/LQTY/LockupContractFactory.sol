@@ -15,8 +15,8 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
     // --- Data ---
     uint constant public ONE_YEAR_IN_SECONDS = 31536000;
 
-    uint public deploymentTime;
-    address public deployer;
+    uint public immutable deploymentTime;
+    address public immutable deployer;
 
     ILQTYToken public lqtyToken;
     

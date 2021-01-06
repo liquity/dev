@@ -9,10 +9,6 @@ contract CommunityIssuanceTester is CommunityIssuance {
         lqtyToken.transfer(msg.sender, _amount);
     }
 
-    function setDeploymentTime() external {
-        deploymentTime = block.timestamp;
-    }
-
     function getCumulativeIssuanceFraction() external view returns (uint) {
        return _getCumulativeIssuanceFraction();
     }
