@@ -26,7 +26,7 @@ contract SaverProxy {
 
     function repay(Subscriptions.TroveOwner memory _params) public payable {
         address payable user = payable(getUserAddress());
-        uint ICR = _params.minRatio; // _ICR target min coll ratio of user (e.g. 1.5)
+        uint ICR = _params.minRatio; // ICR target min coll ratio of user (e.g. 1.5)
         // determine how much debt to sell to recover collateralization to be above minimum
         uint d = ITroveManager(troveManagerAddress).getTroveDebt(user); // user's debt
         uint c = ITroveManager(troveManagerAddress).getTroveColl(user); // user's coll

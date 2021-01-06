@@ -3,7 +3,7 @@ const DSProxy = artifacts.require("./DSProxy.sol");
 const Monitor = artifacts.require("./Monitor.sol");
 const MonitorProxy = artifacts.require("./MonitorProxy.sol");
 const SaverProxy = artifacts.require("./SaverProxy.sol");
-const SubscriptionProxy = artifacts.require("./SubscripionProxy.sol");
+const SubscriptionsProxy = artifacts.require("./SubscripionsProxy.sol");
 const Subscriptions = artifacts.require("./Subscripions.sol");
 const ProxyFactory = artifacts.require("./DSProxyFactory.sol");
 const ProxyRegistry = artifacts.require("./ProxyRegistry.sol");
@@ -33,6 +33,7 @@ const getAbiFunction = (contract, functionName) => {
 
 contract('Proxy', async accounts => {
     const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE';
+    const MIN_RATIO = '1240000000000000000';
     const [owner, alice, bob] = accounts;
     
     let monitorProxy, monitor, subscriptionsProxy, subscriptions;
@@ -61,12 +62,12 @@ contract('Proxy', async accounts => {
         guardFactory = await DSGuardFactory.new()
         DSGuardFactory.setAsDeployed(guardFactory)
 
-        subscriptionProxy = await SubscriptionProxy.new(
+        subscriptionsProxy = await SubscriptionsProxy.new(
             guardFactory.address, 
             subscriptions.address, 
             monitorProxy.address
         )
-        SubscripionProxy.setAsDeployed(subscriptionProxy)
+        SubscripionsProxy.setAsDeployed(subscriptionProxy)
         
         scriptProxy = await SaverProxy.new(borrowerOperations.address, troveManager.address)
         SaverProxy.setAsDeployed(scriptProxy)
@@ -92,6 +93,8 @@ contract('Proxy', async accounts => {
         const proxyAddr = proxyInfo.proxyAddr;
         
         web3Proxy = new web3.eth.Contract(DSProxy.abi, proxyAddr)
+
+        await subscribe(alice, MIN_RATIO);
     })
 
     describe('Proxy integration test', async accounts => { 
@@ -100,7 +103,7 @@ contract('Proxy', async accounts => {
         
         it("direct proxy, should top up deposit with gains", async () => {
             
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(script, 'open'),
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'open'),
                 [ 0 ]
             );
             await assertRevert(
@@ -109,7 +112,7 @@ contract('Proxy', async accounts => {
                 "ds-proxy-target-address-required"
             )
             
-            await web3Proxy.methods['execute(address,bytes)'](script.address, data).send(
+            await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send(
                 { from: alice, value: dec(1, 'ether') 
             });
             
@@ -130,18 +133,30 @@ contract('Proxy', async accounts => {
         // open two troves
         // price drop, one gets liquidated
         // withdraw collateral surplus, draw more debt, deposit
-    })
 
-    it("", async () => {
-        //
+        // TODO
+        // await repayFor(...);
     })
-
 })
 
-const repayFor = async (cdpId, ethAmount, joinAddr, nextPrice) => {
+const subscribe = async (account, minRatio) => {
     try {
-        const tx = await monitor.methods.repayFor([cdpId, ethAmount, '0', '0', 3000000, '0'], nextPrice, joinAddr, address0, '0x0').send({
-            from: bot.address, gas: 4500000, gasPrice: gasPrice
+        const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(subscriptionsProxy, 'subscribe'),
+        [minRatio]);
+
+        const tx = await web3Proxy.methods['execute(address,bytes)'](subscriptionsProxy.address, data).send({
+            from: account.address, gas: 400000, gasPrice: 7100000000});
+
+        console.log(tx);
+    } catch(err) {
+        console.log(err);
+    }
+};
+
+const repayFor = async (address, minRatio) => {
+    try {
+        const tx = await monitor.methods.repayFor([account.address, minRatio]).send({
+            from: owner.address, gas: 4500000, gasPrice: gasPrice
         });
 
         console.log(tx);
@@ -150,12 +165,12 @@ const repayFor = async (cdpId, ethAmount, joinAddr, nextPrice) => {
     }
 }
 
-const repay = async (cdpId, ethAmount, joinAddr, nextPrice) => {
+const repay = async (account, minRatio) => {
     try {
-        const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(AutomaticProxyV2, 'automaticRepay'),
-            [[cdpId, ethAmount, '0', '0', 3000000, '0'], joinAddr, address0, '0x0']);
+        const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'automaticRepay'),
+            [[account.address, minRatio]]);
 
-        const tx = await proxy.methods['execute(address,bytes)'](automaticProxyAddress, data).send({
+        const tx = await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({
             from: account.address, gas: 5000000, gasPrice: gasPrice
         });
 
@@ -164,10 +179,3 @@ const repay = async (cdpId, ethAmount, joinAddr, nextPrice) => {
         console.log(err);
     }
 }
-
-const canCall = async (method, cdpId, nextPrice) => {
-    const response = await monitor.methods.canCall(method, cdpId, nextPrice).call();
-
-    return response;
-}
-
