@@ -89,6 +89,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   
   ---*/
 
+  // using the result of this to advance time by the desired amount from the deployment time, whether or not some extra time has passed in the meanwhile
   const getDuration = async (expectedDuration) => {
     const deploymentTime = (await communityIssuanceTester.deploymentTime()).toNumber()
     const currentTime = await th.getLatestBlockTimestamp(web3)

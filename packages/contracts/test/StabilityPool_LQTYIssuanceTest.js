@@ -84,6 +84,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       issuance_M6 = toBN('41651488815552900').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
     })
 
+    // using the result of this to advance time by the desired amount from the deployment time, whether or not some extra time has passed in the meanwhile
     const getDuration = async (expectedDuration) => {
       const deploymentTime = (await communityIssuanceTester.deploymentTime()).toNumber()
       const currentTime = await th.getLatestBlockTimestamp(web3)
