@@ -5,6 +5,7 @@ pragma solidity 0.6.11;
 import './Interfaces/IPool.sol';
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 
@@ -15,7 +16,7 @@ import "./Dependencies/console.sol";
  * Stability Pool, the Default Pool, or both, depending on the liquidation conditions.
  * 
  */
-contract ActivePool is Ownable, IPool {
+contract ActivePool is Ownable, CheckContract, IPool {
     using SafeMath for uint256;
 
     address public borrowerOperationsAddress;
@@ -41,6 +42,11 @@ contract ActivePool is Ownable, IPool {
         external
         onlyOwner
     {
+        checkContract(_borrowerOperationsAddress);
+        checkContract(_troveManagerAddress);
+        checkContract(_stabilityPoolAddress);
+        checkContract(_defaultPoolAddress);
+
         borrowerOperationsAddress = _borrowerOperationsAddress;
         troveManagerAddress = _troveManagerAddress;
         stabilityPoolAddress = _stabilityPoolAddress;

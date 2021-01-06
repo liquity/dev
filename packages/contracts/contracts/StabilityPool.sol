@@ -15,6 +15,7 @@ import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/LiquitySafeMath128.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 /* 
@@ -129,7 +130,7 @@ import "./Dependencies/console.sol";
  * The product P (and snapshot P_t) is re-used, as the ratio P/P_t tracks a deposit's depletion due to liquidations.
  *
  */
-contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
+contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     using LiquitySafeMath128 for uint128;
 
     IBorrowerOperations public borrowerOperations;
@@ -234,6 +235,14 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         override
         onlyOwner
     {
+        checkContract(_borrowerOperationsAddress);
+        checkContract(_troveManagerAddress);
+        checkContract(_activePoolAddress);
+        checkContract(_lusdTokenAddress);
+        checkContract(_sortedTrovesAddress);
+        checkContract(_priceFeedAddress);
+        checkContract(_communityIssuanceAddress);
+
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
         troveManager = ITroveManager(_troveManagerAddress);
         activePool = IPool(_activePoolAddress);

@@ -2,13 +2,14 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "./OneYearLockupContract.sol";
 import "./CustomDurationLockupContract.sol";
 import "../Dependencies/console.sol";
 
-contract LockupContractFactory is ILockupContractFactory {
+contract LockupContractFactory is CheckContract, ILockupContractFactory {
     using SafeMath for uint;
      
     // --- Data ---
@@ -37,6 +38,8 @@ contract LockupContractFactory is ILockupContractFactory {
 
     function setLQTYTokenAddress(address _lqtyTokenAddress) external override {
         _requireCallerIsFactoryDeployer();
+        checkContract(_lqtyTokenAddress);
+
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
         emit LQTYTokenAddressSet(_lqtyTokenAddress);
     }

@@ -6,10 +6,11 @@ import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ICommunityIssuance.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/Ownable.sol";
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 
 //TODO: Decide upon and implement LQTY community issuance schedule.
-contract CommunityIssuance is ICommunityIssuance, Ownable {
+contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
     using SafeMath for uint;
 
     // --- Data ---
@@ -69,6 +70,9 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
         onlyOwner 
         override 
     {
+        checkContract(_lqtyTokenAddress);
+        checkContract(_stabilityPoolAddress);
+
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
 
