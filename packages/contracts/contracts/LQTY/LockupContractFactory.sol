@@ -78,8 +78,7 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
             _requireIsRegisteredOneYearLockup(addr);
             _requireCallerIsOriginalDeployerofOYLC(addr);
 
-            bool success = oneYearlockupContract.lockContract();
-            require(success, "LockupContractFactory: Failed to lock the contract");
+            oneYearlockupContract.lockContract();
         }
     }
 
@@ -92,8 +91,7 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
             _requireIsRegisteredCustomDurationLockup(addr);
             _requireCallerIsOriginalDeployerofCDLC(addr);
 
-            bool success = customDurationLockupContract.lockContract();
-            require(success, "LockupContractFactory: Failed to lock the contract");
+            customDurationLockupContract.lockContract();
         }
     }
 

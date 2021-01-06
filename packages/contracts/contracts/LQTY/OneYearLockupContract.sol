@@ -51,7 +51,7 @@ contract OneYearLockupContract is CheckContract {
         initialEntitlement = _initialEntitlement;
     }
 
-    function lockContract() external returns (bool) {
+    function lockContract() external {
         _requireCallerIsLockupDeployer();
         _requireContractIsNotActive();
         _requireLQTYBalanceAtLeastEqualsEntitlement();
@@ -59,7 +59,6 @@ contract OneYearLockupContract is CheckContract {
         active = true; 
         lockupStartTime = block.timestamp;
         emit OYLCLocked(lockupStartTime);
-        return true;
     }
 
     function withdrawLQTY() external {
