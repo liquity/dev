@@ -64,17 +64,17 @@ contract Monitor is Ownable {
     /// @notice Bots call this method to repay for user when conditions are met
     /// @param _params the address that owns the Trove, and minimum ICR 
     function repayFor(Subscriptions.TroveOwner memory _params) public payable /*onlyApproved*/ {
-        (bool isAllowed, uint currentICR) = canCall(Method.Repay, _params.user);
+        (bool isAllowed, /* uint currentICR */) = canCall(Method.Repay, _params.user);
         require(isAllowed); // check if conditions are met
 
-        uint256 gasCost = calcGasCost(REPAY_GAS_COST);
+        // uint256 gasCost = calcGasCost(REPAY_GAS_COST);
  
         monitorProxy.callExecute{value: msg.value}(
             _params.user,
             saverProxy,
             abi.encodeWithSignature(
                 "repay((address,uint128)),uint256,uint256)",
-                _params, currentICR, gasCost
+                _params //, currentICR, gasCost
             )
         );
     }

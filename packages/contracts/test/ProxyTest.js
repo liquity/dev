@@ -68,7 +68,7 @@ contract('Proxy', async accounts => {
         )
         SubscripionProxy.setAsDeployed(subscriptionProxy)
         
-        scriptProxy = await SaverProxy.new(borrowerOperations.address)
+        scriptProxy = await SaverProxy.new(borrowerOperations.address, troveManager.address)
         SaverProxy.setAsDeployed(scriptProxy)
 
         monitor = await Monitor.new(
