@@ -242,7 +242,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         if (!L.isCollIncrease) {_requireCollAmountIsWithdrawable(L.coll, L.collChange);}
         if (!_isDebtIncrease && _debtChange > 0) {
             _requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange);
-            _requireSufficientLUSDBalance(L.rawDebtChange);
+            _requireSufficientLUSDBalance(_borrower, L.rawDebtChange);
         }
 
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
@@ -267,7 +267,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint coll = troveManager.getTroveColl(msg.sender);
         uint debt = troveManager.getTroveDebt(msg.sender);
 
-        _requireSufficientLUSDBalance(debt.sub(LUSD_GAS_COMPENSATION));
+        _requireSufficientLUSDBalance(msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
 
         troveManager.removeStake(msg.sender);
         troveManager.closeTrove(msg.sender);
@@ -428,8 +428,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
     }
 
-     function _requireSufficientLUSDBalance(uint _debtRepayment) internal view {
-        require(lusdToken.balanceOf(msg.sender) >= _debtRepayment, "BorrowerOps: Caller doesnt have enough LUSD to close their trove");
+     function _requireSufficientLUSDBalance(address _borrower, uint _debtRepayment) internal view {
+        require(lusdToken.balanceOf(_borrower) >= _debtRepayment, "BorrowerOps: Caller doesnt have enough LUSD to close their trove");
     }
 
     // --- ICR and TCR checks ---
