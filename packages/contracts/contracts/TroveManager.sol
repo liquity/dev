@@ -28,7 +28,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     IPriceFeed public priceFeed;
 
     ILQTYStaking public lqtyStaking;
-    address public lqtyStakingAddress;
 
     // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
     ISortedTroves public sortedTroves;
@@ -214,7 +213,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         priceFeed = IPriceFeed(_priceFeedAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
-        lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
@@ -947,7 +945,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         // Calculate the ETH fee and send it to the LQTY staking contract
         T.ETHFee = _getRedemptionFee(T.totalETHDrawn);
-        activePool.sendETH(lqtyStakingAddress, T.ETHFee);
+        activePool.sendETH(address(lqtyStaking), T.ETHFee);
         lqtyStaking.increaseF_ETH(T.ETHFee);
 
         T.ETHToSendToRedeemer = T.totalETHDrawn.sub(T.ETHFee);

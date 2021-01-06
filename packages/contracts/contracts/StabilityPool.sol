@@ -137,14 +137,11 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     ILUSDToken public lusdToken;
 
-    address public activePoolAddress;
-
     // Needed to check if there are pending liquidations
     ISortedTroves public sortedTroves;
     IPriceFeed public priceFeed;
 
     ICommunityIssuance public communityIssuance;
-    address public communityIssuanceAddress;
 
     uint256 internal ETH;  // deposited ether tracker
 
@@ -235,11 +232,9 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
         troveManager = ITroveManager(_troveManagerAddress);
         activePool = IPool(_activePoolAddress);
-        activePoolAddress = _activePoolAddress;
         lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
-        communityIssuanceAddress = _communityIssuanceAddress;
         communityIssuance = ICommunityIssuance(_communityIssuanceAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
@@ -847,7 +842,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     // --- 'require' functions ---
 
     function _requireCallerIsActivePool() internal view {
-        require( msg.sender == activePoolAddress, "StabilityPool: Caller is not ActivePool");
+        require( msg.sender == address(activePool), "StabilityPool: Caller is not ActivePool");
     }
 
     function _requireCallerIsTroveManager() internal view {
