@@ -653,7 +653,7 @@ export class PopulatableEthersLiquity
     const [
       firstRedemptionHint,
       partialRedemptionHint,
-      partialRedemptionHintICR
+      partialRedemptionHintNICR
     ] = await this.findRedemptionHints(amount, optionalParams);
 
     return this.wrapRedemption(
@@ -663,7 +663,7 @@ export class PopulatableEthersLiquity
         amount.bigNumber,
         firstRedemptionHint,
         partialRedemptionHint,
-        partialRedemptionHintICR.bigNumber,
+        partialRedemptionHintNICR.bigNumber,
         redeemMaxIterations
       )
     );

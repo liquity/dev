@@ -888,7 +888,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         uint _LUSDamount,
         address _firstRedemptionHint,
         address _partialRedemptionHint,
-        uint _partialRedemptionHintICR,
+        uint _partialRedemptionHintNICR,
         uint _maxIterations
     )
         external
@@ -933,7 +933,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
                 remainingLUSD,
                 price,
                 _partialRedemptionHint,
-                _partialRedemptionHintICR
+                _partialRedemptionHintNICR
             );
 
             if (V.LUSDLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last Trove
