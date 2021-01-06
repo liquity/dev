@@ -115,9 +115,7 @@ const overlay: ThemeUIStyleObject = {
   left: 0,
   top: 0,
   width: "100%",
-  height: "100%",
-
-  zIndex: 2
+  height: "100%"
 };
 
 const modalOverlay: ThemeUIStyleObject = {
@@ -126,9 +124,7 @@ const modalOverlay: ThemeUIStyleObject = {
   left: 0,
   top: 0,
   width: "100vw",
-  height: "100vh",
-
-  zIndex: 4
+  height: "100vh"
 };
 
 const theme: Theme = {
@@ -265,7 +261,7 @@ const theme: Theme = {
 
       fontSize: 1,
 
-      zIndex: 3
+      zIndex: 1
     }
   },
 
@@ -297,7 +293,7 @@ const theme: Theme = {
       position: ["fixed", "relative"],
       width: "100vw",
       top: 0,
-      zIndex: 2,
+      zIndex: 1,
 
       px: [2, "12px", "12px", 5],
       py: [2, "12px", "12px"],
@@ -346,7 +342,7 @@ const theme: Theme = {
       justifyContent: "center"
     },
 
-    loadingOverlay: {
+    disabledOverlay: {
       ...overlay,
 
       bg: "rgba(255, 255, 255, 0.5)"

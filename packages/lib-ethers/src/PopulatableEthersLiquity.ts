@@ -401,7 +401,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     amount: Decimal,
     { price, ...rest }: HintedMethodOptionalParams = {}
   ): Promise<[string, string, Decimal]> {
-    price = price ?? (await this.readableLiquity.getPrice());
+    price ??= await this.readableLiquity.getPrice();
 
     const {
       firstRedemptionHint,
@@ -438,7 +438,7 @@ export class PopulatableEthersLiquity
     const { depositCollateral, borrowLUSD } = normalized;
 
     let { fees, ...hintOptionalParams } = optionalParams;
-    fees = fees ?? (borrowLUSD && (await this.readableLiquity.getFees()));
+    fees ??= borrowLUSD && (await this.readableLiquity.getFees());
 
     const newTrove = Trove.create(normalized, fees?.borrowingFeeFactor());
 
@@ -524,7 +524,7 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async claimRedeemedCollateral(address?: string, overrides?: EthersTransactionOverrides) {
+  async claimCollateralSurplus(address?: string, overrides?: EthersTransactionOverrides) {
     address ??= await this.signer.getAddress();
 
     return this.wrapSimpleTransaction(

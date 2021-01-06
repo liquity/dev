@@ -11,6 +11,7 @@ export type LiquityStoreBaseState = {
   accountBalance: Decimal;
   lusdBalance: Decimal;
   lqtyBalance: Decimal;
+  collateralSurplusBalance: Decimal;
   price: Decimal;
   lusdInStabilityPool: Decimal;
   total: Trove;
@@ -132,6 +133,13 @@ export abstract class LiquityStore<T = unknown> {
         "lqtyBalance",
         baseState.lqtyBalance,
         baseStateUpdate.lqtyBalance
+      ),
+
+      collateralSurplusBalance: this.updateIfChanged(
+        eq,
+        "collateralSurplusBalance",
+        baseState.collateralSurplusBalance,
+        baseStateUpdate.collateralSurplusBalance
       ),
 
       price: this.updateIfChanged(eq, "price", baseState.price, baseStateUpdate.price),
