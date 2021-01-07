@@ -305,10 +305,10 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         _updateDepositAndSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
 
-        _sendETHGainToDepositor(depositorETHGain);
-
         emit ETHGainWithdrawn(msg.sender, depositorETHGain, LUSDLoss); // LUSD Loss required for event log
-    }
+   
+        _sendETHGainToDepositor(depositorETHGain);
+     }
 
     /*  withdrawFromSP():
     *
@@ -350,9 +350,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         _updateDepositAndSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
 
-        _sendETHGainToDepositor(depositorETHGain);
-
         emit ETHGainWithdrawn(msg.sender, depositorETHGain, LUSDLoss);  // LUSD Loss required for event log
+    
+        _sendETHGainToDepositor(depositorETHGain);
     }
 
     /* withdrawETHGainToTrove:
@@ -842,7 +842,6 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         // Pay out depositor's LQTY gain
         uint depositorLQTYGain = getDepositorLQTYGain(_depositor);
         communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
-
         emit LQTYPaidToDepositor(_depositor, depositorLQTYGain);
     }
 

@@ -261,11 +261,11 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         // Re-insert trove it in the sorted list
         sortedTroves.reInsert(_borrower, L.newICR, L.price, _hint, _hint);
 
-        // Pass unmodified _debtChange here, as we don't send the fee to the user
-        _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
-
         emit TroveUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustTrove);
         emit LUSDBorrowingFeePaid(msg.sender,  L.LUSDFee);
+
+        // Pass unmodified _debtChange here, as we don't send the fee to the user
+        _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
     }
 
     function closeTrove() external override {
@@ -282,20 +282,21 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         troveManager.removeStake(msg.sender);
         troveManager.closeTrove(msg.sender);
 
-        // Burn the debt from the user's balance, and send the collateral back to the user
+        emit TroveUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
+
+        // Burn the repaid LUSD from the user's balance and the gas compensation from the Gas Pool
         _repayLUSD(msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
-        activePool.sendETH(msg.sender, coll);
-        // Refund gas compensation
         _repayLUSD(gasPoolAddress, LUSD_GAS_COMPENSATION);
 
-        emit TroveUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
+        // Send the collateral back to the user
+        activePool.sendETH(msg.sender, coll);
     }
 
     function claimRedeemedCollateral(address _user) external override {
+        emit RedeemedCollateralClaimed(_user);
+
         // send ETH from CollSurplus Pool to owner
         collSurplusPool.claimColl(_user);
-
-        emit RedeemedCollateralClaimed(_user);
     }
 
     // --- Helper functions ---
