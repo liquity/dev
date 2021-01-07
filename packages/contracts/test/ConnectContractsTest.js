@@ -103,7 +103,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct LQTYStaking address in TroveManager', async () => {
     const lqtyStakingAddress = lqtyStaking.address
 
-    const recordedLQTYStakingAddress = await troveManager.lqtyStakingAddress()
+    const recordedLQTYStakingAddress = await troveManager.lqtyStaking()
     assert.equal(lqtyStakingAddress, recordedLQTYStakingAddress)
   })
 
@@ -145,7 +145,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct ActivePool address in StabilityPool', async () => {
     const activePoolAddress = activePool.address
 
-    const recordedActivePoolAddress = await stabilityPool.activePoolAddress()
+    const recordedActivePoolAddress = await stabilityPool.activePool()
     assert.equal(activePoolAddress, recordedActivePoolAddress)
   })
 

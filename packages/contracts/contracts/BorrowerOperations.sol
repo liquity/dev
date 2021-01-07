@@ -8,7 +8,6 @@ import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/IPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import './Interfaces/ILUSDToken.sol';
-import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedTroves.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
@@ -22,17 +21,11 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     ITroveManager public troveManager;
 
-    IPool public activePool;
-
-    IPool public defaultPool;
-
     address stabilityPoolAddress;
 
     address gasPoolAddress;
 
     ICollSurplusPool collSurplusPool;
-
-    IPriceFeed public priceFeed;
 
     ILQTYStaking public lqtyStaking;
     address public lqtyStakingAddress;
@@ -488,8 +481,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         view
         returns (uint)
     {
-        uint totalColl = activePool.getETH().add(defaultPool.getETH());
-        uint totalDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
+        uint totalColl = getEntireSystemColl();
+        uint totalDebt = getEntireSystemDebt();
 
         totalColl = _isCollIncrease ? totalColl.add(_collChange) : totalColl.sub(_collChange);
         totalDebt = _isDebtIncrease ? totalDebt.add(_debtChange) : totalDebt = totalDebt.sub(_debtChange);
@@ -500,32 +493,5 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     function getCompositeDebt(uint _debt) external pure override returns (uint) {
         return _getCompositeDebt(_debt);
-    }
-
-    // --- Recovery Mode and TCR functions ---
-
-    function _checkRecoveryMode() internal view returns (bool) {
-        uint TCR = _getTCR();
-
-        if (TCR < CCR) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function _getTCR() internal view returns (uint TCR) {
-        uint price = priceFeed.getPrice();
-        uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getLUSDDebt();
-        uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getLUSDDebt();
-
-        uint totalCollateral = activeColl.add(liquidatedColl);
-        uint totalDebt = activeDebt.add(closedDebt);
-
-        TCR = LiquityMath._computeCR(totalCollateral, totalDebt, price);
-
-        return TCR;
     }
 }

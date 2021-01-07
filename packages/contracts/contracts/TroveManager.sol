@@ -3,12 +3,10 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/ITroveManager.sol";
-import "./Interfaces/IPool.sol";
 import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/ISortedTroves.sol";
-import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
@@ -21,10 +19,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     address public borrowerOperationsAddress;
 
-    IPool public activePool;
-
-    IPool public defaultPool;
-
     IStabilityPool public stabilityPool;
 
     address gasPoolAddress;
@@ -33,10 +27,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     ILUSDToken public lusdToken;
 
-    IPriceFeed public priceFeed;
-
     ILQTYStaking public lqtyStaking;
-    address public lqtyStakingAddress;
 
     // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
     ISortedTroves public sortedTroves;
@@ -235,7 +226,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         priceFeed = IPriceFeed(_priceFeedAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
-        lqtyStakingAddress = _lqtyStakingAddress;
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
@@ -476,7 +466,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         L.price = priceFeed.getPrice();
         L.LUSDInStabPool = stabilityPool.getTotalLUSDDeposits();
-        L.recoveryModeAtStart = checkRecoveryMode();
+        L.recoveryModeAtStart = _checkRecoveryMode();
 
         // Perform the appropriate liquidation sequence - tally the values, and obtain their totals
         if (L.recoveryModeAtStart == true) {
@@ -519,8 +509,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         L.remainingLUSDInStabPool = _LUSDInStabPool;
         L.backToNormalMode = false;
-        L.entireSystemDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
-        L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
+        L.entireSystemDebt = getEntireSystemDebt();
+        L.entireSystemColl = getEntireSystemColl();
 
         L.i = 0;
         while (L.i < _n) {
@@ -612,7 +602,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         L.price = priceFeed.getPrice();
         L.LUSDInStabPool = stabilityPool.getTotalLUSDDeposits();
-        L.recoveryModeAtStart = checkRecoveryMode();
+        L.recoveryModeAtStart = _checkRecoveryMode();
 
         // Perform the appropriate liquidation sequence - tally values and obtain their totals.
         if (L.recoveryModeAtStart == true) {
@@ -654,8 +644,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         L.remainingLUSDInStabPool = _LUSDInStabPool;
         L.backToNormalMode = false;
-        L.entireSystemDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
-        L.entireSystemColl = activePool.getETH().add(defaultPool.getETH());
+        L.entireSystemDebt = getEntireSystemDebt();
+        L.entireSystemColl = getEntireSystemColl();
 
         L.i = 0;
         for (L.i = 0; L.i < _troveArray.length; L.i++) {
@@ -969,7 +959,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         // Calculate the ETH fee and send it to the LQTY staking contract
         T.ETHFee = _getRedemptionFee(T.totalETHDrawn);
-        activePool.sendETH(lqtyStakingAddress, T.ETHFee);
+        activePool.sendETH(address(lqtyStaking), T.ETHFee);
         lqtyStaking.increaseF_ETH(T.ETHFee);
 
         T.ETHToSendToRedeemer = T.totalETHDrawn.sub(T.ETHFee);
@@ -1262,14 +1252,12 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     // --- Recovery Mode and TCR functions ---
 
-    function checkRecoveryMode() public view override returns (bool) {
-        uint TCR = getTCR();
+    function getTCR() external view override returns (uint) {
+        return _getTCR();
+    }
 
-        if (TCR < CCR) {
-            return true;
-        } else {
-            return false;
-        }
+    function checkRecoveryMode() external view override returns (bool) {
+        return _checkRecoveryMode();
     }
 
     // Check whether or not the system *would be* in Recovery Mode, given an ETH:USD price, and the entire system coll and debt.
@@ -1283,35 +1271,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     returns (bool)
     {
         uint TCR = LiquityMath._computeCR(_entireSystemColl, _entireSystemDebt, _price);
-        if (TCR < CCR) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function getTCR() public view override returns (uint TCR) {
-        uint price = priceFeed.getPrice();
-        uint entireSystemColl = getEntireSystemColl();
-        uint entireSystemDebt = getEntireSystemDebt();
-
-        TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, price);
-
-        return TCR;
-    }
-
-    function getEntireSystemColl() public view override returns (uint entireSystemColl) {
-        uint activeColl = activePool.getETH();
-        uint liquidatedColl = defaultPool.getETH();
-
-        return activeColl.add(liquidatedColl);
-    }
-
-    function getEntireSystemDebt() public view override returns (uint entireSystemDebt) {
-        uint activeDebt = activePool.getLUSDDebt();
-        uint closedDebt = defaultPool.getLUSDDebt();
-
-        return activeDebt.add(closedDebt);
+        
+        return TCR < CCR;
     }
 
     // --- Redemption fee functions ---
