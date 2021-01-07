@@ -111,7 +111,7 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
         // Node id must not be null
         require(_id != address(0));  
         // ICR must be non-zero
-        require(_ICR > 0); 
+        require(_ICR > 0, "SortedTroves: ICR must be positive"); 
 
         address prevId = _prevId; 
         address nextId = _nextId; 
@@ -209,10 +209,10 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
         // Remove node from the list
         _remove(_id);
 
-        if (_newICR > 0) {
-            // Insert node if it has a non-zero ICR
-            _insert(_id, _newICR, _price, _prevId, _nextId);
-        }
+        // Require non-zero ICR
+        require(_newICR > 0, "SortedTroves: ICR must be positive");
+            
+        _insert(_id, _newICR, _price, _prevId, _nextId);
     }
 
     /*
