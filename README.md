@@ -614,7 +614,10 @@ Standard ERC20 and EIP2612 (`permit()` ) functionality.
 This allows flexibility, as it means that _anyone_ can submit a Permit signed by A that allows B to spend a portion of A's tokens.
 
 The end result is the same for the signer A and spender B, but does mean that a `permit` transaction
-could be front-run and revert - which may hamper the execution flow of a contract that is intended handle the submission of a Permit on-chain.
+could be front-run and revert - which may hamper the execution flow of a contract that is intended to handle the submission of a Permit on-chain.
+
+For more details please see the original proposal EIP-2612:
+https://eips.ethereum.org/EIPS/eip-2612
 
 ## Supplying Hints to trove operations
 
