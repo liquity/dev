@@ -451,7 +451,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         L.price = priceFeed.getPrice();
         L.LUSDInStabPool = stabilityPool.getTotalLUSDDeposits();
-        L.recoveryModeAtStart = checkRecoveryMode();
+        L.recoveryModeAtStart = _checkRecoveryMode();
 
         // Perform the appropriate liquidation sequence - tally the values, and obtain their totals
         if (L.recoveryModeAtStart == true) {
@@ -587,7 +587,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         L.price = priceFeed.getPrice();
         L.LUSDInStabPool = stabilityPool.getTotalLUSDDeposits();
-        L.recoveryModeAtStart = checkRecoveryMode();
+        L.recoveryModeAtStart = _checkRecoveryMode();
 
         // Perform the appropriate liquidation sequence - tally values and obtain their totals.
         if (L.recoveryModeAtStart == true) {
@@ -1236,6 +1236,14 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     }
 
     // --- Recovery Mode and TCR functions ---
+
+    function getTCR() external view override returns (uint) {
+        return _getTCR();
+    }
+
+    function checkRecoveryMode() external view override returns (bool) {
+        return _checkRecoveryMode();
+    }
 
     // Check whether or not the system *would be* in Recovery Mode, given an ETH:USD price, and the entire system coll and debt.
     function _checkPotentialRecoveryMode(

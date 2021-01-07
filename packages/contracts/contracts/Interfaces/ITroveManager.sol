@@ -111,4 +111,8 @@ interface ITroveManager {
     function increaseTroveDebt(address _borrower, uint _debtIncrease) external returns (uint); 
 
     function decreaseTroveDebt(address _borrower, uint _collDecrease) external returns (uint); 
+
+    function getTCR() external view returns (uint);
+
+    function checkRecoveryMode() external view returns (bool);
 }

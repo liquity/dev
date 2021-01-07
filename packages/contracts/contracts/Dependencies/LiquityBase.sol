@@ -67,7 +67,7 @@ contract LiquityBase {
         return activeDebt.add(closedDebt);
     }
 
-    function getTCR() public view returns (uint TCR) {
+    function _getTCR() internal view returns (uint TCR) {
         uint price = priceFeed.getPrice();
         uint entireSystemColl = getEntireSystemColl();
         uint entireSystemDebt = getEntireSystemDebt();
@@ -77,8 +77,8 @@ contract LiquityBase {
         return TCR;
     }
 
-    function checkRecoveryMode() public view returns (bool) {
-        uint TCR = getTCR();
+    function _checkRecoveryMode() internal view returns (bool) {
+        uint TCR = _getTCR();
 
         return TCR < CCR;
     }

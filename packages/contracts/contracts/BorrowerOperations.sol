@@ -124,7 +124,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         assert(compositeDebt > 0);
         uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
 
-        if (checkRecoveryMode()) {
+        if (_checkRecoveryMode()) {
             _requireICRisAboveR_MCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
@@ -375,7 +375,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     function _requireNotInRecoveryMode() internal view {
-        require(checkRecoveryMode() == false, "BorrowerOps: Operation not permitted during Recovery Mode");
+        require(_checkRecoveryMode() == false, "BorrowerOps: Operation not permitted during Recovery Mode");
     }
 
     function _requireICRisAboveMCR(uint _newICR)  internal pure {
