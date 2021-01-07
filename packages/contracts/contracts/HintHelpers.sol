@@ -3,7 +3,6 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/ITroveManager.sol";
-import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedTroves.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";

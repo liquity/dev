@@ -7,7 +7,6 @@ import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/ISortedTroves.sol";
-import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
@@ -24,8 +23,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     ICollSurplusPool collSurplusPool;
 
     ILUSDToken public lusdToken;
-
-    IPriceFeed public priceFeed;
 
     ILQTYStaking public lqtyStaking;
 
@@ -452,7 +449,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         L.price = priceFeed.getPrice();
         L.LUSDInStabPool = stabilityPool.getTotalLUSDDeposits();
-        L.recoveryModeAtStart = checkRecoveryMode();
+        L.recoveryModeAtStart = _checkRecoveryMode();
 
         // Perform the appropriate liquidation sequence - tally the values, and obtain their totals
         if (L.recoveryModeAtStart == true) {
@@ -588,7 +585,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
         L.price = priceFeed.getPrice();
         L.LUSDInStabPool = stabilityPool.getTotalLUSDDeposits();
-        L.recoveryModeAtStart = checkRecoveryMode();
+        L.recoveryModeAtStart = _checkRecoveryMode();
 
         // Perform the appropriate liquidation sequence - tally values and obtain their totals.
         if (L.recoveryModeAtStart == true) {
@@ -1238,14 +1235,12 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     // --- Recovery Mode and TCR functions ---
 
-    function checkRecoveryMode() public view override returns (bool) {
-        uint TCR = getTCR();
+    function getTCR() external view override returns (uint) {
+        return _getTCR();
+    }
 
-        if (TCR < CCR) {
-            return true;
-        } else {
-            return false;
-        }
+    function checkRecoveryMode() external view override returns (bool) {
+        return _checkRecoveryMode();
     }
 
     // Check whether or not the system *would be* in Recovery Mode, given an ETH:USD price, and the entire system coll and debt.
@@ -1259,21 +1254,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     returns (bool)
     {
         uint TCR = LiquityMath._computeCR(_entireSystemColl, _entireSystemDebt, _price);
-        if (TCR < CCR) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function getTCR() public view override returns (uint TCR) {
-        uint price = priceFeed.getPrice();
-        uint entireSystemColl = getEntireSystemColl();
-        uint entireSystemDebt = getEntireSystemDebt();
-
-        TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, price);
-
-        return TCR;
+        
+        return TCR < CCR;
     }
 
     // --- Redemption fee functions ---

@@ -4,6 +4,7 @@ pragma solidity 0.6.11;
 
 import "./LiquityMath.sol";
 import "../Interfaces/IPool.sol";
+import "../Interfaces/IPriceFeed.sol";
 
 /* 
 * Base contract for TroveManager, BorrowerOperations and StabilityPool. Contains global system constants and
@@ -34,6 +35,8 @@ contract LiquityBase {
 
     IPool public defaultPool;
 
+    IPriceFeed public priceFeed;
+
     // --- Gas compensation functions ---
 
     // Returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation
@@ -62,5 +65,21 @@ contract LiquityBase {
         uint closedDebt = defaultPool.getLUSDDebt();
 
         return activeDebt.add(closedDebt);
+    }
+
+    function _getTCR() internal view returns (uint TCR) {
+        uint price = priceFeed.getPrice();
+        uint entireSystemColl = getEntireSystemColl();
+        uint entireSystemDebt = getEntireSystemDebt();
+
+        TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, price);
+
+        return TCR;
+    }
+
+    function _checkRecoveryMode() internal view returns (bool) {
+        uint TCR = _getTCR();
+
+        return TCR < CCR;
     }
 }

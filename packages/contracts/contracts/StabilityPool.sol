@@ -8,7 +8,6 @@ import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/ITroveManager.sol';
 import './Interfaces/ILUSDToken.sol';
 import './Interfaces/ISortedTroves.sol';
-import './Interfaces/IPriceFeed.sol';
 import "./Interfaces/ICommunityIssuance.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/SafeMath.sol";
@@ -139,7 +138,6 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // Needed to check if there are pending liquidations
     ISortedTroves public sortedTroves;
-    IPriceFeed public priceFeed;
 
     ICommunityIssuance public communityIssuance;
 
