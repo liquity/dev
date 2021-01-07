@@ -525,7 +525,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `adjustTrove(uint _collWithdrawal, int _debtChange, address _hint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
 
-`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their trove.
+`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their trove. Requires the borrower have a LUSD balance sufficient to repay their trove's debt, excluding gas compensation - i.e. `(debt - 10)` LUSD.
 
 `claimRedeemedCollateral(address _user)`: when a borrower’s trove has been fully redeemed from and closed, this function allows the borrower to claim their ETH collateral surplus that remains in the system.
 
