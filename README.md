@@ -619,7 +619,7 @@ A hint is the address of a trove with a position in the sorted list close to the
 
 All trove operations take a ‘hint’ argument. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call.
 
-The `TroveManager::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
+The `HintHelpers::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
 
 `getApproxHint(uint _CR, uint _numTrials, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a nominal collateral ratio of `_CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.
 
@@ -1035,7 +1035,7 @@ _**Entire debt:**_ the sum of a trove’s active debt plus its pending debt rewa
 
 _**Individual collateral ratio (ICR):**_ a trove's ICR is the ratio of the dollar value of its entire collateral at the current ETH:USD price, to its entire debt
 
-**Nominal collateral ratio (nominal ICR, NICR):** a trove's nominal ICR is the ratio its entire collateral (in ETH) to its entire debt, without factoring in the current ETH:USD price.
+_**Nominal collateral ratio (nominal ICR, NICR):**_ a trove's nominal ICR is the ratio of its entire collateral (in ETH) to its entire debt, without factoring in the current ETH:USD price.
 
 _**Total active collateral:**_ the sum of active collateral over all troves. Equal to the ETH in the ActivePool.
 
