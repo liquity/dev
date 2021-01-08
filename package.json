@@ -10,7 +10,8 @@
       "**/@graphprotocol/*",
       "**/jest*",
       "**/@babel/*",
-      "**/babel*"
+      "**/babel*",
+      "**/react-scripts"
     ]
   },
   "scripts": {
