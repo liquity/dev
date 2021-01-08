@@ -3430,6 +3430,47 @@ contract('TroveManager', async accounts => {
     await assertRevert(borrowerOperations.openTrove(D, ZERO_ADDRESS, { from: D, value: dec(10, 18) }), 'BorrowerOps: Trove is active')
   }
 
+  it("redeemCollateral(): emits correct debt and coll values in each redeemed trove's TroveUpdated event", async () => {
+    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(120, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(130, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(35, 18), D, { from: D, value: dec(1, 'ether') })
+
+    // whale redeems 365 LUSD.  Expect this to fully redeem A, B, C, and partially redeem 15 LUSD from D.
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(whale, contracts, dec(365, 18), { gasPrice: 0 })
+
+    // Check A, B, C have been closed
+    assert.isFalse(await sortedTroves.contains(A))
+    assert.isFalse(await sortedTroves.contains(B))
+    assert.isFalse(await sortedTroves.contains(C))
+
+    // Check D stays active
+    assert.isTrue(await sortedTroves.contains(D))
+
+    const troveUpdatedEvents = th.getAllEventsByName(redemptionTx, "TroveUpdated")
+
+    // Get each trove's emitted debt and coll 
+    const [A_emittedDebt, A_emittedColl] = th.getDebtAndCollFromTroveUpdatedEvents(troveUpdatedEvents, A)
+    const [B_emittedDebt, B_emittedColl] = th.getDebtAndCollFromTroveUpdatedEvents(troveUpdatedEvents, B)
+    const [C_emittedDebt, C_emittedColl] = th.getDebtAndCollFromTroveUpdatedEvents(troveUpdatedEvents, C)
+    const [D_emittedDebt, D_emittedColl] = th.getDebtAndCollFromTroveUpdatedEvents(troveUpdatedEvents, D)
+
+    // Expect A, B, C to have 0 emitted debt and coll, since they were closed
+    assert.equal(A_emittedDebt, '0')
+    assert.equal(A_emittedColl, '0')
+    assert.equal(B_emittedDebt, '0')
+    assert.equal(B_emittedColl, '0')
+    assert.equal(C_emittedDebt, '0')
+    assert.equal(C_emittedColl, '0')
+
+    /* Expect D to have lost 15 debt and (at ETH price of 200) 15/200 = 0.075 ETH. 
+    So, expect remaining debt = (45 - 15) = 30, and remaining ETH = 1 - 15/200 = 0.925 remaining. */
+    assert.equal(D_emittedDebt, dec(30, 18))
+    assert.equal(D_emittedColl, dec(925, 15))
+  })
+
   it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to claim", async () => {
     await redeemCollateral3Full1Partial()
 
