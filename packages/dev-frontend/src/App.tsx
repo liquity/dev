@@ -1,6 +1,6 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { Flex, Spinner, Heading, Text, ThemeProvider, Container } from "theme-ui";
+import { Flex, Spinner, Heading, ThemeProvider, Container } from "theme-ui";
 import { Wallet } from "@ethersproject/wallet";
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
@@ -103,9 +103,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
         <RiskiestTroves pageSize={10} />
       </Container>
 
-      <Footer>
-        <Text>* Please note that the final user-facing application will look different.</Text>
-      </Footer>
+      <Footer>* Please note that the final user-facing application will look different.</Footer>
 
       <TransactionMonitor />
     </LiquityStoreProvider>
@@ -126,11 +124,14 @@ const App = () => {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        height: "100vh"
+        height: "100vh",
+        textAlign: "center"
       }}
     >
-      <Heading>Liquity is not yet deployed to {chainId === 1 ? "mainnet" : "this network"}.</Heading>
-      <Text sx={{ mt: 3 }}>Please switch to Ropsten, Rinkeby, Kovan or Görli.</Text>
+      <Heading sx={{ mb: 3 }}>
+        Liquity is not yet deployed to {chainId === 1 ? "mainnet" : "this network"}.
+      </Heading>
+      Please switch to Ropsten, Rinkeby, Kovan or Görli.
     </Flex>
   );
 

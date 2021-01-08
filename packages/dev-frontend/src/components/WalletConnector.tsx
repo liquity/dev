@@ -123,9 +123,9 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
           onRetry={() => dispatch({ type: "retry" })}
           onCancel={() => dispatch({ type: "cancel" })}
         >
-          <Text sx={{ textAlign: "center" }}>
+          <Box sx={{ textAlign: "center" }}>
             You might need to install MetaMask or use a different browser.
-          </Text>
+          </Box>
           <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
             Learn more <Icon size="xs" name="external-link-alt" />
           </Link>

@@ -18,14 +18,14 @@
     "@ethersproject/bignumber": "^5.0.0",
     "@liquity/decimal": "^0.0.1",
     "@liquity/lib-base": "^0.0.1",
-    "@types/react": "^16.9.52",
+    "@types/react": "^17.0.0",
     "@typescript-eslint/eslint-plugin": "^4.4.1",
     "@typescript-eslint/parser": "^4.4.1",
     "eslint": "^7.11.0",
     "eslint-plugin-react": "^7.21.4",
     "eslint-plugin-react-hooks": "^4.1.2",
     "npm-run-all": "^4.1.5",
-    "react": "^16.13.1",
+    "react": "^17.0.1",
     "typescript": "^4.0.3"
   }
 }
