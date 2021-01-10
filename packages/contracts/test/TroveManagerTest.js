@@ -929,7 +929,6 @@ contract('TroveManager', async accounts => {
 
     Check Alice is above MCR, Bob below, Carol below. */
 
-
     assert.isTrue(alice_ICR_After.gte(mv._MCR))
     assert.isTrue(bob_ICR_After.lte(mv._MCR))
     assert.isTrue(carol_ICR_After.lte(mv._MCR))
