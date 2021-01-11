@@ -316,6 +316,25 @@ describe("EthersLiquity", () => {
     });
   });
 
+  describe("Frontend", () => {
+    it("should have no frontend initially", async () => {
+      const frontend = await liquity.getFrontendStatus();
+
+      assertStrictEqual(frontend.status, "unregistered" as const);
+    });
+
+    it("should register a frontend", async () => {
+      await liquity.registerFrontend(0.75);
+    });
+
+    it("should have a frontend now", async () => {
+      const frontend = await liquity.getFrontendStatus();
+
+      assertStrictEqual(frontend.status, "registered" as const);
+      expect(`${frontend.kickbackRate}`).to.equal("0.75");
+    });
+  });
+
   describe("StabilityPool", () => {
     before(async () => {
       deployment = await deployLiquity(deployer);
