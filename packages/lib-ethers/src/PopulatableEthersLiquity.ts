@@ -216,7 +216,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     return new PopulatedEthersTransaction<TroveChangeWithFees<T>>(
       rawPopulatedTransaction,
 
-      ({ logs }): TroveChangeWithFees<T> => {
+      ({ logs }) => {
         const [newTrove] = this.contracts.borrowerOperations
           .extractEvents(logs, "TroveUpdated")
           .map(
