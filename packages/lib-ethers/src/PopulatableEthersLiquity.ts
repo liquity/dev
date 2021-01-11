@@ -679,7 +679,7 @@ export class PopulatableEthersLiquity
 
   async depositLUSDInStabilityPool(
     amount: Decimalish,
-    frontEndTag = AddressZero,
+    frontendTag = AddressZero,
     overrides?: EthersTransactionOverrides
   ) {
     const depositLUSD = Decimal.from(amount);
@@ -690,7 +690,7 @@ export class PopulatableEthersLiquity
         { ...overrides },
         addGasForLQTYIssuance,
         depositLUSD.bigNumber,
-        frontEndTag
+        frontendTag
       )
     );
   }
@@ -809,6 +809,16 @@ export class PopulatableEthersLiquity
 
   withdrawGainsFromStaking(overrides?: EthersTransactionOverrides) {
     return this.unstakeLQTY(Decimal.ZERO, overrides);
+  }
+
+  async registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.stabilityPool.estimateAndPopulate.registerFrontEnd(
+        { ...overrides },
+        id,
+        Decimal.from(kickbackRate).bigNumber
+      )
+    );
   }
 }
 

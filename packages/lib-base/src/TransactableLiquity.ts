@@ -112,7 +112,7 @@ export interface TransactableLiquity {
 
   depositLUSDInStabilityPool(
     amount: Decimalish,
-    frontEndTag?: string
+    frontendTag?: string
   ): Promise<StabilityDepositChangeDetails>;
   withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
   withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
@@ -127,6 +127,8 @@ export interface TransactableLiquity {
   stakeLQTY(amount: Decimalish): Promise<void>;
   unstakeLQTY(amount: Decimalish): Promise<void>;
   withdrawGainsFromStaking(): Promise<void>;
+
+  registerFrontend(kickbackRate: Decimalish): Promise<void>;
 }
 
 type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (

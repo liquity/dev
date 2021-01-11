@@ -15,7 +15,8 @@ import {
   emptyTrove,
   StabilityDeposit,
   Fees,
-  LQTYStake
+  LQTYStake,
+  FrontendStatus
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
@@ -321,6 +322,10 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getTotalStakedLQTY(): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getFrontendStatus(address?: string): Promise<FrontendStatus> {
     throw new Error("Method not implemented.");
   }
 }
