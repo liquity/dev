@@ -853,7 +853,7 @@ When a deposit earns LQTY, it is split between the depositor, and the front end 
 
 The overall community issuance schedule for LQTY is sub-linear and monotonic. We currently (provisionally) implement a yearly “halving” schedule, described by the cumulative issuance function:
 
-`supplyCap * 1 - 0.5^t` 
+`supplyCap * (1 - 0.5^t)`
 
 where `t` is year and `supplyCap` is (provisionally) set to represent 33.33 million LQTY tokens.
 
