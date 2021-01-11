@@ -43,6 +43,12 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
       break;
     case "fail":
       if (state.type === "activating") {
+        // Ginormous HACK: ignoring this error seems to make things work.
+        // But why do we get this error?
+        // Why do we get it in launchkit-wizard-app but not dev-frontend?
+        if (action.error.message.match(/already pending/)) {
+          return state;
+        }
         return {
           type: action.error.name === "UserRejectedRequestError" ? "rejectedByUser" : "failed",
           connector: state.connector
