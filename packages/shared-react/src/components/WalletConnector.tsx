@@ -3,11 +3,18 @@ import { useWeb3React } from "@web3-react/core";
 import { Button, Text, Flex, Link, Box } from "theme-ui";
 
 import { useInjectedConnector } from "../hooks/connectors/InjectedConnector";
+
 import { RetryDialog } from "./RetryDialog";
 import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
 import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
+
+interface MaybeHasMetaMask {
+  ethereum?: {
+    isMetaMask?: boolean;
+  };
+}
 
 interface Connector {
   activate: () => Promise<void>;
@@ -69,7 +76,7 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
   throw new Error(`Cannot ${action.type} when ${state.type}`);
 };
 
-const detectMetaMask = () => window.ethereum?.isMetaMask ?? false;
+const detectMetaMask = () => (window as MaybeHasMetaMask).ethereum?.isMetaMask ?? false;
 
 type WalletConnectorProps = {
   loader?: React.ReactNode;

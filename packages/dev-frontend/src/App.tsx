@@ -9,9 +9,9 @@ import { Trove, StabilityDeposit } from "@liquity/lib-base";
 import { addressesOf, BlockPolledLiquityStore, EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { LiquityStoreProvider } from "@liquity/lib-react";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
+import { WalletConnector } from "@liquity/shared-react";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
-import { WalletConnector } from "./components/WalletConnector";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
 import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
