@@ -15,6 +15,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
     using SafeMath for uint;
 
     // --- Data ---
+    uint constant public DECIMAL_PRECISION = 1e18;
 
     mapping( address => uint) public stakes;
     uint public totalLQTYStaked;
@@ -151,7 +152,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
         _requireCallerIsTroveManager();
         uint ETHFeePerLQTYStaked;
      
-        if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = _ETHFee.mul(1e18).div(totalLQTYStaked);}
+        if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = _ETHFee.mul(DECIMAL_PRECISION).div(totalLQTYStaked);}
 
         F_ETH = F_ETH.add(ETHFeePerLQTYStaked); 
     }
@@ -160,7 +161,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
         _requireCallerIsBorrowerOperations();
         uint LUSDFeePerLQTYStaked;
         
-        if (totalLQTYStaked > 0) {LUSDFeePerLQTYStaked = _LUSDFee.mul(1e18).div(totalLQTYStaked);}
+        if (totalLQTYStaked > 0) {LUSDFeePerLQTYStaked = _LUSDFee.mul(DECIMAL_PRECISION).div(totalLQTYStaked);}
         
         F_LUSD = F_LUSD.add(LUSDFeePerLQTYStaked);
     }
@@ -173,7 +174,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
 
     function _getPendingETHGain(address _user) internal view returns (uint) {
         uint F_ETH_Snapshot = snapshots[_user].F_ETH_Snapshot;
-        uint ETHGain = stakes[_user].mul(F_ETH.sub(F_ETH_Snapshot)).div(1e18);
+        uint ETHGain = stakes[_user].mul(F_ETH.sub(F_ETH_Snapshot)).div(DECIMAL_PRECISION);
         return ETHGain;
     }
 
@@ -183,7 +184,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
 
     function _getPendingLUSDGain(address _user) internal view returns (uint) {
         uint F_LUSD_Snapshot = snapshots[_user].F_LUSD_Snapshot;
-        uint LUSDGain = stakes[_user].mul(F_LUSD.sub(F_LUSD_Snapshot)).div(1e18);
+        uint LUSDGain = stakes[_user].mul(F_LUSD.sub(F_LUSD_Snapshot)).div(DECIMAL_PRECISION);
         return LUSDGain;
     }
 

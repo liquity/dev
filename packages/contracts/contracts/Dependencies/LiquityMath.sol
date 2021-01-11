@@ -8,6 +8,8 @@ import "./console.sol";
 library LiquityMath {
     using SafeMath for uint;
 
+    uint internal constant FIXED_DECIMAL_UNIT = 1e18;
+
     /* Precision for Nominal ICR (independent of price). Rational for the value:
      * - Making it “too high” could lead to overflows.
      * - Making it “too low” could lead to a zero ICR (there’s an issue in ToB audit about that)
@@ -32,7 +34,7 @@ library LiquityMath {
     function decMul(uint x, uint y) internal pure returns (uint decProd) {
         uint prod_xy = x.mul(y);
 
-        decProd = prod_xy.add(1e18 / 2).div(1e18);
+        decProd = prod_xy.add(FIXED_DECIMAL_UNIT / 2).div(FIXED_DECIMAL_UNIT);
     }
 
     /* _decPow: Exponentiation function for 18-digit decimal base, and integer exponent n. 
@@ -55,9 +57,9 @@ library LiquityMath {
        
         if (_minutes > 525600000) {_minutes = 525600000;}  // cap to avoid overflow
     
-        if (_minutes == 0) {return 1e18;}
+        if (_minutes == 0) {return FIXED_DECIMAL_UNIT;}
 
-        uint y = 1e18;
+        uint y = FIXED_DECIMAL_UNIT;
         uint x = _base;
         uint n = _minutes;
 

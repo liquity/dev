@@ -15,6 +15,8 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
 
     // --- Data ---
 
+    uint constant public DECIMAL_PRECISION = 1e18;
+
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
 
    /* The issuance factor F determines the curvature of the issuance curve.
@@ -85,7 +87,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
     function issueLQTY() external override returns (uint) {
         _requireCallerIsStabilityPool();
 
-        uint latestTotalLQTYIssued = LQTYSupplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
+        uint latestTotalLQTYIssued = LQTYSupplyCap.mul(_getCumulativeIssuanceFraction()).div(DECIMAL_PRECISION);
         uint issuance = latestTotalLQTYIssued.sub(totalLQTYIssued);
 
         totalLQTYIssued = latestTotalLQTYIssued;
@@ -104,8 +106,8 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
         uint power = LiquityMath._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
 
         //  (1 - f^t)
-        uint cumulativeIssuanceFraction = (uint(1e18).sub(power));
-        assert(cumulativeIssuanceFraction <= 1e18); // must be in range [0,1]
+        uint cumulativeIssuanceFraction = (uint(DECIMAL_PRECISION).sub(power));
+        assert(cumulativeIssuanceFraction <= DECIMAL_PRECISION); // must be in range [0,1]
 
         return cumulativeIssuanceFraction;
     }

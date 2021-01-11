@@ -180,7 +180,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * During its lifetime, a deposit's value evolves from d_t to d_t * P / P_t , where P_t
     * is the snapshot of P taken at the instant the deposit was made. 18-digit decimal.
     */
-    uint public P = 1e18;
+    uint public P = DECIMAL_PRECISION;
 
     // Each time the scale of P shifts by 1e18, the scale is incremented by 1
     uint128 public currentScale;
@@ -425,7 +425,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     function _computeLQTYPerUnitStaked(uint _LQTYIssuance, uint _totalLUSDDeposits) internal returns (uint) {
-        uint LQTYNumerator = _LQTYIssuance.mul(1e18).add(lastLQTYError);
+        uint LQTYNumerator = _LQTYIssuance.mul(DECIMAL_PRECISION).add(lastLQTYError);
 
         uint LQTYPerUnitStaked = LQTYNumerator.div(_totalLUSDDeposits);
         lastLQTYError = LQTYNumerator.sub(LQTYPerUnitStaked.mul(_totalLUSDDeposits));
@@ -465,15 +465,15 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         internal
         returns (uint ETHGainPerUnitStaked, uint LUSDLossPerUnitStaked)
     {
-        uint LUSDLossNumerator = _debtToOffset.mul(1e18).sub(lastLUSDLossError_Offset);
-        uint ETHNumerator = _collToAdd.mul(1e18).add(lastETHError_Offset);
+        uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
+        uint ETHNumerator = _collToAdd.mul(DECIMAL_PRECISION).add(lastETHError_Offset);
 
         /*
         * Compute the LUSD and ETH rewards. Uses a "feedback" error correction, to keep
         * the cumulative error in the P and S state variables low.
         */
         if (_debtToOffset >= _totalLUSDDeposits) {
-            LUSDLossPerUnitStaked = 1e18;
+            LUSDLossPerUnitStaked = DECIMAL_PRECISION;
             lastLUSDLossError_Offset = 0;
         } else {
             /*
@@ -495,12 +495,12 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint currentP = P;
         uint newP;
 
-        assert(_LUSDLossPerUnitStaked <= 1e18);
+        assert(_LUSDLossPerUnitStaked <= DECIMAL_PRECISION);
         /*
         * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool LUSD in the liquidation.
         * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - LUSDLossPerUnitStaked)
         */
-        uint newProductFactor = _LUSDLossPerUnitStaked >= 1e18 ? 0 : uint(1e18).sub(_LUSDLossPerUnitStaked);
+        uint newProductFactor = _LUSDLossPerUnitStaked >= DECIMAL_PRECISION ? 0 : uint(DECIMAL_PRECISION).sub(_LUSDLossPerUnitStaked);
 
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
@@ -522,14 +522,14 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         if (newProductFactor == 0) {
             currentEpoch = currentEpochCached.add(1);
             currentScale = 0;
-            newP = 1e18;
+            newP = DECIMAL_PRECISION;
 
         // If multiplying P by a non-zero product factor would round P to zero, increment the scale
-        } else if (currentP.mul(newProductFactor) < 1e18) {
+        } else if (currentP.mul(newProductFactor) < DECIMAL_PRECISION) {
             newP = currentP.mul(newProductFactor);
             currentScale = currentScaleCached.add(1);
         } else {
-            newP = currentP.mul(newProductFactor).div(1e18);
+            newP = currentP.mul(newProductFactor).div(DECIMAL_PRECISION);
         }
 
         P = newP;
@@ -583,9 +583,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint P_Snapshot = snapshots.P;
 
         uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(S_Snapshot);
-        uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
+        uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(DECIMAL_PRECISION);
 
-        uint ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(1e18);
+        uint ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(DECIMAL_PRECISION);
 
         return ETHGain;
     }
@@ -607,11 +607,11 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * Otherwise, their cut of the deposit's earnings is equal to the kickbackRate, set by the front end through
         * which they made their deposit.
         */
-        uint kickbackRate = frontEndTag == address(0) ? 1e18 : frontEnds[frontEndTag].kickbackRate;
+        uint kickbackRate = frontEndTag == address(0) ? DECIMAL_PRECISION : frontEnds[frontEndTag].kickbackRate;
 
         Snapshots memory snapshots = depositSnapshots[_depositor];
 
-        uint LQTYGain = kickbackRate.mul(_getLQTYGainFromSnapshots(initialDeposit, snapshots)).div(1e18);
+        uint LQTYGain = kickbackRate.mul(_getLQTYGainFromSnapshots(initialDeposit, snapshots)).div(DECIMAL_PRECISION);
 
         return LQTYGain;
     }
@@ -627,11 +627,11 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         if (frontEndStake == 0) { return 0; }
 
         uint kickbackRate = frontEnds[_frontEnd].kickbackRate;
-        uint frontEndShare = uint(1e18).sub(kickbackRate);
+        uint frontEndShare = uint(DECIMAL_PRECISION).sub(kickbackRate);
 
         Snapshots memory snapshots = frontEndSnapshots[_frontEnd];
 
-        uint LQTYGain = frontEndShare.mul(_getLQTYGainFromSnapshots(frontEndStake, snapshots)).div(1e18);
+        uint LQTYGain = frontEndShare.mul(_getLQTYGainFromSnapshots(frontEndStake, snapshots)).div(DECIMAL_PRECISION);
         return LQTYGain;
     }
 
@@ -647,9 +647,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint P_Snapshot = snapshots.P;
 
         uint firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot].sub(G_Snapshot);
-        uint secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot.add(1)].div(1e18);
+        uint secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot.add(1)].div(DECIMAL_PRECISION);
 
-        uint LQTYGain = initialStake.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(1e18);
+        uint LQTYGain = initialStake.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(DECIMAL_PRECISION);
 
         return LQTYGain;
     }
@@ -713,7 +713,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         if (scaleDiff == 0) {
             compoundedStake = initialStake.mul(P).div(snapshot_P);
         } else if (scaleDiff == 1) {
-            compoundedStake = initialStake.mul(P).div(snapshot_P).div(1e18);
+            compoundedStake = initialStake.mul(P).div(snapshot_P).div(DECIMAL_PRECISION);
         } else {
             compoundedStake = 0;
         }
@@ -897,7 +897,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     function  _requireValidKickbackRate(uint _kickbackRate) internal pure {
-        require (_kickbackRate <= 1e18, "StabilityPool: Kickback rate must be in range [0,1]");
+        require (_kickbackRate <= DECIMAL_PRECISION, "StabilityPool: Kickback rate must be in range [0,1]");
     }
 
     // --- Fallback function ---

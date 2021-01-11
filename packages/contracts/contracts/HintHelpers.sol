@@ -77,7 +77,7 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
                 uint ETH = troveManager.getTroveColl(currentTroveuser)
                                      .add(troveManager.getPendingETHReward(currentTroveuser));
                 
-                uint newColl = ETH.sub(remainingLUSD.mul(1e18).div(_price));
+                uint newColl = ETH.sub(remainingLUSD.mul(DECIMAL_PRECISION).div(_price));
                 uint newDebt = LUSDDebt.sub(remainingLUSD);
                 
                 uint compositeDebt = _getCompositeDebt(newDebt);

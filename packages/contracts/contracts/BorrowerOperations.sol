@@ -305,7 +305,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     // --- Helper functions ---
 
     function _getUSDValue(uint _coll, uint _price) internal pure returns (uint) {
-        uint usdValue = _price.mul(_coll).div(1e18);
+        uint usdValue = _price.mul(_coll).div(DECIMAL_PRECISION);
 
         return usdValue;
     }

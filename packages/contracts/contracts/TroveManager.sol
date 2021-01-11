@@ -803,7 +803,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         V.LUSDLot = LiquityMath._min(_maxLUSDamount, Troves[_borrower].debt.sub(LUSD_GAS_COMPENSATION));
 
         // Get the ETHLot of equivalent value in USD
-        V.ETHLot = V.LUSDLot.mul(1e18).div(_price);
+        V.ETHLot = V.LUSDLot.mul(DECIMAL_PRECISION).div(_price);
 
         // Decrease the debt and collateral of the current Trove according to the LUSD lot and corresponding ETH to send
         uint newDebt = (Troves[_borrower].debt).sub(V.LUSDLot);
@@ -1063,7 +1063,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         uint stake = Troves[_borrower].stake;
 
-        uint pendingETHReward = stake.mul(rewardPerUnitStaked).div(1e18);
+        uint pendingETHReward = stake.mul(rewardPerUnitStaked).div(DECIMAL_PRECISION);
 
         return pendingETHReward;
     }
@@ -1077,7 +1077,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         uint stake =  Troves[_borrower].stake;
 
-        uint pendingLUSDDebtReward = stake.mul(rewardPerUnitStaked).div(1e18);
+        uint pendingLUSDDebtReward = stake.mul(rewardPerUnitStaked).div(DECIMAL_PRECISION);
 
         return pendingLUSDDebtReward;
     }
@@ -1163,8 +1163,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         * Division uses a "feedback" error correction, to keep the cumulative error in
         * the  L_ETH and L_LUSDDebt state variables low.
         */
-        uint ETHNumerator = _coll.mul(1e18).add(lastETHError_Redistribution);
-        uint LUSDDebtNumerator = _debt.mul(1e18).add(lastLUSDDebtError_Redistribution);
+        uint ETHNumerator = _coll.mul(DECIMAL_PRECISION).add(lastETHError_Redistribution);
+        uint LUSDDebtNumerator = _debt.mul(DECIMAL_PRECISION).add(lastLUSDDebtError_Redistribution);
 
         uint ETHRewardPerUnitStaked = ETHNumerator.div(totalStakes);
         uint LUSDDebtRewardPerUnitStaked = LUSDDebtNumerator.div(totalStakes);
@@ -1313,8 +1313,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint newBaseRate = decayedBaseRate.add(redeemedLUSDFraction.div(BETA));
 
         // Update the baseRate state variable
-        baseRate = newBaseRate < 1e18 ? newBaseRate : 1e18;  // cap baseRate at a maximum of 100%
-        assert(baseRate <= 1e18 && baseRate > 0); // Base rate is always non-zero after redemption
+        baseRate = newBaseRate < DECIMAL_PRECISION ? newBaseRate : DECIMAL_PRECISION;  // cap baseRate at a maximum of 100%
+        assert(baseRate <= DECIMAL_PRECISION && baseRate > 0); // Base rate is always non-zero after redemption
 
         _updateLastFeeOpTime();
 
@@ -1322,13 +1322,13 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
-       return baseRate.mul(_ETHDrawn).div(1e18);
+       return baseRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
     }
 
     // --- Borrowing fee functions ---
 
     function getBorrowingFee(uint _LUSDDebt) external view override returns (uint) {
-        return _LUSDDebt.mul(baseRate).div(1e18);
+        return _LUSDDebt.mul(baseRate).div(DECIMAL_PRECISION);
     }
 
     // Updates the baseRate state variable based on time elapsed since the last redemption or LUSD borrowing operation.
@@ -1336,7 +1336,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         _requireCallerIsBorrowerOperations();
 
         baseRate = _calcDecayedBaseRate();
-        assert(baseRate <= 1e18);  // The baseRate can decay to 0
+        assert(baseRate <= DECIMAL_PRECISION);  // The baseRate can decay to 0
 
         _updateLastFeeOpTime();
     }
@@ -1356,7 +1356,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint minutesPassed = _minutesPassedSinceLastFeeOp();
         uint decayFactor = LiquityMath._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
 
-        return baseRate.mul(decayFactor).div(1e18);
+        return baseRate.mul(decayFactor).div(DECIMAL_PRECISION);
     }
 
     function _minutesPassedSinceLastFeeOp() internal view returns (uint) {
