@@ -2116,7 +2116,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(G_After.eq(G_Before))
   })
 
-  // --- redemptions ---
+  // --- Redemption hints ---
 
 
   it('getRedemptionHints(): gets the address of the first Trove and the final ICR of the last Trove involved in a redemption', async () => {
@@ -2161,6 +2161,8 @@ contract('TroveManager', async accounts => {
 
     assert.equal(partialRedemptionHintNICR, '0')
   });
+
+    // --- Redemptions  ---
 
   it('redeemCollateral(): cancels the provided LUSD with debt from Troves with the lowest ICRs and sends an equivalent amount of Ether', async () => {
     // --- SETUP ---

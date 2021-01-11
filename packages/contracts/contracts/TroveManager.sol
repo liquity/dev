@@ -168,10 +168,9 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     // --- Variable container structs for redemptions ---
 
     struct RedemptionTotals {
-        uint totalLUSDToRedeem;
+        uint totalLUSDRedeemed;
         uint totalETHDrawn;
-        uint ETHFee;
-        uint ETHToSendToRedeemer;
+        uint LUSDFee;
         uint decayedBaseRate;
     }
 
@@ -183,7 +182,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     // --- Events ---
 
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _collGasCompensation, uint _LUSDGasCompensation);
-    event Redemption(uint _attemptedLUSDAmount, uint _actualLUSDAmount, uint _ETHSent, uint _ETHFee);
+    event Redemption(uint _attemptedLUSDAmount, uint _actualLUSDAmount, uint _ETHSent, uint _LUSDFee);
 
     enum TroveManagerOperation {
         applyPendingRewards,
@@ -910,26 +909,22 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         // Confirm redeemer's balance is less than total systemic debt
         assert(lusdToken.balanceOf(msg.sender) <= (activeDebt.add(defaultedDebt)));
 
-        uint remainingLUSD = _LUSDamount;
-        uint price = priceFeed.getPrice();
-        address currentBorrower;
+        _decayBaseRate();
 
-        if (_isValidFirstRedemptionHint(_firstRedemptionHint, price)) {
-            currentBorrower = _firstRedemptionHint;
-        } else {
-            currentBorrower = sortedTroves.getLast();
-            // Find the first trove with ICR >= MCR
-            while (currentBorrower != address(0) && getCurrentICR(currentBorrower, price) < MCR) {
-                currentBorrower = sortedTroves.getPrev(currentBorrower);
-            }
-        }
+        uint totalLUSDSupplyAtStart = getEntireSystemDebt();
+        T.LUSDFee = _getOptimisticRedemptionFee(_LUSDamount, totalLUSDSupplyAtStart); 
+        uint remainingLUSD = _LUSDamount.sub(T.LUSDFee);
+        uint newBaseRate = _getNewBaseRateFromRedemption(remainingLUSD, totalLUSDSupplyAtStart);
+        
+        uint price = priceFeed.getPrice();
+        address currentBorrower = _getFirstBorrowerInRedemptionSequence(_firstRedemptionHint, price);
 
         // Loop through the Troves starting from the one with lowest collateral ratio until _amount of LUSD is exchanged for collateral
         if (_maxIterations == 0) { _maxIterations = uint(-1); }
         while (currentBorrower != address(0) && remainingLUSD > 0 && _maxIterations > 0) {
             _maxIterations--;
             // Save the address of the Trove preceding the current one, before potentially modifying the list
-            address nextUserToCheck = sortedTroves.getPrev(currentBorrower);
+            address nextBorrowerToCheck = sortedTroves.getPrev(currentBorrower);
 
             _applyPendingRewards(currentBorrower);
 
@@ -943,27 +938,47 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
             if (V.LUSDLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last Trove
 
-            T.totalLUSDToRedeem  = T.totalLUSDToRedeem.add(V.LUSDLot);
+            T.totalLUSDRedeemed = T.totalLUSDRedeemed.add(V.LUSDLot);
             T.totalETHDrawn = T.totalETHDrawn.add(V.ETHLot);
 
             remainingLUSD = remainingLUSD.sub(V.LUSDLot);
-            currentBorrower = nextUserToCheck;
+            currentBorrower = nextBorrowerToCheck;
         }
 
-        // Decay the baseRate due to time passed, and then increase it according to the size of this redemption
-        _updateBaseRateFromRedemption(T.totalETHDrawn, price);
+        /*
+        * If the redemption sequence was cut short (due to either the partial redemption hint becoming out-of-date, or the redemption 
+        * sequence hitting the maxIterations cap before fulfilling the gross redemption), then recalculate the baseRate with the
+        * amount that was actually redeemed, and then the new reduced fee.
+        */
+        if (remainingLUSD > 0) {
+            uint reducedGrossRedemption = _LUSDamount.sub(remainingLUSD);
+            newBaseRate = _getNewBaseRateFromRedemption(T.totalLUSDRedeemed, totalLUSDSupplyAtStart);
+            T.LUSDFee = _getReducedRedemptionFee(reducedGrossRedemption, newBaseRate);
+        }
 
-        // Calculate the ETH fee and send it to the LQTY staking contract
-        T.ETHFee = _getRedemptionFee(T.totalETHDrawn);
-        activePool.sendETH(lqtyStakingAddress, T.ETHFee);
-        lqtyStaking.increaseF_ETH(T.ETHFee);
+        // Update baseRate state variable
+        baseRate = newBaseRate;
+        
+        emit Redemption(_LUSDamount, T.totalLUSDRedeemed, T.totalETHDrawn, T.LUSDFee);
 
-        T.ETHToSendToRedeemer = T.totalETHDrawn.sub(T.ETHFee);
+        // Send the LUSD fee to the staking contract
+        lqtyStaking.increaseF_LUSD(T.totalLUSDRedeemed);
+        lusdToken.sendToPool(msg.sender, address(lqtyStaking), T.totalLUSDRedeemed);
 
         // Burn the total LUSD that is cancelled with debt, and send the redeemed ETH to msg.sender
-        _activePoolRedeemCollateral(msg.sender, T.totalLUSDToRedeem, T.ETHToSendToRedeemer);
+        _activePoolRedeemCollateral(msg.sender, T.totalLUSDRedeemed, T.totalETHDrawn);
+    }
 
-        emit Redemption(_LUSDamount, T.totalLUSDToRedeem, T.totalETHDrawn, T.ETHFee);
+    function _getFirstBorrowerInRedemptionSequence(address _firstRedemptionHint, uint _price) internal view returns (address) {
+        if (_isValidFirstRedemptionHint(_firstRedemptionHint, _price)) {return _firstRedemptionHint;}
+        
+        address firstBorrower = sortedTroves.getLast();
+
+        // Find the first trove with ICR >= MCR
+        while (firstBorrower != address(0) && getCurrentICR(firstBorrower, _price) < MCR) {
+            firstBorrower = sortedTroves.getPrev(firstBorrower);
+        }
+        return firstBorrower;
     }
 
     // Burn the received LUSD, transfer the redeemed ETH to _redeemer and updates the Active Pool
@@ -1316,36 +1331,62 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
 
     // --- Redemption fee functions ---
 
-    /* 
-    * This function has two impacts on the baseRate state variable:
-    * 1) decays the baseRate based on time passed since last redemption or LUSD borrowing operation.
-    * then,
-    * 2) increases the baseRate based on the amount redeemed, as a proportion of total supply
+    /*  _getNewBaseRateFromRedemption():
+    *
+    * Gets the new baseRate based on the amount redeemed as a proportion of total LUSD supply. 
+    * Based on the whitepaper formula:
+    * 
+    * b_new = b + n/T
+    *
+    * Where n is the redeemed LUSD amount, T is the total LUSD supply, and b is the decayed baseRate.
     */
-    function _updateBaseRateFromRedemption(uint _ETHDrawn,  uint _price) internal returns (uint) {
-        uint decayedBaseRate = _calcDecayedBaseRate();
+    function _getNewBaseRateFromRedemption(uint _redeemedAmount,  uint _totalLUSDSupplyAtStart) internal view returns (uint) {
+        uint redeemedLUSDFraction = _redeemedAmount.div(_totalLUSDSupplyAtStart);
 
-        uint activeDebt = activePool.getLUSDDebt();
-        uint closedDebt = defaultPool.getLUSDDebt();
-        uint totalLUSDSupply = activeDebt.add(closedDebt);
+        uint newBaseRate = LiquityMath._max(baseRate.add(redeemedLUSDFraction), 1e18);
 
-        /* Convert the drawn ETH back to LUSD at face value rate (1 LUSD:1 USD), in order to get
-        * the fraction of total supply that was redeemed at face value. */
-        uint redeemedLUSDFraction = _ETHDrawn.mul(_price).div(totalLUSDSupply);
-
-        uint newBaseRate = decayedBaseRate.add(redeemedLUSDFraction.div(BETA));
-
-        // Update the baseRate state variable
-        baseRate = newBaseRate < 1e18 ? newBaseRate : 1e18;  // cap baseRate at a maximum of 100%
-        assert(baseRate <= 1e18 && baseRate > 0); // Base rate is always non-zero after redemption
-
-        _updateLastFeeOpTime();
-
-        return baseRate;
+        return newBaseRate;
     }
 
-    function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
-       return baseRate.mul(_ETHDrawn).div(1e18);
+    /* _getOptimisticRedemptionFee():
+    *
+    * Calculates the LUSD redemption fee based on the equation:
+    *
+    * 1) f = g(bT + g)/(T + g)
+    *
+    * where:
+    *
+    * f is the optimistic redemption fee
+    * g is the requested redemption amount
+    * T is the total LUSD supply
+    * b is the baseRate (after decay, before increasing from redemption)
+    * 
+    * Equation 1) for f is derived by solving the following two equations:
+    *
+    * 2) g = n + f   
+    * 3) f = g(b + n/T)
+    * 
+    * 2) is the expression for the request redemption amount g in terms of the fee f and net redemption n.
+    * 3) is the basic redemption fee formula from the whitepaper.
+    * 
+    * The fee f is "optimistic" in the sense that it assumes the full requested amount g is split between a redemption and a fee -- i.e. 
+    * that the redeemed amount does not get reduced by a failed partial redemption, or from the loop hitting its maxIterations cap.
+    */
+    function _getOptimisticRedemptionFee(uint _grossLUSDRedemption, uint _totalLUSDSupplyAtStart) internal view returns (uint) {
+        uint numerator = _grossLUSDRedemption.mul(baseRate.mul(_totalLUSDSupplyAtStart).div(1e18).add(_grossLUSDRedemption));
+
+        uint denominator = _totalLUSDSupplyAtStart.add(_grossLUSDRedemption);
+
+        return numerator.div(denominator);
+    }
+
+    /*  _getReducedRedemptionFee():
+    *
+    * This function is used to recalculate the redemption fee when a redemption falls short of its expected amount 
+    * due to a failed partial or hitting the maxIterations cap. 
+    */
+    function _getReducedRedemptionFee(uint _reducedGrossLUSDRedemption, uint _newBaseRate) internal pure returns (uint) {
+        return _reducedGrossLUSDRedemption.mul(_newBaseRate).div(1e18);
     }
 
     // --- Borrowing fee functions ---
@@ -1354,17 +1395,23 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         return _LUSDDebt.mul(baseRate).div(1e18);
     }
 
-    // Updates the baseRate state variable based on time elapsed since the last redemption or LUSD borrowing operation.
     function decayBaseRateFromBorrowing() external override {
         _requireCallerIsBorrowerOperations();
 
+        _decayBaseRate();
+    }
+
+    // --- Internal fee functions ---
+
+      /* Updates the baseRate and lastFeeOperationTime state variables based on time elapsed
+    * since the last redemption or LUSD borrowing operation. 
+    */
+    function _decayBaseRate() internal {
         baseRate = _calcDecayedBaseRate();
         assert(baseRate <= 1e18);  // The baseRate can decay to 0
 
         _updateLastFeeOpTime();
     }
-
-    // --- Internal fee functions ---
 
     // Update the last fee operation time only if time passed >= decay interval. This prevents base rate griefing.
     function _updateLastFeeOpTime() internal {
