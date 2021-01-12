@@ -537,13 +537,16 @@ export class PopulatableEthersLiquity
 
     const newTrove = Trove.create(normalized, fees?.borrowingFeeFactor());
 
+    const hint = await this.findHint(newTrove, hintOptionalParams);
+
     return this.wrapTroveChangeWithFees(
       normalized,
       await this.contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: depositCollateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
         borrowLUSD?.bigNumber ?? 0,
-        await this.findHint(newTrove, hintOptionalParams)
+        hint,
+        hint
       )
     );
   }
