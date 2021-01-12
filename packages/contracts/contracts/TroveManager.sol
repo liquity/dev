@@ -168,6 +168,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     // --- Variable container structs for redemptions ---
 
     struct RedemptionTotals {
+        uint remainingLUSD;
         uint totalLUSDRedeemed;
         uint totalETHDrawn;
         uint LUSDFee;
@@ -818,6 +819,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
             // certainly result in running out of gas.
             if (newNICR != _partialRedemptionHintNICR) {
+                console.log("failed partial");
                 V.LUSDLot = 0;
                 V.ETHLot = 0;
                 return V;
@@ -898,72 +900,73 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         external
         override
     {
-        uint activeDebt = activePool.getLUSDDebt();
-        uint defaultedDebt = defaultPool.getLUSDDebt();
-
         RedemptionTotals memory T;
 
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);
 
+        uint totalLUSDSupplyAtStart = getEntireSystemDebt();
+
         // Confirm redeemer's balance is less than total systemic debt
-        assert(lusdToken.balanceOf(msg.sender) <= (activeDebt.add(defaultedDebt)));
+        assert(lusdToken.balanceOf(msg.sender) <= (totalLUSDSupplyAtStart));
 
         _decayBaseRate();
 
-        uint totalLUSDSupplyAtStart = getEntireSystemDebt();
-        T.LUSDFee = _getOptimisticRedemptionFee(_LUSDamount, totalLUSDSupplyAtStart); 
-        uint remainingLUSD = _LUSDamount.sub(T.LUSDFee);
-        uint newBaseRate = _getNewBaseRateFromRedemption(remainingLUSD, totalLUSDSupplyAtStart);
-        
+        /* 
+        * Split the requested _LUSDamount into a net redemption and a fee, optimistically assuming a full redemption occurs -
+        * if not, the fee will be corrected after the loop finishes.
+        */
+        T.LUSDFee = _getOptimisticRedemptionFee(_LUSDamount, totalLUSDSupplyAtStart, baseRate); 
+        T.remainingLUSD = _LUSDamount.sub(T.LUSDFee);
+        uint newBaseRate = _getNewBaseRateFromRedemption(T.remainingLUSD, totalLUSDSupplyAtStart);
+       
         uint price = priceFeed.getPrice();
         address currentBorrower = _getFirstBorrowerInRedemptionSequence(_firstRedemptionHint, price);
 
-        // Loop through the Troves starting from the one with lowest collateral ratio until _amount of LUSD is exchanged for collateral
+        // Loop through the troves starting from the one with lowest collateral ratio until the net amount to redeem is exchanged for collateral
         if (_maxIterations == 0) { _maxIterations = uint(-1); }
-        while (currentBorrower != address(0) && remainingLUSD > 0 && _maxIterations > 0) {
+        while (currentBorrower != address(0) && T.remainingLUSD > 0 && _maxIterations > 0) {
             _maxIterations--;
-            // Save the address of the Trove preceding the current one, before potentially modifying the list
+            // Save the address of the trove preceding the current one, before potentially modifying the list
             address nextBorrowerToCheck = sortedTroves.getPrev(currentBorrower);
 
             _applyPendingRewards(currentBorrower);
 
             SingleRedemptionValues memory V = _redeemCollateralFromTrove(
                 currentBorrower,
-                remainingLUSD,
+                T.remainingLUSD,
                 price,
                 _partialRedemptionHint,
                 _partialRedemptionHintNICR
             );
 
-            if (V.LUSDLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last Trove
+            if (V.LUSDLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last trove
 
             T.totalLUSDRedeemed = T.totalLUSDRedeemed.add(V.LUSDLot);
             T.totalETHDrawn = T.totalETHDrawn.add(V.ETHLot);
 
-            remainingLUSD = remainingLUSD.sub(V.LUSDLot);
+            T.remainingLUSD = T.remainingLUSD.sub(V.LUSDLot);
             currentBorrower = nextBorrowerToCheck;
         }
 
         /*
         * If the redemption sequence was cut short (due to either the partial redemption hint becoming out-of-date, or the redemption 
         * sequence hitting the maxIterations cap before fulfilling the gross redemption), then recalculate the baseRate with the
-        * amount that was actually redeemed, and then the new reduced fee.
+        * amount that was actually redeemed, and then calculate the new reduced fee.
         */
-        if (remainingLUSD > 0) {
-            uint reducedGrossRedemption = _LUSDamount.sub(remainingLUSD);
+        if (T.remainingLUSD > 0) {
+            uint reducedGrossRedemption = _LUSDamount.sub(T.remainingLUSD);
             newBaseRate = _getNewBaseRateFromRedemption(T.totalLUSDRedeemed, totalLUSDSupplyAtStart);
             T.LUSDFee = _getReducedRedemptionFee(reducedGrossRedemption, newBaseRate);
         }
 
-        // Update baseRate state variable
-        baseRate = newBaseRate;
+        baseRate = newBaseRate;  // Update state variable
         
         emit Redemption(_LUSDamount, T.totalLUSDRedeemed, T.totalETHDrawn, T.LUSDFee);
 
         // Send the LUSD fee to the staking contract
-        lqtyStaking.increaseF_LUSD(T.totalLUSDRedeemed);
-        lusdToken.sendToPool(msg.sender, address(lqtyStaking), T.totalLUSDRedeemed);
+        lqtyStaking.increaseF_LUSD(T.LUSDFee);
+        lusdToken.sendToPool(msg.sender, address(lqtyStaking), T.LUSDFee);
 
         // Burn the total LUSD that is cancelled with debt, and send the redeemed ETH to msg.sender
         _activePoolRedeemCollateral(msg.sender, T.totalLUSDRedeemed, T.totalETHDrawn);
@@ -991,7 +994,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     }
 
     // --- Helper functions ---
-
 
     // Return the nominal collateral ratio (ICR) of a given Trove, without the price. Takes a trove's pending coll and debt rewards from redistributions into account.
     function getNominalICR(address _borrower) public view override returns (uint) {
@@ -1341,9 +1343,9 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     * Where n is the redeemed LUSD amount, T is the total LUSD supply, and b is the decayed baseRate.
     */
     function _getNewBaseRateFromRedemption(uint _redeemedAmount,  uint _totalLUSDSupplyAtStart) internal view returns (uint) {
-        uint redeemedLUSDFraction = _redeemedAmount.div(_totalLUSDSupplyAtStart);
+        uint redeemedLUSDFraction = _redeemedAmount.mul(1e18).div(_totalLUSDSupplyAtStart);
 
-        uint newBaseRate = LiquityMath._max(baseRate.add(redeemedLUSDFraction), 1e18);
+        uint newBaseRate = LiquityMath._min(baseRate.add(redeemedLUSDFraction), 1e18);
 
         return newBaseRate;
     }
@@ -1372,12 +1374,20 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     * The fee f is "optimistic" in the sense that it assumes the full requested amount g is split between a redemption and a fee -- i.e. 
     * that the redeemed amount does not get reduced by a failed partial redemption, or from the loop hitting its maxIterations cap.
     */
-    function _getOptimisticRedemptionFee(uint _grossLUSDRedemption, uint _totalLUSDSupplyAtStart) internal view returns (uint) {
-        uint numerator = _grossLUSDRedemption.mul(baseRate.mul(_totalLUSDSupplyAtStart).div(1e18).add(_grossLUSDRedemption));
+    function _getOptimisticRedemptionFee(uint _grossLUSDRedemption, uint _totalLUSDSupplyAtStart, uint _decayedBaseRate) internal view returns (uint) {
+        uint numerator = _grossLUSDRedemption.mul(_decayedBaseRate.mul(_totalLUSDSupplyAtStart).div(1e18).add(_grossLUSDRedemption));
 
         uint denominator = _totalLUSDSupplyAtStart.add(_grossLUSDRedemption);
 
         return numerator.div(denominator);
+    }
+
+    // External wrapper to enable estimation of the redemption fee with a single contract call
+    function getOptimisticRedemptionFee(uint _grossLUSDRedemption) external view returns (uint)  {
+        uint totalLUSDSupply = getEntireSystemDebt();
+        uint decayedBaseRate = _calcDecayedBaseRate();
+
+        return _getOptimisticRedemptionFee(_grossLUSDRedemption, totalLUSDSupply, decayedBaseRate);
     }
 
     /*  _getReducedRedemptionFee():

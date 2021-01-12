@@ -287,9 +287,9 @@ class TestHelper {
         const LUSDAmount = redemptionTx.logs[i].args[0]
         const totalLUSDRedeemed = redemptionTx.logs[i].args[1]
         const totalETHDrawn = redemptionTx.logs[i].args[2]
-        const ETHFee = redemptionTx.logs[i].args[3]
+        const LUSDFee = redemptionTx.logs[i].args[3]
 
-        return [LUSDAmount, totalLUSDRedeemed, totalETHDrawn, ETHFee]
+        return [LUSDAmount, totalLUSDRedeemed, totalETHDrawn, LUSDFee]
       }
     }
     throw ("The transaction logs do not contain a redemption event")
@@ -805,10 +805,14 @@ class TestHelper {
   }
 
   static async performRedemptionTx(redeemer, price, contracts, LUSDAmount) {
-    const redemptionhint = await contracts.hintHelpers.getRedemptionHints(LUSDAmount, price, 0)
+    /* For a given LUSDAmount redemption request, calculate how much LUSD we expect to actually be redeemed, 
+    *so that we can accurately find the partial */
+    const netRedemptionAmount = await this.getNetRedemption(LUSDAmount, contracts.troveManager)
 
-    const firstRedemptionHint = redemptionhint[0]
-    const partialRedemptionNewICR = redemptionhint[1]
+    const redemptionHints = await contracts.hintHelpers.getRedemptionHints(netRedemptionAmount, price, 0)
+
+    const firstRedemptionHint = redemptionHints[0]
+    const partialRedemptionNewICR = redemptionHints[1]
 
     const {
       hintAddress: approxPartialRedemptionHint,
@@ -829,6 +833,15 @@ class TestHelper {
     )
 
     return tx
+  }
+
+  static async getNetRedemption(LUSDAmount, troveManager) {
+    const fee = await troveManager.getOptimisticRedemptionFee(LUSDAmount)
+    console.log(`fee: ${fee}`)
+    const netRedemptionAmount = this.toBN(LUSDAmount).sub(this.toBN(fee))
+    console.log(`netRedemptionAmount: ${netRedemptionAmount}`)
+
+    return netRedemptionAmount
   }
 
   // --- Composite functions ---

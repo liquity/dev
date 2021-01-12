@@ -134,7 +134,7 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     // --- Reward-per-unit-staked increase function. Called by Liquity core contracts ---
 
     function increaseF_LUSD(uint _LUSDFee) external override {
-        _requireCallerIsBorrowerOperations();
+        _requireCallerIsTMorBO();
         uint LUSDFeePerLQTYStaked;
         
         if (totalLQTYStaked > 0) {LUSDFeePerLQTYStaked = _LUSDFee.mul(1e18).div(totalLQTYStaked);}
@@ -158,12 +158,9 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     // --- 'require' functions ---
 
-    function _requireCallerIsTroveManager() internal view {
-        require(msg.sender == troveManagerAddress, "LQTYStaking: caller is not TroveM");
-    }
-
-    function _requireCallerIsBorrowerOperations() internal view {
-        require(msg.sender == borrowerOperationsAddress, "LQTYStaking: caller is not BorrowerOps");
+    function _requireCallerIsTMorBO() internal view {
+        require(msg.sender == troveManagerAddress || msg.sender == borrowerOperationsAddress, 
+            "LQTYStaking: caller is not TroveManager or BorrowerOps");
     }
 
     function _requireCallerIsActivePool() internal view {
