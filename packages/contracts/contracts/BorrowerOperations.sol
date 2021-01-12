@@ -122,7 +122,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     // --- Borrower Trove Operations ---
 
-    function openTrove(uint _LUSDAmount, address _hint) external payable override {
+    function openTrove(uint _LUSDAmount, address _upperHint, address _lowerHint) external payable override {
         uint price = priceFeed.getPrice();
 
         _requireTroveisNotActive(msg.sender);
@@ -153,7 +153,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         troveManager.updateTroveRewardSnapshots(msg.sender);
         uint stake = troveManager.updateStakeAndTotalStakes(msg.sender);
 
-        sortedTroves.insert(msg.sender, NICR, _hint, _hint);
+        sortedTroves.insert(msg.sender, NICR, _upperHint, _lowerHint);
         uint arrayIndex = troveManager.addTroveOwnerToArray(msg.sender);
         emit TroveCreated(msg.sender, arrayIndex);
 

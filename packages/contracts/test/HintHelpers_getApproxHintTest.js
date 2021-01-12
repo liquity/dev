@@ -38,7 +38,7 @@ contract('TroveManager', async accounts => {
  const openTrove = async (account, index) => {
    const amountFinney = 2000 + index * 10
    const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-   await borrowerOperations.openTrove(0, account, { from: account, value: coll })
+   await borrowerOperations.openTrove(0, account, account, { from: account, value: coll })
  }
 
  const withdrawLUSDfromTrove = async (account) => {
@@ -55,7 +55,7 @@ contract('TroveManager', async accounts => {
     // console.time('makeTrovesInSequence')
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-      await borrowerOperations.openTrove(0, account, { from: account, value: coll })
+      await borrowerOperations.openTrove(0, account, account, { from: account, value: coll })
       await borrowerOperations.withdrawLUSD('90000000000000000000', account, { from: account })
   
       amountFinney += 10
