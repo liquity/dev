@@ -13,12 +13,11 @@ contract Subscriptions is Ownable, ISubscription {
 
     event Subscribed(address indexed user);
     event Unsubscribed(address indexed user);
-    event Updated(address indexed user);
-    event ParamUpdates(address indexed user, uint128 minRatio);
+    event Updated(address indexed user, uint minRatio);
     
     struct TroveOwner {
         address user;
-        uint128 minRatio;
+        uint minRatio;
     }
     TroveOwner[] public subscribers;
 
@@ -33,8 +32,11 @@ contract Subscriptions is Ownable, ISubscription {
     /// @return Subscription information about the user if exists
     function getMinRatio(address _user) public view returns (uint) {
         SubPosition storage subInfo = subscribersPos[_user];
-        TroveOwner storage trove = subscribers[subInfo.arrPos];
-        return trove.minRatio;
+        if (subInfo.subscribed) {
+            TroveOwner storage trove = subscribers[subInfo.arrPos];
+            return trove.minRatio;
+        }
+        return 0;
     }
 
     /// @dev Checks if the user is subscribed
@@ -48,7 +50,7 @@ contract Subscriptions is Ownable, ISubscription {
     /// @dev Called by the DSProxy contract which owns the Trove
     /// @notice Adds the users poistion in the list of subscriptions so it can be monitored
     /// @param _minRatio Minimum ratio below which repay is triggered
-    function subscribe(uint128 _minRatio) public virtual override {
+    function subscribe(uint _minRatio) public virtual override {
         SubPosition storage subInfo = subscribersPos[msg.sender];
 
         TroveOwner memory subscription = TroveOwner({
@@ -59,8 +61,7 @@ contract Subscriptions is Ownable, ISubscription {
          if (subInfo.subscribed) {
             subscribers[subInfo.arrPos] = subscription;
 
-            emit Updated(msg.sender);
-            emit ParamUpdates(msg.sender, _minRatio);
+            emit Updated(msg.sender, _minRatio);
         } else {
             subscribers.push(subscription);
             

@@ -86,6 +86,11 @@ contract Monitor is Ownable {
         );
     }
 
+    //  /// @param _params the address that owns the Trove, and minimum ICR 
+    // function boostFor(
+    // ) public payable /*onlyApproved*/ {
+    // }
+
     function getICR(address _user) public view returns(uint) {
         uint price = priceFeed.getPrice();
         uint ICR = troveManager.getCurrentICR(_user, price);
@@ -108,7 +113,11 @@ contract Monitor is Ownable {
 
         if (_method == Method.Repay) {
             return (currentICR < minRatio, currentICR);
-        } else {
+        } 
+        // else if (_method == Method.Boost) {
+        //     //
+        // }
+        else {
             return (false, 0);
         }
     }

@@ -54,6 +54,50 @@ contract('Proxy', async accounts => {
     let contracts, borrowerOperations, troveManager, priceFeed
     let factory, guardFactory, registry, scriptProxy, web3Proxy
 
+    const subscribe = async (account, minRatio) => {
+        try {
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(subscriptionsProxy, 'subscribe'),
+            [minRatio]);
+
+            const tx = await web3Proxy.methods['execute(address,bytes)'](subscriptionsProxy.address, data).send({ from: account });
+            console.log(tx);
+        } catch(err) {
+            console.log(err);
+        }
+    }
+    
+    const repayFor = async (user, /* minRatio, */  firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
+        try {
+            const tx = await monitor.methods.repayFor(
+               //[account.address, minRatio],
+               firstRedemptionHint, 
+               partialRedemptionHint, 
+               partialRedemptionHintICR, 
+               redeemMaxIterations   
+            ).send({ from: user });
+            console.log(tx);
+        } catch(err) {
+            console.log(err);
+        }
+    }
+    
+    const repay = async (account, /* minRatio, */ firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
+        try {
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'repay'),
+                [//[account.address, minRatio],
+                    firstRedemptionHint, 
+                    partialRedemptionHint, 
+                    partialRedemptionHintICR, 
+                    redeemMaxIterations  
+                ]);
+    
+            const tx = await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({ from: account });
+            console.log(tx);
+        } catch(err) {
+            console.log(err);
+        }
+    }    
+
     before(async () => {
         //Deploy the entire system
         contracts = await deploymentHelper.deployLiquityCore()
@@ -104,7 +148,7 @@ contract('Proxy', async accounts => {
         registry = await ProxyRegistry.new(factory.address)
         ProxyRegistry.setAsDeployed(registry)
         
-        console.log("alice...", alice.address)
+        console.log("alice...", alice)
         const proxyInfo = await getProxy(alice, registry)
         const proxyAddr = proxyInfo.proxyAddr;
         console.log(proxyAddr)
@@ -112,6 +156,11 @@ contract('Proxy', async accounts => {
         web3Proxy = new web3.eth.Contract(DSProxy.abi, proxyAddr)
 
         await subscribe(alice, MIN_RATIO);
+        
+        // even though alice is invoking the subscription
+        // she is doing this via her DSproxy by way of the SubscriptionProxy contract
+        // thus the subscription actually belongs to her DSproxy address
+        assert.isTrue(await subscriptions.isSubscribed(proxyAddr))
     })
 
     describe('Proxy integration test', async accounts => { 
@@ -143,10 +192,8 @@ contract('Proxy', async accounts => {
             // changing ETH and debt trackers in ActivePool
             assert.equal(activePool_ETH_After, dec(1, 'ether'))
             assert.equal(activePool_RawEther_After, dec(1, 'ether'))
-
-            await subscribe(alice, MIN_RATIO)
-
         })
+
         it("Proxity monitor calling SaverProxy", async () => {
             // open two troves
             // price drop
@@ -158,13 +205,13 @@ contract('Proxy', async accounts => {
             const debt = AliceTrove[0]
             
             const nowICR = await troveManager.computeICR(coll, debt, price)
-            const minICR = await subscriptions.getMinRatio(alice.address)
+            const minICR = await subscriptions.getMinRatio(alice)
     
             assert.isTrue(nowICR < minICR)
             
             // determine how much debt to sell to recover collateralization to be above minimum
-            let amount = debt.mul(minICR).sub(coll).div(minICR + 1); // TODO 1
-            // TODO account for redemption fee
+            let amount = debt.mul(minICR).sub(coll).div(minICR + Number('1' + _18_zeros)); // TODO 1
+            // TODO account for redemption fee?
             
             const {
                 firstRedemptionHint,
@@ -178,13 +225,13 @@ contract('Proxy', async accounts => {
             // so the correct position is quickly found 
             const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
                 partialRedemptionHintICR, price,
-                alice, // TODO alice == her DSProxy?
+                alice,
                 alice
             )
       
             // Don't pay for gas, as it makes it easier to calculate the received Ether
             /*
-            wait repayFor(alice, // TODO check sender
+            await repayFor(alice, // TODO check sender
                 amount, firstRedemptionHint,
                 partialRedemptionHint,
                 partialRedemptionHintICR,
@@ -193,53 +240,3 @@ contract('Proxy', async accounts => {
         })
     })
 })
-
-const subscribe = async (account, minRatio) => {
-    try {
-        const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(subscriptionsProxy, 'subscribe'),
-        [minRatio]);
-
-        const tx = await web3Proxy.methods['execute(address,bytes)'](subscriptionsProxy.address, data).send({
-            from: account.address, gas: 400000, gasPrice: 7100000000});
-
-        console.log(tx);
-    } catch(err) {
-        console.log(err);
-    }
-}
-
-const repayFor = async (user, /* minRatio, */  firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
-    try {
-        const tx = await monitor.methods.repayFor(
-           //[account.address, minRatio],
-           firstRedemptionHint, 
-           partialRedemptionHint, 
-           partialRedemptionHintICR, 
-           redeemMaxIterations   
-        ).send({
-            from: user.address, gas: 4500000, gasPrice: gasPrice
-        });
-        console.log(tx);
-    } catch(err) {
-        console.log(err);
-    }
-}
-
-const repay = async (account, /* minRatio, */ firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
-    try {
-        const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'repay'),
-            [//[account.address, minRatio],
-                firstRedemptionHint, 
-                partialRedemptionHint, 
-                partialRedemptionHintICR, 
-                redeemMaxIterations  
-            ]);
-
-        const tx = await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({
-            from: account.address, gas: 5000000, gasPrice: gasPrice
-        });
-        console.log(tx);
-    } catch(err) {
-        console.log(err);
-    }
-}

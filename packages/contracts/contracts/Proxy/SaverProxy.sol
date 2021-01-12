@@ -25,13 +25,13 @@ contract SaverProxy {
         IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_amt, msg.sender);
     }
 
-    function repay( //Subscriptions.TroveOwner memory _params, 
+    function repay( //Subscriptions.TroveOwner memory _params, //TODO rename redeemAdjust
                     uint _redemptionAmountLUSD,
                     address _firstRedemptionHint,
                     address _partialRedemptionHint,
                     uint _partialRedemptionHintICR,
                     uint _maxIterations 
-                  ) public payable {
+                  ) public /*payable*/ {
                       
         address payable user = payable(getUserAddress());
 
@@ -45,9 +45,12 @@ contract SaverProxy {
                                                             _partialRedemptionHint, 
                                                             _partialRedemptionHintICR, 
                                                             _maxIterations); 
+        
         // TODO msg.value should be redeemed collateral from above
         // IBorrowerOperations(borrowerOperations).adjustTrove{value: msg.value}(0, n, false, user);
 	}
+
+    //function boost
 
     /// @notice Returns the owner of the DSProxy that called the contract
     function getUserAddress() internal view returns (address) {

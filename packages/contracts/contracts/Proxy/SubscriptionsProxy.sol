@@ -55,7 +55,7 @@ contract SubscriptionsProxy {
 
     /// @notice Calls subscription contract and creates a DSGuard if non existent
     /// @param _minRatio Minimum ratio below which repay is triggered
-    function subscribe(uint128 _minRatio) public {
+    function subscribe(uint _minRatio) public {
         givePermission(LQTY_MONITOR_PROXY_ADDRESS);
         ISubscription(LQTY_SUBSCRIPTIONS_ADDRESS).subscribe(_minRatio);
     }
@@ -63,7 +63,7 @@ contract SubscriptionsProxy {
     /// @notice Calls subscription contract and updated existing parameters
     /// @dev If subscription is non existent this will create one
     /// @param _minRatio Minimum ratio below which repay is triggered
-    function update(uint128 _minRatio) public {
+    function update(uint _minRatio) public {
         ISubscription(LQTY_SUBSCRIPTIONS_ADDRESS).subscribe(_minRatio);
     }
 
