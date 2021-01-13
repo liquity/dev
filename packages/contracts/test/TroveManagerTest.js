@@ -3770,23 +3770,6 @@ contract('TroveManager', async accounts => {
     assert.equal(B_Status, '2')  // closed
     assert.equal(C_Status, '0')  // non-existent
   })
-
-  // --- Internal removeTroveOwner ---
-
-  it("Internal _removeTroveOwner(): Reverts if trove has been closed", async () => { 
-    await borrowerOperations.openTrove(dec(1, 18), C, { from: C, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
-   
-    // B closes, leaves 2 troves in system
-    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.closeTrove({from: B})
-
-    /* Call the external tester function that directly accesses the internal _removeTroveOwner() function.
-     Try to remove B */
-    const txPromise_B = troveManager.callInternalRemoveTroveOwner(B)
-
-    assertRevert(txPromise_B)
-  })
 })
 
 contract('Reset chain state', async accounts => { })
