@@ -438,8 +438,12 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     const numberOfTroves =
       optionalParams.numberOfTroves ?? (await this.readableLiquity.getNumberOfTroves());
 
-    if (!numberOfTroves || nominalCollateralRatio.infinite) {
-      return AddressZero;
+    if (!numberOfTroves) {
+      return [AddressZero, AddressZero];
+    }
+
+    if (nominalCollateralRatio.infinite) {
+      return [AddressZero, await this.contracts.sortedTroves.getFirst()];
     }
 
     const totalNumberOfTrials = Math.ceil(10 * Math.sqrt(numberOfTroves));
@@ -469,15 +473,11 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
     const { hintAddress } = results.reduce((a, b) => (a.diff.lt(b.diff) ? a : b));
 
-    // Picking the second address as hint results in better gas cost, especially when having to
-    // traverse the list due to interference
-    const [, hint] = await this.contracts.sortedTroves.findInsertPosition(
+    return await this.contracts.sortedTroves.findInsertPosition(
       nominalCollateralRatio.bigNumber,
       hintAddress,
       hintAddress
     );
-
-    return hint;
   }
 
   protected async findHint(trove: Trove, optionalParams: HintedMethodOptionalParams = {}) {
@@ -505,10 +505,13 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
     const collateralRatio = new Decimal(partialRedemptionHintNICR);
 
+    // Picking the second address as hint results in better gas cost, especially when having to
+    // traverse the list due to interference
+    const [, hint] = await this.findHintForNominalCollateralRatio(collateralRatio, hintOptionalParams)
     return [
       firstRedemptionHint,
       collateralRatio.nonZero
-        ? await this.findHintForNominalCollateralRatio(collateralRatio, hintOptionalParams)
+        ? hint
         : AddressZero,
       collateralRatio
     ];
@@ -537,7 +540,7 @@ export class PopulatableEthersLiquity
 
     const newTrove = Trove.create(normalized, fees?.borrowingFeeFactor());
 
-    const hint = await this.findHint(newTrove, hintOptionalParams);
+    const [upperHint, lowerHint] = await this.findHint(newTrove, hintOptionalParams);
 
     return this.wrapTroveChangeWithFees(
       normalized,
@@ -545,8 +548,8 @@ export class PopulatableEthersLiquity
         { value: depositCollateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
         borrowLUSD?.bigNumber ?? 0,
-        hint,
-        hint
+        upperHint,
+        lowerHint
       )
     );
   }
@@ -606,6 +609,8 @@ export class PopulatableEthersLiquity
 
     const finalTrove = trove.adjust(normalized, fees?.borrowingFeeFactor());
 
+    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams)
+
     return this.wrapTroveChangeWithFees(
       normalized,
       await this.contracts.borrowerOperations.estimateAndPopulate.adjustTrove(
@@ -617,7 +622,8 @@ export class PopulatableEthersLiquity
         withdrawCollateral?.bigNumber ?? 0,
         (borrowLUSD ?? repayLUSD)?.bigNumber ?? 0,
         !!borrowLUSD,
-        await this.findHint(finalTrove, hintOptionalParams)
+        upperHint,
+        lowerHint
       )
     );
   }
@@ -719,11 +725,14 @@ export class PopulatableEthersLiquity
       (deposit ?? (await this.readableLiquity.getStabilityDeposit())).collateralGain
     );
 
+    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams)
+
     return this.wrapCollateralGainTransfer(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
         { ...overrides },
         compose(addGasForPotentialListTraversal, addGasForLQTYIssuance),
-        await this.findHint(finalTrove, hintOptionalParams)
+        upperHint,
+        lowerHint
       )
     );
   }
