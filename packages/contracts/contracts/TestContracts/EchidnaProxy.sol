@@ -58,28 +58,28 @@ contract EchidnaProxy {
         borrowerOperations.openTrove{value: _ETH}(_LUSDAmount, _upperHint, _lowerHint);
     }
 
-    function addCollPrx(uint _ETH, address _hint) external payable {
-        borrowerOperations.addColl{value: _ETH}(_hint);
+    function addCollPrx(uint _ETH, address _upperHint, address _lowerHint) external payable {
+        borrowerOperations.addColl{value: _ETH}(_upperHint, _lowerHint);
     }
 
-    function withdrawCollPrx(uint _amount, address _hint) external {
-        borrowerOperations.withdrawColl(_amount, _hint);
+    function withdrawCollPrx(uint _amount, address _upperHint, address _lowerHint) external {
+        borrowerOperations.withdrawColl(_amount, _upperHint, _lowerHint);
     }
 
-    function withdrawLUSDPrx(uint _amount, address _hint) external {
-        borrowerOperations.withdrawLUSD(_amount, _hint);
+    function withdrawLUSDPrx(uint _amount, address _upperHint, address _lowerHint) external {
+        borrowerOperations.withdrawLUSD(_amount, _upperHint, _lowerHint);
     }
 
-    function repayLUSDPrx(uint _amount, address _hint) external {
-        borrowerOperations.repayLUSD(_amount, _hint);
+    function repayLUSDPrx(uint _amount, address _upperHint, address _lowerHint) external {
+        borrowerOperations.repayLUSD(_amount, _upperHint, _lowerHint);
     }
 
     function closeTrovePrx() external {
         borrowerOperations.closeTrove();
     }
 
-    function adjustTrovePrx(uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable {
-        borrowerOperations.adjustTrove{value: _ETH}(_collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+    function adjustTrovePrx(uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint) external payable {
+        borrowerOperations.adjustTrove{value: _ETH}(_collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint);
     }
 
     // Pool Manager

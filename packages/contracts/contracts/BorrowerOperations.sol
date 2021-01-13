@@ -172,40 +172,40 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     }
 
     // Send ETH as collateral to a trove
-    function addColl(address _hint) external payable override {
-        _adjustTrove(msg.sender, 0, 0, false, _hint);
+    function addColl(address _upperHint, address _lowerHint) external payable override {
+        _adjustTrove(msg.sender, 0, 0, false, _upperHint, _lowerHint);
     }
 
     // Send ETH as collateral to a trove. Called by only the Stability Pool.
-    function moveETHGainToTrove(address _borrower, address _hint) external payable override {
+    function moveETHGainToTrove(address _borrower, address _upperHint, address _lowerHint) external payable override {
         _requireCallerIsStabilityPool();
-        _adjustTrove(_borrower, 0, 0, false, _hint);
+        _adjustTrove(_borrower, 0, 0, false, _upperHint, _lowerHint);
     }
 
     // Withdraw ETH collateral from a trove
-    function withdrawColl(uint _collWithdrawal, address _hint) external override {
-        _adjustTrove(msg.sender, _collWithdrawal, 0, false, _hint);
+    function withdrawColl(uint _collWithdrawal, address _upperHint, address _lowerHint) external override {
+        _adjustTrove(msg.sender, _collWithdrawal, 0, false, _upperHint, _lowerHint);
     }
 
     // Withdraw LUSD tokens from a trove: mint new LUSD tokens to the owner, and increase the trove's debt accordingly
-    function withdrawLUSD(uint _LUSDAmount, address _hint) external override {
-        _adjustTrove(msg.sender, 0, _LUSDAmount, true, _hint);
+    function withdrawLUSD(uint _LUSDAmount, address _upperHint, address _lowerHint) external override {
+        _adjustTrove(msg.sender, 0, _LUSDAmount, true, _upperHint, _lowerHint);
     }
 
     // Repay LUSD tokens to a Trove: Burn the repaid LUSD tokens, and reduce the trove's debt accordingly
-    function repayLUSD(uint _LUSDAmount, address _hint) external override {
-        _adjustTrove(msg.sender, 0, _LUSDAmount, false, _hint);
+    function repayLUSD(uint _LUSDAmount, address _upperHint, address _lowerHint) external override {
+        _adjustTrove(msg.sender, 0, _LUSDAmount, false, _upperHint, _lowerHint);
     }
 
     /*
     * If ETH is sent, the operation is considered as a collateral increase, and the first parameter
     * _collWithdrawal must be zero
     */
-    function adjustTrove(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) external payable override {
-        _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+    function adjustTrove(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint) external payable override {
+        _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint);
     }
 
-    function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _hint) internal {
+    function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint) internal {
         require(msg.value == 0 || _collWithdrawal == 0, "BorrowerOperations: Cannot withdraw and add coll");
         // The operation "isWithdrawal" if it removes collateral or LUSD, i.e. it removes funds and lowers the ICR
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
@@ -258,7 +258,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
         // Re-insert trove it in the sorted list
         uint newNICR = _getNewNominalICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
-        sortedTroves.reInsert(_borrower, newNICR, _hint, _hint);
+        sortedTroves.reInsert(_borrower, newNICR, _upperHint, _lowerHint);
 
         // Pass unmodified _debtChange here, as we don't send the fee to the user
         _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);

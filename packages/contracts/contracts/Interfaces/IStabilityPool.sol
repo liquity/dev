@@ -50,7 +50,7 @@ interface IStabilityPool {
 
     function provideToSP(uint _amount, address _frontEndTag) external;
     function withdrawFromSP(uint _amount) external;
-    function withdrawETHGainToTrove(address _hint) external;
+    function withdrawETHGainToTrove(address _upperHint, address _lowerHint) external;
 
     function registerFrontEnd(uint _kickbackRate) external;
 
