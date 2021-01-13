@@ -35,6 +35,9 @@ contract SaverProxy {
                       
         address payable user = payable(getUserAddress());
 
+        console.log("inside saver msg.sender:", msg.sender);
+        console.log("saver address:", address(this));
+
         // uint ICR = _params.minRatio; // ICR target min coll ratio of user (e.g. 1.5)
         // uint d = ITroveManager(troveManagerAddress).getTroveDebt(user); // user's debt
         // uint c = ITroveManager(troveManagerAddress).getTroveColl(user); // user's coll

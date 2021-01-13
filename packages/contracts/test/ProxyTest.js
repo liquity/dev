@@ -40,7 +40,7 @@ contract('Proxy', async accounts => {
     
     var   MIN_RATIO = '1420000000000000000'
     const _18_zeros = '000000000000000000'
-    const [alice, bob] = accounts
+    const [owner, alice, bob] = accounts
     
     // With 68 iterations redemption costs about ~10M gas, 
     // and each iteration accounts for ~144k more
@@ -61,7 +61,7 @@ contract('Proxy', async accounts => {
         }
     }
     
-    const repayFor = async (user, minRatio, redemptionAmount, firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
+    const repayFor = async (caller, user, minRatio, redemptionAmount, firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
         try {
             const tx = await monitor.repayFor(
                [user, minRatio],
@@ -69,7 +69,7 @@ contract('Proxy', async accounts => {
                firstRedemptionHint, 
                partialRedemptionHint, 
                partialRedemptionHintICR, 
-               redeemMaxIterations, { from: user } 
+               redeemMaxIterations, { from: caller } 
             )
             console.log(tx);
         } catch(err) {
@@ -136,6 +136,7 @@ contract('Proxy', async accounts => {
             priceFeed.address
         )
         Monitor.setAsDeployed(monitor)
+        monitorProxy.setMonitor(monitor.address, {from: owner})
 
         // We must deploy DSProxyFactory because we call the build function
         // inside it in order to create DSproxies on behalf of Trove owners
@@ -148,8 +149,10 @@ contract('Proxy', async accounts => {
         const proxyInfo = await getProxy(alice, registry)
         proxyAddr = proxyInfo.proxyAddr;
         
+        console.log("owner...", owner)
         console.log("alice...", alice)
-        console.log(proxyAddr)
+        console.log("bob...", bob)
+        console.log("alicePROXY...", proxyAddr)
         
         web3Proxy = new web3.eth.Contract(DSProxy.abi, proxyAddr)
     })
@@ -202,6 +205,7 @@ contract('Proxy', async accounts => {
         })
 
         it("subscribe to automation, which calls the script", async () => {
+            let caller = bob
             var price = await priceFeed.getPrice()
 
             await subscribe(alice, MIN_RATIO);
@@ -221,7 +225,7 @@ contract('Proxy', async accounts => {
 
             // TODO this repayFor call will fail because minICR hasn't been reached yet
             /*
-            await repayFor(proxyAddr, minICR,
+            await repayFor(caller, proxyAddr, minICR,
                 amount, firstRedemptionHint,
                 partialRedemptionHint,
                 partialRedemptionHintICR,
@@ -268,17 +272,17 @@ contract('Proxy', async accounts => {
                 partialRedemptionHintICR, price, alice, alice
             )
 
-            // Don't pay for gas, as it makes it easier to calculate the received Ether
-        
-            await repayFor(proxyAddr, minICR, 
+            await repayFor(caller, proxyAddr, minICR, 
                 amount, firstRedemptionHint,
                 partialRedemptionHint,
                 partialRedemptionHintICR,
             )
 
             const AliceTroveFinal = await troveManager.Troves(proxyAddr)
-            const debtFinal = AliceTroveBefore[0]
-            console.log("debtFinal", debtFinal.toString())
+            const debtFinal = AliceTroveFinal[0].toString()
+            const collFinal = AliceTroveFinal[1].toString()
+            assert.equal(debtFinal, newDebt.toString())
+            assert.equal(collFinal, newColl.toString())
         })
     })
 })

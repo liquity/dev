@@ -25,10 +25,15 @@ contract MonitorProxy is Ownable {
         // execute reverts if calling specific method fails
         DSProxyInterface(_owner).execute{value: msg.value}(_saverProxy, _data);
 
+        console.log("inside monitorPROXY msg.sender:", msg.sender);
+        console.log("monitorPROXY address:", address(this));
+
         // return if anything left
+        /* 
         if (address(this).balance > 0) {
             msg.sender.transfer(address(this).balance);
         }
+        */
     }
 
     /// @notice Allowed users are able to set Monitor contract without any waiting period first time

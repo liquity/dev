@@ -9,6 +9,7 @@ import "../Interfaces/IPriceFeed.sol";
 
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
+import "../Dependencies/console.sol";
 
 import "./Subscriptions.sol";
 import "./MonitorProxy.sol";
@@ -70,9 +71,11 @@ contract Monitor is Ownable {
     ) public payable /*onlyApproved*/ {
 
         (bool isAllowed, /* uint currentICR */) = canCall(Method.Repay, _params.user);
-        require(isAllowed); // check if conditions are met
+        require(isAllowed, "not allowed"); // check if conditions are met
 
         // uint256 gasCost = calcGasCost(REPAY_GAS_COST);
+        console.log("inside monitor msg.sender:", msg.sender);
+        console.log("monitor address:", address(this));
  
         monitorProxy.callExecute{value: msg.value}(
             _params.user,
