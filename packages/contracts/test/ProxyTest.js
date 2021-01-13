@@ -14,6 +14,7 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const th = testHelpers.TestHelper
 const dec = th.dec
+const toBN = th.toBN
 const assertRevert = th.assertRevert
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 
@@ -33,26 +34,20 @@ const getAbiFunction = (contract, functionName) => {
 };
 
  // This returns a random integer between 0 and Number.MAX_SAFE_INTEGER
- const randomInteger = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+ // const randomInteger = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
 
 contract('Proxy', async accounts => {
-    const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
-    const MIN_RATIO = '1240000000000000000'
+    // const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+    const MIN_RATIO = '1420000000000000000'
     const _18_zeros = '000000000000000000'
     const [owner, alice, bob] = accounts
     // With 68 iterations redemption costs about ~10M gas, 
     // and each iteration accounts for ~144k more
     const redeemMaxIterations = 68
-    // Maximum number of trials to perform in a single getApproxHint() call. If the number of trials
-    // required to get a statistically "good" hint is larger than this, the search for the hint will
-    // be broken up into multiple getApproxHint() calls.
-    // This should be low enough to work with popular public Ethereum providers like Infura without
-    // triggering any fair use limits.
-    const maxNumberOfTrialsAtOnce = 2500;
     
     let monitorProxy, monitor, subscriptionsProxy, subscriptions
     let contracts, borrowerOperations, troveManager, priceFeed
-    let factory, guardFactory, registry, scriptProxy, web3Proxy
+    let factory, guardFactory, registry, scriptProxy, web3Proxy, proxyAddr
 
     const subscribe = async (account, minRatio) => {
         try {
@@ -60,36 +55,37 @@ contract('Proxy', async accounts => {
             [minRatio]);
 
             const tx = await web3Proxy.methods['execute(address,bytes)'](subscriptionsProxy.address, data).send({ from: account });
-            console.log(tx);
+            //console.log(tx);
         } catch(err) {
             console.log(err);
         }
     }
     
-    const repayFor = async (user, /* minRatio, */  firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
+    const repayFor = async (user, minRatio, redemptionAmount, firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
         try {
-            const tx = await monitor.methods.repayFor(
-               //[account.address, minRatio],
+            const tx = await monitor.repayFor(
+               [user, minRatio],
+               redemptionAmount,
                firstRedemptionHint, 
                partialRedemptionHint, 
                partialRedemptionHintICR, 
-               redeemMaxIterations   
-            ).send({ from: user });
+               redeemMaxIterations, { from: user } 
+            )
             console.log(tx);
         } catch(err) {
             console.log(err);
         }
     }
     
-    const repay = async (account, /* minRatio, */ firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
+    const repay = async (account, redemptionAmount, firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
         try {
             const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'repay'),
-                [//[account.address, minRatio],
-                    firstRedemptionHint, 
-                    partialRedemptionHint, 
-                    partialRedemptionHintICR, 
-                    redeemMaxIterations  
-                ]);
+            [   redemptionAmount,
+                firstRedemptionHint, 
+                partialRedemptionHint, 
+                partialRedemptionHintICR, 
+                redeemMaxIterations  
+            ]);
     
             const tx = await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({ from: account });
             console.log(tx);
@@ -99,7 +95,7 @@ contract('Proxy', async accounts => {
     }    
 
     before(async () => {
-        //Deploy the entire system
+        //Deploy the core system
         contracts = await deploymentHelper.deployLiquityCore()
         contracts.troveManager = await TroveManagerTester.new()
         const LQTYContracts = await deploymentHelper.deployLQTYContracts()
@@ -148,29 +144,25 @@ contract('Proxy', async accounts => {
         registry = await ProxyRegistry.new(factory.address)
         ProxyRegistry.setAsDeployed(registry)
         
-        console.log("alice...", alice)
         const proxyInfo = await getProxy(alice, registry)
-        const proxyAddr = proxyInfo.proxyAddr;
+        proxyAddr = proxyInfo.proxyAddr;
+        
+        console.log("alice...", alice)
         console.log(proxyAddr)
         
         web3Proxy = new web3.eth.Contract(DSProxy.abi, proxyAddr)
-
-        await subscribe(alice, MIN_RATIO);
-        
-        // even though alice is invoking the subscription
-        // she is doing this via her DSproxy by way of the SubscriptionProxy contract
-        // thus the subscription actually belongs to her DSproxy address
-        assert.isTrue(await subscriptions.isSubscribed(proxyAddr))
     })
 
     describe('Proxy integration test', async accounts => { 
+        
+        // TODO
         // should fail unauthorized caller closing Trove
         // should fail caller authorized but not for closing
         
-        it("set up Trove via DSproxy, subscribe to automation", async () => {
-            
+        it("set up Trove via DSproxy", async () => {
+          
             const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'open'),
-                [ 0 ]
+                [ dec(40, 18) ]
             );
             await assertRevert(
                 web3Proxy.methods['execute(address,bytes)']
@@ -178,65 +170,122 @@ contract('Proxy', async accounts => {
                 "ds-proxy-target-address-required"
             )
             
-            await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send(
-                { from: alice, value: dec(1, 'ether') 
+            // cannot open a trove for Bob using Alice's DSproxy
+            await assertRevert(
+                web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({ 
+                    from: bob, value: dec(1, 'ether') 
+            }))
+            assert.isFalse(await contracts.sortedTroves.contains(proxyAddr))
+
+            // so Bob will open a Trove the good old fashioned way :)
+            await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(2, 'ether') })
+            assert.isTrue(await contracts.sortedTroves.contains(bob))
+
+            // Now Alice finally opens a trove using her DSproxy
+            await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({
+                from: alice, value: dec(1, 'ether') 
             });
+
+            // the address of the owner of the trove from Liquity's perspective is actually the DSproxy address
+            assert.isTrue(await contracts.sortedTroves.contains(proxyAddr))
             
-            // TODO
-            // assert that new trove created by alice added collateral 
-            // and also increasing its raw ETH balance? 
-            const activePool_ETH_After = await contracts.activePool.getETH()
+            const aliceTrove = await troveManager.Troves(proxyAddr)
+            const aliceColl =  aliceTrove[1]
+            const aliceDebt = aliceTrove[0]
+
+            const activePool_Debt_After = (await contracts.activePool.getLUSDDebt()).toString()
+            const activePool_ETH_After = (await contracts.activePool.getETH()).toString()
             const activePool_RawEther_After = await web3.eth.getBalance(contracts.activePool.address)
             
-            // assert updating the correct trove properties in TroveManager
-            // changing ETH and debt trackers in ActivePool
-            assert.equal(activePool_ETH_After, dec(1, 'ether'))
-            assert.equal(activePool_RawEther_After, dec(1, 'ether'))
+            assert.equal(activePool_Debt_After, dec(60, 18)) // from alice 40 + 10, + 10 from bob
+            assert.equal(aliceDebt, dec(50, 18))
+            assert.equal(activePool_ETH_After, dec(3, 'ether'))
+            assert.equal(activePool_RawEther_After, dec(3, 'ether'))
+            assert.equal(aliceColl, dec(1, 'ether'))
         })
 
-        it("Proxity monitor calling SaverProxy", async () => {
-            // open two troves
-            // price drop
-            await priceFeed.setPrice(dec(100, 18))
+        it("subscribe to automation, which calls the script", async () => {
             var price = await priceFeed.getPrice()
-    
-            const AliceTrove = await troveManager.Troves(alice)
-            const coll =  AliceTrove[1]
-            const debt = AliceTrove[0]
+
+            await subscribe(alice, MIN_RATIO);
+        
+            // even though alice is invoking the subscription
+            // she is doing this via her DSproxy by way of the SubscriptionProxy contract
+            // thus the subscription actually belongs to her DSproxy address
+            assert.isTrue(await subscriptions.isSubscribed(proxyAddr))
+            const minICR = await subscriptions.getMinRatio(proxyAddr)
             
-            const nowICR = await troveManager.computeICR(coll, debt, price)
-            const minICR = await subscriptions.getMinRatio(alice)
-    
-            assert.isTrue(nowICR < minICR)
-            
-            // determine how much debt to sell to recover collateralization to be above minimum
-            let amount = debt.mul(minICR).sub(coll).div(minICR + Number('1' + _18_zeros)); // TODO 1
-            // TODO account for redemption fee?
-            
-            const {
-                firstRedemptionHint,
-                partialRedemptionHintICR
-            } = await contracts.hintHelpers.getRedemptionHints(
-                amount, price
-            );
-            
-            // We don't need to first obtain an approximate hint for _partialRedemptionHintICR via getApproxHint(), 
-            // for this test, since it's not the subject of this test case, and the list is very small, 
-            // so the correct position is quickly found 
-            const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-                partialRedemptionHintICR, price,
-                alice,
-                alice
-            )
-      
-            // Don't pay for gas, as it makes it easier to calculate the received Ether
+            const AliceTroveBefore = await troveManager.Troves(proxyAddr)
+            const debtBefore = AliceTroveBefore[0]
+            const collBefore =  AliceTroveBefore[1]
+            const ICRbefore = await troveManager.computeICR(collBefore, debtBefore, price)
+
+            assert.isTrue(ICRbefore > minICR)
+
+            // TODO this repayFor call will fail because minICR hasn't been reached yet
             /*
-            await repayFor(alice, // TODO check sender
+            await repayFor(alice, 
                 amount, firstRedemptionHint,
                 partialRedemptionHint,
                 partialRedemptionHintICR,
             )
             */
+
+            await priceFeed.setPrice(dec(70, 18))
+            price = await priceFeed.getPrice()
+            assert.isFalse(await troveManager.checkRecoveryMode())
+    
+            const AliceTroveAfter = await troveManager.Troves(proxyAddr)
+            const debtAfter = AliceTroveAfter[0]
+            const collAfter =  AliceTroveAfter[1]
+            const collInDoll = collAfter.mul(price).div(toBN('1' + _18_zeros))            
+            const ICRafter = await troveManager.computeICR(collAfter, debtAfter, price)
+
+            assert.isTrue(ICRafter < minICR)
+            
+            // determine how much debt to redeem for coll and top up trove with
+            // to recover collateralization to be above minimum (should be half a dollar)
+        
+            let numerator = debtAfter.mul(minICR).div(toBN('1' + _18_zeros)).sub(collInDoll)
+            var amount = numerator.mul(toBN('1' + _18_zeros)).div(minICR.add(toBN('1' + _18_zeros))).add(toBN(1)); 
+            
+            amount = amount.add(toBN(100)) // solely to account for arithmetic precision loss from all the BN ops    
+
+            // TODO account for redemption fee?
+            let newDebt = debtAfter.sub(amount)
+            let gainedColl = amount.mul(toBN('1' + _18_zeros)).div(price) 
+            let newColl = collAfter.add(gainedColl)
+            let newICR = await troveManager.computeICR(newColl, newDebt, price)
+            
+            assert.isTrue(newICR.gte(minICR))
+        
+            const {
+                firstRedemptionHint,
+                partialRedemptionHintICR
+            } = await contracts.hintHelpers.getRedemptionHints(
+                amount.toString(), price
+            );
+            
+            // We don't need to first obtain an approximate hint for _partialRedemptionHintICR via getApproxHint(), 
+            // for this test, since it's not the subject of this test case, and the list is very small, 
+            // so the correct position is quickly found 
+            const { partialRedemptionHint } = await contracts.sortedTroves.findInsertPosition(
+                partialRedemptionHintICR, price,
+                alice,
+                alice
+            )
+
+            // Don't pay for gas, as it makes it easier to calculate the received Ether
+        
+            await repayFor(alice, 
+                amount, firstRedemptionHint,
+                partialRedemptionHint,
+                partialRedemptionHintICR,
+            )
+
+            const AliceTroveFinal = await troveManager.Troves(proxyAddr)
+            const debtFinal = AliceTroveBefore[0]
+            console.log("debtFinal", debtFinal.toString())
         })
     })
 })

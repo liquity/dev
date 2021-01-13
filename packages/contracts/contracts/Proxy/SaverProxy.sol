@@ -25,7 +25,7 @@ contract SaverProxy {
         IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_amt, msg.sender);
     }
 
-    function repay( //Subscriptions.TroveOwner memory _params, //TODO rename redeemAdjust
+    function repay( //Subscriptions.TroveOwner memory _params, //TODO rename
                     uint _redemptionAmountLUSD,
                     address _firstRedemptionHint,
                     address _partialRedemptionHint,
