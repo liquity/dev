@@ -2167,51 +2167,32 @@ contract('TroveManager', async accounts => {
   it('redeemCollateral(): cancels the provided LUSD with debt from Troves with the lowest ICRs and sends an equivalent amount of Ether', async () => {
     // --- SETUP ---
 
-    await borrowerOperations.openTrove(dec(5, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(8, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), carol, { from: carol, value: dec(1, 'ether') })
+    // A, B, C, D have 20, 30, 40, 310 LUSD debt respectively (inc gas comp)
+    await borrowerOperations.openTrove(dec(15, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(30, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(40, 18), carol, { from: carol, value: dec(1, 'ether') })
     // start Dennis with a high ICR
-    await borrowerOperations.openTrove(dec(150, 18), dennis, { from: dennis, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(dec(275, 18), dennis, { from: dennis, value: dec(100, 'ether') })
 
     const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
 
     const dennis_LUSDBalance_Before = await lusdToken.balanceOf(dennis)
-    assert.equal(dennis_LUSDBalance_Before, dec(150, 18))
+    assert.equal(dennis_LUSDBalance_Before, dec(275, 18))
+
 
     const price = await priceFeed.getPrice()
     assert.equal(price, dec(200, 18))
 
-    // --- TEST --- 
+    // check total LUSD supply is 400
+    const totalLUSDSupply = await troveManager.getEntireSystemDebt()
+    assert.isTrue(totalLUSDSupply.eq(toBN(dec(400, 18))))
 
-    // Find hints for redeeming 20 LUSD
-    const {
-      firstRedemptionHint,
-      partialRedemptionHintNICR
-    } = await hintHelpers.getRedemptionHints(dec(20, 18), price, 0)
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(dennis, contracts, dec(100, 18))
 
-    // We don't need to use getApproxHint for this test, since it's not the subject of this
-    // test case, and the list is very small, so the correct position is quickly found
-    const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintNICR,
-      dennis,
-      dennis
-    )
-
-    // Dennis redeems 20 LUSD
-    // Don't pay for gas, as it makes it easier to calculate the received Ether
-    const redemptionTx = await troveManager.redeemCollateral(
-      dec(20, 18),
-      firstRedemptionHint,
-      partialRedemptionHint,
-      partialRedemptionHintNICR,
-      0,
-      {
-        from: dennis,
-        gasPrice: 0
-      }
-    )
-
-    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
+    const emittedVals = th.getEmittedRedemptionValues(redemptionTx)
+    const LUSDFee = emittedVals[3]
+    const totalLUSDRedeemed = emittedVals[1]
+    assert.isTrue(LUSDFee.eq(toBN(dec(20, 18)))) // check Fee was 20, and thus 80 net redeemed amount
 
     const alice_Trove_After = await troveManager.Troves(alice)
     const bob_Trove_After = await troveManager.Troves(bob)
@@ -2221,23 +2202,23 @@ contract('TroveManager', async accounts => {
     const bob_debt_After = bob_Trove_After[0].toString()
     const carol_debt_After = carol_Trove_After[0].toString()
 
-    /* check that Dennis' redeemed 20 LUSD has been cancelled with debt from Bobs's Trove (8) and Carol's Trove (10).
-    The remaining lot (2) is sent to Alice's Trove, who had the best ICR.
-    It leaves her with (3) LUSD debt + 10 for gas compensation. */
-    assert.equal(alice_debt_After, dec(13, 18))
+    /* check that Dennis' redeemed 80 LUSD has been cancelled with debt from Bobs's Trove (30) and Carol's Trove (40).
+    The remaining lot (10) is sent to Alice's Trove, who had the best ICR.
+    It leaves her with (10) LUSD debt. */
+
+    assert.equal(alice_debt_After, dec(15, 18))
     assert.equal(bob_debt_After, '0')
     assert.equal(carol_debt_After, '0')
 
     const dennis_ETHBalance_After = toBN(await web3.eth.getBalance(dennis))
     const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
 
-    const expectedTotalETHDrawn = toBN(dec(20, 18)).div(toBN(200)) // convert 20 LUSD to ETH, at ETH:USD price 200
-    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
+    const expectedTotalETHDrawn = toBN(dec(80, 18)).div(toBN(200)) // convert 80 LUSD to ETH, at ETH:USD price 200
 
-    assert.isTrue(expectedReceivedETH.eq(receivedETH))
+    assert.isTrue(expectedTotalETHDrawn.eq(receivedETH))
 
     const dennis_LUSDBalance_After = (await lusdToken.balanceOf(dennis)).toString()
-    assert.equal(dennis_LUSDBalance_After, dec(130, 18))
+    assert.equal(dennis_LUSDBalance_After, dec(175, 18))
   })
 
   it('redeemCollateral(): ends the redemption sequence when the token redemption request has been filled', async () => {
@@ -2249,49 +2230,51 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(20, 18), alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(20, 18), dennis, { from: dennis, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(1, 'ether') })
+
+    await borrowerOperations.openTrove(dec(240, 18), flyn, { from: flyn, value: dec(100, 'ether') })
+
+    // Check total LUSD supply is 400
+    const totalLUSDSupply = await troveManager.getEntireSystemDebt()
+    assert.isTrue(totalLUSDSupply.eq(toBN(dec(400, 18))))
 
     // --- TEST --- 
 
-    // open trove from redeemer.  Redeemer has highest ICR (100ETH, 100 LUSD), 20000%
-    await borrowerOperations.openTrove(dec(100, 18), flyn, { from: flyn, value: dec(100, 'ether') })
-
     // Flyn redeems collateral
-    await troveManager.redeemCollateral(dec(60, 18), alice, alice, 0, 0, { from: flyn })
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(flyn, contracts, dec(100, 18))
+    const emittedVals = th.getEmittedRedemptionValues(redemptionTx)
+    const totalLUSDRedeemed = emittedVals[1]
 
-    // Check Flyn's redemption has reduced his balance from 100 to (100-60) = 40 LUSD
-    const flynBalance = (await lusdToken.balanceOf(flyn)).toString()
-    assert.equal(flynBalance, dec(40, 18))
+    assert.isTrue(totalLUSDRedeemed.eq(toBN(dec(80, 18))))
 
-    // Check debt of Alice, Bob, Carol
+    // Confirm redemption (80 LUSD) has fully hit A, B, C, D (20 debt each)
     const alice_Debt = await troveManager.getTroveDebt(alice)
     const bob_Debt = await troveManager.getTroveDebt(bob)
     const carol_Debt = await troveManager.getTroveDebt(carol)
+    const dennis_Debt = await troveManager.getTroveDebt(dennis)
 
     assert.equal(alice_Debt, 0)
     assert.equal(bob_Debt, 0)
     assert.equal(carol_Debt, 0)
+    assert.equal(dennis_Debt, 0)
 
     // check Alice, Bob and Carol troves are closed
     const alice_Status = await troveManager.getTroveStatus(alice)
     const bob_Status = await troveManager.getTroveStatus(bob)
     const carol_Status = await troveManager.getTroveStatus(carol)
+    const dennis_Status = await troveManager.getTroveStatus(dennis)
     assert.equal(alice_Status, 2)
     assert.equal(bob_Status, 2)
     assert.equal(carol_Status, 2)
+    assert.equal(dennis_Status, 2)
 
-    // check debt and coll of Dennis, Erin has not been impacted by redemption
-    const dennis_Debt = await troveManager.getTroveDebt(dennis)
+    // Check coll of Erin has not been impacted by redemption
     const erin_Debt = await troveManager.getTroveDebt(erin)
-
-    assert.equal(dennis_Debt, dec(20, 18))
     assert.equal(erin_Debt, dec(20, 18))
 
-    const dennis_Coll = await troveManager.getTroveColl(dennis)
     const erin_Coll = await troveManager.getTroveColl(erin)
 
-    assert.equal(dennis_Coll, dec(1, 'ether'))
     assert.equal(erin_Coll, dec(1, 'ether'))
   })
 
@@ -2307,15 +2290,15 @@ contract('TroveManager', async accounts => {
 
     // --- TEST --- 
 
-    // open trove from redeemer.  Redeemer has highest ICR (100ETH, 100 LUSD), 20000%
-    await borrowerOperations.openTrove(dec(100, 18), flyn, { from: flyn, value: dec(100, 'ether') })
+    // open trove from redeemer.  Redeemer has highest ICR (10000ETH, 10000 LUSD), 20000%
+    await borrowerOperations.openTrove(dec(10000, 18), flyn, { from: flyn, value: dec(10000, 'ether') })
 
     // Flyn redeems collateral
     await troveManager.redeemCollateral(dec(60, 18), alice, alice, 0, 2, { from: flyn })
 
-    // Check Flyn's redemption has reduced his balance from 100 to (100-40) = 60 LUSD
-    const flynBalance = (await lusdToken.balanceOf(flyn)).toString()
-    assert.equal(flynBalance, dec(60, 18))
+    // Check Flyn's redemption has reduced
+    const flynBalance = await lusdToken.balanceOf(flyn)
+    assert.isTrue(flynBalance.lt(toBN(dec(10000, 18))))
 
     // Check debt of Alice, Bob, Carol
     const alice_Debt = await troveManager.getTroveDebt(alice)
@@ -2326,7 +2309,7 @@ contract('TroveManager', async accounts => {
     assert.equal(bob_Debt, 0)
     assert.equal(carol_Debt.toString(), dec(30, 18)) // 20 withdrawn + 10 for gas compensation
 
-    // check Alice and Bob troves are closed, but Carol is not
+    // check only 2 troves were redeemed: i.e. Alice and Bob troves are closed, but Carol is not
     const alice_Status = await troveManager.getTroveStatus(alice)
     const bob_Status = await troveManager.getTroveStatus(bob)
     const carol_Status = await troveManager.getTroveStatus(carol)
@@ -2701,7 +2684,6 @@ contract('TroveManager', async accounts => {
 
     therefore remaining ActivePool ETH should be 198 */
     const activePool_coll_after = await activePool.getETH()
-    // console.log(`activePool_coll_after: ${activePool_coll_after}`)
     assert.equal(activePool_coll_after, '198000000000000000000')
 
     // Check Erin's balance after

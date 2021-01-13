@@ -819,7 +819,6 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
             // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
             // certainly result in running out of gas.
             if (newNICR != _partialRedemptionHintNICR) {
-                console.log("failed partial");
                 V.LUSDLot = 0;
                 V.ETHLot = 0;
                 return V;
