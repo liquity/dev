@@ -37,10 +37,11 @@ const getAbiFunction = (contract, functionName) => {
  // const randomInteger = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
 
 contract('Proxy', async accounts => {
-    // const ETH_ADDRESS = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
-    const MIN_RATIO = '1420000000000000000'
+    
+    var   MIN_RATIO = '1420000000000000000'
     const _18_zeros = '000000000000000000'
-    const [owner, alice, bob] = accounts
+    const [alice, bob] = accounts
+    
     // With 68 iterations redemption costs about ~10M gas, 
     // and each iteration accounts for ~144k more
     const redeemMaxIterations = 68
@@ -55,7 +56,6 @@ contract('Proxy', async accounts => {
             [minRatio]);
 
             const tx = await web3Proxy.methods['execute(address,bytes)'](subscriptionsProxy.address, data).send({ from: account });
-            //console.log(tx);
         } catch(err) {
             console.log(err);
         }
@@ -73,14 +73,15 @@ contract('Proxy', async accounts => {
             )
             console.log(tx);
         } catch(err) {
+            console.log("\nCATCH\n")
             console.log(err);
         }
     }
     
     const repay = async (account, redemptionAmount, firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
         try {
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'repay'),
-            [   redemptionAmount,
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'repay'), [   
+                redemptionAmount,
                 firstRedemptionHint, 
                 partialRedemptionHint, 
                 partialRedemptionHintICR, 
@@ -155,10 +156,6 @@ contract('Proxy', async accounts => {
 
     describe('Proxy integration test', async accounts => { 
         
-        // TODO
-        // should fail unauthorized caller closing Trove
-        // should fail caller authorized but not for closing
-        
         it("set up Trove via DSproxy", async () => {
           
             const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'open'),
@@ -170,7 +167,7 @@ contract('Proxy', async accounts => {
                 "ds-proxy-target-address-required"
             )
             
-            // cannot open a trove for Bob using Alice's DSproxy
+            // cannot open a trove for Bob using Alice's DSproxy (only owner or authorized contract can call execute)
             await assertRevert(
                 web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({ 
                     from: bob, value: dec(1, 'ether') 
@@ -224,7 +221,7 @@ contract('Proxy', async accounts => {
 
             // TODO this repayFor call will fail because minICR hasn't been reached yet
             /*
-            await repayFor(alice, 
+            await repayFor(proxyAddr, minICR,
                 amount, firstRedemptionHint,
                 partialRedemptionHint,
                 partialRedemptionHintICR,
@@ -259,25 +256,21 @@ contract('Proxy', async accounts => {
             
             assert.isTrue(newICR.gte(minICR))
         
-            const {
-                firstRedemptionHint,
-                partialRedemptionHintICR
-            } = await contracts.hintHelpers.getRedemptionHints(
+            const { firstRedemptionHint,
+                partialRedemptionHintICR } = await contracts.hintHelpers.getRedemptionHints(
                 amount.toString(), price
             );
             
             // We don't need to first obtain an approximate hint for _partialRedemptionHintICR via getApproxHint(), 
             // for this test, since it's not the subject of this test case, and the list is very small, 
             // so the correct position is quickly found 
-            const { partialRedemptionHint } = await contracts.sortedTroves.findInsertPosition(
-                partialRedemptionHintICR, price,
-                alice,
-                alice
+            const { 0: partialRedemptionHint } = await contracts.sortedTroves.findInsertPosition(
+                partialRedemptionHintICR, price, alice, alice
             )
 
             // Don't pay for gas, as it makes it easier to calculate the received Ether
         
-            await repayFor(alice, 
+            await repayFor(proxyAddr, minICR, 
                 amount, firstRedemptionHint,
                 partialRedemptionHint,
                 partialRedemptionHintICR,
