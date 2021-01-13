@@ -83,7 +83,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // Defaulter opens trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -92,9 +92,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_1, { from: owner });
 
       // Check depositors' compounded deposit is 66.66 LUSD and ETH Gain is 0.33 ETH
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol, { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol, { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -123,8 +123,8 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -134,9 +134,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_2, { from: owner });
 
       // Check depositors' compounded deposit is 33.33 LUSD and ETH Gain is 0.66 ETH
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -166,9 +166,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -179,9 +179,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_3, { from: owner });
 
       // Check depositors' compounded deposit is 0 LUSD and ETH Gain is 1 ETH
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice,  { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice,  { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -211,7 +211,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: '100000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '200000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -221,9 +221,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_2, { from: owner });
 
       // Check depositors' compounded deposit is 0 LUSD and ETH Gain is 1 ETH
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -253,8 +253,8 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: '100000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '200000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: '300000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(20, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(20, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -265,9 +265,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_3, { from: owner });
 
       // Check depositors' compounded deposit is 80 LUSD and ETH Gain is 0.2 ETH
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob,  { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob,  { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -301,8 +301,8 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -312,9 +312,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_2, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,  { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -348,9 +348,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -361,9 +361,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_3, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -407,8 +407,8 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(22, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '100000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(5, 'ether') })
-      await borrowerOperations.withdrawLUSD('2100000000000000000000', defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD('457000000000000000000', defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD('2100000000000000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD('457000000000000000000', defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -419,9 +419,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_3, { from: owner });
 
       // Depositors attempt to withdraw everything
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -454,9 +454,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -472,10 +472,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // Third defaulter liquidated
       await troveManager.liquidate(defaulter_3, { from: owner });
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -511,10 +511,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -531,10 +531,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_3, { from: owner });
       await troveManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -581,10 +581,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '2500000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: '500000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(240, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(390, 18), defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(240, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(390, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -602,10 +602,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_4, { from: owner });
 
       // Each depositor withdraws as much as possible
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -642,10 +642,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -655,7 +655,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_2, { from: owner });
 
       // Dennis withdraws his deposit and ETH gain
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       const dennis_ETHWithdrawn = th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
       assert.isAtMost(th.getDifference((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), '50000000000000000000'), 1000)
@@ -665,9 +665,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_3, { from: owner });
       await troveManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,  { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -715,10 +715,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: '500000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(290, 18), defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(290, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -743,9 +743,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_3, { from: owner });
       await troveManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,  { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,  { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -778,10 +778,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 18) })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: '500000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -808,9 +808,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       await troveManager.liquidate(defaulter_4, { from: owner });
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob,{ from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob,{ from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -848,9 +848,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -871,10 +871,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // await borrowerOperations.openTrove(dec(1, 18), account, account, { from: erin, value: dec(2, 'ether') })
       // await stabilityPool.provideToSP(dec(1, 18),  ZERO_ADDRESS, { from: erin })
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
@@ -918,9 +918,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -944,11 +944,11 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // await borrowerOperations.openTrove(dec(1, 18), account, account, { from: flyn, value: dec(2, 'ether') })
       // await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: flyn })
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
-      const txE = await stabilityPool.withdrawETHGainToTrove(erin, { from: erin })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
+      const txE = await stabilityPool.withdrawETHGainToTrove(erin, erin, { from: erin })
 
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
@@ -986,13 +986,13 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // Defaulter 1,2,3 withdraw 'almost' 100 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1004,7 +1004,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       await troveManager.liquidate(defaulter_3, { from: owner });
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = await th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -1032,13 +1032,13 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // 4 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -1083,17 +1083,17 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // Defaulter 4 liquidated. 100 LUSD offset
       await troveManager.liquidate(defaulter_4, { from: owner });
 
-      // await borrowerOperations.withdrawLUSD(dec(1, 18), whale, { from: whale })
+      // await borrowerOperations.withdrawLUSD(dec(1, 18), whale, whale, { from: whale })
       // await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
-      const txE = await stabilityPool.withdrawETHGainToTrove(erin, { from: erin })
-      const txF = await stabilityPool.withdrawETHGainToTrove(flyn, { from: flyn })
-      const txG = await stabilityPool.withdrawETHGainToTrove(graham,  { from: graham })
-      const txH = await stabilityPool.withdrawETHGainToTrove(harriet,  { from: harriet })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
+      const txE = await stabilityPool.withdrawETHGainToTrove(erin, erin, { from: erin })
+      const txF = await stabilityPool.withdrawETHGainToTrove(flyn, flyn, { from: flyn })
+      const txG = await stabilityPool.withdrawETHGainToTrove(graham, graham,  { from: graham })
+      const txH = await stabilityPool.withdrawETHGainToTrove(harriet, harriet,  { from: harriet })
 
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
       const bob_ETHWithdrawn = th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
@@ -1148,11 +1148,11 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // Defaulter 1 withdraws 'almost' 90 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999999999000', defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD('89999999999999999000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // Defaulter 2 withdraws 80 LUSD
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '500000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(80, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(80, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1161,7 +1161,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await stabilityPool.P()).toString(), '9')
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = await th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
@@ -1172,7 +1172,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // Defaulter 2 liquidated.  90 LUSD liquidated. P altered by a factor of (1-90/100) = 0.1.  Scale changed.
       await troveManager.liquidate(defaulter_2, { from: owner });
  
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
 
       // Expect Bob to withdraw 10% of initial deposit (10 LUSD) and all the liquidated ETH (0.5 ether)
@@ -1198,11 +1198,11 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // Defaulter 1 withdraws 'almost' 90 LUSD.
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999999999000', defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD('89999999999999999000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // Defaulter 2 withdraws 530 LUSD
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(3, 'ether') })
-      await borrowerOperations.withdrawLUSD('530000000000000000000', defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD('530000000000000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1211,7 +1211,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       await troveManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await stabilityPool.P()).toString(), '9')
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
 
       await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(100, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
@@ -1226,9 +1226,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       /* Expect depositors to withdraw 10% of their initial deposit, and an ETH gain 
       in proportion to their initial deposit:
@@ -1272,10 +1272,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // Defaulter 1 and default 2 each withdraw 89.999999999 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter 1 ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -1285,7 +1285,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
       // Bob deposits 100 LUSD
       await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(2, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: bob })
@@ -1293,7 +1293,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
 
       // Bob should withdraw 0 deposit, and the full ETH gain of 1 ether
@@ -1318,10 +1318,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
           // Defaulter 1 and default 2 withdraw 89.999999999 LUSD and 58.9999999994
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(6, 'ether') })
-      await borrowerOperations.withdrawLUSD('589999999994000000000', defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD('589999999994000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1331,7 +1331,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       assert.isTrue(txL1.receipt.status)
 
       // Alice withdraws
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
 
       // B, C, D deposit 100, 200, 300 LUSD
       await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(100, 'ether') })
@@ -1347,13 +1347,13 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       const txL2 = await troveManager.liquidate(defaulter_2, { from: owner });
       assert.isTrue(txL2.receipt.status)
 
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
 
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
       const carol_ETHWithdrawn = await th.getEventArgByName(txC, 'ETHGainWithdrawn', '_ETH').toString()
 
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
       const dennis_ETHWithdrawn = await th.getEventArgByName(txD, 'ETHGainWithdrawn', '_ETH').toString()
 
       // B, C and D should withdraw 1e-10 of initial deposit, 
@@ -1386,16 +1386,16 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // Defaulters 1-4 each withdraw 89.999999999 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_3, defaulter_3, { from: defaulter_3 })
 
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1, 18) })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1429,10 +1429,10 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       const txL4 = await troveManager.liquidate(defaulter_4, { from: owner });
       assert.isTrue(txL4.receipt.status)
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
-      const txC = await stabilityPool.withdrawETHGainToTrove(carol,   { from: carol })
-      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, { from: dennis })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
+      const txC = await stabilityPool.withdrawETHGainToTrove(carol, carol,   { from: carol })
+      const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
 
       const alice_ETHWithdrawn = await th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH').toString()
       const bob_ETHWithdrawn = await th.getEventArgByName(txB, 'ETHGainWithdrawn', '_ETH').toString()
@@ -1471,7 +1471,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // Defaulter opens trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 27) })
-      await borrowerOperations.withdrawLUSD(await th.getActualDebtFromComposite(dec(1, 36), contracts), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(await th.getActualDebtFromComposite(dec(1, 36), contracts), defaulter_1, defaulter_1, { from: defaulter_1 })
       
 
       // ETH:USD price drops to $1 billion per ETH
@@ -1480,8 +1480,8 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // Defaulter liquidated
       await troveManager.liquidate(defaulter_1, { from: owner });
 
-      const txA = await stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txB = await stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
+      const txA = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txB = await stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
 
       // Grab the ETH gain from the emitted event in the tx log
       const alice_ETHWithdrawn = th.getEventArgByName(txA, 'ETHGainWithdrawn', '_ETH')
@@ -1536,7 +1536,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
       // Defaulter opens trove with 20e-9 ETH (with minimum value of $20) and 20 LUSD. 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: '20000000000' })
-      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // ETH:USD price drops to $1 billion per ETH
       await priceFeed.setPrice(dec(1, 27));
@@ -1544,8 +1544,8 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
       // Defaulter liquidated
       await troveManager.liquidate(defaulter_1, { from: owner });
 
-      const txPromise_A = stabilityPool.withdrawETHGainToTrove(alice, { from: alice })
-      const txPromise_B = stabilityPool.withdrawETHGainToTrove(bob, { from: bob })
+      const txPromise_A = stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
+      const txPromise_B = stabilityPool.withdrawETHGainToTrove(bob, bob, { from: bob })
 
        // Expect ETH gain per depositor of 1e9 wei to be rounded to 0 by the ETHGainedPerUnitStaked calculation (e / D), where D is ~1e36.
       await th.assertRevert(txPromise_A, 'StabilityPool: caller must have non-zero ETH Gain')

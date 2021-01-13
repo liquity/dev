@@ -444,13 +444,13 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const allDepositors = [A, B, C, D, E, F, G, H]
       // 4 Defaulters open trove with 200LUSD debt, and 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -673,12 +673,12 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       for (const defaulter of fiveDefaulters) {
         // Defaulters 1-6 each withdraw to 99.999999999 debt (including gas comp)
         await borrowerOperations.openTrove(0, defaulter, defaulter, { from: defaulter, value: dec(1, 'ether') })
-        await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter, { from: defaulter })
+        await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter, defaulter, { from: defaulter })
       }
 
       // Defaulter 6 withdraws to 100 debt (inc. gas comp)
       await borrowerOperations.openTrove(0, defaulter_6, defaulter_6, { from: defaulter_6, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_6, { from: defaulter_6 })
+      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_6, defaulter_6, { from: defaulter_6 })
 
       // Confirm all depositors have 0 LQTY
       for (const depositor of [A, B, C, D, E, F]) {
@@ -1354,7 +1354,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       for (const defaulter of _4_Defaulters) {
         // Defaulters 1-3 each withdraw to 99.999999999 debt (including gas comp)
         await borrowerOperations.openTrove(0, defaulter, defaulter, { from: defaulter, value: dec(1, 'ether') })
-        await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter, { from: defaulter })
+        await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter, defaulter, { from: defaulter })
       }
 
       // Confirm all would-be depositors have 0 LQTY

@@ -64,8 +64,8 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(3, 'ether') })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawLUSD(dec(390, 18), alice, { from: alice })
-    await borrowerOperations.withdrawLUSD(dec(390, 18), bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(dec(390, 18), alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(dec(390, 18), bob, bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, dec(15, 17))
@@ -91,8 +91,8 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: _3_Ether })
 
     // Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -105,7 +105,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const recoveryMode_Before = await troveManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_Before)
 
-    await borrowerOperations.addColl(alice, { from: alice, value: '1' })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: '1' })
 
     const recoveryMode_After = await troveManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_After)
@@ -116,14 +116,14 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: _10_Ether })
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: _3_Ether })
 
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, bob, { from: bob })
 
     // --- TEST ---
     const recoveryMode_Before = await troveManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_Before)
 
-    await borrowerOperations.withdrawColl(_1_Ether, alice, { from: alice })
+    await borrowerOperations.withdrawColl(_1_Ether, alice, alice, { from: alice })
 
     const recoveryMode_After = await troveManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_After)
@@ -135,8 +135,8 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -148,7 +148,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     const recoveryMode_Before = await troveManager.checkRecoveryMode();
     assert.isTrue(recoveryMode_Before)
 
-    await borrowerOperations.addColl(alice, { from: alice, value: _10_Ether })
+    await borrowerOperations.addColl(alice, alice, { from: alice, value: _10_Ether })
 
     const recoveryMode_After = await troveManager.checkRecoveryMode();
     assert.isFalse(recoveryMode_After)
@@ -162,8 +162,8 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -204,9 +204,9 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is ~150%
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', dennis, dennis, { from: dennis })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -244,8 +244,8 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: _3_Ether })
 
     //  Alice and Bob withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, bob, { from: bob })
 
     const TCR = (await troveManager.getTCR()).toString()
     assert.equal(TCR, '1500000000000000000')
@@ -286,9 +286,9 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Bob withdraw such that their ICRs and the TCR is 150%
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, { from: bob })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', bob, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', dennis, dennis, { from: dennis })
 
     // Alice deposits to SP
     await stabilityPool.provideToSP('390000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -326,7 +326,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: _21_Ether })
 
     //  Bob withdraws 1990 LUSD, bringing his ICR to 210%
-    await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, bob, { from: bob })
 
     // Total TCR = 24*200/2010 = 240%
     const TCR = (await troveManager.getTCR()).toString()
@@ -367,11 +367,11 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Dennis withdraw such that their ICR is ~150%
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', dennis, dennis, { from: dennis })
 
     //  Bob withdraws 1990 LUSD, bringing his ICR to 210%
-    await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, bob, { from: bob })
 
     const totalStakesSnaphot_1 = (await troveManager.totalStakesSnapshot()).toString()
     const totalCollateralSnapshot_1 = (await troveManager.totalCollateralSnapshot()).toString()
@@ -427,7 +427,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: _21_Ether })
 
     //  Bob withdraws 1990 LUSD, bringing his ICR to 210%
-    await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, bob, { from: bob })
 
     const bob_TroveStatus_Before = (await troveManager.Troves(bob))[3]
     const bob_Trove_isInSortedList_Before = await sortedTroves.contains(bob)
@@ -465,14 +465,14 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _3_Ether })
 
     //  Alice and Dennis withdraw such that the TCR is ~150%
-    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('390000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('390000000000000000000', dennis, dennis, { from: dennis })
 
     // Alice deposits 390LUSD to the Stability Pool
     await stabilityPool.provideToSP('390000000000000000000', ZERO_ADDRESS, { from: alice })
 
     // Bob withdraws 1990 LUSD, bringing his ICR to 210%
-    await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('1990000000000000000000', bob, bob, { from: bob })
 
     // --- TEST ---
     // price drops to 1ETH:100LUSD, reducing TCR below 150%
@@ -539,10 +539,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     //  Alice and Dennis withdraw 140 LUSD, resulting in ICRs of 266%. 
-    await borrowerOperations.withdrawLUSD('140000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     //Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // --- TEST ---
     // price drops to 1ETH:100LUSD, reducing TCR below 150%
@@ -600,10 +600,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits all 1490 LUSD in the Stability Pool
     await stabilityPool.provideToSP('1490000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -645,10 +645,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 150 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits all 1490 LUSD in the Stability Pool
     await stabilityPool.provideToSP('1490000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -690,10 +690,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits all 1490 LUSD in the Stability Pool
     await stabilityPool.provideToSP('1490000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -736,10 +736,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits all 1490 LUSD in the Stability Pool
     await stabilityPool.provideToSP('1490000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -845,10 +845,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits 100 LUSD in the Stability Pool
     await stabilityPool.provideToSP('100000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -887,10 +887,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits 100 LUSD in the Stability Pool
     await stabilityPool.provideToSP('100000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -942,10 +942,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits 100 LUSD in the Stability Pool
     await stabilityPool.provideToSP('100000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -995,10 +995,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits 100 LUSD in the Stability Pool
     await stabilityPool.provideToSP('100000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -1038,10 +1038,10 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
     // Bob withdraws 240 LUSD, resulting in ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
 
     // Alice deposits 100 LUSD in the Stability Pool
     await stabilityPool.provideToSP('100000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -1090,13 +1090,13 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: _2_Ether })
 
     // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, -> ICRs of 266%.  
-    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, { from: dennis })
+    await borrowerOperations.withdrawLUSD('1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD('140000000000000000000', dennis, dennis, { from: dennis })
 
     // Bob withdraws 240 LUSD, -> ICR of 240%. Bob has lowest ICR.
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob })
     // Carol withdraws 230 LUSD, -> ICR of 250%.
-    await borrowerOperations.withdrawLUSD('230000000000000000000', carol, { from: carol })
+    await borrowerOperations.withdrawLUSD('230000000000000000000', carol, carol, { from: carol })
 
     // Alice deposits 100 LUSD in the Stability Pool
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
@@ -1588,14 +1588,14 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, harry, harry, { from: harry, value: _1_Ether })
 
     // Everyone withdraws some LUSD from their Trove, resulting in different ICRs
-    await borrowerOperations.withdrawLUSD('1390000000000000000000', alice, { from: alice })  // 1400 LUSD -> ICR = 400%
-    await borrowerOperations.withdrawLUSD('190000000000000000000', bob, { from: bob }) //  200 LUSD -> ICR = 350%
-    await borrowerOperations.withdrawLUSD('200000000000000000000', carol, { from: carol }) // 210 LUSD -> ICR = 286%
-    await borrowerOperations.withdrawLUSD('210000000000000000000', dennis, { from: dennis }) // 220 LUSD -> ICR = 273%
-    await borrowerOperations.withdrawLUSD('220000000000000000000', erin, { from: erin }) // 230 LUSD -> ICR = 261%
-    await borrowerOperations.withdrawLUSD('230000000000000000000', freddy, { from: freddy }) // 240 LUSD -> ICR = 250%
-    await borrowerOperations.withdrawLUSD('75000000000000000000', greta, { from: greta }) // 85 LUSD -> ICR = 235%
-    await borrowerOperations.withdrawLUSD('80000000000000000000', harry, { from: harry }) // 90 LUSD ->  ICR = 222%
+    await borrowerOperations.withdrawLUSD('1390000000000000000000', alice, alice, { from: alice })  // 1400 LUSD -> ICR = 400%
+    await borrowerOperations.withdrawLUSD('190000000000000000000', bob, bob, { from: bob }) //  200 LUSD -> ICR = 350%
+    await borrowerOperations.withdrawLUSD('200000000000000000000', carol, carol, { from: carol }) // 210 LUSD -> ICR = 286%
+    await borrowerOperations.withdrawLUSD('210000000000000000000', dennis, dennis, { from: dennis }) // 220 LUSD -> ICR = 273%
+    await borrowerOperations.withdrawLUSD('220000000000000000000', erin, erin, { from: erin }) // 230 LUSD -> ICR = 261%
+    await borrowerOperations.withdrawLUSD('230000000000000000000', freddy, freddy, { from: freddy }) // 240 LUSD -> ICR = 250%
+    await borrowerOperations.withdrawLUSD('75000000000000000000', greta, greta, { from: greta }) // 85 LUSD -> ICR = 235%
+    await borrowerOperations.withdrawLUSD('80000000000000000000', harry, harry, { from: harry }) // 90 LUSD ->  ICR = 222%
 
     // Alice deposits 1390 LUSD to Stability Pool
     await stabilityPool.provideToSP('1390000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -1722,12 +1722,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, freddy, freddy, { from: freddy, value: _3_Ether })
 
     // Alice withdraws 1400 LUSD, the others each withdraw 240 LUSD 
-    await borrowerOperations.withdrawLUSD('1400000000000000000000', alice, { from: alice })  // 1410 LUSD -> ICR = 426%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob }) //  250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', carol, { from: carol }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', dennis, { from: dennis }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', erin, { from: erin }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', freddy, { from: freddy }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('1400000000000000000000', alice, alice, { from: alice })  // 1410 LUSD -> ICR = 426%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob }) //  250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', carol, carol, { from: carol }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', dennis, dennis, { from: dennis }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', erin, erin, { from: erin }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', freddy, freddy, { from: freddy }) // 250 LUSD -> ICR = 240%
 
     // Alice deposits 1400 LUSD to Stability Pool
     await stabilityPool.provideToSP('1400000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -2823,12 +2823,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, freddy, freddy, { from: freddy, value: _3_Ether })
 
     // Alice withdraws 1400 LUSD, the others each withdraw 240 LUSD 
-    await borrowerOperations.withdrawLUSD('1400000000000000000000', alice, { from: alice })  // 1410 LUSD -> ICR = 426%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob }) //  250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', carol, { from: carol }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', dennis, { from: dennis }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', erin, { from: erin }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', freddy, { from: freddy }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('1400000000000000000000', alice, alice, { from: alice })  // 1410 LUSD -> ICR = 426%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob }) //  250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', carol, carol, { from: carol }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', dennis, dennis, { from: dennis }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', erin, erin, { from: erin }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', freddy, freddy, { from: freddy }) // 250 LUSD -> ICR = 240%
 
     // Alice deposits 1400 LUSD to Stability Pool
     await stabilityPool.provideToSP('1400000000000000000000', ZERO_ADDRESS, { from: alice })
@@ -2935,12 +2935,12 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await borrowerOperations.openTrove(0, freddy, freddy, { from: freddy, value: _3_Ether })
 
     // Alice withdraws 1400 LUSD, the others each withdraw 240 LUSD
-    await borrowerOperations.withdrawLUSD('1400000000000000000000', alice, { from: alice })  // 1410 LUSD -> ICR = 426%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, { from: bob }) //  250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', carol, { from: carol }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', dennis, { from: dennis }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', erin, { from: erin }) // 250 LUSD -> ICR = 240%
-    await borrowerOperations.withdrawLUSD('240000000000000000000', freddy, { from: freddy }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('1400000000000000000000', alice, alice, { from: alice })  // 1410 LUSD -> ICR = 426%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', bob, bob, { from: bob }) //  250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', carol, carol, { from: carol }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', dennis, dennis, { from: dennis }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', erin, erin, { from: erin }) // 250 LUSD -> ICR = 240%
+    await borrowerOperations.withdrawLUSD('240000000000000000000', freddy, freddy, { from: freddy }) // 250 LUSD -> ICR = 240%
 
     // Alice deposits 1400 LUSD to Stability Pool
     await stabilityPool.provideToSP('1400000000000000000000', ZERO_ADDRESS, { from: alice })
