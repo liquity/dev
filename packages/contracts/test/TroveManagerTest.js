@@ -6,7 +6,7 @@ const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 const th = testHelpers.TestHelper
 const dec = th.dec
 const toBN = th.toBN
-const assertRevert = th.assertRevert
+const { assertRevert, assertAssert } = th
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
@@ -3773,7 +3773,8 @@ contract('TroveManager', async accounts => {
 
   // --- Internal removeTroveOwner ---
 
-  it("Internal _removeTroveOwner(): Reverts if trove has been closed", async () => { 
+  // Note that if trove B was not the last one, _removeTroveOwner could still be called
+  it.skip("Internal _removeTroveOwner(): Reverts if trove is out of bounds", async () => { 
     await borrowerOperations.openTrove(dec(1, 18), C, { from: C, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
    
@@ -3785,7 +3786,34 @@ contract('TroveManager', async accounts => {
      Try to remove B */
     const txPromise_B = troveManager.callInternalRemoveTroveOwner(B)
 
-    assertRevert(txPromise_B)
+    await assertAssert(txPromise_B)
+  })
+
+  it("Internal _removeTroveOwner(): Reverts if trove has been previously closed", async () => { 
+    await borrowerOperations.openTrove(dec(1, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+
+    // B closes, leaves 2 troves in system
+    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.closeTrove({from: B})
+
+    /* Call the external tester function that directly accesses the internal _removeTroveOwner() function.
+     Try to remove B */
+    const txPromise_B = troveManager.callInternalRemoveTroveOwner(B)
+
+    await assertAssert(txPromise_B)
+  })
+
+  it("Internal _removeTroveOwner(): Reverts if trove is not closed", async () => {
+    await borrowerOperations.openTrove(dec(1, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+
+    /* Call the external tester function that directly accesses the internal _removeTroveOwner() function.
+       Try to remove B */
+    const txPromise_B = troveManager.callInternalRemoveTroveOwner(B)
+
+    await assertAssert(txPromise_B)
   })
 })
 

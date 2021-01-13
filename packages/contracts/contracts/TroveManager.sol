@@ -65,7 +65,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         uint coll;
         uint stake;
         Status status;
-        uint128 arrayIndex;
+        uint128 arrayIndex; // starts at 1, all non-active will have arrayIndex = 0
     }
 
     mapping (address => Trove) public Troves;
@@ -96,6 +96,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     struct RewardSnapshot { uint ETH; uint LUSDDebt;}
 
     // Array of all active trove addresses - used to to compute an approximate hint off-chain, for the sorted list insertion
+    // Starts at index 1, 0 slot will be empty, so all non-active will have arrayIndex = 0
     address[] public TroveOwners;
 
     // Error trackers for the trove redistribution calculation
@@ -197,6 +198,10 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint _stake, TroveManagerOperation _operation);
     event TroveLiquidated(address indexed _borrower, uint _debt, uint _coll, TroveManagerOperation _operation);
 
+    constructor() public {
+        // TroveOwners array starts at index 1, 0 slot will be empty, so all non-active will have arrayIndex = 0
+        TroveOwners.push(address(0));
+    }
     // --- Dependency setter ---
 
     function setAddresses(
@@ -244,7 +249,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     // --- Getters ---
 
     function getTroveOwnersCount() external view override returns (uint) {
-        return TroveOwners.length;
+        return TroveOwners.length.sub(1);
     }
 
     function getTroveFromTroveOwnersArray(uint _index) external view override returns (address) {
@@ -295,7 +300,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     function _liquidateRecoveryMode(address _borrower, uint _ICR, uint _LUSDInStabPool, uint _TCR) internal returns (LiquidationValues memory V) {
         LocalVariables_InnerSingleLiquidateFunction memory L;
         
-        if (TroveOwners.length <= 1) { return V; } // don't liquidate if last trove
+        if (TroveOwners.length <= 2) { return V; } // don't liquidate if last trove
 
         (V.entireTroveDebt,
         V.entireTroveColl,
@@ -1184,17 +1189,19 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     }
 
     function _closeTrove(address _borrower) internal {
-        uint TroveOwnersArrayLength = TroveOwners.length;
-        _requireMoreThanOneTroveInSystem(TroveOwnersArrayLength);
+        uint troveOwnersArrayLength = TroveOwners.length;
+        _requireMoreThanOneTroveInSystem(troveOwnersArrayLength);
 
-        Troves[_borrower].status = Status.closed;
-        Troves[_borrower].coll = 0;
-        Troves[_borrower].debt = 0;
+        Trove storage trove = Troves[_borrower];
+        trove.status = Status.closed;
+        trove.coll = 0;
+        trove.debt = 0;
+        trove.stake = 0;
 
         rewardSnapshots[_borrower].ETH = 0;
         rewardSnapshots[_borrower].LUSDDebt = 0;
 
-        _removeTroveOwner(_borrower, TroveOwnersArrayLength);
+        _removeTroveOwner(trove, troveOwnersArrayLength);
         sortedTroves.remove(_borrower);
     }
 
@@ -1246,21 +1253,22 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     * Remove a Trove owner from the TroveOwners array, not preserving array order. Removing owner 'B' does the following:
     * [A B C D E] => [A E C D], and updates E's Trove struct to point to its new array index. 
     */
-    function _removeTroveOwner(address _borrower, uint TroveOwnersArrayLength) internal {
+    function _removeTroveOwner(Trove storage _trove, uint _troveOwnersArrayLength) internal {
         // It’s set in caller function `_closeTrove`
-        assert(Troves[_borrower].status == Status.closed);
+        assert(_trove.status == Status.closed);
 
-        uint128 index = Troves[_borrower].arrayIndex;
-        uint length = TroveOwnersArrayLength;
-        uint idxLast = length.sub(1);
+        uint128 index = _trove.arrayIndex;
+        uint idxLast = _troveOwnersArrayLength.sub(1);
 
         assert(index <= idxLast);
+        assert(index > 0);
 
         address addressToMove = TroveOwners[idxLast];
 
         TroveOwners[index] = addressToMove;
-        Troves[addressToMove].arrayIndex = index;
         TroveOwners.pop();
+        Troves[addressToMove].arrayIndex = index;
+        _trove.arrayIndex = 0;
     }
 
     // --- Recovery Mode and TCR functions ---
