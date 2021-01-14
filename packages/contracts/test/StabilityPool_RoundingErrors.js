@@ -41,7 +41,7 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
     const defaulters = accounts.slice(101, 301)
 
     for (let account of depositors) {
-      await borrowerOperations.openTrove(dec(100, 18), account, { from: account, value: dec(4, 'ether') })
+      await borrowerOperations.openTrove(dec(100, 18), account, account, { from: account, value: dec(4, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), { from: account })
     }
 

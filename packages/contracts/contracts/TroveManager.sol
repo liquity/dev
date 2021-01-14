@@ -792,7 +792,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         address _borrower,
         uint _maxLUSDamount,
         uint _price,
-        address _partialRedemptionHint,
+        address _upperPartialRedemptionHint,
+        address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR
     )
         internal returns (SingleRedemptionValues memory V)
@@ -825,7 +826,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
                 return V;
             }
 
-            sortedTroves.reInsert(_borrower, newNICR, _partialRedemptionHint, _partialRedemptionHint);
+            sortedTroves.reInsert(_borrower, newNICR, _upperPartialRedemptionHint, _lowerPartialRedemptionHint);
 
             Troves[_borrower].debt = newDebt;
             Troves[_borrower].coll = newColl;
@@ -895,7 +896,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     function redeemCollateral(
         uint _LUSDamount,
         address _firstRedemptionHint,
-        address _partialRedemptionHint,
+        address _upperPartialRedemptionHint,
+        address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR,
         uint _maxIterations
     )
@@ -940,7 +942,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
                 currentBorrower,
                 remainingLUSD,
                 price,
-                _partialRedemptionHint,
+                _upperPartialRedemptionHint,
+                _lowerPartialRedemptionHint,
                 _partialRedemptionHintNICR
             );
 
