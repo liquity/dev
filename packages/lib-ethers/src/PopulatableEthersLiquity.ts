@@ -72,7 +72,7 @@ const id = <T>(t: T) => t;
 const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add(10000);
 
 // An extra traversal can take ~12K.
-const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(15000);
+const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(25000);
 
 const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(40000);
 
