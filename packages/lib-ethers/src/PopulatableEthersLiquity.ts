@@ -473,7 +473,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
     const { hintAddress } = results.reduce((a, b) => (a.diff.lt(b.diff) ? a : b));
 
-    return await this.contracts.sortedTroves.findInsertPosition(
+    return this.contracts.sortedTroves.findInsertPosition(
       nominalCollateralRatio.bigNumber,
       hintAddress,
       hintAddress
