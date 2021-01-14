@@ -833,11 +833,12 @@ class TestHelper {
 
     const exactPartialRedemptionHint = (await contracts.sortedTroves.findInsertPosition(partialRedemptionNewICR,
       approxPartialRedemptionHint,
-      approxPartialRedemptionHint))[0]
+      approxPartialRedemptionHint))
 
     const tx = await contracts.troveManager.redeemCollateral(LUSDAmount,
       firstRedemptionHint,
-      exactPartialRedemptionHint,
+      exactPartialRedemptionHint[0],
+      exactPartialRedemptionHint[1],
       partialRedemptionNewICR,
       0,
       { from: redeemer, gasPrice: 0 },

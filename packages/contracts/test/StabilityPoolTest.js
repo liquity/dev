@@ -3276,8 +3276,8 @@ contract('StabilityPool', async accounts => {
 
       // D attempts to withdraw his ETH gain to Trove
       try {
-        console.log('wtf', stabilityPool.abi.filter(m => m.name == 'withdrawETHGainToTrove')[0])
-        console.log(dennis, dennis, { from: dennis })
+        //console.log(stabilityPool.abi.filter(m => m.name == 'withdrawETHGainToTrove')[0])
+        //console.log(dennis, dennis, { from: dennis })
         const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
         assert.isFalse(txD.receipt.status)
       } catch (error) {
