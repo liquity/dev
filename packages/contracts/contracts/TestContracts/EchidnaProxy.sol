@@ -46,11 +46,12 @@ contract EchidnaProxy {
     function redeemCollateralPrx(
         uint _LUSDAmount,
         address _firstRedemptionHint,
-        address _partialRedemptionHint,
+        address _upperPartialRedemptionHint,
+        address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR,
         uint _maxIterations
     ) external {
-        troveManager.redeemCollateral(_LUSDAmount, _firstRedemptionHint, _partialRedemptionHint, _partialRedemptionHintNICR, _maxIterations);
+        troveManager.redeemCollateral(_LUSDAmount, _firstRedemptionHint, _upperPartialRedemptionHint, _lowerPartialRedemptionHint, _partialRedemptionHintNICR, _maxIterations);
     }
 
     // Borrower Operations

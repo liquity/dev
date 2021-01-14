@@ -66,7 +66,8 @@ interface ITroveManager {
     function redeemCollateral(
         uint _LUSDAmount,
         address _firstRedemptionHint,
-        address _partialRedemptionHint,
+        address _upperPartialRedemptionHint,
+        address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR,
         uint _maxIterations
     ) external; 
