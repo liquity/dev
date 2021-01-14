@@ -757,7 +757,7 @@ describe("EthersLiquity", () => {
       const gasIncrease = newGasEstimate.sub(originalGasEstimate).toNumber();
 
       await waitForSuccess(tx.send());
-      expect(gasIncrease).to.be.within(10000, 15000);
+      expect(gasIncrease).to.be.within(10000, 25000);
 
       await rudeLiquity.closeTrove({ gasPrice: 0 });
     });
@@ -784,7 +784,7 @@ describe("EthersLiquity", () => {
       const gasIncrease = newGasEstimate.sub(originalGasEstimate).toNumber();
 
       await waitForSuccess(tx.send());
-      expect(gasIncrease).to.be.within(15000, 25000);
+      expect(gasIncrease).to.be.within(15000, 30000);
     });
   });
 
