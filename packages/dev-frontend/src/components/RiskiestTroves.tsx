@@ -279,7 +279,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                             [numberOfTroves > 1, "Can't liquidate when only one Trove exists"]
                           ]}
                           send={liquity.send.liquidate.bind(liquity.send, owner)}
-                          numberOfConfirmationsToWait={1}
                         >
                           <Button variant="dangerIcon">
                             <Icon name="trash" />

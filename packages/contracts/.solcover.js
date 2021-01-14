@@ -1,4 +1,4 @@
-const { accountsList } = require("./buidlerAccountsList2k.js");
+const { accountsList } = require("./hardhatAccountsList2k.js");
 // syntax for solcover network (ganache based) is different:
 // https://hardhat.org/plugins/solidity-coverage.html#configuration
 // Link in providerOptions:
@@ -28,5 +28,10 @@ module.exports = {
     "Dependencies/SafeMath.sol",
     "Dependencies/SafeMath128.sol",
     "Dependencies/console.sol",
-  ]
+  ],
+  // https://github.com/sc-forks/solidity-coverage/blob/master/docs/advanced.md#skipping-tests
+  mocha: {
+    grep: "@skip-on-coverage", // Find everything with this tag
+    invert: true               // Run the grep's inverse set.
+  }
 };

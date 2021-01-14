@@ -58,23 +58,29 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
           {amount}
         </Text>
 
-        <Text sx={{ fontSize: 2 }} color={pendingColor}>
-          {pendingAmount === "++" ? (
-            <Icon name="angle-double-up" />
-          ) : pendingAmount === "--" ? (
-            <Icon name="angle-double-down" />
-          ) : pendingAmount?.startsWith("+") ? (
-            <>
-              <Icon name="angle-up" /> {pendingAmount.substr(1)}
-            </>
-          ) : pendingAmount?.startsWith("-") ? (
-            <>
-              <Icon name="angle-down" /> {pendingAmount.substr(1)}
-            </>
-          ) : (
-            pendingAmount
-          )}
-        </Text>
+        {pendingAmount ? (
+          <Text sx={{ fontSize: 2, color: pendingColor }}>
+            {pendingAmount === "++" ? (
+              <Icon name="angle-double-up" />
+            ) : pendingAmount === "--" ? (
+              <Icon name="angle-double-down" />
+            ) : pendingAmount?.startsWith("+") ? (
+              <>
+                <Icon name="angle-up" /> {pendingAmount.substr(1)}
+              </>
+            ) : pendingAmount?.startsWith("-") ? (
+              <>
+                <Icon name="angle-down" /> {pendingAmount.substr(1)}
+              </>
+            ) : (
+              pendingAmount
+            )}
+          </Text>
+        ) : onClick ? (
+          <Text sx={{ display: "flex", alignItems: "center", ml: 1, fontSize: 1 }}>
+            <Icon name="pen" />
+          </Text>
+        ) : undefined}
       </Flex>
     </Label>
   );
@@ -119,7 +125,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
       {editing === inputId ? (
         <Input
           autoFocus
-          sx={{ ...(invalid ? { backgroundColor: "invalid" } : {}) }}
+          sx={invalid ? { backgroundColor: "invalid" } : {}}
           id={inputId}
           type="number"
           step="any"

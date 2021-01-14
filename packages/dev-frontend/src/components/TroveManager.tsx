@@ -6,6 +6,8 @@ import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liqu
 
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
+import { RedeemedTroveOverlay } from "./RedeemedTroveOverlay";
+import { CollateralSurplusAction } from "./CollateralSurplusAction";
 
 const init = ({ trove }: LiquityStoreState) => ({
   original: trove,
@@ -112,11 +114,14 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
   }
 };
 
-const select = ({ fees }: LiquityStoreState) => ({ fees });
+const select = ({ fees, collateralSurplusBalance }: LiquityStoreState) => ({
+  fees,
+  redeemed: !collateralSurplusBalance.isZero
+});
 
 export const TroveManager: React.FC = () => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
-  const { fees } = useLiquitySelector(select);
+  const { fees, redeemed } = useLiquitySelector(select);
 
   const change = original.whatChanged(edited);
   const feeFactor = fees.borrowingFeeFactor();
@@ -124,8 +129,15 @@ export const TroveManager: React.FC = () => {
 
   return (
     <>
-      <TroveEditor {...{ original, edited, afterFee, feeFactor, change, changePending, dispatch }} />
-      <TroveAction {...{ original, edited, afterFee, change, changePending, dispatch }} />
+      <TroveEditor {...{ original, edited, afterFee, feeFactor, change, changePending, dispatch }}>
+        {redeemed && <RedeemedTroveOverlay />}
+      </TroveEditor>
+
+      {redeemed ? (
+        <CollateralSurplusAction />
+      ) : (
+        <TroveAction {...{ original, edited, afterFee, change, changePending, dispatch }} />
+      )}
     </>
   );
 };

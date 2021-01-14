@@ -25,8 +25,6 @@ interface IPool {
 
     function getLUSDDebt() external view returns (uint);
 
-    function sendETH(address _account, uint _amount) external;
-
     function increaseLUSDDebt(uint _amount) external;
 
     function decreaseLUSDDebt(uint _amount) external;

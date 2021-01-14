@@ -4,7 +4,7 @@ pragma solidity 0.6.11;
 
 
 interface ICollSurplusPool {
-    event CollBalanceUpdated(address _account, uint _newBalance);
+    event CollBalanceUpdated(address indexed _account, uint _newBalance);
     event EtherSent(address _to, uint _amount);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);

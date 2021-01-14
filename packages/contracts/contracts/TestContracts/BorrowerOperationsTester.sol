@@ -50,10 +50,11 @@ contract BorrowerOperationsTester is BorrowerOperations {
         uint _collWithdrawal, 
         uint _debtChange, 
         bool _isDebtIncrease, 
-        address _hint) 
+        address _upperHint,
+        address _lowerHint)
         external 
     {
-        _adjustTrove(_borrower, _collWithdrawal, _debtChange, _isDebtIncrease, _hint);
+        _adjustTrove(_borrower, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint);
     }
 
 

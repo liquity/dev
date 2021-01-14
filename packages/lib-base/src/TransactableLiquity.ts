@@ -2,6 +2,7 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { proxify } from "./utils";
 import { Trove, TroveAdjustment, TroveClosure, TroveCreation } from "./Trove";
+import { StabilityDepositChange } from "./StabilityDeposit";
 
 export type PopulatedLiquityTransaction<
   P = unknown,
@@ -21,13 +22,31 @@ export type SentLiquityTransaction<S = unknown, T extends LiquityReceipt = Liqui
 
 export type PendingReceipt = { status: "pending" };
 
+export const pendingReceipt: PendingReceipt = { status: "pending" };
+
 export type FailedReceipt<R = unknown> = { status: "failed"; rawReceipt: R };
+
+export const failedReceipt = <R>(rawReceipt: R): FailedReceipt<R> => ({
+  status: "failed",
+  rawReceipt
+});
 
 export type SuccessfulReceipt<R = unknown, D = unknown> = {
   status: "succeeded";
   rawReceipt: R;
   details: D;
 };
+
+export const successfulReceipt = <R, D>(
+  rawReceipt: R,
+  details: D,
+  toString?: () => string
+): SuccessfulReceipt<R, D> => ({
+  status: "succeeded",
+  rawReceipt,
+  details,
+  ...(toString ? { toString } : {})
+});
 
 export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
 export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
@@ -61,8 +80,18 @@ export type RedemptionDetails = {
   fee: Decimal;
 };
 
-export type CollateralGainTransferDetails = {
+export type StabilityPoolGainsWithdrawalDetails = {
+  lusdLoss: Decimal;
+  newLUSDDeposit: Decimal;
   collateralGain: Decimal;
+  lqtyReward: Decimal;
+};
+
+export type StabilityDepositChangeDetails = StabilityPoolGainsWithdrawalDetails & {
+  change: StabilityDepositChange<Decimal>;
+};
+
+export type CollateralGainTransferDetails = StabilityPoolGainsWithdrawalDetails & {
   newTrove: Trove;
 };
 
@@ -81,13 +110,23 @@ export interface TransactableLiquity {
   liquidate(address: string): Promise<LiquidationDetails>;
   liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;
 
-  depositLUSDInStabilityPool(amount: Decimalish, frontEndTag?: string): Promise<void>;
-  withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<void>;
+  depositLUSDInStabilityPool(
+    amount: Decimalish,
+    frontEndTag?: string
+  ): Promise<StabilityDepositChangeDetails>;
+  withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
+  withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
   transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
   sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
+  sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
 
   redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
+  claimCollateralSurplus(address?: string): Promise<void>;
+
+  stakeLQTY(amount: Decimalish): Promise<void>;
+  unstakeLQTY(amount: Decimalish): Promise<void>;
+  withdrawGainsFromStaking(): Promise<void>;
 }
 
 type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (

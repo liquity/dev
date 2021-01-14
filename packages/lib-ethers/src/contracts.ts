@@ -26,8 +26,9 @@ import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
+import gasPoolAbi from "../abi/GasPool.json";
 
-import dev from "../deployments/dev.json";
+import devOrNull from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
 import kovan from "../deployments/kovan.json";
 import rinkeby from "../deployments/rinkeby.json";
@@ -49,7 +50,8 @@ import {
   PriceFeed,
   PriceFeedTestnet,
   SortedTroves,
-  StabilityPool
+  StabilityPool,
+  GasPool
 } from "../types";
 
 export interface TypedLogDescription<T> extends Omit<LogDescription, "args"> {
@@ -154,6 +156,7 @@ export interface LiquityContracts {
   priceFeed: PriceFeed | PriceFeedTestnet;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
+  gasPool: GasPool;
 }
 
 export const priceFeedIsTestnet = (
@@ -179,6 +182,7 @@ const getAbi = (priceFeedIsTestnet: boolean): LiquityContractAbis => ({
   priceFeed: priceFeedIsTestnet ? priceFeedTestnetAbi : priceFeedAbi,
   sortedTroves: sortedTrovesAbi,
   stabilityPool: stabilityPoolAbi,
+  gasPool: gasPoolAbi,
   collSurplusPool: collSurplusPoolAbi
 });
 
@@ -219,18 +223,7 @@ export type LiquityDeployment = {
 
 export const DEV_CHAIN_ID = 17;
 
-type DevDeployment = {
-  dev: LiquityDeployment;
-  [DEV_CHAIN_ID]: LiquityDeployment;
-};
-
-const devDeployment: DevDeployment | {} =
-  dev !== null
-    ? {
-        dev,
-        [DEV_CHAIN_ID]: dev
-      }
-    : {};
+const dev = devOrNull as LiquityDeployment | null;
 
 export const deploymentOnNetwork: {
   [network: string]: LiquityDeployment;
@@ -246,5 +239,5 @@ export const deploymentOnNetwork: {
   5: goerli,
   42: kovan,
 
-  ...devDeployment
+  ...(dev !== null ? { [DEV_CHAIN_ID]: dev, dev } : {})
 };

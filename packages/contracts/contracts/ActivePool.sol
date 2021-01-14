@@ -2,7 +2,7 @@
 
 pragma solidity 0.6.11;
 
-import './Interfaces/IPool.sol';
+import './Interfaces/IActivePool.sol';
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/console.sol";
@@ -15,7 +15,7 @@ import "./Dependencies/console.sol";
  * Stability Pool, the Default Pool, or both, depending on the liquidation conditions.
  * 
  */
-contract ActivePool is Ownable, IPool {
+contract ActivePool is Ownable, IActivePool {
     using SafeMath for uint256;
 
     address public borrowerOperationsAddress;

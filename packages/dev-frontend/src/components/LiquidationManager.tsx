@@ -40,7 +40,6 @@ export const LiquidationManager: React.FC = () => {
                 }
                 return liquity.liquidateUpTo(parseInt(numberOfTrovesToLiquidate, 10), overrides);
               }}
-              numberOfConfirmationsToWait={1}
             >
               <Button variant="dangerIcon">
                 <Icon name="trash" size="lg" />
