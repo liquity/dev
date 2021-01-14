@@ -838,9 +838,7 @@ class TestHelper {
   // Calculate the net redeemed amount, given a requested redemption of LUSDAmount.
   static async getNetRedemption(LUSDAmount, troveManager) {
     const fee = await troveManager.getOptimisticRedemptionFee(LUSDAmount)
-    console.log(`fee: ${fee}`)
     const netRedemptionAmount = this.toBN(LUSDAmount).sub(this.toBN(fee))
-    console.log(`netRedemptionAmount: ${netRedemptionAmount}`)
 
     return netRedemptionAmount
   }

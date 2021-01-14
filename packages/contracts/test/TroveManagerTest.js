@@ -2321,25 +2321,27 @@ contract('TroveManager', async accounts => {
   it('redeemCollateral(): doesnt perform the final partial redemption in the sequence if the hint is out-of-date', async () => {
     // --- SETUP ---
 
-    await borrowerOperations.openTrove(dec(5, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(8, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), dennis, { from: dennis, value: dec(100, 'ether') })
+    const price = await priceFeed.getPrice()
+
+    await borrowerOperations.openTrove(dec(21, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(50, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(270, 18), dennis, { from: dennis, value: dec(100, 'ether') })
 
     const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
 
-    const dennis_LUSDBalance_Before = await lusdToken.balanceOf(dennis)
-    assert.equal(dennis_LUSDBalance_Before, dec(150, 18))
-
-    const price = await priceFeed.getPrice()
-    assert.equal(price, dec(200, 18))
+   // Check total LUSD supply is 401
+   const totalLUSDSupply = await troveManager.getEntireSystemDebt()
+   assert.isTrue(totalLUSDSupply.eq(toBN(dec(401, 18))))
 
     // --- TEST --- 
+
+    const expectedNetRedemption_1 = await th.getNetRedemption(dec(100, 18), troveManager)
 
     const {
       firstRedemptionHint,
       partialRedemptionHintNICR
-    } = await hintHelpers.getRedemptionHints(dec(20, 18), price, 0)
+    } = await hintHelpers.getRedemptionHints(expectedNetRedemption_1, price, 0)
 
     const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
       partialRedemptionHintNICR,
@@ -2347,33 +2349,16 @@ contract('TroveManager', async accounts => {
       dennis
     )
 
-    // Oops, another transaction gets in the way
-    {
-      const {
-        firstRedemptionHint,
-        partialRedemptionHintNICR
-      } = await hintHelpers.getRedemptionHints(dec(1, 18), price, 0)
+    // Oops - Alice changes her trove's debt (and ICR) before Dennis' tx goes through
+    await borrowerOperations.repayLUSD(dec(1, 18), alice, {from: alice})
+  
+    // Get new expected net redemption (now that total supply has changed) -  check it is 80 LUSD
+    const expectedNetRedemption_2 = await th.getNetRedemption(dec(100, 18), troveManager)
+    assert.equal(expectedNetRedemption_2, dec(80, 18))
 
-      const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-        partialRedemptionHintNICR,
-        dennis,
-        dennis
-      )
-
-      // Alice redeems 1 LUSD from Carol's Trove
-      await troveManager.redeemCollateral(
-        dec(1, 18),
-        firstRedemptionHint,
-        partialRedemptionHint,
-        partialRedemptionHintNICR,
-        0,
-        { from: alice }
-      )
-    }
-
-    // Dennis tries to redeem 20 LUSD
+    // Dennis tries to redeem 100 LUSD, but passes the out-of-date ICR hint
     const redemptionTx = await troveManager.redeemCollateral(
-      dec(20, 18),
+      dec(100, 18),
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintNICR,
@@ -2384,28 +2369,29 @@ contract('TroveManager', async accounts => {
       }
     )
 
-    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
+    // Dennis was able to redeem:
+    //  - 50 LUSD from Carol's
+    //  - 20 LUSD from Bob's
+    // for a total of 70 LUSD.
 
-    // Since Alice already redeemed 1 LUSD from Carol's Trove, Dennis was  able to redeem:
-    //  - 9 LUSD from Carol's
-    //  - 8 LUSD from Bob's
-    // for a total of 17 LUSD.
+    // Dennis calculated his hint for redeeming 10 LUSD from Alice's Trove, but when he passed the wrong ICR, the partial redemption failed.
+    // So he did not redeem at all from Alice's trove
 
-    // Dennis calculated his hint for redeeming 2 LUSD from Alice's Trove, but after Alice's transaction
-    // got in the way, he would have needed to redeem 3 LUSD to fully complete his redemption of 20 LUSD.
-    // This would have required a different hint, therefore he ended up with a partial redemption.
-
+    // Expect only 70 LUSD worth of ETH drawn
+    const expectedTotalETHDrawn = toBN(dec(70, 18)).div(toBN(200)) // 70 LUSD converted to ETH, at ETH:USD price 200
+   
     const dennis_ETHBalance_After = toBN(await web3.eth.getBalance(dennis))
     const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
+    assert.isTrue(expectedTotalETHDrawn.eq(receivedETH))
 
-    // Expect only 17 worth of ETH drawn
-    const expectedTotalETHDrawn = toBN(dec(17, 18)).div(toBN(200)) // 20 LUSD converted to ETH, at ETH:USD price 200
-    const expectedReceivedETH = expectedTotalETHDrawn.sub(ETHFee)
+    // Check debt of Alice, Bob, Carol
+    const alice_Debt = await troveManager.getTroveDebt(alice)
+    const bob_Debt = await troveManager.getTroveDebt(bob)
+    const carol_Debt = await troveManager.getTroveDebt(carol)
 
-    assert.isTrue(expectedReceivedETH.eq(receivedETH))
-
-    const dennis_LUSDBalance_After = (await lusdToken.balanceOf(dennis)).toString()
-    assert.equal(dennis_LUSDBalance_After, dec(133, 18))
+    assert.isTrue(alice_Debt.eq(toBN(dec(30, 18)))) // Alice's trove is left untouched
+    assert.equal(bob_Debt, 0)
+    assert.equal(carol_Debt, 0) 
   })
 
   it("redeemCollateral(): can redeem if there is zero active debt but non-zero debt in DefaultPool", async () => {
@@ -2419,34 +2405,18 @@ contract('TroveManager', async accounts => {
     const price = dec(100, 18)
     await priceFeed.setPrice(price)
 
-    // Liquidate Bob's Trove
+    // Liquidate Bob's Trove - there is now no active debt in the system (only pending rewards for Alice)
     await troveManager.liquidateTroves(1)
 
     // --- TEST --- 
 
     const carol_ETHBalance_Before = toBN(await web3.eth.getBalance(carol))
 
-    const redemptionTx = await troveManager.redeemCollateral(
-      dec(100, 18),
-      alice,
-      '0x0000000000000000000000000000000000000000',
-      dec(49975, 15), // (10 + 0.995 - 1)*100 / 20
-      0,
-      {
-        from: carol,
-        gasPrice: 0
-      }
-    )
-
-    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(carol, contracts, dec(100, 18))
 
     const carol_ETHBalance_After = toBN(await web3.eth.getBalance(carol))
 
-    const expectedTotalETHDrawn = toBN(dec(100, 18)).div(toBN(100)) // convert 100 LUSD to ETH at ETH:USD price of 100
-    const expectedReceivedETH = expectedTotalETHDrawn.sub(ETHFee)
-
-    const receivedETH = carol_ETHBalance_After.sub(carol_ETHBalance_Before)
-    assert.isTrue(expectedReceivedETH.eq(receivedETH))
+    assert.isTrue(carol_ETHBalance_After.gt(carol_ETHBalance_Before))
 
     const carol_LUSDBalance_After = (await lusdToken.balanceOf(carol)).toString()
     assert.equal(carol_LUSDBalance_After, '0')
@@ -2457,8 +2427,7 @@ contract('TroveManager', async accounts => {
 
     await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
-
-    await lusdToken.transfer(carol, dec(100, 18), { from: bob })
+    await borrowerOperations.openTrove(dec(2000, 18), carol, { from: carol, value: dec(10000, 'ether') })  // highest ICR
 
     // Put Bob's Trove below 110% ICR
     const price = dec(100, 18)
@@ -2467,7 +2436,7 @@ contract('TroveManager', async accounts => {
     // --- TEST --- 
 
     await troveManager.redeemCollateral(
-      dec(100, 18),
+      dec(200, 18),
       bob,
       '0x0000000000000000000000000000000000000000',
       0,
@@ -2475,9 +2444,9 @@ contract('TroveManager', async accounts => {
       { from: carol }
     );
 
-    // Alice's Trove was cleared of debt
+    // Alice's Trove debt was reduced
     const { debt: alice_Debt_After } = await troveManager.Troves(alice)
-    assert.equal(alice_Debt_After, '0')
+    assert.isTrue(alice_Debt_After.lt(toBN(dec(110, 18))))
 
     // Bob's Trove was left untouched
     const { debt: bob_Debt_After } = await troveManager.Troves(bob)
@@ -2486,6 +2455,7 @@ contract('TroveManager', async accounts => {
 
   it("redeemCollateral(): finds the last Trove with ICR == 110% even if there is more than one", async () => {
     // --- SETUP ---
+    await borrowerOperations.openTrove('10000' + _18_zeros, whale, { from: whale, value: dec(1000, 'ether') })
 
     await borrowerOperations.openTrove('90' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove('90' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
@@ -2508,18 +2478,18 @@ contract('TroveManager', async accounts => {
       current = await sortedTroves.getNext(current);
     }
 
-    assert.deepEqual(orderOfTroves, [carol, bob, alice, dennis]);
+    assert.deepEqual(orderOfTroves, [whale, carol, bob, alice, dennis]);
 
     // --- TEST --- 
 
     await troveManager.redeemCollateral(
-      '270' + _18_zeros,
+      '1000' + _18_zeros,
       carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
       // last Trove with ICR == 110% (which would be Alice's)
       '0x0000000000000000000000000000000000000000',
       0,
       0,
-      { from: dennis }
+      { from: whale }
     );
 
     const { debt: alice_Debt_After } = await troveManager.Troves(alice)
@@ -2632,7 +2602,7 @@ contract('TroveManager', async accounts => {
     assert.equal(dennis_ETHGain_before, dennis_ETHGain_after)
   })
 
-  it("redeemCollateral(): caller can redeem their entire LUSDToken balance", async () => {
+  it("redeemCollateral(): caller can redeem their entire LUSDToken balance (split between redemption and fee)", async () => {
     await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice opens trove and transfers 400 LUSD to Erin, the would-be redeemer
@@ -2649,42 +2619,21 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(dec(1990, 18), dennis, { from: dennis, value: dec(50, 'ether') })
 
     // Get active debt and coll before redemption
-    const activePool_debt_before = (await activePool.getLUSDDebt()).toString()
-    const activePool_coll_before = (await activePool.getETH()).toString()
+    const activePool_debt_before = await activePool.getLUSDDebt()
+    const activePool_coll_before = await activePool.getETH()
 
-    assert.equal(activePool_debt_before, dec(5020, 18))
-    assert.equal(activePool_coll_before, dec(200, 'ether'))
+    assert.isTrue(activePool_debt_before.eq(toBN(dec(5020, 18))))
+    assert.isTrue(activePool_coll_before.eq(toBN(dec(200, 'ether'))))
 
     const price = await priceFeed.getPrice()
+    
     // Erin attempts to redeem 400 LUSD
-    const {
-      firstRedemptionHint,
-      partialRedemptionHintNICR
-    } = await hintHelpers.getRedemptionHints(dec(400, 18), price, 0)
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(erin, contracts, dec(400, 18))
+    const [, totalLUSDRedeemed, , LUSDFee] = th.getEmittedRedemptionValues(redemptionTx)
 
-    const { 0: partialRedemptionHint } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintNICR,
-      erin,
-      erin
-    )
-
-    await troveManager.redeemCollateral(
-      dec(400, 18),
-      firstRedemptionHint,
-      partialRedemptionHint,
-      partialRedemptionHintNICR,
-      0,
-      { from: erin })
-
-    // Check activePool debt reduced by  400 LUSD
-    const activePool_debt_after = (await activePool.getLUSDDebt()).toString()
-    assert.equal(activePool_debt_after, '4620000000000000000000')
-
-    /* Check ActivePool coll reduced by $400 worth of Ether: at ETH:USD price of $200, this should be 2 ETH.
-
-    therefore remaining ActivePool ETH should be 198 */
-    const activePool_coll_after = await activePool.getETH()
-    assert.equal(activePool_coll_after, '198000000000000000000')
+    // Check the emitted LUSDFee plus net redeemed amount equal the redemption request
+    const redeemedPlusFee = toBN(totalLUSDRedeemed).add(toBN(LUSDFee))
+    assert.isTrue(toBN(dec(400, 18)).eq(redeemedPlusFee))
 
     // Check Erin's balance after
     const erin_balance_after = (await lusdToken.balanceOf(erin)).toString()
@@ -2845,97 +2794,48 @@ contract('TroveManager', async accounts => {
     const _950_LUSD = '950000000000000000000'
 
     // Expect 280 Ether in activePool 
-    const activeETH_0 = (await activePool.getETH()).toString()
+    const activeETH_0 = await activePool.getETH()
     assert.equal(activeETH_0, '280000000000000000000');
 
-    let firstRedemptionHint
-    let partialRedemptionHintNICR
-
-
+  
     // Erin redeems 120 LUSD
-    ({
-      firstRedemptionHint,
-      partialRedemptionHintNICR
-    } = await hintHelpers.getRedemptionHints(_120_LUSD, price, 0))
+    const expectedNetRedemption_1 = await th.getNetRedemption(dec(120, 18), troveManager)
+    const redemption_1 = await th.redeemCollateralAndGetTxObject(erin, contracts, dec(120, 18))
 
-    const { 0: partialRedemptionHint_1 } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintNICR,
-      erin,
-      erin
-    )
+    // check active pool change
+    const activeETH_1 = await activePool.getETH()
+    let activeETHDiff = activeETH_0.sub(activeETH_1)
+    let activeETHChangeDollarVal = activeETHDiff.mul(price).div(toBN(dec(1, 18)))
 
-    const redemption_1 = await troveManager.redeemCollateral(
-      _120_LUSD,
-      firstRedemptionHint,
-      partialRedemptionHint_1,
-      partialRedemptionHintNICR,
-      0,
-      { from: erin })
-
-    assert.isTrue(redemption_1.receipt.status);
-
-    /* 120 LUSD redeemed.  Expect $120 worth of ETH removed. At ETH:USD price of $200, 
-    ETH removed = (120/200) = 0.6 ETH
-    Total active ETH = 280 - 0.6 = 279.4 ETH */
-
-    const activeETH_1 = (await activePool.getETH()).toString()
-    assert.equal(activeETH_1, '279400000000000000000');
-
+    // check ETH val in $ = expectedNetRedemption
+    assert.isAtMost(th.getDifference(activeETHChangeDollarVal, expectedNetRedemption_1), 1000)
+  
     // Flyn redeems 373 LUSD
-    ({
-      firstRedemptionHint,
-      partialRedemptionHintNICR
-    } = await hintHelpers.getRedemptionHints(_373_LUSD, price, 0))
+    const expectedNetRedemption_2 = await th.getNetRedemption(dec(373, 18), troveManager)
 
-    const { 0: partialRedemptionHint_2 } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintNICR,
-      flyn,
-      flyn
-    )
+    const redemption_2 = await th.redeemCollateralAndGetTxObject(flyn, contracts, dec(373, 18))
 
-    const redemption_2 = await troveManager.redeemCollateral(
-      _373_LUSD,
-      firstRedemptionHint,
-      partialRedemptionHint_2,
-      partialRedemptionHintNICR,
-      0,
-      { from: flyn })
+    // check active pool change
+    const activeETH_2 = await activePool.getETH()
+    activeETHDiff = activeETH_1.sub(activeETH_2)
+    activeETHChangeDollarVal = activeETHDiff.mul(price).div(toBN(dec(1, 18)))
 
-    assert.isTrue(redemption_2.receipt.status);
-
-    /* 373 LUSD redeemed.  Expect $373 worth of ETH removed. At ETH:USD price of $200, 
-    ETH removed = (373/200) = 1.865 ETH
-    Total active ETH = 279.4 - 1.865 = 277.535 ETH */
-    const activeETH_2 = (await activePool.getETH()).toString()
-    assert.equal(activeETH_2, '277535000000000000000');
-
+    // check ETH val in $ = expectedNetRedemption
+    assert.isAtMost(th.getDifference(activeETHChangeDollarVal, expectedNetRedemption_2), 1000)
+   
+   
     // Graham redeems 950 LUSD
-    ({
-      firstRedemptionHint,
-      partialRedemptionHintNICR
-    } = await hintHelpers.getRedemptionHints(_950_LUSD, price, 0))
+    const expectedNetRedemption_3 = await th.getNetRedemption(dec(950, 18), troveManager)
 
-    const { 0: partialRedemptionHint_3 } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintNICR,
-      graham,
-      graham
-    )
+    const redemption_3 = await th.redeemCollateralAndGetTxObject(graham, contracts, dec(950, 18))
 
-    const redemption_3 = await troveManager.redeemCollateral(
-      _950_LUSD,
-      firstRedemptionHint,
-      partialRedemptionHint_3,
-      partialRedemptionHintNICR,
-      0,
-      { from: graham })
+    // check active pool change
+    const activeETH_3 = await activePool.getETH()
+    activeETHDiff = activeETH_2.sub(activeETH_3)
+    activeETHChangeDollarVal = activeETHDiff.mul(price).div(toBN(dec(1, 18)))
 
-    assert.isTrue(redemption_3.receipt.status);
-
-    /* 950 LUSD redeemed.  Expect $950 worth of ETH removed. At ETH:USD price of $200, 
-    ETH removed = (950/200) = 4.75 ETH
-    Total active ETH = 277.535 - 4.75 = 272.785 ETH */
-    const activeETH_3 = (await activePool.getETH()).toString()
-    assert.equal(activeETH_3, '272785000000000000000');
+    // check ETH val in $ = expectedNetRedemption
+    assert.isAtMost(th.getDifference(activeETHChangeDollarVal, expectedNetRedemption_3), 1000)
   })
 
   it("redeemCollateral(): reverts if there is zero outstanding system debt", async () => {
@@ -3016,7 +2916,7 @@ contract('TroveManager', async accounts => {
 
   // Redemption fees 
   it("redeemCollateral(): a redemption made when base rate is zero increases the base rate", async () => {
-    await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove('0', whale, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
@@ -3124,7 +3024,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
   })
 
-  it("redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to LQTY staking contract", async () => {
+  it("redeemCollateral(): a redemption made at zero base rate send a non-zero LUSDFee to LQTY staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -3139,9 +3039,9 @@ contract('TroveManager', async accounts => {
     // Check baseRate == 0
     assert.equal(await troveManager.baseRate(), '0')
 
-    // Check LQTY Staking contract balance before is zero
-    const lqtyStakingBalance_Before = await web3.eth.getBalance(lqtyStaking.address)
-    assert.equal(lqtyStakingBalance_Before, '0')
+    // Check LQTY Staking contract LUSD balance before is zero
+    const lqtyStakingLUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStakingLUSDBalance_Before, '0')
 
     // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
@@ -3153,12 +3053,12 @@ contract('TroveManager', async accounts => {
     const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    // Check LQTY Staking contract balance after is non-zero
-    const lqtyStakingBalance_After = toBN(await web3.eth.getBalance(lqtyStaking.address))
-    assert.isTrue(lqtyStakingBalance_After.gt(toBN('0')))
+    // Check LQTY Staking LUSD contract balance after is non-zero
+    const lqtyStakingLUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.isTrue(lqtyStakingLUSDBalance_After.gt(toBN('0')))
   })
 
-  it("redeemCollateral(): a redemption made at zero base increases the ETH-fees-per-LQTY-staked in LQTY Staking contract", async () => {
+  it("redeemCollateral(): a redemption made at zero base increases the LUSD-fees-per-LQTY-staked in LQTY Staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -3173,9 +3073,9 @@ contract('TroveManager', async accounts => {
     // Check baseRate == 0
     assert.equal(await troveManager.baseRate(), '0')
 
-    // Check LQTY Staking ETH-fees-per-LQTY-staked before is zero
-    const F_ETH_Before = await lqtyStaking.F_ETH()
-    assert.equal(F_ETH_Before, '0')
+    // Check LQTY Staking LUSD-fees-per-LQTY-staked before is zero
+    const F_LUSD_Before = await lqtyStaking.F_LUSD()
+    assert.equal(F_LUSD_Before, '0')
 
     // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
@@ -3187,9 +3087,9 @@ contract('TroveManager', async accounts => {
     const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    // Check LQTY Staking ETH-fees-per-LQTY-staked after is non-zero
-    const F_ETH_After = await lqtyStaking.F_ETH()
-    assert.isTrue(F_ETH_After.gt('0'))
+    // Check LQTY Staking LUSD-fees-per-LQTY-staked after is non-zero
+    const F_LUSD_After = await lqtyStaking.F_LUSD()
+    assert.isTrue(F_LUSD_After.gt('0'))
   })
 
   it("redeemCollateral(): a redemption made at a non-zero base rate send a non-zero ETHFee to LQTY staking contract", async () => {
@@ -3217,7 +3117,7 @@ contract('TroveManager', async accounts => {
     const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    const lqtyStakingBalance_Before = toBN(await web3.eth.getBalance(lqtyStaking.address))
+    const lqtyStakingLUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
 
     // B redeems 10 LUSD
     await th.redeemCollateral(B, contracts, dec(10, 18))
@@ -3225,13 +3125,13 @@ contract('TroveManager', async accounts => {
     // Check B's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(B), dec(30, 18))
 
-    const lqtyStakingBalance_After = toBN(await web3.eth.getBalance(lqtyStaking.address))
+    const lqtyStakingLUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
 
-    // check LQTY Staking balance has increased
-    assert.isTrue(lqtyStakingBalance_After.gt(lqtyStakingBalance_Before))
+    // check LQTY Staking LUSD balance has increased
+    assert.isTrue(lqtyStakingLUSDBalance_After.gt(lqtyStakingLUSDBalance_Before))
   })
 
-  it("redeemCollateral(): a redemption made at a non-zero base rate increases ETH-per-LQTY-staked in the staking contract", async () => {
+  it("redeemCollateral(): a redemption made at a non-zero base rate increases LUSD-per-LQTY-staked in the staking contract", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -3256,8 +3156,8 @@ contract('TroveManager', async accounts => {
     const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    // Check LQTY Staking ETH-fees-per-LQTY-staked before is zero
-    const F_ETH_Before = await lqtyStaking.F_ETH()
+    // Check LQTY Staking LUSD-fees-per-LQTY-staked before is zero
+    const F_LUSD_Before = await lqtyStaking.F_LUSD()
 
     // B redeems 10 LUSD
     await th.redeemCollateral(B, contracts, dec(10, 18))
@@ -3265,13 +3165,13 @@ contract('TroveManager', async accounts => {
     // Check B's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(B), dec(30, 18))
 
-    const F_ETH_After = await lqtyStaking.F_ETH()
+    const F_LUSD_After = await lqtyStaking.F_LUSD()
 
-    // check LQTY Staking balance has increased
-    assert.isTrue(F_ETH_After.gt(F_ETH_Before))
+    // check LQTY LUSD Staking balance has increased
+    assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
   })
 
-  it("redeemCollateral(): a redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => {
+  it("redeemCollateral(): a redemption sends the ETH drawn to the redeemer", async () => {
     // time fast-forwards 1 year, and owner stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
@@ -3285,31 +3185,16 @@ contract('TroveManager', async accounts => {
 
     const A_balanceBefore = toBN(await web3.eth.getBalance(A))
 
-    // Confirm baseRate before redemption is 0
-    const baseRate = await troveManager.baseRate()
-    assert.equal(baseRate, '0')
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18))
+    const [, ,totalETHDrawn, ] = th.getEmittedRedemptionValues(redemptionTx)
 
-    // Check total LUSD supply
-    const activeLUSD = await activePool.getLUSDDebt()
-    const defaultLUSD = await defaultPool.getLUSDDebt()
-
-    const totalLUSDSupply = await activeLUSD.add(defaultLUSD)
-    assert.equal(totalLUSDSupply, dec(100, 18))
-
-    // A redeems 10 LUSD, which is 10% of total LUSD supply
-    await th.redeemCollateral(A, contracts, dec(10, 18))
-
-    /*
-    At ETH:USD price of 200:
-    ETHDrawn = (10 / 200) = 0.05 ETH
-    ETHfee = (1/) *( 10/100 ) * ETHDrawn = 0.0025 ETH
-    ETHRemainder = 0.005 - 0.027 = 0.0475 ETH
-    */
+    // Check emitted ETH drawn is > 0 
+    assert.isTrue(totalETHDrawn.gt(toBN('0')))
 
     const A_balanceAfter = toBN(await web3.eth.getBalance(A))
 
-    // check A's ETH balance has increased by 0.045 ETH 
-    assert.equal((A_balanceAfter.sub(A_balanceBefore)).toString(), dec(475, 14))
+    // check A's ETH balance has increased by the ETH drawn
+    assert.isTrue(A_balanceAfter.sub(A_balanceBefore).eq(totalETHDrawn))
   })
 
   it("redeemCollateral(): a full redemption (leaving trove with 0 debt), closes the trove", async () => {
@@ -3318,7 +3203,7 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(dec(10000, 18), whale, { from: whale, value: dec(10000, 'ether') })  // highest ICR
 
     await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(120, 18), B, { from: B, value: dec(1, 'ether') })
@@ -3329,8 +3214,8 @@ contract('TroveManager', async accounts => {
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
-    // whale redeems 360 LUSD.  Expect this to fully redeem A, B, C, and partially redeem D.
-    await th.redeemCollateral(whale, contracts, dec(360, 18), { gasPrice: 0 })
+    // whale redeems 400 LUSD.  Expect this to fully redeem A, B, C, and partially redeem D.
+    await th.redeemCollateral(whale, contracts, dec(400, 18), { gasPrice: 0 })
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
@@ -3347,7 +3232,7 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(dec(10000, 18), whale, { from: whale, value: dec(10000, 'ether') })
 
     await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(120, 18), B, { from: B, value: dec(1, 'ether') })
@@ -3368,8 +3253,8 @@ contract('TroveManager', async accounts => {
     const baseRate = await troveManager.baseRate()
     assert.equal(baseRate, '0')
 
-    // whale redeems 360 LUSD.  Expect this to fully redeem A, B, C, and partially redeem D.
-    await th.redeemCollateral(whale, contracts, dec(360, 18), { gasPrice: 0 })
+    // whale redeems 400 LUSD.  Expect this to fully redeem A, B, C, and partially redeem D.
+    await th.redeemCollateral(whale, contracts, dec(400, 18), { gasPrice: 0 })
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
@@ -3378,40 +3263,6 @@ contract('TroveManager', async accounts => {
 
     // Check D stays active
     assert.isTrue(await sortedTroves.contains(D))
-    
-    /*
-    At ETH:USD price of 200, with full redemptions from A, B, C:
-
-    ETHDrawn from A = 100/200 = 0.5 ETH --> Surplus = (1-0.5) = 0.5
-    ETHDrawn from B = 120/200 = 0.6 ETH --> Surplus = (1-0.6) = 0.4
-    ETHDrawn from C = 130/200 = 0.65 ETH --> Surplus = (1-0.65) = 0.35
-    */
-
-    const A_balanceAfter = toBN(await web3.eth.getBalance(A))
-    const B_balanceAfter = toBN(await web3.eth.getBalance(B))
-    const C_balanceAfter = toBN(await web3.eth.getBalance(C))
-    const D_balanceAfter = toBN(await web3.eth.getBalance(D))
-
-    // Check A, B, C’s trove collateral balance is zero (fully redeemed-from troves)
-    const A_collAfter = await troveManager.getTroveColl(A)
-    const B_collAfter = await troveManager.getTroveColl(B)
-    const C_collAfter = await troveManager.getTroveColl(C)
-    assert.isTrue(A_collAfter.eq(toBN(0)))
-    assert.isTrue(B_collAfter.eq(toBN(0)))
-    assert.isTrue(C_collAfter.eq(toBN(0)))
-
-    // check D's trove collateral balances have decreased (the partially redeemed-from trove)
-    const D_collAfter = await troveManager.getTroveColl(D)
-    assert.isTrue(D_collAfter.lt(D_collBefore))
-
-    // Check A, B, C (fully redeemed-from troves), and D's (the partially redeemed-from trove) balance has not changed
-    assert.isTrue(A_balanceAfter.eq(A_balanceBefore))
-    assert.isTrue(B_balanceAfter.eq(B_balanceBefore))
-    assert.isTrue(C_balanceAfter.eq(C_balanceBefore))
-    assert.isTrue(D_balanceAfter.eq(D_balanceBefore))
-
-    // D is not closed, so cannot open trove
-    await assertRevert(borrowerOperations.openTrove(D, ZERO_ADDRESS, { from: D, value: dec(10, 18) }), 'BorrowerOps: Trove is active')
   }
 
   it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to claim", async () => {
