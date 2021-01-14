@@ -37,10 +37,9 @@ const getAbiFunction = (contract, functionName) => {
  // const randomInteger = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
 
 contract('Proxy', async accounts => {
-    
     var   MIN_RATIO = '1420000000000000000'
     const _18_zeros = '000000000000000000'
-    const [owner, alice, bob] = accounts
+    const [owner, alice, bob, carol] = accounts
     
     // With 68 iterations redemption costs about ~10M gas, 
     // and each iteration accounts for ~144k more
@@ -71,7 +70,6 @@ contract('Proxy', async accounts => {
                partialRedemptionHintICR, 
                redeemMaxIterations, { from: caller } 
             )
-            console.log(tx);
         } catch(err) {
             console.log("\nCATCH\n")
             console.log(err);
@@ -98,8 +96,9 @@ contract('Proxy', async accounts => {
     before(async () => {
         //Deploy the core system
         contracts = await deploymentHelper.deployLiquityCore()
-        contracts.troveManager = await TroveManagerTester.new()
         const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+        contracts.troveManager = await TroveManagerTester.new()
+        contracts = await deploymentHelper.deployLUSDToken(contracts)
 
         await deploymentHelper.connectLQTYContracts(LQTYContracts)
         await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -109,7 +108,7 @@ contract('Proxy', async accounts => {
         troveManager = contracts.troveManager
         priceFeed = contracts.priceFeedTestnet
 
-        monitorProxy = await MonitorProxy.new()
+        monitorProxy = await MonitorProxy.new({ from: owner })
         MonitorProxy.setAsDeployed(monitorProxy)
         
         subscriptions = await Subscriptions.new()
@@ -148,11 +147,6 @@ contract('Proxy', async accounts => {
         
         const proxyInfo = await getProxy(alice, registry)
         proxyAddr = proxyInfo.proxyAddr;
-        
-        console.log("owner...", owner)
-        console.log("alice...", alice)
-        console.log("bob...", bob)
-        console.log("alicePROXY...", proxyAddr)
         
         web3Proxy = new web3.eth.Contract(DSProxy.abi, proxyAddr)
     })
@@ -205,9 +199,16 @@ contract('Proxy', async accounts => {
         })
 
         it("subscribe to automation, which calls the script", async () => {
-            let caller = bob
+
+            // we open this trove, having a worse ICR than alice's, so that alice can redeem 
+            // from this trove when she calls redeem without redeeming from her own trove
+            await borrowerOperations.openTrove(dec(50, 18), carol, { from: carol, value: dec(1, 'ether') })
+
             var price = await priceFeed.getPrice()
 
+            // it doesn't really matter who the caller is since we've commented out the onlyApproved modifier
+            let caller = bob 
+        
             await subscribe(alice, MIN_RATIO);
         
             // even though alice is invoking the subscription
@@ -223,19 +224,15 @@ contract('Proxy', async accounts => {
 
             assert.isTrue(ICRbefore > minICR)
 
-            // TODO this repayFor call will fail because minICR hasn't been reached yet
-            /*
-            await repayFor(caller, proxyAddr, minICR,
-                amount, firstRedemptionHint,
-                partialRedemptionHint,
-                partialRedemptionHintICR,
-            )
-            */
+            // cannot execute script because minICR hasn't been reached yet
+            const { 0: res } = await monitor.canCall(0, proxyAddr)
+            assert.isFalse(res)
 
             await priceFeed.setPrice(dec(70, 18))
             price = await priceFeed.getPrice()
+
             assert.isFalse(await troveManager.checkRecoveryMode())
-    
+            
             const AliceTroveAfter = await troveManager.Troves(proxyAddr)
             const debtAfter = AliceTroveAfter[0]
             const collAfter =  AliceTroveAfter[1]
@@ -243,20 +240,15 @@ contract('Proxy', async accounts => {
             const ICRafter = await troveManager.computeICR(collAfter, debtAfter, price)
 
             assert.isTrue(ICRafter < minICR)
-            
+
             // determine how much debt to redeem for coll and top up trove with
             // to recover collateralization to be above minimum (should be half a dollar)
-        
-            let numerator = debtAfter.mul(minICR).div(toBN('1' + _18_zeros)).sub(collInDoll)
-            var amount = numerator.mul(toBN('1' + _18_zeros)).div(minICR.add(toBN('1' + _18_zeros))).add(toBN(1)); 
-            
-            amount = amount.add(toBN(100)) // solely to account for arithmetic precision loss from all the BN ops    
+            var amount = debtAfter.mul(minICR).div(toBN('1' + _18_zeros)).sub(collInDoll)
+            amount = amount.add(toBN(100)) // solely to account for arithmetic precision loss from all the BN ops
 
-            // TODO account for redemption fee?
-            let newDebt = debtAfter.sub(amount)
             let gainedColl = amount.mul(toBN('1' + _18_zeros)).div(price) 
             let newColl = collAfter.add(gainedColl)
-            let newICR = await troveManager.computeICR(newColl, newDebt, price)
+            let newICR = await troveManager.computeICR(newColl, debtAfter, price)
             
             assert.isTrue(newICR.gte(minICR))
         
@@ -279,10 +271,12 @@ contract('Proxy', async accounts => {
             )
 
             const AliceTroveFinal = await troveManager.Troves(proxyAddr)
-            const debtFinal = AliceTroveFinal[0].toString()
-            const collFinal = AliceTroveFinal[1].toString()
-            assert.equal(debtFinal, newDebt.toString())
-            assert.equal(collFinal, newColl.toString())
+            const collFinal = AliceTroveFinal[1]
+            
+            // account for discrepancy resulting from redemption fee
+            const delta = Number(newColl.sub(collFinal)) / Number('1' + _18_zeros)
+        
+            assert.isTrue(delta < 0.0001)
         })
     })
 })

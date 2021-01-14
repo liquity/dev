@@ -895,6 +895,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     )
         external
         override
+        returns (uint)
     {
         uint activeDebt = activePool.getLUSDDebt();
         uint defaultedDebt = defaultPool.getLUSDDebt();
@@ -961,6 +962,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         _activePoolRedeemCollateral(msg.sender, T.totalLUSDToRedeem, T.ETHToSendToRedeemer);
 
         emit Redemption(_LUSDamount, T.totalLUSDToRedeem, T.totalETHDrawn, T.ETHFee);
+
+        return T.ETHToSendToRedeemer;
     }
 
     // Burn the received LUSD, transfer the redeemed ETH to _redeemer and updates the Active Pool

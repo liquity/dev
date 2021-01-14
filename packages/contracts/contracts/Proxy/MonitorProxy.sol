@@ -18,22 +18,19 @@ contract MonitorProxy is Ownable {
     }
 
     /// @notice Only monitor contract is able to call execute on users proxy
-    /// @param _owner Address of cdp owner (users DSProxy address)
+    /// @param _owner Address of Trove owner (end user's DSProxy's address)
     /// @param _saverProxy Address of SaverProxy
     /// @param _data Data to send to SaverProxy
     function callExecute(address _owner, address _saverProxy, bytes memory _data) public payable onlyMonitor {
+        // msg.sender here is the monitor contract address 
+
         // execute reverts if calling specific method fails
         DSProxyInterface(_owner).execute{value: msg.value}(_saverProxy, _data);
 
-        console.log("inside monitorPROXY msg.sender:", msg.sender);
-        console.log("monitorPROXY address:", address(this));
-
         // return if anything left
-        /* 
         if (address(this).balance > 0) {
             msg.sender.transfer(address(this).balance);
         }
-        */
     }
 
     /// @notice Allowed users are able to set Monitor contract without any waiting period first time

@@ -28,6 +28,7 @@ contract Monitor is Ownable {
     IPriceFeed public priceFeed;
     address public saverProxy;
     
+    // this can be a simple contract doing nothing but storing a list of approved addresses
     // modifier onlyApproved() {
     //     require(BotRegistry(BOT_REGISTRY_ADDRESS).botList(msg.sender), "Not auth bot");
     //     _;
@@ -72,11 +73,10 @@ contract Monitor is Ownable {
 
         (bool isAllowed, /* uint currentICR */) = canCall(Method.Repay, _params.user);
         require(isAllowed, "not allowed"); // check if conditions are met
-
-        // uint256 gasCost = calcGasCost(REPAY_GAS_COST);
-        console.log("inside monitor msg.sender:", msg.sender);
-        console.log("monitor address:", address(this));
  
+        // the msg.sender inside of this call to saver will be the monitorProxy
+        // and the address(this) inside this call will be _params.user because
+        // the call is being executed by monitorProxy via DSproxy
         monitorProxy.callExecute{value: msg.value}(
             _params.user,
             saverProxy,
@@ -88,11 +88,6 @@ contract Monitor is Ownable {
             )
         );
     }
-
-    //  /// @param _params the address that owns the Trove, and minimum ICR 
-    // function boostFor(
-    // ) public payable /*onlyApproved*/ {
-    // }
 
     function getICR(address _user) public view returns(uint) {
         uint price = priceFeed.getPrice();
@@ -117,9 +112,6 @@ contract Monitor is Ownable {
         if (_method == Method.Repay) {
             return (currentICR < minRatio, currentICR);
         } 
-        // else if (_method == Method.Boost) {
-        //     //
-        // }
         else {
             return (false, 0);
         }
