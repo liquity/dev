@@ -491,7 +491,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   protected async findRedemptionHints(
     amount: Decimal,
     { price, ...hintOptionalParams }: RedemptionOptionalParams = {}
-  ): Promise<[string, string, Decimal]> {
+  ): Promise<[string, string, string, Decimal]> {
     price ??= await this.readableLiquity.getPrice();
 
     const {
@@ -505,14 +505,14 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
     const collateralRatio = new Decimal(partialRedemptionHintNICR);
 
-    // Picking the second address as hint results in better gas cost, especially when having to
-    // traverse the list due to interference
-    const [, hint] = await this.findHintForNominalCollateralRatio(collateralRatio, hintOptionalParams)
+    const [upperHint, lowerHint] = collateralRatio.nonZero
+      ? await this.findHintForNominalCollateralRatio(collateralRatio, hintOptionalParams)
+      : [AddressZero, AddressZero];
+
     return [
       firstRedemptionHint,
-      collateralRatio.nonZero
-        ? hint
-        : AddressZero,
+      upperHint,
+      lowerHint,
       collateralRatio
     ];
   }
@@ -768,7 +768,8 @@ export class PopulatableEthersLiquity
 
     const [
       firstRedemptionHint,
-      partialRedemptionHint,
+      upperPartialRedemptionHint,
+      lowerPartialRedemptionHint,
       partialRedemptionHintNICR
     ] = await this.findRedemptionHints(amount, optionalParams);
 
@@ -778,7 +779,8 @@ export class PopulatableEthersLiquity
         addGasForPotentialLastFeeOperationTimeUpdate,
         amount.bigNumber,
         firstRedemptionHint,
-        partialRedemptionHint,
+        upperPartialRedemptionHint,
+        lowerPartialRedemptionHint,
         partialRedemptionHintNICR.bigNumber,
         redeemMaxIterations
       )
