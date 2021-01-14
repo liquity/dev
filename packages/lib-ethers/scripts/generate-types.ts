@@ -18,6 +18,7 @@ import PriceFeed from "../../contracts/artifacts/contracts/PriceFeed.sol/PriceFe
 import PriceFeedTestnet from "../../contracts/artifacts/contracts/TestContracts/PriceFeedTestnet.sol/PriceFeedTestnet.json";
 import SortedTroves from "../../contracts/artifacts/contracts/SortedTroves.sol/SortedTroves.json";
 import StabilityPool from "../../contracts/artifacts/contracts/StabilityPool.sol/StabilityPool.json";
+import GasPool from "../../contracts/artifacts/contracts/GasPool.sol/GasPool.json";
 import CollSurplusPool from "../../contracts/artifacts/contracts/CollSurplusPool.sol/CollSurplusPool.json";
 
 const getTupleType = (components: ParamType[], flexible: boolean) => {
@@ -134,6 +135,7 @@ const contractArtifacts = [
   PriceFeedTestnet,
   SortedTroves,
   StabilityPool,
+  GasPool,
   CollSurplusPool
 ];
 

@@ -44,6 +44,9 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
 
+    event StakeChanged(address indexed staker, uint newStake);
+    event StakingGainsWithdrawn(address indexed staker, uint LUSDGain, uint ETHGain);
+
     // --- Functions ---
 
     function setAddresses
@@ -87,12 +90,17 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     
        _updateUserSnapshots(msg.sender);
 
+        uint newStake = currentStake.add(_LQTYamount);
+
         // Increase user’s stake and total LQTY staked
-        stakes[msg.sender] = currentStake.add(_LQTYamount);
+        stakes[msg.sender] = newStake;
         totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
 
         // Transfer LQTY from caller to this contract
         lqtyToken.sendToLQTYStaking(msg.sender, _LQTYamount);
+
+        emit StakeChanged(msg.sender, newStake);
+        emit StakingGainsWithdrawn(msg.sender, LUSDGain, ETHGain);
 
         // Send accumulated LUSD and ETH gains to the caller
         lusdToken.transfer(msg.sender, LUSDGain);
@@ -113,12 +121,17 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
         uint LQTYToWithdraw = LiquityMath._min(_LQTYamount, currentStake);
 
+        uint newStake = currentStake.sub(LQTYToWithdraw);
+
         // Decrease user's stake and total LQTY staked
-        stakes[msg.sender] = currentStake.sub(LQTYToWithdraw);
+        stakes[msg.sender] = newStake;
         totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);  
 
         // Transfer unstaked LQTY to user
         lqtyToken.transfer(msg.sender, LQTYToWithdraw);
+
+        emit StakeChanged(msg.sender, newStake);
+        emit StakingGainsWithdrawn(msg.sender, LUSDGain, ETHGain);
 
         // Send accumulated LUSD and ETH gains to the caller
         lusdToken.transfer(msg.sender, LUSDGain);

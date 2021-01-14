@@ -3,7 +3,7 @@ import chaiAsPromised from "chai-as-promised";
 import chaiSpies from "chai-spies";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
-import { ethers, network } from "hardhat";
+import { ethers, network, deployLiquity } from "hardhat";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 import {
@@ -17,7 +17,6 @@ import {
   Fees
 } from "@liquity/lib-base";
 
-import { deployAndSetupContracts } from "../utils/deploy";
 import { HintHelpers } from "../types";
 import { LiquityContracts, LiquityDeployment } from "../src/contracts";
 import {
@@ -108,7 +107,7 @@ describe("EthersLiquity", () => {
 
   before(async () => {
     [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
-    deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+    deployment = await deployLiquity(deployer);
 
     liquity = await EthersLiquity.connect(deployment, user);
     expect(liquity).to.be.an.instanceOf(EthersLiquity);
@@ -180,23 +179,20 @@ describe("EthersLiquity", () => {
         (undefined as unknown) as Signer
       );
 
-      const collateralRatio = Decimal.from("1.5");
-      const price = Decimal.from(200);
+      const nominalCollateralRatio = Decimal.from(0.75);
 
       const params = { depositCollateral: 0.75, borrowLUSD: 90 };
       const trove = Trove.create(params);
-      expect(`${trove.collateralRatio(price)}`).to.equal(`${collateralRatio}`);
+      expect(`${trove.nominalCollateralRatio}`).to.equal(`${nominalCollateralRatio}`);
 
       await fakeLiquity.openTrove(params, {
         numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
-        fees: new Fees(new Date(), 0, 0.99, 1),
-        price
+        fees: new Fees(new Date(), 0, 0.99, 1)
       });
 
       expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.exactly(4);
       expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(
-        collateralRatio.bigNumber,
-        price.bigNumber
+        nominalCollateralRatio.bigNumber
       );
 
       // returned latestRandomSeed should be passed back on the next call
@@ -206,8 +202,7 @@ describe("EthersLiquity", () => {
 
       expect(fakeContracts.sortedTroves.findInsertPosition).to.have.been.called.once;
       expect(fakeContracts.sortedTroves.findInsertPosition).to.have.been.called.with(
-        collateralRatio.bigNumber,
-        price.bigNumber,
+        nominalCollateralRatio.bigNumber,
         "carol"
       );
     });
@@ -323,7 +318,7 @@ describe("EthersLiquity", () => {
 
   describe("StabilityPool", () => {
     before(async () => {
-      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+      deployment = await deployLiquity(deployer);
 
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
@@ -339,7 +334,15 @@ describe("EthersLiquity", () => {
 
     it("should make a small stability deposit", async () => {
       await liquity.openTrove({ depositCollateral: 1, borrowLUSD: 90 });
-      await liquity.depositLUSDInStabilityPool(10);
+      const details = await liquity.depositLUSDInStabilityPool(10);
+
+      expect(details).to.deep.equal({
+        lusdLoss: Decimal.from(0),
+        newLUSDDeposit: Decimal.from(10),
+        collateralGain: Decimal.from(0),
+        lqtyReward: Decimal.from(0),
+        change: { depositLUSD: Decimal.from(10) }
+      });
     });
 
     it("other user should make a Trove with very low ICR", async () => {
@@ -413,15 +416,19 @@ describe("EthersLiquity", () => {
     });
 
     it("should transfer the gains to the Trove", async () => {
-      const { collateralGain, newTrove } = await liquity.transferCollateralGainToTrove();
-      expect(`${collateralGain}`).to.equal("0.0569701282051282");
+      const details = await liquity.transferCollateralGainToTrove();
 
-      expect(newTrove).to.deep.equal(
-        new Trove({
+      expect(details).to.deep.equal({
+        lusdLoss: Decimal.from(10),
+        newLUSDDeposit: Decimal.from(0),
+        collateralGain: Decimal.from("0.0569701282051282"),
+        lqtyReward: Decimal.from(0),
+
+        newTrove: new Trove({
           collateral: "1.222183499999999995", // ~ 1 + 0.2233 * 0.995
           debt: 129
         })
-      );
+      });
 
       const deposit = await liquity.getStabilityDeposit();
       expect(deposit.isEmpty).to.be.true;
@@ -430,7 +437,7 @@ describe("EthersLiquity", () => {
     describe("when non-empty in recovery mode", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
-        deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+        deployment = await deployLiquity(deployer);
 
         const otherUsersSubset = otherUsers.slice(0, 2);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
@@ -483,7 +490,7 @@ describe("EthersLiquity", () => {
     describe("when people overstay", () => {
       before(async () => {
         // Deploy new instances of the contracts, for a clean slate
-        deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+        deployment = await deployLiquity(deployer);
 
         const otherUsersSubset = otherUsers.slice(0, 5);
         [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
@@ -544,7 +551,7 @@ describe("EthersLiquity", () => {
   describe("Redemption", () => {
     before(async () => {
       // Deploy new instances of the contracts, for a clean slate
-      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+      deployment = await deployLiquity(deployer);
 
       const otherUsersSubset = otherUsers.slice(0, 3);
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
@@ -613,8 +620,8 @@ describe("EthersLiquity", () => {
       expect(surplus2.toString()).to.equal("0.85");
 
       // we call it from a “3rd party” to avoid having to account for gas tx fees
-      await liquity.claimRedeemedCollateral(await otherUsers[1].getAddress());
-      await liquity.claimRedeemedCollateral(await otherUsers[2].getAddress());
+      await liquity.claimCollateralSurplus(await otherUsers[1].getAddress());
+      await liquity.claimCollateralSurplus(await otherUsers[2].getAddress());
 
       expect(`${await otherLiquities[0].getCollateralSurplusBalance()}`).to.equal("0");
       expect(`${await otherLiquities[1].getCollateralSurplusBalance()}`).to.equal("0");
@@ -646,7 +653,7 @@ describe("EthersLiquity", () => {
       }
 
       // Deploy new instances of the contracts, for a clean slate
-      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+      deployment = await deployLiquity(deployer);
       const otherUsersSubset = otherUsers.slice(0, redeemMaxIterations);
       expect(otherUsersSubset).to.have.length(redeemMaxIterations);
 
@@ -670,7 +677,7 @@ describe("EthersLiquity", () => {
       const gasUsed = rawReceipt.gasUsed.toNumber();
       // gasUsed is ~half the real used amount because of how refunds work, see:
       // https://ethereum.stackexchange.com/a/859/9205
-      expect(gasUsed).to.be.at.least(4950000, "should use close to 10M gas");
+      expect(gasUsed).to.be.at.least(4900000, "should use close to 10M gas");
     });
   });
 
@@ -686,7 +693,7 @@ describe("EthersLiquity", () => {
         this.skip();
       }
 
-      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+      deployment = await deployLiquity(deployer);
 
       [rudeUser, ...fiveOtherUsers] = otherUsers.slice(0, 6);
 
@@ -750,7 +757,7 @@ describe("EthersLiquity", () => {
       const gasIncrease = newGasEstimate.sub(originalGasEstimate).toNumber();
 
       await waitForSuccess(tx.send());
-      expect(gasIncrease).to.be.within(10000, 15000);
+      expect(gasIncrease).to.be.within(10000, 25000);
 
       await rudeLiquity.closeTrove({ gasPrice: 0 });
     });
@@ -777,7 +784,7 @@ describe("EthersLiquity", () => {
       const gasIncrease = newGasEstimate.sub(originalGasEstimate).toNumber();
 
       await waitForSuccess(tx.send());
-      expect(gasIncrease).to.be.within(15000, 25000);
+      expect(gasIncrease).to.be.within(15000, 30000);
     });
   });
 
@@ -790,7 +797,7 @@ describe("EthersLiquity", () => {
         this.skip();
       }
 
-      deployment = await deployAndSetupContracts(deployer, ethers.getContractFactory);
+      deployment = await deployLiquity(deployer);
       [deployerLiquity, liquity] = await connectUsers([deployer, user]);
     });
 

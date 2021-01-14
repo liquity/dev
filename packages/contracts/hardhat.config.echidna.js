@@ -1,7 +1,7 @@
-usePlugin("@nomiclabs/buidler-truffle5");
-usePlugin("@nomiclabs/buidler-ethers");
-usePlugin("solidity-coverage");
-usePlugin("buidler-gas-reporter");
+require("@nomiclabs/hardhat-truffle5");
+require("@nomiclabs/hardhat-ethers");
+require("solidity-coverage");
+require("hardhat-gas-reporter");
 
 const accountsList = [
     {

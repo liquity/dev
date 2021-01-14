@@ -13,17 +13,18 @@ import "./Dependencies/console.sol";
 * A sorted doubly linked list with nodes sorted in descending order.
 * 
 * Nodes map to active Troves in the system - the ID property is the address of a Trove owner. 
-* Nodes are ordered according to their current individual collateral ratio (ICR).
+* Nodes are ordered according to their current nominal individual collateral ratio (NICR),
+* which is like the ICR but without the price, i.e., just collateral / debt.
 * 
 * The list optionally accepts insert position hints.
 * 
-* ICRs are computed dynamically at runtime, and not stored on the Node. This is because ICRs of active Troves 
+* NICRs are computed dynamically at runtime, and not stored on the Node. This is because NICRs of active Troves
 * change dynamically as liquidation events occur.
 * 
-* The list relies on the fact that liquidation events preserve ordering: a liquidation decreases the ICRs of all active Troves, 
-* but maintains their order. A node inserted based on current ICR will maintain the correct position, 
+* The list relies on the fact that liquidation events preserve ordering: a liquidation decreases the NICRs of all active Troves,
+* but maintains their order. A node inserted based on current NICR will maintain the correct position,
 * relative to it's peers, as rewards accumulate, as long as it's raw collateral and debt have not changed.
-* Thus, Nodes remain sorted by current ICR.
+* Thus, Nodes remain sorted by current NICR.
 * 
 * Nodes need only be re-inserted upon a Trove operation - when the owner adds or removes collateral or debt 
 * to their position.
@@ -36,7 +37,7 @@ import "./Dependencies/console.sol";
 *
 * - Keys have been removed from nodes
 *
-* - Ordering checks for insertion are performed by comparing an ICR argument to the current ICR, calculated at runtime. 
+* - Ordering checks for insertion are performed by comparing an NICR argument to the current NICR, calculated at runtime.
 *   The list relies on the property that ordering by ICR is maintained as the ETH:USD price varies.
 *
 * - Public functions with parameters have been made internal to save gas, and given an external wrapper function for external access
@@ -55,14 +56,14 @@ contract SortedTroves is Ownable, ISortedTroves {
     // Information for a node in the list
     struct Node {
         bool exists;
-        address nextId;                  // Id of next node (smaller ICR) in the list
-        address prevId;                  // Id of previous node (larger ICR) in the list
+        address nextId;                  // Id of next node (smaller NICR) in the list
+        address prevId;                  // Id of previous node (larger NICR) in the list
     }
 
     // Information for the list
     struct Data {
-        address head;                        // Head of the list. Also the node in the list with the largest ICR
-        address tail;                        // Tail of the list. Also the node in the list with the smallest ICR
+        address head;                        // Head of the list. Also the node in the list with the largest NICR
+        address tail;                        // Tail of the list. Also the node in the list with the smallest NICR
         uint256 maxSize;                     // Maximum size of the list
         uint256 size;                        // Current size of the list
         mapping (address => Node) nodes;     // Track the corresponding ids for each node in the list
@@ -90,33 +91,33 @@ contract SortedTroves is Ownable, ISortedTroves {
     /*
      * @dev Add a node to the list
      * @param _id Node's id
-     * @param _ICR Node's ICR
+     * @param _NICR Node's NICR
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
 
-    function insert (address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) external override {
+    function insert (address _id, uint256 _NICR, address _prevId, address _nextId) external override {
         _requireCallerIsBOorTroveM();
-        _insert (_id, _ICR, _price, _prevId, _nextId);
+        _insert (_id, _NICR, _prevId, _nextId);
     }
     
-    function _insert(address _id, uint256 _ICR, uint _price, address _prevId, address _nextId) internal {
+    function _insert(address _id, uint256 _NICR, address _prevId, address _nextId) internal {
         // List must not be full
         require(!isFull(), "SortedTroves: List is full");
         // List must not already contain node
         require(!contains(_id), "SortedTroves: List already contains the node");
         // Node id must not be null
         require(_id != address(0), "SortedTroves: Id cannot be zero");
-        // ICR must be non-zero
-        require(_ICR > 0, "SortedTroves: ICR must be positive");
+        // NICR must be non-zero
+        require(_NICR > 0, "SortedTroves: NICR must be positive");
 
         address prevId = _prevId; 
         address nextId = _nextId; 
 
-        if (!validInsertPosition(_ICR, _price, prevId, nextId)) {
+        if (!validInsertPosition(_NICR, prevId, nextId)) {
             // Sender's hint was not a valid insert position
             // Use sender's hint to find a valid insert position
-            (prevId, nextId) = findInsertPosition(_ICR, _price, prevId, nextId);   
+            (prevId, nextId) = findInsertPosition(_NICR, prevId, nextId);
         }
         
          data.nodes[_id].exists = true;  
@@ -192,24 +193,24 @@ contract SortedTroves is Ownable, ISortedTroves {
     }
 
     /*
-     * @dev Re-insert the node at a new position, based on its new ICR
+     * @dev Re-insert the node at a new position, based on its new NICR
      * @param _id Node's id
-     * @param _newICR Node's new ICR
+     * @param _newNICR Node's new NICR
      * @param _prevId Id of previous node for the new insert position
      * @param _nextId Id of next node for the new insert position
      */
-    function reInsert(address _id, uint256 _newICR, uint _price, address _prevId, address _nextId) external override {
+    function reInsert(address _id, uint256 _newNICR, address _prevId, address _nextId) external override {
         _requireCallerIsBOorTroveM();
         // List must contain the node
         require(contains(_id), "SortedTroves: List does not contain the id");
-        // ICR must be non-zero
-        require(_newICR > 0, "SortedTroves: ICR must be positive");
+        // NICR must be non-zero
+        require(_newNICR > 0, "SortedTroves: NICR must be positive");
 
         // Remove node from the list
         _remove(_id);
 
         // Insert node
-        _insert(_id, _newICR, _price, _prevId, _nextId);
+        _insert(_id, _newNICR, _prevId, _nextId);
     }
 
     /*
@@ -248,21 +249,21 @@ contract SortedTroves is Ownable, ISortedTroves {
     }
 
     /*
-     * @dev Returns the first node in the list (node with the largest ICR)
+     * @dev Returns the first node in the list (node with the largest NICR)
      */
     function getFirst() external view override returns (address) {
         return data.head;
     }
 
     /*
-     * @dev Returns the last node in the list (node with the smallest ICR)
+     * @dev Returns the last node in the list (node with the smallest NICR)
      */
     function getLast() external view override returns (address) {
         return data.tail;
     }
 
     /*
-     * @dev Returns the next node (with a smaller ICR) in the list for a given node
+     * @dev Returns the next node (with a smaller NICR) in the list for a given node
      * @param _id Node's id
      */
     function getNext(address _id) external view override returns (address) {
@@ -270,7 +271,7 @@ contract SortedTroves is Ownable, ISortedTroves {
     }
 
     /*
-     * @dev Returns the previous node (with a larger ICR) in the list for a given node
+     * @dev Returns the previous node (with a larger NICR) in the list for a given node
      * @param _id Node's id
      */
     function getPrev(address _id) external view override returns (address) {
@@ -278,37 +279,37 @@ contract SortedTroves is Ownable, ISortedTroves {
     }
 
     /*
-     * @dev Check if a pair of nodes is a valid insertion point for a new node with the given ICR
-     * @param _ICR Node's ICR
+     * @dev Check if a pair of nodes is a valid insertion point for a new node with the given NICR
+     * @param _NICR Node's NICR
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view override returns (bool) {
+    function validInsertPosition(uint256 _NICR, address _prevId, address _nextId) public view override returns (bool) {
         if (_prevId == address(0) && _nextId == address(0)) {
             // `(null, null)` is a valid insert position if the list is empty
             return isEmpty();
         } else if (_prevId == address(0)) {
             // `(null, _nextId)` is a valid insert position if `_nextId` is the head of the list
-            return data.head == _nextId && _ICR >= troveManager.getCurrentICR(_nextId, _price);
+            return data.head == _nextId && _NICR >= troveManager.getNominalICR(_nextId);
         } else if (_nextId == address(0)) {
             // `(_prevId, null)` is a valid insert position if `_prevId` is the tail of the list
-            return data.tail == _prevId && _ICR <= troveManager.getCurrentICR(_prevId, _price);
+            return data.tail == _prevId && _NICR <= troveManager.getNominalICR(_prevId);
         } else {
-            // `(_prevId, _nextId)` is a valid insert position if they are adjacent nodes and `_ICR` falls between the two nodes' ICRs
+            // `(_prevId, _nextId)` is a valid insert position if they are adjacent nodes and `_NICR` falls between the two nodes' NICRs
             return data.nodes[_prevId].nextId == _nextId && 
-                   troveManager.getCurrentICR(_prevId, _price) >= _ICR && 
-                   _ICR >= troveManager.getCurrentICR(_nextId, _price);
+                   troveManager.getNominalICR(_prevId) >= _NICR &&
+                   _NICR >= troveManager.getNominalICR(_nextId);
         }
     }
 
     /*
-     * @dev Descend the list (larger ICRs to smaller ICRs) to find a valid insert position
-     * @param _ICR Node's ICR
+     * @dev Descend the list (larger NICRs to smaller NICRs) to find a valid insert position
+     * @param _NICR Node's NICR
      * @param _startId Id of node to start descending the list from
      */
-    function _descendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {
+    function _descendList(uint256 _NICR, address _startId) internal view returns (address, address) {
         // If `_startId` is the head, check if the insert position is before the head
-        if (data.head == _startId && _ICR >= troveManager.getCurrentICR(_startId, _price)) {
+        if (data.head == _startId && _NICR >= troveManager.getNominalICR(_startId)) {
             return (address(0), _startId);
         }
 
@@ -316,7 +317,7 @@ contract SortedTroves is Ownable, ISortedTroves {
         address nextId = data.nodes[prevId].nextId;
 
         // Descend the list until we reach the end or until we find a valid insert position
-        while (prevId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
+        while (prevId != address(0) && !validInsertPosition(_NICR, prevId, nextId)) {
             prevId = data.nodes[prevId].nextId;
             nextId = data.nodes[prevId].nextId;
         }
@@ -325,13 +326,13 @@ contract SortedTroves is Ownable, ISortedTroves {
     }
 
     /*
-     * @dev Ascend the list (smaller ICRs to larger ICRs) to find a valid insert position
-     * @param _ICR Node's ICR
+     * @dev Ascend the list (smaller NICRs to larger NICRs) to find a valid insert position
+     * @param _NICR Node's NICR
      * @param _startId Id of node to start ascending the list from
      */
-    function _ascendList(uint256 _ICR, uint _price, address _startId) internal view returns (address, address) {       
+    function _ascendList(uint256 _NICR, address _startId) internal view returns (address, address) {
         // If `_startId` is the tail, check if the insert position is after the tail
-        if (data.tail == _startId && _ICR <= troveManager.getCurrentICR(_startId, _price)) {
+        if (data.tail == _startId && _NICR <= troveManager.getNominalICR(_startId)) {
             return (_startId, address(0));
         }
 
@@ -339,7 +340,7 @@ contract SortedTroves is Ownable, ISortedTroves {
         address prevId = data.nodes[nextId].prevId;
 
         // Ascend the list until we reach the end or until we find a valid insertion point
-        while (nextId != address(0) && !validInsertPosition(_ICR, _price, prevId, nextId)) {
+        while (nextId != address(0) && !validInsertPosition(_NICR, prevId, nextId)) {
             nextId = data.nodes[nextId].prevId;
             prevId = data.nodes[nextId].prevId;
         }
@@ -348,41 +349,41 @@ contract SortedTroves is Ownable, ISortedTroves {
     }
 
     /*
-     * @dev Find the insert position for a new node with the given ICR
-     * @param _ICR Node's ICR
+     * @dev Find the insert position for a new node with the given NICR
+     * @param _NICR Node's NICR
      * @param _prevId Id of previous node for the insert position
      * @param _nextId Id of next node for the insert position
      */
-    function findInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) public view override returns (address, address) {
+    function findInsertPosition(uint256 _NICR, address _prevId, address _nextId) public view override returns (address, address) {
         address prevId = _prevId;
         address nextId = _nextId;
 
         if (prevId != address(0)) {
-            if (!contains(prevId) || _ICR > troveManager.getCurrentICR(prevId, _price)) {
-                // `prevId` does not exist anymore or now has a smaller ICR than the given ICR
+            if (!contains(prevId) || _NICR > troveManager.getNominalICR(prevId)) {
+                // `prevId` does not exist anymore or now has a smaller NICR than the given NICR
                 prevId = address(0);
             }
         }
 
         if (nextId != address(0)) {
-            if (!contains(nextId) || _ICR < troveManager.getCurrentICR(nextId, _price)) {
-                // `nextId` does not exist anymore or now has a larger ICR than the given ICR
+            if (!contains(nextId) || _NICR < troveManager.getNominalICR(nextId)) {
+                // `nextId` does not exist anymore or now has a larger NICR than the given NICR
                 nextId = address(0);
             }
         }
 
         if (prevId == address(0) && nextId == address(0)) {
             // No hint - descend list starting from head
-            return _descendList(_ICR, _price, data.head);
+            return _descendList(_NICR, data.head);
         } else if (prevId == address(0)) {
             // No `prevId` for hint - ascend list starting from `nextId`
-            return _ascendList(_ICR, _price, nextId);
+            return _ascendList(_NICR, nextId);
         } else if (nextId == address(0)) {
             // No `nextId` for hint - descend list starting from `prevId`
-            return _descendList(_ICR, _price, prevId);
+            return _descendList(_NICR, prevId);
         } else {
             // Descend list starting from `prevId`
-            return _descendList(_ICR, _price, prevId);
+            return _descendList(_NICR, prevId);
         }
     }
 

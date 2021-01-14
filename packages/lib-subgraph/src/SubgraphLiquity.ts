@@ -272,11 +272,15 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     throw new Error("Method not implemented.");
   }
 
+  watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
+    throw new Error("Method not implemented.");
+  }
+
   getLQTYBalance(address?: string): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 
-  watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
+  getCollateralSurplusBalance(address?: string): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 

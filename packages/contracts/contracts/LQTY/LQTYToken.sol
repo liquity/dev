@@ -18,7 +18,7 @@ import "../Dependencies/console.sol";
 *  --- Functionality added specific to the LQTYToken ---
 * 
 * 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external 
-* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending LUSD directly to a Liquity 
+* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending LQTY directly to a Liquity
 * core contract, when they should rather call the right function.
 *
 * 2) sendToLQTYStaking(): callable only Liquity core contracts, which move LQTY tokens from user -> LQTYStaking contract.
