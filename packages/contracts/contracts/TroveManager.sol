@@ -939,6 +939,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
                 _partialRedemptionHintNICR
             );
 
+            console.log("V.LUSDLot: %s", V.LUSDLot);
             if (V.LUSDLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last trove
 
             T.totalLUSDRedeemed = T.totalLUSDRedeemed.add(V.LUSDLot);
