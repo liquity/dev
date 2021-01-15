@@ -33,7 +33,7 @@ contract('CollSurplusPool', async accounts => {
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
-  it.only("CollSurplusPool::getETH(): Returns the ETH balance of the CollSurplusPool after redemption", async () => {
+  it("CollSurplusPool::getETH(): Returns the ETH balance of the CollSurplusPool after redemption", async () => {
     const ETH_1 = await collSurplusPool.getETH()
     assert.equal(ETH_1, '0')
 
@@ -57,7 +57,7 @@ contract('CollSurplusPool', async accounts => {
     await th.assertRevert(borrowerOperations.claimRedeemedCollateral(A), 'CollSurplusPool: No collateral available to claim')
   })
 
-  it.only("CollSurplusPool: claimColl(): Reverts if owner cannot receive ETH surplus", async () => {
+  it("CollSurplusPool: claimColl(): Reverts if owner cannot receive ETH surplus", async () => {
     const nonPayable = await NonPayable.new()
 
     await priceFeed.setPrice(dec(100, 18))
