@@ -1,36 +1,32 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Difference } from "@liquity/decimal";
+import { Decimal, Decimalish, Difference } from "@liquity/decimal";
 import { StabilityDeposit } from "@liquity/lib-base";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Icon } from "./Icon";
-import { COIN } from "../strings";
+import { COIN, GT } from "../strings";
 
 type StabilityDepositEditorProps = {
   title: string;
   originalDeposit: StabilityDeposit;
-  editedDeposit: StabilityDeposit;
-  setEditedDeposit: (deposit: StabilityDeposit) => void;
+  editedLUSD: Decimal;
   changePending: boolean;
+  dispatch: (action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }) => void;
 };
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   title,
   originalDeposit,
-  editedDeposit,
-  setEditedDeposit,
-  changePending
+  editedLUSD,
+  changePending,
+  dispatch
 }) => {
   const editingState = useState<string>();
 
-  const pendingDepositChange = Difference.between(
-    editedDeposit.depositAfterLoss,
-    originalDeposit.depositAfterLoss.nonZero
-  );
-
-  const edited = originalDeposit.calculateDifference(editedDeposit) !== undefined;
+  const pendingDepositChange = Difference.between(editedLUSD, originalDeposit.currentLUSD.nonZero);
+  const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
 
   return (
     <Card>
@@ -40,7 +36,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setEditedDeposit(originalDeposit)}
+            onClick={() => dispatch({ type: "revert" })}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -53,25 +49,33 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         <EditableRow
           label="Deposit"
           inputId="deposit-lqty"
-          amount={editedDeposit.depositAfterLoss.prettify()}
+          amount={editedLUSD.prettify()}
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
           unit={COIN}
           {...{ editingState }}
-          editedAmount={editedDeposit.depositAfterLoss.toString(2)}
-          setEditedAmount={(editedDeposit: string) =>
-            setEditedDeposit(new StabilityDeposit({ deposit: editedDeposit }))
-          }
+          editedAmount={editedLUSD.toString(2)}
+          setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
         ></EditableRow>
 
         {!originalDeposit.isEmpty && (
-          <StaticRow
-            label="Gain"
-            inputId="deposit-gain"
-            amount={originalDeposit.pendingCollateralGain.prettify(4)}
-            color={originalDeposit.pendingCollateralGain.nonZero && "success"}
-            unit="ETH"
-          />
+          <>
+            <StaticRow
+              label="Gain"
+              inputId="deposit-gain"
+              amount={originalDeposit.collateralGain.prettify(4)}
+              color={originalDeposit.collateralGain.nonZero && "success"}
+              unit="ETH"
+            />
+
+            <StaticRow
+              label="Reward"
+              inputId="deposit-reward"
+              amount={originalDeposit.lqtyReward.prettify()}
+              color={originalDeposit.lqtyReward.nonZero && "success"}
+              unit={GT}
+            />
+          </>
         )}
       </Box>
     </Card>

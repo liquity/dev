@@ -1,25 +1,23 @@
 {
   "addresses": {
-    "activePool": "0x28Ff66B2E6Ea5FC3b683DfEf4bF27eCC86AAe30b",
-    "borrowerOperations": "0x8201320176d40488374F681E2D93288E368E8A14",
-    "troveManager": "0x0cD7146c57b6Da5a14b663Db41c524e0d2deCf1c",
-    "lusdToken": "0xB181aECAF995887c787d250f81A84e2c50613Fe2",
-    "communityIssuance": "",
-    "defaultPool": "0xfFdD29E10464f458eAd131D10d647642D975AA9F",
-    "lqtyToken": "",
-    "hintHelpers": "0x5eeD5A91A6C219FF1915C2C5C569719FC5092642",
-    "lockupContractFactory": "",
-    "lqtyStaking": "",
-    "multiTroveGetter": "0x2b0d3Fa2878B650472e811d3907288b870123C5e",
-    "poolManager": "0xf6cDc39044dd404448e4e736c4135455778D223c",
-    "priceFeed": "0x9b5b1e076f5321314FaD499b3a847e5833492F10",
-    "sortedTroves": "0x0b9965bc54cB6FC0b84D09CB1143AAdc26141A74",
-    "stabilityPool": "0xB181a8cDA30c68F6a9b998471dc45a086879E8aC",
-    "collSurplusPool": "",
-    "priceFeedTestnet": ""
+    "activePool": "0xbFbA357Dc90070F8EebFF0b6089Bb0a53cCF8aFA",
+    "borrowerOperations": "0x09260D5F9F98AFf053959c53E180AfD2a12723d4",
+    "troveManager": "0x85f70CfD59a5df512955f638BCf5F70F45a91c65",
+    "collSurplusPool": "0x4874E3DeCf35d07181eb1E9fdB403242Ef6fCFF3",
+    "communityIssuance": "0x85068e752C322A5811efAfC662e034f206675823",
+    "defaultPool": "0x22119962EdCEFD9a200cc1329582D6F1b3A05D57",
+    "gasPool": "",
+    "hintHelpers": "0xf07f0485dDFbd4bb048640741168eFFEBc125239",
+    "lockupContractFactory": "0x2B21296E59C5E7fa730eC0Db509C7612aebbbd9E",
+    "lqtyStaking": "0xBB49dF9752D2cC176280B48351116f74493155AA",
+    "priceFeed": "0x1581035f1f472011903e32873D79554213325B45",
+    "sortedTroves": "0x0D3C91FddD7Ef0881674F9b0C56aA5914616a611",
+    "stabilityPool": "0xB4d5A01aD31974edD60998D9eD2bdD1b13bf8Ea6",
+    "lusdToken": "0xb11148f779D136778981dD5541Cb1929fe081B5A",
+    "lqtyToken": "0x8F30A4BcDD7750F16E1181f939bb9981e37C24FE",
+    "multiTroveGetter": "0x3dffBD4682c84b470Ba843743E0E459bC4CAdd2D"
   },
   "priceFeedIsTestnet": true,
-  "version": "1fe9301410a48ff1a8f3173d87d850621c561a2f",
-  "deploymentDate": 1603706601486,
-  "abiHash": "1222c9f972feddbb08667e79ee7806858ae1989a"
+  "version": "c80defd1def8dad1de30a3df4a4267717847f17f",
+  "deploymentDate": 1607930296454
 }

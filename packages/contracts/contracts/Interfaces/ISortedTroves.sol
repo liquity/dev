@@ -14,11 +14,11 @@ interface ISortedTroves {
     
     function setParams(uint256 _size, address _TroveManagerAddress, address _borrowerOperationsAddress) external;
 
-    function insert(address _id, uint256 _ICR, uint price, address _prevId, address _nextId) external;
+    function insert(address _id, uint256 _ICR, address _prevId, address _nextId) external;
 
     function remove(address _id) external;
 
-    function reInsert(address _id, uint256 _newICR, uint price, address _prevId, address _nextId) external;
+    function reInsert(address _id, uint256 _newICR, address _prevId, address _nextId) external;
 
     function contains(address _id) external view returns (bool);
 
@@ -38,7 +38,7 @@ interface ISortedTroves {
 
     function getPrev(address _id) external view returns (address);
 
-    function validInsertPosition(uint256 _ICR, uint _price, address _prevId, address _nextId) external view returns (bool);
+    function validInsertPosition(uint256 _ICR, address _prevId, address _nextId) external view returns (bool);
 
-    function findInsertPosition(uint256 _ICR, uint _price,  address _prevId, address _nextId) external view returns (address, address);
+    function findInsertPosition(uint256 _ICR, address _prevId, address _nextId) external view returns (address, address);
 }

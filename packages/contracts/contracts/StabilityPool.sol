@@ -4,7 +4,7 @@ pragma solidity 0.6.11;
 
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/IStabilityPool.sol';
-import './Interfaces/IPool.sol';
+import './Interfaces/IActivePool.sol';
 import './Interfaces/IBorrowerOperations.sol';
 import './Interfaces/ITroveManager.sol';
 import './Interfaces/ILUSDToken.sol';
@@ -138,7 +138,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     ILUSDToken public lusdToken;
 
-    IPool public activePool;
+    IActivePool public activePool;
     address public activePoolAddress;
 
     // Needed to check if there are pending liquidations
@@ -236,7 +236,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     {
         borrowerOperations = IBorrowerOperations(_borrowerOperationsAddress);
         troveManager = ITroveManager(_troveManagerAddress);
-        activePool = IPool(_activePoolAddress);
+        activePool = IActivePool(_activePoolAddress);
         activePoolAddress = _activePoolAddress;
         lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
@@ -321,7 +321,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     * If _amount > userDeposit, the user withdraws all of their compounded deposit. 
     */
     function withdrawFromSP(uint _amount) external override {
-        _requireNoUnderCollateralizedTroves();
+        if (_amount !=0) {_requireNoUnderCollateralizedTroves();}
         uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
 
@@ -362,7 +362,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
     * - Transfers the depositor's entire ETH gain from the Stability Pool to the caller's trove
     * - Leaves their compounded deposit in the Stability Pool
     * - Updates snapshots for deposit and tagged front end stake */
-    function withdrawETHGainToTrove(address _hint) external override {
+    function withdrawETHGainToTrove(address _upperHint, address _lowerHint) external override {
         uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
         _requireUserHasTrove(msg.sender);
@@ -397,7 +397,7 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         emit ETHBalanceUpdated(ETH);
         emit EtherSent(msg.sender, depositorETHGain);
 
-        borrowerOperations.moveETHGainToTrove{ value: depositorETHGain }(msg.sender, _hint);
+        borrowerOperations.moveETHGainToTrove{ value: depositorETHGain }(msg.sender, _upperHint, _lowerHint);
     }
 
     // --- LQTY issuance functions ---
@@ -413,8 +413,9 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
         /* 
         * When total deposits is 0, G is not updated. In this case, the LQTY issued can not be obtained by later 
         * depositors - it is missed out on, and remains in the balanceof the CommunityIssuance contract. 
+        *
         */
-        if (totalLUSD == 0) {return;}
+        if (totalLUSD == 0 || _LQTYIssuance == 0) {return;}
 
         uint LQTYPerUnitStaked;
         LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalLUSD);
@@ -754,6 +755,8 @@ contract StabilityPool is LiquityBase, Ownable, IStabilityPool {
 
     // Send LUSD to user and decrease LUSD in Pool
     function _sendLUSDToDepositor(address _depositor, uint LUSDWithdrawal) internal {
+        if (LUSDWithdrawal == 0) {return;}
+        
         lusdToken.returnFromPool(address(this), _depositor, LUSDWithdrawal);
         _decreaseLUSD(LUSDWithdrawal);
     }

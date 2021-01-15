@@ -25,6 +25,7 @@ type TroveEditorProps = {
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
+  children,
   original,
   edited,
   afterFee,
@@ -53,7 +54,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   return (
     <Card>
       <Heading>
-        {original.isEmpty ? "Open a new Liquity Trove" : "My Liquity Trove"}
+        {original.isEmpty ? "Open a Trove to borrow LUSD" : "My Trove"}
         {change && !changePending && (
           <Button
             variant="titleIcon"
@@ -66,6 +67,8 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
       </Heading>
 
       {changePending && <LoadingOverlay />}
+
+      {children}
 
       <Box>
         <EditableRow
