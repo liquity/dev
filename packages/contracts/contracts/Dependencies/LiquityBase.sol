@@ -2,6 +2,7 @@
 
 pragma solidity 0.6.11;
 
+import "./BaseMath.sol";
 import "./LiquityMath.sol";
 import "../Interfaces/IActivePool.sol";
 import "../Interfaces/IDefaultPool.sol";
@@ -11,10 +12,8 @@ import "../Interfaces/IPriceFeed.sol";
 * Base contract for TroveManager, BorrowerOperations and StabilityPool. Contains global system constants and
 * common functions. 
 */
-contract LiquityBase {
+contract LiquityBase is BaseMath {
     using SafeMath for uint;
-
-    uint constant public DECIMAL_PRECISION = 1e18;
 
     uint constant public _100pct = 1000000000000000000; // 1e18 == 100%
 

@@ -4,18 +4,17 @@ pragma solidity 0.6.11;
 
 import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ICommunityIssuance.sol";
+import "../Dependencies/BaseMath.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 
 //TODO: Decide upon and implement LQTY community issuance schedule.
-contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
+contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMath {
     using SafeMath for uint;
 
     // --- Data ---
-
-    uint constant public DECIMAL_PRECISION = 1e18;
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
 

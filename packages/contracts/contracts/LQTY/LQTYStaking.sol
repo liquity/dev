@@ -2,6 +2,7 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/BaseMath.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
@@ -11,12 +12,10 @@ import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Interfaces/ILUSDToken.sol";
 
-contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
+contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     using SafeMath for uint;
 
     // --- Data ---
-    uint constant public DECIMAL_PRECISION = 1e18;
-
     mapping( address => uint) public stakes;
     uint public totalLQTYStaked;
 
