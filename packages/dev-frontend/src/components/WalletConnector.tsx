@@ -1,50 +1,54 @@
 import React, { useEffect, useReducer } from "react";
 import { useWeb3React } from "@web3-react/core";
+import { AbstractConnector } from "@web3-react/abstract-connector";
 import { Button, Text, Flex, Link, Box } from "theme-ui";
 
-import { useInjectedConnector } from "../hooks/connectors/InjectedConnector";
+import { injectedConnector } from "../connectors/injectedConnector";
+import { useAuthorizedConnection } from "../hooks/useAuthorizedConnection";
 import { RetryDialog } from "./RetryDialog";
 import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
 import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
 
-interface Connector {
-  activate: () => Promise<void>;
-  deactivate: () => void;
-}
-
 type ConnectionState =
   | { type: "inactive" }
-  | { type: "activating" | "rejectedByUser" | "failed"; connector: Connector };
+  | {
+      type: "activating" | "active" | "rejectedByUser" | "alreadyPending" | "failed";
+      connector: AbstractConnector;
+    };
 
 type ConnectionAction =
-  | { type: "activate"; connector: Connector }
+  | { type: "startActivating"; connector: AbstractConnector }
   | { type: "fail"; error: Error }
-  | { type: "retry" | "cancel" };
+  | { type: "finishActivating" | "retry" | "cancel" | "deactivate" };
 
 const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (state, action) => {
   switch (action.type) {
-    case "activate":
-      if (state.type === "inactive" || state.type === "failed") {
-        action.connector.activate();
-        return {
-          type: "activating",
-          connector: action.connector
-        };
-      }
-      break;
+    case "startActivating":
+      return {
+        type: "activating",
+        connector: action.connector
+      };
+    case "finishActivating":
+      return {
+        type: "active",
+        connector: state.type === "inactive" ? injectedConnector : state.connector
+      };
     case "fail":
-      if (state.type === "activating") {
+      if (state.type !== "inactive") {
         return {
-          type: action.error.name === "UserRejectedRequestError" ? "rejectedByUser" : "failed",
+          type: action.error.message.match(/user rejected/i)
+            ? "rejectedByUser"
+            : action.error.message.match(/already pending/i)
+            ? "alreadyPending"
+            : "failed",
           connector: state.connector
         };
       }
       break;
     case "retry":
-      if (state.type === "rejectedByUser" || state.type === "failed") {
-        state.connector.activate();
+      if (state.type !== "inactive") {
         return {
           type: "activating",
           connector: state.connector
@@ -52,21 +56,21 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
       }
       break;
     case "cancel":
-      if (state.type === "activating") {
-        state.connector.deactivate();
-        return {
-          type: "inactive"
-        };
-      }
-      if (state.type === "rejectedByUser" || state.type === "failed") {
-        return {
-          type: "inactive"
-        };
-      }
-      break;
+      return {
+        type: "inactive"
+      };
+    case "deactivate":
+      return {
+        type: "inactive"
+      };
   }
 
-  throw new Error(`Cannot ${action.type} when ${state.type}`);
+  console.warn("Ignoring connectionReducer action:");
+  console.log(action);
+  console.log("  in state:");
+  console.log(state);
+
+  return state;
 };
 
 const detectMetaMask = () => window.ethereum?.isMetaMask ?? false;
@@ -76,33 +80,43 @@ type WalletConnectorProps = {
 };
 
 export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, loader }) => {
-  const web3React = useWeb3React<unknown>();
-
+  const { activate, deactivate, active, error } = useWeb3React<unknown>();
+  const triedAuthorizedConnection = useAuthorizedConnection();
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
-  const connectors = {
-    injected: useInjectedConnector(web3React)
-  };
-
   const isMetaMask = detectMetaMask();
 
   useEffect(() => {
-    if (web3React.error) {
-      dispatch({ type: "fail", error: web3React.error });
+    if (error) {
+      dispatch({ type: "fail", error });
+      deactivate();
     }
-  }, [web3React.error]);
+  }, [error, deactivate]);
 
-  if (!connectors.injected.triedAuthorizedConnection) {
+  useEffect(() => {
+    if (active) {
+      dispatch({ type: "finishActivating" });
+    } else {
+      dispatch({ type: "deactivate" });
+    }
+  }, [active]);
+
+  if (!triedAuthorizedConnection) {
     return <>{loader}</>;
   }
 
-  if (web3React.active) {
+  if (connectionState.type === "active") {
     return <>{children}</>;
   }
 
   return (
     <>
       <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center" }}>
-        <Button onClick={() => dispatch({ type: "activate", connector: connectors.injected })}>
+        <Button
+          onClick={() => {
+            dispatch({ type: "startActivating", connector: injectedConnector });
+            activate(injectedConnector);
+          }}
+        >
           {isMetaMask ? (
             <>
               <MetaMaskIcon />
@@ -117,47 +131,76 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
         </Button>
       </Flex>
 
-      <Modal isOpen={connectionState.type === "failed"}>
-        <RetryDialog
-          title={isMetaMask ? "Failed to connect to MetaMask" : "Failed to connect wallet"}
-          onRetry={() => dispatch({ type: "retry" })}
-          onCancel={() => dispatch({ type: "cancel" })}
-        >
-          <Text sx={{ textAlign: "center" }}>
-            You might need to install MetaMask or use a different browser.
-          </Text>
-          <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
-            Learn more <Icon size="xs" name="external-link-alt" />
-          </Link>
-        </RetryDialog>
-      </Modal>
+      {connectionState.type === "failed" && (
+        <Modal>
+          <RetryDialog
+            title={isMetaMask ? "Failed to connect to MetaMask" : "Failed to connect wallet"}
+            onCancel={() => dispatch({ type: "cancel" })}
+            onRetry={() => {
+              dispatch({ type: "retry" });
+              activate(connectionState.connector);
+            }}
+          >
+            <Box sx={{ textAlign: "center" }}>
+              You might need to install MetaMask or use a different browser.
+            </Box>
+            <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
+              Learn more <Icon size="xs" name="external-link-alt" />
+            </Link>
+          </RetryDialog>
+        </Modal>
+      )}
 
-      <Modal isOpen={connectionState.type === "activating"}>
-        <ConnectionConfirmationDialog
-          title={isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"}
-          icon={isMetaMask ? <MetaMaskIcon /> : <Icon name="wallet" size="lg" />}
-          onCancel={() => dispatch({ type: "cancel" })}
-        >
-          <Text sx={{ textAlign: "center" }}>
-            Confirm the request that's just appeared.
-            {isMetaMask ? (
-              <> If you can't see a request, open your MetaMask extension via your browser.</>
-            ) : (
-              <> If you can't see a request, you might have to open your wallet.</>
-            )}
-          </Text>
-        </ConnectionConfirmationDialog>
-      </Modal>
+      {connectionState.type === "activating" && (
+        <Modal>
+          <ConnectionConfirmationDialog
+            title={
+              isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"
+            }
+            icon={isMetaMask ? <MetaMaskIcon /> : <Icon name="wallet" size="lg" />}
+            onCancel={() => dispatch({ type: "cancel" })}
+          >
+            <Text sx={{ textAlign: "center" }}>
+              Confirm the request that&apos;s just appeared.
+              {isMetaMask ? (
+                <> If you can&apos;t see a request, open your MetaMask extension via your browser.</>
+              ) : (
+                <> If you can&apos;t see a request, you might have to open your wallet.</>
+              )}
+            </Text>
+          </ConnectionConfirmationDialog>
+        </Modal>
+      )}
 
-      <Modal isOpen={connectionState.type === "rejectedByUser"}>
-        <RetryDialog
-          title="Cancel connection?"
-          onCancel={() => dispatch({ type: "cancel" })}
-          onRetry={() => dispatch({ type: "retry" })}
-        >
-          <Text>To use Liquity, you need to connect your Ethereum account.</Text>
-        </RetryDialog>
-      </Modal>
+      {connectionState.type === "rejectedByUser" && (
+        <Modal>
+          <RetryDialog
+            title="Cancel connection?"
+            onCancel={() => dispatch({ type: "cancel" })}
+            onRetry={() => {
+              dispatch({ type: "retry" });
+              activate(connectionState.connector);
+            }}
+          >
+            <Text>To use Liquity, you need to connect your Ethereum account.</Text>
+          </RetryDialog>
+        </Modal>
+      )}
+
+      {connectionState.type === "alreadyPending" && (
+        <Modal>
+          <RetryDialog
+            title="Connection already requested"
+            onCancel={() => dispatch({ type: "cancel" })}
+            onRetry={() => {
+              dispatch({ type: "retry" });
+              activate(connectionState.connector);
+            }}
+          >
+            <Text>Please check your wallet and accept the connection request before retrying.</Text>
+          </RetryDialog>
+        </Modal>
+      )}
     </>
   );
 };
