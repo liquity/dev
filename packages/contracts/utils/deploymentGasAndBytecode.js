@@ -18,7 +18,7 @@ const HintHelpers = artifacts.require("./HintHelpers.sol")
 const CommunityIssuanceTester = artifacts.require("./LQTY/CommunityIssuanceTester.sol")
 const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
-const MathTester = artifacts.require("./MathTester.sol")
+const MathTester = artifacts.require("./LiquityMathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
@@ -123,6 +123,13 @@ async function main() {
   console.log(`\n`)
   logContractBytecodeLengths(TesterContractABIs)
   console.log(`\n`)
+
+
+  
+  const OYLCdeployment = await LQTYContracts.lockupContractFactory.deployOneYearLockupContract('0x0000000000000000000000000000000000000000', 100)
+  const OYLCdeploymentGasCost = OYLCdeployment.receipt.gasUsed
+  console.log(`OYLC deployment through factory gas cost:${OYLCdeploymentGasCost }`)
+
 
 }
 
