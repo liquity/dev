@@ -367,7 +367,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the StabilityPool")
+        assert.include(err.message, "Caller is neither TroveManager nor StabilityPool")
       }
     })
 
@@ -567,15 +567,6 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('LQTYStaking', async accounts => {
-    it("addETHFee(): reverts when caller is not TroveManager", async () => {
-      try {
-        const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-    })
-
     it("addLQTYFee(): reverts when caller is not TroveManager", async () => {
       try {
         const txAlice = await lqtyStaking.increaseF_LUSD(dec(1, 18), { from: alice })

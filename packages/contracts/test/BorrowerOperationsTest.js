@@ -847,9 +847,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY LUSD balance before == 0
     const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
@@ -932,9 +930,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY contract LUSD fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
-    assert.equal(F_LUSD_Before, '0')
 
     // D withdraws LUSD
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
@@ -960,9 +956,7 @@ contract('BorrowerOperations', async accounts => {
     // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check LQTY Staking contract balance before == 0
     const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
@@ -1557,9 +1551,7 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY LUSD balance before == 0
     const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // D adjusts trove
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
@@ -1637,10 +1629,8 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY contract LUSD fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
-    assert.equal(F_LUSD_Before, '0')
-
+  
     // D adjusts trove
     await borrowerOperations.openTrove(0, D, { from: D, value: dec(5, 'ether') })
     await borrowerOperations.adjustTrove(0, dec(37, 18), true, D, { from: D })
@@ -1665,9 +1655,7 @@ contract('BorrowerOperations', async accounts => {
     // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check LQTY Staking contract balance before == 0
     const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
@@ -2775,9 +2763,6 @@ contract('BorrowerOperations', async accounts => {
     // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check A's balance has decreased by 10 LUSD
-    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
-
     // Check baseRate is now non-zero
     const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
@@ -2787,7 +2772,6 @@ contract('BorrowerOperations', async accounts => {
 
     // Check LQTY LUSD balance before == 0
     const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
 
     // D opens trove 
     await borrowerOperations.openTrove(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
@@ -2863,10 +2847,8 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // Check LQTY contract LUSD fees-per-unit-staked is zero
     const F_LUSD_Before = await lqtyStaking.F_LUSD()
-    assert.equal(F_LUSD_Before, '0')
-
+ 
     // D opens trove 
     await borrowerOperations.openTrove(dec(37, 18), D, { from: D, value: dec(5, 'ether') })
 
@@ -2890,10 +2872,8 @@ contract('BorrowerOperations', async accounts => {
     // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
-    // Check LQTY Staking contract balance before == 0
     const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-    assert.equal(lqtyStaking_LUSDBalance_Before, '0')
-
+    
     // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
 
