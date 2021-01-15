@@ -1800,23 +1800,43 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Check operations impossible when system is in Recovery Mode
     try { // collateral withdrawal should also fail
       const txAlice = await borrowerOperations.adjustTrove(dec(1, 'ether'), 0, false, alice, alice, { from: alice })
       assert.isFalse(txAlice.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
-
+    
     try { // debt increase should fail
-      const txBob = await borrowerOperations.adjustTrove(0, dec(50, 18), true, bob, bob, { from: bob, value: dec(1, 'ether') })
+      const txBob = await borrowerOperations.adjustTrove(0, dec(50, 18), true, bob, bob, { from: bob })
       assert.isFalse(txBob.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
     }
 
-    try { // debt increase that also improves the ICR should succeed
-      const txBob = await borrowerOperations.adjustTrove(0, dec(20, 18), true, bob, bob, { from: bob, value: dec(2, 'ether') })
+    try { // debt increase that's also a collateral increase should also fail, if ICR will be worse off
+      const txBob = await borrowerOperations.adjustTrove(0, dec(111, 18), true, bob, bob, { from: bob, value: dec(1, 'ether') })
+      assert.isFalse(txBob.receipt.status)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
+  })
+
+  it("adjustTrove(): debt increase that also improves the ICR should succeed in Recovery Mode", async () => {
+    await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+
+    assert.isFalse(await troveManager.checkRecoveryMode())
+
+    const txAlice = await borrowerOperations.adjustTrove(0, dec(50, 18), true, alice, alice, { from: alice, value: dec(1, 'ether') })
+    assert.isTrue(txAlice.receipt.status)
+
+    await priceFeed.setPrice(dec(100, 18)) // trigger 50% drop in ETH price
+
+    assert.isTrue(await troveManager.checkRecoveryMode())
+
+    try { 
+      const txBob = await borrowerOperations.adjustTrove(0, dec(50, 18), true, bob, bob, { from: bob, value: dec(1, 'ether') })
       assert.isTrue(txBob.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -1936,8 +1956,15 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(debtBefore, dec(110, 18))
     assert.equal(activePoolDebtBefore, dec(120, 18))
 
-    // Alice adjusts trove. No coll change, no debt change
-    await borrowerOperations.adjustTrove(0, 0, true, alice, alice, { from: alice, value: dec(1, 'ether') })
+    // Alice adjusts trove. no debt change
+    await borrowerOperations.adjustTrove(0, 0, false, alice, alice, { from: alice, value: dec(1, 'ether') })
+
+    try {
+      const txAlice = await borrowerOperations.adjustTrove(0, dec(200, 18), true, bob, bob, { from: bob, value: dec(1, 'ether') })
+      assert.isFalse(txAlice.receipt.status)
+    } catch (err) {
+      assert.include(err.message, "revert")
+    }
 
     const debtAfter = ((await troveManager.Troves(alice))[0]).toString()
     // const collAfter = ((await troveManager.Troves(alice))[1]).toString()
@@ -2191,6 +2218,15 @@ contract('BorrowerOperations', async accounts => {
     )
   })
 
+  it("adjustTrove(): Reverts if requested debt increase and amount is zero", async () => {
+    await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+
+    const aliceColl_Before = (await troveManager.Troves(alice))[1].toString()
+    assert.equal(aliceColl_Before, dec(1, 'ether'))
+
+    await assertRevert(borrowerOperations.adjustTrove(0, 0, true, alice, alice, { from: alice }), 'BorrowerOps: Debt increase requires positive debtChange')
+  })
 
   it("adjustTrove(): Reverts if requested coll withdrawal and ether is sent", async () => {
     await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(100, 'ether') })

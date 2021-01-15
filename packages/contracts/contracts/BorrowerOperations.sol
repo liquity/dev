@@ -245,7 +245,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             if (!_checkRecoveryMode()) {
                 _requireICRisAboveMCR(L.newICR);
                 uint newTCR = _getNewTCRFromTroveChange(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
-                require(newTCR < CCR, "BorrowerOps: Cannot bring TCR below CCR");
+                require(newTCR >= CCR, "BorrowerOps: Cannot bring TCR below CCR");
             } else {
                 require(L.newICR >= L.oldICR, "BorrowerOps: Cannot decrease your Trove's ICR in Recovery Mode");
             }
