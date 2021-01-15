@@ -3,7 +3,8 @@
 pragma solidity 0.6.11;
 
 import "./LiquityMath.sol";
-import "../Interfaces/IPool.sol";
+import "../Interfaces/IActivePool.sol";
+import "../Interfaces/IDefaultPool.sol";
 import "../Interfaces/IPriceFeed.sol";
 
 /* 
@@ -29,9 +30,9 @@ contract LiquityBase {
 
     uint constant public PERCENT_DIVISOR = 200; // dividing by 200 yields 0.5%
 
-    IPool public activePool;
+    IActivePool public activePool;
 
-    IPool public defaultPool;
+    IDefaultPool public defaultPool;
 
     IPriceFeed public priceFeed;
 

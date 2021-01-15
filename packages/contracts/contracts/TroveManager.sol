@@ -3,8 +3,6 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/ITroveManager.sol";
-import "./Interfaces/IDefaultPool.sol";
-import "./Interfaces/IActivePool.sol";
 import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
@@ -20,10 +18,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // --- Connected contract declarations ---
 
     address public borrowerOperationsAddress;
-
-    IActivePool public activePool;
-
-    IDefaultPool public defaultPool;
 
     IStabilityPool public stabilityPool;
 

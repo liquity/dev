@@ -5,8 +5,6 @@ pragma solidity 0.6.11;
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/ILUSDToken.sol";
-import "./Interfaces/IActivePool.sol";
-import "./Interfaces/IDefaultPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import './Interfaces/ILUSDToken.sol';
 import "./Interfaces/ISortedTroves.sol";
@@ -21,10 +19,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     // --- Connected contract declarations ---
 
     ITroveManager public troveManager;
-
-    IActivePool public activePool;
-
-    IDefaultPool public defaultPool;
 
     address stabilityPoolAddress;
 
@@ -304,8 +298,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     }
 
     function claimRedeemedCollateral(address _user) external override {
-        emit RedeemedCollateralClaimed(_user);
-
         // send ETH from CollSurplus Pool to owner
         collSurplusPool.claimColl(_user);
     }
