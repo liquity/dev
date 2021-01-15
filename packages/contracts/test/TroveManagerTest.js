@@ -2530,22 +2530,9 @@ contract('TroveManager', async accounts => {
 
     assert.deepEqual(orderOfTroves, [carol, bob, alice, dennis]);
 
-    // --- TEST --- 
-    const TCR = (await troveManager.getTCR())
-    assert.isTrue(TCR < 1100000000000000000)
-    await assertRevert(troveManager.redeemCollateral(
-      '270' + _18_zeros,
-      carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
-      // last Trove with ICR == 110% (which would be Alice's)
-      '0x0000000000000000000000000000000000000000',
-      0, 
-      0, 
-      { from: dennis }
-    ), "TroveManager: Cannot redeem when TCR < MCR")
-    
-    await borrowerOperations.openTrove('0', whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove('0', whale, whale, { from: whale, value: dec(100, 'ether') })
 
-    await troveManager.redeemCollateral(
+    const tx = await troveManager.redeemCollateral(
       '270' + _18_zeros,
       carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
       // last Trove with ICR == 110% (which would be Alice's)
@@ -2567,6 +2554,35 @@ contract('TroveManager', async accounts => {
 
     const { debt: dennis_Debt_After } = await troveManager.Troves(dennis)
     assert.equal(dennis_Debt_After, '101' + _18_zeros)
+  });
+
+  it("redeemCollateral(): reverts when TCR < MCR", async () => {
+    await borrowerOperations.openTrove('90' + _18_zeros, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('90' + _18_zeros, bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('90' + _18_zeros, carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove('91' + _18_zeros, dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+
+    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: alice })
+    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: bob })
+    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: carol })
+
+    // This will put Dennis slightly below 110%, and everyone else exactly at 110%
+    const price = '110' + _18_zeros
+    await priceFeed.setPrice(price)
+
+    const TCR = (await troveManager.getTCR()).toString()
+    assert.isTrue(TCR < '1100000000000000000')
+
+    await assertRevert(troveManager.redeemCollateral(
+      '270' + _18_zeros,
+      carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
+      // last Trove with ICR == 110% (which would be Alice's)
+      '0x0000000000000000000000000000000000000000',
+      '0x0000000000000000000000000000000000000000',
+      0, 
+      0, 
+      { from: dennis }
+    ), "TroveManager: Cannot redeem when TCR < MCR")
   });
 
   it("redeemCollateral(): reverts when argument _amount is 0", async () => {
