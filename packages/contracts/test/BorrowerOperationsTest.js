@@ -2614,8 +2614,8 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("closeTrove(): reverts if borrower has insufficient LUSD balance to repay his entire debt", async () => {
-    await borrowerOperations.openTrove(dec(1000), A, { from: A, value: dec(15, 'ether') })
-    await borrowerOperations.openTrove(dec(100), B, { from: B, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(dec(1000), A, A, { from: A, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(dec(100), B, B, { from: B, value: dec(5, 'ether') })
  
     // Bob transfers some LUSD to carol
     await lusdToken.transfer(carol, 1,  {from: B})
