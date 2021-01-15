@@ -441,143 +441,39 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
   })
 
-  describe('OneYearLockupContract', async accounts => {
-    it("lockContract(): reverts when caller is not deployer", async () => {
-      // deploy new OYLC with Carol as beneficiary
-      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
-
-      const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
-
-      // Check Factory is OYLC deployer
-      assert.equal(await OYLC.deployer(), lockupContractFactory.address)
-
-      // Deployer funds the OYLC
-      await lqtyToken.transfer(OYLC.address, dec(100, 18), { from: owner })
-
-      try {
-        const txAlice = await OYLC.lockContract({ from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully lock OYLC contract via Factory
-      const txOwner = await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
-      assert.isTrue(txOwner.receipt.status)
-    })
-
+  describe('LockupContract', async accounts => {
     it("withdrawLQTY(): reverts when caller is not beneficiary", async () => {
-      // deploy new OYLC with Carol as beneficiary
-      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
+      // deploy new LC with Carol as beneficiary
+      const unlockTime = (await lqtyToken.deploymentStartTime()).add(toBN(timeValues.SECONDS_IN_ONE_YEAR))
+      const deployedLCtx = await lockupContractFactory.deployLockupContract(
+        carol, dec(100, 18), 
+        unlockTime,
+        { from: owner })
 
-      const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
+      const LC = await th.getLCFromDeploymentTx(deployedLCtx)
 
-      // Deployer funds the OYLC
-      await lqtyToken.transfer(OYLC.address, dec(100, 18), { from: owner })
-
-      // Deployer locks contract via the factory
-      await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
-      assert.isTrue(await OYLC.active())
+      // Deployer funds the LC
+      await lqtyToken.transfer(LC.address, dec(100, 18), { from: owner })
 
       // Fast-forward one year, so that beneficiary can withdraw
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // Bob attempts to withdraw LQTY
       try {
-        const txBob = await OYLC.withdrawLQTY({ from: bob })
+        const txBob = await LC.withdrawLQTY({ from: bob })
         
       } catch (err) {
         assert.include(err.message, "revert")
       }
 
       // Confirm beneficiary, Carol, can withdraw
-      const txCarol = await OYLC.withdrawLQTY({ from: carol })
-      assert.isTrue(txCarol.receipt.status)
-    })
-  })
-
-  describe('CustomDurationLockupContract', async accounts => {
-    it("lockContract(): reverts when caller is not deployer", async () => {
-      // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-
-      // deploy new CDLC with 1 month duration and Carol as beneficiary
-      const deployedCDLCtx = await lockupContractFactory
-        .deployCustomDurationLockupContract(
-          carol,
-          dec(100, 18),
-          timeValues.SECONDS_IN_ONE_MONTH,
-          { from: owner }
-        )
-
-      const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
-
-      // Check Factory is CDLC deployer
-      assert.equal(await CDLC.deployer(), lockupContractFactory.address)
-
-      // Deployer funds the CDLC
-      await lqtyToken.transfer(CDLC.address, dec(100, 18), { from: owner })
-
-      try {
-        const txAlice = await CDLC.lockContract({ from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully lock OYLC contract via Factory
-      const txOwner1 = await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
-    })
-
-    it("withdrawLQTY(): reverts when caller is not beneficiary", async () => {
-      // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-
-      // deploy new CDLC with 1 month duration and Carol as beneficiary
-      const deployedCDLCtx = await lockupContractFactory
-        .deployCustomDurationLockupContract(
-          carol,
-          dec(100, 18),
-          timeValues.SECONDS_IN_ONE_MONTH,
-          { from: owner })
-
-      const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
-
-      // Deployer funds the CDLC
-      await lqtyToken.transfer(CDLC.address, dec(100, 18), { from: owner })
-
-      // Deployer locks contract via the factory
-      await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
-      assert.isTrue(await CDLC.active())
-
-      // Fast-forward one month, so that beneficiary can withdraw
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
-
-      // Bob attempts to withdraw LQTY
-      try {
-        const txBob = await CDLC.withdrawLQTY({ from: bob })
-     
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Confirm beneficiary, Carol, can withdraw
-      const txCarol = await CDLC.withdrawLQTY({ from: carol })
+      const txCarol = await LC.withdrawLQTY({ from: carol })
       assert.isTrue(txCarol.receipt.status)
     })
   })
 
   describe('LQTYStaking', async accounts => {
-    it("addETHFee(): reverts when caller is not TroveManager", async () => {
-      try {
-        const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-    })
-
-    it("addLQTYFee(): reverts when caller is not TroveManager", async () => {
+    it("increaseF_LUSD(): reverts when caller is not TroveManager", async () => {
       try {
         const txAlice = await lqtyStaking.increaseF_LUSD(dec(1, 18), { from: alice })
         

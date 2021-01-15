@@ -1,7 +1,6 @@
 
 const BN = require('bn.js')
-const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
-const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
+const LockupContract = artifacts.require(("./LockupContract.sol"))
 const Destructible = artifacts.require("./TestContracts/Destructible.sol")
 
 const MoneyValues = {
@@ -924,16 +923,10 @@ class TestHelper {
     return deployedLCTx.logs[0].args[0]
   }
 
-  static async getOYLCFromDeploymentTx(deployedOYLCTx) {
-    const deployedOYLCAddress = this.getLCAddressFromDeploymentTx(deployedOYLCTx)  // grab addr of deployed contract from event
-    const OYLC = await OneYearLockupContract.at(deployedOYLCAddress)
-    return OYLC
-  }
-
-  static async getCDLCFromDeploymentTx(deployedCDLCTx) {
-    const deployedCDLCAddress = this.getLCAddressFromDeploymentTx(deployedCDLCTx)  // grab addr of deployed contract from event
-    const CDLC = await CustomDurationLockupContract.at(deployedCDLCAddress)
-    return CDLC
+  static async getLCFromDeploymentTx(deployedOYLCTx) {
+    const deployedLCAddress = this.getLCAddressFromDeploymentTx(deployedOYLCTx)  // grab addr of deployed contract from event
+    const LC = await LockupContract.at(deployedLCAddress)
+    return LC
   }
 
   static async registerFrontEnds(frontEnds, stabilityPool) {

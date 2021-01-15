@@ -5,34 +5,29 @@ pragma solidity 0.6.11;
 import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ILockupContractFactory.sol";
-import "./OneYearLockupContract.sol";
-import "./CustomDurationLockupContract.sol";
+import "./LockupContract.sol";
 import "../Dependencies/console.sol";
 
 contract LockupContractFactory is CheckContract, ILockupContractFactory {
     using SafeMath for uint;
 
     // --- Data ---
-    uint constant public ONE_YEAR_IN_SECONDS = 31536000;
+    uint constant public SECONDS_IN_ONE_YEAR = 31536000;
 
-    uint public immutable deploymentTime;
     address public immutable deployer;
 
     ILQTYToken public lqtyToken;
-
-    mapping (address => address) public oneYearLockupContractToDeployer;
-    mapping (address => address) public customDurationLockupContractToDeployer;
+    
+    mapping (address => address) public lockupContractToDeployer;
 
     // --- Events ---
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
-    event OYLCDeployed(address _OYLCAddress, address _beneficiary, uint _entitlement);
-    event CDLCDeployed(address _CDLCAddress, address _beneficiary, uint _initialEntitlement);
+    event LockupContractDeployed(address _lockupContractAddress, address _beneficiary, uint _entitlement, uint _unlockTime);
 
     // --- Functions ---
 
     constructor () public {
-        deploymentTime = block.timestamp;
         deployer = msg.sender;
     }
 
@@ -44,72 +39,20 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
         emit LQTYTokenAddressSet(_lqtyTokenAddress);
     }
 
-    function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external override {
+    function deployLockupContract(address _beneficiary, uint _initialEntitlement, uint _unlockTime) external override {
         _requireLQTYAddressIsSet();
-        OneYearLockupContract oneYearLockupContract = new OneYearLockupContract(
-                                                        address(lqtyToken),
-                                                        beneficiary,
-                                                        initialEntitlement);
+        LockupContract lockupContract = new LockupContract(
+                                                        address(lqtyToken), 
+                                                        _beneficiary, 
+                                                        _initialEntitlement,
+                                                        _unlockTime);
 
-        oneYearLockupContractToDeployer[address(oneYearLockupContract)] = msg.sender;
-        emit OYLCDeployed(address(oneYearLockupContract), beneficiary, initialEntitlement);
+        lockupContractToDeployer[address(lockupContract)] = msg.sender;
+        emit LockupContractDeployed(address(lockupContract), _beneficiary, _initialEntitlement, _unlockTime);
     }
 
-    function deployCustomDurationLockupContract(address beneficiary, uint initialEntitlement, uint lockupDuration) external override {
-        _requireLQTYAddressIsSet();
-        _requireFactoryIsAtLeastOneYearOld();
-
-        CustomDurationLockupContract customDurationLockupContract = new CustomDurationLockupContract(
-                                                                        address(lqtyToken),
-                                                                        beneficiary,
-                                                                        initialEntitlement,
-                                                                        lockupDuration);
-
-        customDurationLockupContractToDeployer[address(customDurationLockupContract)] = msg.sender;
-        emit CDLCDeployed(address(customDurationLockupContract),  beneficiary, initialEntitlement);
-    }
-
-    // Simultaneously lock a set of OYLCs that were originally deployed by the caller, through this Factory.
-    function lockOneYearContracts(address[] calldata addresses) external override {
-        for (uint i = 0; i < addresses.length; i++ ) {
-            address addr = addresses[i];
-            OneYearLockupContract oneYearlockupContract = OneYearLockupContract(addr);
-
-            _requireIsRegisteredOneYearLockup(addr);
-            _requireCallerIsOriginalDeployerofOYLC(addr);
-
-            oneYearlockupContract.lockContract();
-        }
-    }
-
-    // Simultaneously lock a set of CDLCs that were originally deployed by the caller, through this Factory.
-    function lockCustomDurationContracts(address[] calldata addresses) external override {
-        for (uint i = 0; i < addresses.length; i++ ) {
-            address addr = addresses[i];
-            CustomDurationLockupContract customDurationLockupContract = CustomDurationLockupContract(addr);
-
-            _requireIsRegisteredCustomDurationLockup(addr);
-            _requireCallerIsOriginalDeployerofCDLC(addr);
-
-            customDurationLockupContract.lockContract();
-        }
-    }
-
-    function isRegisteredOneYearLockup(address _contractAddress) external view override returns (bool) {
-        return _isRegisteredOneYearLockup(_contractAddress);
-    }
-
-    function _isRegisteredOneYearLockup(address _contractAddress) internal view returns (bool) {
-        bool isRegistered = oneYearLockupContractToDeployer[_contractAddress] != address(0);
-        return isRegistered;
-    }
-
-    function isRegisteredCustomDurationLockup(address _contractAddress) external view override returns (bool) {
-        return _isRegisteredCustomDurationLockup(_contractAddress);
-    }
-
-    function _isRegisteredCustomDurationLockup(address _contractAddress) internal view returns (bool) {
-        bool isRegistered = customDurationLockupContractToDeployer[_contractAddress] != address(0);
+    function isRegisteredLockup(address _contractAddress) public view override returns (bool) {
+        bool isRegistered = lockupContractToDeployer[_contractAddress] != address(0);
         return isRegistered;
     }
 
@@ -121,32 +64,5 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
 
     function _requireLQTYAddressIsSet() internal view {
         require(address(lqtyToken) != address(0), "LCF: LQTY Address is not set");
-    }
-
-    function _requireFactoryIsAtLeastOneYearOld() internal view {
-        require(block.timestamp.sub(deploymentTime) >= ONE_YEAR_IN_SECONDS,
-        "Factory must be at least one year old");
-    }
-
-    function _requireIsRegisteredOneYearLockup(address _contractAddress) internal view {
-        require(_isRegisteredOneYearLockup(_contractAddress),
-        "LCF: is not the address of a registered OneYearLockupContract");
-    }
-
-    function _requireIsRegisteredCustomDurationLockup(address _contractAddress) internal view {
-        require(_isRegisteredCustomDurationLockup(_contractAddress),
-        "LCF: is not the address of a registered CustomDurationLockupContract");
-    }
-
-    function _requireCallerIsOriginalDeployerofOYLC(address _contractAddress) internal view {
-        address deployerAddress = oneYearLockupContractToDeployer[_contractAddress];
-        require(deployerAddress == msg.sender,
-        "LCF: OneYearLockupContract was not deployed by the caller");
-    }
-
-     function _requireCallerIsOriginalDeployerofCDLC(address _contractAddress) internal view {
-        address deployerAddress = customDurationLockupContractToDeployer[_contractAddress];
-        require(deployerAddress == msg.sender,
-        "LCF: customDurationLockupContract was not deployed by the caller");
     }
 }

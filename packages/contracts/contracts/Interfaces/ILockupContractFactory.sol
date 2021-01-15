@@ -12,15 +12,7 @@ interface ILockupContractFactory {
 
     function setLQTYTokenAddress(address _lqtyTokenAddress) external;
 
-    function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external;
+    function deployLockupContract(address _beneficiary, uint _initialEntitlement, uint _unlockTime) external;
 
-    function deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration) external;
-
-    function lockOneYearContracts(address[] calldata addresses) external;
-
-    function lockCustomDurationContracts(address[] calldata addresses) external;
-
-    function isRegisteredOneYearLockup(address _addr) external view returns (bool);
-
-    function isRegisteredCustomDurationLockup(address _contractAddress) external view returns (bool);
+    function isRegisteredLockup(address _addr) external view returns (bool);
 }

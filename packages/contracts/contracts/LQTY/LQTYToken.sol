@@ -22,7 +22,7 @@ import "../Dependencies/console.sol";
 * transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending LQTY directly to a Liquity
 * core contract, when they should rather call the right function.
 *
-* 2) sendToLQTYStaking(): callable only Liquity core contracts, which move LQTY tokens from user -> LQTYStaking contract.
+* 2) sendToLQTYStaking(): callable only by Liquity core contracts, which move LQTY tokens from user -> LQTYStaking contract.
 *
 * 3) Supply hard-capped at 100 million
 *
@@ -45,7 +45,7 @@ import "../Dependencies/console.sol";
 * 
 * After one year has passed since deployment of the LQTYToken, the restrictions on deployer operations are lifted
 * and the deployer has the same rights as any other address.
- */
+*/
 
 contract LQTYToken is CheckContract, ILQTYToken {
     using SafeMath for uint256;
@@ -160,10 +160,14 @@ contract LQTYToken is CheckContract, ILQTYToken {
         return _balances[account];
     }
 
+    function getDeploymentStartTime() external view override returns (uint256) {
+        return deploymentStartTime;
+    }
+
     function transfer(address recipient, uint256 amount) external override returns (bool) {
         // Restrict the deployer's transfers in first year
         if (_callerIsDeployer() && _isFirstYear()) {
-            _requireRecipientIsRegisteredOYLC(recipient);
+            _requireRecipientIsRegisteredLC(recipient);
         }
 
         _requireValidRecipient(recipient);
@@ -313,9 +317,9 @@ contract LQTYToken is CheckContract, ILQTYToken {
         );
     }
 
-    function _requireRecipientIsRegisteredOYLC(address _recipient) internal view {
-        require(lockupContractFactory.isRegisteredOneYearLockup(_recipient), 
-        "LQTYToken: recipient must be a OYLC registered in the Factory");
+    function _requireRecipientIsRegisteredLC(address _recipient) internal view {
+        require(lockupContractFactory.isRegisteredLockup(_recipient), 
+        "LQTYToken: recipient must be a LockupContract registered in the Factory");
     }
 
     function _requireSenderIsNotDeployer(address _sender) internal view {
