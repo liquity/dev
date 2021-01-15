@@ -184,18 +184,19 @@ contract('DefaultPool', async accounts => {
     assert.isTrue(tx1.receipt.status)
 
     const defaultPool_BalanceBeforeTx = web3.utils.toBN(await web3.eth.getBalance(defaultPool.address))
-    const activePool_Balance_BeforeTx = web3.utils.toBN(await web3.eth.getBalance(mockActivePoolAddress))
+    const activePool_Balance_BeforeTx = web3.utils.toBN(await web3.eth.getBalance(mockActivePool.address))
 
     assert.equal(defaultPool_BalanceBeforeTx, dec(2, 'ether'))
 
     // send ether from pool to alice
     //await defaultPool.sendETHToActivePool(dec(1, 'ether'), { from: mockTroveManagerAddress })
     const sendETHData = th.getTransactionData('sendETHToActivePool(uint256)', [web3.utils.toHex(dec(1, 'ether'))])
+    await mockActivePool.setPayable(true)
     const tx2 = await mockTroveManager.forward(defaultPool.address, sendETHData, { from: owner })
     assert.isTrue(tx2.receipt.status)
 
     const defaultPool_BalanceAfterTx = web3.utils.toBN(await web3.eth.getBalance(defaultPool.address))
-    const activePool_Balance_AfterTx = web3.utils.toBN(await web3.eth.getBalance(mockActivePoolAddress))
+    const activePool_Balance_AfterTx = web3.utils.toBN(await web3.eth.getBalance(mockActivePool.address))
 
     const activePool_BalanceChange = activePool_Balance_AfterTx.sub(activePool_Balance_BeforeTx)
     const defaultPool_BalanceChange = defaultPool_BalanceAfterTx.sub(defaultPool_BalanceBeforeTx)

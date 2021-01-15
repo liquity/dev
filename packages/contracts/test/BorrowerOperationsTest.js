@@ -1372,8 +1372,8 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("repayLUSD(): Reverts if borrower has insufficient LUSD balance to cover his debt repayment", async () => {
-    await borrowerOperations.openTrove(dec(1000, 18), A, { from: A, value: dec(15, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(dec(1000, 18), A, A, { from: A, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), B, B, { from: B, value: dec(5, 'ether') })
  
     // Bob transfers some LUSD to carol
     await lusdToken.transfer(C, dec(51, 18),  {from: B})
@@ -1382,7 +1382,7 @@ contract('BorrowerOperations', async accounts => {
     const B_LUSDBal = await lusdToken.balanceOf(B)
     assert.isTrue(B_LUSDBal.lt(toBN(dec(50, 18))))
 
-    const repayLUSDPromise_B = borrowerOperations.repayLUSD(dec(50, 18), B, {from: B})
+    const repayLUSDPromise_B = borrowerOperations.repayLUSD(dec(50, 18), B, B, {from: B})
      
     // B attempts to repay 50 LUSD
     await assertRevert(repayLUSDPromise_B, "BorrowerOps: Caller doesnt have enough LUSD to close their trove")
@@ -2206,16 +2206,20 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // Requested coll withdrawal > coll in the trove
+    await assertRevert(borrowerOperations.adjustTrove('1000000000000000001', 0 , false, alice, alice, {from: alice}))
+    await assertRevert(borrowerOperations.adjustTrove(dec(37, 'ether'), 0 , false, bob, bob, {from: bob}))
+    /*
     const txPromise_B = borrowerOperations.adjustTrove(dec(37, 'ether'), 0 , false, bob, bob, {from: bob})
     const txPromise_A = borrowerOperations.adjustTrove('1000000000000000001', 0 , false, alice, alice, {from: alice})
 
     await assertRevert(txPromise_A)
     await assertRevert(txPromise_B)
+    */
   })
 
   it("adjustTrove(): Reverts if borrower has insufficient LUSD balance to cover his debt repayment", async () => {
-    await borrowerOperations.openTrove(dec(1000, 18), A, { from: A, value: dec(15, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(dec(1000, 18), A, A, { from: A, value: dec(15, 'ether') })
+    await borrowerOperations.openTrove(dec(100, 18), B, B, { from: B, value: dec(5, 'ether') })
  
     // Bob transfers some LUSD to carol
     await lusdToken.transfer(C, dec(51, 18),  {from: B})
@@ -2224,7 +2228,7 @@ contract('BorrowerOperations', async accounts => {
     const B_LUSDBal = await lusdToken.balanceOf(B)
     assert.isTrue(B_LUSDBal.lt(toBN(dec(50, 18))))
 
-    const repayLUSDPromise_B = borrowerOperations.adjustTrove(0, dec(50, 18), false, B, {from: B})
+    const repayLUSDPromise_B = borrowerOperations.adjustTrove(0, dec(50, 18), false, B, B, {from: B})
      
     // B attempts to repay 50 LUSD
     await assertRevert(repayLUSDPromise_B, "BorrowerOps: Caller doesnt have enough LUSD to close their trove")
