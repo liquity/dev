@@ -1373,7 +1373,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
     * The fee f is "optimistic" in the sense that it assumes the full requested amount g is split between a redemption and a fee -- i.e. 
     * that the redeemed amount does not get reduced by a failed partial redemption, or from the loop hitting its maxIterations cap.
     */
-    function _getOptimisticRedemptionFee(uint _grossLUSDRedemption, uint _totalLUSDSupplyAtStart, uint _decayedBaseRate) internal view returns (uint) {
+    function _getOptimisticRedemptionFee(uint _grossLUSDRedemption, uint _totalLUSDSupplyAtStart, uint _decayedBaseRate) internal pure returns (uint) {
         uint numerator = _grossLUSDRedemption.mul(_decayedBaseRate.mul(_totalLUSDSupplyAtStart).div(1e18).add(_grossLUSDRedemption));
 
         uint denominator = _totalLUSDSupplyAtStart.add(_grossLUSDRedemption);
