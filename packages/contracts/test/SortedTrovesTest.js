@@ -307,7 +307,6 @@ contract('SortedTroves', async accounts => {
         assert.equal(pos[0], alice, 'prevId result should be nextId param')
         assert.equal(pos[1], th.ZERO_ADDRESS, 'nextId result should be zero')
       })
-
     })
   })
 })

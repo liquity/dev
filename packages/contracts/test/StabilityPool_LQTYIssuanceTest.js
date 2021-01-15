@@ -119,12 +119,17 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.isTrue(LQTYIssuedAfter.eq(LQTYIssuedBefore))
     })
 
+    // using the result of this to advance time by the desired amount from the deployment time, whether or not some extra time has passed in the meanwhile
+    const getDuration = async (expectedDuration) => {
+      const deploymentTime = (await communityIssuanceTester.deploymentTime()).toNumber()
+      const currentTime = await th.getLatestBlockTimestamp(web3)
+      const duration = Math.max(expectedDuration - (currentTime - deploymentTime), 0)
+
+      return duration
+    }
 
     // Simple case: 3 depositors, equal stake. No liquidations. No front-end.
     it("withdrawFromSP(): Depositors with equal initial deposit withdraw correct LQTY gain. No liquidations. No front end.", async () => {
-      // Set the deployment time to now
-      await communityIssuanceTester.setDeploymentTime()
-
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
@@ -147,7 +152,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: C })
 
       // One year passes
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_YEAR), web3.currentProvider)
 
       // D deposits, triggering LQTY gains for A,B,C. Withdraws immediately after
       await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
@@ -200,9 +205,6 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     // 3 depositors, varied stake. No liquidations. No front-end.
     it("withdrawFromSP(): Depositors with varying initial deposit withdraw correct LQTY gain. No liquidations. No front end.", async () => {
-      // Set the deployment time to now
-      await communityIssuanceTester.setDeploymentTime()
-
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
@@ -225,7 +227,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: C })
 
       // One year passes
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_YEAR), web3.currentProvider)
 
       // D deposits, triggering LQTY gains for A,B,C. Withdraws immediately after
       await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: D })
@@ -297,9 +299,6 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     // A, B, C deposit. Varied stake. 1 Liquidation. D joins.
     it("withdrawFromSP(): Depositors with varying initial deposit withdraw correct LQTY gain. No liquidations. No front end.", async () => {
-      // Set the deployment time to now
-      await communityIssuanceTester.setDeploymentTime()
-
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
@@ -326,7 +325,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: C })
 
       // Year 1 passes
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_YEAR), web3.currentProvider)
 
       assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(600, 18))
 
@@ -432,9 +431,6 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
     Expect all depositors withdraw  1/2 of 1 month's LQTY issuance */
     it('withdrawFromSP(): Depositor withdraws correct LQTY gain after serial pool-emptying liquidations. No front-ends.', async () => {
-      // Set the deployment time to now
-      await communityIssuanceTester.setDeploymentTime()
-
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
@@ -468,7 +464,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       }
 
       // 1 month passes
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_MONTH), web3.currentProvider)
 
       // Defaulter 1 liquidated. 200 LUSD fully offset with pool.
       await troveManager.liquidate(defaulter_1, { from: owner });
@@ -554,8 +550,6 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
 
     it('LQTY issuance for a given period is not obtainable if the SP was empty during the period', async () => {
-      // Set the deployment time to now
-      await communityIssuanceTester.setDeploymentTime()
       const CIBalanceBefore = await lqtyToken.balanceOf(communityIssuanceTester.address)
 
       await borrowerOperations.openTrove(dec(100, 18), A, A, { from: A, value: dec(1, 'ether') })
@@ -568,7 +562,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.equal(G_0, '0') 
 
       // 1 month passes (M1)
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_MONTH), web3.currentProvider)
       
       // LQTY issuance event triggered: A deposits
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, {from: A})
@@ -695,7 +689,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: A })
 
       // 1 month passes
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_MONTH), web3.currentProvider)
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
       const txL1 = await troveManager.liquidate(defaulter_1, { from: owner });
@@ -814,9 +808,6 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.registerFrontEnd(kickbackRate_F1, { from: frontEnd_1 })
       await stabilityPool.registerFrontEnd(kickbackRate_F2, { from: frontEnd_2 })
 
-      // Set the deployment time to now
-      await communityIssuanceTester.setDeploymentTime()
-
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
@@ -851,7 +842,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.equal(F2_stake, dec(200, 18))
 
       // One year passes
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_YEAR), web3.currentProvider)
 
       // E deposits, triggering LQTY gains for A,B,C,D,F1,F2. Withdraws immediately after
       await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: E })
@@ -959,9 +950,6 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.registerFrontEnd(F1_kickbackRate, { from: frontEnd_1 })
       await stabilityPool.registerFrontEnd(F2_kickbackRate, { from: frontEnd_2 })
 
-      // Set the deployment time to now
-      await communityIssuanceTester.setDeploymentTime()
-
       const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
       assert.equal(initialIssuance, 0)
 
@@ -1006,7 +994,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.equal(F2_stake, dec(500, 18))
 
       // Month 1 passes
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_MONTH), web3.currentProvider)
 
       assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(1000, 18))
 
@@ -1376,7 +1364,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.provideToSP(dec(50, 18), frontEnd_1, { from: B })
 
       // 1 month passes (M1)
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
+      await th.fastForwardTime(await getDuration(timeValues.SECONDS_IN_ONE_MONTH), web3.currentProvider)
 
       // Defaulter 1 liquidated.  Value of P updated to  to 9999999, i.e. in decimal, ~1e-10
       const txL1 = await troveManager.liquidate(defaulter_1, { from: owner });

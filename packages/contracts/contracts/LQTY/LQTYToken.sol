@@ -2,6 +2,7 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ILockupContractFactory.sol";
@@ -42,7 +43,7 @@ import "../Dependencies/console.sol";
 * and the deployer has the same rights as any other address.
  */
 
-contract LQTYToken is ILQTYToken {
+contract LQTYToken is CheckContract, ILQTYToken {
     using SafeMath for uint256;
 
     // --- ERC20 Data ---
@@ -78,13 +79,13 @@ contract LQTYToken is ILQTYToken {
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
     uint internal _100_MILLION = 1e26;  // non-constant, for use with SafeMath
 
-    uint public deploymentStartTime;
-    address public deployer;
+    uint public immutable deploymentStartTime;
+    address public immutable deployer;
 
     address public immutable communityIssuanceAddress;
     address public immutable lqtyStakingAddress;
 
-    ILockupContractFactory public lockupContractFactory;
+    ILockupContractFactory public immutable lockupContractFactory;
 
     // --- Events ---
 
@@ -102,6 +103,10 @@ contract LQTYToken is ILQTYToken {
     ) 
         public 
     {
+        checkContract(_communityIssuanceAddress);
+        checkContract(_lqtyStakingAddress);
+        checkContract(_lockupFactoryAddress);
+
         deployer = msg.sender;
         deploymentStartTime  = block.timestamp;
         

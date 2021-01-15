@@ -434,9 +434,8 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         assert.include(err.message, "revert")
       }
 
-      // Owner can successfully set any address
-      const txOwner1 = await lockupContractFactory.setLQTYTokenAddress(bob, { from: owner })
-      const txOwner2 = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: owner })
+      // Owner can successfully set any valid address
+      const txOwner = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: owner })
     })
   })
 

@@ -9,14 +9,14 @@ import "./Interfaces/IActivePool.sol";
 import "./Interfaces/IDefaultPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import './Interfaces/ILUSDToken.sol';
-import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedTroves.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
-contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
+contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOperations {
 
     // --- Connected contract declarations ---
 
@@ -31,8 +31,6 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
     address gasPoolAddress;
 
     ICollSurplusPool collSurplusPool;
-
-    IPriceFeed public priceFeed;
 
     ILQTYStaking public lqtyStaking;
     address public lqtyStakingAddress;
@@ -93,6 +91,17 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         override
         onlyOwner
     {
+        checkContract(_troveManagerAddress);
+        checkContract(_activePoolAddress);
+        checkContract(_defaultPoolAddress);
+        checkContract(_stabilityPoolAddress);
+        checkContract(_gasPoolAddress);
+        checkContract(_collSurplusPoolAddress);
+        checkContract(_priceFeedAddress);
+        checkContract(_sortedTrovesAddress);
+        checkContract(_lusdTokenAddress);
+        checkContract(_lqtyStakingAddress);
+
         troveManager = ITroveManager(_troveManagerAddress);
         activePool = IActivePool(_activePoolAddress);
         defaultPool = IDefaultPool(_defaultPoolAddress);
@@ -251,7 +260,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
          * - _getNewICRFromTroveChange, due to SafeMath
          * - _requireICRisAboveMCR
          */
-        if (!_isDebtIncrease && _debtChange > 0) {_requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange);}
+        if (!_isDebtIncrease && _debtChange > 0) {
+            _requireLUSDRepaymentAllowed(L.debt, L.rawDebtChange);
+            _requireSufficientLUSDBalance(_borrower, L.rawDebtChange);
+        }
 
         (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
         L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
@@ -260,11 +272,11 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint newNICR = _getNewNominalICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
         sortedTroves.reInsert(_borrower, newNICR, _upperHint, _lowerHint);
 
-        // Pass unmodified _debtChange here, as we don't send the fee to the user
-        _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
-
         emit TroveUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustTrove);
         emit LUSDBorrowingFeePaid(msg.sender,  L.LUSDFee);
+
+        // Pass unmodified _debtChange here, as we don't send the fee to the user
+        _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
     }
 
     function closeTrove() external override {
@@ -276,19 +288,24 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         uint coll = troveManager.getTroveColl(msg.sender);
         uint debt = troveManager.getTroveDebt(msg.sender);
 
+        _requireSufficientLUSDBalance(msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
+
         troveManager.removeStake(msg.sender);
         troveManager.closeTrove(msg.sender);
 
-        // Burn the debt from the user's balance, and send the collateral back to the user
+        emit TroveUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
+
+        // Burn the repaid LUSD from the user's balance and the gas compensation from the Gas Pool
         _repayLUSD(msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
-        activePool.sendETH(msg.sender, coll);
-        // Refund gas compensation
         _repayLUSD(gasPoolAddress, LUSD_GAS_COMPENSATION);
 
-        emit TroveUpdated(msg.sender, 0, 0, 0, BorrowerOperation.closeTrove);
+        // Send the collateral back to the user
+        activePool.sendETH(msg.sender, coll);
     }
 
     function claimRedeemedCollateral(address _user) external override {
+        emit RedeemedCollateralClaimed(_user);
+
         // send ETH from CollSurplus Pool to owner
         collSurplusPool.claimColl(_user);
     }
@@ -426,6 +443,10 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         require(msg.sender == stabilityPoolAddress, "BorrowerOps: Caller is not Stability Pool");
     }
 
+     function _requireSufficientLUSDBalance(address _borrower, uint _debtRepayment) internal view {
+        require(lusdToken.balanceOf(_borrower) >= _debtRepayment, "BorrowerOps: Caller doesnt have enough LUSD to close their trove");
+    }
+
     // --- ICR and TCR checks ---
 
     // Compute the new collateral ratio, considering the change in coll and debt. Assumes 0 pending rewards.
@@ -502,8 +523,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         view
         returns (uint)
     {
-        uint totalColl = activePool.getETH().add(defaultPool.getETH());
-        uint totalDebt = activePool.getLUSDDebt().add(defaultPool.getLUSDDebt());
+        uint totalColl = getEntireSystemColl();
+        uint totalDebt = getEntireSystemDebt();
 
         totalColl = _isCollIncrease ? totalColl.add(_collChange) : totalColl.sub(_collChange);
         totalDebt = _isDebtIncrease ? totalDebt.add(_debtChange) : totalDebt = totalDebt.sub(_debtChange);
@@ -514,32 +535,5 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
 
     function getCompositeDebt(uint _debt) external pure override returns (uint) {
         return _getCompositeDebt(_debt);
-    }
-
-    // --- Recovery Mode and TCR functions ---
-
-    function _checkRecoveryMode() internal view returns (bool) {
-        uint TCR = _getTCR();
-
-        if (TCR < CCR) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function _getTCR() internal view returns (uint TCR) {
-        uint price = priceFeed.getPrice();
-        uint activeColl = activePool.getETH();
-        uint activeDebt = activePool.getLUSDDebt();
-        uint liquidatedColl = defaultPool.getETH();
-        uint closedDebt = defaultPool.getLUSDDebt();
-
-        uint totalCollateral = activeColl.add(liquidatedColl);
-        uint totalDebt = activeDebt.add(closedDebt);
-
-        TCR = LiquityMath._computeCR(totalCollateral, totalDebt, price);
-
-        return TCR;
     }
 }

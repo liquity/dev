@@ -2,22 +2,23 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ILQTYToken.sol";
 
-contract CustomDurationLockupContract {
+contract CustomDurationLockupContract is CheckContract {
     using SafeMath for uint;
 
     // --- Data ---
-    address public deployer;
-    address public beneficiary;
+    address public immutable deployer;
+    address public immutable beneficiary;
 
-    ILQTYToken public lqtyToken;
+    ILQTYToken public immutable lqtyToken;
 
-    uint public initialEntitlement;
+    uint public immutable initialEntitlement;
 
     uint public lockupStartTimeInSeconds;
-    uint public lockupDurationInSeconds;
+    uint public immutable lockupDurationInSeconds;
 
     // TODO: use an enum for {inactive, active, ended} ? Make a lockup contract non-reusable after
     // full withdrawal.
@@ -39,6 +40,8 @@ contract CustomDurationLockupContract {
     )
     public 
     {
+        checkContract(_lqtyTokenAddress);
+
         deployer = msg.sender;
 
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
@@ -48,7 +51,7 @@ contract CustomDurationLockupContract {
         lockupDurationInSeconds = _lockupDurationInSeconds;
     }
 
-    function lockContract() external returns (bool) {
+    function lockContract() external {
         _requireCallerIsLockupDeployer();
         _requireContractIsNotActive();
         _requireLQTYBalanceAtLeastEqualsEntitlement();
@@ -56,7 +59,6 @@ contract CustomDurationLockupContract {
         lockupStartTimeInSeconds = block.timestamp;
         active = true; 
         emit CDLCLocked(lockupStartTimeInSeconds);
-        return true;
     }
 
     function withdrawLQTY() external {

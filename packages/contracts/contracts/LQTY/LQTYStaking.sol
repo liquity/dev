@@ -4,13 +4,14 @@ pragma solidity 0.6.11;
 
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/console.sol";
 import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Interfaces/ILUSDToken.sol";
 
-contract LQTYStaking is ILQTYStaking, Ownable {
+contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
     using SafeMath for uint;
 
     // --- Data ---
@@ -61,6 +62,12 @@ contract LQTYStaking is ILQTYStaking, Ownable {
         onlyOwner 
         override 
     {
+        checkContract(_lqtyTokenAddress);
+        checkContract(_lusdTokenAddress);
+        checkContract(_troveManagerAddress);
+        checkContract(_borrowerOperationsAddress);
+        checkContract(_activePoolAddress);
+
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
         troveManagerAddress = _troveManagerAddress;

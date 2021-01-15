@@ -5,22 +5,23 @@ pragma solidity 0.6.11;
 import './Interfaces/IDefaultPool.sol';
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
-/* 
+/*
  * The Default Pool holds the ETH and LUSD debt (but not LUSD tokens) from liquidations that have been redistributed
  * to active troves but not yet "applied", i.e. not yet recorded on a recipient active trove's struct.
- * 
+ *
  * When a trove makes an operation that applies its pending ETH and LUSD debt, its pending ETH and LUSD debt is moved
  * from the Default Pool to the Active Pool.
  */
-contract DefaultPool is Ownable, IDefaultPool {
+contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     using SafeMath for uint256;
 
     address public troveManagerAddress;
     address public activePoolAddress;
     uint256 internal ETH;  // deposited ETH tracker
-    uint256 internal LUSDDebt;  // debt 
+    uint256 internal LUSDDebt;  // debt
 
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
 
@@ -33,6 +34,9 @@ contract DefaultPool is Ownable, IDefaultPool {
         external
         onlyOwner
     {
+        checkContract(_troveManagerAddress);
+        checkContract(_activePoolAddress);
+
         troveManagerAddress = _troveManagerAddress;
         activePoolAddress = _activePoolAddress;
 
@@ -44,10 +48,10 @@ contract DefaultPool is Ownable, IDefaultPool {
 
     // --- Getters for public variables. Required by IPool interface ---
 
-    /* 
+    /*
     * Returns the ETH state variable.
     *
-    * Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts. 
+    * Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts.
     */
     function getETH() external view override returns (uint) {
         return ETH;
