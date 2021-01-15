@@ -923,8 +923,8 @@ class TestHelper {
     return deployedLCTx.logs[0].args[0]
   }
 
-  static async getLCFromDeploymentTx(deployedOYLCTx) {
-    const deployedLCAddress = this.getLCAddressFromDeploymentTx(deployedOYLCTx)  // grab addr of deployed contract from event
+  static async getLCFromDeploymentTx(deployedLCTx) {
+    const deployedLCAddress = this.getLCAddressFromDeploymentTx(deployedLCTx)  // grab addr of deployed contract from event
     const LC = await LockupContract.at(deployedLCAddress)
     return LC
   }

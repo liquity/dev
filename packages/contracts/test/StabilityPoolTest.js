@@ -3255,7 +3255,7 @@ contract('StabilityPool', async accounts => {
       assert.isAtMost(th.getDifference(ETHinSP_After, '0'), 1000)
     })
 
-    it("withdrawETHGainToTrove(): reverts if user has no trove", async () => {
+    it.only("withdrawETHGainToTrove(): reverts if user has no trove", async () => {
       await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(10, 'ether') })
 
       await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
