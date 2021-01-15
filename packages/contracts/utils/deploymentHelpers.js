@@ -6,6 +6,7 @@ const LUSDToken = artifacts.require("./LUSDToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
+const GasPool = artifacts.require("./GasPool.sol")
 const CollSurplusPool = artifacts.require("./CollSurplusPool.sol")
 const FunctionCaller = artifacts.require("./TestContracts/FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
@@ -46,8 +47,8 @@ class DeploymentHelper {
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
 
-    if (frameworkPath.includes("buidler")) {
-      return this.deployLiquityCoreBuidler()
+    if (frameworkPath.includes("hardhat")) {
+      return this.deployLiquityCoreHardhat()
     } else if (frameworkPath.includes("truffle")) {
       return this.deployLiquityCoreTruffle()
     }
@@ -58,19 +59,20 @@ class DeploymentHelper {
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
 
-    if (frameworkPath.includes("buidler")) {
-      return this.deployLQTYContractsBuidler()
+    if (frameworkPath.includes("hardhat")) {
+      return this.deployLQTYContractsHardhat()
     } else if (frameworkPath.includes("truffle")) {
       return this.deployLQTYContractsTruffle()
     }
   }
 
-  static async deployLiquityCoreBuidler() {
+  static async deployLiquityCoreHardhat() {
     const priceFeedTestnet = await PriceFeedTestnet.new()
     const sortedTroves = await SortedTroves.new()
     const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
+    const gasPool = await GasPool.new()
     const defaultPool = await DefaultPool.new()
     const collSurplusPool = await CollSurplusPool.new()
     const functionCaller = await FunctionCaller.new()
@@ -88,6 +90,7 @@ class DeploymentHelper {
     TroveManager.setAsDeployed(troveManager)
     ActivePool.setAsDeployed(activePool)
     StabilityPool.setAsDeployed(stabilityPool)
+    GasPool.setAsDeployed(gasPool)
     CollSurplusPool.setAsDeployed(collSurplusPool)
     FunctionCaller.setAsDeployed(functionCaller)
     BorrowerOperations.setAsDeployed(borrowerOperations)
@@ -100,6 +103,7 @@ class DeploymentHelper {
       troveManager,
       activePool,
       stabilityPool,
+      gasPool,
       defaultPool,
       collSurplusPool,
       functionCaller,
@@ -109,7 +113,7 @@ class DeploymentHelper {
     return coreContracts
   }
 
-  static async deployTesterContractsBuidler() {
+  static async deployTesterContractsHardhat() {
     const testerContracts = {}
 
     // Contract without testers (yet)
@@ -117,10 +121,10 @@ class DeploymentHelper {
     testerContracts.sortedTroves = await SortedTroves.new()
     // Actual tester contracts
     testerContracts.communityIssuance = await CommunityIssuanceTester.new()
-    testerContracts.stabilityPool = await StabilityPoolTester.new()
     testerContracts.activePool = await ActivePoolTester.new()
     testerContracts.defaultPool = await DefaultPoolTester.new()
     testerContracts.stabilityPool = await StabilityPoolTester.new()
+    testerContracts.gasPool = await GasPool.new()
     testerContracts.collSurplusPool = await CollSurplusPool.new()
     testerContracts.math = await LiquityMathTester.new()
     testerContracts.borrowerOperations = await BorrowerOperationsTester.new()
@@ -135,7 +139,7 @@ class DeploymentHelper {
     return testerContracts
   }
 
-  static async deployLQTYContractsBuidler() {
+  static async deployLQTYContractsHardhat() {
     const lqtyStaking = await LQTYStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
@@ -161,7 +165,7 @@ class DeploymentHelper {
     return LQTYContracts
   }
 
-  static async deployLQTYTesterContractsBuidler() {
+  static async deployLQTYTesterContractsHardhat() {
     const lqtyStaking = await LQTYStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuanceTester.new()
@@ -193,6 +197,7 @@ class DeploymentHelper {
     const troveManager = await TroveManager.new()
     const activePool = await ActivePool.new()
     const stabilityPool = await StabilityPool.new()
+    const gasPool = await GasPool.new()
     const defaultPool = await DefaultPool.new()
     const collSurplusPool = await CollSurplusPool.new()
     const functionCaller = await FunctionCaller.new()
@@ -210,6 +215,7 @@ class DeploymentHelper {
       troveManager,
       activePool,
       stabilityPool,
+      gasPool,
       defaultPool,
       collSurplusPool,
       functionCaller,
@@ -270,6 +276,7 @@ class DeploymentHelper {
       contracts.activePool.address,
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
+      contracts.gasPool.address,
       contracts.collSurplusPool.address,
       contracts.priceFeedTestnet.address,
       contracts.lusdToken.address,
@@ -283,6 +290,7 @@ class DeploymentHelper {
       contracts.activePool.address,
       contracts.defaultPool.address,
       contracts.stabilityPool.address,
+      contracts.gasPool.address,
       contracts.collSurplusPool.address,
       contracts.priceFeedTestnet.address,
       contracts.sortedTroves.address,

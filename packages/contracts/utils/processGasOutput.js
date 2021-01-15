@@ -2,7 +2,7 @@
 
 Gas profiling logs the 'gas left', which includes the cost of the previous console.log call in the .sol file. 
 
-A Buidler console.log call of the form:
+A Hardhat console.log call of the form:
     
 console.log("01. gas left: %s", gasleft());
 

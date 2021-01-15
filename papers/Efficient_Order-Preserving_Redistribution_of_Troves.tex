@@ -1,0 +1,952 @@
+\documentclass[reqno]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{blindtext}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{relsize} %bigger math symbols
+\usepackage{bm} %bolder text
+\usepackage{ulem} %Fixes underlining line break issue
+\usepackage[a4paper, inner=1.7cm, outer=2.7cm, top=3cm, bottom=3cm, bindingoffset=1.2cm]{geometry}
+\usepackage{tcolorbox}
+\usepackage{graphicx}
+\usepackage{svg}
+\usepackage{wrapfig}
+\usepackage{enumitem}
+\newlist{terms}{description}{1}
+
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\begin{document}
+\title{\textbf{Efficient Order-Preserving Redistribution of Troves}}
+\author{Richard Pardoe \thanks{rick@liquity.org}\\[1ex]
+  Robert Lauko \thanks{robert@liquity.org} \hspace{2cm}
+  Bingen Eguzkitza \thanks{bingen@liquity.org}
+}
+\date{December 2020\\v1.0}
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+
+The Liquity protocol $\cite{Whitepaper}$ issues a USD-pegged stablecoin LUSD that is redeemable at face value against ETH: any owner of LUSD can exchange their stablecoins for equivalent value in the underlying collateral at any time. The ETH paid to the redeemer is taken from the borrowers' collateralized debt positions (“troves”) in ascending order of collateral ratio. In other words, the system uses the redeemed LUSD to repay the debt on the riskiest trove with the currently lowest individual collateral ratio (ICR), and transfers a corresponding amount of ETH from the trove to the redeemer. If the redeemed LUSD is larger than the debt on the riskiest trove, the system proceeds with the second riskiest trove, and so on. \\
+
+To allow for efficient redemptions despite Ethereum's gas constraints, the system keeps troves ordered by ICR, so that it can iterate over the linked list starting from the bottom. It is not feasible to sort the list after every operation. \\
+
+Troves with an insufficient ICR are subject to liquidation. Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be ensured that redistributions do not break trove ordering. \\
+
+Redistribution in proportion to the collateral size of active troves maintains ordering, as can be easily shown (see \ref{sec:appendix} Appendix). However, in practice, it is clear that redistributing in a “push” based manner - iterating over all troves and updating their collateral and debt - does not scale, and has computational complexity of $O(n)$, where $n$ is the number of troves. \\
+
+Previous work by Batog et al $\cite{Batog}$ derived a scalable $O(1)$ method to assign proportional rewards to a large number of recipients, as long as the basis for their rewards (“stakes”) do not change over time. The method is “pull” based: instead of adjusting all recipient positions upon every reward event, the update is deferred to the moment at which an owner changes their position. In the described approach rewards are stored separately from the initial stakes, and do not compound. That is to say, past accumulated rewards are not included in future reward calculations. \\
+
+It turns out that this approach thus cannot be applied to Liquity as is. As the system undergoes reward events, a given trove’s ratio of initial collateral to its total collateral shrinks. Rewards are based on a smaller and smaller share of the total collateral. This is fine, as long as all active troves have experienced all reward events - in this case, ordering is maintained since all troves are affected by the same change. \\
+
+However, a problem arises when a new trove is created after active troves have received reward shares.  Such “fresh” troves (with no accumulated rewards) would thus gain an advantage in redistributions over older troves whose stakes may be smaller than their actual collateral due to the liquidations that have taken place in the meantime. In other words, a “fresh” trove that has experienced fewer rewards than the earlier troves would receive a disproportionate share of subsequent rewards relative to its collateral. Though, a trove's collateral ratio must always be based on its entire collateral, which does include accumulated rewards.  \\
+
+This discrepancy means that the reward distribution scheme described in $\cite{Batog}$ can break the ordering of troves by collateral ratio. To remedy this, we modify the original approach by introducing a “corrected stake”, to ensure fresh troves do not receive disproportionate rewards. We then show that this corrected stake preserves trove ordering. \\
+
+
+\section{Troves and Liquidations}
+Troves are collateralized debt positions held by individual borrowers, defined by their amount of debt $d$ (in LUSD) and collateral $c$ (in ETH).
+
+Let $\gamma_i$ denote the individual collateral ratio (ICR) of a trove $i$, i.e. the ratio of its collateral to its debt:
+
+\begin{equation}
+    \gamma_i = \frac{c_i} {d_i}
+\end{equation}
+
+If $\gamma_i$ falls below a minimum threshold $\delta$, the trove is subject to liquidation. As long as there are sufficient LUSD tokens in the Stability Pool, the system can use them to repay the liquidated debt. 
+
+If the Stability Pool is empty, the trove's collateral and debt are redistributed to all active troves in the system as part of the liquidation process (a trove is called \textit{active} as long as it has not been liquidated, or closed by their owner or by a redemption). Every existing borrower with an active trove thus receives a share of both the collateral and the debt of the liquidated trove.
+
+Collateral and debt shares from liquidations are proportional to the \textit{entire} collateral of the recipient troves, i.e. taking into account accumulated “rewards” from prior liquidations. Thus, in the event of a redistribution of a trove $k$, an active trove $i$ receives the following collateral and debt shares $x_i,y_i$:  
+\begin{equation} \label{eq:proportional}
+  (x_i, y_i) = \left(\frac{c_i}{C} \cdot c_k, \frac{c_i}{C} \cdot d_k\right)
+\end{equation}
+where $C=\sum c_j$ is the total collateral in the system.
+
+The rewards compound across multiple redistribution events.
+
+\section{Trove Ordering}
+To ensure that the troves can be reliably accessed using a linked list, it is crucial to maintain the ordering of the troves (by ICR) throughout all redistribution events $E_k$.
+
+The ordering is maintained if $\forall{E_k,i,j}: (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$), where $\gamma_i'$ and $\gamma_j'$ is the ICR of troves $i$ and $j$ after $E_k$.
+
+It is easy to prove that a redistribution in proportion to the collateral of the recipient trove as described by equation (\ref{eq:proportional}) troves maintains ordering. See \ref{sec:appendix} Appendix.
+
+\section{Efficient Reward Distribution}
+
+\subsection{Scalable Reward Distribution with Fixed Stakes} \label{sec:strawman}
+
+A naive “push” based implementation of the redistribution (“strawman approach”), where rewards don’t compound, would iterate over all participants and compute the debt and collateral shares  for each recipient $i$ separately whenever the system distributes such rewards. Thus, at a reward event $t$, every recipient would receive the following reward share:
+
+\begin{equation} 
+    r_{i,t}=s_i \cdot \frac{R_t}{S_t}
+\end{equation}
+
+where $R_t$ is the reward distributed at $t$, $r_{i,t}$ the reward share of recipient $i$, $s_i$ the stake of recipient $i$, and $S_t$ the sum of the stakes of all recipients, i.e. $\sum s_j$.
+
+Note that $s_i$ does not depend on $t$, and is thus fixed throughout multiple reward events. The sum of $s_i$ may vary over time because the set of them may change, stakes entering or leaving the set, but each amount $s_i$ is fixed while it’s in the set. \\
+
+Based on this prerequisite, $\cite{Batog}$ suggests a scalable $O(1)$ method of distributing such rewards by deferring the reward computation. The total reward share of $i$ from all reward events that occur between time $t_1$ and $t_2$ can be written as a sum of its reward shares with the (fixed) stake $s_i$ being factored out:
+
+\begin{equation}
+    \sum\limits_{t=t_1+1}^{t_2} r_{i,t} = s_i \cdot \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{S_t}
+\end{equation}
+
+Let $Q_t$ denote the sum of all rewards per total staked amount up to instant $t$:
+
+\begin{equation}
+   Q_t = \sum\limits_{k=0}^{t}\frac{R_t}{S_t}
+\end{equation}
+
+Assuming stake $s_i$ is deposited at moment $t_1$ and then
+withdrawn at moment $t_2 > t_1$, we can use the sum $Q_t$ to
+compute the total reward share for participant $i$ since
+
+
+\begin{equation} 
+    r_i = s_i \cdot \sum\limits_{t=t_1+1}^{t_2}\frac{R_t}{S_t}
+\end{equation}
+
+can be written as
+
+\begin{equation} 
+    r_i = s_i \cdot (Q_{t_2} - Q_{t_1})
+\end{equation}
+
+As $Q_t$ is monotonic, we can simply track the current (latest)
+value of $Q$ as a running sum, and snapshot it whenever we expect it to be required for a later computation, i.e. whenever a participant changes their stake.
+
+To compute the total (accumulated) reward for participant $i$, we can then use following formula:
+
+\begin{equation} 
+    r_i = s_i \cdot (Q - Q_{t_1})
+\end{equation}
+
+\bigskip
+
+\subsection{Corrected Stake Approach for Variable Stakes}
+In Liquity, collateral and debt shares from liquidations are proportional to the entire collateral of the recipient troves. The redistribution must cope with the fact that some fraction of a trove's entire collateral is the accumulated reward from prior liquidations, and this fraction varies across troves. \\
+
+The “strawman” approach in \ref{sec:strawman}, with rewards proportional to the initial stake, neglects this: it over-rewards fresh troves, and under-rewards older troves. \\
+
+We introduce a corrected stake $s_i$ to restore proportional reward distribution:
+
+\begin{equation} \label{eq:2}
+    s_i=
+        \begin{cases} 
+            c_i & for \;C_\emptyset = 0\\
+            \mathlarger{c_i} \cdot \frac{S_\emptyset} {\;C_\emptyset} & for \;C_\emptyset>0
+        \end{cases}
+\end{equation}
+
+\bigskip
+The corrected stake $s_i$ is chosen such that it earns rewards from liquidations equivalent to a trove that would have accumulated $c_i$ total collateral by the time the fresh trove $i$ was created.
+ 
+$S_\emptyset$ and $C_\emptyset$ are the respective snapshots of the total stakes and total collateral in the system, taken immediately after the last liquidation event. Note that with this terminology, the total collateral includes the total stakes, and therefore $C_\emptyset \ge S_\emptyset$
+\\
+
+By extending the original formula from $\cite{Batog}$, we can thus express the collateral and debt share received by a trove by:
+
+\begin{equation}
+    r_i=
+        \begin{cases} 
+            c_i \cdot (Q - Q_{t_1}) & for \;C_\emptyset = 0\\
+            c_i \cdot \frac{S_\emptyset} {\;C_\emptyset} \cdot (Q - Q_{t_1}) & for \;C_\emptyset>0
+        \end{cases}
+\end{equation}
+
+Note that $r_i$ can stand for the collateral or the debt share of a recipient trove since both of them can be represented as "rewards" through $R_t$. \\
+
+The intuition behind the choice of corrected stake is that the corrected stake effectively models the fresh trove’s collateral $c_i$ as a total collateral, which includes ‘virtual’ accumulated rewards. The corrected stake earns rewards for the trove as if the trove had been in the system from the beginning - thus maintaining proportional reward growth.\\
+
+\section{System Order Evolution}
+
+As mentioned above, we aim to prove that the corrected stake approach leaves the ordering of the troves by collateral ratio unchanged throughout all liquidations, regardless of any borrowers that change their troves' collateral between liquidation events.
+
+Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be  ensured that redistributions do not break trove ordering.
+
+To break up the proof, we introduce the notion of \textit{system order}. 
+
+\begin{definition}[System Order]
+  A system of troves has an order, $n$, and we label it $\Gamma_n$. When the first trove is created, the system order equals 1.
+
+  The order of a system remains constant throughout the following event sequence:
+
+\begin{itemize}
+  \item 1 or more new troves are created 
+  \item 1 or more troves are subsequently liquidated
+\end{itemize}
+\end{definition}
+
+\begin{definition}[System order evolution]
+  The first trove creation event after a series of liquidations triggers a system evolution, and the system order increases by 1.
+\end{definition}
+
+It can be represented graphically in the following way, where circles correspond to trove creations and squares to liquidation events:
+
+\includegraphics[width=\linewidth]{System_order_evolution_generic.png}
+
+We capture the system order increase from order $n$ to order $n+1$  in a system evolution function:
+
+\begin{equation} 
+    f(\Gamma_n)=\Gamma_{n+1}
+\end{equation}
+
+\bigskip
+Let $\Gamma_1$ define a system of troves with past liquidations, in which all active troves have received reward shares from all past liquidations. $\Gamma_1$ is a first-order system, and contains only stakes of first-order troves. Each first-order stake $s_i$ is equal to its collateral $c_i$, and \textit{S} $= \sum s_i = \sum c_i$.\\
+
+Let $\Gamma_2$ define an evolution of $\Gamma_1$, i.e. $\Gamma_2 = f(\Gamma_1)$. $\Gamma_2$ is a system with past liquidations, with \textit{S} $= \sum s_i + \sum s_j$, where $s_j$ is the stake of newly added troves $j$. $\Gamma_2$ is a second-order system, containing \textbf{both} \textit{first-order} stakes $s_i = c_i$ which have experienced all liquidations, \textbf{and} \textit{second-order} stakes $s_j$ which have only experienced the liquidations after their creation.\\
+
+In general, $\Gamma_n$ is a system with $n$ sequential pairs, each consisting of a trove creation period and a liquidation period. Troves created in a given trove creation period $t$ have experienced only those liquidations that occurred in liquidation period $t$ or greater.
+
+\begin{proposition}
+  At first-order, stake equals initial collateral.
+\end{proposition}
+\begin{proof}
+For first-order systems, all troves were added before any liquidation events occurred. The snapshot $C_\emptyset$ is equal to 0. Therefore:
+
+\begin{equation}
+    s_i=c_i
+\end{equation}
+for all $s_i$, $c_i$ in an $\Gamma_1$ system.
+\end{proof}
+
+\section{Outline of the Proof}
+
+We first prove that ICR equality is maintained with rewards proportional to corrected stakes - starting with the simplest case, and progressively generalizing, and finally we prove that order is maintained too.
+
+\begin{itemize}
+  \item Lemma \ref{result:1}. We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+
+    \includegraphics[width=\linewidth]{System_order_evolution_1.png}
+
+  \item Lemma \ref{result:2}. We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of liquidations $P$, such that $|P| > 1$ and $j \notin P$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+
+    \includegraphics[width=\linewidth]{System_order_evolution_2.png}
+
+  \item Lemma \ref{result:3}. We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+
+    \includegraphics[width=\linewidth]{System_order_evolution_3.png}
+
+  \item Theorem \ref{result:4}. We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+    In other words, in a second-order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between any first-order trove and corresponding second-order trove with the same ICR holds across $P$ subsequent liquidation events.
+
+    \includegraphics[width=\linewidth]{System_order_evolution_4.png}
+
+  \item Lemma \ref{result:5}. For every $2^{nd}$-order system $\Gamma_2$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+
+  \item Proposition \ref{result:6}. For every $n^{th}$-order system $\Gamma_n$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+
+  \item Corollary \ref{result:7}. In an $n^{th}$-order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$-order trove and $n^{th}$-order trove holds across $P$ liquidation events.
+
+  \item Theorem \ref{result:8}. For every system $\Gamma_n$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{n+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
+\end{itemize}
+
+
+\section{Corrected Stake Approach Preserves Equality}
+
+
+%\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$-order, M past liquidations %Evolves to $2^{nd}$-order: Q new stakes, P subsequent liquidations
+%Formal notation becomes unwieldy
+%$\forall{\{\Gamma_2, i,j,k| k \in$ $\Gamma_0, k \notin$ $\Gamma_1 }}: 
+% (\gamma_i > \gamma_j	\Longrightarrow \gamma_i' > \gamma_j'$)
+
+%\begin{itemize}
+%  \item Proof: $\gamma_1=\gamma_2$. $1^{st}$-order, M past liquidations. %Evolves to $2^{nd}$-order: 1 new stake, 1 subsequent liquidation
+  %\item Proof: $\gamma_1=\gamma_2$ for $1^{st}$-order, M past liquidations %Evolves to $2^{nd}$-order: 1 new stake, P subsequent liquidations
+  %\item Show $2^{nd}$-order system is equivalent to first-order 
+
+  %\item Show that $n^{th}$-order system is equivalent to first-order
+%\end{itemize}
+
+
+%\subsection{PROOF. Corrected Stake Preserves ICR Equality Across a Reward Event in a Second-Order System with $m$ Past Liquidations}
+
+\begin{lemma}\label{result:1} We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a liquidation of a trove $k$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+\end{lemma}
+
+\begin{proof}
+A first-order system of $n+m$ troves undergoes $m$ trove liquidations, before evolving to second-order.\\
+
+    \includegraphics[width=\linewidth]{System_order_evolution_1_proof.png}
+
+Consider the $m$ past liquidations from the point of view of an active first-order trove $i$. As per (\ref{eq:2}), the stake of trove $i$ is $s_i = c_i$.\\
+
+Let the reward from liquidating trove $k$ received by trove $i$ be the pair $R_i^k = (x_i^k, y_i^k)$ where $x_i^k$ is the share of trove $k$’s collateral assigned to trove $i$, and $y_i^k$ is the share of trove $k$’s debt assigned to trove $i$.\\
+
+Let $x_i$ be the total accumulated collateral from rewards earned by trove $i$. At the end of the first-order stage this is the sum of its collateral rewards from $m$ past liquidations.\\
+
+(For simplicity, let’s assume that troves $n+1, ..., n+m$ are the liquidated troves, in that order, and $1, ..., n$ are those that remain )\\
+
+For a trove that remains in the system, its total accumulated collateral from rewards is:\\
+
+\begin{equation} \label{eq:collreward}
+  x_i = x_i^{n+1} + ... + x_i^{n+m} = \sum_{k=n+1}^{n+m}x_i^k = \sum_{j=1}^{m}x_i^{n+j}
+\end{equation}
+
+For a trove liquidated in the sequence, its reward sum is truncated at the previous liquidated trove \\
+
+\begin{equation}
+  x_i = x_i^{n+1} + ... + x_i^{i-1} = \sum_{k=n+1}^{i-1}x_i^k
+\end{equation}
+
+With each liquidation j, $c_j$ collateral is removed from the system. As per (\ref{eq:2}), stake equals collateral. Thus, the total stakes denominator $S$ in each liquidation is reduced by $c_j$, where $j$ denotes the index of the liquidated trove.\\ 
+
+
+Let
+
+\begin{equation} 
+    C_{n+m}=\sum\limits^{n+m}_{i=1}c_i
+\end{equation}
+
+\bigskip
+and
+
+\begin{equation} 
+    L_m=\sum\limits^m_{j=1}c_{n+j}
+\end{equation}
+
+\bigskip
+Consider the collateral reward for active trove $i$, received from the single liquidation of trove $n + j$: 
+ \\
+
+\begin{equation} 
+  x_i^j = \frac{c_i}{C_{n+m}-L_j}(c_{n+j}+x_{n+j})
+\end{equation}
+
+The denominator $C_{n+m}-L_j$ corresponds to the fact that the initial total stakes has been reduced by the amount of liquidated collateral from  troves up to and including $j$, that is, $L_j$. The collateral to redistribute is $c_{n+j}+x_{n+j}$, which corresponds to the initial collateral of the liquidated trove, $c_{n+j}$, plus the collateral it has earned from previous liquidations, $x_{n+j}$. \\
+
+We now sum all reward events, noting that the total liquidated collateral is removed from the denominator at each reward. This yields the total collateral reward for active trove $i$:\\
+
+\begin{equation} 
+    x_i=c_i\left[\frac{c_{n+1}+x_{n+1}}{C_{n+m}-L_1}+\frac{c_{n+2}+x_{n+2}}{C_{n+m}-L_2}+\frac{c_{n+3}+x_{n+3}}{C_{n+m}-L_3}+...+\frac{c_{n+m}+x_{n+m}}{C_{n+m}-L_m}\right]
+\end{equation}
+
+\bigskip
+i.e.
+
+\begin{equation} 
+    x_i=c_i\sum\limits^m_{j=1}\frac{c_{n+j}+x_{n+j}}{\sum\limits^{n+m}_{i=1}c_i-\sum\limits^j_{p=1}c_{n+p}}
+\end{equation}
+
+\bigskip
+(Note, that for liquidation of a given trove $j$, the redistributed collateral is the sum of its collateral $c_{n+j}$ plus its accumulated collateral reward $x_{n+j}$ which has itself been earned from liquidations $[n+1, n+2, n+3, … n+j-1]$.  Thus, liquidations have a “roll-up” effect - though, it is not important for our result. In fact, it can also be proved that $x_i=c_i\frac{L_m}{C_n}$)\\
+
+We label the main sum expression $H$.\\
+
+Rewriting trove $i$’s accumulated reward:
+
+\begin{equation} \label{eq:45}
+    x_i=Hc_i
+\end{equation}
+
+\bigskip
+Summing over all $n$ active troves gives the total accumulated rewards for active troves in the system:
+
+\begin{equation} 
+    X_n=\sum\limits^n_{i=1}Hc_i
+\end{equation}
+
+\begin{equation} \label{eq:47}
+    X_n=H \; C_n
+\end{equation}
+
+\bigskip
+Note that after $m$ liquidations, the system snapshots update from initially:
+
+\begin{equation}
+    S_\emptyset = C_\emptyset = C_{n+m}
+\end{equation}
+
+to:
+
+\begin{equation} \label{eq:8}
+    S_\emptyset=C_n
+\end{equation}
+
+\begin{equation} \label{eq:9}
+    C_\emptyset=C_n+X_n
+\end{equation}
+
+\bigskip
+(Note that it can also be proved that that $X_n=L_m$ and therefore $C_\emptyset=C_n+L_m=C_{n+m}$)
+
+\bigskip
+Now, a fresh trove is added, $j$, with collateral $c_j$ (and the system becomes second-order). Let the ICR of trove $j$ equal the ICR of an active first-order trove $i$.\\
+
+\begin{equation} \label{eq:10}
+    \gamma_j=\gamma_i
+\end{equation}
+
+\begin{equation} 
+    \gamma_j=\frac{c_\mathsmaller{j}}{d_\mathsmaller{j}}
+\end{equation}
+
+\begin{equation} 
+    \gamma_i=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}}
+\end{equation}
+
+\bigskip
+Where $c_j$, $d_j$ and $c_i$, $d_i$ are the collateral and debt values of trove $j$ and trove $i$ respectively.\\
+
+$x_i$, $y_i$ are the respective accumulated collateral and debt rewards for trove $i$ earned by its stake over its lifetime.\\
+
+The ICR equality identity (\ref{eq:10}) yields the following relation:
+
+\begin{equation} 
+        c_j=\frac{d_\mathsmaller{j}}{d_\mathsmaller{i}+y_\mathsmaller{i}}(c_\mathsmaller{i}+x_\mathsmaller{i})
+\end{equation}
+
+\bigskip
+i.e.
+
+\begin{equation} \label{eq:14}
+    c_j=\lambda(c_\mathsmaller{i}+x_\mathsmaller{i})
+\end{equation}
+
+\bigskip
+where
+
+\begin{equation} \label{eq:15}
+    \lambda=\frac{d_\mathsmaller{j}}{d_\mathsmaller{i}+y_\mathsmaller{i}}
+\end{equation}
+
+
+\bigskip
+Trove $j$’s stake $s_j$ is given by the corrected stake rule (\ref{eq:2}), that is:
+
+\begin{equation} 
+    s_j=\frac{c_\mathsmaller{j} \cdot S_\emptyset}{C_\emptyset}
+\end{equation}
+
+\bigskip
+Which by (\ref{eq:8}) and (\ref{eq:9}) gives:
+
+\begin{equation} \label{eq:17}
+    s_j=\frac{c_j \cdot C_n}{C_n+X_n}
+\end{equation}
+
+\bigskip
+Now, trove $k$ liquidates. Upon liquidation, the second-order trove $j$ and the first-order trove $i$ earn the following rewards:
+
+\begin{equation} \label{eq:20}
+    \begin{split}
+        r_{c\mathsmaller{j}}=as_\mathsmaller{j}\\
+        r_{d\mathsmaller{j}}=bs_\mathsmaller{j}\\
+        r_{c\mathsmaller{i}}=as_\mathsmaller{i}\\
+        r_{d\mathsmaller{i}}=bs_\mathsmaller{i}
+    \end{split}
+\end{equation}
+
+\bigskip
+where
+
+\begin{equation} \label{eq:20_a}
+    a=\frac{c_k+x_k}{S}
+\end{equation}
+
+\begin{equation} \label{eq:20_b}
+    b=\frac{d_k+y_k}{S}
+\end{equation}
+
+\bigskip
+And since $s_\mathsmaller{i}$ is a first-order stake:
+
+\begin{equation} \label{eq:21}
+    s_\mathsmaller{i}=c_\mathsmaller{i}
+\end{equation}
+
+\bigskip
+To show ICR equivalence after the reward event, we must first obtain $s_j$ as a linear function of $c_i$. Recall our definition of trove $j$’s stake from (\ref{eq:17}):
+
+\begin{equation} 
+    s_\mathsmaller{j}=\frac{c_\mathsmaller{j} \cdot C_n}{C_n+X_n}
+\end{equation}
+
+\bigskip
+Now, substituting in the expression for i’s collateral, (\ref{eq:14}), we obtain:
+
+\begin{equation} 
+    s_\mathsmaller{j}=\frac{\lambda(c_\mathsmaller{i}+x_\mathsmaller{i})C_n}{C_n+X_n}
+\end{equation}
+
+
+\bigskip
+Substituting in the expressions for accumulated reward $x_j$ from (\ref{eq:45}), and total accumulated reward $X_n$ from (\ref{eq:47}):
+
+\begin{equation} 
+    s_\mathsmaller{j}=\frac{\lambda(c_i+Hc_i)C_n}{C_n+HC_n}
+\end{equation}
+
+\bigskip
+And factorizing:
+
+\begin{equation} 
+    s_j=\frac{\lambda c_i(C_n+HC_n)}{C_n+HC_n}
+\end{equation}
+
+\bigskip
+Canceling yields:
+
+\begin{equation} \label{eq:29}
+    s_j=\lambda c_i
+\end{equation}
+
+\bigskip
+We now compare ICRs of trove $j$ and trove $i$, after liquidation of trove $k$, respectively $\gamma_{j}'$ and $\gamma_{i}'$.
+
+\begin{equation} 
+    \gamma_{j}'=\frac{c_\mathsmaller{j}+r_{c\mathsmaller{j}}}{d_\mathsmaller{j}+r_{d\mathsmaller{j}}}
+\end{equation}
+
+\begin{equation} 
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+r_{c\mathsmaller{i}}}{d_\mathsmaller{i}+y_\mathsmaller{i}+r_{d\mathsmaller{i}}}
+\end{equation}
+
+\bigskip
+Using (\ref{eq:20}), the individual rewards as functions of stakes:
+
+\begin{equation} 
+    \gamma_{j}'=\frac{c_j+as_j}{d_j+bs_j}
+\end{equation}
+
+\begin{equation} 
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+as_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bs_\mathsmaller{i}}
+\end{equation}
+
+\bigskip
+Now, substituting our definitions for $s_\mathsmaller{i}$ (\ref{eq:21}) and $s_j$ (\ref{eq:29}):
+
+\begin{equation} 
+    \gamma_{j}'=\frac{c_\mathsmaller{j}+a\lambda c_\mathsmaller{i}}{d_\mathsmaller{j}+b\lambda c_\mathsmaller{i}}
+\end{equation}
+
+\begin{equation} 
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
+\end{equation}
+
+\bigskip
+Using identities (\ref{eq:14}) for $c_j$, and (\ref{eq:15}) for $d_j$:
+
+\begin{equation} 
+    \gamma_{j}'=\frac{\lambda(c_\mathsmaller{i} + x_\mathsmaller{i}+ac_\mathsmaller{i})}{\lambda(d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i})}
+\end{equation}
+
+\begin{equation} 
+    \gamma_{i}'=\frac{c_\mathsmaller{i}+x_\mathsmaller{i}+ac_\mathsmaller{i}}{d_\mathsmaller{i}+y_\mathsmaller{i}+bc_\mathsmaller{i}}
+\end{equation}
+
+\bigskip
+Thus, canceling $\lambda$:
+
+\begin{equation} 
+    \gamma_{j}'=\gamma_{i}'
+\end{equation}
+
+\end{proof}
+
+%\subsection{EXTENSION PROOF. Arbitrary Number of Liquidation Events At Current System Order}
+\begin{lemma} \label{result:2} We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove $j$, followed by a set of liquidations $P$, such that $|P| > 1$ and $j \notin P$. For any trove $i$ with $\gamma_i = \gamma_j$ in $\Gamma_1$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+\end{lemma}
+
+\begin{proof}
+If instead of a single liquidation event at a given system order, we have now a set of $P$ liquidation events, of arbitrary size $> 1$, it is clear that ICR equality holds across all $P$ events:\\
+
+Since ICR equality holds across one liquidation event, it will hold across the next, and thus hold for all.\\
+
+Liquidation events do not alter the stakes that earn shares of liquidated collateral and debt - and for a given stake, the individual trove reward term given in (\ref{eq:20}) depends only on reward sizes and stakes.
+\end{proof}
+
+%\subsection{EXTENSION PROOF. Arbitrary Number of troves Added Between Liquidation Events}
+\begin{lemma} \label{result:3}
+  We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, such that $|N| > 1$, and then by a single liquidation. For any trove $i$ in $\Gamma_1$ and any trove $j$ in $N$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$.
+\end{lemma}
+
+\begin{proof}
+With $N$ second-order troves added between consecutive liquidation events, the stake $s_j$ of any given second-order trove is given by (\ref{eq:2}):
+
+\begin{equation} 
+    s_j=\frac{c_j \cdot S_\emptyset}{C_\emptyset}
+\end{equation}
+
+\bigskip
+The snapshots of the system state after the last liquidation event ($S_\emptyset$, $C_\emptyset$) remain constant until the next liquidation. It is clear that all $N$ second-order stakes $s_j$ have been corrected by the same constant factor.\\
+
+Thus, $s_j$ in the N second-order troves case is equal to $s_j$ in the single second-order trove case.\\
+
+As such, the logic of the proof of Lemma \ref{result:1} applies - and ICR equality between a second-order trove and first-order trove holds across a liquidation event, no matter how many fresh troves are added in between.\\
+The fact that the liquidated trove is first or second-order doesn’t have any impact on that proof either: it would only vary the amounts $x_k$ and $y_k$ in \ref{eq:20_a} and \ref{eq:20_b}, which may be even zero if $k$ is the last created trove, but we don’t make any assumption on those amounts along the proof.
+\end{proof}
+
+%\subsection{CONCLUSION 1}
+\begin{theorem} \label{result:4}
+We consider a system evolution $\Gamma_1 \rightarrow \Gamma_2$ triggered by the creation of a trove, followed by some more creations, up to a set $N$, and then by a set of liquidations $P$, such that $|N|, |P| > 0$. For any trove $i$ in $\Gamma_1$ and any trove $j \in N, j\notin P$ with $\gamma_i = \gamma_j$, the corrected stake approach maintains $\gamma_i = \gamma_j$ in $\Gamma_2$. \\
+In other words, in a second-order system with $M$ previous liquidations, and $N$ second-order troves added after the last liquidation, ICR equality between a first-order trove and second-order trove holds across $P$ subsequent liquidation events.
+\end{theorem}
+
+\begin{proof}
+  Proofs of Lemmas \ref{result:2} and \ref{result:3} can be applied independently to extend Lemma \ref{result:1} into this general result.
+\end{proof}
+
+%\subsection{2nd Order Systems Collapse to 1st Order}
+\begin{lemma} \label{result:5}
+  For every $2^{nd}$-order system $\Gamma_2$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+\end{lemma}
+
+\begin{proof}
+We now show that a second-order system is equivalent to a first-order system.\\
+
+Consider a hypothetical first-order trove $i$ and an actual second-order trove $j$. Let both troves have identical ICR, and also let trove $i$’s total collateral and debt equal trove $j$’s initial collateral and initial debt respectively:
+
+\begin{equation} 
+    c_i+x_i=c_j
+\end{equation}
+
+\begin{equation} 
+    d_i+y_i=d_j
+\end{equation}
+
+\bigskip
+Clearly, the ratio  $\lambda = \frac{d_j}{d_i+y_i} = 1$.\\
+
+We substitute $\lambda=1$ into the second-order system expression for $s_i$, from equation (\ref{eq:29}), to yield:
+
+\begin{equation} 
+    s_j=c_i
+\end{equation}
+
+\bigskip
+Thus, any second-order stake is equivalent to some hypothetical first-order stake $s_i=c_i$, which has accumulated collateral reward $x_i=(c_j-c_i)$ and debt reward $y_i=(d_j-d_i)$.\\
+
+Therefore any second-order system is equivalent to a first-order system that contains only first-order stakes which have experienced all liquidations. We write:
+
+\begin{equation} 
+    \Gamma_2=\Gamma_1
+\end{equation}
+\end{proof}
+
+%\subsection{N’th Order Systems Collapse to 1st Order}
+\begin{proposition} \label{result:6}
+  For every $n^{th}$-order system $\Gamma_n$ there exists an equivalent first-order system $\Gamma_1$ that contains only first-order stakes which have experienced all liquidations.
+\end{proposition}
+
+\begin{proof}
+  We prove it by induction.\\
+  We have already proved for $n=1$ in previous lemma: $\Gamma_1=\Gamma_2$.\\
+  Now we show that if it’s true for $n-1$ then it’s true for $n$, i.e.:
+
+\begin{equation}
+    \Gamma_{n-1} = \Gamma_n \Rightarrow \Gamma_n = \Gamma_{n+1}
+\end{equation}
+
+Recall our system evolution function: 
+
+\begin{equation} 
+    f(\Gamma_n)=\Gamma_{n+1}
+\end{equation}
+
+Therefore:
+
+\begin{equation} 
+    \Gamma_{n+1} = f(\Gamma_n) = f(\Gamma_{n-1}) = \Gamma_n
+\end{equation}
+
+\bigskip
+So, for every $n > 1$, $\Gamma_n = \Gamma_{n-1}$, and for the transitive property of equivalence, we finally have:
+
+\begin{equation}
+    \Gamma_n=\Gamma_1
+\end{equation}
+\end{proof}
+
+\bigskip
+Having shown all $n^{th}$-order systems are equivalent to a first-order system, we now extend our previous conclusion to $n^{th}$-order systems:
+
+%\subsection{CONCLUSION 2}
+\begin{corollary} \label{result:7}
+  In an $n^{th}$-order system with $M$ previous liquidations, and $N$ $n^{th}$-order troves added after the last liquidation, ICR equality between an $(n-1)^{th}$-order trove and $n^{th}$-order trove holds across $P$ liquidation events.
+\end{corollary}
+
+\section{Corrected Stake Approach Preserves Order}
+
+\begin{theorem} \label{result:8}
+  For every system $\Gamma_n$ containing troves $i$ and $j$ with $\gamma_i > \gamma_j$ that transitions to $\Gamma_{n+1}$, the corrected stake approach maintains $\gamma_i > \gamma_j$.
+\end{theorem}
+
+\begin{proof}
+Here we show that ICR ordering is preserved with corrected stakes across a liquidation event.\\
+
+We make use of the first-order equivalence result \ref{result:6}, namely, that with corrected stakes:
+
+\begin{equation} 
+    \Gamma_n = \Gamma_1
+\end{equation}
+
+i.e:\\
+
+Any $n^{th}$-order system of troves is equivalent to a first-order system of troves. For a given fresh trove with stake $s_i$ and collateral $c_i$, the stake $s_i$ is equivalent to some hypothetical first-order stake $c_j$ which has accumulated collateral reward $x_j = (c_i - c_j)$ and debt reward $y_j = (d_i - d_j)$.\\
+
+Due to this equivalence between first and $n^{th}$-order systems, if ordering is preserved for first-order systems, it is preserved for $n^{th}$-order systems.\\
+
+Now consider a first-order system of troves, with stakes equal to their initial collateral.\\
+
+Let trove $i$ and trove $j$ be troves with initial collateral $c_i$, $c_j$ accumulated collateral and debt rewards $x_i$, $y_i$ and $x_j$, $y_j$ respectively:\\
+
+\begin{equation} 
+    \gamma_i=\frac{c_i+x_i}{d_i+y_i}
+\end{equation}
+
+\begin{equation} 
+    \gamma_j=\frac{c_j+x_j}{d_j+y_j}
+\end{equation}
+
+Let their ICRs be such that:
+
+\begin{equation} 
+    \gamma_i > \gamma_j
+\end{equation}
+
+\bigskip
+Since, a first-order trove’s collateral and debt rewards are always in direct proportion to its initial collateral, we can write the accumulated rewards as:
+
+\begin{equation} 
+    x_i=Ac_i
+\end{equation}
+
+\begin{equation} 
+    x_j=Ac_j
+\end{equation}
+
+and
+
+\begin{equation} 
+    y_i=Bc_i
+\end{equation}
+
+\begin{equation} 
+    y_j=Bc_j
+\end{equation}
+
+\bigskip
+Where A is the sum of all ‘collateral rewards per unit staked’, and B is the sum of all ‘debt rewards per unit staked’. This yields ICRs:
+
+\begin{equation} 
+    \gamma_i=c_i\frac{1+A}{d_i+Bc_i}
+\end{equation}
+
+\begin{equation} 
+    \gamma_j=c_j\frac{1+A}{d_j+Bc_j}
+\end{equation}
+
+And the initial ICR inequality becomes:
+
+\begin{equation} 
+    c_i\frac{1+A}{d_i+Bc_i}>c_j\frac{1+A}{d_j+Bc_j}
+\end{equation}
+
+\bigskip
+Cross multiplying and canceling the common denominator yields:
+
+\begin{equation} 
+    c_i\left(1+A\right)\left(d_j+Bc_j\right)>c_j\left(1+A\right)\left(d_i+Bc_i\right)
+\end{equation}
+
+Then canceling $(1+A)$ and expanding:
+
+\begin{equation} 
+    c_i\left(d_j+Bc_j\right)>c_j\left(d_i+Bc_i\right)
+\end{equation}
+
+\begin{equation} 
+    c_id_j+Bc_ic_j > c_jd_i+Bc_ic_j
+\end{equation}
+
+\bigskip
+And canceling terms:
+
+\begin{equation}
+    c_id_j > c_jd_i
+\end{equation}
+
+\bigskip
+Finally yielding the result:
+
+\begin{equation} \label{eq:217}
+    \frac{d_j}{c_j}>\frac{d_i}{c_i}
+\end{equation}
+
+\bigskip
+We will later use this to prove that the inequality of ICRs holds across a liquidation event.\\
+
+Now consider a liquidation event occurs. Upon a trove liquidation, $r_c$ collateral and $r_d$ debt are distributed to all active troves. Each active trove earns rewards proportional to its initial collateral, thus:
+
+\begin{equation} 
+    \gamma_{i}'=\frac{c_i\left(1+A\right)+ac_i}{d_i+Bc_i+bc_i}
+\end{equation}
+
+\begin{equation} 
+    \gamma_{j}'=\frac{c_j\left(1+A\right)+ac_j}{d_j+Bc_j+bc_j}
+\end{equation}
+
+\bigskip
+Where:
+
+\begin{equation} 
+    a=\frac{r_c}{S}
+\end{equation}
+
+\begin{equation} 
+    b=\frac{r_d}{S}
+\end{equation}
+
+\bigskip
+Collecting terms:
+
+\begin{equation} 
+    \gamma_i=\frac{c_i\left(1+a+A\right)}{d_i+\left(1+B\right)c_i}
+\end{equation}
+
+\begin{equation} 
+    \gamma_j=\frac{c_j\left(1+a+A\right)}{d_j+\left(1+B\right)c_j}
+\end{equation}
+
+\bigskip
+And taking reciprocals:
+
+\begin{equation} 
+    \frac{1}{\gamma_{i}'}=\frac{d_i+\left(1+B\right)c_i}{c_i\left(1+a+A\right)}
+\end{equation}
+
+\begin{equation} 
+    \frac{1}{\gamma_{j}'}=\frac{d_j+\left(1+B\right)c_j}{c_j\left(1+a+A\right)}
+\end{equation}
+
+\bigskip
+Rearranging, and separating the constant term:
+
+\begin{equation} 
+    \frac{1}{\gamma_{i}'}=\frac{\frac{d_i}{c_i}}{1+a+A}+\frac{1+B}{1+a+A}
+\end{equation}
+
+\begin{equation} 
+    \frac{1}{\gamma_{j}'}=\frac{\frac{d_j}{c_j}}{1+a+A}+\frac{1+B}{1+a+A}
+\end{equation}
+
+\bigskip
+Recall our earlier result (\ref{eq:217}): $\frac{d_i}{c_i}<\frac{d_j}{c_j}$. Thus:
+
+\begin{equation} 
+    \frac{1}{\gamma_{i}'} < \frac{1}{\gamma_{j}'}
+\end{equation}
+
+\bigskip
+Then taking reciprocals, finally yields:
+
+\begin{equation} 
+    \gamma_{i}' > \gamma_{j}'
+\end{equation}
+
+\bigskip
+Therefore, trove ordering holds across a liquidation event in first-order systems, and thus holds across a liquidation event in $n^{th}$-order systems.
+
+\bigskip
+
+\section{Acknowledgements}
+We would like to thank Daniel Simon for the helpful discussion on trove ordering and Bojan Peček for his help with preparing this paper.
+
+\begin{thebibliography}{9}
+
+\bibitem{Whitepaper} 
+R. Lauko, R. Pardoe. 
+\textit{Liquity: Decentralized Borrowing Protocol (Whitepaper), 2020}. 
+https://docsend.com/view/bwiczmy
+
+\bibitem{Batog} 
+B. Batog, L. Boca, N. Johnson.
+\textit{Scalable Reward Distribution on the Ethereum Blockchain, 2018}. 
+http://batog.info/papers/scalable-reward-distribution.pdf
+
+
+\end{thebibliography}
+
+\pagebreak
+\appendix
+\section{Appendix} \label{sec:appendix}
+We prove that after a redistribution proportional to the collateral of active troves, the ordering of active troves by ICR is preserved. 
+
+Consider two active troves $i$ and $j$ with ICR $\gamma_i,  \gamma_j$ such that $\gamma_i > \gamma_j$.
+
+Let $c_i$, $d_i$ and $c_j$, $d_j$ denote the collateral and debt of troves $i$ and $j$ respectively, and let $C$ denote the total active collateral in the system.
+
+Given the definition of ICR we have 
+\begin{equation} \label{eq:92}
+    \frac{c_i}{d_i}>\frac{c_j}{d_j}
+\end{equation}
+
+In the event of a redistribution of a trove $k$, its collateral $c_k$ and debt $d_k$ is redistributed to all active troves, proportional to their shares of $C$.
+
+Troves $i$ and $j$ thus receive the following pairs of collateral and debt rewards $(x_i, y_i)$ and $(x_j, y_j)$:
+
+\begin{equation} 
+  (x_i, y_i) = \left(\frac{c_i}{C} \cdot c_k, \frac{c_i}{C} \cdot d_k\right)
+\end{equation}
+
+\begin{equation} 
+   (x_j, y_j) = \left(\frac{c_j}{C} \cdot c_k, \frac{c_j}{C} \cdot d_k\right)
+\end{equation}
+
+As a result, their ICRs will change to:
+\begin{equation} 
+  \gamma_i' = \frac{c_i + x_i}{d_i + y_i} 
+\end{equation}
+
+\begin{equation} 
+  \gamma_j' = \frac{c_j + x_j}{d_j + y_j} 
+\end{equation}
+
+Let $a = \frac{c_k}{C}$ and $b = \frac{d_k}{C}$. Substituting the rewards, this leads to:
+
+\begin{equation} \label{eq:97}
+  \gamma_i' = \frac{c_i + a \cdot c_i}{d_i + b \cdot c_i} 
+\end{equation}
+
+\begin{equation} \label{eq:98}
+  \gamma_j' = \frac{c_j + a \cdot c_j}{d_j + b \cdot c_j} 
+\end{equation}
+
+The equations (\ref{eq:97}) and (\ref{eq:98}) can be rewritten as:
+\begin{equation} \label{eq:a}
+  \frac{1}{\gamma_i'} = \left(\frac{d_i}{c_i}+b\right) \cdot \frac{1}{1 + a}  
+\end{equation}
+
+\begin{equation} \label{eq:b}
+  \frac{1}{\gamma_j'} = \left(\frac{d_j}{c_j}+b\right) \cdot \frac{1}{1 + a}  
+\end{equation}
+
+Taking the reciprocal of inequality (\ref{eq:92}):
+\begin{equation}
+  \frac{d_i}{c_i} < \frac{d_j}{c_j}
+\end{equation}
+
+and applying it to equations (\ref{eq:a}) and (\ref{eq:b}), canceling out common constants, yields:
+\begin{equation} \label{eq:c}
+  \frac{1}{\gamma_i'} < \frac{1}{\gamma_j'}
+\end{equation}
+
+Finally, taking the reciprocal of (\ref{eq:c}), yields:
+\begin{equation}
+  \gamma_i' > \gamma_j'
+\end{equation}
+
+Thus, ordering of active troves by ICR is preserved across a reward event that is proportional to the collateral of the active troves.
+\end{proof}
+
+\end{document}

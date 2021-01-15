@@ -151,7 +151,7 @@ contract LUSDToken is ILUSDToken {
         external 
         override 
     {            
-        require(deadline == 0 || deadline >= now, 'LUSD: Signature has expired');
+        require(deadline >= now, 'LUSD: Signature has expired');
         bytes32 digest = keccak256(abi.encodePacked(uint16(0x1901), 
                          domainSeparator(), keccak256(abi.encode(
                          _PERMIT_TYPEHASH, owner, spender, amount, 
@@ -173,10 +173,11 @@ contract LUSDToken is ILUSDToken {
     }
 
     // --- Internal operations ---
+    // Warning: sanity checks (for sender and recipient) should have been done before calling these internal functions
 
     function _transfer(address sender, address recipient, uint256 amount) internal {
-        require(sender != address(0), "ERC20: transfer from the zero address");
-        require(recipient != address(0), "ERC20: transfer to the zero address");
+        assert(sender != address(0));
+        assert(recipient != address(0));
 
         _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
         _balances[recipient] = _balances[recipient].add(amount);
@@ -184,7 +185,7 @@ contract LUSDToken is ILUSDToken {
     }
 
     function _mint(address account, uint256 amount) internal {
-        require(account != address(0), "ERC20: mint to the zero address");
+        assert(account != address(0));
 
         _totalSupply = _totalSupply.add(amount);
         _balances[account] = _balances[account].add(amount);
@@ -192,7 +193,7 @@ contract LUSDToken is ILUSDToken {
     }
 
     function _burn(address account, uint256 amount) internal {
-        require(account != address(0), "ERC20: burn from the zero address");
+        assert(account != address(0));
         
         _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
         _totalSupply = _totalSupply.sub(amount);
@@ -200,8 +201,8 @@ contract LUSDToken is ILUSDToken {
     }
 
     function _approve(address owner, address spender, uint256 amount) internal {
-        require(owner != address(0), "ERC20: approve from the zero address");
-        require(spender != address(0), "ERC20: approve to the zero address");
+        assert(owner != address(0));
+        assert(spender != address(0));
 
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);

@@ -15,14 +15,14 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
     // --- Data ---
 
-    mapping( address => uint) stakes;
+    mapping( address => uint) public stakes;
     uint public totalLQTYStaked;
 
     uint public F_ETH;  // Running sum of ETH fees per-LQTY-staked
     uint public F_LUSD; // Running sum of LQTY fees per-LQTY-staked
 
     // User snapshots of F_ETH and F_LUSD, taken at the point at which their latest deposit was made
-    mapping (address => Snapshot) snapshots; 
+    mapping (address => Snapshot) public snapshots; 
 
     struct Snapshot {
         uint F_ETH_Snapshot;
@@ -43,6 +43,9 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     event TroveManagerAddressSet(address _troveManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
+
+    event StakeChanged(address indexed staker, uint newStake);
+    event StakingGainsWithdrawn(address indexed staker, uint LUSDGain, uint ETHGain);
 
     // --- Functions ---
 
@@ -87,12 +90,17 @@ contract LQTYStaking is ILQTYStaking, Ownable {
     
        _updateUserSnapshots(msg.sender);
 
+        uint newStake = currentStake.add(_LQTYamount);
+
         // Increase user’s stake and total LQTY staked
-        stakes[msg.sender] = currentStake.add(_LQTYamount);
+        stakes[msg.sender] = newStake;
         totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
 
         // Transfer LQTY from caller to this contract
         lqtyToken.sendToLQTYStaking(msg.sender, _LQTYamount);
+
+        emit StakeChanged(msg.sender, newStake);
+        emit StakingGainsWithdrawn(msg.sender, LUSDGain, ETHGain);
 
         // Send accumulated LUSD and ETH gains to the caller
         lusdToken.transfer(msg.sender, LUSDGain);
@@ -113,12 +121,17 @@ contract LQTYStaking is ILQTYStaking, Ownable {
 
         uint LQTYToWithdraw = LiquityMath._min(_LQTYamount, currentStake);
 
+        uint newStake = currentStake.sub(LQTYToWithdraw);
+
         // Decrease user's stake and total LQTY staked
-        stakes[msg.sender] = currentStake.sub(LQTYToWithdraw);
+        stakes[msg.sender] = newStake;
         totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);  
 
         // Transfer unstaked LQTY to user
         lqtyToken.transfer(msg.sender, LQTYToWithdraw);
+
+        emit StakeChanged(msg.sender, newStake);
+        emit StakingGainsWithdrawn(msg.sender, LUSDGain, ETHGain);
 
         // Send accumulated LUSD and ETH gains to the caller
         lusdToken.transfer(msg.sender, LUSDGain);

@@ -48,7 +48,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsBuidler()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
     contracts.stabilityPool = await StabilityPool.new()
     contracts = await deploymentHelper.deployLUSDToken(contracts)
 
@@ -840,7 +840,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
     // Alice opens trove and deposits to SP
-    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
@@ -876,7 +876,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
     // Alice opens trove and deposits to SP
-    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
@@ -911,7 +911,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
     // Alice opens trove and deposits to SP
-    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
@@ -947,7 +947,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Set the deployment time to now
     await communityIssuanceTester.setDeploymentTime()
     // Alice opens trove and deposits to SP
-    await borrowerOperations.openTrove(dec(1, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
 
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))

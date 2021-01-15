@@ -32,7 +32,7 @@ const compareDeployedVersionsTo = (version: string) => {
   return match;
 };
 
-const savedLiveVersion = fs.readFileSync("live/artifacts/version").toString().trim();
+const savedLiveVersion = fs.readFileSync(path.join("live", "version")).toString().trim();
 
 console.log(`Saved live version: ${savedLiveVersion}`.cyan);
 
