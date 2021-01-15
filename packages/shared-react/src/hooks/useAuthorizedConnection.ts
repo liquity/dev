@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Web3ReactContextInterface } from "@web3-react/core/dist/types";
-import { InjectedConnector } from "@web3-react/injected-connector";
+import { useWeb3React } from "@web3-react/core";
 
-const injectedConnector = new InjectedConnector({});
+import { injectedConnector } from "../connectors/injectedConnector";
 
 /**
  * React hook that tries to activate the InjectedConnector if the app's already authorized in the
@@ -15,26 +14,30 @@ const injectedConnector = new InjectedConnector({});
  * @returns true when finished trying to activate the InjectedConnector, false otherwise
  */
 
-export function useInjectedConnector<T>(web3React: Web3ReactContextInterface<T>) {
+export function useAuthorizedConnection(): boolean {
+  const { activate, active } = useWeb3React<unknown>();
   const [tried, setTried] = useState(false);
 
   useEffect(() => {
     const tryToActivateIfAuthorized = async () => {
       try {
         if (await injectedConnector.isAuthorized()) {
-          await web3React.activate(injectedConnector, undefined, true);
+          await activate(injectedConnector, undefined, true);
+        } else {
+          throw new Error("Unauthorized");
         }
-      } finally {
+      } catch {
         setTried(true);
       }
     };
     tryToActivateIfAuthorized();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // only once
+  }, [activate]);
 
-  return {
-    triedAuthorizedConnection: tried,
-    activate: () => web3React.activate(injectedConnector),
-    deactivate: web3React.deactivate
-  };
+  useEffect(() => {
+    if (active) {
+      setTried(true);
+    }
+  }, [active]);
+
+  return tried;
 }
