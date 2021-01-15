@@ -894,7 +894,8 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         address _firstRedemptionHint,
         address _partialRedemptionHint,
         uint _partialRedemptionHintNICR,
-        uint _maxIterations
+        uint _maxIterations,
+        uint _currentFee
     )
         external
         override
