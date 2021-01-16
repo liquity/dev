@@ -3275,15 +3275,7 @@ contract('StabilityPool', async accounts => {
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       // D attempts to withdraw his ETH gain to Trove
-      try {
-        //console.log(stabilityPool.abi.filter(m => m.name == 'withdrawETHGainToTrove')[0])
-        //console.log(dennis, dennis, { from: dennis })
-        const txD = await stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis })
-        assert.isFalse(txD.receipt.status)
-      } catch (error) {
-        assert.include(error.message, "revert")
-        assert.include(error.message, "caller must have an active trove to withdraw ETHGain to")
-      }
+      await th.assertRevert(stabilityPool.withdrawETHGainToTrove(dennis, dennis, { from: dennis }), "caller must have an active trove to withdraw ETHGain to")
     })
 
     it("withdrawETHGainToTrove(): triggers LQTY reward event - increases the sum G", async () => {
