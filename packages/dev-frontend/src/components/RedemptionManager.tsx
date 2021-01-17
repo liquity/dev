@@ -19,10 +19,18 @@ type RedemptionActionProps = {
   setChangePending: (isPending: boolean) => void;
 };
 
-const selectForRedemptionAction = ({ price, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
+const selectForRedemptionAction = ({
   price,
   lusdBalance,
-  numberOfTroves
+  numberOfTroves,
+  fees,
+  total
+}: LiquityStoreState) => ({
+  price,
+  lusdBalance,
+  numberOfTroves,
+  fees,
+  total
 });
 
 const RedemptionAction: React.FC<RedemptionActionProps> = ({
@@ -31,7 +39,10 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   changePending,
   setChangePending
 }) => {
-  const { price, lusdBalance, numberOfTroves } = useLiquitySelector(selectForRedemptionAction);
+  const { price, lusdBalance, numberOfTroves, fees, total } = useLiquitySelector(
+    selectForRedemptionAction
+  );
+
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -54,7 +65,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     return null;
   }
 
-  const send = liquity.redeemLUSD.bind(liquity, amount, { price, numberOfTroves });
+  const send = liquity.redeemLUSD.bind(liquity, amount, { price, numberOfTroves, fees, total });
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">
@@ -87,10 +98,9 @@ export const RedemptionManager: React.FC = () => {
   const editingState = useState<string>();
 
   const edited = !lusdAmount.isZero;
-  const ethAmount = lusdAmount.div(price);
-  const feeFactor = fees.redemptionFeeFactor(lusdAmount.div(total.debt));
+  const lusdFee = fees.optimisticRedemptionFee(lusdAmount, total.debt);
+  const feeFactor = lusdFee.div(lusdAmount);
   const feePct = new Percent(feeFactor);
-  const ethFee = ethAmount.mul(feeFactor);
 
   return (
     <>
@@ -126,17 +136,17 @@ export const RedemptionManager: React.FC = () => {
               <StaticRow
                 label="Fee"
                 inputId="redeem-fee"
-                amount={ethFee.toString(4)}
+                amount={lusdFee.toString(4)}
                 color="danger"
                 pendingAmount={feePct.toString(2)}
                 pendingColor="danger"
-                unit="ETH"
+                unit={COIN}
               />
 
               <StaticRow
                 label="Get"
                 inputId="redeem-eth"
-                amount={ethAmount.sub(ethFee).prettify(4)}
+                amount={lusdAmount.sub(lusdFee).div(price).prettify(4)}
                 unit="ETH"
               />
             </>

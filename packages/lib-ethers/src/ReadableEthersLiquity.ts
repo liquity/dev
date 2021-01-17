@@ -14,11 +14,10 @@ import { MultiTroveGetter } from "../types";
 import { EthersCallOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
 
-// TODO: these are constant in the contracts, so it doesn't make sense to make a call for them,
-// but to avoid having to update them here when we change them in the contracts, we could read
-// them once after deployment and save them to LiquityDeployment.
+// TODO: this is constant in the contracts, so it doesn't make sense to make a call for it,
+// but to avoid having to update it here whenever we change it in the contracts, we could read
+// it once after deployment and save it to LiquityDeployment.
 const MINUTE_DECAY_FACTOR = Decimal.from("0.999832508430720967");
-const BETA = Decimal.from(2);
 
 enum TroveStatus {
   nonExistent,
@@ -155,7 +154,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 
     const lastFeeOperation = new Date(1000 * lastFeeOperationTime.toNumber());
 
-    return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR, BETA);
+    return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR);
   }
 
   async getLQTYStake(address = this.requireAddress(), overrides?: EthersCallOverrides) {

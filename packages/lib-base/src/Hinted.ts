@@ -26,6 +26,8 @@ export type CollateralGainTransferOptionalParams = FeelessTroveAdjustmentOptiona
 
 export type RedemptionOptionalParams = HintedMethodOptionalParams & {
   price?: Decimal;
+  fees?: Fees;
+  total?: Trove;
 };
 
 type AddParams<T, K extends keyof T, U extends unknown[]> = {

@@ -187,7 +187,7 @@ describe("EthersLiquity", () => {
 
       await fakeLiquity.openTrove(params, {
         numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
-        fees: new Fees(new Date(), 0, 0.99, 1)
+        fees: new Fees(new Date(), 0, 0.99)
       });
 
       expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.exactly(4);

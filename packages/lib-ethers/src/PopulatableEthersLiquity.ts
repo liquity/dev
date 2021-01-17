@@ -496,15 +496,21 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
   protected async findRedemptionHints(
     amount: Decimal,
-    { price, ...hintOptionalParams }: RedemptionOptionalParams = {}
+    { price, fees, total, ...hintOptionalParams }: RedemptionOptionalParams = {}
   ): Promise<[string, string, Decimal]> {
-    price ??= await this.readableLiquity.getPrice();
+    [price, fees, total] = await Promise.all([
+      price ?? this.readableLiquity.getPrice(),
+      fees ?? this.readableLiquity.getFees(),
+      total ?? this.readableLiquity.getTotal()
+    ]);
+
+    const fee = fees.optimisticRedemptionFee(amount, total.debt);
 
     const {
       firstRedemptionHint,
       partialRedemptionHintNICR
     } = await this.contracts.hintHelpers.getRedemptionHints(
-      amount.bigNumber,
+      amount.sub(fee).bigNumber,
       price.bigNumber,
       redeemMaxIterations
     );
