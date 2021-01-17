@@ -26,14 +26,18 @@ import "../Dependencies/console.sol";
 *
 * 3) Supply hard-capped at 100 million
 *
-* 4) CommunityIssuance and LockupContractFactory addresses set at deployment
+* 4) CommunityIssuance and LockupContractFactory addresses are set at deployment
 *
-* 5) 2/3 of supply is minted to deployer at deployment
+* 5) 3 million tokens are minted to an EOA that holds the bug bounty / hackathons allocation at deployment
+
+* 6) 25 million tokens are minted to the CommunityIssuance contract at deployment
 *
-* 6) 1/3 of supply minted to CommunityIssuance contract at deployment
-* 
-* 7) Until one year from deployment:
-* -Deployer may only transfer() tokens to OneYearLockupContracts that have been deployed via & registered in the 
+* 7) (8 + 1/3) million tokens are minted to an EOA that holds the LP rewards allocation
+*
+* 8) (63 + 2/3) million tokens are minted to the deployer at deployment
+*
+* 9) Until one year from deployment:
+* -Deployer may only transfer() tokens to LockupContracts that have been deployed via & registered in the 
 *  LockupContractFactory 
 * -approve(), increaseAllowance(), decreaseAllowance() revert when called by the deployer
 * -transferFrom() reverts when deployer is the sender
@@ -79,7 +83,6 @@ contract LQTYToken is CheckContract, ILQTYToken {
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
 
     // uints for use with SafeMath
-    uint internal _100_MILLION = 1e26;  // 1e8 * 1e18 = 1e26
     uint internal _1_MILLION = 1e24;    // 1e6 * 1e18 = 1e24
 
     uint public immutable deploymentStartTime;
@@ -132,14 +135,14 @@ contract LQTYToken is CheckContract, ILQTYToken {
         uint bountyEntitlement = _1_MILLION.mul(3); // Allocate 3 million for bounties/hackathons
         _mint(_bountyAddress, bountyEntitlement);
 
-        uint depositorsAndFrontEndsEntitlement = _100_MILLION.div(4); // Allocate 25 million to the algorithmic issuance schedule
+        uint depositorsAndFrontEndsEntitlement = _1_MILLION.mul(25); // Allocate 25 million to the algorithmic issuance schedule
         _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
 
-        uint lpRewardsEntitlement = _100_MILLION.div(3).sub(depositorsAndFrontEndsEntitlement);  // Allocate 8.33 million for LP rewards
+        uint lpRewardsEntitlement = _1_MILLION.mul(100).div(3).sub(depositorsAndFrontEndsEntitlement);  // Allocate 8.33 million for LP rewards
         _mint(_lpRewardsAddress, lpRewardsEntitlement);
         
         // Allocate the remainder to the deployer: (100 - 3 - 25 - 8.33) million = 63.66 million
-        uint deployerEntitlement = _100_MILLION 
+        uint deployerEntitlement = _1_MILLION.mul(100)
             .sub(bountyEntitlement)
             .sub(depositorsAndFrontEndsEntitlement)
             .sub(lpRewardsEntitlement);
