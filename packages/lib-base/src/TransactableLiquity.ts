@@ -54,7 +54,7 @@ export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedRec
 export type TroveChangeWithFees<T> = {
   params: T;
   newTrove: Trove;
-  fee: Decimal;
+  lusdFee: Decimal;
 };
 
 export type TroveCreationDetails = TroveChangeWithFees<TroveCreation<Decimal>>;
@@ -77,7 +77,7 @@ export type RedemptionDetails = {
   attemptedLUSDAmount: Decimal;
   actualLUSDAmount: Decimal;
   collateralReceived: Decimal;
-  fee: Decimal;
+  lusdFee: Decimal;
 };
 
 export type StabilityPoolGainsWithdrawalDetails = {

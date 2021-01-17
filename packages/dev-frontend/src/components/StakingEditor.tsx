@@ -59,23 +59,13 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
         ></EditableRow>
 
         {!originalStake.isEmpty && (
-          <>
-            <StaticRow
-              label="Gain"
-              inputId="stake-gain-eth"
-              amount={originalStake.collateralGain.prettify(4)}
-              color={originalStake.collateralGain.nonZero && "success"}
-              unit="ETH"
-            />
-
-            <StaticRow
-              label="Gain"
-              inputId="stake-gain-lusd"
-              amount={originalStake.lusdGain.prettify()}
-              color={originalStake.lusdGain.nonZero && "success"}
-              unit={COIN}
-            />
-          </>
+          <StaticRow
+            label="Gain"
+            inputId="stake-gain-lusd"
+            amount={originalStake.lusdGain.prettify()}
+            color={originalStake.lusdGain.nonZero && "success"}
+            unit={COIN}
+          />
         )}
       </Box>
     </Card>

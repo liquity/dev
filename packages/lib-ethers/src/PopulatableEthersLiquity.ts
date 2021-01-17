@@ -230,14 +230,14 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
             })
         );
 
-        const [fee] = this.contracts.borrowerOperations
+        const [lusdFee] = this.contracts.borrowerOperations
           .extractEvents(logs, "LUSDBorrowingFeePaid")
           .map(({ args: { _LUSDFee } }) => new Decimal(_LUSDFee));
 
         return {
           params,
           newTrove,
-          fee
+          lusdFee
         };
       },
 
@@ -325,11 +325,11 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       ({ logs }) =>
         this.contracts.troveManager
           .extractEvents(logs, "Redemption")
-          .map(({ args: { _ETHSent, _ETHFee, _actualLUSDAmount, _attemptedLUSDAmount } }) => ({
+          .map(({ args: { _ETHSent, _LUSDFee, _actualLUSDAmount, _attemptedLUSDAmount } }) => ({
             attemptedLUSDAmount: new Decimal(_attemptedLUSDAmount),
             actualLUSDAmount: new Decimal(_actualLUSDAmount),
             collateralReceived: new Decimal(_ETHSent),
-            fee: new Decimal(_ETHFee)
+            lusdFee: new Decimal(_LUSDFee)
           }))[0],
 
       this.signer,

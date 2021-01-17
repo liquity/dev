@@ -594,7 +594,7 @@ describe("EthersLiquity", () => {
         attemptedLUSDAmount: Decimal.from(55),
         actualLUSDAmount: Decimal.from(55),
         collateralReceived: Decimal.from(0.275),
-        fee: Decimal.from("0.042013888888888888")
+        lusdFee: Decimal.from("0.042013888888888888")
       });
 
       const balance = new Decimal(await provider.getBalance(user.getAddress()));
@@ -634,9 +634,9 @@ describe("EthersLiquity", () => {
     });
 
     it("borrowing should have a fee now", async () => {
-      const { fee, newTrove } = await liquity.borrowLUSD(10);
-      expect(`${fee}`).to.equal("1.52777777777777777");
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 20, debt: fee.add(120) }));
+      const { lusdFee, newTrove } = await liquity.borrowLUSD(10);
+      expect(`${lusdFee}`).to.equal("1.52777777777777777");
+      expect(newTrove).to.deep.equal(new Trove({ collateral: 20, debt: lusdFee.add(120) }));
     });
   });
 

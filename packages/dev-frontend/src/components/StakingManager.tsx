@@ -36,12 +36,7 @@ const StakingAction: React.FC<StakingActionProps> = ({
   const myTransactionState = useMyTransactionState(/^stake-/);
 
   const { stakeLQTY, unstakeLQTY } = originalStake.whatChanged(editedLQTY) ?? {};
-
-  const collateralGain = originalStake.collateralGain.nonZero;
   const lusdGain = originalStake.lusdGain.nonZero;
-  const gains =
-    (collateralGain ?? lusdGain) &&
-    [collateralGain && "ETH", lusdGain && COIN].filter(x => x).join(" & ");
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
@@ -51,15 +46,15 @@ const StakingAction: React.FC<StakingActionProps> = ({
     }
   }, [myTransactionState.type, dispatch]);
 
-  if (!stakeLQTY && !unstakeLQTY && !gains) {
+  if (!stakeLQTY && !unstakeLQTY && !lusdGain) {
     return null;
   }
 
   const actions: Action[] = stakeLQTY
     ? [
         [
-          gains
-            ? `Stake ${stakeLQTY.prettify()} ${GT} & claim ${gains}`
+          lusdGain
+            ? `Stake ${stakeLQTY.prettify()} ${GT} & claim ${lusdGain.prettify()} ${COIN}`
             : `Stake ${stakeLQTY.prettify()} ${GT}`,
           liquity.stakeLQTY.bind(liquity, stakeLQTY),
           [[lqtyBalance.gte(stakeLQTY), `You don't have enough ${GT}`]]
@@ -68,14 +63,14 @@ const StakingAction: React.FC<StakingActionProps> = ({
     : unstakeLQTY
     ? [
         [
-          gains
-            ? `Unstake ${unstakeLQTY.prettify()} ${GT} & claim ${gains}`
+          lusdGain
+            ? `Unstake ${unstakeLQTY.prettify()} ${GT} & claim ${lusdGain.prettify()} ${COIN}`
             : `Unstake ${unstakeLQTY.prettify()} ${GT}`,
           liquity.unstakeLQTY.bind(liquity, unstakeLQTY)
         ]
       ]
-    : gains
-    ? [[`Claim ${gains}`, liquity.withdrawGainsFromStaking.bind(liquity)]]
+    : lusdGain
+    ? [[`Claim ${lusdGain.prettify()} ${COIN}`, liquity.withdrawGainsFromStaking.bind(liquity)]]
     : [];
 
   return myTransactionState.type === "waitingForApproval" ? (
@@ -154,7 +149,6 @@ const reduce = (state: StakeManagerState, action: StakeManagerAction): StakeMana
 
       const changeCommitted =
         !updatedStake.stakedLQTY.eq(originalStake.stakedLQTY) ||
-        updatedStake.collateralGain.lt(originalStake.collateralGain) ||
         updatedStake.lusdGain.lt(originalStake.lusdGain);
 
       if (changePending && changeCommitted) {
