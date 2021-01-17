@@ -77,7 +77,10 @@ contract LQTYToken is CheckContract, ILQTYToken {
     // --- LQTYToken specific data ---
 
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
-    uint internal _100_MILLION = 1e26;  // non-constant, for use with SafeMath
+
+    // uints for use with SafeMath
+    uint internal _100_MILLION = 1e26;  // 1e8 * 1e18 = 1e26
+    uint internal _1_MILLION = 1e24;    // 1e6 * 1e18 = 1e24
 
     uint public immutable deploymentStartTime;
     address public immutable deployer;
@@ -99,7 +102,9 @@ contract LQTYToken is CheckContract, ILQTYToken {
     (
         address _communityIssuanceAddress, 
         address _lqtyStakingAddress,
-        address _lockupFactoryAddress
+        address _lockupFactoryAddress,
+        address _bountyAddress,
+        address _lpRewardsAddress
     ) 
         public 
     {
@@ -122,13 +127,24 @@ contract LQTYToken is CheckContract, ILQTYToken {
         _CACHED_CHAIN_ID = _chainID();
         _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_TYPE_HASH, hashedName, hashedVersion);
         
-        // mint 2/3 to deployer
-        uint deployerEntitlement = _100_MILLION.mul(2).div(3);
-        _mint(msg.sender, deployerEntitlement);
+        // --- Initial LQTY allocations ---
+     
+        uint bountyEntitlement = _1_MILLION.mul(3); // Allocate 3 million for bounties/hackathons
+        _mint(_bountyAddress, bountyEntitlement);
 
-        // mint 1/3 to CommunityIssuance
-        uint communityEntitlement = _100_MILLION.mul(1).div(3);
-        _mint(_communityIssuanceAddress, communityEntitlement);
+        uint depositorsAndFrontEndsEntitlement = _100_MILLION.div(4); // Allocate 25 million to the algorithmic issuance schedule
+        _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
+
+        uint lpRewardsEntitlement = _100_MILLION.div(3).sub(depositorsAndFrontEndsEntitlement);  // Allocate 8.33 million for LP rewards
+        _mint(_lpRewardsAddress, lpRewardsEntitlement);
+        
+        // Allocate the remainder to the deployer: (100 - 3 - 25 - 8.33) million = 63.66 million
+        uint deployerEntitlement = _100_MILLION 
+            .sub(bountyEntitlement)
+            .sub(depositorsAndFrontEndsEntitlement)
+            .sub(lpRewardsEntitlement);
+
+        _mint(msg.sender, deployerEntitlement);
     }
 
     // --- External functions ---

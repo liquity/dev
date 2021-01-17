@@ -45,12 +45,15 @@ contract('SortedTroves', async accounts => {
   let troveManager
   let borrowerOperations
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   let contracts
 
   describe('SortedTroves', () => {
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
       priceFeed = contracts.priceFeedTestnet
       sortedTroves = contracts.sortedTroves

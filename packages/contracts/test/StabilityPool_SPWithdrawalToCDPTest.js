@@ -27,6 +27,9 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
     harriet
   ] = accounts;
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   let priceFeed
   let lusdToken
   let sortedTroves
@@ -50,7 +53,7 @@ contract('StabilityPool - Withdrawal of Stability deposit to Trove - reward calc
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
       contracts.troveManager = await TroveManagerTester.new()
       contracts = await deploymentHelper.deployLUSDToken(contracts)
   

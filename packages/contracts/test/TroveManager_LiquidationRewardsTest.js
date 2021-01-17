@@ -15,6 +15,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     A, B, C, D, E,
     whale, defaulter_1, defaulter_2, defaulter_3, defaulter_4] = accounts;
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   let priceFeed
   let lusdToken
   let sortedTroves
@@ -30,7 +33,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken

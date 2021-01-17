@@ -17,6 +17,8 @@ test/launchSequenceTest/DuringLockupPeriodTest.js */
 contract('Access Control: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
   let priceFeed
   let lusdToken
   let sortedTroves
@@ -31,7 +33,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   
   before(async () => {
     const coreContracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = coreContracts.priceFeed
     lusdToken = coreContracts.lusdToken
@@ -55,7 +57,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
     await th.openTrove_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
 
-    const expectedCISupplyCap = '33333333333333333333333333' // 100mil / 3
+    const expectedCISupplyCap = '25000000000000000000000000' // 25mil
 
     // Check CI has been properly funded
     const bal = await lqtyToken.balanceOf(communityIssuance.address)

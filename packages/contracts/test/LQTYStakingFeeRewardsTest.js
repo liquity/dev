@@ -24,6 +24,9 @@ const ZERO = th.toBN('0')
 
 contract('Fee arithmetic tests', async accounts => {
   let contracts
+
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
   
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 
@@ -34,7 +37,7 @@ contract('Fee arithmetic tests', async accounts => {
   
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
 
     nonPayable = await NonPayable.new() 
     priceFeed = contracts.priceFeedTestnet

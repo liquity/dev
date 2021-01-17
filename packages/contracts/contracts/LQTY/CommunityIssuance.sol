@@ -33,11 +33,13 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
     */
     uint constant public ISSUANCE_FACTOR = 999998681227695000;
 
-    /* The community LQTY supply cap is the starting balance of the Community Issuance contract.
-    Liquity admin should transfer LQTY to this CommunityIssuance contract before activating it.
-
-    Set to 1/3 of total LQTY supply.*/
-    uint constant public LQTYSupplyCap = 33333333333333333333333333; // (1/3) * 100 million
+    /* 
+    * The community LQTY supply cap is the starting balance of the Community Issuance contract.
+    * Liquity admin should transfer LQTY to this CommunityIssuance contract before activating it.
+    * 
+    * Set to 1/4 of total LQTY supply.
+    */
+    uint constant public LQTYSupplyCap = 25e24; // 25 million
 
     ILQTYToken public lqtyToken;
 

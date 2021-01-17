@@ -7,6 +7,10 @@ const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.s
 contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   const [owner, alice, bob] = accounts;
+
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+  
   let contracts
   let lusdToken
   let sortedTroves
@@ -24,7 +28,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
     contracts = await deploymentHelper.deployLUSDToken(contracts)
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
