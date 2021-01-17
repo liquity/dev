@@ -1002,7 +1002,7 @@ class TestHelper {
     }
   }
 
-  static async assertAssert(txPromise, message = undefined) {
+  static async assertAssert(txPromise) {
     try {
       const tx = await txPromise
       assert.isFalse(tx.receipt.status) // when this assert fails, the expected revert didn't occur, i.e. the tx succeeded

@@ -4,12 +4,14 @@ pragma solidity 0.6.11;
 
 import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ICommunityIssuance.sol";
+import "../Dependencies/BaseMath.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/Ownable.sol";
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 
 //TODO: Decide upon and implement LQTY community issuance schedule.
-contract CommunityIssuance is ICommunityIssuance, Ownable {
+contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMath {
     using SafeMath for uint;
 
     // --- Data ---
@@ -43,7 +45,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
     address public stabilityPoolAddress;
 
     uint public totalLQTYIssued;
-    uint public deploymentTime;
+    uint public immutable deploymentTime;
 
     // --- Events ---
 
@@ -65,6 +67,9 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
         onlyOwner 
         override 
     {
+        checkContract(_lqtyTokenAddress);
+        checkContract(_stabilityPoolAddress);
+
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
         stabilityPoolAddress = _stabilityPoolAddress;
 
@@ -81,7 +86,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
     function issueLQTY() external override returns (uint) {
         _requireCallerIsStabilityPool();
 
-        uint latestTotalLQTYIssued = LQTYSupplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
+        uint latestTotalLQTYIssued = LQTYSupplyCap.mul(_getCumulativeIssuanceFraction()).div(DECIMAL_PRECISION);
         uint issuance = latestTotalLQTYIssued.sub(totalLQTYIssued);
 
         totalLQTYIssued = latestTotalLQTYIssued;
@@ -100,8 +105,8 @@ contract CommunityIssuance is ICommunityIssuance, Ownable {
         uint power = LiquityMath._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
 
         //  (1 - f^t)
-        uint cumulativeIssuanceFraction = (uint(1e18).sub(power));
-        assert(cumulativeIssuanceFraction <= 1e18); // must be in range [0,1]
+        uint cumulativeIssuanceFraction = (uint(DECIMAL_PRECISION).sub(power));
+        assert(cumulativeIssuanceFraction <= DECIMAL_PRECISION); // must be in range [0,1]
 
         return cumulativeIssuanceFraction;
     }

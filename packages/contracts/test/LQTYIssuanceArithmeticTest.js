@@ -89,16 +89,23 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   
   ---*/
 
-  it("Cumulative issuance fraction is 0.0000013 after a minute", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
+  // using the result of this to advance time by the desired amount from the deployment time, whether or not some extra time has passed in the meanwhile
+  const getDuration = async (expectedDuration) => {
+    const deploymentTime = (await communityIssuanceTester.deploymentTime()).toNumber()
+    const currentTime = await th.getLatestBlockTimestamp(web3)
+    const duration = Math.max(expectedDuration - (currentTime - deploymentTime), 0)
 
+    return duration
+  }
+
+  it("Cumulative issuance fraction is 0.0000013 after a minute", async () => {
     // console.log(`supply cap: ${await communityIssuanceTester.LQTYSupplyCap()}`)
 
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_MINUTE
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MINUTE)
+
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -117,13 +124,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.000079 after an hour", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_HOUR
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_HOUR)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -142,13 +146,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.0019 after a day", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_DAY
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_DAY)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -167,13 +168,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.013 after a week", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_WEEK
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_WEEK)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -192,13 +190,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.055 after a month", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_MONTH
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -217,13 +212,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.16 after 3 months", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_MONTH * 3
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH * 3)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -242,13 +234,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.29 after 6 months", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_MONTH * 6
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH * 6)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -267,13 +256,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.5 after a year", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -292,13 +278,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.75 after 2 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 2
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 2)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -317,13 +300,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.875 after 3 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 3
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 3)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -342,13 +322,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.9375 after 4 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 4
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 4)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -367,13 +344,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.999 after 10 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 10
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 10)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -392,13 +366,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.999999 after 20 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 20
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 20)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -417,13 +388,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Cumulative issuance fraction is 0.999999999 after 30 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuanceFraction = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.equal(initialIssuanceFraction, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 30)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -446,13 +414,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   //  Error tolerance: 1e-3, i.e. 1/1000th of a token
 
   it("Total LQTY tokens issued is 43.96 after a minute", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_MINUTE
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MINUTE)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -473,14 +438,11 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("total LQTY tokens issued is 2637.44 after an hour", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
 
-    const duration = timeValues.SECONDS_IN_ONE_HOUR
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_HOUR)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -501,14 +463,11 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 63241.04 after a day", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
 
-    const duration = timeValues.SECONDS_IN_ONE_DAY
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_DAY)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -529,14 +488,11 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 440175.62 after a week", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
 
-    const duration = timeValues.SECONDS_IN_ONE_WEEK
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_WEEK)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -557,14 +513,11 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 1845951.27 after a month", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
 
-    const duration = timeValues.SECONDS_IN_ONE_MONTH
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -585,13 +538,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 5236836.69 after 3 months", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_MONTH * 3
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH * 3)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -612,13 +562,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 9650939.63 after 6 months", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_MONTH * 6
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH * 6)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -639,13 +586,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 16666666.67 after a year", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -666,13 +610,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 25000000 after 2 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 2
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 2)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -693,13 +634,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 29166666.666666666666666666 after 3 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 3
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 3)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -720,13 +658,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 31250000 after 4 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 4
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 4)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -747,13 +682,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 33300781.25 after 10 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 10
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 10)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -774,13 +706,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 33333301.54 after 20 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 20
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 20)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -801,13 +730,10 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   it("Total LQTY tokens issued is 33333333.30 after 30 years", async () => {
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
-
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 30)
     // Fast forward time
     await th.fastForwardTime(duration, web3.currentProvider)
 
@@ -837,8 +763,6 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
     // Alice opens trove and deposits to SP
     await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
@@ -846,7 +770,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
 
     const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_YEAR
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 30)
 
     await repeatedlyIssueLQTY(stabilityPool, timeBetweenIssuances, duration)
 
@@ -873,8 +797,6 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
     // Alice opens trove and deposits to SP
     await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
@@ -882,7 +804,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
 
     const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_DAY
-    const duration = timeValues.SECONDS_IN_ONE_YEAR * 30
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 30)
 
     await repeatedlyIssueLQTY(stabilityPool, timeBetweenIssuances, duration)
 
@@ -908,8 +830,6 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
     // Alice opens trove and deposits to SP
     await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
@@ -917,7 +837,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
 
     const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_MINUTE
-    const duration = timeValues.SECONDS_IN_ONE_MONTH
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH)
 
     await repeatedlyIssueLQTY(stabilityPool, timeBetweenIssuances, duration)
 
@@ -944,8 +864,6 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
 
-    // Set the deployment time to now
-    await communityIssuanceTester.setDeploymentTime()
     // Alice opens trove and deposits to SP
     await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: alice })
@@ -953,7 +871,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isTrue(await stabilityPool.isEligibleForLQTY(alice))
 
     const timeBetweenIssuances = timeValues.SECONDS_IN_ONE_MINUTE
-    const duration = timeValues.SECONDS_IN_ONE_YEAR
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR)
 
     await repeatedlyIssueLQTY(stabilityPool, timeBetweenIssuances, duration)
 

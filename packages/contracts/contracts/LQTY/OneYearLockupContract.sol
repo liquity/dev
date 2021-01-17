@@ -2,22 +2,23 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ILQTYToken.sol";
 
-contract OneYearLockupContract {
+contract OneYearLockupContract is CheckContract {
     using SafeMath for uint;
 
     // --- Data ---
 
     uint constant public ONE_YEAR_IN_SECONDS = 31536000; 
 
-    address public deployer;
-    address public beneficiary;
+    address public immutable deployer;
+    address public immutable beneficiary;
 
-    ILQTYToken public lqtyToken;
+    ILQTYToken public immutable lqtyToken;
 
-    uint public initialEntitlement;
+    uint public immutable initialEntitlement;
 
     uint public lockupStartTime;
 
@@ -40,6 +41,8 @@ contract OneYearLockupContract {
     )
         public 
     {
+        checkContract(_lqtyTokenAddress);
+
         deployer = msg.sender;
 
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
@@ -48,7 +51,7 @@ contract OneYearLockupContract {
         initialEntitlement = _initialEntitlement;
     }
 
-    function lockContract() external returns (bool) {
+    function lockContract() external {
         _requireCallerIsLockupDeployer();
         _requireContractIsNotActive();
         _requireLQTYBalanceAtLeastEqualsEntitlement();
@@ -56,7 +59,6 @@ contract OneYearLockupContract {
         active = true; 
         lockupStartTime = block.timestamp;
         emit OYLCLocked(lockupStartTime);
-        return true;
     }
 
     function withdrawLQTY() external {

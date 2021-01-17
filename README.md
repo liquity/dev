@@ -525,7 +525,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `adjustTrove(uint _collWithdrawal, int _debtChange, address _hint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
 
-`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their trove.
+`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their trove. Requires the borrower have a LUSD balance sufficient to repay their trove's debt, excluding gas compensation - i.e. `(debt - 10)` LUSD.
 
 `claimRedeemedCollateral(address _user)`: when a borrower’s trove has been fully redeemed from and closed, this function allows the borrower to claim their ETH collateral surplus that remains in the system.
 
@@ -607,7 +607,17 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`
 
-Standard ERC20 and EIP2612 (permit() ) functionality.
+Standard ERC20 and EIP2612 (`permit()` ) functionality.
+
+**Note**: `permit()` can be front-run, as it does not require that the permitted spender be the `msg.sender`.
+
+This allows flexibility, as it means that _anyone_ can submit a Permit signed by A that allows B to spend a portion of A's tokens.
+
+The end result is the same for the signer A and spender B, but does mean that a `permit` transaction
+could be front-run and revert - which may hamper the execution flow of a contract that is intended to handle the submission of a Permit on-chain.
+
+For more details please see the original proposal EIP-2612:
+https://eips.ethereum.org/EIPS/eip-2612
 
 ## Supplying Hints to trove operations
 
@@ -848,7 +858,7 @@ When a deposit earns LQTY, it is split between the depositor, and the front end 
 
 The overall community issuance schedule for LQTY is sub-linear and monotonic. We currently (provisionally) implement a yearly “halving” schedule, described by the cumulative issuance function:
 
-`supplyCap * 1 - 0.5^t` 
+`supplyCap * (1 - 0.5^t)`
 
 where `t` is year and `supplyCap` is (provisionally) set to represent 33.33 million LQTY tokens.
 

@@ -3,12 +3,12 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/ITroveManager.sol";
-import "./Interfaces/IPriceFeed.sol";
 import "./Interfaces/ISortedTroves.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 
-contract HintHelpers is LiquityBase, Ownable {
+contract HintHelpers is LiquityBase, Ownable, CheckContract {
 
     ISortedTroves public sortedTroves;
     ITroveManager public troveManager;
@@ -27,6 +27,9 @@ contract HintHelpers is LiquityBase, Ownable {
         external
         onlyOwner
     {
+        checkContract(_sortedTrovesAddress);
+        checkContract(_troveManagerAddress);
+
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
         troveManager = ITroveManager(_troveManagerAddress);
 
@@ -74,7 +77,7 @@ contract HintHelpers is LiquityBase, Ownable {
                 uint ETH = troveManager.getTroveColl(currentTroveuser)
                                      .add(troveManager.getPendingETHReward(currentTroveuser));
                 
-                uint newColl = ETH.sub(remainingLUSD.mul(1e18).div(_price));
+                uint newColl = ETH.sub(remainingLUSD.mul(DECIMAL_PRECISION).div(_price));
                 uint newDebt = LUSDDebt.sub(remainingLUSD);
                 
                 uint compositeDebt = _getCompositeDebt(newDebt);
