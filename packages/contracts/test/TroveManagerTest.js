@@ -2562,26 +2562,32 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove('90' + _18_zeros, carol, carol, { from: carol, value: dec(1, 'ether') })
     await borrowerOperations.openTrove('91' + _18_zeros, dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
-    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: alice })
-    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: bob })
-    await lusdToken.transfer(dennis, '90' + _18_zeros, { from: carol })
-
     // This will put Dennis slightly below 110%, and everyone else exactly at 110%
-    const price = '110' + _18_zeros
-    await priceFeed.setPrice(price)
+  
+    await priceFeed.setPrice('110' + _18_zeros)
+    const price = await priceFeed.getPrice()
+    
+    const TCR = (await troveManager.getTCR())
+    assert.isTrue(TCR.lt(toBN('1100000000000000000')))
+    
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintNICR
+    } = await hintHelpers.getRedemptionHints(dec(270, 18), price, 0)
 
-    const TCR = (await troveManager.getTCR()).toString()
-    assert.isTrue(TCR < '1100000000000000000')
-
+    const { 0: upperPartialRedemptionHint, 1: lowerPartialRedemptionHint } = await sortedTroves.findInsertPosition(
+      partialRedemptionHintNICR,
+      carol,
+      carol
+    )
     await assertRevert(troveManager.redeemCollateral(
       '270' + _18_zeros,
-      carol, // try to trick redeemCollateral by passing a hint that doesn't exactly point to the
-      // last Trove with ICR == 110% (which would be Alice's)
-      '0x0000000000000000000000000000000000000000',
-      '0x0000000000000000000000000000000000000000',
+      firstRedemptionHint,
+      upperPartialRedemptionHint,
+      lowerPartialRedemptionHint,
+      partialRedemptionHintNICR,
       0, 
-      0, 
-      { from: dennis }
+      { from: carol }
     ), "TroveManager: Cannot redeem when TCR < MCR")
   });
 
