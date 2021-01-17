@@ -28,13 +28,13 @@ import "../Dependencies/console.sol";
 *
 * 4) CommunityIssuance and LockupContractFactory addresses are set at deployment
 *
-* 5) 3 million tokens are minted to an EOA that holds the bug bounty / hackathons allocation at deployment
+* 5) The bug bounties / hackathons allocation of 3 million tokens is minted at deployment to an EOA
 
-* 6) 25 million tokens are minted to the CommunityIssuance contract at deployment
+* 6) 25 million tokens are minted at deployment to the CommunityIssuance contract 
 *
-* 7) (8 + 1/3) million tokens are minted to an EOA that holds the LP rewards allocation
+* 7) The LP rewards allocation of (8 + 1/3) million tokens is minted at deployent to an EOA
 *
-* 8) (63 + 2/3) million tokens are minted to the deployer at deployment
+* 8) (63 + 2/3) million tokens are minted at deployment to the deployer 
 *
 * 9) Until one year from deployment:
 * -Deployer may only transfer() tokens to LockupContracts that have been deployed via & registered in the 
@@ -82,7 +82,7 @@ contract LQTYToken is CheckContract, ILQTYToken {
 
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
 
-    // uints for use with SafeMath
+    // uint for use with SafeMath
     uint internal _1_MILLION = 1e24;    // 1e6 * 1e18 = 1e24
 
     uint public immutable deploymentStartTime;
