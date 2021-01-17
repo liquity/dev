@@ -105,6 +105,22 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
 
       assert.equal(communityLQTYEntitlement, _25Million)
     })
+
+    it("Mints the correct LQTY amount to the bountyAddress EOA: 3 million", async () => {
+      const bountyAddressBal = await lqtyToken.balanceOf(bountyAddress)
+      // 3 million as 18-digit decimal
+      const _3Million = dec(3, 24)
+
+      assert.equal(bountyAddressBal, _3Million)
+    })
+
+    it("Mints the correct LQTY amount to the lpRewardsAddress EOA: 8.33 million", async () => {
+      const lpRewardsAddressBal = await lqtyToken.balanceOf(lpRewardsAddress)
+      // 3 million as 18-digit decimal
+      const _8pt33Million = "8".concat("3".repeat(24))
+
+      assert.equal(lpRewardsAddressBal, _8pt33Million)
+    })
   })
 
   describe('Community Issuance deployment', async accounts => {
