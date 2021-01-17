@@ -1787,7 +1787,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("adjustTrove(): reverts when system is in Recovery Mode", async () => {
+  it("adjustTrove(): reverts in Recovery Mode when the adjustment would reduce the TCR", async () => {
     await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
 
@@ -1843,7 +1843,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("adjustTrove(): a debtIncrease at TCR = CCR fails to trigger Recovery Mode", async () => {
+  it("adjustTrove(): reverts when change would cause the TCR of the system to fall below the CCR", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
     await borrowerOperations.openTrove(dec(190, 18), alice, alice, { from: alice, value: dec(3, 'ether') })
@@ -1957,7 +1957,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePoolDebtBefore, dec(120, 18))
 
     // Alice adjusts trove. no debt change
-    await borrowerOperations.adjustTrove(0, 0, false, alice, alice, { from: alice, value: dec(1, 'ether') })
+    // await borrowerOperations.adjustTrove(0, 0, false, alice, alice, { from: alice, value: dec(1, 'ether') })
 
     try {
       const txAlice = await borrowerOperations.adjustTrove(0, dec(200, 18), true, bob, bob, { from: bob, value: dec(1, 'ether') })
