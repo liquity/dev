@@ -3510,6 +3510,122 @@ contract('TroveManager', async accounts => {
     assert.isAtMost(th.getDifference(baseRate, expectedbaseRate), 100000)  
   })
 
+  //  --- Redemption values with shortfall ---
+
+  // These tests correspond to scenarios 1), 2) and 3) in this sheet, respectively:
+  // https://docs.google.com/spreadsheets/d/1kN2U5Dq3xfPVhjV_AS4BdGo8sVpCCQBHoEF31V-XqNM/edit?usp=sharing
+
+  it("1) redeemCollateral() {LUSDAmount: 100, totalLUSDSupply: 300, decayedBaseRate: 0, shortfall: 70}. Expected: {redeemed: 5, fee: 0.5, baseRate: 0.01666}", async () => { 
+    await borrowerOperations.openTrove(dec(265, 18), whale, { from: whale, value: dec(1000, 'ether') }) 
+    await borrowerOperations.openTrove(dec(5, 18), B, { from: B, value: dec(1, 'ether') })  // Lowest ICR
+    await borrowerOperations.openTrove(0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
+
+    // Whale transfers 100 LUSD to A 
+    await lusdToken.transfer(A, dec(100, 18), {from: whale})
+
+    // Check total supply is 300
+    const totalLUSDSupply = await troveManager.getEntireSystemDebt()
+    assert.isTrue(totalLUSDSupply.eq(toBN(dec(300, 18))));
+
+    // A attempts to redeem 100, with the wrong hint for the partial redemption.  He should only be able to redeem
+    // 5 LUSD from B, and nothing from whale, leaving a shortfall of 70 LUSD.
+    const redemptionTx = await troveManager.redeemCollateral(
+      dec(100, 18),
+      B,
+      ZERO_ADDRESS,
+      0,
+      0,
+      { from: A })
+    
+    const [, totalLUSDRedeemed, , LUSDFee] = th.getEmittedRedemptionValues(redemptionTx)
+
+    const expectedTotalLUSDRedeemed = dec(5, 18)  // 5 LUSD
+    const expectedLUSDFee = dec(5, 17)  // 0.5 LUSD
+
+    assert.isAtMost(th.getDifference(totalLUSDRedeemed,expectedTotalLUSDRedeemed), 100000)  // error tolerance 1e-13
+    assert.isAtMost(th.getDifference(LUSDFee,expectedLUSDFee), 100000)
+    
+    const expectedbaseRate = '1666666666666666' // 0.0166666...
+    const baseRate = await troveManager.baseRate()
+
+    assert.isAtMost(th.getDifference(baseRate, expectedbaseRate), 100000)  
+  })
+
+  it("2) redeemCollateral() {LUSDAmount: 100, totalLUSDSupply: 300, decayedBaseRate: 0, shortfall: 74}. Expected: {redeemed: 5, fee: 0.0866, baseRate: 0.0033}", async () => { 
+    await borrowerOperations.openTrove(dec(269, 18), whale, { from: whale, value: dec(1000, 'ether') }) 
+    await borrowerOperations.openTrove(dec(1, 18), B, { from: B, value: dec(1, 'ether') })  // Lowest ICR
+    await borrowerOperations.openTrove(0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
+
+    // Whale transfers 100 LUSD to A 
+    await lusdToken.transfer(A, dec(100, 18), {from: whale})
+
+    // Check total supply is 300
+    const totalLUSDSupply = await troveManager.getEntireSystemDebt()
+    assert.isTrue(totalLUSDSupply.eq(toBN(dec(300, 18))));
+
+    // A attempts to redeem 100, with the wrong hint for the partial redemption.  He should only be able to redeem
+    // 1 LUSD from B, and nothing from whale, leaving a shortfall of 74 LUSD.
+    const redemptionTx = await troveManager.redeemCollateral(
+      dec(100, 18),
+      B,
+      ZERO_ADDRESS,
+      0,
+      0,
+      { from: A })
+    
+    const [, totalLUSDRedeemed, , LUSDFee] = th.getEmittedRedemptionValues(redemptionTx)
+
+    const expectedTotalLUSDRedeemed = dec(1, 18)  // 1 LUSD
+    const expectedLUSDFee = '86666666666666666'  // 0.08666... LUSD
+
+    assert.isAtMost(th.getDifference(totalLUSDRedeemed,expectedTotalLUSDRedeemed), 100000)  // error tolerance 1e-13
+    assert.isAtMost(th.getDifference(LUSDFee,expectedLUSDFee), 100000)
+    
+    const expectedbaseRate = '3333333333333333' // 0.0033
+    const baseRate = await troveManager.baseRate()
+
+    assert.isAtMost(th.getDifference(baseRate, expectedbaseRate), 100000)  
+  })
+
+  it("3) redeemCollateral() {LUSDAmount: 100, totalLUSDSupply: 300, decayedBaseRate: 0.99, shortfall 0.7}. Expected: {redeemed: 0.05, fee: 98.3235500, baseRate: 0.990166}", async () => { 
+    await borrowerOperations.openTrove(dec(26995, 16), whale, { from: whale, value: dec(1000, 'ether') }) 
+    await borrowerOperations.openTrove(dec(5, 16), B, { from: B, value: dec(1, 17) })  // Lowest ICR
+    await borrowerOperations.openTrove(0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
+
+    // Whale transfers 100 LUSD to A 
+    await lusdToken.transfer(A, dec(100, 18), {from: whale})
+
+    // Artificially set baseRate to 0.99
+    await troveManager.setBaseRate((dec(99, 16)))
+
+    // Check total supply is 300
+    const totalLUSDSupply = await troveManager.getEntireSystemDebt()
+    assert.isTrue(totalLUSDSupply.eq(toBN(dec(300, 18))));
+
+    // A attempts to redeem 100, with the wrong hint for the partial redemption.  He should only be able to redeem
+    // 0.05 LUSD from B, and nothing from whale, leaving a shortfall of 0.7 LUSD.
+    const redemptionTx = await troveManager.redeemCollateral(
+      dec(100, 18),
+      B,
+      ZERO_ADDRESS,
+      0,
+      0,
+      { from: A })
+    
+    const [, totalLUSDRedeemed, , LUSDFee] = th.getEmittedRedemptionValues(redemptionTx)
+
+    const expectedTotalLUSDRedeemed = dec(5, 16)  // 1 LUSD
+    const expectedLUSDFee = '98323550000000000000'  // 98.32 LUSD
+
+    assert.isAtMost(th.getDifference(totalLUSDRedeemed,expectedTotalLUSDRedeemed), 100000)  // error tolerance 1e-13
+    assert.isAtMost(th.getDifference(LUSDFee,expectedLUSDFee), 100000)
+    
+    const expectedbaseRate = '990166666666666666' // 0.9901
+    const baseRate = await troveManager.baseRate()
+
+    assert.isAtMost(th.getDifference(baseRate, expectedbaseRate), 100000)  
+  })
+
   // ---  Pending reward getters ---
 
   it("getPendingLUSDDebtReward(): Returns 0 if there is no pending LUSDDebt reward", async () => {
