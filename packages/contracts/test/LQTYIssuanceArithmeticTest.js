@@ -414,347 +414,347 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   // --- Token issuance for yearly halving ---
 
-  //  Error tolerance: 1e-3, i.e. 1/1000th of a token
-
-  // it("Total LQTY tokens issued is 43.96 after a minute", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_MINUTE)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '43959076834188000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("total LQTY tokens issued is 2637.44 after an hour", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_HOUR)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '2637442002203140000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 63241.04 after a day", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_DAY)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '63241044948055500000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 440175.62 after a week", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_WEEK)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '440175626020948000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 1845951.27 after a month", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '1845951269598890000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 5236836.69 after 3 months", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH * 3)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '5236836691734560000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000100000000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 9650939.63 after 6 months", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH * 6)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '9650939627392200000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 16666666.67 after a year", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '16666666666666666666666666'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 25000000 after 2 years", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 2)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '25000000000000000000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 29166666.666666666666666666 after 3 years", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 3)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '29166666666666666666666666'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 31250000 after 4 years", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 4)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '31250000000000000000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 33300781.25 after 10 years", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 10)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '33300781250000000000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 33333301.54 after 20 years", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 20)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '33333301544189400000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
-
-  // it("Total LQTY tokens issued is 33333333.30 after 30 years", async () => {
-  //   const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
-  //   assert.equal(initialIssuance, 0)
-
-  //   const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 30)
-  //   // Fast forward time
-  //   await th.fastForwardTime(duration, web3.currentProvider)
-
-  //   // Issue LQTY
-  //   await communityIssuanceTester.unprotectedIssueLQTY()
-  //   const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-  //   const expectedTotalLQTYIssued = '33333333302289200000000000'
-
-  //   const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
-  //   // console.log(
-  //   //   `time since deployment: ${duration}, 
-  //   //    totalLQTYIssued: ${totalLQTYIssued},  
-  //   //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
-  //   //    abs. error: ${absError}`
-  //   // )
-
-  //   assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
-  // })
+   // Error tolerance: 1e-3, i.e. 1/1000th of a token
+
+  it("Total LQTY tokens issued is 32.97 after a minute", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MINUTE)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '32969307625641000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 1978.08 after an hour", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_HOUR)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '1978081501652350000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 47430.78 after a day", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_DAY)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '47430783711041600000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 330131.72 after a week", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_WEEK)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '330131719515711000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 1384463.45 after a month", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '1384463452199160000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 3927627.52 after 3 months", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH * 3)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '3927627518800920000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 7238204.72 after 6 months", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_MONTH * 6)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '7238204720544150000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 12500000 after a year", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '12500000000000000000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 18750000 after 2 years", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 2)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '18750000000000000000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 21875000 after 3 years", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 3)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '21875000000000000000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 23437500 after 4 years", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 4)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '23437500000000000000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 24975585.98 after 10 years", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 10)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '24975585937500000000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 24999976.16 after 20 years", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 20)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '24999976158142100000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
+
+  it("Total LQTY tokens issued is 24999999.98 after 30 years", async () => {
+    const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
+    assert.equal(initialIssuance, 0)
+
+    const duration = await getDuration(timeValues.SECONDS_IN_ONE_YEAR * 30)
+    // Fast forward time
+    await th.fastForwardTime(duration, web3.currentProvider)
+
+    // Issue LQTY
+    await communityIssuanceTester.unprotectedIssueLQTY()
+    const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
+    const expectedTotalLQTYIssued = '24999999976716900000000000'
+
+    const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
+    // console.log(
+    //   `time since deployment: ${duration}, 
+    //    totalLQTYIssued: ${totalLQTYIssued},  
+    //    expectedTotalLQTYIssued: ${expectedTotalLQTYIssued},
+    //    abs. error: ${absError}`
+    // )
+
+    assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
+  })
 
   /* ---  
   Accumulated issuance error: how many tokens are lost over a given period, for a given issuance frequency? 
@@ -762,6 +762,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   Slow tests are skipped.
   --- */
 
+  // TODO: Convert to 25mil issuance schedule
   it.skip("Frequent token issuance: issuance event every year, for 30 years", async () => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
@@ -796,6 +797,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   Abs. error: -47499999999 */
 
 
+    // TODO: Convert to 25mil issuance schedule
   it.skip("Frequent token issuance: issuance event every day, for 30 years", async () => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
@@ -829,6 +831,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   Actual final balance: 33333333302297188866666666,
   Abs. error: -7988866666666  */
 
+  // TODO: Convert to 25mil issuance schedule
   it.skip("Frequent token issuance: issuance event every minute, for 1 month", async () => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
@@ -863,6 +866,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   Abs. error: 34459800000001
   */
 
+  // TODO: Convert to 25mil issuance schedule
   it.skip("Frequent token issuance: issuance event every minute, for 1 year", async () => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })
