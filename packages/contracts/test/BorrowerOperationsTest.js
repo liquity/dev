@@ -1960,7 +1960,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePoolCollAfter, activePoolCollBefore)
   })
 
-  it.only("adjustTrove(): With 0 debt change, doesnt change borrower's debt or ActivePool debt", async () => {
+  it("adjustTrove(): With 0 debt change, doesnt change borrower's debt or ActivePool debt", async () => {
     await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(10, 'ether') })
