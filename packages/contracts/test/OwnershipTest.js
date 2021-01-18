@@ -157,7 +157,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   })
 
   describe('LockupContractFactory', async accounts => {
-    it.only("setLQTYAddress(): reverts when called by non-owner, with wrong address, or twice", async () => {
+    it("setLQTYAddress(): reverts when called by non-owner, with wrong address, or twice", async () => {
       await th.assertRevert(lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: alice }))
 
       const params = [lqtyToken.address]
