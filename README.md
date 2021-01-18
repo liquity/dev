@@ -259,15 +259,13 @@ In the first year after launch:
 
 - All team members and partners are unable to access their locked up LQTY tokens
 
-- The Liquity admin address may transfer tokens **only to verified one-year lockup contracts**
+- The Liquity admin address may transfer tokens **only to verified lockup contracts with an unlock date at least one year after system deployment**
 
-Thus only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Pool depositors via the `CommunityIssuance` contract.
+Also, separate LQTY allocations are made at deployent to EOAs that hold the LQTY reserved for LP rewards and for bug bounties/hackathons. Aside from these allocations, the only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Pool depositors via the `CommunityIssuance` contract.
 
 ### Lockup Implementation and admin transfer restriction
 
-A `LockupContractFactory` is used to deploy `OneYearLockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Liquity admin address is to a valid `OneYearLockupContract` that is registered in and was deployed through the `LockupContractFactory`.
-
-After the first year, anyone may deploy `CustomDurationLockupContracts` via the factory.
+A `LockupContractFactory` is used to deploy `LockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Liquity admin address is to a valid `LockupContract` that is registered in and was deployed through the `LockupContractFactory`.
 
 ### Launch sequence and vesting process
 
@@ -277,29 +275,28 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 3. Liquity admin deploys `LQTYStaking` 
 4. Liquity admin deploys `LQTYToken`, which upon deployment:
 - Stores the `CommunityIssuance` and `LockupContractFactory` addresses
-- Mints LQTY tokens to `CommunityIssuance` and the Liquity admin address
+- Mints LQTY tokens to `CommunityIssuance`, the Liquity admin address, the LP rewards address, and the bug bounty address
 5. Liquity admin sets `LQTYToken` address in `LockupContractFactory`, `CommunityIssuance`, and `LQTYStaking`
 
 #### Deploy and fund Lockup Contracts
-6. Liquity admin tells `LockupContractFactory` to deploy a `OneYearLockupContract` for each (beneficiary, entitlement) pair, including one for the Liquity admin address
-7. Liquity admin transfers LQTY to each `OneYearLockupContract`, equal to its beneficiary’s entitlement
-8. Liquity admin calls `lockOneYearContracts()` on the Factory, telling it to lock and activate all the `OneYearLockupContracts` that Liquity admin deployed
+6. Liquity admin tells `LockupContractFactory` to deploy a `LockupContract` for each beneficiary, with an `unlockTime` set to exactly one year after system deployment
+7. Liquity admin transfers LQTY to each `LockupContract`, according to their entitlement
 
 #### Deploy Liquity Core
-9. Liquity admin deploys the Liquity core system
-11. Liquity admin connects Liquity core system internally (with setters)
-12. Liquity admin connects `LQTYStaking` to Liquity core contracts and `LQTYToken`
+8. Liquity admin deploys the Liquity core system
+9. Liquity admin connects Liquity core system internally (with setters)
+10. Liquity admin connects `LQTYStaking` to Liquity core contracts and `LQTYToken`
 12. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `LQTYToken`
 
 #### During one year lockup period
-- Liquity admin periodically transfers newly vested tokens to team & partners’ `OneYearLockupContracts`, as per their vesting schedules
-- Liquity admin may only transfer LQTY to `OneYearLockupContracts`
-- Anyone may deploy new `OneYearLockupContracts` via the Factory
+- Liquity admin periodically transfers newly vested tokens to team & partners’ `LockupContracts`, as per their vesting schedules
+- Liquity admin may only transfer LQTY to `LockupContracts`
+- Anyone may deploy new `LockupContracts` via the Factory, setting any `unlockTime` that is >= 1 year from system deployment
 
-#### Upon end of lockup period
-- All `OneYearLockupContracts` automatically unlock. Beneficiaries may withdraw their entire unlocked entitlements
+#### Upon end of one year lockup period
+- All beneficiaries may withdraw their entire entitlements
 - Liquity admin address restriction on LQTY transfers is automatically lifted, and Liquity admin may now transfer LQTY to any address
-- Anyone may deploy new `OneYearLockupContracts` and `CustomDurationLockupContracts` via the Factory
+- Anyone may deploy new `LockupContracts` via the Factory, setting any `unlockTime` in the future
 
 #### Post-lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
@@ -307,6 +304,8 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 _NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `LQTYToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
 
 _The current code does not utilize a multi-sig. It implements the launch architecture outlined above._
+
+_Additionally, a LP staking contract will receive the initial LP staking reward allowance, rather than an EOA. It will be used to hold and issue LQTY to users who stake LP tokens that correspond to certain pools on DEXs.
 
 ## Core System Architecture
 
@@ -345,6 +344,8 @@ Along with `StabilityPool.sol`, these contracts hold Ether and/or tokens for the
 `DefaultPool.sol` - holds the total Ether balance and records the total stablecoin debt of the liquidated troves that are pending redistribution to active troves. If a trove has pending ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
 
 `CollSurplusPool.sol` - holds the ETH surplus from troves that have been fully redeemed from. Sends the surplus back to the owning borrower, when told to do so by `BorrowerOperations.sol`.
+
+`GasPool.sol` - holds the total LUSD liquidation reserves. LUSD is moved into the `GasPool` when a trove is opened, and moved out when a trove is liquidated or closed.
 
 ### Contract Interfaces
 
