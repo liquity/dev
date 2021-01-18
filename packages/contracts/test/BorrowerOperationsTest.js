@@ -1960,7 +1960,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePoolCollAfter, activePoolCollBefore)
   })
 
-  it("adjustTrove(): With 0 debt change, doesnt change borrower's debt or ActivePool debt", async () => {
+  it.only("adjustTrove(): With 0 debt change, doesnt change borrower's debt or ActivePool debt", async () => {
     await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(10, 'ether') })
@@ -1972,17 +1972,9 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(activePoolDebtBefore, dec(120, 18))
 
     // Alice adjusts trove. no debt change
-    // await borrowerOperations.adjustTrove(0, 0, false, alice, alice, { from: alice, value: dec(1, 'ether') })
-
-    try {
-      const txAlice = await borrowerOperations.adjustTrove(0, dec(200, 18), true, bob, bob, { from: bob, value: dec(1, 'ether') })
-      assert.isFalse(txAlice.receipt.status)
-    } catch (err) {
-      assert.include(err.message, "revert")
-    }
+    await borrowerOperations.adjustTrove(0, 0, false, alice, alice, { from: alice, value: dec(1, 'ether') })
 
     const debtAfter = ((await troveManager.Troves(alice))[0]).toString()
-    // const collAfter = ((await troveManager.Troves(alice))[1]).toString()
     const activePoolDebtAfter = (await activePool.getLUSDDebt()).toString()
 
     assert.equal(debtAfter, debtBefore)
