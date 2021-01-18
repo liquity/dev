@@ -2569,26 +2569,8 @@ contract('TroveManager', async accounts => {
     
     const TCR = (await troveManager.getTCR())
     assert.isTrue(TCR.lt(toBN('1100000000000000000')))
-    
-    const {
-      firstRedemptionHint,
-      partialRedemptionHintNICR
-    } = await hintHelpers.getRedemptionHints(dec(270, 18), price, 0)
 
-    const { 0: upperPartialRedemptionHint, 1: lowerPartialRedemptionHint } = await sortedTroves.findInsertPosition(
-      partialRedemptionHintNICR,
-      carol,
-      carol
-    )
-    await assertRevert(troveManager.redeemCollateral(
-      '270' + _18_zeros,
-      firstRedemptionHint,
-      upperPartialRedemptionHint,
-      lowerPartialRedemptionHint,
-      partialRedemptionHintNICR,
-      0, 
-      { from: carol }
-    ), "TroveManager: Cannot redeem when TCR < MCR")
+    await assertRevert(th.redeemCollateral(carol, contracts, dec(270, 18), { gasPrice: 0 }), "TroveManager: Cannot redeem when TCR < MCR")
   });
 
   it("redeemCollateral(): reverts when argument _amount is 0", async () => {
