@@ -25,6 +25,7 @@ import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { StakingManager } from "./components/StakingManager";
+import { getConfig } from "./config";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
@@ -43,6 +44,12 @@ if (process.env.REACT_APP_DEMO_MODE === "true") {
   Object.assign(window, { ethereum });
 }
 
+// Start pre-fetching the config
+getConfig().then(config => {
+  // console.log("Frontend config:");
+  // console.log(config);
+});
+
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
     <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
@@ -56,8 +63,15 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, liquity, contracts } = useLiquity();
-  const store = new BlockPolledLiquityStore(provider, account, liquity);
+  const {
+    config: { frontendTag },
+    account,
+    provider,
+    liquity,
+    contracts
+  } = useLiquity();
+
+  const store = new BlockPolledLiquityStore(provider, account, liquity, frontendTag);
 
   // For console tinkering ;-)
   Object.assign(window, {

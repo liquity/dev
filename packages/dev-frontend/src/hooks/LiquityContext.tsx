@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
 import { getNetwork } from "@ethersproject/networks";
 import { Web3Provider } from "@ethersproject/providers";
@@ -13,7 +13,10 @@ import {
   DEV_CHAIN_ID
 } from "@liquity/lib-ethers";
 
+import { LiquityFrontendConfig, getConfig } from "../config";
+
 type LiquityContextValue = {
+  config: LiquityFrontendConfig;
   account: string;
   provider: Provider;
   contracts: LiquityContracts;
@@ -29,9 +32,10 @@ type LiquityProviderProps = {
   unsupportedNetworkFallback?: (chainId: number) => React.ReactNode;
 };
 
-const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
-const wsParams = (network: string) =>
-  [`wss://${network}.infura.io/ws/v3/${infuraApiKey}`, network] as const;
+const wsParams = (network: string, infuraApiKey: string): [string, string] => [
+  `wss://${network}.infura.io/ws/v3/${infuraApiKey}`,
+  network
+];
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
@@ -39,9 +43,14 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   unsupportedNetworkFallback
 }) => {
   const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
+  const [config, setConfig] = useState<LiquityFrontendConfig>();
 
   useEffect(() => {
-    if (provider && chainId) {
+    getConfig().then(setConfig);
+  }, []);
+
+  useEffect(() => {
+    if (config && provider && chainId) {
       if (isBatchedProvider(provider)) {
         provider.chainId = chainId;
       }
@@ -49,8 +58,8 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
       if (isWebSocketAugmentedProvider(provider)) {
         const network = getNetwork(chainId);
 
-        if (network.name && network.name !== "unknown") {
-          provider.openWebSocket(...wsParams(network.name));
+        if (network.name && network.name !== "unknown" && config.infuraApiKey) {
+          provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
         } else if (chainId === DEV_CHAIN_ID) {
           provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
         }
@@ -60,9 +69,9 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         };
       }
     }
-  }, [provider, chainId]);
+  }, [config, provider, chainId]);
 
-  if (!provider || !account || !chainId) {
+  if (!config || !provider || !account || !chainId) {
     return <>{loader}</>;
   }
 
@@ -80,6 +89,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   return (
     <LiquityContext.Provider
       value={{
+        config,
         account,
         provider,
         contracts,
