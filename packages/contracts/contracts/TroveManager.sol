@@ -905,20 +905,20 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         external
         override
     {
-        uint activeDebt = activePool.getLUSDDebt();
-        uint defaultedDebt = defaultPool.getLUSDDebt();
-
-        RedemptionTotals memory T;
-
+        _requireTCRoverMCR();
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);
 
+        uint activeDebt = activePool.getLUSDDebt();
+        uint defaultedDebt = defaultPool.getLUSDDebt();        
         // Confirm redeemer's balance is less than total systemic debt
         assert(lusdToken.balanceOf(msg.sender) <= (activeDebt.add(defaultedDebt)));
 
         uint remainingLUSD = _LUSDamount;
         uint price = priceFeed.getPrice();
+        
         address currentBorrower;
+        RedemptionTotals memory T;
 
         if (_isValidFirstRedemptionHint(_firstRedemptionHint, price)) {
             currentBorrower = _firstRedemptionHint;
@@ -1383,6 +1383,10 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     function _requireAmountGreaterThanZero(uint _amount) internal pure {
         require(_amount > 0, "TroveManager: Amount must be greater than zero");
+    }
+
+    function _requireTCRoverMCR() internal view {
+        require(getTCR() >= MCR, "TroveManager: Cannot redeem when TCR < MCR");
     }
 
     // --- Trove property getters ---
