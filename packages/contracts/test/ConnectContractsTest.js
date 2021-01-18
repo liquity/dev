@@ -331,7 +331,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct LQTYToken address in LockupContractFactory', async () => {
     const lqtyTokenAddress = lqtyToken.address
 
-    const recordedLQTYTokenAddress = await lockupContractFactory.lqtyToken()
+    const recordedLQTYTokenAddress = await lockupContractFactory.lqtyTokenAddress()
     assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
   })
 
