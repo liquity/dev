@@ -25,7 +25,7 @@
       - [Deploy and fund Lockup Contracts](#deploy-and-fund-lockup-contracts)
       - [Deploy Liquity Core](#deploy-liquity-core)
       - [During one year lockup period](#during-one-year-lockup-period)
-      - [Upon end of lockup period](#upon-end-of-lockup-period)
+      - [Upon end of one year lockup period](#upon-end-of-one-year-lockup-period)
       - [Post-lockup period](#post-lockup-period)
   - [Core System Architecture](#core-system-architecture)
     - [Core Smart Contracts](#core-smart-contracts)
@@ -50,7 +50,7 @@
     - [Stability Pool Functions - `StabilityPool.sol`](#stability-pool-functions---stabilitypoolsol)
     - [LQTY Staking Functions  `LQTYStaking.sol`](#lqty-staking-functions--lqtystakingsol)
     - [Lockup Contract Factory `LockupContractFactory.sol`](#lockup-contract-factory-lockupcontractfactorysol)
-    - [Lockup contracts - `OneYearLockupContract.sol` and `CustomDurationLockupContract.sol`](#lockup-contracts---oneyearlockupcontractsol-and-customdurationlockupcontractsol)
+    - [Lockup contracts - `LockupContract.sol`](#lockup-contract---lockupcontractsol)
     - [LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`](#lusd-token-lusdtokensol-and-lqty-token-lqtytokensol)
   - [Supplying Hints to trove operations](#supplying-hints-to-trove-operations)
     - [Hints for `redeemCollateral`](#hints-for-redeemcollateral)
@@ -218,7 +218,7 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 - `packages/lib-subgraph/` - [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state
 - `packages/providers/` - Subclassed Ethers providers used by the frontend
 - `packages/subgraph/` - [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history
-- `packages/contracts/` - The backend development folder, contains the Buidler project, contracts and tests
+- `packages/contracts/` - The backend development folder, contains the Hardhat project, contracts and tests
 - `packages/contracts/contracts/` - The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
 - `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
@@ -227,13 +227,11 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 - `packages/contracts/utils/` - external Buidler and node scripts - deployment helpers, gas calculators, etc
 - `packages/contracts/mathProofs/` - core mathematical proofs of Liquity properties, and a derivation of the scalable Stability Pool staking formula
 
-Backend development is done in the Buidler framework, and allows Liquity to be deployed on the Buidler EVM network for fast compilation and test execution.
+Backend development is done in the Hardhat framework, and allows Liquity to be deployed on the Buidler EVM network for fast compilation and test execution.
 
 ### Branches
 
-As of 28/11/2020, the current working branch is `main`.  
-
-`master` is somewhat out of date, as our CI pipeline automatically redeploys contracts to testnet from master branch, and we want users to have a chance to engage with the existing deployments.
+As of 18/01/2021, the current working branch is `main`. `master` is out of date.
 
 ## LQTY Token Architecture
 
@@ -247,7 +245,7 @@ The LQTY contracts consist of:
 
 `LQTYStaking.sol` - the staking contract, containing stake and unstake functionality for LQTY holders. This contract receives ETH fees from redemptions, and LUSD fees from new debt issuance.
 
-`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability depositors as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the CommunityIssuance automatically receives a supply of LQTY - the “community issuance” supply, provisionally set to one third of the total supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
+`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability depositors as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the CommunityIssuance automatically receives a supply of LQTY - the “community issuance” supply, provisionally set to one quarter of the total supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
 
 `LQTYToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
 
@@ -639,19 +637,11 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Lockup Contract Factory `LockupContractFactory.sol`
 
-`deployOneYearLockupContract(address beneficiary, uint initialEntitlement)`; Deploys a `OneYearLockupContract`, and sets the beneficiary’s address, and their initial LQTY entitlement, i.e. the minimum LQTY balance the lockup contract must have before it can be locked.
+`deployLockupContract(address _beneficiary, uint _unlockTime)`; Deploys a `LockupContract`, and sets the beneficiary’s address, and the `_unlockTime` - the instant in time at which the LQTY can be withrawn by the beneficiary.
 
-`deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration)`: Deploys a `CustomDurationLockupContract`, and sets the beneficiary’s address, their initial LQTY entitlement, and the lockup duration.
-    
-`lockOneYearContracts(address[] calldata addresses)`: locks the lockup contracts deployed by the caller through the factory, at the given `addresses`. 
+### Lockup contract - `LockupContract.sol`
 
-`lockCustomDurationContracts(address[] calldata addresses)`: locks the lockup contracts deployed by the caller through the factory, at the given `addresses`.
-
-### Lockup contracts - `OneYearLockupContract.sol` and `CustomDurationLockupContract.sol`
-
-`lockContract()`: Locks the contract when called by the deployer. It’s LQTY tokens may not be withdrawn until the lockup duration has passed.
-
-`withdrawLQTY()`: When the lockup duration has passed and the caller is the beneficiary, it transfers their LQTY to them and deactivates the lockup contract.
+`withdrawLQTY()`: When the current time is later than the `unlockTime` and the caller is the beneficiary, it transfers their LQTY to them.
 
 ### LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`
 
