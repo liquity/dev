@@ -523,7 +523,7 @@ Several public and external functions have modifiers such as `requireCallerIsTro
 
 ## Deployment to a Development Blockchain
 
-The Buidler migrations script and deployment helpers in `utils/deploymentHelpers.js` deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
+The Hardhat migrations script and deployment helpers in `utils/deploymentHelpers.js` deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
 
 The project is deployed on the Ropsten testnet.
 
