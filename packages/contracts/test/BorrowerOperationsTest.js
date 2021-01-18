@@ -29,6 +29,9 @@ contract('BorrowerOperations', async accounts => {
     A, B, C, D, E,
     // defaulter_1, defaulter_2,
     frontEnd_1, frontEnd_2, frontEnd_3] = accounts;
+    
+    const bountyAddress = accounts[998]
+    const lpRewardsAddress = accounts[999]
 
   // const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
 
@@ -53,7 +56,7 @@ contract('BorrowerOperations', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
     contracts = await deploymentHelper.deployLUSDToken(contracts)
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken

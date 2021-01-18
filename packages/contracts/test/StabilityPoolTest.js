@@ -26,6 +26,9 @@ contract('StabilityPool', async accounts => {
     frontEnd_1, frontEnd_2, frontEnd_3,
   ] = accounts;
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
   let contracts
   let priceFeed
@@ -49,7 +52,7 @@ contract('StabilityPool', async accounts => {
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
       priceFeed = contracts.priceFeedTestnet
       lusdToken = contracts.lusdToken

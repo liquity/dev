@@ -54,15 +54,15 @@ class DeploymentHelper {
     }
   }
 
-  static async deployLQTYContracts() {
+  static async deployLQTYContracts(bountyAddress, lpRewardsAddress) {
     const cmdLineArgs = process.argv
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
 
     if (frameworkPath.includes("hardhat")) {
-      return this.deployLQTYContractsHardhat()
+      return this.deployLQTYContractsHardhat(bountyAddress, lpRewardsAddress)
     } else if (frameworkPath.includes("truffle")) {
-      return this.deployLQTYContractsTruffle()
+      return this.deployLQTYContractsTruffle(bountyAddress, lpRewardsAddress)
     }
   }
 
@@ -139,7 +139,7 @@ class DeploymentHelper {
     return testerContracts
   }
 
-  static async deployLQTYContractsHardhat() {
+  static async deployLQTYContractsHardhat(bountyAddress, lpRewardsAddress) {
     const lqtyStaking = await LQTYStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
@@ -152,7 +152,9 @@ class DeploymentHelper {
     const lqtyToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
-      lockupContractFactory.address
+      lockupContractFactory.address,
+      bountyAddress,
+      lpRewardsAddress
     )
     LQTYToken.setAsDeployed(lqtyToken)
 
@@ -165,7 +167,7 @@ class DeploymentHelper {
     return LQTYContracts
   }
 
-  static async deployLQTYTesterContractsHardhat() {
+  static async deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress) {
     const lqtyStaking = await LQTYStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuanceTester.new()
@@ -178,7 +180,9 @@ class DeploymentHelper {
     const lqtyToken = await LQTYTokenTester.new(
       communityIssuance.address, 
       lqtyStaking.address,
-      lockupContractFactory.address
+      lockupContractFactory.address,
+      bountyAddress,
+      lpRewardsAddress
     )
     LQTYTokenTester.setAsDeployed(lqtyToken)
 
@@ -225,7 +229,7 @@ class DeploymentHelper {
     return coreContracts
   }
 
-  static async deployLQTYContractsTruffle() {
+  static async deployLQTYContractsTruffle(bountyAddress, lpRewardsAddress) {
     const lqtyStaking = await lqtyStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
@@ -235,7 +239,9 @@ class DeploymentHelper {
     const lqtyToken = await LQTYToken.new(
       communityIssuance.address, 
       lqtyStaking.address,
-      lockupContractFactory.address
+      lockupContractFactory.address,
+      bountyAddress,
+      lpRewardsAddress
     )
 
     const LQTYContracts = {
@@ -347,7 +353,7 @@ class DeploymentHelper {
       coreContracts.borrowerOperations.address,
       coreContracts.activePool.address
     )
-   
+  
     await LQTYContracts.communityIssuance.setAddresses(
       LQTYContracts.lqtyToken.address,
       coreContracts.stabilityPool.address

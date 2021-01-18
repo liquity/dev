@@ -16,6 +16,9 @@ contract('After the initial lockup period has passed', async accounts => {
     investor_3,
     A, B, C, D, E, F, G, H, I, J, K] = accounts;
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   const SECONDS_IN_ONE_DAY = timeValues.SECONDS_IN_ONE_DAY
   const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
   const SECONDS_IN_ONE_YEAR = timeValues.SECONDS_IN_ONE_YEAR
@@ -55,7 +58,7 @@ contract('After the initial lockup period has passed', async accounts => {
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
+    LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
     coreContracts = await deploymentHelper.deployLiquityCore()
 
     lqtyStaking = LQTYContracts.lqtyStaking

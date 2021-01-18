@@ -25,6 +25,9 @@ const assertRevert = th.assertRevert
 contract('LQTY Token', async accounts => {
   const [owner, A, B, C, D] = accounts
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   // Create the approval tx data, for use in permit()
   const approve = {
     owner: A,
@@ -107,7 +110,7 @@ contract('LQTY Token', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat()
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
 
     lqtyStaking = LQTYContracts.lqtyStaking
     lqtyTokenTester = LQTYContracts.lqtyToken
@@ -134,11 +137,10 @@ contract('LQTY Token', async accounts => {
     assert.equal(C_Balance, dec(50, 18))
   })
 
-  it('totalSupply(): gets the total supply', async () => {
+  it.only('totalSupply(): gets the total supply', async () => {
     const total = (await lqtyTokenTester.totalSupply()).toString()
-    /* Total supply should be 100 million, with a rounding error of 1e-18, due to splitting the initial supply
-    between CommunityIssuance and the Liquity admin address */
-    assert.equal(getDifference(total, dec(100, 24)), 1)
+   
+    assert.equal(total, dec(100, 24))
   })
 
   it("name(): returns the token's name", async () => {

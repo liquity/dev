@@ -10,12 +10,16 @@ let latestRandomSeed = 31337
 contract('TroveManager', async accounts => {
  
   const [owner] = accounts;
-    let sortedTroves
-    let troveManager
-    let borrowerOperations
-    let hintHelpers
-  
-    let contracts
+
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
+  let sortedTroves
+  let troveManager
+  let borrowerOperations
+  let hintHelpers
+
+  let contracts
 
   let numAccounts;
 
@@ -65,7 +69,7 @@ contract('TroveManager', async accounts => {
 
   before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager

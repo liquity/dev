@@ -14,6 +14,9 @@ contract('CollSurplusPool', async accounts => {
     owner,
     A, B, C, D, E] = accounts;
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   let borrowerOperations
   let priceFeed
   let collSurplusPool
@@ -22,7 +25,7 @@ contract('CollSurplusPool', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
     collSurplusPool = contracts.collSurplusPool

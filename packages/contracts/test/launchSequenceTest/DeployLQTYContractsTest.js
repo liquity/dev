@@ -7,21 +7,24 @@ const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 const assertRevert = th.assertRevert
 const toBN = th.toBN
+const dec = th.dec
 
 contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', async accounts => {
   const [liquityAG, A, B] = accounts;
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
 
   let LQTYContracts
 
   oneHundred = toBN(100)
   oneMillion = toBN(1000000)
   digits = toBN(1e18)
-  three = toBN(3)
-  const expectedCISupplyCap = oneHundred.mul(oneMillion).mul(digits).div(three)
+  four = toBN(4)
+  const expectedCISupplyCap = oneHundred.mul(oneMillion).mul(digits).div(four)
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
 
     lqtyStaking = LQTYContracts.lqtyStaking
@@ -86,22 +89,37 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
       assert.equal(lockupContractFactory.address, storedLCFAddress)
     })
 
-    it("Mints the correct LQTY amount to the deployer's address: (2/3 * 100million)", async () => {
+    it("Mints the correct LQTY amount to the deployer's address: (63.66 million)", async () => {
       const deployerLQTYEntitlement = await lqtyToken.balanceOf(liquityAG)
 
-      // (2/3 * 100million ), as a uint representation of 18-digit decimal
-      const _twentySix_Sixes = "6".repeat(26)
-
-      assert.equal(_twentySix_Sixes, deployerLQTYEntitlement)
+     const twentyThreeSixes = "6".repeat(23)
+      const expectedDeployerEntitlement = "63".concat(twentyThreeSixes).concat("7")
+      console.log(`${deployerLQTYEntitlement}`)
+      assert.equal(deployerLQTYEntitlement, expectedDeployerEntitlement)
     })
 
     it("Mints the correct LQTY amount to the CommunityIssuance contract address: (1/3 * 100million)", async () => {
       const communityLQTYEntitlement = await lqtyToken.balanceOf(communityIssuance.address)
+      // 25 million as 18-digit decimal
+      const _25Million = dec(25, 24)
 
-      // (1/3 * 100million ), as a uint representation of 18-digit decimal
-      const _twentySix_Threes = "3".repeat(26)
+      assert.equal(communityLQTYEntitlement, _25Million)
+    })
 
-      assert.equal(_twentySix_Threes, communityLQTYEntitlement)
+    it("Mints the correct LQTY amount to the bountyAddress EOA: 3 million", async () => {
+      const bountyAddressBal = await lqtyToken.balanceOf(bountyAddress)
+      // 3 million as 18-digit decimal
+      const _3Million = dec(3, 24)
+
+      assert.equal(bountyAddressBal, _3Million)
+    })
+
+    it("Mints the correct LQTY amount to the lpRewardsAddress EOA: 8.33 million", async () => {
+      const lpRewardsAddressBal = await lqtyToken.balanceOf(lpRewardsAddress)
+      // 3 million as 18-digit decimal
+      const _8pt33Million = "8".concat("3".repeat(24))
+
+      assert.equal(lpRewardsAddressBal, _8pt33Million)
     })
   })
 

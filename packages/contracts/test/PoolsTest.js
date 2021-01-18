@@ -17,6 +17,7 @@ contract('StabilityPool', async accounts => {
   let stabilityPool
 
   const [owner, alice] = accounts;
+
   beforeEach(async () => {
     stabilityPool = await StabilityPool.new()
     const mockActivePoolAddress = (await NonPayable.new()).address

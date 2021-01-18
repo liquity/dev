@@ -16,6 +16,9 @@ contract('Fee arithmetic tests', async accounts => {
   let troveManagerTester
   let mathTester
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+  
   // Results array, maps seconds to expected hours passed output (rounded down to nearest hour).
 
   const secondsToMinutesRoundedDown = [
@@ -337,7 +340,7 @@ contract('Fee arithmetic tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)

@@ -26,14 +26,18 @@ import "../Dependencies/console.sol";
 *
 * 3) Supply hard-capped at 100 million
 *
-* 4) CommunityIssuance and LockupContractFactory addresses set at deployment
+* 4) CommunityIssuance and LockupContractFactory addresses are set at deployment
 *
-* 5) 2/3 of supply is minted to deployer at deployment
+* 5) The bug bounties / hackathons allocation of 3 million tokens is minted at deployment to an EOA
+
+* 6) 25 million tokens are minted at deployment to the CommunityIssuance contract 
 *
-* 6) 1/3 of supply minted to CommunityIssuance contract at deployment
-* 
-* 7) Until one year from deployment:
-* -Deployer may only transfer() tokens to OneYearLockupContracts that have been deployed via & registered in the 
+* 7) The LP rewards allocation of (8 + 1/3) million tokens is minted at deployent to an EOA
+*
+* 8) (63 + 2/3) million tokens are minted at deployment to the deployer 
+*
+* 9) Until one year from deployment:
+* -Deployer may only transfer() tokens to LockupContracts that have been deployed via & registered in the 
 *  LockupContractFactory 
 * -approve(), increaseAllowance(), decreaseAllowance() revert when called by the deployer
 * -transferFrom() reverts when deployer is the sender
@@ -77,7 +81,9 @@ contract LQTYToken is CheckContract, ILQTYToken {
     // --- LQTYToken specific data ---
 
     uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
-    uint internal _100_MILLION = 1e26;  // non-constant, for use with SafeMath
+
+    // uint for use with SafeMath
+    uint internal _1_MILLION = 1e24;    // 1e6 * 1e18 = 1e24
 
     uint public immutable deploymentStartTime;
     address public immutable deployer;
@@ -99,7 +105,9 @@ contract LQTYToken is CheckContract, ILQTYToken {
     (
         address _communityIssuanceAddress, 
         address _lqtyStakingAddress,
-        address _lockupFactoryAddress
+        address _lockupFactoryAddress,
+        address _bountyAddress,
+        address _lpRewardsAddress
     ) 
         public 
     {
@@ -122,13 +130,24 @@ contract LQTYToken is CheckContract, ILQTYToken {
         _CACHED_CHAIN_ID = _chainID();
         _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_TYPE_HASH, hashedName, hashedVersion);
         
-        // mint 2/3 to deployer
-        uint deployerEntitlement = _100_MILLION.mul(2).div(3);
-        _mint(msg.sender, deployerEntitlement);
+        // --- Initial LQTY allocations ---
+     
+        uint bountyEntitlement = _1_MILLION.mul(3); // Allocate 3 million for bounties/hackathons
+        _mint(_bountyAddress, bountyEntitlement);
 
-        // mint 1/3 to CommunityIssuance
-        uint communityEntitlement = _100_MILLION.mul(1).div(3);
-        _mint(_communityIssuanceAddress, communityEntitlement);
+        uint depositorsAndFrontEndsEntitlement = _1_MILLION.mul(25); // Allocate 25 million to the algorithmic issuance schedule
+        _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
+
+        uint lpRewardsEntitlement = _1_MILLION.mul(100).div(3).sub(depositorsAndFrontEndsEntitlement);  // Allocate 8.33 million for LP rewards
+        _mint(_lpRewardsAddress, lpRewardsEntitlement);
+        
+        // Allocate the remainder to the deployer: (100 - 3 - 25 - 8.33) million = 63.66 million
+        uint deployerEntitlement = _1_MILLION.mul(100)
+            .sub(bountyEntitlement)
+            .sub(depositorsAndFrontEndsEntitlement)
+            .sub(lpRewardsEntitlement);
+
+        _mint(msg.sender, deployerEntitlement);
     }
 
     // --- External functions ---
