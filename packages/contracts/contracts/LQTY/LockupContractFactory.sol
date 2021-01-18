@@ -8,7 +8,21 @@ import "../Interfaces/ILockupContractFactory.sol";
 import "./LockupContract.sol";
 import "../Dependencies/console.sol";
 
-contract LockupContractFactory is CheckContract, ILockupContractFactory {
+/*
+* The LockupContractFactory deploys LockupContracts - its main purpose is to keep a registry of valid deployed 
+* LockupContracts. 
+* 
+* This registry is checked by LQTYToken when the Liquity deployer attempts to transfer LQTY tokens. During the first year 
+* since system deployment, the Liquity deployer is only allowed to transfer LQTY to valid LockupContracts that have been 
+* deployed by and recorded in the LockupContractFactory. This ensures the deployer's LQTY can't be traded or staked in the
+* first year, and can only be sent to a verified LockupContract which unlocks at least one year after system deployment.
+*
+* LockupContracts can of course be deployed directly, but only those deployed through and recorded in the LockupContractFactory 
+* will be considered "valid" by LQTYToken. This is a convenient way to verify that the target address is a genuine 
+* LockupContract.
+*/
+
+contract LockupContractFactory is ILockupContractFactory {
     using SafeMath for uint;
 
     // --- Data ---
@@ -16,14 +30,14 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
 
     address public immutable deployer;
 
-    ILQTYToken public lqtyToken;
+    address public lqtyTokenAddress;
     
     mapping (address => address) public lockupContractToDeployer;
 
     // --- Events ---
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
-    event LockupContractDeployed(address _lockupContractAddress, address _beneficiary, uint _entitlement, uint _unlockTime);
+    event LockupContractDeployed(address _lockupContractAddress, address _beneficiary, uint _unlockTime);
 
     // --- Functions ---
 
@@ -33,22 +47,20 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
 
     function setLQTYTokenAddress(address _lqtyTokenAddress) external override {
         _requireCallerIsFactoryDeployer();
-        checkContract(_lqtyTokenAddress);
-
-        lqtyToken = ILQTYToken(_lqtyTokenAddress);
+        
+        lqtyTokenAddress = _lqtyTokenAddress;
         emit LQTYTokenAddressSet(_lqtyTokenAddress);
     }
 
-    function deployLockupContract(address _beneficiary, uint _initialEntitlement, uint _unlockTime) external override {
+    function deployLockupContract(address _beneficiary, uint _unlockTime) external override {
         _requireLQTYAddressIsSet();
         LockupContract lockupContract = new LockupContract(
-                                                        address(lqtyToken), 
+                                                        lqtyTokenAddress, 
                                                         _beneficiary, 
-                                                        _initialEntitlement,
                                                         _unlockTime);
 
         lockupContractToDeployer[address(lockupContract)] = msg.sender;
-        emit LockupContractDeployed(address(lockupContract), _beneficiary, _initialEntitlement, _unlockTime);
+        emit LockupContractDeployed(address(lockupContract), _beneficiary, _unlockTime);
     }
 
     function isRegisteredLockup(address _contractAddress) public view override returns (bool) {
@@ -63,6 +75,6 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
     }
 
     function _requireLQTYAddressIsSet() internal view {
-        require(address(lqtyToken) != address(0), "LCF: LQTY Address is not set");
+        require(lqtyTokenAddress != address(0), "LCF: LQTY Address is not set");
     }
 }

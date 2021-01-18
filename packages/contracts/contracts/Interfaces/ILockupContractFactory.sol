@@ -12,7 +12,7 @@ interface ILockupContractFactory {
 
     function setLQTYTokenAddress(address _lqtyTokenAddress) external;
 
-    function deployLockupContract(address _beneficiary, uint _initialEntitlement, uint _unlockTime) external;
+    function deployLockupContract(address _beneficiary, uint _unlockTime) external;
 
     function isRegisteredLockup(address _addr) external view returns (bool);
 }

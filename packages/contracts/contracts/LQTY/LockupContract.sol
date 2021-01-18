@@ -13,8 +13,8 @@ import "../Interfaces/ILQTYToken.sol";
 The deployer of the LQTYToken (Liquity AG's address) may transfer LQTY only to valid LockupContracts within the first year from 
 * deployment, and no other addresses (this is enforced in LQTYToken.sol's transfer() function).
 * 
-* The above two restrictions ensure that LQTY tokens originating from Liquity AG cannot enter circulating supply until one year after
-* system deployment.
+* The above two restrictions ensure that until one year after system deployment, LQTY tokens originating from Liquity AG cannot 
+* enter circulating supply and cannot be staked to earn system revenue.
 */
 contract LockupContract {
     using SafeMath for uint;
@@ -27,8 +27,6 @@ contract LockupContract {
     address public beneficiary;
 
     ILQTYToken public lqtyToken;
-
-    uint public initialEntitlement;
 
     // Unlock time is the Unix point in time at which the beneficiary can withdraw.
     uint public unlockTime;
@@ -44,7 +42,6 @@ contract LockupContract {
     (
         address _lqtyTokenAddress, 
         address _beneficiary, 
-        uint _initialEntitlement,
         uint _unlockTime
     )
         public 
@@ -60,7 +57,6 @@ contract LockupContract {
         
         deployer = msg.sender;
         beneficiary =  _beneficiary;
-        initialEntitlement = _initialEntitlement;
     }
 
     function withdrawLQTY() external {
@@ -86,10 +82,5 @@ contract LockupContract {
         uint systemDeploymentTime = lqtyToken.getDeploymentStartTime();
 
         require(_unlockTime >= systemDeploymentTime.add(SECONDS_IN_ONE_YEAR), "LockupContract: unlock time must be at least one year after system deployment");
-    }
-
-    function _requireLQTYBalanceAtLeastEqualsEntitlement() internal view {
-        uint LQTYBalance = lqtyToken.balanceOf(address(this));
-        require(LQTYBalance >= initialEntitlement, "LockupContract: LQTY balance must cover the initial entitlement");
     }
 }
