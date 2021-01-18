@@ -246,12 +246,12 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         if (isWithdrawal) { 
             if (!_checkRecoveryMode()) {
-                _requireICRisAboveMCR(L.newICR);
                 uint newTCR = _getNewTCRFromTroveChange(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
                 require(newTCR >= CCR, "BorrowerOps: Cannot bring TCR below CCR");
             } else {
                 require(L.newICR >= L.oldICR, "BorrowerOps: Cannot decrease your Trove's ICR in Recovery Mode");
             }
+            _requireICRisAboveMCR(L.newICR);
         }
         /*
          * We don’t check that the withdrawn coll isn’t greater than the current collateral in the trove because it would fail previously in:
