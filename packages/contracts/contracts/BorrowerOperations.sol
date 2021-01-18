@@ -130,6 +130,7 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
         // Decay the base rate, and calculate the borrowing fee
         troveManager.decayBaseRateFromBorrowing();
         uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
+        //require(_maxFee >= LUSDFee || _maxFee == 0, "BorrowerOps: issuance fee exceeded provided max");
         uint rawDebt = _LUSDAmount.add(LUSDFee);
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
@@ -228,6 +229,8 @@ contract BorrowerOperations is LiquityBase, Ownable, IBorrowerOperations {
             // Decay the baseRate and get the fee
             troveManager.decayBaseRateFromBorrowing();
             L.LUSDFee = troveManager.getBorrowingFee(_debtChange);
+            
+            //require(_maxFee >= L.LUSDFee || _maxFee == 0, "BorrowerOps: issuance fee exceeded provided max");
 
             // The raw debt change includes the fee, if there was one
             L.rawDebtChange = L.rawDebtChange.add(L.LUSDFee);

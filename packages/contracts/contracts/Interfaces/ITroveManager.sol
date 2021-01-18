@@ -69,7 +69,7 @@ interface ITroveManager {
         address _partialRedemptionHint,
         uint _partialRedemptionHintNICR,
         uint _maxIterations,
-        uint _currentFee
+        uint _maxFee
     ) external; 
 
     function updateStakeAndTotalStakes(address _borrower) external returns (uint);

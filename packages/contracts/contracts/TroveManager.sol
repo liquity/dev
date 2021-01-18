@@ -895,7 +895,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         address _partialRedemptionHint,
         uint _partialRedemptionHintNICR,
         uint _maxIterations,
-        uint _currentFee
+        uint _maxFee
     )
         external
         override
@@ -917,6 +917,7 @@ contract TroveManager is LiquityBase, Ownable, ITroveManager {
         * if not, the fee will be corrected after the loop finishes.
         */
         T.LUSDFee = _getOptimisticRedemptionFee(_LUSDamount, totalLUSDSupplyAtStart, baseRate); 
+        require(_maxFee >= T.LUSDFee || _maxFee == 0, "TroveManager: redemption fee exceeded provided max");
         T.remainingLUSD = _LUSDamount.sub(T.LUSDFee);
         uint newBaseRate = _getNewBaseRateFromRedemption(T.remainingLUSD, totalLUSDSupplyAtStart);
        

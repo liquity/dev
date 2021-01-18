@@ -2162,7 +2162,12 @@ contract('TroveManager', async accounts => {
     assert.equal(partialRedemptionHintNICR, '0')
   });
 
-    // --- Redemptions  ---
+  // --- Redemptions  ---
+
+  it('redeemCollateral(): reverts if redemption fee exceeds max', async () => {
+
+
+  })
 
   it('redeemCollateral(): cancels the provided LUSD with debt from Troves with the lowest ICRs and sends an equivalent amount of Ether', async () => {
     // --- SETUP ---

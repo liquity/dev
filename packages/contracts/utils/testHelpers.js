@@ -777,9 +777,9 @@ class TestHelper {
 
   // --- Redemption functions ---
 
-  static async redeemCollateral(redeemer, contracts, LUSDAmount) {
+  static async redeemCollateral(redeemer, contracts, LUSDAmount, maxFee = 0) {
     const price = await contracts.priceFeedTestnet.getPrice()
-    const tx = await this.performRedemptionTx(redeemer, price, contracts, LUSDAmount)
+    const tx = await this.performRedemptionTx(redeemer, price, contracts, LUSDAmount, maxFee)
     const gas = await this.gasUsed(tx)
     return gas
   }
@@ -804,7 +804,7 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async performRedemptionTx(redeemer, price, contracts, LUSDAmount) {
+  static async performRedemptionTx(redeemer, price, contracts, LUSDAmount, maxFee) {
     /* For a given LUSDAmount redemption request, calculate how much LUSD we expect to actually be redeemed, 
     *so that we can accurately find the partial */
     const netRedemptionAmount = await this.getNetRedemption(LUSDAmount, contracts.troveManager)
@@ -828,7 +828,7 @@ class TestHelper {
       firstRedemptionHint,
       exactPartialRedemptionHint,
       partialRedemptionNewICR,
-      0,
+      0, maxFee,
       { from: redeemer, gasPrice: 0 },
     )
 
