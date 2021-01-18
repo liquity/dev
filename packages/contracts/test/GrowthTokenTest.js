@@ -137,7 +137,7 @@ contract('LQTY Token', async accounts => {
     assert.equal(C_Balance, dec(50, 18))
   })
 
-  it.only('totalSupply(): gets the total supply', async () => {
+  it('totalSupply(): gets the total supply', async () => {
     const total = (await lqtyTokenTester.totalSupply()).toString()
    
     assert.equal(total, dec(100, 24))
