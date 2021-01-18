@@ -85,7 +85,7 @@ contract LQTYToken is CheckContract, ILQTYToken {
     // uint for use with SafeMath
     uint internal _1_MILLION = 1e24;    // 1e6 * 1e18 = 1e24
 
-    uint public immutable deploymentStartTime;
+    uint internal immutable deploymentStartTime;
     address public immutable deployer;
 
     address public immutable communityIssuanceAddress;

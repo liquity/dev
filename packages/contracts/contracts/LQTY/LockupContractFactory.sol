@@ -47,6 +47,7 @@ contract LockupContractFactory is ILockupContractFactory {
 
     function setLQTYTokenAddress(address _lqtyTokenAddress) external override {
         _requireCallerIsFactoryDeployer();
+        _requireLQTYAddressIsNotSet();
         
         lqtyTokenAddress = _lqtyTokenAddress;
         emit LQTYTokenAddressSet(_lqtyTokenAddress);
@@ -64,8 +65,7 @@ contract LockupContractFactory is ILockupContractFactory {
     }
 
     function isRegisteredLockup(address _contractAddress) public view override returns (bool) {
-        bool isRegistered = lockupContractToDeployer[_contractAddress] != address(0);
-        return isRegistered;
+        return lockupContractToDeployer[_contractAddress] != address(0);
     }
 
     // --- 'require'  functions ---
@@ -76,5 +76,9 @@ contract LockupContractFactory is ILockupContractFactory {
 
     function _requireLQTYAddressIsSet() internal view {
         require(lqtyTokenAddress != address(0), "LCF: LQTY Address is not set");
+    }
+
+    function _requireLQTYAddressIsNotSet() internal view {
+        require(lqtyTokenAddress == address(0), "LCF: LQTY Address is already set");
     }
 }

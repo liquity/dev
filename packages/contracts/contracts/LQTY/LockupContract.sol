@@ -10,8 +10,8 @@ import "../Interfaces/ILQTYToken.sol";
 * to the LockupContract's constructor. The contract's balance can be withdrawn by the beneficiary when block.timestamp > unlockTime. 
 * At construction, the contract checks that unlockTime is at least one year later than the Liquity system's deployment time. 
 
-The deployer of the LQTYToken (Liquity AG's address) may transfer LQTY only to valid LockupContracts within the first year from 
-* deployment, and no other addresses (this is enforced in LQTYToken.sol's transfer() function).
+* Within the first year from deployment, the deployer of the LQTYToken (Liquity AG's address) may transfer LQTY only to valid 
+* LockupContracts, and no other addresses (this is enforced in LQTYToken.sol's transfer() function).
 * 
 * The above two restrictions ensure that until one year after system deployment, LQTY tokens originating from Liquity AG cannot 
 * enter circulating supply and cannot be staked to earn system revenue.
@@ -23,8 +23,7 @@ contract LockupContract {
 
     uint constant public SECONDS_IN_ONE_YEAR = 31536000; 
 
-    address public deployer;
-    address public beneficiary;
+    address public immutable beneficiary;
 
     ILQTYToken public lqtyToken;
 
@@ -55,7 +54,6 @@ contract LockupContract {
         _requireUnlockTimeIsAtLeastOneYearAfterSystemDeployment(_unlockTime);
         unlockTime = _unlockTime;
         
-        deployer = msg.sender;
         beneficiary =  _beneficiary;
     }
 
@@ -80,7 +78,6 @@ contract LockupContract {
 
     function _requireUnlockTimeIsAtLeastOneYearAfterSystemDeployment(uint _unlockTime) internal view {
         uint systemDeploymentTime = lqtyToken.getDeploymentStartTime();
-
         require(_unlockTime >= systemDeploymentTime.add(SECONDS_IN_ONE_YEAR), "LockupContract: unlock time must be at least one year after system deployment");
     }
 }
