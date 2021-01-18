@@ -46,7 +46,7 @@ contract('TroveManager', async accounts => {
  }
 
  const withdrawLUSDfromTrove = async (account) => {
-  await borrowerOperations.withdrawLUSD('100000000000000000000', account, account, { from: account })
+  await borrowerOperations.withdrawLUSD(0, '100000000000000000000', account, account, { from: account })
  }
 
  // Sequentially add coll and withdraw LUSD, 1 account at a time
@@ -60,7 +60,7 @@ contract('TroveManager', async accounts => {
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
       await borrowerOperations.openTrove(0, account, account, { from: account, value: coll })
-      await borrowerOperations.withdrawLUSD('90000000000000000000', account, account, { from: account })
+      await borrowerOperations.withdrawLUSD(0, '90000000000000000000', account, account, { from: account })
   
       amountFinney += 10
     }

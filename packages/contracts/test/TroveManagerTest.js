@@ -90,7 +90,7 @@ contract('TroveManager', async accounts => {
     // Alice withdraws to 180 LUSD, lowering her ICR to 1.11
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
 
-    await borrowerOperations.withdrawLUSD(A_LUSDWithdrawal, alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, A_LUSDWithdrawal, alice, alice, { from: alice })
 
     const ICR_AfterWithdrawal = await troveManager.getCurrentICR(alice, price)
     assert.isAtMost(th.getDifference(ICR_AfterWithdrawal, '1111111111111111111'), 100)
@@ -118,8 +118,8 @@ contract('TroveManager', async accounts => {
     // Alice withdraws 100LUSD, Bob withdraws 180LUSD
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(100, 18), contracts)
     const B_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
-    await borrowerOperations.withdrawLUSD(A_LUSDWithdrawal, alice, alice, { from: alice })
-    await borrowerOperations.withdrawLUSD(B_LUSDWithdrawal, bob, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, A_LUSDWithdrawal, alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, B_LUSDWithdrawal, bob, bob, { from: bob })
 
     // --- TEST ---
 
@@ -157,8 +157,8 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(1, 'ether') })
 
-    await borrowerOperations.withdrawLUSD('1000000000000000000', alice, alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('170000000000000000000', bob, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, '1000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, '170000000000000000000', bob, bob, { from: bob })
 
     // --- TEST ---
 
@@ -197,8 +197,8 @@ contract('TroveManager', async accounts => {
 
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(100, 18), contracts)
     const B_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
-    await borrowerOperations.withdrawLUSD(A_LUSDWithdrawal, alice, alice, { from: alice })
-    await borrowerOperations.withdrawLUSD(B_LUSDWithdrawal, bob, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, A_LUSDWithdrawal, alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, B_LUSDWithdrawal, bob, bob, { from: bob })
 
     // --- TEST ---
 
@@ -290,8 +290,8 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(10, 'ether') })
     await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(1, 'ether') })
 
-    await borrowerOperations.withdrawLUSD('1000000000000000000', alice, alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('170000000000000000000', bob, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, '1000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, '170000000000000000000', bob, bob, { from: bob })
 
     // --- TEST ---
 
@@ -329,7 +329,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(0, carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Carol withdraws 170LUSD, lowering her ICR to 1.11
-    await borrowerOperations.withdrawLUSD('170000000000000000000', carol, carol, { from: carol })
+    await borrowerOperations.withdrawLUSD(0, '170000000000000000000', carol, carol, { from: carol })
 
     // --- TEST ---
 
@@ -357,7 +357,7 @@ contract('TroveManager', async accounts => {
     assert.isAtMost(th.getDifference(L_LUSDDebt_AfterCarolLiquidated, '9000000000000000000'), 100)
 
     // Bob now withdraws 790 LUSD, bringing his ICR to 1.11
-    await borrowerOperations.withdrawLUSD('790000000000000000000', bob, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, '790000000000000000000', bob, bob, { from: bob })
 
     // Confirm system is in Recovery Mode
     assert.isFalse(await troveManager.checkRecoveryMode());

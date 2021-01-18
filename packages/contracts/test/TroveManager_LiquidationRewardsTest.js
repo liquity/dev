@@ -501,7 +501,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // Alice withdraws 100 LUSD
-    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, dec(100, 18), alice, alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -801,7 +801,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, bob, { from: bob })
 
     // Alice withdraws 100 LUSD
-    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, dec(100, 18), alice, alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))

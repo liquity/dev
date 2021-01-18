@@ -1386,7 +1386,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function _requireTCRoverMCR() internal view {
-        require(getTCR() >= MCR, "TroveManager: Cannot redeem when TCR < MCR");
+        require(_getTCR() >= MCR, "TroveManager: Cannot redeem when TCR < MCR");
     }
 
     // --- Trove property getters ---

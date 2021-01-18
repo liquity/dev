@@ -94,7 +94,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulter opens trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -134,8 +134,8 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -177,9 +177,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -222,7 +222,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: '100000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '200000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(10, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -264,8 +264,8 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: '100000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '200000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: '300000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(20, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(10, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(20, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -314,8 +314,8 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -361,9 +361,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -420,8 +420,8 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(22, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '100000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(5, 'ether') })
-      await borrowerOperations.withdrawLUSD('2100000000000000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD('457000000000000000000', defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, '2100000000000000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, '457000000000000000000', defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -467,9 +467,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -524,10 +524,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -594,10 +594,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '2500000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: '500000000000000000' })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(240, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(390, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(240, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(40, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(390, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -655,10 +655,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -731,10 +731,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: '500000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(290, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(190, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(290, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(40, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -793,10 +793,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: '500000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
-      await borrowerOperations.withdrawLUSD(dec(40, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(40, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -863,9 +863,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -932,16 +932,16 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // 4 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -1031,9 +1031,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // 2 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1099,13 +1099,13 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulter 1,2,3 withdraw 'almost' 100 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(90, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1145,13 +1145,13 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // 4 Defaulters open trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(190, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(190, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(190, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(190, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, dec(190, 18), defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -1196,7 +1196,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Defaulter 4 liquidated. 100 LUSD offset
       await troveManager.liquidate(defaulter_4, { from: owner });
 
-      // await borrowerOperations.withdrawLUSD(dec(1, 18), whale, whale, { from: whale })
+      // await borrowerOperations.withdrawLUSD(0, dec(1, 18), whale, whale, { from: whale })
       // await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
       const txA = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
@@ -1261,11 +1261,11 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulter 1 withdraws 'almost' 90 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999999999000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999999999000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // Defaulter 2 withdraws 80 LUSD
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: '500000000000000000' })
-      await borrowerOperations.withdrawLUSD(dec(80, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(80, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1313,11 +1313,11 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulter 1 withdraws 'almost' 90 LUSD.
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999999999000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999999999000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // Defaulter 2 withdraws 530 LUSD
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(3, 'ether') })
-      await borrowerOperations.withdrawLUSD('530000000000000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, '530000000000000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1389,10 +1389,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulter 1 and default 2 each withdraw 89.999999999 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%: defaulter 1 ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
@@ -1439,10 +1439,10 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulter 1 and default 2 withdraw 89.999999999 LUSD and 589.9999999 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(6, 'ether') })
-      await borrowerOperations.withdrawLUSD('589999999994000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, '589999999994000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1499,7 +1499,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulters 1 withdraws 89.999999999 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1533,16 +1533,16 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulters 1-4 each withdraw 89.999999999 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_3, defaulter_3, { from: defaulter_3 })
 
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_4, defaulter_4, { from: defaulter_4 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1607,13 +1607,13 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulters 1-2 each withdraw 200 LUSD (inc gas comp)
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(191, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(191, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(193, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, dec(193, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(2, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(195, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, dec(195, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1739,22 +1739,22 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulters 1-4 each withdraw 89.999999999 LUSD
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_1, defaulter_1, { from: defaulter_1 })
 
       await borrowerOperations.openTrove(0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_2, defaulter_2, { from: defaulter_2 })
 
       await borrowerOperations.openTrove(0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_3, defaulter_3, { from: defaulter_3 })
 
       await borrowerOperations.openTrove(0, defaulter_4, defaulter_4, { from: defaulter_4, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD('89999999999000000000', defaulter_4, defaulter_4, { from: defaulter_4 })
+      await borrowerOperations.withdrawLUSD(0, '89999999999000000000', defaulter_4, defaulter_4, { from: defaulter_4 })
 
       await borrowerOperations.openTrove(0, defaulter_5, defaulter_5, { from: defaulter_5, value: dec(100, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(1, 22), defaulter_5, defaulter_5, { from: defaulter_5 })
+      await borrowerOperations.withdrawLUSD(0, dec(1, 22), defaulter_5, defaulter_5, { from: defaulter_5 })
 
       await borrowerOperations.openTrove(0, defaulter_6, defaulter_6, { from: defaulter_6, value: dec(100, 'ether') })
-      await borrowerOperations.withdrawLUSD(dec(1, 22), defaulter_6, defaulter_6, { from: defaulter_6 })
+      await borrowerOperations.withdrawLUSD(0, dec(1, 22), defaulter_6, defaulter_6, { from: defaulter_6 })
 
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
@@ -1819,7 +1819,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulter opens trove with 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 27) })
-      await borrowerOperations.withdrawLUSD(await th.getActualDebtFromComposite(dec(1, 36), contracts), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, await th.getActualDebtFromComposite(dec(1, 36), contracts), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // ETH:USD price drops to $1 billion per ETH
       await priceFeed.setPrice(dec(1, 27));
@@ -1876,7 +1876,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
       // Defaulter opens trove with 20e-9 ETH (with minimum value of $20) and 20 LUSD. 200% ICR
       await borrowerOperations.openTrove(0, defaulter_1, defaulter_1, { from: defaulter_1, value: '20000000000' })
-      await borrowerOperations.withdrawLUSD(dec(10, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(0, dec(10, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // ETH:USD price drops to $1 billion per ETH
       await priceFeed.setPrice(dec(1, 27));

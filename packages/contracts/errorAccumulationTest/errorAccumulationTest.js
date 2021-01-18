@@ -464,7 +464,7 @@ contract('TroveManager', async accounts => {
   it("11 accounts. 10 liquidations, partial offsets. Check (DefaultPool - totalRewards) differences", async () => {
    // Acct 99 opens trove with 100 LUSD
     await borrowerOperations.openTrove(0,  accounts[99], { from: accounts[99], value: dec(100, 'ether') })
-    await borrowerOperations.withdrawLUSD(dec(100, 18), accounts[99], {from: accounts[99]})
+    await borrowerOperations.withdrawLUSD(0, dec(100, 18), accounts[99], {from: accounts[99]})
     
     await th.openTrove_allAccounts(accounts.slice(0, 11), contracts, dec(1, 'ether'), dec(170, 18))
 
@@ -512,7 +512,7 @@ contract('TroveManager', async accounts => {
   it("101 accounts. 100 liquidations, partial offsets. Check (DefaultPool - totalRewards) differences", async () => {
     // Acct 99 opens trove with 100 LUSD
      await borrowerOperations.openTrove(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await borrowerOperations.withdrawLUSD(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.withdrawLUSD(0, dec(100, 18), accounts[999], {from: accounts[999]})
      
      await th.openTrove_allAccounts(accounts.slice(0, 101), contracts, dec(1, 'ether'), dec(170, 18))
  
@@ -562,7 +562,7 @@ contract('TroveManager', async accounts => {
   it("11 accounts. 10 Borrowers add to SP. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens trove with 100 LUSD
      await borrowerOperations.openTrove(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await borrowerOperations.withdrawLUSD(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.withdrawLUSD(0, dec(100, 18), accounts[999], {from: accounts[999]})
      
      // Account 0 (to be liquidated) opens a trove
      await borrowerOperations.openTrove(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
@@ -615,7 +615,7 @@ contract('TroveManager', async accounts => {
    it("101 accounts. 100 Borrowers add to SP. 1 liquidation, 100 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens trove with 100 LUSD
      await borrowerOperations.openTrove(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await borrowerOperations.withdrawLUSD(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.withdrawLUSD(0, dec(100, 18), accounts[999], {from: accounts[999]})
      
      // Account 0 (to be liquidated) opens a trove
      await borrowerOperations.openTrove(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
@@ -664,7 +664,7 @@ contract('TroveManager', async accounts => {
    it("11 accounts. 10 Borrowers add to SP, random LUSD amounts. 1 liquidation, 10 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens trove with 100 LUSD
      await borrowerOperations.openTrove(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await borrowerOperations.withdrawLUSD(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.withdrawLUSD(0, dec(100, 18), accounts[999], {from: accounts[999]})
      
      // Account 0 (to be liquidated) opens a trove
      await borrowerOperations.openTrove(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
@@ -724,7 +724,7 @@ contract('TroveManager', async accounts => {
    it("101 accounts. 100 Borrowers add to SP, random LUSD amounts. 1 liquidation, 100 Borrowers withdraw all their SP funds", async () => {
     // Acct 99 opens trove with 100 LUSD
      await borrowerOperations.openTrove(0,  accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-     await borrowerOperations.withdrawLUSD(dec(100, 18), accounts[999], {from: accounts[999]})
+     await borrowerOperations.withdrawLUSD(0, dec(100, 18), accounts[999], {from: accounts[999]})
      
      // Account 0 (to be liquidated) opens a trove
      await borrowerOperations.openTrove(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})
@@ -781,7 +781,7 @@ contract('TroveManager', async accounts => {
  it("501 accounts. 500 Borrowers add to SP, random LUSD amounts. 1 liquidation, 500 Borrowers withdraw all their SP funds", async () => {
   // Acct 99 opens trove with 100 LUSD
    await borrowerOperations.openTrove(0, accounts[999], { from: accounts[999], value: dec(100, 'ether') })
-   await borrowerOperations.withdrawLUSD(dec(100, 18), accounts[999], {from: accounts[999]})
+   await borrowerOperations.withdrawLUSD(0, dec(100, 18), accounts[999], {from: accounts[999]})
    
    // Account 0 (to be liquidated) opens a trove
    await borrowerOperations.openTrove(dec(100, 18), accounts[0],{from: accounts[0], value: dec(1, 'ether')})

@@ -618,7 +618,7 @@ export class PopulatableEthersLiquity
         compose(
           borrowLUSD ? addGasForPotentialLastFeeOperationTimeUpdate : id,
           addGasForPotentialListTraversal
-        ),
+        ), 0,
         withdrawCollateral?.bigNumber ?? 0,
         (borrowLUSD ?? repayLUSD)?.bigNumber ?? 0,
         !!borrowLUSD,

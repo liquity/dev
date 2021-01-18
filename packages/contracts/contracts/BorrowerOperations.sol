@@ -134,6 +134,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         troveManager.decayBaseRateFromBorrowing();
         uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
         uint rawDebt = _LUSDAmount.add(LUSDFee);
+        
+        //require(_maxFee >= LUSDFee || _maxFee == 0, "BorrowerOps: issuance fee exceeded provided max");
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
@@ -176,39 +178,39 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     // Send ETH as collateral to a trove
     function addColl(address _upperHint, address _lowerHint) external payable override {
-        _adjustTrove(msg.sender, 0, 0, false, _upperHint, _lowerHint);
+        _adjustTrove(msg.sender, 0, 0, false, _upperHint, _lowerHint, 0);
     }
 
     // Send ETH as collateral to a trove. Called by only the Stability Pool.
     function moveETHGainToTrove(address _borrower, address _upperHint, address _lowerHint) external payable override {
         _requireCallerIsStabilityPool();
-        _adjustTrove(_borrower, 0, 0, false, _upperHint, _lowerHint);
+        _adjustTrove(_borrower, 0, 0, false, _upperHint, _lowerHint, 0);
     }
 
     // Withdraw ETH collateral from a trove
     function withdrawColl(uint _collWithdrawal, address _upperHint, address _lowerHint) external override {
-        _adjustTrove(msg.sender, _collWithdrawal, 0, false, _upperHint, _lowerHint);
+        _adjustTrove(msg.sender, _collWithdrawal, 0, false, _upperHint, _lowerHint, 0);
     }
 
     // Withdraw LUSD tokens from a trove: mint new LUSD tokens to the owner, and increase the trove's debt accordingly
-    function withdrawLUSD(uint _LUSDAmount, address _upperHint, address _lowerHint) external override {
-        _adjustTrove(msg.sender, 0, _LUSDAmount, true, _upperHint, _lowerHint);
+    function withdrawLUSD(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external override {
+        _adjustTrove(msg.sender, 0, _LUSDAmount, true, _upperHint, _lowerHint, _maxFee);
     }
 
     // Repay LUSD tokens to a Trove: Burn the repaid LUSD tokens, and reduce the trove's debt accordingly
     function repayLUSD(uint _LUSDAmount, address _upperHint, address _lowerHint) external override {
-        _adjustTrove(msg.sender, 0, _LUSDAmount, false, _upperHint, _lowerHint);
+        _adjustTrove(msg.sender, 0, _LUSDAmount, false, _upperHint, _lowerHint, 0);
     }
 
     /*
     * If ETH is sent, the operation is considered as a collateral increase, and the first parameter
     * _collWithdrawal must be zero
     */
-    function adjustTrove(uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint) external payable override {
-        _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint);
+    function adjustTrove(uint _maxFee, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint) external payable override {
+        _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint, _maxFee);
     }
 
-    function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint) internal {
+    function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint _maxFee) internal {
         require(msg.value == 0 || _collWithdrawal == 0, "BorrowerOperations: Cannot withdraw and add coll");
         // The operation "isWithdrawal" if it removes collateral or LUSD, i.e. it removes funds and lowers the ICR
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease;
@@ -218,7 +220,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         LocalVariables_adjustTrove memory L;
 
         _requireTroveisActive(_borrower);
-        if (isWithdrawal) {_requireNotInRecoveryMode();}
+        if (isWithdrawal) { _requireNotInRecoveryMode(); }
 
         L.price = priceFeed.getPrice();
 
@@ -231,6 +233,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
             // Decay the baseRate and get the fee
             troveManager.decayBaseRateFromBorrowing();
             L.LUSDFee = troveManager.getBorrowingFee(_debtChange);
+
+            require(_maxFee >= L.LUSDFee || _maxFee == 0, "BorrowerOps: issuance fee exceeded provided max");
 
             // The raw debt change includes the fee, if there was one
             L.rawDebtChange = L.rawDebtChange.add(L.LUSDFee);

@@ -145,7 +145,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
     while(await systemContainsTroveUnder100(price) && await troveManager.checkRecoveryMode()) {
       const lowestTrove = await sortedTroves.getLast()
       const lastTroveDebt = (await troveManager.getEntireDebtAndColl(trove))[0]
-      await borrowerOperations.adjustTrove(0 , lastTroveDebt, true, whale, {from: whale})
+      await borrowerOperations.adjustTrove(0, 0 , lastTroveDebt, true, whale, {from: whale})
       await lusdToken.transfer(lowestTrove, lowestTroveDebt, {from: whale})
       await borrowerOperations.closeTrove({from: lowestTrove})
     }
@@ -154,7 +154,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       const debtLowest50Troves = await getTotalDebtFromUndercollateralizedTroves(50, price)
       
       if (debtLowest50Troves.gt(ZERO)) {
-        await borrowerOperations.adjustTrove(0 , debtLowest50Troves, true, whale, {from: whale})
+        await borrowerOperations.adjustTrove(0, 0 , debtLowest50Troves, true, whale, {from: whale})
         await stabilityPool.provideToSP(debtLowest50Troves, {from: whale})
       }
       
