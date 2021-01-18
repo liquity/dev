@@ -348,7 +348,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
             _closeTrove(_borrower);
             if (V.collSurplus > 0) {
-                _sendCollSurplus(_borrower, V.collSurplus);
+                collSurplusPool.accountSurplus(_borrower, V.collSurplus);
             }
 
             emit TroveLiquidated(_borrower, V.entireTroveDebt, V.collToSendToSP, TroveManagerOperation.liquidateInRecoveryMode);
@@ -447,6 +447,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         // Move liquidated ETH and LUSD to the appropriate pools
         stabilityPool.offset(T.totalDebtToOffset, T.totalCollToSendToSP);
         _redistributeDebtAndColl(T.totalDebtToRedistribute, T.totalCollToRedistribute);
+        if (T.totalCollSurplus > 0) {
+            activePool.sendETH(address(collSurplusPool), T.totalCollSurplus);
+        }
 
         // Update system snapshots
         _updateSystemSnapshots_excludeCollRemainder(T.totalCollGasCompensation);
@@ -573,6 +576,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         // Move liquidated ETH and LUSD to the appropriate pools
         stabilityPool.offset(T.totalDebtToOffset, T.totalCollToSendToSP);
         _redistributeDebtAndColl(T.totalDebtToRedistribute, T.totalCollToRedistribute);
+        if (T.totalCollSurplus > 0) {
+            activePool.sendETH(address(collSurplusPool), T.totalCollSurplus);
+        }
 
         // Update system snapshots
         _updateSystemSnapshots_excludeCollRemainder(T.totalCollGasCompensation);
