@@ -20,6 +20,9 @@ type TroveActionProps = {
 
 const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
 const ccrPercent = new Percent(Trove.CRITICAL_COLLATERAL_RATIO).toString(0);
+const rmcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO_FOR_NEW_TROVE_IN_RECOVERY).toString(
+  0
+);
 
 const describeAdjustment = ({
   depositCollateral,
@@ -84,35 +87,32 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   if (change.type === "invalidCreation") {
     // Yuck, Transaction needs refactoring
     return (
-      <Transaction
-        id={myTransactionId}
-        requires={[
-          [false, `Need at least ${Trove.GAS_COMPENSATION_DEPOSIT} ${COIN} for gas compensation`]
-        ]}
-        send={(() => {}) as any}
-      >
-        <Button sx={{ mx: 2 }} />
-      </Transaction>
+      <Flex variant="layout.actions">
+        <Transaction
+          id={myTransactionId}
+          requires={[
+            [false, `Need at least ${Trove.GAS_COMPENSATION_DEPOSIT} ${COIN} for gas compensation`]
+          ]}
+          send={(() => {}) as any}
+        >
+          <Button sx={{ mx: 2 }} />
+        </Transaction>
+      </Flex>
     );
   }
 
   const [actionName, send, extraRequirements] =
     change.type === "creation"
       ? ([
-          "Open new Trove",
-          liquity.openTrove.bind(liquity, change.params, { price, numberOfTroves, fees }),
-          edited.debt.nonZero
-            ? ([
-                [
-                  !total.collateralRatioIsBelowCritical(price),
-                  `Can't borrow ${COIN} during recovery mode`
-                ],
-                [
-                  !total.add(edited).collateralRatioIsBelowCritical(price),
-                  `Total collateral ratio would fall below ${ccrPercent}`
-                ]
-              ] as const)
-            : []
+          describeAdjustment(change.params),
+          liquity.openTrove.bind(liquity, change.params, { numberOfTroves, fees }),
+          [
+            [
+              afterFee.isOpenableInRecoveryMode(price) ||
+                !total.collateralRatioIsBelowCritical(price),
+              `Can't open Trove with less than ${rmcrPercent} collateral ratio during recovery mode`
+            ]
+          ]
         ] as const)
       : change.type === "closure"
       ? ([
@@ -120,7 +120,6 @@ export const TroveAction: React.FC<TroveActionProps> = ({
           liquity.closeTrove.bind(liquity),
           [
             [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
-            [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`],
             [numberOfTroves > 1, "Can't close when no other Trove exists"]
           ]
         ] as const)
@@ -129,7 +128,6 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
           liquity.adjustTrove.bind(liquity, change.params, {
             numberOfTroves,
-            price,
             trove: original,
             fees
           }),
@@ -142,13 +140,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             [
               !change.params.borrowLUSD || !total.collateralRatioIsBelowCritical(price),
               `Can't borrow ${COIN} during recovery mode`
-            ],
-            [
-              !change.params.borrowLUSD ||
-                !total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price),
-              `Total collateral ratio would fall below ${ccrPercent}`
-            ],
-            [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`]
+            ]
           ]
         ] as const);
 
@@ -165,13 +157,25 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         id={myTransactionId}
         requires={[
           [
-            !afterFee.collateralRatioIsBelowMinimum(price),
-            `Collateral ratio must be at least ${mcrPercent}`
-          ],
-          [
             edited.isEmpty || edited.debt.gte(Trove.GAS_COMPENSATION_DEPOSIT),
             `Need at least ${Trove.GAS_COMPENSATION_DEPOSIT} ${COIN} for gas compensation`
           ],
+          [
+            !(
+              change.type === "creation" ||
+              (change.type === "adjustment" &&
+                (change.params.withdrawCollateral || change.params.borrowLUSD))
+            ) || !afterFee.collateralRatioIsBelowMinimum(price),
+            `Collateral ratio must be at least ${mcrPercent}`
+          ],
+          [
+            !(
+              change.type === "creation" ||
+              (change.type === "adjustment" && change.params.borrowLUSD)
+            ) || !total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price),
+            `Total collateral ratio would fall below ${ccrPercent}`
+          ],
+          [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`],
           ...extraRequirements
         ]}
         {...{ send }}

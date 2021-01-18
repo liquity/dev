@@ -1,73 +1,89 @@
-import { Decimal, Decimalish, Difference } from "@liquity/decimal";
+import { Decimal, Decimalish } from "@liquity/decimal";
 
 // yeah, sounds stupid...
 interface StabilityDepositish {
-  readonly deposit?: Decimalish;
-  readonly depositAfterLoss?: Decimalish;
-  readonly pendingCollateralGain?: Decimalish;
+  readonly initialLUSD?: Decimalish;
+  readonly currentLUSD?: Decimalish;
+  readonly collateralGain?: Decimalish;
+  readonly lqtyReward?: Decimalish;
 }
 
-export class StabilityDeposit {
-  readonly deposit: Decimal;
-  readonly depositAfterLoss: Decimal;
-  readonly pendingCollateralGain: Decimal;
+export type StabilityDepositChange<T> =
+  | { depositLUSD: T; withdrawLUSD?: undefined }
+  | { depositLUSD?: undefined; withdrawLUSD: T; withdrawAllLUSD: boolean };
 
-  get isEmpty(): boolean {
-    return this.deposit.isZero && this.depositAfterLoss.isZero && this.pendingCollateralGain.isZero;
-  }
+export class StabilityDeposit {
+  readonly initialLUSD: Decimal;
+  readonly currentLUSD: Decimal;
+  readonly collateralGain: Decimal;
+  readonly lqtyReward: Decimal;
 
   constructor({
-    deposit = 0,
-    depositAfterLoss = deposit,
-    pendingCollateralGain = 0
+    initialLUSD = 0,
+    currentLUSD = initialLUSD,
+    collateralGain = 0,
+    lqtyReward = 0
   }: StabilityDepositish) {
-    this.deposit = Decimal.from(deposit);
-    this.depositAfterLoss = Decimal.from(depositAfterLoss);
-    this.pendingCollateralGain = Decimal.from(pendingCollateralGain);
+    this.initialLUSD = Decimal.from(initialLUSD);
+    this.currentLUSD = Decimal.from(currentLUSD);
+    this.collateralGain = Decimal.from(collateralGain);
+    this.lqtyReward = Decimal.from(lqtyReward);
 
-    if (this.depositAfterLoss.gt(this.deposit)) {
-      throw new Error("depositAfterLoss can't be greater than deposit");
+    if (this.currentLUSD.gt(this.initialLUSD)) {
+      throw new Error("currentLUSD can't be greater than initialLUSD");
     }
+  }
+
+  get isEmpty(): boolean {
+    return (
+      this.initialLUSD.isZero &&
+      this.currentLUSD.isZero &&
+      this.collateralGain.isZero &&
+      this.lqtyReward.isZero
+    );
   }
 
   toString(): string {
     return (
-      "{\n" +
-      `  deposit: ${this.deposit},\n` +
-      `  depositAfterLoss: ${this.depositAfterLoss},\n` +
-      `  pendingCollateralGain: ${this.pendingCollateralGain}\n` +
-      "}"
+      `{ initialLUSD: ${this.initialLUSD}` +
+      `, currentLUSD: ${this.currentLUSD}` +
+      `, collateralGain: ${this.collateralGain}` +
+      `, lqtyReward: ${this.lqtyReward} }`
     );
   }
 
   equals(that: StabilityDeposit): boolean {
     return (
-      this.deposit.eq(that.deposit) &&
-      this.depositAfterLoss.eq(that.depositAfterLoss) &&
-      this.pendingCollateralGain.eq(that.pendingCollateralGain)
+      this.initialLUSD.eq(that.initialLUSD) &&
+      this.currentLUSD.eq(that.currentLUSD) &&
+      this.collateralGain.eq(that.collateralGain) &&
+      this.lqtyReward.eq(that.lqtyReward)
     );
   }
 
-  calculateDifference(that: StabilityDeposit): Difference | undefined {
-    if (!that.depositAfterLoss.eq(this.depositAfterLoss)) {
-      return Difference.between(that.depositAfterLoss, this.depositAfterLoss);
+  whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined {
+    thatLUSD = Decimal.from(thatLUSD);
+
+    if (thatLUSD.lt(this.currentLUSD)) {
+      return { withdrawLUSD: this.currentLUSD.sub(thatLUSD), withdrawAllLUSD: thatLUSD.isZero };
+    }
+
+    if (thatLUSD.gt(this.currentLUSD)) {
+      return { depositLUSD: thatLUSD.sub(this.currentLUSD) };
     }
   }
 
-  apply(difference?: Difference): StabilityDeposit {
-    if (difference?.positive) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return new StabilityDeposit({ deposit: this.depositAfterLoss.add(difference.absoluteValue!) });
-    } else if (difference?.negative) {
-      return new StabilityDeposit({
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        deposit: difference.absoluteValue!.lt(this.depositAfterLoss)
-          ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            this.depositAfterLoss.sub(difference.absoluteValue!)
-          : 0
-      });
+  apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal {
+    if (!change) {
+      return this.currentLUSD;
+    }
+
+    if (change.withdrawLUSD !== undefined) {
+      return change.withdrawAllLUSD || this.currentLUSD.lte(change.withdrawLUSD)
+        ? Decimal.ZERO
+        : this.currentLUSD.sub(change.withdrawLUSD);
     } else {
-      return this;
+      return this.currentLUSD.add(change.depositLUSD);
     }
   }
 }

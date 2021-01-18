@@ -8,10 +8,7 @@ const { pack } = require('@ethersproject/solidity');
 const { hexlify } = require("@ethersproject/bytes");
 const { ecsign } = require('ethereumjs-util');
 
-const toBN = testHelpers.TestHelper.toBN
-const assertRevert = testHelpers.TestHelper.assertRevert
-const dec = testHelpers.TestHelper.dec
-const ZERO_ADDRESS = testHelpers.TestHelper.ZERO_ADDRESS
+const { toBN, assertRevert, assertAssert, dec, ZERO_ADDRESS } = testHelpers.TestHelper
 
 const sign = (digest, privateKey) => {
   return ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(privateKey.slice(2), 'hex'))
@@ -65,7 +62,6 @@ contract('LUSDToken', async accounts => {
 
   describe('Basic token functions', async () => {
     beforeEach(async () => {
-    
       const contracts = await deploymentHelper.deployTesterContractsHardhat()
  
       lusdTokenTester = contracts.lusdToken
@@ -149,12 +145,12 @@ contract('LUSDToken', async accounts => {
 
     it("approve(): reverts when spender param is address(0)", async () => {
       const txPromise = lusdTokenTester.approve(ZERO_ADDRESS, 100, {from: bob})
-      await assertRevert(txPromise)
+      await assertAssert(txPromise)
     })
 
     it("approve(): reverts when owner param is address(0)", async () => {
       const txPromise = lusdTokenTester.callInternalApprove(ZERO_ADDRESS, alice, dec(1000, 18), {from: bob})
-      await assertRevert(txPromise)
+      await assertAssert(txPromise)
     })
 
     it("transferFrom(): successfully transfers from an account which is it approved to transfer from", async () => {
@@ -353,41 +349,18 @@ contract('LUSDToken', async accounts => {
       // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
       await assertRevert(lusdTokenTester.permit(
         approve.owner, approve.spender, approve.value, 
-        deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
+        deadline, v, r, s), 'LUSD: invalid signature')
      
       // Check that the zero address fails
-      await assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
-        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
-    })
-
-    it('permits and emits an Approval event (replay protected), with infinite deadline', async () => {
-      const deadline = 0
-
-      // Approve it
-      const { v, r, s, tx } = await buildPermitTx(deadline)
-      const receipt = await tx
-      const event = receipt.logs[0]
-
-      // Check that approval was successful
-      assert.equal(event.event, 'Approval')
-      assert.equal(await lusdTokenTester.nonces(approve.owner), 1)
-      assert.equal(await lusdTokenTester.allowance(approve.owner, approve.spender), approve.value)
-      
-      // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
-      await assertRevert(lusdTokenTester.permit(
-        approve.owner, approve.spender, approve.value, 
-        deadline, v, r, s), 'LUSD: Recovered address from the sig is not the owner')
-     
-      // Check that the zero address fails
-      await assertRevert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000', 
-        approve.spender, approve.value, deadline, '0x99', r, s), 'LUSD: Recovered address from the sig is not the owner')
+      await assertAssert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000',
+        approve.spender, approve.value, deadline, '0x99', r, s))
     })
 
     it('permits(): fails with expired deadline', async () => {
       const deadline = 1
 
       const { v, r, s, tx } = await buildPermitTx(deadline)
-      await assertRevert(tx, 'LUSD: Signature has expired')
+      await assertRevert(tx, 'LUSD: expired deadline')
     })
 
     it('permits(): fails with the wrong signature', async () => {
@@ -400,7 +373,7 @@ contract('LUSDToken', async accounts => {
         deadline, v, hexlify(r), hexlify(s)
       )
 
-      await assertRevert(tx, 'LUSD: Recovered address from the sig is not the owner')
+      await assertRevert(tx, 'LUSD: invalid signature')
     })
   })
 })

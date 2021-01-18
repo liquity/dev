@@ -52,6 +52,7 @@ interface ITroveManager {
 
     function getTroveFromTroveOwnersArray(uint _index) external view returns (address);
 
+    function getNominalICR(address _borrower) external view returns (uint);
     function getCurrentICR(address _borrower, uint _price) external view returns (uint);
 
     function liquidate(address _borrower) external;
@@ -63,8 +64,9 @@ interface ITroveManager {
     function redeemCollateral(
         uint _LUSDAmount,
         address _firstRedemptionHint,
-        address _partialRedemptionHint,
-        uint _partialRedemptionHintICR,
+        address _upperPartialRedemptionHint,
+        address _lowerPartialRedemptionHint,
+        uint _partialRedemptionHintNICR,
         uint _maxIterations
     ) external; 
 

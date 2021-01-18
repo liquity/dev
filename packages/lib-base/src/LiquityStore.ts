@@ -4,11 +4,14 @@ import { Decimal } from "@liquity/decimal";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Trove, TroveWithPendingRewards } from "./Trove";
 import { Fees } from "./Fees";
+import { LQTYStake } from "./LQTYStake";
 
 export type LiquityStoreBaseState = {
   numberOfTroves: number;
   accountBalance: Decimal;
   lusdBalance: Decimal;
+  lqtyBalance: Decimal;
+  collateralSurplusBalance: Decimal;
   price: Decimal;
   lusdInStabilityPool: Decimal;
   total: Trove;
@@ -16,6 +19,8 @@ export type LiquityStoreBaseState = {
   troveWithoutRewards: TroveWithPendingRewards;
   deposit: StabilityDeposit;
   fees: Fees;
+  lqtyStake: LQTYStake;
+  totalStakedLQTY: Decimal;
 };
 
 export type LiquityStoreDerivedState = {
@@ -97,6 +102,10 @@ export abstract class LiquityStore<T = unknown> {
     return next !== undefined && !equals(prev, next) ? this.logUpdate(name, next) : prev;
   }
 
+  protected silentlyUpdateIfChanged<U>(equals: (a: U, b: U) => boolean, prev: U, next?: U): U {
+    return next !== undefined && !equals(prev, next) ? next : prev;
+  }
+
   private reduce(
     baseState: LiquityStoreBaseState,
     baseStateUpdate: Partial<LiquityStoreBaseState>
@@ -121,6 +130,20 @@ export abstract class LiquityStore<T = unknown> {
         "lusdBalance",
         baseState.lusdBalance,
         baseStateUpdate.lusdBalance
+      ),
+
+      lqtyBalance: this.updateIfChanged(
+        eq,
+        "lqtyBalance",
+        baseState.lqtyBalance,
+        baseStateUpdate.lqtyBalance
+      ),
+
+      collateralSurplusBalance: this.updateIfChanged(
+        eq,
+        "collateralSurplusBalance",
+        baseState.collateralSurplusBalance,
+        baseStateUpdate.collateralSurplusBalance
       ),
 
       price: this.updateIfChanged(eq, "price", baseState.price, baseStateUpdate.price),
@@ -150,7 +173,21 @@ export abstract class LiquityStore<T = unknown> {
 
       deposit: this.updateIfChanged(equals, "deposit", baseState.deposit, baseStateUpdate.deposit),
 
-      fees: this.updateIfChanged(equals, "fees", baseState.fees, baseStateUpdate.fees)
+      fees: this.updateIfChanged(equals, "fees", baseState.fees, baseStateUpdate.fees),
+
+      lqtyStake: this.updateIfChanged(
+        equals,
+        "lqtyStake",
+        baseState.lqtyStake,
+        baseStateUpdate.lqtyStake
+      ),
+
+      totalStakedLQTY: this.updateIfChanged(
+        eq,
+        "totalStakedLQTY",
+        baseState.totalStakedLQTY,
+        baseStateUpdate.totalStakedLQTY
+      )
     };
   }
 
@@ -173,16 +210,14 @@ export abstract class LiquityStore<T = unknown> {
     return {
       trove: this.updateIfChanged(equals, "trove", derivedState.trove, derivedStateUpdate.trove),
 
-      borrowingFeeFactor: this.updateIfChanged(
+      borrowingFeeFactor: this.silentlyUpdateIfChanged(
         eq,
-        "borrowingFeeFactor",
         derivedState.borrowingFeeFactor,
         derivedStateUpdate.borrowingFeeFactor
       ),
 
-      redemptionFeeFactor: this.updateIfChanged(
+      redemptionFeeFactor: this.silentlyUpdateIfChanged(
         eq,
-        "redemptionFeeFactor",
         derivedState.redemptionFeeFactor,
         derivedStateUpdate.redemptionFeeFactor
       )

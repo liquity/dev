@@ -173,7 +173,7 @@ contract('DefaultPool', async accounts => {
   })
 
   // send raw ether
-  it('sendETH(): decreases the recorded ETH balance by the correct amount', async () => {
+  it('sendETHToActivePool(): decreases the recorded ETH balance by the correct amount', async () => {
     // setup: give pool 2 ether
     const defaultPool_initialBalance = web3.utils.toBN(await web3.eth.getBalance(defaultPool.address))
     assert.equal(defaultPool_initialBalance, 0)
@@ -184,23 +184,24 @@ contract('DefaultPool', async accounts => {
     assert.isTrue(tx1.receipt.status)
 
     const defaultPool_BalanceBeforeTx = web3.utils.toBN(await web3.eth.getBalance(defaultPool.address))
-    const alice_Balance_BeforeTx = web3.utils.toBN(await web3.eth.getBalance(alice))
+    const activePool_Balance_BeforeTx = web3.utils.toBN(await web3.eth.getBalance(mockActivePool.address))
 
     assert.equal(defaultPool_BalanceBeforeTx, dec(2, 'ether'))
 
     // send ether from pool to alice
-    //await defaultPool.sendETH(alice, dec(1, 'ether'), { from: mockTroveManagerAddress })
-    const sendETHData = th.getTransactionData('sendETH(address,uint256)', [alice, web3.utils.toHex(dec(1, 'ether'))])
+    //await defaultPool.sendETHToActivePool(dec(1, 'ether'), { from: mockTroveManagerAddress })
+    const sendETHData = th.getTransactionData('sendETHToActivePool(uint256)', [web3.utils.toHex(dec(1, 'ether'))])
+    await mockActivePool.setPayable(true)
     const tx2 = await mockTroveManager.forward(defaultPool.address, sendETHData, { from: owner })
     assert.isTrue(tx2.receipt.status)
 
     const defaultPool_BalanceAfterTx = web3.utils.toBN(await web3.eth.getBalance(defaultPool.address))
-    const alice_Balance_AfterTx = web3.utils.toBN(await web3.eth.getBalance(alice))
+    const activePool_Balance_AfterTx = web3.utils.toBN(await web3.eth.getBalance(mockActivePool.address))
 
-    const alice_BalanceChange = alice_Balance_AfterTx.sub(alice_Balance_BeforeTx)
-    const pool_BalanceChange = defaultPool_BalanceAfterTx.sub(defaultPool_BalanceBeforeTx)
-    assert.equal(alice_BalanceChange, dec(1, 'ether'))
-    assert.equal(pool_BalanceChange, _minus_1_Ether)
+    const activePool_BalanceChange = activePool_Balance_AfterTx.sub(activePool_Balance_BeforeTx)
+    const defaultPool_BalanceChange = defaultPool_BalanceAfterTx.sub(defaultPool_BalanceBeforeTx)
+    assert.equal(activePool_BalanceChange, dec(1, 'ether'))
+    assert.equal(defaultPool_BalanceChange, _minus_1_Ether)
   })
 })
 

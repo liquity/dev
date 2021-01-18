@@ -14,7 +14,8 @@ import {
   Trove,
   emptyTrove,
   StabilityDeposit,
-  Fees
+  Fees,
+  LQTYStake
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
@@ -275,6 +276,14 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     throw new Error("Method not implemented.");
   }
 
+  getLQTYBalance(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getCollateralSurplusBalance(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
   getFirstTroves(startIdx: number, numberOfTroves: number) {
     return troves.get(this.client, {
       startIdx,
@@ -304,6 +313,14 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getFees(): Promise<Fees> {
+    throw new Error("Method not implemented.");
+  }
+
+  getLQTYStake(address?: string): Promise<LQTYStake> {
+    throw new Error("Method not implemented.");
+  }
+
+  getTotalStakedLQTY(): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 }

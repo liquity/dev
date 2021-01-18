@@ -11,7 +11,7 @@ import "../Dependencies/console.sol";
 
 contract LockupContractFactory is CheckContract, ILockupContractFactory {
     using SafeMath for uint;
-     
+
     // --- Data ---
     uint constant public ONE_YEAR_IN_SECONDS = 31536000;
 
@@ -19,7 +19,7 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
     address public immutable deployer;
 
     ILQTYToken public lqtyToken;
-    
+
     mapping (address => address) public oneYearLockupContractToDeployer;
     mapping (address => address) public customDurationLockupContractToDeployer;
 
@@ -28,7 +28,7 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
     event OYLCDeployed(address _OYLCAddress, address _beneficiary, uint _entitlement);
     event CDLCDeployed(address _CDLCAddress, address _beneficiary, uint _initialEntitlement);
-    
+
     // --- Functions ---
 
     constructor () public {
@@ -47,8 +47,8 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
     function deployOneYearLockupContract(address beneficiary, uint initialEntitlement) external override {
         _requireLQTYAddressIsSet();
         OneYearLockupContract oneYearLockupContract = new OneYearLockupContract(
-                                                        address(lqtyToken), 
-                                                        beneficiary, 
+                                                        address(lqtyToken),
+                                                        beneficiary,
                                                         initialEntitlement);
 
         oneYearLockupContractToDeployer[address(oneYearLockupContract)] = msg.sender;
@@ -58,11 +58,11 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
     function deployCustomDurationLockupContract(address beneficiary, uint initialEntitlement, uint lockupDuration) external override {
         _requireLQTYAddressIsSet();
         _requireFactoryIsAtLeastOneYearOld();
-    
-        CustomDurationLockupContract customDurationLockupContract = new CustomDurationLockupContract( 
-                                                                        address(lqtyToken), 
-                                                                        beneficiary, 
-                                                                        initialEntitlement, 
+
+        CustomDurationLockupContract customDurationLockupContract = new CustomDurationLockupContract(
+                                                                        address(lqtyToken),
+                                                                        beneficiary,
+                                                                        initialEntitlement,
                                                                         lockupDuration);
 
         customDurationLockupContractToDeployer[address(customDurationLockupContract)] = msg.sender;
@@ -74,7 +74,7 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
         for (uint i = 0; i < addresses.length; i++ ) {
             address addr = addresses[i];
             OneYearLockupContract oneYearlockupContract = OneYearLockupContract(addr);
-            
+
             _requireIsRegisteredOneYearLockup(addr);
             _requireCallerIsOriginalDeployerofOYLC(addr);
 
@@ -87,7 +87,7 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
         for (uint i = 0; i < addresses.length; i++ ) {
             address addr = addresses[i];
             CustomDurationLockupContract customDurationLockupContract = CustomDurationLockupContract(addr);
-            
+
             _requireIsRegisteredCustomDurationLockup(addr);
             _requireCallerIsOriginalDeployerofCDLC(addr);
 
@@ -129,12 +129,12 @@ contract LockupContractFactory is CheckContract, ILockupContractFactory {
     }
 
     function _requireIsRegisteredOneYearLockup(address _contractAddress) internal view {
-        require(_isRegisteredOneYearLockup(_contractAddress), 
+        require(_isRegisteredOneYearLockup(_contractAddress),
         "LCF: is not the address of a registered OneYearLockupContract");
     }
 
     function _requireIsRegisteredCustomDurationLockup(address _contractAddress) internal view {
-        require(_isRegisteredCustomDurationLockup(_contractAddress), 
+        require(_isRegisteredCustomDurationLockup(_contractAddress),
         "LCF: is not the address of a registered CustomDurationLockupContract");
     }
 

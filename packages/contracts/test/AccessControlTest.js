@@ -66,7 +66,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("moveETHGainToTrove(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
-        const tx1= await borrowerOperations.moveETHGainToTrove(bob, bob, { from: bob })    
+        const tx1= await borrowerOperations.moveETHGainToTrove(bob, bob, bob, { from: bob })
       } catch (err) {
          assert.include(err.message, "revert")
         // assert.include(err.message, "BorrowerOps: Caller is not Stability Pool")
@@ -259,11 +259,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('DefaultPool', async accounts => {
-    // sendETH
-    it("sendETH(): reverts when called by an account that is not TroveManager", async () => {
+    // sendETHToActivePool
+    it("sendETHToActivePool(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await defaultPool.sendETH(alice, 100, { from: alice })
+        const txAlice = await defaultPool.sendETHToActivePool(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -355,7 +355,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither BorrowerOperations nor TroveManager nor StabilityPool")
+        // assert.include(err.message, "Caller is neither BorrowerOperations nor TroveManager nor StabilityPool")
       }
     })
 
@@ -390,7 +390,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("insert(): reverts when called by an account that is not BorrowerOps or TroveM", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedTroves.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        const txAlice = await sortedTroves.insert(bob, '150000000000000000000', bob, bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -416,7 +416,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("reinsert(): reverts when called by an account that is neither BorrowerOps nor TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedTroves.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        const txAlice = await sortedTroves.reInsert(bob, '150000000000000000000', bob, bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")

@@ -2,6 +2,7 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/BaseMath.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
@@ -11,19 +12,18 @@ import "../Interfaces/ILQTYStaking.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Interfaces/ILUSDToken.sol";
 
-contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
+contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     using SafeMath for uint;
 
     // --- Data ---
-
-    mapping( address => uint) stakes;
+    mapping( address => uint) public stakes;
     uint public totalLQTYStaked;
 
     uint public F_ETH;  // Running sum of ETH fees per-LQTY-staked
     uint public F_LUSD; // Running sum of LQTY fees per-LQTY-staked
 
     // User snapshots of F_ETH and F_LUSD, taken at the point at which their latest deposit was made
-    mapping (address => Snapshot) snapshots; 
+    mapping (address => Snapshot) public snapshots; 
 
     struct Snapshot {
         uint F_ETH_Snapshot;
@@ -44,6 +44,9 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
     event TroveManagerAddressSet(address _troveManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
+
+    event StakeChanged(address indexed staker, uint newStake);
+    event StakingGainsWithdrawn(address indexed staker, uint LUSDGain, uint ETHGain);
 
     // --- Functions ---
 
@@ -94,12 +97,17 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
     
        _updateUserSnapshots(msg.sender);
 
+        uint newStake = currentStake.add(_LQTYamount);
+
         // Increase user’s stake and total LQTY staked
-        stakes[msg.sender] = currentStake.add(_LQTYamount);
+        stakes[msg.sender] = newStake;
         totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
 
         // Transfer LQTY from caller to this contract
         lqtyToken.sendToLQTYStaking(msg.sender, _LQTYamount);
+
+        emit StakeChanged(msg.sender, newStake);
+        emit StakingGainsWithdrawn(msg.sender, LUSDGain, ETHGain);
 
         // Send accumulated LUSD and ETH gains to the caller
         lusdToken.transfer(msg.sender, LUSDGain);
@@ -120,12 +128,17 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
 
         uint LQTYToWithdraw = LiquityMath._min(_LQTYamount, currentStake);
 
+        uint newStake = currentStake.sub(LQTYToWithdraw);
+
         // Decrease user's stake and total LQTY staked
-        stakes[msg.sender] = currentStake.sub(LQTYToWithdraw);
+        stakes[msg.sender] = newStake;
         totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);  
 
         // Transfer unstaked LQTY to user
         lqtyToken.transfer(msg.sender, LQTYToWithdraw);
+
+        emit StakeChanged(msg.sender, newStake);
+        emit StakingGainsWithdrawn(msg.sender, LUSDGain, ETHGain);
 
         // Send accumulated LUSD and ETH gains to the caller
         lusdToken.transfer(msg.sender, LUSDGain);
@@ -138,7 +151,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
         _requireCallerIsTroveManager();
         uint ETHFeePerLQTYStaked;
      
-        if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = _ETHFee.mul(1e18).div(totalLQTYStaked);}
+        if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = _ETHFee.mul(DECIMAL_PRECISION).div(totalLQTYStaked);}
 
         F_ETH = F_ETH.add(ETHFeePerLQTYStaked); 
     }
@@ -147,7 +160,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
         _requireCallerIsBorrowerOperations();
         uint LUSDFeePerLQTYStaked;
         
-        if (totalLQTYStaked > 0) {LUSDFeePerLQTYStaked = _LUSDFee.mul(1e18).div(totalLQTYStaked);}
+        if (totalLQTYStaked > 0) {LUSDFeePerLQTYStaked = _LUSDFee.mul(DECIMAL_PRECISION).div(totalLQTYStaked);}
         
         F_LUSD = F_LUSD.add(LUSDFeePerLQTYStaked);
     }
@@ -160,7 +173,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
 
     function _getPendingETHGain(address _user) internal view returns (uint) {
         uint F_ETH_Snapshot = snapshots[_user].F_ETH_Snapshot;
-        uint ETHGain = stakes[_user].mul(F_ETH.sub(F_ETH_Snapshot)).div(1e18);
+        uint ETHGain = stakes[_user].mul(F_ETH.sub(F_ETH_Snapshot)).div(DECIMAL_PRECISION);
         return ETHGain;
     }
 
@@ -170,7 +183,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract {
 
     function _getPendingLUSDGain(address _user) internal view returns (uint) {
         uint F_LUSD_Snapshot = snapshots[_user].F_LUSD_Snapshot;
-        uint LUSDGain = stakes[_user].mul(F_LUSD.sub(F_LUSD_Snapshot)).div(1e18);
+        uint LUSDGain = stakes[_user].mul(F_LUSD.sub(F_LUSD_Snapshot)).div(DECIMAL_PRECISION);
         return LUSDGain;
     }
 

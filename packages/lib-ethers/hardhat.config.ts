@@ -1,10 +1,15 @@
+import assert from "assert";
 import fs from "fs";
 import path from "path";
 import dotenv from "dotenv";
+import "colors";
 
+import { JsonFragment } from "@ethersproject/abi";
 import { Wallet } from "@ethersproject/wallet";
+import { Signer } from "@ethersproject/abstract-signer";
+import { Overrides } from "@ethersproject/contracts";
 
-import { task, HardhatUserConfig, types } from "hardhat/config";
+import { task, HardhatUserConfig, types, extendEnvironment } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";
 import "@nomiclabs/hardhat-ethers";
 
@@ -15,15 +20,24 @@ import { connectToContracts, LiquityDeployment, priceFeedIsTestnet } from "./src
 
 import accounts from "./accounts.json";
 
-const numAccounts = 100;
-
 dotenv.config();
+
+const numAccounts = 100;
 
 const useLiveVersionEnv = (process.env.USE_LIVE_VERSION ?? "false").toLowerCase();
 const useLiveVersion = !["false", "no", "0"].includes(useLiveVersionEnv);
 
+const contractsDir = path.join("..", "contracts");
+const artifacts = path.join(contractsDir, "artifacts");
+const cache = path.join(contractsDir, "cache");
+
+const contractsVersion = fs
+  .readFileSync(path.join(useLiveVersion ? "live" : artifacts, "version"))
+  .toString()
+  .trim();
+
 if (useLiveVersion) {
-  console.log("Using live version of contracts.".cyan);
+  console.log(`Using live version of contracts (${contractsVersion}).`.cyan);
 }
 
 const generateRandomAccounts = (numberOfAccounts: number) => {
@@ -61,34 +75,65 @@ const hasAggregator = (network: string): network is keyof typeof aggregatorAddre
 const config: HardhatUserConfig = {
   networks: {
     hardhat: {
+      accounts: accounts.slice(0, numAccounts),
+
+      gas: 12e6, // tx gas limit
+      blockGasLimit: 12e6,
+
       // Let Ethers throw instead of Buidler EVM
       // This is closer to what will happen in production
       throwOnCallFailures: false,
-      throwOnTransactionFailures: false,
-      gas: 12e6, // tx gas limit
-      blockGasLimit: 12e6,
-      accounts: accounts.slice(0, numAccounts)
+      throwOnTransactionFailures: false
     },
+
     dev: {
       url: "http://localhost:8545",
       accounts: [deployerAccount, devChainRichAccount, ...generateRandomAccounts(numAccounts - 2)]
     },
+
     ...infuraNetwork("ropsten"),
     ...infuraNetwork("rinkeby"),
     ...infuraNetwork("goerli"),
     ...infuraNetwork("kovan"),
     ...infuraNetwork("mainnet")
   },
-  paths: useLiveVersion
-    ? {
-        artifacts: "live/artifacts",
-        cache: "live/cache"
-      }
-    : {
-        artifacts: "../contracts/artifacts",
-        cache: "../contracts/cache"
-      }
+
+  paths: {
+    artifacts,
+    cache
+  }
 };
+
+declare module "hardhat/types/runtime" {
+  interface HardhatRuntimeEnvironment {
+    deployLiquity: (
+      deployer: Signer,
+      useRealPriceFeed?: boolean,
+      overrides?: Overrides
+    ) => Promise<LiquityDeployment>;
+  }
+}
+
+const getLiveArtifact = (name: string): { abi: JsonFragment[]; bytecode: string } =>
+  require(`./live/${name}.json`);
+
+extendEnvironment(env => {
+  env.deployLiquity = async (deployer, useRealPriceFeed = false, overrides?: Overrides) => {
+    const deployment = await deployAndSetupContracts(
+      deployer,
+      useLiveVersion
+        ? (name, signer) => {
+            const { abi, bytecode } = getLiveArtifact(name);
+            return env.ethers.getContractFactory(abi, bytecode, signer);
+          }
+        : env.ethers.getContractFactory,
+      !useRealPriceFeed,
+      overrides
+    );
+
+    return { ...deployment, version: contractsVersion };
+  };
+});
 
 type DeployParams = {
   channel: string;
@@ -107,27 +152,19 @@ task("deploy", "Deploys the contracts to the network")
     undefined,
     types.boolean
   )
-  .setAction(async ({ channel, gasPrice, useRealPriceFeed }: DeployParams, bre) => {
+  .setAction(async ({ channel, gasPrice, useRealPriceFeed }: DeployParams, env) => {
     const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).bigNumber };
-    const [deployer] = await bre.ethers.getSigners();
+    const [deployer] = await env.ethers.getSigners();
 
-    useRealPriceFeed ??= bre.network.name === "mainnet";
+    useRealPriceFeed ??= env.network.name === "mainnet";
 
-    if (useRealPriceFeed && !hasAggregator(bre.network.name)) {
-      throw new Error(`Aggregator unavailable on ${bre.network.name}`);
+    if (useRealPriceFeed && !hasAggregator(env.network.name)) {
+      throw new Error(`Aggregator unavailable on ${env.network.name}`);
     }
 
     setSilent(false);
 
-    const deployment: LiquityDeployment = {
-      ...(await deployAndSetupContracts(
-        deployer,
-        bre.ethers.getContractFactory,
-        !useRealPriceFeed,
-        overrides
-      )),
-      version: fs.readFileSync(path.join(bre.config.paths.artifacts, "version")).toString().trim()
-    };
+    const deployment = await env.deployLiquity(deployer, useRealPriceFeed, overrides);
 
     if (useRealPriceFeed) {
       const contracts = connectToContracts(
@@ -136,13 +173,15 @@ task("deploy", "Deploys the contracts to the network")
         deployer
       );
 
-      if (!priceFeedIsTestnet(contracts.priceFeed) && hasAggregator(bre.network.name)) {
+      assert(!priceFeedIsTestnet(contracts.priceFeed));
+
+      if (hasAggregator(env.network.name)) {
         console.log(
-          `Hooking up PriceFeed with aggregator at ${aggregatorAddress[bre.network.name]} ...`
+          `Hooking up PriceFeed with aggregator at ${aggregatorAddress[env.network.name]} ...`
         );
 
         const tx = await contracts.priceFeed.setAddresses(
-          aggregatorAddress[bre.network.name],
+          aggregatorAddress[env.network.name],
           overrides
         );
 
@@ -153,12 +192,12 @@ task("deploy", "Deploys the contracts to the network")
     fs.mkdirSync(path.join("deployments", channel), { recursive: true });
 
     fs.writeFileSync(
-      path.join("deployments", channel, `${bre.network.name}.json`),
+      path.join("deployments", channel, `${env.network.name}.json`),
       JSON.stringify(deployment, undefined, 2)
     );
 
     console.log();
-    console.log({ [bre.network.name]: deployment });
+    console.log(deployment);
     console.log();
   });
 

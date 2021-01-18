@@ -4,13 +4,14 @@ pragma solidity 0.6.11;
 
 import "../Interfaces/ILQTYToken.sol";
 import "../Interfaces/ICommunityIssuance.sol";
+import "../Dependencies/BaseMath.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
 
 //TODO: Decide upon and implement LQTY community issuance schedule.
-contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
+contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMath {
     using SafeMath for uint;
 
     // --- Data ---
@@ -57,10 +58,6 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
         deploymentTime = block.timestamp;
     }
 
-    function getLQTYSupplyCap() external pure returns (uint) {
-        return LQTYSupplyCap;
-    }
-
     function setAddresses
     (
         address _lqtyTokenAddress, 
@@ -89,7 +86,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
     function issueLQTY() external override returns (uint) {
         _requireCallerIsStabilityPool();
 
-        uint latestTotalLQTYIssued = LQTYSupplyCap.mul(_getCumulativeIssuanceFraction()).div(1e18);
+        uint latestTotalLQTYIssued = LQTYSupplyCap.mul(_getCumulativeIssuanceFraction()).div(DECIMAL_PRECISION);
         uint issuance = latestTotalLQTYIssued.sub(totalLQTYIssued);
 
         totalLQTYIssued = latestTotalLQTYIssued;
@@ -108,8 +105,8 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract {
         uint power = LiquityMath._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
 
         //  (1 - f^t)
-        uint cumulativeIssuanceFraction = (uint(1e18).sub(power));
-        assert(cumulativeIssuanceFraction <= 1e18); // must be in range [0,1]
+        uint cumulativeIssuanceFraction = (uint(DECIMAL_PRECISION).sub(power));
+        assert(cumulativeIssuanceFraction <= DECIMAL_PRECISION); // must be in range [0,1]
 
         return cumulativeIssuanceFraction;
     }

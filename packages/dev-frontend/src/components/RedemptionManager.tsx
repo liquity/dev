@@ -38,21 +38,17 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
 
   const myTransactionId = "redemption";
   const myTransactionState = useMyTransactionState(myTransactionId);
-  const tentativelyConfirmed =
-    (myTransactionState.type === "waitingForConfirmations" &&
-      myTransactionState.confirmations > 0) ||
-    myTransactionState.type === "confirmed";
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
       setChangePending(true);
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       setChangePending(false);
-    } else if (tentativelyConfirmed) {
+    } else if (myTransactionState.type === "confirmed") {
       setAmount(Decimal.ZERO);
       setChangePending(false);
     }
-  }, [myTransactionState.type, setChangePending, setAmount, tentativelyConfirmed]);
+  }, [myTransactionState.type, setChangePending, setAmount]);
 
   if (amount.isZero) {
     return null;
@@ -86,27 +82,26 @@ const select = ({ price, fees, total }: LiquityStoreState) => ({ price, fees, to
 
 export const RedemptionManager: React.FC = () => {
   const { price, fees, total } = useLiquitySelector(select);
-  const [amount, setAmount] = useState(Decimal.ZERO);
+  const [lusdAmount, setLUSDAmount] = useState(Decimal.ZERO);
   const [changePending, setChangePending] = useState(false);
-
   const editingState = useState<string>();
 
-  const edited = amount.nonZero !== undefined;
-  const ethAmount = amount.div(price);
-  const feeFactor = fees.redemptionFeeFactor(amount.div(total.debt));
+  const edited = !lusdAmount.isZero;
+  const ethAmount = lusdAmount.div(price);
+  const feeFactor = fees.redemptionFeeFactor(lusdAmount.div(total.debt));
   const feePct = new Percent(feeFactor);
-  const fee = ethAmount.nonZero?.mul(feeFactor);
+  const ethFee = ethAmount.mul(feeFactor);
 
   return (
     <>
       <Card>
         <Heading>
-          Redeem Collateral with {COIN}
+          Redeem {COIN} to get ETH
           {edited && !changePending && (
             <Button
               variant="titleIcon"
               sx={{ ":enabled:hover": { color: "danger" } }}
-              onClick={() => setAmount(Decimal.ZERO)}
+              onClick={() => setLUSDAmount(Decimal.ZERO)}
             >
               <Icon name="history" size="lg" />
             </Button>
@@ -117,40 +112,41 @@ export const RedemptionManager: React.FC = () => {
 
         <Box>
           <EditableRow
-            label="Exchange"
-            inputId="redeem-exchange"
-            amount={amount.prettify()}
+            label="Redeem"
+            inputId="redeem-lusd"
+            amount={lusdAmount.prettify()}
             unit={COIN}
             {...{ editingState }}
-            editedAmount={amount.toString(2)}
-            setEditedAmount={amount => setAmount(Decimal.from(amount))}
+            editedAmount={lusdAmount.toString(2)}
+            setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
           ></EditableRow>
 
-          <EditableRow
-            label="Redeem"
-            inputId="redeem-eth"
-            amount={amount.div(price).prettify(4)}
-            unit="ETH"
-            {...{ editingState }}
-            editedAmount={ethAmount.toString(4)}
-            setEditedAmount={amount => setAmount(Decimal.from(amount).mul(price))}
-          ></EditableRow>
+          {edited && (
+            <>
+              <StaticRow
+                label="Fee"
+                inputId="redeem-fee"
+                amount={ethFee.toString(4)}
+                color="danger"
+                pendingAmount={feePct.toString(2)}
+                pendingColor="danger"
+                unit="ETH"
+              />
 
-          {fee && (
-            <StaticRow
-              label="Fee"
-              inputId="redemption-fee"
-              amount={fee.toString(4)}
-              color="danger"
-              pendingAmount={feePct.toString(2)}
-              pendingColor="danger"
-              unit="ETH"
-            />
+              <StaticRow
+                label="Get"
+                inputId="redeem-eth"
+                amount={ethAmount.sub(ethFee).prettify(4)}
+                unit="ETH"
+              />
+            </>
           )}
         </Box>
       </Card>
 
-      <RedemptionAction {...{ amount, setAmount, changePending, setChangePending }} />
+      <RedemptionAction
+        {...{ amount: lusdAmount, setAmount: setLUSDAmount, changePending, setChangePending }}
+      />
     </>
   );
 };

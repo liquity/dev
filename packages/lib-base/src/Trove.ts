@@ -129,7 +129,10 @@ const applyFee = (borrowingFeeFactor: Decimalish, debtIncrease: Decimalish) =>
 const unapplyFee = (borrowingFeeFactor: Decimalish, debtIncrease: Decimalish) =>
   Decimal.from(debtIncrease).div(Decimal.ONE.add(borrowingFeeFactor));
 
+const NOMINAL_COLLATERAL_RATIO_PRECISION = Decimal.from(100);
+
 export class Trove {
+  public static readonly MINIMUM_COLLATERAL_RATIO_FOR_NEW_TROVE_IN_RECOVERY = Decimal.from(3);
   public static readonly CRITICAL_COLLATERAL_RATIO: Decimal = Decimal.from(1.5);
   public static readonly MINIMUM_COLLATERAL_RATIO: Decimal = Decimal.from(1.1);
   /**
@@ -158,6 +161,10 @@ export class Trove {
     return this.debt.sub(Trove.GAS_COMPENSATION_DEPOSIT);
   }
 
+  get nominalCollateralRatio(): Decimal {
+    return this.collateral.mulDiv(NOMINAL_COLLATERAL_RATIO_PRECISION, this.debt);
+  }
+
   collateralRatio(price: Decimalish): Decimal {
     return this.collateral.mulDiv(price, this.debt);
   }
@@ -168,6 +175,10 @@ export class Trove {
 
   collateralRatioIsBelowCritical(price: Decimalish): boolean {
     return this.collateralRatio(price).lt(Trove.CRITICAL_COLLATERAL_RATIO);
+  }
+
+  isOpenableInRecoveryMode(price: Decimalish): boolean {
+    return this.collateralRatio(price).gte(Trove.MINIMUM_COLLATERAL_RATIO_FOR_NEW_TROVE_IN_RECOVERY);
   }
 
   toString(): string {
