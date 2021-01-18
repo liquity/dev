@@ -223,11 +223,11 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
 - `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
 - `packages/contracts/fuzzTests/` - Echidna tests, and naive "random operation" tests 
-- `packages/contracts/migrations/` - contains Buidler script for deploying the smart contracts to the blockchain
-- `packages/contracts/utils/` - external Buidler and node scripts - deployment helpers, gas calculators, etc
+- `packages/contracts/migrations/` - contains Hardhat script for deploying the smart contracts to the blockchain
+- `packages/contracts/utils/` - external Hardhat and node scripts - deployment helpers, gas calculators, etc
 - `packages/contracts/mathProofs/` - core mathematical proofs of Liquity properties, and a derivation of the scalable Stability Pool staking formula
 
-Backend development is done in the Hardhat framework, and allows Liquity to be deployed on the Buidler EVM network for fast compilation and test execution.
+Backend development is done in the Hardhat framework, and allows Liquity to be deployed on the Hardhat EVM network for fast compilation and test execution.
 
 ### Branches
 
@@ -529,9 +529,9 @@ The project is deployed on the Ropsten testnet.
 
 ## Running Tests
 
-Run all tests with `npx buidler test`, or run a specific test with `npx buidler test ./test/contractTest.js`
+Run all tests with `npx hardhat test`, or run a specific test with `npx hardhat test ./test/contractTest.js`
 
-Tests are run against the Buidler EVM.
+Tests are run against the Hardhat EVM.
 
 ## System Quantities - Units and Representation
 
