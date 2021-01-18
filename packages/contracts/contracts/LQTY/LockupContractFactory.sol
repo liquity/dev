@@ -4,6 +4,7 @@ pragma solidity 0.6.11;
 
 import "../Dependencies/CheckContract.sol";
 import "../Dependencies/SafeMath.sol";
+import "../Dependencies/Ownable.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "./LockupContract.sol";
 import "../Dependencies/console.sol";
@@ -22,13 +23,11 @@ import "../Dependencies/console.sol";
 * LockupContract.
 */
 
-contract LockupContractFactory is ILockupContractFactory {
+contract LockupContractFactory is ILockupContractFactory, Ownable, CheckContract {
     using SafeMath for uint;
 
     // --- Data ---
     uint constant public SECONDS_IN_ONE_YEAR = 31536000;
-
-    address public immutable deployer;
 
     address public lqtyTokenAddress;
     
@@ -41,16 +40,13 @@ contract LockupContractFactory is ILockupContractFactory {
 
     // --- Functions ---
 
-    constructor () public {
-        deployer = msg.sender;
-    }
+    function setLQTYTokenAddress(address _lqtyTokenAddress) external override onlyOwner {
+        checkContract(_lqtyTokenAddress);
 
-    function setLQTYTokenAddress(address _lqtyTokenAddress) external override {
-        _requireCallerIsFactoryDeployer();
-        _requireLQTYAddressIsNotSet();
-        
         lqtyTokenAddress = _lqtyTokenAddress;
         emit LQTYTokenAddressSet(_lqtyTokenAddress);
+
+        _renounceOwnership();
     }
 
     function deployLockupContract(address _beneficiary, uint _unlockTime) external override {
@@ -69,16 +65,7 @@ contract LockupContractFactory is ILockupContractFactory {
     }
 
     // --- 'require'  functions ---
-
-    function _requireCallerIsFactoryDeployer() internal view {
-        require(msg.sender == deployer, "LCF: caller is not LCF deployer");
-    }
-
     function _requireLQTYAddressIsSet() internal view {
         require(lqtyTokenAddress != address(0), "LCF: LQTY Address is not set");
-    }
-
-    function _requireLQTYAddressIsNotSet() internal view {
-        require(lqtyTokenAddress == address(0), "LCF: LQTY Address is already set");
     }
 }

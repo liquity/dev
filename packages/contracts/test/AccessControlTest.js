@@ -30,6 +30,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   let functionCaller
   let borrowerOperations
 
+  let lqtyStaking
+  let lqtyToken
+  let communityIssuance
+  let lockupContractFactory
+
   
   before(async () => {
     const coreContracts = await deploymentHelper.deployLiquityCore()
@@ -427,26 +432,12 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
   })
 
-  describe('LockupContractFactory', async accounts => {
-    it("setLQTYTokenAddress(): reverts when caller is not deployer", async () => {
-      try {
-        const txAlice = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Owner can successfully set any valid address
-      const txOwner = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: owner })
-    })
-  })
-
   describe('LockupContract', async accounts => {
     it("withdrawLQTY(): reverts when caller is not beneficiary", async () => {
       // deploy new LC with Carol as beneficiary
-      const unlockTime = (await lqtyToken.deploymentStartTime()).add(toBN(timeValues.SECONDS_IN_ONE_YEAR))
+      const unlockTime = (await lqtyToken.getDeploymentStartTime()).add(toBN(timeValues.SECONDS_IN_ONE_YEAR))
       const deployedLCtx = await lockupContractFactory.deployLockupContract(
-        carol, dec(100, 18), 
+        carol, 
         unlockTime,
         { from: owner })
 
