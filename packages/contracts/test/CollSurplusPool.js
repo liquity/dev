@@ -39,8 +39,8 @@ contract('CollSurplusPool', async accounts => {
 
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), B, { from: B, value: dec(1, 'ether') })  // lowest ICR
+    await borrowerOperations.openTrove(0, dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), B, { from: B, value: dec(1, 'ether') })  // lowest ICR
 
     // At ETH:USD = 100, this redemption should fully eat all of B's debt, and leave 50% coll surplus for B, 0.5 ether
     const redemptionTx = await th.redeemCollateralAndGetTxObject(A, contracts, dec(100, 18))
@@ -62,7 +62,7 @@ contract('CollSurplusPool', async accounts => {
 
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), A, { from: A, value: dec(3000, 'ether') })
     // open trove from NonPayable proxy contract
     const openTroveData = th.getTransactionData('openTrove(uint256,address)', [web3.utils.toHex(dec(50, 18)), B])
     await nonPayable.forward(borrowerOperations.address, openTroveData, { value: dec(1, 'ether') })

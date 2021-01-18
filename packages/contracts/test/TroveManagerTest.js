@@ -74,8 +74,8 @@ contract('TroveManager', async accounts => {
   })
 
   it('liquidate(): closes a Trove that has ICR < MCR', async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(50, 'ether') })
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(50, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(1, 'ether') })
 
     const price = await priceFeed.getPrice()
     const ICR_Before = await troveManager.getCurrentICR(alice, price)
@@ -87,7 +87,7 @@ contract('TroveManager', async accounts => {
     // Alice withdraws to 180 LUSD, lowering her ICR to 1.11
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
 
-    await borrowerOperations.withdrawLUSD(A_LUSDWithdrawal, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, A_LUSDWithdrawal, alice, { from: alice })
 
     const ICR_AfterWithdrawal = await troveManager.getCurrentICR(alice, price)
     assert.isAtMost(th.getDifference(ICR_AfterWithdrawal, '1111111111111111111'), 100)
@@ -110,13 +110,13 @@ contract('TroveManager', async accounts => {
 
   it("liquidate(): decreases ActivePool ETH and LUSDDebt by correct amounts", async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(1, 'ether') })
     // Alice withdraws 100LUSD, Bob withdraws 180LUSD
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(100, 18), contracts)
     const B_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
-    await borrowerOperations.withdrawLUSD(A_LUSDWithdrawal, alice, { from: alice })
-    await borrowerOperations.withdrawLUSD(B_LUSDWithdrawal, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, A_LUSDWithdrawal, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, B_LUSDWithdrawal, bob, { from: bob })
 
     // --- TEST ---
 
@@ -151,11 +151,11 @@ contract('TroveManager', async accounts => {
 
   it("liquidate(): increases DefaultPool ETH and LUSD debt by correct amounts", async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(1, 'ether') })
 
-    await borrowerOperations.withdrawLUSD('1000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('170000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, '1000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, '170000000000000000000', bob, { from: bob })
 
     // --- TEST ---
 
@@ -189,13 +189,13 @@ contract('TroveManager', async accounts => {
 
   it("liquidate(): removes the Trove's stake from the total stakes", async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(1, 'ether') })
 
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(100, 18), contracts)
     const B_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
-    await borrowerOperations.withdrawLUSD(A_LUSDWithdrawal, alice, { from: alice })
-    await borrowerOperations.withdrawLUSD(B_LUSDWithdrawal, bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, A_LUSDWithdrawal, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, B_LUSDWithdrawal, bob, { from: bob })
 
     // --- TEST ---
 
@@ -219,14 +219,14 @@ contract('TroveManager', async accounts => {
 
   it("liquidate(): Removes the correct trove from the TroveOwners array, and moves the last array element to the new empty slot", async () => {
     // --- SETUP --- 
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice, Bob, Carol, Dennis, Erin open troves with consecutively decreasing collateral ratio
-    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('102000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('103000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('104000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '101000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '102000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '103000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '104000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // At this stage, TroveOwners array should be: [W, A, B, C, D, E] 
 
@@ -284,11 +284,11 @@ contract('TroveManager', async accounts => {
 
   it("liquidate(): updates the snapshots of total stakes and total collateral", async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(1, 'ether') })
 
-    await borrowerOperations.withdrawLUSD('1000000000000000000', alice, { from: alice })
-    await borrowerOperations.withdrawLUSD('170000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, '1000000000000000000', alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, '170000000000000000000', bob, { from: bob })
 
     // --- TEST ---
 
@@ -321,12 +321,12 @@ contract('TroveManager', async accounts => {
 
   it("liquidate(): updates the L_ETH and L_LUSDDebt reward-per-unit-staked totals", async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, { from: carol, value: dec(1, 'ether') })
 
     // Carol withdraws 170LUSD, lowering her ICR to 1.11
-    await borrowerOperations.withdrawLUSD('170000000000000000000', carol, { from: carol })
+    await borrowerOperations.withdrawLUSD(0, '170000000000000000000', carol, { from: carol })
 
     // --- TEST ---
 
@@ -354,7 +354,7 @@ contract('TroveManager', async accounts => {
     assert.isAtMost(th.getDifference(L_LUSDDebt_AfterCarolLiquidated, '9000000000000000000'), 100)
 
     // Bob now withdraws 790 LUSD, bringing his ICR to 1.11
-    await borrowerOperations.withdrawLUSD('790000000000000000000', bob, { from: bob })
+    await borrowerOperations.withdrawLUSD(0, '790000000000000000000', bob, { from: bob })
 
     // Confirm system is in Recovery Mode
     assert.isFalse(await troveManager.checkRecoveryMode());
@@ -386,12 +386,12 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): Liquidates undercollateralized trove if there are two troves in the system", async () => {
-    await borrowerOperations.openTrove(dec(50, 18), bob, { from: bob, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), bob, { from: bob, value: dec(100, 'ether') })
 
     // Alice creates a single trove with 0.5 ETH and a debt of 50 LQTY,  and provides 10 LUSD to SP
 
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(50, 18), contracts)
-    await borrowerOperations.openTrove(A_LUSDWithdrawal, alice, { from: alice, value: dec(500, 'finney') })
+    await borrowerOperations.openTrove(0, A_LUSDWithdrawal, alice, { from: alice, value: dec(500, 'finney') })
 
     // Alice proves 10 LUSD to SP
     await stabilityPool.provideToSP(dec(10, 18), ZERO_ADDRESS, { from: alice })
@@ -427,8 +427,8 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): reverts if trove is non-existent", async () => {
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, { from: bob, value: dec(10, 'ether') })
 
     assert.equal(await troveManager.getTroveStatus(carol), 0) // check trove non-existent
 
@@ -448,9 +448,9 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): reverts if trove has been closed", async () => {
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(180, 18), bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(180, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     assert.isTrue(await sortedTroves.contains(carol))
 
@@ -479,8 +479,8 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): does nothing if trove has >= 110% ICR", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(180, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(180, 18), bob, { from: bob, value: dec(10, 'ether') })
 
     const TCR_Before = (await troveManager.getTCR()).toString()
     const listSize_Before = (await sortedTroves.getSize()).toString()
@@ -510,20 +510,20 @@ contract('TroveManager', async accounts => {
 
   it("liquidate(): Given the same price and no other trove changes, complete Pool offsets restore the TCR to its value prior to the defaulters opening troves", async () => {
     // Whale provides 2000 LUSD to SP
-    await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await stabilityPool.provideToSP(dec(2000, 18), ZERO_ADDRESS, { from: whale })
 
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(7, 'ether') })
-    await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(20, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(7, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, 0, dennis, { from: dennis, value: dec(20, 'ether') })
 
     const TCR_Before = (await troveManager.getTCR()).toString()
 
-    await borrowerOperations.openTrove('101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
+    await borrowerOperations.openTrove(0, '101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, '328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, '480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
     assert.isTrue((await sortedTroves.contains(defaulter_1)))
     assert.isTrue((await sortedTroves.contains(defaulter_2)))
@@ -559,18 +559,18 @@ contract('TroveManager', async accounts => {
 
   it("liquidate(): Pool offsets increase the TCR", async () => {
     // Whale provides 2000 LUSD to SP
-    await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await stabilityPool.provideToSP(dec(2000, 18), ZERO_ADDRESS, { from: whale })
 
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(7, 'ether') })
-    await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(20, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(7, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, 0, dennis, { from: dennis, value: dec(20, 'ether') })
 
-    await borrowerOperations.openTrove('101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
+    await borrowerOperations.openTrove(0, '101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, '328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, '480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
     assert.isTrue((await sortedTroves.contains(defaulter_1)))
     assert.isTrue((await sortedTroves.contains(defaulter_2)))
@@ -607,17 +607,17 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): a pure redistribution reduces the TCR only as a result of compensation", async () => {
-    await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(7, 'ether') })
-    await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(20, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(7, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, 0, dennis, { from: dennis, value: dec(20, 'ether') })
 
-    await borrowerOperations.openTrove('101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
+    await borrowerOperations.openTrove(0, '101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, '328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, '480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
     assert.isTrue((await sortedTroves.contains(defaulter_1)))
     assert.isTrue((await sortedTroves.contains(defaulter_2)))
@@ -701,9 +701,9 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): does not affect the SP deposit or ETH gain when called on an SP depositor's address that has no trove", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Bob sends tokens to Dennis, who has no trove
     await lusdToken.transfer(dennis, dec(200, 18), { from: bob })
@@ -743,9 +743,9 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): does not liquidate a SP depositor's trove with ICR > 110%, and does not affect their SP deposit or ETH gain", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     //Bob provides 200 LUSD to SP
     await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
@@ -784,10 +784,10 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): liquidates a SP depositor's trove with ICR < 110%, and the liquidation correctly impacts their SP deposit and ETH gain", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     //Bob provides 200 LUSD to SP
     await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: bob })
@@ -831,10 +831,10 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): does not alter the liquidated user's token balance", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), bob, { from: bob, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
     await priceFeed.setPrice(dec(100, 18))
 
     // Check token balances 
@@ -881,12 +881,12 @@ contract('TroveManager', async accounts => {
     const withdrawal_B = await th.getActualDebtFromComposite('90500000000000000000', contracts)
     const withdrawal_C = await th.getActualDebtFromComposite(dec(100, 18), contracts)
 
-    await borrowerOperations.openTrove(withdrawal_A, alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(withdrawal_B, bob, { from: bob, value: dec(1, 'ether') })  // 90.5 LUSD, 1 ETH
-    await borrowerOperations.openTrove(withdrawal_C, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, withdrawal_A, alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, withdrawal_B, bob, { from: bob, value: dec(1, 'ether') })  // 90.5 LUSD, 1 ETH
+    await borrowerOperations.openTrove(0, withdrawal_C, carol, { from: carol, value: dec(1, 'ether') })
 
     // Defaulter opens with 30 LUSD, 0.3 ETH
-    await borrowerOperations.openTrove(dec(30, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
+    await borrowerOperations.openTrove(0, dec(30, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -943,7 +943,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(bob_rawICR.gte(mv._MCR))
 
     // Whale enters system, pulling it into Normal Mode
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
     assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Liquidate Alice, Bob, Carol
@@ -964,14 +964,14 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
-    await borrowerOperations.openTrove(dec(50, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), B, { from: B, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), C, { from: C, value: dec(3, 'ether') })
 
-    await borrowerOperations.openTrove(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+    await borrowerOperations.openTrove(0, dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
 
     // B provides to SP
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
@@ -997,14 +997,14 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidate(): when SP is empty, doesn't update G", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
-    await borrowerOperations.openTrove(dec(50, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), B, { from: B, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), C, { from: C, value: dec(3, 'ether') })
 
-    await borrowerOperations.openTrove(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+    await borrowerOperations.openTrove(0, dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
 
     // B provides to SP
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
@@ -1042,19 +1042,19 @@ contract('TroveManager', async accounts => {
 
   it('liquidateTroves(): closes every Trove with ICR < MCR, when n > number of undercollateralized troves', async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(dec(490, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(490, 18), whale, { from: whale, value: dec(100, 'ether') })
 
     // create 5 Troves with varying ICRs
-    await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(290, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(170, 18), flyn, { from: flyn, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(290, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(170, 18), flyn, { from: flyn, value: dec(1, 'ether') })
 
     // G,H, I open high-ICR troves
-    await borrowerOperations.openTrove(dec(90, 18), graham, { from: graham, value: dec(100, 'ether') })
-    await borrowerOperations.openTrove(dec(190, 18), harriet, { from: harriet, value: dec(100, 'ether') })
-    await borrowerOperations.openTrove(dec(290, 18), ida, { from: ida, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(90, 18), graham, { from: graham, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), harriet, { from: harriet, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(290, 18), ida, { from: ida, value: dec(100, 'ether') })
 
     // Whale puts some tokens in Stability Pool
     await stabilityPool.provideToSP(dec(300, 18), ZERO_ADDRESS, { from: whale })
@@ -1105,15 +1105,15 @@ contract('TroveManager', async accounts => {
   })
 
   it('liquidateTroves(): liquidates  up to the requested number of undercollateralized troves', async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // --- SETUP --- 
     // Alice, Bob, Carol, Dennis, Erin open troves with consecutively decreasing collateral ratio
-    await borrowerOperations.openTrove('105000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('104000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('103000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('102000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('101000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '105000000000000000000', alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '104000000000000000000', bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '103000000000000000000', carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '102000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '101000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
 
     // --- TEST --- 
 
@@ -1166,10 +1166,10 @@ contract('TroveManager', async accounts => {
     const LUSDwithdrawal_A = await th.getActualDebtFromComposite(dec(90, 18), contracts)
     const LUSDwithdrawal_B = await th.getActualDebtFromComposite(dec(20, 18), contracts)
     const LUSDwithdrawal_C = await th.getActualDebtFromComposite('37398509798897897897', contracts)
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(LUSDwithdrawal_A, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(LUSDwithdrawal_B, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(LUSDwithdrawal_C, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, LUSDwithdrawal_A, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, LUSDwithdrawal_B, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, LUSDwithdrawal_C, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops, but all troves remain active at 111% ICR
     await priceFeed.setPrice(dec(100, 18))
@@ -1209,12 +1209,12 @@ contract('TroveManager', async accounts => {
 
   
   it("liquidateTroves(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt", async () => {
-    await borrowerOperations.openTrove(dec(40, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('80500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 LUSD, 1 ETH
-    await borrowerOperations.openTrove(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '80500000000000000000', bob, { from: bob, value: dec(1, 'ether') })  // 90.5 LUSD, 1 ETH
+    await borrowerOperations.openTrove(0, dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Defaulter opens with 30 LUSD, 0.3 ETH
-    await borrowerOperations.openTrove(dec(20, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
+    await borrowerOperations.openTrove(0, dec(20, 18), defaulter_1, { from: defaulter_1, value: dec(300, 'finney') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1260,7 +1260,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(bob_rawICR.gte(mv._MCR))
 
     // Whale enters system, pulling it into Normal Mode
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
 
     // Confirm system is not in Recovery Mode
     assert.isFalse(await troveManager.checkRecoveryMode());
@@ -1280,10 +1280,10 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidateTroves(): does nothing if n = 0", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
@@ -1317,7 +1317,7 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidateTroves():  liquidates troves with ICR < MCR", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
 
     // A, B, C open troves that will remain active when price drops to 100
 
@@ -1325,18 +1325,18 @@ contract('TroveManager', async accounts => {
     const B_LUSDWithdrawal = await th.getActualDebtFromComposite('89000000000000000000', contracts)
     const C_LUSDWithdrawal = await th.getActualDebtFromComposite('90000000000000000000', contracts)
 
-    await borrowerOperations.openTrove(A_LUSDWithdrawal, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(B_LUSDWithdrawal, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(C_LUSDWithdrawal, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, A_LUSDWithdrawal, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, B_LUSDWithdrawal, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, C_LUSDWithdrawal, carol, { from: carol, value: dec(1, 'ether') })
 
     const D_LUSDWithdrawal = await th.getActualDebtFromComposite('91000000000000000000', contracts)
     const E_LUSDWithdrawal = await th.getActualDebtFromComposite('92000000000000000000', contracts)
     const F_LUSDWithdrawal = await th.getActualDebtFromComposite('93000000000000000000', contracts)
 
     // D, E, F open troves that will fall below MCR when price drops to 100
-    await borrowerOperations.openTrove('91000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('92000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('93000000000000000000', flyn, { from: flyn, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '91000000000000000000', dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '92000000000000000000', erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '93000000000000000000', flyn, { from: flyn, value: dec(1, 'ether') })
 
     // Check list size is 7
     assert.equal((await sortedTroves.getSize()).toString(), '7')
@@ -1384,16 +1384,16 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidateTroves(): does not affect the liquidated user's token balances", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(10, 'ether') })
 
     const A_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(100, 18), contracts)
     const B_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(150, 18), contracts)
     const C_LUSDWithdrawal = await th.getActualDebtFromComposite(dec(180, 18), contracts)
 
     // D, E, F open troves that will fall below MCR when price drops to 100
-    await borrowerOperations.openTrove(A_LUSDWithdrawal, dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(B_LUSDWithdrawal, erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(C_LUSDWithdrawal, flyn, { from: flyn, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, A_LUSDWithdrawal, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, B_LUSDWithdrawal, erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, C_LUSDWithdrawal, flyn, { from: flyn, value: dec(1, 'ether') })
 
     // Check list size is 4
     assert.equal((await sortedTroves.getSize()).toString(), '4')
@@ -1432,18 +1432,18 @@ contract('TroveManager', async accounts => {
 
   it("liquidateTroves(): A liquidation sequence containing Pool offsets increases the TCR", async () => {
     // Whale provides 500 LUSD to SP
-    await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await stabilityPool.provideToSP(dec(500, 18), ZERO_ADDRESS, { from: whale })
 
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(7, 'ether') })
-    await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(20, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(7, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, 0, dennis, { from: dennis, value: dec(20, 'ether') })
 
-    await borrowerOperations.openTrove('101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove('328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove('480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
+    await borrowerOperations.openTrove(0, '101000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '257000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, '328000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, '480000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
     assert.isTrue((await sortedTroves.contains(defaulter_1)))
     assert.isTrue((await sortedTroves.contains(defaulter_2)))
@@ -1484,16 +1484,16 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidateTroves(): A liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5%", async () => {
-    await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
-    await borrowerOperations.openTrove(0, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(7, 'ether') })
-    await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(20, 'ether') })
+    await borrowerOperations.openTrove(0, dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(7, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, 0, dennis, { from: dennis, value: dec(20, 'ether') })
 
-    await borrowerOperations.openTrove('91000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('247000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove('318000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove('470000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
+    await borrowerOperations.openTrove(0, '91000000000000000000', defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '247000000000000000000', defaulter_2, { from: defaulter_2, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, '318000000000000000000', defaulter_3, { from: defaulter_3, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, '470000000000000000000', defaulter_4, { from: defaulter_4, value: dec(4, 'ether') })
 
     assert.isTrue((await sortedTroves.contains(defaulter_1)))
     assert.isTrue((await sortedTroves.contains(defaulter_2)))
@@ -1537,12 +1537,12 @@ contract('TroveManager', async accounts => {
 
   it("liquidateTroves(): Liquidating troves with SP deposits correctly impacts their SP deposit and ETH gain", async () => {
     // Whale provides 400 LUSD to the SP
-    await borrowerOperations.openTrove(dec(400, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(400, 18), whale, { from: whale, value: dec(100, 'ether') })
     await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: whale })
 
-    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), bob, { from: bob, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // A, B provide 100, 300 to the SP
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: alice })
@@ -1624,15 +1624,15 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidateTroves(): when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
-    await borrowerOperations.openTrove(dec(50, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), B, { from: B, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), C, { from: C, value: dec(3, 'ether') })
 
-    await borrowerOperations.openTrove(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
-    await borrowerOperations.openTrove(dec(25, 18), defaulter_2, { from: defaulter_2, value: dec(25, 16) })
+    await borrowerOperations.openTrove(0, dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+    await borrowerOperations.openTrove(0, dec(25, 18), defaulter_2, { from: defaulter_2, value: dec(25, 16) })
 
     // B provides to SP
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
@@ -1659,15 +1659,15 @@ contract('TroveManager', async accounts => {
   })
 
   it("liquidateTroves(): when SP is empty, doesn't update G", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
-    await borrowerOperations.openTrove(dec(50, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), B, { from: B, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), C, { from: C, value: dec(3, 'ether') })
 
-    await borrowerOperations.openTrove(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
-    await borrowerOperations.openTrove(dec(25, 18), defaulter_2, { from: defaulter_2, value: dec(25, 16) })
+    await borrowerOperations.openTrove(0, dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+    await borrowerOperations.openTrove(0, dec(25, 18), defaulter_2, { from: defaulter_2, value: dec(25, 16) })
 
     // B provides to SP
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
@@ -1707,13 +1707,13 @@ contract('TroveManager', async accounts => {
 
   it('batchLiquidateTroves(): closes every trove with ICR < MCR in the given array', async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     // Check full sorted list size is 6
     assert.equal((await sortedTroves.getSize()).toString(), '6')
@@ -1761,13 +1761,13 @@ contract('TroveManager', async accounts => {
 
   it('batchLiquidateTroves(): does not liquidate troves that are not in the given array', async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(500, 18), dennis, { from: dennis, value: dec(5, 'ether') })
-    await borrowerOperations.openTrove(dec(500, 18), erin, { from: erin, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), dennis, { from: dennis, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     // Check full sorted list size is 6
     assert.equal((await sortedTroves.getSize()).toString(), '6')
@@ -1818,14 +1818,14 @@ contract('TroveManager', async accounts => {
 
   it('batchLiquidateTroves(): does not close troves with ICR >= MCR in the given array', async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
 
 
-    await borrowerOperations.openTrove(dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     // Check full sorted list size is 6
     assert.equal((await sortedTroves.getSize()).toString(), '6')
@@ -1873,13 +1873,13 @@ contract('TroveManager', async accounts => {
 
   it('batchLiquidateTroves(): reverts if array is empty', async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), carol, { from: carol, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     // Check full sorted list size is 6
     assert.equal((await sortedTroves.getSize()).toString(), '6')
@@ -1907,12 +1907,12 @@ contract('TroveManager', async accounts => {
 
   it("batchLiquidateTroves(): skips if trove is non-existent", async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     assert.equal(await troveManager.getTroveStatus(carol), 0) // check trove non-existent
 
@@ -1970,13 +1970,13 @@ contract('TroveManager', async accounts => {
 
   it("batchLiquidateTroves(): skips if a trove has been closed", async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove(dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), whale, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(140, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(90, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(5, 18), dennis, { from: dennis, value: dec(5, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), erin, { from: erin, value: dec(5, 'ether') })
 
     assert.isTrue(await sortedTroves.contains(carol))
 
@@ -2038,15 +2038,15 @@ contract('TroveManager', async accounts => {
   })
 
   it("batchLiquidateTroves: when SP > 0, triggers LQTY reward event - increases the sum G", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
-    await borrowerOperations.openTrove(dec(50, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), B, { from: B, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), C, { from: C, value: dec(3, 'ether') })
 
-    await borrowerOperations.openTrove(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
-    await borrowerOperations.openTrove(dec(25, 18), defaulter_2, { from: defaulter_2, value: dec(25, 16) })
+    await borrowerOperations.openTrove(0, dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+    await borrowerOperations.openTrove(0, dec(25, 18), defaulter_2, { from: defaulter_2, value: dec(25, 16) })
 
     // B provides to SP
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
@@ -2073,15 +2073,15 @@ contract('TroveManager', async accounts => {
   })
 
   it("batchLiquidateTroves(): when SP is empty, doesn't update G", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // A, B, C open troves 
-    await borrowerOperations.openTrove(dec(50, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), B, { from: B, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(150, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), B, { from: B, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(150, 18), C, { from: C, value: dec(3, 'ether') })
 
-    await borrowerOperations.openTrove(dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
-    await borrowerOperations.openTrove(dec(25, 18), defaulter_2, { from: defaulter_2, value: dec(25, 16) })
+    await borrowerOperations.openTrove(0, dec(50, 18), defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+    await borrowerOperations.openTrove(0, dec(25, 18), defaulter_2, { from: defaulter_2, value: dec(25, 16) })
 
     // B provides to SP
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
@@ -2121,11 +2121,11 @@ contract('TroveManager', async accounts => {
 
   it('getRedemptionHints(): gets the address of the first Trove and the final ICR of the last Trove involved in a redemption', async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove('10' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('20' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('30' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '10' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '20' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '30' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
     // Dennis' Trove should be untouched by redemption, because its ICR will be < 110% after the price drop
-    await borrowerOperations.openTrove('170' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '170' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Drop the price
     const price = '100' + _18_zeros
@@ -2144,10 +2144,10 @@ contract('TroveManager', async accounts => {
 
   it('getRedemptionHints(): returns 0 as partialRedemptionHintNICR when reaching _maxIterations', async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove('10' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('20' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('30' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('170' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '10' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '20' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '30' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '170' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
 
     const price = await priceFeed.getPrice();
 
@@ -2173,11 +2173,11 @@ contract('TroveManager', async accounts => {
     // --- SETUP ---
 
     // A, B, C, D have 20, 30, 40, 310 LUSD debt respectively (inc gas comp)
-    await borrowerOperations.openTrove(dec(15, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(30, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(15, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), carol, { from: carol, value: dec(1, 'ether') })
     // start Dennis with a high ICR
-    await borrowerOperations.openTrove(dec(275, 18), dennis, { from: dennis, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(275, 18), dennis, { from: dennis, value: dec(100, 'ether') })
 
     const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
 
@@ -2229,16 +2229,16 @@ contract('TroveManager', async accounts => {
   it('redeemCollateral(): ends the redemption sequence when the token redemption request has been filled', async () => {
     // --- SETUP --- 
     const price = await priceFeed.getPrice()
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice, Bob, Carol, Dennis, Erin open troves with consecutively decreasing collateral ratio
-    await borrowerOperations.openTrove(dec(20, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(20, 18), dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), erin, { from: erin, value: dec(1, 'ether') })
 
-    await borrowerOperations.openTrove(dec(240, 18), flyn, { from: flyn, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(240, 18), flyn, { from: flyn, value: dec(100, 'ether') })
 
     // Check total LUSD supply is 400
     const totalLUSDSupply = await troveManager.getEntireSystemDebt()
@@ -2286,20 +2286,20 @@ contract('TroveManager', async accounts => {
   it('redeemCollateral(): ends the redemption sequence when max iterations have been reached', async () => {
     // --- SETUP --- 
     const price = await priceFeed.getPrice()
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice, Bob, Carol, Dennis, Erin open troves with consecutively decreasing collateral ratio
-    await borrowerOperations.openTrove(dec(20, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // --- TEST --- 
 
     // open trove from redeemer.  Redeemer has highest ICR (10000ETH, 10000 LUSD), 20000%
-    await borrowerOperations.openTrove(dec(10000, 18), flyn, { from: flyn, value: dec(10000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10000, 18), flyn, { from: flyn, value: dec(10000, 'ether') })
 
     // Flyn redeems collateral
-    await troveManager.redeemCollateral(dec(60, 18), alice, alice, 0, 2, { from: flyn })
+    await troveManager.redeemCollateral(dec(60, 18), alice, alice, 0, 2, 0, { from: flyn })
 
     // Check Flyn's redemption has reduced
     const flynBalance = await lusdToken.balanceOf(flyn)
@@ -2328,10 +2328,10 @@ contract('TroveManager', async accounts => {
 
     const price = await priceFeed.getPrice()
 
-    await borrowerOperations.openTrove(dec(21, 18), alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(270, 18), dennis, { from: dennis, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(21, 18), alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(270, 18), dennis, { from: dennis, value: dec(100, 'ether') })
 
     const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
 
@@ -2355,7 +2355,7 @@ contract('TroveManager', async accounts => {
     )
 
     // Oops - Alice changes her trove's debt (and ICR) before Dennis' tx goes through
-    await borrowerOperations.repayLUSD(dec(1, 18), alice, {from: alice})
+    await borrowerOperations.repayLUSD(0, dec(1, 18), alice, {from: alice})
   
     // Get new expected net redemption (now that total supply has changed) -  check it is 80 LUSD
     const expectedNetRedemption_2 = await th.getNetRedemption(dec(100, 18), troveManager)
@@ -2367,7 +2367,7 @@ contract('TroveManager', async accounts => {
       firstRedemptionHint,
       partialRedemptionHint,
       partialRedemptionHintNICR,
-      0,
+      0, 0,
       {
         from: dennis,
         gasPrice: 0
@@ -2402,8 +2402,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): can redeem if there is zero active debt but non-zero debt in DefaultPool", async () => {
     // --- SETUP ---
 
-    await borrowerOperations.openTrove('0', alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '0', alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
 
     await lusdToken.transfer(carol, dec(100, 18), { from: bob })
 
@@ -2430,9 +2430,9 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): doesn't touch Troves with ICR < 110%", async () => {
     // --- SETUP ---
 
-    await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(2000, 18), carol, { from: carol, value: dec(10000, 'ether') })  // highest ICR
+    await borrowerOperations.openTrove(0, dec(100, 18), alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(2000, 18), carol, { from: carol, value: dec(10000, 'ether') })  // highest ICR
 
     // Put Bob's Trove below 110% ICR
     const price = dec(100, 18)
@@ -2444,6 +2444,7 @@ contract('TroveManager', async accounts => {
       dec(200, 18),
       bob,
       '0x0000000000000000000000000000000000000000',
+      0,
       0,
       0,
       { from: carol }
@@ -2460,12 +2461,12 @@ contract('TroveManager', async accounts => {
 
   it("redeemCollateral(): finds the last Trove with ICR == 110% even if there is more than one", async () => {
     // --- SETUP ---
-    await borrowerOperations.openTrove('10000' + _18_zeros, whale, { from: whale, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, '10000' + _18_zeros, whale, { from: whale, value: dec(1000, 'ether') })
 
-    await borrowerOperations.openTrove('90' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('90' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('90' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove('91' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '90' + _18_zeros, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '90' + _18_zeros, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '90' + _18_zeros, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, '91' + _18_zeros, dennis, { from: dennis, value: dec(1, 'ether') })
 
     await lusdToken.transfer(dennis, '90' + _18_zeros, { from: alice })
     await lusdToken.transfer(dennis, '90' + _18_zeros, { from: bob })
@@ -2494,6 +2495,7 @@ contract('TroveManager', async accounts => {
       '0x0000000000000000000000000000000000000000',
       0,
       0,
+      0,
       { from: whale }
     );
 
@@ -2511,34 +2513,34 @@ contract('TroveManager', async accounts => {
   });
 
   it("redeemCollateral(): reverts when argument _amount is 0", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice opens trove and transfers 500LUSD to Erin, the would-be redeemer
-    await borrowerOperations.openTrove(dec(500, 18), alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), alice, { from: alice, value: dec(10, 'ether') })
     await lusdToken.transfer(erin, dec(500, 18), { from: alice })
 
     // B, C and D open troves
-    await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(200, 18), carol, { from: carol, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), dennis, { from: dennis, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), dennis, { from: dennis, value: dec(3, 'ether') })
 
     // Erin attempts to redeem with _amount = 0
-    const redemptionTxPromise = troveManager.redeemCollateral(0, erin, erin, 0, 0, { from: erin })
+    const redemptionTxPromise = troveManager.redeemCollateral(0, erin, erin, 0, 0, 0, { from: erin })
     await assertRevert(redemptionTxPromise, "TroveManager: Amount must be greater than zero")
   })
 
   it("redeemCollateral(): doesn't affect the Stability Pool deposits or ETH gain of redeemed-from troves", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice opens trove and transfers 400LUSD to Erin, the would-be redeemer
-    await borrowerOperations.openTrove(dec(500, 18), alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(500, 18), alice, { from: alice, value: dec(10, 'ether') })
     await lusdToken.transfer(erin, dec(400, 18), { from: alice })
 
     // B, C, D, F open trove
-    await borrowerOperations.openTrove(dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(200, 18), carol, { from: carol, value: dec(2, 'ether') })
-    await borrowerOperations.openTrove(dec(300, 18), dennis, { from: dennis, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), flyn, { from: flyn, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(200, 18), carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(0, dec(300, 18), dennis, { from: dennis, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), flyn, { from: flyn, value: dec(1, 'ether') })
 
     // B, C, D deposit some of their tokens to the Stability Pool
     await stabilityPool.provideToSP(dec(50, 18), ZERO_ADDRESS, { from: bob })
@@ -2577,7 +2579,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(ETHinSP.gte(mv._zeroBN))
 
     // Erin redeems 400 LUSD
-    await troveManager.redeemCollateral(dec(400, 18), erin, erin, 0, 0, { from: erin })
+    await troveManager.redeemCollateral(dec(400, 18), erin, erin, 0, 0, 0, { from: erin })
 
     price = await priceFeed.getPrice()
     const bob_ICR_after = await troveManager.getCurrentICR(bob, price)
@@ -2608,10 +2610,10 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral(): caller can redeem their entire LUSDToken balance (split between redemption and fee)", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice opens trove and transfers 400 LUSD to Erin, the would-be redeemer
-    await borrowerOperations.openTrove(dec(400, 18), alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(400, 18), alice, { from: alice, value: dec(10, 'ether') })
     await lusdToken.transfer(erin, dec(400, 18), { from: alice })
 
     // Check Erin's balance before
@@ -2619,9 +2621,9 @@ contract('TroveManager', async accounts => {
     assert.equal(erin_balance_before, dec(400, 18))
 
     // B, C, D open trove
-    await borrowerOperations.openTrove(dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(1990, 18), carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openTrove(dec(1990, 18), dennis, { from: dennis, value: dec(50, 'ether') })
+    await borrowerOperations.openTrove(0, dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1990, 18), carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1990, 18), dennis, { from: dennis, value: dec(50, 'ether') })
 
     // Get active debt and coll before redemption
     const activePool_debt_before = await activePool.getLUSDDebt()
@@ -2646,10 +2648,10 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts when requested redemption amount exceeds caller's LUSD token balance", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice opens trove and transfers 400 LUSD to Erin, the would-be redeemer
-    await borrowerOperations.openTrove(dec(400, 18), alice, { from: alice, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(400, 18), alice, { from: alice, value: dec(10, 'ether') })
     await lusdToken.transfer(erin, dec(400, 18), { from: alice })
 
     // Check Erin's balance before
@@ -2657,9 +2659,9 @@ contract('TroveManager', async accounts => {
     assert.equal(erin_balance_before, dec(400, 18))
 
     // B, C, D open trove
-    await borrowerOperations.openTrove(dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(1990, 18), carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openTrove(dec(1990, 18), dennis, { from: dennis, value: dec(50, 'ether') })
+    await borrowerOperations.openTrove(0, dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1990, 18), carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1990, 18), dennis, { from: dennis, value: dec(50, 'ether') })
 
     // Get active debt and coll before redemption
     const activePool_debt_before = (await activePool.getLUSDDebt()).toString()
@@ -2691,7 +2693,7 @@ contract('TroveManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint_1,
         partialRedemptionHintNICR,
-        0,
+        0, 0,
         { from: erin })
 
       assert.isFalse(redemptionTx.receipt.status)
@@ -2717,7 +2719,7 @@ contract('TroveManager', async accounts => {
         '401000000000000000000', firstRedemptionHint,
         partialRedemptionHint_2,
         partialRedemptionHintNICR,
-        0,
+        0, 0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2742,7 +2744,7 @@ contract('TroveManager', async accounts => {
         '239482309000000000000000000', firstRedemptionHint,
         partialRedemptionHint_3,
         partialRedemptionHintNICR,
-        0,
+        0, 0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2769,7 +2771,7 @@ contract('TroveManager', async accounts => {
         maxBytes32, firstRedemptionHint,
         partialRedemptionHint_4,
         partialRedemptionHintNICR,
-        0,
+        0, 0,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2779,18 +2781,18 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral(): value of issued ETH == face value of redeemed LUSD (assuming 1 LUSD has value of $1)", async () => {
-    await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(100, 'ether') })
 
     // Alice opens trove and transfers 1000 LUSD each to Erin, Flyn, Graham
-    await borrowerOperations.openTrove(dec(4990, 18), alice, { from: alice, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(4990, 18), alice, { from: alice, value: dec(100, 'ether') })
     await lusdToken.transfer(erin, dec(1000, 18), { from: alice })
     await lusdToken.transfer(flyn, dec(1000, 18), { from: alice })
     await lusdToken.transfer(graham, dec(1000, 18), { from: alice })
 
     // B, C, D open trove
-    await borrowerOperations.openTrove(dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(1090, 18), carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openTrove(dec(1090, 18), dennis, { from: dennis, value: dec(40, 'ether') })
+    await borrowerOperations.openTrove(0, dec(590, 18), bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1090, 18), carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1090, 18), dennis, { from: dennis, value: dec(40, 'ether') })
 
     const price = await priceFeed.getPrice()
 
@@ -2849,9 +2851,9 @@ contract('TroveManager', async accounts => {
 
     assert.equal((await lusdToken.balanceOf(bob)), dec(100, 18))
 
-    await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(0, carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openTrove(0, dennis, { from: dennis, value: dec(40, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openTrove(0, 0, dennis, { from: dennis, value: dec(40, 'ether') })
 
     const price = await priceFeed.getPrice()
 
@@ -2873,7 +2875,7 @@ contract('TroveManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintNICR,
-        0,
+        0, 0,
         { from: bob })
     } catch (error) {
       assert.include(error.message, "VM Exception while processing transaction")
@@ -2888,8 +2890,8 @@ contract('TroveManager', async accounts => {
 
     assert.equal((await lusdToken.balanceOf(bob)), '101000000000000000000')
 
-    await borrowerOperations.openTrove(dec(40, 18), carol, { from: carol, value: dec(30, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), dennis, { from: dennis, value: dec(40, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), carol, { from: carol, value: dec(30, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), dennis, { from: dennis, value: dec(40, 'ether') })
 
     assert.equal((await activePool.getLUSDDebt()).toString(), dec(100, 18))
 
@@ -2912,7 +2914,7 @@ contract('TroveManager', async accounts => {
         firstRedemptionHint,
         partialRedemptionHint,
         partialRedemptionHintNICR,
-        0,
+        0, 0,
         { from: bob })
     } catch (error) {
       assert.include(error.message, "VM Exception while processing transaction")
@@ -2921,11 +2923,11 @@ contract('TroveManager', async accounts => {
 
   // Redemption fees 
   it("redeemCollateral(): a redemption made when base rate is zero increases the base rate", async () => {
-    await borrowerOperations.openTrove('0', whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, '0', whale, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate == 0
     assert.equal(await troveManager.baseRate(), '0')
@@ -2945,11 +2947,11 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, '0', A, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate == 0
     assert.equal(await troveManager.baseRate(), '0')
@@ -2982,11 +2984,11 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation [ @skip-on-coverage ]", async () => {
-    await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, '0', A, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
@@ -3035,11 +3037,11 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, '0', A, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate == 0
     assert.equal(await troveManager.baseRate(), '0')
@@ -3069,11 +3071,11 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, '0', A, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate == 0
     assert.equal(await troveManager.baseRate(), '0')
@@ -3103,11 +3105,11 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, '0', A, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate == 0
     assert.equal(await troveManager.baseRate(), '0')
@@ -3142,11 +3144,11 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, '0', A, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(30, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(50, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, { from: C, value: dec(1, 'ether') })
 
     // Check baseRate == 0
     assert.equal(await troveManager.baseRate(), '0')
@@ -3182,11 +3184,11 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove('0', A, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, '0', A, { from: whale, value: dec(100, 'ether') })
 
-    await borrowerOperations.openTrove(dec(10, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(20, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(30, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), C, { from: C, value: dec(1, 'ether') })
 
     const A_balanceBefore = toBN(await web3.eth.getBalance(A))
 
@@ -3208,19 +3210,19 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove(dec(10000, 18), whale, { from: whale, value: dec(10000, 'ether') })  // highest ICR
+    await borrowerOperations.openTrove(0, dec(10000, 18), whale, { from: whale, value: dec(10000, 'ether') })  // highest ICR
 
-    await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(120, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(130, 18), C, { from: C, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), D, { from: D, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(120, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(130, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), D, { from: D, value: dec(1, 'ether') })
 
     const A_balanceBefore = toBN(await web3.eth.getBalance(A))
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
     // whale redeems 400 LUSD.  Expect this to fully redeem A, B, C, and partially redeem D.
-    await th.redeemCollateral(whale, contracts, dec(400, 18), { gasPrice: 0 })
+    await th.redeemCollateral(whale, contracts, dec(400, 18))
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
@@ -3237,12 +3239,12 @@ contract('TroveManager', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: owner })
     await lqtyStaking.stake(dec(1, 18), { from: owner })
 
-    await borrowerOperations.openTrove(dec(10000, 18), whale, { from: whale, value: dec(10000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10000, 18), whale, { from: whale, value: dec(10000, 'ether') })
 
-    await borrowerOperations.openTrove(dec(100, 18), A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(120, 18), B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(130, 18), C, { from: C, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(40, 18), D, { from: D, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(120, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(130, 18), C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), D, { from: D, value: dec(1, 'ether') })
 
     const A_balanceBefore = toBN(await web3.eth.getBalance(A))
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
@@ -3259,7 +3261,7 @@ contract('TroveManager', async accounts => {
     assert.equal(baseRate, '0')
 
     // whale redeems 400 LUSD.  Expect this to fully redeem A, B, C, and partially redeem D.
-    await th.redeemCollateral(whale, contracts, dec(400, 18), { gasPrice: 0 })
+    await th.redeemCollateral(whale, contracts, dec(400, 18))
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
@@ -3300,9 +3302,9 @@ contract('TroveManager', async accounts => {
     const B_collSent = toBN(dec(4, 17))
     const C_collSent = toBN(dec(36, 16))
 
-    await borrowerOperations.openTrove(dec(100, 18), ZERO_ADDRESS, { from: A, value: A_collSent })
-    await borrowerOperations.openTrove(dec(10, 18), ZERO_ADDRESS, { from: B, value: B_collSent })
-    await borrowerOperations.openTrove(0, ZERO_ADDRESS, { from: C, value: C_collSent })
+    await borrowerOperations.openTrove(0, dec(100, 18), ZERO_ADDRESS, { from: A, value: A_collSent })
+    await borrowerOperations.openTrove(0, dec(10, 18), ZERO_ADDRESS, { from: B, value: B_collSent })
+    await borrowerOperations.openTrove(0, 0, ZERO_ADDRESS, { from: C, value: C_collSent })
 
     const A_collAfter = await troveManager.getTroveColl(A)
     const B_collAfter = await troveManager.getTroveColl(B)
@@ -3339,8 +3341,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral() {LUSDAmount: (1e9 - 20), totalLUSDSupply: 1e9, decayedBaseRate: 0}. Expected: {redeemed: ~5e8, fee: ~5e8. baseRate: ~0.5}", async () => { 
     const _1e27minus20 = toBN(dec(1, 27)).sub(toBN(dec(20, 18)))
     
-    await borrowerOperations.openTrove(_1e27minus20, whale, { from: whale, value: dec(1, 25) }) 
-    await borrowerOperations.openTrove(0, A, { from: A, value: dec(1, 'ether') })  // Highest ICR
+    await borrowerOperations.openTrove(0, _1e27minus20, whale, { from: whale, value: dec(1, 25) }) 
+    await borrowerOperations.openTrove(0, 0, A, { from: A, value: dec(1, 'ether') })  // Highest ICR
 
     // Whale transfers (1e9 - 20) LUSD to A 
     await lusdToken.transfer(A, _1e27minus20, {from: whale})
@@ -3373,8 +3375,8 @@ contract('TroveManager', async accounts => {
 
   // Redeems small fraction of the supply: 1/1000
   it("redeemCollateral() {LUSDAmount: 1, totalLUSDSupply: 1000, decayedBaseRate: 0}. Expected: {redeemed: 0.999, fee: 0.0009, baseRate: 0.0009}", async () => { 
-    await borrowerOperations.openTrove(dec(980, 18), whale, { from: whale, value: dec(100, 'ether') }) 
-    await borrowerOperations.openTrove(0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
+    await borrowerOperations.openTrove(0, dec(980, 18), whale, { from: whale, value: dec(100, 'ether') }) 
+    await borrowerOperations.openTrove(0, 0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
 
     // Whale transfers 1 LUSD to A 
     await lusdToken.transfer(A, dec(1, 18), {from: whale})
@@ -3400,8 +3402,8 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral() {LUSDAmount: 373.445, totalLUSDSupply: 1000, decayedBaseRate: 0}. Expected: {redeemed: 271.90, fee: 101.54, baseRate: 0.27}", async () => { 
-    await borrowerOperations.openTrove(dec(980, 18), whale, { from: whale, value: dec(100, 'ether') }) 
-    await borrowerOperations.openTrove(0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
+    await borrowerOperations.openTrove(0, dec(980, 18), whale, { from: whale, value: dec(100, 'ether') }) 
+    await borrowerOperations.openTrove(0, 0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
 
     // Whale transfers 373.445 LUSD to A 
     await lusdToken.transfer(A, dec(373445, 15), {from: whale})
@@ -3427,8 +3429,8 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral() {LUSDAmount: 100, totalLUSDSupply: 300, decayedBaseRate: 0}. Expected: {redeemed: 75, fee: 25, baseRate: 0.25}", async () => { 
-    await borrowerOperations.openTrove(dec(280, 18), whale, { from: whale, value: dec(100, 'ether') }) 
-    await borrowerOperations.openTrove(0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
+    await borrowerOperations.openTrove(0, dec(280, 18), whale, { from: whale, value: dec(100, 'ether') }) 
+    await borrowerOperations.openTrove(0, 0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
 
     // Whale transfers 100 LUSD to A 
     await lusdToken.transfer(A, dec(100, 18), {from: whale})
@@ -3455,8 +3457,8 @@ contract('TroveManager', async accounts => {
 
   // Very high base rate --> High fee, high new base rate, and low net redeemed amount
   it("redeemCollateral() {LUSDAmount: 100, totalLUSDSupply: 300, decayedBaseRate: 0.99}. Expected: {redeemed: 0.75, fee: 99.25, baseRate: 0.9925}", async () => { 
-    await borrowerOperations.openTrove(dec(280, 18), whale, { from: whale, value: dec(100, 'ether') }) 
-    await borrowerOperations.openTrove(0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
+    await borrowerOperations.openTrove(0, dec(280, 18), whale, { from: whale, value: dec(100, 'ether') }) 
+    await borrowerOperations.openTrove(0, 0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
 
     // Whale transfers 100 LUSD to A 
     await lusdToken.transfer(A, dec(100, 18), {from: whale})
@@ -3486,8 +3488,8 @@ contract('TroveManager', async accounts => {
 
   // Low base rate --> values for fee, net redeemed amount, and new base are close to the values for 0 base rate
   it("redeemCollateral() {LUSDAmount: 100, totalLUSDSupply: 300, decayedBaseRate: 0.02524}. Expected: {redeemed: 73.107, fee: 26.893, baseRate: 0.26893}", async () => { 
-    await borrowerOperations.openTrove(dec(280, 18), whale, { from: whale, value: dec(100, 'ether') }) 
-    await borrowerOperations.openTrove(0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
+    await borrowerOperations.openTrove(0, dec(280, 18), whale, { from: whale, value: dec(100, 'ether') }) 
+    await borrowerOperations.openTrove(0, 0, A, { from: A, value: dec(100, 'ether') })  // Highest ICR
 
     // Whale transfers 100 LUSD to A 
     await lusdToken.transfer(A, dec(100, 18), {from: whale})
@@ -3520,12 +3522,12 @@ contract('TroveManager', async accounts => {
   it("getPendingLUSDDebtReward(): Returns 0 if there is no pending LUSDDebt reward", async () => {
     // Make some troves
     const price = await priceFeed.getPrice()
-    await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await stabilityPool.provideToSP(dec(2000, 18), ZERO_ADDRESS, { from: whale })
 
-    await borrowerOperations.openTrove(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
-    await borrowerOperations.openTrove(dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -3549,12 +3551,12 @@ contract('TroveManager', async accounts => {
   it("getPendingETHReward(): Returns 0 if there is no pending ETH reward", async () => {
     // make some troves
     const price = await priceFeed.getPrice()
-    await borrowerOperations.openTrove(dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
+    await borrowerOperations.openTrove(0, dec(2000, 18), whale, { from: whale, value: dec(100, 'ether') })
     await stabilityPool.provideToSP(dec(2000, 18), ZERO_ADDRESS, { from: whale })
 
-    await borrowerOperations.openTrove(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
-    await borrowerOperations.openTrove(dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -3645,8 +3647,8 @@ contract('TroveManager', async accounts => {
   it("checkRecoveryMode(): Returns true when TCR < 150%", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     await priceFeed.setPrice('99999999999999999999')
 
@@ -3661,8 +3663,8 @@ contract('TroveManager', async accounts => {
   it("checkRecoveryMode(): Returns false when TCR == 150%", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     await priceFeed.setPrice('100000000000000000001')
 
@@ -3677,8 +3679,8 @@ contract('TroveManager', async accounts => {
   it("checkRecoveryMode(): Returns false when TCR > 150%", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     const TCR = (await troveManager.getTCR()).toString()
 
@@ -3691,8 +3693,8 @@ contract('TroveManager', async accounts => {
   it("checkRecoveryMode(): Returns false when TCR == 0", async () => {
     await priceFeed.setPrice(dec(100, 18))
 
-    await borrowerOperations.openTrove(dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), bob, { from: bob, value: dec(3, 'ether') })
 
     await priceFeed.setPrice(0)
 
@@ -3706,8 +3708,8 @@ contract('TroveManager', async accounts => {
   // --- Getters ---
 
   it("getTroveStake(): Returns stake", async () => {
-    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(27, 18), B, { from: B, value: dec(1, 'ether') })
 
     const A_Stake = await troveManager.getTroveStake(A)
     const B_Stake = await troveManager.getTroveStake(B)
@@ -3717,8 +3719,8 @@ contract('TroveManager', async accounts => {
   })
 
   it("getTroveColl(): Returns coll", async () => {
-    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(27, 18), B, { from: B, value: dec(1, 'ether') })
 
     const A_Coll = await troveManager.getTroveColl(A)
     const B_Coll = await troveManager.getTroveColl(B)
@@ -3728,8 +3730,8 @@ contract('TroveManager', async accounts => {
   })
 
   it("getTroveDebt(): Returns debt", async () => {
-    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(27, 18), B, { from: B, value: dec(1, 'ether') })
 
     const A_Debt = await troveManager.getTroveDebt(A)
     const B_Debt = await troveManager.getTroveDebt(B)
@@ -3741,8 +3743,8 @@ contract('TroveManager', async accounts => {
   })
 
   it("getTroveStatus(): Returns status", async () => {
-    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(27, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.closeTrove({from: B})
 
     const A_Status = await troveManager.getTroveStatus(A)
@@ -3757,11 +3759,11 @@ contract('TroveManager', async accounts => {
   // --- Internal removeTroveOwner ---
 
   it("Internal _removeTroveOwner(): Reverts if trove has been closed", async () => { 
-    await borrowerOperations.openTrove(dec(1, 18), C, { from: C, value: dec(3, 'ether') })
-    await borrowerOperations.openTrove(dec(190, 18), A, { from: A, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1, 18), C, { from: C, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, dec(190, 18), A, { from: A, value: dec(3, 'ether') })
    
     // B closes, leaves 2 troves in system
-    await borrowerOperations.openTrove(dec(27, 18), B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(27, 18), B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.closeTrove({from: B})
 
     /* Call the external tester function that directly accesses the internal _removeTroveOwner() function.
