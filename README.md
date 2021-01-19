@@ -57,7 +57,6 @@
   - [Gas compensation](#gas-compensation)
     - [Gas compensation schedule](#gas-compensation-schedule)
     - [Liquidation](#liquidation)
-      - [Edge case: Gas compensation in a partial liquidation in Recovery Mode](#edge-case-gas-compensation-in-a-partial-liquidation-in-recovery-mode)
     - [Gas compensation and redemptions](#gas-compensation-and-redemptions)
   - [Gas compensation Functionality](#gas-compensation-functionality)
   - [The Stability Pool](#the-stability-pool)
@@ -153,11 +152,9 @@ Here is the liquidation logic for a single trove in Normal Mode and Recovery Mod
 | 100% < ICR < MCR & SP.LUSD > trove.debt  | LUSD in the StabilityPool equal to the trove's debt is offset with the trove's debt. The trove's ETH collateral (minus ETH gas compensation) is shared between depsitors.                                                                                                                                                                                                                                    |
 | 100% < ICR < MCR & SP.LUSD < trove.debt  | The total StabilityPool LUSD is offset with an equal amount of debt from the trove.  A fraction of the trove's collateral (equal to the ratio of its offset debt to its entire debt) is shared between depositors. The remaining debt and collateral (minus ETH gas compensation) is redistributed to active troves                                                                                          |
 | MCR% <= ICR < TCR & SP.LUSD > trove.debt |  The debt is completely offset against LUSD in the Pool, and all its collateral (minus ETH gas compensation) is shared between depositors.                                                                                                                                                                                   |
-| MCR <= ICR < TCR & SP.LUSD > trove.debt  |  The Pool LUSD is offset with an equal amount of debt from the trove. A fraction of ETH collateral with dollar value equal to `1.1 * debt` is shared between depositors. Nothing is redistributed to other active troves. Since it's ICR was > 1.1, the trove has a collateral surplus, which is sent to the `CollSurplusPool` and is claimable by the borrower. The trove is closed. |
-| MCR <= ICR < TCR & SP.LUSD  < trove debt         | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| MCR <= ICR < TCR & SP.LUSD > trove.debt  |  The Pool LUSD is offset with an equal amount of debt from the trove. A fraction of ETH collateral with dollar value equal to `1.1 * debt` is shared between depositors. Nothing is redistributed to other active troves. Since it's ICR was > 1.1, the trove has a collateral remainder, which is sent to the `CollSurplusPool` and is claimable by the borrower. The trove is closed. |
+| MCR <= ICR < TCR & SP.LUSD  < trove debt | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ICR >= TCR                               | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
-
-
 
 
 ## Gains From Liquidations
@@ -744,23 +741,6 @@ The purpose of the 10 LUSD debt is to provide a minimum level of gas compensatio
 ### Liquidation
 
 When a trove is liquidated, 0.5% of its collateral is sent to the liquidator, along with the 10 LUSD reserved for gas compensation. Thus, a liquidator always receives `{10 LUSD + 0.5% collateral}` per trove that they liquidate. The collateral remainder of the trove is then either offset, redistributed or a combination of both, depending on the amount of LUSD in the Stability Pool.
-
-#### Edge case: Gas compensation in a partial liquidation in Recovery Mode
-
-A trove can be partially liquidated under specific conditions:
-
-- Recovery mode is active: TCR < 150%  
-- 110% <= trove ICR < TCR
-- trove debt > LUSD in Stability Pool
-
-In this case, a partial offset occurs: the entire LUSD in the Stability Pool is offset with an equal amount of the trove's debt, which is only a fraction of its total debt. A corresponding fraction of the trove's collateral is liquidated (sent to the Stability Pool).
-
-The trove is left with some LUSD Debt and collateral remaining.
-
-For the purposes of a partial liquidation, only the amount (debt - 10) is considered. If the LUSD in the Stability Pool is >= (debt - 10), a full liquidation
-is performed.
-
-In a partial liquidation, the ETH gas compensation is 0.5% of the _collateral fraction_ that corresponds to the partial offset.
 
 ### Gas compensation and redemptions
 
