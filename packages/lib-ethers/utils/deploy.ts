@@ -1,5 +1,6 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction, ContractFactory, Overrides } from "@ethersproject/contracts";
+import { Wallet } from "@ethersproject/wallet";
 
 import {
   LiquityContractAddresses,
@@ -104,6 +105,9 @@ const deployContracts = async (
       addresses.communityIssuance,
       addresses.lqtyStaking,
       addresses.lockupContractFactory,
+      // TODO: parameterize these
+      Wallet.createRandom().address, // _bountyAddress
+      Wallet.createRandom().address, // _lpRewardsAddress
       { ...overrides }
     ),
 
