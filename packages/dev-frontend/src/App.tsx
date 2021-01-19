@@ -48,6 +48,7 @@ if (process.env.REACT_APP_DEMO_MODE === "true") {
 getConfig().then(config => {
   // console.log("Frontend config:");
   // console.log(config);
+  Object.assign(window, { config });
 });
 
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {

@@ -47,6 +47,13 @@ let configPromise: Promise<LiquityFrontendConfig> | undefined = undefined;
 const fetchConfig = async () => {
   try {
     const response = await fetch("config.json");
+
+    if (response.status !== 200) {
+      throw new Error(
+        `Failed to fetch config.json (expected status 200 but got ${response.status})`
+      );
+    }
+
     return parseConfig(await response.json());
   } catch (err) {
     console.error(err);
