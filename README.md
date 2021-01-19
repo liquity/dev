@@ -309,7 +309,7 @@ All application logic and data is contained in these contracts - there is no nee
 
 The system has no admin key or human governance. Once deployed, it is fully automated, decentralized and no user holds any special privileges in or control over the system.
 
-The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Stability.sol` - hold the user-facing public functions, and contain most of the internal system logic. Together they control trove state updates and movements of Ether and LUSD tokens around the system.
+The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `StabilityPool.sol` - hold the user-facing public functions, and contain most of the internal system logic. Together they control trove state updates and movements of Ether and LUSD tokens around the system.
 
 ### Core Smart Contracts
 
