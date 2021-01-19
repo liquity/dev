@@ -51,14 +51,6 @@ import { EthersTransactionOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
 import { logsToString } from "./parseLogs";
 
-enum TroveManagerOperation {
-  applyPendingRewards,
-  liquidateInNormalMode,
-  liquidateInRecoveryMode,
-  partiallyLiquidateInRecoveryMode,
-  redeemLUSD
-}
-
 // With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
 export const redeemMaxIterations = 68;
 
@@ -272,16 +264,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       rawPopulatedTransaction,
 
       ({ logs }) => {
-        const fullyLiquidated = this.contracts.troveManager
+        const liquidatedAddresses = this.contracts.troveManager
           .extractEvents(logs, "TroveLiquidated")
-          .map(({ args: { _borrower } }) => _borrower);
-
-        const [partiallyLiquidated] = this.contracts.troveManager
-          .extractEvents(logs, "TroveUpdated")
-          .filter(
-            ({ args: { _operation } }) =>
-              _operation === TroveManagerOperation.partiallyLiquidateInRecoveryMode
-          )
           .map(({ args: { _borrower } }) => _borrower);
 
         const [totals] = this.contracts.troveManager
@@ -301,8 +285,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           );
 
         return {
-          fullyLiquidated,
-          partiallyLiquidated,
+          liquidatedAddresses,
           ...totals
         };
       },
@@ -509,12 +492,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       ? await this.findHintForNominalCollateralRatio(collateralRatio, hintOptionalParams)
       : [AddressZero, AddressZero];
 
-    return [
-      firstRedemptionHint,
-      upperHint,
-      lowerHint,
-      collateralRatio
-    ];
+    return [firstRedemptionHint, upperHint, lowerHint, collateralRatio];
   }
 }
 
@@ -609,7 +587,7 @@ export class PopulatableEthersLiquity
 
     const finalTrove = trove.adjust(normalized, fees?.borrowingFeeFactor());
 
-    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams)
+    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams);
 
     return this.wrapTroveChangeWithFees(
       normalized,
@@ -725,7 +703,7 @@ export class PopulatableEthersLiquity
       (deposit ?? (await this.readableLiquity.getStabilityDeposit())).collateralGain
     );
 
-    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams)
+    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams);
 
     return this.wrapCollateralGainTransfer(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(

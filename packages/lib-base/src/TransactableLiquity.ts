@@ -65,8 +65,7 @@ export type TroveClosureDetails = {
 };
 
 export type LiquidationDetails = {
-  fullyLiquidated: string[];
-  partiallyLiquidated?: string;
+  liquidatedAddresses: string[];
 
   totalLiquidated: Trove;
   lusdGasCompensation: Decimal;
