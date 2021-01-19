@@ -33,9 +33,11 @@ type LiquityProviderProps = {
 };
 
 const wsParams = (network: string, infuraApiKey: string): [string, string] => [
-  `wss://${network}.infura.io/ws/v3/${infuraApiKey}`,
+  `wss://${network === "homestead" ? "mainnet" : network}.infura.io/ws/v3/${infuraApiKey}`,
   network
 ];
+
+const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
@@ -58,7 +60,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
       if (isWebSocketAugmentedProvider(provider)) {
         const network = getNetwork(chainId);
 
-        if (network.name && network.name !== "unknown" && config.infuraApiKey) {
+        if (network.name && supportedNetworks.includes(network.name) && config.infuraApiKey) {
           provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
         } else if (chainId === DEV_CHAIN_ID) {
           provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
