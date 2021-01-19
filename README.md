@@ -57,7 +57,6 @@
   - [Gas compensation](#gas-compensation)
     - [Gas compensation schedule](#gas-compensation-schedule)
     - [Liquidation](#liquidation)
-      - [Edge case: Gas compensation in a partial liquidation in Recovery Mode](#edge-case-gas-compensation-in-a-partial-liquidation-in-recovery-mode)
     - [Gas compensation and redemptions](#gas-compensation-and-redemptions)
   - [Gas compensation Functionality](#gas-compensation-functionality)
   - [The Stability Pool](#the-stability-pool)
@@ -152,12 +151,9 @@ Here is the liquidation logic for a single trove in Normal Mode and Recovery Mod
 | ICR <=100%                               | Redistribute all debt and collateral (minus ETH gas compensation) to active troves.                                                                                                                                                                                                                                                                                                                          |
 | 100% < ICR < MCR & SP.LUSD > trove.debt  | LUSD in the StabilityPool equal to the trove's debt is offset with the trove's debt. The trove's ETH collateral (minus ETH gas compensation) is shared between depsitors.                                                                                                                                                                                                                                    |
 | 100% < ICR < MCR & SP.LUSD < trove.debt  | The total StabilityPool LUSD is offset with an equal amount of debt from the trove.  A fraction of the trove's collateral (equal to the ratio of its offset debt to its entire debt) is shared between depositors. The remaining debt and collateral (minus ETH gas compensation) is redistributed to active troves                                                                                          |
-| MCR% <= ICR < TCR & SP.LUSD > trove.debt |  The debt is completely offset against LUSD in the Pool, and all its collateral (minus ETH gas compensation) is shared between depositors.                                                                                                                                                                                   |
-| MCR <= ICR < TCR & SP.LUSD < trove.debt  |  the trove is partially liquidated: the Pool LUSD is offset with an equal amount of debt from the trove. A corresponding fraction of ETH collateral (minus ETH gas compensation) is shared between depositors. Nothing is redistributed to other active troves. The trove remains active, with reduced collateral and debt. |
-| MCR <= ICR < TCR & SP.LUSD  = 0          | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| MCR <= ICR < TCR & SP.LUSD > trove.debt  |  The Pool LUSD is offset with an equal amount of debt from the trove. A fraction of ETH collateral with dollar value equal to `1.1 * debt` is shared between depositors. Nothing is redistributed to other active troves. Since it's ICR was > 1.1, the trove has a collateral remainder, which is sent to the `CollSurplusPool` and is claimable by the borrower. The trove is closed. |
+| MCR <= ICR < TCR & SP.LUSD  < trove debt | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ICR >= TCR                               | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
-
-
 
 
 ## Gains From Liquidations
@@ -559,17 +555,17 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Borrower (Trove) Operations - `BorrowerOperations.sol`
 
-`openTrove(uint _LUSDAmount)`: payable function that creates a trove for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional mainly on the resulting collateral ratio which must exceed the minimum (110% in Normal Mode). In addition to the requested debt, extra debt is issued to pay the issuance fee, and cover the gas compensation.
+`openTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint)`: payable function that creates a trove for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional mainly on the resulting collateral ratio which must exceed the minimum (110% in Normal Mode). In addition to the requested debt, extra debt is issued to pay the issuance fee, and cover the gas compensation.
 
-`addColl(address _hint)`: payable function that adds the received Ether to the caller's active trove.
+`addColl(address _upperHint, address _lowerHint))`: payable function that adds the received Ether to the caller's active trove.
 
-`withdrawColl(uint _amount, address _hint)`: withdraws `_amount` of collateral from the caller’s trove. Executes only if the user has an active trove, the system is in Normal Mode, and the withdrawal would not pull the user’s trove below the minimum collateral ratio. 
+`withdrawColl(uint _amount, address _upperHint, address _lowerHint)`: withdraws `_amount` of collateral from the caller’s trove. Executes only if the user has an active trove, the system is in Normal Mode, and the withdrawal would not pull the user’s trove below the minimum collateral ratio. 
 
-`withdrawLUSD(uint _amount, address_hint)`: issues `_amount` of LUSD from the caller’s trove to the caller. Executes only if the resultant collateral ratio would remain above the minimum, and the system would remain in Normal Mode after the withdrawal. 
+`withdrawLUSD(uint _maxFee, uint _amount, address _upperHint, address _lowerHint)`: issues `_amount` of LUSD from the caller’s trove to the caller. Executes only if the resultant collateral ratio would remain above the minimum, and the system would remain in Normal Mode after the withdrawal. 
 
-`repayLUSD(uint _amount, uint _hint)`: repay `_amount` of LUSD to the caller’s trove, subject to leaving 10 debt in the trove (which corresponds to the 10 LUSD gas compensation).
+`repayLUSD(uint _amount, address _upperHint, address _lowerHint)`: repay `_amount` of LUSD to the caller’s trove, subject to leaving 10 debt in the trove (which corresponds to the 10 LUSD gas compensation).
 
-`adjustTrove(uint _collWithdrawal, int _debtChange, address _hint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
+`adjustTrove(uint _maxFee, uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
 
 `closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their trove. Requires the borrower have a LUSD balance sufficient to repay their trove's debt, excluding gas compensation - i.e. `(debt - 10)` LUSD.
 
@@ -577,21 +573,21 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### TroveManager Functions - `TroveManager.sol`
 
-`liquidate(address _user)`: callable by anyone, attempts to liquidate the trove of `_user`. Executes successfully if `_user`’s trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the trove's ICR < the system MCR).  
+`liquidate(address _borrower)`: callable by anyone, attempts to liquidate the trove of `_user`. Executes successfully if `_user`’s trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the trove's ICR < the system MCR).  
 
 `liquidateTroves(uint n)`: callable by anyone, checks for under-collateralized troves below MCR and liquidates up to `n`, starting from the trove with the lowest collateral ratio; subject to gas constraints and the actual number of under-collateralized troves. The gas costs of `liquidateTroves(uint n)` mainly depend on the number of troves that are liquidated, and whether the troves are offset against the Stability Pool or redistributed. For n=1, the gas costs per liquidated trove are roughly between 240K-400K, for n=5 between 88K-113K, for n=10 between 78K-85K, and for n=40 between 66K-72K.
 
-`batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 troves, the gas costs per liquidated trove are roughly between 75K-83K, for a batch of 50 troves between 54K-69K.
+`batchLiquidateTroves(address[] calldata _troveArray)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 troves, the gas costs per liquidated trove are roughly between 75K-83K, for a batch of 50 troves between 54K-69K.
 
-`redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintNICR,  uint _maxIterations)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of troves redeemed from is capped by `_maxIterations`.
+`redeemCollateral(uint _LUSDAmount, address _firstRedemptionHint, address _upperPartialRedemptionHint, address _lowerPartialRedemptionHint, uint _partialRedemptionHintNICR, uint _maxIterations,uint _maxFee)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of troves redeemed from is capped by `_maxIterations`.
 
 `getCurrentICR(address _user, uint _price)`: computes the user’s individual collateral ratio (ICR) based on their total collateral and total LUSD debt. Returns 2^256 -1 if they have 0 debt.
 
 `getTroveOwnersCount()`: get the number of active troves in the system.
 
-`getPendingETHReward(address _user)`: get the pending ETH reward from liquidation redistribution events, for the given trove.
+`getPendingETHReward(ddress _borrower)`: get the pending ETH reward from liquidation redistribution events, for the given trove.
 
-`getPendingTroveDebtReward(address _user)`: get the pending trove debt "reward" (i.e. the amount of extra debt assigned to the trove) from liquidation redistribution events.
+`getPendingLUSDDebtReward(address _borrower)`: get the pending trove debt "reward" (i.e. the amount of extra debt assigned to the trove) from liquidation redistribution events.
 
 `getEntireDebtAndColl(address _borrower)`: returns a trove’s entire debt and collateral, which respectively include any pending debt rewards and ETH rewards from prior redistributions.
 
@@ -744,23 +740,6 @@ The purpose of the 10 LUSD debt is to provide a minimum level of gas compensatio
 ### Liquidation
 
 When a trove is liquidated, 0.5% of its collateral is sent to the liquidator, along with the 10 LUSD reserved for gas compensation. Thus, a liquidator always receives `{10 LUSD + 0.5% collateral}` per trove that they liquidate. The collateral remainder of the trove is then either offset, redistributed or a combination of both, depending on the amount of LUSD in the Stability Pool.
-
-#### Edge case: Gas compensation in a partial liquidation in Recovery Mode
-
-A trove can be partially liquidated under specific conditions:
-
-- Recovery mode is active: TCR < 150%  
-- 110% <= trove ICR < TCR
-- trove debt > LUSD in Stability Pool
-
-In this case, a partial offset occurs: the entire LUSD in the Stability Pool is offset with an equal amount of the trove's debt, which is only a fraction of its total debt. A corresponding fraction of the trove's collateral is liquidated (sent to the Stability Pool).
-
-The trove is left with some LUSD Debt and collateral remaining.
-
-For the purposes of a partial liquidation, only the amount (debt - 10) is considered. If the LUSD in the Stability Pool is >= (debt - 10), a full liquidation
-is performed.
-
-In a partial liquidation, the ETH gas compensation is 0.5% of the _collateral fraction_ that corresponds to the partial offset.
 
 ### Gas compensation and redemptions
 

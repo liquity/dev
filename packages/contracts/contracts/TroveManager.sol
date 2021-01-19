@@ -151,6 +151,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // --- Variable container structs for redemptions ---
 
     struct RedemptionTotals {
+        address currentBorrower;
         uint totalLUSDToRedeem;
         uint totalETHDrawn;
         uint ETHFee;
@@ -828,7 +829,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         address _upperPartialRedemptionHint,
         address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR,
-        uint _maxIterations
+        uint _maxIterations,
+        uint _maxFee
     )
         external
         override
@@ -845,30 +847,29 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint remainingLUSD = _LUSDamount;
         uint price = priceFeed.getPrice();
         
-        address currentBorrower;
         RedemptionTotals memory T;
 
         if (_isValidFirstRedemptionHint(_firstRedemptionHint, price)) {
-            currentBorrower = _firstRedemptionHint;
+            T.currentBorrower = _firstRedemptionHint;
         } else {
-            currentBorrower = sortedTroves.getLast();
+            T.currentBorrower = sortedTroves.getLast();
             // Find the first trove with ICR >= MCR
-            while (currentBorrower != address(0) && getCurrentICR(currentBorrower, price) < MCR) {
-                currentBorrower = sortedTroves.getPrev(currentBorrower);
+            while (T.currentBorrower != address(0) && getCurrentICR(T.currentBorrower, price) < MCR) {
+                T.currentBorrower = sortedTroves.getPrev(T.currentBorrower);
             }
         }
 
         // Loop through the Troves starting from the one with lowest collateral ratio until _amount of LUSD is exchanged for collateral
         if (_maxIterations == 0) { _maxIterations = uint(-1); }
-        while (currentBorrower != address(0) && remainingLUSD > 0 && _maxIterations > 0) {
+        while (T.currentBorrower != address(0) && remainingLUSD > 0 && _maxIterations > 0) {
             _maxIterations--;
             // Save the address of the Trove preceding the current one, before potentially modifying the list
-            address nextUserToCheck = sortedTroves.getPrev(currentBorrower);
+            address nextUserToCheck = sortedTroves.getPrev(T.currentBorrower);
 
-            _applyPendingRewards(currentBorrower);
+            _applyPendingRewards(T.currentBorrower);
 
             SingleRedemptionValues memory V = _redeemCollateralFromTrove(
-                currentBorrower,
+                T.currentBorrower,
                 remainingLUSD,
                 price,
                 _upperPartialRedemptionHint,
@@ -882,14 +883,18 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             T.totalETHDrawn = T.totalETHDrawn.add(V.ETHLot);
 
             remainingLUSD = remainingLUSD.sub(V.LUSDLot);
-            currentBorrower = nextUserToCheck;
+            T.currentBorrower = nextUserToCheck;
         }
 
         // Decay the baseRate due to time passed, and then increase it according to the size of this redemption
         _updateBaseRateFromRedemption(T.totalETHDrawn, price);
 
-        // Calculate the ETH fee and send it to the LQTY staking contract
+        // Calculate the ETH fee
         T.ETHFee = _getRedemptionFee(T.totalETHDrawn);
+        
+        require(_maxFee >= T.ETHFee || _maxFee == 0, "TroveManager: redemption fee exceeded provided max");
+
+        // Send the ETH fee to the LQTY staking contract
         activePool.sendETH(address(lqtyStaking), T.ETHFee);
         lqtyStaking.increaseF_ETH(T.ETHFee);
 
