@@ -5,8 +5,15 @@ import { StabilityDeposit } from "./StabilityDeposit";
 import { Trove, TroveWithPendingRewards } from "./Trove";
 import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
+import { FrontendStatus } from "./ReadableLiquity";
+
+export type LiquityStoreConstants = {
+  frontendTag: string;
+};
 
 export type LiquityStoreBaseState = {
+  frontend: FrontendStatus;
+  ownFrontend: FrontendStatus;
   numberOfTroves: number;
   accountBalance: Decimal;
   lusdBalance: Decimal;
@@ -29,7 +36,10 @@ export type LiquityStoreDerivedState = {
   redemptionFeeFactor: Decimal;
 };
 
-export type LiquityStoreState<T = unknown> = LiquityStoreBaseState & LiquityStoreDerivedState & T;
+export type LiquityStoreState<T = unknown> = T &
+  LiquityStoreConstants &
+  LiquityStoreBaseState &
+  LiquityStoreDerivedState;
 
 export type LiquityStoreListener<T = unknown> = (params: {
   newState: LiquityStoreState<T>;
@@ -41,6 +51,16 @@ const strictEquals = <T>(a: T, b: T) => a === b;
 const eq = <T extends { eq(that: T): boolean }>(a: T, b: T) => a.eq(b);
 const equals = <T extends { equals(that: T): boolean }>(a: T, b: T) => a.equals(b);
 
+const frontendStatusEquals = (a: FrontendStatus, b: FrontendStatus) =>
+  a.status === "unregistered"
+    ? b.status === "unregistered"
+    : b.status === "registered" && a.kickbackRate.eq(b.kickbackRate);
+
+const showFrontendStatus = (x: FrontendStatus) =>
+  x.status === "unregistered"
+    ? '{ status: "unregistered" }'
+    : `{ status: "registered", kickbackRate: ${x.kickbackRate} }`;
+
 const wrap = <A extends unknown[], R>(f: (...args: A) => R) => (...args: A) => f(...args);
 
 const difference = <T extends Record<string, unknown>>(a: T, b: T) =>
@@ -50,6 +70,7 @@ export abstract class LiquityStore<T = unknown> {
   logging = true;
   onLoaded?: () => void;
 
+  protected constants: LiquityStoreConstants;
   protected loaded = false;
 
   private baseState?: LiquityStoreBaseState;
@@ -59,8 +80,12 @@ export abstract class LiquityStore<T = unknown> {
   private updateTimeoutId: ReturnType<typeof setTimeout> | undefined;
   private listeners = new Set<LiquityStoreListener<T>>();
 
+  constructor(constants: LiquityStoreConstants) {
+    this.constants = constants;
+  }
+
   get state(): LiquityStoreState<T> {
-    return Object.assign({}, this.baseState, this.derivedState, this.extraState);
+    return Object.assign({}, this.constants, this.baseState, this.derivedState, this.extraState);
   }
 
   abstract doStart(): () => void;
@@ -90,16 +115,26 @@ export abstract class LiquityStore<T = unknown> {
     }, 30000);
   }
 
-  protected logUpdate<U>(name: string, next: U): U {
+  protected logUpdate<U>(name: string, next: U, show?: (next: U) => string): U {
     if (this.logging) {
-      console.log(`${name} updated to ${next}`);
+      console.log(`${name} updated to ${show ? show(next) : next}`);
     }
 
     return next;
   }
 
-  protected updateIfChanged<U>(equals: (a: U, b: U) => boolean, name: string, prev: U, next?: U): U {
-    return next !== undefined && !equals(prev, next) ? this.logUpdate(name, next) : prev;
+  protected updateIfChanged<U>(
+    equals: (a: U, b: U) => boolean,
+    name: string,
+    prev: U,
+    next?: U,
+    show?: (next: U) => string
+  ): U {
+    return next !== undefined && !equals(prev, next) ? this.logUpdate(name, next, show) : prev;
+  }
+
+  protected silentlyUpdateIfChanged<U>(equals: (a: U, b: U) => boolean, prev: U, next?: U): U {
+    return next !== undefined && !equals(prev, next) ? next : prev;
   }
 
   private reduce(
@@ -107,6 +142,22 @@ export abstract class LiquityStore<T = unknown> {
     baseStateUpdate: Partial<LiquityStoreBaseState>
   ): LiquityStoreBaseState {
     return {
+      frontend: this.updateIfChanged(
+        frontendStatusEquals,
+        "frontend",
+        baseState.frontend,
+        baseStateUpdate.frontend,
+        showFrontendStatus
+      ),
+
+      ownFrontend: this.updateIfChanged(
+        frontendStatusEquals,
+        "ownFrontend",
+        baseState.ownFrontend,
+        baseStateUpdate.ownFrontend,
+        showFrontendStatus
+      ),
+
       numberOfTroves: this.updateIfChanged(
         strictEquals,
         "numberOfTroves",
@@ -206,16 +257,14 @@ export abstract class LiquityStore<T = unknown> {
     return {
       trove: this.updateIfChanged(equals, "trove", derivedState.trove, derivedStateUpdate.trove),
 
-      borrowingFeeFactor: this.updateIfChanged(
+      borrowingFeeFactor: this.silentlyUpdateIfChanged(
         eq,
-        "borrowingFeeFactor",
         derivedState.borrowingFeeFactor,
         derivedStateUpdate.borrowingFeeFactor
       ),
 
-      redemptionFeeFactor: this.updateIfChanged(
+      redemptionFeeFactor: this.silentlyUpdateIfChanged(
         eq,
-        "redemptionFeeFactor",
         derivedState.redemptionFeeFactor,
         derivedStateUpdate.redemptionFeeFactor
       )

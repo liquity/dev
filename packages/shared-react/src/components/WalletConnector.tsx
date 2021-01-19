@@ -11,6 +11,12 @@ import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
 
+interface MaybeHasMetaMask {
+  ethereum?: {
+    isMetaMask?: boolean;
+  };
+}
+
 type ConnectionState =
   | { type: "inactive" }
   | {
@@ -73,7 +79,7 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
   return state;
 };
 
-const detectMetaMask = () => window.ethereum?.isMetaMask ?? false;
+const detectMetaMask = () => (window as MaybeHasMetaMask).ethereum?.isMetaMask ?? false;
 
 type WalletConnectorProps = {
   loader?: React.ReactNode;

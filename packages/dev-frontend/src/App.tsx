@@ -1,6 +1,6 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { Flex, Spinner, Heading, Text, ThemeProvider, Container } from "theme-ui";
+import { Flex, Spinner, Heading, ThemeProvider, Container } from "theme-ui";
 import { Wallet } from "@ethersproject/wallet";
 
 import { Decimal, Difference, Percent } from "@liquity/decimal";
@@ -9,9 +9,9 @@ import { Trove, StabilityDeposit } from "@liquity/lib-base";
 import { addressesOf, BlockPolledLiquityStore, EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { LiquityStoreProvider } from "@liquity/lib-react";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
+import { WalletConnector } from "@liquity/shared-react";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
-import { WalletConnector } from "./components/WalletConnector";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
 import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
@@ -25,6 +25,7 @@ import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
 import { StakingManager } from "./components/StakingManager";
+import { getConfig } from "./config";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
@@ -43,6 +44,12 @@ if (process.env.REACT_APP_DEMO_MODE === "true") {
   Object.assign(window, { ethereum });
 }
 
+// Start pre-fetching the config
+getConfig().then(config => {
+  // console.log("Frontend config:");
+  // console.log(config);
+});
+
 const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   return (
     <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
@@ -56,8 +63,15 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, liquity, contracts } = useLiquity();
-  const store = new BlockPolledLiquityStore(provider, account, liquity);
+  const {
+    config: { frontendTag },
+    account,
+    provider,
+    liquity,
+    contracts
+  } = useLiquity();
+
+  const store = new BlockPolledLiquityStore(provider, account, liquity, frontendTag);
 
   // For console tinkering ;-)
   Object.assign(window, {
@@ -103,9 +117,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
         <RiskiestTroves pageSize={10} />
       </Container>
 
-      <Footer>
-        <Text>* Please note that the final user-facing application will look different.</Text>
-      </Footer>
+      <Footer>* Please note that the final user-facing application will look different.</Footer>
 
       <TransactionMonitor />
     </LiquityStoreProvider>
@@ -126,11 +138,14 @@ const App = () => {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        height: "100vh"
+        height: "100vh",
+        textAlign: "center"
       }}
     >
-      <Heading>Liquity is not yet deployed to {chainId === 1 ? "mainnet" : "this network"}.</Heading>
-      <Text sx={{ mt: 3 }}>Please switch to Ropsten, Rinkeby, Kovan or Görli.</Text>
+      <Heading sx={{ mb: 3 }}>
+        Liquity is not yet deployed to {chainId === 1 ? "mainnet" : "this network"}.
+      </Heading>
+      Please switch to Ropsten, Rinkeby, Kovan or Görli.
     </Flex>
   );
 

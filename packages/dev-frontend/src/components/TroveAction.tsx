@@ -105,7 +105,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
     change.type === "creation"
       ? ([
           describeAdjustment(change.params),
-          liquity.openTrove.bind(liquity, change.params, { price, numberOfTroves, fees }),
+          liquity.openTrove.bind(liquity, change.params, { numberOfTroves, fees }),
           [
             [
               afterFee.isOpenableInRecoveryMode(price) ||
@@ -128,7 +128,6 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
           liquity.adjustTrove.bind(liquity, change.params, {
             numberOfTroves,
-            price,
             trove: original,
             fees
           }),

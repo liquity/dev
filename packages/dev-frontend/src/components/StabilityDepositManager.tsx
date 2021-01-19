@@ -17,11 +17,19 @@ type StabilityDepositActionProps = {
   dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
 
-const select = ({ trove, price, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
+const select = ({
   trove,
-  price,
   lusdBalance,
-  numberOfTroves
+  numberOfTroves,
+  frontend,
+  frontendTag,
+  ownFrontend
+}: LiquityStoreState) => ({
+  trove,
+  lusdBalance,
+  numberOfTroves,
+  frontendTag: frontend.status === "registered" ? frontendTag : undefined,
+  noOwnFrontend: ownFrontend.status === "unregistered"
 });
 
 type Action = [name: string, send: TransactionFunction, requirements?: [boolean, string][]];
@@ -32,7 +40,10 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   dispatch
 }) => {
-  const { trove, price, lusdBalance, numberOfTroves } = useLiquitySelector(select);
+  const { trove, lusdBalance, numberOfTroves, frontendTag, noOwnFrontend } = useLiquitySelector(
+    select
+  );
+
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -66,8 +77,11 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
           gains
             ? `Deposit ${depositLUSD.prettify()} ${COIN} & claim ${gains}`
             : `Deposit ${depositLUSD.prettify()} ${COIN}`,
-          liquity.depositLUSDInStabilityPool.bind(liquity, depositLUSD, undefined),
-          [[lusdBalance.gte(depositLUSD), `You don't have enough ${COIN}`]]
+          liquity.depositLUSDInStabilityPool.bind(liquity, depositLUSD, frontendTag),
+          [
+            [noOwnFrontend, "Address registered as frontend"],
+            [lusdBalance.gte(depositLUSD), `You don't have enough ${COIN}`]
+          ]
         ]
       ]
     : withdrawLUSD
@@ -89,7 +103,6 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
                 liquity.transferCollateralGainToTrove.bind(liquity, {
                   deposit: originalDeposit,
                   trove,
-                  price,
                   numberOfTroves
                 })
               ] as Action

@@ -3,11 +3,11 @@ import { Text, Flex, Box, Heading } from "theme-ui";
 
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
+import { Icon } from "@liquity/shared-react";
 
+import { COIN, GT } from "../strings";
 import { useLiquity } from "../hooks/LiquityContext";
 import { shortenAddress } from "../utils/shortenAddress";
-import { Icon } from "./Icon";
-import { COIN, GT } from "../strings";
 
 const select = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
   accountBalance,

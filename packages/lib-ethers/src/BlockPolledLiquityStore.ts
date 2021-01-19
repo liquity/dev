@@ -1,3 +1,4 @@
+import { AddressZero } from "@ethersproject/constants";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Provider } from "@ethersproject/abstract-provider";
 
@@ -30,8 +31,13 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
   private account: string;
   private liquity: ReadableEthersLiquity;
 
-  constructor(provider: Provider, account: string, liquity: ReadableEthersLiquity) {
-    super();
+  constructor(
+    provider: Provider,
+    account: string,
+    liquity: ReadableEthersLiquity,
+    frontendTag = AddressZero
+  ) {
+    super({ frontendTag });
 
     this.provider = provider;
     this.account = account;
@@ -40,6 +46,8 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
 
   private get(blockTag?: number): Promise<LiquityStoreBaseState> {
     return promiseAllValues({
+      frontend: this.liquity.getFrontendStatus(this.constants.frontendTag, { blockTag }),
+      ownFrontend: this.liquity.getFrontendStatus(this.account, { blockTag }),
       accountBalance: this.provider.getBalance(this.account, blockTag).then(decimalify),
       lusdBalance: this.liquity.getLUSDBalance(this.account, { blockTag }),
       lqtyBalance: this.liquity.getLQTYBalance(this.account, { blockTag }),

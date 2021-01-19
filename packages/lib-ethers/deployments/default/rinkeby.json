@@ -6,6 +6,7 @@
     "collSurplusPool": "0x7Ea869BE18d308370D121E1F220D70C0bB68EFE1",
     "communityIssuance": "0xB55a9c795fa1EA4DFA2B7982657Db2FEe8faEbaf",
     "defaultPool": "0xdA1B5dF971e7Fa0ecB96bCCeb399EfF7c812A137",
+    "gasPool": "",
     "hintHelpers": "0x83a5F3ED33e14cBe86c01a1599f8576b97638172",
     "lockupContractFactory": "0x9e8bB175fBC4F61E69CF6B0Ad263431d5029cf58",
     "lqtyStaking": "0xA08AEe6beD5B1731455023ce27cC56e7e279A5Ad",

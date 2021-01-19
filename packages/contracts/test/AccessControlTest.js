@@ -17,6 +17,8 @@ test/launchSequenceTest/DuringLockupPeriodTest.js */
 contract('Access Control: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
   let priceFeed
   let lusdToken
   let sortedTroves
@@ -28,10 +30,15 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   let functionCaller
   let borrowerOperations
 
+  let lqtyStaking
+  let lqtyToken
+  let communityIssuance
+  let lockupContractFactory
+
   
   before(async () => {
     const coreContracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = coreContracts.priceFeed
     lusdToken = coreContracts.lusdToken
@@ -55,7 +62,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
     await th.openTrove_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
 
-    const expectedCISupplyCap = '33333333333333333333333333' // 100mil / 3
+    const expectedCISupplyCap = '25000000000000000000000000' // 25mil
 
     // Check CI has been properly funded
     const bal = await lqtyToken.balanceOf(communityIssuance.address)
@@ -66,10 +73,10 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("moveETHGainToTrove(): reverts when called by an account that is not StabilityPool", async () => {
       // Attempt call from alice
       try {
-        const tx1= await borrowerOperations.moveETHGainToTrove(bob, bob, { from: bob })    
+        const tx1= await borrowerOperations.moveETHGainToTrove(bob, bob, bob, { from: bob })
       } catch (err) {
          assert.include(err.message, "revert")
-        // assert.include(err.message, "Caller is not the BorrowerOperations contract")
+        // assert.include(err.message, "BorrowerOps: Caller is not Stability Pool")
       }
     })
   })
@@ -259,11 +266,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   })
 
   describe('DefaultPool', async accounts => {
-    // sendETH
-    it("sendETH(): reverts when called by an account that is not TroveManager", async () => {
+    // sendETHToActivePool
+    it("sendETHToActivePool(): reverts when called by an account that is not TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await defaultPool.sendETH(alice, 100, { from: alice })
+        const txAlice = await defaultPool.sendETHToActivePool(100, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -355,7 +362,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is neither BorrowerOperations nor TroveManager nor StabilityPool")
+        // assert.include(err.message, "Caller is neither BorrowerOperations nor TroveManager nor StabilityPool")
       }
     })
 
@@ -390,7 +397,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("insert(): reverts when called by an account that is not BorrowerOps or TroveM", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedTroves.insert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        const txAlice = await sortedTroves.insert(bob, '150000000000000000000', bob, bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -416,7 +423,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("reinsert(): reverts when called by an account that is neither BorrowerOps nor TroveManager", async () => {
       // Attempt call from alice
       try {
-        const txAlice = await sortedTroves.reInsert(bob, '150000000000000000000', '150000000000000000000', bob, bob, { from: alice })
+        const txAlice = await sortedTroves.reInsert(bob, '150000000000000000000', bob, bob, { from: alice })
         
       } catch (err) {
         assert.include(err.message, "revert")
@@ -425,158 +432,39 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     })
   })
 
-  describe('LockupContractFactory', async accounts => {
-    it("setLQTYTokenAddress(): reverts when caller is not deployer", async () => {
-      try {
-        const txAlice = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Owner can successfully set any address
-      const txOwner1 = await lockupContractFactory.setLQTYTokenAddress(bob, { from: owner })
-      const txOwner2 = await lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, { from: owner })
-    })
-  })
-
-  describe('OneYearLockupContract', async accounts => {
-    it("lockContract(): reverts when caller is not deployer", async () => {
-      // deploy new OYLC with Carol as beneficiary
-      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
-
-      const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
-
-      // Check Factory is OYLC deployer
-      assert.equal(await OYLC.deployer(), lockupContractFactory.address)
-
-      // Deployer funds the OYLC
-      await lqtyToken.transfer(OYLC.address, dec(100, 18), { from: owner })
-
-      try {
-        const txAlice = await OYLC.lockContract({ from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully lock OYLC contract via Factory
-      const txOwner = await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
-      assert.isTrue(txOwner.receipt.status)
-    })
-
+  describe('LockupContract', async accounts => {
     it("withdrawLQTY(): reverts when caller is not beneficiary", async () => {
-      // deploy new OYLC with Carol as beneficiary
-      const deployedOYLCtx = await lockupContractFactory.deployOneYearLockupContract(carol, dec(100, 18), { from: owner })
+      // deploy new LC with Carol as beneficiary
+      const unlockTime = (await lqtyToken.getDeploymentStartTime()).add(toBN(timeValues.SECONDS_IN_ONE_YEAR))
+      const deployedLCtx = await lockupContractFactory.deployLockupContract(
+        carol, 
+        unlockTime,
+        { from: owner })
 
-      const OYLC = await th.getOYLCFromDeploymentTx(deployedOYLCtx)
+      const LC = await th.getLCFromDeploymentTx(deployedLCtx)
 
-      // Deployer funds the OYLC
-      await lqtyToken.transfer(OYLC.address, dec(100, 18), { from: owner })
-
-      // Deployer locks contract via the factory
-      await lockupContractFactory.lockOneYearContracts([OYLC.address], { from: owner })
-      assert.isTrue(await OYLC.active())
+      // Deployer funds the LC
+      await lqtyToken.transfer(LC.address, dec(100, 18), { from: owner })
 
       // Fast-forward one year, so that beneficiary can withdraw
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // Bob attempts to withdraw LQTY
       try {
-        const txBob = await OYLC.withdrawLQTY({ from: bob })
+        const txBob = await LC.withdrawLQTY({ from: bob })
         
       } catch (err) {
         assert.include(err.message, "revert")
       }
 
       // Confirm beneficiary, Carol, can withdraw
-      const txCarol = await OYLC.withdrawLQTY({ from: carol })
-      assert.isTrue(txCarol.receipt.status)
-    })
-  })
-
-  describe('CustomDurationLockupContract', async accounts => {
-    it("lockContract(): reverts when caller is not deployer", async () => {
-      // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-
-      // deploy new CDLC with 1 month duration and Carol as beneficiary
-      const deployedCDLCtx = await lockupContractFactory
-        .deployCustomDurationLockupContract(
-          carol,
-          dec(100, 18),
-          timeValues.SECONDS_IN_ONE_MONTH,
-          { from: owner }
-        )
-
-      const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
-
-      // Check Factory is CDLC deployer
-      assert.equal(await CDLC.deployer(), lockupContractFactory.address)
-
-      // Deployer funds the CDLC
-      await lqtyToken.transfer(CDLC.address, dec(100, 18), { from: owner })
-
-      try {
-        const txAlice = await CDLC.lockContract({ from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Deployer can successfully lock OYLC contract via Factory
-      const txOwner1 = await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
-    })
-
-    it("withdrawLQTY(): reverts when caller is not beneficiary", async () => {
-      // 1 year passes since LockupContractFactory deployment, so that it can deploy CDLCs
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-
-      // deploy new CDLC with 1 month duration and Carol as beneficiary
-      const deployedCDLCtx = await lockupContractFactory
-        .deployCustomDurationLockupContract(
-          carol,
-          dec(100, 18),
-          timeValues.SECONDS_IN_ONE_MONTH,
-          { from: owner })
-
-      const CDLC = await th.getCDLCFromDeploymentTx(deployedCDLCtx)
-
-      // Deployer funds the CDLC
-      await lqtyToken.transfer(CDLC.address, dec(100, 18), { from: owner })
-
-      // Deployer locks contract via the factory
-      await lockupContractFactory.lockCustomDurationContracts([CDLC.address], { from: owner })
-      assert.isTrue(await CDLC.active())
-
-      // Fast-forward one month, so that beneficiary can withdraw
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
-
-      // Bob attempts to withdraw LQTY
-      try {
-        const txBob = await CDLC.withdrawLQTY({ from: bob })
-     
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-
-      // Confirm beneficiary, Carol, can withdraw
-      const txCarol = await CDLC.withdrawLQTY({ from: carol })
+      const txCarol = await LC.withdrawLQTY({ from: carol })
       assert.isTrue(txCarol.receipt.status)
     })
   })
 
   describe('LQTYStaking', async accounts => {
-    it("addETHFee(): reverts when caller is not TroveManager", async () => {
-      try {
-        const txAlice = await lqtyStaking.increaseF_ETH(dec(1, 'ether'), { from: alice })
-        
-      } catch (err) {
-        assert.include(err.message, "revert")
-      }
-    })
-
-    it("addLQTYFee(): reverts when caller is not TroveManager", async () => {
+    it("increaseF_LUSD(): reverts when caller is not TroveManager", async () => {
       try {
         const txAlice = await lqtyStaking.increaseF_LUSD(dec(1, 18), { from: alice })
         

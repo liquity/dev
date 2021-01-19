@@ -2,18 +2,31 @@
 
 ![Tests](https://github.com/liquity/dev/workflows/CI/badge.svg) [![Frontend status](https://img.shields.io/uptimerobot/status/m785036778-7edf816c69dafd2d19c45491?label=Frontend&logo=nginx&logoColor=white)](https://devui.liquity.org/internal) ![uptime](https://img.shields.io/uptimerobot/ratio/7/m785036778-7edf816c69dafd2d19c45491) [![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend)
 
-- [Liquity Overview](#liquity-overview)
+- [Liquity System Summary](#liquity-system-summary)
+  - [Liquity Overview](#liquity-overview)
   - [Liquidation and the Stability Pool](#liquidation-and-the-stability-pool)
-  - [Rewards From Liquidations](#gains-from-liquidations)
-  - [Recovery Mode](#recovery-mode)
+    - [Liquidation Logic](#liquidation-logic)
+      - [Liquidations in Normal Mode: TCR >= 150%](#liquidations-in-normal-mode-tcr--150)
+      - [Liquidations in Recovery Mode: TCR < 150%](#liquidations-in-recovery-mode-tcr--150)
+  - [Gains From Liquidations](#gains-from-liquidations)
   - [LUSD Token Redemption](#lusd-token-redemption)
+    - [Partial redemption](#partial-redemption)
+    - [Full redemption](#full-redemption)
+    - [Redemptions create a price floor](#redemptions-create-a-price-floor)
+  - [Recovery Mode](#recovery-mode)
   - [Project Structure](#project-structure)
     - [Directories](#directories)
     - [Branches](#branches)
   - [LQTY Token Architecture](#lqty-token-architecture)
-    - [LQTY lockup contracts and token vesting](#lqty-lockup-contracts-and-token-vesting)
+    - [LQTY Lockup contracts and token vesting](#lqty-lockup-contracts-and-token-vesting)
     - [Lockup Implementation and admin transfer restriction](#lockup-implementation-and-admin-transfer-restriction)
     - [Launch sequence and vesting process](#launch-sequence-and-vesting-process)
+      - [Deploy LQTY Contracts](#deploy-lqty-contracts)
+      - [Deploy and fund Lockup Contracts](#deploy-and-fund-lockup-contracts)
+      - [Deploy Liquity Core](#deploy-liquity-core)
+      - [During one year lockup period](#during-one-year-lockup-period)
+      - [Upon end of one year lockup period](#upon-end-of-one-year-lockup-period)
+      - [Post-lockup period](#post-lockup-period)
   - [Core System Architecture](#core-system-architecture)
     - [Core Smart Contracts](#core-smart-contracts)
     - [Data and Value Silo Contracts](#data-and-value-silo-contracts)
@@ -22,25 +35,57 @@
     - [Keeping a sorted list of troves ordered by ICR](#keeping-a-sorted-list-of-troves-ordered-by-icr)
     - [Flow of Ether in Liquity](#flow-of-ether-in-liquity)
     - [Flow of LUSD tokens in Liquity](#flow-of-lusd-tokens-in-liquity)
-    - [Flow of LQTY tokens in Liquity](#flow-of-lqty-tokens-in-liquity)
+    - [Flow of LQTY Tokens in Liquity](#flow-of-lqty-tokens-in-liquity)
   - [Expected User Behaviors](#expected-user-behaviors)
   - [Contract Ownership and Function Permissions](#contract-ownership-and-function-permissions)
   - [Deployment to a Development Blockchain](#deployment-to-a-development-blockchain)
   - [Running Tests](#running-tests)
-  - [Integer representations of decimals](#integer-representations-of-decimals)
+  - [System Quantities - Units and Representation](#system-quantities---units-and-representation)
+    - [Integer representations of decimals](#integer-representations-of-decimals)
   - [Public Data](#public-data)
   - [Public User-Facing Functions](#public-user-facing-functions)
-  - [Supplying Hints to Trove operations](#supplying-hints-to-trove-operations)
-  - [Gas Compensation](#gas-compensation)
+    - [Borrower (Trove) Operations - `BorrowerOperations.sol`](#borrower-trove-operations---borroweroperationssol)
+    - [TroveManager Functions - `TroveManager.sol`](#trovemanager-functions---trovemanagersol)
+    - [Hint Helper Functions - `HintHelpers.sol`](#hint-helper-functions---hinthelperssol)
+    - [Stability Pool Functions - `StabilityPool.sol`](#stability-pool-functions---stabilitypoolsol)
+    - [LQTY Staking Functions  `LQTYStaking.sol`](#lqty-staking-functions--lqtystakingsol)
+    - [Lockup Contract Factory `LockupContractFactory.sol`](#lockup-contract-factory-lockupcontractfactorysol)
+    - [Lockup contracts - `LockupContract.sol`](#lockup-contract---lockupcontractsol)
+    - [LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`](#lusd-token-lusdtokensol-and-lqty-token-lqtytokensol)
+  - [Supplying Hints to trove operations](#supplying-hints-to-trove-operations)
+    - [Hints for `redeemCollateral`](#hints-for-redeemcollateral)
+  - [Gas compensation](#gas-compensation)
+    - [Gas compensation schedule](#gas-compensation-schedule)
+    - [Liquidation](#liquidation)
+      - [Edge case: Gas compensation in a partial liquidation in Recovery Mode](#edge-case-gas-compensation-in-a-partial-liquidation-in-recovery-mode)
+    - [Gas compensation and redemptions](#gas-compensation-and-redemptions)
+  - [Gas compensation Functionality](#gas-compensation-functionality)
   - [The Stability Pool](#the-stability-pool)
+    - [Mixed liquidations: offset and redistribution](#mixed-liquidations-offset-and-redistribution)
+    - [Stability Pool deposit losses and ETH gains - implementation](#stability-pool-deposit-losses-and-eth-gains---implementation)
+    - [Stability Pool example](#stability-pool-example)
+    - [Stability Pool implementation](#stability-pool-implementation)
+    - [How deposits and ETH gains are tracked](#how-deposits-and-eth-gains-are-tracked)
   - [LQTY Issuance to Stability Depositors](#lqty-issuance-to-stability-depositors)
+    - [LQTY Issuance schedule](#lqty-issuance-schedule)
+    - [LQTY Issuance implementation](#lqty-issuance-implementation)
+    - [Handling the front end LQTY gain](#handling-the-front-end-lqty-gain)
+    - [LQTY reward events and payouts](#lqty-reward-events-and-payouts)
   - [Liquity System Fees](#liquity-system-fees)
+    - [Redemption Fee](#redemption-fee)
+    - [Issuance fee](#issuance-fee)
+    - [Fee Schedule](#fee-schedule)
+    - [Intuition behind fees](#intuition-behind-fees)
+    - [Fee decay Implementation](#fee-decay-implementation)
+    - [Staking LQTY and earning fees](#staking-lqty-and-earning-fees)
   - [Redistributions and Corrected Stakes](#redistributions-and-corrected-stakes)
+    - [Corrected Stake Solution](#corrected-stake-solution)
   - [Math Proofs](#math-proofs)
   - [Definitions](#definitions)
   - [Development](#development)
     - [Prerequisites](#prerequisites)
       - [Making node-gyp work](#making-node-gyp-work)
+    - [Clone & Install](#clone--install)
     - [Top-level scripts](#top-level-scripts)
       - [Run all tests](#run-all-tests)
       - [Deploy contracts to a testnet](#deploy-contracts-to-a-testnet)
@@ -131,6 +176,8 @@ In order to fulfill the redemption request, troves are redeemed from in ascendin
 
 A redemption sequence of `n` steps will **fully** redeem from up to `n-1` troves, and, and **partially** redeems from up to 1 trove, which is always the last trove in the redemption sequence.
 
+Redemptions are blocked when TCR < 110% (there is no need to restrict ICR < TCR). At that TCR redemptions would likely be unprofitable, as LUSD is probably trading above $1 if the system has crashed that badly, but it could be a way for an attacker with a lot of LUSD to lower the TCR even further.
+
 ### Partial redemption
 
 Most redemption transactions will include a partial redemption, since the amount redeemed is unlikely to perfectly match the total debt of a series of troves.
@@ -171,22 +218,20 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 - `packages/lib-subgraph/` - [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state
 - `packages/providers/` - Subclassed Ethers providers used by the frontend
 - `packages/subgraph/` - [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history
-- `packages/contracts/` - The backend development folder, contains the Buidler project, contracts and tests
+- `packages/contracts/` - The backend development folder, contains the Hardhat project, contracts and tests
 - `packages/contracts/contracts/` - The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
 - `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
 - `packages/contracts/fuzzTests/` - Echidna tests, and naive "random operation" tests 
-- `packages/contracts/migrations/` - contains Buidler script for deploying the smart contracts to the blockchain
-- `packages/contracts/utils/` - external Buidler and node scripts - deployment helpers, gas calculators, etc
+- `packages/contracts/migrations/` - contains Hardhat script for deploying the smart contracts to the blockchain
+- `packages/contracts/utils/` - external Hardhat and node scripts - deployment helpers, gas calculators, etc
 - `packages/contracts/mathProofs/` - core mathematical proofs of Liquity properties, and a derivation of the scalable Stability Pool staking formula
 
-Backend development is done in the Buidler framework, and allows Liquity to be deployed on the Buidler EVM network for fast compilation and test execution.
+Backend development is done in the Hardhat framework, and allows Liquity to be deployed on the Hardhat EVM network for fast compilation and test execution.
 
 ### Branches
 
-As of 28/11/2020, the current working branch is `main`.  
-
-`master` is somewhat out of date, as our CI pipeline automatically redeploys contracts to testnet from master branch, and we want users to have a chance to engage with the existing deployments.
+As of 18/01/2021, the current working branch is `main`. `master` is out of date.
 
 ## LQTY Token Architecture
 
@@ -200,7 +245,7 @@ The LQTY contracts consist of:
 
 `LQTYStaking.sol` - the staking contract, containing stake and unstake functionality for LQTY holders. This contract receives ETH fees from redemptions, and LUSD fees from new debt issuance.
 
-`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability depositors as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the CommunityIssuance automatically receives a supply of LQTY - the “community issuance” supply, provisionally set to one third of the total supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
+`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability depositors as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the CommunityIssuance automatically receives a supply of LQTY - the “community issuance” supply, provisionally set to one quarter of the total supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
 
 `LQTYToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
 
@@ -212,15 +257,13 @@ In the first year after launch:
 
 - All team members and partners are unable to access their locked up LQTY tokens
 
-- The Liquity admin address may transfer tokens **only to verified one-year lockup contracts**
+- The Liquity admin address may transfer tokens **only to verified lockup contracts with an unlock date at least one year after system deployment**
 
-Thus only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Pool depositors via the `CommunityIssuance` contract.
+Also, separate LQTY allocations are made at deployent to EOAs that hold the LQTY reserved for LP rewards and for bug bounties/hackathons. Aside from these allocations, the only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Pool depositors via the `CommunityIssuance` contract.
 
 ### Lockup Implementation and admin transfer restriction
 
-A `LockupContractFactory` is used to deploy `OneYearLockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Liquity admin address is to a valid `OneYearLockupContract` that is registered in and was deployed through the `LockupContractFactory`.
-
-After the first year, anyone may deploy `CustomDurationLockupContracts` via the factory.
+A `LockupContractFactory` is used to deploy `LockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Liquity admin address is to a valid `LockupContract` that is registered in and was deployed through the `LockupContractFactory`.
 
 ### Launch sequence and vesting process
 
@@ -230,29 +273,28 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 3. Liquity admin deploys `LQTYStaking` 
 4. Liquity admin deploys `LQTYToken`, which upon deployment:
 - Stores the `CommunityIssuance` and `LockupContractFactory` addresses
-- Mints LQTY tokens to `CommunityIssuance` and the Liquity admin address
+- Mints LQTY tokens to `CommunityIssuance`, the Liquity admin address, the LP rewards address, and the bug bounty address
 5. Liquity admin sets `LQTYToken` address in `LockupContractFactory`, `CommunityIssuance`, and `LQTYStaking`
 
 #### Deploy and fund Lockup Contracts
-6. Liquity admin tells `LockupContractFactory` to deploy a `OneYearLockupContract` for each (beneficiary, entitlement) pair, including one for the Liquity admin address
-7. Liquity admin transfers LQTY to each `OneYearLockupContract`, equal to its beneficiary’s entitlement
-8. Liquity admin calls `lockOneYearContracts()` on the Factory, telling it to lock and activate all the `OneYearLockupContracts` that Liquity admin deployed
+6. Liquity admin tells `LockupContractFactory` to deploy a `LockupContract` for each beneficiary, with an `unlockTime` set to exactly one year after system deployment
+7. Liquity admin transfers LQTY to each `LockupContract`, according to their entitlement
 
 #### Deploy Liquity Core
-9. Liquity admin deploys the Liquity core system
-11. Liquity admin connects Liquity core system internally (with setters)
-12. Liquity admin connects `LQTYStaking` to Liquity core contracts and `LQTYToken`
+8. Liquity admin deploys the Liquity core system
+9. Liquity admin connects Liquity core system internally (with setters)
+10. Liquity admin connects `LQTYStaking` to Liquity core contracts and `LQTYToken`
 12. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `LQTYToken`
 
 #### During one year lockup period
-- Liquity admin periodically transfers newly vested tokens to team & partners’ `OneYearLockupContracts`, as per their vesting schedules
-- Liquity admin may only transfer LQTY to `OneYearLockupContracts`
-- Anyone may deploy new `OneYearLockupContracts` via the Factory
+- Liquity admin periodically transfers newly vested tokens to team & partners’ `LockupContracts`, as per their vesting schedules
+- Liquity admin may only transfer LQTY to `LockupContracts`
+- Anyone may deploy new `LockupContracts` via the Factory, setting any `unlockTime` that is >= 1 year from system deployment
 
-#### Upon end of lockup period
-- All `OneYearLockupContracts` automatically unlock. Beneficiaries may withdraw their entire unlocked entitlements
+#### Upon end of one year lockup period
+- All beneficiaries may withdraw their entire entitlements
 - Liquity admin address restriction on LQTY transfers is automatically lifted, and Liquity admin may now transfer LQTY to any address
-- Anyone may deploy new `OneYearLockupContracts` and `CustomDurationLockupContracts` via the Factory
+- Anyone may deploy new `LockupContracts` via the Factory, setting any `unlockTime` in the future
 
 #### Post-lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
@@ -260,6 +302,8 @@ After the first year, anyone may deploy `CustomDurationLockupContracts` via the 
 _NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `LQTYToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
 
 _The current code does not utilize a multi-sig. It implements the launch architecture outlined above._
+
+_Additionally, a LP staking contract will receive the initial LP staking reward allowance, rather than an EOA. It will be used to hold and issue LQTY to users who stake LP tokens that correspond to certain pools on DEXs.
 
 ## Core System Architecture
 
@@ -298,6 +342,8 @@ Along with `StabilityPool.sol`, these contracts hold Ether and/or tokens for the
 `DefaultPool.sol` - holds the total Ether balance and records the total stablecoin debt of the liquidated troves that are pending redistribution to active troves. If a trove has pending ether/debt “rewards” in the DefaultPool, then they will be applied to the trove when it next undergoes a borrower operation, a redemption, or a liquidation.
 
 `CollSurplusPool.sol` - holds the ETH surplus from troves that have been fully redeemed from. Sends the surplus back to the owning borrower, when told to do so by `BorrowerOperations.sol`.
+
+`GasPool.sol` - holds the total LUSD liquidation reserves. LUSD is moved into the `GasPool` when a trove is opened, and moved out when a trove is liquidated or closed.
 
 ### Contract Interfaces
 
@@ -477,15 +523,15 @@ Several public and external functions have modifiers such as `requireCallerIsTro
 
 ## Deployment to a Development Blockchain
 
-The Buidler migrations script and deployment helpers in `utils/deploymentHelpers.js` deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
+The Hardhat migrations script and deployment helpers in `utils/deploymentHelpers.js` deploy all contracts, and connect all contracts to their dependency contracts, by setting the necessary deployed addresses.
 
 The project is deployed on the Ropsten testnet.
 
 ## Running Tests
 
-Run all tests with `npx buidler test`, or run a specific test with `npx buidler test ./test/contractTest.js`
+Run all tests with `npx hardhat test`, or run a specific test with `npx hardhat test ./test/contractTest.js`
 
-Tests are run against the Buidler EVM.
+Tests are run against the Hardhat EVM.
 
 ## System Quantities - Units and Representation
 
@@ -525,7 +571,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `adjustTrove(uint _collWithdrawal, int _debtChange, address _hint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
 
-`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their trove.
+`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their trove. Requires the borrower have a LUSD balance sufficient to repay their trove's debt, excluding gas compensation - i.e. `(debt - 10)` LUSD.
 
 `claimRedeemedCollateral(address _user)`: when a borrower’s trove has been fully redeemed from and closed, this function allows the borrower to claim their ETH collateral surplus that remains in the system.
 
@@ -537,7 +583,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `batchLiquidateTroves( address[] calldata troveList)`: callable by anyone, accepts a custom list of troves addresses as an argument. Steps through the provided list and attempts to liquidate every trove, until it reaches the end or it runs out of gas. A trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 troves, the gas costs per liquidated trove are roughly between 75K-83K, for a batch of 50 troves between 54K-69K.
 
-`redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintICR,  uint _maxIterations)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of troves redeemed from is capped by `_maxIterations`.
+`redeemCollateral(uint _LUSDamount, address _firstRedemptionHint, address _partialRedemptionHint, uint _partialRedemptionHintNICR,  uint _maxIterations)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of troves redeemed from is capped by `_maxIterations`.
 
 `getCurrentICR(address _user, uint _price)`: computes the user’s individual collateral ratio (ICR) based on their total collateral and total LUSD debt. Returns 2^256 -1 if they have 0 debt.
 
@@ -561,7 +607,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a trove to the sorted list.
 
-`getRedemptionHints(uint _LUSDamount, uint _price)`: helper function specifically for redemptions. Returns two hints - the first is positional, the second ensures transaction success (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
+`getRedemptionHints(uint _LUSDamount, uint _price, uint _maxIterations)`: helper function specifically for redemptions. Returns two hints - the first is a positional hint for the first redeemable trove (i.e. trove with the lowest ICR >= MCR), the second is the final nominal ICR of the last trove after being hit by partial redemption, or zero in case of no partial redemption (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)). The number of troves to consider for redemption can be capped by passing a non-zero value as `_maxIterations`, while passing zero will leave it uncapped.
 
 ### Stability Pool Functions - `StabilityPool.sol`
 
@@ -591,23 +637,25 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Lockup Contract Factory `LockupContractFactory.sol`
 
-`deployOneYearLockupContract(address beneficiary, uint initialEntitlement)`; Deploys a `OneYearLockupContract`, and sets the beneficiary’s address, and their initial LQTY entitlement, i.e. the minimum LQTY balance the lockup contract must have before it can be locked.
+`deployLockupContract(address _beneficiary, uint _unlockTime)`; Deploys a `LockupContract`, and sets the beneficiary’s address, and the `_unlockTime` - the instant in time at which the LQTY can be withrawn by the beneficiary.
 
-`deployCustomDurationLockupContract(address beneficiary, uint entitlement, uint lockupDuration)`: Deploys a `CustomDurationLockupContract`, and sets the beneficiary’s address, their initial LQTY entitlement, and the lockup duration.
-    
-`lockOneYearContracts(address[] calldata addresses)`: locks the lockup contracts deployed by the caller through the factory, at the given `addresses`. 
+### Lockup contract - `LockupContract.sol`
 
-`lockCustomDurationContracts(address[] calldata addresses)`: locks the lockup contracts deployed by the caller through the factory, at the given `addresses`.
-
-### Lockup contracts - `OneYearLockupContract.sol` and `CustomDurationLockupContract.sol`
-
-`lockContract()`: Locks the contract when called by the deployer. It’s LQTY tokens may not be withdrawn until the lockup duration has passed.
-
-`withdrawLQTY()`: When the lockup duration has passed and the caller is the beneficiary, it transfers their LQTY to them and deactivates the lockup contract.
+`withdrawLQTY()`: When the current time is later than the `unlockTime` and the caller is the beneficiary, it transfers their LQTY to them.
 
 ### LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`
 
-Standard ERC20 and EIP2612 (permit() ) functionality.
+Standard ERC20 and EIP2612 (`permit()` ) functionality.
+
+**Note**: `permit()` can be front-run, as it does not require that the permitted spender be the `msg.sender`.
+
+This allows flexibility, as it means that _anyone_ can submit a Permit signed by A that allows B to spend a portion of A's tokens.
+
+The end result is the same for the signer A and spender B, but does mean that a `permit` transaction
+could be front-run and revert - which may hamper the execution flow of a contract that is intended to handle the submission of a Permit on-chain.
+
+For more details please see the original proposal EIP-2612:
+https://eips.ethereum.org/EIPS/eip-2612
 
 ## Supplying Hints to trove operations
 
@@ -619,9 +667,9 @@ A hint is the address of a trove with a position in the sorted list close to the
 
 All trove operations take a ‘hint’ argument. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call.
 
-The `TroveManager::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
+The `HintHelpers::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
 
-`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a collateral ratio of `CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.  The `_price` parameter is included for ICR calculation.
+`getApproxHint(uint _CR, uint _numTrials, uint _inputRandomSeed)` randomly selects `numTrials` amount of troves, and returns the one with the closest position in the list to where a trove with a nominal collateral ratio of `_CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.
 
 **Trove operation without a hint**
 
@@ -634,29 +682,34 @@ Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` li
 
 1. User performs trove operation in their browser
 2. The front end computes a new collateral ratio locally, based on the change in collateral and/or debt.
-3. Call `TroveManager::getApproxHint(...)`, passing it the computed collateral ratio. Returns an address close to the correct insert position
-4. Call `SortedTroves::findInsertPosition(uint256 _ICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new collateral ratio via `_ICR`. 
+3. Call `HintHelpers::getApproxHint(...)`, passing it the computed nominal collateral ratio. Returns an address close to the correct insert position
+4. Call `SortedTroves::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new nominal collateral ratio via `_NICR`. 
 5. Pass the exact position as an argument to the trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
 
 Hints allow cheaper trove operations for the user, at the expense of a slightly longer time to completion, due to the need to await the result of the two read calls in steps 1 and 2 - which may be sent as JSON-RPC requests to Infura, unless the front end operator is running a full Ethereum node.
 
-Each BorrowerOperations function that reinserts a troves takes a single hint, as does `StabilityPool::withdrawFromSPtoTrove(...)`.
+Each BorrowerOperations function that reinserts a trove takes a single hint, as does `StabilityPool::withdrawFromSPtoTrove(...)`.
 
 ### Hints for `redeemCollateral`
 
-`TroveManager::redeemCollateral` as a special case requires two hints. The first hint provides an accurate reinsert position (as described above), and the second hint ensures the transaction succeeds.
+`TroveManager::redeemCollateral` as a special case requires three hints:
+- `_firstRedemptionHint` hints at the position of the first trove that will be redeemed from,
+- `_partialRedemptionHint` hints at the position where the last redeemed trove should be reinserted, if it's partially redeemed,
+- `_partialRedemptionHintNICR` ensures that the transaction won't run out of gas if `_partialRedemptionHint` is no longer valid.
 
 **TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
 
+`redeemCollateral` will only redeem from troves that have an ICR >= MCR. In other words, if there are troves at the bottom of the SortedTroves list that are below the minimum collateral ratio (which can happen after an ETH:USD price drop), they will be skipped. To make this more gas-efficient, the position of the first redeemable trove should be passed as `_firstRedemptionHint`.
+
 All troves that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the SortedTroves list.
 
-It’s likely that the last trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The first hint passed to `redeemCollateral` gives the expected reinsert position.
+It’s likely that the last trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The `_partialRedemptionHint` passed to `redeemCollateral` gives the expected reinsert position.
 
 However, if between the off-chain hint computation and on-chain execution a different transaction changes the state of a trove that would otherwise be hit by the redemption sequence, then the off-chain hint computation could end up totally inaccurate. This could lead to the whole redemption sequence reverting due to out-of-gas error.
 
-To mitigate this, a second hint needs to be provided: the expected ICR of the final partially-redeemed-from trove. The on-chain redemption function checks whether, after redemption, the ICR of this trove would equal the ICR hint.
+To mitigate this, another hint needs to be provided: `_partialRedemptionHintNICR`, the expected nominal ICR of the final partially-redeemed-from trove. The on-chain redemption function checks whether, after redemption, the nominal ICR of this trove would equal the nominal ICR hint.
 
 If not, the redemption sequence doesn’t perform the final partial redemption, and terminates early. This ensures that the transaction doesn’t revert, and most of the requested LUSD redemption can be fulfilled.
 
@@ -682,9 +735,9 @@ The intentions behind this formula are:
 
 ### Gas compensation schedule
 
-When a borrower opens a trove, an additional 10 LUSD debt is issued, and 10 LUSD is minted and sent to a dedicated externally owned account (EOA) for gas compensation - the "gas address".
+When a borrower opens a trove, an additional 10 LUSD debt is issued, and 10 LUSD is minted and sent to a dedicated contract (`GasPool`) for gas compensation - the "gas pool".
 
-When a borrower closes their active trove, this gas compensation is refunded: 10 LUSD is burned from the gas address's balance, and the corresponding 10 LUSD debt on the trove is cancelled.
+When a borrower closes their active trove, this gas compensation is refunded: 10 LUSD is burned from the gas pool's balance, and the corresponding 10 LUSD debt on the trove is cancelled.
 
 The purpose of the 10 LUSD debt is to provide a minimum level of gas compensation, regardless of the trove's collateral size or the current ETH price.
 
@@ -713,7 +766,7 @@ In a partial liquidation, the ETH gas compensation is 0.5% of the _collateral fr
 
 When a trove is redeemed from, the redemption is made only against (debt - 10), not the entire debt.
 
-But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 LUSD gas compensation is cancelled with its remaining 10 debt. That is, the gas compensation is burned from the gas address, and the 10 debt is zero’d. The ETH collateral surplus from the trove remains in the system, to be later claimed by its owner.
+But if the redemption causes an amount (debt - 10) to be cancelled, the trove is then closed: the 10 LUSD gas compensation is cancelled with its remaining 10 debt. That is, the gas compensation is burned from the gas pool, and the 10 debt is zero’d. The ETH collateral surplus from the trove remains in the system, to be later claimed by its owner.
 
 ## Gas compensation Functionality
 
@@ -843,7 +896,7 @@ When a deposit earns LQTY, it is split between the depositor, and the front end 
 
 The overall community issuance schedule for LQTY is sub-linear and monotonic. We currently (provisionally) implement a yearly “halving” schedule, described by the cumulative issuance function:
 
-`supplyCap * 1 - 0.5^t` 
+`supplyCap * (1 - 0.5^t)`
 
 where `t` is year and `supplyCap` is (provisionally) set to represent 33.33 million LQTY tokens.
 
@@ -1029,6 +1082,8 @@ _**Entire collateral:**_ the sum of a trove’s active collateral plus its pendi
 _**Entire debt:**_ the sum of a trove’s active debt plus its pending debt rewards accumulated from distributions
 
 _**Individual collateral ratio (ICR):**_ a trove's ICR is the ratio of the dollar value of its entire collateral at the current ETH:USD price, to its entire debt
+
+_**Nominal collateral ratio (nominal ICR, NICR):**_ a trove's nominal ICR is the ratio of its entire collateral (in ETH) to its entire debt, without factoring in the current ETH:USD price.
 
 _**Total active collateral:**_ the sum of active collateral over all troves. Equal to the ETH in the ActivePool.
 

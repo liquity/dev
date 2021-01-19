@@ -19,6 +19,8 @@ interface ITroveManager {
 
     event StabilityPoolAddressChanged(address _stabilityPoolAddress);
 
+    event GasPoolAddressChanged(address _gasPoolAddress);
+
     event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
 
     event SortedTrovesAddressChanged(address _sortedTrovesAddress);
@@ -38,6 +40,7 @@ interface ITroveManager {
         address _activePoolAddress,
         address _defaultPoolAddress,
         address _stabilityPoolAddress,
+        address _gasPoolAddress,
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _lusdTokenAddress,
@@ -49,6 +52,7 @@ interface ITroveManager {
 
     function getTroveFromTroveOwnersArray(uint _index) external view returns (address);
 
+    function getNominalICR(address _borrower) external view returns (uint);
     function getCurrentICR(address _borrower, uint _price) external view returns (uint);
 
     function liquidate(address _borrower) external;
@@ -57,13 +61,12 @@ interface ITroveManager {
 
     function batchLiquidateTroves(address[] calldata _troveArray) external;
 
-    function checkRecoveryMode() external view returns (bool);
-
     function redeemCollateral(
         uint _LUSDAmount,
         address _firstRedemptionHint,
-        address _partialRedemptionHint,
-        uint _partialRedemptionHintICR,
+        address _upperPartialRedemptionHint,
+        address _lowerPartialRedemptionHint,
+        uint _partialRedemptionHintNICR,
         uint _maxIterations
     ) external; 
 
@@ -87,12 +90,6 @@ interface ITroveManager {
         uint pendingLUSDDebtReward, 
         uint pendingETHReward
     );
-
-    function getEntireSystemColl() external view returns (uint);
-
-    function getEntireSystemDebt() external view returns (uint);
-
-    function getTCR() external view returns (uint TCR);
 
     function closeTrove(address _borrower) external;
 
@@ -119,4 +116,8 @@ interface ITroveManager {
     function increaseTroveDebt(address _borrower, uint _debtIncrease) external returns (uint); 
 
     function decreaseTroveDebt(address _borrower, uint _collDecrease) external returns (uint); 
+
+    function getTCR() external view returns (uint);
+
+    function checkRecoveryMode() external view returns (bool);
 }

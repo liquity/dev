@@ -4,6 +4,14 @@ pragma solidity 0.6.11;
 
 interface ILQTYStaking {
 
+    // --- Events --
+
+    event StakeChanged(address indexed staker, uint newStake);
+    
+    event StakingGainsWithdrawn(address indexed staker, uint LUSDGain, uint ETHGain);
+
+    // --- Functions ---
+
     function setAddresses
     (
         address _lqtyTokenAddress,

@@ -1,5 +1,6 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction, ContractFactory, Overrides } from "@ethersproject/contracts";
+import { Wallet } from "@ethersproject/wallet";
 
 import {
   LiquityContractAddresses,
@@ -79,6 +80,9 @@ const deployContracts = async (
     }),
     stabilityPool: await deployContract(deployer, getContractFactory, "StabilityPool", {
       ...overrides
+    }),
+    gasPool: await deployContract(deployer, getContractFactory, "GasPool", {
+      ...overrides
     })
   };
 
@@ -101,6 +105,9 @@ const deployContracts = async (
       addresses.communityIssuance,
       addresses.lqtyStaking,
       addresses.lockupContractFactory,
+      // TODO: parameterize these
+      Wallet.createRandom().address, // _bountyAddress
+      Wallet.createRandom().address, // _lpRewardsAddress
       { ...overrides }
     ),
 
@@ -130,7 +137,8 @@ const connectContracts = async (
     lqtyStaking,
     priceFeed,
     sortedTroves,
-    stabilityPool
+    stabilityPool,
+    gasPool
   }: LiquityContracts,
   deployer: Signer,
   overrides?: Overrides
@@ -154,6 +162,7 @@ const connectContracts = async (
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
+        gasPool.address,
         collSurplusPool.address,
         priceFeed.address,
         lusdToken.address,
@@ -168,6 +177,7 @@ const connectContracts = async (
         activePool.address,
         defaultPool.address,
         stabilityPool.address,
+        gasPool.address,
         collSurplusPool.address,
         priceFeed.address,
         sortedTroves.address,

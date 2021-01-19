@@ -4,11 +4,11 @@ import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 import { Decimal, Percent } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
+import { Icon } from "@liquity/shared-react";
 
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow, StaticRow } from "./Editor";
-import { Icon } from "./Icon";
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN } from "../strings";
 
@@ -38,21 +38,17 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
 
   const myTransactionId = "redemption";
   const myTransactionState = useMyTransactionState(myTransactionId);
-  const tentativelyConfirmed =
-    (myTransactionState.type === "waitingForConfirmations" &&
-      myTransactionState.confirmations > 0) ||
-    myTransactionState.type === "confirmed";
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
       setChangePending(true);
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       setChangePending(false);
-    } else if (tentativelyConfirmed) {
+    } else if (myTransactionState.type === "confirmed") {
       setAmount(Decimal.ZERO);
       setChangePending(false);
     }
-  }, [myTransactionState.type, setChangePending, setAmount, tentativelyConfirmed]);
+  }, [myTransactionState.type, setChangePending, setAmount]);
 
   if (amount.isZero) {
     return null;

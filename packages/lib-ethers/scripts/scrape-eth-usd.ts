@@ -2,17 +2,19 @@ import fs from "fs";
 
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { Contract, CallOverrides, EventFilter } from "@ethersproject/contracts";
-import { getDefaultProvider } from "@ethersproject/providers";
+import { AlchemyProvider } from "@ethersproject/providers";
 
 import { Decimal } from "@liquity/decimal";
 
 const outputFile = "eth-usd.csv";
 
+const phase = 2;
 const answerDecimals = 8;
 const liquityDecimals = 18;
 const answerMultiplier = BigNumber.from(10).pow(liquityDecimals - answerDecimals);
+const firstRound = BigNumber.from("0x10000000000000000").mul(phase);
 
-const aggregatorAddress = "0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F";
+const aggregatorAddress = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419";
 
 const aggregatorAbi = [
   "function latestAnswer() view returns (int256)",
@@ -40,8 +42,8 @@ declare class Aggregator extends Contract {
   };
 }
 
-function* range(start: number, end: number) {
-  for (let i = start; i < end; ++i) {
+function* range(start: BigNumber, end: BigNumber) {
+  for (let i = start; i.lt(end); i = i.add(1)) {
     yield i;
   }
 }
@@ -57,7 +59,7 @@ const formatDateTime = (timestamp: number) => {
 };
 
 (async () => {
-  const provider = getDefaultProvider("mainnet");
+  const provider = new AlchemyProvider("mainnet", "LfzNw5K5sLuITGhCxFObHJWMHY_1HW6M");
   const aggregator = new Contract(aggregatorAddress, aggregatorAbi, provider) as Aggregator;
 
   const getRound = (roundId: BigNumberish) =>
@@ -72,16 +74,18 @@ const formatDateTime = (timestamp: number) => {
     ]);
 
   const roundsPerPass = 10;
-  const latestRound = (await aggregator.latestRound()).toNumber();
-  const passes = Math.ceil((latestRound + 1) / roundsPerPass);
+  // const latestRound = await aggregator.latestRound();
+  const latestRound = BigNumber.from("0x200000000000015A6");
+  const totalRounds = latestRound.sub(firstRound).toNumber();
+  const passes = Math.ceil((totalRounds + 1) / roundsPerPass);
 
   fs.writeFileSync(outputFile, "");
 
   for (let pass = 0; pass < passes; ++pass) {
-    const start = pass * roundsPerPass;
-    const end = Math.min((pass + 1) * roundsPerPass, latestRound + 1);
+    const start = firstRound.add(pass * roundsPerPass);
+    const end = firstRound.add(Math.min((pass + 1) * roundsPerPass, totalRounds + 1));
 
-    console.log(`Pass ${pass} out of ${passes} (rounds ${start} - ${end - 1})`);
+    console.log(`Pass ${pass} out of ${passes} (rounds ${start} - ${end.sub(1)})`);
 
     const answers = await Promise.all(Array.from(range(start, end)).map(i => getRound(i)));
     fs.appendFileSync(outputFile, answers.map(answer => answer.join(",")).join("\n") + "\n");

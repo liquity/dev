@@ -25,7 +25,7 @@ export const CollateralSurplusAction: React.FC = () => {
         Waiting for your approval
       </Button>
     </Flex>
-  ) : myTransactionState.type !== "waitingForConfirmations" &&
+  ) : myTransactionState.type !== "waitingForConfirmation" &&
     myTransactionState.type !== "confirmed" ? (
     <Flex variant="layout.actions">
       <Transaction

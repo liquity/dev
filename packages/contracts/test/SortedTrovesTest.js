@@ -24,6 +24,11 @@ contract('SortedTroves', async accounts => {
       
       assert.isTrue(prevTroveICR.gte(troveICR))
 
+      const troveNICR = await contracts.troveManager.getNominalICR(trove)
+      const prevTroveNICR = await contracts.troveManager.getNominalICR(prevTrove)
+      
+      assert.isTrue(prevTroveNICR.gte(troveNICR))
+
       // climb the list
       trove = prevTrove
     }
@@ -40,12 +45,15 @@ contract('SortedTroves', async accounts => {
   let troveManager
   let borrowerOperations
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   let contracts
 
   describe('SortedTroves', () => {
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
       priceFeed = contracts.priceFeedTestnet
       sortedTroves = contracts.sortedTroves
@@ -58,9 +66,9 @@ contract('SortedTroves', async accounts => {
     })
 
     it('contains(): returns true for addresses that have opened troves', async () => {
-      await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(5, 'ether') })
-      await borrowerOperations.openTrove('98908089089', carol, { from: carol, value: '23082308092385098009809' })
+      await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(5, 'ether') })
+      await borrowerOperations.openTrove('98908089089', carol, carol, { from: carol, value: '23082308092385098009809' })
 
       // Confirm trove statuses became active
       assert.equal((await troveManager.Troves(alice))[3], '1')
@@ -74,9 +82,9 @@ contract('SortedTroves', async accounts => {
     })
 
     it('contains(): returns false for addresses that have not opened troves', async () => {
-      await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(5, 'ether') })
-      await borrowerOperations.openTrove('98908089089', carol, { from: carol, value: '23082308092385098009809' })
+      await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(5, 'ether') })
+      await borrowerOperations.openTrove('98908089089', carol, carol, { from: carol, value: '23082308092385098009809' })
 
       // Confirm troves have non-existent status
       assert.equal((await troveManager.Troves(dennis))[3], '0')
@@ -88,11 +96,11 @@ contract('SortedTroves', async accounts => {
     })
 
     it('contains(): returns false for addresses that opened and then closed a trove', async () => {
-      await borrowerOperations.openTrove('0', whale, { from: whale, value: dec(100, 'ether') })
+      await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(100, 'ether') })
       
-      await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(5, 'ether') })
-      await borrowerOperations.openTrove('98908089089', carol, { from: carol, value: '23082308092385098009809' })
+      await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(5, 'ether') })
+      await borrowerOperations.openTrove('98908089089', carol, carol, { from: carol, value: '23082308092385098009809' })
 
       // A, B, C close troves
       await borrowerOperations.closeTrove({ from: alice })
@@ -112,11 +120,11 @@ contract('SortedTroves', async accounts => {
 
     // true for addresses that opened -> closed -> opened a trove
     it('contains(): returns true for addresses that opened, closed and then re-opened a trove', async () => {
-      await borrowerOperations.openTrove('0', whale, { from: whale, value: dec(100, 'ether') })
+      await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(100, 'ether') })
       
-      await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(5, 'ether') })
-      await borrowerOperations.openTrove('98908089089', carol, { from: carol, value: '23082308092385098009809' })
+      await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(5, 'ether') })
+      await borrowerOperations.openTrove('98908089089', carol, carol, { from: carol, value: '23082308092385098009809' })
 
       // A, B, C close troves
       await borrowerOperations.closeTrove({ from: alice })
@@ -128,9 +136,9 @@ contract('SortedTroves', async accounts => {
       assert.equal((await troveManager.Troves(bob))[3], '2')
       assert.equal((await troveManager.Troves(carol))[3], '2')
 
-      await borrowerOperations.openTrove('234234', alice, { from: alice, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove('9999', bob, { from: bob, value: dec(5, 'ether') })
-      await borrowerOperations.openTrove('1', carol, { from: carol, value: '23082308092385098009809' })
+      await borrowerOperations.openTrove('234234', alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove('9999', bob, bob, { from: bob, value: dec(5, 'ether') })
+      await borrowerOperations.openTrove('1', carol, carol, { from: carol, value: '23082308092385098009809' })
 
       // Confirm trove statuses became open again
       assert.equal((await troveManager.Troves(alice))[3], '1')
@@ -152,14 +160,14 @@ contract('SortedTroves', async accounts => {
 
     // true when list size is 1 and the trove the only one in system
     it('contains(): true when list size is 1 and the trove the only one in system', async () => {
-      await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
       
       assert.isTrue(await sortedTroves.contains(alice))
     })
 
     // false when list size is 1 and trove is not in the system
     it('contains(): false when list size is 1 and trove is not in the system', async () => {
-      await borrowerOperations.openTrove(dec(100, 18), alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
       
       assert.isFalse(await sortedTroves.contains(bob))
     })
@@ -175,53 +183,57 @@ contract('SortedTroves', async accounts => {
 
     it("Finds the correct insert position given two addresses that loosely bound the correct position", async () => { 
       await priceFeed.setPrice(dec(100, 18))
-      const price = await priceFeed.getPrice()
 
-      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(5000, 'ether') }) //  Highest ICR (infinite)
-      await borrowerOperations.openTrove(dec(90, 18), A, { from: A, value: dec(10, 'ether') }) //  |  
-      await borrowerOperations.openTrove(dec(190, 18), B, { from: B, value: dec(10, 'ether') }) //  | ICR = 500%
-      await borrowerOperations.openTrove(dec(390, 18), C, { from: C, value: dec(10, 'ether') }) //  | ICR = 250%
-      await borrowerOperations.openTrove(dec(590, 18), D, { from: D, value: dec(10, 'ether') }) //  | 
-      await borrowerOperations.openTrove(dec(790, 18), E, { from: E, value: dec(10, 'ether') }) //  Lowest ICR
+      await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(5000, 'ether') }) //  Highest NICR (50,000%)
+      await borrowerOperations.openTrove(dec(90, 18), A, A, { from: A, value: dec(10, 'ether') }) //  |  NICR = 1,000%
+      await borrowerOperations.openTrove(dec(190, 18), B, B, { from: B, value: dec(10, 'ether') }) //  | NICR = 500%
+      await borrowerOperations.openTrove(dec(390, 18), C, C, { from: C, value: dec(10, 'ether') }) //  | NICR = 250%
+      await borrowerOperations.openTrove(dec(590, 18), D, D, { from: D, value: dec(10, 'ether') }) //  | NICR = 166%
+      await borrowerOperations.openTrove(dec(790, 18), E, E, { from: E, value: dec(10, 'ether') }) //  Lowest NICR (125%)
 
-      console.log(`B ICR: ${await troveManager.getCurrentICR(B, price)}`)
-      console.log(`C ICR: ${await troveManager.getCurrentICR(C, price)}`)
-
-      // Expect a trove with ICR 300% to be inserted between B and C
-      const targetICR = dec(3, 18) 
+      // Expect a trove with NICR 300% to be inserted between B and C
+      const targetNICR = dec(3, 18)
 
       // Pass addresses that loosely bound the right postiion
-      const hints = await sortedTroves.findInsertPosition(targetICR, price, A, E)
+      const hints = await sortedTroves.findInsertPosition(targetNICR, A, E)
 
       // Expect the exact correct insert hints have been returned
       assert.equal(hints[0], B )
       assert.equal(hints[1], C )
+
+      // The price doesn’t affect the hints
+      await priceFeed.setPrice(dec(500, 18))
+      const hints2 = await sortedTroves.findInsertPosition(targetNICR, A, E)
+
+      // Expect the exact correct insert hints have been returned
+      assert.equal(hints2[0], B )
+      assert.equal(hints2[1], C )
     })
 
     //--- Ordering --- 
     it("stays ordered after troves with 'infinite' ICR receive a redistribution", async () => {
 
       // make several troves with 0 debt and collateral, in random order
-      await borrowerOperations.openTrove(0, whale, { from: whale, value: dec(50, 'ether') })
-      await borrowerOperations.openTrove(0, A, { from: A, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(0, B, { from: B, value: dec(37, 'ether') })
-      await borrowerOperations.openTrove(0, C, { from: C, value: dec(5, 'ether') })
-      await borrowerOperations.openTrove(0, D, { from: D, value: dec(4, 'ether') })
-      await borrowerOperations.openTrove(0, E, { from: E, value: dec(19, 'ether') })
+      await borrowerOperations.openTrove(0, whale, whale, { from: whale, value: dec(50, 'ether') })
+      await borrowerOperations.openTrove(0, A, A, { from: A, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(0, B, B, { from: B, value: dec(37, 'ether') })
+      await borrowerOperations.openTrove(0, C, C, { from: C, value: dec(5, 'ether') })
+      await borrowerOperations.openTrove(0, D, D, { from: D, value: dec(4, 'ether') })
+      await borrowerOperations.openTrove(0, E, E, { from: E, value: dec(19, 'ether') })
 
       // Make some troves with non-zero debt, in random order
-      await borrowerOperations.openTrove(dec(5, 19), F, { from: F, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(dec(3, 18), G, { from: G, value: dec(37, 'ether') })
-      await borrowerOperations.openTrove(dec(2, 20), H, { from: H, value: dec(5, 'ether') })
-      await borrowerOperations.openTrove(dec(17, 18), I, { from: I, value: dec(4, 'ether') })
-      await borrowerOperations.openTrove(dec(5, 21), J, { from: J, value: dec(1345, 'ether') })
+      await borrowerOperations.openTrove(dec(5, 19), F, F, { from: F, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(dec(3, 18), G, G, { from: G, value: dec(37, 'ether') })
+      await borrowerOperations.openTrove(dec(2, 20), H, H, { from: H, value: dec(5, 'ether') })
+      await borrowerOperations.openTrove(dec(17, 18), I, I, { from: I, value: dec(4, 'ether') })
+      await borrowerOperations.openTrove(dec(5, 21), J, J, { from: J, value: dec(1345, 'ether') })
 
       const price_1 = await priceFeed.getPrice()
       
       // Check troves are ordered
       await assertSortedListIsOrdered(contracts)
 
-      await borrowerOperations.openTrove(dec(100, 18), defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       assert.isTrue(await sortedTroves.contains(defaulter_1))
 
       // Price drops
@@ -259,22 +271,22 @@ contract('SortedTroves', async accounts => {
       })
 
       it('insert(): fails if list is full', async () => {
-        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
-        await sortedTrovesTester.insert(bob, 1, 1, alice, alice)
-        await th.assertRevert(sortedTrovesTester.insert(carol, 1, 1, alice, alice), 'SortedTroves: List is full')
+        await sortedTrovesTester.insert(alice, 1, alice, alice)
+        await sortedTrovesTester.insert(bob, 1, alice, alice)
+        await th.assertRevert(sortedTrovesTester.insert(carol, 1, alice, alice), 'SortedTroves: List is full')
       })
 
       it('insert(): fails if list already contains the node', async () => {
-        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
-        await th.assertRevert(sortedTrovesTester.insert(alice, 1, 1, alice, alice), 'SortedTroves: List already contains the node')
+        await sortedTrovesTester.insert(alice, 1, alice, alice)
+        await th.assertRevert(sortedTrovesTester.insert(alice, 1, alice, alice), 'SortedTroves: List already contains the node')
       })
 
       it('insert(): fails if id is zero', async () => {
-        await th.assertRevert(sortedTrovesTester.insert(th.ZERO_ADDRESS, 1, 1, alice, alice), 'SortedTroves: Id cannot be zero')
+        await th.assertRevert(sortedTrovesTester.insert(th.ZERO_ADDRESS, 1, alice, alice), 'SortedTroves: Id cannot be zero')
       })
 
-      it('insert(): fails if ICR is zero', async () => {
-        await th.assertRevert(sortedTrovesTester.insert(alice, 0, 1, alice, alice), 'SortedTroves: ICR must be positive')
+      it('insert(): fails if NICR is zero', async () => {
+        await th.assertRevert(sortedTrovesTester.insert(alice, 0, alice, alice), 'SortedTroves: NICR must be positive')
       })
 
       it('remove(): fails if id is not in the list', async () => {
@@ -282,23 +294,22 @@ contract('SortedTroves', async accounts => {
       })
 
       it('reInsert(): fails if list doesn’t contain the node', async () => {
-        await th.assertRevert(sortedTrovesTester.reInsert(alice, 1, 1, alice, alice), 'SortedTroves: List does not contain the id')
+        await th.assertRevert(sortedTrovesTester.reInsert(alice, 1, alice, alice), 'SortedTroves: List does not contain the id')
       })
 
-      it('reInsert(): fails if new ICR is zero', async () => {
-        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
+      it('reInsert(): fails if new NICR is zero', async () => {
+        await sortedTrovesTester.insert(alice, 1, alice, alice)
         assert.isTrue(await sortedTroves.contains(alice), 'list should contain element')
-        await th.assertRevert(sortedTrovesTester.reInsert(alice, 0, 1, alice, alice), 'SortedTroves: ICR must be positive')
+        await th.assertRevert(sortedTrovesTester.reInsert(alice, 0, alice, alice), 'SortedTroves: NICR must be positive')
         assert.isTrue(await sortedTroves.contains(alice), 'list should contain element')
       })
 
       it('findInsertPosition(): No prevId for hint - ascend list starting from nextId, result is after the tail', async () => {
-        await sortedTrovesTester.insert(alice, 1, 1, alice, alice)
-        const pos = await sortedTroves.findInsertPosition(1, 1, th.ZERO_ADDRESS, alice)
+        await sortedTrovesTester.insert(alice, 1, alice, alice)
+        const pos = await sortedTroves.findInsertPosition(1, th.ZERO_ADDRESS, alice)
         assert.equal(pos[0], alice, 'prevId result should be nextId param')
         assert.equal(pos[1], th.ZERO_ADDRESS, 'nextId result should be zero')
       })
-
     })
   })
 })

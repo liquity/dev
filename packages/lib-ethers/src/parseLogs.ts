@@ -1,31 +1,42 @@
 import { BigNumber } from "@ethersproject/bignumber";
 import { AddressZero } from "@ethersproject/constants";
-import { Log } from "@ethersproject/abstract-provider";
+import { Log, TransactionReceipt } from "@ethersproject/abstract-provider";
+import { Contract } from "@ethersproject/contracts";
 import { LogDescription, Interface } from "@ethersproject/abi";
 
 import { Decimal } from "@liquity/decimal";
-import { LiquityContracts } from "./contracts";
 
-const GAS_POOL_ADDRESS = "0x00000000000000000000000000000000000009A5";
+type InterfaceLookup = {
+  [address: string]: Interface;
+};
 
-export const contractsToInterfaces = (contracts: LiquityContracts) => {
-  return Object.entries(contracts).reduce<{ [address: string]: [string, Interface] }>(
-    (interfaces, [name, contract]) => ({
-      ...interfaces,
-      [contract.address]: [name, contract.interface]
-    }),
-    {}
+type NameLookup = {
+  [address: string]: string;
+};
+
+const interfaceLookupFrom = (contracts: Record<string, Contract>): InterfaceLookup => {
+  return Object.fromEntries(
+    Object.entries(contracts).map(([, contract]) => [contract.address, contract.interface])
   );
 };
 
-const tryToParseLog = (
-  log: Log,
-  interfaces: { [address: string]: [string, Interface] }
-): [string, LogDescription] | undefined => {
-  if (log.address in interfaces) {
+const nameLookupFrom = (contracts: Record<string, Contract>): NameLookup => {
+  return Object.fromEntries(
+    Object.entries(contracts).map(([name, contract]) => [contract.address, name])
+  );
+};
+
+type ParsedLog = {
+  address: string;
+  logDescription: LogDescription;
+};
+
+const tryToParseLog = (log: Log, interfaceLookup: InterfaceLookup): ParsedLog | undefined => {
+  const { address } = log;
+
+  if (address in interfaceLookup) {
     try {
-      const [name, iface] = interfaces[log.address];
-      return [name, iface.parseLog(log)];
+      return { address, logDescription: interfaceLookup[address].parseLog(log) };
     } catch (err) {
       console.warn("Failed to parse log:");
       console.warn(log);
@@ -35,15 +46,15 @@ const tryToParseLog = (
   }
 };
 
-export const parseLogs = (
+const parseLogs = (
   logs: Log[],
-  interfaces: { [address: string]: [string, Interface] }
-): [[string, LogDescription][], Log[]] => {
-  const parsedLogs: [string, LogDescription][] = [];
+  interfaceLookup: InterfaceLookup
+): [parsedLogs: ParsedLog[], unparsedLogs: Log[]] => {
+  const parsedLogs: ParsedLog[] = [];
   const unparsedLogs: Log[] = [];
 
   logs.forEach(log => {
-    const parsedLog = tryToParseLog(log, interfaces);
+    const parsedLog = tryToParseLog(log, interfaceLookup);
 
     if (parsedLog) {
       parsedLogs.push(parsedLog);
@@ -57,7 +68,7 @@ export const parseLogs = (
 
 const VERY_BIG = BigNumber.from(10).pow(9);
 
-const prettify = (arg: unknown, names?: { [address: string]: string }) => {
+const prettify = (arg: unknown, nameLookup: NameLookup) => {
   if (BigNumber.isBigNumber(arg)) {
     if (arg.gte(VERY_BIG)) {
       return new Decimal(arg).toString() + "e18";
@@ -67,23 +78,49 @@ const prettify = (arg: unknown, names?: { [address: string]: string }) => {
   } else if (typeof arg === "string") {
     return arg === AddressZero
       ? "address(0)"
-      : arg === GAS_POOL_ADDRESS
-      ? "gasPool"
-      : names && arg in names
-      ? names[arg]
+      : nameLookup && arg in nameLookup
+      ? nameLookup[arg]
       : arg;
   } else {
     return String(arg);
   }
 };
 
-export const logDescriptionToString = (
-  logDescription: LogDescription,
-  names?: { [address: string]: string }
-) => {
+const logDescriptionToString = (logDescription: LogDescription, nameLookup: NameLookup) => {
   const prettyEntries = Object.entries(logDescription.args)
     .filter(([key]) => !key.match(/^[0-9]/))
-    .map(([key, value]) => `${key}: ${prettify(value, names)}`);
+    .map(([key, value]) => `${key}: ${prettify(value, nameLookup)}`);
 
   return `${logDescription.name}({ ${prettyEntries.join(", ")} })`;
+};
+
+export const logsToString = (receipt: TransactionReceipt, contracts: Record<string, Contract>) => {
+  const interfaceLookup = interfaceLookupFrom(contracts);
+  const contractNameLookup = nameLookupFrom(contracts);
+
+  const nameLookup = {
+    [receipt.from]: "user",
+    ...contractNameLookup
+  };
+
+  const [parsedLogs, unparsedLogs] = parseLogs(receipt.logs, interfaceLookup);
+
+  if (unparsedLogs.length > 0) {
+    console.warn("Warning: not all logs were parsed. Unparsed logs:");
+    console.warn(unparsedLogs);
+  }
+
+  if (parsedLogs.length > 0) {
+    return (
+      `Logs of tx ${receipt.transactionHash}:\n` +
+      parsedLogs
+        .map(
+          ({ address, logDescription }) =>
+            `  ${contractNameLookup[address]}.${logDescriptionToString(logDescription, nameLookup)}`
+        )
+        .join("\n")
+    );
+  } else {
+    return `No logs were parsed in tx ${receipt.transactionHash}`;
+  }
 };

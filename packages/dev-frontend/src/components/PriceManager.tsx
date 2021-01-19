@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
-import { Transaction } from "./Transaction";
 
 import { Decimal } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
+import { Icon } from "@liquity/shared-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
-import { Icon } from "./Icon";
+import { Transaction } from "./Transaction";
 
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
@@ -50,7 +50,6 @@ export const PriceManager: React.FC = () => {
                 }
                 return liquity.setPrice(Decimal.from(editedPrice), overrides);
               }}
-              numberOfConfirmationsToWait={1}
             >
               <Button variant="icon">
                 <Icon name="chart-line" size="lg" />

@@ -6,12 +6,13 @@ import "./Interfaces/IPriceFeed.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 /*
 * PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference contract.
 */
-contract PriceFeed is Ownable, IPriceFeed {
+contract PriceFeed is Ownable, CheckContract, IPriceFeed {
     using SafeMath for uint256;
 
     // Mainnet Chainlink aggregator
@@ -28,6 +29,8 @@ contract PriceFeed is Ownable, IPriceFeed {
         external
         onlyOwner
     {
+        checkContract(_priceAggregatorAddress);
+
         priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
         _renounceOwnership();
     }

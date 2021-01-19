@@ -10,7 +10,8 @@
       "**/@graphprotocol/*",
       "**/jest*",
       "**/@babel/*",
-      "**/babel*"
+      "**/babel*",
+      "**/react-scripts"
     ]
   },
   "scripts": {
@@ -27,6 +28,7 @@
     "prepare:lib-react": "yarn workspace @liquity/lib-react prepare",
     "prepare:lib-subgraph": "yarn workspace @liquity/lib-subgraph prepare",
     "prepare:providers": "yarn workspace @liquity/providers prepare",
+    "prepare:shared-react": "yarn workspace @liquity/shared-react prepare",
     "prepare:subgraph": "yarn workspace @liquity/subgraph prepare",
     "rebuild": "run-s prepare build",
     "save-live-version": "yarn workspace @liquity/lib-ethers save-live-version",

@@ -1,7 +1,6 @@
 
 const BN = require('bn.js')
-const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
-const CustomDurationLockupContract = artifacts.require(("./CustomDurationLockupContract.sol"))
+const LockupContract = artifacts.require(("./LockupContract.sol"))
 const Destructible = artifacts.require("./TestContracts/Destructible.sol")
 
 const MoneyValues = {
@@ -169,6 +168,13 @@ class TestHelper {
     const ICR = await troveManager.getCurrentICR(account, price)
     return (ICR.gt(MoneyValues._ICR100)) && (ICR.lt(MoneyValues._MCR))
   }
+
+  static async isUndercollateralized(account, troveManager, price) {
+    const ICR = await troveManager.getCurrentICR(account, price)
+    return ICR.lt(MoneyValues._MCR)
+  }
+
+
 
   static toBN(num) {
     return web3.utils.toBN(num)
@@ -357,6 +363,21 @@ class TestHelper {
     throw (`The transaction logs do not contain event ${eventName} and arg ${argName}`)
   }
 
+  static getAllEventsByName(tx, eventName) {
+    const events = []
+    for (let i = 0; i < tx.logs.length; i++) {
+      if (tx.logs[i].event === eventName) {
+        events.push(tx.logs[i])
+      }
+    }
+    return events
+  }
+
+  static getDebtAndCollFromTroveUpdatedEvents(troveUpdatedEvents, address) {
+    const event = troveUpdatedEvents.filter(event => event.args[0] === address)[0]
+    return [event.args[1], event.args[2]]
+  }
+
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
     return compositeDebt
@@ -367,10 +388,10 @@ class TestHelper {
     const {
       hintAddress: approxfullListHint,
       latestRandomSeed
-    } = await contracts.hintHelpers.getApproxHint(newICR, 50, price, this.latestRandomSeed)
+    } = await contracts.hintHelpers.getApproxHint(newICR, 50, this.latestRandomSeed)
     this.latestRandomSeed = latestRandomSeed
 
-    const exactFullListHint = (await contracts.sortedTroves.findInsertPosition(newICR, price, approxfullListHint, approxfullListHint))[0]
+    const exactFullListHint = (await contracts.sortedTroves.findInsertPosition(newICR, approxfullListHint, approxfullListHint))[0]
 
     return exactFullListHint
   }
@@ -444,7 +465,7 @@ class TestHelper {
     for (const account of accounts) {
       const hint = await this.getBorrowerOpsListHint(contracts, ETHAmount, LUSDAmount, price)
 
-      const tx = await contracts.borrowerOperations.openTrove(LUSDAmount, hint, { from: account, value: ETHAmount })
+      const tx = await contracts.borrowerOperations.openTrove(LUSDAmount, hint, hint, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -459,7 +480,7 @@ class TestHelper {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
       const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, LUSDAmount, price)
 
-      const tx = await contracts.borrowerOperations.openTrove(LUSDAmount, hint, { from: account, value: randCollAmount })
+      const tx = await contracts.borrowerOperations.openTrove(LUSDAmount, hint, hint, { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -475,7 +496,7 @@ class TestHelper {
       const proportionalLUSD = (web3.utils.toBN(proportion)).mul(web3.utils.toBN(randCollAmount))
       const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, proportionalLUSD, price)
 
-      const tx = await contracts.borrowerOperations.openTrove(proportionalLUSD, hint, { from: account, value: randCollAmount })
+      const tx = await contracts.borrowerOperations.openTrove(proportionalLUSD, hint, hint, { from: account, value: randCollAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -498,7 +519,7 @@ class TestHelper {
       const compositeDebt = await this.getCompositeDebt(contracts, proportionalLUSD)
       const hint = await this.getBorrowerOpsListHint(contracts, randCollAmount, compositeDebt, price)
 
-      const tx = await contracts.borrowerOperations.openTrove(proportionalLUSD, hint, { from: account, value: randCollAmount })
+      const tx = await contracts.borrowerOperations.openTrove(proportionalLUSD, hint, hint, { from: account, value: randCollAmount })
 
       if (logging && tx.receipt.status) {
         i++
@@ -519,7 +540,7 @@ class TestHelper {
       const randLUSDAmount = this.randAmountInWei(minLUSD, maxLUSD)
       const hint = await this.getBorrowerOpsListHint(contracts, ETHAmount, randLUSDAmount, price)
 
-      const tx = await contracts.borrowerOperations.openTrove(randLUSDAmount, hint, { from: account, value: ETHAmount })
+      const tx = await contracts.borrowerOperations.openTrove(randLUSDAmount, hint, hint, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
@@ -548,7 +569,7 @@ class TestHelper {
       const LUSDAmountWei = web3.utils.toWei(LUSDAmount, 'ether')
       const hint = await this.getBorrowerOpsListHint(contracts, ETHAmount, LUSDAmountWei, price)
 
-      const tx = await contracts.borrowerOperations.openTrove(LUSDAmountWei, hint, { from: account, value: ETHAmount })
+      const tx = await contracts.borrowerOperations.openTrove(LUSDAmountWei, hint, hint, { from: account, value: ETHAmount })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
       i += 1
@@ -798,7 +819,7 @@ class TestHelper {
   }
 
   static async performRedemptionTx(redeemer, price, contracts, LUSDAmount) {
-    const redemptionhint = await contracts.hintHelpers.getRedemptionHints(LUSDAmount, price)
+    const redemptionhint = await contracts.hintHelpers.getRedemptionHints(LUSDAmount, price, 0)
 
     const firstRedemptionHint = redemptionhint[0]
     const partialRedemptionNewICR = redemptionhint[1]
@@ -806,17 +827,17 @@ class TestHelper {
     const {
       hintAddress: approxPartialRedemptionHint,
       latestRandomSeed
-    } = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50, price, this.latestRandomSeed)
+    } = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50, this.latestRandomSeed)
     this.latestRandomSeed = latestRandomSeed
 
     const exactPartialRedemptionHint = (await contracts.sortedTroves.findInsertPosition(partialRedemptionNewICR,
-      price,
       approxPartialRedemptionHint,
-      approxPartialRedemptionHint))[0]
+      approxPartialRedemptionHint))
 
     const tx = await contracts.troveManager.redeemCollateral(LUSDAmount,
       firstRedemptionHint,
-      exactPartialRedemptionHint,
+      exactPartialRedemptionHint[0],
+      exactPartialRedemptionHint[1],
       partialRedemptionNewICR,
       0,
       { from: redeemer, gasPrice: 0 },
@@ -835,7 +856,7 @@ class TestHelper {
     for (const account of accounts) {
       const coll = web3.utils.toWei(amountFinney.toString(), 'finney')
 
-      await contracts.borrowerOperations.openTrove('200000000000000000000', account, { from: account, value: coll })
+      await contracts.borrowerOperations.openTrove('200000000000000000000', account, account, { from: account, value: coll })
 
       amountFinney += 10
     }
@@ -902,16 +923,10 @@ class TestHelper {
     return deployedLCTx.logs[0].args[0]
   }
 
-  static async getOYLCFromDeploymentTx(deployedOYLCTx) {
-    const deployedOYLCAddress = this.getLCAddressFromDeploymentTx(deployedOYLCTx)  // grab addr of deployed contract from event
-    const OYLC = await OneYearLockupContract.at(deployedOYLCAddress)
-    return OYLC
-  }
-
-  static async getCDLCFromDeploymentTx(deployedCDLCTx) {
-    const deployedCDLCAddress = this.getLCAddressFromDeploymentTx(deployedCDLCTx)  // grab addr of deployed contract from event
-    const CDLC = await CustomDurationLockupContract.at(deployedCDLCAddress)
-    return CDLC
+  static async getLCFromDeploymentTx(deployedLCTx) {
+    const deployedLCAddress = this.getLCAddressFromDeploymentTx(deployedLCTx)  // grab addr of deployed contract from event
+    const LC = await LockupContract.at(deployedLCAddress)
+    return LC
   }
 
   static async registerFrontEnds(frontEnds, stabilityPool) {
@@ -980,7 +995,7 @@ class TestHelper {
     }
   }
 
-  static async assertAssert(txPromise, message = undefined) {
+  static async assertAssert(txPromise) {
     try {
       const tx = await txPromise
       assert.isFalse(tx.receipt.status) // when this assert fails, the expected revert didn't occur, i.e. the tx succeeded

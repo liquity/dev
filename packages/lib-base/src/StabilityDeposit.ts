@@ -8,7 +8,7 @@ interface StabilityDepositish {
   readonly lqtyReward?: Decimalish;
 }
 
-type StabilityDepositChange<T> =
+export type StabilityDepositChange<T> =
   | { depositLUSD: T; withdrawLUSD?: undefined }
   | { depositLUSD?: undefined; withdrawLUSD: T; withdrawAllLUSD: boolean };
 
