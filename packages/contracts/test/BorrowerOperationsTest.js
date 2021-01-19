@@ -1840,25 +1840,20 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("adjustTrove(): debt increase that also improves the ICR should succeed in Recovery Mode", async () => {
+  it.only("adjustTrove(): debt increase that also improves the ICR should succeed in Recovery Mode", async () => {
     await borrowerOperations.openTrove(0, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
-    const txAlice = await borrowerOperations.adjustTrove(0, 0, dec(50, 18), true, alice, alice, { from: alice, value: dec(1, 'ether') })
-    assert.isTrue(txAlice.receipt.status)
-
     await priceFeed.setPrice(dec(100, 18)) // trigger 50% drop in ETH price
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    try { 
-      const txBob = await borrowerOperations.adjustTrove(0, 0, dec(50, 18), true, bob, bob, { from: bob, value: dec(1, 'ether') })
-      assert.isTrue(txBob.receipt.status)
-    } catch (err) {
-      assert.include(err.message, "revert")
-    }
+    const txAlice = await borrowerOperations.adjustTrove(0, 0, dec(50, 18), true, alice, alice, { from: alice, value: dec(1, 'ether') })
+    assert.isTrue(txAlice.receipt.status)
+
+    assert.isTrue(await troveManager.checkRecoveryMode())
   })
 
   it("adjustTrove(): reverts when change would cause the TCR of the system to fall below the CCR", async () => {
