@@ -219,7 +219,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         require(msg.sender == _borrower || !isWithdrawal, "BorrowerOps: User must be sender for withdrawals");
         require(msg.value != 0 || _collWithdrawal != 0 || _debtChange != 0, "BorrowerOps: There must be either a collateral change or a debt change");
         _requireTroveisActive(_borrower);
-        if (isWithdrawal) { _requireNotInRecoveryMode(); }
 
         LocalVariables_adjustTrove memory L;
         L.price = priceFeed.getPrice();
