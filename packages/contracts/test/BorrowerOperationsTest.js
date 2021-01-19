@@ -1840,7 +1840,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it.only("adjustTrove(): debt increase that also improves the ICR should succeed in Recovery Mode", async () => {
+  it("adjustTrove(): debt increase that also improves the ICR should succeed in Recovery Mode", async () => {
     await borrowerOperations.openTrove(0, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
 
