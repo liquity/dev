@@ -129,7 +129,7 @@ contract EchidnaTester {
         uint _partialRedemptionHintNICR
     ) external {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].redeemCollateralPrx(_LUSDAmount, _firstRedemptionHint, _upperPartialRedemptionHint, _lowerPartialRedemptionHint, _partialRedemptionHintNICR, 0);
+        echidnaProxies[actor].redeemCollateralPrx(_LUSDAmount, _firstRedemptionHint, _upperPartialRedemptionHint, _lowerPartialRedemptionHint, _partialRedemptionHintNICR, 0, 0);
     }
 
     // Borrower Operations
@@ -167,7 +167,7 @@ contract EchidnaTester {
         //console.log('ETH', ETH);
         //console.log('LUSDAmount', LUSDAmount);
 
-        echidnaProxy.openTrovePrx(ETH, LUSDAmount, address(0), address(0));
+        echidnaProxy.openTrovePrx(ETH, LUSDAmount, address(0), address(0), 0);
 
         numberOfTroves = troveManager.getTroveOwnersCount();
         assert(numberOfTroves > 0);
@@ -175,9 +175,9 @@ contract EchidnaTester {
         //assert(numberOfTroves == 0);
     }
 
-    function openTroveRawExt(uint _i, uint _ETH, uint _LUSDAmount, address _upperHint, address _lowerHint) public payable {
+    function openTroveRawExt(uint _i, uint _ETH, uint _LUSDAmount, address _upperHint, address _lowerHint, uint _maxFee) public payable {
         uint actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].openTrovePrx(_ETH, _LUSDAmount, _upperHint, _lowerHint);
+        echidnaProxies[actor].openTrovePrx(_ETH, _LUSDAmount, _upperHint, _lowerHint, _maxFee);
     }
 
     function addCollExt(uint _i, uint _ETH) external payable {

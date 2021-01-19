@@ -126,7 +126,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     // --- Borrower Trove Operations ---
 
-    function openTrove(uint _LUSDAmount, address _upperHint, address _lowerHint) external payable override {
+    function openTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external payable override {
         uint price = priceFeed.getPrice();
 
         _requireTroveisNotActive(msg.sender);
@@ -136,11 +136,12 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         uint LUSDFee = troveManager.getBorrowingFee(_LUSDAmount);
         uint rawDebt = _LUSDAmount.add(LUSDFee);
         
-        //require(_maxFee >= LUSDFee || _maxFee == 0, "BorrowerOps: issuance fee exceeded provided max");
+        require(_maxFee >= LUSDFee || _maxFee == 0, "BorrowerOps: issuance fee exceeded provided max");
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
         assert(compositeDebt > 0);
+        
         uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
         uint NICR = LiquityMath._computeNominalCR(msg.value, compositeDebt);
 
