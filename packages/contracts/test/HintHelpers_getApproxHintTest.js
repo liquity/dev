@@ -241,6 +241,12 @@ contract('TroveManager', async accounts => {
      const ICR_Difference_Min = (ICRPercent_hintAddress_Min - ICRPercent_LastTrove)
      assert.isBelow(ICR_Difference_Min, sqrtLength)
   })
+
+  it('computeNominalCR()', async () => {
+    const NICR = await hintHelpers.computeNominalCR(dec(3, 18), dec(200, 18))
+    assert.equal(NICR.toString(), dec(150, 16))
+  })
+
 })
 
 // Gas usage:  See gas costs spreadsheet. Cost per trial = 10k-ish.
