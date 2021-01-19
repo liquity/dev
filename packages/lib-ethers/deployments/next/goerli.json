@@ -1,0 +1,23 @@
+{
+  "addresses": {
+    "activePool": "0x843Cc91af61B6988379c5E528f8d5B5F936a00b1",
+    "borrowerOperations": "0x0dBCB1229B43b1D2FE0B63235bF64e7c8034B98e",
+    "troveManager": "0x839017Ef9366c7A1b094e8CCe1bF45FCcCA5C55a",
+    "collSurplusPool": "0xb847b61a58B103dC3163091a294c8F270cD6df0a",
+    "communityIssuance": "0xFAe08e80e0598EBeCb8a3aCf0eb8f85922e7Cae1",
+    "defaultPool": "0x10fE36cc9A830C86f8117c74E85ce6C58705ef21",
+    "hintHelpers": "0x19303bC4d3518039D0780A55E9950B222B178467",
+    "lockupContractFactory": "0x8d2bd55A7B76a394C35ff5F027021f9149df58B5",
+    "lqtyStaking": "0xc1519eA24370293C610a024F9579b75b1ACD64b7",
+    "priceFeed": "0x77E14d8e0239EB0f1bBD30c31b0eC474AfA31731",
+    "sortedTroves": "0x75c815a82628bCD043560556D1A4C26721Cf2921",
+    "stabilityPool": "0xED291E223ECE13D4f8de1EaC32774d7991c23F86",
+    "gasPool": "0x54596CFB363900C7f43dd6f0894Ac7A090cC509F",
+    "lusdToken": "0xF9f19C8E3637288f5b190C0E4713218bdeE443B1",
+    "lqtyToken": "0x0cBb09a52D948C03Bf80E0474a58a9F21DD5fFc9",
+    "multiTroveGetter": "0xAa71fEcbFD5915772c8E2A1B5dB5116947D71734"
+  },
+  "priceFeedIsTestnet": true,
+  "version": "cd97b26b6f32f81db57c01b1a19e10d0175d1028",
+  "deploymentDate": 1611048357201
+}
