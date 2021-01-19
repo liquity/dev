@@ -525,6 +525,7 @@ export class PopulatableEthersLiquity
       await this.contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: depositCollateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
+        0,
         borrowLUSD?.bigNumber ?? 0,
         upperHint,
         lowerHint
@@ -596,7 +597,8 @@ export class PopulatableEthersLiquity
         compose(
           borrowLUSD ? addGasForPotentialLastFeeOperationTimeUpdate : id,
           addGasForPotentialListTraversal
-        ), 0,
+        ),
+        0,
         withdrawCollateral?.bigNumber ?? 0,
         (borrowLUSD ?? repayLUSD)?.bigNumber ?? 0,
         !!borrowLUSD,
@@ -760,7 +762,8 @@ export class PopulatableEthersLiquity
         upperPartialRedemptionHint,
         lowerPartialRedemptionHint,
         partialRedemptionHintNICR.bigNumber,
-        redeemMaxIterations
+        redeemMaxIterations,
+        0
       )
     );
   }
