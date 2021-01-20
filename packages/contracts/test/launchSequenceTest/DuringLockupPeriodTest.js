@@ -421,7 +421,7 @@ contract('During the initial lockup period', async accounts => {
   })
 
   // --- LCs ---
-  describe('Transferring LQTY to active LCs', async accounts => {
+  describe('Transferring LQTY to LCs', async accounts => {
     it("LQTY deployer can transfer LQTY (vesting) to lockup contracts they deployed", async () => {
       const initialLQTYBalanceOfLC_T1 = await lqtyToken.balanceOf(LC_T1.address)
       const initialLQTYBalanceOfLC_T2 = await lqtyToken.balanceOf(LC_T2.address)
@@ -629,7 +629,7 @@ contract('During the initial lockup period', async accounts => {
     })
 
 
-    describe('Withdrawal Attempts on active LCs before unlockTime has passed ', async accounts => {
+    describe('Withdrawal Attempts on LCs before unlockTime has passed ', async accounts => {
       it("LQTY Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory before the unlockTime", async () => {
 
         // Check currentTime < unlockTime
@@ -646,7 +646,7 @@ contract('During the initial lockup period', async accounts => {
         }
       })
 
-      it("LQTY Deployer can't withdraw from a locked and funded LC that someone else deployed before the unlockTime", async () => {
+      it("LQTY Deployer can't withdraw from a funded LC that someone else deployed before the unlockTime", async () => {
         // Account D deploys a new LC via the Factory
         const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: D })
         const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
@@ -682,7 +682,7 @@ contract('During the initial lockup period', async accounts => {
         assert.isTrue(currentTime.lt(unlockTime))
 
         /* Beneficiaries of all LCS - team, investor, and newly created LCs - 
-        attempt to withdraw from their respective funded and locked contracts */
+        attempt to withdraw from their respective funded contracts */
         const LCs = [
           LC_T1,
           LC_T2,
