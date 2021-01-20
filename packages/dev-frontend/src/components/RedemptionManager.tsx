@@ -119,7 +119,7 @@ export const RedemptionManager: React.FC = () => {
             {...{ editingState }}
             editedAmount={lusdAmount.toString(2)}
             setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
-          ></EditableRow>
+          />
 
           {edited && (
             <>

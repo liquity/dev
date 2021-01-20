@@ -13,22 +13,15 @@ import { WalletConnector } from "@liquity/shared-react";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
-import { TroveManager } from "./components/TroveManager";
 import { UserAccount } from "./components/UserAccount";
-import { SystemStats } from "./components/SystemStats";
 import { SystemStatsPopup } from "./components/SystemStatsPopup";
-import { StabilityDepositManager } from "./components/StabilityDepositManager";
-import { RiskiestTroves } from "./components/RiskiestTroves";
-import { PriceManager } from "./components/PriceManager";
-import { RedemptionManager } from "./components/RedemptionManager";
-import { LiquidationManager } from "./components/LiquidationManager";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
-import { StakingManager } from "./components/StakingManager";
 import { getConfig } from "./config";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
+import { PageSwitcher } from "./pages/PageSwitcher";
 
 if (window.ethereum) {
   // Silence MetaMask warning in console
@@ -94,31 +87,27 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   return (
     <LiquityStoreProvider {...{ store, loader }}>
-      <Header>
-        <UserAccount />
-        <SystemStatsPopup />
-      </Header>
+      <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
+        <Header>
+          <UserAccount />
+          <SystemStatsPopup />
+        </Header>
 
-      <Container variant="main">
-        <Container variant="columns">
-          <Container variant="left">
-            <TroveManager />
-            <StabilityDepositManager />
-            <StakingManager />
-            <RedemptionManager />
-          </Container>
-
-          <Container variant="right">
-            <SystemStats />
-            <PriceManager />
-            <LiquidationManager />
-          </Container>
+        <Container
+          variant="main"
+          sx={{
+            display: "flex",
+            flexGrow: 1,
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center"
+          }}
+        >
+          <PageSwitcher />
         </Container>
 
-        <RiskiestTroves pageSize={10} />
-      </Container>
-
-      <Footer>* Please note that the final user-facing application will look different.</Footer>
+        <Footer>* Please note that the final user-facing application will look different.</Footer>
+      </Flex>
 
       <TransactionMonitor />
     </LiquityStoreProvider>

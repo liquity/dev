@@ -110,7 +110,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
   );
 
   return (
-    <Card>
+    <Card sx={{ width: "100%" }}>
       <Heading>
         <Abbreviation short="Troves">Riskiest Troves</Abbreviation>
 
