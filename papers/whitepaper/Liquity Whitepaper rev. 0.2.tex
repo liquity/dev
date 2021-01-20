@@ -26,7 +26,7 @@
 \maketitle
 
 \section*{Abstract}
-Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against their collateral without paying interest. After locking up ETH as collateral in a smart contract and creating an individual position called a “trove”, the user can get instant liquidity by minting LUSD, a USD-pegged stablecoin. Each trove is required to be collateralized at a minimum of 110\%. Any owner of LUSD can redeem their stablecoins for the underlying collateral at any time. The redemption mechanism along with algorithmically adjusted fees guarantee a minimum stablecoin value of USD 1. 
+Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against their collateral without paying interest. After locking up ETH as collateral in a smart contract and creating an individual position called a “trove”, the user can get instant liquidity by minting LUSD, a USD-pegged stablecoin. Each trove is required to be collateralized at a minimum of 110\%. Any owner of LUSD can redeem their stablecoins for the underlying collateral at any time. The redemption mechanism along with algorithmically adjusted fees guarantee a minimum stablecoin value of \$1. 
 
 An unprecedented liquidation mechanism based on incentivized stability deposits and a redistribution cycle from riskier to safer troves provides stability at a much lower collateral ratio than current systems. Stability is maintained via economically-driven user interactions and arbitrage, rather than by active governance or monetary interventions. 
 The protocol has built-in incentives that encourage both early adoption and the operation of multiple front ends, enhancing decentralization.
@@ -105,13 +105,13 @@ The allocation of LQTY between front ends and users is based on a kickback rate 
 \subsection{Borrower operations }
 Anyone may obtain liquidity anytime in an entirely permissionless manner after depositing ETH into a \textbf{trove\footnote{Each trove is linked to a specific Ethereum address. An Ethereum address can only own one single trove.} }.The deposited ETH collateral gets locked up in the trove and allows its owner to withdraw up to \textbf{90.91\%}\footnote{Called loan-to-value ratio or LTV.} of its current dollar value in the form of LUSD stablecoins. In other words, the trove must always maintain a \textbf{minimum collateral ratio (MCR)} of 110\%, defined as the ratio of the current dollar value of the collateral to the withdrawn liquidity. Borrowers can repay or borrow more liquidity within the limits of the MCR whenever they wish. Within the same limit, they can retrieve their collateral. Moreover, a trove can be topped up with more collateral as needed. \\
 
-\textit{Gas reserve}. When a borrower opens a new trove, an amount of 10 LUSD is reserved and held back by the protocol as a compensation for the gas costs if the trove needs to be liquidated at some point. The 10 LUSD is added to the trove's debt, leading to a minimum collateral requirement of 11 USD worth of ETH\footnote{This requirement also makes it harder to spam the system by creating very small troves.}. When a borrower closes their trove, the gas reserve is refunded, i.e. the corresponding 10 LUSD debt on the trove is cancelled. The borrower thus needs to pay back 10 LUSD less to fully pay off their debt. \\
+\textit{Liquidation reserve}. When a borrower opens a new trove, an amount of 10 LUSD is reserved and held back by the protocol as a compensation for the gas costs if the trove needs to be liquidated at some point. The 10 LUSD is added to the trove's debt, leading to a minimum collateral requirement of 11 USD worth of ETH\footnote{This requirement also makes it harder to spam the system by creating very small troves.}. When a borrower closes their trove, the liquidation reserve is refunded, i.e. the corresponding 10 LUSD debt on the trove is cancelled. The borrower thus needs to pay back 10 LUSD less to fully pay off their debt. \\
 
 \textit{Issuance fee}.   The protocol charges a one-time issuance fee for the borrowed liquidity. The fee is added to the trove's debt and is given by a \textbf{base rate} (see 3.3 Redemption mechanism “Redemption fee and base rate”), rounded to one decimal and multiplied by the amount of liquidity drawn by the borrower.\\
 
 \begin{tcolorbox}
 \textbf{Example}\\
-The base rate stands at 1.07\%. The borrower opens a new trove by depositing 5 ETH and draws 1,000 LUSD. Being subject to a gas reserve of 10 LUSD and charged a 1.1\% fee on the 1,000 LUSD, the borrower will obtain 1,000 LUSD, but their initial debt will be set to 1,021 (1,000 + 10 + 11) LUSD. To close the trove and fully retrieve the 5 ETH, the borrower needs to repay 1,011 LUSD as the gas reserve gets refunded.
+The base rate stands at 1.07\%. The borrower opens a new trove by depositing 5 ETH and draws 1,000 LUSD. Being subject to a liquidation reserve of 10 LUSD and charged a 1.1\% fee on the 1,000 LUSD, the borrower will obtain 1,000 LUSD, but their initial debt will be set to 1,021 (1,000 + 10 + 11) LUSD. To close the trove and fully retrieve the 5 ETH, the borrower needs to repay 1,011 LUSD as the liquidation reserve gets refunded.
 \end{tcolorbox}
 
 \textit{Restrictions due to recovery mode}.   Borrower operations are restricted in several respects when the system is in recovery mode or at the verge of it (see 5 Recovery mode). 
@@ -242,11 +242,13 @@ The two charts show the troves A, B, C and D with their debt and collateral amou
 Receiving collateral and debt shares should generally result in a \textbf{net gain for borrowers}, though at the same time it reduces their own collateral ratios. The risk of being drawn down and becoming undercollateralized as a recipient is minimal, and only affects troves that are already very close to the minimum collateral ratio (e.g. 111\%).
 
 \section{Recovery mode}
-The stability of the system depends on the amount of LUSD tokens in the Stability Pool and ultimately on the total collateral ratio (TCR) across all troves, given by the total collateral (in USD) divided by the total debt (in LUSD). 
+System solvency depends on the amount of LUSD tokens in the Stability Pool and ultimately on the total collateral ratio (TCR) across all troves, given by the total collateral (in USD) divided by the total debt (in LUSD). 
 
-To keep the system sufficiently collateralized, the protocol incorporates a recovery mode, which is triggered as an \textbf{ultima ratio} if the total collateral ratio falls below the critical collateral ratio (CCR) which is set to 150\%. In this case, the system will offset the troves with the lowest collateral ratios (even if they are above 110\%) against the Stability Pool, until the critical threshold is met.\\
+To keep the system sufficiently collateralized even in times of crisis, the protocol incorporates a recovery mode, which is triggered as an \textbf{ultima ratio} if the TCR falls below the critical collateral ratio (CCR) which is set to 150\%. In this special mode of operation, troves with a collateral ratio between 110\% and the current TCR become subject to liquidation as well. Such extra liquidations are only possible against the Stability Pool (i.e. they are exempt from redistribution), and require that the entire debt can be liquidated at once. 
 
-During recovery mode, the liquidation mechanism is described by the following rules:\\
+To protect the borrower from an excessive loss, the collateral that is offset against the Stability Pool is capped at 110\% of the liquidated debt. The borrower can reclaim any collateral remainder above 110\% any time after the liquidation.
+
+During recovery mode, the liquidation mechanism is thus described by the following rules:\\
 
 \begin{table}[hbt!]
   \begin{center}
@@ -256,30 +258,31 @@ During recovery mode, the liquidation mechanism is described by the following ru
       \textbf{Trove's Collateral Ratio} & \textbf{Liquidation Procedure}\\
 
       \hline
-      $<100\%$ & \makecell[tl]{The trove is liquidated by directly redistributing its entire \\  debt and collateral to other troves, with no prior Stability Pool offset.} \\
+      $<100\%$ & \makecell[tl]{The trove is liquidated by directly redistributing its entire debt \\ and collateral to other troves, with no prior Stability Pool offset.} \\
       
-      between $100\%$ and $110\%$ & \makecell[tl]{As under normal operation, the trove is liquidated by \\ first offsetting its debt and collateral against the Stability Pool \\ and redistributing any remainders to other troves}. \\
+      between $100\%$ and $110\%$ & \makecell[tl]{As under normal operation, the trove is liquidated by \\ first offsetting its debt and collateral against the Stability Pool \\ and redistributing any remainders to other troves.} \\
       
-      between $110\%$ and TCR & \makecell[tl]{The trove is liquidated by offsetting \\ its debt and collateral against the Stability Pool, \\ without redistributing any remainders to other troves.}. \\
+      between $110\%$ and TCR & \makecell[tl]{The trove is liquidated by offsetting its debt against the \\ Stability Pool, provided that the entire debt can be liquidated. \\ The liquidated collateral is capped at $110\%$ of the debt, \\ and the remainder above $110\%$ is reclaimable by the borrower.} \\
       
-      $>$ TCR & \makecell[tl]{No liquidation possible} \\
+      $>$ TCR & \makecell[tl]{No liquidation possible.} \\
     \end{tabular}
   \end{center}
 \end{table}
 
 
-These changes incentivize stability providers to increase their deposits during recovery mode, which in turn improves the total collateral ratio of the system.
+These changes incentivize stability providers to increase their deposits during recovery mode, which in turn improves the total collateral ratio of the system. \\
 
 The existence of recovery mode alone helps to avert the system falling below the critical threshold: the threat of the extra liquidations incentivizes risky borrowers to improve their collateral ratios and stability providers to increase their deposits, long before the system actually reaches the critical collateral ratio of 150\%. On the other hand, risk-averse borrowers are recommended to maintain a collateral ratio above 150\% at all times.\\
 
-\textit{Restrictions on trove operations}. Trove operations that would deteriorate the total collateral ratio are temporarily suspended during recovery mode. That means, it is not possible to:
+\textit{Restrictions on trove operations}. All trove operations that would deteriorate the TCR are temporarily disabled if the system is in recovery mode or if the operation would trigger recovery mode by pushing the TCR below 150\%. That means, it may not possible to:
 \begin{itemize}
-    \item Obtain liquidity for existing or new troves
-    \item Retrieve collateral from troves
+    \item increase the debt of existing troves
+    \item retrieve collateral from troves
+    \item adjust the debt and collateral of a trove, resulting in a lower collateral ratio
 \end{itemize}
-until the system returns to normal mode.\\
+until the TCR of the system improves.\\
 
-Furthermore, it is prohibited to draw LUSD and/or withdraw collateral in an amount that would push the system from normal mode into recovery mode. This prevents users from inadvertently triggering recovery mode by opening a low-collateral trove and falling victim to an immediate liquidation.
+Furthermore, new troves can only be opened during recovery mode if their collateral ratio is at least 150\%. This prevents users from inadvertently creating troves that may immediately fall victim to a liquidation.
 
 \section{Conclusion}
 The following diagram summarizes the token flows between the protocol and its users:\\
