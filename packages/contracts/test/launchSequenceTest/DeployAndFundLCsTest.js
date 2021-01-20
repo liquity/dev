@@ -9,12 +9,6 @@ const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
 const { dec, toBN, assertRevert } = th
 
-
-const getTimestampFromSystemDeployment = async (lqtyToken, web3) => {
-  const deploymentTime = await lqtyToken.getDeploymentStartTime()
-  return toBN(deploymentTime).add(toBN(timeValues.SECONDS_IN_ONE_YEAR))
-}
-
 contract('Deploying and funding One Year Lockup Contracts', async accounts => {
   const [liquityAG, A, B, C, D, E, F, G, H, I, J] = accounts;
 
@@ -49,15 +43,14 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
     communityIssuance = LQTYContracts.communityIssuance
     lockupContractFactory = LQTYContracts.lockupContractFactory
 
-    oneYearFromSystemDeployment = await getTimestampFromSystemDeployment(lqtyToken, web3)
+    oneYearFromSystemDeployment = await th.getTimeFromSystemDeployment(lqtyToken, web3, timeValues.SECONDS_IN_ONE_DAY)
   })
 
   // --- LCs ---
 
   describe('Deploying LCs', async accounts => {
     it("LQTY Deployer can deploy LCs through the Factory", async () => {
-      const oneYearFromSystemDeployment = await getTimestampFromSystemDeployment(lqtyToken, web3)
-
+    
       // LQTY deployer deploys LCs
       const LCDeploymentTx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
       const LCDeploymentTx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
