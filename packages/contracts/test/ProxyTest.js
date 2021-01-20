@@ -81,7 +81,7 @@ contract('Proxy', async accounts => {
         try {
             let params = await getRedemptionParams(contracts, redemptionAmount, price)
             const tx = await monitor.repayFor(
-               [user, minRatio], redemptionAmount, params[0], params[1], params[2], params[3], params[4], params[5],
+               [user, minRatio], redemptionAmount, ...params,
                { from: caller } 
             )
         } catch(err) {

@@ -2,7 +2,6 @@
 // Adapted from https://github.com/DecenterApps/defisaver-contracts/
 
 pragma solidity 0.6.11;
-pragma experimental ABIEncoderV2;
 
 import "../Dependencies/DappSys/DSProxy.sol";
 import "../Interfaces/IBorrowerOperations.sol";
@@ -25,14 +24,12 @@ contract SaverProxy {
         IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_maxFee, _amt, msg.sender, msg.sender);
     }
 
+    // TODO
     // borrowAndDeposit
-
-    //stakeFor
+    // stakeFor
       // stake LQTY
-
-    //depositGainsFor
+    // depositGainsFor
       // withdraw gains, sell ETH for LUSD, redeposit
-
 
     function repay( uint _redemptionAmountLUSD,
                     address _firstRedemptionHint,
@@ -44,7 +41,7 @@ contract SaverProxy {
              
         // if invoked by monitor->monitorProxy, then inside here
         // msg.sender here is the monitorProxy contract address 
-        // inside TM msg.sender will be the address of invoking DSproxy
+        // inside TM, msg.sender will be the address of invoking DSproxy
         uint ethReturned = ITroveManager(troveManagerAddress).redeemCollateral( _redemptionAmountLUSD, 
                                                                                 _firstRedemptionHint, 
                                                                                 _upperPartialRedemptionHint, 

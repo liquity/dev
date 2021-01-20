@@ -174,8 +174,6 @@ class TestHelper {
     return ICR.lt(MoneyValues._MCR)
   }
 
-
-
   static toBN(num) {
     return web3.utils.toBN(num)
   }
