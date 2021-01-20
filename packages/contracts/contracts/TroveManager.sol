@@ -1238,14 +1238,16 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint redeemedLUSDFraction = _ETHDrawn.mul(_price).div(totalLUSDSupply);
 
         uint newBaseRate = decayedBaseRate.add(redeemedLUSDFraction.div(BETA));
+        newBaseRate = LiquityMath._min(newBaseRate, DECIMAL_PRECISION); // cap baseRate at a maximum of 100%
+        //assert(newBaseRate <= DECIMAL_PRECISION); // This is already enforced in the line above
+        assert(newBaseRate > 0); // Base rate is always non-zero after redemption
 
         // Update the baseRate state variable
-        baseRate = newBaseRate < DECIMAL_PRECISION ? newBaseRate : DECIMAL_PRECISION;  // cap baseRate at a maximum of 100%
-        assert(baseRate <= DECIMAL_PRECISION && baseRate > 0); // Base rate is always non-zero after redemption
+        baseRate = newBaseRate;
 
         _updateLastFeeOpTime();
 
-        return baseRate;
+        return newBaseRate;
     }
 
     function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
@@ -1262,8 +1264,10 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     function decayBaseRateFromBorrowing() external override {
         _requireCallerIsBorrowerOperations();
 
-        baseRate = _calcDecayedBaseRate();
-        assert(baseRate <= DECIMAL_PRECISION);  // The baseRate can decay to 0
+        uint decayedBaseRate = _calcDecayedBaseRate();
+        assert(decayedBaseRate <= DECIMAL_PRECISION);  // The baseRate can decay to 0
+
+        baseRate = decayedBaseRate;
 
         _updateLastFeeOpTime();
     }
