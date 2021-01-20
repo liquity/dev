@@ -5,11 +5,16 @@ third-party services would use a DSProxy instance to perform actions on a user's
 
 # 2. Contract Details
 
-you need to write a contract that transfers the eth away, and then have the owner of the proxy call into that contract via `execute` on the proxy.
+
+Say the DSProxy receives ETH and LQTY when gains are paid out.  Then, how does the user get their ETH and LQTY back? You need to write a contract that transfers the eth away, and then have the owner of the proxy call into that contract via `execute` on the proxy. For LQTY, you can just forward a transfer call to the LQTYToken contract
+
 
 
 ## Key Functionalities (as defined in the smart contract)
 
+user A already has a deposit and service Z tops up A's deposit with depositFor. Currently it pays out all pending gains to user A, before adjusting the deposit.
+
+getting gains out from the DSProxy after topping up / withdrawing from a Stability Deposit
 
 # 3. Key Mechanisms & Concepts
 

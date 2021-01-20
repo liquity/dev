@@ -152,6 +152,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     struct RedemptionTotals {
         address currentBorrower;
+        uint remainingLUSD;
         uint totalLUSDToRedeem;
         uint totalETHDrawn;
         uint ETHFee;
@@ -829,8 +830,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         address _upperPartialRedemptionHint,
         address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR,
-        uint _maxIterations,
-        uint _maxFee
+        uint _maxIterations, uint _maxFee
     )
         external
         override
@@ -845,10 +845,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         // Confirm redeemer's balance is less than total systemic debt
         assert(lusdToken.balanceOf(msg.sender) <= (activeDebt.add(defaultedDebt)));
 
-        uint remainingLUSD = _LUSDamount;
         uint price = priceFeed.getPrice();
-        
         RedemptionTotals memory T;
+        T.remainingLUSD = _LUSDamount;
 
         if (_isValidFirstRedemptionHint(_firstRedemptionHint, price)) {
             T.currentBorrower = _firstRedemptionHint;
@@ -862,7 +861,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         // Loop through the Troves starting from the one with lowest collateral ratio until _amount of LUSD is exchanged for collateral
         if (_maxIterations == 0) { _maxIterations = uint(-1); }
-        while (T.currentBorrower != address(0) && remainingLUSD > 0 && _maxIterations > 0) {
+        while (T.currentBorrower != address(0) && T.remainingLUSD > 0 && _maxIterations > 0) {
             _maxIterations--;
             // Save the address of the Trove preceding the current one, before potentially modifying the list
             address nextUserToCheck = sortedTroves.getPrev(T.currentBorrower);
@@ -871,8 +870,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
             SingleRedemptionValues memory V = _redeemCollateralFromTrove(
                 T.currentBorrower,
-                remainingLUSD,
-                price,
+                T.remainingLUSD, price,
                 _upperPartialRedemptionHint,
                 _lowerPartialRedemptionHint,
                 _partialRedemptionHintNICR
@@ -883,7 +881,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             T.totalLUSDToRedeem  = T.totalLUSDToRedeem.add(V.LUSDLot);
             T.totalETHDrawn = T.totalETHDrawn.add(V.ETHLot);
 
-            remainingLUSD = remainingLUSD.sub(V.LUSDLot);
+            T.remainingLUSD = T.remainingLUSD.sub(V.LUSDLot);
             T.currentBorrower = nextUserToCheck;
         }
 

@@ -18,7 +18,29 @@ const toBN = th.toBN
 const assertRevert = th.assertRevert
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 
-const getProxy = async (acc, registry) => {2
+const randomInteger = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+
+const getRedemptionParams = async (contracts, LUSDAmount, price) => {
+    const redemptionhint = await contracts.hintHelpers.getRedemptionHints(LUSDAmount, price, 0)
+
+    const firstRedemptionHint = redemptionhint[0]
+    const partialRedemptionNewICR = redemptionhint[1]
+
+    const approxHint = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, 50, randomInteger())
+
+    const exactPartialRedemptionHint = await contracts.sortedTroves.findInsertPosition(
+        partialRedemptionNewICR,
+        approxHint[0], approxHint[0]
+    )
+    return [
+        firstRedemptionHint,
+        exactPartialRedemptionHint[0],
+        exactPartialRedemptionHint[1],
+        partialRedemptionNewICR, 0, 0
+    ]
+}
+
+const getProxy = async (acc, registry) => {
     let proxyAddr = await registry.proxies(acc)
     if (proxyAddr === ZERO_ADDRESS) {
         await registry.build({from: acc})
@@ -33,18 +55,13 @@ const getAbiFunction = (contract, functionName) => {
     return abi.find(abi => abi.name === functionName)
 };
 
- // This returns a random integer between 0 and Number.MAX_SAFE_INTEGER
- // const randomInteger = () => Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-
 contract('Proxy', async accounts => {
     var   MIN_RATIO = '1420000000000000000'
     const _18_zeros = '000000000000000000'
     const [owner, alice, bob, carol] = accounts
-    
-    // With 68 iterations redemption costs about ~10M gas, 
-    // and each iteration accounts for ~144k more
-    const redeemMaxIterations = 68
-    
+    const bountyAddress = accounts[998]
+    const lpRewardsAddress = accounts[999]
+
     let monitorProxy, monitor, subscriptionsProxy, subscriptions
     let contracts, borrowerOperations, troveManager, priceFeed
     let factory, guardFactory, registry, scriptProxy, web3Proxy, proxyAddr
@@ -59,35 +76,27 @@ contract('Proxy', async accounts => {
             console.log(err);
         }
     }
-    
-    const repayFor = async (caller, user, minRatio, redemptionAmount, firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
+    // 
+    const repayFor = async (caller, user, minRatio, redemptionAmount, price) => {
         try {
+            let params = await getRedemptionParams(contracts, redemptionAmount, price)
             const tx = await monitor.repayFor(
-               [user, minRatio],
-               redemptionAmount,
-               firstRedemptionHint, 
-               partialRedemptionHint, 
-               partialRedemptionHintICR, 
-               redeemMaxIterations, { from: caller } 
+               [user, minRatio], redemptionAmount, params[0], params[1], params[2], params[3], params[4], params[5],
+               { from: caller } 
             )
         } catch(err) {
-            console.log("\nCATCH\n")
             console.log(err);
         }
     }
     
-    const repay = async (account, redemptionAmount, firstRedemptionHint, partialRedemptionHint, partialRedemptionHintICR) => {
+    const repay = async (account, redemptionAmount, price) => {
         try {
+            let params = await getRedemptionParams(contracts, redemptionAmount, price)
+
             const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'repay'), [   
-                redemptionAmount,
-                firstRedemptionHint, 
-                partialRedemptionHint, 
-                partialRedemptionHintICR, 
-                redeemMaxIterations  
+                redemptionAmount, ...params
             ]);
-    
             const tx = await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({ from: account });
-            console.log(tx);
         } catch(err) {
             console.log(err);
         }
@@ -96,7 +105,7 @@ contract('Proxy', async accounts => {
     before(async () => {
         //Deploy the core system
         contracts = await deploymentHelper.deployLiquityCore()
-        const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+        const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
         contracts.troveManager = await TroveManagerTester.new()
         contracts = await deploymentHelper.deployLUSDToken(contracts)
 
@@ -156,7 +165,7 @@ contract('Proxy', async accounts => {
         it("set up Trove via DSproxy", async () => {
           
             const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'open'),
-                [ dec(40, 18) ]
+                [  0, dec(40, 18) ]
             );
             await assertRevert(
                 web3Proxy.methods['execute(address,bytes)']
@@ -172,7 +181,7 @@ contract('Proxy', async accounts => {
             assert.isFalse(await contracts.sortedTroves.contains(proxyAddr))
 
             // so Bob will open a Trove the good old fashioned way :)
-            await borrowerOperations.openTrove(0, bob, { from: bob, value: dec(2, 'ether') })
+            await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(2, 'ether') })
             assert.isTrue(await contracts.sortedTroves.contains(bob))
 
             // Now Alice finally opens a trove using her DSproxy
@@ -198,11 +207,19 @@ contract('Proxy', async accounts => {
             assert.equal(aliceColl, dec(1, 'ether'))
         })
 
+        /*
+        const price = dec(100, 18)
+        const coll = 0
+        const debt = 0
+        const ICR = (await troveManager.computeICR(coll, debt, price)).toString()
+        assert.equal(ICR, 0)
+        */
+
         it("subscribe to automation, which calls the script", async () => {
 
             // we open this trove, having a worse ICR than alice's, so that alice can redeem 
             // from this trove when she calls redeem without redeeming from her own trove
-            await borrowerOperations.openTrove(dec(50, 18), carol, { from: carol, value: dec(1, 'ether') })
+            await borrowerOperations.openTrove(0, dec(50, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
             var price = await priceFeed.getPrice()
 
@@ -252,23 +269,7 @@ contract('Proxy', async accounts => {
             
             assert.isTrue(newICR.gte(minICR))
         
-            const { firstRedemptionHint,
-                partialRedemptionHintICR } = await contracts.hintHelpers.getRedemptionHints(
-                amount.toString(), price
-            );
-            
-            // We don't need to first obtain an approximate hint for _partialRedemptionHintICR via getApproxHint(), 
-            // for this test, since it's not the subject of this test case, and the list is very small, 
-            // so the correct position is quickly found 
-            const { 0: partialRedemptionHint } = await contracts.sortedTroves.findInsertPosition(
-                partialRedemptionHintICR, price, alice, alice
-            )
-
-            await repayFor(caller, proxyAddr, minICR, 
-                amount, firstRedemptionHint,
-                partialRedemptionHint,
-                partialRedemptionHintICR,
-            )
+            await repayFor(caller, proxyAddr, minICR, amount, price)
 
             const AliceTroveFinal = await troveManager.Troves(proxyAddr)
             const collFinal = AliceTroveFinal[1]

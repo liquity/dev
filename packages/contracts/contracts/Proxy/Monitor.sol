@@ -66,9 +66,13 @@ contract Monitor is Ownable {
     /// @notice Bots call this method to repay for user when conditions are met
     /// @param _params the address that owns the Trove, and minimum ICR 
     function repayFor(
-        Subscriptions.TroveOwner memory _params, uint _redemptionAmount,
-        address _firstRedemptionHint, address _partialRedemptionHint,
-        uint _partialRedemptionHintICR, uint _maxIterations
+        Subscriptions.TroveOwner memory _params, 
+        uint _redemptionAmount,
+        address _firstRedemptionHint, 
+        address _upperPartialRedemptionHint,
+        address _lowerPartialRedemptionHint, 
+        uint _partialRedemptionHintICR, 
+        uint _maxIterations, uint _maxFee
     ) public payable /*onlyApproved*/ {
 
         (bool isAllowed, /* uint currentICR */) = canCall(Method.Repay, _params.user);
@@ -81,10 +85,12 @@ contract Monitor is Ownable {
             _params.user,
             saverProxy,
             abi.encodeWithSignature(
-                "repay(uint256,address,address,uint256,uint256)",
+                "repay(uint256,address,address,address,uint256,uint256,uint256)",
                 _redemptionAmount, _firstRedemptionHint, 
-                _partialRedemptionHint, _partialRedemptionHintICR,
-                _maxIterations 
+                _upperPartialRedemptionHint, 
+                _lowerPartialRedemptionHint, 
+                _partialRedemptionHintICR,
+                _maxIterations, _maxFee
             )
         );
     }

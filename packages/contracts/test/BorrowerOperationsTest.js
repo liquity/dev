@@ -2507,8 +2507,8 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.withdrawLUSD(0, dec(100, 18), alice, alice, { from: alice })
 
     // Check before
-    const activePool_Debt_before = (await activePool.getETH()).toString()
-    assert.equal(activePool_Debt_before, dec(11, 'ether'))
+    const activePool_Debt_before = (await activePool.getLUSD()).toString()
+    assert.equal(activePool_Debt_before, dec(110, 18))
 
     // Close the trove
     await borrowerOperations.closeTrove({ from: alice })

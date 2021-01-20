@@ -21,15 +21,25 @@ contract SaverProxy {
         troveManagerAddress = _troveManagerAddress;
     }
 
-    function open(uint _amt) external payable {
-        IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_amt, msg.sender);
+    function open(uint _maxFee, uint _amt) external payable {
+        IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_maxFee, _amt, msg.sender, msg.sender);
     }
+
+    // borrowAndDeposit
+
+    //stakeFor
+      // stake LQTY
+
+    //depositGainsFor
+      // withdraw gains, sell ETH for LUSD, redeposit
+
 
     function repay( uint _redemptionAmountLUSD,
                     address _firstRedemptionHint,
-                    address _partialRedemptionHint,
+                    address _upperPartialRedemptionHint,
+                    address _lowerPartialRedemptionHint,
                     uint _partialRedemptionHintICR,
-                    uint _maxIterations 
+                    uint _maxIterations, uint _maxFee 
                   ) public {
              
         // if invoked by monitor->monitorProxy, then inside here
@@ -37,11 +47,12 @@ contract SaverProxy {
         // inside TM msg.sender will be the address of invoking DSproxy
         uint ethReturned = ITroveManager(troveManagerAddress).redeemCollateral( _redemptionAmountLUSD, 
                                                                                 _firstRedemptionHint, 
-                                                                                _partialRedemptionHint, 
+                                                                                _upperPartialRedemptionHint, 
+                                                                                _lowerPartialRedemptionHint, 
                                                                                 _partialRedemptionHintICR, 
-                                                                                _maxIterations );
+                                                                                _maxIterations, _maxFee );
 
-        IBorrowerOperations(borrowerOperationsAddress).adjustTrove{value: ethReturned}(0, 0, false, address(this));
+        IBorrowerOperations(borrowerOperationsAddress).adjustTrove{value: ethReturned}(0, 0, 0, false, address(this), address(this));
 	}
 
     /// @notice Returns the owner of the DSProxy that called the contract
