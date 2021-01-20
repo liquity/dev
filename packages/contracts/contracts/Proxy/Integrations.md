@@ -1,12 +1,26 @@
 # 1. Introduction (Summary)
 
+third-party services would use a DSProxy instance to perform actions on a user's behalf, and we've written some intermediate contracts ("scripts") that can be used with DSProxy to perform Liquity operations.
+
 
 # 2. Contract Details
+
+you need to write a contract that transfers the eth away, and then have the owner of the proxy call into that contract via `execute` on the proxy.
+
 
 ## Key Functionalities (as defined in the smart contract)
 
 
 # 3. Key Mechanisms & Concepts
+
+So everything will be owned by users DSProxies?
+
+Yes, if they make the initial open/stake/deposit action through DSProxy. Otherwise, the trove/stake/deposit would be directly owned by their EOA 
+
+In Liquity, the debt positions (troves), stakes and deposits are owned by the calling address, and are non-transferrable
+
+There's no mandatory coupling between troves/stakes/deposits though - users could use a different address for each of these actions: open a trove, stake LQTY, make a LUSD deposit
+
 
 ## Summary
 
@@ -133,5 +147,5 @@ Most of the functionality outlined below is implemented through such a “script
 * Automation should be individually toggleable
     * Liquidate Troves on my behalf (configurable freq)
     * Replenish my Trove on my behalf (and thresholds)
-    * Move my liquidation gains to my stability pool deposit
+    *   
     * Redeposit my stability deposit gains into my stability deposit

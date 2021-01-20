@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Text, Heading, Link, Box } from "theme-ui";
+import { Card, Heading, Link, Box } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
@@ -20,13 +20,13 @@ const Balances: React.FC = () => {
   return (
     <Box sx={{ mb: 3 }}>
       <Heading>My Account Balances</Heading>
-      <Text>ETH: {accountBalance.prettify(4)}</Text>
-      <Text>
+      <Box>ETH: {accountBalance.prettify(4)}</Box>
+      <Box>
         {COIN}: {lusdBalance.prettify()}
-      </Text>
-      <Text>
+      </Box>
+      <Box>
         {GT}: {lqtyBalance.prettify()}
-      </Text>
+      </Box>
     </Box>
   );
 };
@@ -85,37 +85,37 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
 
       <Heading>Liquity System</Heading>
 
-      <Text>Borrowing fee: {borrowingFeePct.toString(2)}</Text>
-      <Text>Redemption fee: {redemptionFeePct.toString(2)}</Text>
+      <Box>Borrowing fee: {borrowingFeePct.toString(2)}</Box>
+      <Box>Redemption fee: {redemptionFeePct.toString(2)}</Box>
 
-      <Text sx={{ mt: 2 }}>Number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Text>
-      <Text>
+      <Box sx={{ mt: 2 }}>Number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Box>
+      <Box>
         Total {COIN} supply: {total.debt.shorten()}
-      </Text>
+      </Box>
       {lusdInStabilityPoolPct && (
-        <Text>
+        <Box>
           Fraction of {COIN} in Stability Pool: {lusdInStabilityPoolPct.toString(1)}
-        </Text>
+        </Box>
       )}
-      <Text>Total staked LQTY: {totalStakedLQTY.shorten()}</Text>
-      <Text>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Text>
+      <Box>Total staked LQTY: {totalStakedLQTY.shorten()}</Box>
+      <Box>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Box>
       {total.collateralRatioIsBelowCritical(price) && (
-        <Text color="danger">The system is in recovery mode!</Text>
+        <Box color="danger">The system is in recovery mode!</Box>
       )}
 
       <Box sx={{ mt: 3, opacity: 0.66 }}>
-        <Text sx={{ fontSize: 0 }}>
+        <Box sx={{ fontSize: 0 }}>
           Contracts version: <GitHubCommit>{contractsVersion}</GitHubCommit>
-        </Text>
-        <Text sx={{ fontSize: 0 }}>Deployed: {new Date(deploymentDate).toLocaleString()}</Text>
-        <Text sx={{ fontSize: 0 }}>
+        </Box>
+        <Box sx={{ fontSize: 0 }}>Deployed: {new Date(deploymentDate).toLocaleString()}</Box>
+        <Box sx={{ fontSize: 0 }}>
           Frontend version:{" "}
           {process.env.NODE_ENV === "development" ? (
             "development"
           ) : (
             <GitHubCommit>{process.env.REACT_APP_VERSION}</GitHubCommit>
           )}
-        </Text>
+        </Box>
       </Box>
     </Card>
   );

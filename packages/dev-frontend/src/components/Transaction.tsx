@@ -9,10 +9,10 @@ import "react-circular-progressbar/dist/styles.css";
 
 import { EthersTransactionOverrides } from "@liquity/lib-ethers";
 import { SentLiquityTransaction, LiquityReceipt } from "@liquity/lib-base";
+import { Icon } from "@liquity/shared-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 import { Tooltip, TooltipProps, Hoverable } from "./Tooltip";
-import { Icon } from "./Icon";
 
 const strokeWidth = 10;
 

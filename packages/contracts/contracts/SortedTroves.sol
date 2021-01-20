@@ -7,31 +7,32 @@ import "./Interfaces/ITroveManager.sol";
 import "./Interfaces/IBorrowerOperations.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
-/* 
+/*
 * A sorted doubly linked list with nodes sorted in descending order.
-* 
-* Nodes map to active Troves in the system - the ID property is the address of a Trove owner. 
+*
+* Nodes map to active Troves in the system - the ID property is the address of a Trove owner.
 * Nodes are ordered according to their current nominal individual collateral ratio (NICR),
 * which is like the ICR but without the price, i.e., just collateral / debt.
-* 
+*
 * The list optionally accepts insert position hints.
-* 
+*
 * NICRs are computed dynamically at runtime, and not stored on the Node. This is because NICRs of active Troves
 * change dynamically as liquidation events occur.
-* 
+*
 * The list relies on the fact that liquidation events preserve ordering: a liquidation decreases the NICRs of all active Troves,
 * but maintains their order. A node inserted based on current NICR will maintain the correct position,
 * relative to it's peers, as rewards accumulate, as long as it's raw collateral and debt have not changed.
 * Thus, Nodes remain sorted by current NICR.
-* 
-* Nodes need only be re-inserted upon a Trove operation - when the owner adds or removes collateral or debt 
+*
+* Nodes need only be re-inserted upon a Trove operation - when the owner adds or removes collateral or debt
 * to their position.
 *
 * The list is a modification of the following audited SortedDoublyLinkedList:
 * https://github.com/livepeer/protocol/blob/master/contracts/libraries/SortedDoublyLL.sol
-* 
+*
 *
 * Changes made in the Liquity implementation:
 *
@@ -42,7 +43,7 @@ import "./Dependencies/console.sol";
 *
 * - Public functions with parameters have been made internal to save gas, and given an external wrapper function for external access
 */
-contract SortedTroves is Ownable, ISortedTroves {
+contract SortedTroves is Ownable, CheckContract, ISortedTroves {
     using SafeMath for uint256;
 
     event TroveManagerAddressChanged(address _newTrovelManagerAddress);
@@ -51,7 +52,7 @@ contract SortedTroves is Ownable, ISortedTroves {
     address public borrowerOperationsAddress;
 
     ITroveManager public troveManager;
-    address public TroveManagerAddress;
+    address public troveManagerAddress;
 
     // Information for a node in the list
     struct Node {
@@ -71,18 +72,20 @@ contract SortedTroves is Ownable, ISortedTroves {
 
     Data public data;
 
-    // --- Dependency setters --- 
+    // --- Dependency setters ---
 
-    function setParams(uint256 _size, address _TroveManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
+    function setParams(uint256 _size, address _troveManagerAddress, address _borrowerOperationsAddress) external override onlyOwner {
         require(_size > 0, "SortedTroves: Size can’t be zero");
+        checkContract(_troveManagerAddress);
+        checkContract(_borrowerOperationsAddress);
 
         data.maxSize = _size;
 
-        TroveManagerAddress = _TroveManagerAddress;
-        troveManager = ITroveManager(_TroveManagerAddress);
+        troveManagerAddress = _troveManagerAddress;
+        troveManager = ITroveManager(_troveManagerAddress);
         borrowerOperationsAddress = _borrowerOperationsAddress;
 
-        emit TroveManagerAddressChanged(_TroveManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
 
         _renounceOwnership();
@@ -100,7 +103,7 @@ contract SortedTroves is Ownable, ISortedTroves {
         _requireCallerIsBOorTroveM();
         _insert (_id, _NICR, _prevId, _nextId);
     }
-    
+
     function _insert(address _id, uint256 _NICR, address _prevId, address _nextId) internal {
         // List must not be full
         require(!isFull(), "SortedTroves: List is full");
@@ -111,40 +114,40 @@ contract SortedTroves is Ownable, ISortedTroves {
         // NICR must be non-zero
         require(_NICR > 0, "SortedTroves: NICR must be positive");
 
-        address prevId = _prevId; 
-        address nextId = _nextId; 
+        address prevId = _prevId;
+        address nextId = _nextId;
 
         if (!validInsertPosition(_NICR, prevId, nextId)) {
             // Sender's hint was not a valid insert position
             // Use sender's hint to find a valid insert position
             (prevId, nextId) = findInsertPosition(_NICR, prevId, nextId);
         }
-        
-         data.nodes[_id].exists = true;  
-    
+
+         data.nodes[_id].exists = true;
+
         if (prevId == address(0) && nextId == address(0)) {
             // Insert as head and tail
-            data.head = _id; 
-            data.tail = _id; 
-        } else if (prevId == address(0)) { 
+            data.head = _id;
+            data.tail = _id;
+        } else if (prevId == address(0)) {
             // Insert before `prevId` as the head
-            data.nodes[_id].nextId = data.head; 
-            data.nodes[data.head].prevId = _id;  
-            data.head = _id; 
+            data.nodes[_id].nextId = data.head;
+            data.nodes[data.head].prevId = _id;
+            data.head = _id;
         } else if (nextId == address(0)) {
             // Insert after `nextId` as the tail
             data.nodes[_id].prevId = data.tail;
             data.nodes[data.tail].nextId = _id;
             data.tail = _id;
-        } else { 
+        } else {
             // Insert at insert position between `prevId` and `nextId`
-            data.nodes[_id].nextId = nextId; 
-            data.nodes[_id].prevId = prevId; 
-            data.nodes[prevId].nextId = _id; 
-            data.nodes[nextId].prevId = _id; 
+            data.nodes[_id].nextId = nextId;
+            data.nodes[_id].prevId = prevId;
+            data.nodes[prevId].nextId = _id;
+            data.nodes[nextId].prevId = _id;
         }
 
-        data.size = data.size.add(1); 
+        data.size = data.size.add(1);
     }
 
     function remove(address _id) external override {
@@ -160,14 +163,14 @@ contract SortedTroves is Ownable, ISortedTroves {
         // List must contain the node
         require(contains(_id), "SortedTroves: List does not contain the id");
 
-        if (data.size > 1) { 
+        if (data.size > 1) {
             // List contains more than a single node
-            if (_id == data.head) { 
+            if (_id == data.head) {
                 // The removed node is the head
                 // Set head to next node
-                data.head = data.nodes[_id].nextId; 
+                data.head = data.nodes[_id].nextId;
                 // Set prev pointer of new head to null
-                data.nodes[data.head].prevId = address(0); 
+                data.nodes[data.head].prevId = address(0);
             } else if (_id == data.tail) {
                 // The removed node is the tail
                 // Set tail to previous node
@@ -188,8 +191,8 @@ contract SortedTroves is Ownable, ISortedTroves {
             data.tail = address(0);
         }
 
-        delete data.nodes[_id]; 
-        data.size = data.size.sub(1); 
+        delete data.nodes[_id];
+        data.size = data.size.sub(1);
     }
 
     /*
@@ -209,7 +212,9 @@ contract SortedTroves is Ownable, ISortedTroves {
         // Remove node from the list
         _remove(_id);
 
-        // Insert node
+        // Require non-zero ICR
+        require(_newNICR > 0, "SortedTroves: ICR must be positive");
+
         _insert(_id, _newNICR, _prevId, _nextId);
     }
 
@@ -296,7 +301,7 @@ contract SortedTroves is Ownable, ISortedTroves {
             return data.tail == _prevId && _NICR <= troveManager.getNominalICR(_prevId);
         } else {
             // `(_prevId, _nextId)` is a valid insert position if they are adjacent nodes and `_NICR` falls between the two nodes' NICRs
-            return data.nodes[_prevId].nextId == _nextId && 
+            return data.nodes[_prevId].nextId == _nextId &&
                    troveManager.getNominalICR(_prevId) >= _NICR &&
                    _NICR >= troveManager.getNominalICR(_nextId);
         }
@@ -390,11 +395,11 @@ contract SortedTroves is Ownable, ISortedTroves {
     // --- 'require' functions ---
 
     function _requireCallerIsTroveManager() internal view {
-        require(msg.sender == TroveManagerAddress, "SortedTroves: Caller is not the TroveManager");
+        require(msg.sender == troveManagerAddress, "SortedTroves: Caller is not the TroveManager");
     }
 
     function _requireCallerIsBOorTroveM() internal view {
-        require(msg.sender == borrowerOperationsAddress || msg.sender == TroveManagerAddress,
+        require(msg.sender == borrowerOperationsAddress || msg.sender == troveManagerAddress,
                 "SortedTroves: Caller is neither BO nor TroveM");
     }
 }

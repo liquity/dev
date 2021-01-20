@@ -316,6 +316,25 @@ describe("EthersLiquity", () => {
     });
   });
 
+  describe("Frontend", () => {
+    it("should have no frontend initially", async () => {
+      const frontend = await liquity.getFrontendStatus();
+
+      assertStrictEqual(frontend.status, "unregistered" as const);
+    });
+
+    it("should register a frontend", async () => {
+      await liquity.registerFrontend(0.75);
+    });
+
+    it("should have a frontend now", async () => {
+      const frontend = await liquity.getFrontendStatus();
+
+      assertStrictEqual(frontend.status, "registered" as const);
+      expect(`${frontend.kickbackRate}`).to.equal("0.75");
+    });
+  });
+
   describe("StabilityPool", () => {
     before(async () => {
       deployment = await deployLiquity(deployer);
@@ -366,8 +385,7 @@ describe("EthersLiquity", () => {
       const details = await liquity.liquidateUpTo(1);
 
       expect(details).to.deep.equal({
-        fullyLiquidated: [await otherUsers[0].getAddress()],
-        partiallyLiquidated: undefined,
+        liquidatedAddresses: [await otherUsers[0].getAddress()],
 
         collateralGasCompensation: Decimal.from(0.0011165), // 0.5%
         lusdGasCompensation: Decimal.from(10),
@@ -432,59 +450,6 @@ describe("EthersLiquity", () => {
 
       const deposit = await liquity.getStabilityDeposit();
       expect(deposit.isEmpty).to.be.true;
-    });
-
-    describe("when non-empty in recovery mode", () => {
-      before(async () => {
-        // Deploy new instances of the contracts, for a clean slate
-        deployment = await deployLiquity(deployer);
-
-        const otherUsersSubset = otherUsers.slice(0, 2);
-        [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
-          deployer,
-          user,
-          ...otherUsersSubset
-        ]);
-
-        await sendToEach(otherUsersSubset, 1.1);
-
-        let price = Decimal.from(200);
-        await deployerLiquity.setPrice(price);
-
-        await otherLiquities[0].openTrove({ depositCollateral: 1, borrowLUSD: 90 });
-        await otherLiquities[1].openTrove({ depositCollateral: 1, borrowLUSD: 90 });
-
-        await liquity.openTrove({ depositCollateral: 10.075, borrowLUSD: 1400 });
-        await liquity.depositLUSDInStabilityPool(100);
-
-        price = Decimal.from(190);
-        await deployerLiquity.setPrice(price);
-
-        const total = await deployerLiquity.getTotal();
-        expect(total.collateralRatio(price).lt(1.5)).to.be.true;
-      });
-
-      it("should partially liquidate the bottom Trove", async () => {
-        await liquity.liquidateUpTo(40);
-
-        const trove = await liquity.getTrove();
-        // 10.075 * 1310 / 1410
-        expect(trove).to.deep.equal(new Trove({ collateral: "9.360460992907801419", debt: 1310 }));
-      });
-
-      describe("after depositing some more tokens", () => {
-        before(async () => {
-          await liquity.depositLUSDInStabilityPool(1300);
-          await otherLiquities[0].depositLUSDInStabilityPool(10);
-        });
-
-        it("should liquidate more of the bottom Trove", async () => {
-          await liquity.liquidateUpTo(40);
-
-          const trove = await liquity.getTrove();
-          expect(trove.isEmpty).to.be.true;
-        });
-      });
     });
 
     describe("when people overstay", () => {

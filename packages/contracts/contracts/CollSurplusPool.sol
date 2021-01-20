@@ -5,10 +5,11 @@ pragma solidity 0.6.11;
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
+import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 
-contract CollSurplusPool is Ownable, ICollSurplusPool {
+contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
     using SafeMath for uint256;
 
     address public borrowerOperationsAddress;
@@ -31,6 +32,10 @@ contract CollSurplusPool is Ownable, ICollSurplusPool {
         override
         onlyOwner
     {
+        checkContract(_borrowerOperationsAddress);
+        checkContract(_troveManagerAddress);
+        checkContract(_activePoolAddress);
+
         borrowerOperationsAddress = _borrowerOperationsAddress;
         troveManagerAddress = _troveManagerAddress;
         activePoolAddress = _activePoolAddress;

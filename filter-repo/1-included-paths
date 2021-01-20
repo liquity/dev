@@ -5,6 +5,9 @@ packages/frontend/
 packages/dev-frontend/
 packages/providers/
 packages/subgraph/
+packages/lib/
+glob:packages/lib-*/
+papers/
 .dockerignore
 .gitignore
 Dockerfile

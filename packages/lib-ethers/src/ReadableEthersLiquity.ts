@@ -3,6 +3,7 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Decimal } from "@liquity/decimal";
 import {
   Fees,
+  FrontendStatus,
   LQTYStake,
   ReadableLiquity,
   StabilityDeposit,
@@ -118,8 +119,13 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return new Decimal(await this.contracts.lqtyToken.balanceOf(address, { ...overrides }));
   }
 
-  async getCollateralSurplusBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.collSurplusPool.getCollateral(address, { ...overrides }));
+  async getCollateralSurplusBalance(
+    address = this.requireAddress(),
+    overrides?: EthersCallOverrides
+  ) {
+    return new Decimal(
+      await this.contracts.collSurplusPool.getCollateral(address, { ...overrides })
+    );
   }
 
   async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
@@ -167,6 +173,19 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 
   async getTotalStakedLQTY(overrides?: EthersCallOverrides) {
     return new Decimal(await this.contracts.lqtyStaking.totalLQTYStaked({ ...overrides }));
+  }
+
+  async getFrontendStatus(
+    address = this.requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<FrontendStatus> {
+    const { registered, kickbackRate } = await this.contracts.stabilityPool.frontEnds(address, {
+      ...overrides
+    });
+
+    return registered
+      ? { status: "registered", kickbackRate: new Decimal(kickbackRate) }
+      : { status: "unregistered" };
   }
 }
 

@@ -1,1 +1,4 @@
 packages/providers/multicaller/
+packages/lib/live/
+packages/lib-ethers/live/
+papers/whitepaper/

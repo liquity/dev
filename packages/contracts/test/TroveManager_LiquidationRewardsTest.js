@@ -15,6 +15,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     A, B, C, D, E,
     whale, defaulter_1, defaulter_2, defaulter_3, defaulter_4] = accounts;
 
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
   let priceFeed
   let lusdToken
   let sortedTroves
@@ -30,7 +33,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
@@ -50,8 +53,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   it("redistribution: A, B Open. B Liquidated. C, D Open. D Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
     // A, B open trove
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -68,8 +71,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(200, 18))
 
     // C, D open troves
-    await borrowerOperations.openTrove(0, carol, carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -112,9 +115,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   it("redistribution: A, B, C Open. C Liquidated. D, E, F Open. F Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
     // A, B C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -131,9 +134,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(200, 18))
 
     // D, E, F open troves
-    await borrowerOperations.openTrove(0, dennis, dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, erin, erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), freddy, freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, erin, erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), freddy, freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -188,8 +191,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   it("redistribution: Sequence of alternate opening/liquidation: final surviving trove has ETH from all previously liquidated troves", async () => {
     // A, B  open troves
-    await borrowerOperations.openTrove(dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(1, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // Price drops to 1 $/E
     await priceFeed.setPrice(dec(1, 18))
@@ -202,7 +205,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     // Price bounces back to 200 $/E
     await priceFeed.setPrice(dec(200, 18))
     // C, opens trove
-    await borrowerOperations.openTrove(dec(1, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(1, 18))
@@ -215,7 +218,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     // Price bounces back to 200 $/E
     await priceFeed.setPrice(dec(200, 18))
     // D opens trove
-    await borrowerOperations.openTrove(dec(1, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(1, 18))
@@ -228,7 +231,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     // Price bounces back to 200 $/E
     await priceFeed.setPrice(dec(200, 18))
     // E opens trove
-    await borrowerOperations.openTrove(dec(1, 18), erin, erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1, 18), erin, erin, { from: erin, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(1, 18))
@@ -241,7 +244,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     // Price bounces back to 200 $/E
     await priceFeed.setPrice(dec(200, 18))
     // F opens trove
-    await borrowerOperations.openTrove(dec(1, 18), freddy, freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(1, 18), freddy, freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(1, 18))
@@ -296,11 +299,11 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   // Test based on scenario in: https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
   it("redistribution: A,B,C, D open. Liq(A). B adds coll. Liq(C). B and D have correct coll and debt", async () => {
     // A, B, C open troves
-    await borrowerOperations.openTrove(dec(100000, 18), A, A, { from: A, value: dec(1000, 'ether') })
-    await borrowerOperations.openTrove(dec(100000, 18), B, B, { from: B, value: dec(1000, 'ether') })
-    await borrowerOperations.openTrove(dec(100000, 18), C, C, { from: C, value: dec(1000, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), D, D, { from: D, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(100000, 18), E, E, { from: E, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100000, 18), A, A, { from: A, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100000, 18), B, B, { from: B, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100000, 18), C, C, { from: C, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), D, D, { from: D, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100000, 18), E, E, { from: E, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -361,11 +364,11 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   // Test based on scenario in: https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
   it("redistribution: A,B,C,D open. Liq(A). B adds coll. Liq(C). B and D have correct coll and debt", async () => {
     // A, B, C open troves
-    await borrowerOperations.openTrove(dec(100000, 18), A, A, { from: A, value: dec(1000, 'ether') })
-    await borrowerOperations.openTrove(dec(100000, 18), B, B, { from: B, value: dec(1000, 'ether') })
-    await borrowerOperations.openTrove(dec(100000, 18), C, C, { from: C, value: dec(1000, 'ether') })
-    await borrowerOperations.openTrove(dec(10, 18), D, D, { from: D, value: dec(10, 'ether') })
-    await borrowerOperations.openTrove(dec(100000, 18), E, E, { from: E, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100000, 18), A, A, { from: A, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100000, 18), B, B, { from: B, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100000, 18), C, C, { from: C, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), D, D, { from: D, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100000, 18), E, E, { from: E, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -479,9 +482,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   it("redistribution: A,B,C Open. Liq(C). B adds coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -498,7 +501,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // Alice withdraws 100 LUSD
-    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, dec(100, 18), alice, alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -523,9 +526,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   it("redistribution: A,B,C Open. Liq(C). B tops up coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
     // A, B, C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -542,7 +545,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // D opens trove
-    await borrowerOperations.openTrove(dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -598,10 +601,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). C tops up. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, carol, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openTrove(dec(1, 23), dennis, dennis, { from: dennis, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, carol, { from: carol, value: _998_Ether })
+    await borrowerOperations.openTrove(0, dec(1, 23), dennis, dennis, { from: dennis, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -635,7 +638,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_2, '1996000000000000000000')
 
     // E opens with another 1996 ETH
-    await borrowerOperations.openTrove(dec(2, 23), erin, erin, { from: erin, value: '1996000000000000000000' })
+    await borrowerOperations.openTrove(0, dec(2, 23), erin, erin, { from: erin, value: '1996000000000000000000' })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -686,10 +689,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). A, B, C top up. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, carol, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openTrove(dec(1, 23), dennis, dennis, { from: dennis, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, carol, { from: carol, value: _998_Ether })
+    await borrowerOperations.openTrove(0, dec(1, 23), dennis, dennis, { from: dennis, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -727,7 +730,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_2, '1998000000000000000000')
 
     // E opens with another 1998 ETH
-    await borrowerOperations.openTrove(dec(2, 23), erin, erin, { from: erin, value: '1998000000000000000000' })
+    await borrowerOperations.openTrove(0, dec(2, 23), erin, erin, { from: erin, value: '1998000000000000000000' })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -779,9 +782,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -798,7 +801,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, bob, { from: bob })
 
     // Alice withdraws 100 LUSD
-    await borrowerOperations.withdrawLUSD(dec(100, 18), alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, dec(100, 18), alice, alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -827,9 +830,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
     // A, B, C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -846,7 +849,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, bob, { from: bob })
 
     // D opens trove
-    await borrowerOperations.openTrove(dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -907,10 +910,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). C withdraws some coll. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, carol, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openTrove(dec(1, 23), dennis, dennis, { from: dennis, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, carol, { from: carol, value: _998_Ether })
+    await borrowerOperations.openTrove(0, dec(1, 23), dennis, dennis, { from: dennis, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -944,7 +947,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_2, '1994000000000000000000')
 
     // E opens with another 1994 ETH
-    await borrowerOperations.openTrove(dec(2, 23), erin, erin, { from: erin, value: '1994000000000000000000' })
+    await borrowerOperations.openTrove(0, dec(2, 23), erin, erin, { from: erin, value: '1994000000000000000000' })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -995,10 +998,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). A, B, C withdraw. E Enters, Liq(E). Distributes correct rewards", async () => {
     const _998_Ether = '998000000000000000000'
     // A, B, C open troves
-    await borrowerOperations.openTrove(0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, carol, carol, { from: carol, value: _998_Ether })
-    await borrowerOperations.openTrove(dec(1, 23), dennis, dennis, { from: dennis, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, 0, carol, carol, { from: carol, value: _998_Ether })
+    await borrowerOperations.openTrove(0, dec(1, 23), dennis, dennis, { from: dennis, value: dec(1000, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -1051,7 +1054,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_2, '1993500000000000000000')
 
     // E opens with another 1993.5 ETH
-    await borrowerOperations.openTrove(dec(2, 23), erin, erin, { from: erin, value: '1993500000000000000000' })
+    await borrowerOperations.openTrove(0, dec(2, 23), erin, erin, { from: erin, value: '1993500000000000000000' })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -1103,9 +1106,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   // https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
   it("redistribution, all operations: A,B,C open. Liq(A). D opens. B adds, C withdraws. Liq(B). E & F open. D adds. Liq(F). All 1 ETH operations. Distributes correct rewards", async () => {
     // A, B, C open troves
-    await borrowerOperations.openTrove(dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 1 $/E
     await priceFeed.setPrice(dec(1, 18))
@@ -1119,7 +1122,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1000, 18))
 
     // D opens trove
-    await borrowerOperations.openTrove(dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     //Bob adds 1 ETH to his trove
     await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
@@ -1139,8 +1142,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1000, 18))
 
     // E and F open troves
-    await borrowerOperations.openTrove(dec(100, 18), erin, erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(dec(100, 18), freddy, freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), erin, erin, { from: erin, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(100, 18), freddy, freddy, { from: freddy, value: dec(1, 'ether') })
 
     // D tops up
     await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: dec(1, 'ether') })
@@ -1198,9 +1201,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     B: 8901 ETH
     C: 23.902 ETH
     */
-    await borrowerOperations.openTrove(dec(90, 18), alice, alice, { from: alice, value: '450000000000000000000' })
-    await borrowerOperations.openTrove(dec(90, 18), bob, bob, { from: bob, value: '8901000000000000000000' })
-    await borrowerOperations.openTrove(dec(90, 18), carol, carol, { from: carol, value: '23902000000000000000' })
+    await borrowerOperations.openTrove(0, dec(90, 18), alice, alice, { from: alice, value: '450000000000000000000' })
+    await borrowerOperations.openTrove(0, dec(90, 18), bob, bob, { from: bob, value: '8901000000000000000000' })
+    await borrowerOperations.openTrove(0, dec(90, 18), carol, carol, { from: carol, value: '23902000000000000000' })
 
     // Price drops 
     await priceFeed.setPrice('1')
@@ -1218,7 +1221,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(1, 27))
 
     // D opens trove: 0.035 ETH
-    await borrowerOperations.openTrove(dec(100, 18), dennis, dennis, { from: dennis, value: '35000000000000000' })
+    await borrowerOperations.openTrove(0, dec(100, 18), dennis, dennis, { from: dennis, value: '35000000000000000' })
 
     // Bob adds 11.33909 ETH to his trove
     await borrowerOperations.addColl(bob, bob, { from: bob, value: '11339090000000000000' })
@@ -1245,8 +1248,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     E: 10000 ETH
     F: 0.0007 ETH
     */
-    await borrowerOperations.openTrove(dec(100, 18), erin, erin, { from: erin, value: dec(1, 22) })
-    await borrowerOperations.openTrove(dec(100, 18), freddy, freddy, { from: freddy, value: '700000000000000' })
+    await borrowerOperations.openTrove(0, dec(100, 18), erin, erin, { from: erin, value: dec(1, 22) })
+    await borrowerOperations.openTrove(0, dec(100, 18), freddy, freddy, { from: freddy, value: '700000000000000' })
 
     // D tops up
     await borrowerOperations.addColl(dennis, dennis, { from: dennis, value: dec(1, 'ether') })

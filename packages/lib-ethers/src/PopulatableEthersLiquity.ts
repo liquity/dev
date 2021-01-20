@@ -51,14 +51,6 @@ import { EthersTransactionOverrides } from "./types";
 import { EthersLiquityBase } from "./EthersLiquityBase";
 import { logsToString } from "./parseLogs";
 
-enum TroveManagerOperation {
-  applyPendingRewards,
-  liquidateInNormalMode,
-  liquidateInRecoveryMode,
-  partiallyLiquidateInRecoveryMode,
-  redeemLUSD
-}
-
 // With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
 export const redeemMaxIterations = 68;
 
@@ -272,16 +264,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       rawPopulatedTransaction,
 
       ({ logs }) => {
-        const fullyLiquidated = this.contracts.troveManager
+        const liquidatedAddresses = this.contracts.troveManager
           .extractEvents(logs, "TroveLiquidated")
-          .map(({ args: { _borrower } }) => _borrower);
-
-        const [partiallyLiquidated] = this.contracts.troveManager
-          .extractEvents(logs, "TroveUpdated")
-          .filter(
-            ({ args: { _operation } }) =>
-              _operation === TroveManagerOperation.partiallyLiquidateInRecoveryMode
-          )
           .map(({ args: { _borrower } }) => _borrower);
 
         const [totals] = this.contracts.troveManager
@@ -301,8 +285,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           );
 
         return {
-          fullyLiquidated,
-          partiallyLiquidated,
+          liquidatedAddresses,
           ...totals
         };
       },
@@ -509,12 +492,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
       ? await this.findHintForNominalCollateralRatio(collateralRatio, hintOptionalParams)
       : [AddressZero, AddressZero];
 
-    return [
-      firstRedemptionHint,
-      upperHint,
-      lowerHint,
-      collateralRatio
-    ];
+    return [firstRedemptionHint, upperHint, lowerHint, collateralRatio];
   }
 }
 
@@ -547,6 +525,7 @@ export class PopulatableEthersLiquity
       await this.contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: depositCollateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
+        0,
         borrowLUSD?.bigNumber ?? 0,
         upperHint,
         lowerHint
@@ -609,7 +588,7 @@ export class PopulatableEthersLiquity
 
     const finalTrove = trove.adjust(normalized, fees?.borrowingFeeFactor());
 
-    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams)
+    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams);
 
     return this.wrapTroveChangeWithFees(
       normalized,
@@ -619,6 +598,7 @@ export class PopulatableEthersLiquity
           borrowLUSD ? addGasForPotentialLastFeeOperationTimeUpdate : id,
           addGasForPotentialListTraversal
         ),
+        0,
         withdrawCollateral?.bigNumber ?? 0,
         (borrowLUSD ?? repayLUSD)?.bigNumber ?? 0,
         !!borrowLUSD,
@@ -679,7 +659,7 @@ export class PopulatableEthersLiquity
 
   async depositLUSDInStabilityPool(
     amount: Decimalish,
-    frontEndTag = AddressZero,
+    frontendTag = AddressZero,
     overrides?: EthersTransactionOverrides
   ) {
     const depositLUSD = Decimal.from(amount);
@@ -690,7 +670,7 @@ export class PopulatableEthersLiquity
         { ...overrides },
         addGasForLQTYIssuance,
         depositLUSD.bigNumber,
-        frontEndTag
+        frontendTag
       )
     );
   }
@@ -725,7 +705,7 @@ export class PopulatableEthersLiquity
       (deposit ?? (await this.readableLiquity.getStabilityDeposit())).collateralGain
     );
 
-    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams)
+    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams);
 
     return this.wrapCollateralGainTransfer(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
@@ -782,7 +762,8 @@ export class PopulatableEthersLiquity
         upperPartialRedemptionHint,
         lowerPartialRedemptionHint,
         partialRedemptionHintNICR.bigNumber,
-        redeemMaxIterations
+        redeemMaxIterations,
+        0
       )
     );
   }
@@ -809,6 +790,16 @@ export class PopulatableEthersLiquity
 
   withdrawGainsFromStaking(overrides?: EthersTransactionOverrides) {
     return this.unstakeLQTY(Decimal.ZERO, overrides);
+  }
+
+  async registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides) {
+    return this.wrapSimpleTransaction(
+      await this.contracts.stabilityPool.estimateAndPopulate.registerFrontEnd(
+        { ...overrides },
+        id,
+        Decimal.from(kickbackRate).bigNumber
+      )
+    );
   }
 }
 

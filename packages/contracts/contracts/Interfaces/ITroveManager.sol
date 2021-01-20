@@ -61,15 +61,14 @@ interface ITroveManager {
 
     function batchLiquidateTroves(address[] calldata _troveArray) external;
 
-    function checkRecoveryMode() external view returns (bool);
-
     function redeemCollateral(
         uint _LUSDAmount,
         address _firstRedemptionHint,
         address _upperPartialRedemptionHint,
         address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR,
-        uint _maxIterations
+        uint _maxIterations,
+        uint _maxFee
     ) external returns (uint); 
 
     function updateStakeAndTotalStakes(address _borrower) external returns (uint);
@@ -92,12 +91,6 @@ interface ITroveManager {
         uint pendingLUSDDebtReward, 
         uint pendingETHReward
     );
-
-    function getEntireSystemColl() external view returns (uint);
-
-    function getEntireSystemDebt() external view returns (uint);
-
-    function getTCR() external view returns (uint TCR);
 
     function closeTrove(address _borrower) external;
 
@@ -124,4 +117,8 @@ interface ITroveManager {
     function increaseTroveDebt(address _borrower, uint _debtIncrease) external returns (uint); 
 
     function decreaseTroveDebt(address _borrower, uint _collDecrease) external returns (uint); 
+
+    function getTCR() external view returns (uint);
+
+    function checkRecoveryMode() external view returns (bool);
 }

@@ -1,25 +1,20 @@
-/** @jsx jsx */
-import { jsx } from "theme-ui";
-
 import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import { Card, Button, Text, Box, Heading, Flex, Styled } from "theme-ui";
+import { Card, Button, Text, Box, Heading, Flex } from "theme-ui";
 
 import { Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib-base";
 import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
 import { useLiquitySelector } from "@liquity/lib-react";
+import { Icon } from "@liquity/shared-react";
 
 import { shortenAddress } from "../utils/shortenAddress";
 import { useLiquity } from "../hooks/LiquityContext";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
-import { Icon } from "./Icon";
 import { Tooltip } from "./Tooltip";
 import { Abbreviation } from "./Abbreviation";
 import { COIN } from "../strings";
-
-const Table = Styled.table;
 
 const rowHeight = "40px";
 
@@ -121,7 +116,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
 
         <Flex sx={{ alignItems: "center" }}>
           {numberOfTroves !== 0 && (
-            <React.Fragment>
+            <>
               <Abbreviation
                 short={`page ${clampedPage + 1} / ${numberOfPages}`}
                 sx={{ mr: [0, 3], fontWeight: "body", fontSize: [1, 2], letterSpacing: [-1, 0] }}
@@ -141,7 +136,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
               >
                 <Icon name="chevron-right" size="lg" />
               </Button>
-            </React.Fragment>
+            </>
           )}
 
           <Button
@@ -158,13 +153,23 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
 
       {!troves || troves.length === 0 ? (
         <Box>
-          <Text sx={{ p: 4, fontSize: 3, textAlign: "center" }}>
+          <Box sx={{ p: 4, fontSize: 3, textAlign: "center" }}>
             {!troves ? "Loading..." : "There are no Troves yet"}
-          </Text>
+          </Box>
         </Box>
       ) : (
         <Box>
-          <Table sx={{ mt: 2, pl: [1, 4], width: "100%", textAlign: "center", lineHeight: 1.15 }}>
+          <Box
+            as="table"
+            sx={{
+              mt: 2,
+              pl: [1, 4],
+              width: "100%",
+
+              textAlign: "center",
+              lineHeight: 1.15
+            }}
+          >
             <colgroup>
               <col style={{ width: "50px" }} />
               <col />
@@ -178,11 +183,11 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                 <th>Owner</th>
                 <th>
                   <Abbreviation short="Coll.">Collateral</Abbreviation>
-                  <Text sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>ETH</Text>
+                  <Box sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>ETH</Box>
                 </th>
                 <th>
                   Debt
-                  <Text sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>{COIN}</Text>
+                  <Box sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>{COIN}</Box>
                 </th>
                 <th>
                   Coll.
@@ -289,7 +294,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                   )
               )}
             </tbody>
-          </Table>
+          </Box>
         </Box>
       )}
     </Card>
