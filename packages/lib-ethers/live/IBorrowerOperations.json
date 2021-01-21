@@ -48,6 +48,19 @@
         {
           "indexed": false,
           "internalType": "address",
+          "name": "_gasPoolAddress",
+          "type": "address"
+        }
+      ],
+      "name": "GasPoolAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
           "name": "_lqtyStakingAddress",
           "type": "address"
         }
@@ -79,19 +92,6 @@
         }
       ],
       "name": "PriceFeedAddressChanged",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "_user",
-          "type": "address"
-        }
-      ],
-      "name": "RedeemedCollateralClaimed",
       "type": "event"
     },
     {
@@ -137,7 +137,12 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_hint",
+          "name": "_upperHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerHint",
           "type": "address"
         }
       ],
@@ -148,6 +153,11 @@
     },
     {
       "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_maxFee",
+          "type": "uint256"
+        },
         {
           "internalType": "uint256",
           "name": "_collWithdrawal",
@@ -165,7 +175,12 @@
         },
         {
           "internalType": "address",
-          "name": "_hint",
+          "name": "_upperHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerHint",
           "type": "address"
         }
       ],
@@ -222,7 +237,12 @@
         },
         {
           "internalType": "address",
-          "name": "_hint",
+          "name": "_upperHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerHint",
           "type": "address"
         }
       ],
@@ -235,12 +255,22 @@
       "inputs": [
         {
           "internalType": "uint256",
+          "name": "_maxFee",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
           "name": "_LUSDAmount",
           "type": "uint256"
         },
         {
           "internalType": "address",
-          "name": "_hint",
+          "name": "_upperHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerHint",
           "type": "address"
         }
       ],
@@ -258,7 +288,12 @@
         },
         {
           "internalType": "address",
-          "name": "_hint",
+          "name": "_upperHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerHint",
           "type": "address"
         }
       ],
@@ -287,6 +322,11 @@
         {
           "internalType": "address",
           "name": "_stabilityPoolAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_gasPoolAddress",
           "type": "address"
         },
         {
@@ -329,7 +369,12 @@
         },
         {
           "internalType": "address",
-          "name": "_hint",
+          "name": "_upperHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerHint",
           "type": "address"
         }
       ],
@@ -342,12 +387,22 @@
       "inputs": [
         {
           "internalType": "uint256",
+          "name": "_maxFee",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
           "name": "_amount",
           "type": "uint256"
         },
         {
           "internalType": "address",
-          "name": "_hint",
+          "name": "_upperHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerHint",
           "type": "address"
         }
       ],

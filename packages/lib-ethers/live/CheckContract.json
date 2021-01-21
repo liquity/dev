@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "CheckContract",
+  "sourceName": "contracts/Dependencies/CheckContract.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220f833a90a63ff9562d958937f5a8785e3f5716c3a9702005b5b2b779a76276b5564736f6c634300060b0033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220f833a90a63ff9562d958937f5a8785e3f5716c3a9702005b5b2b779a76276b5564736f6c634300060b0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

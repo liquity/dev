@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "BaseMath",
+  "sourceName": "contracts/Dependencies/BaseMath.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "DECIMAL_PRECISION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b5060878061001e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063a20baee614602d575b600080fd5b60336045565b60408051918252519081900360200190f35b670de0b6b3a76400008156fea26469706673582212203fb2d993a2b5a960b76fd70521614e4fd75bcdcef0a985be398c063af89b4a3064736f6c634300060b0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b506004361060285760003560e01c8063a20baee614602d575b600080fd5b60336045565b60408051918252519081900360200190f35b670de0b6b3a76400008156fea26469706673582212203fb2d993a2b5a960b76fd70521614e4fd75bcdcef0a985be398c063af89b4a3064736f6c634300060b0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

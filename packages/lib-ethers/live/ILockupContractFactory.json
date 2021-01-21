@@ -20,60 +20,18 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "beneficiary",
+          "name": "_beneficiary",
           "type": "address"
         },
         {
           "internalType": "uint256",
-          "name": "entitlement",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "lockupDuration",
+          "name": "_unlockTime",
           "type": "uint256"
         }
       ],
-      "name": "deployCustomDurationLockupContract",
+      "name": "deployLockupContract",
       "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "beneficiary",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "initialEntitlement",
-          "type": "uint256"
-        }
-      ],
-      "name": "deployOneYearLockupContract",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_contractAddress",
-          "type": "address"
-        }
-      ],
-      "name": "isRegisteredCustomDurationLockup",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -84,7 +42,7 @@
           "type": "address"
         }
       ],
-      "name": "isRegisteredOneYearLockup",
+      "name": "isRegisteredLockup",
       "outputs": [
         {
           "internalType": "bool",
@@ -93,32 +51,6 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address[]",
-          "name": "addresses",
-          "type": "address[]"
-        }
-      ],
-      "name": "lockCustomDurationContracts",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address[]",
-          "name": "addresses",
-          "type": "address[]"
-        }
-      ],
-      "name": "lockOneYearContracts",
-      "outputs": [],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
