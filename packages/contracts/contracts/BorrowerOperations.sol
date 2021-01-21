@@ -206,6 +206,13 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint, _maxFee);
     }
 
+    /*
+    * _adjustLoan(): Alongside a debt change, this function can perform either a collateral top-up or a collateral withdrawal. 
+    *
+    * It therefore expects either a positive msg.value, or a positive _collWithdrawal argument.
+    *
+    * If both are positive, it will revert.
+    */
     function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint _maxFee) internal {
         _requireSingularCollChange(_collWithdrawal);
         _requireNonZeroAdjustment(_collWithdrawal, _debtChange);
