@@ -1,5 +1,5 @@
 import fs from "fs";
 
-const devDeployment = "multicaller/devDeployment.json";
+const devDeployment = "devDeployment.json";
 
 fs.existsSync(devDeployment) || fs.writeFileSync(devDeployment, JSON.stringify(null));
