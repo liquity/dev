@@ -383,7 +383,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     // Send ETH to Active Pool and increase its recorded ETH balance
     function _activePoolAddColl(uint _amount) internal {
         (bool success, ) = address(activePool).call{value: _amount}("");
-        assert(success == true);
+        require(success, "BorrowerOps: Sending ETH to ActivePool failed");
     }
 
     // Issue the specified amount of LUSD to _account and increases the total active debt (_rawDebtIncrease potentially includes a LUSDFee)
@@ -411,7 +411,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     }
 
     function _requireNotInRecoveryMode() internal view {
-        require(_checkRecoveryMode() == false, "BorrowerOps: Operation not permitted during Recovery Mode");
+        require(!_checkRecoveryMode(), "BorrowerOps: Operation not permitted during Recovery Mode");
     }
 
     function _requireICRisAboveMCR(uint _newICR)  internal pure {

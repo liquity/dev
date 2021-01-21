@@ -439,9 +439,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         L.recoveryModeAtStart = _checkRecoveryMode();
 
         // Perform the appropriate liquidation sequence - tally the values, and obtain their totals
-        if (L.recoveryModeAtStart == true) {
+        if (L.recoveryModeAtStart) {
             T = _getTotalsFromLiquidateTrovesSequence_RecoveryMode(L.price, L.LUSDInStabPool, _n);
-        } else { // if L.recoveryModeAtStart == false
+        } else { // if !L.recoveryModeAtStart
             T = _getTotalsFromLiquidateTrovesSequence_NormalMode(L.price, L.LUSDInStabPool, _n);
         }
 
@@ -492,7 +492,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
             L.ICR = getCurrentICR(L.user, _price);
 
-            if (L.backToNormalMode == false) {
+            if (!L.backToNormalMode) {
                 // Break the loop if ICR is greater than MCR and Stability Pool is empty
                 if (L.ICR >= MCR && L.remainingLUSDInStabPool == 0) { break; }
 
@@ -510,7 +510,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
-            else if (L.backToNormalMode == true && L.ICR < MCR) {
+            else if (L.backToNormalMode && L.ICR < MCR) {
                 V = _liquidateNormalMode(L.user, L.remainingLUSDInStabPool);
 
                 L.remainingLUSDInStabPool = L.remainingLUSDInStabPool.sub(V.debtToOffset);
@@ -568,9 +568,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         L.recoveryModeAtStart = _checkRecoveryMode();
 
         // Perform the appropriate liquidation sequence - tally values and obtain their totals.
-        if (L.recoveryModeAtStart == true) {
+        if (L.recoveryModeAtStart) {
            T = _getTotalFromBatchLiquidate_RecoveryMode(L.price, L.LUSDInStabPool, _troveArray);
-        } else {  //  if L.recoveryModeAtStart == false
+        } else {  //  if !L.recoveryModeAtStart
             T = _getTotalsFromBatchLiquidate_NormalMode(L.price, L.LUSDInStabPool, _troveArray);
         }
 
@@ -616,7 +616,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             L.user = _troveArray[L.i];
             L.ICR = getCurrentICR(L.user, _price);
 
-            if (L.backToNormalMode == false) {
+            if (!L.backToNormalMode) {
 
                 // Skip this trove if ICR is greater than MCR and Stability Pool is empty
                 if (L.ICR >= MCR && L.remainingLUSDInStabPool == 0) { continue; }
@@ -636,7 +636,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
                 L.backToNormalMode = !_checkPotentialRecoveryMode(L.entireSystemColl, L.entireSystemDebt, _price);
             }
 
-            else if (L.backToNormalMode == true && L.ICR < MCR) {
+            else if (L.backToNormalMode && L.ICR < MCR) {
                 V = _liquidateNormalMode(L.user, L.remainingLUSDInStabPool);
                 L.remainingLUSDInStabPool = L.remainingLUSDInStabPool.sub(V.debtToOffset);
 
@@ -839,10 +839,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);
 
-        uint activeDebt = activePool.getLUSDDebt();
-        uint defaultedDebt = defaultPool.getLUSDDebt();        
+        uint entireSystemDebt = getEntireSystemDebt();       
         // Confirm redeemer's balance is less than total systemic debt
-        assert(lusdToken.balanceOf(msg.sender) <= (activeDebt.add(defaultedDebt)));
+        assert(lusdToken.balanceOf(msg.sender) <= entireSystemDebt);
 
         uint remainingLUSD = _LUSDamount;
         uint price = priceFeed.getPrice();
@@ -1092,19 +1091,27 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         if (_debt == 0) { return; }
 
         /*
-        * Add distributed coll and debt rewards-per-unit-staked to the running totals.
-        * Division uses a "feedback" error correction, to keep the cumulative error in
-        * the  L_ETH and L_LUSDDebt state variables low.
+        * Add distributed coll and debt rewards-per-unit-staked to the running totals. Division uses a "feedback" 
+        * error correction, to keep the cumulative error low in the running totals L_ETH and L_LUSDDebt:
+        *
+        * 1) Form numerators which compensate for the floor division errors that occurred the last time this 
+        * function was called.  
+        * 2) Calculate "per-unit-staked" ratios.
+        * 3) Multiply each ratio back by its denominator, to reveal the current floor division error.
+        * 4) Store these errors for use in in the next correction when this function is called.
+        * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
         uint ETHNumerator = _coll.mul(DECIMAL_PRECISION).add(lastETHError_Redistribution);
         uint LUSDDebtNumerator = _debt.mul(DECIMAL_PRECISION).add(lastLUSDDebtError_Redistribution);
 
+        // Get the per-unit-staked terms
         uint ETHRewardPerUnitStaked = ETHNumerator.div(totalStakes);
         uint LUSDDebtRewardPerUnitStaked = LUSDDebtNumerator.div(totalStakes);
 
         lastETHError_Redistribution = ETHNumerator.sub(ETHRewardPerUnitStaked.mul(totalStakes));
         lastLUSDDebtError_Redistribution = LUSDDebtNumerator.sub(LUSDDebtRewardPerUnitStaked.mul(totalStakes));
 
+        // Add per-unit-staked terms to the running totals
         L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
         L_LUSDDebt = L_LUSDDebt.add(LUSDDebtRewardPerUnitStaked);
 

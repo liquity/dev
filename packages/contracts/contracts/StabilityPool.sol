@@ -425,6 +425,17 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     function _computeLQTYPerUnitStaked(uint _LQTYIssuance, uint _totalLUSDDeposits) internal returns (uint) {
+        /*  
+        * Calculate the LQTY-per-unit staked.  Division uses a "feedback" error correction, to keep the 
+        * cumulative error low in the running total G:
+        *
+        * 1) Form a numerator which compensates for the floor division error that occurred the last time this 
+        * function was called.  
+        * 2) Calculate "per-unit-staked" ratio.
+        * 3) Multiply the ratio back by its denominator, to reveal the current floor division error.
+        * 4) Store this error for use in in the next correction when this function is called.
+        * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
+        */
         uint LQTYNumerator = _LQTYIssuance.mul(DECIMAL_PRECISION).add(lastLQTYError);
 
         uint LQTYPerUnitStaked = LQTYNumerator.div(_totalLUSDDeposits);
@@ -465,13 +476,21 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         internal
         returns (uint ETHGainPerUnitStaked, uint LUSDLossPerUnitStaked)
     {
+        /*
+        * Compute the LUSD and ETH rewards. Uses a "feedback" error correction, to keep
+        * the cumulative error in the P and S state variables low:
+        *
+        * 1) Form numerators which compensate for the floor division errors that occurred the last time this 
+        * function was called.  
+        * 2) Calculate "per-unit-staked" ratios.
+        * 3) Multiply each ratio back by its denominator, to reveal the current floor division error.
+        * 4) Store these errors for use in in the next correction when this function is called.
+        * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
+        */
         uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
         uint ETHNumerator = _collToAdd.mul(DECIMAL_PRECISION).add(lastETHError_Offset);
 
-        /*
-        * Compute the LUSD and ETH rewards. Uses a "feedback" error correction, to keep
-        * the cumulative error in the P and S state variables low.
-        */
+
         if (_debtToOffset >= _totalLUSDDeposits) {
             LUSDLossPerUnitStaked = DECIMAL_PRECISION;
             lastLUSDLossError_Offset = 0;
@@ -888,7 +907,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     function _requireFrontEndNotRegistered(address _address) internal view {
-        require(frontEnds[_address].registered == false, "StabilityPool: must not already be a registered front end");
+        require(!frontEnds[_address].registered, "StabilityPool: must not already be a registered front end");
     }
 
      function _requireFrontEndIsRegisteredOrZero(address _address) internal view {
