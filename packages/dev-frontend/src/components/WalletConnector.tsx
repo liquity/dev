@@ -5,6 +5,7 @@ import { Button, Text, Flex, Link, Box } from "theme-ui";
 
 import { injectedConnector } from "../connectors/injectedConnector";
 import { useAuthorizedConnection } from "../hooks/useAuthorizedConnection";
+
 import { RetryDialog } from "./RetryDialog";
 import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
 import { MetaMaskIcon } from "./MetaMaskIcon";

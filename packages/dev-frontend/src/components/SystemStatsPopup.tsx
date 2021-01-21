@@ -3,8 +3,8 @@ import { Container, Flex, Button } from "theme-ui";
 
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { Icon } from "@liquity/shared-react";
 
+import { Icon } from "./Icon";
 import { SystemStats } from "./SystemStats";
 
 const select = ({ total, price }: LiquityStoreState) => ({ total, price });

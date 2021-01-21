@@ -14,7 +14,7 @@ const ethereum = new DisposableWalletProvider(
 // Let web3-react's InjectedConnector find our DisposableWalletProvider
 Object.assign(window, { ethereum });
 
-Object.fromEntries = <T = any>(
-  entries: Iterable<readonly [PropertyKey, T]>
-): { [k in PropertyKey]: T } =>
-  Object.assign({}, ...Array.from(entries).map(([k, v]) => ({ [k]: v })));
+// Object.fromEntries = <T = any>(
+//   entries: Iterable<readonly [PropertyKey, T]>
+// ): { [k in PropertyKey]: T } =>
+//   Object.assign({}, ...Array.from(entries).map(([k, v]) => ({ [k]: v })));

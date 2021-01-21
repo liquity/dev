@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Button, Flex } from "theme-ui";
+
 import { Dialog } from "./Dialog";
 
 type RetryDialogProps = {

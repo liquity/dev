@@ -1,6 +1,6 @@
 import { Box, Flex, Heading, Paragraph, Button } from "theme-ui";
 
-import { Icon } from "@liquity/shared-react";
+import { Icon } from "../components/Icon";
 
 type FrontendRegistrationSuccessProps = {
   onDismiss: () => void;

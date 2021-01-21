@@ -1,7 +1,7 @@
 import React from "react";
 import { Flex, Container, Card, Heading, Text } from "theme-ui";
 
-import { Icon } from "@liquity/shared-react";
+import { Icon } from "./Icon";
 
 export const RedeemedTroveOverlay: React.FC = () => (
   <Container
