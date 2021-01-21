@@ -13,7 +13,10 @@ papers/
 Dockerfile
 docker-compose.yml
 nginx.conf.tpl
-package.json
+package.public.json==>package.json
+package.public.json
+yarn.public.lock==>yarn.lock
+yarn.public.lock
 README.public.md==>README.md
 README.public.md
 tsconfig.base.json
