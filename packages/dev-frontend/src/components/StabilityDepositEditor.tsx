@@ -3,11 +3,12 @@ import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Decimal, Decimalish, Difference } from "@liquity/decimal";
 import { StabilityDeposit } from "@liquity/lib-base";
-import { Icon } from "@liquity/shared-react";
 
+import { COIN, GT } from "../strings";
+
+import { Icon } from "./Icon";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
-import { COIN, GT } from "../strings";
 
 type StabilityDepositEditorProps = {
   title: string;

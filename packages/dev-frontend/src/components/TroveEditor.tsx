@@ -4,9 +4,10 @@ import { Heading, Box, Card, Button } from "theme-ui";
 import { Percent, Difference, Decimalish, Decimal } from "@liquity/decimal";
 import { Trove, LiquityStoreState, TroveChange } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { Icon } from "@liquity/shared-react";
 
 import { COIN } from "../strings";
+
+import { Icon } from "./Icon";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 

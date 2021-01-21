@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
+import { Decimal, Decimalish } from "@liquity/decimal";
 import { StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
-import { StabilityDepositEditor } from "./StabilityDepositEditor";
-import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN, GT } from "../strings";
-import { Decimal, Decimalish } from "@liquity/decimal";
+
+import { StabilityDepositEditor } from "./StabilityDepositEditor";
+import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
 
 type StabilityDepositActionProps = {
   originalDeposit: StabilityDeposit;

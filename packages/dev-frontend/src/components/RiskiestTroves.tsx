@@ -6,15 +6,16 @@ import { Percent } from "@liquity/decimal";
 import { Trove } from "@liquity/lib-base";
 import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { Icon } from "@liquity/shared-react";
 
 import { shortenAddress } from "../utils/shortenAddress";
 import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
+
+import { Icon } from "./Icon";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
 import { Tooltip } from "./Tooltip";
 import { Abbreviation } from "./Abbreviation";
-import { COIN } from "../strings";
 
 const rowHeight = "40px";
 
@@ -110,7 +111,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
   );
 
   return (
-    <Card>
+    <Card sx={{ width: "100%" }}>
       <Heading>
         <Abbreviation short="Troves">Riskiest Troves</Abbreviation>
 

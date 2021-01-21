@@ -7,7 +7,7 @@ import { Deferrable, resolveProperties } from "@ethersproject/properties";
 
 import { WebSocketAugmentedWeb3Provider } from "./WebSocketAugmentedProvider";
 
-import dev from "../multicaller/devDeployment.json";
+import dev from "../devDeployment.json";
 
 const devOrNull = dev as { chainId: number; address: string } | null;
 

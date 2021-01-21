@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
+import { Decimal, Decimalish } from "@liquity/decimal";
 import { LQTYStake, LiquityStoreState } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
-import { StakingEditor } from "./StakingEditor";
-import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN, GT } from "../strings";
-import { Decimal, Decimalish } from "@liquity/decimal";
+
+import { StakingEditor } from "./StakingEditor";
+import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
 
 type StakingActionProps = {
   originalStake: LQTYStake;
