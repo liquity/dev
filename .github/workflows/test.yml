@@ -51,17 +51,6 @@ jobs:
           docker-compose push
         working-directory: ./packages/dev-frontend
 
-      - name: Build dev-frontend for internal use
-        run: yarn rebuild
-        env:
-          CHANNEL: internal
-
-      - name: Build dev-frontend Docker image for internal use
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master'}}
-        run: |
-          docker-compose -f docker-compose.yml -f docker-compose.internal.yml build
-          docker-compose -f docker-compose.yml -f docker-compose.internal.yml push
-        working-directory: ./packages/dev-frontend
   coverage:
     runs-on: ubuntu-latest
     if: ${{ contains(github.event.pull_request.labels.*.name, 'coverage') }}
