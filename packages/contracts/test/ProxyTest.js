@@ -78,10 +78,10 @@ contract('Proxy', async accounts => {
         }
     }
 
-    const repayFor = async (caller, user, minRatio, redemptionAmount, price) => {
+    const redeemAndTopUpFor = async (caller, user, minRatio, redemptionAmount, price) => {
         try {
             let params = await getRedemptionParams(contracts, redemptionAmount, price)
-            const tx = await monitor.repayFor(
+            const tx = await monitor.redeemAndTopUpFor(
                [user, minRatio], redemptionAmount, ...params,
                { from: caller } 
             )
@@ -90,11 +90,11 @@ contract('Proxy', async accounts => {
         }
     }
 
-    const repay = async (account, redemptionAmount, price) => {
+    const redeemAndTopUp = async (account, redemptionAmount, price) => {
         try {
             let params = await getRedemptionParams(contracts, redemptionAmount, price)
 
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(liquityScript, 'repay'), [   
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(liquityScript, 'redeemAndTopUp'), [   
                 redemptionAmount, ...params
             ]);
             const tx = await web3Proxy.methods['execute(address,bytes)'](liquityScript.address, data).send({ from: account });
@@ -163,8 +163,7 @@ contract('Proxy', async accounts => {
     describe('Proxy integration test', async accounts => { 
         
         it("set up Trove via DSproxy", async () => {
-          
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(liquityScript, 'open'),
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(liquityScript, 'openTrove'),
                 [  0, dec(40, 18) ]
             );
             await assertRevert(
@@ -215,8 +214,20 @@ contract('Proxy', async accounts => {
         assert.equal(ICR, 0)
         */
 
-        it("subscribe to automation, which calls the script", async () => {
+        it("withdraw alice ETH gains, sell them for LUSD and redeposit it", async () => {
+            // borrowAndDeposit alice
 
+            // add some debt to bob
+
+            // liquidate bob 
+
+        })
+
+        it("stake and withdraw LQTY via DSProxy", async () => {
+            // use unprotectedMint in GrowthTokenTester.sol
+        })
+
+        it("subscribe to automation, which calls the redeemAndTopUp script", async () => {
             // we open this trove, having a worse ICR than alice's, so that alice can redeem 
             // from this trove when she calls redeem without redeeming from her own trove
             await borrowerOperations.openTrove(0, dec(50, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
@@ -269,7 +280,7 @@ contract('Proxy', async accounts => {
             
             assert.isTrue(newICR.gte(minICR))
         
-            await repayFor(caller, proxyAddr, minICR, amount, price)
+            await redeemAndTopUpFor(caller, proxyAddr, minICR, amount, price)
 
             const AliceTroveFinal = await troveManager.Troves(proxyAddr)
             const collFinal = AliceTroveFinal[1]

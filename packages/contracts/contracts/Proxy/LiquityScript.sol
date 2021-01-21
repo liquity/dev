@@ -19,25 +19,24 @@ contract LiquityScript {
         troveManagerAddress = _troveManagerAddress;
     }
 
-    function open(uint _maxFee, uint _amt) external payable {
+    function openTrove(uint _maxFee, uint _amt) external payable {
         IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_maxFee, _amt, msg.sender, msg.sender);
     }
 
     // TODO
-    // borrowAndDeposit
     // stakeFor
-      // stake LQTY
-    // depositGainsFor
-      // withdraw gains, sell ETH for LUSD, redeposit
+    
+    // borrowAndDeposit
+    // borrowAndLeverage AKA immediately obtain additional ETH instead of LUSD being sent to your address
+    
+    // TODO use this in boost AKA automatic leverage increase in case of price increase
+    function redeemAndTopUp(uint _redemptionAmountLUSD,
+                            address _firstRedemptionHint,
+                            address _upperPartialRedemptionHint,
+                            address _lowerPartialRedemptionHint,
+                            uint _partialRedemptionHintICR,
+                            uint _maxIterations, uint _maxFee) public {
 
-    function repay( uint _redemptionAmountLUSD,
-                    address _firstRedemptionHint,
-                    address _upperPartialRedemptionHint,
-                    address _lowerPartialRedemptionHint,
-                    uint _partialRedemptionHintICR,
-                    uint _maxIterations, uint _maxFee 
-                  ) public {
-             
         // if invoked by monitor->monitorProxy, then inside here
         // msg.sender here is the monitorProxy contract address 
         // inside TM, msg.sender will be the address of invoking DSproxy

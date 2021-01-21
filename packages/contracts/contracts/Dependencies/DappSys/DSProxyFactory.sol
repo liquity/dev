@@ -11,23 +11,11 @@ import './DSProxy.sol';
 // Deployed proxy addresses can be logged
 // This factory deploys new proxy instances through build()
 
-/** 
- * The function build in the DSProxyFactory contract is used to 
- * deploy a personal DSProxy contract. Since proxy addresses are
- * derived from the internal nonce of the DSProxyFactory, it's 
- * reccommended a 20 block confirmation time follows the build 
- * transaction, lest an accidental address re-assignment during
- * a block re-org. For production use cases on mainnet you can 
- * use a common factory contract that is already being used by
- * existing projects to avoid deploying redundant DSProxy 
- * contracts for users who already have one.
-*/
-
 contract DSProxyFactory {
     
     event Created(address indexed sender, address indexed owner, address proxy, address cache);
     
-    mapping(address=>bool) public isProxy;
+    mapping(address => bool) public isProxy;
     
     DSProxyCache public cache;
 

@@ -17,10 +17,10 @@ import "./MonitorScript.sol";
 contract Monitor is Ownable {
     using SafeMath for uint256;
 
-    enum Method { Repay } 
+    enum Method { RedeemAndTopUp } 
 
     uint public MAX_GAS_PRICE = 400000000000; // 400 gwei
-    uint public REPAY_GAS_COST = 2500000; // TODO calculate
+    uint public REDEEM_AND_TOP_UP_GAS_COST = 2500000; // TODO calculate
 
     Subscriptions public subscriptionsContract;
     MonitorScript public monitorScript;
@@ -36,7 +36,7 @@ contract Monitor is Ownable {
 
     /// @param _monitorScript actually authorized to call DSProxy
     /// @param _subscriptions Subscriptions contract for Troves
-    /// @param _liquityScript Contract that actually does Repay
+    /// @param _liquityScript Contract that actually does business logic
     /// @param _troveManagerAddress TroveManager address
     /// @param _priceFeedAddress Oracle address
     constructor(
@@ -63,9 +63,9 @@ contract Monitor is Ownable {
         return gasPrice.mul(_gasAmount);
     }
 
-    /// @notice Bots call this method to repay for user when conditions are met
+    /// @notice Bots call this method to top up user's trove with redeemed ETH when conditions are met
     /// @param _params the address that owns the Trove, and minimum ICR 
-    function repayFor(
+    function redeemAndTopUpFor(
         Subscriptions.TroveOwner memory _params, 
         uint _redemptionAmount,
         address _firstRedemptionHint, 
@@ -75,7 +75,7 @@ contract Monitor is Ownable {
         uint _maxIterations, uint _maxFee
     ) public payable /*onlyApproved*/ {
 
-        (bool isAllowed, /* uint currentICR */) = canCall(Method.Repay, _params.user);
+        (bool isAllowed, /* uint currentICR */) = canCall(Method.RedeemAndTopUp, _params.user);
         require(isAllowed, "not allowed"); // check if conditions are met
  
         // the msg.sender inside of this call to saver will be the monitorScript
@@ -85,7 +85,7 @@ contract Monitor is Ownable {
             _params.user,
             liquityScript,
             abi.encodeWithSignature(
-                "repay(uint256,address,address,address,uint256,uint256,uint256)",
+                "redeemAndTopUp(uint256,address,address,address,uint256,uint256,uint256)",
                 _redemptionAmount, _firstRedemptionHint, 
                 _upperPartialRedemptionHint, 
                 _lowerPartialRedemptionHint, 
@@ -101,7 +101,7 @@ contract Monitor is Ownable {
         return ICR;
     }
 
-    /// @notice Checks Repay could be triggered for the Trove
+    /// @notice Checks whether given action could be triggered for the Trove
     /// @dev Called by Monitor to enforce the min/max check
     /// @param _method Type of action to be called
     /// @param _user The actual address that owns the Trove
@@ -115,7 +115,7 @@ contract Monitor is Ownable {
 
         uint currentICR = getICR(_user);
 
-        if (_method == Method.Repay) {
+        if (_method == Method.RedeemAndTopUp) {
             return (currentICR < minRatio, currentICR);
         } 
         else {
@@ -123,12 +123,14 @@ contract Monitor is Ownable {
         }
     }
 
-    /// @notice Allows owner to change gas cost for repay operation, but only up to 3 millions
-    /// @param _gasCost New gas cost for repay method
-    function changeRepayGasCost(uint _gasCost) public onlyOwner {
+    /// @notice Allows owner to change gas cost for operations, but only up to 3 million
+    /// @param _gasCost New gas cost for given method
+    function changeGasCost(Method _method, uint _gasCost) public onlyOwner {
         require(_gasCost < 3000000);
 
-        REPAY_GAS_COST = _gasCost;
+        if (_method == Method.RedeemAndTopUp) {
+            REDEEM_AND_TOP_UP_GAS_COST = _gasCost;
+        } 
     }
 
     /// @notice Allows owner to change max gas price
