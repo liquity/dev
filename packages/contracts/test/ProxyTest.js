@@ -1,9 +1,9 @@
 
 const DSProxy = artifacts.require("./DSProxy.sol")
 const Monitor = artifacts.require("./Monitor.sol")
-const MonitorProxy = artifacts.require("./MonitorProxy.sol")
-const SaverProxy = artifacts.require("./SaverProxy.sol")
-const SubscriptionsProxy = artifacts.require("./SubscriptionsProxy.sol")
+const MonitorScript = artifacts.require("./MonitorScript.sol")
+const LiquityScript = artifacts.require("./LiquityScript.sol")
+const SubscriptionScript = artifacts.require("./SubscriptionScript.sol")
 const Subscriptions = artifacts.require("./Subscriptions.sol")
 const ProxyFactory = artifacts.require("./DSProxyFactory.sol")
 const ProxyRegistry = artifacts.require("./ProxyRegistry.sol")
@@ -58,25 +58,26 @@ const getAbiFunction = (contract, functionName) => {
 contract('Proxy', async accounts => {
     var   MIN_RATIO = '1420000000000000000'
     const _18_zeros = '000000000000000000'
+    
     const [owner, alice, bob, carol] = accounts
     const bountyAddress = accounts[998]
     const lpRewardsAddress = accounts[999]
 
-    let monitorProxy, monitor, subscriptionsProxy, subscriptions
+    let monitorScript, monitor, subscriptionScript, subscriptions
     let contracts, borrowerOperations, troveManager, priceFeed
-    let factory, guardFactory, registry, scriptProxy, web3Proxy, proxyAddr
+    let factory, guardFactory, registry, liquityScript, web3Proxy, proxyAddr
 
     const subscribe = async (account, minRatio) => {
         try {
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(subscriptionsProxy, 'subscribe'),
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(subscriptionScript, 'subscribe'),
             [minRatio]);
 
-            const tx = await web3Proxy.methods['execute(address,bytes)'](subscriptionsProxy.address, data).send({ from: account });
+            const tx = await web3Proxy.methods['execute(address,bytes)'](subscriptionScript.address, data).send({ from: account });
         } catch(err) {
             console.log(err);
         }
     }
-    // 
+
     const repayFor = async (caller, user, minRatio, redemptionAmount, price) => {
         try {
             let params = await getRedemptionParams(contracts, redemptionAmount, price)
@@ -88,22 +89,21 @@ contract('Proxy', async accounts => {
             console.log(err);
         }
     }
-    
+
     const repay = async (account, redemptionAmount, price) => {
         try {
             let params = await getRedemptionParams(contracts, redemptionAmount, price)
 
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'repay'), [   
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(liquityScript, 'repay'), [   
                 redemptionAmount, ...params
             ]);
-            const tx = await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({ from: account });
+            const tx = await web3Proxy.methods['execute(address,bytes)'](liquityScript.address, data).send({ from: account });
         } catch(err) {
             console.log(err);
         }
     }    
 
     before(async () => {
-        //Deploy the core system
         contracts = await deploymentHelper.deployLiquityCore()
         const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
         contracts.troveManager = await TroveManagerTester.new()
@@ -117,8 +117,8 @@ contract('Proxy', async accounts => {
         troveManager = contracts.troveManager
         priceFeed = contracts.priceFeedTestnet
 
-        monitorProxy = await MonitorProxy.new({ from: owner })
-        MonitorProxy.setAsDeployed(monitorProxy)
+        monitorScript = await MonitorScript.new({ from: owner })
+        MonitorScript.setAsDeployed(monitorScript)
         
         subscriptions = await Subscriptions.new()
         Subscriptions.setAsDeployed(subscriptions)
@@ -126,25 +126,25 @@ contract('Proxy', async accounts => {
         guardFactory = await DSGuardFactory.new()
         DSGuardFactory.setAsDeployed(guardFactory)
 
-        subscriptionsProxy = await SubscriptionsProxy.new(
+        subscriptionScript = await SubscriptionScript.new(
             guardFactory.address, 
             subscriptions.address, 
-            monitorProxy.address
+            monitorScript.address
         )
-        SubscriptionsProxy.setAsDeployed(subscriptionsProxy)
+        SubscriptionScript.setAsDeployed(subscriptionScript)
         
-        scriptProxy = await SaverProxy.new(borrowerOperations.address, troveManager.address)
-        SaverProxy.setAsDeployed(scriptProxy)
+        liquityScript = await LiquityScript.new(borrowerOperations.address, troveManager.address)
+        LiquityScript.setAsDeployed(liquityScript)
 
         monitor = await Monitor.new(
-            monitorProxy.address, 
+            monitorScript.address, 
             subscriptions.address, 
-            scriptProxy.address,
+            liquityScript.address,
             troveManager.address,
             priceFeed.address
         )
         Monitor.setAsDeployed(monitor)
-        monitorProxy.setMonitor(monitor.address, {from: owner})
+        monitorScript.setMonitor(monitor.address, {from: owner})
 
         // We must deploy DSProxyFactory because we call the build function
         // inside it in order to create DSproxies on behalf of Trove owners
@@ -164,7 +164,7 @@ contract('Proxy', async accounts => {
         
         it("set up Trove via DSproxy", async () => {
           
-            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(scriptProxy, 'open'),
+            const data = web3.eth.abi.encodeFunctionCall(getAbiFunction(liquityScript, 'open'),
                 [  0, dec(40, 18) ]
             );
             await assertRevert(
@@ -175,7 +175,7 @@ contract('Proxy', async accounts => {
             
             // cannot open a trove for Bob using Alice's DSproxy (only owner or authorized contract can call execute)
             await assertRevert(
-                web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({ 
+                web3Proxy.methods['execute(address,bytes)'](liquityScript.address, data).send({ 
                     from: bob, value: dec(1, 'ether') 
             }))
             assert.isFalse(await contracts.sortedTroves.contains(proxyAddr))
@@ -185,7 +185,7 @@ contract('Proxy', async accounts => {
             assert.isTrue(await contracts.sortedTroves.contains(bob))
 
             // Now Alice finally opens a trove using her DSproxy
-            await web3Proxy.methods['execute(address,bytes)'](scriptProxy.address, data).send({
+            await web3Proxy.methods['execute(address,bytes)'](liquityScript.address, data).send({
                 from: alice, value: dec(1, 'ether') 
             });
 
@@ -229,7 +229,7 @@ contract('Proxy', async accounts => {
             await subscribe(alice, MIN_RATIO);
         
             // even though alice is invoking the subscription
-            // she is doing this via her DSproxy by way of the SubscriptionProxy contract
+            // she is doing this via her DSproxy by way of the SubscriptionScript contract
             // thus the subscription actually belongs to her DSproxy address
             assert.isTrue(await subscriptions.isSubscribed(proxyAddr))
             const minICR = await subscriptions.getMinRatio(proxyAddr)

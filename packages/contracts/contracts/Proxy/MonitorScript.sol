@@ -8,7 +8,7 @@ import "../Dependencies/Ownable.sol";
 import "../Dependencies/console.sol";
 import "../Dependencies/IERC20.sol";
 
-contract MonitorProxy is Ownable {
+contract MonitorScript is Ownable {
 
     address public monitor;
 
@@ -19,13 +19,13 @@ contract MonitorProxy is Ownable {
 
     /// @notice Only monitor contract is able to call execute on users proxy
     /// @param _owner Address of Trove owner (end user's DSProxy's address)
-    /// @param _saverProxy Address of SaverProxy
-    /// @param _data Data to send to SaverProxy
-    function callExecute(address _owner, address _saverProxy, bytes memory _data) public payable onlyMonitor {
+    /// @param _liquityScript Address of LiquityScript
+    /// @param _data Data to send to LiquityScript
+    function callExecute(address _owner, address _liquityScript, bytes memory _data) public payable onlyMonitor {
         // msg.sender here is the monitor contract address 
 
         // execute reverts if calling specific method fails
-        DSProxyInterface(_owner).execute{value: msg.value}(_saverProxy, _data);
+        DSProxyInterface(_owner).execute{value: msg.value}(_liquityScript, _data);
 
         // return if anything left
         if (address(this).balance > 0) {

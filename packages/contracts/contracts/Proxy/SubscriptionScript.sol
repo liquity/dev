@@ -8,8 +8,8 @@ import "../Dependencies/DappSys/DSGuard.sol";
 import "../Dependencies/DappSys/DSAuth.sol";
 import "../Interfaces/ISubscription.sol";
 
-/// @title SubscriptionsProxy handles authorization and interaction with the Subscriptions contract
-contract SubscriptionsProxy {
+/// @title SubscriptionsScript handles authorization and interaction with the Subscriptions contract
+contract SubscriptionScript {
 
     address public immutable FACTORY_ADDRESS;
     address public immutable LQTY_SUBSCRIPTIONS_ADDRESS;
@@ -21,7 +21,7 @@ contract SubscriptionsProxy {
         LQTY_MONITOR_PROXY_ADDRESS = monitorProxyAddress;
     }
 
-     /// @notice Called in the context of DSProxy to authorize an address
+    /// @notice Called in the context of DSProxy to authorize an address
     /// @param _contractAddr Address which will be authorized
     function givePermission(address _contractAddr) public {
         address currAuthority = address(DSAuth(address(this)).authority());

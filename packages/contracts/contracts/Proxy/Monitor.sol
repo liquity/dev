@@ -12,7 +12,7 @@ import "../Dependencies/Ownable.sol";
 import "../Dependencies/console.sol";
 
 import "./Subscriptions.sol";
-import "./MonitorProxy.sol";
+import "./MonitorScript.sol";
 
 contract Monitor is Ownable {
     using SafeMath for uint256;
@@ -23,10 +23,10 @@ contract Monitor is Ownable {
     uint public REPAY_GAS_COST = 2500000; // TODO calculate
 
     Subscriptions public subscriptionsContract;
-    MonitorProxy public monitorProxy;
+    MonitorScript public monitorScript;
     ITroveManager public troveManager;
     IPriceFeed public priceFeed;
-    address public saverProxy;
+    address public liquityScript;
     
     // this can be a simple contract doing nothing but storing a list of approved addresses
     // modifier onlyApproved() {
@@ -34,21 +34,21 @@ contract Monitor is Ownable {
     //     _;
     // }
 
-    /// @param _monitorProxy actually authorized to call DSProxy
+    /// @param _monitorScript actually authorized to call DSProxy
     /// @param _subscriptions Subscriptions contract for Troves
-    /// @param _saverProxy Contract that actually does Repay
+    /// @param _liquityScript Contract that actually does Repay
     /// @param _troveManagerAddress TroveManager address
     /// @param _priceFeedAddress Oracle address
     constructor(
-        address _monitorProxy, 
+        address _monitorScript, 
         address _subscriptions, 
-        address _saverProxy,
+        address _liquityScript,
         address _troveManagerAddress,
         address _priceFeedAddress
     ) public {
-        monitorProxy = MonitorProxy(_monitorProxy);
+        monitorScript = MonitorScript(_monitorScript);
         subscriptionsContract = Subscriptions(_subscriptions);
-        saverProxy = _saverProxy;
+        liquityScript = _liquityScript;
         troveManager = ITroveManager(_troveManagerAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
     }
@@ -78,12 +78,12 @@ contract Monitor is Ownable {
         (bool isAllowed, /* uint currentICR */) = canCall(Method.Repay, _params.user);
         require(isAllowed, "not allowed"); // check if conditions are met
  
-        // the msg.sender inside of this call to saver will be the monitorProxy
+        // the msg.sender inside of this call to saver will be the monitorScript
         // and the address(this) inside this call will be _params.user because
-        // the call is being executed by monitorProxy via DSproxy
-        monitorProxy.callExecute{value: msg.value}(
+        // the call is being executed by monitorScript via DSproxy
+        monitorScript.callExecute{value: msg.value}(
             _params.user,
-            saverProxy,
+            liquityScript,
             abi.encodeWithSignature(
                 "repay(uint256,address,address,address,uint256,uint256,uint256)",
                 _redemptionAmount, _firstRedemptionHint, 

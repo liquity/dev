@@ -6,10 +6,9 @@ pragma solidity 0.6.11;
 import "../Dependencies/DappSys/DSProxy.sol";
 import "../Interfaces/IBorrowerOperations.sol";
 import "../Interfaces/ITroveManager.sol";
-import "../Interfaces/ITroveManager.sol";
 import "./Subscriptions.sol";
 
-contract SaverProxy {
+contract LiquityScript {
     using SafeMath for uint256;
 
     address immutable borrowerOperationsAddress;
