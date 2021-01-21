@@ -2595,6 +2595,17 @@ contract('TroveManager', async accounts => {
     await assertRevert(redemptionTxPromise, "TroveManager: Amount must be greater than zero")
   })
 
+  it("redeemCollateral(): fails if max fee is exceeded", async () => {
+    await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 LUSD
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), 1), "TroveManager: redemption fee exceeded provided max")
+  })
+
   it("redeemCollateral(): doesn't affect the Stability Pool deposits or ETH gain of redeemed-from troves", async () => {
     await borrowerOperations.openTrove(0, 0, whale, whale, { from: whale, value: dec(100, 'ether') })
 

@@ -709,6 +709,17 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
+  it("withdrawLUSD(): fails if max fee is exceeded", async () => {
+    await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 LUSD
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    await assertRevert(borrowerOperations.withdrawLUSD(1, dec(10, 18), A, A, { from: A }), "BorrowerOps: issuance fee exceeded provided max")
+  })
+
   it("withdrawLUSD(): doesn't change base rate if it is already zero", async () => {
     await borrowerOperations.openTrove(0, 0, A, A, { from: whale, value: dec(100, 'ether') })
 
@@ -2874,6 +2885,16 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
   })
 
+  it("openTrove(): fails if max fee is exceeded", async () => {
+    await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 LUSD
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    await assertRevert(borrowerOperations.openTrove(1, dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+  })
 
   it("openTrove(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
     await borrowerOperations.openTrove(0, 0, A, A, { from: whale, value: dec(100, 'ether') })
