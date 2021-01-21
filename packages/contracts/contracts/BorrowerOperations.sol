@@ -216,7 +216,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         * The caller may make a withdrawal only from their own trove.
         */
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease; 
-        if (isWithdrawal) {_requireBorrowerIsCaller(_borrower);}
+        if (isWithdrawal) {_requireCallerIsBorrower(_borrower);}
        
         LocalVariables_adjustTrove memory L;
         L.price = priceFeed.getPrice();
@@ -406,8 +406,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         require(msg.value == 0 || _collWithdrawal == 0, "BorrowerOperations: Cannot withdraw and add coll");
     }
 
-    function _requireBorrowerIsCaller(address _borrower) internal view {
-        require(msg.sender == _borrower, "BorrowerOps: User must be caller for withdrawals");
+    function _requireCallerIsBorrower(address _borrower) internal view {
+        require(msg.sender == _borrower, "BorrowerOps: Caller must be the borrower for a withdrawal");
     }
 
     function _requireNonZeroAdjustment(uint _collWithdrawal, uint _debtChange) internal view {
