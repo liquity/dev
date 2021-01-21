@@ -646,6 +646,54 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.equal(await collSurplusPool.getCollateral(bob), dec(25, 16))
   })
 
+  it("liquidate(), with ICR% = 110 < TCR, and StabilityPool LUSD > debt to liquidate: offsets the trove entirely with the pool, there’s no collateral surplus", async () => {
+    // --- SETUP ---
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: _20_Ether })
+    await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(275, 16) })
+    await borrowerOperations.openTrove(0, 0, dennis, dennis, { from: dennis, value: _2_Ether })
+
+    // Alice withdraws 1490 LUSD, and Dennis 140 LUSD, resulting in ICRs of 266%.
+    await borrowerOperations.withdrawLUSD(0, '1490000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, '140000000000000000000', dennis, dennis, { from: dennis })
+    // Bob withdraws 240 LUSD, resulting in ICR of 220%. Bob has lowest ICR.
+    await borrowerOperations.withdrawLUSD(0, '240000000000000000000', bob, bob, { from: bob })
+
+    // Alice deposits all 1490 LUSD in the Stability Pool
+    await stabilityPool.provideToSP('1490000000000000000000', ZERO_ADDRESS, { from: alice })
+
+    // --- TEST ---
+    // price drops to 1ETH:100LUSD, reducing TCR below 150%
+    await priceFeed.setPrice('100000000000000000000')
+    const price = await priceFeed.getPrice()
+    const TCR = await troveManager.getTCR()
+
+    const recoveryMode = await troveManager.checkRecoveryMode()
+    assert.isTrue(recoveryMode)
+
+    // Check Bob's ICR is between 110 and TCR
+    const bob_ICR = await troveManager.getCurrentICR(bob, price)
+    assert.isTrue(bob_ICR.eq(mv._MCR))
+
+    // Liquidate Bob
+    await troveManager.liquidate(bob, { from: owner })
+
+    /* Check accrued Stability Pool rewards after. Total Pool deposits was 1490 LUSD, Alice sole depositor.
+    As liquidated debt (250 LUSD) was completely offset
+
+    Alice's expected compounded deposit: (1490 - 250) = 1240LUSD
+    Alice's expected ETH gain:  Bob's liquidated capped coll (minus gas comp), 2.75*0.995 ether
+
+    */
+    const aliceExpectedDeposit = await stabilityPool.getCompoundedLUSDDeposit(alice)
+    const aliceExpectedETHGain = await stabilityPool.getDepositorETHGain(alice)
+
+    assert.isAtMost(th.getDifference(aliceExpectedDeposit.toString(), '1240000000000000000000'), 2000)
+    assert.isAtMost(th.getDifference(aliceExpectedETHGain, dec(273625, 13)), 1000)
+
+    // check Bob’s collateral surplus
+    assert.equal(await collSurplusPool.getCollateral(bob), '0')
+  })
+
   it("liquidate(), with  110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: removes stake and updates totalStakes", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: _20_Ether })
