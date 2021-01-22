@@ -1098,7 +1098,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         * function was called.  
         * 2) Calculate "per-unit-staked" ratios.
         * 3) Multiply each ratio back by its denominator, to reveal the current floor division error.
-        * 4) Store these errors for use in in the next correction when this function is called.
+        * 4) Store these errors for use in the next correction when this function is called.
         * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
         uint ETHNumerator = _coll.mul(DECIMAL_PRECISION).add(lastETHError_Redistribution);

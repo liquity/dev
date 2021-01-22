@@ -433,7 +433,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * function was called.  
         * 2) Calculate "per-unit-staked" ratio.
         * 3) Multiply the ratio back by its denominator, to reveal the current floor division error.
-        * 4) Store this error for use in in the next correction when this function is called.
+        * 4) Store this error for use in the next correction when this function is called.
         * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
         uint LQTYNumerator = _LQTYIssuance.mul(DECIMAL_PRECISION).add(lastLQTYError);
@@ -484,7 +484,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * function was called.  
         * 2) Calculate "per-unit-staked" ratios.
         * 3) Multiply each ratio back by its denominator, to reveal the current floor division error.
-        * 4) Store these errors for use in in the next correction when this function is called.
+        * 4) Store these errors for use in the next correction when this function is called.
         * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
         uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
