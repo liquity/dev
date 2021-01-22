@@ -29,32 +29,33 @@ This repository hosts an early preview of the Liquity codebase until we get read
 
 These are the Liquity components that have been made visible in this repo. They can be found under the `packages` directory.
 
-| Package               | Description                                                                                                                                               |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                                                                       |
-| @liquity/dev-frontend | [Liquity Developer UI](https://devui.liquity.org): a bare-bones but functional React app used for interfacing with the smart contracts during development |
-| @liquity/lib-base     | Common interfaces and classes shared by the other `lib-` packages                                                                                         |
-| @liquity/lib-ethers   | [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions                                      |
-| @liquity/lib-react    | Components and hooks that React-based apps can use to view Liquity contract state                                                                         |
-| @liquity/lib-subgraph | [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state               |
-| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                                                                       |
-| @liquity/subgraph     | [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history                                           |
+| Package               | Description                                                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                                                         |
+| @liquity/dev-frontend | [Dev UI](https://devui.liquity.org): a bare-bones but functional React app used for interfacing with the smart contracts during development |
+| @liquity/lib-base     | Common interfaces and classes shared by the other `lib-` packages                                                                           |
+| @liquity/lib-ethers   | [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions                        |
+| @liquity/lib-react    | Components and hooks that React-based apps can use to view Liquity contract state                                                           |
+| @liquity/lib-subgraph | [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state |
+| @liquity/providers    | Customized ethers.js Providers used by dev-frontend                                                                                         |
+| @liquity/subgraph     | [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history                             |
 
-## Running the dev-frontend
+## Running Dev UI with Docker
 
-The dev-frontend has some dependencies that are not yet published in this repo, therefore it cannot be built from these sources yet. In the meantime, [images are available](https://hub.docker.com/r/liquity/dev-frontend) on Docker Hub.
+The quickest way to get Dev UI up and running is to use the [prebuilt image](https://hub.docker.com/r/liquity/dev-frontend) available on Docker Hub.
 
 ### Prerequisites
 
 You will need to have [Docker](https://docs.docker.com/get-docker/) installed.
 
-### Run using `docker`
+### Running with `docker`
 
 ```
+docker pull liquity/dev-frontend
 docker run --name liquity -d --rm -p 3000:80 liquity/dev-frontend
 ```
 
-This will start serving the Liquity Developer UI using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
+This will start serving Dev UI using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
 
 To stop the service:
 
@@ -62,31 +63,79 @@ To stop the service:
 docker kill liquity
 ```
 
-### Run using `docker-compose`
+### Running with `docker-compose`
 
-After cloning the repo, change to the `packages/dev-frontend` subdirectory. Inside there, run:
+See [packages/dev-frontend/docker-compose.yml](packages/dev-frontend/docker-compose.yml) for a simple example of docker-compose configuration.
+
+### Configuring a public Dev UI
+
+If you're planning to publicly host Dev UI, you might need to pass the Docker container some extra configuration in the form of environment variables.
+
+#### FRONTEND_TAG
+
+If you want to receive a share of the LQTY rewards earned by users of your Dev UI, set this variable to the Ethereum address you want the LQTY to be sent to.
+
+#### INFURA_API_KEY
+
+This is an optional parameter. If you'd like your Dev UI to use Infura's [WebSocket endpoint](https://infura.io/docs/ethereum#section/Websockets) for receiving blockchain events, set this variable to an Infura Project ID.
+
+### Setting a kickback rate
+
+The kickback rate is the portion of LQTY you pass on to users of your Dev UI. For example with a kickback rate of 80%, you receive 20% while users get the other 80. Before you can start to receive a share of LQTY rewards, you'll need to set this parameter by making a transaction on-chain.
+
+It is highly recommended that you do this while running Dev UI locally, before you start hosting it publicly:
 
 ```
-docker-compose pull
-docker-compose up -d
+docker run --name liquity -d --rm -p 3000:80 -e \
+  FRONTEND_TAG=0x2781fD154358b009abf6280db4Ec066FCC6cb435 -e \
+  INFURA_API_KEY=158b6511a5c74d1ac028a8a2afe8f626 \
+  liquity/dev-frontend
 ```
 
-This will start the service on port 80. This can be overridden by using the `LIQUITY_FRONTEND_HTTP_PORT` environment variable.
+Remember to replace the environment variables in the above example. After executing this command, open http://localhost:3000/ in a browser with MetaMask installed, then switch MetaMask to the account whose address you specified as FRONTEND_TAG to begin setting the kickback rate.
 
-To stop the service, execute in the same directory:
+## Building Dev UI from source
+
+If you want to customize the functionality or look of Dev UI, or you don't want to use the Docker image, you'll need to build it yourself from source.
+
+### Prerequisites
+
+Node v12 and Yarn v1.
+
+### Install dependencies and build libraries
+
+Inside the root directory of the repo:
 
 ```
-docker-compose down
+yarn
 ```
 
-### Using your own HTTP server
-
-Maybe you want to use a different server than nginx, or you need to use a different configuration, etc. Luckily, it is very easy to host the dev-frontend yourself — you just need to statically serve some files. To extract them from the Docker image, execute these commands:
+### Start Dev UI in development mode
 
 ```
-docker create --name liquity liquity/dev-frontend
-docker cp liquity:/usr/share/nginx/html /path/to/extract/files/to
-docker rm liquity
+yarn start-dev-frontend
 ```
 
-Replace `/path/to/extract/files/to` with the location where you want to extract the files to.
+This will start Dev UI in development mode on http://localhost:3000. The app will automatically be reloaded if you change a source file inside `packages/dev-frontend`.
+
+If you make changes to a different package, it is recommended to rebuild the entire project with `yarn prepare` in the root directory of the repo.
+
+### Build optimized Dev UI for production
+
+```
+cd packages/dev-frontend
+yarn build
+```
+
+You'll find the output in `packages/dev-frontend/build`.
+
+### Configuring your custom Dev UI
+
+Your custom built Dev UI can be configured by putting a file named `config.json` inside the same directory as `index.html` built in the previous step. The format of this file is:
+
+```
+{
+  "frontendTag": "0x2781fD154358b009abf6280db4Ec066FCC6cb435",
+  "infuraApiKey": "158b6511a5c74d1ac028a8a2afe8f626"
+}
+```
