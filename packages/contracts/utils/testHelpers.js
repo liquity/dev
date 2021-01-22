@@ -798,9 +798,9 @@ class TestHelper {
     return gas
   }
 
-  static async redeemCollateralAndGetTxObject(redeemer, contracts, LUSDAmount) {
+  static async redeemCollateralAndGetTxObject(redeemer, contracts, LUSDAmount, maxFee = 0) {
     const price = await contracts.priceFeedTestnet.getPrice()
-    const tx = await this.performRedemptionTx(redeemer, price, contracts, LUSDAmount)
+    const tx = await this.performRedemptionTx(redeemer, price, contracts, LUSDAmount, maxFee)
     return tx
   }
 
