@@ -23,6 +23,7 @@ type LiquityContextValue = {
   liquity: EthersLiquity;
   contractsVersion: string;
   deploymentDate: number;
+  canSetPrice: boolean;
 };
 
 const LiquityContext = createContext<LiquityContextValue | undefined>(undefined);
@@ -97,7 +98,8 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         contracts,
         liquity,
         contractsVersion,
-        deploymentDate
+        deploymentDate,
+        canSetPrice: priceFeedIsTestnet
       }}
     >
       {children}
