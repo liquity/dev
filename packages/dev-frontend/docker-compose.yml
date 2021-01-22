@@ -1,19 +1,14 @@
 version: "3"
 
-# Configs are only supported when using `docker stack`; `docker-compose` ignores them.
-# As a workaround, config.json is mounted as a volume in docker-compose.override.yml, which lets
-# us try the config locally via `docker-compose up`.
-configs:
-  frontend_config:
-    file: ./config.json
-
 services:
   dev-frontend:
     build: .
     image: liquity/dev-frontend
     ports:
       - 80:80
-    configs:
-      - source: frontend_config
-        target: /usr/share/nginx/html/config.json
+    environment:
+      # Ethereum address that shall receive LQTY rewards
+      - FRONTEND_TAG=0x0000000000000000000000000000000000000000
+      # Optional Infura API key to enable snappier blockchain events using WebSockets
+      - INFURA_API_KEY=
     restart: always

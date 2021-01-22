@@ -1,5 +1,0 @@
-version: "3"
-
-services:
-  dev-frontend:
-    image: "liquitybot/dev-frontend-internal"

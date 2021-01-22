@@ -13,7 +13,7 @@ const parseConfig = (json: unknown): LiquityFrontendConfig => {
   const config: LiquityFrontendConfig = {};
 
   if (typeof json === "object" && json !== null) {
-    if (hasKey(json, "frontendTag")) {
+    if (hasKey(json, "frontendTag") && json.frontendTag !== "") {
       const { frontendTag } = json;
 
       if (typeof frontendTag === "string" && isAddress(frontendTag)) {
@@ -24,7 +24,7 @@ const parseConfig = (json: unknown): LiquityFrontendConfig => {
       }
     }
 
-    if (hasKey(json, "infuraApiKey")) {
+    if (hasKey(json, "infuraApiKey") && json.infuraApiKey !== "") {
       const { infuraApiKey } = json;
 
       if (typeof infuraApiKey === "string") {
