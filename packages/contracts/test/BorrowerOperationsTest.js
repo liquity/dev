@@ -2277,7 +2277,7 @@ contract('BorrowerOperations', async accounts => {
 
   // --- Internal _adjustTrove() ---
 
-  it("Internal _adjustTrove(): reverts when _borrower param is not the msg.sender", async () => {
+  it("Internal _adjustTrove(): reverts when op is a withdrawal and _borrower param is not the msg.sender", async () => {
     await borrowerOperations.openTrove(0, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
 
@@ -2285,9 +2285,9 @@ contract('BorrowerOperations', async accounts => {
     const txPromise_B = borrowerOperations.callInternalAdjustLoan(bob, dec(1, 18),  dec(1, 18), true, alice, alice, {from: owner} )
     const txPromise_C = borrowerOperations.callInternalAdjustLoan(carol, dec(1, 18),  dec(1, 18), true, alice, alice, {from: bob} )
   
-    await assertRevert(txPromise_A)
-    await assertRevert(txPromise_B)
-    await assertRevert(txPromise_C)
+    await assertRevert(txPromise_A, "BorrowerOps: Caller must be the borrower for a withdrawal")
+    await assertRevert(txPromise_B, "BorrowerOps: Caller must be the borrower for a withdrawal")
+    await assertRevert(txPromise_C, "BorrowerOps: Caller must be the borrower for a withdrawal")
   })
 
   // --- closeTrove() ---
