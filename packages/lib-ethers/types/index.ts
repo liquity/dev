@@ -548,12 +548,12 @@ export interface SortedTroves
     BorrowerOperationsAddressChanged(_borrowerOperationsAddress?: null): EventFilter;
     OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
     SortedTrovesAddressChanged(_sortedDoublyLLAddress?: null): EventFilter;
-    TroveManagerAddressChanged(_newTrovelManagerAddress?: null): EventFilter;
+    TroveManagerAddressChanged(_troveManagerAddress?: null): EventFilter;
   };
   extractEvents(logs: Log[], name: "BorrowerOperationsAddressChanged"): TypedLogDescription<{ _borrowerOperationsAddress: string }>[];
   extractEvents(logs: Log[], name: "OwnershipTransferred"): TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
   extractEvents(logs: Log[], name: "SortedTrovesAddressChanged"): TypedLogDescription<{ _sortedDoublyLLAddress: string }>[];
-  extractEvents(logs: Log[], name: "TroveManagerAddressChanged"): TypedLogDescription<{ _newTrovelManagerAddress: string }>[];
+  extractEvents(logs: Log[], name: "TroveManagerAddressChanged"): TypedLogDescription<{ _troveManagerAddress: string }>[];
 }
 
 interface StabilityPoolFunctions {

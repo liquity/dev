@@ -3225,7 +3225,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("openTrove(): with ICR < 300%, reverts when system is in recovery mode", async () => {
+  it("openTrove(): with ICR < CRR, reverts when system is in recovery mode", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(3, 'ether') })
@@ -3243,13 +3243,12 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('150000000000000000000');
 
     try {                                                
-      const txData = await borrowerOperations.openTrove(0, '101000000000000000000', carol, carol, { from: carol, value: dec(1, 'ether') })
+      const txData = await borrowerOperations.openTrove(0, '91000000000000000000', carol, carol, { from: carol, value: dec(1, 'ether') })
       assert.isFalse(txData.receipt.status)
     } catch (err) {
       assert.include(err.message, 'revert')
+      assert.include(err.message, 'BorrowerOps: In Recovery Mode new troves must have ICR >= CCR')
     }
-    // this should work as the ICR is exactly 300% (incl the virtual debt)
-    await borrowerOperations.openTrove(0, '90000000000000000000', carol, carol, { from: carol, value: dec(2, 'ether') })
   })
 
   it("openTrove(): reverts if trove is already active", async () => {
@@ -3273,7 +3272,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("openTrove(): Can open a trove with zero debt (plus gas comp) when system is in recovery mode, if ICR >= 300%", async () => {
+  it("openTrove(): Can open a trove with zero debt (plus gas comp) when system is in recovery mode, if ICR >= CCR", async () => {
     // --- SETUP ---
     //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
     await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
@@ -3286,18 +3285,11 @@ contract('BorrowerOperations', async accounts => {
 
     // price drops to 1ETH:100LUSD, reducing TCR below 150%
     await priceFeed.setPrice('100000000000000000000');
-    
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    await assertRevert(
-      borrowerOperations.openTrove(0, dec(80, 18), carol, carol, { from: carol, value: dec(1, 'ether') }),
-      'BorrowerOps: In Recovery Mode new troves must have ICR >= R_MCR'
-    )
-    const txCarol = await borrowerOperations.openTrove(0, 0, carol, carol, { from: carol, value: dec(1, 'ether') })
+    const txCarol = await borrowerOperations.openTrove(0, dec(50, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
     assert.isTrue(txCarol.receipt.status)
-
-    assert.isTrue(await troveManager.checkRecoveryMode())
 
     assert.isTrue(await sortedTroves.contains(carol))
 
