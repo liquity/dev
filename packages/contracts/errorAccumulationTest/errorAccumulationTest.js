@@ -9,17 +9,21 @@ const randAmountInWei = th.randAmountInWei
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 
 contract('TroveManager', async accounts => {
+  
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
+  let contracts 
   let priceFeed
   let troveManager
   let activePool
   let stabilityPool
   let defaultPool
   let borrowerOperations
-
-  let contracts 
+  
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
     
     lusdToken = contracts.lusdToken
     priceFeed = contracts.priceFeedTestnet

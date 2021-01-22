@@ -19,6 +19,8 @@ const ZERO = toBN('0')
 contract("PoolManager - random liquidations/deposits, then check all depositors can withdraw", async accounts => {
 
   const whale = accounts[accounts.length - 1]
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
 
   let priceFeed
   let lusdToken
@@ -213,7 +215,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
       stabilityPool = contracts.stabilityPool
       priceFeed = contracts.priceFeedTestnet
