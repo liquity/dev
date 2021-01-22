@@ -46,7 +46,7 @@ import "./Dependencies/console.sol";
 contract SortedTroves is Ownable, CheckContract, ISortedTroves {
     using SafeMath for uint256;
 
-    event TroveManagerAddressChanged(address _newTrovelManagerAddress);
+    event TroveManagerAddressChanged(address _troveManagerAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
 
     address public borrowerOperationsAddress;
