@@ -136,8 +136,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         uint LUSDFee;
         if (_LUSDAmount > 0) {LUSDFee = _triggerBorrowingFee(_LUSDAmount, _maxFee);}
         uint rawDebt = _LUSDAmount.add(LUSDFee);
-        
-        require(_maxFee >= LUSDFee || _maxFee == 0, "BorrowerOps: issuance fee exceeded provided max");
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
@@ -207,7 +205,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     }
 
     /*
-    * _adjustLoan(): Alongside a debt change, this function can perform either a collateral top-up or a collateral withdrawal. 
+    * _adjustTrove(): Alongside a debt change, this function can perform either a collateral top-up or a collateral withdrawal. 
     *
     * It therefore expects either a positive msg.value, or a positive _collWithdrawal argument.
     *
@@ -255,7 +253,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         * current system mode.
         */
         if (isWithdrawal) { 
-            _requireValidCollWithdrawal(_collWithdrawal, L.coll);
+            assert(_collWithdrawal <= L.coll); 
             uint newTCR = _getNewTCRFromTroveChange(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
             _requireValidNewICRandValidNewTCR(L.oldICR, L.newICR, newTCR);
         }
