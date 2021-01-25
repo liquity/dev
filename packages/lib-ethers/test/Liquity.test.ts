@@ -165,11 +165,11 @@ describe("EthersLiquity", () => {
         },
 
         hintHelpers: chai.spy.interface({
-          getApproxHint: (..._args: any) => Promise.resolve(fakeHints.shift())
+          getApproxHint: () => Promise.resolve(fakeHints.shift())
         }),
 
         sortedTroves: chai.spy.interface({
-          findInsertPosition: (..._args: any) => Promise.resolve(["fake insert position"])
+          findInsertPosition: () => Promise.resolve(["fake insert position"])
         })
       };
 
@@ -630,7 +630,7 @@ describe("EthersLiquity", () => {
       await sendToEach(otherUsersSubset, 1.1);
 
       await liquity.openTrove({ depositCollateral: 50, borrowLUSD: 400 });
-      for (let otherLiquity of otherLiquities) {
+      for (const otherLiquity of otherLiquities) {
         await otherLiquity.openTrove({ depositCollateral: 1, borrowLUSD: 1 });
       }
     });

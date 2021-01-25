@@ -8,6 +8,7 @@
     "prepare": "run-s prepare:*",
     "prepare:eslint": "eslint src",
     "prepare:tsc": "tsc --project tsconfig.dist.json",
+    "prepare:api": "api-extractor run --local",
     "test": "mocha --require ts-node/register"
   },
   "peerDependencies": {
@@ -16,6 +17,7 @@
   "devDependencies": {
     "@ethersproject/bignumber": "^5.0.0",
     "@liquity/decimal": "^0.0.1",
+    "@microsoft/api-extractor": "^7.13.0",
     "@types/mocha": "^8.0.4",
     "@typescript-eslint/eslint-plugin": "^4.4.1",
     "@typescript-eslint/parser": "^4.4.1",

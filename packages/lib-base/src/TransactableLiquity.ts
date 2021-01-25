@@ -130,7 +130,7 @@ export interface TransactableLiquity {
   registerFrontend(kickbackRate: Decimalish): Promise<void>;
 }
 
-type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (
+export type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (
   ...args: A
 ) => Promise<SentLiquityTransaction<S, LiquityReceipt<R, D>>>;
 
@@ -140,7 +140,7 @@ export type Sendable<T, R = unknown, S = unknown> = {
     : never;
 };
 
-type PopulateMethod<A extends unknown[], D, R = unknown, S = unknown, P = unknown> = (
+export type PopulateMethod<A extends unknown[], D, R = unknown, S = unknown, P = unknown> = (
   ...args: A
 ) => Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>>;
 
@@ -150,7 +150,7 @@ export type Populatable<T, R = unknown, S = unknown, P = unknown> = {
     : never;
 };
 
-type SendableFrom<T> = new (populatable: T) => {
+export type SendableFrom<T> = {
   [M in keyof T]: T[M] extends PopulateMethod<infer A, infer D, infer R, infer S>
     ? SendMethod<A, D, R, S>
     : never;
@@ -158,7 +158,7 @@ type SendableFrom<T> = new (populatable: T) => {
 
 export const sendableFrom = <T, U extends Populatable<T>>(
   Populatable: new (...args: never[]) => U
-): SendableFrom<U> => {
+): new (populatable: U) => SendableFrom<U> => {
   const Sendable = class {
     _populatable: U;
 
@@ -176,16 +176,16 @@ export const sendableFrom = <T, U extends Populatable<T>>(
       }
   );
 
-  return (Sendable as unknown) as SendableFrom<U>;
+  return (Sendable as unknown) as new (populatable: U) => SendableFrom<U>;
 };
 
-type TransactableFrom<T> = new (sendable: T) => {
+export type TransactableFrom<T> = {
   [M in keyof T]: T[M] extends SendMethod<infer A, infer D> ? (...args: A) => Promise<D> : never;
 };
 
 export const transactableFrom = <T, U extends Sendable<T>>(
   Sendable: new (...args: never[]) => U
-): TransactableFrom<U> => {
+): new (sendable: U) => TransactableFrom<U> => {
   const Transactable = class {
     _sendable: U;
 
@@ -210,5 +210,5 @@ export const transactableFrom = <T, U extends Sendable<T>>(
       }
   );
 
-  return (Transactable as unknown) as TransactableFrom<U>;
+  return (Transactable as unknown) as new (sendable: U) => TransactableFrom<U>;
 };

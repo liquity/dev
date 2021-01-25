@@ -46,7 +46,9 @@ import {
   StabilityDepositChangeDetails,
   MinedReceipt,
   TroveCreationDetails,
-  TroveAdjustmentDetails
+  TroveAdjustmentDetails,
+  SendableFrom,
+  TransactableFrom
 } from "@liquity/lib-base";
 
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
@@ -820,8 +822,14 @@ export class PopulatableEthersLiquity
   }
 }
 
-export const SendableEthersLiquity = sendableFrom(PopulatableEthersLiquity);
-export type SendableEthersLiquity = InstanceType<typeof SendableEthersLiquity>;
+export type SendableEthersLiquity = SendableFrom<PopulatableEthersLiquity>;
 
-export const TransactableEthersLiquity = transactableFrom(SendableEthersLiquity);
-export type TransactableEthersLiquity = InstanceType<typeof TransactableEthersLiquity>;
+export const SendableEthersLiquity: new (
+  populatable: PopulatableEthersLiquity
+) => SendableEthersLiquity = sendableFrom(PopulatableEthersLiquity);
+
+export type TransactableEthersLiquity = TransactableFrom<SendableEthersLiquity>;
+
+export const TransactableEthersLiquity: new (
+  sendable: SendableEthersLiquity
+) => TransactableEthersLiquity = transactableFrom(SendableEthersLiquity);

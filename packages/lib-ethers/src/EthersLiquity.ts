@@ -11,11 +11,21 @@ import {
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 import { ObservableEthersLiquity } from "./ObservableEthersLiquity";
 
-export class EthersLiquity extends glue(
+type GluedEthersLiquity = TransactableEthersLiquity &
+  ReadableEthersLiquity &
+  ObservableEthersLiquity;
+
+const GluedEthersLiquity: new (
+  transactable: TransactableEthersLiquity,
+  readable: ReadableEthersLiquity,
+  observable: ObservableEthersLiquity
+) => GluedEthersLiquity = glue(
   TransactableEthersLiquity,
   ReadableEthersLiquity,
   ObservableEthersLiquity
-) {
+);
+
+export class EthersLiquity extends GluedEthersLiquity {
   readonly populate: PopulatableEthersLiquity;
   readonly send: SendableEthersLiquity;
 
