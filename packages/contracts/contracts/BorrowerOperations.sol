@@ -130,8 +130,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         _requireTroveisNotActive(msg.sender);
 
-        troveManager.decayBaseRateFromBorrowing();
-
         uint LUSDFee;
         uint rawDebt = _LUSDAmount;
 
@@ -171,7 +169,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         // Move the ether to the Active Pool, and mint the LUSDAmount to the borrower
         _activePoolAddColl(msg.value);
-        _withdrawLUSD(msg.sender, _LUSDAmount, rawDebt);
+        if (_LUSDAmount > 0) {_withdrawLUSD(msg.sender, _LUSDAmount, rawDebt);}
         // Move the LUSD gas compensation to the Gas Pool
         _withdrawLUSD(gasPoolAddress, LUSD_GAS_COMPENSATION, LUSD_GAS_COMPENSATION);
 
@@ -243,8 +241,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         // If the adjustment incorporates a debt increase, then trigger a borrowing fee
         if (_isDebtIncrease) {
             _requireNonZeroDebtChange(_debtChange);
-            troveManager.decayBaseRateFromBorrowing(); // decay the baseRate state variable
-
+           
             if (!isRecoveryMode) {
                 vars.LUSDFee = _triggerBorrowingFee(_debtChange, _maxFee);
                 vars.rawDebtChange = vars.rawDebtChange.add(vars.LUSDFee); // The raw debt change includes the fee
@@ -322,7 +319,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     // --- Helper functions ---
 
-    function _triggerBorrowingFee(uint _debtChange, uint _maxFee) internal returns (uint) {    
+    function _triggerBorrowingFee(uint _debtChange, uint _maxFee) internal returns (uint) {  
+        troveManager.decayBaseRateFromBorrowing(); // decay the baseRate state variable
         uint LUSDFee = troveManager.getBorrowingFee(_debtChange);
 
         _requireBorrowerAcceptsFee(LUSDFee, _maxFee);
