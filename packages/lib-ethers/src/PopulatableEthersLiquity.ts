@@ -43,7 +43,10 @@ import {
   pendingReceipt,
   successfulReceipt,
   StabilityPoolGainsWithdrawalDetails,
-  StabilityDepositChangeDetails
+  StabilityDepositChangeDetails,
+  MinedReceipt,
+  TroveCreationDetails,
+  TroveAdjustmentDetails
 } from "@liquity/lib-base";
 
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
@@ -54,7 +57,7 @@ import { logsToString } from "./parseLogs";
 // With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
 export const redeemMaxIterations = 68;
 
-const noDetails = () => {};
+const noDetails = () => undefined;
 
 const compose = <T, U, V>(f: (_: U) => V, g: (_: T) => U) => (_: T) => f(g(_));
 
@@ -122,7 +125,7 @@ export class SentEthersTransaction<T = unknown>
     this.contracts = contracts;
   }
 
-  private receiptFrom(rawReceipt: TransactionReceipt | null): LiquityReceipt<TransactionReceipt, T> {
+  private receiptFrom(rawReceipt: TransactionReceipt | null) {
     return rawReceipt
       ? rawReceipt.status
         ? successfulReceipt(rawReceipt, this.parse(rawReceipt), () =>
@@ -132,11 +135,11 @@ export class SentEthersTransaction<T = unknown>
       : pendingReceipt;
   }
 
-  async getReceipt() {
+  async getReceipt(): Promise<LiquityReceipt<TransactionReceipt, T>> {
     return this.receiptFrom(await this.provider.getTransactionReceipt(this.rawSentTransaction.hash));
   }
 
-  async waitForReceipt() {
+  async waitForReceipt(): Promise<MinedReceipt<TransactionReceipt, T>> {
     const receipt = this.receiptFrom(
       await this.provider.waitForTransaction(this.rawSentTransaction.hash)
     );
@@ -147,11 +150,7 @@ export class SentEthersTransaction<T = unknown>
 }
 
 export class PopulatedEthersTransaction<T = unknown>
-  implements
-    PopulatedLiquityTransaction<
-      PopulatedTransaction,
-      SentLiquityTransaction<TransactionResponse, LiquityReceipt<TransactionReceipt, T>>
-    > {
+  implements PopulatedLiquityTransaction<PopulatedTransaction, SentEthersTransaction<T>> {
   readonly rawPopulatedTransaction: PopulatedTransaction;
 
   private readonly parse: (rawReceipt: TransactionReceipt) => T;
@@ -170,7 +169,7 @@ export class PopulatedEthersTransaction<T = unknown>
     this.contracts = contracts;
   }
 
-  async send() {
+  async send(): Promise<SentEthersTransaction<T>> {
     if (!this.signer.provider) {
       throw new Error("Signer must have a Provider");
     }
@@ -417,7 +416,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   private async findHintForNominalCollateralRatio(
     nominalCollateralRatio: Decimal,
     optionalParams: HintedMethodOptionalParams
-  ) {
+  ): Promise<[string, string]> {
     const numberOfTroves =
       optionalParams.numberOfTroves ?? (await this.readableLiquity.getNumberOfTroves());
 
@@ -509,16 +508,12 @@ export class PopulatableEthersLiquity
     params: TroveCreation<Decimalish>,
     optionalParams: TroveCreationOptionalParams = {},
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<TroveCreationDetails>> {
     const normalized = normalizeTroveCreation(params);
     const { depositCollateral, borrowLUSD } = normalized;
 
-    let { fees, ...hintOptionalParams } = optionalParams;
-    fees ??= borrowLUSD && (await this.readableLiquity.getFees());
-
+    const fees = borrowLUSD && (optionalParams.fees ?? (await this.readableLiquity.getFees()));
     const newTrove = Trove.create(normalized, fees?.borrowingFeeFactor());
-
-    const [upperHint, lowerHint] = await this.findHint(newTrove, hintOptionalParams);
 
     return this.wrapTroveChangeWithFees(
       normalized,
@@ -527,13 +522,14 @@ export class PopulatableEthersLiquity
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
         0,
         borrowLUSD?.bigNumber ?? 0,
-        upperHint,
-        lowerHint
+        ...(await this.findHint(newTrove, optionalParams))
       )
     );
   }
 
-  async closeTrove(overrides?: EthersTransactionOverrides) {
+  async closeTrove(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<TroveClosureDetails>> {
     return this.wrapTroveClosure(
       await this.contracts.borrowerOperations.estimateAndPopulate.closeTrove({ ...overrides }, id)
     );
@@ -543,7 +539,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
     return this.adjustTrove({ depositCollateral: amount }, optionalParams, overrides);
   }
 
@@ -551,7 +547,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
     return this.adjustTrove({ withdrawCollateral: amount }, optionalParams, overrides);
   }
 
@@ -559,7 +555,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
     return this.adjustTrove({ borrowLUSD: amount }, optionalParams, overrides);
   }
 
@@ -567,7 +563,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
     return this.adjustTrove({ repayLUSD: amount }, optionalParams, overrides);
   }
 
@@ -575,20 +571,16 @@ export class PopulatableEthersLiquity
     params: TroveAdjustment<Decimalish>,
     optionalParams: TroveAdjustmentOptionalParams = {},
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
     const normalized = normalizeTroveAdjustment(params);
     const { depositCollateral, withdrawCollateral, borrowLUSD, repayLUSD } = normalized;
 
-    let { trove, fees, ...hintOptionalParams } = optionalParams;
-
-    [trove, fees] = await Promise.all([
-      trove ?? this.readableLiquity.getTrove(),
-      fees ?? (borrowLUSD && this.readableLiquity.getFees())
+    const [trove, fees] = await Promise.all([
+      optionalParams.trove ?? this.readableLiquity.getTrove(),
+      borrowLUSD && (optionalParams.fees ?? this.readableLiquity.getFees())
     ]);
 
     const finalTrove = trove.adjust(normalized, fees?.borrowingFeeFactor());
-
-    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams);
 
     return this.wrapTroveChangeWithFees(
       normalized,
@@ -602,13 +594,14 @@ export class PopulatableEthersLiquity
         withdrawCollateral?.bigNumber ?? 0,
         (borrowLUSD ?? repayLUSD)?.bigNumber ?? 0,
         !!borrowLUSD,
-        upperHint,
-        lowerHint
+        ...(await this.findHint(finalTrove, optionalParams))
       )
     );
   }
 
-  async claimCollateralSurplus(overrides?: EthersTransactionOverrides) {
+  async claimCollateralSurplus(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<void>> {
     return this.wrapSimpleTransaction(
       await this.contracts.borrowerOperations.estimateAndPopulate.claimCollateral(
         { ...overrides },
@@ -617,7 +610,10 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async setPrice(price: Decimalish, overrides?: EthersTransactionOverrides) {
+  async setPrice(
+    price: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<void>> {
     if (!priceFeedIsTestnet(this.contracts.priceFeed)) {
       throw new Error("setPrice() unavailable on this deployment of Liquity");
     }
@@ -631,7 +627,10 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async liquidate(address: string, overrides?: EthersTransactionOverrides) {
+  async liquidate(
+    address: string,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<LiquidationDetails>> {
     return this.wrapLiquidation(
       await this.contracts.troveManager.estimateAndPopulate.liquidate(
         { ...overrides },
@@ -644,7 +643,7 @@ export class PopulatableEthersLiquity
   async liquidateUpTo(
     maximumNumberOfTrovesToLiquidate: number,
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<LiquidationDetails>> {
     return this.wrapLiquidation(
       await this.contracts.troveManager.estimateAndPopulate.liquidateTroves(
         { ...overrides },
@@ -658,7 +657,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     frontendTag = AddressZero,
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>> {
     const depositLUSD = Decimal.from(amount);
 
     return this.wrapStabilityDepositTopup(
@@ -672,7 +671,10 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+  async withdrawLUSDFromStabilityPool(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>> {
     return this.wrapStabilityDepositWithdrawal(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
@@ -682,7 +684,9 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides) {
+  async withdrawGainsFromStabilityPool(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<StabilityPoolGainsWithdrawalDetails>> {
     return this.wrapStabilityPoolGainsWithdrawal(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
@@ -695,26 +699,27 @@ export class PopulatableEthersLiquity
   async transferCollateralGainToTrove(
     optionalParams: CollateralGainTransferOptionalParams = {},
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>> {
     const { deposit, trove, ...hintOptionalParams } = optionalParams;
     const initialTrove = trove ?? (await this.readableLiquity.getTrove());
     const finalTrove = initialTrove.addCollateral(
       (deposit ?? (await this.readableLiquity.getStabilityDeposit())).collateralGain
     );
 
-    const [upperHint, lowerHint] = await this.findHint(finalTrove, hintOptionalParams);
-
     return this.wrapCollateralGainTransfer(
       await this.contracts.stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
         { ...overrides },
         compose(addGasForPotentialListTraversal, addGasForLQTYIssuance),
-        upperHint,
-        lowerHint
+        ...(await this.findHint(finalTrove, hintOptionalParams))
       )
     );
   }
 
-  async sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
+  async sendLUSD(
+    toAddress: string,
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<void>> {
     return this.wrapSimpleTransaction(
       await this.contracts.lusdToken.estimateAndPopulate.transfer(
         { ...overrides },
@@ -725,7 +730,11 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides) {
+  async sendLQTY(
+    toAddress: string,
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<void>> {
     return this.wrapSimpleTransaction(
       await this.contracts.lqtyToken.estimateAndPopulate.transfer(
         { ...overrides },
@@ -740,7 +749,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     optionalParams: RedemptionOptionalParams = {},
     overrides?: EthersTransactionOverrides
-  ) {
+  ): Promise<PopulatedEthersTransaction<RedemptionDetails>> {
     amount = Decimal.from(amount);
 
     const [
@@ -765,7 +774,10 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+  async stakeLQTY(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<void>> {
     return this.wrapSimpleTransaction(
       await this.contracts.lqtyStaking.estimateAndPopulate.stake(
         { ...overrides },
@@ -775,7 +787,10 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides) {
+  async unstakeLQTY(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<void>> {
     return this.wrapSimpleTransaction(
       await this.contracts.lqtyStaking.estimateAndPopulate.unstake(
         { ...overrides },
@@ -785,11 +800,16 @@ export class PopulatableEthersLiquity
     );
   }
 
-  withdrawGainsFromStaking(overrides?: EthersTransactionOverrides) {
+  withdrawGainsFromStaking(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<void>> {
     return this.unstakeLQTY(Decimal.ZERO, overrides);
   }
 
-  async registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides) {
+  async registerFrontend(
+    kickbackRate: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersTransaction<void>> {
     return this.wrapSimpleTransaction(
       await this.contracts.stabilityPool.estimateAndPopulate.registerFrontEnd(
         { ...overrides },

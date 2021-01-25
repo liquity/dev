@@ -30,7 +30,7 @@ enum TroveStatus {
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
 export class ReadableEthersLiquity extends EthersLiquityBase implements ReadableLiquity {
-  async getTotalRedistributed(overrides?: EthersCallOverrides) {
+  async getTotalRedistributed(overrides?: EthersCallOverrides): Promise<Trove> {
     const [collateral, debt] = await Promise.all([
       this.contracts.troveManager.L_ETH({ ...overrides }).then(decimalify),
       this.contracts.troveManager.L_LUSDDebt({ ...overrides }).then(decimalify)
@@ -39,7 +39,10 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return new Trove({ collateral, debt });
   }
 
-  async getTroveWithoutRewards(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getTroveWithoutRewards(
+    address = this.requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<TroveWithPendingRewards> {
     const [trove, snapshot] = await Promise.all([
       this.contracts.troveManager.Troves(address, { ...overrides }),
       this.contracts.troveManager.rewardSnapshots(address, { ...overrides })
@@ -61,7 +64,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     }
   }
 
-  async getTrove(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getTrove(address = this.requireAddress(), overrides?: EthersCallOverrides): Promise<Trove> {
     const [trove, totalRedistributed] = await Promise.all([
       this.getTroveWithoutRewards(address, { ...overrides }),
       this.getTotalRedistributed({ ...overrides })
@@ -70,15 +73,15 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return trove.applyRewards(totalRedistributed);
   }
 
-  async getNumberOfTroves(overrides?: EthersCallOverrides) {
+  async getNumberOfTroves(overrides?: EthersCallOverrides): Promise<number> {
     return (await this.contracts.troveManager.getTroveOwnersCount({ ...overrides })).toNumber();
   }
 
-  async getPrice(overrides?: EthersCallOverrides) {
+  async getPrice(overrides?: EthersCallOverrides): Promise<Decimal> {
     return new Decimal(await this.contracts.priceFeed.getPrice({ ...overrides }));
   }
 
-  async getTotal(overrides?: EthersCallOverrides) {
+  async getTotal(overrides?: EthersCallOverrides): Promise<Trove> {
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
         this.contracts.activePool.getETH({ ...overrides }),
@@ -94,7 +97,10 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     });
   }
 
-  async getStabilityDeposit(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getStabilityDeposit(
+    address = this.requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<StabilityDeposit> {
     const [initialLUSD, currentLUSD, collateralGain, lqtyReward] = await Promise.all(
       [
         this.contracts.stabilityPool.deposits(address, { ...overrides }).then(d => d.initialValue),
@@ -107,28 +113,38 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return new StabilityDeposit({ initialLUSD, currentLUSD, collateralGain, lqtyReward });
   }
 
-  async getLUSDInStabilityPool(overrides?: EthersCallOverrides) {
+  async getLUSDInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal> {
     return new Decimal(await this.contracts.stabilityPool.getTotalLUSDDeposits({ ...overrides }));
   }
 
-  async getLUSDBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getLUSDBalance(
+    address = this.requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<Decimal> {
     return new Decimal(await this.contracts.lusdToken.balanceOf(address, { ...overrides }));
   }
 
-  async getLQTYBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getLQTYBalance(
+    address = this.requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<Decimal> {
     return new Decimal(await this.contracts.lqtyToken.balanceOf(address, { ...overrides }));
   }
 
   async getCollateralSurplusBalance(
     address = this.requireAddress(),
     overrides?: EthersCallOverrides
-  ) {
+  ): Promise<Decimal> {
     return new Decimal(
       await this.contracts.collSurplusPool.getCollateral(address, { ...overrides })
     );
   }
 
-  async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
+  async getLastTroves(
+    startIdx: number,
+    numberOfTroves: number,
+    overrides?: EthersCallOverrides
+  ): Promise<[string, TroveWithPendingRewards][]> {
     const troves = await this.contracts.multiTroveGetter.getMultipleSortedTroves(
       -(startIdx + 1),
       numberOfTroves,
@@ -138,7 +154,11 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return mapMultipleSortedTrovesToTroves(troves);
   }
 
-  async getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
+  async getFirstTroves(
+    startIdx: number,
+    numberOfTroves: number,
+    overrides?: EthersCallOverrides
+  ): Promise<[string, TroveWithPendingRewards][]> {
     const troves = await this.contracts.multiTroveGetter.getMultipleSortedTroves(
       startIdx,
       numberOfTroves,
@@ -148,7 +168,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return mapMultipleSortedTrovesToTroves(troves);
   }
 
-  async getFees(overrides?: EthersCallOverrides) {
+  async getFees(overrides?: EthersCallOverrides): Promise<Fees> {
     const [lastFeeOperationTime, baseRateWithoutDecay] = await Promise.all([
       this.contracts.troveManager.lastFeeOperationTime({ ...overrides }),
       this.contracts.troveManager.baseRate({ ...overrides }).then(decimalify)
@@ -159,7 +179,10 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR, BETA);
   }
 
-  async getLQTYStake(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getLQTYStake(
+    address = this.requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<LQTYStake> {
     const [stakedLQTY, collateralGain, lusdGain] = await Promise.all(
       [
         this.contracts.lqtyStaking.stakes(address, { ...overrides }),
@@ -171,7 +194,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return new LQTYStake({ stakedLQTY, collateralGain, lusdGain });
   }
 
-  async getTotalStakedLQTY(overrides?: EthersCallOverrides) {
+  async getTotalStakedLQTY(overrides?: EthersCallOverrides): Promise<Decimal> {
     return new Decimal(await this.contracts.lqtyStaking.totalLQTYStaked({ ...overrides }));
   }
 

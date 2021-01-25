@@ -16,10 +16,10 @@ import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 const debouncingDelayMs = 50;
 
 const debounce = (listener: (latestBlock: number) => void) => {
-  let timeoutId: any = undefined;
-  let latestBlock: number = 0;
+  let timeoutId: ReturnType<typeof setTimeout> | undefined = undefined;
+  let latestBlock = 0;
 
-  return (...args: any[]) => {
+  return (...args: unknown[]) => {
     const event = args[args.length - 1] as Event;
 
     if (event.blockNumber !== undefined && event.blockNumber > latestBlock) {
@@ -50,7 +50,9 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     this.readableLiquity = readableLiquity;
   }
 
-  watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void) {
+  watchTotalRedistributed(
+    onTotalRedistributedChanged: (totalRedistributed: Trove) => void
+  ): () => void {
     const etherSent = this.contracts.activePool.filters.EtherSent();
 
     const redistributionListener = debounce((blockTag: number) => {
@@ -73,7 +75,7 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   watchTroveWithoutRewards(
     onTroveChanged: (trove: TroveWithPendingRewards) => void,
     address = this.requireAddress()
-  ) {
+  ): () => void {
     const { TroveCreated, TroveUpdated } = this.contracts.troveManager.filters;
     const troveEventFilters = [TroveCreated(address), TroveUpdated(address)];
 
@@ -90,7 +92,7 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     };
   }
 
-  watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void) {
+  watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void): () => void {
     const { TroveUpdated } = this.contracts.troveManager.filters;
     const troveUpdated = TroveUpdated();
 
@@ -105,14 +107,15 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     };
   }
 
-  watchPrice(_onPriceChanged: (price: Decimal) => void): () => void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  watchPrice(onPriceChanged: (price: Decimal) => void): () => void {
     // TODO revisit
     // We no longer have our own PriceUpdated events. If we want to implement this in an event-based
     // manner, we'll need to listen to aggregator events directly. Or we could do polling.
     throw new Error("Method not implemented.");
   }
 
-  watchTotal(onTotalChanged: (total: Trove) => void) {
+  watchTotal(onTotalChanged: (total: Trove) => void): () => void {
     const { TroveUpdated } = this.contracts.troveManager.filters;
     const troveUpdated = TroveUpdated();
 
@@ -130,7 +133,7 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   watchStabilityDeposit(
     onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
     address = this.requireAddress()
-  ) {
+  ): () => void {
     const { UserDepositChanged } = this.contracts.stabilityPool.filters;
     const { EtherSent } = this.contracts.activePool.filters;
 
@@ -160,7 +163,9 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     };
   }
 
-  watchLUSDInStabilityPool(onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void) {
+  watchLUSDInStabilityPool(
+    onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void
+  ): () => void {
     const { Transfer } = this.contracts.lusdToken.filters;
 
     const transferLUSDFromStabilityPool = Transfer(this.contracts.stabilityPool.address);
@@ -185,7 +190,7 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   watchLUSDBalance(
     onLUSDBalanceChanged: (balance: Decimal) => void,
     address = this.requireAddress()
-  ) {
+  ): () => void {
     const { Transfer } = this.contracts.lusdToken.filters;
     const transferLUSDFromUser = Transfer(address);
     const transferLUSDToUser = Transfer(null, address);
