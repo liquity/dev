@@ -610,7 +610,7 @@ export class PopulatableEthersLiquity
 
   async claimCollateralSurplus(overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.claimRedeemedCollateral(
+      await this.contracts.borrowerOperations.estimateAndPopulate.claimCollateral(
         { ...overrides },
         id
       )

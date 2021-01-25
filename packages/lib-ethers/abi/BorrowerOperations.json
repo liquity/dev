@@ -385,7 +385,7 @@
   },
   {
     "inputs": [],
-    "name": "claimRedeemedCollateral",
+    "name": "claimCollateral",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
