@@ -3519,9 +3519,9 @@ contract('TroveManager', async accounts => {
     // CollSurplusPool endpoint cannot be called directly
     await assertRevert(collSurplusPool.claimColl(A), 'CollSurplusPool: Caller is not Borrower Operations')
 
-    await borrowerOperations.claimRedeemedCollateral(A)
-    await borrowerOperations.claimRedeemedCollateral(B)
-    await borrowerOperations.claimRedeemedCollateral(C)
+    await borrowerOperations.claimRedeemedCollateral({ from: A, gasPrice: 0 })
+    await borrowerOperations.claimRedeemedCollateral({ from: B, gasPrice: 0 })
+    await borrowerOperations.claimRedeemedCollateral({ from: C, gasPrice: 0 })
 
     const A_balanceAfter = toBN(await web3.eth.getBalance(A))
     const B_balanceAfter = toBN(await web3.eth.getBalance(B))
@@ -3559,9 +3559,9 @@ contract('TroveManager', async accounts => {
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
-    await borrowerOperations.claimRedeemedCollateral(A)
-    await borrowerOperations.claimRedeemedCollateral(B)
-    await borrowerOperations.claimRedeemedCollateral(C)
+    await borrowerOperations.claimRedeemedCollateral({ from: A, gasPrice: 0 })
+    await borrowerOperations.claimRedeemedCollateral({ from: B, gasPrice: 0 })
+    await borrowerOperations.claimRedeemedCollateral({ from: C, gasPrice: 0 })
 
     const A_balanceAfter = toBN(await web3.eth.getBalance(A))
     const B_balanceAfter = toBN(await web3.eth.getBalance(B))
