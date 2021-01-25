@@ -584,9 +584,8 @@ describe("EthersLiquity", () => {
       // 1 - 30 / 200
       expect(surplus2.toString()).to.equal("0.85");
 
-      // we call it from a “3rd party” to avoid having to account for gas tx fees
-      await liquity.claimCollateralSurplus(await otherUsers[1].getAddress());
-      await liquity.claimCollateralSurplus(await otherUsers[2].getAddress());
+      await otherLiquities[1].claimCollateralSurplus({ gasPrice: 0 });
+      await otherLiquities[2].claimCollateralSurplus({ gasPrice: 0 });
 
       expect(`${await otherLiquities[0].getCollateralSurplusBalance()}`).to.equal("0");
       expect(`${await otherLiquities[1].getCollateralSurplusBalance()}`).to.equal("0");
