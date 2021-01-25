@@ -134,8 +134,14 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         troveManager.decayBaseRateFromBorrowing();
 
         uint LUSDFee;
-        if (_LUSDAmount > 0) {LUSDFee = _triggerBorrowingFee(_LUSDAmount, _maxFee);}
-        uint rawDebt = _LUSDAmount.add(LUSDFee);
+        uint rawDebt = _LUSDAmount;
+
+        bool isRecoveryMode = _checkRecoveryMode();
+
+        if (!isRecoveryMode && _LUSDAmount > 0) {
+            LUSDFee = _triggerBorrowingFee(_LUSDAmount, _maxFee);
+            rawDebt = rawDebt.add(LUSDFee);
+        }
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         uint compositeDebt = _getCompositeDebt(rawDebt);
@@ -144,7 +150,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         uint ICR = LiquityMath._computeCR(msg.value, compositeDebt, price);
         uint NICR = LiquityMath._computeNominalCR(msg.value, compositeDebt);
 
-        if (_checkRecoveryMode()) {
+        if (isRecoveryMode) {
             _requireICRisAboveR_MCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
@@ -222,7 +228,9 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         */
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease; 
         if (isWithdrawal) {_requireCallerIsBorrower(_borrower);}
-       
+
+        bool isRecoveryMode = _checkRecoveryMode();
+
         LocalVariables_adjustTrove memory L;
         L.price = priceFeed.getPrice();
 
@@ -237,8 +245,11 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         if (_isDebtIncrease) {
             _requireNonZeroDebtChange(_debtChange);
             troveManager.decayBaseRateFromBorrowing(); // decay the baseRate state variable
-            L.LUSDFee = _triggerBorrowingFee(_debtChange, _maxFee);
-            L.rawDebtChange = L.rawDebtChange.add(L.LUSDFee); // The raw debt change includes the fee
+
+            if (!isRecoveryMode) {
+                L.LUSDFee = _triggerBorrowingFee(_debtChange, _maxFee);
+                L.rawDebtChange = L.rawDebtChange.add(L.LUSDFee); // The raw debt change includes the fee
+            }
         }
 
         L.debt = troveManager.getTroveDebt(_borrower);
@@ -255,7 +266,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         if (isWithdrawal) { 
             assert(_collWithdrawal <= L.coll); 
             uint newTCR = _getNewTCRFromTroveChange(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
-            _requireValidNewICRandValidNewTCR(L.oldICR, L.newICR, newTCR);
+            _requireValidNewICRandValidNewTCR(isRecoveryMode, L.oldICR, L.newICR, newTCR);
         }
 
         // When the adjustment is a debt repayment, check it's a valid amount and that the caller has enough LUSD
@@ -441,10 +452,10 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         require(!_checkRecoveryMode(), "BorrowerOps: Operation not permitted during Recovery Mode");
     }
 
-    function _requireValidNewICRandValidNewTCR(uint _oldICR, uint _newICR, uint _newTCR) internal view {
+    function _requireValidNewICRandValidNewTCR(bool _isRecoveryMode, uint _oldICR, uint _newICR, uint _newTCR) internal pure {
         _requireICRisAboveMCR(_newICR);
 
-        if (!_checkRecoveryMode()) {
+        if (!_isRecoveryMode) {
             // When the system is in Normal Mode, check that this operation would not push the system into Recovery Mode
             _requireNewTCRisAboveCCR(_newTCR);
         } else {
