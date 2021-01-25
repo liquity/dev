@@ -445,6 +445,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             T = _getTotalsFromLiquidateTrovesSequence_NormalMode(L.price, L.LUSDInStabPool, _n);
         }
 
+        require(T.totalDebtInSequence > 0, "TroveManager: nothing to liquidate");
+
         // Move liquidated ETH and LUSD to the appropriate pools
         stabilityPool.offset(T.totalDebtToOffset, T.totalCollToSendToSP);
         _redistributeDebtAndColl(T.totalDebtToRedistribute, T.totalCollToRedistribute);
@@ -573,6 +575,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         } else {  //  if !L.recoveryModeAtStart
             T = _getTotalsFromBatchLiquidate_NormalMode(L.price, L.LUSDInStabPool, _troveArray);
         }
+
+        require(T.totalDebtInSequence > 0, "TroveManager: nothing to liquidate");
 
         // Move liquidated ETH and LUSD to the appropriate pools
         stabilityPool.offset(T.totalDebtToOffset, T.totalCollToSendToSP);
