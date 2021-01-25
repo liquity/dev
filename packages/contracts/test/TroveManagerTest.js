@@ -3488,7 +3488,7 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(0, dec(35, 18), D, D, { from: D, value: dec(1, 'ether') })
 
     // whale redeems 365 LUSD.  Expect this to fully redeem A, B, C, and partially redeem 15 LUSD from D.
-    const redemptionTx = await th.redeemCollateralAndGetTxObject(whale, contracts, dec(365, 18), { gasPrice: 0 })
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(whale, contracts, dec(365, 18), 0, { gasPrice: 0 })
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
