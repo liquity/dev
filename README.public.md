@@ -86,9 +86,9 @@ The kickback rate is the portion of LQTY you pass on to users of your Dev UI. Fo
 It is highly recommended that you do this while running Dev UI locally, before you start hosting it publicly:
 
 ```
-docker run --name liquity -d --rm -p 3000:80 -e \
-  FRONTEND_TAG=0x2781fD154358b009abf6280db4Ec066FCC6cb435 -e \
-  INFURA_API_KEY=158b6511a5c74d1ac028a8a2afe8f626 \
+docker run --name liquity -d --rm -p 3000:80 \
+  -e FRONTEND_TAG=0x2781fD154358b009abf6280db4Ec066FCC6cb435 \
+  -e INFURA_API_KEY=158b6511a5c74d1ac028a8a2afe8f626 \
   liquity/dev-frontend
 ```
 
