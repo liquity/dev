@@ -302,9 +302,9 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         activePool.sendETH(msg.sender, coll);
     }
 
-    function claimRedeemedCollateral(address _user) external override {
+    function claimRedeemedCollateral() external override {
         // send ETH from CollSurplus Pool to owner
-        collSurplusPool.claimColl(_user);
+        collSurplusPool.claimColl(msg.sender);
     }
 
     // --- Helper functions ---
