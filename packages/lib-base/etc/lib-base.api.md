@@ -240,7 +240,7 @@ export const pendingReceipt: PendingReceipt;
 
 // @public (undocumented)
 export type Populatable<T, R = unknown, S = unknown, P = unknown> = {
-    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? PopulateMethod<A, D, R, S, P> : never;
+    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? PopulateMethod<A, PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>> : never;
 };
 
 // @public (undocumented)
@@ -250,7 +250,7 @@ export type PopulatedLiquityTransaction<P = unknown, T extends SentLiquityTransa
 };
 
 // @public (undocumented)
-export type PopulateMethod<A extends unknown[], D, R = unknown, S = unknown, P = unknown> = (...args: A) => Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>>;
+export type PopulateMethod<A extends unknown[], T extends PopulatedLiquityTransaction> = (...args: A) => Promise<T>;
 
 // @public (undocumented)
 export interface ReadableLiquity {
@@ -305,19 +305,19 @@ export type RedemptionOptionalParams = HintedMethodOptionalParams & {
 
 // @public (undocumented)
 export type Sendable<T, R = unknown, S = unknown> = {
-    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? SendMethod<A, D, R, S> : never;
+    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? SendMethod<A, SentLiquityTransaction<S, LiquityReceipt<R, D>>> : never;
 };
 
 // @public (undocumented)
 export type SendableFrom<T> = {
-    [M in keyof T]: T[M] extends PopulateMethod<infer A, infer D, infer R, infer S> ? SendMethod<A, D, R, S> : never;
+    [M in keyof T]: T[M] extends PopulateMethod<infer A, PopulatedLiquityTransaction<unknown, infer U>> ? SendMethod<A, U> : never;
 };
 
 // @public (undocumented)
 export const sendableFrom: <T, U extends Populatable<T, unknown, unknown, unknown>>(Populatable: new (...args: never[]) => U) => new (populatable: U) => SendableFrom<U>;
 
 // @public (undocumented)
-export type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (...args: A) => Promise<SentLiquityTransaction<S, LiquityReceipt<R, D>>>;
+export type SendMethod<A extends unknown[], T extends SentLiquityTransaction> = (...args: A) => Promise<T>;
 
 // @public (undocumented)
 export type SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> = {
@@ -411,7 +411,7 @@ export type TaggedTroveCreation<T> = {
 
 // @public (undocumented)
 export type TransactableFrom<T> = {
-    [M in keyof T]: T[M] extends SendMethod<infer A, infer D> ? (...args: A) => Promise<D> : never;
+    [M in keyof T]: T[M] extends SendMethod<infer A, SentLiquityTransaction<unknown, LiquityReceipt<unknown, infer D>>> ? (...args: A) => Promise<D> : never;
 };
 
 // @public (undocumented)

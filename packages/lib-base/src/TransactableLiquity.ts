@@ -130,29 +130,32 @@ export interface TransactableLiquity {
   registerFrontend(kickbackRate: Decimalish): Promise<void>;
 }
 
-export type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (
+export type SendMethod<A extends unknown[], T extends SentLiquityTransaction> = (
   ...args: A
-) => Promise<SentLiquityTransaction<S, LiquityReceipt<R, D>>>;
+) => Promise<T>;
 
 export type Sendable<T, R = unknown, S = unknown> = {
   [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
-    ? SendMethod<A, D, R, S>
+    ? SendMethod<A, SentLiquityTransaction<S, LiquityReceipt<R, D>>>
     : never;
 };
 
-export type PopulateMethod<A extends unknown[], D, R = unknown, S = unknown, P = unknown> = (
+export type PopulateMethod<A extends unknown[], T extends PopulatedLiquityTransaction> = (
   ...args: A
-) => Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>>;
+) => Promise<T>;
 
 export type Populatable<T, R = unknown, S = unknown, P = unknown> = {
   [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
-    ? PopulateMethod<A, D, R, S, P>
+    ? PopulateMethod<
+        A,
+        PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>
+      >
     : never;
 };
 
 export type SendableFrom<T> = {
-  [M in keyof T]: T[M] extends PopulateMethod<infer A, infer D, infer R, infer S>
-    ? SendMethod<A, D, R, S>
+  [M in keyof T]: T[M] extends PopulateMethod<infer A, PopulatedLiquityTransaction<unknown, infer U>>
+    ? SendMethod<A, U>
     : never;
 };
 
@@ -180,7 +183,12 @@ export const sendableFrom = <T, U extends Populatable<T>>(
 };
 
 export type TransactableFrom<T> = {
-  [M in keyof T]: T[M] extends SendMethod<infer A, infer D> ? (...args: A) => Promise<D> : never;
+  [M in keyof T]: T[M] extends SendMethod<
+    infer A,
+    SentLiquityTransaction<unknown, LiquityReceipt<unknown, infer D>>
+  >
+    ? (...args: A) => Promise<D>
+    : never;
 };
 
 export const transactableFrom = <T, U extends Sendable<T>>(
