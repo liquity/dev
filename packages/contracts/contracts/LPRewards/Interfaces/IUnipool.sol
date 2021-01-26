@@ -10,5 +10,5 @@ interface IUnipool {
     function earned(address account) external view returns (uint256);
     function exit() external;
     function getReward() external;
-    function notifyRewardAmount(uint256 reward) external;
+    //function notifyRewardAmount(uint256 reward) external;
 }

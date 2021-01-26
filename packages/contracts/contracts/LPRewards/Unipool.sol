@@ -6,11 +6,13 @@ import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
+import "../Interfaces/ILQTYToken.sol";
 import "./Dependencies/SafeERC20.sol";
 import "./Interfaces/ILPTokenWrapper.sol";
 import "./Interfaces/IUnipool.sol";
 
 
+// Adapted from: https://github.com/Synthetixio/Unipool/blob/master/contracts/Unipool.sol
 contract LPTokenWrapper is ILPTokenWrapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -43,7 +45,7 @@ contract LPTokenWrapper is ILPTokenWrapper {
 
 contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     uint256 public constant DURATION = 7 days;
-    IERC20 lqtyToken;
+    ILQTYToken lqtyToken;
 
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
@@ -71,7 +73,9 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         checkContract(_uniTokenAddress);
 
         uniToken = IERC20(_uniTokenAddress);
-        lqtyToken = IERC20(_lqtyTokenAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
+
+        _notifyRewardAmount(lqtyToken.getLpRewardsEntitlement());
 
         emit LQTYTokenAddressChanged(_lqtyTokenAddress);
         emit UniTokenAddressChanged(_uniTokenAddress);
@@ -137,14 +141,12 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
-            lqtyToken.safeTransfer(msg.sender, reward);
+            lqtyToken.transfer(msg.sender, reward);
             emit RewardPaid(msg.sender, reward);
         }
     }
 
-    function notifyRewardAmount(uint256 reward) external override {
-        _requireCallerIsLQTYToken();
-
+    function _notifyRewardAmount(uint256 reward) internal {
         _updateReward(address(0));
 
         if (block.timestamp >= periodFinish) {
