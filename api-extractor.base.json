@@ -266,7 +266,7 @@
    *
    * DEFAULT VALUE: "crlf"
    */
-  // "newlineKind": "crlf",
+  "newlineKind": "lf",
 
   /**
    * Configures how API Extractor reports error and warning messages produced during analysis.
