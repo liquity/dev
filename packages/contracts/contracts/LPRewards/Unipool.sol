@@ -6,9 +6,9 @@ import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
-import "./SafeERC20.sol";
-import "./ILPTokenWrapper.sol";
-import "./IUnipool.sol";
+import "./Dependencies/SafeERC20.sol";
+import "./Interfaces/ILPTokenWrapper.sol";
+import "./Interfaces/IUnipool.sol";
 
 
 contract LPTokenWrapper is ILPTokenWrapper {

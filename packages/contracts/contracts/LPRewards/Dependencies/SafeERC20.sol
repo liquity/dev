@@ -2,8 +2,8 @@
 
 pragma solidity >=0.6.0 <0.8.0;
 
-import "../Dependencies/IERC20.sol";
-import "../Dependencies/SafeMath.sol";
+import "../../Dependencies/IERC20.sol";
+import "../../Dependencies/SafeMath.sol";
 import "./Address.sol";
 
 /**
