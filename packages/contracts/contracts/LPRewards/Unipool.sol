@@ -132,10 +132,10 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
 
     function exit() external override {
         withdraw(balanceOf(msg.sender));
-        getReward();
+        claimReward();
     }
 
-    function getReward() public override {
+    function claimReward() public override {
         _updateReward(msg.sender);
 
         uint256 reward = earned(msg.sender);

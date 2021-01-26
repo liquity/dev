@@ -9,6 +9,6 @@ interface IUnipool {
     function rewardPerToken() external view returns (uint256);
     function earned(address account) external view returns (uint256);
     function exit() external;
-    function getReward() external;
+    function claimReward() external;
     //function notifyRewardAmount(uint256 reward) external;
 }
