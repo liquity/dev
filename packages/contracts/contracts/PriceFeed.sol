@@ -19,7 +19,7 @@ contract PriceFeed is Ownable, CheckContract, IPriceFeed {
     AggregatorV3Interface public priceAggregator;
 
     // Use to convert to 18-digit precision uints
-    uint constant public TARGET_DIGITS = 18;  
+    uint8 constant public TARGET_DIGITS = 18;  
 
     // --- Dependency setters ---
 
