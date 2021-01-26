@@ -4,43 +4,46 @@ pragma solidity 0.6.11;
 
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/SafeMath.sol";
+import "../Dependencies/Ownable.sol";
+import "../Dependencies/CheckContract.sol";
 import "./SafeERC20.sol";
+import "./ILPTokenWrapper.sol";
+import "./IUnipool.sol";
 
 
-contract LPTokenWrapper {
+contract LPTokenWrapper is ILPTokenWrapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 public uni = IERC20(0xe9Cf7887b93150D4F2Da7dFc6D502B216438F244);
+    IERC20 public uniToken;
 
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
 
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         return _totalSupply;
     }
 
-    function balanceOf(address account) public view returns (uint256) {
+    function balanceOf(address account) public view override returns (uint256) {
         return _balances[account];
     }
 
-    function stake(uint256 amount) public virtual {
+    function stake(uint256 amount) public virtual override {
         _totalSupply = _totalSupply.add(amount);
         _balances[msg.sender] = _balances[msg.sender].add(amount);
-        uni.safeTransferFrom(msg.sender, address(this), amount);
+        uniToken.safeTransferFrom(msg.sender, address(this), amount);
     }
 
-    function withdraw(uint256 amount) public virtual {
+    function withdraw(uint256 amount) public virtual override {
         _totalSupply = _totalSupply.sub(amount);
         _balances[msg.sender] = _balances[msg.sender].sub(amount);
-        uni.safeTransfer(msg.sender, amount);
+        uniToken.safeTransfer(msg.sender, amount);
     }
 }
 
-contract Unipool is LPTokenWrapper {
-    IERC20 public snx = IERC20(0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F);
+contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     uint256 public constant DURATION = 7 days;
-    address _lqtyToken;
+    IERC20 lqtyToken;
 
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
@@ -49,6 +52,8 @@ contract Unipool is LPTokenWrapper {
     mapping(address => uint256) public userRewardPerTokenPaid;
     mapping(address => uint256) public rewards;
 
+    event LQTYTokenAddressChanged(address _lqtyTokenAddress);
+    event UniTokenAddressChanged(address _uniTokenAddress);
     event RewardAdded(uint256 reward);
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
@@ -64,11 +69,31 @@ contract Unipool is LPTokenWrapper {
         _;
     }
 
-    function lastTimeRewardApplicable() public view returns (uint256) {
+    function setAddresses(
+        address _lqtyTokenAddress,
+        address _uniTokenAddress
+    )
+        external
+        override
+        onlyOwner
+    {
+        checkContract(_lqtyTokenAddress);
+        checkContract(_uniTokenAddress);
+
+        uniToken = IERC20(_uniTokenAddress);
+        lqtyToken = IERC20(_lqtyTokenAddress);
+
+        emit LQTYTokenAddressChanged(_lqtyTokenAddress);
+        emit UniTokenAddressChanged(_uniTokenAddress);
+
+        _renounceOwnership();
+    }
+
+    function lastTimeRewardApplicable() public view override returns (uint256) {
         return LiquityMath._min(block.timestamp, periodFinish);
     }
 
-    function rewardPerToken() public view returns (uint256) {
+    function rewardPerToken() public view override returns (uint256) {
         if (totalSupply() == 0) {
             return rewardPerTokenStored;
         }
@@ -82,7 +107,7 @@ contract Unipool is LPTokenWrapper {
             );
     }
 
-    function earned(address account) public view returns (uint256) {
+    function earned(address account) public view override returns (uint256) {
         return
             balanceOf(account)
                 .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
@@ -103,22 +128,23 @@ contract Unipool is LPTokenWrapper {
         emit Withdrawn(msg.sender, amount);
     }
 
-    function exit() external {
+    function exit() external override {
         withdraw(balanceOf(msg.sender));
         getReward();
     }
 
-    function getReward() public updateReward(msg.sender) {
+    function getReward() public override updateReward(msg.sender) {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
-            snx.safeTransfer(msg.sender, reward);
+            lqtyToken.safeTransfer(msg.sender, reward);
             emit RewardPaid(msg.sender, reward);
         }
     }
 
     function notifyRewardAmount(uint256 reward)
         external
+        override
         updateReward(address(0))
     {
         _requireCallerIsLQTYToken();
@@ -136,6 +162,6 @@ contract Unipool is LPTokenWrapper {
     }
 
     function _requireCallerIsLQTYToken() internal view {
-        require(msg.sender == _lqtyToken, "Unipool: Caller must be the LQTY token");
+        require(msg.sender == address(lqtyToken), "Unipool: Caller must be the LQTY token");
     }
 }
