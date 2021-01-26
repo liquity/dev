@@ -12,5 +12,6 @@ node_modules
 # api-extractor temp files
 /packages/*/temp
 
+/temp
 .env
 .eslintcache
