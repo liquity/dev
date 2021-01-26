@@ -65,7 +65,7 @@
     - [Stability Pool example](#stability-pool-example)
     - [Stability Pool implementation](#stability-pool-implementation)
     - [How deposits and ETH gains are tracked](#how-deposits-and-eth-gains-are-tracked)
-  - [LQTY Issuance to Stability Providers](#lqty-issuance-to-stability-depositors)
+  - [LQTY Issuance to Stability Providers](#lqty-issuance-to-stability-providers)
     - [LQTY Issuance schedule](#lqty-issuance-schedule)
     - [LQTY Issuance implementation](#lqty-issuance-implementation)
     - [Handling the front end LQTY gain](#handling-the-front-end-lqty-gain)
@@ -908,7 +908,7 @@ The same product `P` is used, and a sum `G` is used to track LQTY rewards, and e
 
 ### Handling the front end LQTY gain
 
-As mentioned in [LQTY Issuance to Stability Providers](#lqty-issuance-to-stability-depositors), in a LQTY reward event generating `LQTY_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * LQTY_d` and the depositor receives `k * LQTY_d`.
+As mentioned in [LQTY Issuance to Stability Providers](#lqty-issuance-to-stability-providers), in a LQTY reward event generating `LQTY_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * LQTY_d` and the depositor receives `k * LQTY_d`.
 
 The front end should earn a cut of LQTY gains for all deposits tagged with its front end.
 
