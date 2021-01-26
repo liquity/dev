@@ -65,7 +65,7 @@
     - [Stability Pool example](#stability-pool-example)
     - [Stability Pool implementation](#stability-pool-implementation)
     - [How deposits and ETH gains are tracked](#how-deposits-and-eth-gains-are-tracked)
-  - [LQTY Issuance to Stability Depositors](#lqty-issuance-to-stability-depositors)
+  - [LQTY Issuance to Stability Providers](#lqty-issuance-to-stability-depositors)
     - [LQTY Issuance schedule](#lqty-issuance-schedule)
     - [LQTY Issuance implementation](#lqty-issuance-implementation)
     - [Handling the front end LQTY gain](#handling-the-front-end-lqty-gain)
@@ -241,7 +241,7 @@ The LQTY contracts consist of:
 
 `LQTYStaking.sol` - the staking contract, containing stake and unstake functionality for LQTY holders. This contract receives ETH fees from redemptions, and LUSD fees from new debt issuance.
 
-`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability depositors as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the CommunityIssuance automatically receives a supply of LQTY - the “community issuance” supply, provisionally set to one quarter of the total supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
+`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability Providers as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the CommunityIssuance automatically receives a supply of LQTY - the “community issuance” supply, provisionally set to one quarter of the total supply. The contract steadily issues these LQTY tokens to the Stability Pool depositors over time.
 
 `LQTYToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
 
@@ -861,7 +861,7 @@ Any time a depositor updates their deposit (withdrawal, top-up) their ETH gain i
 
 This is similar in spirit to the simpler [Scalable Reward Distribution on the Ethereum Network by Bogdan Batog et al](http://batog.info/papers/scalable-reward-distribution.pdf), however, the mathematics is more involved as we handle a compounding, decreasing stake, and a corresponding ETH reward.
 
-## LQTY Issuance to Stability Depositors
+## LQTY Issuance to Stability Providers
 
 Stability Pool depositors earn LQTY tokens continuously over time, in proportion to the size of their deposit. This is known as “Community Issuance”, and is handled by `CommunityIssuance.sol`.
 
@@ -908,7 +908,7 @@ The same product `P` is used, and a sum `G` is used to track LQTY rewards, and e
 
 ### Handling the front end LQTY gain
 
-As mentioned in [LQTY Issuance to Stability Depositors](#lqty-issuance-to-stability-depositors), in a LQTY reward event generating `LQTY_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * LQTY_d` and the depositor receives `k * LQTY_d`.
+As mentioned in [LQTY Issuance to Stability Providers](#lqty-issuance-to-stability-depositors), in a LQTY reward event generating `LQTY_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * LQTY_d` and the depositor receives `k * LQTY_d`.
 
 The front end should earn a cut of LQTY gains for all deposits tagged with its front end.
 
