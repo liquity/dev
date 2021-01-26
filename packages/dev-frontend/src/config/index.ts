@@ -1,16 +1,21 @@
+import { AddressZero } from "@ethersproject/constants";
 import { isAddress, getAddress } from "@ethersproject/address";
 
-export type LiquityFrontendConfig = Partial<{
+export type LiquityFrontendConfig = {
   frontendTag: string;
-  infuraApiKey: string;
-}>;
+  infuraApiKey?: string;
+};
+
+const defaultConfig: LiquityFrontendConfig = {
+  frontendTag: AddressZero
+};
 
 function hasKey<K extends string>(o: object, k: K): o is Record<K, unknown> {
   return k in o;
 }
 
 const parseConfig = (json: unknown): LiquityFrontendConfig => {
-  const config: LiquityFrontendConfig = {};
+  const config = { ...defaultConfig };
 
   if (typeof json === "object" && json !== null) {
     if (hasKey(json, "frontendTag") && json.frontendTag !== "") {
@@ -57,7 +62,7 @@ const fetchConfig = async () => {
     return parseConfig(await response.json());
   } catch (err) {
     console.error(err);
-    return {};
+    return { ...defaultConfig };
   }
 };
 

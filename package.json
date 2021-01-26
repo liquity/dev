@@ -21,7 +21,7 @@
     "deploy": "yarn workspace @liquity/lib-ethers hardhat deploy",
     "docs": "run-s docs:*",
     "docs:collect-sdk-apis": "node scripts/collect-sdk-apis.js",
-    "docs:api-documenter": "api-documenter markdown -i temp/sdk-apis -o docs/sdk",
+    "docs:api-documenter": "api-documenter generate -i temp/sdk-apis -o docs/sdk",
     "fuzzer": "yarn workspace @liquity/fuzzer fuzzer",
     "prepare": "run-s prepare:*",
     "prepare:contracts": "yarn workspace @liquity/contracts prepare",

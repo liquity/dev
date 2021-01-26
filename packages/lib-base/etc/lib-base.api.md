@@ -7,18 +7,46 @@
 import { Decimal } from '@liquity/decimal';
 import { Decimalish } from '@liquity/decimal';
 
-// @public (undocumented)
-export type CollateralGainTransferDetails = StabilityPoolGainsWithdrawalDetails & {
-    newTrove: Trove;
+// @internal (undocumented)
+export type _AddParams<T, K extends keyof T, U extends unknown[]> = {
+    [P in K]: T[P] extends (...args: infer A) => infer R ? (...args: [...A, ...U]) => R : never;
+};
+
+// @internal (undocumented)
+export type _CollateralChange<T> = (_CollateralDeposit<T> & _NoCollateralWithdrawal) | (_CollateralWithdrawal<T> & _NoCollateralDeposit);
+
+// @internal (undocumented)
+export type _CollateralDeposit<T> = {
+    depositCollateral: T;
 };
 
 // @public (undocumented)
-export type CollateralGainTransferOptionalParams = FeelessTroveAdjustmentOptionalParams & {
+export interface CollateralGainTransferDetails extends StabilityPoolGainsWithdrawalDetails {
+    // (undocumented)
+    newTrove: Trove;
+}
+
+// @internal (undocumented)
+export type _CollateralGainTransferMethod = "transferCollateralGainToTrove";
+
+// @internal (undocumented)
+export type _CollateralGainTransferOptionalParams = _FeelessTroveAdjustmentOptionalParams & {
     deposit?: StabilityDeposit;
 };
 
-// @public (undocumented)
-export const emptyTrove: Trove;
+// @internal (undocumented)
+export type _CollateralWithdrawal<T> = {
+    withdrawCollateral: T;
+};
+
+// @public
+export const CRITICAL_COLLATERAL_RATIO: Decimal;
+
+// @internal (undocumented)
+export type _DebtChange<T> = (_LUSDBorrowing<T> & _NoLUSDRepayment) | (_LUSDRepayment<T> & _NoLUSDBorrowing);
+
+// @internal (undocumented)
+export const _emptyTrove: Trove;
 
 // @public (undocumented)
 export type FailedReceipt<R = unknown> = {
@@ -26,30 +54,31 @@ export type FailedReceipt<R = unknown> = {
     rawReceipt: R;
 };
 
-// @public (undocumented)
-export const failedReceipt: <R>(rawReceipt: R) => FailedReceipt<R>;
+// @internal (undocumented)
+export const _failedReceipt: <R>(rawReceipt: R) => FailedReceipt<R>;
 
-// @public (undocumented)
-export type FeelessTroveAdjustmentOptionalParams = HintedMethodOptionalParams & {
+// @internal (undocumented)
+export type _FeelessTroveAdjustmentMethod = "depositCollateral" | "withdrawCollateral" | "repayLUSD";
+
+// @internal (undocumented)
+export type _FeelessTroveAdjustmentOptionalParams = _HintedMethodOptionalParams & {
     trove?: Trove;
 };
 
-// @public (undocumented)
+// @public
 export class Fees {
+    // @internal
     constructor(lastFeeOperation: Date, baseRateWithoutDecay: Decimalish, minuteDecayFactor: Decimalish, beta: Decimalish);
-    // (undocumented)
+    // @internal (undocumented)
     baseRate(when: Date): Decimal;
-    // (undocumented)
-    borrowingFeeFactor(when?: Date): Decimal;
-    // (undocumented)
+    borrowingFeeFactor(): Decimal;
     equals(that: Fees): boolean;
-    // (undocumented)
-    redemptionFeeFactor(redeemedFractionOfSupply?: Decimalish, when?: Date): Decimal;
-    // (undocumented)
+    redemptionFeeFactor(redeemedFractionOfSupply?: Decimalish): Decimal;
+    // @internal (undocumented)
     toString(): string;
 }
 
-// @public (undocumented)
+// @public
 export type FrontendStatus = {
     status: "unregistered";
 } | {
@@ -57,160 +86,179 @@ export type FrontendStatus = {
     kickbackRate: Decimal;
 };
 
-// @public (undocumented)
-export function glue<T, U>(t: new (...args: never[]) => T, u: new (...args: never[]) => U): new (t: T, u: U) => T & U;
+// @internal (undocumented)
+export function _glue<T, U>(t: new (...args: never[]) => T, u: new (...args: never[]) => U): new (t: T, u: U) => T & U;
 
-// @public (undocumented)
-export function glue<T, U, V>(t: new (...args: never[]) => T, u: new (...args: never[]) => U, v: new (...args: never[]) => V): new (t: T, u: U, v: V) => T & U & V;
+// @internal (undocumented)
+export function _glue<T, U, V>(t: new (...args: never[]) => T, u: new (...args: never[]) => U, v: new (...args: never[]) => V): new (t: T, u: U, v: V) => T & U & V;
 
-// @public (undocumented)
-export function glue<T, U, V, W>(t: new (...args: never[]) => T, u: new (...args: never[]) => U, v: new (...args: never[]) => V, w: new (...args: never[]) => W): new (t: T, u: U, v: V, w: W) => T & U & V & W;
+// @internal (undocumented)
+export function _glue<T, U, V, W>(t: new (...args: never[]) => T, u: new (...args: never[]) => U, v: new (...args: never[]) => V, w: new (...args: never[]) => W): new (t: T, u: U, v: V, w: W) => T & U & V & W;
 
-// Warning: (ae-forgotten-export) The symbol "Hintable" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "AddParams" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "TroveCreationMethod" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "FeelessTroveAdjustmentMethod" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "TroveAdjustmentMethod" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "CollateralGainTransferMethod" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RedemptionMethod" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type Hinted<T extends Hintable> = T & AddParams<T, TroveCreationMethod, [optionalParams?: TroveCreationOptionalParams]> & AddParams<T, FeelessTroveAdjustmentMethod, [
-    optionalParams?: FeelessTroveAdjustmentOptionalParams
-]> & AddParams<T, TroveAdjustmentMethod, [optionalParams?: TroveAdjustmentOptionalParams]> & AddParams<T, CollateralGainTransferMethod, [
-    optionalParams?: CollateralGainTransferOptionalParams
-]> & AddParams<T, RedemptionMethod, [optionalParams?: RedemptionOptionalParams]>;
+// @internal (undocumented)
+export type _Hintable = {
+    [P in _HintedMethod]: (...args: never[]) => unknown;
+};
 
-// @public (undocumented)
-export type HintedMethodOptionalParams = {
+// @internal (undocumented)
+export type _Hinted<T extends _Hintable> = T & _AddParams<T, _TroveCreationMethod, [optionalParams?: _TroveCreationOptionalParams]> & _AddParams<T, _FeelessTroveAdjustmentMethod, [
+    optionalParams?: _FeelessTroveAdjustmentOptionalParams
+]> & _AddParams<T, _TroveAdjustmentMethod, [optionalParams?: _TroveAdjustmentOptionalParams]> & _AddParams<T, _CollateralGainTransferMethod, [
+    optionalParams?: _CollateralGainTransferOptionalParams
+]> & _AddParams<T, _RedemptionMethod, [optionalParams?: _RedemptionOptionalParams]>;
+
+// @internal (undocumented)
+export type _HintedMethod = _TroveCreationMethod | _FeelessTroveAdjustmentMethod | _TroveAdjustmentMethod | _CollateralGainTransferMethod | _RedemptionMethod;
+
+// @internal (undocumented)
+export type _HintedMethodOptionalParams = {
     numberOfTroves?: number;
 };
 
 // @public (undocumented)
-export const invalidTroveCreation: (invalidTrove: Trove, error: TroveCreationError) => TaggedInvalidTroveCreation;
-
-// @public (undocumented)
-export type LiquidationDetails = {
-    liquidatedAddresses: string[];
-    totalLiquidated: Trove;
-    lusdGasCompensation: Decimal;
+export interface LiquidationDetails {
+    // (undocumented)
     collateralGasCompensation: Decimal;
-};
+    // (undocumented)
+    liquidatedAddresses: string[];
+    // (undocumented)
+    lusdGasCompensation: Decimal;
+    // (undocumented)
+    totalLiquidated: Trove;
+}
 
 // @public (undocumented)
 export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
 
-// @public (undocumented)
+// @public
 export abstract class LiquityStore<T = unknown> {
-    constructor(constants: LiquityStoreConstants);
-    // (undocumented)
-    protected constants: LiquityStoreConstants;
-    // (undocumented)
-    abstract doStart(): () => void;
-    // (undocumented)
-    protected load(baseState: LiquityStoreBaseState, extraState?: T): void;
-    // (undocumented)
-    protected loaded: boolean;
-    // (undocumented)
+    // @internal (undocumented)
+    protected abstract _doStart(): () => void;
+    // @internal (undocumented)
+    protected _load(baseState: LiquityStoreBaseState, extraState?: T): void;
+    // @internal (undocumented)
+    protected _loaded: boolean;
     logging: boolean;
-    // (undocumented)
-    protected logUpdate<U>(name: string, next: U, show?: (next: U) => string): U;
-    // (undocumented)
     onLoaded?: () => void;
-    // (undocumented)
-    protected abstract reduceExtra(extraState: T, extraStateUpdate: Partial<T>): T;
-    // (undocumented)
-    protected silentlyUpdateIfChanged<U>(equals: (a: U, b: U) => boolean, prev: U, next?: U): U;
-    // (undocumented)
+    // @internal (undocumented)
+    protected abstract _reduceExtra(extraState: T, extraStateUpdate: Partial<T>): T;
     start(): () => void;
-    // (undocumented)
     get state(): LiquityStoreState<T>;
-    // (undocumented)
-    subscribe(listener: LiquityStoreListener<T>): () => void;
-    // (undocumented)
-    protected update(baseStateUpdate?: Partial<LiquityStoreBaseState>, extraStateUpdate?: Partial<T>): void;
-    // (undocumented)
-    protected updateIfChanged<U>(equals: (a: U, b: U) => boolean, name: string, prev: U, next?: U, show?: (next: U) => string): U;
+    subscribe(listener: (params: LiquityStoreListenerParams<T>) => void): () => void;
+    // @internal (undocumented)
+    protected _update(baseStateUpdate?: Partial<LiquityStoreBaseState>, extraStateUpdate?: Partial<T>): void;
     }
 
-// @public (undocumented)
-export type LiquityStoreBaseState = {
-    frontend: FrontendStatus;
-    ownFrontend: FrontendStatus;
-    numberOfTroves: number;
+// @public
+export interface LiquityStoreBaseState {
     accountBalance: Decimal;
-    lusdBalance: Decimal;
-    lqtyBalance: Decimal;
     collateralSurplusBalance: Decimal;
-    price: Decimal;
-    lusdInStabilityPool: Decimal;
-    total: Trove;
-    totalRedistributed: Trove;
-    troveWithoutRewards: TroveWithPendingRewards;
     deposit: StabilityDeposit;
     fees: Fees;
+    frontend: FrontendStatus;
+    lqtyBalance: Decimal;
     lqtyStake: LQTYStake;
+    lusdBalance: Decimal;
+    lusdInStabilityPool: Decimal;
+    numberOfTroves: number;
+    ownFrontend: FrontendStatus;
+    price: Decimal;
+    total: Trove;
+    totalRedistributed: Trove;
     totalStakedLQTY: Decimal;
-};
+    troveWithoutRewards: TroveWithPendingRewards;
+}
 
-// @public (undocumented)
-export type LiquityStoreConstants = {
-    frontendTag: string;
-};
-
-// @public (undocumented)
-export type LiquityStoreDerivedState = {
-    trove: Trove;
+// @public
+export interface LiquityStoreDerivedState {
     borrowingFeeFactor: Decimal;
     redemptionFeeFactor: Decimal;
-};
+    trove: Trove;
+}
 
-// @public (undocumented)
-export type LiquityStoreListener<T = unknown> = (params: {
+// @public
+export interface LiquityStoreListenerParams<T = unknown> {
     newState: LiquityStoreState<T>;
     oldState: LiquityStoreState<T>;
     stateChange: Partial<LiquityStoreState<T>>;
-}) => void;
+}
 
-// @public (undocumented)
-export type LiquityStoreState<T = unknown> = T & LiquityStoreConstants & LiquityStoreBaseState & LiquityStoreDerivedState;
+// @public
+export type LiquityStoreState<T = unknown> = LiquityStoreBaseState & LiquityStoreDerivedState & T;
 
-// @public (undocumented)
+// @public
 export class LQTYStake {
-    // Warning: (ae-forgotten-export) The symbol "LQTYStakish" needs to be exported by the entry point index.d.ts
-    constructor({ stakedLQTY, collateralGain, lusdGain }: LQTYStakish);
-    // (undocumented)
+    // @internal
+    constructor(stakedLQTY?: Decimal, collateralGain?: Decimal, lusdGain?: Decimal);
     apply(change: LQTYStakeChange<Decimalish> | undefined): Decimal;
-    // (undocumented)
     readonly collateralGain: Decimal;
-    // (undocumented)
     equals(that: LQTYStake): boolean;
     // (undocumented)
     get isEmpty(): boolean;
-    // (undocumented)
     readonly lusdGain: Decimal;
-    // (undocumented)
     readonly stakedLQTY: Decimal;
-    // (undocumented)
+    // @internal (undocumented)
     toString(): string;
-    // Warning: (ae-forgotten-export) The symbol "LQTYStakeChange" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     whatChanged(thatStakedLQTY: Decimalish): LQTYStakeChange<Decimal> | undefined;
 }
 
 // @public (undocumented)
+export type LQTYStakeChange<T> = {
+    stakeLQTY: T;
+    unstakeLQTY?: undefined;
+} | {
+    stakeLQTY?: undefined;
+    unstakeLQTY: T;
+    unstakeAllLQTY: boolean;
+};
+
+// @public
+export const LUSD_LIQUIDATION_RESERVE: Decimal;
+
+// @internal (undocumented)
+export type _LUSDBorrowing<T> = {
+    borrowLUSD: T;
+};
+
+// @internal (undocumented)
+export type _LUSDRepayment<T> = {
+    repayLUSD: T;
+};
+
+// @public (undocumented)
 export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
 
-// Warning: (ae-forgotten-export) The symbol "Normalizer" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export const normalizeTroveAdjustment: Normalizer<TroveAdjustment<Decimalish>, TroveAdjustment<Decimal>>;
+// @public
+export const MINIMUM_COLLATERAL_RATIO: Decimal;
 
-// @public (undocumented)
-export const normalizeTroveCreation: Normalizer<TroveCreation<Decimalish>, TroveCreation<Decimal>>;
+// @internal (undocumented)
+export type _NoCollateralChange = _NoCollateralDeposit & _NoCollateralWithdrawal;
 
-// @public (undocumented)
+// @internal (undocumented)
+export type _NoCollateralDeposit = Partial<_CollateralDeposit<undefined>>;
+
+// @internal (undocumented)
+export type _NoCollateralWithdrawal = Partial<_CollateralWithdrawal<undefined>>;
+
+// @internal (undocumented)
+export type _NoDebtChange = _NoLUSDBorrowing & _NoLUSDRepayment;
+
+// @internal (undocumented)
+export type _NoLUSDBorrowing = Partial<_LUSDBorrowing<undefined>>;
+
+// @internal (undocumented)
+export type _NoLUSDRepayment = Partial<_LUSDRepayment<undefined>>;
+
+// @internal (undocumented)
+export type _Normalizer<T, U> = (params: T) => U;
+
+// @internal (undocumented)
+export const _normalizeTroveAdjustment: _Normalizer<TroveAdjustmentParams<Decimalish>, TroveAdjustmentParams<Decimal>>;
+
+// @internal (undocumented)
+export const _normalizeTroveCreation: _Normalizer<TroveCreationParams<Decimalish>, TroveCreationParams<Decimal>>;
+
+// @alpha (undocumented)
 export interface ObservableLiquity {
     // (undocumented)
     watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void;
@@ -235,22 +283,24 @@ export type PendingReceipt = {
     status: "pending";
 };
 
-// @public (undocumented)
-export const pendingReceipt: PendingReceipt;
+// @internal (undocumented)
+export const _pendingReceipt: PendingReceipt;
 
-// @public (undocumented)
-export type Populatable<T, R = unknown, S = unknown, P = unknown> = {
-    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? PopulateMethod<A, PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>> : never;
+// @internal (undocumented)
+export type _Populatable<T, R = unknown, S = unknown, P = unknown> = {
+    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? _PopulateMethod<A, PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>> : never;
 };
 
 // @public (undocumented)
-export type PopulatedLiquityTransaction<P = unknown, T extends SentLiquityTransaction = SentLiquityTransaction> = {
+export interface PopulatedLiquityTransaction<P = unknown, T extends SentLiquityTransaction = SentLiquityTransaction> {
+    // (undocumented)
     rawPopulatedTransaction: P;
+    // (undocumented)
     send(): Promise<T>;
-};
+}
 
-// @public (undocumented)
-export type PopulateMethod<A extends unknown[], T extends PopulatedLiquityTransaction> = (...args: A) => Promise<T>;
+// @internal (undocumented)
+export type _PopulateMethod<A extends unknown[], T extends PopulatedLiquityTransaction> = (...args: A) => Promise<T>;
 
 // @public (undocumented)
 export interface ReadableLiquity {
@@ -280,7 +330,6 @@ export interface ReadableLiquity {
     getStabilityDeposit(address?: string): Promise<StabilityDeposit>;
     // (undocumented)
     getTotal(): Promise<Trove>;
-    // (undocumented)
     getTotalRedistributed(): Promise<Trove>;
     // (undocumented)
     getTotalStakedLQTY(): Promise<Decimal>;
@@ -291,45 +340,55 @@ export interface ReadableLiquity {
 }
 
 // @public (undocumented)
-export type RedemptionDetails = {
-    attemptedLUSDAmount: Decimal;
+export interface RedemptionDetails {
+    // (undocumented)
     actualLUSDAmount: Decimal;
+    // (undocumented)
+    attemptedLUSDAmount: Decimal;
+    // (undocumented)
     collateralReceived: Decimal;
+    // (undocumented)
     fee: Decimal;
-};
+}
 
-// @public (undocumented)
-export type RedemptionOptionalParams = HintedMethodOptionalParams & {
+// @internal (undocumented)
+export type _RedemptionMethod = "redeemLUSD";
+
+// @internal (undocumented)
+export type _RedemptionOptionalParams = _HintedMethodOptionalParams & {
     price?: Decimal;
 };
 
-// @public (undocumented)
-export type Sendable<T, R = unknown, S = unknown> = {
-    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? SendMethod<A, SentLiquityTransaction<S, LiquityReceipt<R, D>>> : never;
+// @internal (undocumented)
+export type _Sendable<T, R = unknown, S = unknown> = {
+    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? _SendMethod<A, SentLiquityTransaction<S, LiquityReceipt<R, D>>> : never;
 };
 
-// @public (undocumented)
-export type SendableFrom<T> = {
-    [M in keyof T]: T[M] extends PopulateMethod<infer A, PopulatedLiquityTransaction<unknown, infer U>> ? SendMethod<A, U> : never;
+// @internal (undocumented)
+export type _SendableFrom<T> = {
+    [M in keyof T]: T[M] extends _PopulateMethod<infer A, PopulatedLiquityTransaction<unknown, infer U>> ? _SendMethod<A, U> : never;
 };
 
-// @public (undocumented)
-export const sendableFrom: <T, U extends Populatable<T, unknown, unknown, unknown>>(Populatable: new (...args: never[]) => U) => new (populatable: U) => SendableFrom<U>;
+// @internal (undocumented)
+export const _sendableFrom: <T, U extends _Populatable<T, unknown, unknown, unknown>>(_Populatable: new (...args: never[]) => U) => new (populatable: U) => _SendableFrom<U>;
+
+// @internal (undocumented)
+export type _SendMethod<A extends unknown[], T extends SentLiquityTransaction> = (...args: A) => Promise<T>;
 
 // @public (undocumented)
-export type SendMethod<A extends unknown[], T extends SentLiquityTransaction> = (...args: A) => Promise<T>;
-
-// @public (undocumented)
-export type SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> = {
-    rawSentTransaction: S;
+export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> {
+    // (undocumented)
     getReceipt(): Promise<T>;
+    // (undocumented)
+    rawSentTransaction: S;
+    // (undocumented)
     waitForReceipt(): Promise<Extract<T, MinedReceipt>>;
-};
+}
 
 // @public (undocumented)
 export class StabilityDeposit {
-    // Warning: (ae-forgotten-export) The symbol "StabilityDepositish" needs to be exported by the entry point index.d.ts
-    constructor({ initialLUSD, currentLUSD, collateralGain, lqtyReward }: StabilityDepositish);
+    // @internal
+    constructor(initialLUSD?: Decimal, currentLUSD?: Decimal, collateralGain?: Decimal, lqtyReward?: Decimal);
     // (undocumented)
     apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
     // (undocumented)
@@ -361,17 +420,22 @@ export type StabilityDepositChange<T> = {
 };
 
 // @public (undocumented)
-export type StabilityDepositChangeDetails = StabilityPoolGainsWithdrawalDetails & {
+export interface StabilityDepositChangeDetails extends StabilityPoolGainsWithdrawalDetails {
+    // (undocumented)
     change: StabilityDepositChange<Decimal>;
-};
+}
 
 // @public (undocumented)
-export type StabilityPoolGainsWithdrawalDetails = {
-    lusdLoss: Decimal;
-    newLUSDDeposit: Decimal;
+export interface StabilityPoolGainsWithdrawalDetails {
+    // (undocumented)
     collateralGain: Decimal;
+    // (undocumented)
     lqtyReward: Decimal;
-};
+    // (undocumented)
+    lusdLoss: Decimal;
+    // (undocumented)
+    newLUSDDeposit: Decimal;
+}
 
 // @public (undocumented)
 export type SuccessfulReceipt<R = unknown, D = unknown> = {
@@ -380,47 +444,21 @@ export type SuccessfulReceipt<R = unknown, D = unknown> = {
     details: D;
 };
 
-// @public (undocumented)
-export const successfulReceipt: <R, D>(rawReceipt: R, details: D, toString?: (() => string) | undefined) => SuccessfulReceipt<R, D>;
+// @internal (undocumented)
+export const _successfulReceipt: <R, D>(rawReceipt: R, details: D, toString?: (() => string) | undefined) => SuccessfulReceipt<R, D>;
 
-// @public (undocumented)
-export type TaggedInvalidTroveCreation = {
-    type: "invalidCreation";
-    invalidTrove: Trove;
-    error: TroveCreationError;
+// @internal (undocumented)
+export type _TransactableFrom<T> = {
+    [M in keyof T]: T[M] extends _SendMethod<infer A, SentLiquityTransaction<unknown, LiquityReceipt<unknown, infer D>>> ? (...args: A) => Promise<D> : never;
 };
 
-// @public (undocumented)
-export type TaggedTroveAdjustment<T> = {
-    type: "adjustment";
-    params: TroveAdjustment<T>;
-    setToZero?: "collateral" | "debt";
-};
-
-// @public (undocumented)
-export type TaggedTroveClosure<T> = {
-    type: "closure";
-    params: TroveClosure<T>;
-};
-
-// @public (undocumented)
-export type TaggedTroveCreation<T> = {
-    type: "creation";
-    params: TroveCreation<T>;
-};
-
-// @public (undocumented)
-export type TransactableFrom<T> = {
-    [M in keyof T]: T[M] extends SendMethod<infer A, SentLiquityTransaction<unknown, LiquityReceipt<unknown, infer D>>> ? (...args: A) => Promise<D> : never;
-};
-
-// @public (undocumented)
-export const transactableFrom: <T, U extends Sendable<T, unknown, unknown>>(Sendable: new (...args: never[]) => U) => new (sendable: U) => TransactableFrom<U>;
+// @internal (undocumented)
+export const _transactableFrom: <T, U extends _Sendable<T, unknown, unknown>>(_Sendable: new (...args: never[]) => U) => new (sendable: U) => _TransactableFrom<U>;
 
 // @public (undocumented)
 export interface TransactableLiquity {
     // (undocumented)
-    adjustTrove(params: TroveAdjustment<Decimalish>): Promise<TroveAdjustmentDetails>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentDetails>;
     // (undocumented)
     borrowLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
     // (undocumented)
@@ -435,8 +473,7 @@ export interface TransactableLiquity {
     liquidate(address: string): Promise<LiquidationDetails>;
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;
-    // (undocumented)
-    openTrove(params: TroveCreation<Decimalish>): Promise<TroveCreationDetails>;
+    openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails>;
     // (undocumented)
     redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
     // (undocumented)
@@ -447,7 +484,7 @@ export interface TransactableLiquity {
     sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
     // (undocumented)
     sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
-    // (undocumented)
+    // @internal (undocumented)
     setPrice(price: Decimalish): Promise<void>;
     // (undocumented)
     stakeLQTY(amount: Decimalish): Promise<void>;
@@ -467,17 +504,18 @@ export interface TransactableLiquity {
 
 // @public (undocumented)
 export class Trove {
-    constructor({ collateral, debt }?: Trovish);
+    // @internal
+    constructor(collateral?: Decimal, debt?: Decimal);
     // (undocumented)
-    add({ collateral, debt }: Trovish): Trove;
+    add(that: Trove): Trove;
     // (undocumented)
     addCollateral(collateral: Decimalish): Trove;
     // (undocumented)
     addDebt(debt: Decimalish): Trove;
     // (undocumented)
-    adjust(params: TroveAdjustment<Decimalish>, borrowingFeeFactor?: Decimalish): Trove;
+    adjust(params: TroveAdjustmentParams<Decimalish>, borrowingFeeFactor?: Decimalish): Trove;
     // (undocumented)
-    adjustTo(that: Trove, borrowingFeeFactor?: Decimalish): TroveAdjustment<Decimal>;
+    adjustTo(that: Trove, borrowingFeeFactor?: Decimalish): TroveAdjustmentParams<Decimal>;
     // (undocumented)
     apply(change: TroveChange<Decimalish> | undefined, borrowingFeeFactor?: Decimalish): Trove;
     // (undocumented)
@@ -489,34 +527,28 @@ export class Trove {
     // (undocumented)
     collateralRatioIsBelowMinimum(price: Decimalish): boolean;
     // (undocumented)
-    static create(params: TroveCreation<Decimalish>, borrowingFeeFactor?: Decimalish): Trove;
-    // (undocumented)
-    static readonly CRITICAL_COLLATERAL_RATIO: Decimal;
+    static create(params: TroveCreationParams<Decimalish>, borrowingFeeFactor?: Decimalish): Trove;
     // (undocumented)
     readonly debt: Decimal;
     // (undocumented)
     equals(that: Trove): boolean;
-    static readonly GAS_COMPENSATION_DEPOSIT: Decimal;
     // (undocumented)
     get isEmpty(): boolean;
     // (undocumented)
     isOpenableInRecoveryMode(price: Decimalish): boolean;
     // (undocumented)
-    static readonly MINIMUM_COLLATERAL_RATIO: Decimal;
-    // (undocumented)
     multiply(multiplier: Decimalish): Trove;
-    // (undocumented)
     get netDebt(): Decimal;
+    // @internal (undocumented)
+    get _nominalCollateralRatio(): Decimal;
     // (undocumented)
-    get nominalCollateralRatio(): Decimal;
-    // (undocumented)
-    static recreate(that: Trove, borrowingFeeFactor?: Decimalish): TroveCreation<Decimal>;
+    static recreate(that: Trove, borrowingFeeFactor?: Decimalish): TroveCreationParams<Decimal>;
     // (undocumented)
     setCollateral(collateral: Decimalish): Trove;
     // (undocumented)
     setDebt(debt: Decimalish): Trove;
     // (undocumented)
-    subtract(that: Trovish): Trove;
+    subtract(that: Trove): Trove;
     // (undocumented)
     subtractCollateral(collateral: Decimalish): Trove;
     // (undocumented)
@@ -527,77 +559,95 @@ export class Trove {
     whatChanged(that: Trove, borrowingFeeFactor?: Decimalish): TroveChange<Decimal> | undefined;
 }
 
-// Warning: (ae-forgotten-export) The symbol "CollateralChange" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "NoDebtChange" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DebtChange" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "NoCollateralChange" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export type TroveAdjustment<T> = (CollateralChange<T> & NoDebtChange) | (DebtChange<T> & NoCollateralChange) | (CollateralChange<T> & DebtChange<T>);
-
-// @public (undocumented)
-export const troveAdjustment: <T>(params: TroveAdjustment<T>, setToZero?: "collateral" | "debt" | undefined) => TaggedTroveAdjustment<T>;
-
-// @public (undocumented)
-export type TroveAdjustmentDetails = TroveChangeWithFees<TroveAdjustment<Decimal>>;
-
-// @public (undocumented)
-export type TroveAdjustmentOptionalParams = FeelessTroveAdjustmentOptionalParams & {
-    fees?: Fees;
-};
-
-// @public (undocumented)
-export type TroveChange<T> = TaggedInvalidTroveCreation | TaggedTroveCreation<T> | TaggedTroveClosure<T> | TaggedTroveAdjustment<T>;
-
-// @public (undocumented)
-export type TroveChangeWithFees<T> = {
-    params: T;
-    newTrove: Trove;
+export interface TroveAdjustmentDetails {
+    // (undocumented)
     fee: Decimal;
-};
+    // (undocumented)
+    newTrove: Trove;
+    // (undocumented)
+    params: TroveAdjustmentParams<Decimal>;
+}
 
-// Warning: (ae-forgotten-export) The symbol "CollateralWithdrawal" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "NoCollateralDeposit" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "LUSDRepayment" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "NoLUSDBorrowing" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type TroveClosure<T> = CollateralWithdrawal<T> & NoCollateralDeposit & Partial<LUSDRepayment<T>> & NoLUSDBorrowing;
+// @internal (undocumented)
+export type _TroveAdjustmentMethod = "borrowLUSD" | "adjustTrove";
 
-// @public (undocumented)
-export const troveClosure: <T>(params: TroveClosure<T>) => TaggedTroveClosure<T>;
-
-// @public (undocumented)
-export type TroveClosureDetails = {
-    params: TroveClosure<Decimal>;
-};
-
-// Warning: (ae-forgotten-export) The symbol "CollateralDeposit" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "NoCollateralWithdrawal" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "LUSDBorrowing" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "NoLUSDRepayment" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type TroveCreation<T> = CollateralDeposit<T> & NoCollateralWithdrawal & Partial<LUSDBorrowing<T>> & NoLUSDRepayment;
-
-// @public (undocumented)
-export const troveCreation: <T>(params: TroveCreation<T>) => TaggedTroveCreation<T>;
-
-// @public (undocumented)
-export type TroveCreationDetails = TroveChangeWithFees<TroveCreation<Decimal>>;
-
-// @public (undocumented)
-export type TroveCreationError = "missingGasDeposit";
-
-// @public (undocumented)
-export type TroveCreationOptionalParams = HintedMethodOptionalParams & {
+// @internal (undocumented)
+export type _TroveAdjustmentOptionalParams = _FeelessTroveAdjustmentOptionalParams & {
     fees?: Fees;
 };
+
+// Warning: (ae-incompatible-release-tags) The symbol "TroveAdjustmentParams" is marked as @public, but its signature references "_CollateralChange" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveAdjustmentParams" is marked as @public, but its signature references "_NoDebtChange" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveAdjustmentParams" is marked as @public, but its signature references "_DebtChange" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveAdjustmentParams" is marked as @public, but its signature references "_NoCollateralChange" which is marked as @internal
+//
+// @public
+export type TroveAdjustmentParams<T> = (_CollateralChange<T> & _NoDebtChange) | (_DebtChange<T> & _NoCollateralChange) | (_CollateralChange<T> & _DebtChange<T>);
+
+// @public
+export type TroveChange<T> = {
+    type: "invalidCreation";
+    invalidTrove: Trove;
+    error: TroveCreationError;
+} | {
+    type: "creation";
+    params: TroveCreationParams<T>;
+} | {
+    type: "closure";
+    params: TroveClosureParams<T>;
+} | {
+    type: "adjustment";
+    params: TroveAdjustmentParams<T>;
+    setToZero?: "collateral" | "debt";
+};
+
+// @public (undocumented)
+export interface TroveClosureDetails {
+    // (undocumented)
+    params: TroveClosureParams<Decimal>;
+}
+
+// Warning: (ae-incompatible-release-tags) The symbol "TroveClosureParams" is marked as @public, but its signature references "_CollateralWithdrawal" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveClosureParams" is marked as @public, but its signature references "_NoCollateralDeposit" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveClosureParams" is marked as @public, but its signature references "_LUSDRepayment" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveClosureParams" is marked as @public, but its signature references "_NoLUSDBorrowing" which is marked as @internal
+//
+// @public
+export type TroveClosureParams<T> = _CollateralWithdrawal<T> & _NoCollateralDeposit & Partial<_LUSDRepayment<T>> & _NoLUSDBorrowing;
+
+// @public (undocumented)
+export interface TroveCreationDetails {
+    // (undocumented)
+    fee: Decimal;
+    // (undocumented)
+    newTrove: Trove;
+    // (undocumented)
+    params: TroveCreationParams<Decimal>;
+}
+
+// @public
+export type TroveCreationError = "missingLiquidationReserve";
+
+// @internal (undocumented)
+export type _TroveCreationMethod = "openTrove";
+
+// @internal (undocumented)
+export type _TroveCreationOptionalParams = _HintedMethodOptionalParams & {
+    fees?: Fees;
+};
+
+// Warning: (ae-incompatible-release-tags) The symbol "TroveCreationParams" is marked as @public, but its signature references "_CollateralDeposit" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveCreationParams" is marked as @public, but its signature references "_NoCollateralWithdrawal" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveCreationParams" is marked as @public, but its signature references "_LUSDBorrowing" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "TroveCreationParams" is marked as @public, but its signature references "_NoLUSDRepayment" which is marked as @internal
+//
+// @public
+export type TroveCreationParams<T> = _CollateralDeposit<T> & _NoCollateralWithdrawal & Partial<_LUSDBorrowing<T>> & _NoLUSDRepayment;
 
 // @public (undocumented)
 export class TroveWithPendingRewards extends Trove {
-    // Warning: (ae-forgotten-export) The symbol "TrovishWithPendingRewards" needs to be exported by the entry point index.d.ts
-    constructor({ collateral, debt, stake, snapshotOfTotalRedistributed }?: TrovishWithPendingRewards);
+    constructor(collateral?: Decimal, debt?: Decimal, stake?: Decimal, snapshotOfTotalRedistributed?: Trove);
     // (undocumented)
     applyRewards(totalRedistributed: Trove): Trove;
     // (undocumented)
@@ -606,14 +656,6 @@ export class TroveWithPendingRewards extends Trove {
     readonly snapshotOfTotalRedistributed: Trove;
     // (undocumented)
     readonly stake: Decimal;
-}
-
-// @public (undocumented)
-export interface Trovish {
-    // (undocumented)
-    readonly collateral?: Decimalish;
-    // (undocumented)
-    readonly debt?: Decimalish;
 }
 
 

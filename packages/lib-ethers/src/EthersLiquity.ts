@@ -1,6 +1,6 @@
 import { Signer } from "@ethersproject/abstract-signer";
 
-import { glue } from "@liquity/lib-base";
+import { _glue } from "@liquity/lib-base";
 
 import { connectToContracts, LiquityContracts, LiquityDeployment } from "./contracts";
 import {
@@ -19,7 +19,7 @@ const GluedEthersLiquity: new (
   transactable: TransactableEthersLiquity,
   readable: ReadableEthersLiquity,
   observable: ObservableEthersLiquity
-) => GluedEthersLiquity = glue(
+) => GluedEthersLiquity = _glue(
   TransactableEthersLiquity,
   ReadableEthersLiquity,
   ObservableEthersLiquity

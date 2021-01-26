@@ -10,7 +10,7 @@ import { BlockTag } from '@ethersproject/abstract-provider';
 import { BytesLike } from '@ethersproject/bytes';
 import { CallOverrides } from '@ethersproject/contracts';
 import { CollateralGainTransferDetails } from '@liquity/lib-base';
-import { CollateralGainTransferOptionalParams } from '@liquity/lib-base';
+import { _CollateralGainTransferOptionalParams } from '@liquity/lib-base';
 import { Contract } from '@ethersproject/contracts';
 import { ContractInterface } from '@ethersproject/contracts';
 import { ContractTransaction } from '@ethersproject/contracts';
@@ -19,8 +19,8 @@ import { Decimalish } from '@liquity/decimal';
 import { EventFilter } from '@ethersproject/contracts';
 import { Fees } from '@liquity/lib-base';
 import { FrontendStatus } from '@liquity/lib-base';
-import { Hinted } from '@liquity/lib-base';
-import { HintedMethodOptionalParams } from '@liquity/lib-base';
+import { _Hinted } from '@liquity/lib-base';
+import { _HintedMethodOptionalParams } from '@liquity/lib-base';
 import { JsonFragment } from '@ethersproject/abi';
 import { LiquidationDetails } from '@liquity/lib-base';
 import { LiquityReceipt } from '@liquity/lib-base';
@@ -33,32 +33,31 @@ import { MinedReceipt } from '@liquity/lib-base';
 import { ObservableLiquity } from '@liquity/lib-base';
 import { Overrides } from '@ethersproject/contracts';
 import { PayableOverrides } from '@ethersproject/contracts';
-import { Populatable } from '@liquity/lib-base';
+import { _Populatable } from '@liquity/lib-base';
 import { PopulatedLiquityTransaction } from '@liquity/lib-base';
 import { PopulatedTransaction } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/abstract-provider';
 import { ReadableLiquity } from '@liquity/lib-base';
 import { RedemptionDetails } from '@liquity/lib-base';
-import { RedemptionOptionalParams } from '@liquity/lib-base';
-import { SendableFrom } from '@liquity/lib-base';
+import { _RedemptionOptionalParams } from '@liquity/lib-base';
+import { _SendableFrom } from '@liquity/lib-base';
 import { SentLiquityTransaction } from '@liquity/lib-base';
 import { Signer } from '@ethersproject/abstract-signer';
 import { StabilityDeposit } from '@liquity/lib-base';
 import { StabilityDepositChangeDetails } from '@liquity/lib-base';
 import { StabilityPoolGainsWithdrawalDetails } from '@liquity/lib-base';
-import { TransactableFrom } from '@liquity/lib-base';
+import { _TransactableFrom } from '@liquity/lib-base';
 import { TransactableLiquity } from '@liquity/lib-base';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { Trove } from '@liquity/lib-base';
-import { TroveAdjustment } from '@liquity/lib-base';
 import { TroveAdjustmentDetails } from '@liquity/lib-base';
-import { TroveAdjustmentOptionalParams } from '@liquity/lib-base';
-import { TroveChangeWithFees } from '@liquity/lib-base';
+import { _TroveAdjustmentOptionalParams } from '@liquity/lib-base';
+import { TroveAdjustmentParams } from '@liquity/lib-base';
 import { TroveClosureDetails } from '@liquity/lib-base';
-import { TroveCreation } from '@liquity/lib-base';
 import { TroveCreationDetails } from '@liquity/lib-base';
-import { TroveCreationOptionalParams } from '@liquity/lib-base';
+import { _TroveCreationOptionalParams } from '@liquity/lib-base';
+import { TroveCreationParams } from '@liquity/lib-base';
 import { TroveWithPendingRewards } from '@liquity/lib-base';
 
 // @public (undocumented)
@@ -67,10 +66,10 @@ export const addressesOf: (contracts: LiquityContracts) => LiquityContractAddres
 // @public (undocumented)
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
     constructor(provider: Provider, account: string, liquity: ReadableEthersLiquity, frontendTag?: string);
-    // (undocumented)
-    doStart(): () => void;
-    // (undocumented)
-    protected reduceExtra(oldState: BlockPolledLiquityStoreExtraState, stateUpdate: Partial<BlockPolledLiquityStoreExtraState>): BlockPolledLiquityStoreExtraState;
+    // @override (undocumented)
+    protected _doStart(): () => void;
+    // @override (undocumented)
+    protected _reduceExtra(oldState: BlockPolledLiquityStoreExtraState, stateUpdate: Partial<BlockPolledLiquityStoreExtraState>): BlockPolledLiquityStoreExtraState;
 }
 
 // @public (undocumented)
@@ -233,17 +232,17 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
 // Warning: (ae-forgotten-export) The symbol "PopulatableEthersLiquityBase" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase implements Populatable<Hinted<TransactableLiquity>, TransactionReceipt, TransactionResponse, PopulatedTransaction> {
+export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase implements _Populatable<_Hinted<TransactableLiquity>, TransactionReceipt, TransactionResponse, PopulatedTransaction> {
     // (undocumented)
-    adjustTrove(params: TroveAdjustment<Decimalish>, optionalParams?: TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    borrowLUSD(amount: Decimalish, optionalParams?: TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    borrowLUSD(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
     closeTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveClosureDetails>>;
     // (undocumented)
-    depositCollateral(amount: Decimalish, optionalParams?: TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    depositCollateral(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>>;
     // (undocumented)
@@ -251,13 +250,13 @@ export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase imple
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<LiquidationDetails>>;
     // (undocumented)
-    openTrove(params: TroveCreation<Decimalish>, optionalParams?: TroveCreationOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveCreationDetails>>;
+    openTrove(params: TroveCreationParams<Decimalish>, optionalParams?: _TroveCreationOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveCreationDetails>>;
     // (undocumented)
-    redeemLUSD(amount: Decimalish, optionalParams?: RedemptionOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<RedemptionDetails>>;
+    redeemLUSD(amount: Decimalish, optionalParams?: _RedemptionOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<RedemptionDetails>>;
     // (undocumented)
     registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
-    repayLUSD(amount: Decimalish, optionalParams?: TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    repayLUSD(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
@@ -267,11 +266,11 @@ export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase imple
     // (undocumented)
     stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
-    transferCollateralGainToTrove(optionalParams?: CollateralGainTransferOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>>;
+    transferCollateralGainToTrove(optionalParams?: _CollateralGainTransferOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>>;
     // (undocumented)
     unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
-    withdrawCollateral(amount: Decimalish, optionalParams?: TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    withdrawCollateral(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityPoolGainsWithdrawalDetails>>;
     // (undocumented)
@@ -339,7 +338,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
 export const redeemMaxIterations = 68;
 
 // @public (undocumented)
-export type SendableEthersLiquity = SendableFrom<PopulatableEthersLiquity>;
+export type SendableEthersLiquity = _SendableFrom<PopulatableEthersLiquity>;
 
 // @public (undocumented)
 export const SendableEthersLiquity: new (populatable: PopulatableEthersLiquity) => SendableEthersLiquity;
@@ -356,7 +355,7 @@ export class SentEthersTransaction<T = unknown> implements SentLiquityTransactio
 }
 
 // @public (undocumented)
-export type TransactableEthersLiquity = TransactableFrom<SendableEthersLiquity>;
+export type TransactableEthersLiquity = _TransactableFrom<SendableEthersLiquity>;
 
 // @public (undocumented)
 export const TransactableEthersLiquity: new (sendable: SendableEthersLiquity) => TransactableEthersLiquity;
