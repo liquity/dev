@@ -349,9 +349,9 @@ contract('Fee arithmetic tests', async accounts => {
 
   it("minutesPassedSinceLastFeeOp(): returns minutes passed for no time increase", async () => {
     await troveManagerTester.setLastFeeOpTimeToNow()
-    const hoursPassed = await troveManagerTester.minutesPassedSinceLastFeeOp()
+    const minutesPassed = await troveManagerTester.minutesPassedSinceLastFeeOp()
 
-    assert.equal(hoursPassed, '0')
+    assert.equal(minutesPassed, '0')
   })
 
   it("minutesPassedSinceLastFeeOp(): returns minutes passed between time of last fee operation and current block.timestamp, rounded down to nearest minutes", async () => {
@@ -363,9 +363,9 @@ contract('Fee arithmetic tests', async accounts => {
 
       await th.fastForwardTime(seconds, web3.currentProvider)
 
-      const hoursPassed = await troveManagerTester.minutesPassedSinceLastFeeOp()
+      const minutesPassed = await troveManagerTester.minutesPassedSinceLastFeeOp()
 
-      assert.equal(expectedHoursPassed.toString(), hoursPassed.toString())
+      assert.equal(expectedHoursPassed.toString(), minutesPassed.toString())
     }
   })
 

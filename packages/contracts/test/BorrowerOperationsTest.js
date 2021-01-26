@@ -1563,14 +1563,11 @@ contract('BorrowerOperations', async accounts => {
     const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    // 59 minutes pass
-    th.fastForwardTime(3540, web3.currentProvider)
-
-    // Borrower C triggers a fee, before decay interval has passed
+    // Borrower C triggers a fee, before decay interval of 1 minute has passed
     await borrowerOperations.adjustTrove(0, 0, dec(1, 18), true, C, C, { from: C })
 
-    // 1 minute pass
-    th.fastForwardTime(3540, web3.currentProvider)
+    // 1 minute passes
+    th.fastForwardTime(60, web3.currentProvider)
 
     // Borrower C triggers another fee
     await borrowerOperations.adjustTrove(0, 0, dec(1, 18), true, C, C, { from: C })
