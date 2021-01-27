@@ -10,6 +10,7 @@ import "../Interfaces/ILQTYToken.sol";
 import "./Dependencies/SafeERC20.sol";
 import "./Interfaces/ILPTokenWrapper.sol";
 import "./Interfaces/IUnipool.sol";
+import "../Dependencies/console.sol";
 
 
 // Adapted from: https://github.com/Synthetixio/Unipool/blob/master/contracts/Unipool.sol
@@ -160,10 +161,6 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         emit RewardAdded(reward);
     }
 
-    function _requireCallerIsLQTYToken() internal view {
-        require(msg.sender == address(lqtyToken), "Unipool: Caller must be the LQTY token");
-    }
-
     function _updateReward(address account) internal {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = lastTimeRewardApplicable();
@@ -171,5 +168,9 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
             rewards[account] = earned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
+    }
+
+    function _requireCallerIsLQTYToken() internal view {
+        require(msg.sender == address(lqtyToken), "Unipool: Caller must be the LQTY token");
     }
 }
