@@ -19,7 +19,7 @@ contract PriceFeed is Ownable, CheckContract, IPriceFeed {
     AggregatorV3Interface public priceAggregator;
 
     // Use to convert to 18-digit precision uints
-    uint8 constant public TARGET_DIGITS = 18;  
+    uint constant public TARGET_DIGITS = 18;  
 
     // --- Dependency setters ---
 
@@ -45,10 +45,10 @@ contract PriceFeed is Ownable, CheckContract, IPriceFeed {
         require(timeStamp > 0 && timeStamp <= block.timestamp, "PriceFeed: price timestamp from aggregator is 0, or in future");
         require(priceAnswer >= 0, "PriceFeed: price answer from aggregator is negative");
         
-        uint8 answerDigits = priceAggregator.decimals();
+        uint answerDigits = uint256(priceAggregator.decimals());
         uint price = uint256(priceAnswer);
         
-        // currently the Aggregator returns an 8-digit precision, but we handle the case of future changes
+        // Currently the Aggregator returns an 8-digit precision, but we handle the case of future changes
         if (answerDigits > TARGET_DIGITS) { 
             price = price.div(10 ** (answerDigits - TARGET_DIGITS));
         }
