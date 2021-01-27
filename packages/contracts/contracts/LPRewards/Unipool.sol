@@ -147,15 +147,14 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     }
 
     function _notifyRewardAmount(uint256 reward) internal {
+        assert(reward > 0);
+        assert(reward == lqtyToken.balanceOf(address(this)));
+        assert(periodFinish == 0);
+
         _updateReward(address(0));
 
-        if (block.timestamp >= periodFinish) {
-            rewardRate = reward.div(DURATION);
-        } else {
-            uint256 remaining = periodFinish.sub(block.timestamp);
-            uint256 leftover = remaining.mul(rewardRate);
-            rewardRate = reward.add(leftover).div(DURATION);
-        }
+        rewardRate = reward.div(DURATION);
+
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(DURATION);
         emit RewardAdded(reward);
