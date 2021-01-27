@@ -114,6 +114,10 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     function stake(uint256 amount) public override {
         require(amount > 0, "Cannot stake 0");
 
+        if (totalSupply() == 0) {
+            periodFinish = periodFinish.add(block.timestamp.sub(lastUpdateTime));
+        }
+
         _updateReward(msg.sender);
 
         super.stake(amount);
