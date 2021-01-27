@@ -50,10 +50,10 @@ contract PriceFeed is Ownable, CheckContract, IPriceFeed {
         
         // Currently the Aggregator returns an 8-digit precision, but we handle the case of future changes
         if (answerDigits > TARGET_DIGITS) { 
-            price = price.div(10 ** uint(answerDigits - TARGET_DIGITS));
+            price = price.div(10 ** uint256(answerDigits - TARGET_DIGITS));
         }
         else if (answerDigits < TARGET_DIGITS) {
-            price = price.mul(10 ** uint(TARGET_DIGITS - answerDigits));
+            price = price.mul(10 ** uint256(TARGET_DIGITS - answerDigits));
         } 
         return price;
     }
