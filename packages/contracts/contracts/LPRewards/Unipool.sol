@@ -45,7 +45,7 @@ contract LPTokenWrapper is ILPTokenWrapper {
 }
 
 contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
-    uint256 public constant DURATION = 7 days;
+    uint256 public constant DURATION = 30 days;
     ILQTYToken lqtyToken;
 
     uint256 public periodFinish = 0;
