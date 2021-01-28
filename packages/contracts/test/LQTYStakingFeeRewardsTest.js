@@ -3,6 +3,7 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
 
+const LQTYStakingTester = artifacts.require('LQTYStakingTester')
 const NonPayable = artifacts.require("./NonPayable.sol")
 
 const th = testHelpers.TestHelper
@@ -646,5 +647,10 @@ contract('Fee arithmetic tests', async accounts => {
 
     await assertRevert(unstakeTxPromise1)
     await assertRevert(unstakeTxPromise2)
+  })
+
+  it('Test requireCallerIsTroveManager', async () => {
+    const lqtyStakingTester = await LQTYStakingTester.new()
+    await assertRevert(lqtyStakingTester.requireCallerIsTroveManager(), 'LQTYStaking: caller is not TroveM')
   })
 })
