@@ -3322,6 +3322,8 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
+    const lqtyStakingLUSDBalanceBefore = await lusdToken.balanceOf(lqtyStaking.address)
+
     const txCarol = await borrowerOperations.openTrove(0, 0, carol, carol, { from: carol, value: dec(1, 'ether') })
     assert.isTrue(txCarol.receipt.status)
 
