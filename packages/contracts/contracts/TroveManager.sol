@@ -834,7 +834,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR,
         uint _maxIterations,
-        uint _maxFee
+        uint _maxFeePercentage
     )
         external
         override
@@ -896,7 +896,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         // Calculate the ETH fee
         totals.ETHFee = _getRedemptionFee(totals.totalETHDrawn);
         
-        require(_maxFee >= totals.ETHFee || _maxFee == 0, "TroveManager: redemption fee exceeded provided max");
+        _requireUserAcceptsFee(totals.ETHFee, totals.totalETHDrawn, _maxFeePercentage);
 
         // Send the ETH fee to the LQTY staking contract
         activePool.sendETH(address(lqtyStaking), totals.ETHFee);

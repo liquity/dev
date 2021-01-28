@@ -79,4 +79,9 @@ contract LiquityBase is BaseMath {
 
         return TCR < CCR;
     }
+
+    function _requireUserAcceptsFee(uint _fee, uint _amount, uint _maxFeePercentage) internal pure {
+        uint feePercentage = _fee.mul(DECIMAL_PRECISION).div(_amount);
+        require(feePercentage <= _maxFeePercentage || _maxFeePercentage == 0, "Fee exceeded provided maximum");
+    }
 }
