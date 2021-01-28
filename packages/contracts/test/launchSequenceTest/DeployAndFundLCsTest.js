@@ -1,638 +1,430 @@
 
- 
-// const OneYearLockupContract = artifacts.require("./OneYearLockupContract.sol")
-// const CustomDurationLockupContract = artifacts.require("./CustomDurationLockupContract.sol")
-
-// const deploymentHelper = require("../../utils/deploymentHelpers.js")
-// const testHelpers = require("../../utils/testHelpers.js")
-
-// const th = testHelpers.TestHelper
-// const timeValues = testHelpers.TimeValues
-// const { dec, toBN, assertRevert } = th
-
-// contract('Deploying and funding One Year Lockup Contracts', async accounts => {
-//   const [liquityAG, A, B, C, D, E, F, G, H, I, J] = accounts;
-
-//   const bountyAddress = accounts[998]
-//   const lpRewardsAddress = accounts[999]
-
-//   const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
-
-//   let LQTYContracts
-
-//   // 1e24 = 1 million tokens with 18 decimal digits
-//   const LQTYEntitlement_A = dec(1, 24)
-//   const LQTYEntitlement_B = dec(2, 24)
-//   const LQTYEntitlement_C = dec(3, 24)
-//   const LQTYEntitlement_D = dec(4, 24)
-//   const LQTYEntitlement_E = dec(5, 24)
-
-//   beforeEach(async () => {
-//     // Deploy all contracts from the first account
-//     LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
-//     await deploymentHelper.connectLQTYContracts(LQTYContracts)
-
-//     lqtyStaking = LQTYContracts.lqtyStaking
-//     lqtyToken = LQTYContracts.lqtyToken
-//     communityIssuance = LQTYContracts.communityIssuance
-//     lockupContractFactory = LQTYContracts.lockupContractFactory
-//   })
-
-//   // --- OYLCs ---
-
-//   describe('Deploying OYLCs', async accounts => {
-//     it("LQTY Deployer can deploy OYLCs through the Factory", async () => {
-//       // LQTY deployer deploys CDLCs
-//       const OYLCDeploymentTx_A = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 18), { from: liquityAG })
-//       const OYLCDeploymentTx_B = await lockupContractFactory.deployOneYearLockupContract(B, dec(1, 18), { from: liquityAG })
-//       const OYLCDeploymentTx_C = await lockupContractFactory.deployOneYearLockupContract(C, '9595995999999900000023423234', { from: liquityAG })
-
-//       assert.isTrue(OYLCDeploymentTx_A.receipt.status)
-//       assert.isTrue(OYLCDeploymentTx_B.receipt.status)
-//       assert.isTrue(OYLCDeploymentTx_C.receipt.status)
-//     })
-
-//     it("Anyone can deploy OYLCs through the Factory", async () => {
-//       // Various EOAs deploy CDLCs
-//       const OYLCDeploymentTx_1 = await lockupContractFactory.deployOneYearLockupContract(A, dec(1, 18), { from: G })
-//       const OYLCDeploymentTx_2 = await lockupContractFactory.deployOneYearLockupContract(C, dec(1, 18), { from: H })
-//       const OYLCDeploymentTx_3 = await lockupContractFactory.deployOneYearLockupContract(liquityAG, '9595995999999900000023423234', { from: I })
-//       const OYLCDeploymentTx_4 = await lockupContractFactory.deployOneYearLockupContract(D, '123', { from: J })
-
-//       assert.isTrue(OYLCDeploymentTx_1.receipt.status)
-//       assert.isTrue(OYLCDeploymentTx_2.receipt.status)
-//       assert.isTrue(OYLCDeploymentTx_3.receipt.status)
-//       assert.isTrue(OYLCDeploymentTx_4.receipt.status)
-//     })
-
-//     it("LQTY Deployer can deploy OYLCs directly", async () => {
-//       // LQTY deployer deploys CDLCs
-//       const OYLC_A = await OneYearLockupContract.new(lqtyToken.address, A, dec(1, 18), { from: liquityAG })
-//       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)
-
-//       const OYLC_B = await OneYearLockupContract.new(lqtyToken.address, B, dec(2, 18), { from: liquityAG })
-//       const OYLC_B_txReceipt = await web3.eth.getTransactionReceipt(OYLC_B.transactionHash)
-
-//       const OYLC_C = await OneYearLockupContract.new(lqtyToken.address, C, dec(3, 18), { from: liquityAG })
-//       const OYLC_C_txReceipt = await web3.eth.getTransactionReceipt(OYLC_C.transactionHash)
-
-//       // Check deployment succeeded
-//       assert.isTrue(OYLC_A_txReceipt.status)
-//       assert.isTrue(OYLC_B_txReceipt.status)
-//       assert.isTrue(OYLC_C_txReceipt.status)
-//     })
-
-//     it("Anyone can deploy OYLCs directly", async () => {
-//       // Various EOAs deploy OYLCs
-//       const OYLC_A = await OneYearLockupContract.new(lqtyToken.address, A, dec(1, 18), { from: D })
-//       const OYLC_A_txReceipt = await web3.eth.getTransactionReceipt(OYLC_A.transactionHash)
-
-//       const OYLC_B = await OneYearLockupContract.new(lqtyToken.address, B, dec(2, 18), { from: E })
-//       const OYLC_B_txReceipt = await web3.eth.getTransactionReceipt(OYLC_B.transactionHash)
-
-//       const OYLC_C = await OneYearLockupContract.new(lqtyToken.address, C, dec(3, 18), { from: F })
-//       const OYLC_C_txReceipt = await web3.eth.getTransactionReceipt(OYLC_C.transactionHash)
-
-//       // Check deployment succeeded
-//       assert.isTrue(OYLC_A_txReceipt.status)
-//       assert.isTrue(OYLC_B_txReceipt.status)
-//       assert.isTrue(OYLC_C_txReceipt.status)
-//     })
-
-//     it("OYLC deployed through the Factory stores Factory's address in the OYLC", async () => {
-//       // Deploy 5 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: liquityAG })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: liquityAG })
-
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLC_C = await th.getOYLCFromDeploymentTx(deployedOYLCtx_C)
-//       const OYLC_D = await th.getOYLCFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLC_E = await th.getOYLCFromDeploymentTx(deployedOYLCtx_E)
-
-//       const storedDeployerAddress_A = await OYLC_A.deployer()
-//       const storedDeployerAddress_B = await OYLC_B.deployer()
-//       const storedDeployerAddress_C = await OYLC_C.deployer()
-//       const storedDeployerAddress_D = await OYLC_D.deployer()
-//       const storedDeployerAddress_E = await OYLC_E.deployer()
-
-//       assert.equal(lockupContractFactory.address, storedDeployerAddress_A)
-//       assert.equal(lockupContractFactory.address, storedDeployerAddress_B)
-//       assert.equal(lockupContractFactory.address, storedDeployerAddress_C)
-//       assert.equal(lockupContractFactory.address, storedDeployerAddress_D)
-//       assert.equal(lockupContractFactory.address, storedDeployerAddress_E)
-//     })
-
-//     it("OYLC deployment stores the beneficiary's address in the OYLC", async () => {
-//       // Deploy 5 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: liquityAG })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: liquityAG })
-
-//       // Grab contracts from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLC_C = await th.getOYLCFromDeploymentTx(deployedOYLCtx_C)
-//       const OYLC_D = await th.getOYLCFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLC_E = await th.getOYLCFromDeploymentTx(deployedOYLCtx_E)
-
-//       const storedBeneficiaryAddress_A = await OYLC_A.beneficiary()
-//       const storedBeneficiaryAddress_B = await OYLC_B.beneficiary()
-//       const storedBeneficiaryAddress_C = await OYLC_C.beneficiary()
-//       const storedBeneficiaryAddress_D = await OYLC_D.beneficiary()
-//       const storedBeneficiaryAddress_E = await OYLC_E.beneficiary()
-
-//       assert.equal(A, storedBeneficiaryAddress_A)
-//       assert.equal(B, storedBeneficiaryAddress_B)
-//       assert.equal(C, storedBeneficiaryAddress_C)
-//       assert.equal(D, storedBeneficiaryAddress_D)
-//       assert.equal(E, storedBeneficiaryAddress_E)
-//     })
-
-//     it("OYLC deployment records the beneficiary's initial entitlement in the OYLC", async () => {
-//       // Deploy 5 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: liquityAG })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: liquityAG })
-
-//       // Grab contracts from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLC_C = await th.getOYLCFromDeploymentTx(deployedOYLCtx_C)
-//       const OYLC_D = await th.getOYLCFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLC_E = await th.getOYLCFromDeploymentTx(deployedOYLCtx_E)
-
-//       const recordedInitialEntitlement_A = await OYLC_A.initialEntitlement()
-//       const recordedInitialEntitlement_B = await OYLC_B.initialEntitlement()
-//       const recordedInitialEntitlement_C = await OYLC_C.initialEntitlement()
-//       const recordedInitialEntitlement_D = await OYLC_D.initialEntitlement()
-//       const recordedInitialEntitlement_E = await OYLC_E.initialEntitlement()
-
-//       assert.equal(LQTYEntitlement_A, recordedInitialEntitlement_A)
-//       assert.equal(LQTYEntitlement_B, recordedInitialEntitlement_B)
-//       assert.equal(LQTYEntitlement_C, recordedInitialEntitlement_C)
-//       assert.equal(LQTYEntitlement_D, recordedInitialEntitlement_D)
-//       assert.equal(LQTYEntitlement_E, recordedInitialEntitlement_E)
-//     })
-
-//     it("OYLC deployment through the Factory registers the OYLC in the Factory", async () => {
-//       // Deploy 5 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: liquityAG })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: liquityAG })
-
-//       // Grab contract addresses from deployment tx events
-//       const OYLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLCAddress_B = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLCAddress_C = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_C)
-//       const OYLCAddress_D = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLCAddress_E = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_E)
-
-//       assert.isTrue(await lockupContractFactory.isRegisteredOneYearLockup(OYLCAddress_A))
-//       assert.isTrue(await lockupContractFactory.isRegisteredOneYearLockup(OYLCAddress_B))
-//       assert.isTrue(await lockupContractFactory.isRegisteredOneYearLockup(OYLCAddress_C))
-//       assert.isTrue(await lockupContractFactory.isRegisteredOneYearLockup(OYLCAddress_D))
-//       assert.isTrue(await lockupContractFactory.isRegisteredOneYearLockup(OYLCAddress_E))
-//     })
-
-//     it("OYLC deployment through the Factory records the OYLC contract address and deployer as a k-v pair in the Factory", async () => {
-//       // Deploy 5 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: liquityAG })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: liquityAG })
-
-//       // Grab contract addresses from deployment tx events
-//       const OYLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLCAddress_B = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLCAddress_C = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_C)
-//       const OYLCAddress_D = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLCAddress_E = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_E)
-
-//       assert.equal(liquityAG, await lockupContractFactory.oneYearLockupContractToDeployer(OYLCAddress_A))
-//       assert.equal(liquityAG, await lockupContractFactory.oneYearLockupContractToDeployer(OYLCAddress_B))
-//       assert.equal(liquityAG, await lockupContractFactory.oneYearLockupContractToDeployer(OYLCAddress_C))
-//       assert.equal(liquityAG, await lockupContractFactory.oneYearLockupContractToDeployer(OYLCAddress_D))
-//       assert.equal(liquityAG, await lockupContractFactory.oneYearLockupContractToDeployer(OYLCAddress_E))
-//     })
-//   })
-
-//   describe('Funding OYLCs', async accounts => {
-//     it("LQTY transfer from LQTY deployer to their deployed OYLC increases the LQTY balance of the OYLC", async () => {
-//       // Deploy 5 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: liquityAG })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: liquityAG })
-
-//       // Grab contract addresses from deployment tx events
-//       const OYLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLCAddress_B = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLCAddress_C = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_C)
-//       const OYLCAddress_D = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLCAddress_E = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_E)
-
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_A), '0')
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_B), '0')
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_C), '0')
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_D), '0')
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_E), '0')
-
-//       // LiquityAG transfers LQTY to each OYLC
-//       await lqtyToken.transfer(OYLCAddress_A, LQTYEntitlement_A, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_B, LQTYEntitlement_B, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_C, LQTYEntitlement_C, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_D, LQTYEntitlement_D, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_E, LQTYEntitlement_E, { from: liquityAG })
-
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_A), LQTYEntitlement_A)
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_B), LQTYEntitlement_B)
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_C), LQTYEntitlement_C)
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_D), LQTYEntitlement_D)
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_E), LQTYEntitlement_E)
-//     })
-
-//     it("LQTY Deployer can transfer LQTY to OYLCs deployed by anyone", async () => {  // Deploy 5 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: F })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: G })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: H })
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: I })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: J })
-
-//       // Grab contract addresses from deployment tx events
-//       const OYLCAddress_A = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLCAddress_B = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLCAddress_C = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_C)
-//       const OYLCAddress_D = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLCAddress_E = await th.getLCAddressFromDeploymentTx(deployedOYLCtx_E)
-
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_A), '0')
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_B), '0')
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_C), '0')
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_D), '0')
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_E), '0')
-
-//       // Liquity AG transfers LQTY to each OYLC
-//       await lqtyToken.transfer(OYLCAddress_A, dec(1, 18), { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_B, dec(2, 18), { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_C, dec(3, 18), { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_D, dec(4, 18), { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_E, dec(5, 18), { from: liquityAG })
-
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_A), dec(1, 18))
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_B), dec(2, 18))
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_C), dec(3, 18))
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_D), dec(4, 18))
-//       assert.equal(await lqtyToken.balanceOf(OYLCAddress_E), dec(5, 18))
-//     })
-//   })
-
-//   describe('Withdrawal attempts on funded, inactive OYLCs', async accounts => {
-//     it("Beneficiary can't withdraw from their funded inactive OYLC", async () => {
-//       // Deploy 3 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-
-//       // Grab contract objects from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLC_C = await th.getOYLCFromDeploymentTx(deployedOYLCtx_C)
-
-//       // LiquityAG transfers LQTY to each OYLC
-//       await lqtyToken.transfer(OYLC_A.address, LQTYEntitlement_A, { from: liquityAG })
-//       await lqtyToken.transfer(OYLC_B.address, LQTYEntitlement_B, { from: liquityAG })
-//       await lqtyToken.transfer(OYLC_C.address, LQTYEntitlement_C, { from: liquityAG })
-
-//       assert.equal(await lqtyToken.balanceOf(OYLC_A.address), LQTYEntitlement_A)
-//       assert.equal(await lqtyToken.balanceOf(OYLC_B.address), LQTYEntitlement_B)
-//       assert.equal(await lqtyToken.balanceOf(OYLC_C.address), LQTYEntitlement_C)
-
-//       assert.isFalse(await OYLC_A.active())
-//       assert.isFalse(await OYLC_B.active())
-//       assert.isFalse(await OYLC_C.active())
-
-//       const OYLCs = [OYLC_A, OYLC_B, OYLC_C]
-
-//       // Beneficiary attempts to withdraw
-//       for (OYLC of OYLCs) {
-//         try {
-//           const beneficiary = await OYLC.beneficiary()
-//           const withdrawalAttemptTx = await OYLC.withdrawLQTY({ from: beneficiary })
-//           assert.isFalse(withdrawalAttemptTx.receipt.status)
-//         } catch (error) {
-//           assert.include(error.message, "revert")
-//         }
-//       }
-//     })
-
-//     it("LQTY deployer can't withraw from an inactive OYLC they funded", async () => {
-//       // Deploy 3 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-
-//       // Grab contract objects from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLC_C = await th.getOYLCFromDeploymentTx(deployedOYLCtx_C)
-
-//       // LiquityAG transfers LQTY to each OYLC
-//       await lqtyToken.transfer(OYLC_A.address, LQTYEntitlement_A, { from: liquityAG })
-//       await lqtyToken.transfer(OYLC_B.address, LQTYEntitlement_B, { from: liquityAG })
-//       await lqtyToken.transfer(OYLC_C.address, LQTYEntitlement_C, { from: liquityAG })
-
-//       assert.equal(await lqtyToken.balanceOf(OYLC_A.address), LQTYEntitlement_A)
-//       assert.equal(await lqtyToken.balanceOf(OYLC_B.address), LQTYEntitlement_B)
-//       assert.equal(await lqtyToken.balanceOf(OYLC_C.address), LQTYEntitlement_C)
-
-//       assert.isFalse(await OYLC_A.active())
-//       assert.isFalse(await OYLC_B.active())
-//       assert.isFalse(await OYLC_C.active())
-
-//       const OYLCs = [OYLC_A, OYLC_B, OYLC_C]
-
-//       // LQTY deployer attempts to withdraw from OYLCs
-//       for (OYLC of OYLCs) {
-//         try {
-//           const withdrawalAttemptTx = await OYLC.withdrawLQTY({ from: liquityAG })
-//           assert.isFalse(withdrawalAttemptTx.receipt.status)
-//         } catch (error) {
-//           assert.include(error.message, "revert")
-//         }
-//       }
-//     })
-
-//     it("No one can withraw from an inactive OYLC", async () => {
-//       // Deploy 3 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: D })
-
-//       // Grab contract objects from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-
-//       // LiquityAG transfers LQTY to the OYLC
-//       await lqtyToken.transfer(OYLC_A.address, LQTYEntitlement_A, { from: liquityAG })
-
-//       assert.equal(await lqtyToken.balanceOf(OYLC_A.address), LQTYEntitlement_A)
-
-//       assert.isFalse(await OYLC_A.active())
-
-//       // Various EOAs attempt to withdraw from OYLCs
-//       try {
-//         const withdrawalAttemptTx = await OYLC_A.withdrawLQTY({ from: G })
-//         assert.isFalse(withdrawalAttemptTx.receipt.status)
-//       } catch (error) {
-//         assert.include(error.message, "revert")
-//       }
-
-//       try {
-//         const withdrawalAttemptTx = await OYLC_A.withdrawLQTY({ from: H })
-//         assert.isFalse(withdrawalAttemptTx.receipt.status)
-//       } catch (error) {
-//         assert.include(error.message, "revert")
-//       }
-
-//       try {
-//         const withdrawalAttemptTx = await OYLC_A.withdrawLQTY({ from: I })
-//         assert.isFalse(withdrawalAttemptTx.receipt.status)
-//       } catch (error) {
-//         assert.include(error.message, "revert")
-//       }
-//     })
-//   })
-
-//   describe('Locking OYLCs', async accounts => {
-//     it("LQTY deployer can lock, via the Factory, all the OYLCs that they deployed", async () => {
-//       // Deploy 5 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: liquityAG })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: liquityAG })
-
-//       // Grab contracts from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLC_C = await th.getOYLCFromDeploymentTx(deployedOYLCtx_C)
-//       const OYLC_D = await th.getOYLCFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLC_E = await th.getOYLCFromDeploymentTx(deployedOYLCtx_E)
-
-//       // Grab contract addresses from deployment tx events
-//       const OYLCAddress_A = OYLC_A.address
-//       const OYLCAddress_B = OYLC_B.address
-//       const OYLCAddress_C = OYLC_C.address
-//       const OYLCAddress_D = OYLC_D.address
-//       const OYLCAddress_E = OYLC_E.address
-
-//       const listOfOYLCsToLock = [
-//         OYLCAddress_A,
-//         OYLCAddress_B,
-//         OYLCAddress_C,
-//         OYLCAddress_D,
-//         OYLCAddress_E
-//       ]
-
-//       // LiquityAG transfers LQTY to each OYLC
-//       await lqtyToken.transfer(OYLCAddress_A, LQTYEntitlement_A, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_B, LQTYEntitlement_B, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_C, LQTYEntitlement_C, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_D, LQTYEntitlement_D, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_E, LQTYEntitlement_E, { from: liquityAG })
-
-//       // Check OYLCs are inactive
-//       assert.isFalse(await OYLC_A.active())
-//       assert.isFalse(await OYLC_B.active())
-//       assert.isFalse(await OYLC_C.active())
-//       assert.isFalse(await OYLC_D.active())
-//       assert.isFalse(await OYLC_E.active())
-
-//       // LQTY deployer locks the OYLCs they deployed
-//       await lockupContractFactory.lockOneYearContracts(listOfOYLCsToLock, { from: liquityAG })
-
-//       // Check OYLCs are now active (locked)
-//       assert.isTrue(await OYLC_A.active())
-//       assert.isTrue(await OYLC_B.active())
-//       assert.isTrue(await OYLC_C.active())
-//       assert.isTrue(await OYLC_D.active())
-//       assert.isTrue(await OYLC_E.active())
-//     })
-
-//     it("Records the lockup start time on the OYLC", async () => {
-//       // Deploy 3 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: liquityAG })
-//       const deployedOYLCtx_C = await lockupContractFactory.deployOneYearLockupContract(C, LQTYEntitlement_C, { from: liquityAG })
-
-//       // Grab contracts from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-//       const OYLC_C = await th.getOYLCFromDeploymentTx(deployedOYLCtx_C)
-
-//       const OYLCAddress_A = OYLC_A.address
-//       const OYLCAddress_B = OYLC_B.address
-//       const OYLCAddress_C = OYLC_C.address
-
-//       // LiquityAG transfers LQTY to each OYLC
-//       await lqtyToken.transfer(OYLCAddress_A, LQTYEntitlement_A, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_B, LQTYEntitlement_B, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_C, LQTYEntitlement_C, { from: liquityAG })
-
-//       // LiquityAG  locks the OYLCs they deployed
-//       const lockingTx_1 = await lockupContractFactory.lockOneYearContracts([OYLCAddress_A, OYLCAddress_B, OYLCAddress_C], { from: liquityAG })
-
-//       const lockupTxTimestamp_1 = await th.getTimestampFromTx(lockingTx_1, web3)
-
-//       // Get recorded lockup start times
-//       const lockupStartTime_A = (await OYLC_A.lockupStartTime()).toString()
-//       const lockupStartTime_B = (await OYLC_B.lockupStartTime()).toString()
-//       const lockupStartTime_C = (await OYLC_C.lockupStartTime()).toString()
-
-//       // Check lockup start times equal the timestamp of the lockup transaction
-//       assert.equal(lockupTxTimestamp_1, lockupStartTime_A)
-//       assert.equal(lockupTxTimestamp_1, lockupStartTime_B)
-//       assert.equal(lockupTxTimestamp_1, lockupStartTime_C)
-
-//       // --- Fast forward time one month ---
-
-//       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
-
-//       // Deploy 2 more OYLCs, D and E
-//       const deployedOYLCtx_D = await lockupContractFactory.deployOneYearLockupContract(D, LQTYEntitlement_D, { from: liquityAG })
-//       const deployedOYLCtx_E = await lockupContractFactory.deployOneYearLockupContract(E, LQTYEntitlement_E, { from: liquityAG })
-
-//       // Grab contracts from deployment tx events
-//       const OYLC_D = await th.getOYLCFromDeploymentTx(deployedOYLCtx_D)
-//       const OYLC_E = await th.getOYLCFromDeploymentTx(deployedOYLCtx_E)
-
-//       const OYLCAddress_D = OYLC_D.address
-//       const OYLCAddress_E = OYLC_E.address
-
-//       // LiquityAG transfers LQTY to each OYLC
-//       await lqtyToken.transfer(OYLCAddress_D, LQTYEntitlement_D, { from: liquityAG })
-//       await lqtyToken.transfer(OYLCAddress_E, LQTYEntitlement_E, { from: liquityAG })
-
-//       //LiquityAG locks OYLCs D and E
-//       const lockingTx_2 = await lockupContractFactory.lockOneYearContracts([OYLCAddress_D, OYLCAddress_E], { from: liquityAG })
-
-//       const lockupTxTimestamp_2 = await th.getTimestampFromTx(lockingTx_2, web3)
-
-//       // Get recorded lockup start times
-//       const lockupStartTime_D = (await OYLC_D.lockupStartTime()).toString()
-//       const lockupStartTime_E = (await OYLC_E.lockupStartTime()).toString()
-
-//       // Check lockup start times of D and E equal the timestamp of the lockup transaction
-//       assert.equal(lockupTxTimestamp_2, lockupStartTime_D)
-//       assert.equal(lockupTxTimestamp_2, lockupStartTime_E)
-//     })
-
-//     it("Locking through the factory reverts when caller is not the deployer", async () => {
-//       // Deploy 2 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: C })
-
-//       // Grab contracts from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-
-//       // LQTY deployer transfers LQTY to both OYLCs
-//       await lqtyToken.transfer(OYLC_A.address, LQTYEntitlement_A, { from: liquityAG })
-//       await lqtyToken.transfer(OYLC_B.address, LQTYEntitlement_B, { from: liquityAG })
-
-//       // Check OYLC is inactive
-//       assert.isFalse(await OYLC_A.active())
-//       assert.isFalse(await OYLC_B.active())
-
-//       const variousAccounts = [A, B, D, E, F, G, H, I, J]
-
-//       // Various EOAs try to lock OYLC_A via Factory
-//       for (account of variousAccounts) {
-//         try {
-//           const lockingAttemptTx = await lockupContractFactory.lockOneYearContracts([OYLC_A.address], { from: account })
-//           assert.isFalse(lockingAttemptTx.receipt.status)
-//         } catch (error) {
-//           assert.include(error.message, "revert")
-//         }
-//       }
-
-//       // Various EOAs try to lock OYLC_B via Factory
-//       for (account of variousAccounts) {
-//         try {
-//           const lockingAttemptTx = await lockupContractFactory.lockOneYearContracts([OYLC_B.address], { from: account })
-//           assert.isFalse(lockingAttemptTx.receipt.status)
-//         } catch (error) {
-//           assert.include(error.message, "revert")
-//         }
-//       }
-//     })
-
-//     it("Locking reverts when contract is already locked & active", async () => {
-//       // Deploy 2 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: C })
-
-//       // Grab contracts from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-
-//       // LQTY deployer transfers LQTY to both OYLCs
-//       await lqtyToken.transfer(OYLC_A.address, LQTYEntitlement_A, { from: liquityAG })
-//       await lqtyToken.transfer(OYLC_B.address, LQTYEntitlement_B, { from: liquityAG })
-
-//       // Check OYLCs are inactive
-//       assert.isFalse(await OYLC_A.active())
-//       assert.isFalse(await OYLC_B.active())
-
-//       // Lock contracts by deployers
-//       await lockupContractFactory.lockOneYearContracts([OYLC_A.address], {from: liquityAG})
-//       await lockupContractFactory.lockOneYearContracts([OYLC_B.address], {from: C})
-
-//       // Check OYLCs are active
-//       assert.isTrue(await OYLC_A.active())
-//       assert.isTrue(await OYLC_B.active())
-
-//       // Deployers again call lockContract() 
-//       const txAPromise = lockupContractFactory.lockOneYearContracts([OYLC_A.address], {from: liquityAG})
-//       const txBPromise = lockupContractFactory.lockOneYearContracts([OYLC_B.address], {from: C})
-
-//       await assertRevert(txAPromise)
-//       await assertRevert(txBPromise)
-//     })
-
-//     it("Locking reverts when contract balance < beneficiary entitlement", async () => {
-//       // Deploy 2 OYLCs
-//       const deployedOYLCtx_A = await lockupContractFactory.deployOneYearLockupContract(A, LQTYEntitlement_A, { from: liquityAG })
-//       const deployedOYLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, LQTYEntitlement_B, { from: C })
-
-//       // Grab contracts from deployment tx events
-//       const OYLC_A = await th.getOYLCFromDeploymentTx(deployedOYLCtx_A)
-//       const OYLC_B = await th.getOYLCFromDeploymentTx(deployedOYLCtx_B)
-
-//       // LQTY deployer transfers insufficient LQTY to both OYLCs
-//       await lqtyToken.transfer(OYLC_A.address, toBN(LQTYEntitlement_A).sub(toBN('1')), { from: liquityAG })
-//       await lqtyToken.transfer(OYLC_B.address, toBN(LQTYEntitlement_B).sub(toBN('1')), { from: liquityAG })
-
-//       // Check OYLCs are inactive
-//       assert.isFalse(await OYLC_A.active())
-//       assert.isFalse(await OYLC_B.active())
-
-//       // Deployers attempts to locks contracts through factory - expect it fails, insufficient funds
-//       const txAPromise = lockupContractFactory.lockOneYearContracts([OYLC_A.address], {from: liquityAG})
-//       const txBPromise = lockupContractFactory.lockOneYearContracts([OYLC_B.address], {from: C})
-//       await assertRevert(txAPromise, "LQTY balance of this OYLC must cover the initial entitlement")
-//       await assertRevert(txBPromise, "LQTY balance of this OYLC must cover the initial entitlement")
-//     })
-//   })
+
+const LockupContract = artifacts.require("./LockupContract.sol")
+
+const deploymentHelper = require("../../utils/deploymentHelpers.js")
+const testHelpers = require("../../utils/testHelpers.js")
+
+const th = testHelpers.TestHelper
+const timeValues = testHelpers.TimeValues
+const { dec, toBN, assertRevert } = th
+
+contract('Deploying and funding One Year Lockup Contracts', async accounts => {
+  const [liquityAG, A, B, C, D, E, F, G, H, I, J] = accounts;
+
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
+
+  const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
+
+  let LQTYContracts
+
+  // 1e24 = 1 million tokens with 18 decimal digits
+  const LQTYEntitlement_A = dec(1, 24)
+  const LQTYEntitlement_B = dec(2, 24)
+  const LQTYEntitlement_C = dec(3, 24)
+  const LQTYEntitlement_D = dec(4, 24)
+  const LQTYEntitlement_E = dec(5, 24)
+
+  let lqtyStaking
+  let lqtyToken
+  let communityIssuance
+  let lockupContractFactory
+
+  let oneYearFromSystemDeployment
+
+  beforeEach(async () => {
+    // Deploy all contracts from the first account
+    LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+
+    lqtyStaking = LQTYContracts.lqtyStaking
+    lqtyToken = LQTYContracts.lqtyToken
+    communityIssuance = LQTYContracts.communityIssuance
+    lockupContractFactory = LQTYContracts.lockupContractFactory
+
+    oneYearFromSystemDeployment = await th.getTimeFromSystemDeployment(lqtyToken, web3, timeValues.SECONDS_IN_ONE_YEAR)
+  })
+
+  // --- LCs ---
+
+  describe('Deploying LCs', async accounts => {
+    it("LQTY Deployer can deploy LCs through the Factory", async () => {
+    
+      // LQTY deployer deploys LCs
+      const LCDeploymentTx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
+      const LCDeploymentTx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
+      const LCDeploymentTx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: liquityAG })
+
+      assert.isTrue(LCDeploymentTx_A.receipt.status)
+      assert.isTrue(LCDeploymentTx_B.receipt.status)
+      assert.isTrue(LCDeploymentTx_C.receipt.status)
+    })
+
+    it("Anyone can deploy LCs through the Factory", async () => {
+      // Various EOAs deploy LCs
+      const LCDeploymentTx_1 = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: G })
+      const LCDeploymentTx_2 = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: H })
+      const LCDeploymentTx_3 = await lockupContractFactory.deployLockupContract(liquityAG, oneYearFromSystemDeployment, { from: I })
+      const LCDeploymentTx_4 = await lockupContractFactory.deployLockupContract(D, oneYearFromSystemDeployment, { from: J })
+
+      assert.isTrue(LCDeploymentTx_1.receipt.status)
+      assert.isTrue(LCDeploymentTx_2.receipt.status)
+      assert.isTrue(LCDeploymentTx_3.receipt.status)
+      assert.isTrue(LCDeploymentTx_4.receipt.status)
+    })
+
+    it("LQTY Deployer can deploy LCs directly", async () => {
+      // LQTY deployer deploys CDLCs
+      const LC_A = await LockupContract.new(lqtyToken.address, A, oneYearFromSystemDeployment, { from: liquityAG })
+      const LC_A_txReceipt = await web3.eth.getTransactionReceipt(LC_A.transactionHash)
+
+      const LC_B = await LockupContract.new(lqtyToken.address, B, oneYearFromSystemDeployment, { from: liquityAG })
+      const LC_B_txReceipt = await web3.eth.getTransactionReceipt(LC_B.transactionHash)
+
+      const LC_C = await LockupContract.new(lqtyToken.address, C, oneYearFromSystemDeployment, { from: liquityAG })
+      const LC_C_txReceipt = await web3.eth.getTransactionReceipt(LC_C.transactionHash)
+
+      // Check deployment succeeded
+      assert.isTrue(LC_A_txReceipt.status)
+      assert.isTrue(LC_B_txReceipt.status)
+      assert.isTrue(LC_C_txReceipt.status)
+    })
+
+    it("Anyone can deploy LCs directly", async () => {
+      // Various EOAs deploy LCs
+      const LC_A = await LockupContract.new(lqtyToken.address, A, oneYearFromSystemDeployment, { from: D })
+      const LC_A_txReceipt = await web3.eth.getTransactionReceipt(LC_A.transactionHash)
+
+      const LC_B = await LockupContract.new(lqtyToken.address, B, oneYearFromSystemDeployment, { from: E })
+      const LC_B_txReceipt = await web3.eth.getTransactionReceipt(LC_B.transactionHash)
+
+      const LC_C = await LockupContract.new(lqtyToken.address, C, oneYearFromSystemDeployment, { from: F })
+      const LC_C_txReceipt = await web3.eth.getTransactionReceipt(LC_C.transactionHash)
+
+      // Check deployment succeeded
+      assert.isTrue(LC_A_txReceipt.status)
+      assert.isTrue(LC_B_txReceipt.status)
+      assert.isTrue(LC_C_txReceipt.status)
+    })
+
+    it("LC deployment stores the beneficiary's address in the LC", async () => {
+      // Deploy 5 LCs
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_D = await lockupContractFactory.deployLockupContract(D, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_E = await lockupContractFactory.deployLockupContract(E, oneYearFromSystemDeployment, { from: liquityAG })
+
+      // Grab contracts from deployment tx events
+      const LC_A = await th.getLCFromDeploymentTx(deployedLCtx_A)
+      const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
+      const LC_C = await th.getLCFromDeploymentTx(deployedLCtx_C)
+      const LC_D = await th.getLCFromDeploymentTx(deployedLCtx_D)
+      const LC_E = await th.getLCFromDeploymentTx(deployedLCtx_E)
+
+      const storedBeneficiaryAddress_A = await LC_A.beneficiary()
+      const storedBeneficiaryAddress_B = await LC_B.beneficiary()
+      const storedBeneficiaryAddress_C = await LC_C.beneficiary()
+      const storedBeneficiaryAddress_D = await LC_D.beneficiary()
+      const storedBeneficiaryAddress_E = await LC_E.beneficiary()
+
+      assert.equal(A, storedBeneficiaryAddress_A)
+      assert.equal(B, storedBeneficiaryAddress_B)
+      assert.equal(C, storedBeneficiaryAddress_C)
+      assert.equal(D, storedBeneficiaryAddress_D)
+      assert.equal(E, storedBeneficiaryAddress_E)
+    })
+
+    it("LC deployment through the Factory registers the LC in the Factory", async () => {
+      // Deploy 5 LCs
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_D = await lockupContractFactory.deployLockupContract(D, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_E = await lockupContractFactory.deployLockupContract(E, oneYearFromSystemDeployment, { from: liquityAG })
+
+      // Grab contract addresses from deployment tx events
+      const LCAddress_A = await th.getLCAddressFromDeploymentTx(deployedLCtx_A)
+      const LCAddress_B = await th.getLCAddressFromDeploymentTx(deployedLCtx_B)
+      const LCAddress_C = await th.getLCAddressFromDeploymentTx(deployedLCtx_C)
+      const LCAddress_D = await th.getLCAddressFromDeploymentTx(deployedLCtx_D)
+      const LCAddress_E = await th.getLCAddressFromDeploymentTx(deployedLCtx_E)
+
+      assert.isTrue(await lockupContractFactory.isRegisteredLockup(LCAddress_A))
+      assert.isTrue(await lockupContractFactory.isRegisteredLockup(LCAddress_B))
+      assert.isTrue(await lockupContractFactory.isRegisteredLockup(LCAddress_C))
+      assert.isTrue(await lockupContractFactory.isRegisteredLockup(LCAddress_D))
+      assert.isTrue(await lockupContractFactory.isRegisteredLockup(LCAddress_E))
+    })
+
+    it("LC deployment through the Factory records the LC contract address and deployer as a k-v pair in the Factory", async () => {
+      // Deploy 5 LCs
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_D = await lockupContractFactory.deployLockupContract(D, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_E = await lockupContractFactory.deployLockupContract(E, oneYearFromSystemDeployment, { from: liquityAG })
+
+      // Grab contract addresses from deployment tx events
+      const LCAddress_A = await th.getLCAddressFromDeploymentTx(deployedLCtx_A)
+      const LCAddress_B = await th.getLCAddressFromDeploymentTx(deployedLCtx_B)
+      const LCAddress_C = await th.getLCAddressFromDeploymentTx(deployedLCtx_C)
+      const LCAddress_D = await th.getLCAddressFromDeploymentTx(deployedLCtx_D)
+      const LCAddress_E = await th.getLCAddressFromDeploymentTx(deployedLCtx_E)
+
+      assert.equal(liquityAG, await lockupContractFactory.lockupContractToDeployer(LCAddress_A))
+      assert.equal(liquityAG, await lockupContractFactory.lockupContractToDeployer(LCAddress_B))
+      assert.equal(liquityAG, await lockupContractFactory.lockupContractToDeployer(LCAddress_C))
+      assert.equal(liquityAG, await lockupContractFactory.lockupContractToDeployer(LCAddress_D))
+      assert.equal(liquityAG, await lockupContractFactory.lockupContractToDeployer(LCAddress_E))
+    })
+
+    it("LC deployment through the Factory sets the unlockTime in the LC", async () => {
+      // Deploy 3 LCs through factory
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, '230582305895235', { from: B })
+      const deployedLCtx_C = await lockupContractFactory.deployLockupContract(C, dec(20, 18), { from: E })
+
+      // Grab contract objects from deployment events
+      const LC_A = await th.getLCFromDeploymentTx(deployedLCtx_A)
+      const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
+      const LC_C = await th.getLCFromDeploymentTx(deployedLCtx_C)
+
+      // Grab contract addresses from deployment tx events
+      const unlockTime_A = await LC_A.unlockTime()
+      const unlockTime_B = await LC_B.unlockTime()
+      const unlockTime_C = await LC_C.unlockTime()
+
+      // Check contracts have expected unlockTimes set
+      assert.isTrue(unlockTime_A.eq(oneYearFromSystemDeployment))
+      assert.isTrue(unlockTime_B.eq(toBN('230582305895235')))
+      assert.isTrue(unlockTime_C.eq(toBN(dec(20, 18))))
+    })
+
+    it("Direct deployment of LC sets the unlockTime in the LC", async () => {
+      // Deploy 3 LCs directly
+      const LC_A = await LockupContract.new(lqtyToken.address, A, oneYearFromSystemDeployment, { from: liquityAG })
+      const LC_B = await LockupContract.new(lqtyToken.address, B, '230582305895235', { from: B })
+      const LC_C = await LockupContract.new(lqtyToken.address, C, dec(20, 18), { from: E })
+
+      // Grab contract addresses from deployment tx events
+      const unlockTime_A = await LC_A.unlockTime()
+      const unlockTime_B = await LC_B.unlockTime()
+      const unlockTime_C = await LC_C.unlockTime()
+
+      // Check contracts have expected unlockTimes set
+      assert.isTrue(unlockTime_A.eq(oneYearFromSystemDeployment))
+      assert.isTrue(unlockTime_B.eq(toBN('230582305895235')))
+      assert.isTrue(unlockTime_C.eq(toBN(dec(20, 18))))
+    })
+
+    it("LC deployment through the Factory reverts when the unlockTime is < 1 year from system deployment", async () => {
+      const nearlyOneYear = toBN(oneYearFromSystemDeployment).sub(toBN('60'))  // 1 minute short of 1 year
+      
+      // Deploy 3 LCs through factory
+      const LCDeploymentPromise_A = lockupContractFactory.deployLockupContract(A, nearlyOneYear, { from: liquityAG })
+      const LCDeploymentPromise_B = lockupContractFactory.deployLockupContract(B, '37', { from: B })
+      const LCDeploymentPromise_C = lockupContractFactory.deployLockupContract(C, '43200', { from: E })
+
+      // Confirm contract deployments revert
+      await assertRevert(LCDeploymentPromise_A, "LockupContract: unlock time must be at least one year after system deployment")
+      await assertRevert(LCDeploymentPromise_B, "LockupContract: unlock time must be at least one year after system deployment")
+      await assertRevert(LCDeploymentPromise_C, "LockupContract: unlock time must be at least one year after system deployment")
+    })
+
+    it("Direct deployment of LC reverts when the unlockTime is < 1 year from system deployment", async () => {
+      const nearlyOneYear = toBN(oneYearFromSystemDeployment).sub(toBN('60'))  // 1 minute short of 1 year
+      
+      // Deploy 3 LCs directly with unlockTime < 1 year from system deployment
+      const LCDeploymentPromise_A = LockupContract.new(lqtyToken.address, A, nearlyOneYear, { from: liquityAG })
+      const LCDeploymentPromise_B = LockupContract.new(lqtyToken.address, B, '37', { from: B })
+      const LCDeploymentPromise_C = LockupContract.new(lqtyToken.address, C, '43200', { from: E })
+     
+      // Confirm contract deployments revert
+      await assertRevert(LCDeploymentPromise_A, "LockupContract: unlock time must be at least one year after system deployment")
+      await assertRevert(LCDeploymentPromise_B, "LockupContract: unlock time must be at least one year after system deployment")
+      await assertRevert(LCDeploymentPromise_C, "LockupContract: unlock time must be at least one year after system deployment")
+    })
+
   
+  })
 
-// // })
+  describe('Funding LCs', async accounts => {
+    it("LQTY transfer from LQTY deployer to their deployed LC increases the LQTY balance of the LC", async () => {
+      // Deploy 5 LCs
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_D = await lockupContractFactory.deployLockupContract(D, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_E = await lockupContractFactory.deployLockupContract(E, oneYearFromSystemDeployment, { from: liquityAG })
+
+      // Grab contract addresses from deployment tx events
+      const LCAddress_A = await th.getLCAddressFromDeploymentTx(deployedLCtx_A)
+      const LCAddress_B = await th.getLCAddressFromDeploymentTx(deployedLCtx_B)
+      const LCAddress_C = await th.getLCAddressFromDeploymentTx(deployedLCtx_C)
+      const LCAddress_D = await th.getLCAddressFromDeploymentTx(deployedLCtx_D)
+      const LCAddress_E = await th.getLCAddressFromDeploymentTx(deployedLCtx_E)
+
+      assert.equal(await lqtyToken.balanceOf(LCAddress_A), '0')
+      assert.equal(await lqtyToken.balanceOf(LCAddress_B), '0')
+      assert.equal(await lqtyToken.balanceOf(LCAddress_C), '0')
+      assert.equal(await lqtyToken.balanceOf(LCAddress_D), '0')
+      assert.equal(await lqtyToken.balanceOf(LCAddress_E), '0')
+
+      // LiquityAG transfers LQTY to each LC
+      await lqtyToken.transfer(LCAddress_A, LQTYEntitlement_A, { from: liquityAG })
+      await lqtyToken.transfer(LCAddress_B, LQTYEntitlement_B, { from: liquityAG })
+      await lqtyToken.transfer(LCAddress_C, LQTYEntitlement_C, { from: liquityAG })
+      await lqtyToken.transfer(LCAddress_D, LQTYEntitlement_D, { from: liquityAG })
+      await lqtyToken.transfer(LCAddress_E, LQTYEntitlement_E, { from: liquityAG })
+
+      assert.equal(await lqtyToken.balanceOf(LCAddress_A), LQTYEntitlement_A)
+      assert.equal(await lqtyToken.balanceOf(LCAddress_B), LQTYEntitlement_B)
+      assert.equal(await lqtyToken.balanceOf(LCAddress_C), LQTYEntitlement_C)
+      assert.equal(await lqtyToken.balanceOf(LCAddress_D), LQTYEntitlement_D)
+      assert.equal(await lqtyToken.balanceOf(LCAddress_E), LQTYEntitlement_E)
+    })
+
+    it("LQTY Deployer can transfer LQTY to LCs deployed through the factory by anyone", async () => {  // Deploy 5 LCs
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: F })
+      const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: G })
+      const deployedLCtx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: H })
+      const deployedLCtx_D = await lockupContractFactory.deployLockupContract(D, oneYearFromSystemDeployment, { from: I })
+      const deployedLCtx_E = await lockupContractFactory.deployLockupContract(E, oneYearFromSystemDeployment, { from: J })
+
+      // Grab contract addresses from deployment tx events
+      const LCAddress_A = await th.getLCAddressFromDeploymentTx(deployedLCtx_A)
+      const LCAddress_B = await th.getLCAddressFromDeploymentTx(deployedLCtx_B)
+      const LCAddress_C = await th.getLCAddressFromDeploymentTx(deployedLCtx_C)
+      const LCAddress_D = await th.getLCAddressFromDeploymentTx(deployedLCtx_D)
+      const LCAddress_E = await th.getLCAddressFromDeploymentTx(deployedLCtx_E)
+
+      assert.equal(await lqtyToken.balanceOf(LCAddress_A), '0')
+      assert.equal(await lqtyToken.balanceOf(LCAddress_B), '0')
+      assert.equal(await lqtyToken.balanceOf(LCAddress_C), '0')
+      assert.equal(await lqtyToken.balanceOf(LCAddress_D), '0')
+      assert.equal(await lqtyToken.balanceOf(LCAddress_E), '0')
+
+      // Liquity AG transfers LQTY to each LC
+      await lqtyToken.transfer(LCAddress_A, dec(1, 18), { from: liquityAG })
+      await lqtyToken.transfer(LCAddress_B, dec(2, 18), { from: liquityAG })
+      await lqtyToken.transfer(LCAddress_C, dec(3, 18), { from: liquityAG })
+      await lqtyToken.transfer(LCAddress_D, dec(4, 18), { from: liquityAG })
+      await lqtyToken.transfer(LCAddress_E, dec(5, 18), { from: liquityAG })
+
+      assert.equal(await lqtyToken.balanceOf(LCAddress_A), dec(1, 18))
+      assert.equal(await lqtyToken.balanceOf(LCAddress_B), dec(2, 18))
+      assert.equal(await lqtyToken.balanceOf(LCAddress_C), dec(3, 18))
+      assert.equal(await lqtyToken.balanceOf(LCAddress_D), dec(4, 18))
+      assert.equal(await lqtyToken.balanceOf(LCAddress_E), dec(5, 18))
+    })
+
+    // can't transfer LQTY to any LCs that were deployed directly
+  })
+
+  describe('Withdrawal attempts on funded, inactive LCs immediately after funding', async accounts => {
+    it("Beneficiary can't withdraw from their funded LC", async () => {
+      // Deploy 3 LCs
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: liquityAG })
+
+      // Grab contract objects from deployment tx events
+      const LC_A = await th.getLCFromDeploymentTx(deployedLCtx_A)
+      const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
+      const LC_C = await th.getLCFromDeploymentTx(deployedLCtx_C)
+
+      // LiquityAG transfers LQTY to each LC
+      await lqtyToken.transfer(LC_A.address, LQTYEntitlement_A, { from: liquityAG })
+      await lqtyToken.transfer(LC_B.address, LQTYEntitlement_B, { from: liquityAG })
+      await lqtyToken.transfer(LC_C.address, LQTYEntitlement_C, { from: liquityAG })
+
+      assert.equal(await lqtyToken.balanceOf(LC_A.address), LQTYEntitlement_A)
+      assert.equal(await lqtyToken.balanceOf(LC_B.address), LQTYEntitlement_B)
+      assert.equal(await lqtyToken.balanceOf(LC_C.address), LQTYEntitlement_C)
+
+      const LCs = [LC_A, LC_B, LC_C]
+
+      // Beneficiary attempts to withdraw
+      for (LC of LCs) {
+        try {
+          const beneficiary = await LC.beneficiary()
+          const withdrawalAttemptTx = await LC.withdrawLQTY({ from: beneficiary })
+          assert.isFalse(withdrawalAttemptTx.receipt.status)
+        } catch (error) {
+          assert.include(error.message, "revert")
+        }
+      }
+    })
+
+    it("LQTY deployer can't withraw from a LC which they funded", async () => {
+      // Deploy 3 LCs
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
+      const deployedLCtx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: liquityAG })
+
+      // Grab contract objects from deployment tx events
+      const LC_A = await th.getLCFromDeploymentTx(deployedLCtx_A)
+      const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
+      const LC_C = await th.getLCFromDeploymentTx(deployedLCtx_C)
+
+      // LiquityAG transfers LQTY to each LC
+      await lqtyToken.transfer(LC_A.address, LQTYEntitlement_A, { from: liquityAG })
+      await lqtyToken.transfer(LC_B.address, LQTYEntitlement_B, { from: liquityAG })
+      await lqtyToken.transfer(LC_C.address, LQTYEntitlement_C, { from: liquityAG })
+
+      assert.equal(await lqtyToken.balanceOf(LC_A.address), LQTYEntitlement_A)
+      assert.equal(await lqtyToken.balanceOf(LC_B.address), LQTYEntitlement_B)
+      assert.equal(await lqtyToken.balanceOf(LC_C.address), LQTYEntitlement_C)
+
+      const LCs = [LC_A, LC_B, LC_C]
+
+      // LQTY deployer attempts to withdraw from LCs
+      for (LC of LCs) {
+        try {
+          const withdrawalAttemptTx = await LC.withdrawLQTY({ from: liquityAG })
+          assert.isFalse(withdrawalAttemptTx.receipt.status)
+        } catch (error) {
+          assert.include(error.message, "revert")
+        }
+      }
+    })
+
+    it("No one can withraw from a LC", async () => {
+      // Deploy 3 LCs
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, LQTYEntitlement_A, { from: D })
+
+      // Grab contract objects from deployment tx events
+      const LC_A = await th.getLCFromDeploymentTx(deployedLCtx_A)
+
+      // LiquityAG transfers LQTY to the LC
+      await lqtyToken.transfer(LC_A.address, LQTYEntitlement_A, { from: liquityAG })
+
+      assert.equal(await lqtyToken.balanceOf(LC_A.address), LQTYEntitlement_A)
+
+
+      // Various EOAs attempt to withdraw from LCs
+      try {
+        const withdrawalAttemptTx = await LC_A.withdrawLQTY({ from: G })
+        assert.isFalse(withdrawalAttemptTx.receipt.status)
+      } catch (error) {
+        assert.include(error.message, "revert")
+      }
+
+      try {
+        const withdrawalAttemptTx = await LC_A.withdrawLQTY({ from: H })
+        assert.isFalse(withdrawalAttemptTx.receipt.status)
+      } catch (error) {
+        assert.include(error.message, "revert")
+      }
+
+      try {
+        const withdrawalAttemptTx = await LC_A.withdrawLQTY({ from: I })
+        assert.isFalse(withdrawalAttemptTx.receipt.status)
+      } catch (error) {
+        assert.include(error.message, "revert")
+      }
+    })
+  })
+})

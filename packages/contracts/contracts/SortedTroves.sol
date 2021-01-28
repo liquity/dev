@@ -212,9 +212,6 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
         // Remove node from the list
         _remove(_id);
 
-        // Require non-zero ICR
-        require(_newNICR > 0, "SortedTroves: ICR must be positive");
-
         _insert(_id, _newNICR, _prevId, _nextId);
     }
 

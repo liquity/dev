@@ -23,6 +23,8 @@ contract('Gas cost tests', async accounts => {
   const _100_Accounts = accounts.slice(0, 100)
 
   const whale = accounts[999]
+  const bountyAddress = accounts[998]
+  const lpRewardsAddress = accounts[999]
 
   const address_0 = '0x0000000000000000000000000000000000000000'
 
@@ -44,7 +46,7 @@ contract('Gas cost tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts()
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken

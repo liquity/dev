@@ -32,8 +32,8 @@ const TimeValues = {
   SECONDS_IN_ONE_WEEK:    60 * 60 * 24 * 7,
   SECONDS_IN_ONE_MONTH:   60 * 60 * 24 * 30,
   SECONDS_IN_ONE_YEAR:    60 * 60 * 24 * 365,
-  MINUTES_IN_ONE_WEEK:    60 *24 * 30,
-  MINUTES_IN_ONE_MONTH:   60 *24 * 30,
+  MINUTES_IN_ONE_WEEK:    60 * 24 * 30,
+  MINUTES_IN_ONE_MONTH:   60 * 24 * 30,
   MINUTES_IN_ONE_YEAR:    60 * 24 * 365
 }
 
@@ -798,9 +798,9 @@ class TestHelper {
     return gas
   }
 
-  static async redeemCollateralAndGetTxObject(redeemer, contracts, LUSDAmount) {
+  static async redeemCollateralAndGetTxObject(redeemer, contracts, LUSDAmount, maxFee = 0) {
     const price = await contracts.priceFeedTestnet.getPrice()
-    const tx = await this.performRedemptionTx(redeemer, price, contracts, LUSDAmount)
+    const tx = await this.performRedemptionTx(redeemer, price, contracts, LUSDAmount, maxFee)
     return tx
   }
 
@@ -978,6 +978,13 @@ class TestHelper {
     return Number(days) * (60 * 60 * 24)
   }
 
+  static async getTimeFromSystemDeployment(lqtyToken, web3, timePassedSinceDeployment) {
+    const deploymentTime = await lqtyToken.getDeploymentStartTime()
+    return this.toBN(deploymentTime).add(this.toBN(timePassedSinceDeployment))
+  }
+
+  // --- Assert functions ---
+
   static async assertRevert(txPromise, message = undefined) {
     try {
       const tx = await txPromise
@@ -1003,6 +1010,8 @@ class TestHelper {
       assert.include(err.message, "invalid opcode")
     }
   }
+
+  // --- Misc. functions  ---
 
   static async forceSendEth(from, receiver, value) {
     const destructible = await Destructible.new()
