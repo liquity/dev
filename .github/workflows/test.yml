@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: 12.x
 
@@ -87,6 +87,8 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn coverage
         continue-on-error: true
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
