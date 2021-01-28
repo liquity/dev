@@ -230,15 +230,15 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         bool isRecoveryMode = _checkRecoveryMode();
 
-        LocalVariables_adjustTrove memory L;
-        L.price = priceFeed.getPrice();
+        LocalVariables_adjustTrove memory vars;
+        vars.price = priceFeed.getPrice();
 
         troveManager.applyPendingRewards(_borrower);
 
         // Get the collChange based on whether or not ETH was sent in the transaction
-        (L.collChange, L.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
+        (vars.collChange, vars.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
 
-        L.rawDebtChange = _debtChange;
+        vars.rawDebtChange = _debtChange;
 
         // If the adjustment incorporates a debt increase, then trigger a borrowing fee
         if (_isDebtIncrease) {
@@ -246,46 +246,46 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
             troveManager.decayBaseRateFromBorrowing(); // decay the baseRate state variable
 
             if (!isRecoveryMode) {
-                L.LUSDFee = _triggerBorrowingFee(_debtChange, _maxFee);
-                L.rawDebtChange = L.rawDebtChange.add(L.LUSDFee); // The raw debt change includes the fee
+                vars.LUSDFee = _triggerBorrowingFee(_debtChange, _maxFee);
+                vars.rawDebtChange = vars.rawDebtChange.add(vars.LUSDFee); // The raw debt change includes the fee
             }
         }
 
-        L.debt = troveManager.getTroveDebt(_borrower);
-        L.coll = troveManager.getTroveColl(_borrower);
+        vars.debt = troveManager.getTroveDebt(_borrower);
+        vars.coll = troveManager.getTroveColl(_borrower);
         
         // Get the trove's old ICR before the adjustment, and what its new ICR will be after the adjustment
-        L.oldICR = LiquityMath._computeCR(L.coll, L.debt, L.price);
-        L.newICR = _getNewICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
+        vars.oldICR = LiquityMath._computeCR(vars.coll, vars.debt, vars.price);
+        vars.newICR = _getNewICRFromTroveChange(vars.coll, vars.debt, vars.collChange, vars.isCollIncrease, vars.rawDebtChange, _isDebtIncrease, vars.price);
 
         /*
         * When the adjust is a withdrawal, make sure it is a valid change for the trove's ICR and for the system TCR, given the
         * current system mode.
         */
         if (isWithdrawal) { 
-            assert(_collWithdrawal <= L.coll); 
-            uint newTCR = _getNewTCRFromTroveChange(L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease, L.price);
-            _requireValidNewICRandValidNewTCR(isRecoveryMode, L.oldICR, L.newICR, newTCR);
+            assert(_collWithdrawal <= vars.coll); 
+            uint newTCR = _getNewTCRFromTroveChange(vars.collChange, vars.isCollIncrease, vars.rawDebtChange, _isDebtIncrease, vars.price);
+            _requireValidNewICRandValidNewTCR(isRecoveryMode, vars.oldICR, vars.newICR, newTCR);
         }
 
         // When the adjustment is a debt repayment, check it's a valid amount and that the caller has enough LUSD
         if (!_isDebtIncrease && _debtChange > 0) {
-            _requireValidLUSDRepayment(L.debt, L.rawDebtChange);
-            _requireSufficientLUSDBalance(_borrower, L.rawDebtChange);
+            _requireValidLUSDRepayment(vars.debt, vars.rawDebtChange);
+            _requireSufficientLUSDBalance(_borrower, vars.rawDebtChange);
         }
 
-        (L.newColl, L.newDebt) = _updateTroveFromAdjustment(_borrower, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
-        L.stake = troveManager.updateStakeAndTotalStakes(_borrower);
+        (vars.newColl, vars.newDebt) = _updateTroveFromAdjustment(_borrower, vars.collChange, vars.isCollIncrease, vars.rawDebtChange, _isDebtIncrease);
+        vars.stake = troveManager.updateStakeAndTotalStakes(_borrower);
 
         // Re-insert trove in to the sorted list
-        uint newNICR = _getNewNominalICRFromTroveChange(L.coll, L.debt, L.collChange, L.isCollIncrease, L.rawDebtChange, _isDebtIncrease);
+        uint newNICR = _getNewNominalICRFromTroveChange(vars.coll, vars.debt, vars.collChange, vars.isCollIncrease, vars.rawDebtChange, _isDebtIncrease);
         sortedTroves.reInsert(_borrower, newNICR, _upperHint, _lowerHint);
 
-        emit TroveUpdated(_borrower, L.newDebt, L.newColl, L.stake, BorrowerOperation.adjustTrove);
-        emit LUSDBorrowingFeePaid(msg.sender,  L.LUSDFee);
+        emit TroveUpdated(_borrower, vars.newDebt, vars.newColl, vars.stake, BorrowerOperation.adjustTrove);
+        emit LUSDBorrowingFeePaid(msg.sender,  vars.LUSDFee);
 
         // Use the unmodified _debtChange here, as we don't send the fee to the user
-        _moveTokensAndETHfromAdjustment(msg.sender, L.collChange, L.isCollIncrease, _debtChange, _isDebtIncrease, L.rawDebtChange);
+        _moveTokensAndETHfromAdjustment(msg.sender, vars.collChange, vars.isCollIncrease, _debtChange, _isDebtIncrease, vars.rawDebtChange);
     }
 
     function closeTrove() external override {
