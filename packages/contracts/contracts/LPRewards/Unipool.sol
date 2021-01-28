@@ -115,11 +115,9 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     // stake visibility is public as overriding LPTokenWrapper's stake() function
     function stake(uint256 amount) public override {
         require(amount > 0, "Cannot stake 0");
+        require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
 
-        if (totalSupply() == 0) {
-            periodFinish = periodFinish.add(block.timestamp.sub(lastUpdateTime));
-        }
-
+        _updatePeriodFinish();
         _updateReward(msg.sender);
 
         super.stake(amount);
@@ -129,6 +127,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
 
     function withdraw(uint256 amount) public override {
         require(amount > 0, "Cannot withdraw 0");
+        require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
 
         _updateReward(msg.sender);
 
@@ -143,14 +142,18 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     }
 
     function claimReward() public override {
+        require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
+
+        _updatePeriodFinish();
         _updateReward(msg.sender);
 
         uint256 reward = earned(msg.sender);
-        if (reward > 0) {
-            rewards[msg.sender] = 0;
-            lqtyToken.transfer(msg.sender, reward);
-            emit RewardPaid(msg.sender, reward);
-        }
+
+        require(reward > 0, "Nothing to claim");
+
+        rewards[msg.sender] = 0;
+        lqtyToken.transfer(msg.sender, reward);
+        emit RewardPaid(msg.sender, reward);
     }
 
     function _notifyRewardAmount(uint256 _reward, uint256 _duration) internal {
@@ -165,6 +168,27 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         lastUpdateTime = block.timestamp;
         periodFinish = block.timestamp.add(_duration);
         emit RewardAdded(_reward);
+    }
+
+    function _updatePeriodFinish() internal {
+        if (totalSupply() == 0) {
+            assert(periodFinish > 0);
+            /*
+             * If the finish period has been reached (but there are remaining rewards due to zero stake),
+             * to get the new finish date we must add to the current timestamp the difference between
+             * the original finish time and the last update, i.e.:
+             *
+             * periodFinish = block.timestamp.add(periodFinish.sub(lastUpdateTime));
+             *
+             * If we have not reached the end yet, we must extend it by adding to it the difference between
+             * the current timestamp and the last update (the period where the supply has been empty), i.e.:
+             *
+             * periodFinish = periodFinish.add(block.timestamp.sub(lastUpdateTime));
+             *
+             * Both formulas are equivalent.
+             */
+            periodFinish = periodFinish.add(block.timestamp.sub(lastUpdateTime));
+        }
     }
 
     function _updateReward(address account) internal {

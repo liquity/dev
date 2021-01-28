@@ -2,6 +2,9 @@
 
 const { BN, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
+const { TestHelper } = require('../utils/testHelpers.js');
+
+const { assertRevert } = TestHelper;
 
 const Uni = artifacts.require('ERC20Mock');
 const Lqty = artifacts.require('LQTYToken');
@@ -39,37 +42,39 @@ require('chai').use(function (chai, utils) {
 });
 
 contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddress, owner]) {
-  describe('Unipool', async function () {
-    beforeEach(async function () {
-      this.uni = await Uni.new('Uniswap token', 'LPT', owner, 0);
-      this.pool = await Unipool.new();
+  const deploy = async (that) => {
+      that.uni = await Uni.new('Uniswap token', 'LPT', owner, 0);
+      that.pool = await Unipool.new();
 
       const communityIssuance = await NonPayable.new();
       const lqtyStaking = await NonPayable.new();
       const lockupContractFactory = await NonPayable.new();
-      this.lqty = await Lqty.new(
+      that.lqty = await Lqty.new(
         communityIssuance.address,
         lqtyStaking.address,
         lockupContractFactory.address,
         bountyAddress,
-        this.pool.address
+        that.pool.address
       );
-      this.started = await this.lqty.getDeploymentStartTime();
-      this.lpRewardsEntitlement = await this.lqty.getLpRewardsEntitlement();
-      this.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
-      this.rewardRate = this.lpRewardsEntitlement.div(this.DURATION);
+      that.lpRewardsEntitlement = await that.lqty.getLpRewardsEntitlement();
+      that.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
+      that.rewardRate = that.lpRewardsEntitlement.div(that.DURATION);
 
+      await that.uni.mint(wallet1, web3.utils.toWei('1000'));
+      await that.uni.mint(wallet2, web3.utils.toWei('1000'));
+      await that.uni.mint(wallet3, web3.utils.toWei('1000'));
+      await that.uni.mint(wallet4, web3.utils.toWei('1000'));
+
+      await that.uni.approve(that.pool.address, new BN(2).pow(new BN(255)), { from: wallet1 });
+      await that.uni.approve(that.pool.address, new BN(2).pow(new BN(255)), { from: wallet2 });
+      await that.uni.approve(that.pool.address, new BN(2).pow(new BN(255)), { from: wallet3 });
+      await that.uni.approve(that.pool.address, new BN(2).pow(new BN(255)), { from: wallet4 });
+  };
+
+  describe('Unipool', async function () {
+    beforeEach(async function () {
+      await deploy(this);
       await this.pool.setParams(this.lqty.address, this.uni.address, this.DURATION);
-
-      await this.uni.mint(wallet1, web3.utils.toWei('1000'));
-      await this.uni.mint(wallet2, web3.utils.toWei('1000'));
-      await this.uni.mint(wallet3, web3.utils.toWei('1000'));
-      await this.uni.mint(wallet4, web3.utils.toWei('1000'));
-
-      await this.uni.approve(this.pool.address, new BN(2).pow(new BN(255)), { from: wallet1 });
-      await this.uni.approve(this.pool.address, new BN(2).pow(new BN(255)), { from: wallet2 });
-      await this.uni.approve(this.pool.address, new BN(2).pow(new BN(255)), { from: wallet3 });
-      await this.uni.approve(this.pool.address, new BN(2).pow(new BN(255)), { from: wallet4 });
     });
 
     it('Two stakers with the same stakes wait DURATION', async function () {
@@ -171,7 +176,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       await this.pool.stake(stake2, { from: wallet2 });
       const stakeTime2 = await time.latest();
 
-      await time.increaseTo(this.started.add(this.DURATION.div(new BN(3))));
+      await time.increaseTo(stakeTime1.add(this.DURATION.div(new BN(3))));
 
       const stake3 = new BN(web3.utils.toWei('5'));
       await this.pool.stake(stake3, { from: wallet3 });
@@ -220,14 +225,20 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       await this.pool.stake(stake1, { from: wallet1 });
       const stakeTime1 = await time.latest();
 
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
+
       const stake2 = new BN(web3.utils.toWei('3'));
       await this.pool.stake(stake2, { from: wallet2 });
       const stakeTime2 = await time.latest();
+
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
 
       await time.increase(this.DURATION.div(new BN(6)));
 
       await this.pool.exit({ from: wallet1 });
       const exitTime1 = await time.latest();
+
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
 
       const timeDiff1 = stakeTime2.sub(stakeTime1);
       const timeDiff2 = exitTime1.sub(stakeTime2);
@@ -243,6 +254,8 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       await this.pool.exit({ from: wallet2 });
       const exitTime2 = await time.latest();
 
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
+
       const timeDiff3 = exitTime2.sub(exitTime1);
       const rewardPerToken3 = this.rewardRate.mul(timeDiff3).mul(_1e18).div(stake2);
       expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3));
@@ -256,6 +269,9 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       await this.pool.stake(stake3, { from: wallet3 });
       const stakeTime3 = await time.latest();
 
+      const emptyPeriod1 = stakeTime3.sub(exitTime2);
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(emptyPeriod1).add(this.DURATION));
+
       expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3));
       expect(await this.pool.earned(wallet1)).to.be.bignumber.equal('0');
       expect(await this.pool.earned(wallet2)).to.be.bignumber.equal('0');
@@ -265,6 +281,8 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
 
       await this.pool.exit({ from: wallet3 });
       const exitTime3 = await time.latest();
+
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(emptyPeriod1).add(this.DURATION));
 
       const timeDiff4 = exitTime3.sub(stakeTime3);
       const rewardPerToken4 = this.rewardRate.mul(timeDiff4).mul(_1e18).div(stake3);
@@ -283,6 +301,9 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       await this.pool.stake(stake4, { from: wallet4 });
       const stakeTime4 = await time.latest();
 
+      const emptyPeriod2 = stakeTime1.add(emptyPeriod1).add(this.DURATION).sub(exitTime3);
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime4.add(emptyPeriod2));
+
       await time.increase(this.DURATION.div(new BN(2)));
 
       const timeDiff5 = this.DURATION.sub(exitTime2.sub(stakeTime1).add(timeDiff4));
@@ -293,43 +314,136 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       expect(await this.pool.earned(wallet3)).to.be.bignumber.equal('0');
       expect(await this.pool.earned(wallet4)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken5.mul(stake4).div(_1e18));
     });
+
+    it('Four stakers with gaps of zero total supply, with claims in between', async function () {
+      //
+      // 1x: +-------+               |
+      // 3x:  +----------+           |
+      // 5x:                +------+ |
+      // 1x:                         |  +------...
+      //                             +-> end of initial duration
+
+      const stake1 = new BN(web3.utils.toWei('1'));
+      await this.pool.stake(stake1, { from: wallet1 });
+      const stakeTime1 = await time.latest();
+
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
+
+      const stake2 = new BN(web3.utils.toWei('3'));
+      await this.pool.stake(stake2, { from: wallet2 });
+      const stakeTime2 = await time.latest();
+
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
+
+      await time.increase(this.DURATION.div(new BN(6)));
+
+      await this.pool.withdraw(stake1, { from: wallet1 });
+      const exitTime1 = await time.latest();
+
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
+
+      const timeDiff1 = stakeTime2.sub(stakeTime1);
+      const timeDiff2 = exitTime1.sub(stakeTime2);
+      const rewardPerToken1 = this.rewardRate.mul(timeDiff1).mul(_1e18).div(stake1);
+      const rewardPerToken2 = this.rewardRate.mul(timeDiff2).mul(_1e18).div(stake1.add(stake2));
+      expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2));
+      expect(await this.pool.earned(wallet1)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).mul(stake1).div(_1e18));
+      expect(await this.pool.earned(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.mul(stake2).div(_1e18));
+
+      await time.increase(this.DURATION.div(new BN(6)));
+
+      await this.pool.withdraw(stake2, { from: wallet2 });
+      const exitTime2 = await time.latest();
+
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
+
+      const timeDiff3 = exitTime2.sub(exitTime1);
+      const rewardPerToken3 = this.rewardRate.mul(timeDiff3).mul(_1e18).div(stake2);
+      expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3));
+      expect(await this.pool.earned(wallet1)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).mul(stake1).div(_1e18));
+      expect(await this.pool.earned(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.add(rewardPerToken3).mul(stake2).div(_1e18));
+
+      await time.increase(this.DURATION.div(new BN(12)));
+
+      await this.pool.claimReward({ from: wallet1 });
+
+      await time.increase(this.DURATION.div(new BN(12)));
+
+      const stake3 = new BN(web3.utils.toWei('5'));
+      await this.pool.stake(stake3, { from: wallet3 });
+      const stakeTime3 = await time.latest();
+
+      const emptyPeriod1 = stakeTime3.sub(exitTime2);
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(emptyPeriod1).add(this.DURATION));
+
+      expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3));
+      expect(await this.pool.earned(wallet1)).to.be.bignumber.equal('0');
+      expect(await this.pool.earned(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.add(rewardPerToken3).mul(stake2).div(_1e18));
+      expect(await this.pool.earned(wallet3)).to.be.bignumber.equal('0');
+
+      await time.increase(this.DURATION.div(new BN(6)));
+
+      await this.pool.withdraw(stake3, { from: wallet3 });
+      const exitTime3 = await time.latest();
+
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(emptyPeriod1).add(this.DURATION));
+
+      const timeDiff4 = exitTime3.sub(stakeTime3);
+      const rewardPerToken4 = this.rewardRate.mul(timeDiff4).mul(_1e18).div(stake3);
+      expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3).add(rewardPerToken4));
+      expect(await this.pool.earned(wallet1)).to.be.bignumber.equal('0');
+      expect(await this.pool.earned(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.add(rewardPerToken3).mul(stake2).div(_1e18));
+      expect(await this.pool.earned(wallet3)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken4.mul(stake3).div(_1e18));
+
+      await time.increase(this.DURATION.div(new BN(2)));
+
+      // check that we have reached initial duration
+      expect(await time.latest()).to.be.bignumber.gte(stakeTime1.add(this.DURATION));
+
+      await this.pool.claimReward({ from: wallet3 });
+
+      await time.increase(this.DURATION.div(new BN(12)));
+
+      const stake4 = new BN(web3.utils.toWei('1'));
+      await this.pool.stake(stake4, { from: wallet4 });
+      const stakeTime4 = await time.latest();
+
+      const emptyPeriod2 = stakeTime1.add(emptyPeriod1).add(this.DURATION).sub(exitTime3);
+      expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime4.add(emptyPeriod2));
+
+      await time.increase(this.DURATION.div(new BN(2)));
+
+      const timeDiff5 = this.DURATION.sub(exitTime2.sub(stakeTime1).add(timeDiff4));
+      const rewardPerToken5 = this.rewardRate.mul(timeDiff5).mul(_1e18).div(stake4);
+      expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3).add(rewardPerToken4).add(rewardPerToken5));
+      expect(await this.pool.earned(wallet1)).to.be.bignumber.equal('0');
+      expect(await this.pool.earned(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.add(rewardPerToken3).mul(stake2).div(_1e18));
+      expect(await this.pool.earned(wallet3)).to.be.bignumber.equal('0');
+      expect(await this.pool.earned(wallet4)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken5.mul(stake4).div(_1e18));
+    });
   });
 
   describe('Unipool, before calling setAddresses', async function () {
     beforeEach(async function () {
-      this.uni = await Uni.new('Uniswap token', 'LPT', owner, 0);
-      this.pool = await Unipool.new();
-
-      const communityIssuance = await NonPayable.new();
-      const lqtyStaking = await NonPayable.new();
-      const lockupContractFactory = await NonPayable.new();
-      this.lqty = await Lqty.new(
-        communityIssuance.address,
-        lqtyStaking.address,
-        lockupContractFactory.address,
-        bountyAddress,
-        this.uni.address
-      );
-      this.lpRewardsEntitlement = await this.lqty.getLpRewardsEntitlement();
-      this.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
-
-      //await this.pool.setParams(this.lqty.address, this.uni.address, this.DURATION);
-
-      await this.uni.mint(wallet1, web3.utils.toWei('1000'));
-      await this.uni.mint(wallet2, web3.utils.toWei('1000'));
-      await this.uni.mint(wallet3, web3.utils.toWei('1000'));
-      await this.uni.mint(wallet4, web3.utils.toWei('1000'));
-
-      await this.uni.approve(this.pool.address, new BN(2).pow(new BN(255)), { from: wallet1 });
-      await this.uni.approve(this.pool.address, new BN(2).pow(new BN(255)), { from: wallet2 });
-      await this.uni.approve(this.pool.address, new BN(2).pow(new BN(255)), { from: wallet3 });
-      await this.uni.approve(this.pool.address, new BN(2).pow(new BN(255)), { from: wallet4 });
-
-      this.started = (await time.latest()).addn(10);
-      await time.increaseTo(this.started);
+      await deploy(this);
     });
 
-    // TODO
+    it('Stake fails', async function () {
+      const stake1 = new BN(web3.utils.toWei('1'));
+      await assertRevert(this.pool.stake(stake1, { from: wallet1 }), "Liqudity Pool Token has not been set yet");
+    });
 
+    it('Withdraw falis', async function () {
+      const stake1 = new BN(web3.utils.toWei('1'));
+      await assertRevert(this.pool.withdraw(stake1, { from: wallet1 }), "Liqudity Pool Token has not been set yet");
+    });
+
+    it('Claim fails', async function () {
+      await assertRevert(this.pool.claimReward({ from: wallet1 }), "Liqudity Pool Token has not been set yet");
+    });
+
+    it('Exit fails', async function () {
+      await assertRevert(this.pool.exit({ from: wallet1 }), "Cannot withdraw 0");
+    });
   });
 });
