@@ -21,9 +21,6 @@ type TroveActionProps = {
 
 const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
 const ccrPercent = new Percent(Trove.CRITICAL_COLLATERAL_RATIO).toString(0);
-const rmcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO_FOR_NEW_TROVE_IN_RECOVERY).toString(
-  0
-);
 
 const describeAdjustment = ({
   depositCollateral,
@@ -111,7 +108,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             [
               afterFee.isOpenableInRecoveryMode(price) ||
                 !total.collateralRatioIsBelowCritical(price),
-              `Can't open Trove with less than ${rmcrPercent} collateral ratio during recovery mode`
+              `Can't open Trove with less than ${ccrPercent} collateral ratio during recovery mode`
             ]
           ]
         ] as const)
