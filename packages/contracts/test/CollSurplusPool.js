@@ -57,7 +57,7 @@ contract('CollSurplusPool', async accounts => {
   })
 
   it("CollSurplusPool: claimColl(): Reverts if nothing to claim", async () => {
-    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(A), 'CollSurplusPool: No collateral available to claim')
+    await th.assertRevert(borrowerOperations.claimCollateral({ from: A }), 'CollSurplusPool: No collateral available to claim')
   })
 
   it("CollSurplusPool: claimColl(): Reverts if owner cannot receive ETH surplus", async () => {
@@ -75,7 +75,8 @@ contract('CollSurplusPool', async accounts => {
     const ETH_2 = await collSurplusPool.getETH()
     assert.equal(ETH_2, dec(5, 17))
 
-    await th.assertRevert(borrowerOperations.claimRedeemedCollateral(nonPayable.address), 'CollSurplusPool: sending ETH failed')
+    const claimCollateralData = th.getTransactionData('claimCollateral()', [])
+    await th.assertRevert(nonPayable.forward(borrowerOperations.address, claimCollateralData), 'CollSurplusPool: sending ETH failed')
   })
 
   it('CollSurplusPool: reverts trying to send ETH to it', async () => {

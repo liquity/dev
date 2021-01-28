@@ -608,14 +608,11 @@ export class PopulatableEthersLiquity
     );
   }
 
-  async claimCollateralSurplus(address?: string, overrides?: EthersTransactionOverrides) {
-    address ??= await this.signer.getAddress();
-
+  async claimCollateralSurplus(overrides?: EthersTransactionOverrides) {
     return this.wrapSimpleTransaction(
-      await this.contracts.borrowerOperations.estimateAndPopulate.claimRedeemedCollateral(
+      await this.contracts.borrowerOperations.estimateAndPopulate.claimCollateral(
         { ...overrides },
-        id,
-        address
+        id
       )
     );
   }

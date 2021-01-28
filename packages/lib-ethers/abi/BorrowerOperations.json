@@ -384,14 +384,8 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_user",
-        "type": "address"
-      }
-    ],
-    "name": "claimRedeemedCollateral",
+    "inputs": [],
+    "name": "claimCollateral",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

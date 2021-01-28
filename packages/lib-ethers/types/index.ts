@@ -62,7 +62,7 @@ interface BorrowerOperationsFunctions {
   activePool(_overrides?: CallOverrides): Promise<string>;
   addColl(_upperHint: string, _lowerHint: string, _overrides?: PayableOverrides): Promise<ContractTransaction>;
   adjustTrove(_maxFee: BigNumberish, _collWithdrawal: BigNumberish, _debtChange: BigNumberish, _isDebtIncrease: boolean, _upperHint: string, _lowerHint: string, _overrides?: PayableOverrides): Promise<ContractTransaction>;
-  claimRedeemedCollateral(_user: string, _overrides?: Overrides): Promise<ContractTransaction>;
+  claimCollateral(_overrides?: Overrides): Promise<ContractTransaction>;
   closeTrove(_overrides?: Overrides): Promise<ContractTransaction>;
   defaultPool(_overrides?: CallOverrides): Promise<string>;
   getCompositeDebt(_debt: BigNumberish, _overrides?: CallOverrides): Promise<BigNumber>;

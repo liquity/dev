@@ -1850,10 +1850,16 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
+    const lqtyStakingLUSDBalanceBefore = await lusdToken.balanceOf(lqtyStaking.address)
+
     const txAlice = await borrowerOperations.adjustTrove(0, 0, dec(50, 18), true, alice, alice, { from: alice, value: dec(1, 'ether') })
     assert.isTrue(txAlice.receipt.status)
 
     assert.isTrue(await troveManager.checkRecoveryMode())
+
+    // check no fee was charged
+    const lqtyStakingLUSDBalanceAfter = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStakingLUSDBalanceAfter.toString(), lqtyStakingLUSDBalanceBefore.toString())
   })
 
   it("adjustTrove(): reverts when change would cause the TCR of the system to fall below the CCR", async () => {
@@ -2277,7 +2283,7 @@ contract('BorrowerOperations', async accounts => {
 
   // --- Internal _adjustTrove() ---
 
-  it("Internal _adjustTrove(): reverts when _borrower param is not the msg.sender", async () => {
+  it("Internal _adjustTrove(): reverts when op is a withdrawal and _borrower param is not the msg.sender", async () => {
     await borrowerOperations.openTrove(0, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
 
@@ -2285,9 +2291,9 @@ contract('BorrowerOperations', async accounts => {
     const txPromise_B = borrowerOperations.callInternalAdjustLoan(bob, dec(1, 18),  dec(1, 18), true, alice, alice, {from: owner} )
     const txPromise_C = borrowerOperations.callInternalAdjustLoan(carol, dec(1, 18),  dec(1, 18), true, alice, alice, {from: bob} )
   
-    await assertRevert(txPromise_A)
-    await assertRevert(txPromise_B)
-    await assertRevert(txPromise_C)
+    await assertRevert(txPromise_A, "BorrowerOps: Caller must be the borrower for a withdrawal")
+    await assertRevert(txPromise_B, "BorrowerOps: Caller must be the borrower for a withdrawal")
+    await assertRevert(txPromise_C, "BorrowerOps: Caller must be the borrower for a withdrawal")
   })
 
   // --- closeTrove() ---
@@ -3144,9 +3150,9 @@ contract('BorrowerOperations', async accounts => {
   })
 
 
-  it("openTrove(): reverts when system is in Recovery Mode", async () => {
-
-    await borrowerOperations.openTrove(0, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+  it("openTrove(): reverts when system is in Recovery Mode and ICR < CCR", async () => {
+    await borrowerOperations.openTrove(0, dec(90, 18), whale, whale, { from: whale, value: dec(80, 16) })
+    await borrowerOperations.openTrove(0, dec(90, 18), alice, alice, { from: alice, value: dec(70, 16) })
 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
@@ -3155,9 +3161,9 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    // Bob tries to open a trove with same coll and debt, during Recovery Mode
+    // Bob tries to open a trove with same ICR (140%), during Recovery Mode
     try {
-      const txBob = await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+      const txBob = await borrowerOperations.openTrove(0, dec(90, 18), bob, bob, { from: bob, value: dec(14, 17) })
       assert.isFalse(txBob.receipt.status)
     } catch (err) {
       assert.include(err.message, "revert")
@@ -3323,6 +3329,10 @@ contract('BorrowerOperations', async accounts => {
 
     const carol_TroveStatus = await troveManager.getTroveStatus(carol)
     assert.equal(carol_TroveStatus, 1)
+
+    // check no fee was charged
+    const lqtyStakingLUSDBalanceAfter = await lusdToken.balanceOf(lqtyStaking.address)
+    assert.equal(lqtyStakingLUSDBalanceAfter.toString(), lqtyStakingLUSDBalanceBefore.toString())
   })
 
 

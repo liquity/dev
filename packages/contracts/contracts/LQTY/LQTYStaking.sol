@@ -109,9 +109,11 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
         emit StakeChanged(msg.sender, newStake);
         emit StakingGainsWithdrawn(msg.sender, LUSDGain, ETHGain);
 
-        // Send accumulated LUSD and ETH gains to the caller
-        lusdToken.transfer(msg.sender, LUSDGain);
-        _sendETHGainToUser(ETHGain);
+         // Send accumulated LUSD and ETH gains to the caller
+        if (currentStake != 0) {
+            lusdToken.transfer(msg.sender, LUSDGain);
+            _sendETHGainToUser(ETHGain);
+        }
     }
 
     // Unstake the LQTY and send the it back to the caller, along with their accumulated LUSD & ETH gains. 
@@ -194,7 +196,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
         snapshots[_user].F_LUSD_Snapshot = F_LUSD;
     }
 
-    function _sendETHGainToUser(uint ETHGain) internal returns (bool) {
+    function _sendETHGainToUser(uint ETHGain) internal {
         (bool success, ) = msg.sender.call{value: ETHGain}("");
         require(success, "LQTYStaking: Failed to send accumulated ETHGain");
     }

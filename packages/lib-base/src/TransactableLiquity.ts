@@ -121,7 +121,7 @@ export interface TransactableLiquity {
   sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
 
   redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
-  claimCollateralSurplus(address?: string): Promise<void>;
+  claimCollateralSurplus(): Promise<void>;
 
   stakeLQTY(amount: Decimalish): Promise<void>;
   unstakeLQTY(amount: Decimalish): Promise<void>;

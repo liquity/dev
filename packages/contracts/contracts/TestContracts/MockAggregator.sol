@@ -6,43 +6,48 @@ import "../Dependencies/AggregatorV3Interface.sol";
 
 contract MockAggregator is AggregatorV3Interface {
     
-    uint8 private _path = 1;
+    // storage variables to hold the mock data
+    uint8 private decimalsVal;
+    int private price;
+    uint private updateTime;
 
+    enum Output { good, zeroTimestamp, futureTimestamp, negativePrice }
+
+    Output output;
+    
     // --- Functions ---
 
-    function setPath(uint8 path) external returns (bool) {
-        _path = path;
-        return true;
+    function setDecimals(uint8 _decimals) external returns (bool) {
+        decimalsVal = _decimals;
     }
 
+    function setPrice(int _price) external returns (bool) {
+        price = _price;
+    }
+
+    function setUpdateTime(uint _updateTime) external returns (bool) {
+        updateTime = _updateTime;
+    }
+
+    // --- Getters that adhere to the AggregatorV3 interface ---
+
     function decimals() external override view returns (uint8) {
-        if (_path == 1) {
-            return 18;
-        } else if (_path == 2) {
-            return 21;
-        } else if (_path == 3) {
-            return 17;
-        }
+        return decimalsVal;
     }
 
     function latestRoundData()
-    external
-    override
-    view
+        external
+        override
+        view
     returns (
-      uint80 roundId,
-      int256 answer,
-      uint256 startedAt,
-      uint256 updatedAt,
-      uint80 answeredInRound
-    ) {
-        if (_path > 0 && _path < 4) { // good output
-            return (0, 1000, 0, 1, 0);
-        } else if (_path == 4) { // zero timestamp
-            return (0, 1, 0, 0, 0);
-        } else if (_path == 5) { // negative price
-            return (0, -5, 0, 1, 0);
-        }
+        uint80 roundId,
+        int256 answer,
+        uint256 startedAt,
+        uint256 updatedAt,
+        uint80 answeredInRound
+    ) 
+    {
+        return (0, price, 0, updateTime, 0); 
     }
 
     // --- Unused, just here for compilation's sake ---
