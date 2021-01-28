@@ -1434,6 +1434,37 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
+  it("adjustTrove(): doesn't decay a non-zero base rate when user issues 0 debt", async () => {
+    await borrowerOperations.openTrove(0, 0, A, A, { from: whale, value: dec(100, 'ether') })
+
+    await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 10 LUSD
+    await th.redeemCollateral(A, contracts, dec(10, 18))
+
+    // Check A's balance has decreased by 10 LUSD
+    assert.equal(await lusdToken.balanceOf(A), dec(20, 18))
+
+     // D opens trove 
+     await borrowerOperations.openTrove(0, 0, D, D, { from: D, value: dec(5, 'ether') })
+
+    // Check baseRate is now non-zero
+    const baseRate_1 = await troveManager.baseRate()
+    assert.isTrue(baseRate_1.gt(toBN('0')))
+
+    // 2 hours pass
+    th.fastForwardTime(7200, web3.currentProvider)
+
+     // D adjusts trove with 0 debt
+    await borrowerOperations.adjustTrove(0, 0, 0, false, D, D, { from: D, value: dec(1, 'ether') })
+
+    // Check baseRate has not decreased 
+    const baseRate_2 = await troveManager.baseRate()
+    assert.isTrue(baseRate_2.eq(baseRate_1))
+  })
+
   it("adjustTrove(): doesn't change base rate if it is already zero", async () => {
     await borrowerOperations.openTrove(0, 0, A, A, { from: whale, value: dec(100, 'ether') })
 
@@ -1515,7 +1546,6 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
   })
 
-
   it("adjustTrove(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
     await borrowerOperations.openTrove(0, 0, A, A, { from: whale, value: dec(100, 'ether') })
 
@@ -1533,14 +1563,11 @@ contract('BorrowerOperations', async accounts => {
     const baseRate_1 = await troveManager.baseRate()
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
-    // 59 minutes pass
-    th.fastForwardTime(3540, web3.currentProvider)
-
-    // Borrower C triggers a fee, before decay interval has passed
+    // Borrower C triggers a fee, before decay interval of 1 minute has passed
     await borrowerOperations.adjustTrove(0, 0, dec(1, 18), true, C, C, { from: C })
 
-    // 1 minute pass
-    th.fastForwardTime(3540, web3.currentProvider)
+    // 1 minute passes
+    th.fastForwardTime(60, web3.currentProvider)
 
     // Borrower C triggers another fee
     await borrowerOperations.adjustTrove(0, 0, dec(1, 18), true, C, C, { from: C })
@@ -2773,7 +2800,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
-  it("openTrove(): updates base rate when user issues 0 debt (aside from gas comp)", async () => {
+  it("openTrove(): doesn't decay a non-zero base rate when user issues 0 debt (aside from gas comp)", async () => {
     await borrowerOperations.openTrove(0, 0, A, A, { from: whale, value: dec(100, 'ether') })
 
     await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
@@ -2793,12 +2820,12 @@ contract('BorrowerOperations', async accounts => {
     // 2 hours pass
     th.fastForwardTime(7200, web3.currentProvider)
 
-    // D opens trove with 0 debt
+    // D opens trove with 0 debt (aside from gas comp)
     await borrowerOperations.openTrove(0, 0, D, D, { from: D, value: dec(5, 'ether') })
 
-    // Check baseRate has decayed
+    // Check baseRate has not decayed
     const baseRate_2 = await troveManager.baseRate()
-    assert.isTrue(baseRate_2.lt(baseRate_1))
+    assert.isTrue(baseRate_2.eq(baseRate_1))
   })
 
   it("openTrove(): doesn't change base rate if it is already zero", async () => {
@@ -2879,7 +2906,6 @@ contract('BorrowerOperations', async accounts => {
     // after minimum interval had passed 
     assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
   })
-
 
   it("openTrove(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
     await borrowerOperations.openTrove(0, 0, A, A, { from: whale, value: dec(100, 'ether') })
