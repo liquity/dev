@@ -148,7 +148,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         uint NICR = LiquityMath._computeNominalCR(msg.value, compositeDebt);
 
         if (isRecoveryMode) {
-            _requireICRisAboveR_MCR(ICR);
+            _requireICRisAboveCCR(ICR);
         } else {
             _requireICRisAboveMCR(ICR);
             uint newTCR = _getNewTCRFromTroveChange(msg.value, true, compositeDebt, true, price);  // bools: coll increase, debt increase
@@ -464,12 +464,12 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         }  
     }
 
-    function _requireICRisAboveMCR(uint _newICR)  internal pure {
+    function _requireICRisAboveMCR(uint _newICR) internal pure {
         require(_newICR >= MCR, "BorrowerOps: An operation that would result in ICR < MCR is not permitted");
     }
 
-    function _requireICRisAboveR_MCR(uint _newICR) internal pure {
-        require(_newICR >= R_MCR, "BorrowerOps: In Recovery Mode new troves must have ICR >= R_MCR");
+    function _requireICRisAboveCCR(uint _newICR) internal pure {
+        require(_newICR >= CCR, "BorrowerOps: In Recovery Mode new troves must have ICR >= CCR");
     }
 
     function _requireNewICRisAboveOldICR(uint _newICR, uint _oldICR) internal pure {

@@ -433,7 +433,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("withdrawColl(): reverts if system is in recovery mode", async () => {
+  it("withdrawColl(): reverts if system is in Recovery Mode", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(3, 'ether') })
@@ -1200,7 +1200,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("withdrawLUSD(): reverts if system is in recovery mode", async () => {
+  it("withdrawLUSD(): reverts if system is in Recovery Mode", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(3, 'ether') })
@@ -2347,7 +2347,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
 
-    // check recovery mode 
+    // check Recovery Mode 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Bob successfully closes his trove
@@ -2370,7 +2370,7 @@ contract('BorrowerOperations', async accounts => {
   it("closeTrove(): reverts when trove is the only one in the system", async () => {
     await borrowerOperations.openTrove(0, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
 
-    // check recovery mode 
+    // check Recovery Mode 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Alice attempts to close her trove
@@ -3182,7 +3182,7 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isFalse(await troveManager.checkRecoveryMode())
 
-    // price drops, and recovery mode kicks in
+    // price drops, and Recovery Mode kicks in
     await priceFeed.setPrice(dec(100, 18))
 
     assert.isTrue(await troveManager.checkRecoveryMode())
@@ -3257,7 +3257,7 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("openTrove(): with ICR < 300%, reverts when system is in recovery mode", async () => {
+  it("openTrove(): with ICR < CCR, reverts when system is in Recovery Mode", async () => {
     // --- SETUP ---
     await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
     await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(3, 'ether') })
@@ -3275,13 +3275,12 @@ contract('BorrowerOperations', async accounts => {
     await priceFeed.setPrice('150000000000000000000');
 
     try {                                                
-      const txData = await borrowerOperations.openTrove(0, '101000000000000000000', carol, carol, { from: carol, value: dec(1, 'ether') })
+      const txData = await borrowerOperations.openTrove(0, '91000000000000000000', carol, carol, { from: carol, value: dec(1, 'ether') })
       assert.isFalse(txData.receipt.status)
     } catch (err) {
       assert.include(err.message, 'revert')
+      assert.include(err.message, 'BorrowerOps: In Recovery Mode new troves must have ICR >= CCR')
     }
-    // this should work as the ICR is exactly 300% (incl the virtual debt)
-    await borrowerOperations.openTrove(0, '90000000000000000000', carol, carol, { from: carol, value: dec(2, 'ether') })
   })
 
   it("openTrove(): reverts if trove is already active", async () => {
@@ -3305,7 +3304,35 @@ contract('BorrowerOperations', async accounts => {
     }
   })
 
-  it("openTrove(): Can open a trove with zero debt (plus gas comp) when system is in recovery mode, if ICR >= 300%", async () => {
+  it("openTrove(): Can open a trove with ICR >= CCR when system is in Recovery Mode", async () => {
+    // --- SETUP ---
+    //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
+    await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
+    await borrowerOperations.openTrove(0, 0, bob, bob, { from: bob, value: dec(3, 'ether') })
+    await borrowerOperations.withdrawLUSD(0, '390000000000000000000', alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(0, '390000000000000000000', bob, bob, { from: bob })
+
+    const TCR = (await troveManager.getTCR()).toString()
+    assert.equal(TCR, '1500000000000000000')
+
+    // price drops to 1ETH:100LUSD, reducing TCR below 150%
+    await priceFeed.setPrice('100000000000000000000');
+    const price = await priceFeed.getPrice()
+
+    assert.isTrue(await troveManager.checkRecoveryMode())
+
+    const txCarol = await borrowerOperations.openTrove(0, dec(50, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    assert.isTrue(txCarol.receipt.status)
+    assert.isTrue(await sortedTroves.contains(carol))
+
+    const carol_TroveStatus = await troveManager.getTroveStatus(carol)
+    assert.equal(carol_TroveStatus, 1)
+
+    const carolICR = await troveManager.getCurrentICR(carol, price)
+    assert.isTrue(carolICR.gt(toBN(dec(150, 16))))
+  })
+
+  it("openTrove(): Can open a trove with zero debt (plus gas comp) when system is in Recovery Mode", async () => {
     // --- SETUP ---
     //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
     await borrowerOperations.openTrove(0, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
@@ -3321,17 +3348,10 @@ contract('BorrowerOperations', async accounts => {
 
     assert.isTrue(await troveManager.checkRecoveryMode())
 
-    await assertRevert(
-      borrowerOperations.openTrove(0, dec(80, 18), carol, carol, { from: carol, value: dec(1, 'ether') }),
-      'BorrowerOps: In Recovery Mode new troves must have ICR >= R_MCR'
-    )
-
     const lqtyStakingLUSDBalanceBefore = await lusdToken.balanceOf(lqtyStaking.address)
 
     const txCarol = await borrowerOperations.openTrove(0, 0, carol, carol, { from: carol, value: dec(1, 'ether') })
     assert.isTrue(txCarol.receipt.status)
-
-    assert.isTrue(await troveManager.checkRecoveryMode())
 
     assert.isTrue(await sortedTroves.contains(carol))
 
@@ -3342,6 +3362,7 @@ contract('BorrowerOperations', async accounts => {
     const lqtyStakingLUSDBalanceAfter = await lusdToken.balanceOf(lqtyStaking.address)
     assert.equal(lqtyStakingLUSDBalanceAfter.toString(), lqtyStakingLUSDBalanceBefore.toString())
   })
+
 
   it("openTrove(): creates a new Trove and assigns the correct collateral and debt amount", async () => {
     const alice_Trove_Before = await troveManager.Troves(alice)
