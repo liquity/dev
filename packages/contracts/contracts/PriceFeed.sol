@@ -9,19 +9,21 @@ import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/LiquityMath.sol";
-import "./Dependencies/UsingTellor.sol";
+import "./Dependencies/ITellor.sol";
 import "./Dependencies/console.sol";
 
 /*
 * PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference contract,
 * and Tellor's TellorMaster contract.
 */
-contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor, IPriceFeed {
+
+contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     using SafeMath for uint256;
 
     // Mainnet Chainlink aggregator
     AggregatorV3Interface public priceAggregator;
-
+    // Mainnet TellorMaster
+    ITellor public tellor;
 
     uint constant public ETHUSD_TELLOR_REQ_ID = 1;
 
@@ -40,10 +42,8 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
     */
     uint constant public MAX_PRICE_DIFFERENCE_FOR_RETURN = 3e16; // 3%
 
-    uint prevChainlinkDigits;
-    bool usingFallback;
-
-    uint lastGoodPrice;
+    uint public prevChainlinkDigits;
+    uint public lastGoodPrice;
 
     struct ChainlinkResponse {
         uint80 roundId;
@@ -64,9 +64,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
     Status status;
 
     // --- Dependency setters ---
-
+    
     function setAddresses(
-        address _priceAggregatorAddress
+        address _priceAggregatorAddress,
+        address _tellorMasterAddress
     )
         external
         onlyOwner
@@ -74,15 +75,19 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
         checkContract(_priceAggregatorAddress);
 
         priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
+        tellor = ITellor(_tellorMasterAddress);
+
         _renounceOwnership();
     }
+
+    // --- functions ---
 
     /*
     * Returns the latest price obtained from the Oracle. Uses a main oracle (Chainlink) and a fallback oracle(Tellor) 
     * in case Chainlink fails. 
     *
     */
-    function getPrice() public view override returns (uint) {
+    function getPrice() public override returns (uint) {
         // Get current price data from chainlink
         ChainlinkResponse memory chainlinkResponse;
         (chainlinkResponse.roundId,
@@ -97,7 +102,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
             TellorResponse memory tellorResponse;
             (tellorResponse.ifRetrieve,
             tellorResponse.value,
-            tellorResponse.timestamp) = getCurrentValue(ETHUSD_TELLOR_REQ_ID);
+            tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
             
             /*
             * If both oracles are now back online and close together in price, we assume that they are reporting
@@ -117,7 +122,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
             TellorResponse memory tellorResponse;
             (tellorResponse.ifRetrieve,
             tellorResponse.value,
-            tellorResponse.timestamp) = getCurrentValue(ETHUSD_TELLOR_REQ_ID);
+            tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
             
             // If Tellor is only frozen but otherwise returning valid data, just use the last good price
             if (tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
@@ -129,7 +134,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
            
            // If both Tellor and Chainlink are live and reporting similar prices, switch back to Chainlink
             if (bothOraclesLiveAndSimilarPrice(chainlinkResponse, currentChainlinkDigits, tellorResponse)) {
-                usingFallback = false;
+                status = Status.usingChainlink;
                 return _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
             }
 
@@ -152,7 +157,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
                     TellorResponse memory tellorResponse;
                     (tellorResponse.ifRetrieve,
                     tellorResponse.value,
-                    tellorResponse.timestamp) = getCurrentValue(ETHUSD_TELLOR_REQ_ID);
+                    tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
                     
                     // If Tellor is only frozen but otherwise returning valid data, just use the last good price
                     if (tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
@@ -188,7 +193,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
         return true;
     }
 
-    function chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, uint _currentDigits, ChainlinkResponse memory _prevResponse, uint _prevDigits) internal view returns (bool) {
+    function chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, uint _currentDigits, ChainlinkResponse memory _prevResponse, uint _prevDigits) internal pure returns (bool) {
         uint currentScaledPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.answer), _currentDigits);
         uint prevScaledPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.answer), _prevDigits);
        
@@ -197,11 +202,11 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
         return deviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS;
     }
 
-    function tellorIsFrozen(TellorResponse  memory _tellorResponse) internal pure returns (bool) {
+    function tellorIsFrozen(TellorResponse  memory _tellorResponse) internal view returns (bool) {
         return block.timestamp.sub(_tellorResponse.timestamp) > TIMEOUT;
     }
 
-    function tellorIsBroken(TellorResponse memory _response) internal pure returns (bool) {
+    function tellorIsBroken(TellorResponse memory _response) internal view returns (bool) {
           // Check for an invalid timeStamp that is 0, or in the future
         if (_response.timestamp == 0 || _response.timestamp > block.timestamp) {return true;}
         // Check for zero price
@@ -209,7 +214,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
     }
 
 
-    function bothOraclesLiveAndSimilarPrice(ChainlinkResponse memory _chainlinkResponse, uint _chainlinkDigits, TellorResponse memory _tellorResponse) internal pure returns (bool) {
+    function bothOraclesLiveAndSimilarPrice(ChainlinkResponse memory _chainlinkResponse, uint _chainlinkDigits, TellorResponse memory _tellorResponse) internal view returns (bool) {
         // Check both oracles are live
         if (tellorIsBroken(_tellorResponse) || tellorIsFrozen(_tellorResponse) || chainlinkIsBroken(_chainlinkResponse)) {
             return false;
@@ -239,5 +244,34 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, LiquityMath, UsingTellor
 
     function _scaleTellorPriceByDigits(uint _price) internal pure returns (uint) {
         return _price.mul(10**(TARGET_DIGITS - TELLOR_DIGITS));
+    }
+
+
+    // --- Tellor functionality (as found in Tellor's UsingTellor.sol contract) ---
+
+    /**
+    * getTellorCurrentValue():  identical to getCurrentValue() in UsingTellor.sol
+    *
+    * @dev Allows the user to get the latest value for the requestId specified
+    * @param _requestId is the requestId to look up the value for
+    * @return ifRetrieve bool true if it is able to retreive a value, the value, and the value's timestamp
+    * @return value the value retrieved
+    * @return _timestampRetrieved the value's timestamp
+    */
+    function getTellorCurrentValue(uint256 _requestId)
+        public
+        view
+        returns (
+            bool ifRetrieve,
+            uint256 value,
+            uint256 _timestampRetrieved
+        )
+    {
+        uint256 _count = tellor.getNewValueCountbyRequestId(_requestId);
+        uint256 _time =
+            tellor.getTimestampbyRequestIDandIndex(_requestId, _count - 1);
+        uint256 _value = tellor.retrieveData(_requestId, _time);
+        if (_value > 0) return (true, _value, _time);
+        return (false, 0, _time);
     }
 }
