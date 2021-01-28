@@ -115,7 +115,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         emit StabilityPoolAddressChanged(_stabilityPoolAddress);
         emit GasPoolAddressChanged(_gasPoolAddress);
         emit CollSurplusPoolAddressChanged(_collSurplusPoolAddress);
-        emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit SortedTrovesAddressChanged(_sortedTrovesAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
