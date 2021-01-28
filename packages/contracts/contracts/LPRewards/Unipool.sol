@@ -45,8 +45,8 @@ contract LPTokenWrapper is ILPTokenWrapper {
 }
 
 contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
-    uint256 public constant DURATION = 30 days;
-    ILQTYToken lqtyToken;
+    uint256 public duration;
+    ILQTYToken public lqtyToken;
 
     uint256 public periodFinish = 0;
     uint256 public rewardRate = 0;
@@ -62,9 +62,10 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
 
-    function setAddresses(
+    function setParams(
         address _lqtyTokenAddress,
-        address _uniTokenAddress
+        address _uniTokenAddress,
+        uint _duration
     )
         external
         override
@@ -75,8 +76,9 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
 
         uniToken = IERC20(_uniTokenAddress);
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
+        duration = _duration;
 
-        _notifyRewardAmount(lqtyToken.getLpRewardsEntitlement());
+        _notifyRewardAmount(lqtyToken.getLpRewardsEntitlement(), _duration);
 
         emit LQTYTokenAddressChanged(_lqtyTokenAddress);
         emit UniTokenAddressChanged(_uniTokenAddress);
@@ -151,18 +153,18 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         }
     }
 
-    function _notifyRewardAmount(uint256 reward) internal {
-        assert(reward > 0);
-        assert(reward == lqtyToken.balanceOf(address(this)));
+    function _notifyRewardAmount(uint256 _reward, uint256 _duration) internal {
+        assert(_reward > 0);
+        assert(_reward == lqtyToken.balanceOf(address(this)));
         assert(periodFinish == 0);
 
         _updateReward(address(0));
 
-        rewardRate = reward.div(DURATION);
+        rewardRate = _reward.div(_duration);
 
         lastUpdateTime = block.timestamp;
-        periodFinish = block.timestamp.add(DURATION);
-        emit RewardAdded(reward);
+        periodFinish = block.timestamp.add(_duration);
+        emit RewardAdded(_reward);
     }
 
     function _updateReward(address account) internal {

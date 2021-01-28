@@ -56,10 +56,10 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       );
       this.started = await this.lqty.getDeploymentStartTime();
       this.lpRewardsEntitlement = await this.lqty.getLpRewardsEntitlement();
-      this.DURATION = await this.pool.DURATION();
+      this.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
       this.rewardRate = this.lpRewardsEntitlement.div(this.DURATION);
 
-      await this.pool.setAddresses(this.lqty.address, this.uni.address);
+      await this.pool.setParams(this.lqty.address, this.uni.address, this.DURATION);
 
       await this.uni.mint(wallet1, web3.utils.toWei('1000'));
       await this.uni.mint(wallet2, web3.utils.toWei('1000'));
@@ -208,7 +208,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       expect(await this.pool.earned(wallet3)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken3.add(rewardPerToken4).mul(stake3).div(_1e18));
     });
 
-    it('Three stakers with gaps of zero total supply', async function () {
+    it('Four stakers with gaps of zero total supply', async function () {
       //
       // 1x: +-------+               |
       // 3x:  +----------+           |
@@ -311,8 +311,9 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
         this.uni.address
       );
       this.lpRewardsEntitlement = await this.lqty.getLpRewardsEntitlement();
+      this.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
 
-      //await this.pool.setAddresses(this.lqty.address, this.uni.address);
+      //await this.pool.setParams(this.lqty.address, this.uni.address, this.DURATION);
 
       await this.uni.mint(wallet1, web3.utils.toWei('1000'));
       await this.uni.mint(wallet2, web3.utils.toWei('1000'));
