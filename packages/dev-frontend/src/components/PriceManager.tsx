@@ -4,15 +4,17 @@ import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 import { Decimal } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { Icon } from "@liquity/shared-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
+
+import { Icon } from "./Icon";
 import { Transaction } from "./Transaction";
 
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const PriceManager: React.FC = () => {
   const {
+    canSetPrice,
     liquity: { send: liquity }
   } = useLiquity();
   const price = useLiquitySelector(selectPrice);
@@ -24,7 +26,7 @@ export const PriceManager: React.FC = () => {
 
   return (
     <Card>
-      <Heading>Price</Heading>
+      <Heading>Price feed</Heading>
 
       <Box>
         <Flex sx={{ alignItems: "stretch" }}>
@@ -33,29 +35,32 @@ export const PriceManager: React.FC = () => {
           <Label variant="unit">$</Label>
 
           <Input
-            type="number"
+            type={canSetPrice ? "number" : "text"}
             step="any"
             value={editedPrice}
             onChange={e => setEditedPrice(e.target.value)}
+            disabled={!canSetPrice}
           />
 
-          <Flex sx={{ ml: 2, alignItems: "center" }}>
-            <Transaction
-              id="set-price"
-              tooltip="Set"
-              tooltipPlacement="bottom"
-              send={overrides => {
-                if (!editedPrice) {
-                  throw new Error("Invalid price");
-                }
-                return liquity.setPrice(Decimal.from(editedPrice), overrides);
-              }}
-            >
-              <Button variant="icon">
-                <Icon name="chart-line" size="lg" />
-              </Button>
-            </Transaction>
-          </Flex>
+          {canSetPrice && (
+            <Flex sx={{ ml: 2, alignItems: "center" }}>
+              <Transaction
+                id="set-price"
+                tooltip="Set"
+                tooltipPlacement="bottom"
+                send={overrides => {
+                  if (!editedPrice) {
+                    throw new Error("Invalid price");
+                  }
+                  return liquity.setPrice(Decimal.from(editedPrice), overrides);
+                }}
+              >
+                <Button variant="icon">
+                  <Icon name="chart-line" size="lg" />
+                </Button>
+              </Transaction>
+            </Flex>
+          )}
         </Flex>
       </Box>
     </Card>

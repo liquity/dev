@@ -6,8 +6,9 @@ import { LiquityStoreState, Trove, TroveAdjustment, TroveChange } from "@liquity
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
-import { Transaction, useMyTransactionState } from "./Transaction";
 import { COIN } from "../strings";
+
+import { Transaction, useMyTransactionState } from "./Transaction";
 
 type TroveActionProps = {
   original: Trove;

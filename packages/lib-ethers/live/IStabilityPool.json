@@ -590,7 +590,12 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_hint",
+          "name": "_upperHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerHint",
           "type": "address"
         }
       ],

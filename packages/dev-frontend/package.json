@@ -15,7 +15,6 @@
     "@liquity/lib-react": "^0.0.1",
     "@liquity/lib-subgraph": "^0.0.1",
     "@liquity/providers": "^0.0.1",
-    "@liquity/shared-react": "^0.0.1",
     "@popperjs/core": "^2.4.2",
     "@testing-library/dom": "^6.12.2",
     "@testing-library/jest-dom": "^5.1.1",

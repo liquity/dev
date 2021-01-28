@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "deploy-to-dev-chain": "ts-node multicaller/deployToDevChain.ts",
+    "deploy-to-dev-chain": "ts-node scripts/deployToDevChain.ts",
     "prepare": "run-s prepare:*",
-    "prepare:backfill-dev-deployment": "ts-node multicaller/backfillDevDeployment.ts",
+    "prepare:backfill-dev-deployment": "ts-node scripts/backfillDevDeployment.ts",
     "prepare:tsc": "tsc --project tsconfig.dist.json"
   },
   "devDependencies": {

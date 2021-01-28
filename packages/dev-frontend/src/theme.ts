@@ -309,7 +309,7 @@ const theme: Theme = {
 
       mt: cardGapY,
       px: 3,
-      height: "72px",
+      minHeight: "72px",
 
       bg: "muted"
     },
@@ -376,7 +376,13 @@ const theme: Theme = {
     root: {
       fontFamily: "body",
       lineHeight: "body",
-      fontWeight: "body"
+      fontWeight: "body",
+
+      height: "100%",
+
+      "#root": {
+        height: "100%"
+      }
     },
 
     a: {

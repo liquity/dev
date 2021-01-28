@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "fs-extra";
 import path from "path";
 
 import { Interface, ParamType } from "@ethersproject/abi";
@@ -164,6 +164,7 @@ ${contracts.map(declareInterface).join("\n\n")}
 fs.mkdirSync("types", { recursive: true });
 fs.writeFileSync(path.join("types", "index.ts"), output);
 
+fs.removeSync("abi");
 fs.mkdirSync("abi", { recursive: true });
 contractArtifacts.forEach(({ contractName, abi }) =>
   fs.writeFileSync(path.join("abi", `${contractName}.json`), JSON.stringify(abi, undefined, 2))

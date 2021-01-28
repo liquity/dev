@@ -4,13 +4,14 @@ import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 import { Decimal, Percent } from "@liquity/decimal";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { Icon } from "@liquity/shared-react";
 
+import { useLiquity } from "../hooks/LiquityContext";
+import { COIN } from "../strings";
+
+import { Icon } from "./Icon";
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow, StaticRow } from "./Editor";
-import { useLiquity } from "../hooks/LiquityContext";
-import { COIN } from "../strings";
 
 type RedemptionActionProps = {
   amount: Decimal;
@@ -119,7 +120,7 @@ export const RedemptionManager: React.FC = () => {
             {...{ editingState }}
             editedAmount={lusdAmount.toString(2)}
             setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
-          ></EditableRow>
+          />
 
           {edited && (
             <>

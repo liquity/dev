@@ -56,11 +56,6 @@
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "_price",
-          "type": "uint256"
-        },
-        {
           "internalType": "address",
           "name": "_prevId",
           "type": "address"
@@ -190,11 +185,6 @@
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "price",
-          "type": "uint256"
-        },
-        {
           "internalType": "address",
           "name": "_prevId",
           "type": "address"
@@ -246,11 +236,6 @@
         {
           "internalType": "uint256",
           "name": "_newICR",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "price",
           "type": "uint256"
         },
         {
@@ -310,11 +295,6 @@
         {
           "internalType": "uint256",
           "name": "_ICR",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_price",
           "type": "uint256"
         },
         {

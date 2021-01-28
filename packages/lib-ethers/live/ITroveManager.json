@@ -61,6 +61,19 @@
         {
           "indexed": false,
           "internalType": "address",
+          "name": "_gasPoolAddress",
+          "type": "address"
+        }
+      ],
+      "name": "GasPoolAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
           "name": "_lqtyStakingAddress",
           "type": "address"
         }
@@ -411,21 +424,14 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "getEntireSystemColl",
-      "outputs": [
+      "inputs": [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
+          "internalType": "address",
+          "name": "_borrower",
+          "type": "address"
         }
       ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "getEntireSystemDebt",
+      "name": "getNominalICR",
       "outputs": [
         {
           "internalType": "uint256",
@@ -480,7 +486,7 @@
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "TCR",
+          "name": "",
           "type": "uint256"
         }
       ],
@@ -702,17 +708,27 @@
         },
         {
           "internalType": "address",
-          "name": "_partialRedemptionHint",
+          "name": "_upperPartialRedemptionHint",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lowerPartialRedemptionHint",
           "type": "address"
         },
         {
           "internalType": "uint256",
-          "name": "_partialRedemptionHintICR",
+          "name": "_partialRedemptionHintNICR",
           "type": "uint256"
         },
         {
           "internalType": "uint256",
           "name": "_maxIterations",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_maxFee",
           "type": "uint256"
         }
       ],
@@ -754,6 +770,11 @@
         {
           "internalType": "address",
           "name": "_stabilityPoolAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_gasPoolAddress",
           "type": "address"
         },
         {

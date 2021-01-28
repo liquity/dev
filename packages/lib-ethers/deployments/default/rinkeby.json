@@ -1,23 +1,23 @@
 {
   "addresses": {
-    "activePool": "0x530fA17C1bB7CdD36B173059D62df2d64D3A1310",
-    "borrowerOperations": "0x80B68310650a7c77B45Ee4d5894581346466D7F2",
-    "troveManager": "0x2B50462f3026446FA9f6E618f3f08A67AaE96317",
-    "collSurplusPool": "0x7Ea869BE18d308370D121E1F220D70C0bB68EFE1",
-    "communityIssuance": "0xB55a9c795fa1EA4DFA2B7982657Db2FEe8faEbaf",
-    "defaultPool": "0xdA1B5dF971e7Fa0ecB96bCCeb399EfF7c812A137",
-    "gasPool": "",
-    "hintHelpers": "0x83a5F3ED33e14cBe86c01a1599f8576b97638172",
-    "lockupContractFactory": "0x9e8bB175fBC4F61E69CF6B0Ad263431d5029cf58",
-    "lqtyStaking": "0xA08AEe6beD5B1731455023ce27cC56e7e279A5Ad",
-    "priceFeed": "0x1345d39EF04576AF345b9eA400093e502B42AA6d",
-    "sortedTroves": "0xA69476684177dd75a1D1380062ad2ceCcA947603",
-    "stabilityPool": "0x2cEb8dE6833bAbDD96f29408680fc3fA0C0c783F",
-    "lusdToken": "0xA55a2A3fd02a8fA177E84D16fffc863e9E21e9f7",
-    "lqtyToken": "0x27F662b6195A6b1BBe7B49aa235Ae6B8820aC9a2",
-    "multiTroveGetter": "0x1810ED600a0DD164C1Fa97581088608B21665949"
+    "activePool": "0xfb93840f21ef8f28baBCf72B039dC112Af04709e",
+    "borrowerOperations": "0x627C822c04b02A0450D70b46488d742e84F6AF38",
+    "troveManager": "0xe1579e75CfB6dF9A5F1b898027Bbdc66A5A7Ba6e",
+    "collSurplusPool": "0x5e8B1aF8B2518589a1E1dc4D592B84C943703273",
+    "communityIssuance": "0x379212DF1ce300d2bf04007bBd4e6df65c3BBA6f",
+    "defaultPool": "0x020DA537cC4e9B34648aefC7a056390249e04157",
+    "hintHelpers": "0x4349110f765beaD226db9d44bb289087532EcFD9",
+    "lockupContractFactory": "0x451e77F12f37A16e203Be8d41d8c134F648FEe14",
+    "lqtyStaking": "0xd8CB200b4Ca3feA4bCf4540618B737eD83C621B6",
+    "priceFeed": "0x36b36Ca96F72C6C7DA242d0fE5acB9B5cA502662",
+    "sortedTroves": "0x36c4305c99389cd9fC4C4341f62Ecbe015C4b4c8",
+    "stabilityPool": "0xF4440e2cBC5D253DE6CAB01d7dC9E353B8eF7488",
+    "gasPool": "0x15f3a2f77Ca25C134958160fDB11ADFe6E0C187E",
+    "lusdToken": "0x3040f5959D2C666E1A0868702e2D7623A271a656",
+    "lqtyToken": "0x55F773d4bA10B1BA2406d8E6520dbc5fc6e30193",
+    "multiTroveGetter": "0xc4D2389c47112a53334E8AD2A5cC500Eb0b155Cb"
   },
-  "priceFeedIsTestnet": true,
-  "version": "c80defd1def8dad1de30a3df4a4267717847f17f",
-  "deploymentDate": 1608116225349
+  "priceFeedIsTestnet": false,
+  "version": "1076240d7e69eb36a1b786dfe992909971c58d9d",
+  "deploymentDate": 1611225275820
 }

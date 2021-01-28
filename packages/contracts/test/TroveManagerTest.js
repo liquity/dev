@@ -498,7 +498,7 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Attempt to liquidate bob
-    await troveManager.liquidate(bob)
+    await assertRevert(troveManager.liquidate(bob), "TroveManager: nothing to liquidate")
 
     // Check bob active, check whale active
     assert.isTrue((await sortedTroves.contains(bob)))
@@ -774,7 +774,7 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Attempt to liquidate Bob
-    await troveManager.liquidate(bob)
+    await assertRevert(troveManager.liquidate(bob), "TroveManager: nothing to liquidate")
 
     // Confirm Bob's trove is still active
     assert.isTrue(await sortedTroves.contains(bob))
@@ -950,7 +950,7 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode())
 
     // Liquidate Alice, Bob, Carol
-    await troveManager.liquidate(alice)
+    await assertRevert(troveManager.liquidate(alice), "TroveManager: nothing to liquidate")
     await troveManager.liquidate(bob)
     await troveManager.liquidate(carol)
 
@@ -1195,7 +1195,7 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Attempt liqudation sequence
-    await troveManager.liquidateTroves(10)
+    await assertRevert(troveManager.liquidateTroves(10), "TroveManager: nothing to liquidate")
 
     // Check all troves remain active
     assert.isTrue((await sortedTroves.contains(whale)))
@@ -1305,7 +1305,7 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await troveManager.checkRecoveryMode());
 
     // Liquidation with n = 0
-    await troveManager.liquidateTroves(0)
+    await assertRevert(troveManager.liquidateTroves(0), "TroveManager: nothing to liquidate")
 
     // Check all troves are still in the system
     assert.isTrue(await sortedTroves.contains(whale))
@@ -3530,9 +3530,9 @@ contract('TroveManager', async accounts => {
     // CollSurplusPool endpoint cannot be called directly
     await assertRevert(collSurplusPool.claimColl(A), 'CollSurplusPool: Caller is not Borrower Operations')
 
-    await borrowerOperations.claimRedeemedCollateral(A)
-    await borrowerOperations.claimRedeemedCollateral(B)
-    await borrowerOperations.claimRedeemedCollateral(C)
+    await borrowerOperations.claimCollateral({ from: A, gasPrice: 0 })
+    await borrowerOperations.claimCollateral({ from: B, gasPrice: 0 })
+    await borrowerOperations.claimCollateral({ from: C, gasPrice: 0 })
 
     const A_balanceAfter = toBN(await web3.eth.getBalance(A))
     const B_balanceAfter = toBN(await web3.eth.getBalance(B))
@@ -3570,9 +3570,9 @@ contract('TroveManager', async accounts => {
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
-    await borrowerOperations.claimRedeemedCollateral(A)
-    await borrowerOperations.claimRedeemedCollateral(B)
-    await borrowerOperations.claimRedeemedCollateral(C)
+    await borrowerOperations.claimCollateral({ from: A, gasPrice: 0 })
+    await borrowerOperations.claimCollateral({ from: B, gasPrice: 0 })
+    await borrowerOperations.claimCollateral({ from: C, gasPrice: 0 })
 
     const A_balanceAfter = toBN(await web3.eth.getBalance(A))
     const B_balanceAfter = toBN(await web3.eth.getBalance(B))

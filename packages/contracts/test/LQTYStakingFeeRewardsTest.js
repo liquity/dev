@@ -626,11 +626,22 @@ contract('Fee arithmetic tests', async accounts => {
 
     //  A tells proxy to make a stake
     const proxystakeTxData = await th.getTransactionData('stake(uint256)', ['0x56bc75e2d63100000'])  // proxy stakes 100 LQTY
-    const proxyStakeTxPromise = nonPayable.forward(lqtyStaking.address, proxystakeTxData, {from: A})
+    await nonPayable.forward(lqtyStaking.address, proxystakeTxData, {from: A})
+
+
+    // B makes a redemption, creating ETH gain for proxy
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(45, 18))
+    
+    const proxy_ETHGain = await lqtyStaking.getPendingETHGain(nonPayable.address)
+    assert.isTrue(proxy_ETHGain.gt(toBN('0')))
 
     // Expect this tx to revert: stake() tries to send nonPayable proxy's accumulated ETH gain (albeit 0),
+    //  A tells proxy to unStake
+    const proxyUnStakeTxData = await th.getTransactionData('unStake(uint256)', ['0x56bc75e2d63100000'])  // proxy stakes 100 LQTY
+    const proxyUnstakeTxPromise = nonPayable.forward(lqtyStaking.address, proxyUnStakeTxData, {from: A})
+   
     // but nonPayable proxy can not accept ETH - therefore stake() reverts.
-    await assertRevert(proxyStakeTxPromise)
+    await assertRevert(proxyUnstakeTxPromise)
   })
 
   it("receive(): reverts when it receives ETH from an address that is not the Active Pool",  async () => { 

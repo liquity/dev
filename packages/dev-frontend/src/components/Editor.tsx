@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Text, Flex, Label, Input } from "theme-ui";
 
-import { Icon } from "@liquity/shared-react";
+import { Icon } from "./Icon";
 
 type RowProps = {
   label: string;

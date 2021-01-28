@@ -13,7 +13,7 @@ const parseConfig = (json: unknown): LiquityFrontendConfig => {
   const config: LiquityFrontendConfig = {};
 
   if (typeof json === "object" && json !== null) {
-    if (hasKey(json, "frontendTag")) {
+    if (hasKey(json, "frontendTag") && json.frontendTag !== "") {
       const { frontendTag } = json;
 
       if (typeof frontendTag === "string" && isAddress(frontendTag)) {
@@ -24,7 +24,7 @@ const parseConfig = (json: unknown): LiquityFrontendConfig => {
       }
     }
 
-    if (hasKey(json, "infuraApiKey")) {
+    if (hasKey(json, "infuraApiKey") && json.infuraApiKey !== "") {
       const { infuraApiKey } = json;
 
       if (typeof infuraApiKey === "string") {
@@ -47,6 +47,13 @@ let configPromise: Promise<LiquityFrontendConfig> | undefined = undefined;
 const fetchConfig = async () => {
   try {
     const response = await fetch("config.json");
+
+    if (response.status !== 200) {
+      throw new Error(
+        `Failed to fetch config.json (expected status 200 but got ${response.status})`
+      );
+    }
+
     return parseConfig(await response.json());
   } catch (err) {
     console.error(err);
