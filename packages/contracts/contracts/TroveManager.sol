@@ -39,6 +39,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
+    uint constant public MIN_REDEMPTION_FEE = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+    uint constant public MIN_BORROWING_FEE = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+    uint constant public MAX_BORROWING_FEE = DECIMAL_PRECISION / 100 * 5; // 5%
 
     // During bootsrap period redemptions are not allowed
     uint constant public BOOTSRAP_PERIOD = 14 days;
@@ -1272,13 +1275,16 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
-       return baseRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
+        return MIN_REDEMPTION_FEE.add(baseRate.mul(_ETHDrawn).div(DECIMAL_PRECISION));
     }
 
     // --- Borrowing fee functions ---
 
     function getBorrowingFee(uint _LUSDDebt) external view override returns (uint) {
-        return _LUSDDebt.mul(baseRate).div(DECIMAL_PRECISION);
+        return LiquityMath._max(
+            MIN_BORROWING_FEE.add(_LUSDDebt.mul(baseRate).div(DECIMAL_PRECISION)),
+            MAX_BORROWING_FEE
+        );
     }
 
     // Updates the baseRate state variable based on time elapsed since the last redemption or LUSD borrowing operation.
