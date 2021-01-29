@@ -7,6 +7,7 @@ import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/ISortedTroves.sol";
+import "./Interfaces/ILQTYToken.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
@@ -27,6 +28,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     ILUSDToken public lusdToken;
 
+    ILQTYToken public lqtyToken;
+
     ILQTYStaking public lqtyStaking;
 
     // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
@@ -36,6 +39,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
+
+    // During bootsrap period redemptions are not allowed
+    uint constant public BOOTSRAP_PERIOD = 14 days;
 
     /*
     * BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base rate from a redemption.
@@ -192,6 +198,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         address _priceFeedAddress,
         address _lusdTokenAddress,
         address _sortedTrovesAddress,
+        address _lqtyTokenAddress,
         address _lqtyStakingAddress
     )
         external
@@ -207,6 +214,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         checkContract(_priceFeedAddress);
         checkContract(_lusdTokenAddress);
         checkContract(_sortedTrovesAddress);
+        checkContract(_lqtyTokenAddress);
         checkContract(_lqtyStakingAddress);
 
         borrowerOperationsAddress = _borrowerOperationsAddress;
@@ -218,6 +226,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         priceFeed = IPriceFeed(_priceFeedAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
@@ -229,6 +238,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit SortedTrovesAddressChanged(_sortedTrovesAddress);
+        emit LQTYTokenAddressChanged(_lqtyTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
         _renounceOwnership();
@@ -535,7 +545,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         internal
         returns(LiquidationTotals memory totals)
     {
-        LocalVariables_LiquidationSequence memory vars;  
+        LocalVariables_LiquidationSequence memory vars;
         LiquidationValues memory singleLiquidation;
 
         vars.remainingLUSDInStabPool = _LUSDInStabPool;
@@ -840,16 +850,17 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         override
     {
         _requireValidMaxFeePercentage(_maxFeePercentage);
+        _requireAfterBootstrapPeriod();
         _requireTCRoverMCR();
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);
 
-        uint totalLUSDSupplyAtStart = getEntireSystemDebt();       
+        uint totalLUSDSupplyAtStart = getEntireSystemDebt();
         // Confirm redeemer's balance is less than total LUSD supply
         assert(lusdToken.balanceOf(msg.sender) <= totalLUSDSupplyAtStart);
 
         uint price = priceFeed.getPrice();
-        
+
         RedemptionTotals memory totals;
         totals.remainingLUSD = _LUSDamount;
         address currentBorrower;
@@ -897,7 +908,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         // Calculate the ETH fee
         totals.ETHFee = _getRedemptionFee(totals.totalETHDrawn);
-        
+
         _requireUserAcceptsFee(totals.ETHFee, totals.totalETHDrawn, _maxFeePercentage);
 
         // Send the ETH fee to the LQTY staking contract
@@ -1098,11 +1109,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         if (_debt == 0) { return; }
 
         /*
-        * Add distributed coll and debt rewards-per-unit-staked to the running totals. Division uses a "feedback" 
+        * Add distributed coll and debt rewards-per-unit-staked to the running totals. Division uses a "feedback"
         * error correction, to keep the cumulative error low in the running totals L_ETH and L_LUSDDebt:
         *
-        * 1) Form numerators which compensate for the floor division errors that occurred the last time this 
-        * function was called.  
+        * 1) Form numerators which compensate for the floor division errors that occurred the last time this
+        * function was called.
         * 2) Calculate "per-unit-staked" ratios.
         * 3) Multiply each ratio back by its denominator, to reveal the current floor division error.
         * 4) Store these errors for use in the next correction when this function is called.
@@ -1328,6 +1339,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     function _requireTCRoverMCR() internal view {
         require(_getTCR() >= MCR, "TroveManager: Cannot redeem when TCR < MCR");
+    }
+
+    function _requireAfterBootstrapPeriod() internal view {
+        uint systemDeploymentTime = lqtyToken.getDeploymentStartTime();
+        require(block.timestamp >= systemDeploymentTime.add(BOOTSRAP_PERIOD), "TroveManager: Redemptions are not allowed during bootstrap phase");
     }
 
     // --- Trove property getters ---
