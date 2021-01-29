@@ -36,7 +36,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
 
     /* 
     * The community LQTY supply cap is the starting balance of the Community Issuance contract.
-    * Liquity admin should transfer LQTY to this CommunityIssuance contract before activating it.
+    * It should be minted to this contract by LQTYToken, when the token is deployed.
     * 
     * Set to 1/4 of total LQTY supply.
     */
