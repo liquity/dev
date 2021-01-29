@@ -14,7 +14,13 @@ contract PriceFeedTestnet is IPriceFeed {
 
     // --- Functions ---
 
-    function getPrice() external view override returns (uint256) {
+    // View price getter for simplicity in tests
+    function getPrice() external view returns (uint256) {
+        return _price;
+    }
+
+   
+    function fetchPrice() external override returns (uint256) {
         return _price;
     }
 

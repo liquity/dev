@@ -4,5 +4,5 @@ pragma solidity 0.6.11;
 
 interface IPriceFeed {
 
-    function getPrice() external returns (uint);
+    function fetchPrice() external returns (uint);
 }

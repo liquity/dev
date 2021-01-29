@@ -64,18 +64,17 @@ contract LiquityBase is BaseMath {
         return activeDebt.add(closedDebt);
     }
 
-    function _getTCR() internal view returns (uint TCR) {
-        uint price = priceFeed.getPrice();
+    function _getTCR(uint _price) internal view returns (uint TCR) {
         uint entireSystemColl = getEntireSystemColl();
         uint entireSystemDebt = getEntireSystemDebt();
 
-        TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, price);
+        TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, _price);
 
         return TCR;
     }
 
-    function _checkRecoveryMode() internal view returns (bool) {
-        uint TCR = _getTCR();
+    function _checkRecoveryMode(uint _price) internal view returns (bool) {
+        uint TCR = _getTCR(_price);
 
         return TCR < CCR;
     }

@@ -25,6 +25,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     // Mainnet TellorMaster
     ITellor public tellor;
 
+    // Core Liquity contracts
+    address borrowerOperationsAddress;
+    address troveManagerAddress;
+
     uint constant public ETHUSD_TELLOR_REQ_ID = 1;
 
     // Use to convert a price answer to an 18-digit precision uint
@@ -60,34 +64,42 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     enum Status {usingChainlink, usingTellor, bothOraclesSuspect}
-
     Status status;
+
+    event LastGoodPriceUpdated(uint _lastGoodPrice);
 
     // --- Dependency setters ---
     
     function setAddresses(
         address _priceAggregatorAddress,
-        address _tellorMasterAddress
+        address _tellorMasterAddress,
+        address _borrowerOperationsAddress,
+        address _troveManagerAddress
     )
         external
         onlyOwner
     {
         checkContract(_priceAggregatorAddress);
+        checkContract(_tellorMasterAddress);
+        checkContract(_borrowerOperationsAddress);
+        checkContract(_troveManagerAddress);
 
         priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
         tellor = ITellor(_tellorMasterAddress);
+        borrowerOperationsAddress = _borrowerOperationsAddress;
+        troveManagerAddress = _troveManagerAddress;
 
         _renounceOwnership();
     }
 
-    // --- functions ---
+    // --- Functions ---
 
     /*
     * Returns the latest price obtained from the Oracle. Uses a main oracle (Chainlink) and a fallback oracle(Tellor) 
     * in case Chainlink fails. 
     *
     */
-    function getPrice() public override returns (uint) {
+    function fetchPrice() external override returns (uint) {
         // Get current price data from chainlink
         ChainlinkResponse memory chainlinkResponse;
         (chainlinkResponse.roundId,
@@ -96,29 +108,49 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         uint8 currentChainlinkDigits = priceAggregator.decimals();
 
-        // --- Case 1: Both oracles previously failed ---
-        if (status == Status.bothOraclesSuspect) {
-            // Get current price data from Tellor
-            TellorResponse memory tellorResponse;
-            (tellorResponse.ifRetrieve,
-            tellorResponse.value,
-            tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
-            
-            /*
-            * If both oracles are now back online and close together in price, we assume that they are reporting
-            * accurately, and so we switch back to Chainlink.
-            */
-            if (bothOraclesLiveAndSimilarPrice(chainlinkResponse, currentChainlinkDigits, tellorResponse)) {
-                status = Status.usingChainlink;
-                return  _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
-            } else {
-                return lastGoodPrice;
+        // --- Case 1: Main was working at the last price fetch ---
+        if (status == Status.usingChainlink) {
+            // Get previous round price data from chainlink
+            ChainlinkResponse memory prevChainlinkResponse; 
+            (prevChainlinkResponse.roundId,
+            prevChainlinkResponse.answer, ,
+            prevChainlinkResponse.timestamp,) = priceAggregator.getRoundData(chainlinkResponse.roundId - 1);
+
+            // If Chainlink is broken or price has deviated too much from its last value, try Tellor
+            if (chainlinkIsBroken(chainlinkResponse) || chainlinkPriceChangeAboveMax(chainlinkResponse, currentChainlinkDigits, prevChainlinkResponse, prevChainlinkDigits)) {
+                TellorResponse memory tellorResponse;
+                (tellorResponse.ifRetrieve,
+                tellorResponse.value,
+                tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
+                
+                // If Tellor is only frozen but otherwise returning valid data, just use the last good price
+                if (tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
+                
+                // If Tellor is broken then both oracles are suspect, and we just use the last good price
+                if (tellorIsBroken(tellorResponse)) {
+                    status = Status.bothOraclesSuspect; 
+                    return lastGoodPrice; 
+                }
+
+                // If Chainlink is broken and Tellor is working, return Tellor price
+                status = Status.usingTellor;
+                uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
+                lastGoodPrice = scaledTellorPrice;
+                emit LastGoodPriceUpdated(lastGoodPrice);
+                return scaledTellorPrice;
             }
+
+            // If Chainlink is working, return its current price
+            prevChainlinkDigits = currentChainlinkDigits;
+            uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
+            lastGoodPrice = scaledChainlinkPrice;
+            emit LastGoodPriceUpdated(lastGoodPrice);
+            return scaledChainlinkPrice;    
         }
 
-        // --- Case 2: The previous price was reported by Tellor --- 
+        // --- Case 2: The system used Tellor for the last price fetch --- 
         if (status == Status.usingTellor) {
-            // get Tellor price data
+            // Get Tellor price data
             TellorResponse memory tellorResponse;
             (tellorResponse.ifRetrieve,
             tellorResponse.value,
@@ -135,49 +167,46 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
            // If both Tellor and Chainlink are live and reporting similar prices, switch back to Chainlink
             if (bothOraclesLiveAndSimilarPrice(chainlinkResponse, currentChainlinkDigits, tellorResponse)) {
                 status = Status.usingChainlink;
-                return _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
+                prevChainlinkDigits = currentChainlinkDigits;
+                
+                uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
+                lastGoodPrice = scaledChainlinkPrice;
+                emit LastGoodPriceUpdated(lastGoodPrice);
+                return scaledChainlinkPrice;
             }
 
             // Otherwise, use Tellor price
             uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
             lastGoodPrice = scaledTellorPrice;
-            return _scaleTellorPriceByDigits(scaledTellorPrice);
+            emit LastGoodPriceUpdated(lastGoodPrice);
+            return scaledTellorPrice;
         }
 
-        // --- Case 3: Main was previously live ---
-        if (status == Status.usingChainlink) {
-            // Get previous round price data from chainlink
-            ChainlinkResponse memory prevChainlinkResponse; 
-            (prevChainlinkResponse.roundId,
-            prevChainlinkResponse.answer, ,
-            prevChainlinkResponse.timestamp,) = priceAggregator.getRoundData(chainlinkResponse.roundId - 1);
+        // --- Case 3: Both oracles were suspect at the last price fetch ---
+        if (status == Status.bothOraclesSuspect) {
+            // Get current price data from Tellor
+            TellorResponse memory tellorResponse;
+            (tellorResponse.ifRetrieve,
+            tellorResponse.value,
+            tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
+            
+            /*
+            * If both oracles are now back online and close together in price, we assume that they are reporting
+            * accurately, and so we switch back to Chainlink.
+            */
+            if (bothOraclesLiveAndSimilarPrice(chainlinkResponse, currentChainlinkDigits, tellorResponse)) {
+                status = Status.usingChainlink;
+                prevChainlinkDigits = currentChainlinkDigits;
+                
+                uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
+                lastGoodPrice = scaledChainlinkPrice;
+                emit LastGoodPriceUpdated(lastGoodPrice);
+                return scaledChainlinkPrice;
+            } 
 
-            // If Chainlink is broken or price deviated too much from previous, try Tellor
-            if (chainlinkIsBroken(chainlinkResponse) || chainlinkPriceChangeAboveMax(chainlinkResponse, currentChainlinkDigits, prevChainlinkResponse, prevChainlinkDigits)) {
-                    TellorResponse memory tellorResponse;
-                    (tellorResponse.ifRetrieve,
-                    tellorResponse.value,
-                    tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
-                    
-                    // If Tellor is only frozen but otherwise returning valid data, just use the last good price
-                    if (tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
-                    
-                    // If Tellor is broken then both oracles are suspect, and we just use the last good price
-                    if (tellorIsBroken(tellorResponse)) {
-                        status = Status.bothOraclesSuspect; 
-                        return lastGoodPrice; 
-                    }
-
-                // If tellor is working, return Tellor price
-                status = Status.usingTellor;
-                uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
-                lastGoodPrice = scaledTellorPrice;
-                return scaledTellorPrice;
-            }
+            // Otherwise, return the last good price
+            return lastGoodPrice;
         }
-
-       // If Chainlink is working, return its current price
-       return  _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
     }
 
     // --- Helper functions --- 
@@ -213,7 +242,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         if (_response.value == 0) {return true;} 
     }
 
-
     function bothOraclesLiveAndSimilarPrice(ChainlinkResponse memory _chainlinkResponse, uint _chainlinkDigits, TellorResponse memory _tellorResponse) internal view returns (bool) {
         // Check both oracles are live
         if (tellorIsBroken(_tellorResponse) || tellorIsFrozen(_tellorResponse) || chainlinkIsBroken(_chainlinkResponse)) {
@@ -246,10 +274,9 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return _price.mul(10**(TARGET_DIGITS - TELLOR_DIGITS));
     }
 
+    // --- Tellor functions (as found in UsingTellor.sol) ---
 
-    // --- Tellor functionality (as found in Tellor's UsingTellor.sol contract) ---
-
-    /**
+    /*
     * getTellorCurrentValue():  identical to getCurrentValue() in UsingTellor.sol
     *
     * @dev Allows the user to get the latest value for the requestId specified

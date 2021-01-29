@@ -434,9 +434,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         LiquidationTotals memory totals;
 
-        vars.price = priceFeed.getPrice();
+        vars.price = priceFeed.fetchPrice();
         vars.LUSDInStabPool = stabilityPool.getTotalLUSDDeposits();
-        vars.recoveryModeAtStart = _checkRecoveryMode();
+        vars.recoveryModeAtStart = _checkRecoveryMode(vars.price);
 
         // Perform the appropriate liquidation sequence - tally the values, and obtain their totals
         if (vars.recoveryModeAtStart) {
@@ -565,9 +565,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         LocalVariables_OuterLiquidationFunction memory vars;
         LiquidationTotals memory totals;
 
-        vars.price = priceFeed.getPrice();
+        vars.price = priceFeed.fetchPrice();
         vars.LUSDInStabPool = stabilityPool.getTotalLUSDDeposits();
-        vars.recoveryModeAtStart = _checkRecoveryMode();
+        vars.recoveryModeAtStart = _checkRecoveryMode(vars.price);
 
         // Perform the appropriate liquidation sequence - tally values and obtain their totals.
         if (vars.recoveryModeAtStart) {
@@ -839,7 +839,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         external
         override
     {
-        _requireTCRoverMCR();
+        uint price = priceFeed.fetchPrice();
+        _requireTCRoverMCR(price);
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);
 
@@ -847,8 +848,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         // Confirm redeemer's balance is less than total systemic debt
         assert(lusdToken.balanceOf(msg.sender) <= entireSystemDebt);
 
-        uint price = priceFeed.getPrice();
-        
         RedemptionTotals memory totals;
         totals.remainingLUSD = _LUSDamount;
         address currentBorrower;
@@ -1207,12 +1206,12 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     // --- Recovery Mode and TCR functions ---
 
-    function getTCR() external view override returns (uint) {
-        return _getTCR();
+    function getTCR(uint _price) external view override returns (uint) {
+        return _getTCR(_price);
     }
 
-    function checkRecoveryMode() external view override returns (bool) {
-        return _checkRecoveryMode();
+    function checkRecoveryMode(uint _price) external view override returns (bool) {
+        return _checkRecoveryMode(_price);
     }
 
     // Check whether or not the system *would be* in Recovery Mode, given an ETH:USD price, and the entire system coll and debt.
@@ -1328,8 +1327,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         require(_amount > 0, "TroveManager: Amount must be greater than zero");
     }
 
-    function _requireTCRoverMCR() internal view {
-        require(_getTCR() >= MCR, "TroveManager: Cannot redeem when TCR < MCR");
+    function _requireTCRoverMCR(uint _price) internal view {
+        require(_getTCR(_price) >= MCR, "TroveManager: Cannot redeem when TCR < MCR");
     }
 
     // --- Trove property getters ---
