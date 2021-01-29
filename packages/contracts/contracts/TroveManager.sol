@@ -38,7 +38,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // --- Data structures ---
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
-    uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
+    /*
+     * Half-life of 12h. 12h = 720 min
+     * (1/2) = d^720 => d = (1/2)^(1/720)
+     */
+    uint constant public MINUTE_DECAY_FACTOR = 999037758833783000;
     uint constant public MIN_REDEMPTION_FEE = DECIMAL_PRECISION / 1000 * 5; // 0.5%
     uint constant public MIN_BORROWING_FEE = DECIMAL_PRECISION / 1000 * 5; // 0.5%
     uint constant public MAX_BORROWING_FEE = DECIMAL_PRECISION / 100 * 5; // 5%
