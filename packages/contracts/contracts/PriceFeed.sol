@@ -20,10 +20,8 @@ import "./Dependencies/console.sol";
 contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     using SafeMath for uint256;
 
-    // Mainnet Chainlink aggregator
-    AggregatorV3Interface public priceAggregator;
-    // Mainnet TellorMaster
-    ITellor public tellor;
+    AggregatorV3Interface public priceAggregator;  // Mainnet Chainlink aggregator
+    ITellor public tellor;  // Mainnet TellorMaster
 
     // Core Liquity contracts
     address borrowerOperationsAddress;
@@ -46,7 +44,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     */
     uint constant public MAX_PRICE_DIFFERENCE_FOR_RETURN = 3e16; // 3%
 
-    uint public prevChainlinkDigits = 8;  
+    uint public prevChainlinkDigits;  
     uint public lastGoodPrice;
 
     struct ChainlinkResponse {
@@ -84,7 +82,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
         tellor = ITellor(_tellorMasterAddress);
 
-        // Get an initial price from Chainlink as our first reference for lastGoodPrice
+        // Get an initial price from Chainlink to serve as first reference for lastGoodPrice
         ChainlinkResponse memory chainlinkResponse;
         (,chainlinkResponse.answer,,,)  = priceAggregator.latestRoundData();
     
@@ -111,9 +109,8 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         uint8 currentChainlinkDigits = priceAggregator.decimals();
 
-        // --- Case 1: Main was working at the last price fetch ---
+        // --- Case 1: System fetched last price from Chainlink  ---
         if (status == Status.usingChainlink) {
-            console.log("usingCL initally");
             // Get previous round price data from chainlink
             ChainlinkResponse memory prevChainlinkResponse; 
             (prevChainlinkResponse.roundId,
@@ -122,7 +119,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
             // If Chainlink is broken or price has deviated too much from its last value, try Tellor
             if (chainlinkIsBroken(chainlinkResponse) || chainlinkPriceChangeAboveMax(chainlinkResponse, currentChainlinkDigits, prevChainlinkResponse, prevChainlinkDigits)) {
-                console.log("inside cl broken");
                 TellorResponse memory tellorResponse;
                 (tellorResponse.ifRetrieve,
                 tellorResponse.value,
@@ -130,7 +126,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 
                 // If Tellor is only frozen but otherwise returning valid data, just use the last good price
                 if (tellorIsFrozen(tellorResponse)) {
-                    console.log("inside tellor frozen");
                     status = Status.usingTellor; 
                     emit StatusChanged(status);
                     return lastGoodPrice;
@@ -138,14 +133,12 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 
                 // If Tellor is broken then both oracles are suspect, and we just use the last good price
                 if (tellorIsBroken(tellorResponse)) {
-                    console.log("inside tellor broken");
                     status = Status.bothOraclesSuspect; 
                     emit StatusChanged(status);
                     return lastGoodPrice; 
                 }
 
                 // If Chainlink is broken and Tellor is working, return current Tellor price
-                console.log("here3");
                 status = Status.usingTellor;
                 emit StatusChanged(status);
                 uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
@@ -162,7 +155,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             return scaledChainlinkPrice;    
         }
 
-        // --- Case 2: The system used Tellor for the last price fetch --- 
+        // --- Case 2: The system fetched last price from Tellor --- 
         if (status == Status.usingTellor) {
             // Get Tellor price data
             TellorResponse memory tellorResponse;
@@ -229,26 +222,20 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     // --- Helper functions --- 
 
     function chainlinkIsBroken(ChainlinkResponse memory _response) internal view returns (bool) {
-        console.log("Checking chainlink is broken");
         // Check for an invalid timeStamp that is 0, or in the future
         if (_response.timestamp == 0 || _response.timestamp > block.timestamp) {
-            console.log("Timestamp is 0 or in future");
             return true;}
         // Check for non-positive price
         if (_response.answer <= 0) {return true;} 
         // Check whether the oracle has frozen
         if ((block.timestamp.sub(_response.timestamp) > TIMEOUT)) {return true;}
 
-        console.log("CL not broken");
         return false;
     }
 
     function chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, uint _currentDigits, ChainlinkResponse memory _prevResponse, uint _prevDigits) internal view returns (bool) {
         uint currentScaledPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.answer), _currentDigits);
         uint prevScaledPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.answer), _prevDigits);
-       
-        console.log("current: %s", currentScaledPrice);
-        console.log("prevScaledPrice: %s", prevScaledPrice);
 
         uint deviation = LiquityMath._getAbsoluteDifference(currentScaledPrice, prevScaledPrice).mul(DECIMAL_PRECISION).div(prevScaledPrice);
          
