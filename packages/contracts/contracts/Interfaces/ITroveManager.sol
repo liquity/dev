@@ -99,6 +99,10 @@ interface ITroveManager {
 
     function removeStake(address _borrower) external;
 
+    function getRedemptionRate() external view returns (uint);
+
+    function getBorrowingRate() external view returns (uint);
+
     function getBorrowingFee(uint LUSDDebt) external view returns (uint);
 
     function decayBaseRateFromBorrowing() external;

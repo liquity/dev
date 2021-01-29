@@ -1278,17 +1278,25 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         return newBaseRate;
     }
 
+    function getRedemptionRate() public view override returns (uint) {
+        return MIN_REDEMPTION_FEE.add(baseRate);
+    }
+
     function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
-        return MIN_REDEMPTION_FEE.add(baseRate.mul(_ETHDrawn).div(DECIMAL_PRECISION));
+        return getRedemptionRate().mul(_ETHDrawn).div(DECIMAL_PRECISION);
     }
 
     // --- Borrowing fee functions ---
 
-    function getBorrowingFee(uint _LUSDDebt) external view override returns (uint) {
-        return LiquityMath._max(
-            MIN_BORROWING_FEE.add(_LUSDDebt.mul(baseRate).div(DECIMAL_PRECISION)),
+    function getBorrowingRate() public view override returns (uint) {
+        return LiquityMath._min(
+            MIN_BORROWING_FEE.add(baseRate),
             MAX_BORROWING_FEE
         );
+    }
+
+    function getBorrowingFee(uint _LUSDDebt) external view override returns (uint) {
+        return getBorrowingRate().mul(_LUSDDebt).div(DECIMAL_PRECISION);
     }
 
     // Updates the baseRate state variable based on time elapsed since the last redemption or LUSD borrowing operation.
