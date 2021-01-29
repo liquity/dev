@@ -96,15 +96,16 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     // --- Functions ---
 
     /*
+    * fetchPrice():
     * Returns the latest price obtained from the Oracle. Uses a main oracle (Chainlink) and a fallback oracle(Tellor) 
-    * in case Chainlink fails. 
+    * in case Chainlink fails. If both fail, it uses the last good price seen by Liquity.
     *
     */
     function fetchPrice() external override returns (uint) {
         // Get current price data from chainlink
         ChainlinkResponse memory chainlinkResponse;
         (chainlinkResponse.roundId,
-        chainlinkResponse.answer, ,
+        chainlinkResponse.answer,,
         chainlinkResponse.timestamp,)  = priceAggregator.latestRoundData();
 
         uint8 currentChainlinkDigits = priceAggregator.decimals();
@@ -113,8 +114,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         if (status == Status.usingChainlink) {
             // Get previous round price data from chainlink
             ChainlinkResponse memory prevChainlinkResponse; 
-            (prevChainlinkResponse.roundId,
-            prevChainlinkResponse.answer, ,
+            (,prevChainlinkResponse.answer,,
             prevChainlinkResponse.timestamp,) = priceAggregator.getRoundData(chainlinkResponse.roundId - 1);
 
             // If Chainlink is broken or price has deviated too much from its last value, try Tellor
