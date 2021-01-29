@@ -275,7 +275,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(123,  18))
   })
 
-  it("Price deviation of 50% doesn't cause PriceFeed to switch to fallback", async () => {
+  it.only("Price deviation of 50% doesn't cause PriceFeed to switch to fallback", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
@@ -310,7 +310,7 @@ contract('PriceFeed', async accounts => {
     
     await mockTellor.setPrice(dec(123, 6))
     await mockChainlink.setPrevPrice(dec(2, 9))
-    await mockChainlink.setPrice(dec(299999999))
+    await mockChainlink.setPrice(dec(2999999999))
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter =  await priceFeed.status()

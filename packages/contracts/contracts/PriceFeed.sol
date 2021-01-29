@@ -265,7 +265,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         uint scaledTellorPrice = _scaleTellorPriceByDigits(_tellorResponse.value);
         
         // Return true if the prices are close enough
-        uint percentPriceDifference = scaledMainPrice.sub(scaledTellorPrice).mul(1e18).div(scaledMainPrice);
+        uint percentPriceDifference = scaledMainPrice.sub(scaledTellorPrice).mul(DECIMAL_PRECISION).div(scaledMainPrice);
         return percentPriceDifference < MAX_PRICE_DIFFERENCE_FOR_RETURN;
     }
    
