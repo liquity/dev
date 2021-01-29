@@ -7,14 +7,12 @@ import "../Dependencies/AggregatorV3Interface.sol";
 contract MockAggregator is AggregatorV3Interface {
     
     // storage variables to hold the mock data
-    uint8 private decimalsVal;
+    uint8 private decimalsVal = 8;
     int private price;
+    int private prevPrice;
     uint private updateTime;
+    uint private prevUpdateTime;
 
-    enum Output { good, zeroTimestamp, futureTimestamp, negativePrice }
-
-    Output output;
-    
     // --- Functions ---
 
     function setDecimals(uint8 _decimals) external returns (bool) {
@@ -23,6 +21,14 @@ contract MockAggregator is AggregatorV3Interface {
 
     function setPrice(int _price) external returns (bool) {
         price = _price;
+    }
+
+    function setPrevPrice(int _prevPrice) external returns (bool) {
+        prevPrice = _prevPrice;
+    }
+
+    function setPrevUpdateTime(uint _prevUpdateTime) external returns (bool) {
+        prevUpdateTime = _prevUpdateTime;
     }
 
     function setUpdateTime(uint _updateTime) external returns (bool) {
@@ -50,8 +56,6 @@ contract MockAggregator is AggregatorV3Interface {
         return (0, price, 0, updateTime, 0); 
     }
 
-    // --- Unused, just here for compilation's sake ---
-
     function getRoundData(uint80)
     external
     override 
@@ -63,8 +67,9 @@ contract MockAggregator is AggregatorV3Interface {
       uint256 updatedAt,
       uint80 answeredInRound
     ) {
-        return (0,0,0,0,0);
+        return (0, prevPrice, 0, updateTime, 0);
     }
+
     function description() external override view returns (string memory) {
         return "";
     }
