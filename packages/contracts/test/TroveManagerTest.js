@@ -2595,7 +2595,7 @@ contract('TroveManager', async accounts => {
     await assertRevert(redemptionTxPromise, "TroveManager: Amount must be greater than zero")
   })
 
-  it.only("redeemCollateral(): reverts if max fee > 100%", async () => {
+  it("redeemCollateral(): reverts if max fee > 100%", async () => {
     await borrowerOperations.openTrove(th._100pct, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(20, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(40, 18), C, C, { from: C, value: dec(1, 'ether') })
@@ -2605,12 +2605,13 @@ contract('TroveManager', async accounts => {
     await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), '1000000000000000001'), "Max fee percentage must be between 0.5% and 100%")
   })
 
-  it.only("redeemCollateral(): reverts if max fee < 0.5%", async () => { 
+  it("redeemCollateral(): reverts if max fee < 0.5%", async () => { 
     await borrowerOperations.openTrove(th._100pct, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(20, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(40, 18), C, C, { from: C, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(40, 18), D, D, { from: D, value: dec(1, 'ether') })
 
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), 0), "Max fee percentage must be between 0.5% and 100%")
     await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), 1), "Max fee percentage must be between 0.5% and 100%")
     await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), '4999999999999999'), "Max fee percentage must be between 0.5% and 100%")
   })
@@ -2649,7 +2650,7 @@ contract('TroveManager', async accounts => {
     await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, dec(5, 15)), "Fee exceeded provided maximum")
   })
 
-  it.only("redeemCollateral(): succeeds if fee is less than max fee percentage", async () => {
+  it("redeemCollateral(): succeeds if fee is less than max fee percentage", async () => {
     await borrowerOperations.openTrove(th._100pct, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })

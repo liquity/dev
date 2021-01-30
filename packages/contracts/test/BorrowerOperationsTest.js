@@ -721,6 +721,7 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(th._100pct, dec(40, 18), C, C, { from: C, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(40, 18), D, D, { from: D, value: dec(1, 'ether') })
 
+    await assertRevert(borrowerOperations.withdrawLUSD(0, dec(1, 18), A, A, { from: A }), "Max fee percentage must be between 0.5% and 100%")
     await assertRevert(borrowerOperations.withdrawLUSD(1, dec(1, 18), A, A, { from: A }), "Max fee percentage must be between 0.5% and 100%")
     await assertRevert(borrowerOperations.withdrawLUSD('4999999999999999', dec(1, 18), A, A, { from: A }), "Max fee percentage must be between 0.5% and 100%")
   })
@@ -3023,7 +3024,8 @@ contract('BorrowerOperations', async accounts => {
     await assertRevert(borrowerOperations.openTrove('1000000000000000001', dec(20, 18), B, B, { from: B, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
   })
 
-  it("openTrove(): reverts if max fee <0.5%", async () => {
+  it("openTrove(): reverts if max fee < 0.5%", async () => {
+    await assertRevert(borrowerOperations.openTrove(0, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
     await assertRevert(borrowerOperations.openTrove(1, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
     await assertRevert(borrowerOperations.openTrove('4999999999999999', dec(20, 18), B, B, { from: B, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
   })
