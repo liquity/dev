@@ -257,7 +257,7 @@ In the first year after launch:
 
 - The Liquity admin address may transfer tokens **only to verified lockup contracts with an unlock date at least one year after system deployment**
 
-Also, separate LQTY allocations are made at deployent to EOAs that hold the LQTY reserved for LP rewards and for bug bounties/hackathons. Aside from these allocations, the only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Providers via the `CommunityIssuance` contract.
+Also, separate LQTY allocations are made at deployent to an EOA that will hold an amount of LQTY for bug bounties/hackathons and to a Uniswap LP reward contract. Aside from these allocations, the only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Providers via the `CommunityIssuance` contract.
 
 ### Lockup Implementation and admin transfer restriction
 
@@ -323,7 +323,7 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Sta
 
 `StabilityPool.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH and LQTY gains. Holds the LUSD Stability Pool deposits, and the ETH gains for depositors, from liquidations.
 
-`LUSDToken.sol` - the stablecoin token contract, which implements the ERC20 fungible token standard. The contract mints, burns and transfers LUSD tokens.
+`LUSDToken.sol` - the stablecoin token contract, which implements the ERC20 fungible token standard in conjunction with EIP-2612 and a mechanism that blocks (accidental) transfers to addresses like the StabilityPool and address(0) that are not supposed to receive funds through direct transfers. The contract mints, burns and transfers LUSD tokens.
 
 `SortedTroves.sol` - a doubly linked list that stores addresses of Trove owners, sorted by their individual collateralization ratio (ICR). It inserts and re-inserts Troves at the correct position, based on their ICR.
 
@@ -370,7 +370,7 @@ ICRs are computed dynamically at runtime, and not stored on the node. This is be
 
 The list relies on the fact that a collateral and debt redistribution due to a liquidation preserves the ordering of all active Troves (though it does decrease the ICR of each active Trove above the MCR).
 
-The fact that ordering is maintained as redistributions occur, is not immediately obvious: please see the [mathematical proof](https://github.com/liquity/dev/tree/master/packages/contracts/mathProofs) which shows that this holds in Liquity.
+The fact that ordering is maintained as redistributions occur, is not immediately obvious: please see the [mathematical proof](https://github.com/liquity/dev/blob/main/papers) which shows that this holds in Liquity.
 
 A node inserted based on current ICR will maintain the correct position, relative to its peers, as liquidation gains accumulate, as long as its raw collateral and debt have not changed.
 
