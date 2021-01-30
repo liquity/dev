@@ -1279,7 +1279,10 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function getRedemptionRate() public view override returns (uint) {
-        return MIN_REDEMPTION_FEE.add(baseRate);
+        return LiquityMath._min(
+            MIN_REDEMPTION_FEE.add(baseRate),
+            DECIMAL_PRECISION // cap at a maximum of 100%
+        );
     }
 
     function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
