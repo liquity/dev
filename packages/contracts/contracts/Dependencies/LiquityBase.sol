@@ -82,10 +82,11 @@ contract LiquityBase is BaseMath {
 
     function _requireUserAcceptsFee(uint _fee, uint _amount, uint _maxFeePercentage) internal pure {
         uint feePercentage = _fee.mul(DECIMAL_PRECISION).div(_amount);
-        require(feePercentage <= _maxFeePercentage || _maxFeePercentage == 0, "Fee exceeded provided maximum");
+        require(feePercentage <= _maxFeePercentage, "Fee exceeded provided maximum");
     }
 
     function _requireValidMaxFeePercentage(uint _maxFeePercentage) internal view {
-        require(_maxFeePercentage <= DECIMAL_PRECISION, "Max fee percentage must be between 0 and 100%");
+        require(_maxFeePercentage >= 5e15 && _maxFeePercentage <= DECIMAL_PRECISION,
+         "Max fee percentage must be between 0.5% and 100%");
     }
 }
