@@ -43,8 +43,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
      * (1/2) = d^720 => d = (1/2)^(1/720)
      */
     uint constant public MINUTE_DECAY_FACTOR = 999037758833783000;
-    uint constant public MIN_REDEMPTION_FEE = DECIMAL_PRECISION / 1000 * 5; // 0.5%
-    uint constant public MIN_BORROWING_FEE = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+    uint constant public REDEMPTION_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+    uint constant public BORROWING_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
     uint constant public MAX_BORROWING_FEE = DECIMAL_PRECISION / 100 * 5; // 5%
 
     // During bootsrap period redemptions are not allowed
@@ -1281,7 +1281,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     function getRedemptionRate() public view override returns (uint) {
         return LiquityMath._min(
-            MIN_REDEMPTION_FEE.add(baseRate),
+            REDEMPTION_FEE_FLOOR.add(baseRate),
             DECIMAL_PRECISION // cap at a maximum of 100%
         );
     }
@@ -1296,7 +1296,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     function getBorrowingRate() public view override returns (uint) {
         return LiquityMath._min(
-            MIN_BORROWING_FEE.add(baseRate),
+            BORROWING_FEE_FLOOR.add(baseRate),
             MAX_BORROWING_FEE
         );
     }
