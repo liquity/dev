@@ -3065,7 +3065,7 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(baseRate, dec(5, 16))
 
     // Attempt with maxFee 37.659%
-    const tx4 = await borrowerOperations.openTrove(dec(37659, 14), dec(30, 18), A, A, { from: F, value: dec(1, 'ether') })
+    const tx4 = await borrowerOperations.openTrove(dec(37659, 13), dec(30, 18), A, A, { from: F, value: dec(1, 'ether') })
     assert.isTrue(tx4.receipt.status)
 
     // Attempt with maxFee 100%
