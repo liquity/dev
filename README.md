@@ -733,11 +733,11 @@ The intentions behind this formula are:
 
 ### Gas compensation schedule
 
-When a borrower opens a Trove, an additional 10 LUSD debt is issued, and 10 LUSD is minted and sent to a dedicated contract (`GasPool`) for gas compensation - the "gas pool".
+When a borrower opens a Trove, an additional 50 LUSD debt is issued, and 50 LUSD is minted and sent to a dedicated contract (`GasPool`) for gas compensation - the "gas pool".
 
-When a borrower closes their active Trove, this gas compensation is refunded: 10 LUSD is burned from the gas pool's balance, and the corresponding 10 LUSD debt on the Trove is cancelled.
+When a borrower closes their active Trove, this gas compensation is refunded: 50 LUSD is burned from the gas pool's balance, and the corresponding 50 LUSD debt on the Trove is cancelled.
 
-The purpose of the 10 LUSD Liquidation Reserve is to provide a minimum level of gas compensation, regardless of the Trove's collateral size or the current ETH price.
+The purpose of the 50 LUSD Liquidation Reserve is to provide a minimum level of gas compensation, regardless of the Trove's collateral size or the current ETH price.
 
 ### Liquidation
 
@@ -747,7 +747,7 @@ When a Trove is liquidated, 0.5% of its collateral is sent to the liquidator, al
 
 When a Trove is redeemed from, the redemption is made only against (debt - 50), not the entire debt.
 
-But if the redemption causes an amount (debt - 50) to be cancelled, the Trove is then closed: the 10 LUSD Liquidation Reserve is cancelled with its remaining 50 debt. That is, the gas compensation is burned from the gas pool, and the 50 debt is zero’d. The ETH collateral surplus from the Trove remains in the system, to be later claimed by its owner.
+But if the redemption causes an amount (debt - 50) to be cancelled, the Trove is then closed: the 50 LUSD Liquidation Reserve is cancelled with its remaining 50 debt. That is, the gas compensation is burned from the gas pool, and the 50 debt is zero’d. The ETH collateral surplus from the Trove remains in the system, to be later claimed by its owner.
 
 ## Gas compensation Functionality
 
