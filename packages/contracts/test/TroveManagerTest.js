@@ -2595,15 +2595,86 @@ contract('TroveManager', async accounts => {
     await assertRevert(redemptionTxPromise, "TroveManager: Amount must be greater than zero")
   })
 
-  it("redeemCollateral(): fails if max fee is exceeded", async () => {
+  it("redeemCollateral(): reverts if max fee percentage is exceeded", async () => {
     await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 LUSD
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    // total LUSD supply is 150
+    const totalSupply = await lusdToken.totalSupply()
+    assert.equal(totalSupply, dec(150, 18))
 
-    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), 1), "TroveManager: redemption fee exceeded provided max")
+    await troveManager.setBaseRate(0) 
+
+    // LUSD redemption is 15 USD: a redemption that incurs a fee of 15/(150 * 2) = 5%
+    const attemptedLUSDRedemption = dec(15, 18)
+
+    // Max fee is <5%
+    const lessThan5pct = '49999999999999999'
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, lessThan5pct), "TroveManager: redemption fee exceeded provided max")
+  
+    await troveManager.setBaseRate(0)  // artificially zero the baseRate
+    
+    // Max fee is 1%
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, dec(1, 16)), "TroveManager: redemption fee exceeded provided max")
+  
+    await troveManager.setBaseRate(0)
+
+     // Max fee is 3.754%
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, dec(3754, 13)), "TroveManager: redemption fee exceeded provided max")
+  
+    await troveManager.setBaseRate(0)
+
+    // Max fee is 1e-16%
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, 1), "TroveManager: redemption fee exceeded provided max")
+  })
+
+  it("redeemCollateral(): succeeds if fee is less than max fee percentage", async () => {
+    await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+
+    // Total LUSD supply is 150
+    const totalSupply = await lusdToken.totalSupply()
+    assert.equal(totalSupply, dec(150, 18))
+
+    await troveManager.setBaseRate(0) 
+
+    // LUSD redemption is 15 USD: a redemption that incurs a fee of 15/(150 * 2) = 5%
+    const attemptedLUSDRedemption = dec(15, 18)
+
+   // Attempt with maxFee > 5%
+    const moreThan5pct = '50000000000000001'
+    const tx1 = await th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, moreThan5pct)
+    assert.isTrue(tx1.receipt.status)
+    await borrowerOperations.adjustTrove(0, 0, dec(15, 18), true, A, A, {from: C, value: dec(1, 'ether')})  // C withdraws 15 LUSD again
+  
+    await troveManager.setBaseRate(0)  // Artificially zero the baseRate
+    
+   // Attempt with maxFee = 5%
+    const tx2 = await th.redeemCollateralAndGetTxObject(A, contracts, attemptedLUSDRedemption, dec(5, 16))
+    assert.isTrue(tx2.receipt.status)
+    await borrowerOperations.adjustTrove(0, 0, dec(15, 18), true, A, A, {from: C, value: dec(1, 'ether')})
+  
+    await troveManager.setBaseRate(0)
+
+     // Max fee is 10%
+    const tx3 = await th.redeemCollateralAndGetTxObject(B, contracts, attemptedLUSDRedemption, dec(1, 17))
+    assert.isTrue(tx3.receipt.status)
+    await borrowerOperations.adjustTrove(0, 0, dec(15, 18), true, A, A, {from: C, value: dec(1, 'ether')})
+  
+    await troveManager.setBaseRate(0)
+
+    // Max fee is 37.659%
+    const tx4 = await th.redeemCollateralAndGetTxObject(C, contracts, attemptedLUSDRedemption, dec(37659, 13))
+    assert.isTrue(tx4.receipt.status)
+    await borrowerOperations.adjustTrove(0, 0, dec(15, 18), true, A, A, {from: C, value: dec(1, 'ether')})
+
+    await troveManager.setBaseRate(0)
+
+    // Max fee is 100%
+    const tx5 = await th.redeemCollateralAndGetTxObject(C, contracts, attemptedLUSDRedemption, dec(1, 18))
+    assert.isTrue(tx5.receipt.status)
   })
 
   it("redeemCollateral(): doesn't affect the Stability Pool deposits or ETH gain of redeemed-from troves", async () => {
