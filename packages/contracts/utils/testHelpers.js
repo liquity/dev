@@ -263,6 +263,7 @@ class TestHelper {
   }
 
   static logBN(label, x) {
+    x = x.toString()
     // TODO: thousand separators
     console.log(`${label}:`, x.length < 18 ? x : (x.slice(0, x.length-18) + '.' + x.slice(-18)))
   }
