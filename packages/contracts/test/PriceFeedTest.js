@@ -1,5 +1,5 @@
 
-const PriceFeed = artifacts.require("./PriceFeed.sol")
+const PriceFeed = artifacts.require("./PriceFeedTester.sol")
 const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
 const MockChainlink = artifacts.require("./MockAggregator.sol")
 const MockTellor = artifacts.require("./MockTellor.sol")
@@ -98,47 +98,53 @@ contract('PriceFeed', async accounts => {
     })
   })
 
-  it("Chainlink working: fetchPrice should return the correct price, taking into account the number of decimal digits on the aggregator", async () => {
-    await setAddresses()
+  // it("Chainlink working: fetchPrice should return the correct price, taking into account the number of decimal digits on the aggregator", async () => {
+  //   await setAddresses()
 
-    // Oracle price price is 10.00000000
-    await mockChainlink.setDecimals(8)
-    await mockChainlink.setPrevPrice(dec(1, 9))
-    await mockChainlink.setPrice(dec(1, 9))
-    await priceFeed.fetchPrice()
-    let price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 10, with 18 digit precision
-    assert.equal(price, dec(10, 18))
+  //   // Oracle price price is 10.00000000
+  //   await mockChainlink.setDecimals(8)
+  //   await mockChainlink.setPrevPrice(dec(1, 9))
+  //   await mockChainlink.setPrice(dec(1, 9))
+  //   await priceFeed.fetchPrice()
+  //   let price = await priceFeed.lastGoodPrice()
+  //   // Check Liquity PriceFeed gives 10, with 18 digit precision
+  //   assert.equal(price, dec(10, 18))
 
-    // Oracle price is 1e9
-    await mockChainlink.setDecimals(0)
-    await mockChainlink.setPrevPrice(dec(1, 9))
-    await mockChainlink.setPrice(dec(1, 9))
-    await priceFeed.fetchPrice()
-    price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 1e9, with 18 digit precision
-    assert.equal(price, dec(1, 27))
+  //   Oracle price is 1e9
+  //   await mockChainlink.setDecimals(0)
+  //   await mockChainlink.setPrevPrice(dec(1, 9))
+  //   await mockChainlink.setPrice(dec(1, 9))
+  //   await priceFeed.fetchPrice()
+  //   price = await priceFeed.lastGoodPrice()
+  //   Check Liquity PriceFeed gives 1e9, with 18 digit precision
+  //   console.log(`price: ${price}`)
+  //   console.log(`1e27: ${toBN(dec(1, 27))}`)
+  //   assert.isTrue(price.eq(toBN(dec(1, 27))))
+    
+  //   // Oracle price is 0.0001
+  //   await mockChainlink.setDecimals(18)
+  //   const decimals = await mockChainlink.decimals()
+  //   console.log(`decimals after setting: ${decimals}`)
+  //   await mockChainlink.setPrevPrice(dec(1, 14))
+  //   await mockChainlink.setPrice(dec(1, 14))
+  //   await priceFeed.fetchPrice()
+  //   price = await priceFeed.lastGoodPrice()
+  //   // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
+  //   console.log(`price: ${price}`)
+  //   console.log(`dec(1, 14): ${dec(1, 14)}`)
+  //   assert.isTrue(price.eq(toBN(dec(1, 14))))
 
-    // Oracle price is 0.0001
-    await mockChainlink.setDecimals(18)
-    await mockChainlink.setPrevPrice(dec(1, 14))
-    await mockChainlink.setPrice(dec(1, 14))
-    await priceFeed.fetchPrice()
-    price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
-    price = await priceFeed.fetchPrice()
-    assert.equal(price, dec(1, 14))
+  //   // Oracle price is 1234.56789
+  //   await mockChainlink.setDecimals(5)
+  //   await mockChainlink.setPrevPrice(dec(123456789))
+  //   await mockChainlink.setPrice(dec(123456789))
+  //   await priceFeed.fetchPrice()
+  //   price = await priceFeed.lastGoodPrice()
+  //   // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
+  //   assert.equal(price, '1234567890000000000000')
+  // })
 
-    // Oracle price is 1234.56789
-    await mockChainlink.setDecimals(5)
-    await mockChainlink.setPrevPrice(dec(123456789))
-    await mockChainlink.setPrice(dec(123456789))
-    await priceFeed.fetchPrice()
-    price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
-    price = await priceFeed.fetchPrice()
-    assert.equal(price, '1234567890000000000000')
-  })
+  // --- Initial Chainlink failure ---
 
   it("Chainlink failed, Tellor working: fetchPrice should return the correct Tellor price, taking into account Tellor's 6-digit granularity", async () => {
     await setAddresses()
@@ -275,7 +281,69 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(123,  18))
   })
 
-  it.only("Price deviation of 50% doesn't cause PriceFeed to switch to fallback", async () => {
+  // --- Chainlink timeout --- 
+  it("Chainlink failed by timeout, Tellor working: fetchPrice should switch to Tellor", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockTellor.setPrice(dec(123, 6))
+    await th.fastForwardTime(10800, web3.currentProvider) // fast forward 3 hours
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    const statusAfter =  await priceFeed.status()
+    assert.equal(statusAfter, '1') // status 1: using tellor 
+  })
+
+  it("Chainlink failed by timeout, Tellor working: fetchPrice should return the correct price from Tellor", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await th.fastForwardTime(11800, web3.currentProvider) // Fast forward 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    // Tellor price is recent
+    await mockTellor.setUpdateTime(now)
+    await mockTellor.setPrice(dec(123, 6))
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+
+    let price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(123,  18))
+  })
+
+  it("Chainlink is out of date by <3hrs: don't switch to Tellor, keep using Chainlink", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockChainlink.setPrevPrice(dec(1234, 8))
+    await mockChainlink.setPrice(dec(1234, 8))
+    await th.fastForwardTime(10740, web3.currentProvider) // fast forward 2hrs 59 minutes 
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    const statusAfter =  await priceFeed.status()
+    assert.equal(statusAfter, '0') // status 0: using chainlink
+  })
+
+  it("Chainlink is out of date by <3hrs: don't switch to Tellor, get correct price from Chainklink", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+  
+    const decimals = await mockChainlink.decimals()
+
+    await mockChainlink.setPrevPrice(dec(1234, 8))
+    await mockChainlink.setPrice(dec(1234, 8))
+    await th.fastForwardTime(10740, web3.currentProvider) // fast forward 2hrs 59 minutes 
+    
+    const priceFetchTx = await priceFeed.fetchPrice()
+    const price = await priceFeed.lastGoodPrice()
+    console.log(`${price}`)
+    assert.equal(price, dec(1234, 18))
+  })
+
+  it("Chainlink price deviation of 50% doesn't cause PriceFeed to switch to fallback", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
@@ -286,10 +354,10 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter =  await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '0') // status 0: still using chainlink 
   })
 
-  it("Price deviation of >50% causes PriceFeed to switch to fallback", async () => {
+  it("Chainlink price deviation of >50% causes PriceFeed to switch to fallback", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
@@ -303,7 +371,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(statusAfter, '1') // status 1: using tellor 
   })
 
-  it("Price deviation of <50% doesn't cause PriceFeed to switch to fallback", async () => {
+  it("Chainlink price deviation of <50% doesn't cause PriceFeed to switch to fallback", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
@@ -344,6 +412,176 @@ contract('PriceFeed', async accounts => {
 
     let price = await priceFeed.lastGoodPrice()
     assert.equal(price, dec(123,  18))
+  })
+
+  // --- Chainlink fails and Tellor freezes ---
+
+  it.only("Chainlink failed by large relative price deviation, Tellor frozen: Pricefeed switches to Tellor", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockTellor.setPrice(dec(123, 6))
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(2, 9))
+
+    // 3 hours pass with no Tellor updates
+    await th.fastForwardTime(10800, web3.currentProvider)
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+
+  
+    const statusAfter = await priceFeed.status()
+    assert.equal(statusAfter, '1') // status 1: using tellor
+  })
+
+  it.only("Chainlink failed by large relative price deviation, Tellor frozen: fetchPrice get the last good price", async () => {
+    await setAddresses()
+    priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
+    
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockTellor.setPrice(dec(1300, 6))
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(2, 9))
+
+    // 3 hours pass with no Tellor updates
+    await th.fastForwardTime(10800, web3.currentProvider)
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    let price = await priceFeed.lastGoodPrice()
+
+    // Check that the returned price is in fact the previous price
+    assert.equal(price, dec(1200,  18))  
+  })
+
+  // --- Chainlink fails and tellor is broken
+  it.only("Chainlink failed by large relative price deviation, Tellor is broken by 0 price: Pricefeed switches to 'bothOracleSuspect'", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    // Make mock Chainlink price deviate too much
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(2, 9))
+
+     // Make mock Tellor return 0 price
+    await mockTellor.setPrice(0)
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+
+    const statusAfter = await priceFeed.status()
+    assert.equal(statusAfter, '2') // status 2: both oracles suspect
+  })
+
+  it.only("Chainlink failed by large relative price deviation, Tellor is broken by 0 price: fetchPrice get the last good price", async () => {
+    await setAddresses()
+    priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
+    
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockTellor.setPrice(dec(1300, 6))
+
+    // Make mock Chainlink price deviate too much
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(2, 9))
+
+     // Make mock Tellor return 0 price
+    await mockTellor.setPrice(0)
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    let price = await priceFeed.lastGoodPrice()
+
+    // Check that the returned price is in fact the previous price
+    assert.equal(price, dec(1200,  18))  
+  })
+
+   // --- Chainlink fails and Tellor is broken ---
+
+   it.only("Chainlink failed by large relative price deviation, Tellor is broken by 0 timestamp: Pricefeed switches to 'bothOracleSuspect'", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    // Make mock Chainlink price deviate too much
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(2, 9))
+
+     // Make mock Tellor return 0 timestamp
+    await mockTellor.setUpdateTime(0)
+    const priceFetchTx = await priceFeed.fetchPrice()
+
+    const statusAfter = await priceFeed.status()
+    assert.equal(statusAfter, '2') // status 2: both oracles suspect
+  })
+
+  it.only("Chainlink failed by large relative price deviation, Tellor is broken by 0 timestamp: fetchPrice get the last good price", async () => {
+    await setAddresses()
+    priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
+    
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockTellor.setPrice(dec(1300, 6))
+
+    // Make mock Chainlink price deviate too much
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(2, 9))
+
+    // Make mock Tellor return 0 timestamp
+    await mockTellor.setUpdateTime(0)
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    let price = await priceFeed.lastGoodPrice()
+
+    // Check that the returned price is in fact the previous price
+    assert.equal(price, dec(1200,  18))  
+  })
+
+  // --- Chainlink fails and tellor is broken
+  it.only("Chainlink failed by large relative price deviation, Tellor is broken by future timestamp: Pricefeed switches to 'bothOracleSuspect'", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    // Make mock Chainlink price deviate too much
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(2, 9))
+
+    // Make mock Tellor return 0 timestamp
+    await mockTellor.setUpdateTime(0)
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+
+    const statusAfter = await priceFeed.status()
+    assert.equal(statusAfter, '2') // status 2: both oracles suspect
+  })
+
+  it.only("Chainlink failed by large relative price deviation, Tellor is broken by future timestamp: fetchPrice get the last good price", async () => {
+    await setAddresses()
+    priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
+    
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockTellor.setPrice(dec(1300, 6))
+
+    // Make mock Chainlink price deviate too much
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(2, 9))
+
+    // Make mock Tellor return a future timestamp
+    const now = await th.getLatestBlockTimestamp(web3)
+    const future = toBN(now).add(toBN("10000"))
+    await mockTellor.setUpdateTime(future)
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    let price = await priceFeed.lastGoodPrice()
+
+    // Check that the returned price is in fact the previous price
+    assert.equal(price, dec(1200,  18))  
   })
 })
 
