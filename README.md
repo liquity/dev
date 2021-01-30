@@ -174,6 +174,8 @@ A redemption sequence of `n` steps will **fully** redeem from up to `n-1` Troves
 
 Redemptions are blocked when TCR < 110% (there is no need to restrict ICR < TCR). At that TCR redemptions would likely be unprofitable, as LUSD is probably trading above $1 if the system has crashed that badly, but it could be a way for an attacker with a lot of LUSD to lower the TCR even further.
 
+Note that redemptions disabled during the first 14 days since deployment of the Liquity protocol to protect the monetary system in its infancy.
+
 ### Partial redemption
 
 Most redemption transactions will include a partial redemption, since the amount redeemed is unlikely to perfectly match the total debt of a series of Troves.
