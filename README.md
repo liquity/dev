@@ -565,7 +565,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `withdrawLUSD(uint _maxFee, uint _amount, address _upperHint, address _lowerHint)`: issues `_amount` of LUSD from the caller’s Trove to the caller. Executes only if the resultant collateralization ratio would remain above the minimum, and the system would remain in Normal Mode after the withdrawal. 
 
-`repayLUSD(uint _amount, address _upperHint, address _lowerHint)`: repay `_amount` of LUSD to the caller’s Trove, subject to leaving 10 debt in the Trove (which corresponds to the 10 LUSD gas compensation).
+`repayLUSD(uint _amount, address _upperHint, address _lowerHint)`: repay `_amount` of LUSD to the caller’s Trove, subject to leaving 50 debt in the Trove (which corresponds to the 50 LUSD gas compensation).
 
 `adjustTrove(uint _maxFee, uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
 
