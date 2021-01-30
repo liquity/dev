@@ -705,7 +705,17 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
-  it("withdrawLUSD(): reverts if fee exceeds max fee percentage", async () => {
+  it.only("withdrawLUSD(): reverts if max fee > 100%", async () => {
+    await borrowerOperations.openTrove(0, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), C, C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), D, D, { from: D, value: dec(1, 'ether') })
+
+    await assertRevert(borrowerOperations.withdrawLUSD(dec(2, 18), dec(1, 18), A, A, { from: A }), "Max fee percentage must be between 0 and 100%")
+    await assertRevert(borrowerOperations.withdrawLUSD('1000000000000000001', dec(1, 18), A, A, { from: A }), "Max fee percentage must be between 0 and 100%")
+  })
+
+  it.only("withdrawLUSD(): reverts if fee exceeds max fee percentage", async () => {
     await borrowerOperations.openTrove(0, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(20, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(40, 18), C, C, { from: C, value: dec(1, 'ether') })
@@ -721,22 +731,22 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(baseRate, dec(5, 16))
 
     const lessThan5pct = '49999999999999999'
-    await assertRevert(borrowerOperations.withdrawLUSD(lessThan5pct, dec(1, 18), A, A, { from: A }), "BorrowerOps: issuance fee exceeded provided max")
+    await assertRevert(borrowerOperations.withdrawLUSD(lessThan5pct, dec(1, 18), A, A, { from: A }), "Fee exceeded provided maximum")
     
     baseRate = await troveManager.baseRate() // expect 5% base rate
     assert.equal(baseRate, dec(5, 16))
     // Attempt with maxFee 1%
-    await assertRevert(borrowerOperations.withdrawLUSD(dec(1, 16), dec(1, 18), A, A, { from: B }), "BorrowerOps: issuance fee exceeded provided max")
+    await assertRevert(borrowerOperations.withdrawLUSD(dec(1, 16), dec(1, 18), A, A, { from: B }), "Fee exceeded provided maximum")
    
     baseRate = await troveManager.baseRate()  // expect 5% base rate
     assert.equal(baseRate, dec(5, 16))
     // Attempt with maxFee 3.754%
-    await assertRevert(borrowerOperations.withdrawLUSD(dec(3754, 13), dec(1, 18), A, A, { from: C }), "BorrowerOps: issuance fee exceeded provided max")
+    await assertRevert(borrowerOperations.withdrawLUSD(dec(3754, 13), dec(1, 18), A, A, { from: C }), "Fee exceeded provided maximum")
   
     baseRate = await troveManager.baseRate()  // expect 5% base rate
     assert.equal(baseRate, dec(5, 16))
     // Attempt with maxFee 1e-16%
-    await assertRevert(borrowerOperations.withdrawLUSD(1, dec(1, 18), A, A, { from: D}), "BorrowerOps: issuance fee exceeded provided max")
+    await assertRevert(borrowerOperations.withdrawLUSD(1, dec(1, 18), A, A, { from: D}), "Fee exceeded provided maximum")
   })
 
   it("withdrawLUSD(): succeeds when fee is less than max fee percentage", async () => {
@@ -2998,6 +3008,11 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
   })
 
+  it("openTrove(): reverts if max fee > 100%", async () => {
+    await assertRevert(borrowerOperations.openTrove(dec(2, 18), dec(10, 18), A, A, { from: A, value: dec(1, 'ether') }), "Max fee percentage must be between 0 and 100%")
+    await assertRevert(borrowerOperations.openTrove('1000000000000000001', dec(20, 18), B, B, { from: B, value: dec(1, 'ether') }), "Max fee percentage must be between 0 and 100%")
+  })
+
   it("openTrove(): reverts if fee exceeds max fee percentage", async () => {
     await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
@@ -3013,22 +3028,22 @@ contract('BorrowerOperations', async accounts => {
     assert.equal(baseRate, dec(5, 16))
 
     const lessThan5pct = '49999999999999999'
-    await assertRevert(borrowerOperations.openTrove(lessThan5pct, dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+    await assertRevert(borrowerOperations.openTrove(lessThan5pct, dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "Fee exceeded provided maximum")
     
     baseRate = await troveManager.baseRate() // expect 5% base rate
     assert.equal(baseRate, dec(5, 16))
     // Attempt with maxFee 1%
-    await assertRevert(borrowerOperations.openTrove(dec(1, 16), dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+    await assertRevert(borrowerOperations.openTrove(dec(1, 16), dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "Fee exceeded provided maximum")
    
     baseRate = await troveManager.baseRate()  // expect 5% base rate
     assert.equal(baseRate, dec(5, 16))
     // Attempt with maxFee 3.754%
-    await assertRevert(borrowerOperations.openTrove(dec(3754, 13), dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+    await assertRevert(borrowerOperations.openTrove(dec(3754, 13), dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "Fee exceeded provided maximum")
   
     baseRate = await troveManager.baseRate()  // expect 5% base rate
     assert.equal(baseRate, dec(5, 16))
     // Attempt with maxFee 1e-16%
-    await assertRevert(borrowerOperations.openTrove(1, dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+    await assertRevert(borrowerOperations.openTrove(1, dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "Fee exceeded provided maximum")
   })
 
   it("openTrove(): succeeds when fee is less than max fee percentage", async () => {
