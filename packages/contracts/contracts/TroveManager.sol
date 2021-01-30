@@ -839,6 +839,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         external
         override
     {
+        _requireValidMaxFeePercentage(_maxFeePercentage);
         _requireTCRoverMCR();
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);

@@ -705,7 +705,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
-  it("withdrawLUSD(): fails if fee exceeds max fee", async () => {
+  it("withdrawLUSD(): reverts if fee exceeds max fee", async () => {
     await borrowerOperations.openTrove(0, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(20, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(40, 18), C, C, { from: C, value: dec(1, 'ether') })
@@ -2998,7 +2998,7 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
   })
 
-  it("openTrove(): fails if fee exceeds max fee", async () => {
+  it("openTrove(): reverts if fee exceeds max fee", async () => {
     await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
