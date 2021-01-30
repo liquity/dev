@@ -416,7 +416,7 @@ contract('PriceFeed', async accounts => {
 
   // --- Chainlink fails and Tellor freezes ---
 
-  it.only("Chainlink failed by large relative price deviation, Tellor frozen: Pricefeed switches to Tellor", async () => {
+  it("Chainlink failed by large relative price deviation, Tellor frozen: Pricefeed switches to Tellor", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
@@ -430,12 +430,11 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
 
-  
     const statusAfter = await priceFeed.status()
     assert.equal(statusAfter, '1') // status 1: using tellor
   })
 
-  it.only("Chainlink failed by large relative price deviation, Tellor frozen: fetchPrice get the last good price", async () => {
+  it("Chainlink failed by large relative price deviation, Tellor frozen: fetchPrice get the last good price", async () => {
     await setAddresses()
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
     
@@ -457,7 +456,7 @@ contract('PriceFeed', async accounts => {
   })
 
   // --- Chainlink fails and tellor is broken
-  it.only("Chainlink failed by large relative price deviation, Tellor is broken by 0 price: Pricefeed switches to 'bothOracleSuspect'", async () => {
+  it("Chainlink failed by large relative price deviation, Tellor is broken by 0 price: Pricefeed switches to 'bothOracleSuspect'", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
@@ -475,7 +474,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(statusAfter, '2') // status 2: both oracles suspect
   })
 
-  it.only("Chainlink failed by large relative price deviation, Tellor is broken by 0 price: fetchPrice get the last good price", async () => {
+  it("Chainlink failed by large relative price deviation, Tellor is broken by 0 price: fetchPrice get the last good price", async () => {
     await setAddresses()
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
     
@@ -500,7 +499,7 @@ contract('PriceFeed', async accounts => {
 
    // --- Chainlink fails and Tellor is broken ---
 
-   it.only("Chainlink failed by large relative price deviation, Tellor is broken by 0 timestamp: Pricefeed switches to 'bothOracleSuspect'", async () => {
+   it("Chainlink failed by large relative price deviation, Tellor is broken by 0 timestamp: Pricefeed switches to 'bothOracleSuspect'", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
@@ -517,7 +516,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(statusAfter, '2') // status 2: both oracles suspect
   })
 
-  it.only("Chainlink failed by large relative price deviation, Tellor is broken by 0 timestamp: fetchPrice get the last good price", async () => {
+  it("Chainlink failed by large relative price deviation, Tellor is broken by 0 timestamp: fetchPrice get the last good price", async () => {
     await setAddresses()
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
     
@@ -541,7 +540,7 @@ contract('PriceFeed', async accounts => {
   })
 
   // --- Chainlink fails and tellor is broken
-  it.only("Chainlink failed by large relative price deviation, Tellor is broken by future timestamp: Pricefeed switches to 'bothOracleSuspect'", async () => {
+  it("Chainlink failed by large relative price deviation, Tellor is broken by future timestamp: Pricefeed switches to 'bothOracleSuspect'", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
@@ -559,7 +558,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(statusAfter, '2') // status 2: both oracles suspect
   })
 
-  it.only("Chainlink failed by large relative price deviation, Tellor is broken by future timestamp: fetchPrice get the last good price", async () => {
+  it("Chainlink failed by large relative price deviation, Tellor is broken by future timestamp: fetchPrice get the last good price", async () => {
     await setAddresses()
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
     
