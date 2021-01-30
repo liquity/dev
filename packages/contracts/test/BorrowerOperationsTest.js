@@ -26,7 +26,7 @@ contract('BorrowerOperations', async accounts => {
 
   const [
     owner, alice, bob, carol, dennis, whale,
-    A, B, C, D, E,
+    A, B, C, D, E, F, G, H,
     // defaulter_1, defaulter_2,
     frontEnd_1, frontEnd_2, frontEnd_3] = accounts;
     
@@ -674,10 +674,6 @@ contract('BorrowerOperations', async accounts => {
     await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
 
-    // console.log(`activePool raw ETH bal: ${await web3.eth.getBalance(activePool.address)}`)
-    // console.log(`activePool ETH tracker: ${await activePool.getETH()}`)
-    // console.log(`activePool in TroveManager: ${await troveManager.activePool()}`)
-
     // A redeems 10 LUSD
     await th.redeemCollateral(A, contracts, dec(10, 18))
 
@@ -709,15 +705,85 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(baseRate_3.lt(baseRate_2))
   })
 
-  it("withdrawLUSD(): fails if max fee is exceeded", async () => {
-    await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+  it("withdrawLUSD(): fails if fee exceeds max fee", async () => {
+    await borrowerOperations.openTrove(0, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), C, C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), D, D, { from: D, value: dec(1, 'ether') })
 
-    // A redeems 10 LUSD
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    const totalSupply = await lusdToken.totalSupply()
+    assert.equal(totalSupply, dec(150, 18))
 
-    await assertRevert(borrowerOperations.withdrawLUSD(1, dec(10, 18), A, A, { from: A }), "BorrowerOps: issuance fee exceeded provided max")
+    // C redeems 15 LUSD
+    await th.redeemCollateral(C, contracts, dec(15, 18))
+
+    let baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    const lessThan5pct = '49999999999999999'
+    await assertRevert(borrowerOperations.withdrawLUSD(lessThan5pct, dec(1, 18), A, A, { from: A }), "BorrowerOps: issuance fee exceeded provided max")
+    
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+    // Attempt with maxFee 1%
+    await assertRevert(borrowerOperations.withdrawLUSD(dec(1, 16), dec(1, 18), A, A, { from: B }), "BorrowerOps: issuance fee exceeded provided max")
+   
+    baseRate = await troveManager.baseRate()  // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+    // Attempt with maxFee 3.754%
+    await assertRevert(borrowerOperations.withdrawLUSD(dec(3754, 13), dec(1, 18), A, A, { from: C }), "BorrowerOps: issuance fee exceeded provided max")
+  
+    baseRate = await troveManager.baseRate()  // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+    // Attempt with maxFee 1e-16%
+    await assertRevert(borrowerOperations.withdrawLUSD(1, dec(1, 18), A, A, { from: D}), "BorrowerOps: issuance fee exceeded provided max")
+  })
+
+  it("withdrawLUSD(): succeeds when fee is less than max fee", async () => {
+    await borrowerOperations.openTrove(0, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(10, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(20, 18), C, C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), D, D, { from: D, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(30, 18), D, D, { from: E, value: dec(1, 'ether') })
+
+    const totalSupply = await lusdToken.totalSupply()
+    assert.equal(totalSupply, dec(150, 18))
+
+    // C redeems 15 LUSD
+    await th.redeemCollateral(C, contracts, dec(15, 18))
+
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    // Attempt with maxFee > 5%
+    const moreThan5pct = '50000000000000000'
+    const tx1 = await borrowerOperations.withdrawLUSD(moreThan5pct, dec(1, 18), A, A, { from: A})
+    assert.isTrue(tx1.receipt.status)
+
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    // Attempt with maxFee = 5%
+    const tx2 = await borrowerOperations.withdrawLUSD(dec(5, 16), dec(1, 18), A, A, { from: B})
+    assert.isTrue(tx2.receipt.status)
+
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    // Attempt with maxFee 10%
+    const tx3 = await borrowerOperations.withdrawLUSD(dec(1, 17), dec(1, 18), A, A, { from: C })
+    assert.isTrue(tx3.receipt.status)
+
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    // Attempt with maxFee 37.659%
+    const tx4 = await borrowerOperations.withdrawLUSD(dec(37659, 14), dec(1, 18), A, A, { from: D })
+    assert.isTrue(tx4.receipt.status)
+
+    // Attempt with maxFee 100%
+    const tx5 = await borrowerOperations.withdrawLUSD(dec(1, 18), dec(1, 18), A, A, { from: E })
+    assert.isTrue(tx5.receipt.status)
   })
 
   it("withdrawLUSD(): doesn't change base rate if it is already zero", async () => {
@@ -2932,15 +2998,79 @@ contract('BorrowerOperations', async accounts => {
     assert.isTrue(lastFeeOpTime_3.gt(lastFeeOpTime_1))
   })
 
-  it("openTrove(): fails if max fee is exceeded", async () => {
+  it("openTrove(): fails if fee exceeds max fee", async () => {
     await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
 
-    // A redeems 10 LUSD
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    const totalSupply = await lusdToken.totalSupply()
+    assert.equal(totalSupply, dec(150, 18))
 
+    // A redeems 15 LUSD
+    await th.redeemCollateral(A, contracts, dec(15, 18))
+
+    let baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    const lessThan5pct = '49999999999999999'
+    await assertRevert(borrowerOperations.openTrove(lessThan5pct, dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+    
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+    // Attempt with maxFee 1%
+    await assertRevert(borrowerOperations.openTrove(dec(1, 16), dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+   
+    baseRate = await troveManager.baseRate()  // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+    // Attempt with maxFee 3%
+    await assertRevert(borrowerOperations.openTrove(dec(3754, 13), dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+  
+    baseRate = await troveManager.baseRate()  // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+    // Attempt with maxFee 1e-16%
     await assertRevert(borrowerOperations.openTrove(1, dec(30, 18), A, A, { from: D, value: dec(1, 'ether') }), "BorrowerOps: issuance fee exceeded provided max")
+  })
+
+  it("openTrove(): succeeds when fee is less than max fee", async () => {
+    await borrowerOperations.openTrove(0, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(0, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+
+    // A redeems 15 LUSD
+    await th.redeemCollateral(A, contracts, dec(15, 18))
+
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    // Attempt with maxFee > 5%
+    const moreThan5pct = '50000000000000000'
+    const tx1 = await borrowerOperations.openTrove(moreThan5pct, dec(30, 18), A, A, { from: D, value: dec(1, 'ether') })
+    assert.isTrue(tx1.receipt.status)
+
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    // Attempt with maxFee = 5%
+    const tx2 = await borrowerOperations.openTrove(dec(5, 16), dec(30, 18), A, A, { from: H, value: dec(1, 'ether') })
+    assert.isTrue(tx2.receipt.status)
+
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    // Attempt with maxFee 10%
+    const tx3 = await borrowerOperations.openTrove(dec(1, 17), dec(30, 18), A, A, { from: E, value: dec(1, 'ether') })
+    assert.isTrue(tx3.receipt.status)
+
+    baseRate = await troveManager.baseRate() // expect 5% base rate
+    assert.equal(baseRate, dec(5, 16))
+
+    // Attempt with maxFee 37.659%
+    const tx4 = await borrowerOperations.openTrove(dec(37659, 14), dec(30, 18), A, A, { from: F, value: dec(1, 'ether') })
+    assert.isTrue(tx4.receipt.status)
+
+    // Attempt with maxFee 100%
+    const tx5 = await borrowerOperations.openTrove(dec(1, 18), dec(30, 18), A, A, { from: G, value: dec(1, 'ether') })
+    assert.isTrue(tx5.receipt.status)
   })
 
   it("openTrove(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity", async () => {
