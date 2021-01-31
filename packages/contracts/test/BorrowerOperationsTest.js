@@ -81,7 +81,6 @@ contract('BorrowerOperations', async accounts => {
   })
 
   it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
-
     await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
 
     const activePool_ETH_Before = await activePool.getETH()
