@@ -4159,7 +4159,7 @@ contract('BorrowerOperations', async accounts => {
     // we need 2 troves to be able to close 1 and have 1 remaining in the system
     await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(10, 18) })
     // open trove from NonPayable proxy contract
-    const openTroveData = th.getTransactionData('openTrove(uint256,uint256,address,address)', ['0x0', '0x0', '0x0', '0x0'])
+    const openTroveData = th.getTransactionData('openTrove(uint256,uint256,address,address)', ['0xde0b6b3a7640000', '0x0', '0x0', '0x0'])
     await nonPayable.forward(borrowerOperations.address, openTroveData, { value: dec(1, 'ether') })
     assert.equal((await troveManager.getTroveStatus(nonPayable.address)).toString(), '1', 'NonPayable proxy should have a trove')
     assert.isFalse(await troveManager.checkRecoveryMode(), 'System should not be in Recovery Mode')

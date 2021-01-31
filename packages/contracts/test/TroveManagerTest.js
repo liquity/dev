@@ -2913,7 +2913,7 @@ contract('TroveManager', async accounts => {
         upperPartialRedemptionHint_2,
         lowerPartialRedemptionHint_2,
         partialRedemptionHintNICR,
-        0, 0,
+        0, th._100pct,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2939,7 +2939,7 @@ contract('TroveManager', async accounts => {
         upperPartialRedemptionHint_3,
         lowerPartialRedemptionHint_3,
         partialRedemptionHintNICR,
-        0, 0,
+        0, th._100pct,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -2967,7 +2967,7 @@ contract('TroveManager', async accounts => {
         upperPartialRedemptionHint_4,
         lowerPartialRedemptionHint_4,
         partialRedemptionHintNICR,
-        0, 0,
+        0, th._100pct,
         { from: erin })
       assert.isFalse(redemptionTx.receipt.status)
     } catch (error) {
@@ -3081,7 +3081,7 @@ contract('TroveManager', async accounts => {
       upperPartialRedemptionHint_3,
       lowerPartialRedemptionHint_3,
       partialRedemptionHintNICR,
-      0, 0,
+      0, th._100pct,
       { from: graham })
 
     assert.isTrue(redemption_3.receipt.status);
