@@ -282,11 +282,15 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             return false;
         }
 
-        uint scaledMainPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.answer), _chainlinkDigits);
+        uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.answer), _chainlinkDigits);
         uint scaledTellorPrice = _scaleTellorPriceByDigits(_tellorResponse.value);
         
         // Return true if the prices are close enough
-        uint percentPriceDifference = scaledMainPrice.sub(scaledTellorPrice).mul(DECIMAL_PRECISION).div(scaledMainPrice);
+        uint minPrice = LiquityMath._min(scaledTellorPrice, scaledChainlinkPrice);
+        uint maxPrice = LiquityMath._max(scaledTellorPrice, scaledChainlinkPrice);
+
+        uint percentPriceDifference = maxPrice.sub(minPrice).mul(DECIMAL_PRECISION).div(minPrice);
+        
         return percentPriceDifference < MAX_PRICE_DIFFERENCE_FOR_RETURN;
     }
    
