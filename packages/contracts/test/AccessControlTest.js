@@ -60,7 +60,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
-    await th.openTrove_allAccounts(accounts.slice(0, 10), coreContracts, dec(10, 'ether'), dec(100, 18))
+   for (account of accounts.slice(0, 10)) {
+      await borrowerOperations.openTrove(th._100pct, dec(100,18), account, account, {value: dec(100,  'ether'), from: account})
+   }
 
     const expectedCISupplyCap = '25000000000000000000000000' // 25mil
 
