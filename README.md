@@ -356,7 +356,7 @@ Liquity functions that require the most current ETH:USD price data fetch the pri
 The fallback logic distinguishes 3 different failure modes for Chainlink and 2 failure modes for Tellor:
 
 - `Frozen` (for both oracles): last price update more than 3 hours ago
-- `Broken` (for both oracles): invalid timeStamp that is either 0 or in the future, or reported price is non-positive (Chainlink) or zero (Tellor)
+- `Broken` (for both oracles): response call reverted, invalid timeStamp that is either 0 or in the future, or reported price is non-positive (Chainlink) or zero (Tellor)
 - `PriceChangeAboveMax` (Chainlink only): higher than 50% deviation between two consecutive price updates
 
 There is also a return condition `bothOraclesLiveAndSimilarPrice` which is a function returning true if both oracles are live and not broken, and the percentual  difference between the two reported prices is below 3%.
