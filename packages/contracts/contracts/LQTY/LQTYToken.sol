@@ -91,6 +91,8 @@ contract LQTYToken is CheckContract, ILQTYToken {
     address public immutable communityIssuanceAddress;
     address public immutable lqtyStakingAddress;
 
+    uint internal immutable lpRewardsEntitlement;
+
     ILockupContractFactory public immutable lockupContractFactory;
 
     // --- Events ---
@@ -138,14 +140,15 @@ contract LQTYToken is CheckContract, ILQTYToken {
         uint depositorsAndFrontEndsEntitlement = _1_MILLION.mul(25); // Allocate 25 million to the algorithmic issuance schedule
         _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
 
-        uint lpRewardsEntitlement = _1_MILLION.mul(100).div(3).sub(depositorsAndFrontEndsEntitlement);  // Allocate 8.33 million for LP rewards
-        _mint(_lpRewardsAddress, lpRewardsEntitlement);
+        uint _lpRewardsEntitlement = _1_MILLION.mul(100).div(3).sub(depositorsAndFrontEndsEntitlement);  // Allocate 8.33 million for LP rewards
+        lpRewardsEntitlement = _lpRewardsEntitlement;
+        _mint(_lpRewardsAddress, _lpRewardsEntitlement);
         
         // Allocate the remainder to the deployer: (100 - 3 - 25 - 8.33) million = 63.66 million
         uint deployerEntitlement = _1_MILLION.mul(100)
             .sub(bountyEntitlement)
             .sub(depositorsAndFrontEndsEntitlement)
-            .sub(lpRewardsEntitlement);
+            .sub(_lpRewardsEntitlement);
 
         _mint(msg.sender, deployerEntitlement);
     }
@@ -162,6 +165,10 @@ contract LQTYToken is CheckContract, ILQTYToken {
 
     function getDeploymentStartTime() external view override returns (uint256) {
         return deploymentStartTime;
+    }
+
+    function getLpRewardsEntitlement() external view override returns (uint256) {
+        return lpRewardsEntitlement;
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
