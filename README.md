@@ -349,9 +349,29 @@ Along with `StabilityPool.sol`, these contracts hold Ether and/or tokens for the
 
 ### PriceFeed and Oracle
 
-Liquity functions that require the most current ETH:USD price data fetch the price dynamically, as needed, via the core `PriceFeed.sol` contract using the Chainlink ETH:USD reference contract for the price data source, however, other options are under consideration.
+Liquity functions that require the most current ETH:USD price data fetch the price dynamically, as needed, via the core `PriceFeed.sol` contract using the Chainlink ETH:USD reference contract as its primary and Tellor's ETH:USD price feed as its secondary (fallback) data source. PriceFeed is stateful, i.e. it records the last good price that may come from either of the two sources based on the contract's current state.
 
-The current `PriceFeed.sol` contract has a `getPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. The `PriceFeedTestnet.sol` contains additionally, a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price.
+The fallback logic distinguishes 3 different failure modes for Chainlink and 2 failure modes for Tellor:
+
+- `Frozen` (for both oracles): last price update more than 3 hours ago
+- `Broken` (for both oracles): invalid timeStamp that is either 0 or in the future, or non-positive (Chainlink) or zero price (Tellor) reported
+- `PriceChangeAboveMax` (Chainlink only): higher than 50% deviation between two consecutive price updates
+
+There is also a return condition `bothOraclesLiveAndSimilarPrice` which is a function returning true if both oracles are live and not broken, and the percentual  difference between the two reported prices is below 3%.
+
+The PriceFeed contract can be in one of the 4 different states (called `Status`):
+
+- `usingChainlink`: Initial system state. 
+If Chainlink breaks or changes its price more than the maximum, PriceFeed fetches the price from Tellor, switches to `usingTellor` state and uses the Tellor price provided that it passes all checks: If Tellor turns out to be broken, PriceFeed returns the last good price and switches to `bothOraclesSuspect` state. If Tellor is frozen, it switches to `usingTellor` state, while returning the last good price.
+If Chainlink is frozen, PriceFeed switches to `usingTellor`, fetches its price and returns it provided that Tellor is neither broken nor frozen. If Tellor is broken or frozen, PriceFeed returns the last good price.
+
+- `usingTellor`: If both Tellor and Chainlink are live and reporting similar prices, PriceFeed switches back to `usingChainLink` and returns the Chainlink price. If Tellor is broken, PriceFeed changes its status to `bothOraclesSuspect` and returns the last good price. If Tellor is only frozen, PriceFeed returns the last good price without updating its state. If none of the preceding conditions are met, PriceFeed returns the fetched Tellor price, staying in its current state. 
+
+- `bothOraclesSuspect`:  If both Tellor and Chainlink are live and reporting similar prices, PriceFeed switches back to `usingChainLink` and returns the Chainlink price. Otherwise, it returns the last good price, staying in its current state.
+
+- `usingTellorChainlinkFrozen`: TBD
+
+The current `PriceFeed.sol` contract has a `fetchPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. The `PriceFeedTestnet.sol` contains additionally, a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price.
 
 ### Keeping a sorted list of Troves ordered by ICR
 
