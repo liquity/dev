@@ -62,7 +62,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         uint256 timestamp;
     }
 
-    enum Status {usingChainlink, usingTellor, bothOraclesSuspect, usingTellorChainlinkFrozen}
+    enum Status {usingChainlink, usingTellor, bothOraclesSuspect, usingTellorChainlinkFrozen, tellorBrokenChainlinkFrozen}
     Status public status;
 
     event LastGoodPriceUpdated(uint _lastGoodPrice);
@@ -113,64 +113,72 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         // --- Case 1: System fetched last price from Chainlink  ---
         if (status == Status.usingChainlink) {
-            // Get previous round price data from chainlink
+            // Get previous round price data from Chainlink
             ChainlinkResponse memory prevChainlinkResponse = getPrevChainlinkResponse(chainlinkResponse.roundId);
-           
-            // If Chainlink is broken, frozen or price has deviated too much from its last value, try Tellor
+
+            // If Chainlink is broken, or price has deviated too much from its last value, try Tellor
             if (chainlinkIsBroken(chainlinkResponse) ||  
                 chainlinkPriceChangeAboveMax(chainlinkResponse, currentChainlinkDigits, prevChainlinkResponse, prevChainlinkDigits)) 
             {
                 console.log("chainlink is broken or price deviation > max");
-                TellorResponse memory tellorResponse = getCurrentTellorResponse();
-               
+               TellorResponse memory tellorResponse = getCurrentTellorResponse();
+
                 // If Tellor is broken then both oracles are suspect, and we just use the last good price
                 if (tellorIsBroken(tellorResponse)) {
                     console.log("tellor is broken");
-                    status = Status.bothOraclesSuspect; 
-                    emit StatusChanged(status);
+
+                    _changeStatus(Status.bothOraclesSuspect);
                     return lastGoodPrice; 
                 }
-
                 /*
                 * If Tellor is only frozen but otherwise returning valid data, just use the last good price.
                 * Tellor may need to be tipped to return current data.
                 */
                 if (tellorIsFrozen(tellorResponse)) {
                     console.log("tellor is frozen");
-                    status = Status.usingTellor; 
-                    emit StatusChanged(status);
+                    _changeStatus(Status.usingTellor);
                     return lastGoodPrice;
                 }
                 
-                // If Chainlink is broken and Tellor is working, return current Tellor price
-                status = Status.usingTellor;
-                emit StatusChanged(status);
+                // If Chainlink is broken and Tellor is working, switch to Tellor and return current Tellor price
+                _changeStatus(Status.usingTellor);
                 uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
-                lastGoodPrice = scaledTellorPrice;
-                emit LastGoodPriceUpdated(lastGoodPrice);
+                _storeLastGoodPrice(scaledTellorPrice);
                 return scaledTellorPrice;
             }
 
-            // If Chainlink is frozen, switch to Tellor and remember that Chainlink froze
+            // If Chainlink is frozen, try Tellor
             if (chainlinkIsFrozen(chainlinkResponse)) {
-                status = Status.usingTellorChainlinkFrozen;
+                console.log("chainlink is frozen");
                 TellorResponse memory tellorResponse = getCurrentTellorResponse();
                
-                // Use last good price if Tellor is broken or frozen
-                if (tellorIsBroken(tellorResponse) || tellorIsFrozen(tellorResponse)) {
+                // If Tellor is broken too, remember Chainlink froze & Tellor broke, and use last good price
+                if (tellorIsBroken(tellorResponse)) {
+                    console.log("tellor is broken");
+                    _changeStatus(Status.tellorBrokenChainlinkFrozen);
+                    return lastGoodPrice;     
+                }
+
+                // If Tellor is not broken then remember Chainlink froze, and switch to Tellor
+                _changeStatus(Status.usingTellorChainlinkFrozen);
+               
+                if (tellorIsFrozen(tellorResponse)) {  
+                    console.log("tellor is frozen");
                     return lastGoodPrice;
                 }
 
                 // If Tellor is working, use it
-                return _scaleTellorPriceByDigits(tellorResponse.value);
+                console.log("tellor is working");
+                uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
+                _storeLastGoodPrice(scaledTellorPrice);
+                return scaledTellorPrice;
             }
 
             // If Chainlink is working, return its current price
             console.log("chainlink is working");
             prevChainlinkDigits = currentChainlinkDigits;
             uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
-            lastGoodPrice = scaledChainlinkPrice;
-            emit LastGoodPriceUpdated(lastGoodPrice);
+            _storeLastGoodPrice(scaledChainlinkPrice);
             return scaledChainlinkPrice;    
         }
 
@@ -181,19 +189,18 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
           
             // If both Tellor and Chainlink are live and reporting similar prices, switch back to Chainlink
             if (bothOraclesLiveAndSimilarPrice(chainlinkResponse, currentChainlinkDigits, tellorResponse)) {
-                status = Status.usingChainlink;
-                emit StatusChanged(status);
+                console.log("both chainlink and tellor are working");
+                _changeStatus(Status.usingChainlink);
                 prevChainlinkDigits = currentChainlinkDigits;
                 
                 uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
-                lastGoodPrice = scaledChainlinkPrice;
-                emit LastGoodPriceUpdated(lastGoodPrice);
+                _storeLastGoodPrice(scaledChainlinkPrice);
                 return scaledChainlinkPrice;
             }
 
             if (tellorIsBroken(tellorResponse)) {
-                status = Status.bothOraclesSuspect;
-                emit StatusChanged(status); 
+                console.log("tellor is broken");
+                _changeStatus(Status.bothOraclesSuspect);
                 return lastGoodPrice; 
             }
 
@@ -201,12 +208,14 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             * If Tellor is only frozen but otherwise returning valid data, just use the last good price.
             * Tellor may need to be tipped to return current data.
             */
-            if (tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
+            if (tellorIsFrozen(tellorResponse)) {
+                console.log("tellor is frozen");
+                return lastGoodPrice;}
             
             // Otherwise, use Tellor price
+            console.log("tellor is working");
             uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
-            lastGoodPrice = scaledTellorPrice;
-            emit LastGoodPriceUpdated(lastGoodPrice);
+            _storeLastGoodPrice(scaledTellorPrice);
             return scaledTellorPrice;
         }
 
@@ -220,13 +229,12 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             * accurately, and so we switch back to Chainlink.
             */
             if (bothOraclesLiveAndSimilarPrice(chainlinkResponse, currentChainlinkDigits, tellorResponse)) {
-                status = Status.usingChainlink;
-                emit StatusChanged(status);
+                console.log("both chainlink and tellor are working");
+                _changeStatus(Status.usingChainlink);
                 prevChainlinkDigits = currentChainlinkDigits;
                 
                 uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
-                lastGoodPrice = scaledChainlinkPrice;
-                emit LastGoodPriceUpdated(lastGoodPrice);
+                _storeLastGoodPrice(scaledChainlinkPrice);
                 return scaledChainlinkPrice;
             } 
 
@@ -234,26 +242,71 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             return lastGoodPrice;
         }
 
-        // // --- Case 4: We're using Tellor, but Chainlink is frozen ---
-        // *** TODO ***
-        // if (status == Status.usingTellorChainlinkFrozen) {
+        // --- Case 4: Using Tellor, and Chainlink is frozen ---
+        if (status == Status.usingTellorChainlinkFrozen) {
+            // Get current price data from Tellor
+            TellorResponse memory tellorResponse = getCurrentTellorResponse();
 
-        //     bool 
-        //     // If Chainlink is up to date, switch back to it
-        //     if (!chainlinkIsBroken && !chainlinkIsFrozen) {
-        //         status = statusingChainlink;
-        //         return _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
-        //     }
+            if (chainlinkIsBroken(chainlinkResponse)) {
+                // If Chainlink is broken and Tellor is broken then bothOraclesSuspect, and use last good price
+                if (tellorIsBroken(tellorResponse)) {
+                    console.log("chainlink is broken, tellor is broken");
+                    _changeStatus(Status.bothOraclesSuspect);
+                    return lastGoodPrice;
+                }
+                // If Chainlink is broken and Tellor is frozen, switch purely to Tellor, and use last good price now
+                if (tellorIsFrozen(tellorResponse)) {
+                    console.log("chainlink is broken, tellor is frozen");
+                    _changeStatus(Status.usingTellor);
+                    return lastGoodPrice;
+                }
+            }
 
-        //     // Get Tellor price
+            // If Chainlink is now live, switch back to it
+            if (!chainlinkIsFrozen(chainlinkResponse)) {
+                console.log("chainlink is live");
+                _changeStatus(Status.usingChainlink);
+                uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
+                _storeLastGoodPrice(scaledChainlinkPrice);
+                return scaledChainlinkPrice;
+            }
 
-        //     // if Chainlink breaks and Tellor frozen, use Tellor, and use last good price
-        //     if (chainlinkIsBroken)
+            // if Chainlink is frozen and Tellor is broken, remember Tellor broke, and use last good price
+           if (tellorIsBroken(tellorResponse)) {
+               console.log("chainlink is frozen, tellor is broken");
+                _changeStatus(Status.tellorBrokenChainlinkFrozen);
+                return lastGoodPrice;
+           }
 
-        //     // if Chainlink broken and Tellor broken, bothOraclesSuspect, and use last good price
+            // if Chainlink is frozen and Tellor is live, use Tellor
+            console.log("chainlink is frozen, tellor is live");
+            uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
+            _storeLastGoodPrice(scaledTellorPrice);
+            return scaledTellorPrice;
+        }
 
-        //     // if 
+        // --- Case 5: Tellor is broken, Chainlink is frozen ---
+         if (status == Status.tellorBrokenChainlinkFrozen) { 
+            // If Chainlink breaks too, now both oracles are suspect
+            if (chainlinkIsBroken(chainlinkResponse)) {
+                console.log("chainlink is broken");
+                _changeStatus(Status.bothOraclesSuspect);
+                return lastGoodPrice;
+            }
 
+            // If Chainlink remains frozen, use last good price
+            if (chainlinkIsFrozen(chainlinkResponse)) {
+                console.log("chainlink is frozen");
+                return lastGoodPrice;
+            }
+
+            // If Chainlink is live, switch back to it
+            console.log("chainlink is live");
+            _changeStatus(Status.usingChainlink);
+            uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), currentChainlinkDigits);
+            _storeLastGoodPrice(scaledChainlinkPrice);
+            return scaledChainlinkPrice;
+        }
     }
 
     // --- Helper functions --- 
@@ -284,10 +337,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return deviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS;
     }
 
-    function tellorIsFrozen(TellorResponse  memory _tellorResponse) internal view returns (bool) {
-        return block.timestamp.sub(_tellorResponse.timestamp) > TIMEOUT;
-    }
-
     function tellorIsBroken(TellorResponse memory _response) internal view returns (bool) {
         // Check for an invalid timeStamp that is 0, or in the future
         if (_response.timestamp == 0 || _response.timestamp > block.timestamp) {return true;}
@@ -297,21 +346,35 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return false;
     }
 
+     function tellorIsFrozen(TellorResponse  memory _tellorResponse) internal view returns (bool) {
+        return block.timestamp.sub(_tellorResponse.timestamp) > TIMEOUT;
+    }
+
     function bothOraclesLiveAndSimilarPrice(ChainlinkResponse memory _chainlinkResponse, uint _chainlinkDigits, TellorResponse memory _tellorResponse) internal view returns (bool) {
-        // Check both oracles are live
-        if (tellorIsBroken(_tellorResponse) || tellorIsFrozen(_tellorResponse) || chainlinkIsBroken(_chainlinkResponse)) {
+        // Return false if either oracle is broken or frozen
+        if 
+        (
+            tellorIsBroken(_tellorResponse) || 
+            tellorIsFrozen(_tellorResponse) || 
+            chainlinkIsBroken(_chainlinkResponse) ||
+            chainlinkIsFrozen(_chainlinkResponse)
+        )
+        {
             return false;
         }
 
         uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.answer), _chainlinkDigits);
         uint scaledTellorPrice = _scaleTellorPriceByDigits(_tellorResponse.value);
         
-        // Return true if the prices are close enough
+        // Get the relative price difference between the oracles
         uint minPrice = LiquityMath._min(scaledTellorPrice, scaledChainlinkPrice);
         uint maxPrice = LiquityMath._max(scaledTellorPrice, scaledChainlinkPrice);
-
         uint percentPriceDifference = maxPrice.sub(minPrice).mul(DECIMAL_PRECISION).div(minPrice);
         
+        /*
+        * return true if the relative price difference is small: if so, we assume they are probably reporting 
+        * the honest market price, as it is unlikely that both have been broken/hacked and are still in-sync.
+        */
         return percentPriceDifference < MAX_PRICE_DIFFERENCE_FOR_RETURN;
     }
    
@@ -335,7 +398,36 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return _price.mul(10**(TARGET_DIGITS - TELLOR_DIGITS));
     }
 
-    // --- Tellor functions (as found in UsingTellor.sol) ---
+    function _changeStatus(Status _status) internal {
+        status = _status;
+        emit StatusChanged(_status);
+    }
+
+    function _storeLastGoodPrice(uint _lastGoodPrice) internal {
+        lastGoodPrice = _lastGoodPrice;
+        emit LastGoodPriceUpdated(_lastGoodPrice);
+    }
+
+    // --- Oracle response wrapper functions ---
+
+    function getCurrentTellorResponse() internal view returns (TellorResponse memory tellorResponse) {
+        (tellorResponse.ifRetrieve,
+        tellorResponse.value,
+        tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
+    }
+
+    function getCurrentChainlinkResponse() internal view returns (ChainlinkResponse memory chainlinkResponse) {
+        (chainlinkResponse.roundId,
+        chainlinkResponse.answer,,
+        chainlinkResponse.timestamp,)  = priceAggregator.latestRoundData();
+    }
+
+    function getPrevChainlinkResponse(uint80 _currentRoundId) internal view returns (ChainlinkResponse memory prevChainlinkResponse) {
+        (,prevChainlinkResponse.answer,,
+        prevChainlinkResponse.timestamp,) = priceAggregator.getRoundData(_currentRoundId - 1);
+    }
+
+     // --- Tellor functions (as found in UsingTellor.sol) ---
 
     /*
     * getTellorCurrentValue():  identical to getCurrentValue() in UsingTellor.sol
@@ -361,25 +453,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         uint256 _value = tellor.retrieveData(_requestId, _time);
         if (_value > 0) return (true, _value, _time);
         return (false, 0, _time);
-    }
-
-    // --- Response wrapper functions ---
-
-    function getCurrentTellorResponse() internal view returns (TellorResponse memory tellorResponse) {
-        (tellorResponse.ifRetrieve,
-        tellorResponse.value,
-        tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
-    }
-
-    function getCurrentChainlinkResponse() internal view returns (ChainlinkResponse memory chainlinkResponse) {
-        (chainlinkResponse.roundId,
-        chainlinkResponse.answer,,
-        chainlinkResponse.timestamp,)  = priceAggregator.latestRoundData();
-    }
-
-    function getPrevChainlinkResponse(uint80 _currentRoundId) internal view returns (ChainlinkResponse memory prevChainlinkResponse) {
-        (,prevChainlinkResponse.answer,,
-        prevChainlinkResponse.timestamp,) = priceAggregator.getRoundData(_currentRoundId - 1);
     }
 }
 

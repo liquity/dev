@@ -282,23 +282,35 @@ contract('PriceFeed', async accounts => {
   })
 
   // --- Chainlink timeout --- 
-  it("Chainlink failed by timeout, Tellor working: fetchPrice should switch to Tellor", async () => {
+  it("Chainlink failed by timeout, Tellor working: fetchPrice should switch to usingTellorChainlinkFrozen", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
     
-    await mockTellor.setPrice(dec(123, 6))
-    await th.fastForwardTime(10800, web3.currentProvider) // fast forward 3 hours
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
 
+    await th.fastForwardTime(10800, web3.currentProvider) // fast forward 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    
+    // Tellor price is recent
+    await mockTellor.setUpdateTime(now)
+    await mockTellor.setPrice(dec(123, 6))
+    
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter =  await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '3') // status 3: using tellor, chainlink frozen 
   })
 
   it("Chainlink failed by timeout, Tellor working: fetchPrice should return the correct price from Tellor", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
     
     await th.fastForwardTime(11800, web3.currentProvider) // Fast forward 3 hours
     const now = await th.getLatestBlockTimestamp(web3)
@@ -310,6 +322,102 @@ contract('PriceFeed', async accounts => {
 
     let price = await priceFeed.lastGoodPrice()
     assert.equal(price, dec(123,  18))
+  })
+
+  it("Chainlink failed by timeout, Tellor frozen: fetchPrice should switch to usingTellorChainlinkFrozen", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await th.fastForwardTime(10800, web3.currentProvider) // fast forward 3 hours
+
+    // check Tellor price timestamp is out of date by > 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    const tellorUpdateTime = await mockTellor.getTimestampbyRequestIDandIndex(0, 0) 
+    assert.isTrue(tellorUpdateTime.lt(toBN(now).sub(toBN(10800))))
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    const statusAfter =  await priceFeed.status()
+    assert.equal(statusAfter, '3') // status 3: using tellor, chainlink frozen 
+  })
+
+  it("Chainlink failed by timeout, Tellor frozen: fetchPrice should return the last good price", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18)) 
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await th.fastForwardTime(11800, web3.currentProvider) // Fast forward 3 hours
+
+    // check Tellor price timestamp is out of date by > 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    const tellorUpdateTime = await mockTellor.getTimestampbyRequestIDandIndex(0, 0) 
+    assert.isTrue(tellorUpdateTime.lt(toBN(now).sub(toBN(10800))))
+    
+    const priceFetchTx = await priceFeed.fetchPrice()
+    let price = await priceFeed.lastGoodPrice()
+    console.log(`price: ${price}`)
+    // Expect lastGoodPrice has not updated
+    assert.equal(price, dec(999,  18))
+  })
+
+  it("Chainlink failed by timeout, Tellor broken: fetchPrice should switch to tellorBrokenChainlinkFrozen", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await th.fastForwardTime(10800, web3.currentProvider) // fast forward 3 hours
+
+    // check Tellor price timestamp is out of date by > 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    const tellorUpdateTime = await mockTellor.getTimestampbyRequestIDandIndex(0, 0) 
+    assert.isTrue(tellorUpdateTime.lt(toBN(now).sub(toBN(10800))))
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    const statusAfter =  await priceFeed.status()
+    assert.equal(statusAfter, '3') // status 4: tellor broken, chainlink frozen
+  })
+
+  it("Chainlink failed by timeout, Tellor broken: fetchPrice should return the last good price", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await th.fastForwardTime(11800, web3.currentProvider) // Fast forward 3 hours
+
+    // check Tellor price timestamp is out of date by > 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    const tellorUpdateTime = await mockTellor.getTimestampbyRequestIDandIndex(0, 0) 
+    assert.isTrue(tellorUpdateTime.lt(toBN(now).sub(toBN(10800))))
+    
+    const priceFetchTx = await priceFeed.fetchPrice()
+    let price = await priceFeed.lastGoodPrice()
+
+    // Expect lastGoodPrice has not updated
+    assert.equal(price, dec(999,  18))
   })
 
   it("Chainlink is out of date by <3hrs: don't switch to Tellor, keep using Chainlink", async () => {
