@@ -443,7 +443,7 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | adjustTrove: adding ETH      | msg.value                           | msg.sender->BorrowerOperations->ActivePool |
 | adjustTrove: withdrawing ETH | _collWithdrawal parameter           | ActivePool->msg.sender                     |
 | closeTrove                   | All remaining                       | ActivePool->msg.sender                     |
-| claimRedeemedCollateral      | CollSurplusPool.balance[msg.sender] | CollSurplusPool->msg.sender                |
+| claimCollateral              | CollSurplusPool.balance[msg.sender] | CollSurplusPool->msg.sender                |
 
 **Trove Manager**
 
@@ -511,8 +511,8 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 
 | Function       | LUSD Quantity    | ERC20 Operation                                             |
 |----------------|------------------|-------------------------------------------------------------|
-| provideToSP    | deposit / top-up | LUSD. _transfer(msg.sender, stabilityPoolAddress, _amount); |
-| withdrawFromSP | withdrawal       | LUSD. _transfer(stabilityPoolAddress, msg.sender, _amount); |
+| provideToSP    | deposit / top-up | LUSD._transfer(msg.sender, stabilityPoolAddress, _amount);  |
+| withdrawFromSP | withdrawal       | LUSD._transfer(stabilityPoolAddress, msg.sender, _amount);  |
 
 **LQTY Staking**
 
@@ -523,25 +523,25 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 
 ### Flow of LQTY Tokens in Liquity
 
-Stability Providers and front end receive LQTY gains according to their share of the total LUSd deposits, and the LQTY community issuance schedule.  Once obtained, LQTY can be staked and unstaked with the `LQTYStaking` contract.
+Stability Providers and Frontend Operators receive LQTY gains according to their share of the total LUSD deposits, and the LQTY community issuance schedule.  Once obtained, LQTY can be staked and unstaked with the `LQTYStaking` contract.
 
 **Stability Pool**
 
 | Function               | LQTY Quantity       | ERC20 Operation                                                       |
 |------------------------|---------------------|-----------------------------------------------------------------------|
-| provideToSP            | depositor LQTY gain | LQTY. _transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
-|                        | front end LQTY gain | LQTY. _transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
-| withdrawFromSP         | depositor LQTY gain | LQTY. _transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
-|                        | front end LQTY gain | LQTY. _transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
-| withdrawETHGainToTrove | depositor LQTY gain | LQTY. _transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
-|                        | front end LQTY gain | LQTY. _transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
+| provideToSP            | depositor LQTY gain | LQTY._transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
+|                        | front end LQTY gain | LQTY._transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
+| withdrawFromSP         | depositor LQTY gain | LQTY._transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
+|                        | front end LQTY gain | LQTY._transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
+| withdrawETHGainToTrove | depositor LQTY gain | LQTY._transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
+|                        | front end LQTY gain | LQTY._transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
 
 **LQTY Staking Contract**
 
 | Function | LQTY Quantity                  | ERC20 Operation                                           |
 |----------|--------------------------------|-----------------------------------------------------------|
-| stake    | staker's LQTY deposit / top-up | LQTY. _transfer(msg.sender, LQTYStakingAddress, _amount); |
-| unstake  | staker's LQTY withdrawal       | LQTY. _transfer(LQTYStakingAddress, msg.sender, _amount); |
+| stake    | staker's LQTY deposit / top-up | LQTY._transfer(msg.sender, LQTYStakingAddress, _amount); |
+| unstake  | staker's LQTY withdrawal       | LQTY._transfer(LQTYStakingAddress, msg.sender, _amount); |
 
 
 ## Expected User Behaviors
@@ -550,7 +550,7 @@ Generally, borrowers call functions that trigger Trove operations on their own T
 
 Anyone may call the public liquidation functions, and attempt to liquidate one or several Troves.
 
-LUSD token holders may also redeem their tokens, and swap an amount of tokens 1-for-1 in value with Ether.
+LUSD token holders may also redeem their tokens, and swap an amount of tokens 1-for-1 in value (minus fees) with Ether.
 
 LQTY token holders may stake their LQTY, to earn a share of the system fee revenue, in ETH and LUSD.
 
@@ -598,21 +598,21 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Borrower (Trove) Operations - `BorrowerOperations.sol`
 
-`openTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint)`: payable function that creates a Trove for the caller with the requested debt, and the ether received as collateral. Successful execution is conditional mainly on the resulting collateralization ratio which must exceed the minimum (110% in Normal Mode). In addition to the requested debt, extra debt is issued to pay the issuance fee, and cover the gas compensation.
+`openTrove(uint _maxFeePercentage, uint _LUSDAmount, address _upperHint, address _lowerHint)`: payable function that creates a Trove for the caller with the requested debt, and the Ether received as collateral. Successful execution is conditional mainly on the resulting collateralization ratio which must exceed the minimum (110% in Normal Mode, 150% in Recovery Mode). In addition to the requested debt, extra debt is issued to pay the issuance fee, and cover the gas compensation. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when a redemption transaction is processed first, driving up the issuance fee. 
 
 `addColl(address _upperHint, address _lowerHint))`: payable function that adds the received Ether to the caller's active Trove.
 
-`withdrawColl(uint _amount, address _upperHint, address _lowerHint)`: withdraws `_amount` of collateral from the caller’s Trove. Executes only if the user has an active Trove, the system is in Normal Mode, and the withdrawal would not pull the user’s Trove below the minimum collateralization ratio. 
+`withdrawColl(uint _amount, address _upperHint, address _lowerHint)`: withdraws `_amount` of collateral from the caller’s Trove. Executes only if the user has an active Trove, the withdrawal would not pull the user’s Trove below the minimum collateralization ratio, and the resulting total collateralization ratio of the system is above 150%. 
 
-`withdrawLUSD(uint _maxFee, uint _amount, address _upperHint, address _lowerHint)`: issues `_amount` of LUSD from the caller’s Trove to the caller. Executes only if the resultant collateralization ratio would remain above the minimum, and the system would remain in Normal Mode after the withdrawal. 
+`function withdrawLUSD(uint _maxFeePercentage, uint _LUSDAmount, address _upperHint, address _lowerHint)`: issues `_amount` of LUSD from the caller’s Trove to the caller. Executes only if the Trove's collateralization ratio would remain above the minimum, and the resulting total collateralization ratio is above 150%. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when a redemption transaction is processed first, driving up the issuance fee.
 
 `repayLUSD(uint _amount, address _upperHint, address _lowerHint)`: repay `_amount` of LUSD to the caller’s Trove, subject to leaving 50 debt in the Trove (which corresponds to the 50 LUSD gas compensation).
 
-`adjustTrove(uint _maxFee, uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity.
+`_adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint _maxFeePercentage)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity with the following particularity: if the adjustment reduces the collateralization ratio of the Trove, the function only executes if the resulting total collateralization ratio is above 150%. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when a redemption transaction is processed first, driving up the issuance fee. The parameter is ignored if the debt is not increased with the transaction.
 
-`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their Trove. Requires the borrower have a LUSD balance sufficient to repay their trove's debt, excluding gas compensation - i.e. `(debt - 10)` LUSD.
+`closeTrove()`: allows a borrower to repay all debt, withdraw all their collateral, and close their Trove. Requires the borrower have a LUSD balance sufficient to repay their trove's debt, excluding gas compensation - i.e. `(debt - 50)` LUSD.
 
-`claimRedeemedCollateral(address _user)`: when a borrower’s Trove has been fully redeemed from and closed, this function allows the borrower to claim their ETH collateral surplus that remains in the system.
+`claimCollateral(address _user)`: when a borrower’s Trove has been fully redeemed from and closed, or liquidated in Recovery Mode with a collateralization ratio above 110%, this function allows the borrower to claim their ETH collateral surplus that remains in the system (collateral - debt upon redemption; collateral - 110% of the debt upon liquidation).
 
 ### TroveManager Functions - `TroveManager.sol`
 
@@ -622,13 +622,13 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `batchLiquidateTroves(address[] calldata _troveArray)`: callable by anyone, accepts a custom list of Troves addresses as an argument. Steps through the provided list and attempts to liquidate every Trove, until it reaches the end or it runs out of gas. A Trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 Troves, the gas costs per liquidated Trove are roughly between 75K-83K, for a batch of 50 Troves between 54K-69K.
 
-`redeemCollateral(uint _LUSDAmount, address _firstRedemptionHint, address _upperPartialRedemptionHint, address _lowerPartialRedemptionHint, uint _partialRedemptionHintNICR, uint _maxIterations,uint _maxFee)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of Troves redeemed from is capped by `_maxIterations`.
+`redeemCollateral(uint _LUSDAmount, address _firstRedemptionHint, address _upperPartialRedemptionHint, address _lowerPartialRedemptionHint, uint _partialRedemptionHintNICR, uint _maxIterations, uint _maxFeePercentage)`: redeems `_LUSDamount` of stablecoins for ether from the system. Decreases the caller’s LUSD balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient LUSD to redeem. The number of Troves redeemed from is capped by `_maxIterations`. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when another redemption transaction is processed first, driving up the redemption fee.
 
 `getCurrentICR(address _user, uint _price)`: computes the user’s individual collateralization ratio (ICR) based on their total collateral and total LUSD debt. Returns 2^256 -1 if they have 0 debt.
 
 `getTroveOwnersCount()`: get the number of active Troves in the system.
 
-`getPendingETHReward(ddress _borrower)`: get the pending ETH reward from liquidation redistribution events, for the given Trove.
+`getPendingETHReward(address _borrower)`: get the pending ETH reward from liquidation redistribution events, for the given Trove.
 
 `getPendingLUSDDebtReward(address _borrower)`: get the pending Trove debt "reward" (i.e. the amount of extra debt assigned to the Trove) from liquidation redistribution events.
 
@@ -644,15 +644,15 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Hint Helper Functions - `HintHelpers.sol`
 
-`getApproxHint(uint _CR, uint _numTrials, uint _price, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a Trove to the sorted list.
+`function getApproxHint(uint _CR, uint _numTrials, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a Trove to the sorted list.
 
 `getRedemptionHints(uint _LUSDamount, uint _price, uint _maxIterations)`: helper function specifically for redemptions. Returns two hints - the first is a positional hint for the first redeemable Trove (i.e. Trove with the lowest ICR >= MCR), the second is the final nominal ICR of the last Trove after being hit by partial redemption, or zero in case of no partial redemption (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)). The number of Troves to consider for redemption can be capped by passing a non-zero value as `_maxIterations`, while passing zero will leave it uncapped.
 
 ### Stability Pool Functions - `StabilityPool.sol`
 
-`provideToSP(uint _amount, address _frontEndTag)`: allows stablecoin holders to deposit _amount of LUSD to the Stability Pool. It sends `_amount` of LUSD from their address to the Pool, and tops up their LUSD deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already a non-zero deposit, it sends their accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end.
+`provideToSP(uint _amount, address _frontEndTag)`: allows stablecoin holders to deposit `_amount` of LUSD to the Stability Pool. It sends `_amount` of LUSD from their address to the Pool, and tops up their LUSD deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already has a non-zero deposit, it sends their accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end.
 
-`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of LUSD from the Stability Pool, up to the value of their remaining Stability deposit. It decreases their LUSD balance by _amount and decreases their front end’s stake by `_amount`. It sends the depositor’s accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end. If the user makes a partial withdrawal, their deposit remainder will earn further gains.
+`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of LUSD from the Stability Pool, up to the value of their remaining Stability deposit. It decreases their LUSD balance by `_amount` and decreases their front end’s stake by `_amount`. It sends the depositor’s accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end. If the user makes a partial withdrawal, their deposit remainder will earn further gains.
 
 `withdrawETHGainToTrove(address _hint)`: sends the user's entire accumulated ETH gain to the user's active Trove, and updates their Stability deposit with its accumulated loss from debt absorptions. Sends the depositor's LQTY gain to the depositor, and sends the tagged front end's LQTY gain to the front end.
 
