@@ -359,7 +359,7 @@ The fallback logic distinguishes 3 different failure modes for Chainlink and 2 f
 
 There is also a return condition `bothOraclesLiveAndSimilarPrice` which is a function returning true if both oracles are live and not broken, and the percentual  difference between the two reported prices is below 3%.
 
-The PriceFeed contract changes its state (called `Status`) according to the following logic:
+The PriceFeed contract fetches the current price from Chainlink and changes its state (called `Status`) according to the following logic:
 
 - `usingChainlink`: Initial system state that is maintained as long as Chainlink is working properly, i.e. neither broken nor frozen nor exceeding the maximum price change threshold.
    - If Chainlink breaks or changes its price more than the maximum, PriceFeed fetches the price from Tellor and proceeds depending on the following cases: 
