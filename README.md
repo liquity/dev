@@ -361,23 +361,35 @@ There is also a return condition `bothOraclesLiveAndSimilarPrice` which is a fun
 
 The PriceFeed contract changes its state (called `Status`) according to the following logic:
 
-- `usingChainlink`: Initial system state that is maintained as long as Chainlink is working properly.
+- `usingChainlink`: Initial system state that is maintained as long as Chainlink is working properly, i.e. neither broken nor frozen nor exceeding the maximum price change threshold.
    - If Chainlink breaks or changes its price more than the maximum, PriceFeed fetches the price from Tellor and proceeds depending on the following cases: 
-     - Tellor is broken: switch to `bothOraclesSuspect` and return last good price and
+     - Tellor is broken: switch to `bothOraclesSuspect` and return last good price
      - Tellor is frozen: switch to `usingTellor` and return last good price
-     - Otherwise: switch to `usingTellor` and return the fetched Tellor price
-   - If Chainlink freezes, PriceFeed switches to `usingTellor`, fetches the price from Tellor and proceeds as follows: 
-     - If Tellor is broken or frozen, return the last good price
-     - Otherwise: return the fetched Tellor price
+     - Otherwise (Tellor is working properly): switch to `usingTellor` and return the fetched Tellor price
+   - If Chainlink freezes, PriceFeed fetches the price from Tellor and proceeds as follows: 
+     - Tellor is broken: switch to `tellorBrokenChainlinkFrozen` and return last good price
+     - Tellor is frozen: switch to `usingTellorChainlinkFrozen` and return the last good price
+     - Otherwise (Tellor is working properly): return the fetched Tellor price
+    
 - `usingTellor`: The expected fallback state if Chainlink fails.
-   - Tellor is working properly while Chainlink is not (i.e. none of the 3 following conditions are met): return the fetched Tellor price
+   - Tellor is working properly, Chainlink is not (i.e. none of the 3 following conditions are met): return the fetched Tellor price
    - Tellor and Chainlink are both live and reporting similar prices again: switch back to `usingChainLink` and return the Chainlink price
    - Tellor is broken: switch to `bothOraclesSuspect` and return last good price
    - Tellor is frozen: return last good price without updating the state
-
+   
 - `bothOraclesSuspect`: The worst case where both oracles have issues. PriceFeed keeps returning the last good price unless both Tellor and Chainlink are live and reporting similar prices again. In that case, it switches back to `usingChainLink` and returns the Chainlink price.
 
-- `usingTellorChainlinkFrozen`: TBD
+- `usingTellorChainlinkFrozen`: PriceFeed fetches the price from Tellor.
+   - Chainlink and Tellor are both broken: switch to `bothOraclesSuspect` and return last good price
+   - Chainlink is broken, Tellor is frozen: switch to `usingTellor` and return last good price
+   - Chainlink is neither broken nor frozen: switch to `usingChainlink` and return the Chainlink price
+   - Chainlink is frozen, Tellor is broken: switch to `tellorBrokenChainlinkFrozen` and return last good price
+   - Chainlink is frozen, Tellor is working properly: return Tellor price
+
+- `tellorBrokenChainlinkFrozen`
+   - Chainlink is broken: switch to `bothOraclesSuspect` and return last good price
+   - Chainlink is frozen: return last good price
+   - Chainlink is working properly: switch to `usingChainlink` and return Chainlink price
 
 The current `PriceFeed.sol` contract has a `fetchPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. The `PriceFeedTestnet.sol` contains additionally, a manual price setter, `setPrice()`. Price can be manually set, and `getPrice()` returns the latest stored price.
 
