@@ -700,13 +700,13 @@ https://eips.ethereum.org/EIPS/eip-2612
 
 ## Supplying Hints to Trove operations
 
-Troves in Liquity are recorded in a sorted doubly linked list, sorted by their ICR, from high to low.
+Troves in Liquity are recorded in a sorted doubly linked list, sorted by their NICR, from high to low.
 
-All Trove operations that change the collateralization ratio need to either insert or reinsert the Trove to the `SortedTroves` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, a ‘hint’ may be provided.
+All Trove operations that change the collateralization ratio need to either insert or reinsert the Trove to the `SortedTroves` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, two ‘hints’ may be provided.
 
 A hint is the address of a Trove with a position in the sorted list close to the correct insert position.
 
-All Trove operations take a ‘hint’ argument. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call.
+All Trove operations take two ‘hint’ arguments: an `_upperHint` referring to the `nextId` and a `_lowerHint` referring to the `prevId` of the two adjacent nodes in the linked list that would become the neighbors of the given Trove. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call. `SortedList::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)` firsts check if `prevId` is still existant and valid (larger NICR than the provided `_NICR`) and then descends the list starting from `prevId`. If the check fails, the function further checks if `nextId` is still existant and valid (smaller NICR than the provided `_NICR`) and then ascends list starting from `nextId`
 
 The `HintHelpers::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired Trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
 
@@ -719,12 +719,12 @@ The `HintHelpers::getApproxHint(...)` function can be used to generate a useful 
 
 Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` list.
 
-**Trove operation with hint**
+**Trove operation with hints**
 
 1. User performs Trove operation in their browser
 2. The front end computes a new collateralization ratio locally, based on the change in collateral and/or debt.
 3. Call `HintHelpers::getApproxHint(...)`, passing it the computed nominal collateralization ratio. Returns an address close to the correct insert position
-4. Call `SortedTroves::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)`, passing it the approximate hint via both `_prevId` and `_nextId` and the new nominal collateralization ratio via `_NICR`. 
+4. Call `SortedTroves::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)`, passing it the approximate hints via both `_prevId` and `_nextId` and the new nominal collateralization ratio via `_NICR`. 
 5. Pass the exact position as an argument to the Trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
