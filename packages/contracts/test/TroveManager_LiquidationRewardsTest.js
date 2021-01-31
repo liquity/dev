@@ -60,7 +60,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // L1: B liquidated
     const txB = await troveManager.liquidate(bob)
@@ -78,7 +78,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // L2: D Liquidated
     const txD = await troveManager.liquidate(dennis)
@@ -123,7 +123,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // L1: C liquidated
     const txC = await troveManager.liquidate(carol)
@@ -142,7 +142,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(100, 18))
 
     // Confirm not in Recovery Mode
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // L2: F Liquidated
     const txF = await troveManager.liquidate(freddy)

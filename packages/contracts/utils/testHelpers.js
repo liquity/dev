@@ -259,6 +259,26 @@ class TestHelper {
     }
   }
 
+  // --- TCR and Recovery Mode functions ---
+
+  // These functions use the PriceFeedTestNet view price function getPrice() which is sufficient for testing.
+  // the mainnet contract PriceFeed uses fetchPrice, which is non-view and writes to storage.
+
+  // To checkRecoveryMode / getTCR from the Liquity mainnet contracts, pass a price value - this can be the lastGoodPrice
+  // stored in Liquity, or the current Chainlink ETHUSD price, etc.
+
+
+  static async checkRecoveryMode(contracts) {
+    const price = await contracts.priceFeedTestnet.getPrice()
+    return contracts.troveManager.checkRecoveryMode(price)
+  }
+
+  static async getTCR(contracts) {
+    const price = await contracts.priceFeedTestnet.getPrice()
+    return contracts.troveManager.getTCR(price)
+  }
+
+
   // --- Gas compensation calculation functions ---
 
   // Given a composite debt, returns the actual debt  - i.e. subtracts the virtual debt.

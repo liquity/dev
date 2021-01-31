@@ -334,7 +334,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Price Drops, defaulter1 liquidated. Stability Pool size drops by 50%
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
@@ -987,7 +987,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Price Drops, defaulters become undercollateralized
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       // Check initial frontEnd stakes are correct:
       F1_stake = await stabilityPool.frontEndStakes(frontEnd_1)
