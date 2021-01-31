@@ -361,8 +361,9 @@ There is also a return condition `bothOraclesLiveAndSimilarPrice` which is a fun
 
 The PriceFeed contract fetches the current price from Chainlink and changes its state (called `Status`) according to the following logic:
 
-- `usingChainlink`: Initial system state that is maintained as long as Chainlink is working properly, i.e. neither broken nor frozen nor exceeding the maximum price change threshold.
-   - If Chainlink breaks or changes its price more than the maximum, PriceFeed fetches the price from Tellor and proceeds depending on the following cases: 
+- `usingChainlink`: Initial system state that is maintained as long as Chainlink is working properly, i.e. neither broken nor frozen nor exceeding the maximum price change threshold. PriceFeed first fetches the previous round's price data from Chainlink and then does the following:
+
+   - If Chainlink's current price data is broken or if it exceeds the maximum deviation threshold from the previous round's price data, PriceFeed fetches the price from Tellor and proceeds depending on the following cases: 
      - Tellor is broken: switch to `bothOraclesSuspect` and return last good price
      - Tellor is frozen: switch to `usingTellor` and return last good price
      - Otherwise (Tellor is working properly): switch to `usingTellor` and return the fetched Tellor price
