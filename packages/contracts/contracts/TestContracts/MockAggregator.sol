@@ -3,6 +3,7 @@
 pragma solidity 0.6.11;
 
 import "../Dependencies/AggregatorV3Interface.sol";
+import "../Dependencies/console.sol";
 
 contract MockAggregator is AggregatorV3Interface {
     
@@ -12,6 +13,9 @@ contract MockAggregator is AggregatorV3Interface {
     int private prevPrice;
     uint private updateTime;
     uint private prevUpdateTime;
+
+    bool latestRevert;
+    bool prevRevert;
 
     // --- Functions ---
 
@@ -35,6 +39,14 @@ contract MockAggregator is AggregatorV3Interface {
         updateTime = _updateTime;
     }
 
+    function setLatestRevert() external returns (bool) {
+        latestRevert = !latestRevert;
+    }
+
+      function setPrevRevert() external returns (bool) {
+        prevRevert = !prevRevert;
+    }
+
     // --- Getters that adhere to the AggregatorV3 interface ---
 
     function decimals() external override view returns (uint8) {
@@ -52,7 +64,10 @@ contract MockAggregator is AggregatorV3Interface {
         uint256 updatedAt,
         uint80 answeredInRound
     ) 
-    {
+    {    
+        if (latestRevert) {
+            console.log("latestRoundData reverted");
+            require(1== 0, "latestRoundData reverted");}
         return (0, price, 0, updateTime, 0); 
     }
 
@@ -67,6 +82,9 @@ contract MockAggregator is AggregatorV3Interface {
       uint256 updatedAt,
       uint80 answeredInRound
     ) {
+        if (prevRevert) {
+            console.log("getRoundData reverted");
+            require( 1== 0, "getRoundData reverted");}
         return (0, prevPrice, 0, updateTime, 0);
     }
 

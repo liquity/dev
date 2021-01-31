@@ -3,13 +3,13 @@
 pragma solidity 0.6.11;
 
 import "./Interfaces/IPriceFeed.sol";
+import "./Interfaces/ITellorCaller.sol";
 import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/BaseMath.sol";
 import "./Dependencies/LiquityMath.sol";
-import "./Dependencies/ITellor.sol";
 import "./Dependencies/console.sol";
 
 /*
@@ -22,7 +22,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     using SafeMath for uint256;
 
     AggregatorV3Interface public priceAggregator;  // Mainnet Chainlink aggregator
-    ITellor public tellor;  // Mainnet TellorMaster
+    ITellorCaller public tellorCaller;  // Wrapper contract that calls the Tellor system
 
     // Core Liquity contracts
     address borrowerOperationsAddress;
@@ -51,15 +51,15 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     struct ChainlinkResponse {
         uint80 roundId;
         int256 answer;
-        uint256 startedAt;
         uint256 timestamp;
-        uint80 answeredInRound;
+        bool success;
     }
 
     struct TellorResponse {
         bool ifRetrieve;
         uint256 value;
         uint256 timestamp;
+        bool success;
     }
 
     enum Status {usingChainlink, usingTellor, bothOraclesSuspect, usingTellorChainlinkFrozen, tellorBrokenChainlinkFrozen}
@@ -72,16 +72,16 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     
     function setAddresses(
         address _priceAggregatorAddress,
-        address _tellorMasterAddress
+        address _tellorCallerAddress
     )
         external
         onlyOwner
     {
         checkContract(_priceAggregatorAddress);
-        checkContract(_tellorMasterAddress);
+        checkContract(_tellorCallerAddress);
        
         priceAggregator = AggregatorV3Interface(_priceAggregatorAddress);
-        tellor = ITellor(_tellorMasterAddress);
+        tellorCaller = ITellorCaller(_tellorCallerAddress);
 
         // Explicitly set initial system status
         status = Status.usingChainlink;
@@ -312,9 +312,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     // --- Helper functions --- 
 
     function chainlinkIsBroken(ChainlinkResponse memory _response) internal view returns (bool) {
+        // Check for response call reverted
+        if (!_response.success) {return true;}
         // Check for an invalid timeStamp that is 0, or in the future
-        if (_response.timestamp == 0 || _response.timestamp > block.timestamp) {
-            return true;}
+        if (_response.timestamp == 0 || _response.timestamp > block.timestamp) {return true;}
         // Check for non-positive price
         if (_response.answer <= 0) {return true;} 
        
@@ -328,7 +329,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return false;
     }
 
-    function chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, uint _currentDigits, ChainlinkResponse memory _prevResponse, uint _prevDigits) internal view returns (bool) {
+    function chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, uint _currentDigits, ChainlinkResponse memory _prevResponse, uint _prevDigits) internal pure returns (bool) {
         uint currentScaledPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.answer), _currentDigits);
         uint prevScaledPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.answer), _prevDigits);
 
@@ -338,11 +339,13 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     function tellorIsBroken(TellorResponse memory _response) internal view returns (bool) {
+        // Check for response call reverted
+        if (!_response.success) {return true;}
         // Check for an invalid timeStamp that is 0, or in the future
         if (_response.timestamp == 0 || _response.timestamp > block.timestamp) {return true;}
         // Check for zero price
         if (_response.value == 0) {return true;} 
-
+        
         return false;
     }
 
@@ -411,49 +414,97 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     // --- Oracle response wrapper functions ---
 
     function getCurrentTellorResponse() internal view returns (TellorResponse memory tellorResponse) {
-        (tellorResponse.ifRetrieve,
-        tellorResponse.value,
-        tellorResponse.timestamp) = getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID);
+        try tellorCaller.getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID) returns 
+        (
+            bool ifRetrieve,
+            uint256 value,
+            uint256 _timestampRetrieved
+        ) 
+        {
+            // If call to Tellor succeeds, return the response and success = true
+            (tellorResponse.ifRetrieve,
+            tellorResponse.value,
+            tellorResponse.timestamp,
+            tellorResponse.success) = (ifRetrieve, value, _timestampRetrieved, true);
+
+            return (tellorResponse);
+        }catch {
+             // If call to Tellor reverts, return a zero response with success = false
+            return (tellorResponse);
+        }
     }
 
     function getCurrentChainlinkResponse() internal view returns (ChainlinkResponse memory chainlinkResponse) {
-        (chainlinkResponse.roundId,
-        chainlinkResponse.answer,,
-        chainlinkResponse.timestamp,)  = priceAggregator.latestRoundData();
+        try priceAggregator.latestRoundData() returns 
+        (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 timestamp,
+            uint80 answeredInRound
+        )
+        {
+            // If call to Chainlink succeeds, return the response and success = true
+            (chainlinkResponse.roundId,
+            chainlinkResponse.answer,
+            chainlinkResponse.timestamp)  = (roundId, answer, timestamp);
+            chainlinkResponse.success = true;
+            return chainlinkResponse;
+        } catch {
+            // If call to Chainlink aggregator reverts, return a zero response with success = false
+            return chainlinkResponse;
+        }
     }
 
     function getPrevChainlinkResponse(uint80 _currentRoundId) internal view returns (ChainlinkResponse memory prevChainlinkResponse) {
-        (,prevChainlinkResponse.answer,,
-        prevChainlinkResponse.timestamp,) = priceAggregator.getRoundData(_currentRoundId - 1);
+        try priceAggregator.getRoundData(_currentRoundId - 1) returns 
+        (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt, 
+            uint256 timestamp,
+            uint80 answeredInRound
+        )
+        {
+            // If call to Chainlink succeeds, return the response and success = true
+            (prevChainlinkResponse.roundId,
+            prevChainlinkResponse.answer,
+            prevChainlinkResponse.timestamp)  = (roundId, answer, timestamp);
+            prevChainlinkResponse.success = true;
+            return prevChainlinkResponse;
+        } catch {
+            // If call to Chainlink aggregator reverts, return a zero response with success = false
+            return prevChainlinkResponse;
+        }
     }
 
      // --- Tellor functions (as found in UsingTellor.sol) ---
 
-    /*
-    * getTellorCurrentValue():  identical to getCurrentValue() in UsingTellor.sol
-    *
-    * @dev Allows the user to get the latest value for the requestId specified
-    * @param _requestId is the requestId to look up the value for
-    * @return ifRetrieve bool true if it is able to retreive a value, the value, and the value's timestamp
-    * @return value the value retrieved
-    * @return _timestampRetrieved the value's timestamp
-    */
-    function getTellorCurrentValue(uint256 _requestId)
-        public
-        view
-        returns (
-            bool ifRetrieve,
-            uint256 value,
-            uint256 _timestampRetrieved
-        )
-    {
-        uint256 _count = tellor.getNewValueCountbyRequestId(_requestId);
-        uint256 _time =
-            tellor.getTimestampbyRequestIDandIndex(_requestId, _count - 1);
-        uint256 _value = tellor.retrieveData(_requestId, _time);
-        if (_value > 0) return (true, _value, _time);
-        return (false, 0, _time);
-    }
+    // /*
+    // * getTellorCurrentValue():  identical to getCurrentValue() in UsingTellor.sol
+    // *
+    // * @dev Allows the user to get the latest value for the requestId specified
+    // * @param _requestId is the requestId to look up the value for
+    // * @return ifRetrieve bool true if it is able to retreive a value, the value, and the value's timestamp
+    // * @return value the value retrieved
+    // * @return _timestampRetrieved the value's timestamp
+    // */
+    // function getTellorCurrentValue(uint256 _requestId)
+    //     public
+    //     view
+    //     returns (
+    //         bool ifRetrieve,
+    //         uint256 value,
+    //         uint256 _timestampRetrieved
+    //     )
+    // {
+    //     uint256 _count = tellor.getNewValueCountbyRequestId(_requestId);
+    //     uint256 _time =
+    //         tellor.getTimestampbyRequestIDandIndex(_requestId, _count - 1);
+    //     uint256 _value = tellor.retrieveData(_requestId, _time);
+    //     if (_value > 0) return (true, _value, _time);
+    //     return (false, 0, _time);
+    // }
 }
 
 

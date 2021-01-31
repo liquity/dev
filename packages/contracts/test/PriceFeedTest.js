@@ -3,6 +3,7 @@ const PriceFeed = artifacts.require("./PriceFeedTester.sol")
 const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
 const MockChainlink = artifacts.require("./MockAggregator.sol")
 const MockTellor = artifacts.require("./MockTellor.sol")
+const TellorCaller = artifacts.require("./TellorCaller.sol")
 
 const testHelpers = require("../utils/testHelpers.js")
 const th = testHelpers.TestHelper
@@ -18,7 +19,7 @@ contract('PriceFeed', async accounts => {
   let mockChainlink
 
   const setAddresses = async ()  => {
-    await priceFeed.setAddresses(mockChainlink.address, mockTellor.address, { from: owner })
+    await priceFeed.setAddresses(mockChainlink.address, tellorCaller.address, { from: owner })
   }
 
   beforeEach(async () => {
@@ -37,6 +38,9 @@ contract('PriceFeed', async accounts => {
     mockTellor = await MockTellor.new()
     MockTellor.setAsDeployed(mockTellor)
 
+    tellorCaller = await TellorCaller.new(mockTellor.address)
+    TellorCaller.setAsDeployed(tellorCaller)
+  
     // Set mock price updateTimes in both oracles to very recent
     const now = await th.getLatestBlockTimestamp(web3)
     await mockChainlink.setUpdateTime(now)
@@ -145,12 +149,16 @@ contract('PriceFeed', async accounts => {
   // })
 
   // --- Chainlink breaks ---
-  it("Chainlink broken by Tellor working: fetchPrice should return the correct Tellor price, taking into account Tellor's 6-digit granularity", async () => {
+  it("Chainlink breaks, Tellor working: fetchPrice should return the correct Tellor price, taking into account Tellor's 6-digit granularity", async () => {
     await setAddresses()
     // --- Chainlink fails, system switches to Tellor ---
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 1: using chainlink
    
+    // Chainlink breaks with negative price
+    await mockChainlink.setPrevPrice(dec(1, 8))
+    await mockChainlink.setPrice("-5000")
+
     await mockTellor.setPrice(dec(123, 6))
     await mockChainlink.setUpdateTime(0)
 
@@ -280,7 +288,78 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(123,  18))
   })
 
+  it("Chainlink broken - latest round call reverted, Tellor working: fetchPrice should switch to Tellor", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
+
+    await mockTellor.setPrice(dec(123, 6))
+    await mockChainlink.setLatestRevert()
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    const statusAfter =  await priceFeed.status()
+    assert.equal(statusAfter, '1') // status 1: using tellor 
+  })
+
+  it("Chainlink broken - latest round call reverted, Tellor working: fetchPrice should return the correct price from Tellor", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
+
+    await mockTellor.setPrice(dec(123, 6))
+    await mockChainlink.setLatestRevert()
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+
+    let price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(123,  18))
+  })
+
+  it("Chainlink broken - previous round call reverted, Tellor working: fetchPrice should switch to Tellor", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
+
+    await mockTellor.setPrice(dec(123, 6))
+    await mockChainlink.setPrevRevert()
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+    const statusAfter =  await priceFeed.status()
+    assert.equal(statusAfter, '1') // status 1: using tellor 
+  })
+
+  it("Chainlink broken - previous round call reverted, Tellor working: fetchPrice should return the correct price from Tellor", async () => {
+    await setAddresses()
+    const statusBefore = await priceFeed.status()
+    assert.equal(statusBefore, '0') // status 0: using chainlink
+    
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await priceFeed.setLastGoodPrice(dec(999, 18))
+
+    await mockTellor.setPrice(dec(123, 6))
+    await mockChainlink.setPrevRevert()
+
+    const priceFetchTx = await priceFeed.fetchPrice()
+
+    let price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(123,  18))
+  })
+
   // --- Chainlink timeout --- 
+
   it("Chainlink failed by timeout, Tellor working: fetchPrice should switch to usingTellorChainlinkFrozen", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
@@ -556,6 +635,7 @@ contract('PriceFeed', async accounts => {
   })
 
   // --- Chainlink fails and Tellor is broken ---
+
   it("Chainlink failed by large relative price deviation, Tellor is broken by 0 price: Pricefeed switches to 'bothOracleSuspect'", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
@@ -679,5 +759,55 @@ contract('PriceFeed', async accounts => {
     // Check that the returned price is in fact the previous price
     assert.equal(price, dec(1200,  18))  
   })
+
+  // --- Using Tellor ---
+
+  // Using Tellor, Tellor breaks
+  it("Using Telor, Tellor breaks by zero price: set bothOraclesSuspect", async () => {
+    await setAddresses()
+    priceFeed.setStatus(1) // status 1: using Tellor
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await priceFeed.setLastGoodPrice(dec(123, 18))
+
+    const now = await th.getLatestBlockTimestamp(web3)
+    await mockTellor.setUpdateTime(now)
+    await mockTellor.setPrice(0)
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 2)  // status 2: both oracles suspect
+  })
+
+  it("Using Tellor, Tellor breaks by zero price: uses last good price", async () => {
+    await setAddresses()
+    priceFeed.setStatus(1) // status 1: using Tellor
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await priceFeed.setLastGoodPrice(dec(123, 18))
+
+    const now = await th.getLatestBlockTimestamp(web3)
+    await mockTellor.setUpdateTime(now)
+    await mockTellor.setPrice(0)
+
+    await priceFeed.fetchPrice()
+    const price = await priceFeed.lastGoodPrice()
+
+    assert.equal(price, dec(123, 18))
+  })
+
+  // Using Tellor, Tellor freezes
+
+  // Using Tellor, both Chainlink & Tellor go live
+
+  // Using Tellor, 
+
+
+
 })
 
