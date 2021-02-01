@@ -4,6 +4,8 @@
 
 ## TroveAdjustmentDetails.fee property
 
+Amount of LUSD paid as borrowing fee.
+
 <b>Signature:</b>
 
 ```typescript

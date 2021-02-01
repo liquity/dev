@@ -58,7 +58,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       }),
       price: this._liquity.getPrice({ blockTag }),
       numberOfTroves: this._liquity.getNumberOfTroves({ blockTag }),
-      troveWithoutRewards: this._liquity.getTroveWithoutRewards(this._account, { blockTag }),
+      troveWithoutRedistribution: this._liquity.getTroveWithoutRewards(this._account, { blockTag }),
       totalRedistributed: this._liquity.getTotalRedistributed({ blockTag }),
       deposit: this._liquity.getStabilityDeposit(this._account, { blockTag }),
       total: this._liquity.getTotal({ blockTag }),

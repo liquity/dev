@@ -15,7 +15,7 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 import {
   Trove,
-  TroveWithPendingRewards,
+  TroveWithPendingRedistribution,
   TroveAdjustmentParams,
   ReadableLiquity,
   _HintedMethodOptionalParams,
@@ -57,6 +57,8 @@ import { logsToString } from "./parseLogs";
 
 // With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
 export const redeemMaxIterations = 68;
+
+const slippageTolerance = Decimal.from(0.005); // 0.5%
 
 const noDetails = () => undefined;
 
@@ -462,7 +464,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   }
 
   protected async _findHint(trove: Trove, optionalParams: _HintedMethodOptionalParams = {}) {
-    if (trove instanceof TroveWithPendingRewards) {
+    if (trove instanceof TroveWithPendingRedistribution) {
       throw new Error("Rewards must be applied to this Trove");
     }
 
@@ -515,7 +517,7 @@ export class PopulatableEthersLiquity
     const fees = borrowLUSD && (optionalParams.fees ?? (await this._readableLiquity.getFees()));
     const feeFactor = fees?.borrowingFeeFactor();
     const newTrove = Trove.create(normalized, feeFactor);
-    const maxFeeFactor = Decimal.max(feeFactor ?? 0, 0.005); // TODO add slippage tolerance here
+    const maxFeeFactor = Decimal.max(feeFactor?.add(slippageTolerance) ?? 0, 0.005);
 
     return this._wrapTroveChangeWithFees(
       normalized,
@@ -584,7 +586,7 @@ export class PopulatableEthersLiquity
 
     const feeFactor = fees?.borrowingFeeFactor();
     const finalTrove = trove.adjust(normalized, feeFactor);
-    const maxFeeFactor = feeFactor && Decimal.max(feeFactor, 0.005); // TODO add slippage tolerance here
+    const maxFeeFactor = feeFactor && Decimal.max(feeFactor.add(slippageTolerance), 0.005);
 
     return this._wrapTroveChangeWithFees(
       normalized,
@@ -632,16 +634,26 @@ export class PopulatableEthersLiquity
   }
 
   async liquidate(
-    address: string,
+    address: string | string[],
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersTransaction<LiquidationDetails>> {
-    return this._wrapLiquidation(
-      await this._contracts.troveManager.estimateAndPopulate.liquidate(
-        { ...overrides },
-        addGasForLQTYIssuance,
-        address
-      )
-    );
+    if (Array.isArray(address)) {
+      return this._wrapLiquidation(
+        await this._contracts.troveManager.estimateAndPopulate.batchLiquidateTroves(
+          { ...overrides },
+          addGasForLQTYIssuance,
+          address
+        )
+      );
+    } else {
+      return this._wrapLiquidation(
+        await this._contracts.troveManager.estimateAndPopulate.liquidate(
+          { ...overrides },
+          addGasForLQTYIssuance,
+          address
+        )
+      );
+    }
   }
 
   async liquidateUpTo(
@@ -772,7 +784,7 @@ export class PopulatableEthersLiquity
     ]);
 
     const feeFactor = fees.redemptionFeeFactor(amount.div(total.debt));
-    const maxFeeFactor = Decimal.max(feeFactor, 0.005); // TODO add slippage tolerance here
+    const maxFeeFactor = Decimal.max(feeFactor.add(slippageTolerance), 0.005);
 
     return this._wrapRedemption(
       await this._contracts.troveManager.estimateAndPopulate.redeemCollateral(

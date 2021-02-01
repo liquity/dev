@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.depositCollateral() method
 
+Adjust existing Trove by depositing more collateral.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,18 @@ depositCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | The amount of collateral to add to the Trove's existing collateral. |
 
 <b>Returns:</b>
 
 Promise&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;
+
+## Remarks
+
+Equivalent to:
+
+```typescript
+adjustTrove({ depositCollateral: amount })
+
+```
 

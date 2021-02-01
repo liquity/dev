@@ -4,8 +4,15 @@
 
 ## RedemptionDetails.actualLUSDAmount property
 
+Amount of LUSD that was actually redeemed by the transaction.
+
 <b>Signature:</b>
 
 ```typescript
 actualLUSDAmount: Decimal;
 ```
+
+## Remarks
+
+This can end up being lower than `attemptedLUSDAmount` due to interference from another transaction that modifies the list of Troves.
+

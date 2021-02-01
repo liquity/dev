@@ -4,6 +4,8 @@
 
 ## TroveAdjustmentDetails.newTrove property
 
+New state of the adjusted Trove directly after the transaction.
+
 <b>Signature:</b>
 
 ```typescript

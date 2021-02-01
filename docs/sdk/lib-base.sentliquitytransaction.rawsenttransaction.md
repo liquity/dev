@@ -4,6 +4,8 @@
 
 ## SentLiquityTransaction.rawSentTransaction property
 
+Implementation-specific sent transaction object.
+
 <b>Signature:</b>
 
 ```typescript

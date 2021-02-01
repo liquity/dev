@@ -14,5 +14,5 @@ collateralSurplusBalance: Decimal;
 
 ## Remarks
 
-When the user's Trove gets liquidated or redeemed, any collateral they have above 110% (in case of liquidation) or 100% collateralization (in case of redemption) gets sent to a pool, where it can be withdrawn from using [claimCollateralSurplus()](./lib-base.transactableliquity.claimcollateralsurplus.md)<!-- -->.
+See [getCollateralSurplusBalance()](./lib-base.readableliquity.getcollateralsurplusbalance.md) for more information.
 

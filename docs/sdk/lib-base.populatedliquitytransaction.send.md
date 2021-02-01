@@ -4,6 +4,8 @@
 
 ## PopulatedLiquityTransaction.send() method
 
+Send the transaction.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,6 @@ send(): Promise<T>;
 <b>Returns:</b>
 
 Promise&lt;T&gt;
+
+An object that implements [SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- -->.
 

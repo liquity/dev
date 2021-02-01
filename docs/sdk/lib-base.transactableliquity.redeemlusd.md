@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.redeemLUSD() method
 
+Redeem LUSD to native currency (e.g. Ether) at face value.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LUSD to be redeemed. |
 
 <b>Returns:</b>
 

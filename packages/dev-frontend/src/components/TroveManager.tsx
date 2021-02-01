@@ -91,7 +91,7 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
     case "updateStore": {
       const {
         newState: { trove },
-        stateChange: { troveWithoutRewards: changeCommitted }
+        stateChange: { troveWithoutRedistribution: changeCommitted }
       } = action;
 
       const newState = { ...state, original: trove };

@@ -4,20 +4,37 @@
 
 ## ReadableLiquity.getLastTroves() method
 
+Get a slice from the list of Troves sorted by collateral ratio in ascending order.
+
 <b>Signature:</b>
 
 ```typescript
-getLastTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRewards][]>;
+getLastTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRedistribution][]>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  startIdx | number |  |
-|  numberOfTroves | number |  |
+|  startIdx | number | Index of first Trove to include from the sorted list. |
+|  numberOfTroves | number | The length of the slice. |
 
 <b>Returns:</b>
 
-Promise&lt;\[string, [TroveWithPendingRewards](./lib-base.trovewithpendingrewards.md)<!-- -->\]\[\]&gt;
+Promise&lt;\[string, [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->\]\[\]&gt;
+
+Pairs of owner addresses and their Troves.
+
+## Example
+
+The function returns Troves in the form of [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) objects, which require further processing. For example:
+
+```typescript
+const trovesWithoutRedistribution = await liquity.getLastTroves(0, 10);
+const totalRedistributed = await liquity.getTotalRedistributed();
+const troves = trovesWithoutRedistribution.map(
+  ([owner, t]) => [owner, t.applyRedistribution(totalRedistributed)]
+);
+
+```
 

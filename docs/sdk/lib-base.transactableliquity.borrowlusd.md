@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.borrowLUSD() method
 
+Adjust existing Trove by borrowing more LUSD.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,18 @@ borrowLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | The amount of LUSD to borrow. |
 
 <b>Returns:</b>
 
 Promise&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;
+
+## Remarks
+
+Equivalent to:
+
+```typescript
+adjustTrove({ borrowLUSD: amount })
+
+```
 

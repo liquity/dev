@@ -4,6 +4,8 @@
 
 ## ReadableLiquity.getFees() method
 
+Get a calculator for current fees.
+
 <b>Signature:</b>
 
 ```typescript

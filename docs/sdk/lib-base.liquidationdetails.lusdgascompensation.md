@@ -4,6 +4,8 @@
 
 ## LiquidationDetails.lusdGasCompensation property
 
+Amount of LUSD paid to the liquidator as gas compensation.
+
 <b>Signature:</b>
 
 ```typescript

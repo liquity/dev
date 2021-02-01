@@ -58,7 +58,7 @@ import { TroveClosureDetails } from '@liquity/lib-base';
 import { TroveCreationDetails } from '@liquity/lib-base';
 import { _TroveCreationOptionalParams } from '@liquity/lib-base';
 import { TroveCreationParams } from '@liquity/lib-base';
-import { TroveWithPendingRewards } from '@liquity/lib-base';
+import { TroveWithPendingRedistribution } from '@liquity/lib-base';
 
 // @public (undocumented)
 export const addressesOf: (contracts: LiquityContracts) => LiquityContractAddresses;
@@ -226,7 +226,7 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     // (undocumented)
     watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void): () => void;
     // (undocumented)
-    watchTroveWithoutRewards(onTroveChanged: (trove: TroveWithPendingRewards) => void, address?: string): () => void;
+    watchTroveWithoutRewards(onTroveChanged: (trove: TroveWithPendingRedistribution) => void, address?: string): () => void;
 }
 
 // Warning: (ae-forgotten-export) The symbol "PopulatableEthersLiquityBase" needs to be exported by the entry point index.d.ts
@@ -246,7 +246,7 @@ export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase imple
     // (undocumented)
     depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>>;
     // (undocumented)
-    liquidate(address: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<LiquidationDetails>>;
+    liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<LiquidationDetails>>;
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<LiquidationDetails>>;
     // (undocumented)
@@ -303,11 +303,11 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
-    getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRewards][]>;
+    getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRedistribution][]>;
     // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
     // (undocumented)
-    getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRewards][]>;
+    getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRedistribution][]>;
     // (undocumented)
     getLQTYBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
@@ -331,7 +331,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     // (undocumented)
     getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
-    getTroveWithoutRewards(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRewards>;
+    getTroveWithoutRewards(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
 }
 
 // @public (undocumented)

@@ -4,6 +4,8 @@
 
 ## LiquidationDetails.totalLiquidated property
 
+Total collateral liquidated and debt cleared by the transaction.
+
 <b>Signature:</b>
 
 ```typescript

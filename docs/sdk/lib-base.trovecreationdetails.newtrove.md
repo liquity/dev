@@ -4,6 +4,8 @@
 
 ## TroveCreationDetails.newTrove property
 
+The Trove that was created by the transaction.
+
 <b>Signature:</b>
 
 ```typescript

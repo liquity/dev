@@ -8,7 +8,7 @@ import {
   ReadableLiquity,
   StabilityDeposit,
   Trove,
-  TroveWithPendingRewards
+  TroveWithPendingRedistribution
 } from "@liquity/lib-base";
 
 import { MultiTroveGetter } from "../types";
@@ -42,21 +42,21 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
   async getTroveWithoutRewards(
     address = this._requireAddress(),
     overrides?: EthersCallOverrides
-  ): Promise<TroveWithPendingRewards> {
+  ): Promise<TroveWithPendingRedistribution> {
     const [trove, snapshot] = await Promise.all([
       this._contracts.troveManager.Troves(address, { ...overrides }),
       this._contracts.troveManager.rewardSnapshots(address, { ...overrides })
     ]);
 
     if (trove.status === TroveStatus.active) {
-      return new TroveWithPendingRewards(
+      return new TroveWithPendingRedistribution(
         new Decimal(trove.coll),
         new Decimal(trove.debt),
         new Decimal(trove.stake),
         new Trove(new Decimal(snapshot.ETH), new Decimal(snapshot.LUSDDebt))
       );
     } else {
-      return new TroveWithPendingRewards();
+      return new TroveWithPendingRedistribution();
     }
   }
 
@@ -66,7 +66,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
       this.getTotalRedistributed({ ...overrides })
     ] as const);
 
-    return trove.applyRewards(totalRedistributed);
+    return trove.applyRedistribution(totalRedistributed);
   }
 
   async getNumberOfTroves(overrides?: EthersCallOverrides): Promise<number> {
@@ -137,7 +137,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     startIdx: number,
     numberOfTroves: number,
     overrides?: EthersCallOverrides
-  ): Promise<[string, TroveWithPendingRewards][]> {
+  ): Promise<[string, TroveWithPendingRedistribution][]> {
     const troves = await this._contracts.multiTroveGetter.getMultipleSortedTroves(
       -(startIdx + 1),
       numberOfTroves,
@@ -151,7 +151,7 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     startIdx: number,
     numberOfTroves: number,
     overrides?: EthersCallOverrides
-  ): Promise<[string, TroveWithPendingRewards][]> {
+  ): Promise<[string, TroveWithPendingRedistribution][]> {
     const troves = await this._contracts.multiTroveGetter.getMultipleSortedTroves(
       startIdx,
       numberOfTroves,
@@ -210,11 +210,11 @@ type MultipleSortedTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSor
 
 const mapMultipleSortedTrovesToTroves = (
   troves: MultipleSortedTroves
-): [string, TroveWithPendingRewards][] =>
+): [string, TroveWithPendingRedistribution][] =>
   troves.map(({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) => [
     owner,
 
-    new TroveWithPendingRewards(
+    new TroveWithPendingRedistribution(
       new Decimal(coll),
       new Decimal(debt),
       new Decimal(stake),

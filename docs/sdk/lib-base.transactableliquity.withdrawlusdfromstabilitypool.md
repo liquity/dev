@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.withdrawLUSDFromStabilityPool() method
 
+Withdraw LUSD from Stability Deposit.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,13 @@ withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChang
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LUSD to withdraw. |
 
 <b>Returns:</b>
 
 Promise&lt;[StabilityDepositChangeDetails](./lib-base.stabilitydepositchangedetails.md)<!-- -->&gt;
+
+## Remarks
+
+As a side-effect, the transaction will also pay out the Stability Deposit's [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [LQTY reward](./lib-base.stabilitydeposit.lqtyreward.md)<!-- -->.
 

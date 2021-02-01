@@ -4,6 +4,8 @@
 
 ## ReadableLiquity.getLUSDBalance() method
 
+Get the amount of LUSD held by an address.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ getLUSDBalance(address?: string): Promise<Decimal>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address whose balance should be retrieved. |
 
 <b>Returns:</b>
 

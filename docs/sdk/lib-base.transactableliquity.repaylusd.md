@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.repayLUSD() method
 
+Adjust existing Trove by repaying some of its debt.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,18 @@ repayLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | The amount of LUSD to repay. |
 
 <b>Returns:</b>
 
 Promise&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;
+
+## Remarks
+
+Equivalent to:
+
+```typescript
+adjustTrove({ repayLUSD: amount })
+
+```
 

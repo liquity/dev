@@ -1,6 +1,6 @@
 import { Decimal } from "@liquity/decimal";
 
-import { Trove, TroveWithPendingRewards } from "./Trove";
+import { Trove, TroveWithPendingRedistribution } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
 
 /** @alpha */
@@ -10,7 +10,7 @@ export interface ObservableLiquity {
   ): () => void;
 
   watchTroveWithoutRewards(
-    onTroveChanged: (trove: TroveWithPendingRewards) => void,
+    onTroveChanged: (trove: TroveWithPendingRedistribution) => void,
     address?: string
   ): () => void;
 

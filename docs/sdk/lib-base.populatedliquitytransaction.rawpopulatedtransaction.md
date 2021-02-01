@@ -4,6 +4,8 @@
 
 ## PopulatedLiquityTransaction.rawPopulatedTransaction property
 
+Implementation-specific populated transaction object.
+
 <b>Signature:</b>
 
 ```typescript

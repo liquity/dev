@@ -2,7 +2,7 @@ import assert from "assert";
 
 import { Decimal } from "@liquity/decimal";
 import { StabilityDeposit } from "./StabilityDeposit";
-import { Trove, TroveWithPendingRewards } from "./Trove";
+import { Trove, TroveWithPendingRedistribution } from "./Trove";
 import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
 import { FrontendStatus } from "./ReadableLiquity";
@@ -35,10 +35,8 @@ export interface LiquityStoreBaseState {
    * Amount of leftover collateral available for withdrawal to the user.
    *
    * @remarks
-   * When the user's Trove gets liquidated or redeemed, any collateral they have above 110% (in case
-   * of liquidation) or 100% collateralization (in case of redemption) gets sent to a pool, where it
-   * can be withdrawn from using
-   * {@link TransactableLiquity.claimCollateralSurplus | claimCollateralSurplus()}.
+   * See {@link ReadableLiquity.getCollateralSurplusBalance | getCollateralSurplusBalance()} for
+   * more information.
    */
   collateralSurplusBalance: Decimal;
 
@@ -55,7 +53,7 @@ export interface LiquityStoreBaseState {
    * Total collateral and debt per stake that has been liquidated through redistribution.
    *
    * @remarks
-   * Needed when dealing with instances of {@link TroveWithPendingRewards}.
+   * Needed when dealing with instances of {@link TroveWithPendingRedistribution}.
    */
   totalRedistributed: Trove;
 
@@ -66,7 +64,7 @@ export interface LiquityStoreBaseState {
    * The current state of the user's Trove can be found as
    * {@link LiquityStoreDerivedState.trove | trove}.
    */
-  troveWithoutRewards: TroveWithPendingRewards;
+  troveWithoutRedistribution: TroveWithPendingRedistribution;
 
   /** User's stability deposit. */
   deposit: StabilityDeposit;
@@ -164,7 +162,7 @@ const difference = <T>(a: T, b: T) =>
  * The type parameter `T` may be used to type extra state added to {@link LiquityStoreState} by the
  * subclass.
  *
- * Currently, the only implementation is {@link @liquity/lib-ethers#BlockPolledLiquityStore}.
+ * Implemented by {@link @liquity/lib-ethers#BlockPolledLiquityStore}.
  *
  * @public
  */
@@ -338,11 +336,11 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.totalRedistributed
       ),
 
-      troveWithoutRewards: this._updateIfChanged(
+      troveWithoutRedistribution: this._updateIfChanged(
         equals,
-        "troveWithoutRewards",
-        baseState.troveWithoutRewards,
-        baseStateUpdate.troveWithoutRewards
+        "troveWithoutRedistribution",
+        baseState.troveWithoutRedistribution,
+        baseStateUpdate.troveWithoutRedistribution
       ),
 
       deposit: this._updateIfChanged(equals, "deposit", baseState.deposit, baseStateUpdate.deposit),
@@ -366,12 +364,12 @@ export abstract class LiquityStore<T = unknown> {
   }
 
   private _derive({
-    troveWithoutRewards,
+    troveWithoutRedistribution,
     totalRedistributed,
     fees
   }: LiquityStoreBaseState): LiquityStoreDerivedState {
     return {
-      trove: troveWithoutRewards.applyRewards(totalRedistributed),
+      trove: troveWithoutRedistribution.applyRedistribution(totalRedistributed),
       borrowingFeeFactor: fees.borrowingFeeFactor(),
       redemptionFeeFactor: fees.redemptionFeeFactor()
     };

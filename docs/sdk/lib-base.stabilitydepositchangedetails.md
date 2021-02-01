@@ -4,6 +4,8 @@
 
 ## StabilityDepositChangeDetails interface
 
+Details of a [depositLUSDInStabilityPool()](./lib-base.transactableliquity.depositlusdinstabilitypool.md) or [withdrawLUSDFromStabilityPool()](./lib-base.transactableliquity.withdrawlusdfromstabilitypool.md) transaction.
+
 <b>Signature:</b>
 
 ```typescript
@@ -15,5 +17,5 @@ export interface StabilityDepositChangeDetails extends StabilityPoolGainsWithdra
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [change](./lib-base.stabilitydepositchangedetails.change.md) | [StabilityDepositChange](./lib-base.stabilitydepositchange.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt; |  |
+|  [change](./lib-base.stabilitydepositchangedetails.change.md) | [StabilityDepositChange](./lib-base.stabilitydepositchange.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt; | Change that was made to the deposit by this transaction. |
 

@@ -4,7 +4,7 @@
 
 ## TransactableLiquity.openTrove() method
 
-Open a new Trove.
+Open a new Trove by depositing collateral and borrowing LUSD.
 
 <b>Signature:</b>
 
@@ -16,11 +16,9 @@ openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
+|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; | How much to deposit and borrow. |
 
 <b>Returns:</b>
 
 Promise&lt;[TroveCreationDetails](./lib-base.trovecreationdetails.md)<!-- -->&gt;
-
-The details of the Trove creation.
 
