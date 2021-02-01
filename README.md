@@ -737,7 +737,7 @@ Each BorrowerOperations function that reinserts a Trove takes a single hint, as 
 
 ### Hints for `redeemCollateral`
 
-`TroveManager::redeemCollateral` as a special case requires three hints:
+`TroveManager::redeemCollateral` as a special case requires additional hints:
 - `_firstRedemptionHint` hints at the position of the first Trove that will be redeemed from,
 - `_lowerPartialRedemptionHint` hints at the `nextId` neighbor of the last redeemed Trove upon reinsertion, if it's partially redeemed,
 - `_upperPartialRedemptionHint` hints at the `prevId` neighbor of the last redeemed Trove upon reinsertion, if it's partially redeemed,
