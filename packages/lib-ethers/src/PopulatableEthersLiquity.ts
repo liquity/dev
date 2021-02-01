@@ -513,14 +513,16 @@ export class PopulatableEthersLiquity
     const { depositCollateral, borrowLUSD } = normalized;
 
     const fees = borrowLUSD && (optionalParams.fees ?? (await this._readableLiquity.getFees()));
-    const newTrove = Trove.create(normalized, fees?.borrowingFeeFactor());
+    const feeFactor = fees?.borrowingFeeFactor();
+    const newTrove = Trove.create(normalized, feeFactor);
+    const maxFeeFactor = Decimal.max(feeFactor ?? 0, 0.005); // TODO add slippage tolerance here
 
     return this._wrapTroveChangeWithFees(
       normalized,
       await this._contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: depositCollateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
-        0,
+        maxFeeFactor.bigNumber,
         borrowLUSD?.bigNumber ?? 0,
         ...(await this._findHint(newTrove, optionalParams))
       )
@@ -580,7 +582,9 @@ export class PopulatableEthersLiquity
       borrowLUSD && (optionalParams.fees ?? this._readableLiquity.getFees())
     ]);
 
-    const finalTrove = trove.adjust(normalized, fees?.borrowingFeeFactor());
+    const feeFactor = fees?.borrowingFeeFactor();
+    const finalTrove = trove.adjust(normalized, feeFactor);
+    const maxFeeFactor = feeFactor && Decimal.max(feeFactor, 0.005); // TODO add slippage tolerance here
 
     return this._wrapTroveChangeWithFees(
       normalized,
@@ -590,7 +594,7 @@ export class PopulatableEthersLiquity
           borrowLUSD ? addGasForPotentialLastFeeOperationTimeUpdate : id,
           addGasForPotentialListTraversal
         ),
-        0,
+        maxFeeFactor?.bigNumber ?? 0,
         withdrawCollateral?.bigNumber ?? 0,
         (borrowLUSD ?? repayLUSD)?.bigNumber ?? 0,
         !!borrowLUSD,
@@ -753,11 +757,22 @@ export class PopulatableEthersLiquity
     amount = Decimal.from(amount);
 
     const [
-      firstRedemptionHint,
-      upperPartialRedemptionHint,
-      lowerPartialRedemptionHint,
-      partialRedemptionHintNICR
-    ] = await this._findRedemptionHints(amount, optionalParams);
+      fees,
+      total,
+      [
+        firstRedemptionHint,
+        upperPartialRedemptionHint,
+        lowerPartialRedemptionHint,
+        partialRedemptionHintNICR
+      ]
+    ] = await Promise.all([
+      optionalParams.fees ?? this._readableLiquity.getFees(),
+      optionalParams.total ?? this._readableLiquity.getTotal(),
+      this._findRedemptionHints(amount, optionalParams)
+    ]);
+
+    const feeFactor = fees.redemptionFeeFactor(amount.div(total.debt));
+    const maxFeeFactor = Decimal.max(feeFactor, 0.005); // TODO add slippage tolerance here
 
     return this._wrapRedemption(
       await this._contracts.troveManager.estimateAndPopulate.redeemCollateral(
@@ -769,7 +784,7 @@ export class PopulatableEthersLiquity
         lowerPartialRedemptionHint,
         partialRedemptionHintNICR.bigNumber,
         redeemMaxIterations,
-        0
+        maxFeeFactor.bigNumber
       )
     );
   }

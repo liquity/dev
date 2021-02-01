@@ -699,6 +699,132 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "@liquity/decimal!Decimal.max:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static max(a: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Decimalish",
+                  "canonicalReference": "@liquity/decimal!Decimalish:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", b: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Decimalish",
+                  "canonicalReference": "@liquity/decimal!Decimalish:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Decimal",
+                  "canonicalReference": "@liquity/decimal!Decimal:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "a",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "b",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "max"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@liquity/decimal!Decimal.min:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static min(a: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Decimalish",
+                  "canonicalReference": "@liquity/decimal!Decimalish:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", b: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Decimalish",
+                  "canonicalReference": "@liquity/decimal!Decimalish:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Decimal",
+                  "canonicalReference": "@liquity/decimal!Decimal:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isOptional": false,
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "a",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "b",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "min"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "@liquity/decimal!Decimal#mul:member(1)",
               "docComment": "",
               "excerptTokens": [

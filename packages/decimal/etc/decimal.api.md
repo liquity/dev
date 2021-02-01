@@ -45,6 +45,10 @@ export class Decimal {
     // (undocumented)
     lte(that: Decimalish): boolean;
     // (undocumented)
+    static max(a: Decimalish, b: Decimalish): Decimal;
+    // (undocumented)
+    static min(a: Decimalish, b: Decimalish): Decimal;
+    // (undocumented)
     mul(multiplier: Decimalish): Decimal;
     // (undocumented)
     mulDiv(multiplier: Decimalish, divider: Decimalish): Decimal;

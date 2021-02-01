@@ -277,6 +277,20 @@ export class Decimal {
   lte(that: Decimalish) {
     return this.bigNumber.lte(Decimal.from(that).bigNumber);
   }
+
+  static min(a: Decimalish, b: Decimalish) {
+    a = Decimal.from(a);
+    b = Decimal.from(b);
+
+    return a.lt(b) ? a : b;
+  }
+
+  static max(a: Decimalish, b: Decimalish) {
+    a = Decimal.from(a);
+    b = Decimal.from(b);
+
+    return a.gt(b) ? a : b;
+  }
 }
 
 type DifferenceRepresentation = { sign: "" | "+" | "-"; absoluteValue: Decimal };

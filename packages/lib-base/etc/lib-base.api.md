@@ -357,6 +357,8 @@ export type _RedemptionMethod = "redeemLUSD";
 // @internal (undocumented)
 export type _RedemptionOptionalParams = _HintedMethodOptionalParams & {
     price?: Decimal;
+    fees?: Fees;
+    total?: Trove;
 };
 
 // @internal (undocumented)

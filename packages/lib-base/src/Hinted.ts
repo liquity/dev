@@ -32,6 +32,8 @@ export type _CollateralGainTransferOptionalParams = _FeelessTroveAdjustmentOptio
 /** @internal */
 export type _RedemptionOptionalParams = _HintedMethodOptionalParams & {
   price?: Decimal;
+  fees?: Fees;
+  total?: Trove;
 };
 
 /** @internal */
