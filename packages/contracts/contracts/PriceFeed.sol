@@ -282,7 +282,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 return lastGoodPrice;
            }
 
-            // if Chainlink is frozen and Tellor is live, use Tellor
+            // if Chainlink is frozen and Tellor is live, keep using Tellor (no status change)
             console.log("chainlink is frozen, tellor is live");
             uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
             _storeLastGoodPrice(scaledTellorPrice);
@@ -484,5 +484,4 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         }
     }
 }
-
 
