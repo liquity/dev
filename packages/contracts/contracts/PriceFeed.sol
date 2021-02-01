@@ -13,9 +13,12 @@ import "./Dependencies/LiquityMath.sol";
 import "./Dependencies/console.sol";
 
 /*
-* PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference contract,
-* and Tellor's TellorMaster contract.
+* PriceFeed for mainnet deployment, to be connected to Chainlink's live ETH:USD aggregator reference 
+* contract, and a wrapper contract TellorCaller, which connects to TellorMaster contract.
 *
+* The PriceFeed uses Chainlink as primary oracle, and Tellor as fallback.  It contains logic for
+* switching oracles based on oracle failures, timeouts, and conditions for returning to the primary
+* Chainlink oracle.
 */
 contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     using SafeMath for uint256;
@@ -33,6 +36,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     uint constant public TARGET_DIGITS = 18;  
     uint constant public TELLOR_DIGITS = 6;
 
+    // Maximum time period allowed since Chainlink's latest round data timestamp, beyond which Chainlink is considered frozen.
     uint constant public TIMEOUT = 10800;  // 3 hours: 60 * 60 * 3
     
     // Maximum deviation allowed between two consecutive Chainlink oracle prices. 18-digit precision.
@@ -44,6 +48,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     */
     uint constant public MAX_PRICE_DIFFERENCE_FOR_RETURN = 3e16; // 3%
 
+    // The last good price seen from an oracle by Liquity
     uint public lastGoodPrice;
 
     struct ChainlinkResponse {
@@ -101,8 +106,14 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
     /*
     * fetchPrice():
-    * Returns the latest price obtained from the Oracle. Uses a main oracle (Chainlink) and a fallback oracle(Tellor) 
-    * in case Chainlink fails. If both fail, it uses the last good price seen by Liquity.
+    * Returns the latest price obtained from the Oracle. Called by Liquity functions that require a current price.
+    *
+    * Also callable by anyone externally.
+    *
+    * Non-view function - it stores the last good price seen by Liquity.
+    *
+    * Uses a main oracle (Chainlink) and a fallback oracle(Tellor) in case Chainlink fails. If both fail, 
+    * it uses the last good price seen by Liquity.
     *
     */
     function fetchPrice() external override returns (uint) {
@@ -134,8 +145,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 
                 // If Chainlink is broken and Tellor is working, switch to Tellor and return current Tellor price
                 _changeStatus(Status.usingTellor);
-                uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
-                _storeLastGoodPrice(scaledTellorPrice);
+                uint scaledTellorPrice = _storeTellorData(tellorResponse);
                 return scaledTellorPrice;
             }
 
@@ -157,8 +167,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 }
 
                 // If Tellor is working, use it
-                uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
-                _storeLastGoodPrice(scaledTellorPrice);
+                uint scaledTellorPrice = _storeTellorData(tellorResponse);
                 return scaledTellorPrice;
             }
 
@@ -192,8 +201,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 return lastGoodPrice;}
             
             // Otherwise, use Tellor price
-            uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
-            _storeLastGoodPrice(scaledTellorPrice);
+            uint scaledTellorPrice = _storeTellorData(tellorResponse);
             return scaledTellorPrice;
         }
 
@@ -248,8 +256,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
            }
 
             // if Chainlink is frozen and Tellor is live, keep using Tellor (no status change)
-            uint scaledTellorPrice = _scaleTellorPriceByDigits(tellorResponse.value);
-            _storeLastGoodPrice(scaledTellorPrice);
+            uint scaledTellorPrice = _storeTellorData(tellorResponse);
             return scaledTellorPrice;
         }
 
@@ -401,8 +408,15 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         emit LastGoodPriceUpdated(_lastGoodPrice);
     }
 
-    function _storeChainlinkData(ChainlinkResponse memory chainlinkResponse) internal returns (uint) {
-        uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.decimals);
+     function _storeTellorData(TellorResponse memory _tellorResponse) internal returns (uint) {
+        uint scaledTellorPrice = _scaleTellorPriceByDigits(_tellorResponse.value);
+        _storeLastGoodPrice(scaledTellorPrice);
+
+        return scaledTellorPrice;
+    }
+
+    function _storeChainlinkData(ChainlinkResponse memory _chainlinkResponse) internal returns (uint) {
+        uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.answer), _chainlinkResponse.decimals);
         _storeLastGoodPrice(scaledChainlinkPrice);
 
         return scaledChainlinkPrice;
