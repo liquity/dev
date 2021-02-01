@@ -1012,7 +1012,7 @@ Upon each debt issuance:
 - `baseRate` is decayed based on time passed since the last fee event
 - The borrowing rate is given by `min{BORROWING_FEE_FLOOR + baseRate * newDebtIssued, MAX_BORROWING_FEE}`
 
-REDEMPTION_FEE_FLOOR and BORROWING_FEE_FLOOR are both set to 0.5%, while MAX_BORROWING_FEE is 5% and DECIMAL_PRECISION is 100%.
+`REDEMPTION_FEE_FLOOR` and `BORROWING_FEE_FLOOR` are both set to 0.5%, while `MAX_BORROWING_FEE` is 5% and `DECIMAL_PRECISION` is 100%.
 
 ### Intuition behind fees
 
