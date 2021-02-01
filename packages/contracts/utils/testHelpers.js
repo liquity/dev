@@ -277,27 +277,38 @@ class TestHelper {
     return issuedDebt
   }
 
+  // Adds the gas compensation (50 LUSD)
   static async getCompositeDebt(contracts, debt) {
     const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
     return compositeDebt
   }
 
+  /*
+   * given the requested LUSD amomunt in openTrove, returns the total debt
+   * So, it adds the gas compensation and the borrowing fee
+   */
   static async getOpenTroveTotalDebt(contracts, lusdAmount) {
     const fee = await contracts.troveManager.getBorrowingFee(lusdAmount)
     const compositeDebt = await this.getCompositeDebt(contracts, lusdAmount)
     return compositeDebt.add(fee)
   }
 
+  /*
+   * given the desired total debt, returns the LUSD amomunt that needs to be requested in openTrove
+   * So, it subtracts the gas compensation and then the borrowing fee
+   */
   static async getOpenTroveLUSDAmount(contracts, totalDebt) {
     const actualDebt = await this.getActualDebtFromComposite(totalDebt, contracts)
     return this.getNetBorrowingAmount(contracts, actualDebt)
   }
 
+  // Subtracts the borrowing fee
   static async getNetBorrowingAmount(contracts, debtWithFee) {
     const borrowingRate = await contracts.troveManager.getBorrowingRate()
     return this.toBN(debtWithFee).mul(MoneyValues._1e18BN).div(MoneyValues._1e18BN.add(borrowingRate))
   }
 
+  // Adds the redemption fee
   static async getRedemptionGrossAmount(contracts, expected) {
     const redemptionRate = await contracts.troveManager.getRedemptionRate()
     return expected.mul(MoneyValues._1e18BN).div(MoneyValues._1e18BN.add(redemptionRate))
