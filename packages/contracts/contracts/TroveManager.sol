@@ -844,9 +844,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);
 
-        uint entireSystemDebt = getEntireSystemDebt();       
-        // Confirm redeemer's balance is less than total systemic debt
-        assert(lusdToken.balanceOf(msg.sender) <= entireSystemDebt);
+        uint totalLUSDSupplyAtStart = getEntireSystemDebt();       
+        // Confirm redeemer's balance is less than total LUSD supply
+        assert(lusdToken.balanceOf(msg.sender) <= totalLUSDSupplyAtStart);
 
         uint price = priceFeed.getPrice();
         
@@ -891,8 +891,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             currentBorrower = nextUserToCheck;
         }
 
-        // Decay the baseRate due to time passed, and then increase it according to the size of this redemption
-        _updateBaseRateFromRedemption(totals.totalETHDrawn, price);
+        // Decay the baseRate due to time passed, and then increase it according to the size of this redemption.
+        // Use the saved total LUSD supply value, from before it was reduced by the redemption.
+        _updateBaseRateFromRedemption(totals.totalETHDrawn, price, totalLUSDSupplyAtStart);
 
         // Calculate the ETH fee
         totals.ETHFee = _getRedemptionFee(totals.totalETHDrawn);
@@ -1239,16 +1240,12 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     * then,
     * 2) increases the baseRate based on the amount redeemed, as a proportion of total supply
     */
-    function _updateBaseRateFromRedemption(uint _ETHDrawn,  uint _price) internal returns (uint) {
+    function _updateBaseRateFromRedemption(uint _ETHDrawn,  uint _price, uint _totalLUSDSupply) internal returns (uint) {
         uint decayedBaseRate = _calcDecayedBaseRate();
-
-        uint activeDebt = activePool.getLUSDDebt();
-        uint closedDebt = defaultPool.getLUSDDebt();
-        uint totalLUSDSupply = activeDebt.add(closedDebt);
 
         /* Convert the drawn ETH back to LUSD at face value rate (1 LUSD:1 USD), in order to get
         * the fraction of total supply that was redeemed at face value. */
-        uint redeemedLUSDFraction = _ETHDrawn.mul(_price).div(totalLUSDSupply);
+        uint redeemedLUSDFraction = _ETHDrawn.mul(_price).div(_totalLUSDSupply);
 
         uint newBaseRate = decayedBaseRate.add(redeemedLUSDFraction.div(BETA));
         newBaseRate = LiquityMath._min(newBaseRate, DECIMAL_PRECISION); // cap baseRate at a maximum of 100%

@@ -3029,6 +3029,16 @@ contract('BorrowerOperations', async accounts => {
     await assertRevert(borrowerOperations.openTrove('4999999999999999', dec(20, 18), B, B, { from: B, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
   })
 
+
+  it("openTrove(): succeeds if max fee < 0.5% when drawn debt = 0", async () => {
+    const tx1 = await borrowerOperations.openTrove(0, 0, A, A, { from: A, value: dec(1, 'ether') })
+    assert.isTrue(tx1.receipt.status )
+    const tx2 = await borrowerOperations.openTrove(1, 0, A, A, { from: B, value: dec(1, 'ether') })
+    assert.isTrue(tx2.receipt.status )
+    const tx3 = await borrowerOperations.openTrove('4999999999999999', 0, B, B, { from: C, value: dec(1, 'ether') })
+    assert.isTrue(tx3.receipt.status )
+  })
+
   it("openTrove(): reverts if fee exceeds max fee percentage", async () => {
     await borrowerOperations.openTrove(th._100pct, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
