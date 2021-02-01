@@ -386,9 +386,11 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         */
         uint price;
         if (_answerDigits > TARGET_DIGITS) { 
+            // Scale the returned price value down to Liquity's target precision 
             price = _price.div(10 ** (_answerDigits - TARGET_DIGITS));
         }
         else if (_answerDigits < TARGET_DIGITS) {
+            // Scale the returned price value up to Liquity's target precision
             price = _price.mul(10 ** (TARGET_DIGITS - _answerDigits));
         } 
         return price;
