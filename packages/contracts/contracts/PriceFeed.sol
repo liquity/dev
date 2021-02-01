@@ -113,6 +113,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         // --- Case 1: System fetched last price from Chainlink  ---
         if (status == Status.usingChainlink) {
+            console.log("case 1");
             // Get previous round price data from Chainlink
             ChainlinkResponse memory prevChainlinkResponse = getPrevChainlinkResponse(chainlinkResponse.roundId);
 
@@ -184,6 +185,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         // --- Case 2: The system fetched last price from Tellor --- 
         if (status == Status.usingTellor) {
+            console.log("case 2");
             // Get Tellor price data
             TellorResponse memory tellorResponse = getCurrentTellorResponse();
           
@@ -221,6 +223,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         // --- Case 3: Both oracles were suspect at the last price fetch ---
         if (status == Status.bothOraclesSuspect) {
+            console.log("case 3");
             // Get current price data from Tellor
             TellorResponse memory tellorResponse = getCurrentTellorResponse();
            
@@ -244,6 +247,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         // --- Case 4: Using Tellor, and Chainlink is frozen ---
         if (status == Status.usingTellorChainlinkFrozen) {
+            console.log("case 4");
             // Get current price data from Tellor
             TellorResponse memory tellorResponse = getCurrentTellorResponse();
 
@@ -287,6 +291,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         // --- Case 5: Tellor is broken, Chainlink is frozen ---
          if (status == Status.tellorBrokenChainlinkFrozen) { 
+             console.log("case 5");
             // If Chainlink breaks too, now both oracles are suspect
             if (chainlinkIsBroken(chainlinkResponse)) {
                 console.log("chainlink is broken");
@@ -363,6 +368,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             chainlinkIsFrozen(_chainlinkResponse)
         )
         {
+            console.log("both oracles not live");
             return false;
         }
 
@@ -375,7 +381,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         uint percentPriceDifference = maxPrice.sub(minPrice).mul(DECIMAL_PRECISION).div(minPrice);
         
         /*
-        * return true if the relative price difference is small: if so, we assume they are probably reporting 
+        * return true if the relative price difference is small: if so, we assume both oracles are probably reporting 
         * the honest market price, as it is unlikely that both have been broken/hacked and are still in-sync.
         */
         return percentPriceDifference < MAX_PRICE_DIFFERENCE_FOR_RETURN;
@@ -477,34 +483,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             return prevChainlinkResponse;
         }
     }
-
-     // --- Tellor functions (as found in UsingTellor.sol) ---
-
-    // /*
-    // * getTellorCurrentValue():  identical to getCurrentValue() in UsingTellor.sol
-    // *
-    // * @dev Allows the user to get the latest value for the requestId specified
-    // * @param _requestId is the requestId to look up the value for
-    // * @return ifRetrieve bool true if it is able to retreive a value, the value, and the value's timestamp
-    // * @return value the value retrieved
-    // * @return _timestampRetrieved the value's timestamp
-    // */
-    // function getTellorCurrentValue(uint256 _requestId)
-    //     public
-    //     view
-    //     returns (
-    //         bool ifRetrieve,
-    //         uint256 value,
-    //         uint256 _timestampRetrieved
-    //     )
-    // {
-    //     uint256 _count = tellor.getNewValueCountbyRequestId(_requestId);
-    //     uint256 _time =
-    //         tellor.getTimestampbyRequestIDandIndex(_requestId, _count - 1);
-    //     uint256 _value = tellor.retrieveData(_requestId, _time);
-    //     if (_value > 0) return (true, _value, _time);
-    //     return (false, 0, _time);
-    // }
 }
 
 
