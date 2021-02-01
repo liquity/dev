@@ -126,7 +126,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     // --- Borrower Trove Operations ---
 
     function openTrove(uint _maxFeePercentage, uint _LUSDAmount, address _upperHint, address _lowerHint) external payable override {
-        _requireValidMaxFeePercentage(_maxFeePercentage);
+        if (_LUSDAmount > 0) {_requireValidMaxFeePercentage(_maxFeePercentage);}
         _requireTroveisNotActive(msg.sender);
 
         uint price = priceFeed.getPrice();
