@@ -28,13 +28,13 @@ import "../Dependencies/console.sol";
 *
 * 4) CommunityIssuance and LockupContractFactory addresses are set at deployment
 *
-* 5) The bug bounties / hackathons allocation of 3 million tokens is minted at deployment to an EOA
+* 5) The bug bounties / hackathons allocation of 1 million tokens is minted at deployment to an EOA
 
-* 6) 25 million tokens are minted at deployment to the CommunityIssuance contract 
+* 6) 32 million tokens are minted at deployment to the CommunityIssuance contract
 *
-* 7) The LP rewards allocation of (8 + 1/3) million tokens is minted at deployent to an EOA
+* 7) The LP rewards allocation of (1 + 1/3) million tokens is minted at deployent to a Staking contract
 *
-* 8) (63 + 2/3) million tokens are minted at deployment to the deployer 
+* 8) (65 + 2/3) million tokens are minted at deployment to the deployer
 *
 * 9) Until one year from deployment:
 * -Deployer may only transfer() tokens to LockupContracts that have been deployed via & registered in the 
@@ -134,17 +134,17 @@ contract LQTYToken is CheckContract, ILQTYToken {
         
         // --- Initial LQTY allocations ---
      
-        uint bountyEntitlement = _1_MILLION.mul(3); // Allocate 3 million for bounties/hackathons
+        uint bountyEntitlement = _1_MILLION; // Allocate 1 million for bounties/hackathons
         _mint(_bountyAddress, bountyEntitlement);
 
-        uint depositorsAndFrontEndsEntitlement = _1_MILLION.mul(25); // Allocate 25 million to the algorithmic issuance schedule
+        uint depositorsAndFrontEndsEntitlement = _1_MILLION.mul(32); // Allocate 32 million to the algorithmic issuance schedule
         _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
 
-        uint _lpRewardsEntitlement = _1_MILLION.mul(100).div(3).sub(depositorsAndFrontEndsEntitlement);  // Allocate 8.33 million for LP rewards
+        uint _lpRewardsEntitlement = _1_MILLION.mul(4).div(3);  // Allocate 1.33 million for LP rewards
         lpRewardsEntitlement = _lpRewardsEntitlement;
         _mint(_lpRewardsAddress, _lpRewardsEntitlement);
         
-        // Allocate the remainder to the deployer: (100 - 3 - 25 - 8.33) million = 63.66 million
+        // Allocate the remainder to the deployer: (100 - 1 - 32 - 1.33) million = 65.66 million
         uint deployerEntitlement = _1_MILLION.mul(100)
             .sub(bountyEntitlement)
             .sub(depositorsAndFrontEndsEntitlement)
