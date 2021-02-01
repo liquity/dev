@@ -25,6 +25,8 @@ interface ITroveManager {
 
     event SortedTrovesAddressChanged(address _sortedTrovesAddress);
 
+    event LQTYTokenAddressChanged(address _lqtyTokenAddress);
+
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
     event TroveCreated(address indexed _borrower, uint arrayIndex);
@@ -45,6 +47,7 @@ interface ITroveManager {
         address _priceFeedAddress,
         address _lusdTokenAddress,
         address _sortedTrovesAddress,
+        address _lqtyTokenAddress,
         address _lqtyStakingAddress
     ) external;
 
@@ -95,6 +98,10 @@ interface ITroveManager {
     function closeTrove(address _borrower) external;
 
     function removeStake(address _borrower) external;
+
+    function getRedemptionRate() external view returns (uint);
+
+    function getBorrowingRate() external view returns (uint);
 
     function getBorrowingFee(uint LUSDDebt) external view returns (uint);
 

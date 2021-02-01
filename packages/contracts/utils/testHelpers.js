@@ -60,11 +60,16 @@ class TestHelper {
     const len = address.length
     return address.slice(0, 6).concat("...").concat(address.slice(len - 4, len))
   }
+
   static getDifference(x, y) {
     const x_BN = web3.utils.toBN(x)
     const y_BN = web3.utils.toBN(y)
 
     return Number(x_BN.sub(y_BN).abs())
+  }
+
+  static assertIsApproximatelyEqual(x, y, error = 1000) {
+    assert.isAtMost(this.getDifference(x, y), error)
   }
 
   static zipToObject(array1, array2) {
@@ -174,8 +179,6 @@ class TestHelper {
     return ICR.lt(MoneyValues._MCR)
   }
 
-
-
   static toBN(num) {
     return web3.utils.toBN(num)
   }
@@ -259,13 +262,56 @@ class TestHelper {
     }
   }
 
+  static logBN(label, x) {
+    x = x.toString()
+    // TODO: thousand separators
+    console.log(`${label}:`, x.length < 18 ? x : (x.slice(0, x.length-18) + '.' + x.slice(-18)))
+  }
+
   // --- Gas compensation calculation functions ---
 
   // Given a composite debt, returns the actual debt  - i.e. subtracts the virtual debt.
-  // Virtual debt = 10 LUSD.
+  // Virtual debt = 50 LUSD.
   static async getActualDebtFromComposite(compositeDebt, contracts) {
     const issuedDebt = await contracts.troveManager.getActualDebtFromComposite(compositeDebt)
     return issuedDebt
+  }
+
+  // Adds the gas compensation (50 LUSD)
+  static async getCompositeDebt(contracts, debt) {
+    const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
+    return compositeDebt
+  }
+
+  /*
+   * given the requested LUSD amomunt in openTrove, returns the total debt
+   * So, it adds the gas compensation and the borrowing fee
+   */
+  static async getOpenTroveTotalDebt(contracts, lusdAmount) {
+    const fee = await contracts.troveManager.getBorrowingFee(lusdAmount)
+    const compositeDebt = await this.getCompositeDebt(contracts, lusdAmount)
+    return compositeDebt.add(fee)
+  }
+
+  /*
+   * given the desired total debt, returns the LUSD amomunt that needs to be requested in openTrove
+   * So, it subtracts the gas compensation and then the borrowing fee
+   */
+  static async getOpenTroveLUSDAmount(contracts, totalDebt) {
+    const actualDebt = await this.getActualDebtFromComposite(totalDebt, contracts)
+    return this.getNetBorrowingAmount(contracts, actualDebt)
+  }
+
+  // Subtracts the borrowing fee
+  static async getNetBorrowingAmount(contracts, debtWithFee) {
+    const borrowingRate = await contracts.troveManager.getBorrowingRate()
+    return this.toBN(debtWithFee).mul(MoneyValues._1e18BN).div(MoneyValues._1e18BN.add(borrowingRate))
+  }
+
+  // Adds the redemption fee
+  static async getRedemptionGrossAmount(contracts, expected) {
+    const redemptionRate = await contracts.troveManager.getRedemptionRate()
+    return expected.mul(MoneyValues._1e18BN).div(MoneyValues._1e18BN.add(redemptionRate))
   }
 
   // Get's total collateral minus total gas comp, for a series of troves.
@@ -376,11 +422,6 @@ class TestHelper {
   static getDebtAndCollFromTroveUpdatedEvents(troveUpdatedEvents, address) {
     const event = troveUpdatedEvents.filter(event => event.args[0] === address)[0]
     return [event.args[1], event.args[2]]
-  }
-
-  static async getCompositeDebt(contracts, debt) {
-    const compositeDebt = contracts.borrowerOperations.getCompositeDebt(debt)
-    return compositeDebt
   }
 
   static async getBorrowerOpsListHint(contracts, newColl, newDebt, price) {

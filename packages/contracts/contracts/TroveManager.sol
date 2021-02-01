@@ -7,6 +7,7 @@ import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/ISortedTroves.sol";
+import "./Interfaces/ILQTYToken.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
@@ -27,6 +28,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     ILUSDToken public lusdToken;
 
+    ILQTYToken public lqtyToken;
+
     ILQTYStaking public lqtyStaking;
 
     // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
@@ -35,7 +38,17 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // --- Data structures ---
 
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
-    uint constant public MINUTE_DECAY_FACTOR = 999832508430720967;  // 18 digit decimal. Corresponds to an hourly decay factor of 0.99
+    /*
+     * Half-life of 12h. 12h = 720 min
+     * (1/2) = d^720 => d = (1/2)^(1/720)
+     */
+    uint constant public MINUTE_DECAY_FACTOR = 999037758833783000;
+    uint constant public REDEMPTION_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+    uint constant public BORROWING_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+    uint constant public MAX_BORROWING_FEE = DECIMAL_PRECISION / 100 * 5; // 5%
+
+    // During bootsrap period redemptions are not allowed
+    uint constant public BOOTSTRAP_PERIOD = 14 days;
 
     /*
     * BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base rate from a redemption.
@@ -192,6 +205,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         address _priceFeedAddress,
         address _lusdTokenAddress,
         address _sortedTrovesAddress,
+        address _lqtyTokenAddress,
         address _lqtyStakingAddress
     )
         external
@@ -207,6 +221,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         checkContract(_priceFeedAddress);
         checkContract(_lusdTokenAddress);
         checkContract(_sortedTrovesAddress);
+        checkContract(_lqtyTokenAddress);
         checkContract(_lqtyStakingAddress);
 
         borrowerOperationsAddress = _borrowerOperationsAddress;
@@ -218,6 +233,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         priceFeed = IPriceFeed(_priceFeedAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
+        lqtyToken = ILQTYToken(_lqtyTokenAddress);
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
@@ -229,6 +245,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit SortedTrovesAddressChanged(_sortedTrovesAddress);
+        emit LQTYTokenAddressChanged(_lqtyTokenAddress);
         emit LQTYStakingAddressChanged(_lqtyStakingAddress);
 
         _renounceOwnership();
@@ -535,7 +552,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         internal
         returns(LiquidationTotals memory totals)
     {
-        LocalVariables_LiquidationSequence memory vars;  
+        LocalVariables_LiquidationSequence memory vars;
         LiquidationValues memory singleLiquidation;
 
         vars.remainingLUSDInStabPool = _LUSDInStabPool;
@@ -840,16 +857,17 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         override
     {
         _requireValidMaxFeePercentage(_maxFeePercentage);
+        _requireAfterBootstrapPeriod();
         _requireTCRoverMCR();
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);
 
-        uint totalLUSDSupplyAtStart = getEntireSystemDebt();       
+        uint totalLUSDSupplyAtStart = getEntireSystemDebt();
         // Confirm redeemer's balance is less than total LUSD supply
         assert(lusdToken.balanceOf(msg.sender) <= totalLUSDSupplyAtStart);
 
         uint price = priceFeed.getPrice();
-        
+
         RedemptionTotals memory totals;
         totals.remainingLUSD = _LUSDamount;
         address currentBorrower;
@@ -890,6 +908,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             totals.remainingLUSD = totals.remainingLUSD.sub(singleRedemption.LUSDLot);
             currentBorrower = nextUserToCheck;
         }
+        require(totals.totalETHDrawn > 0, "TroveManager: Unable to redeem any amount");
 
         // Decay the baseRate due to time passed, and then increase it according to the size of this redemption.
         // Use the saved total LUSD supply value, from before it was reduced by the redemption.
@@ -897,7 +916,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         // Calculate the ETH fee
         totals.ETHFee = _getRedemptionFee(totals.totalETHDrawn);
-        
+
         _requireUserAcceptsFee(totals.ETHFee, totals.totalETHDrawn, _maxFeePercentage);
 
         // Send the ETH fee to the LQTY staking contract
@@ -1098,11 +1117,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         if (_debt == 0) { return; }
 
         /*
-        * Add distributed coll and debt rewards-per-unit-staked to the running totals. Division uses a "feedback" 
+        * Add distributed coll and debt rewards-per-unit-staked to the running totals. Division uses a "feedback"
         * error correction, to keep the cumulative error low in the running totals L_ETH and L_LUSDDebt:
         *
-        * 1) Form numerators which compensate for the floor division errors that occurred the last time this 
-        * function was called.  
+        * 1) Form numerators which compensate for the floor division errors that occurred the last time this
+        * function was called.
         * 2) Calculate "per-unit-staked" ratios.
         * 3) Multiply each ratio back by its denominator, to reveal the current floor division error.
         * 4) Store these errors for use in the next correction when this function is called.
@@ -1260,14 +1279,30 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         return newBaseRate;
     }
 
+    function getRedemptionRate() public view override returns (uint) {
+        return LiquityMath._min(
+            REDEMPTION_FEE_FLOOR.add(baseRate),
+            DECIMAL_PRECISION // cap at a maximum of 100%
+        );
+    }
+
     function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
-       return baseRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
+        uint redemptionFee = getRedemptionRate().mul(_ETHDrawn).div(DECIMAL_PRECISION);
+        require(redemptionFee < _ETHDrawn, "TroveManager: Fee would eat up all returned collateral");
+        return redemptionFee;
     }
 
     // --- Borrowing fee functions ---
 
+    function getBorrowingRate() public view override returns (uint) {
+        return LiquityMath._min(
+            BORROWING_FEE_FLOOR.add(baseRate),
+            MAX_BORROWING_FEE
+        );
+    }
+
     function getBorrowingFee(uint _LUSDDebt) external view override returns (uint) {
-        return _LUSDDebt.mul(baseRate).div(DECIMAL_PRECISION);
+        return getBorrowingRate().mul(_LUSDDebt).div(DECIMAL_PRECISION);
     }
 
     // Updates the baseRate state variable based on time elapsed since the last redemption or LUSD borrowing operation.
@@ -1328,6 +1363,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     function _requireTCRoverMCR() internal view {
         require(_getTCR() >= MCR, "TroveManager: Cannot redeem when TCR < MCR");
+    }
+
+    function _requireAfterBootstrapPeriod() internal view {
+        uint systemDeploymentTime = lqtyToken.getDeploymentStartTime();
+        require(block.timestamp >= systemDeploymentTime.add(BOOTSTRAP_PERIOD), "TroveManager: Redemptions are not allowed during bootstrap phase");
     }
 
     // --- Trove property getters ---

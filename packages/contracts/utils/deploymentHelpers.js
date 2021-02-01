@@ -287,6 +287,7 @@ class DeploymentHelper {
       contracts.priceFeedTestnet.address,
       contracts.lusdToken.address,
       contracts.sortedTroves.address,
+      LQTYContracts.lqtyToken.address,
       LQTYContracts.lqtyStaking.address
     )
 
