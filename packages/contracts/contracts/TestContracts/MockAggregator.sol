@@ -14,6 +14,9 @@ contract MockAggregator is AggregatorV3Interface {
     uint private updateTime;
     uint private prevUpdateTime;
 
+    uint80 private latestRoundId;
+    uint80 private prevRoundId;
+
     bool latestRevert;
     bool prevRevert;
 
@@ -43,9 +46,18 @@ contract MockAggregator is AggregatorV3Interface {
         latestRevert = !latestRevert;
     }
 
-      function setPrevRevert() external returns (bool) {
+    function setPrevRevert() external returns (bool) {
         prevRevert = !prevRevert;
     }
+
+    function setLatestRoundId(uint80 _latestRoundId) external {
+        latestRoundId = _latestRoundId;
+    }
+
+      function setPrevRoundId(uint80 _prevRoundId) external {
+        prevRoundId = _prevRoundId;
+    }
+    
 
     // --- Getters that adhere to the AggregatorV3 interface ---
 
@@ -68,7 +80,7 @@ contract MockAggregator is AggregatorV3Interface {
         if (latestRevert) {
             console.log("latestRoundData reverted");
             require(1== 0, "latestRoundData reverted");}
-        return (0, price, 0, updateTime, 0); 
+        return (latestRoundId, price, 0, updateTime, 0); 
     }
 
     function getRoundData(uint80)
@@ -85,7 +97,7 @@ contract MockAggregator is AggregatorV3Interface {
         if (prevRevert) {
             console.log("getRoundData reverted");
             require( 1== 0, "getRoundData reverted");}
-        return (0, prevPrice, 0, updateTime, 0);
+        return (prevRoundId, prevPrice, 0, updateTime, 0);
     }
 
     function description() external override view returns (string memory) {
