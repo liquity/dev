@@ -4,6 +4,8 @@
 
 ## StabilityDepositChangeDetails.change property
 
+Change that was made to the deposit by this transaction.
+
 <b>Signature:</b>
 
 ```typescript

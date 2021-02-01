@@ -107,7 +107,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
   }, [copied]);
 
   const troves = trovesWithoutRewards?.map(
-    ([owner, trove]) => [owner, trove.applyRewards(totalRedistributed)] as const
+    ([owner, trove]) => [owner, trove.applyRedistribution(totalRedistributed)] as const
   );
 
   return (

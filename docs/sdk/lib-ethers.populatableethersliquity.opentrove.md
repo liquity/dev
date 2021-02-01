@@ -4,7 +4,7 @@
 
 ## PopulatableEthersLiquity.openTrove() method
 
-Open a new Trove.
+Open a new Trove by depositing collateral and borrowing LUSD.
 
 <b>Signature:</b>
 
@@ -16,13 +16,11 @@ openTrove(params: TroveCreationParams<Decimalish>, optionalParams?: _TroveCreati
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
+|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; | How much to deposit and borrow. |
 |  optionalParams | \_TroveCreationOptionalParams |  |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>
 
 Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveCreationDetails](./lib-base.trovecreationdetails.md)<!-- -->&gt;&gt;
-
-The details of the Trove creation.
 

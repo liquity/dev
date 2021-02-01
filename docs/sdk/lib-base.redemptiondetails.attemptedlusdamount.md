@@ -4,6 +4,8 @@
 
 ## RedemptionDetails.attemptedLUSDAmount property
 
+Amount of LUSD the redeemer tried to redeem.
+
 <b>Signature:</b>
 
 ```typescript

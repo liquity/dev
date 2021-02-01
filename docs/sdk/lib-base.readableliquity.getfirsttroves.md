@@ -4,20 +4,28 @@
 
 ## ReadableLiquity.getFirstTroves() method
 
+Get a slice from the list of Troves sorted by collateral ratio in descending order.
+
 <b>Signature:</b>
 
 ```typescript
-getFirstTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRewards][]>;
+getFirstTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRedistribution][]>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  startIdx | number |  |
-|  numberOfTroves | number |  |
+|  startIdx | number | Index of first Trove to include from the sorted list. |
+|  numberOfTroves | number | The length of the slice. |
 
 <b>Returns:</b>
 
-Promise&lt;\[string, [TroveWithPendingRewards](./lib-base.trovewithpendingrewards.md)<!-- -->\]\[\]&gt;
+Promise&lt;\[string, [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->\]\[\]&gt;
+
+Pairs of owner addresses and their Troves.
+
+## Example
+
+The function returns Troves in the form of [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) objects, which require further processing. For an example, see [getLastTroves()](./lib-base.readableliquity.getlasttroves.md)
 

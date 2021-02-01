@@ -4,6 +4,8 @@
 
 ## ReadableLiquity.getTotal() method
 
+Get the total amount of collateral and debt in the Liquity system.
+
 <b>Signature:</b>
 
 ```typescript

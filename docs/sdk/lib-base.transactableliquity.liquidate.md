@@ -4,17 +4,19 @@
 
 ## TransactableLiquity.liquidate() method
 
+Liquidate one or more undercollateralized Troves.
+
 <b>Signature:</b>
 
 ```typescript
-liquidate(address: string): Promise<LiquidationDetails>;
+liquidate(address: string | string[]): Promise<LiquidationDetails>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string \| string\[\] | Address or array of addresses whose Troves to liquidate. |
 
 <b>Returns:</b>
 

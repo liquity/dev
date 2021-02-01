@@ -4,6 +4,8 @@
 
 ## MinedReceipt type
 
+Either a [FailedReceipt](./lib-base.failedreceipt.md) or a [SuccessfulReceipt](./lib-base.successfulreceipt.md)<!-- -->.
+
 <b>Signature:</b>
 
 ```typescript

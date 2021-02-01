@@ -4,6 +4,8 @@
 
 ## TroveClosureDetails interface
 
+Details of a [closeTrove()](./lib-base.transactableliquity.closetrove.md) transaction.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,5 +16,5 @@ export interface TroveClosureDetails
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [params](./lib-base.troveclosuredetails.params.md) | [TroveClosureParams](./lib-base.troveclosureparams.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt; |  |
+|  [params](./lib-base.troveclosuredetails.params.md) | [TroveClosureParams](./lib-base.troveclosureparams.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt; | How much was withdrawn and repaid. |
 

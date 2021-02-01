@@ -4,6 +4,8 @@
 
 ## ReadableLiquity.getLQTYBalance() method
 
+Get the amount of LQTY held by an address.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ getLQTYBalance(address?: string): Promise<Decimal>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address whose balance should be retrieved. |
 
 <b>Returns:</b>
 

@@ -4,6 +4,8 @@
 
 ## FailedReceipt type
 
+Indicates that the transaction has been mined, but it failed.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,3 +14,10 @@ export declare type FailedReceipt<R = unknown> = {
     rawReceipt: R;
 };
 ```
+
+## Remarks
+
+The `rawReceipt` property is an implementation-specific transaction receipt object.
+
+Returned by [SentLiquityTransaction.getReceipt()](./lib-base.sentliquitytransaction.getreceipt.md) and [SentLiquityTransaction.waitForReceipt()](./lib-base.sentliquitytransaction.waitforreceipt.md)<!-- -->.
+

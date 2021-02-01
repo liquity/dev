@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.withdrawCollateral() method
 
+Adjust existing Trove by withdrawing some of its collateral.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,18 @@ withdrawCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | The amount of collateral to withdraw from the Trove. |
 
 <b>Returns:</b>
 
 Promise&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;
+
+## Remarks
+
+Equivalent to:
+
+```typescript
+adjustTrove({ withdrawCollateral: amount })
+
+```
 

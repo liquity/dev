@@ -4,6 +4,8 @@
 
 ## RedemptionDetails interface
 
+Details of a [redeemLUSD()](./lib-base.transactableliquity.redeemlusd.md) transaction.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,8 +16,8 @@ export interface RedemptionDetails
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [actualLUSDAmount](./lib-base.redemptiondetails.actuallusdamount.md) | [Decimal](./decimal.decimal.md) |  |
-|  [attemptedLUSDAmount](./lib-base.redemptiondetails.attemptedlusdamount.md) | [Decimal](./decimal.decimal.md) |  |
-|  [collateralReceived](./lib-base.redemptiondetails.collateralreceived.md) | [Decimal](./decimal.decimal.md) |  |
-|  [fee](./lib-base.redemptiondetails.fee.md) | [Decimal](./decimal.decimal.md) |  |
+|  [actualLUSDAmount](./lib-base.redemptiondetails.actuallusdamount.md) | [Decimal](./decimal.decimal.md) | Amount of LUSD that was actually redeemed by the transaction. |
+|  [attemptedLUSDAmount](./lib-base.redemptiondetails.attemptedlusdamount.md) | [Decimal](./decimal.decimal.md) | Amount of LUSD the redeemer tried to redeem. |
+|  [collateralReceived](./lib-base.redemptiondetails.collateralreceived.md) | [Decimal](./decimal.decimal.md) | Amount of native currency (e.g. Ether) received in exchange for the redeemed LUSD. |
+|  [fee](./lib-base.redemptiondetails.fee.md) | [Decimal](./decimal.decimal.md) | Amount of native currency (e.g. Ether) deducted as fee. |
 

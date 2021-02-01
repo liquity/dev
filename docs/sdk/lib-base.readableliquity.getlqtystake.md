@@ -4,6 +4,8 @@
 
 ## ReadableLiquity.getLQTYStake() method
 
+Get the current state of an LQTY Stake.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ getLQTYStake(address?: string): Promise<LQTYStake>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address that owns the LQTY Stake. |
 
 <b>Returns:</b>
 

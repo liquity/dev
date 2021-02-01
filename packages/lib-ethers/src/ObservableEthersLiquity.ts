@@ -6,7 +6,7 @@ import {
   ObservableLiquity,
   StabilityDeposit,
   Trove,
-  TroveWithPendingRewards
+  TroveWithPendingRedistribution
 } from "@liquity/lib-base";
 
 import { LiquityContracts } from "./contracts";
@@ -73,7 +73,7 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
   }
 
   watchTroveWithoutRewards(
-    onTroveChanged: (trove: TroveWithPendingRewards) => void,
+    onTroveChanged: (trove: TroveWithPendingRedistribution) => void,
     address = this._requireAddress()
   ): () => void {
     const { TroveCreated, TroveUpdated } = this._contracts.troveManager.filters;

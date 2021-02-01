@@ -4,6 +4,8 @@
 
 ## TroveAdjustmentDetails.params property
 
+Parameters of the adjustment.
+
 <b>Signature:</b>
 
 ```typescript

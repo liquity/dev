@@ -1,5 +1,6 @@
 certs
 registry
+docs
 packages/decimal/
 packages/frontend/
 packages/dev-frontend/

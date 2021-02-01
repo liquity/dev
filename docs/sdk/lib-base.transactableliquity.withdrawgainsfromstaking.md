@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.withdrawGainsFromStaking() method
 
+Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md) from LQTY stake.
+
 <b>Signature:</b>
 
 ```typescript

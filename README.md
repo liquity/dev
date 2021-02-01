@@ -727,7 +727,7 @@ Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` li
 2. The front end computes a new collateralization ratio locally, based on the change in collateral and/or debt.
 3. Call `HintHelpers::getApproxHint(...)`, passing it the computed nominal collateralization ratio. Returns an address close to the correct insert position
 4. Call `SortedTroves::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)`, passing it the same approximate hint via both `_prevId` and `_nextId` and the new nominal collateralization ratio via `_NICR`. 
-5. Pass the ‘exact‘ hint in the form the two direct neighbors, i.e. `_nextId` as `_lowerHint` and `_prevtId` as `_upperHint`, to the Trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system that can ascend or descend the list as needed to find the right position.)
+5. Pass the ‘exact‘ hint in the form of the two direct neighbors, i.e. `_nextId` as `_lowerHint` and `_prevId` as `_upperHint`, to the Trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system that can ascend or descend the list as needed to find the right position.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
 
@@ -737,7 +737,7 @@ Each BorrowerOperations function that reinserts a Trove takes a single hint, as 
 
 ### Hints for `redeemCollateral`
 
-`TroveManager::redeemCollateral` as a special case requires three hints:
+`TroveManager::redeemCollateral` as a special case requires additional hints:
 - `_firstRedemptionHint` hints at the position of the first Trove that will be redeemed from,
 - `_lowerPartialRedemptionHint` hints at the `nextId` neighbor of the last redeemed Trove upon reinsertion, if it's partially redeemed,
 - `_upperPartialRedemptionHint` hints at the `prevId` neighbor of the last redeemed Trove upon reinsertion, if it's partially redeemed,
@@ -793,13 +793,13 @@ When a Trove is redeemed from, the redemption is made only against (debt - 50), 
 
 But if the redemption causes an amount (debt - 50) to be cancelled, the Trove is then closed: the 50 LUSD Liquidation Reserve is cancelled with its remaining 50 debt. That is, the gas compensation is burned from the gas pool, and the 50 debt is zero’d. The ETH collateral surplus from the Trove remains in the system, to be later claimed by its owner.
 
-## Gas compensation Functionality
+### Gas compensation helper functions
 
 Gas compensation functions are found in the parent _LiquityBase.sol_ contract:
 
-`_getCollGasCompensation(uint _entireColl)`
+`_getCollGasCompensation(uint _entireColl)` returns the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
 
-`_getCompositeDebt(uint _debt)`
+`_getCompositeDebt(uint _debt)` returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation.
 
 ## The Stability Pool
 
@@ -911,7 +911,7 @@ This is similar in spirit to the simpler [Scalable Reward Distribution on the Et
 
 Stability Providers earn LQTY tokens continuously over time, in proportion to the size of their deposit. This is known as “Community Issuance”, and is handled by `CommunityIssuance.sol`.
 
-Upon system deployment and activation, `CommunityIssuance` holds an initial LQTY supply, currently (provisionally) set at 1/3 of the total 100 million LQTY tokens.
+Upon system deployment and activation, `CommunityIssuance` holds an initial LQTY supply, currently (provisionally) set at 32 million LQTY tokens.
 
 Each Stability Pool deposit is tagged with a front end tag - the Ethereum address of the front end through which the deposit was made. Stability deposits made directly with the protocol (no front end) are tagged with the zero address.
 
@@ -923,7 +923,7 @@ The overall community issuance schedule for LQTY is sub-linear and monotonic. We
 
 `supplyCap * (1 - 0.5^t)`
 
-where `t` is year and `supplyCap` is (provisionally) set to represent 33.33 million LQTY tokens.
+where `t` is year and `supplyCap` is (provisionally) set to represent 32 million LQTY tokens.
 
 It results in the following cumulative issuance schedule for the community LQTY supply:
 
@@ -987,13 +987,13 @@ Redemptions fees are paid in ETH. Issuance fees (when a user opens a Trove, or i
 
 ### Redemption Fee
 
-The redemption fee is taken as a cut of the total ETH drawn from the system in a redemption.
+The redemption fee is taken as a cut of the total ETH drawn from the system in a redemption. It is based on the current redemption rate.
 
 In the `TroveManager`, `redeemCollateral` calculates the ETH fee and transfers it to the staking contract, `LQTYStaking.sol`
 
 ### Issuance fee
 
-The issuance fee is charged on the LUSD drawn by the user and is added to the Trove's LUSD debt.
+The issuance fee is charged on the LUSD drawn by the user and is added to the Trove's LUSD debt. It is based on the current borrowing rate.
 
 When new LUSD are drawn via one of the `BorrowerOperations` functions `openTrove`, `withdrawLUSD` or `adjustTrove`, an extra amount `LUSDFee` is minted, and an equal amount of debt is added to the user’s Trove. The `LUSDFee` is transferred to the staking contract, `LQTYStaking.sol`.
 
@@ -1001,18 +1001,18 @@ When new LUSD are drawn via one of the `BorrowerOperations` functions `openTrove
 
 Redemption and issuance fees are based on the `baseRate` state variable in TroveManager, which is dynamically updated. The `baseRate` increases with each redemption, and decays according to time passed since the last fee event - i.e. the last redemption or issuance of LUSD.
 
-The fee formulae are provisional, and subject to change depending on the results of economic modelling.
-
 The current fee schedule:
 
 Upon each redemption:
 - `baseRate` is decayed based on time passed since the last fee event
 - `baseRate` is incremented by an amount proportional to the fraction of the total LUSD supply that was redeemed
-- The redemption fee is given by `baseRate * ETHdrawn`
+- The redemption rate is given by `min{REDEMPTION_FEE_FLOOR + baseRate * ETHdrawn, DECIMAL_PRECISION}`
 
 Upon each debt issuance:
 - `baseRate` is decayed based on time passed since the last fee event
-- The issuance fee is given by `baseRate * newDebtIssued`
+- The borrowing rate is given by `min{BORROWING_FEE_FLOOR + baseRate * newDebtIssued, MAX_BORROWING_FEE}`
+
+`REDEMPTION_FEE_FLOOR` and `BORROWING_FEE_FLOOR` are both set to 0.5%, while `MAX_BORROWING_FEE` is 5% and `DECIMAL_PRECISION` is 100%.
 
 ### Intuition behind fees
 
@@ -1021,6 +1021,8 @@ The larger the redemption volume, the greater the fee percentage.
 The longer the time delay since the last operation, the more the `baseRate` decreases.
 
 The intent is to throttle large redemptions with higher fees, and to throttle borrowing directly after large redemption volumes. The `baseRate` decay over time ensures that the fee for both borrowers and redeemers will “cool down”, while redemptions volumes are low.
+
+Furthermore, the fees cannot become smaller than 0.5%, which in the case of redemptions protects the redemption facility from being front-run by arbitrageurs that are faster than the price feed. The 5% maximum on the issuance is meant to keep the system (somewhat) attractive for new borrowers even in phases where the monetary is contracting due to redemptions.
 
 ### Fee decay Implementation
 

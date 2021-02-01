@@ -4,21 +4,27 @@
 
 ## PopulatedLiquityTransaction interface
 
+A transaction that has been prepared for sending.
+
 <b>Signature:</b>
 
 ```typescript
 export interface PopulatedLiquityTransaction<P = unknown, T extends SentLiquityTransaction = SentLiquityTransaction> 
 ```
 
+## Remarks
+
+Implemented by [PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->.
+
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [rawPopulatedTransaction](./lib-base.populatedliquitytransaction.rawpopulatedtransaction.md) | P |  |
+|  [rawPopulatedTransaction](./lib-base.populatedliquitytransaction.rawpopulatedtransaction.md) | P | Implementation-specific populated transaction object. |
 
 ## Methods
 
 |  Method | Description |
 |  --- | --- |
-|  [send()](./lib-base.populatedliquitytransaction.send.md) |  |
+|  [send()](./lib-base.populatedliquitytransaction.send.md) | Send the transaction. |
 

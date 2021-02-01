@@ -4,6 +4,8 @@
 
 ## TroveClosureDetails.params property
 
+How much was withdrawn and repaid.
+
 <b>Signature:</b>
 
 ```typescript

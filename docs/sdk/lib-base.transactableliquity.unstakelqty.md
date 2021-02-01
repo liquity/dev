@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.unstakeLQTY() method
 
+Withdraw LQTY from staking.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,13 @@ unstakeLQTY(amount: Decimalish): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LQTY to withdraw. |
 
 <b>Returns:</b>
 
 Promise&lt;void&gt;
+
+## Remarks
+
+As a side-effect, the transaction will also pay out the LQTY stake's [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md)<!-- -->.
 

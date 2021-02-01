@@ -16,7 +16,7 @@ export declare abstract class LiquityStore<T = unknown>
 
 The type parameter `T` may be used to type extra state added to [LiquityStoreState](./lib-base.liquitystorestate.md) by the subclass.
 
-Currently, the only implementation is [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->.
+Implemented by [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->.
 
 ## Properties
 

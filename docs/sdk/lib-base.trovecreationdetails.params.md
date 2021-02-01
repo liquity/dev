@@ -4,6 +4,8 @@
 
 ## TroveCreationDetails.params property
 
+How much was deposited and borrowed.
+
 <b>Signature:</b>
 
 ```typescript

@@ -7,7 +7,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { JsonRpcProvider } from "@ethersproject/providers";
 
 import { Decimal, Difference } from "@liquity/decimal";
-import { Trove, TroveWithPendingRewards } from "@liquity/lib-base";
+import { Trove, TroveWithPendingRedistribution } from "@liquity/lib-base";
 import { deploymentOnNetwork, EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
@@ -127,7 +127,7 @@ yargs
 
       const fixture = await Fixture.setup(deployerLiquity, funderLiquity, funder);
 
-      let previousListOfTroves: [string, TroveWithPendingRewards][] | undefined = undefined;
+      let previousListOfTroves: [string, TroveWithPendingRedistribution][] | undefined = undefined;
 
       console.log();
       console.log("// Keys");

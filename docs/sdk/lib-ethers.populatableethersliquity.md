@@ -25,7 +25,7 @@ export declare class PopulatableEthersLiquity extends PopulatableEthersLiquityBa
 |  [depositLUSDInStabilityPool(amount, frontendTag, overrides)](./lib-ethers.populatableethersliquity.depositlusdinstabilitypool.md) |  |  |
 |  [liquidate(address, overrides)](./lib-ethers.populatableethersliquity.liquidate.md) |  |  |
 |  [liquidateUpTo(maximumNumberOfTrovesToLiquidate, overrides)](./lib-ethers.populatableethersliquity.liquidateupto.md) |  |  |
-|  [openTrove(params, optionalParams, overrides)](./lib-ethers.populatableethersliquity.opentrove.md) |  | Open a new Trove. |
+|  [openTrove(params, optionalParams, overrides)](./lib-ethers.populatableethersliquity.opentrove.md) |  | Open a new Trove by depositing collateral and borrowing LUSD. |
 |  [redeemLUSD(amount, optionalParams, overrides)](./lib-ethers.populatableethersliquity.redeemlusd.md) |  |  |
 |  [registerFrontend(kickbackRate, overrides)](./lib-ethers.populatableethersliquity.registerfrontend.md) |  |  |
 |  [repayLUSD(amount, optionalParams, overrides)](./lib-ethers.populatableethersliquity.repaylusd.md) |  |  |

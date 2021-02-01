@@ -20,9 +20,8 @@ export type _CollateralDeposit<T> = {
     depositCollateral: T;
 };
 
-// @public (undocumented)
+// @public
 export interface CollateralGainTransferDetails extends StabilityPoolGainsWithdrawalDetails {
-    // (undocumented)
     newTrove: Trove;
 }
 
@@ -48,7 +47,7 @@ export type _DebtChange<T> = (_LUSDBorrowing<T> & _NoLUSDRepayment) | (_LUSDRepa
 // @internal (undocumented)
 export const _emptyTrove: Trove;
 
-// @public (undocumented)
+// @public
 export type FailedReceipt<R = unknown> = {
     status: "failed";
     rawReceipt: R;
@@ -115,19 +114,15 @@ export type _HintedMethodOptionalParams = {
     numberOfTroves?: number;
 };
 
-// @public (undocumented)
+// @public
 export interface LiquidationDetails {
-    // (undocumented)
     collateralGasCompensation: Decimal;
-    // (undocumented)
     liquidatedAddresses: string[];
-    // (undocumented)
     lusdGasCompensation: Decimal;
-    // (undocumented)
     totalLiquidated: Trove;
 }
 
-// @public (undocumented)
+// @public
 export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
 
 // @public
@@ -166,7 +161,7 @@ export interface LiquityStoreBaseState {
     total: Trove;
     totalRedistributed: Trove;
     totalStakedLQTY: Decimal;
-    troveWithoutRewards: TroveWithPendingRewards;
+    troveWithoutRedistribution: TroveWithPendingRedistribution;
 }
 
 // @public
@@ -225,7 +220,7 @@ export type _LUSDRepayment<T> = {
     repayLUSD: T;
 };
 
-// @public (undocumented)
+// @public
 export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
 
 // @public
@@ -275,10 +270,10 @@ export interface ObservableLiquity {
     // (undocumented)
     watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void): () => void;
     // (undocumented)
-    watchTroveWithoutRewards(onTroveChanged: (trove: TroveWithPendingRewards) => void, address?: string): () => void;
+    watchTroveWithoutRewards(onTroveChanged: (trove: TroveWithPendingRedistribution) => void, address?: string): () => void;
 }
 
-// @public (undocumented)
+// @public
 export type PendingReceipt = {
     status: "pending";
 };
@@ -291,11 +286,9 @@ export type _Populatable<T, R = unknown, S = unknown, P = unknown> = {
     [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? _PopulateMethod<A, PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>> : never;
 };
 
-// @public (undocumented)
+// @public
 export interface PopulatedLiquityTransaction<P = unknown, T extends SentLiquityTransaction = SentLiquityTransaction> {
-    // (undocumented)
     rawPopulatedTransaction: P;
-    // (undocumented)
     send(): Promise<T>;
 }
 
@@ -304,50 +297,30 @@ export type _PopulateMethod<A extends unknown[], T extends PopulatedLiquityTrans
 
 // @public (undocumented)
 export interface ReadableLiquity {
-    // (undocumented)
     getCollateralSurplusBalance(address?: string): Promise<Decimal>;
-    // (undocumented)
     getFees(): Promise<Fees>;
-    // (undocumented)
-    getFirstTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRewards][]>;
-    // (undocumented)
+    getFirstTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRedistribution][]>;
     getFrontendStatus(address?: string): Promise<FrontendStatus>;
-    // (undocumented)
-    getLastTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRewards][]>;
-    // (undocumented)
+    getLastTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRedistribution][]>;
     getLQTYBalance(address?: string): Promise<Decimal>;
-    // (undocumented)
     getLQTYStake(address?: string): Promise<LQTYStake>;
-    // (undocumented)
     getLUSDBalance(address?: string): Promise<Decimal>;
-    // (undocumented)
     getLUSDInStabilityPool(): Promise<Decimal>;
-    // (undocumented)
     getNumberOfTroves(): Promise<number>;
-    // (undocumented)
     getPrice(): Promise<Decimal>;
-    // (undocumented)
     getStabilityDeposit(address?: string): Promise<StabilityDeposit>;
-    // (undocumented)
     getTotal(): Promise<Trove>;
     getTotalRedistributed(): Promise<Trove>;
-    // (undocumented)
     getTotalStakedLQTY(): Promise<Decimal>;
-    // (undocumented)
     getTrove(address?: string): Promise<Trove>;
-    // (undocumented)
-    getTroveWithoutRewards(address?: string): Promise<TroveWithPendingRewards>;
+    getTroveWithoutRewards(address?: string): Promise<TroveWithPendingRedistribution>;
 }
 
-// @public (undocumented)
+// @public
 export interface RedemptionDetails {
-    // (undocumented)
     actualLUSDAmount: Decimal;
-    // (undocumented)
     attemptedLUSDAmount: Decimal;
-    // (undocumented)
     collateralReceived: Decimal;
-    // (undocumented)
     fee: Decimal;
 }
 
@@ -377,13 +350,10 @@ export const _sendableFrom: <T, U extends _Populatable<T, unknown, unknown, unkn
 // @internal (undocumented)
 export type _SendMethod<A extends unknown[], T extends SentLiquityTransaction> = (...args: A) => Promise<T>;
 
-// @public (undocumented)
+// @public
 export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> {
-    // (undocumented)
     getReceipt(): Promise<T>;
-    // (undocumented)
     rawSentTransaction: S;
-    // (undocumented)
     waitForReceipt(): Promise<Extract<T, MinedReceipt>>;
 }
 
@@ -421,25 +391,20 @@ export type StabilityDepositChange<T> = {
     withdrawAllLUSD: boolean;
 };
 
-// @public (undocumented)
+// @public
 export interface StabilityDepositChangeDetails extends StabilityPoolGainsWithdrawalDetails {
-    // (undocumented)
     change: StabilityDepositChange<Decimal>;
 }
 
-// @public (undocumented)
+// @public
 export interface StabilityPoolGainsWithdrawalDetails {
-    // (undocumented)
     collateralGain: Decimal;
-    // (undocumented)
     lqtyReward: Decimal;
-    // (undocumented)
     lusdLoss: Decimal;
-    // (undocumented)
     newLUSDDeposit: Decimal;
 }
 
-// @public (undocumented)
+// @public
 export type SuccessfulReceipt<R = unknown, D = unknown> = {
     status: "succeeded";
     rawReceipt: R;
@@ -459,48 +424,28 @@ export const _transactableFrom: <T, U extends _Sendable<T, unknown, unknown>>(_S
 
 // @public (undocumented)
 export interface TransactableLiquity {
-    // (undocumented)
     adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentDetails>;
-    // (undocumented)
     borrowLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
-    // (undocumented)
     claimCollateralSurplus(): Promise<void>;
-    // (undocumented)
     closeTrove(): Promise<TroveClosureDetails>;
-    // (undocumented)
     depositCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
-    // (undocumented)
     depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string): Promise<StabilityDepositChangeDetails>;
-    // (undocumented)
-    liquidate(address: string): Promise<LiquidationDetails>;
-    // (undocumented)
+    liquidate(address: string | string[]): Promise<LiquidationDetails>;
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;
     openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails>;
-    // (undocumented)
     redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
-    // (undocumented)
     registerFrontend(kickbackRate: Decimalish): Promise<void>;
-    // (undocumented)
     repayLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
-    // (undocumented)
     sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
-    // (undocumented)
     sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
     // @internal (undocumented)
     setPrice(price: Decimalish): Promise<void>;
-    // (undocumented)
     stakeLQTY(amount: Decimalish): Promise<void>;
-    // (undocumented)
     transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
-    // (undocumented)
     unstakeLQTY(amount: Decimalish): Promise<void>;
-    // (undocumented)
     withdrawCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
-    // (undocumented)
     withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
-    // (undocumented)
     withdrawGainsFromStaking(): Promise<void>;
-    // (undocumented)
     withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
 }
 
@@ -561,13 +506,10 @@ export class Trove {
     whatChanged(that: Trove, borrowingFeeFactor?: Decimalish): TroveChange<Decimal> | undefined;
 }
 
-// @public (undocumented)
+// @public
 export interface TroveAdjustmentDetails {
-    // (undocumented)
     fee: Decimal;
-    // (undocumented)
     newTrove: Trove;
-    // (undocumented)
     params: TroveAdjustmentParams<Decimal>;
 }
 
@@ -604,9 +546,8 @@ export type TroveChange<T> = {
     setToZero?: "collateral" | "debt";
 };
 
-// @public (undocumented)
+// @public
 export interface TroveClosureDetails {
-    // (undocumented)
     params: TroveClosureParams<Decimal>;
 }
 
@@ -618,13 +559,10 @@ export interface TroveClosureDetails {
 // @public
 export type TroveClosureParams<T> = _CollateralWithdrawal<T> & _NoCollateralDeposit & Partial<_LUSDRepayment<T>> & _NoLUSDBorrowing;
 
-// @public (undocumented)
+// @public
 export interface TroveCreationDetails {
-    // (undocumented)
     fee: Decimal;
-    // (undocumented)
     newTrove: Trove;
-    // (undocumented)
     params: TroveCreationParams<Decimal>;
 }
 
@@ -648,12 +586,12 @@ export type _TroveCreationOptionalParams = _HintedMethodOptionalParams & {
 export type TroveCreationParams<T> = _CollateralDeposit<T> & _NoCollateralWithdrawal & Partial<_LUSDBorrowing<T>> & _NoLUSDRepayment;
 
 // @public (undocumented)
-export class TroveWithPendingRewards extends Trove {
+export class TroveWithPendingRedistribution extends Trove {
     constructor(collateral?: Decimal, debt?: Decimal, stake?: Decimal, snapshotOfTotalRedistributed?: Trove);
     // (undocumented)
-    applyRewards(totalRedistributed: Trove): Trove;
+    applyRedistribution(totalRedistributed: Trove): Trove;
     // (undocumented)
-    equals(that: TroveWithPendingRewards): boolean;
+    equals(that: TroveWithPendingRedistribution): boolean;
     // (undocumented)
     readonly snapshotOfTotalRedistributed: Trove;
     // (undocumented)

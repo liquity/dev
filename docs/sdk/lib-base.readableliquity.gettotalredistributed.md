@@ -17,7 +17,7 @@ Promise&lt;[Trove](./lib-base.trove.md)<!-- -->&gt;
 
 ## Remarks
 
-Needed when dealing with instances of [TroveWithPendingRewards](./lib-base.trovewithpendingrewards.md)<!-- -->.
+Needed when dealing with instances of [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->.
 
 ## Example
 

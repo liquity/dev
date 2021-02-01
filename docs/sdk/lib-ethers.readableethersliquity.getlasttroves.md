@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRewards][]>;
+getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRedistribution][]>;
 ```
 
 ## Parameters
@@ -20,5 +20,5 @@ getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOv
 
 <b>Returns:</b>
 
-Promise&lt;\[string, [TroveWithPendingRewards](./lib-base.trovewithpendingrewards.md)<!-- -->\]\[\]&gt;
+Promise&lt;\[string, [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->\]\[\]&gt;
 

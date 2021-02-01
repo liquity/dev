@@ -7,14 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-watchTroveWithoutRewards(onTroveChanged: (trove: TroveWithPendingRewards) => void, address?: string): () => void;
+watchTroveWithoutRewards(onTroveChanged: (trove: TroveWithPendingRedistribution) => void, address?: string): () => void;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  onTroveChanged | (trove: [TroveWithPendingRewards](./lib-base.trovewithpendingrewards.md)<!-- -->) =&gt; void |  |
+|  onTroveChanged | (trove: [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->) =&gt; void |  |
 |  address | string |  |
 
 <b>Returns:</b>

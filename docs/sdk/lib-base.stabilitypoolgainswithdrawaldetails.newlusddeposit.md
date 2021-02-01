@@ -4,6 +4,8 @@
 
 ## StabilityPoolGainsWithdrawalDetails.newLUSDDeposit property
 
+Amount of LUSD in the deposit directly after this transaction.
+
 <b>Signature:</b>
 
 ```typescript
