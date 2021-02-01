@@ -28,7 +28,7 @@ contract TellorCaller is ITellorCaller {
     *
     * @dev Allows the user to get the latest value for the requestId specified
     * @param _requestId is the requestId to look up the value for
-    * @return ifRetrieve bool true if it is able to retreive a value, the value, and the value's timestamp
+    * @return ifRetrieve bool true if it is able to retrieve a value, the value, and the value's timestamp
     * @return value the value retrieved
     * @return _timestampRetrieved the value's timestamp
     */
