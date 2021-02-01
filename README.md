@@ -793,13 +793,13 @@ When a Trove is redeemed from, the redemption is made only against (debt - 50), 
 
 But if the redemption causes an amount (debt - 50) to be cancelled, the Trove is then closed: the 50 LUSD Liquidation Reserve is cancelled with its remaining 50 debt. That is, the gas compensation is burned from the gas pool, and the 50 debt is zero’d. The ETH collateral surplus from the Trove remains in the system, to be later claimed by its owner.
 
-## Gas compensation Functionality
+### Gas compensation helper functions
 
 Gas compensation functions are found in the parent _LiquityBase.sol_ contract:
 
-`_getCollGasCompensation(uint _entireColl)`
+`_getCollGasCompensation(uint _entireColl)` returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation.
 
-`_getCompositeDebt(uint _debt)`
+`_getCompositeDebt(uint _debt)` returns the amount of ETH to be drawn from a trove's collateral and sent as gas compensation.
 
 ## The Stability Pool
 
