@@ -700,13 +700,13 @@ https://eips.ethereum.org/EIPS/eip-2612
 
 ## Supplying Hints to Trove operations
 
-Troves in Liquity are recorded in a sorted doubly linked list, sorted by their NICR, from high to low.
+Troves in Liquity are recorded in a sorted doubly linked list, sorted by their NICR, from high to low. NICR stands for the nominal collateral ratio that is simply the amount of collateral (in ETH) divided by the amount of debt (in LUSD), without taking the ETH:USD price into account. Given that all Troves are equally affected by Ether price changes, they do not need to be sorted by their real ICR.
 
 All Trove operations that change the collateralization ratio need to either insert or reinsert the Trove to the `SortedTroves` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, two ‘hints’ may be provided.
 
 A hint is the address of a Trove with a position in the sorted list close to the correct insert position.
 
-All Trove operations take two ‘hint’ arguments: a `_lowerHint` referring to the `nextId` and an `_upperHint` referring to the `prevId` of the two adjacent nodes in the linked list that would become the neighbors of the given Trove. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call. `SortedList::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)` firsts check if `prevId` is still existant and valid (larger NICR than the provided `_NICR`) and then descends the list starting from `prevId`. If the check fails, the function further checks if `nextId` is still existant and valid (smaller NICR than the provided `_NICR`) and then ascends list starting from `nextId`
+All Trove operations take two ‘hint’ arguments: a `_lowerHint` referring to the `nextId` and an `_upperHint` referring to the `prevId` of the two adjacent nodes in the linked list that are (or would become) the neighbors of the given Trove. The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call. `SortedList::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)` firsts check if `prevId` is still existant and valid (larger NICR than the provided `_NICR`) and then descends the list starting from `prevId`. If the check fails, the function further checks if `nextId` is still existant and valid (smaller NICR than the provided `_NICR`) and then ascends list starting from `nextId`
 
 The `HintHelpers::getApproxHint(...)` function can be used to generate a useful hint, which can then be passed as an argument to the desired Trove operation or to `SortedTroves::findInsertPosition(...)` to get an exact hint.
 
@@ -715,7 +715,7 @@ The `HintHelpers::getApproxHint(...)` function can be used to generate a useful 
 **Trove operation without a hint**
 
 1. User performs Trove operation in their browser
-2. Call the Trove operation with `_hint = userAddress`
+2. Call the Trove operation with `_lowerHint = _upperHint = userAddress`
 
 Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` list.
 
@@ -737,16 +737,15 @@ Each BorrowerOperations function that reinserts a Trove takes a single hint, as 
 
 `TroveManager::redeemCollateral` as a special case requires three hints:
 - `_firstRedemptionHint` hints at the position of the first Trove that will be redeemed from,
-- `_partialRedemptionHint` hints at the position where the last redeemed Trove should be reinserted, if it's partially redeemed,
-- `_partialRedemptionHintNICR` ensures that the transaction won't run out of gas if `_partialRedemptionHint` is no longer valid.
-
-**TODO: To be reviewed and updated once https://github.com/liquity/dev/issues/106 is fixed**
+- `_lowerPartialRedemptionHint` hints at the `nextId` neighbor of the last redeemed Trove upon reinsertion, if it's partially redeemed,
+- `_upperPartialRedemptionHint` hints at the `prevId` neighbor of the last redeemed Trove upon reinsertion, if it's partially redeemed,
+- `_partialRedemptionHintNICR` ensures that the transaction won't run out of gas if neither `_lowerPartialRedemptionHint` nor `_upperPartialRedemptionHint` are  valid anymore.
 
 `redeemCollateral` will only redeem from Troves that have an ICR >= MCR. In other words, if there are Troves at the bottom of the SortedTroves list that are below the minimum collateralization ratio (which can happen after an ETH:USD price drop), they will be skipped. To make this more gas-efficient, the position of the first redeemable Trove should be passed as `_firstRedemptionHint`.
 
 All Troves that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the SortedTroves list.
 
-It’s likely that the last Trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The `_partialRedemptionHint` passed to `redeemCollateral` gives the expected reinsert position.
+It’s likely that the last Trove in the redemption sequence would be partially redeemed from - i.e. only some of its debt cancelled with LUSD. In this case, it should be reinserted somewhere between top and bottom of the list. The `_lowerPartialRedemptionHint` and `_upperPartialRedemptionHint` hints passed to `redeemCollateral` describe the future neighbors the expected reinsert position.
 
 However, if between the off-chain hint computation and on-chain execution a different transaction changes the state of a Trove that would otherwise be hit by the redemption sequence, then the off-chain hint computation could end up totally inaccurate. This could lead to the whole redemption sequence reverting due to out-of-gas error.
 
