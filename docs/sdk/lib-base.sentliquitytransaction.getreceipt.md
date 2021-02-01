@@ -4,6 +4,8 @@
 
 ## SentLiquityTransaction.getReceipt() method
 
+Check whether the transaction has been mined, and whether it was successful.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,10 @@ getReceipt(): Promise<T>;
 <b>Returns:</b>
 
 Promise&lt;T&gt;
+
+A subtype of [LiquityReceipt](./lib-base.liquityreceipt.md)<!-- -->.
+
+## Remarks
+
+Unlike [waitForReceipt()](./lib-base.sentliquitytransaction.waitforreceipt.md)<!-- -->, this function doesn't wait for the transaction to be mined.
 

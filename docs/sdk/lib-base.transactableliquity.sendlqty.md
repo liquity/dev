@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.sendLQTY() method
 
+Send LQTY tokens to an address.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,8 +16,8 @@ sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  toAddress | string |  |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  toAddress | string | Address of receipient. |
+|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LQTY to send. |
 
 <b>Returns:</b>
 

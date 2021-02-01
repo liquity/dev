@@ -520,7 +520,7 @@ export class Trove {
 export const _emptyTrove = new Trove();
 
 /** @public */
-export class TroveWithPendingRewards extends Trove {
+export class TroveWithPendingRedistribution extends Trove {
   readonly stake: Decimal;
   readonly snapshotOfTotalRedistributed: Trove;
 
@@ -536,13 +536,13 @@ export class TroveWithPendingRewards extends Trove {
     this.snapshotOfTotalRedistributed = snapshotOfTotalRedistributed;
   }
 
-  applyRewards(totalRedistributed: Trove): Trove {
+  applyRedistribution(totalRedistributed: Trove): Trove {
     return this.add(
       totalRedistributed.subtract(this.snapshotOfTotalRedistributed).multiply(this.stake)
     );
   }
 
-  equals(that: TroveWithPendingRewards): boolean {
+  equals(that: TroveWithPendingRedistribution): boolean {
     return (
       super.equals(that) &&
       this.stake.eq(that.stake) &&

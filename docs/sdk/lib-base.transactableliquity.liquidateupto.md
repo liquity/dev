@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.liquidateUpTo() method
 
+Liquidate the least collateralized Troves up to a maximum number.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDeta
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  maximumNumberOfTrovesToLiquidate | number |  |
+|  maximumNumberOfTrovesToLiquidate | number | Stop after liquidating this many Troves. |
 
 <b>Returns:</b>
 

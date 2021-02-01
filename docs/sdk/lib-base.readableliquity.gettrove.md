@@ -4,6 +4,8 @@
 
 ## ReadableLiquity.getTrove() method
 
+Get the current state of a Trove.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ getTrove(address?: string): Promise<Trove>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address that owns the Trove. |
 
 <b>Returns:</b>
 

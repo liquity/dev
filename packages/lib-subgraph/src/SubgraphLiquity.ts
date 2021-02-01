@@ -10,7 +10,7 @@ import { Query } from "./Query";
 import {
   ReadableLiquity,
   ObservableLiquity,
-  TroveWithPendingRewards,
+  TroveWithPendingRedistribution,
   Trove,
   _emptyTrove,
   StabilityDeposit,
@@ -108,7 +108,7 @@ const troveFromRawFields = ({
   rawSnapshotOfTotalRedistributedCollateral,
   rawSnapshotOfTotalRedistributedDebt
 }: TroveRawFields) =>
-  new TroveWithPendingRewards(
+  new TroveWithPendingRedistribution(
     decimalify(rawCollateral),
     decimalify(rawDebt),
     decimalify(rawStake),
@@ -119,8 +119,8 @@ const troveFromRawFields = ({
     )
   );
 
-const troveWithoutRewards = new Query<
-  TroveWithPendingRewards,
+const troveWithoutRedistribution = new Query<
+  TroveWithPendingRedistribution,
   TroveWithoutRewards,
   TroveWithoutRewardsVariables
 >(
@@ -140,12 +140,12 @@ const troveWithoutRewards = new Query<
     if (user?.currentTrove) {
       return troveFromRawFields(user.currentTrove);
     } else {
-      return new TroveWithPendingRewards();
+      return new TroveWithPendingRedistribution();
     }
   }
 );
 
-const troves = new Query<[string, TroveWithPendingRewards][], Troves, TrovesVariables>(
+const troves = new Query<[string, TroveWithPendingRedistribution][], Troves, TrovesVariables>(
   gql`
     query Troves($orderDirection: OrderDirection!, $startIdx: Int!, $numberOfTroves: Int!) {
       troves(
@@ -202,14 +202,14 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getTroveWithoutRewards(address?: string) {
-    return troveWithoutRewards.get(this.client, { address: normalizeAddress(address) });
+    return troveWithoutRedistribution.get(this.client, { address: normalizeAddress(address) });
   }
 
   watchTroveWithoutRewards(
-    onTroveChanged: (trove: TroveWithPendingRewards) => void,
+    onTroveChanged: (trove: TroveWithPendingRedistribution) => void,
     address?: string
   ) {
-    return troveWithoutRewards.watch(this.client, onTroveChanged, {
+    return troveWithoutRedistribution.watch(this.client, onTroveChanged, {
       address: normalizeAddress(address)
     });
   }
@@ -220,7 +220,7 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
       this.getTotalRedistributed()
     ] as const);
 
-    return trove.applyRewards(totalRedistributed);
+    return trove.applyRedistribution(totalRedistributed);
   }
 
   getNumberOfTroves(): Promise<number> {

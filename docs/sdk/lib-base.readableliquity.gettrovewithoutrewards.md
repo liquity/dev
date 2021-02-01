@@ -4,19 +4,25 @@
 
 ## ReadableLiquity.getTroveWithoutRewards() method
 
+Get a Trove in its state after the last direct modification.
+
 <b>Signature:</b>
 
 ```typescript
-getTroveWithoutRewards(address?: string): Promise<TroveWithPendingRewards>;
+getTroveWithoutRewards(address?: string): Promise<TroveWithPendingRedistribution>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address that owns the Trove. |
 
 <b>Returns:</b>
 
-Promise&lt;[TroveWithPendingRewards](./lib-base.trovewithpendingrewards.md)<!-- -->&gt;
+Promise&lt;[TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->&gt;
+
+## Remarks
+
+The current state of a Trove can be fetched using [getTrove()](./lib-base.readableliquity.gettrove.md)<!-- -->.
 

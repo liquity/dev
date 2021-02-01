@@ -4,6 +4,8 @@
 
 ## ReadableLiquity.getLUSDInStabilityPool() method
 
+Get the total amount of LUSD currently deposited in the Stability Pool.
+
 <b>Signature:</b>
 
 ```typescript

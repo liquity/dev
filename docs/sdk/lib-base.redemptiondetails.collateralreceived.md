@@ -4,6 +4,8 @@
 
 ## RedemptionDetails.collateralReceived property
 
+Amount of native currency (e.g. Ether) received in exchange for the redeemed LUSD.
+
 <b>Signature:</b>
 
 ```typescript

@@ -4,6 +4,8 @@
 
 ## SentLiquityTransaction.waitForReceipt() method
 
+Wait for the transaction to be mined, and check whether it was successful.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,6 @@ waitForReceipt(): Promise<Extract<T, MinedReceipt>>;
 <b>Returns:</b>
 
 Promise&lt;Extract&lt;T, [MinedReceipt](./lib-base.minedreceipt.md)<!-- -->&gt;&gt;
+
+Either a [FailedReceipt](./lib-base.failedreceipt.md) or a [SuccessfulReceipt](./lib-base.successfulreceipt.md)<!-- -->.
 

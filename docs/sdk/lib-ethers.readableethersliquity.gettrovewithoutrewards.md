@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getTroveWithoutRewards(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRewards>;
+getTroveWithoutRewards(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ getTroveWithoutRewards(address?: string, overrides?: EthersCallOverrides): Promi
 
 <b>Returns:</b>
 
-Promise&lt;[TroveWithPendingRewards](./lib-base.trovewithpendingrewards.md)<!-- -->&gt;
+Promise&lt;[TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->&gt;
 

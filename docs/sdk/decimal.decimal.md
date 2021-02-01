@@ -48,6 +48,8 @@ export declare class Decimal
 |  [gte(that)](./decimal.decimal.gte.md) |  |  |
 |  [lt(that)](./decimal.decimal.lt.md) |  |  |
 |  [lte(that)](./decimal.decimal.lte.md) |  |  |
+|  [max(a, b)](./decimal.decimal.max.md) | <code>static</code> |  |
+|  [min(a, b)](./decimal.decimal.min.md) | <code>static</code> |  |
 |  [mul(multiplier)](./decimal.decimal.mul.md) |  |  |
 |  [mulDiv(multiplier, divider)](./decimal.decimal.muldiv.md) |  |  |
 |  [pow(exponent)](./decimal.decimal.pow.md) |  |  |

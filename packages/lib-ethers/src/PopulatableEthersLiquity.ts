@@ -15,7 +15,7 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 
 import {
   Trove,
-  TroveWithPendingRewards,
+  TroveWithPendingRedistribution,
   TroveAdjustmentParams,
   ReadableLiquity,
   _HintedMethodOptionalParams,
@@ -464,7 +464,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   }
 
   protected async _findHint(trove: Trove, optionalParams: _HintedMethodOptionalParams = {}) {
-    if (trove instanceof TroveWithPendingRewards) {
+    if (trove instanceof TroveWithPendingRedistribution) {
       throw new Error("Rewards must be applied to this Trove");
     }
 
@@ -634,16 +634,26 @@ export class PopulatableEthersLiquity
   }
 
   async liquidate(
-    address: string,
+    address: string | string[],
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersTransaction<LiquidationDetails>> {
-    return this._wrapLiquidation(
-      await this._contracts.troveManager.estimateAndPopulate.liquidate(
-        { ...overrides },
-        addGasForLQTYIssuance,
-        address
-      )
-    );
+    if (Array.isArray(address)) {
+      return this._wrapLiquidation(
+        await this._contracts.troveManager.estimateAndPopulate.batchLiquidateTroves(
+          { ...overrides },
+          addGasForLQTYIssuance,
+          address
+        )
+      );
+    } else {
+      return this._wrapLiquidation(
+        await this._contracts.troveManager.estimateAndPopulate.liquidate(
+          { ...overrides },
+          addGasForLQTYIssuance,
+          address
+        )
+      );
+    }
   }
 
   async liquidateUpTo(

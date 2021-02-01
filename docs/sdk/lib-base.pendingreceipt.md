@@ -4,6 +4,8 @@
 
 ## PendingReceipt type
 
+Indicates that the transaction hasn't been mined yet.
+
 <b>Signature:</b>
 
 ```typescript
@@ -11,3 +13,8 @@ export declare type PendingReceipt = {
     status: "pending";
 };
 ```
+
+## Remarks
+
+Returned by [SentLiquityTransaction.getReceipt()](./lib-base.sentliquitytransaction.getreceipt.md)
+

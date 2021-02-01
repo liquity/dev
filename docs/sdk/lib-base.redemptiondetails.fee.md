@@ -4,6 +4,8 @@
 
 ## RedemptionDetails.fee property
 
+Amount of native currency (e.g. Ether) deducted as fee.
+
 <b>Signature:</b>
 
 ```typescript

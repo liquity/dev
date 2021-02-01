@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRewards][]>;
+getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRedistribution][]>;
 ```
 
 ## Parameters
@@ -20,5 +20,5 @@ getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallO
 
 <b>Returns:</b>
 
-Promise&lt;\[string, [TroveWithPendingRewards](./lib-base.trovewithpendingrewards.md)<!-- -->\]\[\]&gt;
+Promise&lt;\[string, [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->\]\[\]&gt;
 

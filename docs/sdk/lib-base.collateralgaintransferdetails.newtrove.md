@@ -4,6 +4,8 @@
 
 ## CollateralGainTransferDetails.newTrove property
 
+New state of the depositor's Trove directly after the transaction.
+
 <b>Signature:</b>
 
 ```typescript

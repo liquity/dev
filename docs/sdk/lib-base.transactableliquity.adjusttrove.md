@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.adjustTrove() method
 
+Adjust existing Trove by changing its collateral, debt, or both.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,13 @@ adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentD
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
+|  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; | Parameters of the adjustment. |
 
 <b>Returns:</b>
 
 Promise&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;
+
+## Remarks
+
+The transaction will fail if the Trove's debt would fall below [LUSD\_LIQUIDATION\_RESERVE](./lib-base.lusd_liquidation_reserve.md)<!-- -->.
 

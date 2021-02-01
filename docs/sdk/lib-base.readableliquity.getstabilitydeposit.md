@@ -4,6 +4,8 @@
 
 ## ReadableLiquity.getStabilityDeposit() method
 
+Get the current state of a Stability Deposit.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ getStabilityDeposit(address?: string): Promise<StabilityDeposit>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address that owns the Stability Deposit. |
 
 <b>Returns:</b>
 

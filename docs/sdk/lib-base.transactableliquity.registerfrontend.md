@@ -4,6 +4,8 @@
 
 ## TransactableLiquity.registerFrontend() method
 
+Register current wallet address as a Liquity frontend.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ registerFrontend(kickbackRate: Decimalish): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  kickbackRate | [Decimalish](./decimal.decimalish.md) |  |
+|  kickbackRate | [Decimalish](./decimal.decimalish.md) | The portion of LQTY rewards to pass onto users of the frontend (between 0 and 1). |
 
 <b>Returns:</b>
 
