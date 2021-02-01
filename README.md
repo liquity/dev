@@ -797,9 +797,9 @@ But if the redemption causes an amount (debt - 50) to be cancelled, the Trove is
 
 Gas compensation functions are found in the parent _LiquityBase.sol_ contract:
 
-`_getCollGasCompensation(uint _entireColl)` returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation.
+`_getCollGasCompensation(uint _entireColl)` returns the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
 
-`_getCompositeDebt(uint _debt)` returns the amount of ETH to be drawn from a trove's collateral and sent as gas compensation.
+`_getCompositeDebt(uint _debt)` returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation.
 
 ## The Stability Pool
 
