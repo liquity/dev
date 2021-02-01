@@ -416,19 +416,6 @@
   },
   {
     "inputs": [],
-    "name": "R_MCR",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "SECONDS_IN_ONE_MINUTE",
     "outputs": [
       {
@@ -1201,7 +1188,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_maxFee",
+        "name": "_maxFeePercentage",
         "type": "uint256"
       }
     ],

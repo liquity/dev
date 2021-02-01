@@ -1,3 +1,4 @@
+/** @internal */
 export const proxify = <T, U>(
   t: new (...args: never[]) => T,
   u: new (...args: never[]) => U,
@@ -15,25 +16,29 @@ export const proxify = <T, U>(
 
 type BunchOfMethods = Record<string, (...args: unknown[]) => unknown>;
 
-export function glue<T, U>(
+/** @internal */
+export function _glue<T, U>(
   t: new (...args: never[]) => T,
   u: new (...args: never[]) => U
 ): new (t: T, u: U) => T & U;
 
-export function glue<T, U, V>(
+/** @internal */
+export function _glue<T, U, V>(
   t: new (...args: never[]) => T,
   u: new (...args: never[]) => U,
   v: new (...args: never[]) => V
 ): new (t: T, u: U, v: V) => T & U & V;
 
-export function glue<T, U, V, W>(
+/** @internal */
+export function _glue<T, U, V, W>(
   t: new (...args: never[]) => T,
   u: new (...args: never[]) => U,
   v: new (...args: never[]) => V,
   w: new (...args: never[]) => W
 ): new (t: T, u: U, v: V, w: W) => T & U & V & W;
 
-export function glue(
+/** @internal */
+export function _glue(
   ...constructors: (new (...args: never[]) => BunchOfMethods)[]
 ): new (...instances: BunchOfMethods[]) => unknown {
   const Glued = class {

@@ -1,6 +1,6 @@
 import { Signer } from "@ethersproject/abstract-signer";
 
-import { glue } from "@liquity/lib-base";
+import { _glue } from "@liquity/lib-base";
 
 import { connectToContracts, LiquityContracts, LiquityDeployment } from "./contracts";
 import {
@@ -11,11 +11,21 @@ import {
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 import { ObservableEthersLiquity } from "./ObservableEthersLiquity";
 
-export class EthersLiquity extends glue(
+type GluedEthersLiquity = TransactableEthersLiquity &
+  ReadableEthersLiquity &
+  ObservableEthersLiquity;
+
+const GluedEthersLiquity: new (
+  transactable: TransactableEthersLiquity,
+  readable: ReadableEthersLiquity,
+  observable: ObservableEthersLiquity
+) => GluedEthersLiquity = _glue(
   TransactableEthersLiquity,
   ReadableEthersLiquity,
   ObservableEthersLiquity
-) {
+);
+
+export class EthersLiquity extends GluedEthersLiquity {
   readonly populate: PopulatableEthersLiquity;
   readonly send: SendableEthersLiquity;
 
@@ -33,7 +43,7 @@ export class EthersLiquity extends glue(
     this.send = sendable;
   }
 
-  static from(contracts: LiquityContracts, signer: Signer, userAddress?: string) {
+  static from(contracts: LiquityContracts, signer: Signer, userAddress?: string): EthersLiquity {
     const readable = new ReadableEthersLiquity(contracts, userAddress);
     const observable = new ObservableEthersLiquity(contracts, readable, userAddress);
     const populatable = new PopulatableEthersLiquity(contracts, readable, signer);
@@ -41,7 +51,7 @@ export class EthersLiquity extends glue(
     return new EthersLiquity(readable, observable, populatable);
   }
 
-  static async connect(deployment: LiquityDeployment, signer: Signer) {
+  static async connect(deployment: LiquityDeployment, signer: Signer): Promise<EthersLiquity> {
     const { addresses, priceFeedIsTestnet } = deployment;
     const contracts = connectToContracts(addresses, priceFeedIsTestnet, signer);
     const userAddress = await signer.getAddress();

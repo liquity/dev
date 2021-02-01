@@ -7,16 +7,22 @@ const MAX_UINT_256 = BigNumber.from(
 );
 
 const TEN = BigNumber.from(10);
+const getDigits = (numDigits: number) => TEN.pow(numDigits);
 
+/** @public */
 export type Decimalish = Decimal | number | string;
 
+const stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?(e[-+]?[0-9]+)?$/;
+const trailingZeros = /0*$/;
+const magnitudes = ["", "K", "M", "B", "T"];
+
+const roundedMul = (x: BigNumber, y: BigNumber) =>
+  x.mul(y).add(Decimal.HALF.bigNumber).div(Decimal.DIGITS);
+
+/** @public */
 export class Decimal {
   static readonly PRECISION = 18;
-  static readonly DIGITS = Decimal.getDigits(Decimal.PRECISION);
-
-  private static readonly stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?(e[-+]?[0-9]+)?$/;
-  private static readonly trailingZeros = /0*$/;
-  private static readonly magnitudes = ["", "K", "M", "B", "T"];
+  static readonly DIGITS = getDigits(Decimal.PRECISION);
 
   static readonly INFINITY = new Decimal(MAX_UINT_256);
   static readonly ZERO = Decimal.from(0);
@@ -33,12 +39,8 @@ export class Decimal {
     this.bigNumber = bigNumber;
   }
 
-  private static getDigits(numDigits: number) {
-    return TEN.pow(numDigits);
-  }
-
-  private static fromString(representation: string): Decimal {
-    if (!representation || !representation.match(Decimal.stringRepresentationFormat)) {
+  private static _fromString(representation: string): Decimal {
+    if (!representation || !representation.match(stringRepresentationFormat)) {
       throw new Error("bad decimal format");
     }
 
@@ -47,7 +49,7 @@ export class Decimal {
 
       if (exponent.startsWith("-")) {
         return new Decimal(
-          Decimal.fromString(coefficient).bigNumber.div(TEN.pow(BigNumber.from(exponent.substr(1))))
+          Decimal._fromString(coefficient).bigNumber.div(TEN.pow(BigNumber.from(exponent.substr(1))))
         );
       }
 
@@ -56,7 +58,7 @@ export class Decimal {
       }
 
       return new Decimal(
-        Decimal.fromString(coefficient).bigNumber.mul(TEN.pow(BigNumber.from(exponent)))
+        Decimal._fromString(coefficient).bigNumber.mul(TEN.pow(BigNumber.from(exponent)))
       );
     }
 
@@ -84,9 +86,9 @@ export class Decimal {
       case "object":
         return decimalish;
       case "string":
-        return Decimal.fromString(decimalish);
+        return Decimal._fromString(decimalish);
       case "number":
-        return Decimal.fromString(decimalish.toString());
+        return Decimal._fromString(decimalish.toString());
     }
   }
 
@@ -94,7 +96,7 @@ export class Decimal {
     return Decimal.from(decimalish).bigNumber;
   }
 
-  private toStringWithAutomaticPrecision() {
+  private _toStringWithAutomaticPrecision() {
     const characteristic = this.bigNumber.div(Decimal.DIGITS);
     const mantissa = this.bigNumber.mod(Decimal.DIGITS);
 
@@ -102,22 +104,22 @@ export class Decimal {
       return characteristic.toString();
     } else {
       const paddedMantissa = mantissa.toString().padStart(Decimal.PRECISION, "0");
-      const trimmedMantissa = paddedMantissa.replace(Decimal.trailingZeros, "");
+      const trimmedMantissa = paddedMantissa.replace(trailingZeros, "");
       return characteristic.toString() + "." + trimmedMantissa;
     }
   }
 
-  private roundUp(precision: number) {
-    const halfDigit = Decimal.getDigits(Decimal.PRECISION - 1 - precision).mul(5);
+  private _roundUp(precision: number) {
+    const halfDigit = getDigits(Decimal.PRECISION - 1 - precision).mul(5);
     return this.bigNumber.add(halfDigit);
   }
 
-  private toStringWithPrecision(precision: number) {
+  private _toStringWithPrecision(precision: number) {
     if (precision < 0) {
       throw new Error("precision must not be negative");
     }
 
-    const value = precision < Decimal.PRECISION ? this.roundUp(precision) : this.bigNumber;
+    const value = precision < Decimal.PRECISION ? this._roundUp(precision) : this.bigNumber;
     const characteristic = value.div(Decimal.DIGITS);
     const mantissa = value.mod(Decimal.DIGITS);
 
@@ -134,9 +136,9 @@ export class Decimal {
     if (this.infinite) {
       return "∞";
     } else if (precision !== undefined) {
-      return this.toStringWithPrecision(precision);
+      return this._toStringWithPrecision(precision);
     } else {
-      return this.toStringWithAutomaticPrecision();
+      return this._toStringWithAutomaticPrecision();
     }
   }
 
@@ -153,15 +155,12 @@ export class Decimal {
 
   shorten() {
     const characteristicLength = this.toString(0).length;
-    const magnitude = Math.min(
-      Math.floor((characteristicLength - 1) / 3),
-      Decimal.magnitudes.length - 1
-    );
+    const magnitude = Math.min(Math.floor((characteristicLength - 1) / 3), magnitudes.length - 1);
 
     const precision = Math.max(3 * (magnitude + 1) - characteristicLength, 0);
-    const normalized = this.div(new Decimal(Decimal.getDigits(Decimal.PRECISION + 3 * magnitude)));
+    const normalized = this.div(new Decimal(getDigits(Decimal.PRECISION + 3 * magnitude)));
 
-    return normalized.prettify(precision) + Decimal.magnitudes[magnitude];
+    return normalized.prettify(precision) + magnitudes[magnitude];
   }
 
   static shorten(bigNumber: BigNumber) {
@@ -201,10 +200,6 @@ export class Decimal {
     return new Decimal(this.bigNumber.mul(multiplier.bigNumber).div(divider.bigNumber));
   }
 
-  private static roundedMul(x: BigNumber, y: BigNumber) {
-    return x.mul(y).add(Decimal.HALF.bigNumber).div(Decimal.DIGITS);
-  }
-
   pow(exponent: number) {
     assert(Number.isInteger(exponent));
     assert(0 <= exponent && exponent <= 0xffffffff); // Ensure we're safe to use bitwise ops
@@ -222,13 +217,13 @@ export class Decimal {
 
     for (; exponent > 1; exponent >>>= 1) {
       if (exponent & 1) {
-        y = Decimal.roundedMul(x, y);
+        y = roundedMul(x, y);
       }
 
-      x = Decimal.roundedMul(x, x);
+      x = roundedMul(x, x);
     }
 
-    return new Decimal(Decimal.roundedMul(x, y));
+    return new Decimal(roundedMul(x, y));
   }
 
   get isZero() {
@@ -286,11 +281,12 @@ export class Decimal {
 
 type DifferenceRepresentation = { sign: "" | "+" | "-"; absoluteValue: Decimal };
 
+/** @alpha */
 export class Difference {
-  private number?: DifferenceRepresentation;
+  private _number?: DifferenceRepresentation;
 
   private constructor(number?: DifferenceRepresentation) {
-    this.number = number;
+    this._number = number;
   }
 
   static between(d1: Decimalish | undefined, d2: Decimalish | undefined) {
@@ -317,61 +313,62 @@ export class Difference {
   }
 
   toString(precision?: number) {
-    if (!this.number) {
+    if (!this._number) {
       return "N/A";
     }
 
-    return this.number.sign + this.number.absoluteValue.toString(precision);
+    return this._number.sign + this._number.absoluteValue.toString(precision);
   }
 
   prettify(precision?: number) {
-    if (!this.number) {
+    if (!this._number) {
       return this.toString();
     }
 
-    return this.number.sign + this.number.absoluteValue.prettify(precision);
+    return this._number.sign + this._number.absoluteValue.prettify(precision);
   }
 
   mul(multiplier: Decimalish) {
     return new Difference(
-      this.number && {
-        sign: this.number.sign,
-        absoluteValue: this.number.absoluteValue.mul(multiplier)
+      this._number && {
+        sign: this._number.sign,
+        absoluteValue: this._number.absoluteValue.mul(multiplier)
       }
     );
   }
 
   get bigNumber() {
-    return this.number?.sign === "-"
-      ? this.number.absoluteValue.bigNumber.mul(-1)
-      : this.number?.absoluteValue.bigNumber;
+    return this._number?.sign === "-"
+      ? this._number.absoluteValue.bigNumber.mul(-1)
+      : this._number?.absoluteValue.bigNumber;
   }
 
   get nonZero() {
-    return this.number?.absoluteValue.nonZero && this;
+    return this._number?.absoluteValue.nonZero && this;
   }
 
   get positive() {
-    return this.number?.sign === "+" ? this : undefined;
+    return this._number?.sign === "+" ? this : undefined;
   }
 
   get negative() {
-    return this.number?.sign === "-" ? this : undefined;
+    return this._number?.sign === "-" ? this : undefined;
   }
 
   get absoluteValue() {
-    return this.number?.absoluteValue;
+    return this._number?.absoluteValue;
   }
 
   get infinite() {
-    return this.number?.absoluteValue.infinite && this;
+    return this._number?.absoluteValue.infinite && this;
   }
 
   get finite() {
-    return this.number?.absoluteValue.finite && this;
+    return this._number?.absoluteValue.finite && this;
   }
 }
 
+/** @alpha */
 export class Percent<
   T extends {
     infinite?: T | undefined;
@@ -383,31 +380,31 @@ export class Percent<
     gte(n: string): boolean;
   }
 > {
-  private percent: T;
+  private _percent: T;
 
   public constructor(ratio: T) {
-    this.percent = ratio.infinite || (ratio.mul && ratio.mul(100)) || ratio;
+    this._percent = ratio.infinite || (ratio.mul && ratio.mul(100)) || ratio;
   }
 
   nonZeroish(precision: number) {
     const zeroish = `0.${"0".repeat(precision)}5`;
 
-    if (this.percent.absoluteValue?.gte(zeroish)) {
+    if (this._percent.absoluteValue?.gte(zeroish)) {
       return this;
     }
   }
 
   toString(precision: number) {
     return (
-      this.percent.toString(precision) +
-      (this.percent.absoluteValue && !this.percent.infinite ? "%" : "")
+      this._percent.toString(precision) +
+      (this._percent.absoluteValue && !this._percent.infinite ? "%" : "")
     );
   }
 
   prettify() {
-    if (this.percent.absoluteValue?.gte("1000")) {
+    if (this._percent.absoluteValue?.gte("1000")) {
       return this.toString(0);
-    } else if (this.percent.absoluteValue?.gte("10")) {
+    } else if (this._percent.absoluteValue?.gte("10")) {
       return this.toString(1);
     } else {
       return this.toString(2);

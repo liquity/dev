@@ -2,7 +2,15 @@ import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { Decimal, Percent } from "@liquity/decimal";
-import { LiquityStoreState, Trove, TroveAdjustment, TroveChange } from "@liquity/lib-base";
+import {
+  MINIMUM_COLLATERAL_RATIO,
+  CRITICAL_COLLATERAL_RATIO,
+  LUSD_LIQUIDATION_RESERVE,
+  LiquityStoreState,
+  Trove,
+  TroveAdjustmentParams,
+  TroveChange
+} from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -19,15 +27,15 @@ type TroveActionProps = {
   dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
 
-const mcrPercent = new Percent(Trove.MINIMUM_COLLATERAL_RATIO).toString(0);
-const ccrPercent = new Percent(Trove.CRITICAL_COLLATERAL_RATIO).toString(0);
+const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
+const ccrPercent = new Percent(CRITICAL_COLLATERAL_RATIO).toString(0);
 
 const describeAdjustment = ({
   depositCollateral,
   withdrawCollateral,
   borrowLUSD,
   repayLUSD
-}: TroveAdjustment<Decimal>) =>
+}: TroveAdjustmentParams<Decimal>) =>
   depositCollateral && borrowLUSD
     ? `Deposit ${depositCollateral.prettify()} ETH & borrow ${borrowLUSD.prettify()} ${COIN}`
     : repayLUSD && withdrawCollateral
@@ -89,7 +97,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         <Transaction
           id={myTransactionId}
           requires={[
-            [false, `Need at least ${Trove.GAS_COMPENSATION_DEPOSIT} ${COIN} for gas compensation`]
+            [false, `Need at least ${LUSD_LIQUIDATION_RESERVE} ${COIN} for gas compensation`]
           ]}
           send={(() => {}) as any}
         >
@@ -155,8 +163,8 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         id={myTransactionId}
         requires={[
           [
-            edited.isEmpty || edited.debt.gte(Trove.GAS_COMPENSATION_DEPOSIT),
-            `Need at least ${Trove.GAS_COMPENSATION_DEPOSIT} ${COIN} for gas compensation`
+            edited.isEmpty || edited.debt.gte(LUSD_LIQUIDATION_RESERVE),
+            `Need at least ${LUSD_LIQUIDATION_RESERVE} ${COIN} for gas compensation`
           ],
           [
             !(

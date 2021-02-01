@@ -1,7 +1,7 @@
 import React from "react";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
-import { LiquityStoreState, Trove } from "@liquity/lib-base";
+import { LUSD_LIQUIDATION_RESERVE, LiquityStoreState } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { TroveEditor } from "./TroveEditor";
@@ -74,7 +74,7 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
     case "addDebtCompensation":
       return {
         ...state,
-        edited: edited.setDebt(Trove.GAS_COMPENSATION_DEPOSIT),
+        edited: edited.setDebt(LUSD_LIQUIDATION_RESERVE),
         addedGasCompensation: true
       };
 

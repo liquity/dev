@@ -4,60 +4,73 @@ import { Trove } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Fees } from "./Fees";
 
-export type HintedMethodOptionalParams = {
+/** @internal */
+export type _HintedMethodOptionalParams = {
   numberOfTroves?: number;
 };
 
-export type TroveCreationOptionalParams = HintedMethodOptionalParams & {
+/** @internal */
+export type _TroveCreationOptionalParams = _HintedMethodOptionalParams & {
   fees?: Fees;
 };
 
-export type FeelessTroveAdjustmentOptionalParams = HintedMethodOptionalParams & {
+/** @internal */
+export type _FeelessTroveAdjustmentOptionalParams = _HintedMethodOptionalParams & {
   trove?: Trove;
 };
 
-export type TroveAdjustmentOptionalParams = FeelessTroveAdjustmentOptionalParams & {
+/** @internal */
+export type _TroveAdjustmentOptionalParams = _FeelessTroveAdjustmentOptionalParams & {
   fees?: Fees;
 };
 
-export type CollateralGainTransferOptionalParams = FeelessTroveAdjustmentOptionalParams & {
+/** @internal */
+export type _CollateralGainTransferOptionalParams = _FeelessTroveAdjustmentOptionalParams & {
   deposit?: StabilityDeposit;
 };
 
-export type RedemptionOptionalParams = HintedMethodOptionalParams & {
+/** @internal */
+export type _RedemptionOptionalParams = _HintedMethodOptionalParams & {
   price?: Decimal;
 };
 
-type AddParams<T, K extends keyof T, U extends unknown[]> = {
+/** @internal */
+export type _AddParams<T, K extends keyof T, U extends unknown[]> = {
   [P in K]: T[P] extends (...args: infer A) => infer R ? (...args: [...A, ...U]) => R : never;
 };
 
-type TroveCreationMethod = "openTrove";
-type FeelessTroveAdjustmentMethod = "depositCollateral" | "withdrawCollateral" | "repayLUSD";
-type TroveAdjustmentMethod = "borrowLUSD" | "adjustTrove";
-type CollateralGainTransferMethod = "transferCollateralGainToTrove";
-type RedemptionMethod = "redeemLUSD";
+/** @internal */ export type _TroveCreationMethod = "openTrove";
+/** @internal */ export type _FeelessTroveAdjustmentMethod =
+  | "depositCollateral"
+  | "withdrawCollateral"
+  | "repayLUSD";
+/** @internal */ export type _TroveAdjustmentMethod = "borrowLUSD" | "adjustTrove";
+/** @internal */ export type _CollateralGainTransferMethod = "transferCollateralGainToTrove";
+/** @internal */ export type _RedemptionMethod = "redeemLUSD";
 
-type HintedMethod =
-  | TroveCreationMethod
-  | FeelessTroveAdjustmentMethod
-  | TroveAdjustmentMethod
-  | CollateralGainTransferMethod
-  | RedemptionMethod;
+/** @internal */
+export type _HintedMethod =
+  | _TroveCreationMethod
+  | _FeelessTroveAdjustmentMethod
+  | _TroveAdjustmentMethod
+  | _CollateralGainTransferMethod
+  | _RedemptionMethod;
 
-type Hintable = { [P in HintedMethod]: (...args: never[]) => unknown };
+/** @internal */
+export type _Hintable = { [P in _HintedMethod]: (...args: never[]) => unknown };
 
-export type Hinted<T extends Hintable> = T &
-  AddParams<T, TroveCreationMethod, [optionalParams?: TroveCreationOptionalParams]> &
-  AddParams<
+/** @internal */
+export type _Hinted<T extends _Hintable> = T &
+  _AddParams<T, _TroveCreationMethod, [optionalParams?: _TroveCreationOptionalParams]> &
+  _AddParams<
     T,
-    FeelessTroveAdjustmentMethod,
-    [optionalParams?: FeelessTroveAdjustmentOptionalParams]
+    _FeelessTroveAdjustmentMethod,
+    [optionalParams?: _FeelessTroveAdjustmentOptionalParams]
   > &
-  AddParams<T, TroveAdjustmentMethod, [optionalParams?: TroveAdjustmentOptionalParams]> &
-  AddParams<
+  _AddParams<T, _TroveAdjustmentMethod, [optionalParams?: _TroveAdjustmentOptionalParams]> &
+  _AddParams<
     T,
-    CollateralGainTransferMethod,
-    [optionalParams?: CollateralGainTransferOptionalParams]
+    _CollateralGainTransferMethod,
+    [optionalParams?: _CollateralGainTransferOptionalParams]
   > &
-  AddParams<T, RedemptionMethod, [optionalParams?: RedemptionOptionalParams]>;
+  _AddParams<T, _RedemptionMethod, [optionalParams?: _RedemptionOptionalParams]>;

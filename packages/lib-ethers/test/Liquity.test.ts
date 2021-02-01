@@ -13,8 +13,9 @@ import {
   SuccessfulReceipt,
   SentLiquityTransaction,
   ReadableLiquity,
-  TroveCreation,
-  Fees
+  TroveCreationParams,
+  Fees,
+  LUSD_LIQUIDATION_RESERVE
 } from "@liquity/lib-base";
 
 import { HintHelpers } from "../types";
@@ -78,7 +79,7 @@ describe("EthersLiquity", () => {
   const connectUsers = (users: Signer[]) =>
     Promise.all(users.map(user => EthersLiquity.connect(deployment, user)));
 
-  const openTroves = (users: Signer[], params: TroveCreation<Decimalish>[]) =>
+  const openTroves = (users: Signer[], params: TroveCreationParams<Decimalish>[]) =>
     params
       .map((params, i) => () =>
         Promise.all([
@@ -165,11 +166,11 @@ describe("EthersLiquity", () => {
         },
 
         hintHelpers: chai.spy.interface({
-          getApproxHint: (..._args: any) => Promise.resolve(fakeHints.shift())
+          getApproxHint: () => Promise.resolve(fakeHints.shift())
         }),
 
         sortedTroves: chai.spy.interface({
-          findInsertPosition: (..._args: any) => Promise.resolve(["fake insert position"])
+          findInsertPosition: () => Promise.resolve(["fake insert position"])
         })
       };
 
@@ -183,7 +184,7 @@ describe("EthersLiquity", () => {
 
       const params = { depositCollateral: 0.75, borrowLUSD: 90 };
       const trove = Trove.create(params);
-      expect(`${trove.nominalCollateralRatio}`).to.equal(`${nominalCollateralRatio}`);
+      expect(`${trove._nominalCollateralRatio}`).to.equal(`${nominalCollateralRatio}`);
 
       await fakeLiquity.openTrove(params, {
         numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
@@ -222,9 +223,11 @@ describe("EthersLiquity", () => {
       await expect(liquity.openTrove({ depositCollateral: 0.05 })).to.eventually.be.rejected;
     });
 
+    const withoutBorrowing = { depositCollateral: 1 };
+
     it("should create a Trove without borrowing", async () => {
-      const { newTrove } = await liquity.openTrove({ depositCollateral: 1 });
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 1, debt: 10 }));
+      const { newTrove } = await liquity.openTrove(withoutBorrowing);
+      expect(newTrove).to.deep.equal(Trove.create(withoutBorrowing));
 
       const trove = await liquity.getTrove();
       expect(trove).to.deep.equal(newTrove);
@@ -232,7 +235,10 @@ describe("EthersLiquity", () => {
 
     it("should withdraw some of the collateral", async () => {
       const { newTrove } = await liquity.withdrawCollateral(0.5);
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 0.5, debt: 10 }));
+
+      expect(newTrove).to.deep.equal(
+        Trove.create(withoutBorrowing).adjust({ withdrawCollateral: 0.5 })
+      );
     });
 
     it("should fail to close the Trove when there are no other Troves", async () => {
@@ -253,9 +259,11 @@ describe("EthersLiquity", () => {
       expect(trove.isEmpty).to.be.true;
     });
 
+    const withSomeBorrowing = { depositCollateral: 1, borrowLUSD: 90 };
+
     it("should create a Trove with some borrowing", async () => {
-      const { newTrove } = await liquity.openTrove({ depositCollateral: 1, borrowLUSD: 90 });
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 1, debt: 100 }));
+      const { newTrove } = await liquity.openTrove(withSomeBorrowing);
+      expect(newTrove).to.deep.equal(Trove.create(withSomeBorrowing));
     });
 
     it("should fail to withdraw all the collateral while the Trove has debt", async () => {
@@ -264,42 +272,64 @@ describe("EthersLiquity", () => {
       await expect(liquity.withdrawCollateral(trove.collateral)).to.eventually.be.rejected;
     });
 
+    const repaySomeDebt = { repayLUSD: 10 };
+
     it("should repay some debt", async () => {
-      const { newTrove } = await liquity.repayLUSD(10);
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 1, debt: 90 }));
+      const { newTrove } = await liquity.repayLUSD(repaySomeDebt.repayLUSD);
+      expect(newTrove).to.deep.equal(Trove.create(withSomeBorrowing).adjust(repaySomeDebt));
     });
+
+    const borrowSomeMore = { borrowLUSD: 20 };
 
     it("should borrow some more", async () => {
-      const { newTrove } = await liquity.borrowLUSD(20);
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 1, debt: 110 }));
+      const { newTrove } = await liquity.borrowLUSD(borrowSomeMore.borrowLUSD);
+      expect(newTrove).to.deep.equal(
+        Trove.create(withSomeBorrowing).adjust(repaySomeDebt).adjust(borrowSomeMore)
+      );
     });
+
+    const depositMoreCollateral = { depositCollateral: 1 };
 
     it("should deposit more collateral", async () => {
-      const { newTrove } = await liquity.depositCollateral(1);
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 2, debt: 110 }));
+      const { newTrove } = await liquity.depositCollateral(depositMoreCollateral.depositCollateral);
+      expect(newTrove).to.deep.equal(
+        Trove.create(withSomeBorrowing)
+          .adjust(repaySomeDebt)
+          .adjust(borrowSomeMore)
+          .adjust(depositMoreCollateral)
+      );
     });
 
-    it("should repay some debt and withdraw some collateral at the same time", async () => {
-      const { newTrove } = await liquity.adjustTrove(
-        { repayLUSD: 60, withdrawCollateral: 0.5 },
-        {},
-        { gasPrice: 0 }
-      );
+    const repayAndWithdraw = { repayLUSD: 60, withdrawCollateral: 0.5 };
 
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 1.5, debt: 50 }));
+    it("should repay some debt and withdraw some collateral at the same time", async () => {
+      const { newTrove } = await liquity.adjustTrove(repayAndWithdraw, {}, { gasPrice: 0 });
+
+      expect(newTrove).to.deep.equal(
+        Trove.create(withSomeBorrowing)
+          .adjust(repaySomeDebt)
+          .adjust(borrowSomeMore)
+          .adjust(depositMoreCollateral)
+          .adjust(repayAndWithdraw)
+      );
 
       const ethBalance = new Decimal(await user.getBalance());
       expect(`${ethBalance}`).to.equal("100.5");
     });
 
-    it("should borrow more and deposit some collateral at the same time", async () => {
-      const { newTrove } = await liquity.adjustTrove(
-        { borrowLUSD: 60, depositCollateral: 0.5 },
-        {},
-        { gasPrice: 0 }
-      );
+    const borrowAndDeposit = { borrowLUSD: 60, depositCollateral: 0.5 };
 
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 2, debt: 110 }));
+    it("should borrow more and deposit some collateral at the same time", async () => {
+      const { newTrove } = await liquity.adjustTrove(borrowAndDeposit, {}, { gasPrice: 0 });
+
+      expect(newTrove).to.deep.equal(
+        Trove.create(withSomeBorrowing)
+          .adjust(repaySomeDebt)
+          .adjust(borrowSomeMore)
+          .adjust(depositMoreCollateral)
+          .adjust(repayAndWithdraw)
+          .adjust(borrowAndDeposit)
+      );
 
       const ethBalance = new Decimal(await user.getBalance());
       expect(`${ethBalance}`).to.equal("99.5");
@@ -388,12 +418,12 @@ describe("EthersLiquity", () => {
         liquidatedAddresses: [await otherUsers[0].getAddress()],
 
         collateralGasCompensation: Decimal.from(0.0011165), // 0.5%
-        lusdGasCompensation: Decimal.from(10),
+        lusdGasCompensation: LUSD_LIQUIDATION_RESERVE,
 
-        totalLiquidated: new Trove({
-          collateral: Decimal.from(0.2221835), // -0.5%
-          debt: Decimal.from(39)
-        })
+        totalLiquidated: new Trove(
+          Decimal.from(0.2221835), // -0.5%
+          Decimal.from(39)
+        )
       });
 
       const otherTrove = await otherLiquities[0].getTrove();
@@ -404,11 +434,11 @@ describe("EthersLiquity", () => {
       const deposit = await liquity.getStabilityDeposit();
 
       expect(deposit).to.deep.equal(
-        new StabilityDeposit({
-          initialLUSD: 10,
-          currentLUSD: 0,
-          collateralGain: "0.0569701282051282" // multiplied by 0.995
-        })
+        new StabilityDeposit(
+          Decimal.from(10),
+          Decimal.ZERO,
+          Decimal.from("0.0569701282051282") // multiplied by 0.995
+        )
       );
     });
 
@@ -416,10 +446,7 @@ describe("EthersLiquity", () => {
       const trove = await liquity.getTrove();
 
       expect(trove).to.deep.equal(
-        new Trove({
-          collateral: "1.165213371794871795",
-          debt: 129
-        })
+        new Trove(Decimal.from("1.165213371794871795"), Decimal.from(129))
       );
     });
 
@@ -442,10 +469,10 @@ describe("EthersLiquity", () => {
         collateralGain: Decimal.from("0.0569701282051282"),
         lqtyReward: Decimal.from(0),
 
-        newTrove: new Trove({
-          collateral: "1.222183499999999995", // ~ 1 + 0.2233 * 0.995
-          debt: 129
-        })
+        newTrove: new Trove(
+          Decimal.from("1.222183499999999995"), // ~ 1 + 0.2233 * 0.995
+          Decimal.from(129)
+        )
       });
 
       const deposit = await liquity.getStabilityDeposit();
@@ -600,7 +627,9 @@ describe("EthersLiquity", () => {
     it("borrowing should have a fee now", async () => {
       const { fee, newTrove } = await liquity.borrowLUSD(10);
       expect(`${fee}`).to.equal("1.52777777777777777");
-      expect(newTrove).to.deep.equal(new Trove({ collateral: 20, debt: fee.add(120) }));
+      expect(newTrove).to.deep.equal(
+        Trove.create({ depositCollateral: 20, borrowLUSD: 110 }).addDebt(fee)
+      );
     });
   });
 
@@ -630,7 +659,7 @@ describe("EthersLiquity", () => {
       await sendToEach(otherUsersSubset, 1.1);
 
       await liquity.openTrove({ depositCollateral: 50, borrowLUSD: 400 });
-      for (let otherLiquity of otherLiquities) {
+      for (const otherLiquity of otherLiquities) {
         await otherLiquity.openTrove({ depositCollateral: 1, borrowLUSD: 1 });
       }
     });

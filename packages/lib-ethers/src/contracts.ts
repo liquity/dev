@@ -58,7 +58,7 @@ export interface TypedLogDescription<T> extends Omit<LogDescription, "args"> {
   args: T;
 }
 
-type BucketOfFunctions = Record<string, (...args: any[]) => any>;
+type BucketOfFunctions = Record<string, (...args: unknown[]) => never>;
 
 // Removes unsafe index signatures from an Ethers contract type
 type TypeSafeContract<T> = Pick<
@@ -198,7 +198,7 @@ export const connectToContracts = (
   addresses: LiquityContractAddresses,
   priceFeedIsTestnet: boolean,
   signerOrProvider: Signer | Provider
-) => {
+): LiquityContracts => {
   const abi = getAbi(priceFeedIsTestnet);
 
   return mapLiquityContracts(
@@ -208,7 +208,7 @@ export const connectToContracts = (
   ) as LiquityContracts;
 };
 
-export const addressesOf = (contracts: LiquityContracts) =>
+export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses =>
   mapLiquityContracts(
     contracts as Record<LiquityContractsKey, TypedLiquityContract>,
     contract => contract.address
