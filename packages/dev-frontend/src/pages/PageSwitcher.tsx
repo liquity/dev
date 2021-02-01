@@ -11,17 +11,18 @@ import { UnregisteredFrontend } from "./UnregisteredFrontend";
 import { FrontendRegistration } from "./FrontendRegistration";
 import { FrontendRegistrationSuccess } from "./FrontendRegistrationSuccess";
 
-const select = ({ frontend, frontendTag }: LiquityStoreState) => ({
-  frontend,
-  frontendTag
-});
+const selectFrontend = ({ frontend }: LiquityStoreState) => frontend;
 
 export const PageSwitcher: React.FC = () => {
-  const { account } = useLiquity();
-  const { frontend, frontendTag } = useLiquitySelector(select);
-  const [registering, setRegistering] = useState(false);
+  const {
+    account,
+    config: { frontendTag }
+  } = useLiquity();
 
+  const frontend = useLiquitySelector(selectFrontend);
   const unregistered = frontendTag !== AddressZero && frontend.status === "unregistered";
+
+  const [registering, setRegistering] = useState(false);
 
   useEffect(() => {
     if (unregistered) {

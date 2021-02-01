@@ -1,12 +1,14 @@
 import { describe, it } from "mocha";
 import fc from "fast-check";
 
+import { Decimal } from "@liquity/decimal";
+
 import { LQTYStake } from "../src/LQTYStake";
 
 const arbitraryStake = () =>
   fc
-    .record({ stakedLQTY: fc.float(), collateralGain: fc.float(), lusdGain: fc.float() })
-    .map(stakish => new LQTYStake(stakish));
+    .tuple(fc.float(), fc.float(), fc.float())
+    .map(([a, b, c]) => new LQTYStake(Decimal.from(a), Decimal.from(b), Decimal.from(c)));
 
 const nonZeroStake = () => arbitraryStake().filter(({ stakedLQTY }) => !stakedLQTY.isZero);
 

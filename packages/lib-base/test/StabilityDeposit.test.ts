@@ -1,18 +1,18 @@
 import { describe, it } from "mocha";
 import fc from "fast-check";
 
+import { Decimal } from "@liquity/decimal";
+
 import { StabilityDeposit } from "../src/StabilityDeposit";
 
 const arbitraryDeposit = () =>
   fc
-    .record({
-      initialLUSD: fc.float(),
-      currentLUSD: fc.float(),
-      collateralGain: fc.float(),
-      lqtyReward: fc.float()
-    })
-    .filter(({ initialLUSD, currentLUSD }) => initialLUSD >= currentLUSD)
-    .map(depositish => new StabilityDeposit(depositish));
+    .tuple(fc.float(), fc.float(), fc.float(), fc.float())
+    .filter(([initialLUSD, currentLUSD]) => initialLUSD >= currentLUSD)
+    .map(
+      ([a, b, c, d]) =>
+        new StabilityDeposit(Decimal.from(a), Decimal.from(b), Decimal.from(c), Decimal.from(d))
+    );
 
 const nonZeroDeposit = () => arbitraryDeposit().filter(({ currentLUSD }) => !currentLUSD.isZero);
 

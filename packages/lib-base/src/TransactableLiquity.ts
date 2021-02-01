@@ -1,32 +1,34 @@
 import { Decimal, Decimalish } from "@liquity/decimal";
 
 import { proxify } from "./utils";
-import { Trove, TroveAdjustment, TroveClosure, TroveCreation } from "./Trove";
+import { Trove, TroveAdjustmentParams, TroveClosureParams, TroveCreationParams } from "./Trove";
 import { StabilityDepositChange } from "./StabilityDeposit";
 
-export type PopulatedLiquityTransaction<
+export interface PopulatedLiquityTransaction<
   P = unknown,
   T extends SentLiquityTransaction = SentLiquityTransaction
-> = {
+> {
   rawPopulatedTransaction: P;
 
   send(): Promise<T>;
-};
+}
 
-export type SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> = {
+export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> {
   rawSentTransaction: S;
 
   getReceipt(): Promise<T>;
   waitForReceipt(): Promise<Extract<T, MinedReceipt>>;
-};
+}
 
 export type PendingReceipt = { status: "pending" };
 
-export const pendingReceipt: PendingReceipt = { status: "pending" };
+/** @internal */
+export const _pendingReceipt: PendingReceipt = { status: "pending" };
 
 export type FailedReceipt<R = unknown> = { status: "failed"; rawReceipt: R };
 
-export const failedReceipt = <R>(rawReceipt: R): FailedReceipt<R> => ({
+/** @internal */
+export const _failedReceipt = <R>(rawReceipt: R): FailedReceipt<R> => ({
   status: "failed",
   rawReceipt
 });
@@ -37,7 +39,8 @@ export type SuccessfulReceipt<R = unknown, D = unknown> = {
   details: D;
 };
 
-export const successfulReceipt = <R, D>(
+/** @internal */
+export const _successfulReceipt = <R, D>(
   rawReceipt: R,
   details: D,
   toString?: () => string
@@ -51,59 +54,68 @@ export const successfulReceipt = <R, D>(
 export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
 export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
 
-export type TroveChangeWithFees<T> = {
-  params: T;
+export interface TroveCreationDetails {
+  params: TroveCreationParams<Decimal>;
   newTrove: Trove;
   fee: Decimal;
-};
+}
 
-export type TroveCreationDetails = TroveChangeWithFees<TroveCreation<Decimal>>;
-export type TroveAdjustmentDetails = TroveChangeWithFees<TroveAdjustment<Decimal>>;
+export interface TroveAdjustmentDetails {
+  params: TroveAdjustmentParams<Decimal>;
+  newTrove: Trove;
+  fee: Decimal;
+}
 
-export type TroveClosureDetails = {
-  params: TroveClosure<Decimal>;
-};
+export interface TroveClosureDetails {
+  params: TroveClosureParams<Decimal>;
+}
 
-export type LiquidationDetails = {
+export interface LiquidationDetails {
   liquidatedAddresses: string[];
 
   totalLiquidated: Trove;
   lusdGasCompensation: Decimal;
   collateralGasCompensation: Decimal;
-};
+}
 
-export type RedemptionDetails = {
+export interface RedemptionDetails {
   attemptedLUSDAmount: Decimal;
   actualLUSDAmount: Decimal;
   collateralReceived: Decimal;
   fee: Decimal;
-};
+}
 
-export type StabilityPoolGainsWithdrawalDetails = {
+export interface StabilityPoolGainsWithdrawalDetails {
   lusdLoss: Decimal;
   newLUSDDeposit: Decimal;
   collateralGain: Decimal;
   lqtyReward: Decimal;
-};
+}
 
-export type StabilityDepositChangeDetails = StabilityPoolGainsWithdrawalDetails & {
+export interface StabilityDepositChangeDetails extends StabilityPoolGainsWithdrawalDetails {
   change: StabilityDepositChange<Decimal>;
-};
+}
 
-export type CollateralGainTransferDetails = StabilityPoolGainsWithdrawalDetails & {
+export interface CollateralGainTransferDetails extends StabilityPoolGainsWithdrawalDetails {
   newTrove: Trove;
-};
+}
 
 export interface TransactableLiquity {
-  openTrove(params: TroveCreation<Decimalish>): Promise<TroveCreationDetails>;
+  /**
+   * Open a new Trove.
+   *
+   * @returns The details of the Trove creation.
+   */
+  openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails>;
   closeTrove(): Promise<TroveClosureDetails>;
 
   depositCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
   withdrawCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
   borrowLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
   repayLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
-  adjustTrove(params: TroveAdjustment<Decimalish>): Promise<TroveAdjustmentDetails>;
+  adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentDetails>;
 
+  /** @internal */
   setPrice(price: Decimalish): Promise<void>;
 
   liquidate(address: string): Promise<LiquidationDetails>;
@@ -130,36 +142,48 @@ export interface TransactableLiquity {
   registerFrontend(kickbackRate: Decimalish): Promise<void>;
 }
 
-type SendMethod<A extends unknown[], D, R = unknown, S = unknown> = (
+/** @internal */
+export type _SendMethod<A extends unknown[], T extends SentLiquityTransaction> = (
   ...args: A
-) => Promise<SentLiquityTransaction<S, LiquityReceipt<R, D>>>;
+) => Promise<T>;
 
-export type Sendable<T, R = unknown, S = unknown> = {
+/** @internal */
+export type _Sendable<T, R = unknown, S = unknown> = {
   [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
-    ? SendMethod<A, D, R, S>
+    ? _SendMethod<A, SentLiquityTransaction<S, LiquityReceipt<R, D>>>
     : never;
 };
 
-type PopulateMethod<A extends unknown[], D, R = unknown, S = unknown, P = unknown> = (
+/** @internal */
+export type _PopulateMethod<A extends unknown[], T extends PopulatedLiquityTransaction> = (
   ...args: A
-) => Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>>;
+) => Promise<T>;
 
-export type Populatable<T, R = unknown, S = unknown, P = unknown> = {
+/** @internal */
+export type _Populatable<T, R = unknown, S = unknown, P = unknown> = {
   [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
-    ? PopulateMethod<A, D, R, S, P>
+    ? _PopulateMethod<
+        A,
+        PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>
+      >
     : never;
 };
 
-type SendableFrom<T> = new (populatable: T) => {
-  [M in keyof T]: T[M] extends PopulateMethod<infer A, infer D, infer R, infer S>
-    ? SendMethod<A, D, R, S>
+/** @internal */
+export type _SendableFrom<T> = {
+  [M in keyof T]: T[M] extends _PopulateMethod<
+    infer A,
+    PopulatedLiquityTransaction<unknown, infer U>
+  >
+    ? _SendMethod<A, U>
     : never;
 };
 
-export const sendableFrom = <T, U extends Populatable<T>>(
-  Populatable: new (...args: never[]) => U
-): SendableFrom<U> => {
-  const Sendable = class {
+/** @internal */
+export const _sendableFrom = <T, U extends _Populatable<T>>(
+  _Populatable: new (...args: never[]) => U
+): new (populatable: U) => _SendableFrom<U> => {
+  const _Sendable = class {
     _populatable: U;
 
     constructor(populatable: U) {
@@ -168,24 +192,31 @@ export const sendableFrom = <T, U extends Populatable<T>>(
   };
 
   proxify(
-    Sendable,
-    Populatable,
+    _Sendable,
+    _Populatable,
     method =>
       async function (...args) {
         return (await this._populatable[method].call(this._populatable, ...args)).send();
       }
   );
 
-  return (Sendable as unknown) as SendableFrom<U>;
+  return (_Sendable as unknown) as new (populatable: U) => _SendableFrom<U>;
 };
 
-type TransactableFrom<T> = new (sendable: T) => {
-  [M in keyof T]: T[M] extends SendMethod<infer A, infer D> ? (...args: A) => Promise<D> : never;
+/** @internal */
+export type _TransactableFrom<T> = {
+  [M in keyof T]: T[M] extends _SendMethod<
+    infer A,
+    SentLiquityTransaction<unknown, LiquityReceipt<unknown, infer D>>
+  >
+    ? (...args: A) => Promise<D>
+    : never;
 };
 
-export const transactableFrom = <T, U extends Sendable<T>>(
-  Sendable: new (...args: never[]) => U
-): TransactableFrom<U> => {
+/** @internal */
+export const _transactableFrom = <T, U extends _Sendable<T>>(
+  _Sendable: new (...args: never[]) => U
+): new (sendable: U) => _TransactableFrom<U> => {
   const Transactable = class {
     _sendable: U;
 
@@ -196,7 +227,7 @@ export const transactableFrom = <T, U extends Sendable<T>>(
 
   proxify(
     Transactable,
-    Sendable,
+    _Sendable,
     method =>
       async function (...args) {
         const tx = await this._sendable[method].call(this._sendable, ...args);
@@ -210,5 +241,5 @@ export const transactableFrom = <T, U extends Sendable<T>>(
       }
   );
 
-  return (Transactable as unknown) as TransactableFrom<U>;
+  return (Transactable as unknown) as new (sendable: U) => _TransactableFrom<U>;
 };

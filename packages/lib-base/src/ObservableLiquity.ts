@@ -3,6 +3,7 @@ import { Decimal } from "@liquity/decimal";
 import { Trove, TroveWithPendingRewards } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
 
+/** @alpha */
 export interface ObservableLiquity {
   watchTotalRedistributed(
     onTotalRedistributedChanged: (totalRedistributed: Trove) => void

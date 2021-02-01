@@ -1,31 +1,40 @@
 import { Decimal, Decimalish } from "@liquity/decimal";
 
-// now, this is silly...
-interface LQTYStakish {
-  readonly stakedLQTY?: Decimalish;
-  readonly collateralGain?: Decimalish;
-  readonly lusdGain?: Decimalish;
-}
-
-type LQTYStakeChange<T> =
+/** @public */
+export type LQTYStakeChange<T> =
   | { stakeLQTY: T; unstakeLQTY?: undefined }
   | { stakeLQTY?: undefined; unstakeLQTY: T; unstakeAllLQTY: boolean };
 
+/** 
+ * Represents a user's LQTY stake and accrued gains.
+ * 
+ * @remarks
+ * Returned by the {@link ReadableLiquity.getLQTYStake | getLQTYStake()} function.
+
+ * @public
+ */
 export class LQTYStake {
+  /** The amount of LQTY that's staked. */
   readonly stakedLQTY: Decimal;
+
+  /** Collateral gain available to withdraw. */
   readonly collateralGain: Decimal;
+
+  /** LUSD gain available to withdraw. */
   readonly lusdGain: Decimal;
 
-  constructor({ stakedLQTY = 0, collateralGain = 0, lusdGain = 0 }: LQTYStakish) {
-    this.stakedLQTY = Decimal.from(stakedLQTY);
-    this.collateralGain = Decimal.from(collateralGain);
-    this.lusdGain = Decimal.from(lusdGain);
+  /** @internal */
+  constructor(stakedLQTY = Decimal.ZERO, collateralGain = Decimal.ZERO, lusdGain = Decimal.ZERO) {
+    this.stakedLQTY = stakedLQTY;
+    this.collateralGain = collateralGain;
+    this.lusdGain = lusdGain;
   }
 
   get isEmpty(): boolean {
     return this.stakedLQTY.isZero && this.collateralGain.isZero && this.lusdGain.isZero;
   }
 
+  /** @internal */
   toString(): string {
     return (
       `{ stakedLQTY: ${this.stakedLQTY}` +
@@ -34,6 +43,9 @@ export class LQTYStake {
     );
   }
 
+  /**
+   * Compare to another instance of `LQTYStake`.
+   */
   equals(that: LQTYStake): boolean {
     return (
       this.stakedLQTY.eq(that.stakedLQTY) &&
@@ -42,6 +54,9 @@ export class LQTYStake {
     );
   }
 
+  /**
+   * Calculate the difference between this `LQTYStake` and `thatStakedLQTY`.
+   */
   whatChanged(thatStakedLQTY: Decimalish): LQTYStakeChange<Decimal> | undefined {
     thatStakedLQTY = Decimal.from(thatStakedLQTY);
 
@@ -57,6 +72,11 @@ export class LQTYStake {
     }
   }
 
+  /**
+   * Apply a stake change to this `LQTYStake`.
+   *
+   * @returns The new staked LQTY amount.
+   */
   apply(change: LQTYStakeChange<Decimalish> | undefined): Decimal {
     if (!change) {
       return this.stakedLQTY;

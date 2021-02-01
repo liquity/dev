@@ -66,6 +66,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   } = useLiquity();
 
   const store = new BlockPolledLiquityStore(provider, account, liquity, frontendTag);
+  store.logging = true;
 
   // For console tinkering ;-)
   Object.assign(window, {

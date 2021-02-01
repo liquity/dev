@@ -834,19 +834,20 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         address _lowerPartialRedemptionHint,
         uint _partialRedemptionHintNICR,
         uint _maxIterations,
-        uint _maxFee
+        uint _maxFeePercentage
     )
         external
         override
     {
+        _requireValidMaxFeePercentage(_maxFeePercentage);
         uint price = priceFeed.fetchPrice();
         _requireTCRoverMCR(price);
         _requireAmountGreaterThanZero(_LUSDamount);
         _requireLUSDBalanceCoversRedemption(msg.sender, _LUSDamount);
 
-        uint entireSystemDebt = getEntireSystemDebt();       
-        // Confirm redeemer's balance is less than total systemic debt
-        assert(lusdToken.balanceOf(msg.sender) <= entireSystemDebt);
+        uint totalLUSDSupplyAtStart = getEntireSystemDebt();       
+        // Confirm redeemer's balance is less than total LUSD supply
+        assert(lusdToken.balanceOf(msg.sender) <= totalLUSDSupplyAtStart);
 
         RedemptionTotals memory totals;
         totals.remainingLUSD = _LUSDamount;
@@ -889,13 +890,14 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             currentBorrower = nextUserToCheck;
         }
 
-        // Decay the baseRate due to time passed, and then increase it according to the size of this redemption
-        _updateBaseRateFromRedemption(totals.totalETHDrawn, price);
+        // Decay the baseRate due to time passed, and then increase it according to the size of this redemption.
+        // Use the saved total LUSD supply value, from before it was reduced by the redemption.
+        _updateBaseRateFromRedemption(totals.totalETHDrawn, price, totalLUSDSupplyAtStart);
 
         // Calculate the ETH fee
         totals.ETHFee = _getRedemptionFee(totals.totalETHDrawn);
         
-        require(_maxFee >= totals.ETHFee || _maxFee == 0, "TroveManager: redemption fee exceeded provided max");
+        _requireUserAcceptsFee(totals.ETHFee, totals.totalETHDrawn, _maxFeePercentage);
 
         // Send the ETH fee to the LQTY staking contract
         activePool.sendETH(address(lqtyStaking), totals.ETHFee);
@@ -1237,16 +1239,12 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     * then,
     * 2) increases the baseRate based on the amount redeemed, as a proportion of total supply
     */
-    function _updateBaseRateFromRedemption(uint _ETHDrawn,  uint _price) internal returns (uint) {
+    function _updateBaseRateFromRedemption(uint _ETHDrawn,  uint _price, uint _totalLUSDSupply) internal returns (uint) {
         uint decayedBaseRate = _calcDecayedBaseRate();
-
-        uint activeDebt = activePool.getLUSDDebt();
-        uint closedDebt = defaultPool.getLUSDDebt();
-        uint totalLUSDSupply = activeDebt.add(closedDebt);
 
         /* Convert the drawn ETH back to LUSD at face value rate (1 LUSD:1 USD), in order to get
         * the fraction of total supply that was redeemed at face value. */
-        uint redeemedLUSDFraction = _ETHDrawn.mul(_price).div(totalLUSDSupply);
+        uint redeemedLUSDFraction = _ETHDrawn.mul(_price).div(_totalLUSDSupply);
 
         uint newBaseRate = decayedBaseRate.add(redeemedLUSDFraction.div(BETA));
         newBaseRate = LiquityMath._min(newBaseRate, DECIMAL_PRECISION); // cap baseRate at a maximum of 100%

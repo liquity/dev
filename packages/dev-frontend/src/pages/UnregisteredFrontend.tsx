@@ -1,15 +1,13 @@
 import { Box, Flex, Heading, Paragraph } from "theme-ui";
 
-import { useLiquitySelector } from "@liquity/lib-react";
-import { LiquityStoreState } from "@liquity/lib-base";
-
 import { shortenAddress } from "../utils/shortenAddress";
 import { Icon } from "../components/Icon";
-
-const selectFrontendTag = ({ frontendTag }: LiquityStoreState) => frontendTag;
+import { useLiquity } from "../hooks/LiquityContext";
 
 export const UnregisteredFrontend: React.FC = () => {
-  const frontendTag = useLiquitySelector(selectFrontendTag);
+  const {
+    config: { frontendTag }
+  } = useLiquity();
 
   return (
     <Box

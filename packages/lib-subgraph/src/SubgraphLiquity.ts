@@ -12,7 +12,7 @@ import {
   ObservableLiquity,
   TroveWithPendingRewards,
   Trove,
-  emptyTrove,
+  _emptyTrove,
   StabilityDeposit,
   Fees,
   LQTYStake,
@@ -64,12 +64,12 @@ const totalRedistributed = new Query<Trove, Global>(queryGlobal, ({ data: { glob
   if (global) {
     const { rawTotalRedistributedCollateral, rawTotalRedistributedDebt } = global;
 
-    return new Trove({
-      collateral: decimalify(rawTotalRedistributedCollateral),
-      debt: decimalify(rawTotalRedistributedDebt)
-    });
+    return new Trove(
+      decimalify(rawTotalRedistributedCollateral),
+      decimalify(rawTotalRedistributedDebt)
+    );
   } else {
-    return emptyTrove;
+    return _emptyTrove;
   }
 });
 
@@ -81,12 +81,9 @@ const total = new Query<Trove, Global>(queryGlobal, ({ data: { global } }) => {
   if (global?.currentSystemState) {
     const { totalCollateral, totalDebt } = global.currentSystemState;
 
-    return new Trove({
-      collateral: totalCollateral,
-      debt: totalDebt
-    });
+    return new Trove(totalCollateral, totalDebt);
   } else {
-    return emptyTrove;
+    return _emptyTrove;
   }
 });
 
@@ -111,16 +108,16 @@ const troveFromRawFields = ({
   rawSnapshotOfTotalRedistributedCollateral,
   rawSnapshotOfTotalRedistributedDebt
 }: TroveRawFields) =>
-  new TroveWithPendingRewards({
-    collateral: decimalify(rawCollateral),
-    debt: decimalify(rawDebt),
-    stake: decimalify(rawStake),
+  new TroveWithPendingRewards(
+    decimalify(rawCollateral),
+    decimalify(rawDebt),
+    decimalify(rawStake),
 
-    snapshotOfTotalRedistributed: {
-      collateral: decimalify(rawSnapshotOfTotalRedistributedCollateral),
-      debt: decimalify(rawSnapshotOfTotalRedistributedDebt)
-    }
-  });
+    new Trove(
+      decimalify(rawSnapshotOfTotalRedistributedCollateral),
+      decimalify(rawSnapshotOfTotalRedistributedDebt)
+    )
+  );
 
 const troveWithoutRewards = new Query<
   TroveWithPendingRewards,

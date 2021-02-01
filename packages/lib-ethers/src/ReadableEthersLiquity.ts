@@ -30,38 +30,37 @@ enum TroveStatus {
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
 export class ReadableEthersLiquity extends EthersLiquityBase implements ReadableLiquity {
-  async getTotalRedistributed(overrides?: EthersCallOverrides) {
+  async getTotalRedistributed(overrides?: EthersCallOverrides): Promise<Trove> {
     const [collateral, debt] = await Promise.all([
-      this.contracts.troveManager.L_ETH({ ...overrides }).then(decimalify),
-      this.contracts.troveManager.L_LUSDDebt({ ...overrides }).then(decimalify)
+      this._contracts.troveManager.L_ETH({ ...overrides }).then(decimalify),
+      this._contracts.troveManager.L_LUSDDebt({ ...overrides }).then(decimalify)
     ]);
 
-    return new Trove({ collateral, debt });
+    return new Trove(collateral, debt);
   }
 
-  async getTroveWithoutRewards(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getTroveWithoutRewards(
+    address = this._requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<TroveWithPendingRewards> {
     const [trove, snapshot] = await Promise.all([
-      this.contracts.troveManager.Troves(address, { ...overrides }),
-      this.contracts.troveManager.rewardSnapshots(address, { ...overrides })
+      this._contracts.troveManager.Troves(address, { ...overrides }),
+      this._contracts.troveManager.rewardSnapshots(address, { ...overrides })
     ]);
 
     if (trove.status === TroveStatus.active) {
-      return new TroveWithPendingRewards({
-        collateral: new Decimal(trove.coll),
-        debt: new Decimal(trove.debt),
-        stake: new Decimal(trove.stake),
-
-        snapshotOfTotalRedistributed: {
-          collateral: new Decimal(snapshot.ETH),
-          debt: new Decimal(snapshot.LUSDDebt)
-        }
-      });
+      return new TroveWithPendingRewards(
+        new Decimal(trove.coll),
+        new Decimal(trove.debt),
+        new Decimal(trove.stake),
+        new Trove(new Decimal(snapshot.ETH), new Decimal(snapshot.LUSDDebt))
+      );
     } else {
       return new TroveWithPendingRewards();
     }
   }
 
-  async getTrove(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getTrove(address = this._requireAddress(), overrides?: EthersCallOverrides): Promise<Trove> {
     const [trove, totalRedistributed] = await Promise.all([
       this.getTroveWithoutRewards(address, { ...overrides }),
       this.getTotalRedistributed({ ...overrides })
@@ -70,66 +69,76 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return trove.applyRewards(totalRedistributed);
   }
 
-  async getNumberOfTroves(overrides?: EthersCallOverrides) {
-    return (await this.contracts.troveManager.getTroveOwnersCount({ ...overrides })).toNumber();
+  async getNumberOfTroves(overrides?: EthersCallOverrides): Promise<number> {
+    return (await this._contracts.troveManager.getTroveOwnersCount({ ...overrides })).toNumber();
   }
 
-  async getPrice(overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.priceFeed.getPrice({ ...overrides }));
+  async getPrice(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return new Decimal(await this._contracts.priceFeed.getPrice({ ...overrides }));
   }
 
-  async getTotal(overrides?: EthersCallOverrides) {
+  async getTotal(overrides?: EthersCallOverrides): Promise<Trove> {
     const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
       [
-        this.contracts.activePool.getETH({ ...overrides }),
-        this.contracts.activePool.getLUSDDebt({ ...overrides }),
-        this.contracts.defaultPool.getETH({ ...overrides }),
-        this.contracts.defaultPool.getLUSDDebt({ ...overrides })
+        this._contracts.activePool.getETH({ ...overrides }),
+        this._contracts.activePool.getLUSDDebt({ ...overrides }),
+        this._contracts.defaultPool.getETH({ ...overrides }),
+        this._contracts.defaultPool.getLUSDDebt({ ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
-    return new Trove({
-      collateral: activeCollateral.add(liquidatedCollateral),
-      debt: activeDebt.add(closedDebt)
-    });
+    return new Trove(activeCollateral.add(liquidatedCollateral), activeDebt.add(closedDebt));
   }
 
-  async getStabilityDeposit(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getStabilityDeposit(
+    address = this._requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<StabilityDeposit> {
     const [initialLUSD, currentLUSD, collateralGain, lqtyReward] = await Promise.all(
       [
-        this.contracts.stabilityPool.deposits(address, { ...overrides }).then(d => d.initialValue),
-        this.contracts.stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
-        this.contracts.stabilityPool.getDepositorETHGain(address, { ...overrides }),
-        this.contracts.stabilityPool.getDepositorLQTYGain(address, { ...overrides })
+        this._contracts.stabilityPool.deposits(address, { ...overrides }).then(d => d.initialValue),
+        this._contracts.stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
+        this._contracts.stabilityPool.getDepositorETHGain(address, { ...overrides }),
+        this._contracts.stabilityPool.getDepositorLQTYGain(address, { ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
-    return new StabilityDeposit({ initialLUSD, currentLUSD, collateralGain, lqtyReward });
+    return new StabilityDeposit(initialLUSD, currentLUSD, collateralGain, lqtyReward);
   }
 
-  async getLUSDInStabilityPool(overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.stabilityPool.getTotalLUSDDeposits({ ...overrides }));
+  async getLUSDInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return new Decimal(await this._contracts.stabilityPool.getTotalLUSDDeposits({ ...overrides }));
   }
 
-  async getLUSDBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.lusdToken.balanceOf(address, { ...overrides }));
+  async getLUSDBalance(
+    address = this._requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<Decimal> {
+    return new Decimal(await this._contracts.lusdToken.balanceOf(address, { ...overrides }));
   }
 
-  async getLQTYBalance(address = this.requireAddress(), overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.lqtyToken.balanceOf(address, { ...overrides }));
+  async getLQTYBalance(
+    address = this._requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<Decimal> {
+    return new Decimal(await this._contracts.lqtyToken.balanceOf(address, { ...overrides }));
   }
 
   async getCollateralSurplusBalance(
-    address = this.requireAddress(),
+    address = this._requireAddress(),
     overrides?: EthersCallOverrides
-  ) {
+  ): Promise<Decimal> {
     return new Decimal(
-      await this.contracts.collSurplusPool.getCollateral(address, { ...overrides })
+      await this._contracts.collSurplusPool.getCollateral(address, { ...overrides })
     );
   }
 
-  async getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
-    const troves = await this.contracts.multiTroveGetter.getMultipleSortedTroves(
+  async getLastTroves(
+    startIdx: number,
+    numberOfTroves: number,
+    overrides?: EthersCallOverrides
+  ): Promise<[string, TroveWithPendingRewards][]> {
+    const troves = await this._contracts.multiTroveGetter.getMultipleSortedTroves(
       -(startIdx + 1),
       numberOfTroves,
       { ...overrides }
@@ -138,8 +147,12 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return mapMultipleSortedTrovesToTroves(troves);
   }
 
-  async getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides) {
-    const troves = await this.contracts.multiTroveGetter.getMultipleSortedTroves(
+  async getFirstTroves(
+    startIdx: number,
+    numberOfTroves: number,
+    overrides?: EthersCallOverrides
+  ): Promise<[string, TroveWithPendingRewards][]> {
+    const troves = await this._contracts.multiTroveGetter.getMultipleSortedTroves(
       startIdx,
       numberOfTroves,
       { ...overrides }
@@ -148,10 +161,10 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return mapMultipleSortedTrovesToTroves(troves);
   }
 
-  async getFees(overrides?: EthersCallOverrides) {
+  async getFees(overrides?: EthersCallOverrides): Promise<Fees> {
     const [lastFeeOperationTime, baseRateWithoutDecay] = await Promise.all([
-      this.contracts.troveManager.lastFeeOperationTime({ ...overrides }),
-      this.contracts.troveManager.baseRate({ ...overrides }).then(decimalify)
+      this._contracts.troveManager.lastFeeOperationTime({ ...overrides }),
+      this._contracts.troveManager.baseRate({ ...overrides }).then(decimalify)
     ]);
 
     const lastFeeOperation = new Date(1000 * lastFeeOperationTime.toNumber());
@@ -159,27 +172,30 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR, BETA);
   }
 
-  async getLQTYStake(address = this.requireAddress(), overrides?: EthersCallOverrides) {
+  async getLQTYStake(
+    address = this._requireAddress(),
+    overrides?: EthersCallOverrides
+  ): Promise<LQTYStake> {
     const [stakedLQTY, collateralGain, lusdGain] = await Promise.all(
       [
-        this.contracts.lqtyStaking.stakes(address, { ...overrides }),
-        this.contracts.lqtyStaking.getPendingETHGain(address, { ...overrides }),
-        this.contracts.lqtyStaking.getPendingLUSDGain(address, { ...overrides })
+        this._contracts.lqtyStaking.stakes(address, { ...overrides }),
+        this._contracts.lqtyStaking.getPendingETHGain(address, { ...overrides }),
+        this._contracts.lqtyStaking.getPendingLUSDGain(address, { ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
-    return new LQTYStake({ stakedLQTY, collateralGain, lusdGain });
+    return new LQTYStake(stakedLQTY, collateralGain, lusdGain);
   }
 
-  async getTotalStakedLQTY(overrides?: EthersCallOverrides) {
-    return new Decimal(await this.contracts.lqtyStaking.totalLQTYStaked({ ...overrides }));
+  async getTotalStakedLQTY(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return new Decimal(await this._contracts.lqtyStaking.totalLQTYStaked({ ...overrides }));
   }
 
   async getFrontendStatus(
-    address = this.requireAddress(),
+    address = this._requireAddress(),
     overrides?: EthersCallOverrides
   ): Promise<FrontendStatus> {
-    const { registered, kickbackRate } = await this.contracts.stabilityPool.frontEnds(address, {
+    const { registered, kickbackRate } = await this._contracts.stabilityPool.frontEnds(address, {
       ...overrides
     });
 
@@ -198,14 +214,10 @@ const mapMultipleSortedTrovesToTroves = (
   troves.map(({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) => [
     owner,
 
-    new TroveWithPendingRewards({
-      collateral: new Decimal(coll),
-      debt: new Decimal(debt),
-      stake: new Decimal(stake),
-
-      snapshotOfTotalRedistributed: {
-        collateral: new Decimal(snapshotETH),
-        debt: new Decimal(snapshotLUSDDebt)
-      }
-    })
+    new TroveWithPendingRewards(
+      new Decimal(coll),
+      new Decimal(debt),
+      new Decimal(stake),
+      new Trove(new Decimal(snapshotETH), new Decimal(snapshotLUSDDebt))
+    )
   ]);

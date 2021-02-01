@@ -27,9 +27,10 @@ const promiseAllValues = <T>(object: T) => {
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
-  private provider: Provider;
-  private account: string;
-  private liquity: ReadableEthersLiquity;
+  private _provider: Provider;
+  private _account: string;
+  private _liquity: ReadableEthersLiquity;
+  private _frontendTag: string;
 
   constructor(
     provider: Provider,
@@ -37,59 +38,64 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     liquity: ReadableEthersLiquity,
     frontendTag = AddressZero
   ) {
-    super({ frontendTag });
+    super();
 
-    this.provider = provider;
-    this.account = account;
-    this.liquity = liquity;
+    this._provider = provider;
+    this._account = account;
+    this._liquity = liquity;
+    this._frontendTag = frontendTag;
   }
 
-  private get(blockTag?: number): Promise<LiquityStoreBaseState> {
+  private _get(blockTag?: number): Promise<LiquityStoreBaseState> {
     return promiseAllValues({
-      frontend: this.liquity.getFrontendStatus(this.constants.frontendTag, { blockTag }),
-      ownFrontend: this.liquity.getFrontendStatus(this.account, { blockTag }),
-      accountBalance: this.provider.getBalance(this.account, blockTag).then(decimalify),
-      lusdBalance: this.liquity.getLUSDBalance(this.account, { blockTag }),
-      lqtyBalance: this.liquity.getLQTYBalance(this.account, { blockTag }),
-      collateralSurplusBalance: this.liquity.getCollateralSurplusBalance(this.account, { blockTag }),
-      price: this.liquity.getPrice({ blockTag }),
-      numberOfTroves: this.liquity.getNumberOfTroves({ blockTag }),
-      troveWithoutRewards: this.liquity.getTroveWithoutRewards(this.account, { blockTag }),
-      totalRedistributed: this.liquity.getTotalRedistributed({ blockTag }),
-      deposit: this.liquity.getStabilityDeposit(this.account, { blockTag }),
-      total: this.liquity.getTotal({ blockTag }),
-      lusdInStabilityPool: this.liquity.getLUSDInStabilityPool({ blockTag }),
-      fees: this.liquity.getFees({ blockTag }),
-      lqtyStake: this.liquity.getLQTYStake(this.account, { blockTag }),
-      totalStakedLQTY: this.liquity.getTotalStakedLQTY({ blockTag })
+      frontend: this._liquity.getFrontendStatus(this._frontendTag, { blockTag }),
+      ownFrontend: this._liquity.getFrontendStatus(this._account, { blockTag }),
+      accountBalance: this._provider.getBalance(this._account, blockTag).then(decimalify),
+      lusdBalance: this._liquity.getLUSDBalance(this._account, { blockTag }),
+      lqtyBalance: this._liquity.getLQTYBalance(this._account, { blockTag }),
+      collateralSurplusBalance: this._liquity.getCollateralSurplusBalance(this._account, {
+        blockTag
+      }),
+      price: this._liquity.getPrice({ blockTag }),
+      numberOfTroves: this._liquity.getNumberOfTroves({ blockTag }),
+      troveWithoutRewards: this._liquity.getTroveWithoutRewards(this._account, { blockTag }),
+      totalRedistributed: this._liquity.getTotalRedistributed({ blockTag }),
+      deposit: this._liquity.getStabilityDeposit(this._account, { blockTag }),
+      total: this._liquity.getTotal({ blockTag }),
+      lusdInStabilityPool: this._liquity.getLUSDInStabilityPool({ blockTag }),
+      fees: this._liquity.getFees({ blockTag }),
+      lqtyStake: this._liquity.getLQTYStake(this._account, { blockTag }),
+      totalStakedLQTY: this._liquity.getTotalStakedLQTY({ blockTag })
     });
   }
 
-  doStart() {
-    this.get().then(state => {
-      if (!this.loaded) {
-        this.load(state, {});
+  /** @override */
+  protected _doStart(): () => void {
+    this._get().then(state => {
+      if (!this._loaded) {
+        this._load(state, {});
       }
     });
 
     const blockListener = async (blockTag: number) => {
-      const state = await this.get(blockTag);
+      const state = await this._get(blockTag);
 
-      if (this.loaded) {
-        this.update(state, { blockTag });
+      if (this._loaded) {
+        this._update(state, { blockTag });
       } else {
-        this.load(state, { blockTag });
+        this._load(state, { blockTag });
       }
     };
 
-    this.provider.on("block", blockListener);
+    this._provider.on("block", blockListener);
 
     return () => {
-      this.provider.off("block", blockListener);
+      this._provider.off("block", blockListener);
     };
   }
 
-  protected reduceExtra(
+  /** @override */
+  protected _reduceExtra(
     oldState: BlockPolledLiquityStoreExtraState,
     stateUpdate: Partial<BlockPolledLiquityStoreExtraState>
   ): BlockPolledLiquityStoreExtraState {

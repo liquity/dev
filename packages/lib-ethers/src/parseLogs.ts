@@ -94,7 +94,10 @@ const logDescriptionToString = (logDescription: LogDescription, nameLookup: Name
   return `${logDescription.name}({ ${prettyEntries.join(", ")} })`;
 };
 
-export const logsToString = (receipt: TransactionReceipt, contracts: Record<string, Contract>) => {
+export const logsToString = (
+  receipt: TransactionReceipt,
+  contracts: Record<string, Contract>
+): string => {
   const interfaceLookup = interfaceLookupFrom(contracts);
   const contractNameLookup = nameLookupFrom(contracts);
 

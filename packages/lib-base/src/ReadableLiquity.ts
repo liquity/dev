@@ -5,11 +5,32 @@ import { StabilityDeposit } from "./StabilityDeposit";
 import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
 
+/**
+ * Represents whether an address has been registered as a Liquity frontend.
+ *
+ * @remarks
+ * Returned by the {@link ReadableLiquity.getFrontendStatus | getFrontendStatus()} function.
+ *
+ * When `status` is `"registered"`, `kickbackRate` gives the frontend's kickback rate as a
+ * {@link @liquity/decimal#Decimal} between 0 and 1.
+ *
+ * @public
+ */
 export type FrontendStatus =
   | { status: "unregistered" }
   | { status: "registered"; kickbackRate: Decimal };
 
+/** @public */
 export interface ReadableLiquity {
+  /**
+   * Get the total collateral and debt per stake that has been liquidated through redistribution.
+   *
+   * @remarks
+   * Needed when dealing with instances of {@link TroveWithPendingRewards}.
+   *
+   * @example
+   * See {@link ReadableLiquity.getLastTroves | getLastTroves()} for an example of how it's used.
+   */
   getTotalRedistributed(): Promise<Trove>;
 
   getTroveWithoutRewards(address?: string): Promise<TroveWithPendingRewards>;

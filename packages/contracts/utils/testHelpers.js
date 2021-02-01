@@ -811,14 +811,14 @@ class TestHelper {
 
   // --- Redemption functions ---
 
-  static async redeemCollateral(redeemer, contracts, LUSDAmount, maxFee = 0) {
+  static async redeemCollateral(redeemer, contracts, LUSDAmount, maxFee = this._100pct) {
     const price = await contracts.priceFeedTestnet.getPrice()
     const tx = await this.performRedemptionTx(redeemer, price, contracts, LUSDAmount, maxFee)
     const gas = await this.gasUsed(tx)
     return gas
   }
 
-  static async redeemCollateralAndGetTxObject(redeemer, contracts, LUSDAmount, maxFee = 0) {
+  static async redeemCollateralAndGetTxObject(redeemer, contracts, LUSDAmount, maxFee = this._100pct) {
     const price = await contracts.priceFeedTestnet.getPrice()
     const tx = await this.performRedemptionTx(redeemer, price, contracts, LUSDAmount, maxFee)
     return tx
@@ -1051,6 +1051,7 @@ class TestHelper {
 
 TestHelper.ZERO_ADDRESS = '0x' + '0'.repeat(40)
 TestHelper.maxBytes32 = '0x' + 'f'.repeat(64)
+TestHelper._100pct = '1000000000000000000'
 TestHelper.latestRandomSeed = 31337
 
 module.exports = {

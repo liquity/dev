@@ -3,7 +3,7 @@ import CopyToClipboard from "react-copy-to-clipboard";
 import { Card, Button, Text, Box, Heading, Flex } from "theme-ui";
 
 import { Percent } from "@liquity/decimal";
-import { Trove } from "@liquity/lib-base";
+import { MINIMUM_COLLATERAL_RATIO, CRITICAL_COLLATERAL_RATIO } from "@liquity/lib-base";
 import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -260,9 +260,9 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                         {(collateralRatio => (
                           <Text
                             color={
-                              collateralRatio.gt(Trove.CRITICAL_COLLATERAL_RATIO)
+                              collateralRatio.gt(CRITICAL_COLLATERAL_RATIO)
                                 ? "success"
-                                : collateralRatio.gt(Trove.MINIMUM_COLLATERAL_RATIO)
+                                : collateralRatio.gt(MINIMUM_COLLATERAL_RATIO)
                                 ? "warning"
                                 : "danger"
                             }

@@ -23,13 +23,12 @@ const select = ({
   lusdBalance,
   numberOfTroves,
   frontend,
-  frontendTag,
   ownFrontend
 }: LiquityStoreState) => ({
   trove,
   lusdBalance,
   numberOfTroves,
-  frontendTag: frontend.status === "registered" ? frontendTag : undefined,
+  frontendRegistered: frontend.status === "registered",
   noOwnFrontend: ownFrontend.status === "unregistered"
 });
 
@@ -41,13 +40,20 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   dispatch
 }) => {
-  const { trove, lusdBalance, numberOfTroves, frontendTag, noOwnFrontend } = useLiquitySelector(
-    select
-  );
+  const {
+    trove,
+    lusdBalance,
+    numberOfTroves,
+    frontendRegistered,
+    noOwnFrontend
+  } = useLiquitySelector(select);
 
   const {
+    config,
     liquity: { send: liquity }
   } = useLiquity();
+
+  const frontendTag = frontendRegistered ? config.frontendTag : undefined;
 
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(/^stability-deposit-/);

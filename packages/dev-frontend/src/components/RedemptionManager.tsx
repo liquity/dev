@@ -20,10 +20,18 @@ type RedemptionActionProps = {
   setChangePending: (isPending: boolean) => void;
 };
 
-const selectForRedemptionAction = ({ price, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
+const selectForRedemptionAction = ({
   price,
   lusdBalance,
-  numberOfTroves
+  numberOfTroves,
+  fees,
+  total
+}: LiquityStoreState) => ({
+  price,
+  lusdBalance,
+  numberOfTroves,
+  fees,
+  total
 });
 
 const RedemptionAction: React.FC<RedemptionActionProps> = ({
@@ -32,7 +40,10 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   changePending,
   setChangePending
 }) => {
-  const { price, lusdBalance, numberOfTroves } = useLiquitySelector(selectForRedemptionAction);
+  const { price, lusdBalance, numberOfTroves, fees, total } = useLiquitySelector(
+    selectForRedemptionAction
+  );
+
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -55,7 +66,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     return null;
   }
 
-  const send = liquity.redeemLUSD.bind(liquity, amount, { price, numberOfTroves });
+  const send = liquity.redeemLUSD.bind(liquity, amount, { price, numberOfTroves, fees, total });
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">

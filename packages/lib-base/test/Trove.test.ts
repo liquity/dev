@@ -2,30 +2,36 @@ import assert from "assert";
 import { describe, it } from "mocha";
 import fc from "fast-check";
 
-import { Trove, Trovish, emptyTrove } from "../src/Trove";
+import { Decimal } from "@liquity/decimal";
 
-const trove = (t: Trovish) => new Trove(t);
+import { LUSD_LIQUIDATION_RESERVE } from "../src/constants";
+import { Trove, _emptyTrove } from "../src/Trove";
+
+const minDebt = Number(LUSD_LIQUIDATION_RESERVE);
+
+const trove = ({ collateral = 0, debt = 0 }) =>
+  new Trove(Decimal.from(collateral), Decimal.from(debt));
 
 const onlyCollateral = () => fc.record({ collateral: fc.float({ min: 0.1 }) }).map(trove);
 
-const onlyDebt = () => fc.record({ debt: fc.float({ min: 10, max: 100 }) }).map(trove);
+const onlyDebt = () => fc.record({ debt: fc.float({ min: minDebt, max: 100 }) }).map(trove);
 
 const bothCollateralAndDebt = () =>
   fc
-    .record({ collateral: fc.float({ min: 0.1 }), debt: fc.float({ min: 10, max: 100 }) })
+    .record({ collateral: fc.float({ min: 0.1 }), debt: fc.float({ min: minDebt, max: 100 }) })
     .map(trove);
 
 const arbitraryTrove = () =>
   fc.record({ collateral: fc.float(), debt: fc.float({ max: 100 }) }).map(trove);
 
 const validTrove = () =>
-  fc.record({ collateral: fc.float(), debt: fc.float({ min: 10, max: 100 }) }).map(trove);
+  fc.record({ collateral: fc.float(), debt: fc.float({ min: minDebt, max: 100 }) }).map(trove);
 
 const validNonEmptyTrove = () => validTrove().filter(t => !t.isEmpty);
 
 describe("Trove", () => {
   it("applying undefined diff should yield the same Trove", () => {
-    const trove = new Trove({ collateral: 1, debt: 111 });
+    const trove = new Trove(Decimal.from(1), Decimal.from(111));
 
     assert(trove.apply(undefined) === trove);
   });
@@ -33,7 +39,7 @@ describe("Trove", () => {
   it("applying diff of empty from `b` to `a` should always yield empty", () => {
     fc.assert(
       fc.property(validNonEmptyTrove(), validNonEmptyTrove(), (a, b) =>
-        a.apply(b.whatChanged(emptyTrove)).equals(emptyTrove)
+        a.apply(b.whatChanged(_emptyTrove)).equals(_emptyTrove)
       )
     );
   });

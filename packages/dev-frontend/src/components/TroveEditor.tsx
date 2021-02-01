@@ -2,7 +2,13 @@ import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Percent, Difference, Decimalish, Decimal } from "@liquity/decimal";
-import { Trove, LiquityStoreState, TroveChange } from "@liquity/lib-base";
+import {
+  CRITICAL_COLLATERAL_RATIO,
+  MINIMUM_COLLATERAL_RATIO,
+  Trove,
+  LiquityStoreState,
+  TroveChange
+} from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN } from "../strings";
@@ -121,11 +127,11 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
               : collateralRatioPct.prettify()
           }
           color={
-            collateralRatio?.gt(Trove.CRITICAL_COLLATERAL_RATIO)
+            collateralRatio?.gt(CRITICAL_COLLATERAL_RATIO)
               ? "success"
-              : collateralRatio?.gt(Trove.MINIMUM_COLLATERAL_RATIO)
+              : collateralRatio?.gt(MINIMUM_COLLATERAL_RATIO)
               ? "warning"
-              : collateralRatio?.lte(Trove.MINIMUM_COLLATERAL_RATIO)
+              : collateralRatio?.lte(MINIMUM_COLLATERAL_RATIO)
               ? "danger"
               : "muted"
           }

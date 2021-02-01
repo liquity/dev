@@ -290,19 +290,6 @@
   },
   {
     "inputs": [],
-    "name": "R_MCR",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "_100pct",
     "outputs": [
       {
@@ -349,7 +336,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_maxFee",
+        "name": "_maxFeePercentage",
         "type": "uint256"
       },
       {
@@ -534,7 +521,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_maxFee",
+        "name": "_maxFeePercentage",
         "type": "uint256"
       },
       {
@@ -718,7 +705,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_maxFee",
+        "name": "_maxFeePercentage",
         "type": "uint256"
       },
       {

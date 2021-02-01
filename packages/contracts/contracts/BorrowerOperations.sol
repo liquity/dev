@@ -125,10 +125,11 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     // --- Borrower Trove Operations ---
 
-    function openTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external payable override {
-        uint price = priceFeed.fetchPrice();
-
+    function openTrove(uint _maxFeePercentage, uint _LUSDAmount, address _upperHint, address _lowerHint) external payable override {
+        if (_LUSDAmount > 0) {_requireValidMaxFeePercentage(_maxFeePercentage);}
         _requireTroveisNotActive(msg.sender);
+
+        uint price = priceFeed.fetchPrice();
 
         uint LUSDFee;
         uint rawDebt = _LUSDAmount;
@@ -136,7 +137,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         bool isRecoveryMode = _checkRecoveryMode(price);
 
         if (!isRecoveryMode && _LUSDAmount > 0) {
-            LUSDFee = _triggerBorrowingFee(_LUSDAmount, _maxFee);
+            LUSDFee = _triggerBorrowingFee(_LUSDAmount, _maxFeePercentage);
             rawDebt = rawDebt.add(LUSDFee);
         }
 
@@ -194,8 +195,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     }
 
     // Withdraw LUSD tokens from a trove: mint new LUSD tokens to the owner, and increase the trove's debt accordingly
-    function withdrawLUSD(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external override {
-        _adjustTrove(msg.sender, 0, _LUSDAmount, true, _upperHint, _lowerHint, _maxFee);
+    function withdrawLUSD(uint _maxFeePercentage, uint _LUSDAmount, address _upperHint, address _lowerHint) external override {
+        _adjustTrove(msg.sender, 0, _LUSDAmount, true, _upperHint, _lowerHint, _maxFeePercentage);
     }
 
     // Repay LUSD tokens to a Trove: Burn the repaid LUSD tokens, and reduce the trove's debt accordingly
@@ -203,8 +204,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         _adjustTrove(msg.sender, 0, _LUSDAmount, false, _upperHint, _lowerHint, 0);
     }
 
-    function adjustTrove(uint _maxFee, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint) external payable override {
-        _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint, _maxFee);
+    function adjustTrove(uint _maxFeePercentage, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint) external payable override {
+        _adjustTrove(msg.sender, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint, _maxFeePercentage);
     }
 
     /*
@@ -214,7 +215,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     *
     * If both are positive, it will revert.
     */
-    function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint _maxFee) internal {
+    function _adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint _maxFeePercentage) internal {
+        if (_isDebtIncrease) {_requireValidMaxFeePercentage(_maxFeePercentage);} 
         _requireSingularCollChange(_collWithdrawal);
         _requireNonZeroAdjustment(_collWithdrawal, _debtChange);
         _requireTroveisActive(_borrower);
@@ -238,12 +240,12 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         vars.rawDebtChange = _debtChange;
 
-        // If the adjustment incorporates a debt increase, then trigger a borrowing fee
+        // If the adjustment incorporates a debt increase and system is in Normal Mode, then trigger a borrowing fee
         if (_isDebtIncrease) {
             _requireNonZeroDebtChange(_debtChange);
            
             if (!isRecoveryMode) {
-                vars.LUSDFee = _triggerBorrowingFee(_debtChange, _maxFee);
+                vars.LUSDFee = _triggerBorrowingFee(_debtChange, _maxFeePercentage);
                 vars.rawDebtChange = vars.rawDebtChange.add(vars.LUSDFee); // The raw debt change includes the fee
             }
         }
@@ -320,11 +322,11 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     // --- Helper functions ---
 
-    function _triggerBorrowingFee(uint _debtChange, uint _maxFee) internal returns (uint) {  
+    function _triggerBorrowingFee(uint _debtChange, uint _maxFeePercentage) internal returns (uint) {  
         troveManager.decayBaseRateFromBorrowing(); // decay the baseRate state variable
         uint LUSDFee = troveManager.getBorrowingFee(_debtChange);
 
-        _requireBorrowerAcceptsFee(LUSDFee, _maxFee);
+        _requireUserAcceptsFee(LUSDFee, _debtChange, _maxFeePercentage);
         
         // Send fee to LQTY staking contract
         lqtyStaking.increaseF_LUSD(LUSDFee);
@@ -443,10 +445,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     function _requireNonZeroDebtChange(uint _debtChange) internal pure {
         require(_debtChange > 0, "BorrowerOps: Debt increase requires non-zero debtChange");
-    }
-
-    function _requireBorrowerAcceptsFee(uint _LUSDFee, uint _maxFee) internal pure {
-        require(_LUSDFee <= _maxFee || _maxFee == 0, "BorrowerOps: issuance fee exceeded provided max");
     }
    
     function _requireNotInRecoveryMode(uint _price) internal view {
