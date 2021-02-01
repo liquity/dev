@@ -10,10 +10,14 @@ library LiquityMath {
 
     uint internal constant DECIMAL_PRECISION = 1e18;
 
-    /* Precision for Nominal ICR (independent of price). Rational for the value:
+    /* Precision for Nominal ICR (independent of price). Rationale for the value:
+     *
      * - Making it “too high” could lead to overflows.
-     * - Making it “too low” could lead to a zero ICR (there’s an issue in ToB audit about that)
-     * We are quite safe with these value, as it mimics an ETH price of $100 (so, 20 is 18 for the usual decimals and 2 for $100 price).
+     * - Making it “too low” could lead to an ICR equal to zero, due to truncation from Solidity floor division. 
+     *
+     * This value of 1e20 is chosen for safety: the NICR will only overflow for numerator > ~1e39 ETH,
+     * and will only truncate to 0 if the denominator is at least 1e20 times greater than the numerator.
+     *
      */
     uint internal constant NICR_PRECISION = 1e20;
 
@@ -25,9 +29,10 @@ library LiquityMath {
         return (_a >= _b) ? _a : _b;
     }
 
-    /* multiply two decimal numbers and use normal rounding rules:
-    * -round product up if 19th mantissa digit >= 5
-    * -round product down if 19th mantissa digit < 5
+    /* 
+    * Multiply two decimal numbers and use normal rounding rules:
+    * -round product up if 19'th mantissa digit >= 5
+    * -round product down if 19'th mantissa digit < 5
     *
     * Used only inside the exponentiation, _decPow().
     */
@@ -37,7 +42,9 @@ library LiquityMath {
         decProd = prod_xy.add(DECIMAL_PRECISION / 2).div(DECIMAL_PRECISION);
     }
 
-    /* _decPow: Exponentiation function for 18-digit decimal base, and integer exponent n. 
+    /* 
+    * _decPow: Exponentiation function for 18-digit decimal base, and integer exponent n.
+    * 
     * Uses the efficient "exponentiation by squaring" algorithm. O(log(n)) complexity. 
     * 
     * Called by two functions that represent time in units of minutes:

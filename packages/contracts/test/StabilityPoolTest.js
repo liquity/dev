@@ -465,7 +465,7 @@ contract('StabilityPool', async accounts => {
       const defaultedDebt_Before = (await defaultPool.getLUSDDebt()).toString()
       const activeColl_Before = (await activePool.getETH()).toString()
       const defaultedColl_Before = (await defaultPool.getETH()).toString()
-      const TCR_Before = (await troveManager.getTCR()).toString()
+      const TCR_Before = (await th.getTCR(contracts)).toString()
 
       // D makes an SP deposit
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: dennis })
@@ -475,7 +475,7 @@ contract('StabilityPool', async accounts => {
       const defaultedDebt_After = (await defaultPool.getLUSDDebt()).toString()
       const activeColl_After = (await activePool.getETH()).toString()
       const defaultedColl_After = (await defaultPool.getETH()).toString()
-      const TCR_After = (await troveManager.getTCR()).toString()
+      const TCR_After = (await th.getTCR(contracts)).toString()
 
       // Check total system debt, collateral and TCR have not changed after a Stability deposit is made
       assert.equal(activeDebt_Before, activeDebt_After)
@@ -779,7 +779,7 @@ contract('StabilityPool', async accounts => {
 
       // Price drops, defaulter is liquidated, A, B and C earn ETH
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
 
@@ -917,7 +917,7 @@ contract('StabilityPool', async accounts => {
 
       // Perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
 
@@ -1046,7 +1046,7 @@ contract('StabilityPool', async accounts => {
 
       // Price drops, defaulter is liquidated, A, B, C, D earn ETH
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
 
@@ -1298,7 +1298,7 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
 
@@ -1920,7 +1920,7 @@ contract('StabilityPool', async accounts => {
       const defaultedDebt_Before = (await defaultPool.getLUSDDebt()).toString()
       const activeColl_Before = (await activePool.getETH()).toString()
       const defaultedColl_Before = (await defaultPool.getETH()).toString()
-      const TCR_Before = (await troveManager.getTCR()).toString()
+      const TCR_Before = (await th.getTCR(contracts)).toString()
 
       // Carol withdraws her Stability deposit 
       assert.equal(((await stabilityPool.deposits(carol))[0]).toString(), dec(300, 18))
@@ -1931,7 +1931,7 @@ contract('StabilityPool', async accounts => {
       const defaultedDebt_After = (await defaultPool.getLUSDDebt()).toString()
       const activeColl_After = (await activePool.getETH()).toString()
       const defaultedColl_After = (await defaultPool.getETH()).toString()
-      const TCR_After = (await troveManager.getTCR()).toString()
+      const TCR_After = (await th.getTCR(contracts)).toString()
 
       // Check total system debt, collateral and TCR have not changed after a Stability deposit is made
       assert.equal(activeDebt_Before, activeDebt_After)
@@ -2106,7 +2106,7 @@ contract('StabilityPool', async accounts => {
       // Price drops
       await priceFeed.setPrice(dec(100, 18))
 
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       // Defaulter 1 liquidated, full offset
       await troveManager.liquidate(defaulter_1)
@@ -2253,13 +2253,13 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(50, 18), frontEnd_1, { from: bob })
       await stabilityPool.provideToSP(dec(30, 18), frontEnd_1, { from: carol })
 
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       // Price drops
       await priceFeed.setPrice(dec(105, 18))
       const price = await priceFeed.getPrice()
 
-      assert.isTrue(await troveManager.checkRecoveryMode())
+      assert.isTrue(await th.checkRecoveryMode(contracts))
 
       // Liquidate defaulter 1
       await troveManager.liquidate(defaulter_1)
@@ -2615,7 +2615,7 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
 
@@ -2739,7 +2739,7 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
 
@@ -2824,7 +2824,7 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
 
@@ -2899,7 +2899,7 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
@@ -2940,7 +2940,7 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a trove, price drops, defaulter gets liquidated
       await borrowerOperations.openTrove(th._100pct, dec(0, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
@@ -3208,13 +3208,13 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(50, 18), frontEnd_1, { from: bob })
       await stabilityPool.provideToSP(dec(30, 18), frontEnd_1, { from: carol })
 
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       // Price drops to 105, 
       await priceFeed.setPrice(dec(105, 18))
       const price = await priceFeed.getPrice()
 
-      assert.isTrue(await troveManager.checkRecoveryMode())
+      assert.isTrue(await th.checkRecoveryMode(contracts))
 
       // Check defaulter 1 has ICR: 100% < ICR < 110%.
       assert.isTrue(await th.ICRbetween100and110(defaulter_1, troveManager, price))
@@ -3296,7 +3296,7 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a trove, price drops, defaulter gets liquidated
       await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
@@ -3342,7 +3342,7 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a trove, price drops, defaulter gets liquidated
       await borrowerOperations.openTrove(th._100pct, dec(0, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
@@ -3388,7 +3388,7 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a trove, price drops, defaulter gets liquidated
       await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
@@ -3436,7 +3436,7 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a trove, price drops, defaulter gets liquidated
       await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
@@ -3488,7 +3488,7 @@ contract('StabilityPool', async accounts => {
       // Defaulter opens a trove, price drops, defaulter gets liquidated
       await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
@@ -3551,7 +3551,7 @@ contract('StabilityPool', async accounts => {
 
       // perform a liquidation to make 0 < P < 1, and S > 0
       await priceFeed.setPrice(dec(100, 18))
-      assert.isFalse(await troveManager.checkRecoveryMode())
+      assert.isFalse(await th.checkRecoveryMode(contracts))
 
       await troveManager.liquidate(defaulter_1)
 

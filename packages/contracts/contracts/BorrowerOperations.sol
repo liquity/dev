@@ -129,12 +129,12 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         if (_LUSDAmount > 0) {_requireValidMaxFeePercentage(_maxFeePercentage);}
         _requireTroveisNotActive(msg.sender);
 
-        uint price = priceFeed.getPrice();
+        uint price = priceFeed.fetchPrice();
 
         uint LUSDFee;
         uint rawDebt = _LUSDAmount;
 
-        bool isRecoveryMode = _checkRecoveryMode();
+        bool isRecoveryMode = _checkRecoveryMode(price);
 
         if (!isRecoveryMode && _LUSDAmount > 0) {
             LUSDFee = _triggerBorrowingFee(_LUSDAmount, _maxFeePercentage);
@@ -228,10 +228,10 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease; 
         if (isWithdrawal) {_requireCallerIsBorrower(_borrower);}
 
-        bool isRecoveryMode = _checkRecoveryMode();
-
         LocalVariables_adjustTrove memory vars;
-        vars.price = priceFeed.getPrice();
+
+        vars.price = priceFeed.fetchPrice();
+        bool isRecoveryMode = _checkRecoveryMode(vars.price);
 
         troveManager.applyPendingRewards(_borrower);
 
@@ -289,7 +289,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     function closeTrove() external override {
         _requireTroveisActive(msg.sender);
-        _requireNotInRecoveryMode();
+        uint price = priceFeed.fetchPrice();
+        _requireNotInRecoveryMode(price);
 
         troveManager.applyPendingRewards(msg.sender);
 
@@ -446,8 +447,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         require(_debtChange > 0, "BorrowerOps: Debt increase requires non-zero debtChange");
     }
    
-    function _requireNotInRecoveryMode() internal view {
-        require(!_checkRecoveryMode(), "BorrowerOps: Operation not permitted during Recovery Mode");
+    function _requireNotInRecoveryMode(uint _price) internal view {
+        require(!_checkRecoveryMode(_price), "BorrowerOps: Operation not permitted during Recovery Mode");
     }
 
     function _requireValidNewICRandValidNewTCR(bool _isRecoveryMode, uint _oldICR, uint _newICR, uint _newTCR) internal pure {

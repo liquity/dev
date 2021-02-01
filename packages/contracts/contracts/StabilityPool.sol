@@ -877,8 +877,8 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         require(msg.sender == address(troveManager), "StabilityPool: Caller is not TroveManager");
     }
 
-    function _requireNoUnderCollateralizedTroves() internal view {
-        uint price = priceFeed.getPrice();
+    function _requireNoUnderCollateralizedTroves() internal {
+        uint price = priceFeed.fetchPrice();
         address lowestTrove = sortedTroves.getLast();
         uint ICR = troveManager.getCurrentICR(lowestTrove, price);
         require(ICR >= MCR, "StabilityPool: Cannot withdraw while there are troves with ICR < MCR");

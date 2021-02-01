@@ -363,7 +363,7 @@ contract('Gas compensation tests', async accounts => {
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price_1))
     assert.isTrue(aliceCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
@@ -396,7 +396,7 @@ contract('Gas compensation tests', async accounts => {
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price_2))
     assert.isTrue(bobCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
     await troveManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
@@ -429,7 +429,7 @@ contract('Gas compensation tests', async accounts => {
     const carolCollValueInUSD = (await borrowerOperationsTester.getUSDValue(carolColl, price_3))
     assert.isTrue(carolCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_C = web3.utils.toBN(await web3.eth.getBalance(liquidator))
     await troveManager.liquidate(carol, { from: liquidator, gasPrice: 0 })
@@ -489,7 +489,7 @@ contract('Gas compensation tests', async accounts => {
     const aliceCollFractionInUSD = (await borrowerOperationsTester.getUSDValue(_0pt5percent_aliceColl, price_1))
     assert.isTrue(aliceCollFractionInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     const aliceICR = await troveManager.getCurrentICR(alice, price_1)
     assert.isTrue(aliceICR.lt(mv._MCR))
@@ -537,7 +537,7 @@ contract('Gas compensation tests', async accounts => {
     const bobCollFractionInUSD = (await borrowerOperationsTester.getUSDValue(_0pt5percent_bobColl, price_2))
     assert.isTrue(bobCollFractionInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     const bobICR = await troveManager.getCurrentICR(bob, price_2)
     assert.isTrue(bobICR.lte(mv._MCR))
@@ -602,7 +602,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isAtMost(th.getDifference(_0pt5percent_aliceColl, '50005000000000000'), 1000)
     assert.isTrue(aliceCollFractionInUSD.gt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     const aliceICR = await troveManager.getCurrentICR(alice, price_1)
     assert.isTrue(aliceICR.lt(mv._MCR))
@@ -645,7 +645,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isAtMost(th.getDifference(_0pt5percent_bobColl, '187500000000000000'), 1000)
     assert.isTrue(bobCollFractionInUSD.gt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     const bobICR = await troveManager.getCurrentICR(bob, price_1)
     assert.isTrue(bobICR.lt(mv._MCR))
@@ -706,7 +706,7 @@ contract('Gas compensation tests', async accounts => {
     const aliceCollValueInUSD = (await borrowerOperationsTester.getUSDValue(aliceColl, price_1))
     assert.isTrue(aliceCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidationTxA = await troveManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
@@ -738,7 +738,7 @@ contract('Gas compensation tests', async accounts => {
     const bobCollValueInUSD = (await borrowerOperationsTester.getUSDValue(bobColl, price_2))
     assert.isTrue(bobCollValueInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidationTxB = await troveManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
 
@@ -798,7 +798,7 @@ contract('Gas compensation tests', async accounts => {
     const aliceCollFractionInUSD = (await borrowerOperationsTester.getUSDValue(_0pt5percent_aliceColl, price_1))
     assert.isTrue(aliceCollFractionInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     const aliceICR = await troveManager.getCurrentICR(alice, price_1)
     assert.isTrue(aliceICR.lt(mv._MCR))
@@ -841,7 +841,7 @@ contract('Gas compensation tests', async accounts => {
     const bobCollFractionInUSD = (await borrowerOperationsTester.getUSDValue(_0pt5percent_bobColl, price_2))
     assert.isTrue(bobCollFractionInUSD.lt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     const bobICR = await troveManager.getCurrentICR(bob, price_2)
     assert.isTrue(bobICR.lte(mv._MCR))
@@ -902,7 +902,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isAtMost(th.getDifference(_0pt5percent_aliceColl, '50005000000000000'), 1000)
     assert.isTrue(aliceCollFractionInUSD.gt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     const aliceICR = await troveManager.getCurrentICR(alice, price_1)
     assert.isTrue(aliceICR.lt(mv._MCR))
@@ -940,7 +940,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isAtMost(th.getDifference(_0pt5percent_bobColl, '187500000000000000'), 1000)
     assert.isTrue(bobCollFractionInUSD.gt(th.toBN(dec(10, 18))))
 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     const bobICR = await troveManager.getCurrentICR(bob, price_1)
     assert.isTrue(bobICR.lt(mv._MCR))
@@ -989,7 +989,7 @@ contract('Gas compensation tests', async accounts => {
     const price = await priceFeed.getPrice()
 
     // Check not in Recovery Mode 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // Check A, B, C, D have ICR < MCR
     assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(mv._MCR))
@@ -1097,7 +1097,7 @@ contract('Gas compensation tests', async accounts => {
     const price = await priceFeed.getPrice()
 
     // Check not in Recovery Mode 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // Check A, B, C, D have ICR < MCR
     assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(mv._MCR))
@@ -1207,7 +1207,7 @@ contract('Gas compensation tests', async accounts => {
     const price = await priceFeed.getPrice()
 
     // Check not in Recovery Mode 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // Check A, B, C, D have ICR < MCR
     assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(mv._MCR))
@@ -1311,7 +1311,7 @@ contract('Gas compensation tests', async accounts => {
     const price = await priceFeed.getPrice()
 
     // Check not in Recovery Mode 
-    assert.isFalse(await troveManager.checkRecoveryMode())
+    assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // Check A, B, C, D have ICR < MCR
     assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(mv._MCR))
