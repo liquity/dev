@@ -19,6 +19,7 @@ contract MockAggregator is AggregatorV3Interface {
 
     bool latestRevert;
     bool prevRevert;
+    bool decimalsRevert;
 
     // --- Functions ---
 
@@ -50,6 +51,10 @@ contract MockAggregator is AggregatorV3Interface {
         prevRevert = !prevRevert;
     }
 
+    function setDecimalsRevert() external returns (bool) {
+        decimalsRevert = !decimalsRevert;
+    }
+
     function setLatestRoundId(uint80 _latestRoundId) external {
         latestRoundId = _latestRoundId;
     }
@@ -62,6 +67,10 @@ contract MockAggregator is AggregatorV3Interface {
     // --- Getters that adhere to the AggregatorV3 interface ---
 
     function decimals() external override view returns (uint8) {
+        if (decimalsRevert) {
+            console.log("decimals reverted");
+            require(1== 0, "decimals reverted");}
+
         return decimalsVal;
     }
 

@@ -44,7 +44,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     */
     uint constant public MAX_PRICE_DIFFERENCE_FOR_RETURN = 3e16; // 3%
 
-    uint8 public prevChainlinkDigits;  
     uint public lastGoodPrice;
 
     struct ChainlinkResponse {
@@ -52,6 +51,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         int256 answer;
         uint256 timestamp;
         bool success;
+        uint8 digits;
     }
 
     struct TellorResponse {
@@ -87,12 +87,11 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         // Get an initial price from Chainlink to serve as first reference for lastGoodPrice
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
-        uint8 currentChainlinkDigits = priceAggregator.decimals();
-
+        
         require(!_chainlinkIsBroken(chainlinkResponse) && !_chainlinkIsFrozen(chainlinkResponse), 
             "PriceFeed: Chainlink must be working and current");
 
-        _storeChainlinkData(chainlinkResponse, currentChainlinkDigits);
+        _storeChainlinkData(chainlinkResponse);
 
         _renounceOwnership();
     }
@@ -108,8 +107,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     function fetchPrice() external override returns (uint) {
         // Get current price data from chainlink
         ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
-        uint8 currentChainlinkDigits = priceAggregator.decimals();
-
+    
         // --- Case 1: System fetched last price from Chainlink  ---
         if (status == Status.usingChainlink) {
             console.log("case 1");
@@ -118,7 +116,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
             // If Chainlink is broken, or price has deviated too much from its last value, try Tellor
             if (_chainlinkIsBroken(chainlinkResponse) ||  
-                _chainlinkPriceChangeAboveMax(chainlinkResponse, currentChainlinkDigits, prevChainlinkResponse)) 
+                _chainlinkPriceChangeAboveMax(chainlinkResponse, prevChainlinkResponse)) 
             {
                 console.log("chainlink is broken or price deviation > max");
                TellorResponse memory tellorResponse = _getCurrentTellorResponse();
@@ -176,7 +174,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
             // If Chainlink is working, return its current price
             console.log("chainlink is working");
-            uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse, currentChainlinkDigits);
+            uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse);
             return scaledChainlinkPrice;    
         }
 
@@ -187,10 +185,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             TellorResponse memory tellorResponse = _getCurrentTellorResponse();
           
             // If both Tellor and Chainlink are live and reporting similar prices, switch back to Chainlink
-            if (_bothOraclesLiveAndSimilarPrice(chainlinkResponse, currentChainlinkDigits, tellorResponse)) {
+            if (_bothOraclesLiveAndSimilarPrice(chainlinkResponse, tellorResponse)) {
                 console.log("both chainlink and tellor are working");
                 _changeStatus(Status.usingChainlink);
-                uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse, currentChainlinkDigits);
+                uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse);
                 return scaledChainlinkPrice;
             }
 
@@ -225,10 +223,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             * If both oracles are now back online and close together in price, we assume that they are reporting
             * accurately, and so we switch back to Chainlink.
             */
-            if (_bothOraclesLiveAndSimilarPrice(chainlinkResponse, currentChainlinkDigits, tellorResponse)) {
+            if (_bothOraclesLiveAndSimilarPrice(chainlinkResponse, tellorResponse)) {
                 console.log("both chainlink and tellor are working");
                 _changeStatus(Status.usingChainlink);
-                uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse, currentChainlinkDigits);
+                uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse);
                 return scaledChainlinkPrice;
             } 
 
@@ -261,7 +259,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             if (!_chainlinkIsFrozen(chainlinkResponse)) {
                 console.log("chainlink is live");
                 _changeStatus(Status.usingChainlink);
-                uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse, currentChainlinkDigits);
+                uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse);
                 return scaledChainlinkPrice;
             }
 
@@ -298,7 +296,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             // If Chainlink is live, switch back to it
             console.log("chainlink is live");
             _changeStatus(Status.usingChainlink);
-            uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse, currentChainlinkDigits);
+            uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse);
             return scaledChainlinkPrice;
         }
     }
@@ -325,9 +323,9 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return false;
     }
 
-    function _chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, uint8 _currentDigits, ChainlinkResponse memory _prevResponse) internal view returns (bool) {
-        uint currentScaledPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.answer), _currentDigits);
-        uint prevScaledPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.answer), prevChainlinkDigits);
+    function _chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, ChainlinkResponse memory _prevResponse) internal view returns (bool) {
+        uint currentScaledPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.answer), _currentResponse.digits);
+        uint prevScaledPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.answer), _prevResponse.digits);
         
         uint deviation = LiquityMath._getAbsoluteDifference(currentScaledPrice, prevScaledPrice).mul(DECIMAL_PRECISION).div(prevScaledPrice);
          
@@ -349,7 +347,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return block.timestamp.sub(_tellorResponse.timestamp) > TIMEOUT;
     }
 
-    function _bothOraclesLiveAndSimilarPrice(ChainlinkResponse memory _chainlinkResponse, uint _chainlinkDigits, TellorResponse memory _tellorResponse) internal view returns (bool) {
+    function _bothOraclesLiveAndSimilarPrice(ChainlinkResponse memory _chainlinkResponse, TellorResponse memory _tellorResponse) internal view returns (bool) {
         // Return false if either oracle is broken or frozen
         if 
         (
@@ -363,7 +361,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             return false;
         }
 
-        uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.answer), _chainlinkDigits);
+        uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.answer), _chainlinkResponse.digits);
         uint scaledTellorPrice = _scaleTellorPriceByDigits(_tellorResponse.value);
         
         // Get the relative price difference between the oracles
@@ -410,9 +408,8 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         emit LastGoodPriceUpdated(_lastGoodPrice);
     }
 
-    function _storeChainlinkData(ChainlinkResponse memory chainlinkResponse, uint8 _currentDigits) internal returns (uint) {
-        prevChainlinkDigits = _currentDigits;
-        uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), _currentDigits);
+    function _storeChainlinkData(ChainlinkResponse memory chainlinkResponse) internal returns (uint) {
+        uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(chainlinkResponse.answer), chainlinkResponse.digits);
         _storeLastGoodPrice(scaledChainlinkPrice);
 
         return scaledChainlinkPrice;
@@ -442,6 +439,16 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     function _getCurrentChainlinkResponse() internal view returns (ChainlinkResponse memory chainlinkResponse) {
+        // First, try to get current digits:
+        try priceAggregator.decimals() returns (uint8 decimals) {
+            // If call to Chainlink succeeds, record the current digits
+            chainlinkResponse.digits = decimals;
+        } catch {
+            // If call to Chainlink aggregator reverts, return a zero response with success = false
+            return chainlinkResponse;
+        }
+        
+        // Secondly, try to get latest price data:
         try priceAggregator.latestRoundData() returns 
         (
             uint80 roundId,
@@ -464,6 +471,21 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     function _getPrevChainlinkResponse(uint80 _currentRoundId) internal view returns (ChainlinkResponse memory prevChainlinkResponse) {
+        /* 
+        * First, try to get current digits.
+        * NOTE:  Chainlink only offers a current decimals() value - there is no way to obtain the decimals used in a previous round,
+        * so we use the current digits, and assume/hope they have not changed between two consecutive rounds checked by Liquity
+        * in a price fetch.
+        */
+        try priceAggregator.decimals() returns (uint8 decimals) {
+            // If call to Chainlink succeeds, record the current digits
+            prevChainlinkResponse.digits = decimals;
+        } catch {
+            // If call to Chainlink aggregator reverts, return a zero response with success = false
+            return prevChainlinkResponse;
+        }
+        
+        // Secondly, try to get the price data from the previous round:
         try priceAggregator.getRoundData(_currentRoundId - 1) returns 
         (
             uint80 roundId,
