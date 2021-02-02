@@ -1337,7 +1337,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(123, 18))
   })
 
-  it.only("usingTellorChainlinkFrozen - when Chainlink still frozen and Tellor freezes, stay on usingTellorChainlinkFrozen", async () => { 
+  it("usingTellorChainlinkFrozen - when Chainlink still frozen and Tellor freezes, stay on usingTellorChainlinkFrozen", async () => { 
     await setAddresses()
     priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
 
@@ -1365,7 +1365,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(status, 3)  // status 3: using tellor, chainlink frozn
   })
 
-  it.only("usingTellorChainlinkFrozen - when Chainlink still frozen and Tellor freezes, use the last good price", async () => { 
+  it("usingTellorChainlinkFrozen - when Chainlink still frozen and Tellor freezes, use the last good price", async () => { 
     await setAddresses()
     priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
 
@@ -1394,7 +1394,7 @@ contract('PriceFeed', async accounts => {
   })
 
   // --- Case 5 ---
-  it("tellorFrozenChainlinkBroken - when Chainlink is live, switch back to Chainlink", async () => {
+  it("tellorBrokenChainlinkFrozen - when Chainlink is live, switch back to Chainlink", async () => {
     await setAddresses()
     priceFeed.setStatus(4) // status 4: chainlink broken, tellor frozen
 
@@ -1411,7 +1411,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(status, 0)  // status 0: using Chainlink
   })
 
-  it("tellorFrozenChainlinkBroken - when Chainlink is live, use Chainlink price", async () => {
+  it("tellorBrokenChainlinkFrozen - when Chainlink is live, use Chainlink price", async () => {
     await setAddresses()
     priceFeed.setStatus(4) // status 4: chainlink broken, tellor frozen
 
@@ -1428,7 +1428,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(999, 18))
   })
 
-  it("tellorFrozenChainlinkBroken - when Chainlink breaks too, switch to bothOraclesSuspect", async () => {
+  it("tellorBrokenChainlinkFrozen - when Chainlink breaks too, switch to bothOraclesSuspect", async () => {
     await setAddresses()
     priceFeed.setStatus(4) // status 4: chainlink broken, tellor frozen
 
@@ -1446,7 +1446,7 @@ contract('PriceFeed', async accounts => {
     assert.equal(status, 2)  // status 2: bothOraclesSuspect
   })
 
-  it("tellorFrozenChainlinkBroken - when Chainlink breaks too, use lastGoodPrice", async () => {
+  it("tellorBrokenChainlinkFrozen - when Chainlink breaks too, use lastGoodPrice", async () => {
     await setAddresses()
     priceFeed.setStatus(4) // status 4: chainlink broken, tellor frozen
 
@@ -1464,6 +1464,156 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(246, 18))
   })
 
-  // TODO - CL stays frozen
+  // --- Case 6 - using Chainlink, Tellor broken ---
+
+  it("usingChainlinkTellorBroken - when Chainlink breaks too, switch to bothOraclesSuspect", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await mockChainlink.setUpdateTime(0)  // Chainlink breaks by 0 timestamp
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 2)  // status 2: bothOraclesSuspect
+  })
+
+  it("usingChainlinkTellorBroken - when Chainlink breaks too, use last good price", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+    await mockChainlink.setUpdateTime(0)  // Chainlink breaks by 0 timestamp
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await priceFeed.fetchPrice()
+
+    const price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(50, 18))
+  })
+
+  it("usingChainlinkTellorBroken - when Chainlink freezes, there is no status change", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await th.fastForwardTime(11800, web3.currentProvider) // Fast forward 3 hours
+
+    // check Chainlink price timestamp is out of date by > 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    const chainlinkUpdateTime = (await mockChainlink.latestRoundData())[3] 
+    assert.isTrue(chainlinkUpdateTime.lt(toBN(now).sub(toBN(10800))))
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 5)  // status 5: using chainlink, tellor is broken
+  })
+
+  it("usingChainlinkTellorBroken - when Chainlink freezes, use the last good price", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await th.fastForwardTime(11800, web3.currentProvider) // Fast forward 3 hours
+
+    // check Chainlink price timestamp is out of date by > 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    const chainlinkUpdateTime = (await mockChainlink.latestRoundData())[3] 
+    assert.isTrue(chainlinkUpdateTime.lt(toBN(now).sub(toBN(10800))))
+
+    await priceFeed.fetchPrice()
+
+    const price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(50, 18))
+  })
+
+  it("usingChainlinkTellorBroken - when Chainlink and Tellor are live and similar price, switch to using Chainlink", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(124, 8))
+    await mockTellor.setPrice(dec(123, 6))
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 0)  // status 0: using Chainlink
+  })
+
+  it("usingChainlinkTellorBroken - when Chainlink and Tellor are live and similar price, use Chainlink price", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(124, 8))
+    await mockTellor.setPrice(dec(123, 6))
+    
+    await priceFeed.fetchPrice()
+
+    // Uses latest Chainlink price
+    const price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(124, 18))
+  })
+
+  it("usingChainlinkTellorBroken - when Chainlink and Tellor are live but dissimilar price, no status change", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(124, 8))
+    await mockTellor.setPrice(dec(8765, 6)) // relative difference between Chainlink and Tellor price is >3%
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 5) 
+  })
+
+  it("usingChainlinkTellorBroken - when Chainlink and Tellor are live but dissimilar price, use Chainlink price", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(124, 8))
+    await mockTellor.setPrice(dec(8765, 6))  // relative difference between Chainlink and Tellor price is >3%
+    
+    await priceFeed.fetchPrice()
+
+      // Uses latest Chainlink price
+      const price = await priceFeed.lastGoodPrice()
+      assert.equal(price, dec(124, 18))
+  })
 })
 

@@ -66,7 +66,15 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         bool success;
     }
 
-    enum Status {usingChainlink, usingTellor, bothOraclesSuspect, usingTellorChainlinkFrozen, tellorBrokenChainlinkFrozen}
+    enum Status {
+        usingChainlink, 
+        usingTellor, 
+        bothOraclesSuspect,
+        usingTellorChainlinkFrozen, 
+        tellorBrokenChainlinkFrozen, 
+        usingChainlinkTellorBroken
+    }
+
     Status public status;
 
     event LastGoodPriceUpdated(uint _lastGoodPrice);
@@ -280,6 +288,34 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
             // If Chainlink is live, switch back to it
             _changeStatus(Status.usingChainlink);
+            uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse);
+            return scaledChainlinkPrice;
+        }
+
+        // --- Case 6: Using Chainlink, Tellor is Broken ---
+        if (status == Status.usingChainlinkTellorBroken) { 
+            // Get current price data from Tellor
+            TellorResponse memory tellorResponse = _getCurrentTellorResponse();
+
+            // If Chainlink is broken, switch to bothOraclesSuspect and return the last good price
+            if (_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse)) {
+                _changeStatus(Status.bothOraclesSuspect);
+                return lastGoodPrice;
+            }
+
+            // If Chainlink remains frozen, use last good price (no status change)
+            if (_chainlinkIsFrozen(chainlinkResponse)) {
+                return lastGoodPrice;
+            }
+
+            // If Chainlink and Tellor are both live and reporting a similar price, switch back to usingChainlink and return Chainlink price
+            if (_bothOraclesLiveAndSimilarPrice(chainlinkResponse, prevChainlinkResponse, tellorResponse)) {
+                _changeStatus(Status.usingChainlink);
+                uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse);
+                return scaledChainlinkPrice;
+            }
+
+            // Otherwise if  Chainlink is live, return the Chainlink price (no status change)
             uint scaledChainlinkPrice = _storeChainlinkData(chainlinkResponse);
             return scaledChainlinkPrice;
         }
