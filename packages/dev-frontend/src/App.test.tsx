@@ -1,6 +1,12 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react";
+
+import { Trove } from "@liquity/lib-base";
+
 import App from "./App";
+
+const params = { depositCollateral: 1, borrowLUSD: 50 };
+const trove = Trove.create(params);
 
 /*
  * Just a quick and dirty testcase to prove that the approach can work in our CI pipeline.
@@ -12,11 +18,15 @@ test("there's no smoke", async () => {
   expect(await findByText(/there are no troves yet/i)).toBeInTheDocument();
 
   fireEvent.click(getByLabelText(/^collateral$/i));
-  fireEvent.change(getByLabelText(/^collateral$/i), { target: { value: "1" } });
+  fireEvent.change(getByLabelText(/^collateral$/i), { target: { value: `${trove.collateral}` } });
   fireEvent.click(getByLabelText(/^debt$/i));
-  fireEvent.change(getByLabelText(/^debt$/i), { target: { value: "100" } });
+  fireEvent.change(getByLabelText(/^debt$/i), { target: { value: `${trove.debt}` } });
 
-  const openTroveButton = /^deposit 1(\.[0-9]+)? eth & borrow 90(\.[0-9]+) lusd$/i;
+  const openTroveButton = new RegExp(
+    `^deposit ${params.depositCollateral}(\\.[0-9]+)? eth & ` +
+      `borrow ${params.borrowLUSD}(\\.[0-9]+) lusd$`,
+    "i"
+  );
   fireEvent.click(getByText(openTroveButton));
 
   expect(queryByText(openTroveButton)).not.toBeInTheDocument();
