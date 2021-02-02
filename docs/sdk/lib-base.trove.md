@@ -4,6 +4,8 @@
 
 ## Trove class
 
+A combination of collateral and debt.
+
 <b>Signature:</b>
 
 ```typescript

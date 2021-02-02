@@ -9,5 +9,5 @@ Implementation-specific populated transaction object.
 <b>Signature:</b>
 
 ```typescript
-rawPopulatedTransaction: P;
+readonly rawPopulatedTransaction: P;
 ```

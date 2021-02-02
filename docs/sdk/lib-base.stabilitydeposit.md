@@ -4,6 +4,8 @@
 
 ## StabilityDeposit class
 
+A Stability Deposit and its accrued gains.
+
 <b>Signature:</b>
 
 ```typescript

@@ -4,11 +4,17 @@
 
 ## TransactableLiquity interface
 
+Send Liquity transactions and wait for them to succeed.
+
 <b>Signature:</b>
 
 ```typescript
 export interface TransactableLiquity 
 ```
+
+## Remarks
+
+The functions return the details of the transaction (if any), or throw [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
 
 ## Methods
 

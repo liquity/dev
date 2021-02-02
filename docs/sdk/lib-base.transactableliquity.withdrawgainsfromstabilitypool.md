@@ -15,3 +15,7 @@ withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
 
 Promise&lt;[StabilityPoolGainsWithdrawalDetails](./lib-base.stabilitypoolgainswithdrawaldetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+

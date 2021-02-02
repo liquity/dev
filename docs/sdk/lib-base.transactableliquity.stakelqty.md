@@ -22,6 +22,10 @@ stakeLQTY(amount: Decimalish): Promise<void>;
 
 Promise&lt;void&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+
 ## Remarks
 
 As a side-effect, the transaction will also pay out an existing LQTY stake's [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md)<!-- -->.

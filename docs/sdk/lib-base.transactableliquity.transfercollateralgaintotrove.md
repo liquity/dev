@@ -15,6 +15,10 @@ transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
 Promise&lt;[CollateralGainTransferDetails](./lib-base.collateralgaintransferdetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+
 ## Remarks
 
 The collateral gain is transfered to the Trove as additional collateral.

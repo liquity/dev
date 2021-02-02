@@ -4,6 +4,7 @@
 
 ## TroveWithPendingRedistribution class
 
+A Trove in its state after the last direct modification.
 
 <b>Signature:</b>
 
@@ -12,18 +13,15 @@ export declare class TroveWithPendingRedistribution extends Trove
 ```
 <b>Extends:</b> [Trove](./lib-base.trove.md)
 
+## Remarks
+
+The Trove may have received collateral and debt shares from liquidations since then. Use [applyRedistribution()](./lib-base.trovewithpendingredistribution.applyredistribution.md) to calculate the Trove's most up-to-date state.
+
 ## Constructors
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
 |  [(constructor)(collateral, debt, stake, snapshotOfTotalRedistributed)](./lib-base.trovewithpendingredistribution._constructor_.md) |  | Constructs a new instance of the <code>TroveWithPendingRedistribution</code> class |
-
-## Properties
-
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [snapshotOfTotalRedistributed](./lib-base.trovewithpendingredistribution.snapshotoftotalredistributed.md) |  | [Trove](./lib-base.trove.md) |  |
-|  [stake](./lib-base.trovewithpendingredistribution.stake.md) |  | [Decimal](./decimal.decimal.md) |  |
 
 ## Methods
 

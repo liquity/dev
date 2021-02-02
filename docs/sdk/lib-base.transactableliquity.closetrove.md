@@ -15,3 +15,7 @@ closeTrove(): Promise<TroveClosureDetails>;
 
 Promise&lt;[TroveClosureDetails](./lib-base.troveclosuredetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+

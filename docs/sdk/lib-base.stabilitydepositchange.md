@@ -4,6 +4,8 @@
 
 ## StabilityDepositChange type
 
+Represents the change between two Stability Deposit states.
+
 <b>Signature:</b>
 
 ```typescript

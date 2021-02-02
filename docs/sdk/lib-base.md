@@ -11,9 +11,10 @@
 |  [Fees](./lib-base.fees.md) | Calculator for fees. |
 |  [LiquityStore](./lib-base.liquitystore.md) | Abstract base class of Liquity data store implementations. |
 |  [LQTYStake](./lib-base.lqtystake.md) | Represents a user's LQTY stake and accrued gains. |
-|  [StabilityDeposit](./lib-base.stabilitydeposit.md) |  |
-|  [Trove](./lib-base.trove.md) |  |
-|  [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) |  |
+|  [StabilityDeposit](./lib-base.stabilitydeposit.md) | A Stability Deposit and its accrued gains. |
+|  [TransactionFailedError](./lib-base.transactionfailederror.md) | Thrown by [TransactableLiquity](./lib-base.transactableliquity.md) functions in case of transaction failure. |
+|  [Trove](./lib-base.trove.md) | A combination of collateral and debt. |
+|  [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | A Trove in its state after the last direct modification. |
 
 ## Interfaces
 
@@ -24,13 +25,15 @@
 |  [LiquityStoreBaseState](./lib-base.liquitystorebasestate.md) | State variables read from the blockchain. |
 |  [LiquityStoreDerivedState](./lib-base.liquitystorederivedstate.md) | State variables derived from [LiquityStoreBaseState](./lib-base.liquitystorebasestate.md)<!-- -->. |
 |  [LiquityStoreListenerParams](./lib-base.liquitystorelistenerparams.md) | Parameters passed to [LiquityStore](./lib-base.liquitystore.md) listeners. |
+|  [PopulatableLiquity](./lib-base.populatableliquity.md) | Prepare Liquity transactions for sending. |
 |  [PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.md) | A transaction that has been prepared for sending. |
-|  [ReadableLiquity](./lib-base.readableliquity.md) |  |
+|  [ReadableLiquity](./lib-base.readableliquity.md) | Read the state of the Liquity protocol. |
 |  [RedemptionDetails](./lib-base.redemptiondetails.md) | Details of a [redeemLUSD()](./lib-base.transactableliquity.redeemlusd.md) transaction. |
+|  [SendableLiquity](./lib-base.sendableliquity.md) | Send Liquity transactions. |
 |  [SentLiquityTransaction](./lib-base.sentliquitytransaction.md) | A transaction that has already been sent. |
 |  [StabilityDepositChangeDetails](./lib-base.stabilitydepositchangedetails.md) | Details of a [depositLUSDInStabilityPool()](./lib-base.transactableliquity.depositlusdinstabilitypool.md) or [withdrawLUSDFromStabilityPool()](./lib-base.transactableliquity.withdrawlusdfromstabilitypool.md) transaction. |
 |  [StabilityPoolGainsWithdrawalDetails](./lib-base.stabilitypoolgainswithdrawaldetails.md) | Details of a [withdrawGainsFromStabilityPool()](./lib-base.transactableliquity.withdrawgainsfromstabilitypool.md) transaction. |
-|  [TransactableLiquity](./lib-base.transactableliquity.md) |  |
+|  [TransactableLiquity](./lib-base.transactableliquity.md) | Send Liquity transactions and wait for them to succeed. |
 |  [TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md) | Details of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) transaction. |
 |  [TroveClosureDetails](./lib-base.troveclosuredetails.md) | Details of a [closeTrove()](./lib-base.transactableliquity.closetrove.md) transaction. |
 |  [TroveCreationDetails](./lib-base.trovecreationdetails.md) | Details of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction. |
@@ -54,13 +57,13 @@
 |  [FrontendStatus](./lib-base.frontendstatus.md) | Represents whether an address has been registered as a Liquity frontend. |
 |  [LiquityReceipt](./lib-base.liquityreceipt.md) | One of either a [PendingReceipt](./lib-base.pendingreceipt.md)<!-- -->, a [FailedReceipt](./lib-base.failedreceipt.md) or a [SuccessfulReceipt](./lib-base.successfulreceipt.md)<!-- -->. |
 |  [LiquityStoreState](./lib-base.liquitystorestate.md) | Type of [LiquityStore](./lib-base.liquitystore.md)<!-- -->'s [state](./lib-base.liquitystore.state.md)<!-- -->. |
-|  [LQTYStakeChange](./lib-base.lqtystakechange.md) |  |
+|  [LQTYStakeChange](./lib-base.lqtystakechange.md) | Represents the change between two states of an LQTY Stake. |
 |  [MinedReceipt](./lib-base.minedreceipt.md) | Either a [FailedReceipt](./lib-base.failedreceipt.md) or a [SuccessfulReceipt](./lib-base.successfulreceipt.md)<!-- -->. |
 |  [PendingReceipt](./lib-base.pendingreceipt.md) | Indicates that the transaction hasn't been mined yet. |
-|  [StabilityDepositChange](./lib-base.stabilitydepositchange.md) |  |
-|  [SuccessfulReceipt](./lib-base.successfulreceipt.md) | Indicates that the transaction has been mined, but it failed. |
+|  [StabilityDepositChange](./lib-base.stabilitydepositchange.md) | Represents the change between two Stability Deposit states. |
+|  [SuccessfulReceipt](./lib-base.successfulreceipt.md) | Indicates that the transaction has succeeded. |
 |  [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md) | Parameters of Trove adjustment. |
-|  [TroveChange](./lib-base.trovechange.md) | Represents the change from one Trove to another. |
+|  [TroveChange](./lib-base.trovechange.md) | Represents the change between two Trove states. |
 |  [TroveClosureParams](./lib-base.troveclosureparams.md) | Parameters of Trove closure. |
 |  [TroveCreationError](./lib-base.trovecreationerror.md) | Describes why a Trove could not be created. |
 |  [TroveCreationParams](./lib-base.trovecreationparams.md) | Parameters of Trove creation. |

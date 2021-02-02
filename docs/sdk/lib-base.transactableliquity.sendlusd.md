@@ -23,3 +23,7 @@ sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
 
 Promise&lt;void&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+

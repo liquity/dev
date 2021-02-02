@@ -22,3 +22,7 @@ openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails
 
 Promise&lt;[TroveCreationDetails](./lib-base.trovecreationdetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+

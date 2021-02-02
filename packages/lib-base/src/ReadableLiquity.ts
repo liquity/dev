@@ -20,7 +20,11 @@ export type FrontendStatus =
   | { status: "unregistered" }
   | { status: "registered"; kickbackRate: Decimal };
 
-/** @public */
+/**
+ * Read the state of the Liquity protocol.
+ *
+ * @public
+ */
 export interface ReadableLiquity {
   /**
    * Get the total collateral and debt per stake that has been liquidated through redistribution.

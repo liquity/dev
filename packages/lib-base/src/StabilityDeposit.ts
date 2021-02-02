@@ -1,9 +1,19 @@
 import { Decimal, Decimalish } from "@liquity/decimal";
 
+/**
+ * Represents the change between two Stability Deposit states.
+ *
+ * @public
+ */
 export type StabilityDepositChange<T> =
   | { depositLUSD: T; withdrawLUSD?: undefined }
   | { depositLUSD?: undefined; withdrawLUSD: T; withdrawAllLUSD: boolean };
 
+/**
+ * A Stability Deposit and its accrued gains.
+ *
+ * @public
+ */
 export class StabilityDeposit {
   readonly initialLUSD: Decimal;
   readonly currentLUSD: Decimal;

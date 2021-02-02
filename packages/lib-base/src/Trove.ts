@@ -196,7 +196,7 @@ export type TroveAdjustmentParams<T> =
 export type TroveCreationError = "missingLiquidationReserve";
 
 /**
- * Represents the change from one Trove to another.
+ * Represents the change between two Trove states.
  *
  * @remarks
  * Returned by {@link Trove.whatChanged | Trove.whatChanged()}.
@@ -275,7 +275,11 @@ const unapplyFee = (borrowingRate: Decimalish, debtIncrease: Decimalish) =>
 
 const NOMINAL_COLLATERAL_RATIO_PRECISION = Decimal.from(100);
 
-/** @public */
+/**
+ * A combination of collateral and debt.
+ *
+ * @public
+ */
 export class Trove {
   readonly collateral: Decimal;
   readonly debt: Decimal;
@@ -517,10 +521,19 @@ export class Trove {
 /** @internal */
 export const _emptyTrove = new Trove();
 
-/** @public */
+/**
+ * A Trove in its state after the last direct modification.
+ *
+ * @remarks
+ * The Trove may have received collateral and debt shares from liquidations since then.
+ * Use {@link TroveWithPendingRedistribution.applyRedistribution | applyRedistribution()} to
+ * calculate the Trove's most up-to-date state.
+ *
+ * @public
+ */
 export class TroveWithPendingRedistribution extends Trove {
-  readonly stake: Decimal;
-  readonly snapshotOfTotalRedistributed: Trove;
+  private readonly stake: Decimal;
+  private readonly snapshotOfTotalRedistributed: Trove;
 
   constructor(
     collateral?: Decimal,

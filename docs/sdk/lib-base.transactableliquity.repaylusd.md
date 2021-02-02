@@ -22,6 +22,10 @@ repayLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
 
 Promise&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+
 ## Remarks
 
 Equivalent to:

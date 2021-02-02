@@ -32,6 +32,7 @@
     "prepare:lib-subgraph": "yarn workspace @liquity/lib-subgraph prepare",
     "prepare:providers": "yarn workspace @liquity/providers prepare",
     "prepare:subgraph": "yarn workspace @liquity/subgraph prepare",
+    "prepare:docs": "run-s docs",
     "rebuild": "run-s prepare build",
     "save-live-version": "yarn workspace @liquity/lib-ethers save-live-version",
     "start-dev-chain": "run-s start-dev-chain:*",

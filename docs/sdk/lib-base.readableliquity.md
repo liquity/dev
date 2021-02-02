@@ -4,6 +4,7 @@
 
 ## ReadableLiquity interface
 
+Read the state of the Liquity protocol.
 
 <b>Signature:</b>
 

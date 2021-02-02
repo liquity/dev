@@ -22,3 +22,7 @@ redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
 
 Promise&lt;[RedemptionDetails](./lib-base.redemptiondetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+

@@ -4,6 +4,7 @@
 
 ## LQTYStakeChange type
 
+Represents the change between two states of an LQTY Stake.
 
 <b>Signature:</b>
 

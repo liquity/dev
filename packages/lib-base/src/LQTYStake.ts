@@ -1,6 +1,10 @@
 import { Decimal, Decimalish } from "@liquity/decimal";
 
-/** @public */
+/**
+ * Represents the change between two states of an LQTY Stake.
+ *
+ * @public
+ */
 export type LQTYStakeChange<T> =
   | { stakeLQTY: T; unstakeLQTY?: undefined }
   | { stakeLQTY?: undefined; unstakeLQTY: T; unstakeAllLQTY: boolean };

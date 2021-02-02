@@ -22,6 +22,10 @@ adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentD
 
 Promise&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+
 ## Remarks
 
 The transaction will fail if the Trove's debt would fall below [LUSD\_LIQUIDATION\_RESERVE](./lib-base.lusd_liquidation_reserve.md)<!-- -->.

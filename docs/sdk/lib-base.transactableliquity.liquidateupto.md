@@ -22,3 +22,7 @@ liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDeta
 
 Promise&lt;[LiquidationDetails](./lib-base.liquidationdetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+

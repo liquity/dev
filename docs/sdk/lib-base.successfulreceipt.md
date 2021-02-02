@@ -4,7 +4,7 @@
 
 ## SuccessfulReceipt type
 
-Indicates that the transaction has been mined, but it failed.
+Indicates that the transaction has succeeded.
 
 <b>Signature:</b>
 

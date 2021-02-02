@@ -9,5 +9,5 @@ Implementation-specific sent transaction object.
 <b>Signature:</b>
 
 ```typescript
-rawSentTransaction: S;
+readonly rawSentTransaction: S;
 ```

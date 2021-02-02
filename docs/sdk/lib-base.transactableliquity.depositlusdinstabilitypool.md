@@ -23,6 +23,10 @@ depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string): Promise<St
 
 Promise&lt;[StabilityDepositChangeDetails](./lib-base.stabilitydepositchangedetails.md)<!-- -->&gt;
 
+## Exceptions
+
+Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+
 ## Remarks
 
 The `frontendTag` parameter is only effective when making a new deposit.

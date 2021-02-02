@@ -4,7 +4,7 @@
 
 ## TroveChange type
 
-Represents the change from one Trove to another.
+Represents the change between two Trove states.
 
 <b>Signature:</b>
 
