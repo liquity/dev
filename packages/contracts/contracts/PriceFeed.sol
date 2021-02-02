@@ -258,7 +258,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
            }
 
             // If Chainlink is frozen and Tellor is frozen, just return last good price (no status change)
-            console.log("chainlink frozen, tellor frozen");
             if (_tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
 
             // if Chainlink is frozen and Tellor is live, keep using Tellor (no status change)
@@ -268,7 +267,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         // --- Case 5: Tellor is broken, Chainlink is frozen ---
          if (status == Status.tellorBrokenChainlinkFrozen) { 
-              console.log("case5, status4");
             // If Chainlink breaks too, now both oracles are suspect
             if (_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse)) {
                 _changeStatus(Status.bothOraclesSuspect);

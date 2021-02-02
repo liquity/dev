@@ -1393,8 +1393,6 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(50, 18))
   })
 
-
-
   // --- Case 5 ---
   it("tellorFrozenChainlinkBroken - when Chainlink is live, switch back to Chainlink", async () => {
     await setAddresses()
