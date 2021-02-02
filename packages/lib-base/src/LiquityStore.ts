@@ -88,18 +88,27 @@ export interface LiquityStoreDerivedState {
   /** Current state of user's Trove */
   trove: Trove;
 
-  /** Current borrowing fee factor. */
-  borrowingFeeFactor: Decimal;
-
   /**
-   * Current redemption fee factor.
+   * Current borrowing rate.
    *
    * @remarks
-   * Note that the actual redemption fee will depend on the amount of LUSD being redeemed.
+   * A value between 0 and 1.
    *
-   * Use {@link Fees.redemptionFeeFactor} to calculate a precise redemption fee factor.
+   * @example
+   * For example a value of 0.01 amounts to a borrowing fee of 1% of the borrowed amount.
    */
-  redemptionFeeFactor: Decimal;
+  borrowingRate: Decimal;
+
+  /**
+   * Current redemption rate.
+   *
+   * @remarks
+   * Note that the actual rate paid by a redemption transaction will depend on the amount of LUSD
+   * being redeemed.
+   *
+   * Use {@link Fees.redemptionRate} to calculate a precise redemption rate.
+   */
+  redemptionRate: Decimal;
 }
 
 /**
@@ -370,8 +379,8 @@ export abstract class LiquityStore<T = unknown> {
   }: LiquityStoreBaseState): LiquityStoreDerivedState {
     return {
       trove: troveWithoutRedistribution.applyRedistribution(totalRedistributed),
-      borrowingFeeFactor: fees.borrowingFeeFactor(),
-      redemptionFeeFactor: fees.redemptionFeeFactor()
+      borrowingRate: fees.borrowingRate(),
+      redemptionRate: fees.redemptionRate()
     };
   }
 
@@ -382,16 +391,16 @@ export abstract class LiquityStore<T = unknown> {
     return {
       trove: this._updateIfChanged(equals, "trove", derivedState.trove, derivedStateUpdate.trove),
 
-      borrowingFeeFactor: this._silentlyUpdateIfChanged(
+      borrowingRate: this._silentlyUpdateIfChanged(
         eq,
-        derivedState.borrowingFeeFactor,
-        derivedStateUpdate.borrowingFeeFactor
+        derivedState.borrowingRate,
+        derivedStateUpdate.borrowingRate
       ),
 
-      redemptionFeeFactor: this._silentlyUpdateIfChanged(
+      redemptionRate: this._silentlyUpdateIfChanged(
         eq,
-        derivedState.redemptionFeeFactor,
-        derivedStateUpdate.redemptionFeeFactor
+        derivedState.redemptionRate,
+        derivedStateUpdate.redemptionRate
       )
     };
   }

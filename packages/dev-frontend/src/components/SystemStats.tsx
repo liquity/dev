@@ -48,16 +48,16 @@ const select = ({
   price,
   total,
   lusdInStabilityPool,
-  borrowingFeeFactor,
-  redemptionFeeFactor,
+  borrowingRate,
+  redemptionRate,
   totalStakedLQTY
 }: LiquityStoreState) => ({
   numberOfTroves,
   price,
   total,
   lusdInStabilityPool,
-  borrowingFeeFactor,
-  redemptionFeeFactor,
+  borrowingRate,
+  redemptionRate,
   totalStakedLQTY
 });
 
@@ -68,16 +68,16 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     price,
     lusdInStabilityPool,
     total,
-    borrowingFeeFactor,
-    redemptionFeeFactor,
+    borrowingRate,
+    redemptionRate,
     totalStakedLQTY
   } = useLiquitySelector(select);
 
   const lusdInStabilityPoolPct =
     total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
-  const borrowingFeePct = new Percent(borrowingFeeFactor);
-  const redemptionFeePct = new Percent(redemptionFeeFactor);
+  const borrowingFeePct = new Percent(borrowingRate);
+  const redemptionFeePct = new Percent(redemptionRate);
 
   return (
     <Card {...{ variant }}>

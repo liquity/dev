@@ -70,9 +70,9 @@ export class Fees {
     constructor(lastFeeOperation: Date, baseRateWithoutDecay: Decimalish, minuteDecayFactor: Decimalish, beta: Decimalish);
     // @internal (undocumented)
     baseRate(when: Date): Decimal;
-    borrowingFeeFactor(): Decimal;
+    borrowingRate(): Decimal;
     equals(that: Fees): boolean;
-    redemptionFeeFactor(redeemedFractionOfSupply?: Decimalish): Decimal;
+    redemptionRate(redeemedFractionOfSupply?: Decimalish): Decimal;
     // @internal (undocumented)
     toString(): string;
 }
@@ -166,8 +166,8 @@ export interface LiquityStoreBaseState {
 
 // @public
 export interface LiquityStoreDerivedState {
-    borrowingFeeFactor: Decimal;
-    redemptionFeeFactor: Decimal;
+    borrowingRate: Decimal;
+    redemptionRate: Decimal;
     trove: Trove;
 }
 
@@ -221,10 +221,19 @@ export type _LUSDRepayment<T> = {
 };
 
 // @public
+export const MAXIMUM_BORROWING_RATE: Decimal;
+
+// @public
 export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
 
 // @public
+export const MINIMUM_BORROWING_RATE: Decimal;
+
+// @public
 export const MINIMUM_COLLATERAL_RATIO: Decimal;
+
+// @public
+export const MINIMUM_REDEMPTION_RATE: Decimal;
 
 // @internal (undocumented)
 export type _NoCollateralChange = _NoCollateralDeposit & _NoCollateralWithdrawal;
@@ -320,7 +329,7 @@ export interface ReadableLiquity {
 export interface RedemptionDetails {
     actualLUSDAmount: Decimal;
     attemptedLUSDAmount: Decimal;
-    collateralReceived: Decimal;
+    collateralTaken: Decimal;
     fee: Decimal;
 }
 
@@ -460,11 +469,11 @@ export class Trove {
     // (undocumented)
     addDebt(debt: Decimalish): Trove;
     // (undocumented)
-    adjust(params: TroveAdjustmentParams<Decimalish>, borrowingFeeFactor?: Decimalish): Trove;
+    adjust(params: TroveAdjustmentParams<Decimalish>, borrowingRate?: Decimalish): Trove;
     // (undocumented)
-    adjustTo(that: Trove, borrowingFeeFactor?: Decimalish): TroveAdjustmentParams<Decimal>;
+    adjustTo(that: Trove, borrowingRate?: Decimalish): TroveAdjustmentParams<Decimal>;
     // (undocumented)
-    apply(change: TroveChange<Decimalish> | undefined, borrowingFeeFactor?: Decimalish): Trove;
+    apply(change: TroveChange<Decimalish> | undefined, borrowingRate?: Decimalish): Trove;
     // (undocumented)
     readonly collateral: Decimal;
     // (undocumented)
@@ -474,7 +483,7 @@ export class Trove {
     // (undocumented)
     collateralRatioIsBelowMinimum(price: Decimalish): boolean;
     // (undocumented)
-    static create(params: TroveCreationParams<Decimalish>, borrowingFeeFactor?: Decimalish): Trove;
+    static create(params: TroveCreationParams<Decimalish>, borrowingRate?: Decimalish): Trove;
     // (undocumented)
     readonly debt: Decimal;
     // (undocumented)
@@ -489,7 +498,7 @@ export class Trove {
     // @internal (undocumented)
     get _nominalCollateralRatio(): Decimal;
     // (undocumented)
-    static recreate(that: Trove, borrowingFeeFactor?: Decimalish): TroveCreationParams<Decimal>;
+    static recreate(that: Trove, borrowingRate?: Decimalish): TroveCreationParams<Decimal>;
     // (undocumented)
     setCollateral(collateral: Decimalish): Trove;
     // (undocumented)
@@ -503,7 +512,7 @@ export class Trove {
     // (undocumented)
     toString(): string;
     // (undocumented)
-    whatChanged(that: Trove, borrowingFeeFactor?: Decimalish): TroveChange<Decimal> | undefined;
+    whatChanged(that: Trove, borrowingRate?: Decimalish): TroveChange<Decimal> | undefined;
 }
 
 // @public

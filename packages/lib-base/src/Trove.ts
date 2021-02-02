@@ -5,7 +5,8 @@ import { Decimal, Decimalish } from "@liquity/decimal";
 import {
   MINIMUM_COLLATERAL_RATIO,
   CRITICAL_COLLATERAL_RATIO,
-  LUSD_LIQUIDATION_RESERVE
+  LUSD_LIQUIDATION_RESERVE,
+  MINIMUM_BORROWING_RATE
 } from "./constants";
 
 /** @internal */ export type _CollateralDeposit<T> = { depositCollateral: T };
@@ -266,11 +267,11 @@ export const _normalizeTroveAdjustment = (normalize as unknown) as _Normalizer<
   TroveAdjustmentParams<Decimal>
 >;
 
-const applyFee = (borrowingFeeFactor: Decimalish, debtIncrease: Decimalish) =>
-  Decimal.ONE.add(borrowingFeeFactor).mul(debtIncrease);
+const applyFee = (borrowingRate: Decimalish, debtIncrease: Decimalish) =>
+  Decimal.ONE.add(borrowingRate).mul(debtIncrease);
 
-const unapplyFee = (borrowingFeeFactor: Decimalish, debtIncrease: Decimalish) =>
-  Decimal.from(debtIncrease).div(Decimal.ONE.add(borrowingFeeFactor));
+const unapplyFee = (borrowingRate: Decimalish, debtIncrease: Decimalish) =>
+  Decimal.from(debtIncrease).div(Decimal.ONE.add(borrowingRate));
 
 const NOMINAL_COLLATERAL_RATIO_PRECISION = Decimal.from(100);
 
@@ -376,9 +377,9 @@ export class Trove {
     return new Trove(this.collateral, Decimal.from(debt));
   }
 
-  private _debtChange({ debt }: Trove, borrowingFeeFactor: Decimalish): _DebtChange<Decimal> {
+  private _debtChange({ debt }: Trove, borrowingRate: Decimalish): _DebtChange<Decimal> {
     return debt.gt(this.debt)
-      ? { borrowLUSD: unapplyFee(borrowingFeeFactor, debt.sub(this.debt)) }
+      ? { borrowLUSD: unapplyFee(borrowingRate, debt.sub(this.debt)) }
       : { repayLUSD: this.debt.sub(debt) };
   }
 
@@ -390,7 +391,7 @@ export class Trove {
 
   whatChanged(
     that: Trove,
-    borrowingFeeFactor: Decimalish = Decimal.ZERO
+    borrowingRate: Decimalish = MINIMUM_BORROWING_RATE
   ): TroveChange<Decimal> | undefined {
     if (this.equals(that)) {
       return undefined;
@@ -405,7 +406,7 @@ export class Trove {
         that.netDebt.nonZero
           ? {
               depositCollateral: that.collateral,
-              borrowLUSD: unapplyFee(borrowingFeeFactor, that.netDebt)
+              borrowLUSD: unapplyFee(borrowingRate, that.netDebt)
             }
           : { depositCollateral: that.collateral }
       );
@@ -420,15 +421,12 @@ export class Trove {
     }
 
     return this.collateral.eq(that.collateral)
-      ? troveAdjustment<Decimal>(
-          this._debtChange(that, borrowingFeeFactor),
-          that.debt.zero && "debt"
-        )
+      ? troveAdjustment<Decimal>(this._debtChange(that, borrowingRate), that.debt.zero && "debt")
       : this.debt.eq(that.debt)
       ? troveAdjustment<Decimal>(this._collateralChange(that), that.collateral.zero && "collateral")
       : troveAdjustment<Decimal>(
           {
-            ...this._debtChange(that, borrowingFeeFactor),
+            ...this._debtChange(that, borrowingRate),
             ...this._collateralChange(that)
           },
           (that.debt.zero && "debt") ?? (that.collateral.zero && "collateral")
@@ -437,7 +435,7 @@ export class Trove {
 
   apply(
     change: TroveChange<Decimalish> | undefined,
-    borrowingFeeFactor: Decimalish = Decimal.ZERO
+    borrowingRate: Decimalish = MINIMUM_BORROWING_RATE
   ): Trove {
     if (!change) {
       return this;
@@ -461,7 +459,7 @@ export class Trove {
         return new Trove(
           Decimal.from(depositCollateral),
           borrowLUSD
-            ? LUSD_LIQUIDATION_RESERVE.add(applyFee(borrowingFeeFactor, borrowLUSD))
+            ? LUSD_LIQUIDATION_RESERVE.add(applyFee(borrowingRate, borrowLUSD))
             : LUSD_LIQUIDATION_RESERVE
         );
       }
@@ -482,7 +480,7 @@ export class Trove {
         const collateralDecrease = Decimal.from(withdrawCollateral ?? 0);
         const collateralIncrease = Decimal.from(depositCollateral ?? 0);
         const debtDecrease = Decimal.from(repayLUSD ?? 0);
-        const debtIncrease = borrowLUSD ? applyFee(borrowingFeeFactor, borrowLUSD) : Decimal.ZERO;
+        const debtIncrease = borrowLUSD ? applyFee(borrowingRate, borrowLUSD) : Decimal.ZERO;
 
         return setToZero === "collateral"
           ? this.setCollateral(0).addDebt(debtIncrease).subtractDebt(debtDecrease)
@@ -495,22 +493,22 @@ export class Trove {
     }
   }
 
-  static create(params: TroveCreationParams<Decimalish>, borrowingFeeFactor?: Decimalish): Trove {
-    return _emptyTrove.apply(troveCreation(params), borrowingFeeFactor);
+  static create(params: TroveCreationParams<Decimalish>, borrowingRate?: Decimalish): Trove {
+    return _emptyTrove.apply(troveCreation(params), borrowingRate);
   }
 
-  static recreate(that: Trove, borrowingFeeFactor?: Decimalish): TroveCreationParams<Decimal> {
-    const change = _emptyTrove.whatChanged(that, borrowingFeeFactor);
+  static recreate(that: Trove, borrowingRate?: Decimalish): TroveCreationParams<Decimal> {
+    const change = _emptyTrove.whatChanged(that, borrowingRate);
     assert(change?.type === "creation");
     return change.params;
   }
 
-  adjust(params: TroveAdjustmentParams<Decimalish>, borrowingFeeFactor?: Decimalish): Trove {
-    return this.apply(troveAdjustment(params), borrowingFeeFactor);
+  adjust(params: TroveAdjustmentParams<Decimalish>, borrowingRate?: Decimalish): Trove {
+    return this.apply(troveAdjustment(params), borrowingRate);
   }
 
-  adjustTo(that: Trove, borrowingFeeFactor?: Decimalish): TroveAdjustmentParams<Decimal> {
-    const change = this.whatChanged(that, borrowingFeeFactor);
+  adjustTo(that: Trove, borrowingRate?: Decimalish): TroveAdjustmentParams<Decimal> {
+    const change = this.whatChanged(that, borrowingRate);
     assert(change?.type === "adjustment");
     return change.params;
   }

@@ -124,12 +124,14 @@ export const TroveManager: React.FC = () => {
   const { fees, redeemed } = useLiquitySelector(select);
 
   const change = original.whatChanged(edited);
-  const feeFactor = fees.borrowingFeeFactor();
-  const afterFee = original.apply(change, feeFactor);
+  const borrowingRate = fees.borrowingRate();
+  const afterFee = original.apply(change, borrowingRate);
 
   return (
     <>
-      <TroveEditor {...{ original, edited, afterFee, feeFactor, change, changePending, dispatch }}>
+      <TroveEditor
+        {...{ original, edited, afterFee, borrowingRate, change, changePending, dispatch }}
+      >
         {redeemed && <RedeemedTroveOverlay />}
       </TroveEditor>
 

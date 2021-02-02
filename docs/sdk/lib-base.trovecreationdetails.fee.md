@@ -4,7 +4,7 @@
 
 ## TroveCreationDetails.fee property
 
-Amount of LUSD paid as borrowing fee.
+Amount of LUSD added to the Trove's debt as borrowing fee.
 
 <b>Signature:</b>
 

@@ -16,7 +16,7 @@ export interface LiquityStoreDerivedState
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [borrowingFeeFactor](./lib-base.liquitystorederivedstate.borrowingfeefactor.md) | [Decimal](./decimal.decimal.md) | Current borrowing fee factor. |
-|  [redemptionFeeFactor](./lib-base.liquitystorederivedstate.redemptionfeefactor.md) | [Decimal](./decimal.decimal.md) | Current redemption fee factor. |
+|  [borrowingRate](./lib-base.liquitystorederivedstate.borrowingrate.md) | [Decimal](./decimal.decimal.md) | Current borrowing rate. |
+|  [redemptionRate](./lib-base.liquitystorederivedstate.redemptionrate.md) | [Decimal](./decimal.decimal.md) | Current redemption rate. |
 |  [trove](./lib-base.liquitystorederivedstate.trove.md) | [Trove](./lib-base.trove.md) | Current state of user's Trove |
 

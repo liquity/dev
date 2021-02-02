@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-whatChanged(that: Trove, borrowingFeeFactor?: Decimalish): TroveChange<Decimal> | undefined;
+whatChanged(that: Trove, borrowingRate?: Decimalish): TroveChange<Decimal> | undefined;
 ```
 
 ## Parameters
@@ -15,7 +15,7 @@ whatChanged(that: Trove, borrowingFeeFactor?: Decimalish): TroveChange<Decimal> 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  that | [Trove](./lib-base.trove.md) |  |
-|  borrowingFeeFactor | [Decimalish](./decimal.decimalish.md) |  |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
 
 <b>Returns:</b>
 

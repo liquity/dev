@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-adjust(params: TroveAdjustmentParams<Decimalish>, borrowingFeeFactor?: Decimalish): Trove;
+adjust(params: TroveAdjustmentParams<Decimalish>, borrowingRate?: Decimalish): Trove;
 ```
 
 ## Parameters
@@ -15,7 +15,7 @@ adjust(params: TroveAdjustmentParams<Decimalish>, borrowingFeeFactor?: Decimalis
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
-|  borrowingFeeFactor | [Decimalish](./decimal.decimalish.md) |  |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
 
 <b>Returns:</b>
 

@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type TypedLiquityContract<T = unknown> = TypedContract<LiquityContract, T>;
+export declare type TypedLiquityContract<T = unknown, U = unknown> = TypedContract<LiquityContract, T, U>;
 ```
 <b>References:</b> [TypedContract](./lib-ethers.typedcontract.md)
 

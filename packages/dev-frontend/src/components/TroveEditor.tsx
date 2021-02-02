@@ -21,7 +21,7 @@ type TroveEditorProps = {
   original: Trove;
   edited: Trove;
   afterFee: Trove;
-  feeFactor: Decimal;
+  borrowingRate: Decimal;
   change?: TroveChange<Decimal>;
   changePending: boolean;
   dispatch: (
@@ -36,7 +36,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   original,
   edited,
   afterFee,
-  feeFactor,
+  borrowingRate,
   change,
   changePending,
   dispatch
@@ -46,7 +46,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   const editingState = useState<string>();
 
   const fee = afterFee.subtract(edited).debt.nonZero;
-  const feePct = new Percent(feeFactor);
+  const feePct = new Percent(borrowingRate);
 
   const pendingCollateral = Difference.between(edited.collateral, original.collateral.nonZero)
     .nonZero;

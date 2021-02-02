@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-static recreate(that: Trove, borrowingFeeFactor?: Decimalish): TroveCreationParams<Decimal>;
+static recreate(that: Trove, borrowingRate?: Decimalish): TroveCreationParams<Decimal>;
 ```
 
 ## Parameters
@@ -15,7 +15,7 @@ static recreate(that: Trove, borrowingFeeFactor?: Decimalish): TroveCreationPara
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  that | [Trove](./lib-base.trove.md) |  |
-|  borrowingFeeFactor | [Decimalish](./decimal.decimalish.md) |  |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
 
 <b>Returns:</b>
 

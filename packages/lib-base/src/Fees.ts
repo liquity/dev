@@ -2,6 +2,12 @@ import assert from "assert";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 
+import {
+  MAXIMUM_BORROWING_RATE,
+  MINIMUM_BORROWING_RATE,
+  MINIMUM_REDEMPTION_RATE
+} from "./constants";
+
 /**
  * Calculator for fees.
  *
@@ -65,35 +71,37 @@ export class Fees {
   }
 
   /**
-   * Calculate the current borrowing fee factor.
+   * Calculate the current borrowing rate.
    *
    * @remarks
-   * To calculate the borrowing fee in LUSD, multiply the borrowed LUSD amount with the borrowing
-   * fee factor.
+   * To calculate the borrowing fee in LUSD, multiply the borrowed LUSD amount by the borrowing rate.
    *
    * @example
    * ```typescript
    * const fees = await liquity.getFees();
    *
    * const borrowedLUSDAmount = 100;
-   * const borrowingFeeFactor = fees.borrowingFeeFactor();
-   * const borrowingFeeLUSD = borrowingFeeFactor.mul(borrowedLUSDAmount);
+   * const borrowingRate = fees.borrowingRate();
+   * const borrowingFeeLUSD = borrowingRate.mul(borrowedLUSDAmount);
    * ```
    */
-  borrowingFeeFactor(): Decimal {
-    return this.baseRate(new Date());
+  borrowingRate(): Decimal {
+    return Decimal.min(
+      MINIMUM_BORROWING_RATE.add(this.baseRate(new Date())),
+      MAXIMUM_BORROWING_RATE
+    );
   }
 
   /**
-   * Calculate the current redemption fee factor.
+   * Calculate the current redemption rate.
    *
    * @remarks
-   * Unlike the borrowing fee factor, the redemption fee factor depends on the amount being redeemed.
-   * To be more precise, it depends on the fraction of the redeemed amount compared to the total
-   * LUSD supply, which must be passed as a parameter.
+   * Unlike the borrowing rate, the redemption rate depends on the amount being redeemed. To be more
+   * precise, it depends on the fraction of the redeemed amount compared to the total LUSD supply,
+   * which must be passed as a parameter.
    *
    * To calculate the redemption fee in LUSD, multiply the redeemed LUSD amount with the redemption
-   * fee factor.
+   * rate.
    *
    * @example
    * ```typescript
@@ -102,13 +110,13 @@ export class Fees {
    *
    * const redeemedLUSDAmount = Decimal.from(100);
    * const redeemedFractionOfSupply = redeemedLUSDAmount.div(total.debt);
-   * const redemptionFeeFactor = fees.redemptionFeeFactor(redeemedFractionOfSupply);
-   * const redemptionFeeLUSD = redemptionFeeFactor.mul(redeemedLUSDAmount);
+   * const redemptionRate = fees.redemptionRate(redeemedFractionOfSupply);
+   * const redemptionFeeLUSD = redemptionRate.mul(redeemedLUSDAmount);
    * ```
    *
    * @param redeemedFractionOfSupply - the amount of LUSD being redeemed divided by the total supply
    */
-  redemptionFeeFactor(redeemedFractionOfSupply: Decimalish = Decimal.ZERO): Decimal {
+  redemptionRate(redeemedFractionOfSupply: Decimalish = Decimal.ZERO): Decimal {
     redeemedFractionOfSupply = Decimal.from(redeemedFractionOfSupply);
     let baseRate = this.baseRate(new Date());
 
@@ -116,6 +124,6 @@ export class Fees {
       baseRate = redeemedFractionOfSupply.div(this._beta).add(baseRate);
     }
 
-    return baseRate.lt(Decimal.ONE) ? baseRate : Decimal.ONE;
+    return Decimal.min(MINIMUM_REDEMPTION_RATE.add(baseRate), Decimal.ONE);
   }
 }

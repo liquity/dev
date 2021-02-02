@@ -308,7 +308,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
           .map(({ args: { _ETHSent, _ETHFee, _actualLUSDAmount, _attemptedLUSDAmount } }) => ({
             attemptedLUSDAmount: new Decimal(_attemptedLUSDAmount),
             actualLUSDAmount: new Decimal(_actualLUSDAmount),
-            collateralReceived: new Decimal(_ETHSent),
+            collateralTaken: new Decimal(_ETHSent),
             fee: new Decimal(_ETHFee)
           }))[0],
 
@@ -505,7 +505,6 @@ export class PopulatableEthersLiquity
       TransactionResponse,
       PopulatedTransaction
     > {
-  /** {@inheritDoc @liquity/lib-base#TransactableLiquity.openTrove} */
   async openTrove(
     params: TroveCreationParams<Decimalish>,
     optionalParams: _TroveCreationOptionalParams = {},
@@ -515,16 +514,16 @@ export class PopulatableEthersLiquity
     const { depositCollateral, borrowLUSD } = normalized;
 
     const fees = borrowLUSD && (optionalParams.fees ?? (await this._readableLiquity.getFees()));
-    const feeFactor = fees?.borrowingFeeFactor();
-    const newTrove = Trove.create(normalized, feeFactor);
-    const maxFeeFactor = Decimal.max(feeFactor?.add(slippageTolerance) ?? 0, 0.005);
+    const borrowingRate = fees?.borrowingRate();
+    const newTrove = Trove.create(normalized, borrowingRate);
+    const maxBorrowingRate = borrowingRate?.add(slippageTolerance);
 
     return this._wrapTroveChangeWithFees(
       normalized,
       await this._contracts.borrowerOperations.estimateAndPopulate.openTrove(
         { value: depositCollateral.bigNumber, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
-        maxFeeFactor.bigNumber,
+        maxBorrowingRate?.bigNumber ?? 0,
         borrowLUSD?.bigNumber ?? 0,
         ...(await this._findHint(newTrove, optionalParams))
       )
@@ -584,9 +583,9 @@ export class PopulatableEthersLiquity
       borrowLUSD && (optionalParams.fees ?? this._readableLiquity.getFees())
     ]);
 
-    const feeFactor = fees?.borrowingFeeFactor();
-    const finalTrove = trove.adjust(normalized, feeFactor);
-    const maxFeeFactor = feeFactor && Decimal.max(feeFactor.add(slippageTolerance), 0.005);
+    const borrowingRate = fees?.borrowingRate();
+    const finalTrove = trove.adjust(normalized, borrowingRate);
+    const maxBorrowingRate = borrowingRate?.add(slippageTolerance);
 
     return this._wrapTroveChangeWithFees(
       normalized,
@@ -596,7 +595,7 @@ export class PopulatableEthersLiquity
           borrowLUSD ? addGasForPotentialLastFeeOperationTimeUpdate : id,
           addGasForPotentialListTraversal
         ),
-        maxFeeFactor?.bigNumber ?? 0,
+        maxBorrowingRate?.bigNumber ?? 0,
         withdrawCollateral?.bigNumber ?? 0,
         (borrowLUSD ?? repayLUSD)?.bigNumber ?? 0,
         !!borrowLUSD,
@@ -783,8 +782,8 @@ export class PopulatableEthersLiquity
       this._findRedemptionHints(amount, optionalParams)
     ]);
 
-    const feeFactor = fees.redemptionFeeFactor(amount.div(total.debt));
-    const maxFeeFactor = Decimal.max(feeFactor.add(slippageTolerance), 0.005);
+    const redemptionRate = fees.redemptionRate(amount.div(total.debt));
+    const maxRedemptionRate = Decimal.min(redemptionRate.add(slippageTolerance), Decimal.ONE);
 
     return this._wrapRedemption(
       await this._contracts.troveManager.estimateAndPopulate.redeemCollateral(
@@ -796,7 +795,7 @@ export class PopulatableEthersLiquity
         lowerPartialRedemptionHint,
         partialRedemptionHintNICR.bigNumber,
         redeemMaxIterations,
-        maxFeeFactor.bigNumber
+        maxRedemptionRate.bigNumber
       )
     );
   }

@@ -30,22 +30,22 @@ The constructor for this class is marked as internal. Third-party code should no
 |  [add(that)](./lib-base.trove.add.md) |  |  |
 |  [addCollateral(collateral)](./lib-base.trove.addcollateral.md) |  |  |
 |  [addDebt(debt)](./lib-base.trove.adddebt.md) |  |  |
-|  [adjust(params, borrowingFeeFactor)](./lib-base.trove.adjust.md) |  |  |
-|  [adjustTo(that, borrowingFeeFactor)](./lib-base.trove.adjustto.md) |  |  |
-|  [apply(change, borrowingFeeFactor)](./lib-base.trove.apply.md) |  |  |
+|  [adjust(params, borrowingRate)](./lib-base.trove.adjust.md) |  |  |
+|  [adjustTo(that, borrowingRate)](./lib-base.trove.adjustto.md) |  |  |
+|  [apply(change, borrowingRate)](./lib-base.trove.apply.md) |  |  |
 |  [collateralRatio(price)](./lib-base.trove.collateralratio.md) |  |  |
 |  [collateralRatioIsBelowCritical(price)](./lib-base.trove.collateralratioisbelowcritical.md) |  |  |
 |  [collateralRatioIsBelowMinimum(price)](./lib-base.trove.collateralratioisbelowminimum.md) |  |  |
-|  [create(params, borrowingFeeFactor)](./lib-base.trove.create.md) | <code>static</code> |  |
+|  [create(params, borrowingRate)](./lib-base.trove.create.md) | <code>static</code> |  |
 |  [equals(that)](./lib-base.trove.equals.md) |  |  |
 |  [isOpenableInRecoveryMode(price)](./lib-base.trove.isopenableinrecoverymode.md) |  |  |
 |  [multiply(multiplier)](./lib-base.trove.multiply.md) |  |  |
-|  [recreate(that, borrowingFeeFactor)](./lib-base.trove.recreate.md) | <code>static</code> |  |
+|  [recreate(that, borrowingRate)](./lib-base.trove.recreate.md) | <code>static</code> |  |
 |  [setCollateral(collateral)](./lib-base.trove.setcollateral.md) |  |  |
 |  [setDebt(debt)](./lib-base.trove.setdebt.md) |  |  |
 |  [subtract(that)](./lib-base.trove.subtract.md) |  |  |
 |  [subtractCollateral(collateral)](./lib-base.trove.subtractcollateral.md) |  |  |
 |  [subtractDebt(debt)](./lib-base.trove.subtractdebt.md) |  |  |
 |  [toString()](./lib-base.trove.tostring.md) |  |  |
-|  [whatChanged(that, borrowingFeeFactor)](./lib-base.trove.whatchanged.md) |  |  |
+|  [whatChanged(that, borrowingRate)](./lib-base.trove.whatchanged.md) |  |  |
 

@@ -149,7 +149,7 @@ export interface TroveCreationDetails {
   /** The Trove that was created by the transaction. */
   newTrove: Trove;
 
-  /** Amount of LUSD paid as borrowing fee. */
+  /** Amount of LUSD added to the Trove's debt as borrowing fee. */
   fee: Decimal;
 }
 
@@ -165,7 +165,7 @@ export interface TroveAdjustmentDetails {
   /** New state of the adjusted Trove directly after the transaction. */
   newTrove: Trove;
 
-  /** Amount of LUSD paid as borrowing fee. */
+  /** Amount of LUSD added to the Trove's debt as borrowing fee. */
   fee: Decimal;
 }
 
@@ -219,10 +219,10 @@ export interface RedemptionDetails {
    */
   actualLUSDAmount: Decimal;
 
-  /** Amount of native currency (e.g. Ether) received in exchange for the redeemed LUSD. */
-  collateralReceived: Decimal;
+  /** Amount of collateral (e.g. Ether) taken from troves by the transaction. */
+  collateralTaken: Decimal;
 
-  /** Amount of native currency (e.g. Ether) deducted as fee. */
+  /** Amount of native currency (e.g. Ether) deducted as fee from collateral taken. */
   fee: Decimal;
 }
 

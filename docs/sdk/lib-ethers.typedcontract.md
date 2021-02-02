@@ -7,9 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type TypedContract<T, U> = TypeSafeContract<T> & U & {
+export declare type TypedContract<T, U, V> = TypeSafeContract<T> & U & {
+    [P in keyof V]: V[P] extends (...args: infer A) => unknown ? (...args: A) => Promise<ContractTransaction> : never;
+} & {
+    readonly callStatic: {
+        [P in keyof V]: V[P] extends (...args: [...infer A, never]) => infer R ? (...args: [...A, ...CallOverridesArg]) => R : never;
+    };
     readonly estimateAndPopulate: {
-        [P in keyof U]: U[P] extends (...args: [...infer A, infer O | undefined]) => unknown ? EstimatedContractFunction<PopulatedTransaction, A, O> : never;
+        [P in keyof V]: V[P] extends (...args: [...infer A, infer O | undefined]) => unknown ? EstimatedContractFunction<PopulatedTransaction, A, O> : never;
     };
 };
 ```

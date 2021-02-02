@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-apply(change: TroveChange<Decimalish> | undefined, borrowingFeeFactor?: Decimalish): Trove;
+apply(change: TroveChange<Decimalish> | undefined, borrowingRate?: Decimalish): Trove;
 ```
 
 ## Parameters
@@ -15,7 +15,7 @@ apply(change: TroveChange<Decimalish> | undefined, borrowingFeeFactor?: Decimali
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  change | [TroveChange](./lib-base.trovechange.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; \| undefined |  |
-|  borrowingFeeFactor | [Decimalish](./decimal.decimalish.md) |  |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
 
 <b>Returns:</b>
 

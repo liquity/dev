@@ -5,5 +5,5 @@ import { PriceFeed } from "../../generated/TroveManager/PriceFeed";
 export function getPrice(priceFeedAddress: Address): BigInt {
   let priceFeed = PriceFeed.bind(priceFeedAddress);
 
-  return priceFeed.getPrice();
+  return priceFeed.fetchPrice();
 }

@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-static create(params: TroveCreationParams<Decimalish>, borrowingFeeFactor?: Decimalish): Trove;
+static create(params: TroveCreationParams<Decimalish>, borrowingRate?: Decimalish): Trove;
 ```
 
 ## Parameters
@@ -15,7 +15,7 @@ static create(params: TroveCreationParams<Decimalish>, borrowingFeeFactor?: Deci
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
-|  borrowingFeeFactor | [Decimalish](./decimal.decimalish.md) |  |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
 
 <b>Returns:</b>
 

@@ -4,7 +4,7 @@
 
 ## RedemptionDetails.fee property
 
-Amount of native currency (e.g. Ether) deducted as fee.
+Amount of native currency (e.g. Ether) deducted as fee from collateral taken.
 
 <b>Signature:</b>
 

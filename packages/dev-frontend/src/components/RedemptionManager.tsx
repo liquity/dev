@@ -100,9 +100,9 @@ export const RedemptionManager: React.FC = () => {
 
   const edited = !lusdAmount.isZero;
   const ethAmount = lusdAmount.div(price);
-  const feeFactor = fees.redemptionFeeFactor(lusdAmount.div(total.debt));
-  const feePct = new Percent(feeFactor);
-  const ethFee = ethAmount.mul(feeFactor);
+  const redemptionRate = fees.redemptionRate(lusdAmount.div(total.debt));
+  const feePct = new Percent(redemptionRate);
+  const ethFee = ethAmount.mul(redemptionRate);
 
   return (
     <>

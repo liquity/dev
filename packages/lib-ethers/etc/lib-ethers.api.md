@@ -13,6 +13,7 @@ import { CollateralGainTransferDetails } from '@liquity/lib-base';
 import { _CollateralGainTransferOptionalParams } from '@liquity/lib-base';
 import { Contract } from '@ethersproject/contracts';
 import { ContractInterface } from '@ethersproject/contracts';
+import { ContractTransaction } from '@ethersproject/contracts';
 import { Decimal } from '@liquity/decimal';
 import { Decimalish } from '@liquity/decimal';
 import { EventFilter } from '@ethersproject/contracts';
@@ -363,6 +364,8 @@ export const TransactableEthersLiquity: new (sendable: SendableEthersLiquity) =>
 //
 // @public (undocumented)
 export type TypedContract<T, U, V> = TypeSafeContract<T> & U & {
+    [P in keyof V]: V[P] extends (...args: infer A) => unknown ? (...args: A) => Promise<ContractTransaction> : never;
+} & {
     readonly callStatic: {
         [P in keyof V]: V[P] extends (...args: [...infer A, never]) => infer R ? (...args: [...A, ...CallOverridesArg]) => R : never;
     };
@@ -385,8 +388,8 @@ export interface TypedLogDescription<T> extends Omit<LogDescription, "args"> {
 
 // Warnings were encountered during analysis:
 //
-// src/contracts.ts:86:5 - (ae-forgotten-export) The symbol "CallOverridesArg" needs to be exported by the entry point index.d.ts
-// src/contracts.ts:92:5 - (ae-forgotten-export) The symbol "EstimatedContractFunction" needs to be exported by the entry point index.d.ts
+// src/contracts.ts:92:5 - (ae-forgotten-export) The symbol "CallOverridesArg" needs to be exported by the entry point index.d.ts
+// src/contracts.ts:98:5 - (ae-forgotten-export) The symbol "EstimatedContractFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 
