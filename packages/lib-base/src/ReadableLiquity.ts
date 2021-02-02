@@ -23,6 +23,9 @@ export type FrontendStatus =
 /**
  * Read the state of the Liquity protocol.
  *
+ * @remarks
+ * Implemented by {@link @liquity/lib-ethers#EthersLiquity}.
+ *
  * @public
  */
 export interface ReadableLiquity {

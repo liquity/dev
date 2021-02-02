@@ -12,6 +12,10 @@ Read the state of the Liquity protocol.
 export interface ReadableLiquity 
 ```
 
+## Remarks
+
+Implemented by [EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->.
+
 ## Methods
 
 |  Method | Description |

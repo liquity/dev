@@ -295,6 +295,8 @@ export interface CollateralGainTransferDetails extends StabilityPoolGainsWithdra
  * The functions return the details of the transaction (if any), or throw
  * {@link TransactionFailedError} in case of transaction failure.
  *
+ * Implemented by {@link @liquity/lib-ethers#EthersLiquity}.
+ *
  * @public
  */
 export interface TransactableLiquity {
