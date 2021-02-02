@@ -783,7 +783,7 @@ The first redemption hint is the address of the trove from which to start the re
 
 If when the transaction is confirmed the address is in fact not valid - the system will start from the lowest ICR trove in the system, and step upwards until it finds the first trove with ICR >= 110% to redeem from. In this case, since the number of troves below 110% will be limited due to ongoing liquidations, there's a good chance that the redemption transaction still succeed. 
 
-### Partial redemption hints
+#### Partial redemption hints
 
 All Troves that are fully redeemed from in a redemption sequence are left with zero debt, and are reinserted at the top of the SortedTroves list.
 
