@@ -12,7 +12,7 @@ import {
 
 let silent = true;
 
-export const setSilent = (s: boolean) => {
+export const setSilent = (s: boolean): void => {
   silent = s;
 };
 
@@ -20,7 +20,7 @@ const deployContract = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   contractName: string,
-  ...args: any[]
+  ...args: unknown[]
 ) => {
   silent || console.log(`Deploying ${contractName} ...`);
   const contract = await (await getContractFactory(contractName, deployer)).deploy(...args);
@@ -167,6 +167,7 @@ const connectContracts = async (
         priceFeed.address,
         lusdToken.address,
         sortedTroves.address,
+        lqtyToken.address,
         lqtyStaking.address,
         { ...overrides, nonce }
       ),

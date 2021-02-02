@@ -83,6 +83,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "_lqtyTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "LQTYTokenAddressChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "_newLUSDTokenAddress",
         "type": "address"
       }
@@ -312,6 +325,32 @@
   },
   {
     "inputs": [],
+    "name": "BOOTSTRAP_PERIOD",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "BORROWING_FEE_FLOOR",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "CCR",
     "outputs": [
       {
@@ -377,6 +416,19 @@
   },
   {
     "inputs": [],
+    "name": "MAX_BORROWING_FEE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "MCR",
     "outputs": [
       {
@@ -404,6 +456,19 @@
   {
     "inputs": [],
     "name": "PERCENT_DIVISOR",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "REDEMPTION_FEE_FLOOR",
     "outputs": [
       {
         "internalType": "uint256",
@@ -583,7 +648,13 @@
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
+      }
+    ],
     "name": "checkRecoveryMode",
     "outputs": [
       {
@@ -685,6 +756,19 @@
       }
     ],
     "name": "getBorrowingFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBorrowingRate",
     "outputs": [
       {
         "internalType": "uint256",
@@ -838,6 +922,25 @@
   },
   {
     "inputs": [],
+    "name": "getRedemptionRate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_price",
+        "type": "uint256"
+      }
+    ],
     "name": "getTCR",
     "outputs": [
       {
@@ -1117,6 +1220,19 @@
   },
   {
     "inputs": [],
+    "name": "lqtyToken",
+    "outputs": [
+      {
+        "internalType": "contract ILQTYToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "lusdToken",
     "outputs": [
       {
@@ -1279,6 +1395,11 @@
       {
         "internalType": "address",
         "name": "_sortedTrovesAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_lqtyTokenAddress",
         "type": "address"
       },
       {

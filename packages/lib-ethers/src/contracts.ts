@@ -7,7 +7,9 @@ import {
   ContractInterface,
   ContractFunction,
   Overrides,
-  PopulatedTransaction
+  CallOverrides,
+  PopulatedTransaction,
+  ContractTransaction
 } from "@ethersproject/contracts";
 
 import activePoolAbi from "../abi/ActivePool.json";
@@ -78,16 +80,23 @@ type EstimatedContractFunction<R = unknown, A extends unknown[] = unknown[], O =
   ...args: A
 ) => Promise<R>;
 
-export type TypedContract<T, U> = TypeSafeContract<T> &
-  U & {
-    // readonly estimateAndCall: {
-    //   [P in keyof U]: U[P] extends (...args: [...infer A, infer O | undefined]) => Promise<infer R>
-    //     ? EstimatedContractFunction<R, A, O>
-    //     : never;
-    // };
+type CallOverridesArg = [overrides?: CallOverrides];
+
+export type TypedContract<T, U, V> = TypeSafeContract<T> &
+  U &
+  {
+    [P in keyof V]: V[P] extends (...args: infer A) => unknown
+      ? (...args: A) => Promise<ContractTransaction>
+      : never;
+  } & {
+    readonly callStatic: {
+      [P in keyof V]: V[P] extends (...args: [...infer A, never]) => infer R
+        ? (...args: [...A, ...CallOverridesArg]) => R
+        : never;
+    };
 
     readonly estimateAndPopulate: {
-      [P in keyof U]: U[P] extends (...args: [...infer A, infer O | undefined]) => unknown
+      [P in keyof V]: V[P] extends (...args: [...infer A, infer O | undefined]) => unknown
         ? EstimatedContractFunction<PopulatedTransaction, A, O>
         : never;
     };
@@ -116,7 +125,6 @@ const buildEstimatedFunctions = <T>(
   );
 
 class LiquityContract extends Contract {
-  // readonly estimateAndCall: Record<string, EstimatedContractFunction>;
   readonly estimateAndPopulate: Record<string, EstimatedContractFunction<PopulatedTransaction>>;
 
   constructor(
@@ -138,7 +146,7 @@ class LiquityContract extends Contract {
   }
 }
 
-export type TypedLiquityContract<T = unknown> = TypedContract<LiquityContract, T>;
+export type TypedLiquityContract<T = unknown, U = unknown> = TypedContract<LiquityContract, T, U>;
 
 export interface LiquityContracts {
   activePool: ActivePool;

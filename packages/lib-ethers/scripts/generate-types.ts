@@ -69,17 +69,16 @@ const declareInterface = ({
   interface: Interface;
 }) =>
   [
-    `interface ${contractName}Functions {`,
-    ...Object.values(functions).map(({ name, constant, payable, inputs, outputs }) => {
-      const overridesType = constant ? "CallOverrides" : payable ? "PayableOverrides" : "Overrides";
+    `interface ${contractName}Calls {`,
+    ...Object.values(functions)
+      .filter(({ constant }) => constant)
+      .map(({ name, inputs, outputs }) => {
+        const params = [
+          ...inputs.map((input, i) => `${input.name || "arg" + i}: ${getType(input, true)}`),
+          `_overrides?: CallOverrides`
+        ];
 
-      const params = [
-        ...inputs.map((input, i) => `${input.name || "arg" + i}: ${getType(input, true)}`),
-        `_overrides?: ${overridesType}`
-      ];
-
-      let returnType: string;
-      if (constant) {
+        let returnType: string;
         if (!outputs || outputs.length == 0) {
           returnType = "void";
         } else if (outputs.length === 1) {
@@ -87,16 +86,37 @@ const declareInterface = ({
         } else {
           returnType = getTupleType(outputs, false);
         }
-      } else {
-        returnType = "ContractTransaction";
-      }
 
-      return `  ${name}(${params.join(", ")}): Promise<${returnType}>;`;
-    }),
+        return `  ${name}(${params.join(", ")}): Promise<${returnType}>;`;
+      }),
+    "}\n",
+
+    `interface ${contractName}Transactions {`,
+    ...Object.values(functions)
+      .filter(({ constant }) => !constant)
+      .map(({ name, payable, inputs, outputs }) => {
+        const overridesType = payable ? "PayableOverrides" : "Overrides";
+
+        const params = [
+          ...inputs.map((input, i) => `${input.name || "arg" + i}: ${getType(input, true)}`),
+          `_overrides?: ${overridesType}`
+        ];
+
+        let returnType: string;
+        if (!outputs || outputs.length == 0) {
+          returnType = "void";
+        } else if (outputs.length === 1) {
+          returnType = getType(outputs[0], false);
+        } else {
+          returnType = getTupleType(outputs, false);
+        }
+
+        return `  ${name}(${params.join(", ")}): Promise<${returnType}>;`;
+      }),
     "}\n",
 
     `export interface ${contractName}`,
-    `  extends TypedLiquityContract<${contractName}Functions> {`,
+    `  extends TypedLiquityContract<${contractName}Calls, ${contractName}Transactions> {`,
 
     "  readonly filters: {",
     ...Object.values(events).map(({ name, inputs }) => {
@@ -152,7 +172,6 @@ import {
   Overrides,
   CallOverrides,
   PayableOverrides,
-  ContractTransaction,
   EventFilter
 } from "@ethersproject/contracts";
 

@@ -4,6 +4,7 @@ import path from "path";
 import dotenv from "dotenv";
 import "colors";
 
+import { AddressZero } from "@ethersproject/constants";
 import { JsonFragment } from "@ethersproject/abi";
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
@@ -182,6 +183,7 @@ task("deploy", "Deploys the contracts to the network")
 
         const tx = await contracts.priceFeed.setAddresses(
           aggregatorAddress[env.network.name],
+          AddressZero,
           overrides
         );
 
