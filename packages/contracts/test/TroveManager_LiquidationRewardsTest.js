@@ -7,6 +7,9 @@ const toBN = th.toBN
 const getDifference = th.getDifference
 const mv = testHelpers.MoneyValues
 
+const TroveManagerTester = artifacts.require("TroveManagerTester")
+const LUSDToken = artifacts.require("LUSDToken")
+
 contract('TroveManager - Redistribution reward calculations', async accounts => {
 
   const [
@@ -31,8 +34,16 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
 
   let contracts
 
+  const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
+
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
+    contracts.troveManager = await TroveManagerTester.new()
+    contracts.lusdToken = await LUSDToken.new(
+      contracts.troveManager.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address
+    )
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
@@ -51,10 +62,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
-  it("redistribution: A, B Open. B Liquidated. C, D Open. D Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
+  it("redistribution: A, B Open. B Liquidated. C, D Open. D Liquidated. Distributes correct rewards", async () => {
     // A, B open trove
-    await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -71,8 +82,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(200, 18))
 
     // C, D open troves
-    await borrowerOperations.openTrove(th._100pct, 0, carol, carol, { from: carol, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, 0, carol, carol, { from: carol, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -94,30 +105,30 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
       .toString()
 
     /* Expected collateral:
-    A: Alice receives 0.995 ETH from L1, and 2/3*0.995 ETH from L2.
-    expect aliceColl = 1 + 0.995 + 1.995/2.995 * 0.995 = 2.6577797 ETH
+    A: Alice receives 0.995 ETH from L1, and ~3/5*0.995 ETH from L2.
+    expect aliceColl = 2 + 0.995 + 2.995/4.995 * 0.995 = 3.5916 ETH
 
-    C: Carol receives 1/3 ETH from L2
-    expect carolColl = 1 + 1/2.995 * 0.995 = 1.33222 ETH
+    C: Carol receives ~2/5 ETH from L2
+    expect carolColl = 2 + 2/4.995 * 0.995 = 2.398 ETH
 
-    Total coll = 2 + 2 * 0.995 ETH
+    Total coll = 4 + 2 * 0.995 ETH
     */
-    assert.isAtMost(th.getDifference(alice_Coll, '2657779632721202212'), 1000)
-    assert.isAtMost(th.getDifference(carol_Coll, '1332220367278798001'), 1000)
+    assert.isAtMost(th.getDifference(alice_Coll, '3591601601601602000'), 1000)
+    assert.isAtMost(th.getDifference(carol_Coll, '2398398398398398398'), 1000)
 
 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl, dec(399, 16))
+    assert.equal(entireSystemColl, dec(599, 16))
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
 
   it("redistribution: A, B, C Open. C Liquidated. D, E, F Open. F Liquidated. Each trove opens with 1 ETH. Distributes correct rewards", async () => {
     // A, B C open troves
-    await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -134,9 +145,9 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await priceFeed.setPrice(dec(200, 18))
 
     // D, E, F open troves
-    await borrowerOperations.openTrove(th._100pct, 0, dennis, dennis, { from: dennis, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, 0, erin, erin, { from: erin, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), freddy, freddy, { from: freddy, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, 0, dennis, dennis, { from: dennis, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, 0, erin, erin, { from: erin, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), freddy, freddy, { from: freddy, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -167,25 +178,25 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     A and B receives 1/2 ETH * 0.995 from L1.
     total Coll: 3
 
-    A, B, receive (1.4975)/4.995 * 0.995 ETH from L2.
+    A, B, receive (2.4975)/8.995 * 0.995 ETH from L2.
     
-    D, E receive 1/4.995 * 0.995 ETH from L2.
+    D, E receive 2/8.995 * 0.995 ETH from L2.
 
-    expect A, B coll  = 1 +  0.4975 + 0.2983  = 1.7958 ETH
-    expect D, E coll  = 1 + 0.199199  = 1.199 ETH
+    expect A, B coll  = 2 +  0.4975 + 0.2763  =  ETH
+    expect D, E coll  = 2 + 0.2212  =  ETH
 
-    Total coll = 4 (non-liquidated) + 2 * 0.995 (liquidated and redistributed)
+    Total coll = 8 (non-liquidated) + 2 * 0.995 (liquidated and redistributed)
     */
-    assert.isAtMost(th.getDifference(alice_Coll, '1795800800800800844'), 1000)
-    assert.isAtMost(th.getDifference(bob_Coll, '1795800800800800844'), 1000)
-    assert.isAtMost(th.getDifference(dennis_Coll, '1199199199199199178'), 1000)
-    assert.isAtMost(th.getDifference(erin_Coll, '1199199199199199178'), 1000)
+    assert.isAtMost(th.getDifference(alice_Coll, '2773765981100611000'), 1000)
+    assert.isAtMost(th.getDifference(bob_Coll, '2773765981100611000'), 1000)
+    assert.isAtMost(th.getDifference(dennis_Coll, '2221234018899389000'), 1000)
+    assert.isAtMost(th.getDifference(erin_Coll, '2221234018899389000'), 1000)
 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
-    assert.equal(entireSystemColl, dec(599, 16))
+    assert.equal(entireSystemColl, dec(999, 16))
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
   ////
 
@@ -291,7 +302,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(entireSystemColl, '5925498128746874648'), 1000)
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(50, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(250, 18))
   })
 
   // ---Trove adds collateral --- 
@@ -483,8 +494,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   it("redistribution: A,B,C Open. Liq(C). B adds coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
     await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -501,7 +512,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // Alice withdraws 100 LUSD
-    await borrowerOperations.withdrawLUSD(th._100pct, dec(100, 18), alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), alice, alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -527,8 +538,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   it("redistribution: A,B,C Open. Liq(C). B tops up coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
     // A, B, C open troves
     await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -545,7 +556,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.addColl(bob, bob, { from: bob, value: dec(1, 'ether') })
 
     // D opens trove
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -567,10 +578,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     L2 (1.4975/3.995)*0.995 = 0.3730 ETH, 110*(1.4975/3.995) = 41.23 LUSDDebt
 
     coll: 1.8705 ETH
-    debt: 106.23 LUSDDebt
+    debt: 146.23 LUSDDebt
 
     totalColl: 4.99 ETH
-    totalDebt 330 LUSD (includes 10 each for gas compensation)
+    totalDebt 380 LUSD (includes 50 each for gas compensation)
     */
     const bob_Coll = ((await troveManager.Troves(bob))[1]
       .add(await troveManager.getPendingETHReward(bob)))
@@ -592,10 +603,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(bob_LUSDDebt, '233767209011264071710'), 10000)
 
     assert.isAtMost(th.getDifference(alice_Coll, '1870469336670838700'), 1000)
-    assert.isAtMost(th.getDifference(alice_LUSDDebt, '106232790988735928295'), 10000)
+    assert.isAtMost(th.getDifference(alice_LUSDDebt, '146232790988735928295'), 10000)
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
 
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). C tops up. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -683,7 +694,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_3, '3982020000000000000000')
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
 
   it("redistribution: Trove with the majority stake tops up. A,B,C, D open. Liq(D). A, B, C top up. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -775,7 +786,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_3, '3986010000000000000000')
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
 
   // --- Trove withdraws collateral ---
@@ -783,8 +794,8 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. Liq(A). B acquires all coll and debt", async () => {
     // A, B, C open troves
     await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -801,7 +812,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, bob, { from: bob })
 
     // Alice withdraws 100 LUSD
-    await borrowerOperations.withdrawLUSD(th._100pct, dec(100, 18), alice, alice, { from: alice })
+    await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -811,7 +822,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isTrue(txA.receipt.status)
     assert.isFalse(await sortedTroves.contains(alice))
 
-    // Expect Bob now holds all Ether and LUSDDebt in the system: 2.5 Ether and 330 LUSD
+    // Expect Bob now holds all Ether and LUSDDebt in the system: 2.5 Ether and 300 LUSD
     // 1 + 0.995/2 - 0.5 + 1.4975*0.995
     const bob_Coll = ((await troveManager.Troves(bob))[1]
       .add(await troveManager.getPendingETHReward(bob)))
@@ -822,17 +833,17 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
       .toString()
 
     assert.isAtMost(th.getDifference(bob_Coll, '2487512500000000000'), 1000)
-    assert.isAtMost(th.getDifference(bob_LUSDDebt, dec(330, 18)), 1000)
+    assert.isAtMost(th.getDifference(bob_LUSDDebt, dec(300, 18)), 1000)
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
 
   it("redistribution: A,B,C Open. Liq(C). B withdraws coll. D Opens. Liq(D). Distributes correct rewards.", async () => {
     // A, B, C open troves
     await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -849,7 +860,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await borrowerOperations.withdrawColl(dec(500, 'finney'), bob, bob, { from: bob })
 
     // D opens trove
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), dennis, dennis, { from: dennis, value: dec(1, 'ether') })
 
     // Price drops to 100 $/E
     await priceFeed.setPrice(dec(100, 18))
@@ -871,10 +882,10 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     L2 (1.4975/2.495)*0.995 = 0.5972 ETH, 110*(1.4975/2.495) = 66.022 LUSDDebt
 
     coll: (1 + 0.4975 + 0.5972) = 2.0947 ETH
-    debt: (10 + 55 + 66.022) = 121.022 LUSD Debt
+    debt: (50 + 55 + 66.022) = 171.022 LUSD Debt
 
     totalColl: 3.49 ETH
-    totalDebt 340 LUSD (Includes 10 in each trove for gas compensation)
+    totalDebt 380 LUSD (Includes 50 in each trove for gas compensation)
     */
     const bob_Coll = ((await troveManager.Troves(bob))[1]
       .add(await troveManager.getPendingETHReward(bob)))
@@ -896,15 +907,15 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(bob_LUSDDebt, '208977955911823642050'), 10000)
 
     assert.isAtMost(th.getDifference(alice_Coll, '2094699398797595257'), 1000)
-    assert.isAtMost(th.getDifference(alice_LUSDDebt, '131022044088176343730'), 10000)
+    assert.isAtMost(th.getDifference(alice_LUSDDebt, '171022044088176343730'), 10000)
 
     const entireSystemColl = (await activePool.getETH()).add(await defaultPool.getETH()).toString()
     assert.equal(entireSystemColl, '3490000000000000000')
     const entireSystemDebt = (await activePool.getLUSDDebt()).add(await defaultPool.getLUSDDebt()).toString()
-    assert.equal(entireSystemDebt, '340000000000000000000')
+    th.assertIsApproximatelyEqual(entireSystemDebt, '380000000000000000000')
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
 
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). C withdraws some coll. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -992,7 +1003,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_3, '3978030000000000000000')
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
 
   it("redistribution: Trove with the majority stake withdraws. A,B,C,D open. Liq(D). A, B, C withdraw. E Enters, Liq(E). Distributes correct rewards", async () => {
@@ -1099,16 +1110,16 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.equal(entireSystemColl_3, '3977032500000000000000')
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(20, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(100, 18))
   })
 
   // For calculations of correct values used in test, see scenario 1:
   // https://docs.google.com/spreadsheets/d/1F5p3nZy749K5jwO-bwJeTsRoY7ewMfWIQ3QHtokxqzo/edit?usp=sharing
   it("redistribution, all operations: A,B,C open. Liq(A). D opens. B adds, C withdraws. Liq(B). E & F open. D adds. Liq(F). All 1 ETH operations. Distributes correct rewards", async () => {
     // A, B, C open troves
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), bob, bob, { from: bob, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), carol, carol, { from: carol, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), bob, bob, { from: bob, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), carol, carol, { from: carol, value: dec(1, 'ether') })
 
     // Price drops to 1 $/E
     await priceFeed.setPrice(dec(1, 18))
@@ -1190,7 +1201,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(totalCollateralSnapshot, '6977512500000000000'), 1000000)
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(30, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(150, 18))
   })
 
   // For calculations of correct values used in test, see scenario 2:
@@ -1300,6 +1311,6 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     assert.isAtMost(th.getDifference(totalCollateralSnapshot, '19323232338512800000000'), 2000000000000)
 
     // check LUSD gas compensation
-    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(30, 18))
+    assert.equal((await lusdToken.balanceOf(owner)).toString(), dec(150, 18))
   })
 })
