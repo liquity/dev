@@ -162,9 +162,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 // If Tellor is not broken then remember Chainlink froze, and switch to Tellor
                 _changeStatus(Status.usingTellorChainlinkFrozen);
                
-                if (_tellorIsFrozen(tellorResponse)) {  
-                    return lastGoodPrice;
-                }
+                if (_tellorIsFrozen(tellorResponse)) { return lastGoodPrice;}
 
                 // If Tellor is working, use it
                 uint scaledTellorPrice = _storeTellorData(tellorResponse);
@@ -197,8 +195,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             * If Tellor is only frozen but otherwise returning valid data, just use the last good price.
             * Tellor may need to be tipped to return current data.
             */
-            if (_tellorIsFrozen(tellorResponse)) {
-                return lastGoodPrice;}
+            if (_tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
             
             // Otherwise, use Tellor price
             uint scaledTellorPrice = _storeTellorData(tellorResponse);
@@ -259,6 +256,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 _changeStatus(Status.tellorBrokenChainlinkFrozen);
                 return lastGoodPrice;
            }
+
+            // If Chainlink is frozen and Tellor is frozen, just return last good price (no status change)
+            console.log("chainlink frozen, tellor frozen");
+            if (_tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
 
             // if Chainlink is frozen and Tellor is live, keep using Tellor (no status change)
             uint scaledTellorPrice = _storeTellorData(tellorResponse);

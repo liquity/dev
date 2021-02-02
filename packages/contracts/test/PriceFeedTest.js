@@ -1337,6 +1337,64 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(123, 18))
   })
 
+  it.only("usingTellorChainlinkFrozen - when Chainlink still frozen and Tellor freezes, stay on usingTellorChainlinkFrozen", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await th.fastForwardTime(11800, web3.currentProvider) // Fast forward 3 hours
+
+    // check Chainlink price timestamp is out of date by > 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    const chainlinkUpdateTime = (await mockChainlink.latestRoundData())[3] 
+    assert.isTrue(chainlinkUpdateTime.lt(toBN(now).sub(toBN(10800))))
+
+     // check Tellor price timestamp is out of date by > 3 hours
+    const tellorUpdateTime = await mockTellor.getTimestampbyRequestIDandIndex(0, 0)
+    assert.isTrue(tellorUpdateTime.lt(toBN(now).sub(toBN(10800))))
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 3)  // status 3: using tellor, chainlink frozn
+  })
+
+  it.only("usingTellorChainlinkFrozen - when Chainlink still frozen and Tellor freezes, use the last good price", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(123, 6))
+
+    await th.fastForwardTime(11800, web3.currentProvider) // Fast forward 3 hours
+
+    // check Chainlink price timestamp is out of date by > 3 hours
+    const now = await th.getLatestBlockTimestamp(web3)
+    const chainlinkUpdateTime = (await mockChainlink.latestRoundData())[3] 
+    assert.isTrue(chainlinkUpdateTime.lt(toBN(now).sub(toBN(10800))))
+
+     // check Tellor price timestamp is out of date by > 3 hours
+    const tellorUpdateTime = await mockTellor.getTimestampbyRequestIDandIndex(0, 0)
+    assert.isTrue(tellorUpdateTime.lt(toBN(now).sub(toBN(10800))))
+
+    await priceFeed.fetchPrice()
+
+    const price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(50, 18))
+  })
+
+
+
   // --- Case 5 ---
   it("tellorFrozenChainlinkBroken - when Chainlink is live, switch back to Chainlink", async () => {
     await setAddresses()
