@@ -47,7 +47,6 @@
     "start-demo:dev-frontend": "yarn workspace @liquity/dev-frontend start-demo",
     "stop-demo": "yarn stop-dev-chain",
     "test": "run-s test:*",
-    "test:contracts": "yarn workspace @liquity/contracts test",
     "test:decimal": "yarn workspace @liquity/decimal test",
     "test:lib-base": "yarn workspace @liquity/lib-base test",
     "test:lib-ethers": "yarn workspace @liquity/lib-ethers test",
