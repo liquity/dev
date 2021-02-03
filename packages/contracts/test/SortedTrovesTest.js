@@ -3,6 +3,8 @@ const testHelpers = require("../utils/testHelpers.js")
 
 const SortedTroves = artifacts.require("SortedTroves")
 const SortedTrovesTester = artifacts.require("SortedTrovesTester")
+const TroveManagerTester = artifacts.require("TroveManagerTester")
+const LUSDToken = artifacts.require("LUSDToken")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -44,21 +46,31 @@ contract('SortedTroves', async accounts => {
   let sortedTroves
   let troveManager
   let borrowerOperations
+  let lusdToken
 
   const bountyAddress = accounts[998]
   const lpRewardsAddress = accounts[999]
 
   let contracts
 
+  const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
+
   describe('SortedTroves', () => {
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
+      contracts.troveManager = await TroveManagerTester.new()
+      contracts.lusdToken = await LUSDToken.new(
+        contracts.troveManager.address,
+        contracts.stabilityPool.address,
+        contracts.borrowerOperations.address
+      )
       const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
       priceFeed = contracts.priceFeedTestnet
       sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager
       borrowerOperations = contracts.borrowerOperations
+      lusdToken = contracts.lusdToken
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -66,7 +78,7 @@ contract('SortedTroves', async accounts => {
     })
 
     it('contains(): returns true for addresses that have opened troves', async () => {
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(5, 'ether') })
       await borrowerOperations.openTrove(th._100pct, '98908089089', carol, carol, { from: carol, value: '23082308092385098009809' })
 
@@ -82,7 +94,7 @@ contract('SortedTroves', async accounts => {
     })
 
     it('contains(): returns false for addresses that have not opened troves', async () => {
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(5, 'ether') })
       await borrowerOperations.openTrove(th._100pct, '98908089089', carol, carol, { from: carol, value: '23082308092385098009809' })
 
@@ -96,11 +108,15 @@ contract('SortedTroves', async accounts => {
     })
 
     it('contains(): returns false for addresses that opened and then closed a trove', async () => {
-      await borrowerOperations.openTrove(th._100pct, 0, whale, whale, { from: whale, value: dec(100, 'ether') })
-      
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, dec(20, 18), whale, whale, { from: whale, value: dec(100, 'ether') })
+
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(5, 'ether') })
       await borrowerOperations.openTrove(th._100pct, '98908089089', carol, carol, { from: carol, value: '23082308092385098009809' })
+
+      // to compensate borrowing fees
+      await lusdToken.transfer(alice, dec(10, 18), { from: whale })
+      await lusdToken.transfer(carol, dec(10, 18), { from: whale })
 
       // A, B, C close troves
       await borrowerOperations.closeTrove({ from: alice })
@@ -120,11 +136,15 @@ contract('SortedTroves', async accounts => {
 
     // true for addresses that opened -> closed -> opened a trove
     it('contains(): returns true for addresses that opened, closed and then re-opened a trove', async () => {
-      await borrowerOperations.openTrove(th._100pct, 0, whale, whale, { from: whale, value: dec(100, 'ether') })
-      
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, dec(20, 18), whale, whale, { from: whale, value: dec(100, 'ether') })
+
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(5, 'ether') })
       await borrowerOperations.openTrove(th._100pct, '98908089089', carol, carol, { from: carol, value: '23082308092385098009809' })
+
+      // to compensate borrowing fees
+      await lusdToken.transfer(alice, dec(10, 18), { from: whale })
+      await lusdToken.transfer(carol, dec(10, 18), { from: whale })
 
       // A, B, C close troves
       await borrowerOperations.closeTrove({ from: alice })
@@ -160,14 +180,14 @@ contract('SortedTroves', async accounts => {
 
     // true when list size is 1 and the trove the only one in system
     it('contains(): true when list size is 1 and the trove the only one in system', async () => {
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice, value: dec(1, 'ether') })
       
       assert.isTrue(await sortedTroves.contains(alice))
     })
 
     // false when list size is 1 and trove is not in the system
     it('contains(): false when list size is 1 and trove is not in the system', async () => {
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice, value: dec(1, 'ether') })
       
       assert.isFalse(await sortedTroves.contains(bob))
     })
