@@ -2,16 +2,19 @@
 
 [Home](./index.md) &gt; [@liquity/lib-ethers](./lib-ethers.md) &gt; [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md)
 
-## EthersTransactionOverrides type
+## EthersTransactionOverrides interface
 
 <b>Signature:</b>
 
 ```typescript
-export declare type EthersTransactionOverrides = Partial<Promisable<{
-    nonce: BigNumberish;
-    gasLimit: BigNumberish;
-    gasPrice: BigNumberish;
-}>>;
+export interface EthersTransactionOverrides 
 ```
-<b>References:</b> [Promisable](./lib-ethers.promisable.md)
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [gasLimit?](./lib-ethers.etherstransactionoverrides.gaslimit.md) | BigNumberish | <i>(Optional)</i> |
+|  [gasPrice?](./lib-ethers.etherstransactionoverrides.gasprice.md) | BigNumberish | <i>(Optional)</i> |
+|  [nonce?](./lib-ethers.etherstransactionoverrides.nonce.md) | BigNumberish | <i>(Optional)</i> |
 

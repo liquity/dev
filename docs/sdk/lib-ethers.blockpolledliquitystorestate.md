@@ -4,6 +4,8 @@
 
 ## BlockPolledLiquityStoreState type
 
+The type of [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->'s [state](./lib-base.liquitystore.state.md)<!-- -->.
+
 <b>Signature:</b>
 
 ```typescript

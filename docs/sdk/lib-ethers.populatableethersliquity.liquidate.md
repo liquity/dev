@@ -9,7 +9,7 @@ Liquidate one or more undercollateralized Troves.
 <b>Signature:</b>
 
 ```typescript
-liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<LiquidationDetails>>;
+liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<LiquidationDetails>>;
 ```
 
 ## Parameters
@@ -21,5 +21,5 @@ liquidate(address: string | string[], overrides?: EthersTransactionOverrides): P
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[LiquidationDetails](./lib-base.liquidationdetails.md)<!-- -->&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;[LiquidationDetails](./lib-base.liquidationdetails.md)<!-- -->&gt;&gt;
 

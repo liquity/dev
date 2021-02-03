@@ -16,6 +16,7 @@ import { ContractTransaction } from '@ethersproject/contracts';
 import { Decimal } from '@liquity/decimal';
 import { Decimalish } from '@liquity/decimal';
 import { EventFilter } from '@ethersproject/contracts';
+import { FailedReceipt } from '@liquity/lib-base';
 import { Fees } from '@liquity/lib-base';
 import { FrontendStatus } from '@liquity/lib-base';
 import { JsonFragment } from '@ethersproject/abi';
@@ -43,6 +44,7 @@ import { StabilityDeposit } from '@liquity/lib-base';
 import { StabilityDepositChangeDetails } from '@liquity/lib-base';
 import { StabilityPoolGainsWithdrawalDetails } from '@liquity/lib-base';
 import { _TransactableFrom } from '@liquity/lib-base';
+import { TransactionFailedError } from '@liquity/lib-base';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { Trove } from '@liquity/lib-base';
@@ -56,7 +58,7 @@ import { TroveWithPendingRedistribution } from '@liquity/lib-base';
 // @public (undocumented)
 export const addressesOf: (contracts: LiquityContracts) => LiquityContractAddresses;
 
-// @public (undocumented)
+// @public
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
     constructor(provider: Provider, account: string, liquity: ReadableEthersLiquity, frontendTag?: string);
     // @override (undocumented)
@@ -65,12 +67,12 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     protected _reduceExtra(oldState: BlockPolledLiquityStoreExtraState, stateUpdate: Partial<BlockPolledLiquityStoreExtraState>): BlockPolledLiquityStoreExtraState;
 }
 
-// @public (undocumented)
-export type BlockPolledLiquityStoreExtraState = {
+// @public
+export interface BlockPolledLiquityStoreExtraState {
     blockTag?: number;
-};
+}
 
-// @public (undocumented)
+// @public
 export type BlockPolledLiquityStoreState = LiquityStoreState<BlockPolledLiquityStoreExtraState>;
 
 // @public (undocumented)
@@ -86,14 +88,16 @@ export const deploymentOnNetwork: {
 export const DEV_CHAIN_ID = 17;
 
 // @public (undocumented)
-export type EthersCallOverrides = Partial<Promisable<{
-    blockTag: BlockTag;
-    from: string;
-}>>;
+export interface EthersCallOverrides {
+    // (undocumented)
+    blockTag?: BlockTag;
+    // (undocumented)
+    from?: string;
+}
 
 // Warning: (ae-forgotten-export) The symbol "GluedEthersLiquity" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export class EthersLiquity extends GluedEthersLiquity {
     constructor(readable: ReadableEthersLiquity, populatable: PopulatableEthersLiquity);
     // (undocumented)
@@ -106,12 +110,29 @@ export class EthersLiquity extends GluedEthersLiquity {
     readonly send: SendableEthersLiquity;
 }
 
+// @public
+export type EthersPopulatedTransaction = PopulatedTransaction;
+
+// @public
+export class EthersTransactionFailedError extends TransactionFailedError<FailedReceipt<EthersTransactionReceipt>> {
+    constructor(message: string, failedReceipt: FailedReceipt<EthersTransactionReceipt>);
+}
+
 // @public (undocumented)
-export type EthersTransactionOverrides = Partial<Promisable<{
-    nonce: BigNumberish;
-    gasLimit: BigNumberish;
-    gasPrice: BigNumberish;
-}>>;
+export interface EthersTransactionOverrides {
+    // (undocumented)
+    gasLimit?: BigNumberish;
+    // (undocumented)
+    gasPrice?: BigNumberish;
+    // (undocumented)
+    nonce?: BigNumberish;
+}
+
+// @public
+export type EthersTransactionReceipt = TransactionReceipt;
+
+// @public
+export type EthersTransactionResponse = TransactionResponse;
 
 // @public (undocumented)
 export type LiquityContractAbis = Record<LiquityContractsKey, JsonFragment[]>;
@@ -199,10 +220,10 @@ export type LiquityDeployment = {
     deploymentDate: number;
 };
 
-// Warning: (ae-forgotten-export) The symbol "EthersLiquityBase" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "_EthersLiquityBase" needs to be exported by the entry point index.d.ts
 //
 // @alpha (undocumented)
-export class ObservableEthersLiquity extends EthersLiquityBase implements ObservableLiquity {
+export class ObservableEthersLiquity extends _EthersLiquityBase implements ObservableLiquity {
     constructor(contracts: LiquityContracts, readableLiquity: ReadableEthersLiquity, userAddress?: string);
     // (undocumented)
     watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void;
@@ -222,75 +243,71 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
     watchTroveWithoutRewards(onTroveChanged: (trove: TroveWithPendingRedistribution) => void, address?: string): () => void;
 }
 
-// Warning: (ae-forgotten-export) The symbol "PopulatableEthersLiquityBase" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "_PopulatableEthersLiquityBase" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
-export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase implements PopulatableLiquity<TransactionReceipt, TransactionResponse, PopulatedTransaction> {
+// @public
+export class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase implements PopulatableLiquity<EthersTransactionReceipt, EthersTransactionResponse, EthersPopulatedTransaction> {
+    constructor(contracts: LiquityContracts, readableLiquity: ReadableLiquity, signer: Signer, store?: LiquityStore);
     // (undocumented)
-    adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+    claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
-    closeTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveClosureDetails>>;
+    closeTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveClosureDetails>>;
     // (undocumented)
-    depositCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    depositCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>>;
+    depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>>;
     // (undocumented)
-    liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<LiquidationDetails>>;
+    liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<LiquidationDetails>>;
     // (undocumented)
-    liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<LiquidationDetails>>;
+    liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<LiquidationDetails>>;
     // (undocumented)
-    openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveCreationDetails>>;
+    openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>>;
     // (undocumented)
-    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<RedemptionDetails>>;
+    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<RedemptionDetails>>;
     // (undocumented)
-    registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+    registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
-    repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+    sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
-    sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+    sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // @internal (undocumented)
-    setPrice(price: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+    setPrice(price: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
-    stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+    stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
-    transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>>;
+    transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<CollateralGainTransferDetails>>;
     // (undocumented)
-    unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+    unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
-    withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityPoolGainsWithdrawalDetails>>;
+    withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>>;
     // (undocumented)
-    withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+    withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
-    withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>>;
+    withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>>;
 }
 
-// @public (undocumented)
-export class PopulatedEthersTransaction<T = unknown> implements PopulatedLiquityTransaction<PopulatedTransaction, SentEthersTransaction<T>> {
-    constructor(rawPopulatedTransaction: PopulatedTransaction, parse: (rawReceipt: TransactionReceipt) => T, signer: Signer, contracts: LiquityContracts);
+// @public
+export class PopulatedEthersLiquityTransaction<T = unknown> implements PopulatedLiquityTransaction<EthersPopulatedTransaction, SentEthersLiquityTransaction<T>> {
+    // @internal
+    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, parse: (rawReceipt: EthersTransactionReceipt) => T, signer: Signer, contracts: LiquityContracts);
+    readonly rawPopulatedTransaction: EthersPopulatedTransaction;
     // (undocumented)
-    readonly rawPopulatedTransaction: PopulatedTransaction;
-    // (undocumented)
-    send(): Promise<SentEthersTransaction<T>>;
+    send(): Promise<SentEthersLiquityTransaction<T>>;
     }
 
 // @public (undocumented)
 export const priceFeedIsTestnet: (priceFeed: PriceFeed | PriceFeedTestnet) => priceFeed is PriceFeedTestnet;
 
-// @public (undocumented)
-export type Promisable<T> = {
-    [P in keyof T]: T[P] | Promise<T[P]>;
-};
-
-// @public (undocumented)
-export class ReadableEthersLiquity extends EthersLiquityBase implements ReadableLiquity {
+// @public
+export class ReadableEthersLiquity extends _EthersLiquityBase implements ReadableLiquity {
     // (undocumented)
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
@@ -327,31 +344,117 @@ export class ReadableEthersLiquity extends EthersLiquityBase implements Readable
     getTroveWithoutRewards(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
 }
 
-// @public (undocumented)
-export const redeemMaxIterations = 68;
+// @internal (undocumented)
+export const _redeemMaxIterations = 68;
 
-// @public (undocumented)
-export type SendableEthersLiquity = _SendableFrom<PopulatableEthersLiquity>;
-
-// @public (undocumented)
-export const SendableEthersLiquity: new (populatable: PopulatableEthersLiquity) => SendableEthersLiquity;
-
-// @public (undocumented)
-export class SentEthersTransaction<T = unknown> implements SentLiquityTransaction<TransactionResponse, LiquityReceipt<TransactionReceipt, T>> {
-    constructor(rawSentTransaction: TransactionResponse, parse: (rawReceipt: TransactionReceipt) => T, provider: Provider, contracts: LiquityContracts);
+// @public
+export class SendableEthersLiquity implements _SendableFrom<PopulatableEthersLiquity> {
+    constructor(populatable: PopulatableEthersLiquity);
     // (undocumented)
-    getReceipt(): Promise<LiquityReceipt<TransactionReceipt, T>>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    readonly rawSentTransaction: TransactionResponse;
+    borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    waitForReceipt(): Promise<MinedReceipt<TransactionReceipt, T>>;
+    claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    closeTrove(overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveClosureDetails>>;
+    // (undocumented)
+    depositCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    // (undocumented)
+    depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<StabilityDepositChangeDetails>>;
+    // (undocumented)
+    liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<LiquidationDetails>>;
+    // (undocumented)
+    liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<LiquidationDetails>>;
+    // (undocumented)
+    openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveCreationDetails>>;
+    // (undocumented)
+    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<RedemptionDetails>>;
+    // (undocumented)
+    registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    // (undocumented)
+    sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // @internal (undocumented)
+    setPrice(price: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<CollateralGainTransferDetails>>;
+    // (undocumented)
+    unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    // (undocumented)
+    withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>>;
+    // (undocumented)
+    withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<StabilityDepositChangeDetails>>;
 }
 
-// @public (undocumented)
-export type TransactableEthersLiquity = _TransactableFrom<SendableEthersLiquity>;
+// @public
+export class SentEthersLiquityTransaction<T = unknown> implements SentLiquityTransaction<EthersTransactionResponse, LiquityReceipt<EthersTransactionReceipt, T>> {
+    // @internal
+    constructor(rawSentTransaction: EthersTransactionResponse, parse: (rawReceipt: EthersTransactionReceipt) => T, provider: Provider, contracts: LiquityContracts);
+    // (undocumented)
+    getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>>;
+    readonly rawSentTransaction: EthersTransactionResponse;
+    // (undocumented)
+    waitForReceipt(): Promise<MinedReceipt<EthersTransactionReceipt, T>>;
+}
 
-// @public (undocumented)
-export const TransactableEthersLiquity: new (sendable: SendableEthersLiquity) => TransactableEthersLiquity;
+// @public
+export class TransactableEthersLiquity implements _TransactableFrom<SendableEthersLiquity> {
+    constructor(sendable: SendableEthersLiquity);
+    // (undocumented)
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+    // (undocumented)
+    borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+    // (undocumented)
+    claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    closeTrove(overrides?: EthersTransactionOverrides): Promise<TroveClosureDetails>;
+    // (undocumented)
+    depositCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+    // (undocumented)
+    depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<StabilityDepositChangeDetails>;
+    // (undocumented)
+    liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<LiquidationDetails>;
+    // (undocumented)
+    liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<LiquidationDetails>;
+    // (undocumented)
+    openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<TroveCreationDetails>;
+    // (undocumented)
+    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<RedemptionDetails>;
+    // (undocumented)
+    registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+    // (undocumented)
+    sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // @internal (undocumented)
+    setPrice(price: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<CollateralGainTransferDetails>;
+    // (undocumented)
+    unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+    // (undocumented)
+    withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<StabilityPoolGainsWithdrawalDetails>;
+    // (undocumented)
+    withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<StabilityDepositChangeDetails>;
+}
 
 // Warning: (ae-forgotten-export) The symbol "TypeSafeContract" needs to be exported by the entry point index.d.ts
 //

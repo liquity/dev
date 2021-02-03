@@ -9,7 +9,7 @@ Adjust existing Trove by changing its collateral, debt, or both.
 <b>Signature:</b>
 
 ```typescript
-adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
 ```
 
 ## Parameters
@@ -21,7 +21,7 @@ adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransac
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
 
 ## Remarks
 

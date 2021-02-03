@@ -4,12 +4,14 @@
 
 ## ReadableEthersLiquity class
 
+Ethers-based implementation of [ReadableLiquity](./lib-base.readableliquity.md)<!-- -->.
+
 <b>Signature:</b>
 
 ```typescript
-export declare class ReadableEthersLiquity extends EthersLiquityBase implements ReadableLiquity 
+export declare class ReadableEthersLiquity extends _EthersLiquityBase implements ReadableLiquity 
 ```
-<b>Extends:</b> EthersLiquityBase
+<b>Extends:</b> \_EthersLiquityBase
 
 <b>Implements:</b> [ReadableLiquity](./lib-base.readableliquity.md)
 

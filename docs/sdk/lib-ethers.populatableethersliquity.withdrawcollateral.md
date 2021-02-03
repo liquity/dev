@@ -9,7 +9,7 @@ Adjust existing Trove by withdrawing some of its collateral.
 <b>Signature:</b>
 
 ```typescript
-withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
 ```
 
 ## Parameters
@@ -21,7 +21,7 @@ withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): 
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
 
 ## Remarks
 

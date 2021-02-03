@@ -9,7 +9,7 @@ Make a new Stability Deposit, or top up existing one.
 <b>Signature:</b>
 
 ```typescript
-depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>>;
+depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>>;
 ```
 
 ## Parameters
@@ -22,7 +22,7 @@ depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?:
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[StabilityDepositChangeDetails](./lib-base.stabilitydepositchangedetails.md)<!-- -->&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;[StabilityDepositChangeDetails](./lib-base.stabilitydepositchangedetails.md)<!-- -->&gt;&gt;
 
 ## Remarks
 

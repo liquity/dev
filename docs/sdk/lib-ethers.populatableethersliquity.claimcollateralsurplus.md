@@ -9,7 +9,7 @@ Claim leftover collateral after a liquidation or redemption.
 <b>Signature:</b>
 
 ```typescript
-claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
 ```
 
 ## Parameters
@@ -20,7 +20,7 @@ claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<Populate
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;void&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;void&gt;&gt;
 
 ## Remarks
 

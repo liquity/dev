@@ -2,15 +2,18 @@
 
 [Home](./index.md) &gt; [@liquity/lib-ethers](./lib-ethers.md) &gt; [EthersCallOverrides](./lib-ethers.etherscalloverrides.md)
 
-## EthersCallOverrides type
+## EthersCallOverrides interface
 
 <b>Signature:</b>
 
 ```typescript
-export declare type EthersCallOverrides = Partial<Promisable<{
-    blockTag: BlockTag;
-    from: string;
-}>>;
+export interface EthersCallOverrides 
 ```
-<b>References:</b> [Promisable](./lib-ethers.promisable.md)
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [blockTag?](./lib-ethers.etherscalloverrides.blocktag.md) | BlockTag | <i>(Optional)</i> |
+|  [from?](./lib-ethers.etherscalloverrides.from.md) | string | <i>(Optional)</i> |
 

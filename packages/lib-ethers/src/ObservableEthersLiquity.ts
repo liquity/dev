@@ -10,7 +10,7 @@ import {
 } from "@liquity/lib-base";
 
 import { LiquityContracts } from "./contracts";
-import { EthersLiquityBase } from "./EthersLiquityBase";
+import { _EthersLiquityBase } from "./EthersLiquityBase";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
 const debouncingDelayMs = 50;
@@ -38,7 +38,7 @@ const debounce = (listener: (latestBlock: number) => void) => {
 };
 
 /** @alpha */
-export class ObservableEthersLiquity extends EthersLiquityBase implements ObservableLiquity {
+export class ObservableEthersLiquity extends _EthersLiquityBase implements ObservableLiquity {
   private _readableLiquity: ReadableEthersLiquity;
 
   constructor(

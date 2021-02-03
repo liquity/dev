@@ -14,7 +14,7 @@ export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = 
 
 ## Remarks
 
-Implemented by [SentEthersTransaction](./lib-ethers.sentetherstransaction.md)<!-- -->.
+Implemented by [SentEthersLiquityTransaction](./lib-ethers.sentethersliquitytransaction.md)<!-- -->.
 
 ## Properties
 

@@ -9,7 +9,7 @@ Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gai
 <b>Signature:</b>
 
 ```typescript
-withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
 ```
 
 ## Parameters
@@ -20,5 +20,5 @@ withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<Popula
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;void&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;void&gt;&gt;
 

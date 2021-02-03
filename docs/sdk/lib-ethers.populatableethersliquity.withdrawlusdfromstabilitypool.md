@@ -9,7 +9,7 @@ Withdraw LUSD from Stability Deposit.
 <b>Signature:</b>
 
 ```typescript
-withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>>;
+withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>>;
 ```
 
 ## Parameters
@@ -21,7 +21,7 @@ withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionO
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[StabilityDepositChangeDetails](./lib-base.stabilitydepositchangedetails.md)<!-- -->&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;[StabilityDepositChangeDetails](./lib-base.stabilitydepositchangedetails.md)<!-- -->&gt;&gt;
 
 ## Remarks
 

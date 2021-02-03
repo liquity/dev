@@ -15,8 +15,6 @@ getReceipt(): Promise<T>;
 
 Promise&lt;T&gt;
 
-A subtype of [LiquityReceipt](./lib-base.liquityreceipt.md)<!-- -->.
-
 ## Remarks
 
 Unlike [waitForReceipt()](./lib-base.sentliquitytransaction.waitforreceipt.md)<!-- -->, this function doesn't wait for the transaction to be mined.

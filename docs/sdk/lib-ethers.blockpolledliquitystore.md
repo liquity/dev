@@ -4,6 +4,8 @@
 
 ## BlockPolledLiquityStore class
 
+Ethers-based [LiquityStore](./lib-base.liquitystore.md) that updates state whenever there's a new block.
+
 <b>Signature:</b>
 
 ```typescript

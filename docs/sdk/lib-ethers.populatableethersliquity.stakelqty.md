@@ -9,7 +9,7 @@ Stake LQTY to start earning fee revenue or increase existing stake.
 <b>Signature:</b>
 
 ```typescript
-stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
+stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
 ```
 
 ## Parameters
@@ -21,7 +21,7 @@ stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<P
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;void&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;void&gt;&gt;
 
 ## Remarks
 

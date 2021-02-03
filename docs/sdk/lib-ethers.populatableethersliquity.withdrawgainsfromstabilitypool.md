@@ -9,7 +9,7 @@ Withdraw [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [L
 <b>Signature:</b>
 
 ```typescript
-withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityPoolGainsWithdrawalDetails>>;
+withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>>;
 ```
 
 ## Parameters
@@ -20,5 +20,5 @@ withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[StabilityPoolGainsWithdrawalDetails](./lib-base.stabilitypoolgainswithdrawaldetails.md)<!-- -->&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;[StabilityPoolGainsWithdrawalDetails](./lib-base.stabilitypoolgainswithdrawaldetails.md)<!-- -->&gt;&gt;
 

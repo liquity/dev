@@ -9,7 +9,7 @@ Adjust existing Trove by repaying some of its debt.
 <b>Signature:</b>
 
 ```typescript
-repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
 ```
 
 ## Parameters
@@ -21,7 +21,7 @@ repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<P
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
 
 ## Remarks
 

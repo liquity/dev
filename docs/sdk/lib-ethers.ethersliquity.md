@@ -4,6 +4,8 @@
 
 ## EthersLiquity class
 
+Convenience class that combines multiple interfaces of the library in one object.
+
 <b>Signature:</b>
 
 ```typescript

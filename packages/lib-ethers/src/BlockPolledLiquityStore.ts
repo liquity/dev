@@ -7,10 +7,28 @@ import { LiquityStore, LiquityStoreState, LiquityStoreBaseState } from "@liquity
 
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
-export type BlockPolledLiquityStoreExtraState = {
+/**
+ * Extra state added to {@link @liquity/lib-base#LiquityStoreState} by
+ * {@link BlockPolledLiquityStore}.
+ *
+ * @public
+ */
+export interface BlockPolledLiquityStoreExtraState {
+  /**
+   * Number of block that the store state was fetched from.
+   *
+   * @remarks
+   * May be undefined when the store state is fetched for the first time.
+   */
   blockTag?: number;
-};
+}
 
+/**
+ * The type of {@link BlockPolledLiquityStore}'s
+ * {@link @liquity/lib-base#LiquityStore.state | state}.
+ *
+ * @public
+ */
 export type BlockPolledLiquityStoreState = LiquityStoreState<BlockPolledLiquityStoreExtraState>;
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
@@ -26,6 +44,12 @@ const promiseAllValues = <T>(object: T) => {
 
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
+/**
+ * Ethers-based {@link @liquity/lib-base#LiquityStore} that updates state whenever there's a new
+ * block.
+ *
+ * @public
+ */
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
   private _provider: Provider;
   private _account: string;

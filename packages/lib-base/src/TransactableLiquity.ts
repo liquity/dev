@@ -1,6 +1,5 @@
 import { Decimal, Decimalish } from "@liquity/decimal";
 
-import { proxify } from "./utils";
 import { Trove, TroveAdjustmentParams, TroveClosureParams, TroveCreationParams } from "./Trove";
 import { StabilityDepositChange } from "./StabilityDeposit";
 
@@ -8,7 +7,7 @@ import { StabilityDepositChange } from "./StabilityDeposit";
  * A transaction that has been prepared for sending.
  *
  * @remarks
- * Implemented by {@link @liquity/lib-ethers#PopulatedEthersTransaction}.
+ * Implemented by {@link @liquity/lib-ethers#PopulatedEthersLiquityTransaction}.
  *
  * @public
  */
@@ -22,7 +21,7 @@ export interface PopulatedLiquityTransaction<
   /**
    * Send the transaction.
    *
-   * @returns An object that implements {@link SentLiquityTransaction}.
+   * @returns An object that implements {@link @liquity/lib-base#SentLiquityTransaction}.
    */
   send(): Promise<T>;
 }
@@ -36,9 +35,9 @@ export class TransactionFailedError<T extends FailedReceipt = FailedReceipt> ext
   readonly failedReceipt: T;
 
   /** @internal */
-  constructor(message: string, failedReceipt: T) {
+  constructor(name: string, message: string, failedReceipt: T) {
     super(message);
-    this.name = "TransactionFailedError";
+    this.name = name;
     this.failedReceipt = failedReceipt;
   }
 }
@@ -47,7 +46,7 @@ export class TransactionFailedError<T extends FailedReceipt = FailedReceipt> ext
  * A transaction that has already been sent.
  *
  * @remarks
- * Implemented by {@link @liquity/lib-ethers#SentEthersTransaction}.
+ * Implemented by {@link @liquity/lib-ethers#SentEthersLiquityTransaction}.
  *
  * @public
  */
@@ -58,18 +57,17 @@ export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = 
   /**
    * Check whether the transaction has been mined, and whether it was successful.
    *
-   * @returns A subtype of {@link LiquityReceipt}.
-   *
    * @remarks
-   * Unlike {@link SentLiquityTransaction.waitForReceipt | waitForReceipt()}, this function doesn't
-   * wait for the transaction to be mined.
+   * Unlike {@link @liquity/lib-base#SentLiquityTransaction.waitForReceipt | waitForReceipt()},
+   * this function doesn't wait for the transaction to be mined.
    */
   getReceipt(): Promise<T>;
 
   /**
    * Wait for the transaction to be mined, and check whether it was successful.
    *
-   * @returns Either a {@link FailedReceipt} or a {@link SuccessfulReceipt}.
+   * @returns Either a {@link @liquity/lib-base#FailedReceipt} or a
+   *          {@link @liquity/lib-base#SuccessfulReceipt}.
    */
   waitForReceipt(): Promise<Extract<T, MinedReceipt>>;
 }
@@ -292,8 +290,8 @@ export interface CollateralGainTransferDetails extends StabilityPoolGainsWithdra
  * Send Liquity transactions and wait for them to succeed.
  *
  * @remarks
- * The functions return the details of the transaction (if any), or throw
- * {@link TransactionFailedError} in case of transaction failure.
+ * The functions return the details of the transaction (if any), or throw an implementation-specific
+ * subclass of {@link TransactionFailedError} in case of transaction failure.
  *
  * Implemented by {@link @liquity/lib-ethers#EthersLiquity}.
  *
@@ -597,7 +595,7 @@ export type _Sendable<T, R = unknown, S = unknown> = {
  * The functions return an object implementing {@link SentLiquityTransaction}, which can be used
  * to monitor the transaction and get its details when it succeeds.
  *
- * Implemented by {@link @liquity/lib-ethers#EthersLiquity.send}.
+ * Implemented by {@link @liquity/lib-ethers#SendableEthersLiquity}.
  *
  * @public
  */
@@ -729,7 +727,7 @@ export type _Populatable<T, R = unknown, S = unknown, P = unknown> = {
  * The functions return an object implementing {@link PopulatedLiquityTransaction}, which can be
  * used to send the transaction and get a {@link SentLiquityTransaction}.
  *
- * Implemented by {@link @liquity/lib-ethers#EthersLiquity.populate}.
+ * Implemented by {@link @liquity/lib-ethers#PopulatableEthersLiquity}.
  *
  * @public
  */
@@ -914,30 +912,6 @@ export type _SendableFrom<T> = {
 };
 
 /** @internal */
-export const _sendableFrom = <T, U extends _Populatable<T>>(
-  _Populatable: new (...args: never[]) => U
-): new (populatable: U) => _SendableFrom<U> => {
-  const _Sendable = class {
-    _populatable: U;
-
-    constructor(populatable: U) {
-      this._populatable = populatable;
-    }
-  };
-
-  proxify(
-    _Sendable,
-    _Populatable,
-    method =>
-      async function (...args) {
-        return (await this._populatable[method].call(this._populatable, ...args)).send();
-      }
-  );
-
-  return (_Sendable as unknown) as new (populatable: U) => _SendableFrom<U>;
-};
-
-/** @internal */
 export type _TransactableFrom<T> = {
   [M in keyof T]: T[M] extends _SendMethod<
     infer A,
@@ -945,35 +919,4 @@ export type _TransactableFrom<T> = {
   >
     ? (...args: A) => Promise<D>
     : never;
-};
-
-/** @internal */
-export const _transactableFrom = <T, U extends _Sendable<T>>(
-  _Sendable: new (...args: never[]) => U
-): new (sendable: U) => _TransactableFrom<U> => {
-  const Transactable = class {
-    _sendable: U;
-
-    constructor(sendable: U) {
-      this._sendable = sendable;
-    }
-  };
-
-  proxify(
-    Transactable,
-    _Sendable,
-    method =>
-      async function (...args) {
-        const tx = await this._sendable[method].call(this._sendable, ...args);
-        const receipt = await tx.waitForReceipt();
-
-        if (receipt.status !== "succeeded") {
-          throw new TransactionFailedError("Transaction failed", receipt);
-        }
-
-        return receipt.details;
-      }
-  );
-
-  return (Transactable as unknown) as new (sendable: U) => _TransactableFrom<U>;
 };

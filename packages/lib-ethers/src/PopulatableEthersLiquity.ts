@@ -2,14 +2,9 @@ import assert from "assert";
 
 import { AddressZero } from "@ethersproject/constants";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
-import {
-  Provider,
-  TransactionResponse,
-  TransactionReceipt,
-  Log
-} from "@ethersproject/abstract-provider";
+import { Provider, Log } from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
-import { Contract, PopulatedTransaction } from "@ethersproject/contracts";
+import { Contract } from "@ethersproject/contracts";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 
@@ -23,8 +18,6 @@ import {
   LiquidationDetails,
   RedemptionDetails,
   PopulatedLiquityTransaction,
-  _sendableFrom,
-  _transactableFrom,
   _normalizeTroveAdjustment,
   TroveCreationParams,
   _normalizeTroveCreation,
@@ -41,16 +34,25 @@ import {
   _SendableFrom,
   _TransactableFrom,
   PopulatableLiquity,
-  LiquityStore
+  LiquityStore,
+  TransactionFailedError,
+  FailedReceipt
 } from "@liquity/lib-base";
 
+import {
+  EthersTransactionOverrides,
+  EthersPopulatedTransaction,
+  EthersTransactionReceipt,
+  EthersTransactionResponse
+} from "./types";
+
 import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
-import { EthersTransactionOverrides } from "./types";
-import { EthersLiquityBase } from "./EthersLiquityBase";
 import { logsToString } from "./parseLogs";
+import { _EthersLiquityBase } from "./EthersLiquityBase";
 
 // With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
-export const redeemMaxIterations = 68;
+/** @internal */
+export const _redeemMaxIterations = 68;
 
 const slippageTolerance = Decimal.from(0.005); // 0.5%
 
@@ -102,17 +104,28 @@ function* generateTrials(totalNumberOfTrials: number) {
   }
 }
 
-export class SentEthersTransaction<T = unknown>
-  implements SentLiquityTransaction<TransactionResponse, LiquityReceipt<TransactionReceipt, T>> {
-  readonly rawSentTransaction: TransactionResponse;
+/**
+ * A transaction that has already been sent.
+ *
+ * @remarks
+ * Returned by {@link SendableEthersLiquity} functions.
+ *
+ * @public
+ */
+export class SentEthersLiquityTransaction<T = unknown>
+  implements
+    SentLiquityTransaction<EthersTransactionResponse, LiquityReceipt<EthersTransactionReceipt, T>> {
+  /** Ethers' representation of a sent transaction. */
+  readonly rawSentTransaction: EthersTransactionResponse;
 
-  private readonly _parse: (rawReceipt: TransactionReceipt) => T;
+  private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
   private readonly _provider: Provider;
   private readonly _contracts: LiquityContracts;
 
+  /** @internal */
   constructor(
-    rawSentTransaction: TransactionResponse,
-    parse: (rawReceipt: TransactionReceipt) => T,
+    rawSentTransaction: EthersTransactionResponse,
+    parse: (rawReceipt: EthersTransactionReceipt) => T,
     provider: Provider,
     contracts: LiquityContracts
   ) {
@@ -122,7 +135,7 @@ export class SentEthersTransaction<T = unknown>
     this._contracts = contracts;
   }
 
-  private _receiptFrom(rawReceipt: TransactionReceipt | null) {
+  private _receiptFrom(rawReceipt: EthersTransactionReceipt | null) {
     return rawReceipt
       ? rawReceipt.status
         ? _successfulReceipt(rawReceipt, this._parse(rawReceipt), () =>
@@ -132,13 +145,15 @@ export class SentEthersTransaction<T = unknown>
       : _pendingReceipt;
   }
 
-  async getReceipt(): Promise<LiquityReceipt<TransactionReceipt, T>> {
+  /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.getReceipt} */
+  async getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>> {
     return this._receiptFrom(
       await this._provider.getTransactionReceipt(this.rawSentTransaction.hash)
     );
   }
 
-  async waitForReceipt(): Promise<MinedReceipt<TransactionReceipt, T>> {
+  /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.waitForReceipt} */
+  async waitForReceipt(): Promise<MinedReceipt<EthersTransactionReceipt, T>> {
     const receipt = this._receiptFrom(
       await this._provider.waitForTransaction(this.rawSentTransaction.hash)
     );
@@ -148,17 +163,28 @@ export class SentEthersTransaction<T = unknown>
   }
 }
 
-export class PopulatedEthersTransaction<T = unknown>
-  implements PopulatedLiquityTransaction<PopulatedTransaction, SentEthersTransaction<T>> {
-  readonly rawPopulatedTransaction: PopulatedTransaction;
+/**
+ * A transaction that has been prepared for sending.
+ *
+ * @remarks
+ * Returned by {@link PopulatableEthersLiquity} functions.
+ *
+ * @public
+ */
+export class PopulatedEthersLiquityTransaction<T = unknown>
+  implements
+    PopulatedLiquityTransaction<EthersPopulatedTransaction, SentEthersLiquityTransaction<T>> {
+  /** Unsigned transaction object populated by Ethers. */
+  readonly rawPopulatedTransaction: EthersPopulatedTransaction;
 
-  private readonly _parse: (rawReceipt: TransactionReceipt) => T;
+  private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
   private readonly _signer: Signer;
   private readonly _contracts: LiquityContracts;
 
+  /** @internal */
   constructor(
-    rawPopulatedTransaction: PopulatedTransaction,
-    parse: (rawReceipt: TransactionReceipt) => T,
+    rawPopulatedTransaction: EthersPopulatedTransaction,
+    parse: (rawReceipt: EthersTransactionReceipt) => T,
     signer: Signer,
     contracts: LiquityContracts
   ) {
@@ -168,12 +194,13 @@ export class PopulatedEthersTransaction<T = unknown>
     this._contracts = contracts;
   }
 
-  async send(): Promise<SentEthersTransaction<T>> {
+  /** {@inheritDoc @liquity/lib-base#PopulatedLiquityTransaction.send} */
+  async send(): Promise<SentEthersLiquityTransaction<T>> {
     if (!this._signer.provider) {
       throw new Error("Signer must have a Provider");
     }
 
-    return new SentEthersTransaction(
+    return new SentEthersLiquityTransaction(
       await this._signer.sendTransaction(this.rawPopulatedTransaction),
       this._parse,
       this._signer.provider,
@@ -188,7 +215,8 @@ interface TroveChangeWithFees<T> {
   fee: Decimal;
 }
 
-class PopulatableEthersLiquityBase extends EthersLiquityBase {
+/** @internal */
+class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
   protected readonly _readableLiquity: ReadableLiquity;
   protected readonly _store?: LiquityStore;
   protected readonly _signer: Signer;
@@ -206,8 +234,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     this._store = store;
   }
 
-  protected _wrapSimpleTransaction(rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction(
+  protected _wrapSimpleTransaction(rawPopulatedTransaction: EthersPopulatedTransaction) {
+    return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
       noDetails,
       this._signer,
@@ -215,8 +243,11 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     );
   }
 
-  protected _wrapTroveChangeWithFees<T>(params: T, rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction<TroveChangeWithFees<T>>(
+  protected _wrapTroveChangeWithFees<T>(
+    params: T,
+    rawPopulatedTransaction: EthersPopulatedTransaction
+  ) {
+    return new PopulatedEthersLiquityTransaction<TroveChangeWithFees<T>>(
       rawPopulatedTransaction,
 
       ({ logs }) => {
@@ -240,10 +271,10 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     );
   }
 
-  protected async _wrapTroveClosure(rawPopulatedTransaction: PopulatedTransaction) {
+  protected async _wrapTroveClosure(rawPopulatedTransaction: EthersPopulatedTransaction) {
     const userAddress = await this._signer.getAddress();
 
-    return new PopulatedEthersTransaction<TroveClosureDetails>(
+    return new PopulatedEthersLiquityTransaction<TroveClosureDetails>(
       rawPopulatedTransaction,
 
       ({ logs }) => {
@@ -267,8 +298,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     );
   }
 
-  protected _wrapLiquidation(rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction<LiquidationDetails>(
+  protected _wrapLiquidation(rawPopulatedTransaction: EthersPopulatedTransaction) {
+    return new PopulatedEthersLiquityTransaction<LiquidationDetails>(
       rawPopulatedTransaction,
 
       ({ logs }) => {
@@ -299,8 +330,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     );
   }
 
-  protected _wrapRedemption(rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction<RedemptionDetails>(
+  protected _wrapRedemption(rawPopulatedTransaction: EthersPopulatedTransaction) {
+    return new PopulatedEthersLiquityTransaction<RedemptionDetails>(
       rawPopulatedTransaction,
 
       ({ logs }) =>
@@ -341,8 +372,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     };
   }
 
-  protected _wrapStabilityPoolGainsWithdrawal(rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction<StabilityPoolGainsWithdrawalDetails>(
+  protected _wrapStabilityPoolGainsWithdrawal(rawPopulatedTransaction: EthersPopulatedTransaction) {
+    return new PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>(
       rawPopulatedTransaction,
       ({ logs }) => this._extractStabilityPoolGainsWithdrawalDetails(logs),
       this._signer,
@@ -352,9 +383,9 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
 
   protected _wrapStabilityDepositTopup(
     change: { depositLUSD: Decimal },
-    rawPopulatedTransaction: PopulatedTransaction
+    rawPopulatedTransaction: EthersPopulatedTransaction
   ) {
-    return new PopulatedEthersTransaction<StabilityDepositChangeDetails>(
+    return new PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>(
       rawPopulatedTransaction,
 
       ({ logs }) => ({
@@ -367,10 +398,12 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     );
   }
 
-  protected async _wrapStabilityDepositWithdrawal(rawPopulatedTransaction: PopulatedTransaction) {
+  protected async _wrapStabilityDepositWithdrawal(
+    rawPopulatedTransaction: EthersPopulatedTransaction
+  ) {
     const userAddress = await this._signer.getAddress();
 
-    return new PopulatedEthersTransaction<StabilityDepositChangeDetails>(
+    return new PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>(
       rawPopulatedTransaction,
 
       ({ logs }) => {
@@ -395,8 +428,8 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     );
   }
 
-  protected _wrapCollateralGainTransfer(rawPopulatedTransaction: PopulatedTransaction) {
-    return new PopulatedEthersTransaction<CollateralGainTransferDetails>(
+  protected _wrapCollateralGainTransfer(rawPopulatedTransaction: EthersPopulatedTransaction) {
+    return new PopulatedEthersLiquityTransaction<CollateralGainTransferDetails>(
       rawPopulatedTransaction,
 
       ({ logs }) => {
@@ -480,7 +513,7 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
     } = await this._contracts.hintHelpers.getRedemptionHints(
       amount.bigNumber,
       price.bigNumber,
-      redeemMaxIterations
+      _redeemMaxIterations
     );
 
     const collateralRatio = new Decimal(partialRedemptionHintNICR);
@@ -493,14 +526,33 @@ class PopulatableEthersLiquityBase extends EthersLiquityBase {
   }
 }
 
+/**
+ * Ethers-based implementation of {@link @liquity/lib-base#PopulatableLiquity}.
+ *
+ * @public
+ */
 export class PopulatableEthersLiquity
-  extends PopulatableEthersLiquityBase
-  implements PopulatableLiquity<TransactionReceipt, TransactionResponse, PopulatedTransaction> {
+  extends _PopulatableEthersLiquityBase
+  implements
+    PopulatableLiquity<
+      EthersTransactionReceipt,
+      EthersTransactionResponse,
+      EthersPopulatedTransaction
+    > {
+  constructor(
+    contracts: LiquityContracts,
+    readableLiquity: ReadableLiquity,
+    signer: Signer,
+    store?: LiquityStore
+  ) {
+    super(contracts, readableLiquity, signer, store);
+  }
+
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.openTrove} */
   async openTrove(
     params: TroveCreationParams<Decimalish>,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<TroveCreationDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>> {
     const normalized = _normalizeTroveCreation(params);
     const { depositCollateral, borrowLUSD } = normalized;
 
@@ -524,7 +576,7 @@ export class PopulatableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.closeTrove} */
   async closeTrove(
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<TroveClosureDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<TroveClosureDetails>> {
     return this._wrapTroveClosure(
       await this._contracts.borrowerOperations.estimateAndPopulate.closeTrove({ ...overrides }, id)
     );
@@ -534,7 +586,7 @@ export class PopulatableEthersLiquity
   depositCollateral(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>> {
     return this.adjustTrove({ depositCollateral: amount }, overrides);
   }
 
@@ -542,7 +594,7 @@ export class PopulatableEthersLiquity
   withdrawCollateral(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>> {
     return this.adjustTrove({ withdrawCollateral: amount }, overrides);
   }
 
@@ -550,7 +602,7 @@ export class PopulatableEthersLiquity
   borrowLUSD(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>> {
     return this.adjustTrove({ borrowLUSD: amount }, overrides);
   }
 
@@ -558,7 +610,7 @@ export class PopulatableEthersLiquity
   repayLUSD(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>> {
     return this.adjustTrove({ repayLUSD: amount }, overrides);
   }
 
@@ -566,7 +618,7 @@ export class PopulatableEthersLiquity
   async adjustTrove(
     params: TroveAdjustmentParams<Decimalish>,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>> {
     const normalized = _normalizeTroveAdjustment(params);
     const { depositCollateral, withdrawCollateral, borrowLUSD, repayLUSD } = normalized;
 
@@ -599,7 +651,7 @@ export class PopulatableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.claimCollateralSurplus} */
   async claimCollateralSurplus(
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<void>> {
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
     return this._wrapSimpleTransaction(
       await this._contracts.borrowerOperations.estimateAndPopulate.claimCollateral(
         { ...overrides },
@@ -612,7 +664,7 @@ export class PopulatableEthersLiquity
   async setPrice(
     price: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<void>> {
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
     if (!priceFeedIsTestnet(this._contracts.priceFeed)) {
       throw new Error("setPrice() unavailable on this deployment of Liquity");
     }
@@ -630,7 +682,7 @@ export class PopulatableEthersLiquity
   async liquidate(
     address: string | string[],
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<LiquidationDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<LiquidationDetails>> {
     if (Array.isArray(address)) {
       return this._wrapLiquidation(
         await this._contracts.troveManager.estimateAndPopulate.batchLiquidateTroves(
@@ -654,7 +706,7 @@ export class PopulatableEthersLiquity
   async liquidateUpTo(
     maximumNumberOfTrovesToLiquidate: number,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<LiquidationDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<LiquidationDetails>> {
     return this._wrapLiquidation(
       await this._contracts.troveManager.estimateAndPopulate.liquidateTroves(
         { ...overrides },
@@ -669,7 +721,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     frontendTag = AddressZero,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
     const depositLUSD = Decimal.from(amount);
 
     return this._wrapStabilityDepositTopup(
@@ -687,7 +739,7 @@ export class PopulatableEthersLiquity
   async withdrawLUSDFromStabilityPool(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
     return this._wrapStabilityDepositWithdrawal(
       await this._contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
@@ -700,7 +752,7 @@ export class PopulatableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawGainsFromStabilityPool} */
   async withdrawGainsFromStabilityPool(
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<StabilityPoolGainsWithdrawalDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>> {
     return this._wrapStabilityPoolGainsWithdrawal(
       await this._contracts.stabilityPool.estimateAndPopulate.withdrawFromSP(
         { ...overrides },
@@ -713,7 +765,7 @@ export class PopulatableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.transferCollateralGainToTrove} */
   async transferCollateralGainToTrove(
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<CollateralGainTransferDetails>> {
     const initialTrove = this._store?.state.trove ?? (await this._readableLiquity.getTrove());
     const deposit =
       this._store?.state.deposit ?? (await this._readableLiquity.getStabilityDeposit());
@@ -733,7 +785,7 @@ export class PopulatableEthersLiquity
     toAddress: string,
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<void>> {
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
     return this._wrapSimpleTransaction(
       await this._contracts.lusdToken.estimateAndPopulate.transfer(
         { ...overrides },
@@ -749,7 +801,7 @@ export class PopulatableEthersLiquity
     toAddress: string,
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<void>> {
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
     return this._wrapSimpleTransaction(
       await this._contracts.lqtyToken.estimateAndPopulate.transfer(
         { ...overrides },
@@ -764,7 +816,7 @@ export class PopulatableEthersLiquity
   async redeemLUSD(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<RedemptionDetails>> {
+  ): Promise<PopulatedEthersLiquityTransaction<RedemptionDetails>> {
     amount = Decimal.from(amount);
 
     const [
@@ -794,7 +846,7 @@ export class PopulatableEthersLiquity
         upperPartialRedemptionHint,
         lowerPartialRedemptionHint,
         partialRedemptionHintNICR.bigNumber,
-        redeemMaxIterations,
+        _redeemMaxIterations,
         maxRedemptionRate.bigNumber
       )
     );
@@ -804,7 +856,7 @@ export class PopulatableEthersLiquity
   async stakeLQTY(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<void>> {
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
     return this._wrapSimpleTransaction(
       await this._contracts.lqtyStaking.estimateAndPopulate.stake(
         { ...overrides },
@@ -818,7 +870,7 @@ export class PopulatableEthersLiquity
   async unstakeLQTY(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<void>> {
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
     return this._wrapSimpleTransaction(
       await this._contracts.lqtyStaking.estimateAndPopulate.unstake(
         { ...overrides },
@@ -831,7 +883,7 @@ export class PopulatableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawGainsFromStaking} */
   withdrawGainsFromStaking(
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<void>> {
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
     return this.unstakeLQTY(Decimal.ZERO, overrides);
   }
 
@@ -839,7 +891,7 @@ export class PopulatableEthersLiquity
   async registerFrontend(
     kickbackRate: Decimalish,
     overrides?: EthersTransactionOverrides
-  ): Promise<PopulatedEthersTransaction<void>> {
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
     return this._wrapSimpleTransaction(
       await this._contracts.stabilityPool.estimateAndPopulate.registerFrontEnd(
         { ...overrides },
@@ -850,14 +902,496 @@ export class PopulatableEthersLiquity
   }
 }
 
-export type SendableEthersLiquity = _SendableFrom<PopulatableEthersLiquity>;
+const sendTransaction = <T>(tx: PopulatedEthersLiquityTransaction<T>) => tx.send();
 
-export const SendableEthersLiquity: new (
-  populatable: PopulatableEthersLiquity
-) => SendableEthersLiquity = _sendableFrom(PopulatableEthersLiquity);
+/**
+ * Ethers-based implementation of {@link @liquity/lib-base#SendableLiquity}.
+ *
+ * @public
+ */
+export class SendableEthersLiquity implements _SendableFrom<PopulatableEthersLiquity> {
+  private _populate: PopulatableEthersLiquity;
 
-export type TransactableEthersLiquity = _TransactableFrom<SendableEthersLiquity>;
+  constructor(populatable: PopulatableEthersLiquity) {
+    this._populate = populatable;
+  }
 
-export const TransactableEthersLiquity: new (
-  sendable: SendableEthersLiquity
-) => TransactableEthersLiquity = _transactableFrom(SendableEthersLiquity);
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.openTrove} */
+  openTrove(
+    params: TroveCreationParams<Decimalish>,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<TroveCreationDetails>> {
+    return this._populate.openTrove(params, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.closeTrove} */
+  closeTrove(
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<TroveClosureDetails>> {
+    return this._populate.closeTrove(overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.adjustTrove} */
+  adjustTrove(
+    params: TroveAdjustmentParams<Decimalish>,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>> {
+    return this._populate.adjustTrove(params, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.depositCollateral} */
+  depositCollateral(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>> {
+    return this._populate.depositCollateral(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.withdrawCollateral} */
+  withdrawCollateral(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>> {
+    return this._populate.withdrawCollateral(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.borrowLUSD} */
+  borrowLUSD(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>> {
+    return this._populate.borrowLUSD(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.repayLUSD} */
+  repayLUSD(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>> {
+    return this._populate.repayLUSD(amount, overrides).then(sendTransaction);
+  }
+
+  /** @internal */
+  setPrice(
+    price: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<void>> {
+    return this._populate.setPrice(price, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.liquidate} */
+  liquidate(
+    address: string | string[],
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<LiquidationDetails>> {
+    return this._populate.liquidate(address, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.liquidateUpTo} */
+  liquidateUpTo(
+    maximumNumberOfTrovesToLiquidate: number,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<LiquidationDetails>> {
+    return this._populate
+      .liquidateUpTo(maximumNumberOfTrovesToLiquidate, overrides)
+      .then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.depositLUSDInStabilityPool} */
+  depositLUSDInStabilityPool(
+    amount: Decimalish,
+    frontendTag?: string,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<StabilityDepositChangeDetails>> {
+    return this._populate
+      .depositLUSDInStabilityPool(amount, frontendTag, overrides)
+      .then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.withdrawLUSDFromStabilityPool} */
+  withdrawLUSDFromStabilityPool(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<StabilityDepositChangeDetails>> {
+    return this._populate.withdrawLUSDFromStabilityPool(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.withdrawGainsFromStabilityPool} */
+  withdrawGainsFromStabilityPool(
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>> {
+    return this._populate.withdrawGainsFromStabilityPool(overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.transferCollateralGainToTrove} */
+  transferCollateralGainToTrove(
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<CollateralGainTransferDetails>> {
+    return this._populate.transferCollateralGainToTrove(overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.sendLUSD} */
+  sendLUSD(
+    toAddress: string,
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<void>> {
+    return this._populate.sendLUSD(toAddress, amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.sendLQTY} */
+  sendLQTY(
+    toAddress: string,
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<void>> {
+    return this._populate.sendLQTY(toAddress, amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.redeemLUSD} */
+  redeemLUSD(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<RedemptionDetails>> {
+    return this._populate.redeemLUSD(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.claimCollateralSurplus} */
+  claimCollateralSurplus(
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<void>> {
+    return this._populate.claimCollateralSurplus(overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.stakeLQTY} */
+  stakeLQTY(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<void>> {
+    return this._populate.stakeLQTY(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.unstakeLQTY} */
+  unstakeLQTY(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<void>> {
+    return this._populate.unstakeLQTY(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.withdrawGainsFromStaking} */
+  withdrawGainsFromStaking(
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<void>> {
+    return this._populate.withdrawGainsFromStaking(overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.registerFrontend} */
+  registerFrontend(
+    kickbackRate: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersLiquityTransaction<void>> {
+    return this._populate.registerFrontend(kickbackRate, overrides).then(sendTransaction);
+  }
+}
+
+/**
+ * Thrown by {@link TransactableEthersLiquity} functions in case of transaction failure.
+ *
+ * @public
+ */
+export class EthersTransactionFailedError extends TransactionFailedError<
+  FailedReceipt<EthersTransactionReceipt>
+> {
+  constructor(message: string, failedReceipt: FailedReceipt<EthersTransactionReceipt>) {
+    super("EthersTransactionFailedError", message, failedReceipt);
+  }
+}
+
+const waitForSuccess = async <T>(tx: SentEthersLiquityTransaction<T>) => {
+  const receipt = await tx.waitForReceipt();
+
+  if (receipt.status !== "succeeded") {
+    throw new EthersTransactionFailedError("Transaction failed", receipt);
+  }
+
+  return receipt.details;
+};
+
+/**
+ * Ethers-based implementation of {@link @liquity/lib-base#TransactableLiquity}.
+ *
+ * @public
+ */
+export class TransactableEthersLiquity implements _TransactableFrom<SendableEthersLiquity> {
+  private _send: SendableEthersLiquity;
+
+  constructor(sendable: SendableEthersLiquity) {
+    this._send = sendable;
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.openTrove}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  openTrove(
+    params: TroveCreationParams<Decimalish>,
+    overrides?: EthersTransactionOverrides
+  ): Promise<TroveCreationDetails> {
+    return this._send.openTrove(params, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.closeTrove}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  closeTrove(overrides?: EthersTransactionOverrides): Promise<TroveClosureDetails> {
+    return this._send.closeTrove(overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.adjustTrove}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  adjustTrove(
+    params: TroveAdjustmentParams<Decimalish>,
+    overrides?: EthersTransactionOverrides
+  ): Promise<TroveAdjustmentDetails> {
+    return this._send.adjustTrove(params, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.depositCollateral}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  depositCollateral(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<TroveAdjustmentDetails> {
+    return this._send.depositCollateral(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.withdrawCollateral}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  withdrawCollateral(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<TroveAdjustmentDetails> {
+    return this._send.withdrawCollateral(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.borrowLUSD}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  borrowLUSD(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<TroveAdjustmentDetails> {
+    return this._send.borrowLUSD(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.repayLUSD}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  repayLUSD(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<TroveAdjustmentDetails> {
+    return this._send.repayLUSD(amount, overrides).then(waitForSuccess);
+  }
+
+  /** @internal */
+  setPrice(price: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this._send.setPrice(price, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.liquidate}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  liquidate(
+    address: string | string[],
+    overrides?: EthersTransactionOverrides
+  ): Promise<LiquidationDetails> {
+    return this._send.liquidate(address, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.liquidateUpTo}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  liquidateUpTo(
+    maximumNumberOfTrovesToLiquidate: number,
+    overrides?: EthersTransactionOverrides
+  ): Promise<LiquidationDetails> {
+    return this._send
+      .liquidateUpTo(maximumNumberOfTrovesToLiquidate, overrides)
+      .then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.depositLUSDInStabilityPool}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  depositLUSDInStabilityPool(
+    amount: Decimalish,
+    frontendTag?: string,
+    overrides?: EthersTransactionOverrides
+  ): Promise<StabilityDepositChangeDetails> {
+    return this._send
+      .depositLUSDInStabilityPool(amount, frontendTag, overrides)
+      .then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.withdrawLUSDFromStabilityPool}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  withdrawLUSDFromStabilityPool(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<StabilityDepositChangeDetails> {
+    return this._send.withdrawLUSDFromStabilityPool(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.withdrawGainsFromStabilityPool}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  withdrawGainsFromStabilityPool(
+    overrides?: EthersTransactionOverrides
+  ): Promise<StabilityPoolGainsWithdrawalDetails> {
+    return this._send.withdrawGainsFromStabilityPool(overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.transferCollateralGainToTrove}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  transferCollateralGainToTrove(
+    overrides?: EthersTransactionOverrides
+  ): Promise<CollateralGainTransferDetails> {
+    return this._send.transferCollateralGainToTrove(overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.sendLUSD}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  sendLUSD(
+    toAddress: string,
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<void> {
+    return this._send.sendLUSD(toAddress, amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.sendLQTY}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  sendLQTY(
+    toAddress: string,
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<void> {
+    return this._send.sendLQTY(toAddress, amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.redeemLUSD}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  redeemLUSD(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<RedemptionDetails> {
+    return this._send.redeemLUSD(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.claimCollateralSurplus}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<void> {
+    return this._send.claimCollateralSurplus(overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.stakeLQTY}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this._send.stakeLQTY(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.unstakeLQTY}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this._send.unstakeLQTY(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.withdrawGainsFromStaking}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<void> {
+    return this._send.withdrawGainsFromStaking(overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.registerFrontend}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   */
+  registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this._send.registerFrontend(kickbackRate, overrides).then(waitForSuccess);
+  }
+}

@@ -1,6 +1,7 @@
 import { LiquityContracts } from "./contracts";
 
-export class EthersLiquityBase {
+/** @internal */
+export class _EthersLiquityBase {
   protected readonly _contracts: LiquityContracts;
   private readonly _userAddress?: string;
 

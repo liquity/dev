@@ -14,7 +14,7 @@ export interface TransactableLiquity
 
 ## Remarks
 
-The functions return the details of the transaction (if any), or throw [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+The functions return the details of the transaction (if any), or throw an implementation-specific subclass of [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
 
 Implemented by [EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->.
 

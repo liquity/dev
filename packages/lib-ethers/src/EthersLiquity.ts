@@ -17,6 +17,11 @@ const GluedEthersLiquity: new (
   readable: ReadableEthersLiquity
 ) => GluedEthersLiquity = _glue(TransactableEthersLiquity, ReadableEthersLiquity);
 
+/**
+ * Convenience class that combines multiple interfaces of the library in one object.
+ *
+ * @public
+ */
 export class EthersLiquity extends GluedEthersLiquity {
   readonly populate: PopulatableEthersLiquity;
   readonly send: SendableEthersLiquity;

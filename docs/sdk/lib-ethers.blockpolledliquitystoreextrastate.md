@@ -2,12 +2,19 @@
 
 [Home](./index.md) &gt; [@liquity/lib-ethers](./lib-ethers.md) &gt; [BlockPolledLiquityStoreExtraState](./lib-ethers.blockpolledliquitystoreextrastate.md)
 
-## BlockPolledLiquityStoreExtraState type
+## BlockPolledLiquityStoreExtraState interface
+
+Extra state added to [LiquityStoreState](./lib-base.liquitystorestate.md) by [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->.
 
 <b>Signature:</b>
 
 ```typescript
-export declare type BlockPolledLiquityStoreExtraState = {
-    blockTag?: number;
-};
+export interface BlockPolledLiquityStoreExtraState 
 ```
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [blockTag?](./lib-ethers.blockpolledliquitystoreextrastate.blocktag.md) | number | <i>(Optional)</i> Number of block that the store state was fetched from. |
+

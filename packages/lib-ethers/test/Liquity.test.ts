@@ -24,8 +24,8 @@ import { HintHelpers } from "../types";
 import { LiquityContracts, LiquityDeployment } from "../src/contracts";
 import {
   PopulatableEthersLiquity,
-  PopulatedEthersTransaction,
-  redeemMaxIterations
+  PopulatedEthersLiquityTransaction,
+  _redeemMaxIterations
 } from "../src/PopulatableEthersLiquity";
 import { EthersLiquity } from "../src/EthersLiquity";
 
@@ -712,8 +712,8 @@ describe("EthersLiquity", () => {
 
       // Deploy new instances of the contracts, for a clean slate
       deployment = await deployLiquity(deployer);
-      const otherUsersSubset = otherUsers.slice(0, redeemMaxIterations);
-      expect(otherUsersSubset).to.have.length(redeemMaxIterations);
+      const otherUsersSubset = otherUsers.slice(0, _redeemMaxIterations);
+      expect(otherUsersSubset).to.have.length(_redeemMaxIterations);
 
       [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
         deployer,
@@ -736,7 +736,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should redeem using the maximum iterations and almost all gas", async () => {
-      const { rawReceipt } = await waitForSuccess(liquity.send.redeemLUSD(redeemMaxIterations));
+      const { rawReceipt } = await waitForSuccess(liquity.send.redeemLUSD(_redeemMaxIterations));
 
       const gasUsed = rawReceipt.gasUsed.toNumber();
       // gasUsed is ~half the real used amount because of how refunds work, see:
@@ -865,7 +865,7 @@ describe("EthersLiquity", () => {
   });
 
   describe("Gas estimation (LQTY issuance)", () => {
-    const estimate = (tx: PopulatedEthersTransaction) =>
+    const estimate = (tx: PopulatedEthersLiquityTransaction) =>
       provider.estimateGas(tx.rawPopulatedTransaction);
 
     before(async function () {

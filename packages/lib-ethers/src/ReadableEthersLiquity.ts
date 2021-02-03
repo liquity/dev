@@ -13,7 +13,7 @@ import {
 
 import { MultiTroveGetter } from "../types";
 import { EthersCallOverrides } from "./types";
-import { EthersLiquityBase } from "./EthersLiquityBase";
+import { _EthersLiquityBase } from "./EthersLiquityBase";
 
 // TODO: these are constant in the contracts, so it doesn't make sense to make a call for them,
 // but to avoid having to update them here when we change them in the contracts, we could read
@@ -29,7 +29,12 @@ enum TroveStatus {
 
 const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
 
-export class ReadableEthersLiquity extends EthersLiquityBase implements ReadableLiquity {
+/**
+ * Ethers-based implementation of {@link @liquity/lib-base#ReadableLiquity}.
+ *
+ * @public
+ */
+export class ReadableEthersLiquity extends _EthersLiquityBase implements ReadableLiquity {
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotalRedistributed} */
   async getTotalRedistributed(overrides?: EthersCallOverrides): Promise<Trove> {
     const [collateral, debt] = await Promise.all([

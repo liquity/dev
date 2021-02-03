@@ -331,9 +331,6 @@ export type _SendableFrom<T> = {
     [M in keyof T]: T[M] extends _PopulateMethod<infer A, PopulatedLiquityTransaction<unknown, infer U>> ? _SendMethod<A, U> : never;
 };
 
-// @internal (undocumented)
-export const _sendableFrom: <T, U extends _Populatable<T, unknown, unknown, unknown>>(_Populatable: new (...args: never[]) => U) => new (populatable: U) => _SendableFrom<U>;
-
 // Warning: (ae-incompatible-release-tags) The symbol "SendableLiquity" is marked as @public, but its signature references "_Sendable" which is marked as @internal
 //
 // @public
@@ -435,9 +432,6 @@ export type _TransactableFrom<T> = {
     [M in keyof T]: T[M] extends _SendMethod<infer A, SentLiquityTransaction<unknown, LiquityReceipt<unknown, infer D>>> ? (...args: A) => Promise<D> : never;
 };
 
-// @internal (undocumented)
-export const _transactableFrom: <T, U extends _Sendable<T, unknown, unknown>>(_Sendable: new (...args: never[]) => U) => new (sendable: U) => _TransactableFrom<U>;
-
 // @public
 export interface TransactableLiquity {
     adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentDetails>;
@@ -468,7 +462,7 @@ export interface TransactableLiquity {
 // @public
 export class TransactionFailedError<T extends FailedReceipt = FailedReceipt> extends Error {
     // @internal
-    constructor(message: string, failedReceipt: T);
+    constructor(name: string, message: string, failedReceipt: T);
     // (undocumented)
     readonly failedReceipt: T;
 }

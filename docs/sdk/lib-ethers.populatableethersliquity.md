@@ -4,14 +4,22 @@
 
 ## PopulatableEthersLiquity class
 
+Ethers-based implementation of [PopulatableLiquity](./lib-base.populatableliquity.md)<!-- -->.
+
 <b>Signature:</b>
 
 ```typescript
-export declare class PopulatableEthersLiquity extends PopulatableEthersLiquityBase implements PopulatableLiquity<TransactionReceipt, TransactionResponse, PopulatedTransaction> 
+export declare class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase implements PopulatableLiquity<EthersTransactionReceipt, EthersTransactionResponse, EthersPopulatedTransaction> 
 ```
-<b>Extends:</b> PopulatableEthersLiquityBase
+<b>Extends:</b> \_PopulatableEthersLiquityBase
 
-<b>Implements:</b> [PopulatableLiquity](./lib-base.populatableliquity.md)<!-- -->&lt;TransactionReceipt, TransactionResponse, PopulatedTransaction&gt;
+<b>Implements:</b> [PopulatableLiquity](./lib-base.populatableliquity.md)<!-- -->&lt;[EthersTransactionReceipt](./lib-ethers.etherstransactionreceipt.md)<!-- -->, [EthersTransactionResponse](./lib-ethers.etherstransactionresponse.md)<!-- -->, [EthersPopulatedTransaction](./lib-ethers.etherspopulatedtransaction.md)<!-- -->&gt;
+
+## Constructors
+
+|  Constructor | Modifiers | Description |
+|  --- | --- | --- |
+|  [(constructor)(contracts, readableLiquity, signer, store)](./lib-ethers.populatableethersliquity._constructor_.md) |  | Constructs a new instance of the <code>PopulatableEthersLiquity</code> class |
 
 ## Methods
 

@@ -17,7 +17,7 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown> exten
 
 The functions return an object implementing [PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.md)<!-- -->, which can be used to send the transaction and get a [SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- -->.
 
-Implemented by [EthersLiquity.populate](./lib-ethers.ethersliquity.populate.md)<!-- -->.
+Implemented by [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md)<!-- -->.
 
 ## Methods
 

@@ -9,7 +9,7 @@ Open a new Trove by depositing collateral and borrowing LUSD.
 <b>Signature:</b>
 
 ```typescript
-openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveCreationDetails>>;
+openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>>;
 ```
 
 ## Parameters
@@ -21,5 +21,5 @@ openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransaction
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveCreationDetails](./lib-base.trovecreationdetails.md)<!-- -->&gt;&gt;
+Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;[TroveCreationDetails](./lib-base.trovecreationdetails.md)<!-- -->&gt;&gt;
 
