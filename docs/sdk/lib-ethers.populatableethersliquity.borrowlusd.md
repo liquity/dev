@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-borrowLUSD(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
 ```
 
 ## Parameters
@@ -15,7 +15,6 @@ borrowLUSD(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  amount | [Decimalish](./decimal.decimalish.md) |  |
-|  optionalParams | \_TroveAdjustmentOptionalParams |  |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

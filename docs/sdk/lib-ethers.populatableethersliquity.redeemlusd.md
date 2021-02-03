@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-redeemLUSD(amount: Decimalish, optionalParams?: _RedemptionOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<RedemptionDetails>>;
+redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<RedemptionDetails>>;
 ```
 
 ## Parameters
@@ -15,7 +15,6 @@ redeemLUSD(amount: Decimalish, optionalParams?: _RedemptionOptionalParams, overr
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  amount | [Decimalish](./decimal.decimalish.md) |  |
-|  optionalParams | \_RedemptionOptionalParams |  |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

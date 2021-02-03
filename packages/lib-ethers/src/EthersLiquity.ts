@@ -9,35 +9,23 @@ import {
   TransactableEthersLiquity
 } from "./PopulatableEthersLiquity";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
-import { ObservableEthersLiquity } from "./ObservableEthersLiquity";
 
-type GluedEthersLiquity = TransactableEthersLiquity &
-  ReadableEthersLiquity &
-  ObservableEthersLiquity;
+type GluedEthersLiquity = TransactableEthersLiquity & ReadableEthersLiquity;
 
 const GluedEthersLiquity: new (
   transactable: TransactableEthersLiquity,
-  readable: ReadableEthersLiquity,
-  observable: ObservableEthersLiquity
-) => GluedEthersLiquity = _glue(
-  TransactableEthersLiquity,
-  ReadableEthersLiquity,
-  ObservableEthersLiquity
-);
+  readable: ReadableEthersLiquity
+) => GluedEthersLiquity = _glue(TransactableEthersLiquity, ReadableEthersLiquity);
 
 export class EthersLiquity extends GluedEthersLiquity {
   readonly populate: PopulatableEthersLiquity;
   readonly send: SendableEthersLiquity;
 
-  constructor(
-    readable: ReadableEthersLiquity,
-    observable: ObservableEthersLiquity,
-    populatable: PopulatableEthersLiquity
-  ) {
+  constructor(readable: ReadableEthersLiquity, populatable: PopulatableEthersLiquity) {
     const sendable = new SendableEthersLiquity(populatable);
     const transactable = new TransactableEthersLiquity(sendable);
 
-    super(transactable, readable, observable);
+    super(transactable, readable);
 
     this.populate = populatable;
     this.send = sendable;
@@ -45,10 +33,9 @@ export class EthersLiquity extends GluedEthersLiquity {
 
   static from(contracts: LiquityContracts, signer: Signer, userAddress?: string): EthersLiquity {
     const readable = new ReadableEthersLiquity(contracts, userAddress);
-    const observable = new ObservableEthersLiquity(contracts, readable, userAddress);
     const populatable = new PopulatableEthersLiquity(contracts, readable, signer);
 
-    return new EthersLiquity(readable, observable, populatable);
+    return new EthersLiquity(readable, populatable);
   }
 
   static async connect(deployment: LiquityDeployment, signer: Signer): Promise<EthersLiquity> {

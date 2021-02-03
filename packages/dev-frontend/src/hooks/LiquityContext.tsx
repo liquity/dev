@@ -10,7 +10,11 @@ import {
   deploymentOnNetwork,
   connectToContracts,
   LiquityContracts,
-  DEV_CHAIN_ID
+  DEV_CHAIN_ID,
+  BlockPolledLiquityStore,
+  ReadableEthersLiquity,
+  PopulatableEthersLiquity,
+  LiquityDeployment
 } from "@liquity/lib-ethers";
 
 import { LiquityFrontendConfig, getConfig } from "../config";
@@ -19,11 +23,10 @@ type LiquityContextValue = {
   config: LiquityFrontendConfig;
   account: string;
   provider: Provider;
+  deployment: LiquityDeployment;
   contracts: LiquityContracts;
   liquity: EthersLiquity;
-  contractsVersion: string;
-  deploymentDate: number;
-  canSetPrice: boolean;
+  store: BlockPolledLiquityStore;
 };
 
 const LiquityContext = createContext<LiquityContextValue | undefined>(undefined);
@@ -84,10 +87,15 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
   }
 
-  const { addresses, version: contractsVersion, deploymentDate, priceFeedIsTestnet } = deployment;
   const signer = provider.getSigner(account);
-  const contracts = connectToContracts(addresses, priceFeedIsTestnet, signer);
-  const liquity = EthersLiquity.from(contracts, signer, account);
+
+  const contracts = connectToContracts(deployment.addresses, deployment.priceFeedIsTestnet, signer);
+  const readable = new ReadableEthersLiquity(contracts, account);
+  const store = new BlockPolledLiquityStore(provider, account, readable, config.frontendTag);
+  const populatable = new PopulatableEthersLiquity(contracts, readable, signer, store);
+  const liquity = new EthersLiquity(readable, populatable);
+
+  store.logging = true;
 
   return (
     <LiquityContext.Provider
@@ -95,11 +103,10 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         config,
         account,
         provider,
+        deployment,
         contracts,
         liquity,
-        contractsVersion,
-        deploymentDate,
-        canSetPrice: priceFeedIsTestnet
+        store
       }}
     >
       {children}

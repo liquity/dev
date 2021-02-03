@@ -62,7 +62,9 @@ const select = ({
 });
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
-  const { contractsVersion, deploymentDate } = useLiquity();
+  const {
+    deployment: { version: contractsVersion, deploymentDate }
+  } = useLiquity();
   const {
     numberOfTroves,
     price,

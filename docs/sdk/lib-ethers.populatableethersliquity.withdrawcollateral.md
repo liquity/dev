@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-withdrawCollateral(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
 ```
 
 ## Parameters
@@ -15,7 +15,6 @@ withdrawCollateral(amount: Decimalish, optionalParams?: _TroveAdjustmentOptional
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  amount | [Decimalish](./decimal.decimalish.md) |  |
-|  optionalParams | \_TroveAdjustmentOptionalParams |  |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

@@ -10,7 +10,6 @@ import { BlockTag } from '@ethersproject/abstract-provider';
 import { BytesLike } from '@ethersproject/bytes';
 import { CallOverrides } from '@ethersproject/contracts';
 import { CollateralGainTransferDetails } from '@liquity/lib-base';
-import { _CollateralGainTransferOptionalParams } from '@liquity/lib-base';
 import { Contract } from '@ethersproject/contracts';
 import { ContractInterface } from '@ethersproject/contracts';
 import { ContractTransaction } from '@ethersproject/contracts';
@@ -19,8 +18,6 @@ import { Decimalish } from '@liquity/decimal';
 import { EventFilter } from '@ethersproject/contracts';
 import { Fees } from '@liquity/lib-base';
 import { FrontendStatus } from '@liquity/lib-base';
-import { _Hinted } from '@liquity/lib-base';
-import { _HintedMethodOptionalParams } from '@liquity/lib-base';
 import { JsonFragment } from '@ethersproject/abi';
 import { LiquidationDetails } from '@liquity/lib-base';
 import { LiquityReceipt } from '@liquity/lib-base';
@@ -33,13 +30,12 @@ import { MinedReceipt } from '@liquity/lib-base';
 import { ObservableLiquity } from '@liquity/lib-base';
 import { Overrides } from '@ethersproject/contracts';
 import { PayableOverrides } from '@ethersproject/contracts';
-import { _Populatable } from '@liquity/lib-base';
+import { PopulatableLiquity } from '@liquity/lib-base';
 import { PopulatedLiquityTransaction } from '@liquity/lib-base';
 import { PopulatedTransaction } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/abstract-provider';
 import { ReadableLiquity } from '@liquity/lib-base';
 import { RedemptionDetails } from '@liquity/lib-base';
-import { _RedemptionOptionalParams } from '@liquity/lib-base';
 import { _SendableFrom } from '@liquity/lib-base';
 import { SentLiquityTransaction } from '@liquity/lib-base';
 import { Signer } from '@ethersproject/abstract-signer';
@@ -47,16 +43,13 @@ import { StabilityDeposit } from '@liquity/lib-base';
 import { StabilityDepositChangeDetails } from '@liquity/lib-base';
 import { StabilityPoolGainsWithdrawalDetails } from '@liquity/lib-base';
 import { _TransactableFrom } from '@liquity/lib-base';
-import { TransactableLiquity } from '@liquity/lib-base';
 import { TransactionReceipt } from '@ethersproject/abstract-provider';
 import { TransactionResponse } from '@ethersproject/abstract-provider';
 import { Trove } from '@liquity/lib-base';
 import { TroveAdjustmentDetails } from '@liquity/lib-base';
-import { _TroveAdjustmentOptionalParams } from '@liquity/lib-base';
 import { TroveAdjustmentParams } from '@liquity/lib-base';
 import { TroveClosureDetails } from '@liquity/lib-base';
 import { TroveCreationDetails } from '@liquity/lib-base';
-import { _TroveCreationOptionalParams } from '@liquity/lib-base';
 import { TroveCreationParams } from '@liquity/lib-base';
 import { TroveWithPendingRedistribution } from '@liquity/lib-base';
 
@@ -102,7 +95,7 @@ export type EthersCallOverrides = Partial<Promisable<{
 //
 // @public (undocumented)
 export class EthersLiquity extends GluedEthersLiquity {
-    constructor(readable: ReadableEthersLiquity, observable: ObservableEthersLiquity, populatable: PopulatableEthersLiquity);
+    constructor(readable: ReadableEthersLiquity, populatable: PopulatableEthersLiquity);
     // (undocumented)
     static connect(deployment: LiquityDeployment, signer: Signer): Promise<EthersLiquity>;
     // (undocumented)
@@ -232,17 +225,17 @@ export class ObservableEthersLiquity extends EthersLiquityBase implements Observ
 // Warning: (ae-forgotten-export) The symbol "PopulatableEthersLiquityBase" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase implements _Populatable<_Hinted<TransactableLiquity>, TransactionReceipt, TransactionResponse, PopulatedTransaction> {
+export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase implements PopulatableLiquity<TransactionReceipt, TransactionResponse, PopulatedTransaction> {
     // (undocumented)
-    adjustTrove(params: TroveAdjustmentParams<Decimalish>, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    borrowLUSD(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
     closeTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveClosureDetails>>;
     // (undocumented)
-    depositCollateral(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    depositCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityDepositChangeDetails>>;
     // (undocumented)
@@ -250,13 +243,13 @@ export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase imple
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<LiquidationDetails>>;
     // (undocumented)
-    openTrove(params: TroveCreationParams<Decimalish>, optionalParams?: _TroveCreationOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveCreationDetails>>;
+    openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveCreationDetails>>;
     // (undocumented)
-    redeemLUSD(amount: Decimalish, optionalParams?: _RedemptionOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<RedemptionDetails>>;
+    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<RedemptionDetails>>;
     // (undocumented)
     registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
-    repayLUSD(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
@@ -266,11 +259,11 @@ export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase imple
     // (undocumented)
     stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
-    transferCollateralGainToTrove(optionalParams?: _CollateralGainTransferOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>>;
+    transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>>;
     // (undocumented)
     unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
-    withdrawCollateral(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+    withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<StabilityPoolGainsWithdrawalDetails>>;
     // (undocumented)

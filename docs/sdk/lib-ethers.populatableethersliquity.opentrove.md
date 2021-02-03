@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-openTrove(params: TroveCreationParams<Decimalish>, optionalParams?: _TroveCreationOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveCreationDetails>>;
+openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveCreationDetails>>;
 ```
 
 ## Parameters
@@ -15,7 +15,6 @@ openTrove(params: TroveCreationParams<Decimalish>, optionalParams?: _TroveCreati
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
-|  optionalParams | \_TroveCreationOptionalParams |  |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

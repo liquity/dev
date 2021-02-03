@@ -9,7 +9,7 @@ Constructs a new instance of the `EthersLiquity` class
 <b>Signature:</b>
 
 ```typescript
-constructor(readable: ReadableEthersLiquity, observable: ObservableEthersLiquity, populatable: PopulatableEthersLiquity);
+constructor(readable: ReadableEthersLiquity, populatable: PopulatableEthersLiquity);
 ```
 
 ## Parameters
@@ -17,6 +17,5 @@ constructor(readable: ReadableEthersLiquity, observable: ObservableEthersLiquity
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  readable | [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) |  |
-|  observable | [ObservableEthersLiquity](./lib-ethers.observableethersliquity.md) |  |
 |  populatable | [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md) |  |
 

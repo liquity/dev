@@ -8,11 +8,6 @@ import { Decimal } from '@liquity/decimal';
 import { Decimalish } from '@liquity/decimal';
 
 // @internal (undocumented)
-export type _AddParams<T, K extends keyof T, U extends unknown[]> = {
-    [P in K]: T[P] extends (...args: infer A) => infer R ? (...args: [...A, ...U]) => R : never;
-};
-
-// @internal (undocumented)
 export type _CollateralChange<T> = (_CollateralDeposit<T> & _NoCollateralWithdrawal) | (_CollateralWithdrawal<T> & _NoCollateralDeposit);
 
 // @internal (undocumented)
@@ -24,14 +19,6 @@ export type _CollateralDeposit<T> = {
 export interface CollateralGainTransferDetails extends StabilityPoolGainsWithdrawalDetails {
     newTrove: Trove;
 }
-
-// @internal (undocumented)
-export type _CollateralGainTransferMethod = "transferCollateralGainToTrove";
-
-// @internal (undocumented)
-export type _CollateralGainTransferOptionalParams = _FeelessTroveAdjustmentOptionalParams & {
-    deposit?: StabilityDeposit;
-};
 
 // @internal (undocumented)
 export type _CollateralWithdrawal<T> = {
@@ -55,14 +42,6 @@ export type FailedReceipt<R = unknown> = {
 
 // @internal (undocumented)
 export const _failedReceipt: <R>(rawReceipt: R) => FailedReceipt<R>;
-
-// @internal (undocumented)
-export type _FeelessTroveAdjustmentMethod = "depositCollateral" | "withdrawCollateral" | "repayLUSD";
-
-// @internal (undocumented)
-export type _FeelessTroveAdjustmentOptionalParams = _HintedMethodOptionalParams & {
-    trove?: Trove;
-};
 
 // @public
 export class Fees {
@@ -93,26 +72,6 @@ export function _glue<T, U, V>(t: new (...args: never[]) => T, u: new (...args: 
 
 // @internal (undocumented)
 export function _glue<T, U, V, W>(t: new (...args: never[]) => T, u: new (...args: never[]) => U, v: new (...args: never[]) => V, w: new (...args: never[]) => W): new (t: T, u: U, v: V, w: W) => T & U & V & W;
-
-// @internal (undocumented)
-export type _Hintable = {
-    [P in _HintedMethod]: (...args: never[]) => unknown;
-};
-
-// @internal (undocumented)
-export type _Hinted<T extends _Hintable> = T & _AddParams<T, _TroveCreationMethod, [optionalParams?: _TroveCreationOptionalParams]> & _AddParams<T, _FeelessTroveAdjustmentMethod, [
-    optionalParams?: _FeelessTroveAdjustmentOptionalParams
-]> & _AddParams<T, _TroveAdjustmentMethod, [optionalParams?: _TroveAdjustmentOptionalParams]> & _AddParams<T, _CollateralGainTransferMethod, [
-    optionalParams?: _CollateralGainTransferOptionalParams
-]> & _AddParams<T, _RedemptionMethod, [optionalParams?: _RedemptionOptionalParams]>;
-
-// @internal (undocumented)
-export type _HintedMethod = _TroveCreationMethod | _FeelessTroveAdjustmentMethod | _TroveAdjustmentMethod | _CollateralGainTransferMethod | _RedemptionMethod;
-
-// @internal (undocumented)
-export type _HintedMethodOptionalParams = {
-    numberOfTroves?: number;
-};
 
 // @public
 export interface LiquidationDetails {
@@ -363,16 +322,6 @@ export interface RedemptionDetails {
 }
 
 // @internal (undocumented)
-export type _RedemptionMethod = "redeemLUSD";
-
-// @internal (undocumented)
-export type _RedemptionOptionalParams = _HintedMethodOptionalParams & {
-    price?: Decimal;
-    fees?: Fees;
-    total?: Trove;
-};
-
-// @internal (undocumented)
 export type _Sendable<T, R = unknown, S = unknown> = {
     [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? _SendMethod<A, SentLiquityTransaction<S, LiquityReceipt<R, D>>> : never;
 };
@@ -588,14 +537,6 @@ export interface TroveAdjustmentDetails {
     params: TroveAdjustmentParams<Decimal>;
 }
 
-// @internal (undocumented)
-export type _TroveAdjustmentMethod = "borrowLUSD" | "adjustTrove";
-
-// @internal (undocumented)
-export type _TroveAdjustmentOptionalParams = _FeelessTroveAdjustmentOptionalParams & {
-    fees?: Fees;
-};
-
 // Warning: (ae-incompatible-release-tags) The symbol "TroveAdjustmentParams" is marked as @public, but its signature references "_CollateralChange" which is marked as @internal
 // Warning: (ae-incompatible-release-tags) The symbol "TroveAdjustmentParams" is marked as @public, but its signature references "_NoDebtChange" which is marked as @internal
 // Warning: (ae-incompatible-release-tags) The symbol "TroveAdjustmentParams" is marked as @public, but its signature references "_DebtChange" which is marked as @internal
@@ -643,14 +584,6 @@ export interface TroveCreationDetails {
 
 // @public
 export type TroveCreationError = "missingLiquidationReserve";
-
-// @internal (undocumented)
-export type _TroveCreationMethod = "openTrove";
-
-// @internal (undocumented)
-export type _TroveCreationOptionalParams = _HintedMethodOptionalParams & {
-    fees?: Fees;
-};
 
 // Warning: (ae-incompatible-release-tags) The symbol "TroveCreationParams" is marked as @public, but its signature references "_CollateralDeposit" which is marked as @internal
 // Warning: (ae-incompatible-release-tags) The symbol "TroveCreationParams" is marked as @public, but its signature references "_NoCollateralWithdrawal" which is marked as @internal

@@ -6,7 +6,6 @@ import { Wallet } from "@ethersproject/wallet";
 import { Decimal, Difference, Percent } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { Trove, StabilityDeposit } from "@liquity/lib-base";
-import { addressesOf, BlockPolledLiquityStore, EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { LiquityStoreProvider } from "@liquity/lib-react";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
@@ -58,25 +57,22 @@ type LiquityFrontendProps = {
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   const {
-    config: { frontendTag },
     account,
     provider,
+    contracts,
+    deployment: { addresses },
     liquity,
-    contracts
+    store
   } = useLiquity();
-
-  const store = new BlockPolledLiquityStore(provider, account, liquity, frontendTag);
-  store.logging = true;
 
   // For console tinkering ;-)
   Object.assign(window, {
     account,
     provider,
     contracts,
-    addresses: addressesOf(contracts),
+    addresses,
     store,
     liquity,
-    Liquity,
     SubgraphLiquity,
     Trove,
     StabilityDeposit,

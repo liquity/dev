@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-adjustTrove(params: TroveAdjustmentParams<Decimalish>, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
 ```
 
 ## Parameters
@@ -15,7 +15,6 @@ adjustTrove(params: TroveAdjustmentParams<Decimalish>, optionalParams?: _TroveAd
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
-|  optionalParams | \_TroveAdjustmentOptionalParams |  |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

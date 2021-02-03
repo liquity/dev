@@ -15,7 +15,7 @@ export declare class EthersLiquity extends GluedEthersLiquity
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(readable, observable, populatable)](./lib-ethers.ethersliquity._constructor_.md) |  | Constructs a new instance of the <code>EthersLiquity</code> class |
+|  [(constructor)(readable, populatable)](./lib-ethers.ethersliquity._constructor_.md) |  | Constructs a new instance of the <code>EthersLiquity</code> class |
 
 ## Properties
 

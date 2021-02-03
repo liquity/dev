@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-repayLUSD(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
+repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<TroveAdjustmentDetails>>;
 ```
 
 ## Parameters
@@ -15,7 +15,6 @@ repayLUSD(amount: Decimalish, optionalParams?: _TroveAdjustmentOptionalParams, o
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  amount | [Decimalish](./decimal.decimalish.md) |  |
-|  optionalParams | \_TroveAdjustmentOptionalParams |  |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

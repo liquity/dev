@@ -54,12 +54,11 @@ const describeAdjustment = ({
     ? `Repay ${repayLUSD.prettify()} ${COIN}`
     : "";
 
-const select = ({ price, total, lusdBalance, numberOfTroves, fees }: LiquityStoreState) => ({
+const select = ({ price, total, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
   price,
   total,
   lusdBalance,
-  numberOfTroves,
-  fees
+  numberOfTroves
 });
 
 export const TroveAction: React.FC<TroveActionProps> = ({
@@ -70,7 +69,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   changePending,
   dispatch
 }) => {
-  const { numberOfTroves, price, lusdBalance, total, fees } = useLiquitySelector(select);
+  const { numberOfTroves, price, lusdBalance, total } = useLiquitySelector(select);
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -111,7 +110,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
     change.type === "creation"
       ? ([
           describeAdjustment(change.params),
-          liquity.openTrove.bind(liquity, change.params, { numberOfTroves, fees }),
+          liquity.openTrove.bind(liquity, change.params),
           [
             [
               afterFee.isOpenableInRecoveryMode(price) ||
@@ -131,13 +130,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         ] as const)
       : ([
           describeAdjustment(change.params),
-
-          liquity.adjustTrove.bind(liquity, change.params, {
-            numberOfTroves,
-            trove: original,
-            fees
-          }),
-
+          liquity.adjustTrove.bind(liquity, change.params),
           [
             [
               !change.params.withdrawCollateral || !total.collateralRatioIsBelowCritical(price),

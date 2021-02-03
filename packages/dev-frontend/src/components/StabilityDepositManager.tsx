@@ -18,16 +18,9 @@ type StabilityDepositActionProps = {
   dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
 
-const select = ({
+const select = ({ trove, lusdBalance, frontend, ownFrontend }: LiquityStoreState) => ({
   trove,
   lusdBalance,
-  numberOfTroves,
-  frontend,
-  ownFrontend
-}: LiquityStoreState) => ({
-  trove,
-  lusdBalance,
-  numberOfTroves,
   frontendRegistered: frontend.status === "registered",
   noOwnFrontend: ownFrontend.status === "unregistered"
 });
@@ -40,13 +33,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   dispatch
 }) => {
-  const {
-    trove,
-    lusdBalance,
-    numberOfTroves,
-    frontendRegistered,
-    noOwnFrontend
-  } = useLiquitySelector(select);
+  const { trove, lusdBalance, frontendRegistered, noOwnFrontend } = useLiquitySelector(select);
 
   const {
     config,
@@ -107,11 +94,7 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
           ? [
               [
                 lqtyReward ? `Transfer ETH to Trove & claim ${GT}` : `Transfer ETH to Trove`,
-                liquity.transferCollateralGainToTrove.bind(liquity, {
-                  deposit: originalDeposit,
-                  trove,
-                  numberOfTroves
-                })
+                liquity.transferCollateralGainToTrove.bind(liquity)
               ] as Action
             ]
           : [])

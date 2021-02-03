@@ -7,14 +7,13 @@
 <b>Signature:</b>
 
 ```typescript
-transferCollateralGainToTrove(optionalParams?: _CollateralGainTransferOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>>;
+transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<CollateralGainTransferDetails>>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  optionalParams | \_CollateralGainTransferOptionalParams |  |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>
