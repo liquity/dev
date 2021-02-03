@@ -4,6 +4,8 @@
 
 ## ReadableEthersLiquity.getLastTroves() method
 
+Get a slice from the list of Troves sorted by collateral ratio in ascending order.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,11 +16,13 @@ getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOv
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  startIdx | number |  |
-|  numberOfTroves | number |  |
+|  startIdx | number | Index of first Trove to include from the sorted list. |
+|  numberOfTroves | number | The length of the slice. |
 |  overrides | [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
 
 <b>Returns:</b>
 
 Promise&lt;\[string, [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->\]\[\]&gt;
+
+Pairs of owner addresses and their Troves.
 

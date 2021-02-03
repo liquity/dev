@@ -4,6 +4,8 @@
 
 ## ReadableEthersLiquity.getLQTYStake() method
 
+Get the current state of an LQTY Stake.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ getLQTYStake(address?: string, overrides?: EthersCallOverrides): Promise<LQTYSta
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address that owns the LQTY Stake. |
 |  overrides | [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
 
 <b>Returns:</b>

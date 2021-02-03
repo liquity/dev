@@ -4,6 +4,8 @@
 
 ## ReadableEthersLiquity.getCollateralSurplusBalance() method
 
+Get the amount of leftover collateral available for withdrawal by an address.
+
 <b>Signature:</b>
 
 ```typescript
@@ -20,4 +22,8 @@ getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): 
 <b>Returns:</b>
 
 Promise&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt;
+
+## Remarks
+
+When a Trove gets liquidated or redeemed, any collateral it has above 110% (in case of liquidation) or 100% collateralization (in case of redemption) gets sent to a pool, where it can be withdrawn from using [claimCollateralSurplus()](./lib-base.transactableliquity.claimcollateralsurplus.md)<!-- -->.
 

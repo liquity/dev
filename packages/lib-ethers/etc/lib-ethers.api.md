@@ -201,7 +201,7 @@ export type LiquityDeployment = {
 
 // Warning: (ae-forgotten-export) The symbol "EthersLiquityBase" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @alpha (undocumented)
 export class ObservableEthersLiquity extends EthersLiquityBase implements ObservableLiquity {
     constructor(contracts: LiquityContracts, readableLiquity: ReadableEthersLiquity, userAddress?: string);
     // (undocumented)
@@ -254,7 +254,7 @@ export class PopulatableEthersLiquity extends PopulatableEthersLiquityBase imple
     sendLQTY(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
     sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
-    // (undocumented)
+    // @internal (undocumented)
     setPrice(price: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;
     // (undocumented)
     stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersTransaction<void>>;

@@ -4,6 +4,8 @@
 
 ## PopulatableEthersLiquity.repayLUSD() method
 
+Adjust existing Trove by repaying some of its debt.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,10 +16,19 @@ repayLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<P
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | The amount of LUSD to repay. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>
 
 Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
+
+## Remarks
+
+Equivalent to:
+
+```typescript
+adjustTrove({ repayLUSD: amount })
+
+```
 

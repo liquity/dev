@@ -4,6 +4,8 @@
 
 ## ReadableEthersLiquity.getTotalStakedLQTY() method
 
+Get the total amount of LQTY currently staked.
+
 <b>Signature:</b>
 
 ```typescript

@@ -4,6 +4,8 @@
 
 ## PopulatableEthersLiquity.depositCollateral() method
 
+Adjust existing Trove by depositing more collateral.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,10 +16,19 @@ depositCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): P
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | The amount of collateral to add to the Trove's existing collateral. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>
 
 Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
+
+## Remarks
+
+Equivalent to:
+
+```typescript
+adjustTrove({ depositCollateral: amount })
+
+```
 

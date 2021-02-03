@@ -4,6 +4,8 @@
 
 ## ReadableEthersLiquity.getLUSDBalance() method
 
+Get the amount of LUSD held by an address.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ getLUSDBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decim
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address whose balance should be retrieved. |
 |  overrides | [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
 
 <b>Returns:</b>

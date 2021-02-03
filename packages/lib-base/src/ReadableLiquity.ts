@@ -33,7 +33,7 @@ export interface ReadableLiquity {
    * Get the total collateral and debt per stake that has been liquidated through redistribution.
    *
    * @remarks
-   * Needed when dealing with instances of {@link TroveWithPendingRedistribution}.
+   * Needed when dealing with instances of {@link @liquity/lib-base#TroveWithPendingRedistribution}.
    *
    * @example
    * See {@link ReadableLiquity.getLastTroves | getLastTroves()} for an example of how it's used.
@@ -46,7 +46,8 @@ export interface ReadableLiquity {
    * @param address - Address that owns the Trove.
    *
    * @remarks
-   * The current state of a Trove can be fetched using {@link ReadableLiquity.getTrove | getTrove()}.
+   * The current state of a Trove can be fetched using
+   * {@link @liquity/lib-base#ReadableLiquity.getTrove | getTrove()}.
    */
   getTroveWithoutRewards(address?: string): Promise<TroveWithPendingRedistribution>;
 
@@ -105,7 +106,7 @@ export interface ReadableLiquity {
    * When a Trove gets liquidated or redeemed, any collateral it has above 110% (in case of
    * liquidation) or 100% collateralization (in case of redemption) gets sent to a pool, where it
    * can be withdrawn from using
-   * {@link TransactableLiquity.claimCollateralSurplus | claimCollateralSurplus()}.
+   * {@link @liquity/lib-base#TransactableLiquity.claimCollateralSurplus | claimCollateralSurplus()}.
    */
   getCollateralSurplusBalance(address?: string): Promise<Decimal>;
 

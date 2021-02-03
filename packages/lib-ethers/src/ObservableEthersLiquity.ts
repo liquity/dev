@@ -37,6 +37,7 @@ const debounce = (listener: (latestBlock: number) => void) => {
   };
 };
 
+/** @alpha */
 export class ObservableEthersLiquity extends EthersLiquityBase implements ObservableLiquity {
   private _readableLiquity: ReadableEthersLiquity;
 

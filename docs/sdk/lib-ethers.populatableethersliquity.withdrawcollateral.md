@@ -4,6 +4,8 @@
 
 ## PopulatableEthersLiquity.withdrawCollateral() method
 
+Adjust existing Trove by withdrawing some of its collateral.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,10 +16,19 @@ withdrawCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): 
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) |  |
+|  amount | [Decimalish](./decimal.decimalish.md) | The amount of collateral to withdraw from the Trove. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>
 
 Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
+
+## Remarks
+
+Equivalent to:
+
+```typescript
+adjustTrove({ withdrawCollateral: amount })
+
+```
 

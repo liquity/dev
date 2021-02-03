@@ -10,7 +10,6 @@
 |  --- | --- |
 |  [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md) |  |
 |  [EthersLiquity](./lib-ethers.ethersliquity.md) |  |
-|  [ObservableEthersLiquity](./lib-ethers.observableethersliquity.md) |  |
 |  [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md) |  |
 |  [PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md) |  |
 |  [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) |  |

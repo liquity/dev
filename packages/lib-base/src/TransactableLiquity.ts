@@ -327,7 +327,8 @@ export interface TransactableLiquity {
    * Throws {@link TransactionFailedError} in case of transaction failure.
    *
    * @remarks
-   * The transaction will fail if the Trove's debt would fall below {@link LUSD_LIQUIDATION_RESERVE}.
+   * The transaction will fail if the Trove's debt would fall below
+   * {@link @liquity/lib-base#LUSD_LIQUIDATION_RESERVE}.
    */
   adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentDetails>;
 
@@ -435,8 +436,8 @@ export interface TransactableLiquity {
    * The `frontendTag` parameter is only effective when making a new deposit.
    *
    * As a side-effect, the transaction will also pay out an existing Stability Deposit's
-   * {@link StabilityDeposit.collateralGain | collateral gain} and
-   * {@link StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
    */
   depositLUSDInStabilityPool(
     amount: Decimalish,
@@ -453,14 +454,14 @@ export interface TransactableLiquity {
    *
    * @remarks
    * As a side-effect, the transaction will also pay out the Stability Deposit's
-   * {@link StabilityDeposit.collateralGain | collateral gain} and
-   * {@link StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
    */
   withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
 
   /**
-   * Withdraw {@link StabilityDeposit.collateralGain | collateral gain} and
-   * {@link StabilityDeposit.lqtyReward | LQTY reward} from Stability Deposit.
+   * Withdraw {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward} from Stability Deposit.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -468,8 +469,8 @@ export interface TransactableLiquity {
   withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
 
   /**
-   * Transfer {@link StabilityDeposit.collateralGain | collateral gain} from Stability Deposit to
-   * Trove.
+   * Transfer {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} from
+   * Stability Deposit to Trove.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -478,7 +479,7 @@ export interface TransactableLiquity {
    * The collateral gain is transfered to the Trove as additional collateral.
    *
    * As a side-effect, the transaction will also pay out the Stability Deposit's
-   * {@link StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
    */
   transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
@@ -518,8 +519,8 @@ export interface TransactableLiquity {
    * Claim leftover collateral after a liquidation or redemption.
    *
    * @remarks
-   * Use {@link ReadableLiquity.getCollateralSurplusBalance | getCollateralSurplusBalance()} to
-   * check the amount of collateral available for withdrawal.
+   * Use {@link @liquity/lib-base#ReadableLiquity.getCollateralSurplusBalance | getCollateralSurplusBalance()}
+   * to check the amount of collateral available for withdrawal.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -536,8 +537,8 @@ export interface TransactableLiquity {
    *
    * @remarks
    * As a side-effect, the transaction will also pay out an existing LQTY stake's
-   * {@link LQTYStake.collateralGain | collateral gain} and
-   * {@link LQTYStake.lusdGain | LUSD gain}.
+   * {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain}.
    */
   stakeLQTY(amount: Decimalish): Promise<void>;
 
@@ -551,14 +552,14 @@ export interface TransactableLiquity {
    *
    * @remarks
    * As a side-effect, the transaction will also pay out the LQTY stake's
-   * {@link LQTYStake.collateralGain | collateral gain} and
-   * {@link LQTYStake.lusdGain | LUSD gain}.
+   * {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain}.
    */
   unstakeLQTY(amount: Decimalish): Promise<void>;
 
   /**
-   * Withdraw {@link LQTYStake.collateralGain | collateral gain} and
-   * {@link LQTYStake.lusdGain | LUSD gain} from LQTY stake.
+   * Withdraw {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain} from LQTY stake.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.

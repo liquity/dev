@@ -4,6 +4,8 @@
 
 ## ReadableEthersLiquity.getLQTYBalance() method
 
+Get the amount of LQTY held by an address.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ getLQTYBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decim
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string |  |
+|  address | string | Address whose balance should be retrieved. |
 |  overrides | [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
 
 <b>Returns:</b>

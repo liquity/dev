@@ -4,6 +4,8 @@
 
 ## PopulatableEthersLiquity.adjustTrove() method
 
+Adjust existing Trove by changing its collateral, debt, or both.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,10 +16,14 @@ adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransac
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
+|  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; | Parameters of the adjustment. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>
 
 Promise&lt;[PopulatedEthersTransaction](./lib-ethers.populatedetherstransaction.md)<!-- -->&lt;[TroveAdjustmentDetails](./lib-base.troveadjustmentdetails.md)<!-- -->&gt;&gt;
+
+## Remarks
+
+The transaction will fail if the Trove's debt would fall below [LUSD\_LIQUIDATION\_RESERVE](./lib-base.lusd_liquidation_reserve.md)<!-- -->.
 
