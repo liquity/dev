@@ -6,6 +6,8 @@ const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
+const TroveManagerTester = artifacts.require("TroveManagerTester")
+const LUSDToken = artifacts.require("LUSDToken")
 const NonPayable = artifacts.require('NonPayable.sol')
 
 const ZERO = toBN('0')
@@ -44,6 +46,8 @@ contract('StabilityPool', async accounts => {
 
   let gasPriceInWei
 
+  const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
+
   describe("Stability Pool Mechanisms", async () => {
 
     before(async () => {
@@ -52,6 +56,12 @@ contract('StabilityPool', async accounts => {
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
+      contracts.troveManager = await TroveManagerTester.new()
+      contracts.lusdToken = await LUSDToken.new(
+        contracts.troveManager.address,
+        contracts.stabilityPool.address,
+        contracts.borrowerOperations.address
+      )
       const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
       priceFeed = contracts.priceFeedTestnet
@@ -157,8 +167,8 @@ contract('StabilityPool', async accounts => {
       // 2 Troves opened, each withdraws 160 LUSD
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // Alice makes Trove and withdraws 100 LUSD
       await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
@@ -210,9 +220,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_3, defaulter_3, { from: defaulter_3, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_3, defaulter_3, { from: defaulter_3 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_3, defaulter_3, { from: defaulter_3 })
 
       // --- TEST ---
 
@@ -338,8 +348,8 @@ contract('StabilityPool', async accounts => {
       // Defaulter Troves opened, withdraw 160 LUSD each
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -384,8 +394,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(100, 18), dennis, dennis, { from: dennis, value: dec(4, 'ether') })
 
       // Would-be defaulters open troves
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(170, 18), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
       // Price drops
       await priceFeed.setPrice(dec(100, 18))
@@ -449,8 +459,8 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(100, 18), dennis, dennis, { from: dennis, value: dec(4, 'ether') })
 
       // Would-be defaulters open troves
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(170, 18), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
       // Price drops
       await priceFeed.setPrice(dec(100, 18))
@@ -763,7 +773,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(10, 18), C, C, { from: C, value: dec(2, 'ether') })
 
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- SETUP --- 
 
@@ -905,7 +915,7 @@ contract('StabilityPool', async accounts => {
       // D opens trove
       await borrowerOperations.openTrove(th._100pct, dec(2000, 18), D, D, { from: D, value: dec(20, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- SETUP ---
 
@@ -1029,7 +1039,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(400, 18), C, C, { from: C, value: dec(10, 'ether') })
       await borrowerOperations.openTrove(th._100pct, dec(500, 18), D, D, { from: D, value: dec(10, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- SETUP ---
       // A, B, C, D provide to SP
@@ -1278,7 +1288,7 @@ contract('StabilityPool', async accounts => {
       // D opens trove
       await borrowerOperations.openTrove(th._100pct, dec(1000, 18), D, D, { from: D, value: dec(10, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- SETUP ---
 
@@ -1456,7 +1466,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(alice_initialDeposit, dec(100, 18))
 
       // defaulter opens trove
-      await borrowerOperations.openTrove(th._100pct, dec(89, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // ETH drops, defaulter is in liquidation range (but not liquidated yet)
       await priceFeed.setPrice(dec(100, 18))
@@ -1474,8 +1484,8 @@ contract('StabilityPool', async accounts => {
       // 2 Troves opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -1527,8 +1537,8 @@ contract('StabilityPool', async accounts => {
       // 2 Troves opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -1557,7 +1567,7 @@ contract('StabilityPool', async accounts => {
       Expect LUSD in SP = (2000 - 170 - 170 - 90) = 1570 LUSD */
 
       const SP_LUSD_After = (await stabilityPool.getTotalLUSDDeposits()).toString()
-      assert.equal(SP_LUSD_After, '1570000000000000000000')
+      th.assertIsApproximatelyEqual(SP_LUSD_After, '1570000000000000000000')
     })
 
     it("withdrawFromSP(): full retrieval - leaves the correct amount of LUSD in the Stability Pool", async () => {
@@ -1570,8 +1580,8 @@ contract('StabilityPool', async accounts => {
       // 2 Troves opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -1620,13 +1630,13 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
       // 2 Troves opened, 180 LUSD debt
-      await borrowerOperations.openTrove(th._100pct, dec(170, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(170, 18), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(180, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(180, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
       // --- TEST ---
 
       // Alice makes deposit #1: 150 LUSD
-      await borrowerOperations.openTrove(th._100pct, dec(150, 18), alice, alice, { from: alice, value: dec(2, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, dec(150, 18), alice, alice, { from: alice, value: dec(25, 17) })
       await stabilityPool.provideToSP(dec(150, 18), frontEnd_1, { from: alice })
 
       // price drops: defaulters' Troves fall below MCR, alice and whale Trove remain active
@@ -1671,8 +1681,8 @@ contract('StabilityPool', async accounts => {
       // 2 Troves opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_2, defaulter_2, { from: defaulter_2 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2 })
 
       // --- TEST ---
 
@@ -1717,7 +1727,7 @@ contract('StabilityPool', async accounts => {
 
       // 1 Trove opened, 150 LUSD withdrawn
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(150, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(150, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // --- TEST ---
 
@@ -1764,7 +1774,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, 0, accounts[999], accounts[999], { from: whale, value: dec(100, 'ether') })
 
       // Future defaulter opens trove
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), accounts[0], accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), accounts[0], accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
 
       // 6 Accounts open troves and provide to SP
       const depositors = [alice, bob, carol, dennis, erin, flyn]
@@ -1800,12 +1810,12 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, 0, accounts[999], accounts[999], { from: whale, value: dec(100, 'ether') })
 
       // Future defaulter opens trove
-      await borrowerOperations.openTrove(th._100pct, dec(90, 18), accounts[0], accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), accounts[0], accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
 
       // 6 Accounts open troves and provide to SP
       const depositors = [alice, bob, carol, dennis, erin, flyn]
       for (let account of depositors) {
-        await borrowerOperations.openTrove(th._100pct, dec(100, 18), account, account, { from: account, value: dec(105, 16) })
+        await borrowerOperations.openTrove(th._100pct, dec(100, 18), account, account, { from: account, value: dec(2, 18) })
         await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: account })
       }
 
@@ -1848,8 +1858,8 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(300, 18), frontEnd_1, { from: carol })
 
       // Would-be defaulters open troves
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(170, 18), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(180, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
       // Price drops
       await priceFeed.setPrice(dec(100, 18))
@@ -1904,8 +1914,8 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(300, 18), frontEnd_1, { from: carol })
 
       // Would-be defaulters open troves
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(170, 18), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
       // Price drops
       await priceFeed.setPrice(dec(100, 18))
@@ -2020,8 +2030,8 @@ contract('StabilityPool', async accounts => {
       assert.equal(A_initialDeposit, dec(100, 18))
 
       // defaulters opens trove
-      await borrowerOperations.openTrove(th._100pct, dec(89, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(89, 18), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(99, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(1, 'ether') })
 
       // ETH drops, defaulters are in liquidation range
       await priceFeed.setPrice(dec(100, 18))
@@ -2101,7 +2111,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(300, 18), carol, carol, { from: carol, value: dec(4, 'ether') })
 
       // Would-be defaulters open troves
-      await borrowerOperations.openTrove(th._100pct, dec(1000, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(10, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1000, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(10, 'ether') })
 
       // Price drops
       await priceFeed.setPrice(dec(100, 18))
@@ -2147,7 +2157,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(200, 18), bob, bob, { from: bob, value: dec(3, 'ether') })
       await borrowerOperations.openTrove(th._100pct, dec(300, 18), carol, carol, { from: carol, value: dec(4, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // A, B, C provides 100, 50, 30 LUSD to SP
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
@@ -2202,7 +2212,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(200, 18), bob, bob, { from: bob, value: dec(3, 'ether') })
       await borrowerOperations.openTrove(th._100pct, dec(300, 18), carol, carol, { from: carol, value: dec(4, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // A, B, C provides 100, 50, 30 LUSD to SP
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
@@ -2246,7 +2256,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(200, 18), bob, bob, { from: bob, value: dec(3, 'ether') })
       await borrowerOperations.openTrove(th._100pct, dec(300, 18), carol, carol, { from: carol, value: dec(4, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // A, B, C provides 100, 50, 30 LUSD to SP
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
@@ -2337,9 +2347,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(200, 18), bob, bob, { from: bob, value: dec(2, 'ether') })
       await borrowerOperations.openTrove(th._100pct, dec(300, 18), carol, carol, { from: carol, value: dec(3, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(200, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(300, 18), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(3, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(5000, 18), defaulter_3, defaulter_3, { from: defaulter_3, value: dec(50, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(200, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(2, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(300, 18)), defaulter_2, defaulter_2, { from: defaulter_2, value: dec(3, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(5000, 18)), defaulter_3, defaulter_3, { from: defaulter_3, value: dec(50, 'ether') })
 
       // A, B, provide 100, 50 LUSD to SP
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: alice })
@@ -2588,14 +2598,14 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, 0, whale, whale, { from: whale, value: dec(100, 'ether') })
 
       // A, B, C, open troves 
-      await borrowerOperations.openTrove(th._100pct, dec(200, 18), A, A, { from: A, value: dec(3, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(400, 18), B, B, { from: B, value: dec(5, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, dec(600, 18), C, C, { from: C, value: dec(7, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, dec(200, 18), A, A, { from: A, value: dec(4, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, dec(400, 18), B, B, { from: B, value: dec(6, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, dec(600, 18), C, C, { from: C, value: dec(8, 'ether') })
 
       // D opens trove
-      await borrowerOperations.openTrove(th._100pct, dec(1000, 18), D, D, { from: D, value: dec(12, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, dec(1000, 18), D, D, { from: D, value: dec(13, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- SETUP ---
 
@@ -2724,7 +2734,7 @@ contract('StabilityPool', async accounts => {
     it("withdrawFromSP(), full withdrawal: zero's depositor's snapshots", async () => {
       await borrowerOperations.openTrove(th._100pct, dec(2000, 18), whale, whale, { from: whale, value: dec(100, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(60, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
 
 
       //  SETUP: Execute a series of operations to make G, S > 0 and P < 1  
@@ -2809,7 +2819,7 @@ contract('StabilityPool', async accounts => {
 
       await borrowerOperations.openTrove(th._100pct, dec(2000, 18), whale, whale, { from: whale, value: dec(100, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(60, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
 
 
       //  SETUP: Execute a series of operations to make G, S > 0 and P < 1  
@@ -2889,7 +2899,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(200, 18), A, A, { from: A, value: dec(10, 'ether') })
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A })
 
-      await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(60, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
 
       //  SETUP: Execute a series of operations to trigger LQTY and ETH rewards for depositor A
 
@@ -2938,7 +2948,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(bob_initialDeposit, '0')
 
       // Defaulter opens a trove, price drops, defaulter gets liquidated
-      await borrowerOperations.openTrove(th._100pct, dec(0, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 17) })
+      await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
@@ -2960,7 +2970,7 @@ contract('StabilityPool', async accounts => {
 
       // 1 Trove opened, 180 LUSD withdrawn
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(170, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // --- TEST ---
 
@@ -3014,7 +3024,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP('1850000000000000000000', frontEnd_1, { from: whale })
 
       // 1 Trove opened, 180 LUSD withdrawn
-      await borrowerOperations.openTrove(th._100pct, dec(170, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- TEST ---
 
@@ -3067,7 +3077,7 @@ contract('StabilityPool', async accounts => {
 
       // 1 Trove opened, 160 LUSD withdrawn
       await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, dec(160, 18), defaulter_1, defaulter_1, { from: defaulter_1 })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount(dec(170, 18)), defaulter_1, defaulter_1, { from: defaulter_1 })
 
       // --- TEST ---
 
@@ -3112,7 +3122,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, 0, accounts[999], accounts[999], { from: whale, value: dec(100, 'ether') })
 
       // Future defaulter opens trove
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), accounts[0], accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), accounts[0], accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
 
       // 6 Accounts open troves and provide to SP
       const depositors = [alice, bob, carol, dennis, erin, flyn]
@@ -3144,7 +3154,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, 0, accounts[999], accounts[999], { from: whale, value: dec(100, 'ether') })
 
       // Future defaulter opens trove
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), accounts[0], accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), accounts[0], accounts[0], { from: defaulter_1, value: dec(1, 'ether') })
 
       // 6 Accounts open troves and provide to SP
       const depositors = [alice, bob, carol, dennis, erin, flyn]
@@ -3196,7 +3206,7 @@ contract('StabilityPool', async accounts => {
     it("withdrawETHGainToTrove(): caller can withdraw full deposit and ETH gain to their trove during Recovery Mode", async () => {
       // --- SETUP ---
 
-      await borrowerOperations.openTrove(th._100pct, dec(90, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // A, B, C open troves 
       await borrowerOperations.openTrove(th._100pct, dec(100, 18), alice, alice, { from: alice, value: dec(1, 'ether') })
@@ -3262,7 +3272,7 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(200, 18), bob, bob, { from: bob, value: dec(2, 'ether') })
       await borrowerOperations.openTrove(th._100pct, dec(300, 18), carol, carol, { from: carol, value: dec(3, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // A transfers LUSD to D
       await lusdToken.transfer(dennis, dec(100, 18), { from: alice })
@@ -3294,7 +3304,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
 
       // Defaulter opens a trove, price drops, defaulter gets liquidated
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 18) })
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
@@ -3340,7 +3350,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(30, 18), ZERO_ADDRESS, { from: C })
 
       // Defaulter opens a trove, price drops, defaulter gets liquidated
-      await borrowerOperations.openTrove(th._100pct, dec(0, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 17) })
+      await borrowerOperations.openTrove(th._100pct, 0, defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
@@ -3386,7 +3396,7 @@ contract('StabilityPool', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // Defaulter opens a trove, price drops, defaulter gets liquidated
-      await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(60, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
@@ -3434,7 +3444,7 @@ contract('StabilityPool', async accounts => {
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // Defaulter opens a trove, price drops, defaulter gets liquidated
-      await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(60, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
@@ -3486,7 +3496,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(30, 18), frontEnd_3, { from: F })
 
       // Defaulter opens a trove, price drops, defaulter gets liquidated
-      await borrowerOperations.openTrove(th._100pct, dec(50, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(60, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(5, 17) })
       await priceFeed.setPrice(dec(100, 18))
       assert.isFalse(await th.checkRecoveryMode(contracts))
       await troveManager.liquidate(defaulter_1)
@@ -3531,7 +3541,7 @@ contract('StabilityPool', async accounts => {
       // D opens trove
       await borrowerOperations.openTrove(th._100pct, dec(1000, 18), D, D, { from: D, value: dec(10, 'ether') })
 
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(1, 'ether') })
 
       // --- SETUP ---
 
