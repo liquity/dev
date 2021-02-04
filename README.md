@@ -272,7 +272,7 @@ A `LockupContractFactory` is used to deploy `LockupContracts` in the first year.
 1. Liquity admin deploys `LockupContractFactory`
 2. Liquity admin deploys `CommunityIssuance`
 3. Liquity admin deploys `LQTYStaking` 
-4. Liquity admin creates a pool in Uniswap for LUSD/ETH and deploys `Unipool` (LP rewards contract)
+4. Liquity admin creates a Pool in Uniswap for LUSD/ETH and deploys `Unipool` (LP rewards contract), which knows the address of the Pool
 5. Liquity admin deploys `LQTYToken`, which upon deployment:
 - Stores the `CommunityIssuance` and `LockupContractFactory` addresses
 - Mints LQTY tokens to `CommunityIssuance`, the Liquity admin address, the `Unipool` LP rewards address, and the bug bounty address
