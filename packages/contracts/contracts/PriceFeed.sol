@@ -372,7 +372,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
 
-    function _chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, ChainlinkResponse memory _prevResponse) internal pure returns (bool) {
+    function _chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, ChainlinkResponse memory _prevResponse) internal view returns (bool) {
         uint currentScaledPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.answer), _currentResponse.decimals);
         uint prevScaledPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.answer), _prevResponse.decimals);
 
@@ -381,8 +381,8 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
         /*
         * Use the larger price as the denominator: 
-        * - If price decreased, the deviation is in relation to the the previous price.
-        * - If price increased, the deviation is in relation to the current price.
+        * - If price decreased, the percentage deviation is in relation to the the previous price.
+        * - If price increased, the percentage deviation is in relation to the current price.
         */
         uint percentDeviation = maxPrice.sub(minPrice).mul(DECIMAL_PRECISION).div(maxPrice);
 
@@ -448,13 +448,13 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
    
     function _scaleChainlinkPriceByDigits(uint _price, uint _answerDigits) internal pure returns (uint) {
         /* 
-        * Convert the price returned by the Oracle to an 18-digit decimal for use by Liquity.
-        * Currently, the main Oracle (Chainlink) uses an 8-digit price, but we also handle the possibility of
+        * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Liquity.
+        * At date of Liquity launch, Chainlink uses an 8-digit price, but we also handle the possibility of
         * future changes.
         *
         */
         uint price;
-        if (_answerDigits > TARGET_DIGITS) { 
+        if (_answerDigits >= TARGET_DIGITS) { 
             // Scale the returned price value down to Liquity's target precision 
             price = _price.div(10 ** (_answerDigits - TARGET_DIGITS));
         }

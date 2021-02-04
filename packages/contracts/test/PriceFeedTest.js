@@ -111,51 +111,47 @@ contract('PriceFeed', async accounts => {
     })
   })
 
-  // it("Chainlink working: fetchPrice should return the correct price, taking into account the number of decimal digits on the aggregator", async () => {
-  //   await setAddresses()
+  it("Chainlink working: fetchPrice should return the correct price, taking into account the number of decimal digits on the aggregator", async () => {
+    await setAddresses()
 
-  //   // Oracle price price is 10.00000000
-  //   await mockChainlink.setDecimals(8)
-  //   await mockChainlink.setPrevPrice(dec(1, 9))
-  //   await mockChainlink.setPrice(dec(1, 9))
-  //   await priceFeed.fetchPrice()
-  //   let price = await priceFeed.lastGoodPrice()
-  //   // Check Liquity PriceFeed gives 10, with 18 digit precision
-  //   assert.equal(price, dec(10, 18))
+    // Oracle price price is 10.00000000
+    await mockChainlink.setDecimals(8)
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(1, 9))
+    await priceFeed.fetchPrice()
+    let price = await priceFeed.lastGoodPrice()
+    // Check Liquity PriceFeed gives 10, with 18 digit precision
+    assert.equal(price, dec(10, 18))
 
-  //   Oracle price is 1e9
-  //   await mockChainlink.setDecimals(0)
-  //   await mockChainlink.setPrevPrice(dec(1, 9))
-  //   await mockChainlink.setPrice(dec(1, 9))
-  //   await priceFeed.fetchPrice()
-  //   price = await priceFeed.lastGoodPrice()
-  //   Check Liquity PriceFeed gives 1e9, with 18 digit precision
-  //   console.log(`price: ${price}`)
-  //   console.log(`1e27: ${toBN(dec(1, 27))}`)
-  //   assert.isTrue(price.eq(toBN(dec(1, 27))))
+    // Oracle price is 1e9
+    await mockChainlink.setDecimals(0)
+    await mockChainlink.setPrevPrice(dec(1, 9))
+    await mockChainlink.setPrice(dec(1, 9))
+    await priceFeed.fetchPrice()
+    price = await priceFeed.lastGoodPrice()
+    // Check Liquity PriceFeed gives 1e9, with 18 digit precision
+    assert.isTrue(price.eq(toBN(dec(1, 27))))
 
-  //   // Oracle price is 0.0001
-  //   await mockChainlink.setDecimals(18)
-  //   const decimals = await mockChainlink.decimals()
-  //   console.log(`decimals after setting: ${decimals}`)
-  //   await mockChainlink.setPrevPrice(dec(1, 14))
-  //   await mockChainlink.setPrice(dec(1, 14))
-  //   await priceFeed.fetchPrice()
-  //   price = await priceFeed.lastGoodPrice()
-  //   // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
-  //   console.log(`price: ${price}`)
-  //   console.log(`dec(1, 14): ${dec(1, 14)}`)
-  //   assert.isTrue(price.eq(toBN(dec(1, 14))))
+    // Oracle price is 0.0001
+    await mockChainlink.setDecimals(18)
+    const decimals = await mockChainlink.decimals()
 
-  //   // Oracle price is 1234.56789
-  //   await mockChainlink.setDecimals(5)
-  //   await mockChainlink.setPrevPrice(dec(123456789))
-  //   await mockChainlink.setPrice(dec(123456789))
-  //   await priceFeed.fetchPrice()
-  //   price = await priceFeed.lastGoodPrice()
-  //   // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
-  //   assert.equal(price, '1234567890000000000000')
-  // })
+    await mockChainlink.setPrevPrice(dec(1, 14))
+    await mockChainlink.setPrice(dec(1, 14))
+    await priceFeed.fetchPrice()
+    price = await priceFeed.lastGoodPrice()
+    // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
+    assert.isTrue(price.eq(toBN(dec(1, 14))))
+
+    // Oracle price is 1234.56789
+    await mockChainlink.setDecimals(5)
+    await mockChainlink.setPrevPrice(dec(123456789))
+    await mockChainlink.setPrice(dec(123456789))
+    await priceFeed.fetchPrice()
+    price = await priceFeed.lastGoodPrice()
+    // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
+    assert.equal(price, '1234567890000000000000')
+  })
 
   // --- Chainlink breaks ---
   it("Chainlink breaks, Tellor working: fetchPrice should return the correct Tellor price, taking into account Tellor's 6-digit granularity", async () => {
@@ -183,8 +179,6 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
     price = await priceFeed.lastGoodPrice()
     // Check Liquity PriceFeed gives 10, with 18 digit precision
-    console.log(`${price}`)
-    console.log(dec(10, 18))
     assert.equal(price, dec(10, 18))
 
     // Tellor price is 1e9 at 6-digit precision
@@ -546,7 +540,6 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     let price = await priceFeed.lastGoodPrice()
-    console.log(`price: ${price}`)
     // Expect lastGoodPrice has not updated
     assert.equal(price, dec(999, 18))
   })
@@ -617,7 +610,6 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const price = await priceFeed.lastGoodPrice()
-    console.log(`${price}`)
     assert.equal(price, dec(1234, 18))
   })
 
@@ -848,8 +840,6 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     let price = await priceFeed.lastGoodPrice()
-    console.log(`price: ${price}`)
-    console.log(`dec(99999999, 10): ${dec(99999999, 10)}`)
     assert.equal(price, dec(99999999, 10))
   })
 
@@ -1282,7 +1272,6 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
     const price = await priceFeed.lastGoodPrice()
 
-    console.log(`price: ${price}`)
     assert.equal(price, dec(50, 18))
   })
 
