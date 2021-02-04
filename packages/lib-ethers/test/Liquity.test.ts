@@ -21,7 +21,7 @@ import {
 } from "@liquity/lib-base";
 
 import { HintHelpers } from "../types";
-import { LiquityContracts, LiquityDeployment } from "../src/contracts";
+import { _LiquityContracts, _LiquityDeploymentJSON } from "../src/contracts";
 import {
   PopulatableEthersLiquity,
   PopulatedEthersLiquityTransaction,
@@ -76,20 +76,20 @@ describe("EthersLiquity", () => {
   let user: Signer;
   let otherUsers: Signer[];
 
-  let deployment: LiquityDeployment;
+  let deployment: _LiquityDeploymentJSON;
 
   let deployerLiquity: EthersLiquity;
   let liquity: EthersLiquity;
   let otherLiquities: EthersLiquity[];
 
   const connectUsers = (users: Signer[]) =>
-    Promise.all(users.map(user => EthersLiquity.connect(deployment, user)));
+    Promise.all(users.map(user => EthersLiquity._connectToDeployment(deployment, user)));
 
   const openTroves = (users: Signer[], params: TroveCreationParams<Decimalish>[]) =>
     params
       .map((params, i) => () =>
         Promise.all([
-          EthersLiquity.connect(deployment, users[i]),
+          EthersLiquity._connectToDeployment(deployment, users[i]),
           sendTo(users[i], params.depositCollateral).then(tx => tx.wait())
         ]).then(async ([liquity]) => {
           await liquity.openTrove(params, { gasPrice: 0 });
@@ -116,7 +116,7 @@ describe("EthersLiquity", () => {
     [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
     deployment = await deployLiquity(deployer);
 
-    liquity = await EthersLiquity.connect(deployment, user);
+    liquity = await EthersLiquity._connectToDeployment(deployment, user);
     expect(liquity).to.be.an.instanceOf(EthersLiquity);
   });
 
@@ -181,7 +181,7 @@ describe("EthersLiquity", () => {
       };
 
       const fakeLiquity = new PopulatableEthersLiquity(
-        (fakeContracts as unknown) as LiquityContracts,
+        (fakeContracts as unknown) as _LiquityContracts,
         (undefined as unknown) as ReadableLiquity,
         (undefined as unknown) as Signer,
         {
@@ -258,7 +258,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should close the Trove after another user creates a Trove", async () => {
-      const funderLiquity = await EthersLiquity.connect(deployment, funder);
+      const funderLiquity = await EthersLiquity._connectToDeployment(deployment, funder);
       await funderLiquity.openTrove({ depositCollateral: 1 });
 
       const { params } = await liquity.closeTrove();

@@ -116,7 +116,7 @@ const declareInterface = ({
     "}\n",
 
     `export interface ${contractName}`,
-    `  extends TypedLiquityContract<${contractName}Calls, ${contractName}Transactions> {`,
+    `  extends _TypedLiquityContract<${contractName}Calls, ${contractName}Transactions> {`,
 
     "  readonly filters: {",
     ...Object.values(events).map(({ name, inputs }) => {
@@ -130,7 +130,7 @@ const declareInterface = ({
 
     ...Object.values(events).map(
       ({ name, inputs }) =>
-        `  extractEvents(logs: Log[], name: "${name}"): TypedLogDescription<${getTupleType(
+        `  extractEvents(logs: Log[], name: "${name}"): _TypedLogDescription<${getTupleType(
           inputs,
           false
         )}>[];`
@@ -175,7 +175,7 @@ import {
   EventFilter
 } from "@ethersproject/contracts";
 
-import { TypedLiquityContract, TypedLogDescription } from "../src/contracts";
+import { _TypedLiquityContract, _TypedLogDescription } from "../src/contracts";
 
 ${contracts.map(declareInterface).join("\n\n")}
 `;

@@ -46,7 +46,7 @@ import {
   EthersTransactionResponse
 } from "./types";
 
-import { LiquityContracts, priceFeedIsTestnet } from "./contracts";
+import { ConnectedLiquityDeployment, _LiquityContracts, _priceFeedIsTestnet } from "./contracts";
 import { logsToString } from "./parseLogs";
 import { _EthersLiquityBase } from "./EthersLiquityBase";
 
@@ -120,14 +120,14 @@ export class SentEthersLiquityTransaction<T = unknown>
 
   private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
   private readonly _provider: Provider;
-  private readonly _contracts: LiquityContracts;
+  private readonly _contracts: _LiquityContracts;
 
   /** @internal */
   constructor(
     rawSentTransaction: EthersTransactionResponse,
     parse: (rawReceipt: EthersTransactionReceipt) => T,
     provider: Provider,
-    contracts: LiquityContracts
+    contracts: _LiquityContracts
   ) {
     this.rawSentTransaction = rawSentTransaction;
     this._parse = parse;
@@ -179,14 +179,14 @@ export class PopulatedEthersLiquityTransaction<T = unknown>
 
   private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
   private readonly _signer: Signer;
-  private readonly _contracts: LiquityContracts;
+  private readonly _contracts: _LiquityContracts;
 
   /** @internal */
   constructor(
     rawPopulatedTransaction: EthersPopulatedTransaction,
     parse: (rawReceipt: EthersTransactionReceipt) => T,
     signer: Signer,
-    contracts: LiquityContracts
+    contracts: _LiquityContracts
   ) {
     this.rawPopulatedTransaction = rawPopulatedTransaction;
     this._parse = parse;
@@ -222,15 +222,18 @@ class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
   protected readonly _signer: Signer;
 
   constructor(
-    contracts: LiquityContracts,
+    deployment: ConnectedLiquityDeployment,
     readableLiquity: ReadableLiquity,
-    signer: Signer,
     store?: LiquityStore
   ) {
-    super(contracts);
+    if (!Signer.isSigner(deployment.signerOrProvider)) {
+      throw new Error("Must be connected through a Signer");
+    }
+
+    super(deployment);
 
     this._readableLiquity = readableLiquity;
-    this._signer = signer;
+    this._signer = deployment.signerOrProvider;
     this._store = store;
   }
 
@@ -540,12 +543,11 @@ export class PopulatableEthersLiquity
       EthersPopulatedTransaction
     > {
   constructor(
-    contracts: LiquityContracts,
+    deployment: ConnectedLiquityDeployment,
     readableLiquity: ReadableLiquity,
-    signer: Signer,
     store?: LiquityStore
   ) {
-    super(contracts, readableLiquity, signer, store);
+    super(deployment, readableLiquity, store);
   }
 
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.openTrove} */
@@ -665,7 +667,7 @@ export class PopulatableEthersLiquity
     price: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    if (!priceFeedIsTestnet(this._contracts.priceFeed)) {
+    if (!_priceFeedIsTestnet(this._contracts.priceFeed)) {
       throw new Error("setPrice() unavailable on this deployment of Liquity");
     }
 

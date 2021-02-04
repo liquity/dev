@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import "colors";
 
-import { LiquityDeployment } from "../src/contracts";
+import { _LiquityDeploymentJSON } from "../src/contracts";
 
 const compareDeployedVersionsTo = (version: string) => {
   let match = true;
@@ -21,7 +21,9 @@ const compareDeployedVersionsTo = (version: string) => {
     .reduce((flattenedArray, array) => flattenedArray.concat(array), []);
 
   for (const deploymentJson of deployments) {
-    const deployment = JSON.parse(fs.readFileSync(deploymentJson).toString()) as LiquityDeployment;
+    const deployment = JSON.parse(
+      fs.readFileSync(deploymentJson).toString()
+    ) as _LiquityDeploymentJSON;
 
     if (deployment.version !== version) {
       console.error(`${deploymentJson} has version ${deployment.version}`.red);

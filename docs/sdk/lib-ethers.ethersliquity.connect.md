@@ -7,15 +7,15 @@
 <b>Signature:</b>
 
 ```typescript
-static connect(deployment: LiquityDeployment, signer: Signer): Promise<EthersLiquity>;
+static connect(signer: Signer, network?: string | number): Promise<EthersLiquity>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  deployment | [LiquityDeployment](./lib-ethers.liquitydeployment.md) |  |
 |  signer | Signer |  |
+|  network | string \| number |  |
 
 <b>Returns:</b>
 

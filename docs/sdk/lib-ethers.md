@@ -17,26 +17,22 @@
 |  [SendableEthersLiquity](./lib-ethers.sendableethersliquity.md) | Ethers-based implementation of [SendableLiquity](./lib-base.sendableliquity.md)<!-- -->. |
 |  [SentEthersLiquityTransaction](./lib-ethers.sentethersliquitytransaction.md) | A transaction that has already been sent. |
 |  [TransactableEthersLiquity](./lib-ethers.transactableethersliquity.md) | Ethers-based implementation of [TransactableLiquity](./lib-base.transactableliquity.md)<!-- -->. |
+|  [UnsupportedNetworkError](./lib-ethers.unsupportednetworkerror.md) |  |
+
+## Functions
+
+|  Function | Description |
+|  --- | --- |
+|  [connectToLiquity(signerOrProvider, network)](./lib-ethers.connecttoliquity.md) |  |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
 |  [BlockPolledLiquityStoreExtraState](./lib-ethers.blockpolledliquitystoreextrastate.md) | Extra state added to [LiquityStoreState](./lib-base.liquitystorestate.md) by [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->. |
+|  [ConnectedLiquityDeployment](./lib-ethers.connectedliquitydeployment.md) |  |
 |  [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
 |  [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
-|  [LiquityContracts](./lib-ethers.liquitycontracts.md) |  |
-|  [TypedLogDescription](./lib-ethers.typedlogdescription.md) |  |
-
-## Variables
-
-|  Variable | Description |
-|  --- | --- |
-|  [addressesOf](./lib-ethers.addressesof.md) |  |
-|  [connectToContracts](./lib-ethers.connecttocontracts.md) |  |
-|  [deploymentOnNetwork](./lib-ethers.deploymentonnetwork.md) |  |
-|  [DEV\_CHAIN\_ID](./lib-ethers.dev_chain_id.md) |  |
-|  [priceFeedIsTestnet](./lib-ethers.pricefeedistestnet.md) |  |
 
 ## Type Aliases
 
@@ -46,10 +42,4 @@
 |  [EthersPopulatedTransaction](./lib-ethers.etherspopulatedtransaction.md) | Alias of Ethers' PopulatedTransaction type, which implements [UnsignedTransaction](https://docs.ethers.io/v5/api/utils/transactions/#UnsignedTransaction)<!-- -->. |
 |  [EthersTransactionReceipt](./lib-ethers.etherstransactionreceipt.md) | Alias of Ethers' [TransactionReceipt](https://docs.ethers.io/v5/api/providers/types/#providers-TransactionReceipt) type. |
 |  [EthersTransactionResponse](./lib-ethers.etherstransactionresponse.md) | Alias of Ethers' [TransactionResponse](https://docs.ethers.io/v5/api/providers/types/#providers-TransactionResponse) type. |
-|  [LiquityContractAbis](./lib-ethers.liquitycontractabis.md) |  |
-|  [LiquityContractAddresses](./lib-ethers.liquitycontractaddresses.md) |  |
-|  [LiquityContractsKey](./lib-ethers.liquitycontractskey.md) |  |
-|  [LiquityDeployment](./lib-ethers.liquitydeployment.md) |  |
-|  [TypedContract](./lib-ethers.typedcontract.md) |  |
-|  [TypedLiquityContract](./lib-ethers.typedliquitycontract.md) |  |
 

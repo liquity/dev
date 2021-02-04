@@ -17,7 +17,7 @@ import "@nomiclabs/hardhat-ethers";
 import { Decimal } from "@liquity/decimal";
 
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
-import { connectToContracts, LiquityDeployment, priceFeedIsTestnet } from "./src/contracts";
+import { _connectToContracts, _LiquityDeploymentJSON, _priceFeedIsTestnet } from "./src/contracts";
 
 import accounts from "./accounts.json";
 
@@ -111,7 +111,7 @@ declare module "hardhat/types/runtime" {
       deployer: Signer,
       useRealPriceFeed?: boolean,
       overrides?: Overrides
-    ) => Promise<LiquityDeployment>;
+    ) => Promise<_LiquityDeploymentJSON>;
   }
 }
 
@@ -129,6 +129,7 @@ extendEnvironment(env => {
           }
         : env.ethers.getContractFactory,
       !useRealPriceFeed,
+      env.network.name === "dev",
       overrides
     );
 
@@ -168,13 +169,9 @@ task("deploy", "Deploys the contracts to the network")
     const deployment = await env.deployLiquity(deployer, useRealPriceFeed, overrides);
 
     if (useRealPriceFeed) {
-      const contracts = connectToContracts(
-        deployment.addresses,
-        deployment.priceFeedIsTestnet,
-        deployer
-      );
+      const contracts = _connectToContracts(deployer, deployment);
 
-      assert(!priceFeedIsTestnet(contracts.priceFeed));
+      assert(!_priceFeedIsTestnet(contracts.priceFeed));
 
       if (hasAggregator(env.network.name)) {
         console.log(

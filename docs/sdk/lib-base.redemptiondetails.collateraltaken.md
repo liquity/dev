@@ -4,7 +4,7 @@
 
 ## RedemptionDetails.collateralTaken property
 
-Amount of collateral (e.g. Ether) taken from troves by the transaction.
+Amount of collateral (e.g. Ether) taken from Troves by the transaction.
 
 <b>Signature:</b>
 

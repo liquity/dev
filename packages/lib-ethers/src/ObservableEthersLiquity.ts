@@ -9,7 +9,7 @@ import {
   TroveWithPendingRedistribution
 } from "@liquity/lib-base";
 
-import { LiquityContracts } from "./contracts";
+import { ConnectedLiquityDeployment } from "./contracts";
 import { _EthersLiquityBase } from "./EthersLiquityBase";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
@@ -42,11 +42,11 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
   private _readableLiquity: ReadableEthersLiquity;
 
   constructor(
-    contracts: LiquityContracts,
+    deployment: ConnectedLiquityDeployment,
     readableLiquity: ReadableEthersLiquity,
     userAddress?: string
   ) {
-    super(contracts, userAddress);
+    super(deployment, userAddress);
 
     this._readableLiquity = readableLiquity;
   }

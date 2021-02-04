@@ -56,7 +56,7 @@ import {
   GasPool
 } from "../types";
 
-export interface TypedLogDescription<T> extends Omit<LogDescription, "args"> {
+export interface _TypedLogDescription<T> extends Omit<LogDescription, "args"> {
   args: T;
 }
 
@@ -82,7 +82,7 @@ type EstimatedContractFunction<R = unknown, A extends unknown[] = unknown[], O =
 
 type CallOverridesArg = [overrides?: CallOverrides];
 
-export type TypedContract<T, U, V> = TypeSafeContract<T> &
+type TypedContract<T, U, V> = TypeSafeContract<T> &
   U &
   {
     [P in keyof V]: V[P] extends (...args: infer A) => unknown
@@ -138,7 +138,7 @@ class LiquityContract extends Contract {
     this.estimateAndPopulate = buildEstimatedFunctions(this.estimateGas, this.populateTransaction);
   }
 
-  extractEvents(logs: Log[], name: string): TypedLogDescription<unknown>[] {
+  extractEvents(logs: Log[], name: string): _TypedLogDescription<unknown>[] {
     return logs
       .filter(log => log.address === this.address)
       .map(log => this.interface.parseLog(log))
@@ -146,9 +146,11 @@ class LiquityContract extends Contract {
   }
 }
 
-export type TypedLiquityContract<T = unknown, U = unknown> = TypedContract<LiquityContract, T, U>;
+/** @internal */
+export type _TypedLiquityContract<T = unknown, U = unknown> = TypedContract<LiquityContract, T, U>;
 
-export interface LiquityContracts {
+/** @internal */
+export interface _LiquityContracts {
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
   troveManager: TroveManager;
@@ -167,13 +169,17 @@ export interface LiquityContracts {
   gasPool: GasPool;
 }
 
-export const priceFeedIsTestnet = (
+/** @internal */
+export const _priceFeedIsTestnet = (
   priceFeed: PriceFeed | PriceFeedTestnet
 ): priceFeed is PriceFeedTestnet => "setPrice" in priceFeed;
 
-export type LiquityContractsKey = keyof LiquityContracts;
-export type LiquityContractAddresses = Record<LiquityContractsKey, string>;
-export type LiquityContractAbis = Record<LiquityContractsKey, JsonFragment[]>;
+type LiquityContractsKey = keyof _LiquityContracts;
+
+/** @internal */
+export type _LiquityContractAddresses = Record<LiquityContractsKey, string>;
+
+type LiquityContractAbis = Record<LiquityContractsKey, JsonFragment[]>;
 
 const getAbi = (priceFeedIsTestnet: boolean): LiquityContractAbis => ({
   activePool: activePoolAbi,
@@ -202,40 +208,61 @@ const mapLiquityContracts = <T, U>(
     Object.entries(contracts).map(([key, t]) => [key, f(t, key as LiquityContractsKey)])
   ) as Record<LiquityContractsKey, U>;
 
-export const connectToContracts = (
-  addresses: LiquityContractAddresses,
-  priceFeedIsTestnet: boolean,
-  signerOrProvider: Signer | Provider
-): LiquityContracts => {
-  const abi = getAbi(priceFeedIsTestnet);
+declare const brand: unique symbol;
+
+const branded = <T>(t: Omit<T, typeof brand>): T => t as T;
+
+export interface ConnectedLiquityDeployment {
+  readonly signerOrProvider: Signer | Provider;
+
+  readonly addresses: Record<string, string>;
+  readonly version: string;
+  readonly deploymentDate: number;
+
+  /** @internal */
+  readonly _priceFeedIsTestnet: boolean;
+
+  /** @internal */
+  readonly _isDev: boolean;
+
+  /** @internal */
+  readonly [brand]: unique symbol;
+}
+
+/** @internal */
+export interface _ConnectedLiquityDeployment extends ConnectedLiquityDeployment {
+  readonly addresses: _LiquityContractAddresses;
+  readonly _contracts: _LiquityContracts;
+}
+
+/** @internal */
+export interface _LiquityDeploymentJSON {
+  readonly addresses: _LiquityContractAddresses;
+  readonly version: string;
+  readonly deploymentDate: number;
+  readonly _priceFeedIsTestnet: boolean;
+  readonly _isDev: boolean;
+}
+
+/** @internal */
+export const _connectToContracts = (
+  signerOrProvider: Signer | Provider,
+  { addresses, _priceFeedIsTestnet }: _LiquityDeploymentJSON
+): _LiquityContracts => {
+  const abi = getAbi(_priceFeedIsTestnet);
 
   return mapLiquityContracts(
     addresses,
     (address, key) =>
-      new LiquityContract(address, abi[key], signerOrProvider) as TypedLiquityContract
-  ) as LiquityContracts;
+      new LiquityContract(address, abi[key], signerOrProvider) as _TypedLiquityContract
+  ) as _LiquityContracts;
 };
 
-export const addressesOf = (contracts: LiquityContracts): LiquityContractAddresses =>
-  mapLiquityContracts(
-    contracts as Record<LiquityContractsKey, TypedLiquityContract>,
-    contract => contract.address
-  );
+const dev = devOrNull as _LiquityDeploymentJSON | null;
 
-export type LiquityDeployment = {
-  addresses: LiquityContractAddresses;
-  priceFeedIsTestnet: boolean;
-  version: string;
-  deploymentDate: number;
-};
-
-export const DEV_CHAIN_ID = 17;
-
-const dev = devOrNull as LiquityDeployment | null;
-
-export const deploymentOnNetwork: {
-  [network: string]: LiquityDeployment;
-  [chainId: number]: LiquityDeployment;
+const deployments: {
+  [network: string]: _LiquityDeploymentJSON;
+  [chainId: number]: _LiquityDeploymentJSON;
 } = {
   goerli,
   kovan,
@@ -247,5 +274,59 @@ export const deploymentOnNetwork: {
   5: goerli,
   42: kovan,
 
-  ...(dev !== null ? { [DEV_CHAIN_ID]: dev, dev } : {})
+  ...(dev !== null ? { [17]: dev, dev } : {})
 };
+
+const connectedDeploymentFrom = (
+  deployment: _LiquityDeploymentJSON,
+  signerOrProvider: Signer | Provider,
+  _contracts: _LiquityContracts
+): _ConnectedLiquityDeployment =>
+  branded({
+    ...deployment,
+    signerOrProvider,
+    _contracts
+  });
+
+/** @internal */
+export const _getContracts = (deployment: ConnectedLiquityDeployment): _LiquityContracts =>
+  (deployment as _ConnectedLiquityDeployment)._contracts;
+
+export class UnsupportedNetworkError extends Error {
+  readonly unsupportedNetwork: string | number;
+
+  /** @internal */
+  constructor(unsupportedNetwork: string | number) {
+    super(`Unsupported network ${unsupportedNetwork}`);
+    this.name = "UnsupportedNetworkError";
+    this.unsupportedNetwork = unsupportedNetwork;
+  }
+}
+
+/** @internal */
+export const _connectToDeployment = (
+  deployment: _LiquityDeploymentJSON,
+  signerOrProvider: Signer | Provider
+): ConnectedLiquityDeployment =>
+  connectedDeploymentFrom(
+    deployment,
+    signerOrProvider,
+    _connectToContracts(signerOrProvider, deployment)
+  );
+
+export function connectToLiquity(
+  signerOrProvider: Signer | Provider,
+  network: string | number = "mainnet"
+): ConnectedLiquityDeployment {
+  if (!(network in deployments)) {
+    throw new UnsupportedNetworkError(network);
+  }
+
+  const deployment = deployments[network];
+
+  return connectedDeploymentFrom(
+    deployment,
+    signerOrProvider,
+    _connectToContracts(signerOrProvider, deployment)
+  );
+}

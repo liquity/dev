@@ -1,5 +1,10 @@
+export {
+  connectToLiquity,
+  ConnectedLiquityDeployment,
+  UnsupportedNetworkError
+} from "./src/contracts";
+
 export * from "./src/types";
-export * from "./src/contracts";
 export * from "./src/ReadableEthersLiquity";
 export * from "./src/ObservableEthersLiquity";
 export * from "./src/PopulatableEthersLiquity";

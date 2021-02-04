@@ -3,9 +3,9 @@ import { Web3ReactProvider } from "@web3-react/core";
 import { Flex, Spinner, Heading, ThemeProvider, Container } from "theme-ui";
 import { Wallet } from "@ethersproject/wallet";
 
-import { Decimal, Difference, Percent } from "@liquity/decimal";
+import { Decimal, Difference } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
-import { Trove, StabilityDeposit } from "@liquity/lib-base";
+import { Trove } from "@liquity/lib-base";
 import { LiquityStoreProvider } from "@liquity/lib-react";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
@@ -56,29 +56,19 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const {
-    account,
-    provider,
-    contracts,
-    deployment: { addresses },
-    liquity,
-    store
-  } = useLiquity();
+  const { account, provider, deployment, liquity, store } = useLiquity();
 
   // For console tinkering ;-)
   Object.assign(window, {
     account,
     provider,
-    contracts,
-    addresses,
-    store,
+    deployment,
     liquity,
+    store,
     SubgraphLiquity,
     Trove,
-    StabilityDeposit,
     Decimal,
     Difference,
-    Percent,
     Wallet
   });
 

@@ -3,11 +3,10 @@ import { ContractTransaction, ContractFactory, Overrides } from "@ethersproject/
 import { Wallet } from "@ethersproject/wallet";
 
 import {
-  LiquityContractAddresses,
-  LiquityContracts,
-  LiquityDeployment,
-  connectToContracts,
-  addressesOf
+  _LiquityContractAddresses,
+  _LiquityContracts,
+  _LiquityDeploymentJSON,
+  _connectToContracts
 } from "../src/contracts";
 
 let silent = true;
@@ -45,7 +44,7 @@ const deployContracts = async (
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   priceFeedIsTestnet = true,
   overrides?: Overrides
-): Promise<LiquityContractAddresses> => {
+): Promise<_LiquityContractAddresses> => {
   const addresses = {
     activePool: await deployContract(deployer, getContractFactory, "ActivePool", { ...overrides }),
     borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations", {
@@ -139,7 +138,7 @@ const connectContracts = async (
     sortedTroves,
     stabilityPool,
     gasPool
-  }: LiquityContracts,
+  }: _LiquityContracts,
   deployer: Signer,
   overrides?: Overrides
 ) => {
@@ -260,32 +259,29 @@ const connectContracts = async (
 export const deployAndSetupContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
-  priceFeedIsTestnet = true,
+  _priceFeedIsTestnet = true,
+  _isDev = true,
   overrides?: Overrides
-): Promise<LiquityDeployment> => {
+): Promise<_LiquityDeploymentJSON> => {
   if (!deployer.provider) {
     throw new Error("Signer must have a provider.");
   }
 
   silent || (console.log("Deploying contracts..."), console.log());
 
-  const addresses = await deployContracts(
-    deployer,
-    getContractFactory,
-    priceFeedIsTestnet,
-    overrides
-  );
+  const deployment: _LiquityDeploymentJSON = {
+    _isDev,
+    _priceFeedIsTestnet,
+    addresses: await deployContracts(deployer, getContractFactory, _priceFeedIsTestnet, overrides),
+    deploymentDate: new Date().getTime(),
+    version: "unknown"
+  };
 
-  const contracts = connectToContracts(addresses, priceFeedIsTestnet, deployer);
+  const contracts = _connectToContracts(deployer, deployment);
 
   silent || console.log("Connecting contracts...");
 
   await connectContracts(contracts, deployer, overrides);
 
-  return {
-    addresses: addressesOf(contracts),
-    priceFeedIsTestnet,
-    version: "unknown",
-    deploymentDate: new Date().getTime()
-  };
+  return deployment;
 };

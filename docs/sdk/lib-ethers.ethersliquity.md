@@ -30,6 +30,5 @@ export declare class EthersLiquity extends GluedEthersLiquity
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [connect(deployment, signer)](./lib-ethers.ethersliquity.connect.md) | <code>static</code> |  |
-|  [from(contracts, signer, userAddress)](./lib-ethers.ethersliquity.from.md) | <code>static</code> |  |
+|  [connect(signer, network)](./lib-ethers.ethersliquity.connect.md) | <code>static</code> |  |
 

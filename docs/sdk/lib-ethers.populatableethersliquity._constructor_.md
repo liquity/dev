@@ -9,15 +9,14 @@ Constructs a new instance of the `PopulatableEthersLiquity` class
 <b>Signature:</b>
 
 ```typescript
-constructor(contracts: LiquityContracts, readableLiquity: ReadableLiquity, signer: Signer, store?: LiquityStore);
+constructor(deployment: ConnectedLiquityDeployment, readableLiquity: ReadableLiquity, store?: LiquityStore);
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  contracts | [LiquityContracts](./lib-ethers.liquitycontracts.md) |  |
+|  deployment | [ConnectedLiquityDeployment](./lib-ethers.connectedliquitydeployment.md) |  |
 |  readableLiquity | [ReadableLiquity](./lib-base.readableliquity.md) |  |
-|  signer | Signer |  |
 |  store | [LiquityStore](./lib-base.liquitystore.md) |  |
 

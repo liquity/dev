@@ -19,7 +19,6 @@ import { EventFilter } from '@ethersproject/contracts';
 import { FailedReceipt } from '@liquity/lib-base';
 import { Fees } from '@liquity/lib-base';
 import { FrontendStatus } from '@liquity/lib-base';
-import { JsonFragment } from '@ethersproject/abi';
 import { LiquidationDetails } from '@liquity/lib-base';
 import { LiquityReceipt } from '@liquity/lib-base';
 import { LiquityStore } from '@liquity/lib-base';
@@ -55,9 +54,6 @@ import { TroveCreationDetails } from '@liquity/lib-base';
 import { TroveCreationParams } from '@liquity/lib-base';
 import { TroveWithPendingRedistribution } from '@liquity/lib-base';
 
-// @public (undocumented)
-export const addressesOf: (contracts: LiquityContracts) => LiquityContractAddresses;
-
 // @public
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
     constructor(provider: Provider, account: string, liquity: ReadableEthersLiquity, frontendTag?: string);
@@ -76,16 +72,25 @@ export interface BlockPolledLiquityStoreExtraState {
 export type BlockPolledLiquityStoreState = LiquityStoreState<BlockPolledLiquityStoreExtraState>;
 
 // @public (undocumented)
-export const connectToContracts: (addresses: LiquityContractAddresses, priceFeedIsTestnet: boolean, signerOrProvider: Signer | Provider) => LiquityContracts;
+export interface ConnectedLiquityDeployment {
+    // @internal (undocumented)
+    readonly [brand]: unique symbol;
+    // (undocumented)
+    readonly addresses: Record<string, string>;
+    // (undocumented)
+    readonly deploymentDate: number;
+    // @internal (undocumented)
+    readonly _isDev: boolean;
+    // @internal (undocumented)
+    readonly _priceFeedIsTestnet: boolean;
+    // (undocumented)
+    readonly signerOrProvider: Signer | Provider;
+    // (undocumented)
+    readonly version: string;
+}
 
 // @public (undocumented)
-export const deploymentOnNetwork: {
-    [network: string]: LiquityDeployment;
-    [chainId: number]: LiquityDeployment;
-};
-
-// @public (undocumented)
-export const DEV_CHAIN_ID = 17;
+export function connectToLiquity(signerOrProvider: Signer | Provider, network?: string | number): ConnectedLiquityDeployment;
 
 // @public (undocumented)
 export interface EthersCallOverrides {
@@ -101,9 +106,11 @@ export interface EthersCallOverrides {
 export class EthersLiquity extends GluedEthersLiquity {
     constructor(readable: ReadableEthersLiquity, populatable: PopulatableEthersLiquity);
     // (undocumented)
-    static connect(deployment: LiquityDeployment, signer: Signer): Promise<EthersLiquity>;
-    // (undocumented)
-    static from(contracts: LiquityContracts, signer: Signer, userAddress?: string): EthersLiquity;
+    static connect(signer: Signer, network?: string | number): Promise<EthersLiquity>;
+    // Warning: (ae-forgotten-export) The symbol "_LiquityDeploymentJSON" needs to be exported by the entry point index.d.ts
+    //
+    // @internal (undocumented)
+    static _connectToDeployment(deployment: _LiquityDeploymentJSON, signer: Signer): Promise<EthersLiquity>;
     // (undocumented)
     readonly populate: PopulatableEthersLiquity;
     // (undocumented)
@@ -134,97 +141,11 @@ export type EthersTransactionReceipt = TransactionReceipt;
 // @public
 export type EthersTransactionResponse = TransactionResponse;
 
-// @public (undocumented)
-export type LiquityContractAbis = Record<LiquityContractsKey, JsonFragment[]>;
-
-// @public (undocumented)
-export type LiquityContractAddresses = Record<LiquityContractsKey, string>;
-
-// @public (undocumented)
-export interface LiquityContracts {
-    // Warning: (ae-forgotten-export) The symbol "ActivePool" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    activePool: ActivePool;
-    // Warning: (ae-forgotten-export) The symbol "BorrowerOperations" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    borrowerOperations: BorrowerOperations;
-    // Warning: (ae-forgotten-export) The symbol "CollSurplusPool" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    collSurplusPool: CollSurplusPool;
-    // Warning: (ae-forgotten-export) The symbol "CommunityIssuance" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    communityIssuance: CommunityIssuance;
-    // Warning: (ae-forgotten-export) The symbol "DefaultPool" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    defaultPool: DefaultPool;
-    // Warning: (ae-forgotten-export) The symbol "GasPool" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    gasPool: GasPool;
-    // Warning: (ae-forgotten-export) The symbol "HintHelpers" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    hintHelpers: HintHelpers;
-    // Warning: (ae-forgotten-export) The symbol "LockupContractFactory" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    lockupContractFactory: LockupContractFactory;
-    // Warning: (ae-forgotten-export) The symbol "LQTYStaking" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    lqtyStaking: LQTYStaking;
-    // Warning: (ae-forgotten-export) The symbol "LQTYToken" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    lqtyToken: LQTYToken;
-    // Warning: (ae-forgotten-export) The symbol "LUSDToken" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    lusdToken: LUSDToken;
-    // Warning: (ae-forgotten-export) The symbol "MultiTroveGetter" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    multiTroveGetter: MultiTroveGetter;
-    // Warning: (ae-forgotten-export) The symbol "PriceFeed" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "PriceFeedTestnet" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    priceFeed: PriceFeed | PriceFeedTestnet;
-    // Warning: (ae-forgotten-export) The symbol "SortedTroves" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    sortedTroves: SortedTroves;
-    // Warning: (ae-forgotten-export) The symbol "StabilityPool" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    stabilityPool: StabilityPool;
-    // Warning: (ae-forgotten-export) The symbol "TroveManager" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    troveManager: TroveManager;
-}
-
-// @public (undocumented)
-export type LiquityContractsKey = keyof LiquityContracts;
-
-// @public (undocumented)
-export type LiquityDeployment = {
-    addresses: LiquityContractAddresses;
-    priceFeedIsTestnet: boolean;
-    version: string;
-    deploymentDate: number;
-};
-
 // Warning: (ae-forgotten-export) The symbol "_EthersLiquityBase" needs to be exported by the entry point index.d.ts
 //
 // @alpha (undocumented)
 export class ObservableEthersLiquity extends _EthersLiquityBase implements ObservableLiquity {
-    constructor(contracts: LiquityContracts, readableLiquity: ReadableEthersLiquity, userAddress?: string);
+    constructor(deployment: ConnectedLiquityDeployment, readableLiquity: ReadableEthersLiquity, userAddress?: string);
     // (undocumented)
     watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void;
     // (undocumented)
@@ -247,7 +168,7 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
 //
 // @public
 export class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase implements PopulatableLiquity<EthersTransactionReceipt, EthersTransactionResponse, EthersPopulatedTransaction> {
-    constructor(contracts: LiquityContracts, readableLiquity: ReadableLiquity, signer: Signer, store?: LiquityStore);
+    constructor(deployment: ConnectedLiquityDeployment, readableLiquity: ReadableLiquity, store?: LiquityStore);
     // (undocumented)
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
@@ -296,18 +217,18 @@ export class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase impl
 
 // @public
 export class PopulatedEthersLiquityTransaction<T = unknown> implements PopulatedLiquityTransaction<EthersPopulatedTransaction, SentEthersLiquityTransaction<T>> {
+    // Warning: (ae-forgotten-export) The symbol "_LiquityContracts" needs to be exported by the entry point index.d.ts
+    //
     // @internal
-    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, parse: (rawReceipt: EthersTransactionReceipt) => T, signer: Signer, contracts: LiquityContracts);
+    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, parse: (rawReceipt: EthersTransactionReceipt) => T, signer: Signer, contracts: _LiquityContracts);
     readonly rawPopulatedTransaction: EthersPopulatedTransaction;
     // (undocumented)
     send(): Promise<SentEthersLiquityTransaction<T>>;
     }
 
-// @public (undocumented)
-export const priceFeedIsTestnet: (priceFeed: PriceFeed | PriceFeedTestnet) => priceFeed is PriceFeedTestnet;
-
 // @public
 export class ReadableEthersLiquity extends _EthersLiquityBase implements ReadableLiquity {
+    constructor(deployment: ConnectedLiquityDeployment, userAddress?: string);
     // (undocumented)
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
@@ -399,7 +320,7 @@ export class SendableEthersLiquity implements _SendableFrom<PopulatableEthersLiq
 // @public
 export class SentEthersLiquityTransaction<T = unknown> implements SentLiquityTransaction<EthersTransactionResponse, LiquityReceipt<EthersTransactionReceipt, T>> {
     // @internal
-    constructor(rawSentTransaction: EthersTransactionResponse, parse: (rawReceipt: EthersTransactionReceipt) => T, provider: Provider, contracts: LiquityContracts);
+    constructor(rawSentTransaction: EthersTransactionResponse, parse: (rawReceipt: EthersTransactionReceipt) => T, provider: Provider, contracts: _LiquityContracts);
     // (undocumented)
     getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>>;
     readonly rawSentTransaction: EthersTransactionResponse;
@@ -456,36 +377,14 @@ export class TransactableEthersLiquity implements _TransactableFrom<SendableEthe
     withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<StabilityDepositChangeDetails>;
 }
 
-// Warning: (ae-forgotten-export) The symbol "TypeSafeContract" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export type TypedContract<T, U, V> = TypeSafeContract<T> & U & {
-    [P in keyof V]: V[P] extends (...args: infer A) => unknown ? (...args: A) => Promise<ContractTransaction> : never;
-} & {
-    readonly callStatic: {
-        [P in keyof V]: V[P] extends (...args: [...infer A, never]) => infer R ? (...args: [...A, ...CallOverridesArg]) => R : never;
-    };
-    readonly estimateAndPopulate: {
-        [P in keyof V]: V[P] extends (...args: [...infer A, infer O | undefined]) => unknown ? EstimatedContractFunction<PopulatedTransaction, A, O> : never;
-    };
-};
-
-// Warning: (ae-forgotten-export) The symbol "LiquityContract" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type TypedLiquityContract<T = unknown, U = unknown> = TypedContract<LiquityContract, T, U>;
-
-// @public (undocumented)
-export interface TypedLogDescription<T> extends Omit<LogDescription, "args"> {
+export class UnsupportedNetworkError extends Error {
+    // @internal
+    constructor(unsupportedNetwork: string | number);
     // (undocumented)
-    args: T;
+    readonly unsupportedNetwork: string | number;
 }
 
-
-// Warnings were encountered during analysis:
-//
-// src/contracts.ts:92:5 - (ae-forgotten-export) The symbol "CallOverridesArg" needs to be exported by the entry point index.d.ts
-// src/contracts.ts:98:5 - (ae-forgotten-export) The symbol "EstimatedContractFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

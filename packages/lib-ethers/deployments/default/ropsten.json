@@ -1,4 +1,6 @@
 {
+  "_isDev": false,
+  "_priceFeedIsTestnet": true,
   "addresses": {
     "activePool": "0x750F07A9aaC6adee8299351529df01c857f7E7E0",
     "borrowerOperations": "0xE042d183bee2C5Fc045292C5d76C931087cE63Ee",
@@ -17,7 +19,6 @@
     "lqtyToken": "0x35eE60ed4BFf515546Bc10c012CB4cc894a750bc",
     "multiTroveGetter": "0x04642C936CB009be44b0Be36ca0b02B3F35023CB"
   },
-  "priceFeedIsTestnet": true,
   "version": "1076240d7e69eb36a1b786dfe992909971c58d9d",
   "deploymentDate": 1611225490810
 }

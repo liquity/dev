@@ -18,6 +18,6 @@ export interface RedemptionDetails
 |  --- | --- | --- |
 |  [actualLUSDAmount](./lib-base.redemptiondetails.actuallusdamount.md) | [Decimal](./decimal.decimal.md) | Amount of LUSD that was actually redeemed by the transaction. |
 |  [attemptedLUSDAmount](./lib-base.redemptiondetails.attemptedlusdamount.md) | [Decimal](./decimal.decimal.md) | Amount of LUSD the redeemer tried to redeem. |
-|  [collateralTaken](./lib-base.redemptiondetails.collateraltaken.md) | [Decimal](./decimal.decimal.md) | Amount of collateral (e.g. Ether) taken from troves by the transaction. |
+|  [collateralTaken](./lib-base.redemptiondetails.collateraltaken.md) | [Decimal](./decimal.decimal.md) | Amount of collateral (e.g. Ether) taken from Troves by the transaction. |
 |  [fee](./lib-base.redemptiondetails.fee.md) | [Decimal](./decimal.decimal.md) | Amount of native currency (e.g. Ether) deducted as fee from collateral taken. |
 

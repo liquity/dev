@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
+import { Signer } from "@ethersproject/abstract-signer";
 import { getNetwork } from "@ethersproject/networks";
 import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
@@ -7,14 +8,11 @@ import { useWeb3React } from "@web3-react/core";
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
   EthersLiquity,
-  deploymentOnNetwork,
-  connectToContracts,
-  LiquityContracts,
-  DEV_CHAIN_ID,
   BlockPolledLiquityStore,
   ReadableEthersLiquity,
   PopulatableEthersLiquity,
-  LiquityDeployment
+  ConnectedLiquityDeployment,
+  connectToLiquity
 } from "@liquity/lib-ethers";
 
 import { LiquityFrontendConfig, getConfig } from "../config";
@@ -23,8 +21,7 @@ type LiquityContextValue = {
   config: LiquityFrontendConfig;
   account: string;
   provider: Provider;
-  deployment: LiquityDeployment;
-  contracts: LiquityContracts;
+  deployment: ConnectedLiquityDeployment;
   liquity: EthersLiquity;
   store: BlockPolledLiquityStore;
 };
@@ -43,6 +40,14 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
 
 const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
+const tryConnectToLiquity = (signer: Signer, chainId: number) => {
+  try {
+    return connectToLiquity(signer, chainId);
+  } catch {
+    return undefined;
+  }
+};
+
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
   loader,
@@ -51,12 +56,17 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
 
+  const deployment =
+    provider && account && chainId
+      ? tryConnectToLiquity(provider.getSigner(account), chainId)
+      : undefined;
+
   useEffect(() => {
     getConfig().then(setConfig);
   }, []);
 
   useEffect(() => {
-    if (config && provider && chainId) {
+    if (config && provider && chainId && deployment) {
       if (isBatchedProvider(provider)) {
         provider.chainId = chainId;
       }
@@ -66,7 +76,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
 
         if (network.name && supportedNetworks.includes(network.name) && config.infuraApiKey) {
           provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
-        } else if (chainId === DEV_CHAIN_ID) {
+        } else if (deployment._isDev) {
           provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
         }
 
@@ -75,24 +85,19 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         };
       }
     }
-  }, [config, provider, chainId]);
+  }, [config, provider, chainId, deployment]);
 
   if (!config || !provider || !account || !chainId) {
     return <>{loader}</>;
   }
 
-  const deployment = deploymentOnNetwork[chainId];
-
-  if (deployment === undefined) {
+  if (!deployment) {
     return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
   }
 
-  const signer = provider.getSigner(account);
-
-  const contracts = connectToContracts(deployment.addresses, deployment.priceFeedIsTestnet, signer);
-  const readable = new ReadableEthersLiquity(contracts, account);
+  const readable = new ReadableEthersLiquity(deployment, account);
   const store = new BlockPolledLiquityStore(provider, account, readable, config.frontendTag);
-  const populatable = new PopulatableEthersLiquity(contracts, readable, signer, store);
+  const populatable = new PopulatableEthersLiquity(deployment, readable, store);
   const liquity = new EthersLiquity(readable, populatable);
 
   store.logging = true;
@@ -104,7 +109,6 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         account,
         provider,
         deployment,
-        contracts,
         liquity,
         store
       }}

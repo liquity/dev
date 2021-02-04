@@ -233,7 +233,7 @@ export interface RedemptionDetails {
    */
   actualLUSDAmount: Decimal;
 
-  /** Amount of collateral (e.g. Ether) taken from troves by the transaction. */
+  /** Amount of collateral (e.g. Ether) taken from Troves by the transaction. */
   collateralTaken: Decimal;
 
   /** Amount of native currency (e.g. Ether) deducted as fee from collateral taken. */
