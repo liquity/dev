@@ -1,12 +1,12 @@
-import { ConnectedLiquityDeployment, _LiquityContracts, _getContracts } from "./contracts";
+import { LiquityConnection } from "./contracts";
 
 /** @internal */
 export class _EthersLiquityBase {
-  protected readonly _contracts: _LiquityContracts;
+  protected readonly _connection: LiquityConnection;
   private readonly _userAddress?: string;
 
-  constructor(deployment: ConnectedLiquityDeployment, userAddress?: string) {
-    this._contracts = _getContracts(deployment);
+  constructor(connection: LiquityConnection, userAddress?: string) {
+    this._connection = connection;
     this._userAddress = userAddress;
   }
 

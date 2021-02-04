@@ -14,7 +14,7 @@ const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const PriceManager: React.FC = () => {
   const {
-    deployment: { _priceFeedIsTestnet: canSetPrice },
+    connection: { _priceFeedIsTestnet: canSetPrice },
     liquity: { send: liquity }
   } = useLiquity();
   const price = useLiquitySelector(selectPrice);

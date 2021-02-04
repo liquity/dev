@@ -56,13 +56,13 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, deployment, liquity, store } = useLiquity();
+  const { account, provider, connection, liquity, store } = useLiquity();
 
   // For console tinkering ;-)
   Object.assign(window, {
     account,
     provider,
-    deployment,
+    connection,
     liquity,
     store,
     SubgraphLiquity,

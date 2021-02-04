@@ -21,18 +21,24 @@ import {
 } from "@liquity/lib-base";
 
 import { HintHelpers } from "../types";
-import { _LiquityContracts, _LiquityDeploymentJSON } from "../src/contracts";
+
+import { LiquityConnection, _connectToDeployment, _LiquityDeploymentJSON } from "../src/contracts";
+
 import {
   PopulatableEthersLiquity,
   PopulatedEthersLiquityTransaction,
   _redeemMaxIterations
 } from "../src/PopulatableEthersLiquity";
+
 import { EthersLiquity } from "../src/EthersLiquity";
 
 const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
 chai.use(chaiSpies);
+
+const connectToDeployment = (deployment: _LiquityDeploymentJSON, signer: Signer) =>
+  EthersLiquity._from(_connectToDeployment(deployment, signer));
 
 const baseRate = Fees.prototype.baseRate;
 let cumulativeTimeJumpSeconds = 0;
@@ -83,13 +89,13 @@ describe("EthersLiquity", () => {
   let otherLiquities: EthersLiquity[];
 
   const connectUsers = (users: Signer[]) =>
-    Promise.all(users.map(user => EthersLiquity._connectToDeployment(deployment, user)));
+    Promise.all(users.map(user => connectToDeployment(deployment, user)));
 
   const openTroves = (users: Signer[], params: TroveCreationParams<Decimalish>[]) =>
     params
       .map((params, i) => () =>
         Promise.all([
-          EthersLiquity._connectToDeployment(deployment, users[i]),
+          connectToDeployment(deployment, users[i]),
           sendTo(users[i], params.depositCollateral).then(tx => tx.wait())
         ]).then(async ([liquity]) => {
           await liquity.openTrove(params, { gasPrice: 0 });
@@ -116,7 +122,7 @@ describe("EthersLiquity", () => {
     [deployer, funder, user, ...otherUsers] = await ethers.getSigners();
     deployment = await deployLiquity(deployer);
 
-    liquity = await EthersLiquity._connectToDeployment(deployment, user);
+    liquity = await connectToDeployment(deployment, user);
     expect(liquity).to.be.an.instanceOf(EthersLiquity);
   });
 
@@ -164,26 +170,32 @@ describe("EthersLiquity", () => {
         { diff: BigNumber.from(2), hintAddress: "dennis", latestRandomSeed: BigNumber.from(4444) }
       ];
 
-      const fakeContracts = {
-        borrowerOperations: {
-          estimateAndPopulate: {
-            openTrove: () => ({})
-          }
-        },
+      const borrowerOperations = {
+        estimateAndPopulate: {
+          openTrove: () => ({})
+        }
+      };
 
-        hintHelpers: chai.spy.interface({
-          getApproxHint: () => Promise.resolve(fakeHints.shift())
-        }),
+      const hintHelpers = chai.spy.interface({
+        getApproxHint: () => Promise.resolve(fakeHints.shift())
+      });
 
-        sortedTroves: chai.spy.interface({
-          findInsertPosition: () => Promise.resolve(["fake insert position"])
-        })
+      const sortedTroves = chai.spy.interface({
+        findInsertPosition: () => Promise.resolve(["fake insert position"])
+      });
+
+      const fakeConnection = {
+        signerOrProvider: user,
+        _contracts: {
+          borrowerOperations,
+          hintHelpers,
+          sortedTroves
+        }
       };
 
       const fakeLiquity = new PopulatableEthersLiquity(
-        (fakeContracts as unknown) as _LiquityContracts,
+        (fakeConnection as unknown) as LiquityConnection,
         (undefined as unknown) as ReadableLiquity,
-        (undefined as unknown) as Signer,
         {
           state: {
             numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
@@ -200,18 +212,16 @@ describe("EthersLiquity", () => {
 
       await fakeLiquity.openTrove(params);
 
-      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.exactly(4);
-      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(
-        nominalCollateralRatio.bigNumber
-      );
+      expect(hintHelpers.getApproxHint).to.have.been.called.exactly(4);
+      expect(hintHelpers.getApproxHint).to.have.been.called.with(nominalCollateralRatio.bigNumber);
 
       // returned latestRandomSeed should be passed back on the next call
-      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(1111));
-      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(2222));
-      expect(fakeContracts.hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(3333));
+      expect(hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(1111));
+      expect(hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(2222));
+      expect(hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(3333));
 
-      expect(fakeContracts.sortedTroves.findInsertPosition).to.have.been.called.once;
-      expect(fakeContracts.sortedTroves.findInsertPosition).to.have.been.called.with(
+      expect(sortedTroves.findInsertPosition).to.have.been.called.once;
+      expect(sortedTroves.findInsertPosition).to.have.been.called.with(
         nominalCollateralRatio.bigNumber,
         "carol"
       );
@@ -258,7 +268,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should close the Trove after another user creates a Trove", async () => {
-      const funderLiquity = await EthersLiquity._connectToDeployment(deployment, funder);
+      const funderLiquity = await connectToDeployment(deployment, funder);
       await funderLiquity.openTrove({ depositCollateral: 1 });
 
       const { params } = await liquity.closeTrove();

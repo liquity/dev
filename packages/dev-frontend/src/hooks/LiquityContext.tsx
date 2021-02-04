@@ -11,7 +11,7 @@ import {
   BlockPolledLiquityStore,
   ReadableEthersLiquity,
   PopulatableEthersLiquity,
-  ConnectedLiquityDeployment,
+  LiquityConnection,
   connectToLiquity
 } from "@liquity/lib-ethers";
 
@@ -21,7 +21,7 @@ type LiquityContextValue = {
   config: LiquityFrontendConfig;
   account: string;
   provider: Provider;
-  deployment: ConnectedLiquityDeployment;
+  connection: LiquityConnection;
   liquity: EthersLiquity;
   store: BlockPolledLiquityStore;
 };
@@ -56,7 +56,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
 
-  const deployment =
+  const connection =
     provider && account && chainId
       ? tryConnectToLiquity(provider.getSigner(account), chainId)
       : undefined;
@@ -66,7 +66,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   }, []);
 
   useEffect(() => {
-    if (config && provider && chainId && deployment) {
+    if (config && provider && chainId && connection) {
       if (isBatchedProvider(provider)) {
         provider.chainId = chainId;
       }
@@ -76,7 +76,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
 
         if (network.name && supportedNetworks.includes(network.name) && config.infuraApiKey) {
           provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
-        } else if (deployment._isDev) {
+        } else if (connection._isDev) {
           provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
         }
 
@@ -85,19 +85,19 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         };
       }
     }
-  }, [config, provider, chainId, deployment]);
+  }, [config, provider, chainId, connection]);
 
   if (!config || !provider || !account || !chainId) {
     return <>{loader}</>;
   }
 
-  if (!deployment) {
+  if (!connection) {
     return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
   }
 
-  const readable = new ReadableEthersLiquity(deployment, account);
+  const readable = new ReadableEthersLiquity(connection, account);
   const store = new BlockPolledLiquityStore(provider, account, readable, config.frontendTag);
-  const populatable = new PopulatableEthersLiquity(deployment, readable, store);
+  const populatable = new PopulatableEthersLiquity(connection, readable, store);
   const liquity = new EthersLiquity(readable, populatable);
 
   store.logging = true;
@@ -108,7 +108,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         config,
         account,
         provider,
-        deployment,
+        connection,
         liquity,
         store
       }}

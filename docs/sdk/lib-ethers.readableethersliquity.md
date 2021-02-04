@@ -19,7 +19,7 @@ export declare class ReadableEthersLiquity extends _EthersLiquityBase implements
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(deployment, userAddress)](./lib-ethers.readableethersliquity._constructor_.md) |  | Constructs a new instance of the <code>ReadableEthersLiquity</code> class |
+|  [(constructor)(connection, userAddress)](./lib-ethers.readableethersliquity._constructor_.md) |  | Constructs a new instance of the <code>ReadableEthersLiquity</code> class |
 
 ## Methods
 

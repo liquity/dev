@@ -19,7 +19,7 @@ export declare class PopulatableEthersLiquity extends _PopulatableEthersLiquityB
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(deployment, readableLiquity, store)](./lib-ethers.populatableethersliquity._constructor_.md) |  | Constructs a new instance of the <code>PopulatableEthersLiquity</code> class |
+|  [(constructor)(connection, readableLiquity, store)](./lib-ethers.populatableethersliquity._constructor_.md) |  | Constructs a new instance of the <code>PopulatableEthersLiquity</code> class |
 
 ## Methods
 

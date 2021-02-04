@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare function connectToLiquity(signerOrProvider: Signer | Provider, network?: string | number): ConnectedLiquityDeployment;
+export declare function connectToLiquity(signerOrProvider: Signer | Provider, network?: string | number): LiquityConnection;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ export declare function connectToLiquity(signerOrProvider: Signer | Provider, ne
 
 <b>Returns:</b>
 
-[ConnectedLiquityDeployment](./lib-ethers.connectedliquitydeployment.md)
+[LiquityConnection](./lib-ethers.liquityconnection.md)
 

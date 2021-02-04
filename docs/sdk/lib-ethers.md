@@ -30,9 +30,9 @@
 |  Interface | Description |
 |  --- | --- |
 |  [BlockPolledLiquityStoreExtraState](./lib-ethers.blockpolledliquitystoreextrastate.md) | Extra state added to [LiquityStoreState](./lib-base.liquitystorestate.md) by [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->. |
-|  [ConnectedLiquityDeployment](./lib-ethers.connectedliquitydeployment.md) |  |
 |  [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
 |  [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
+|  [LiquityConnection](./lib-ethers.liquityconnection.md) |  |
 
 ## Type Aliases
 

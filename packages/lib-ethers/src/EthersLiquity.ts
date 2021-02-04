@@ -4,12 +4,7 @@ import { Signer } from "@ethersproject/abstract-signer";
 
 import { _glue } from "@liquity/lib-base";
 
-import {
-  ConnectedLiquityDeployment,
-  connectToLiquity,
-  _connectToDeployment,
-  _LiquityDeploymentJSON
-} from "./contracts";
+import { LiquityConnection, connectToLiquity } from "./contracts";
 
 import {
   PopulatableEthersLiquity,
@@ -45,25 +40,18 @@ export class EthersLiquity extends GluedEthersLiquity {
     this.send = sendable;
   }
 
-  private static async _from(deployment: ConnectedLiquityDeployment): Promise<EthersLiquity> {
-    assert(Signer.isSigner(deployment.signerOrProvider));
+  /** @internal */
+  static async _from(connection: LiquityConnection): Promise<EthersLiquity> {
+    assert(Signer.isSigner(connection.signerOrProvider));
 
-    const userAddress = await deployment.signerOrProvider.getAddress();
-    const readable = new ReadableEthersLiquity(deployment, userAddress);
-    const populatable = new PopulatableEthersLiquity(deployment, readable);
+    const userAddress = await connection.signerOrProvider.getAddress();
+    const readable = new ReadableEthersLiquity(connection, userAddress);
+    const populatable = new PopulatableEthersLiquity(connection, readable);
 
     return new EthersLiquity(readable, populatable);
   }
 
   static connect(signer: Signer, network: string | number = "mainnet"): Promise<EthersLiquity> {
     return EthersLiquity._from(connectToLiquity(signer, network));
-  }
-
-  /** @internal */
-  static _connectToDeployment(
-    deployment: _LiquityDeploymentJSON,
-    signer: Signer
-  ): Promise<EthersLiquity> {
-    return EthersLiquity._from(_connectToDeployment(deployment, signer));
   }
 }

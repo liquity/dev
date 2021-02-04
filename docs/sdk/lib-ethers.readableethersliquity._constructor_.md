@@ -9,13 +9,13 @@ Constructs a new instance of the `ReadableEthersLiquity` class
 <b>Signature:</b>
 
 ```typescript
-constructor(deployment: ConnectedLiquityDeployment, userAddress?: string);
+constructor(connection: LiquityConnection, userAddress?: string);
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  deployment | [ConnectedLiquityDeployment](./lib-ethers.connectedliquitydeployment.md) |  |
+|  connection | [LiquityConnection](./lib-ethers.liquityconnection.md) |  |
 |  userAddress | string |  |
 

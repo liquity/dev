@@ -212,7 +212,7 @@ declare const brand: unique symbol;
 
 const branded = <T>(t: Omit<T, typeof brand>): T => t as T;
 
-export interface ConnectedLiquityDeployment {
+export interface LiquityConnection {
   readonly signerOrProvider: Signer | Provider;
 
   readonly addresses: Record<string, string>;
@@ -230,7 +230,7 @@ export interface ConnectedLiquityDeployment {
 }
 
 /** @internal */
-export interface _ConnectedLiquityDeployment extends ConnectedLiquityDeployment {
+export interface _LiquityConnection extends LiquityConnection {
   readonly addresses: _LiquityContractAddresses;
   readonly _contracts: _LiquityContracts;
 }
@@ -281,7 +281,7 @@ const connectedDeploymentFrom = (
   deployment: _LiquityDeploymentJSON,
   signerOrProvider: Signer | Provider,
   _contracts: _LiquityContracts
-): _ConnectedLiquityDeployment =>
+): _LiquityConnection =>
   branded({
     ...deployment,
     signerOrProvider,
@@ -289,8 +289,8 @@ const connectedDeploymentFrom = (
   });
 
 /** @internal */
-export const _getContracts = (deployment: ConnectedLiquityDeployment): _LiquityContracts =>
-  (deployment as _ConnectedLiquityDeployment)._contracts;
+export const _getContracts = (connection: LiquityConnection): _LiquityContracts =>
+  (connection as _LiquityConnection)._contracts;
 
 export class UnsupportedNetworkError extends Error {
   readonly unsupportedNetwork: string | number;
@@ -307,7 +307,7 @@ export class UnsupportedNetworkError extends Error {
 export const _connectToDeployment = (
   deployment: _LiquityDeploymentJSON,
   signerOrProvider: Signer | Provider
-): ConnectedLiquityDeployment =>
+): LiquityConnection =>
   connectedDeploymentFrom(
     deployment,
     signerOrProvider,
@@ -317,7 +317,7 @@ export const _connectToDeployment = (
 export function connectToLiquity(
   signerOrProvider: Signer | Provider,
   network: string | number = "mainnet"
-): ConnectedLiquityDeployment {
+): LiquityConnection {
   if (!(network in deployments)) {
     throw new UnsupportedNetworkError(network);
   }
