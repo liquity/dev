@@ -75,6 +75,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         usingChainlinkTellorBroken
     }
 
+    // The current status of the PricFeed, which determines the conditions for the next price fetch attempt
     Status public status;
 
     event LastGoodPriceUpdated(uint _lastGoodPrice);
@@ -430,7 +431,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return _bothOraclesSimilarPrice(_chainlinkResponse, _tellorResponse);
     }
 
-    function _bothOraclesSimilarPrice( ChainlinkResponse memory _chainlinkResponse, TellorResponse memory _tellorResponse) internal pure returns (bool) {
+    function _bothOraclesSimilarPrice( ChainlinkResponse memory _chainlinkResponse, TellorResponse memory _tellorResponse) internal view returns (bool) {
         uint scaledChainlinkPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.answer), _chainlinkResponse.decimals);
         uint scaledTellorPrice = _scaleTellorPriceByDigits(_tellorResponse.value);
         
@@ -438,12 +439,12 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         uint minPrice = LiquityMath._min(scaledTellorPrice, scaledChainlinkPrice);
         uint maxPrice = LiquityMath._max(scaledTellorPrice, scaledChainlinkPrice);
         uint percentPriceDifference = maxPrice.sub(minPrice).mul(DECIMAL_PRECISION).div(minPrice);
-        
+
         /*
-        * Return true if the relative price difference is small: if so, we assume both oracles are probably reporting 
+        * Return true if the relative price difference is <= 3%: if so, we assume both oracles are probably reporting 
         * the honest market price, as it is unlikely that both have been broken/hacked and are still in-sync.
         */
-        return percentPriceDifference < MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
+        return percentPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
     }
    
     function _scaleChainlinkPriceByDigits(uint _price, uint _answerDigits) internal pure returns (uint) {
