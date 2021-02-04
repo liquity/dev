@@ -38,9 +38,9 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     * The community LQTY supply cap is the starting balance of the Community Issuance contract.
     * It should be minted to this contract by LQTYToken, when the token is deployed.
     * 
-    * Set to 1/4 of total LQTY supply.
+    * Set to 32M (slightly less than 1/3) of total LQTY supply.
     */
-    uint constant public LQTYSupplyCap = 25e24; // 25 million
+    uint constant public LQTYSupplyCap = 32e24; // 32 million
 
     ILQTYToken public lqtyToken;
 
