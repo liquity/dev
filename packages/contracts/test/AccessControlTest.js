@@ -64,7 +64,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       await borrowerOperations.openTrove(th._100pct, dec(100,18), account, account, {value: dec(100,  'ether'), from: account})
    }
 
-    const expectedCISupplyCap = '25000000000000000000000000' // 25mil
+    const expectedCISupplyCap = '32000000000000000000000000' // 32mil
 
     // Check CI has been properly funded
     const bal = await lqtyToken.balanceOf(communityIssuance.address)
