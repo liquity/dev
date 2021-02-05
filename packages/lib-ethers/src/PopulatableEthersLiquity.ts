@@ -2,9 +2,7 @@ import assert from "assert";
 
 import { AddressZero } from "@ethersproject/constants";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
-import { Provider, Log } from "@ethersproject/abstract-provider";
-import { Signer } from "@ethersproject/abstract-signer";
-import { Contract } from "@ethersproject/contracts";
+import { Log } from "@ethersproject/abstract-provider";
 
 import { Decimal, Decimalish } from "@liquity/decimal";
 
@@ -46,7 +44,8 @@ import {
   EthersTransactionResponse
 } from "./types";
 
-import { LiquityConnection, _getContracts, _priceFeedIsTestnet } from "./contracts";
+import { _priceFeedIsTestnet } from "./contracts";
+import { LiquityConnection, _getContracts, _getProvider, _getSigner } from "./connection";
 import { logsToString } from "./parseLogs";
 import { _EthersLiquityBase } from "./EthersLiquityBase";
 
@@ -118,28 +117,25 @@ export class SentEthersLiquityTransaction<T = unknown>
   /** Ethers' representation of a sent transaction. */
   readonly rawSentTransaction: EthersTransactionResponse;
 
-  private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
-  private readonly _provider: Provider;
   private readonly _connection: LiquityConnection;
+  private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
 
   /** @internal */
   constructor(
     rawSentTransaction: EthersTransactionResponse,
-    parse: (rawReceipt: EthersTransactionReceipt) => T,
-    provider: Provider,
-    connection: LiquityConnection
+    connection: LiquityConnection,
+    parse: (rawReceipt: EthersTransactionReceipt) => T
   ) {
     this.rawSentTransaction = rawSentTransaction;
-    this._parse = parse;
-    this._provider = provider;
     this._connection = connection;
+    this._parse = parse;
   }
 
   private _receiptFrom(rawReceipt: EthersTransactionReceipt | null) {
     return rawReceipt
       ? rawReceipt.status
         ? _successfulReceipt(rawReceipt, this._parse(rawReceipt), () =>
-            logsToString(rawReceipt, (this._connection as unknown) as Record<string, Contract>)
+            logsToString(rawReceipt, _getContracts(this._connection))
           )
         : _failedReceipt(rawReceipt)
       : _pendingReceipt;
@@ -148,14 +144,14 @@ export class SentEthersLiquityTransaction<T = unknown>
   /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.getReceipt} */
   async getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>> {
     return this._receiptFrom(
-      await this._provider.getTransactionReceipt(this.rawSentTransaction.hash)
+      await _getProvider(this._connection).getTransactionReceipt(this.rawSentTransaction.hash)
     );
   }
 
   /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.waitForReceipt} */
   async waitForReceipt(): Promise<MinedReceipt<EthersTransactionReceipt, T>> {
     const receipt = this._receiptFrom(
-      await this._provider.waitForTransaction(this.rawSentTransaction.hash)
+      await _getProvider(this._connection).waitForTransaction(this.rawSentTransaction.hash)
     );
 
     assert(receipt.status !== "pending");
@@ -177,34 +173,26 @@ export class PopulatedEthersLiquityTransaction<T = unknown>
   /** Unsigned transaction object populated by Ethers. */
   readonly rawPopulatedTransaction: EthersPopulatedTransaction;
 
-  private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
-  private readonly _signer: Signer;
   private readonly _connection: LiquityConnection;
+  private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
 
   /** @internal */
   constructor(
     rawPopulatedTransaction: EthersPopulatedTransaction,
-    parse: (rawReceipt: EthersTransactionReceipt) => T,
-    signer: Signer,
-    connection: LiquityConnection
+    connection: LiquityConnection,
+    parse: (rawReceipt: EthersTransactionReceipt) => T
   ) {
     this.rawPopulatedTransaction = rawPopulatedTransaction;
-    this._parse = parse;
-    this._signer = signer;
     this._connection = connection;
+    this._parse = parse;
   }
 
   /** {@inheritDoc @liquity/lib-base#PopulatedLiquityTransaction.send} */
   async send(): Promise<SentEthersLiquityTransaction<T>> {
-    if (!this._signer.provider) {
-      throw new Error("Signer must have a Provider");
-    }
-
     return new SentEthersLiquityTransaction(
-      await this._signer.sendTransaction(this.rawPopulatedTransaction),
-      this._parse,
-      this._signer.provider,
-      this._connection
+      await _getSigner(this._connection).sendTransaction(this.rawPopulatedTransaction),
+      this._connection,
+      this._parse
     );
   }
 }
@@ -218,23 +206,19 @@ export interface _TroveChangeWithFees<T> {
 
 /** @internal */
 export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
+  protected readonly _connection: LiquityConnection;
   protected readonly _readableLiquity: ReadableLiquity;
   protected readonly _store?: LiquityStore;
-  protected readonly _signer: Signer;
 
   constructor(
     connection: LiquityConnection,
     readableLiquity: ReadableLiquity,
     store?: LiquityStore
   ) {
-    if (!Signer.isSigner(connection.signerOrProvider)) {
-      throw new Error("Must be connected through a Signer");
-    }
-
     super(connection);
 
+    this._connection = connection;
     this._readableLiquity = readableLiquity;
-    this._signer = connection.signerOrProvider;
     this._store = store;
   }
 
@@ -243,9 +227,8 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
   ): PopulatedEthersLiquityTransaction<void> {
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
-      noDetails,
-      this._signer,
-      this._connection
+      this._connection,
+      noDetails
     );
   }
 
@@ -257,6 +240,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
 
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
+      this._connection,
 
       ({ logs }) => {
         const [newTrove] = borrowerOperations
@@ -272,10 +256,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
           newTrove,
           fee
         };
-      },
-
-      this._signer,
-      this._connection
+      }
     );
   }
 
@@ -283,12 +264,12 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): Promise<PopulatedEthersLiquityTransaction<TroveClosureDetails>> {
     const { activePool, lusdToken } = _getContracts(this._connection);
-    const userAddress = await this._signer.getAddress();
 
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
+      this._connection,
 
-      ({ logs }) => {
+      ({ logs, from: userAddress }) => {
         const [repayLUSD] = lusdToken
           .extractEvents(logs, "Transfer")
           .filter(({ args: { from, to } }) => from === userAddress && to === AddressZero)
@@ -302,10 +283,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
         return {
           params: repayLUSD.nonZero ? { withdrawCollateral, repayLUSD } : { withdrawCollateral }
         };
-      },
-
-      this._signer,
-      this._connection
+      }
     );
   }
 
@@ -316,6 +294,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
 
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
+      this._connection,
 
       ({ logs }) => {
         const liquidatedAddresses = troveManager
@@ -338,10 +317,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
           liquidatedAddresses,
           ...totals
         };
-      },
-
-      this._signer,
-      this._connection
+      }
     );
   }
 
@@ -352,6 +328,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
 
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
+      this._connection,
 
       ({ logs }) =>
         troveManager
@@ -361,10 +338,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
             actualLUSDAmount: new Decimal(_actualLUSDAmount),
             collateralTaken: new Decimal(_ETHSent),
             fee: new Decimal(_ETHFee)
-          }))[0],
-
-      this._signer,
-      this._connection
+          }))[0]
     );
   }
 
@@ -398,9 +372,8 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
   ): PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails> {
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
-      ({ logs }) => this._extractStabilityPoolGainsWithdrawalDetails(logs),
-      this._signer,
-      this._connection
+      this._connection,
+      ({ logs }) => this._extractStabilityPoolGainsWithdrawalDetails(logs)
     );
   }
 
@@ -410,14 +383,12 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
   ): PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails> {
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
+      this._connection,
 
       ({ logs }) => ({
         ...this._extractStabilityPoolGainsWithdrawalDetails(logs),
         change
-      }),
-
-      this._signer,
-      this._connection
+      })
     );
   }
 
@@ -425,12 +396,12 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
     const { stabilityPool, lusdToken } = _getContracts(this._connection);
-    const userAddress = await this._signer.getAddress();
 
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
+      this._connection,
 
-      ({ logs }) => {
+      ({ logs, from: userAddress }) => {
         const gainsWithdrawalDetails = this._extractStabilityPoolGainsWithdrawalDetails(logs);
 
         const [withdrawLUSD] = lusdToken
@@ -442,10 +413,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
           ...gainsWithdrawalDetails,
           change: { withdrawLUSD, withdrawAllLUSD: gainsWithdrawalDetails.newLUSDDeposit.isZero }
         };
-      },
-
-      this._signer,
-      this._connection
+      }
     );
   }
 
@@ -456,6 +424,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
 
     return new PopulatedEthersLiquityTransaction(
       rawPopulatedTransaction,
+      this._connection,
 
       ({ logs }) => {
         const [newTrove] = borrowerOperations
@@ -466,10 +435,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
           ...this._extractStabilityPoolGainsWithdrawalDetails(logs),
           newTrove
         };
-      },
-
-      this._signer,
-      this._connection
+      }
     );
   }
 

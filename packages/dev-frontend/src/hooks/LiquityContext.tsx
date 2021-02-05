@@ -96,7 +96,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   }
 
   const readable = new ReadableEthersLiquity(connection, account);
-  const store = new BlockPolledLiquityStore(provider, account, readable, config.frontendTag);
+  const store = new BlockPolledLiquityStore(connection, readable, config.frontendTag, account);
   const populatable = new PopulatableEthersLiquity(connection, readable, store);
   const liquity = new EthersLiquity(readable, populatable);
 

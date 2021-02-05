@@ -9,7 +9,7 @@ import {
   TroveWithPendingRedistribution
 } from "@liquity/lib-base";
 
-import { LiquityConnection, _getContracts } from "./contracts";
+import { LiquityConnection, _getContracts } from "./connection";
 import { _EthersLiquityBase } from "./EthersLiquityBase";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 

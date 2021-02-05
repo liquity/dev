@@ -45,12 +45,12 @@ import { TroveWithPendingRedistribution } from '@liquity/lib-base';
 
 // @public
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
-    constructor(provider: Provider, account: string, liquity: ReadableEthersLiquity, frontendTag?: string);
+    constructor(connection: LiquityConnection, readableLiquity?: ReadableEthersLiquity, frontendTag?: string, userAddress?: string);
     // @override (undocumented)
     protected _doStart(): () => void;
     // @override (undocumented)
     protected _reduceExtra(oldState: BlockPolledLiquityStoreExtraState, stateUpdate: Partial<BlockPolledLiquityStoreExtraState>): BlockPolledLiquityStoreExtraState;
-}
+    }
 
 // @public
 export interface BlockPolledLiquityStoreExtraState {
@@ -71,8 +71,6 @@ export interface EthersCallOverrides {
     from?: string;
 }
 
-// Warning: (ae-forgotten-export) The symbol "GluedEthersLiquity" needs to be exported by the entry point index.d.ts
-//
 // @public
 export class EthersLiquity extends GluedEthersLiquity {
     constructor(readable: ReadableEthersLiquity, populatable: PopulatableEthersLiquity);
@@ -215,13 +213,13 @@ export class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase impl
 export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
     constructor(connection: LiquityConnection, readableLiquity: ReadableLiquity, store?: LiquityStore);
     // (undocumented)
+    protected readonly _connection: LiquityConnection;
+    // (undocumented)
     protected _findHints(trove: Trove): Promise<[string, string]>;
     // (undocumented)
     protected _findRedemptionHints(amount: Decimal): Promise<[string, string, string, Decimal]>;
     // (undocumented)
     protected readonly _readableLiquity: ReadableLiquity;
-    // (undocumented)
-    protected readonly _signer: Signer;
     // (undocumented)
     protected readonly _store?: LiquityStore;
     // (undocumented)
@@ -249,11 +247,11 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
 // @public
 export class PopulatedEthersLiquityTransaction<T = unknown> implements PopulatedLiquityTransaction<EthersPopulatedTransaction, SentEthersLiquityTransaction<T>> {
     // @internal
-    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, parse: (rawReceipt: EthersTransactionReceipt) => T, signer: Signer, connection: LiquityConnection);
+    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, connection: LiquityConnection, parse: (rawReceipt: EthersTransactionReceipt) => T);
     readonly rawPopulatedTransaction: EthersPopulatedTransaction;
     // (undocumented)
     send(): Promise<SentEthersLiquityTransaction<T>>;
-    }
+}
 
 // Warning: (ae-incompatible-release-tags) The symbol "ReadableEthersLiquity" is marked as @public, but its signature references "_EthersLiquityBase" which is marked as @internal
 //
@@ -351,7 +349,7 @@ export class SendableEthersLiquity implements _SendableFrom<PopulatableEthersLiq
 // @public
 export class SentEthersLiquityTransaction<T = unknown> implements SentLiquityTransaction<EthersTransactionResponse, LiquityReceipt<EthersTransactionReceipt, T>> {
     // @internal
-    constructor(rawSentTransaction: EthersTransactionResponse, parse: (rawReceipt: EthersTransactionReceipt) => T, provider: Provider, connection: LiquityConnection);
+    constructor(rawSentTransaction: EthersTransactionResponse, connection: LiquityConnection, parse: (rawReceipt: EthersTransactionReceipt) => T);
     // (undocumented)
     getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>>;
     readonly rawSentTransaction: EthersTransactionResponse;

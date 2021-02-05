@@ -1,11 +1,18 @@
-import { AddressZero } from "@ethersproject/constants";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Provider } from "@ethersproject/abstract-provider";
 
 import { Decimal } from "@liquity/decimal";
-import { LiquityStore, LiquityStoreState, LiquityStoreBaseState } from "@liquity/lib-base";
+import {
+  LiquityStore,
+  LiquityStoreState,
+  LiquityStoreBaseState,
+  TroveWithPendingRedistribution,
+  StabilityDeposit,
+  LQTYStake
+} from "@liquity/lib-base";
 
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
+import { LiquityConnection, _getProvider } from "./connection";
 
 /**
  * Extra state added to {@link @liquity/lib-base#LiquityStoreState} by
@@ -51,45 +58,66 @@ const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
  * @public
  */
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
-  private _provider: Provider;
-  private _account: string;
-  private _liquity: ReadableEthersLiquity;
-  private _frontendTag: string;
+  private readonly _provider: Provider;
+  private readonly _readableLiquity: ReadableEthersLiquity;
+  private readonly _frontendTag?: string;
+  private readonly _userAddress?: string;
 
   constructor(
-    provider: Provider,
-    account: string,
-    liquity: ReadableEthersLiquity,
-    frontendTag = AddressZero
+    connection: LiquityConnection,
+    readableLiquity?: ReadableEthersLiquity,
+    frontendTag?: string,
+    userAddress?: string
   ) {
     super();
 
-    this._provider = provider;
-    this._account = account;
-    this._liquity = liquity;
+    this._provider = _getProvider(connection);
+    this._readableLiquity = readableLiquity ?? new ReadableEthersLiquity(connection);
     this._frontendTag = frontendTag;
+    this._userAddress = userAddress;
   }
 
   private _get(blockTag?: number): Promise<LiquityStoreBaseState> {
     return promiseAllValues({
-      frontend: this._liquity.getFrontendStatus(this._frontendTag, { blockTag }),
-      ownFrontend: this._liquity.getFrontendStatus(this._account, { blockTag }),
-      accountBalance: this._provider.getBalance(this._account, blockTag).then(decimalify),
-      lusdBalance: this._liquity.getLUSDBalance(this._account, { blockTag }),
-      lqtyBalance: this._liquity.getLQTYBalance(this._account, { blockTag }),
-      collateralSurplusBalance: this._liquity.getCollateralSurplusBalance(this._account, {
-        blockTag
-      }),
-      price: this._liquity.getPrice({ blockTag }),
-      numberOfTroves: this._liquity.getNumberOfTroves({ blockTag }),
-      troveWithoutRedistribution: this._liquity.getTroveWithoutRewards(this._account, { blockTag }),
-      totalRedistributed: this._liquity.getTotalRedistributed({ blockTag }),
-      deposit: this._liquity.getStabilityDeposit(this._account, { blockTag }),
-      total: this._liquity.getTotal({ blockTag }),
-      lusdInStabilityPool: this._liquity.getLUSDInStabilityPool({ blockTag }),
-      fees: this._liquity.getFees({ blockTag }),
-      lqtyStake: this._liquity.getLQTYStake(this._account, { blockTag }),
-      totalStakedLQTY: this._liquity.getTotalStakedLQTY({ blockTag })
+      price: this._readableLiquity.getPrice({ blockTag }),
+      numberOfTroves: this._readableLiquity.getNumberOfTroves({ blockTag }),
+      totalRedistributed: this._readableLiquity.getTotalRedistributed({ blockTag }),
+      total: this._readableLiquity.getTotal({ blockTag }),
+      lusdInStabilityPool: this._readableLiquity.getLUSDInStabilityPool({ blockTag }),
+      fees: this._readableLiquity.getFees({ blockTag }),
+      totalStakedLQTY: this._readableLiquity.getTotalStakedLQTY({ blockTag }),
+
+      frontend: this._frontendTag
+        ? this._readableLiquity.getFrontendStatus(this._frontendTag, { blockTag })
+        : { status: "unregistered" },
+
+      ...(this._userAddress
+        ? {
+            accountBalance: this._provider.getBalance(this._userAddress, blockTag).then(decimalify),
+            lusdBalance: this._readableLiquity.getLUSDBalance(this._userAddress, { blockTag }),
+            lqtyBalance: this._readableLiquity.getLQTYBalance(this._userAddress, { blockTag }),
+            collateralSurplusBalance: this._readableLiquity.getCollateralSurplusBalance(
+              this._userAddress,
+              { blockTag }
+            ),
+            troveWithoutRedistribution: this._readableLiquity.getTroveWithoutRewards(
+              this._userAddress,
+              { blockTag }
+            ),
+            deposit: this._readableLiquity.getStabilityDeposit(this._userAddress, { blockTag }),
+            lqtyStake: this._readableLiquity.getLQTYStake(this._userAddress, { blockTag }),
+            ownFrontend: this._readableLiquity.getFrontendStatus(this._userAddress, { blockTag })
+          }
+        : {
+            accountBalance: Decimal.ZERO,
+            lusdBalance: Decimal.ZERO,
+            lqtyBalance: Decimal.ZERO,
+            collateralSurplusBalance: Decimal.ZERO,
+            troveWithoutRedistribution: new TroveWithPendingRedistribution(),
+            deposit: new StabilityDeposit(),
+            lqtyStake: new LQTYStake(),
+            ownFrontend: { status: "unregistered" }
+          })
     });
   }
 

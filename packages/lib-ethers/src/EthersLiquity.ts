@@ -4,7 +4,7 @@ import { Signer } from "@ethersproject/abstract-signer";
 
 import { _glue } from "@liquity/lib-base";
 
-import { LiquityConnection, connectToLiquity } from "./contracts";
+import { LiquityConnection, connectToLiquity } from "./connection";
 
 import {
   PopulatableEthersLiquity,

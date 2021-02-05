@@ -12,9 +12,10 @@ import {
 } from "@liquity/lib-base";
 
 import { MultiTroveGetter } from "../types";
+
 import { EthersCallOverrides } from "./types";
+import { LiquityConnection, _getContracts } from "./connection";
 import { _EthersLiquityBase } from "./EthersLiquityBase";
-import { LiquityConnection, _getContracts } from "./contracts";
 
 // TODO: these are constant in the contracts, so it doesn't make sense to make a call for them,
 // but to avoid having to update them here when we change them in the contracts, we could read

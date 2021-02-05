@@ -17,7 +17,7 @@ export declare class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiq
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(provider, account, liquity, frontendTag)](./lib-ethers.blockpolledliquitystore._constructor_.md) |  | Constructs a new instance of the <code>BlockPolledLiquityStore</code> class |
+|  [(constructor)(connection, readableLiquity, frontendTag, userAddress)](./lib-ethers.blockpolledliquitystore._constructor_.md) |  | Constructs a new instance of the <code>BlockPolledLiquityStore</code> class |
 
 ## Methods
 

@@ -1,4 +1,4 @@
-export { connectToLiquity, LiquityConnection, UnsupportedNetworkError } from "./src/contracts";
+export { connectToLiquity, LiquityConnection, UnsupportedNetworkError } from "./src/connection";
 
 export * from "./src/types";
 export * from "./src/ReadableEthersLiquity";

@@ -1,10 +1,15 @@
 import { BigNumber } from "@ethersproject/bignumber";
 import { AddressZero } from "@ethersproject/constants";
 import { Log, TransactionReceipt } from "@ethersproject/abstract-provider";
-import { Contract } from "@ethersproject/contracts";
 import { LogDescription, Interface } from "@ethersproject/abi";
 
 import { Decimal } from "@liquity/decimal";
+
+import { _LiquityContracts, _TypedLiquityContract } from "./contracts";
+
+type ContractLookup = {
+  [name: string]: _TypedLiquityContract;
+};
 
 type InterfaceLookup = {
   [address: string]: Interface;
@@ -14,15 +19,15 @@ type NameLookup = {
   [address: string]: string;
 };
 
-const interfaceLookupFrom = (contracts: Record<string, Contract>): InterfaceLookup => {
+const interfaceLookupFrom = (contractLookup: ContractLookup): InterfaceLookup => {
   return Object.fromEntries(
-    Object.entries(contracts).map(([, contract]) => [contract.address, contract.interface])
+    Object.entries(contractLookup).map(([, contract]) => [contract.address, contract.interface])
   );
 };
 
-const nameLookupFrom = (contracts: Record<string, Contract>): NameLookup => {
+const nameLookupFrom = (contractLookup: ContractLookup): NameLookup => {
   return Object.fromEntries(
-    Object.entries(contracts).map(([name, contract]) => [contract.address, name])
+    Object.entries(contractLookup).map(([name, contract]) => [contract.address, name])
   );
 };
 
@@ -94,12 +99,10 @@ const logDescriptionToString = (logDescription: LogDescription, nameLookup: Name
   return `${logDescription.name}({ ${prettyEntries.join(", ")} })`;
 };
 
-export const logsToString = (
-  receipt: TransactionReceipt,
-  contracts: Record<string, Contract>
-): string => {
-  const interfaceLookup = interfaceLookupFrom(contracts);
-  const contractNameLookup = nameLookupFrom(contracts);
+export const logsToString = (receipt: TransactionReceipt, contracts: _LiquityContracts): string => {
+  const contractLookup = (contracts as unknown) as ContractLookup;
+  const interfaceLookup = interfaceLookupFrom(contractLookup);
+  const contractNameLookup = nameLookupFrom(contractLookup);
 
   const nameLookup = {
     [receipt.from]: "user",

@@ -1,4 +1,4 @@
-import { LiquityConnection } from "./contracts";
+import { LiquityConnection } from "./connection";
 
 /** @internal */
 export class _EthersLiquityBase {

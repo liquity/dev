@@ -30,12 +30,6 @@ import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 import gasPoolAbi from "../abi/GasPool.json";
 
-import devOrNull from "../deployments/dev.json";
-import goerli from "../deployments/goerli.json";
-import kovan from "../deployments/kovan.json";
-import rinkeby from "../deployments/rinkeby.json";
-import ropsten from "../deployments/ropsten.json";
-
 import {
   ActivePool,
   BorrowerOperations,
@@ -82,7 +76,7 @@ type EstimatedContractFunction<R = unknown, A extends unknown[] = unknown[], O =
 
 type CallOverridesArg = [overrides?: CallOverrides];
 
-type TypedContract<T, U, V> = TypeSafeContract<T> &
+type TypedContract<T extends Contract, U, V> = TypeSafeContract<T> &
   U &
   {
     [P in keyof V]: V[P] extends (...args: infer A) => unknown
@@ -208,33 +202,6 @@ const mapLiquityContracts = <T, U>(
     Object.entries(contracts).map(([key, t]) => [key, f(t, key as LiquityContractsKey)])
   ) as Record<LiquityContractsKey, U>;
 
-declare const brand: unique symbol;
-
-const branded = <T>(t: Omit<T, typeof brand>): T => t as T;
-
-export interface LiquityConnection {
-  readonly signerOrProvider: Signer | Provider;
-
-  readonly addresses: Record<string, string>;
-  readonly version: string;
-  readonly deploymentDate: number;
-
-  /** @internal */
-  readonly _priceFeedIsTestnet: boolean;
-
-  /** @internal */
-  readonly _isDev: boolean;
-
-  /** @internal */
-  readonly [brand]: unique symbol;
-}
-
-/** @internal */
-export interface _LiquityConnection extends LiquityConnection {
-  readonly addresses: _LiquityContractAddresses;
-  readonly _contracts: _LiquityContracts;
-}
-
 /** @internal */
 export interface _LiquityDeploymentJSON {
   readonly addresses: _LiquityContractAddresses;
@@ -257,76 +224,3 @@ export const _connectToContracts = (
       new LiquityContract(address, abi[key], signerOrProvider) as _TypedLiquityContract
   ) as _LiquityContracts;
 };
-
-const dev = devOrNull as _LiquityDeploymentJSON | null;
-
-const deployments: {
-  [network: string]: _LiquityDeploymentJSON;
-  [chainId: number]: _LiquityDeploymentJSON;
-} = {
-  goerli,
-  kovan,
-  rinkeby,
-  ropsten,
-
-  3: ropsten,
-  4: rinkeby,
-  5: goerli,
-  42: kovan,
-
-  ...(dev !== null ? { [17]: dev, dev } : {})
-};
-
-const connectedDeploymentFrom = (
-  deployment: _LiquityDeploymentJSON,
-  signerOrProvider: Signer | Provider,
-  _contracts: _LiquityContracts
-): _LiquityConnection =>
-  branded({
-    ...deployment,
-    signerOrProvider,
-    _contracts
-  });
-
-/** @internal */
-export const _getContracts = (connection: LiquityConnection): _LiquityContracts =>
-  (connection as _LiquityConnection)._contracts;
-
-export class UnsupportedNetworkError extends Error {
-  readonly unsupportedNetwork: string | number;
-
-  /** @internal */
-  constructor(unsupportedNetwork: string | number) {
-    super(`Unsupported network ${unsupportedNetwork}`);
-    this.name = "UnsupportedNetworkError";
-    this.unsupportedNetwork = unsupportedNetwork;
-  }
-}
-
-/** @internal */
-export const _connectToDeployment = (
-  deployment: _LiquityDeploymentJSON,
-  signerOrProvider: Signer | Provider
-): LiquityConnection =>
-  connectedDeploymentFrom(
-    deployment,
-    signerOrProvider,
-    _connectToContracts(signerOrProvider, deployment)
-  );
-
-export function connectToLiquity(
-  signerOrProvider: Signer | Provider,
-  network: string | number = "mainnet"
-): LiquityConnection {
-  if (!(network in deployments)) {
-    throw new UnsupportedNetworkError(network);
-  }
-
-  const deployment = deployments[network];
-
-  return connectedDeploymentFrom(
-    deployment,
-    signerOrProvider,
-    _connectToContracts(signerOrProvider, deployment)
-  );
-}
