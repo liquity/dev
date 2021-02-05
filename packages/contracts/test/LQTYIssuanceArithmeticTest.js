@@ -416,7 +416,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
    // Error tolerance: 1e-3, i.e. 1/1000th of a token
 
-  it("Total LQTY tokens issued is 32.97 after a minute", async () => {
+  it("Total LQTY tokens issued is 40.20 after a minute", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -427,7 +427,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '32969307625641000000'
+    const expectedTotalLQTYIssued = '42200713760820460000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -440,7 +440,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 1978.08 after an hour", async () => {
+  it("Total LQTY tokens issued is 2,531.94 after an hour", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -452,7 +452,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '1978081501652350000000'
+    const expectedTotalLQTYIssued = '2531944322115010000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -465,7 +465,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 47430.78 after a day", async () => {
+  it("Total LQTY tokens issued is 60,711.40 after a day", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -477,7 +477,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '47430783711041600000000'
+    const expectedTotalLQTYIssued = '60711403150133240000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -490,7 +490,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 330131.72 after a week", async () => {
+  it("Total LQTY tokens issued is 422,568.60 after a week", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -502,7 +502,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '330131719515711000000000'
+    const expectedTotalLQTYIssued = '422568600980110200000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -515,7 +515,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 1384463.45 after a month", async () => {
+  it("Total LQTY tokens issued is 1,772,113.21 after a month", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -527,7 +527,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '1384463452199160000000000'
+    const expectedTotalLQTYIssued = '1772113218814930000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -540,7 +540,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 3927627.52 after 3 months", async () => {
+  it("Total LQTY tokens issued is 5,027,363.22 after 3 months", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -551,7 +551,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '3927627518800920000000000'
+    const expectedTotalLQTYIssued = '5027363224065180000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -564,7 +564,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 7238204.72 after 6 months", async () => {
+  it("Total LQTY tokens issued is 9,264,902.04 after 6 months", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -575,7 +575,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '7238204720544150000000000'
+    const expectedTotalLQTYIssued = '9264902042296516000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -588,7 +588,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 12500000 after a year", async () => {
+  it("Total LQTY tokens issued is 16,000,000 after a year", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -599,7 +599,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '12500000000000000000000000'
+    const expectedTotalLQTYIssued = '16000000000000000000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -612,7 +612,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 18750000 after 2 years", async () => {
+  it("Total LQTY tokens issued is 24,000,000 after 2 years", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -623,7 +623,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '18750000000000000000000000'
+    const expectedTotalLQTYIssued = '24000000000000000000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -636,7 +636,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 21875000 after 3 years", async () => {
+  it("Total LQTY tokens issued is 28,000,000 after 3 years", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -647,7 +647,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '21875000000000000000000000'
+    const expectedTotalLQTYIssued = '28000000000000000000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -660,7 +660,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 23437500 after 4 years", async () => {
+  it("Total LQTY tokens issued is 30,000,000 after 4 years", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -671,7 +671,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '23437500000000000000000000'
+    const expectedTotalLQTYIssued = '30000000000000000000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -684,7 +684,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 24975585.98 after 10 years", async () => {
+  it("Total LQTY tokens issued is 31,968,750 after 10 years", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -695,7 +695,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '24975585937500000000000000'
+    const expectedTotalLQTYIssued = '31968750000000000000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -708,7 +708,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 24999976.16 after 20 years", async () => {
+  it("Total LQTY tokens issued is 31,999,969.48 after 20 years", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -719,7 +719,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '24999976158142100000000000'
+    const expectedTotalLQTYIssued = '31999969482421880000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
@@ -732,7 +732,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(totalLQTYIssued, expectedTotalLQTYIssued), 1000000000000000)
   })
 
-  it("Total LQTY tokens issued is 24999999.98 after 30 years", async () => {
+  it("Total LQTY tokens issued is 31,999,999.97 after 30 years", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
@@ -743,7 +743,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // Issue LQTY
     await communityIssuanceTester.unprotectedIssueLQTY()
     const totalLQTYIssued = await communityIssuanceTester.totalLQTYIssued()
-    const expectedTotalLQTYIssued = '24999999976716900000000000'
+    const expectedTotalLQTYIssued = '31999999970197680000000000'
 
     const absError = th.toBN(expectedTotalLQTYIssued).sub(totalLQTYIssued)
     // console.log(
