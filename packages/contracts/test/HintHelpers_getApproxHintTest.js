@@ -7,7 +7,10 @@ const moneyVals = testHelpers.MoneyValues
 
 let latestRandomSeed = 31337
 
-contract('TroveManager', async accounts => {
+const TroveManagerTester = artifacts.require("TroveManagerTester")
+const LUSDToken = artifacts.require("LUSDToken")
+
+contract('HintHelpers', async accounts => {
  
   const [owner] = accounts;
 
@@ -23,7 +26,9 @@ contract('TroveManager', async accounts => {
 
   let numAccounts;
 
-  /* Open a Trove for each account. LUSD debt is 200 LUSD each, with collateral beginning at 
+  const getNetBorrowingAmount = async (debtWithFee) => th.getNetBorrowingAmount(contracts, debtWithFee)
+
+  /* Open a Trove for each account. LUSD debt is 200 LUSD each, with collateral beginning at
   1.5 ether, and rising by 0.01 ether per Trove.  Hence, the ICR of account (i + 1) is always 1% greater than the ICR of account i. 
  */
 
@@ -60,7 +65,7 @@ contract('TroveManager', async accounts => {
     for (const account of activeAccounts) {
       const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
       await borrowerOperations.openTrove(th._100pct, 0, account, account, { from: account, value: coll })
-      await borrowerOperations.withdrawLUSD(th._100pct, '90000000000000000000', account, account, { from: account })
+      await borrowerOperations.withdrawLUSD(th._100pct, await getNetBorrowingAmount('50000000000000000000'), account, account, { from: account })
   
       amountFinney += 10
     }
@@ -69,6 +74,12 @@ contract('TroveManager', async accounts => {
 
   before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
+    contracts.troveManager = await TroveManagerTester.new()
+    contracts.lusdToken = await LUSDToken.new(
+      contracts.troveManager.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address
+    )
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     sortedTroves = contracts.sortedTroves

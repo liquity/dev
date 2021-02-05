@@ -263,9 +263,9 @@ class TestHelper {
   }
 
   static logBN(label, x) {
-    x = x.toString()
+    x = x.toString().padStart(18, '0')
     // TODO: thousand separators
-    console.log(`${label}:`, x.length < 18 ? x : (x.slice(0, x.length-18) + '.' + x.slice(-18)))
+    console.log(`${label}:`, x.slice(0, x.length-18) + '.' + x.slice(-18))
   }
   
   // --- TCR and Recovery Mode functions ---

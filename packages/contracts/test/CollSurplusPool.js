@@ -8,6 +8,8 @@ const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
+const TroveManagerTester = artifacts.require("TroveManagerTester")
+const LUSDToken = artifacts.require("LUSDToken")
 
 contract('CollSurplusPool', async accounts => {
   const [
@@ -23,8 +25,16 @@ contract('CollSurplusPool', async accounts => {
 
   let contracts
 
+  const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
+
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
+    contracts.troveManager = await TroveManagerTester.new()
+    contracts.lusdToken = await LUSDToken.new(
+      contracts.troveManager.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address
+    )
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
@@ -43,13 +53,16 @@ contract('CollSurplusPool', async accounts => {
     await priceFeed.setPrice(dec(100, 18))
 
     await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, { from: A, value: dec(3000, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(50, 18), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), B, B, { from: B, value: dec(15, 17) })
 
-    // At ETH:USD = 100, this redemption should leave 50% coll surplus for B, i.e. 0.5 ether
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // At ETH:USD = 100, this redemption should leave 1 ether of coll surplus
     await th.redeemCollateralAndGetTxObject(A, contracts, dec(50, 18))
 
     const ETH_2 = await collSurplusPool.getETH()
-    assert.equal(ETH_2, dec(5, 17))
+    th.assertIsApproximatelyEqual(ETH_2, dec(1, 18))
   })
 
   it("CollSurplusPool: claimColl(): Reverts if caller is not Borrower Operations", async () => {
@@ -67,13 +80,17 @@ contract('CollSurplusPool', async accounts => {
 
     await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, { from: A, value: dec(3000, 'ether') })
     // open trove from NonPayable proxy contract
-    const openTroveData = th.getTransactionData('openTrove(uint256,uint256,address,address)', ['0xde0b6b3a7640000', web3.utils.toHex(dec(50, 18)), B, B])
-    await nonPayable.forward(borrowerOperations.address, openTroveData, { value: dec(1, 'ether') })
-    // At ETH:USD = 100, this redemption should leave 50% coll surplus for B, i.e. 0.5 ether
+    const openTroveData = th.getTransactionData('openTrove(uint256,uint256,address,address)', ['0xde0b6b3a7640000', web3.utils.toHex(await getOpenTroveLUSDAmount(dec(100, 18))), B, B])
+    await nonPayable.forward(borrowerOperations.address, openTroveData, { value: dec(15, 17) })
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // At ETH:USD = 100, this redemption should leave 1 ether of coll surplus for B
     await th.redeemCollateralAndGetTxObject(A, contracts, dec(50, 18))
 
     const ETH_2 = await collSurplusPool.getETH()
-    assert.equal(ETH_2, dec(5, 17))
+    th.assertIsApproximatelyEqual(ETH_2, dec(1, 18))
 
     const claimCollateralData = th.getTransactionData('claimCollateral()', [])
     await th.assertRevert(nonPayable.forward(borrowerOperations.address, claimCollateralData), 'CollSurplusPool: sending ETH failed')

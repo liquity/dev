@@ -2484,7 +2484,8 @@ contract('TroveManager', async accounts => {
       '0x0000000000000000000000000000000000000000',
       '0x0000000000000000000000000000000000000000',
       '10367038690476190477',
-      0, 0,
+      0,
+      th._100pct,
       {
         from: carol,
         gasPrice: 0
@@ -2666,21 +2667,21 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if fee exceeds max fee percentage", async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(80, 18)), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(90, 18)), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), C, C, { from: C, value: dec(1, 'ether') })
 
-    // total LUSD supply is 150
+    // Total LUSD supply is 270
     const totalSupply = await lusdToken.totalSupply()
-    assert.equal(totalSupply, dec(150, 18))
+    th.assertIsApproximatelyEqual(totalSupply, dec(270, 18))
 
     await troveManager.setBaseRate(0) 
 
     // skip bootstrapping phase
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-    // LUSD redemption is 15 USD: a redemption that incurs a fee of 15/(150 * 2) = 5%
-    const attemptedLUSDRedemption = dec(15, 18)
+    // LUSD redemption is 27 USD: a redemption that incurs a fee of 27/(270 * 2) = 5%
+    const attemptedLUSDRedemption = dec(27, 18)
 
     // Max fee is <5%
     const lessThan5pct = '49999999999999999'
@@ -2703,13 +2704,13 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral(): succeeds if fee is less than max fee percentage", async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(30, 18), A, A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(40, 18), B, B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, dec(50, 18), C, C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(95, 18)), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(90, 18)), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), C, C, { from: C, value: dec(1, 'ether') })
 
-    // Total LUSD supply is 150
+    // Total LUSD supply is 285
     const totalSupply = await lusdToken.totalSupply()
-    assert.equal(totalSupply, dec(150, 18))
+    th.assertIsApproximatelyEqual(totalSupply, dec(285, 18))
 
     await troveManager.setBaseRate(0) 
 
