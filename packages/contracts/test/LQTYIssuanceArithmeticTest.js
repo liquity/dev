@@ -416,7 +416,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
    // Error tolerance: 1e-3, i.e. 1/1000th of a token
 
-  it("Total LQTY tokens issued is 40.20 after a minute", async () => {
+  it("Total LQTY tokens issued is 42.20 after a minute", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
     assert.equal(initialIssuance, 0)
 
