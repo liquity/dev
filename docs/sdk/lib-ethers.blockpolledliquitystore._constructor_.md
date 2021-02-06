@@ -9,7 +9,7 @@ Constructs a new instance of the `BlockPolledLiquityStore` class
 <b>Signature:</b>
 
 ```typescript
-constructor(connection: LiquityConnection, readableLiquity?: ReadableEthersLiquity, frontendTag?: string, userAddress?: string);
+constructor(connection: LiquityConnection, readable?: ReadableEthersLiquity);
 ```
 
 ## Parameters
@@ -17,7 +17,5 @@ constructor(connection: LiquityConnection, readableLiquity?: ReadableEthersLiqui
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  connection | [LiquityConnection](./lib-ethers.liquityconnection.md) |  |
-|  readableLiquity | [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) |  |
-|  frontendTag | string |  |
-|  userAddress | string |  |
+|  readable | [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) |  |
 

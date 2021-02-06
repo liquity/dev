@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-import { Signer } from "@ethersproject/abstract-signer";
 import { getNetwork } from "@ethersproject/networks";
 import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
@@ -40,14 +39,6 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
 
 const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
-const tryConnectToLiquity = (signer: Signer, chainId: number) => {
-  try {
-    return connectToLiquity(signer, chainId);
-  } catch {
-    return undefined;
-  }
-};
-
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
   loader,
@@ -56,10 +47,17 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
 
-  const connection =
-    provider && account && chainId
-      ? tryConnectToLiquity(provider.getSigner(account), chainId)
-      : undefined;
+  const connection = useMemo(() => {
+    if (config && provider && account && chainId) {
+      try {
+        return connectToLiquity(provider.getSigner(account), {
+          userAddress: account,
+          frontendTag: config.frontendTag,
+          network: chainId
+        });
+      } catch {}
+    }
+  }, [config, provider, account, chainId]);
 
   useEffect(() => {
     getConfig().then(setConfig);
@@ -95,8 +93,8 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
   }
 
-  const readable = new ReadableEthersLiquity(connection, account);
-  const store = new BlockPolledLiquityStore(connection, readable, config.frontendTag, account);
+  const readable = new ReadableEthersLiquity(connection);
+  const store = new BlockPolledLiquityStore(connection, readable);
   const populatable = new PopulatableEthersLiquity(connection, readable, store);
   const liquity = new EthersLiquity(readable, populatable);
 

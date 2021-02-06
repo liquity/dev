@@ -10,6 +10,7 @@
 |  --- | --- |
 |  [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md) | Ethers-based [LiquityStore](./lib-base.liquitystore.md) that updates state whenever there's a new block. |
 |  [EthersLiquity](./lib-ethers.ethersliquity.md) | Convenience class that combines multiple interfaces of the library in one object. |
+|  [EthersLiquityStore](./lib-ethers.ethersliquitystore.md) |  |
 |  [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) | Thrown by [TransactableEthersLiquity](./lib-ethers.transactableethersliquity.md) functions in case of transaction failure. |
 |  [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md) | Ethers-based implementation of [PopulatableLiquity](./lib-base.populatableliquity.md)<!-- -->. |
 |  [PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md) | A transaction that has been prepared for sending. |
@@ -23,7 +24,7 @@
 
 |  Function | Description |
 |  --- | --- |
-|  [connectToLiquity(signerOrProvider, network)](./lib-ethers.connecttoliquity.md) |  |
+|  [connectToLiquity(signerOrProvider, optionalParams)](./lib-ethers.connecttoliquity.md) |  |
 
 ## Interfaces
 
@@ -33,6 +34,7 @@
 |  [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
 |  [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 |  [LiquityConnection](./lib-ethers.liquityconnection.md) |  |
+|  [LiquityConnectionOptionalParams](./lib-ethers.liquityconnectionoptionalparams.md) |  |
 
 ## Type Aliases
 

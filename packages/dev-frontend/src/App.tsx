@@ -9,6 +9,13 @@ import { Trove } from "@liquity/lib-base";
 import { LiquityStoreProvider } from "@liquity/lib-react";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
+import {
+  PopulatableEthersLiquity,
+  ReadableEthersLiquity,
+  BlockPolledLiquityStore,
+  connectToLiquity
+} from "@liquity/lib-ethers";
+
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
 import { WalletConnector } from "./components/WalletConnector";
 import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
@@ -65,6 +72,10 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
     connection,
     liquity,
     store,
+    connectToLiquity,
+    PopulatableEthersLiquity,
+    ReadableEthersLiquity,
+    BlockPolledLiquityStore,
     SubgraphLiquity,
     Trove,
     Decimal,

@@ -16,6 +16,8 @@ export interface LiquityConnection
 |  --- | --- | --- |
 |  [addresses](./lib-ethers.liquityconnection.addresses.md) | Record&lt;string, string&gt; |  |
 |  [deploymentDate](./lib-ethers.liquityconnection.deploymentdate.md) | number |  |
+|  [frontendTag?](./lib-ethers.liquityconnection.frontendtag.md) | string | <i>(Optional)</i> |
 |  [signerOrProvider](./lib-ethers.liquityconnection.signerorprovider.md) | Signer \| Provider |  |
+|  [userAddress?](./lib-ethers.liquityconnection.useraddress.md) | string | <i>(Optional)</i> |
 |  [version](./lib-ethers.liquityconnection.version.md) | string |  |
 

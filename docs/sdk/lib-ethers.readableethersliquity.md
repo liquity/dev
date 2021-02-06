@@ -9,17 +9,15 @@ Ethers-based implementation of [ReadableLiquity](./lib-base.readableliquity.md)<
 <b>Signature:</b>
 
 ```typescript
-export declare class ReadableEthersLiquity extends _EthersLiquityBase implements ReadableLiquity 
+export declare class ReadableEthersLiquity implements ReadableLiquity 
 ```
-<b>Extends:</b> \_EthersLiquityBase
-
 <b>Implements:</b> [ReadableLiquity](./lib-base.readableliquity.md)
 
 ## Constructors
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(connection, userAddress)](./lib-ethers.readableethersliquity._constructor_.md) |  | Constructs a new instance of the <code>ReadableEthersLiquity</code> class |
+|  [(constructor)(connection)](./lib-ethers.readableethersliquity._constructor_.md) |  | Constructs a new instance of the <code>ReadableEthersLiquity</code> class |
 
 ## Methods
 

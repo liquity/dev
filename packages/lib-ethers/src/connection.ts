@@ -39,6 +39,8 @@ const branded = <T>(t: Omit<T, typeof brand>): T => t as T;
 
 export interface LiquityConnection {
   readonly signerOrProvider: Signer | Provider;
+  readonly userAddress?: string;
+  readonly frontendTag?: string;
 
   readonly addresses: Record<string, string>;
   readonly version: string;
@@ -63,11 +65,15 @@ export interface _LiquityConnection extends LiquityConnection {
 const connectedDeploymentFrom = (
   deployment: _LiquityDeploymentJSON,
   signerOrProvider: Signer | Provider,
+  userAddress: string | undefined,
+  frontendTag: string | undefined,
   _contracts: _LiquityContracts
 ): _LiquityConnection =>
   branded({
     ...deployment,
     signerOrProvider,
+    userAddress,
+    frontendTag,
     _contracts
   });
 
@@ -75,27 +81,32 @@ const connectedDeploymentFrom = (
 export const _getContracts = (connection: LiquityConnection): _LiquityContracts =>
   (connection as _LiquityConnection)._contracts;
 
-/** @internal */
-export const _getSigner = (connection: LiquityConnection): Signer => {
-  if (!Signer.isSigner(connection.signerOrProvider)) {
-    throw new Error("Must be connected through a Signer");
-  }
-
-  return connection.signerOrProvider;
+const panic = <T>(e: unknown): T => {
+  throw e;
 };
 
 /** @internal */
-export const _getProvider = (connection: LiquityConnection): Provider => {
-  if (Signer.isSigner(connection.signerOrProvider)) {
-    if (!connection.signerOrProvider.provider) {
-      throw new Error("Signer must be connected to a Provider");
-    }
+export const _requireSigner = (connection: LiquityConnection): Signer =>
+  Signer.isSigner(connection.signerOrProvider)
+    ? connection.signerOrProvider
+    : panic(new Error("Must be connected through a Signer"));
 
-    return connection.signerOrProvider.provider;
-  } else {
-    return connection.signerOrProvider;
-  }
-};
+/** @internal */
+export const _requireProvider = (connection: LiquityConnection): Provider =>
+  Signer.isSigner(connection.signerOrProvider)
+    ? connection.signerOrProvider.provider ?? panic(new Error("Signer must have a Provider"))
+    : connection.signerOrProvider;
+
+// TODO parameterize error message?
+/** @internal */
+export const _requireAddress = (
+  connection: LiquityConnection,
+  overrides?: { from?: string }
+): string => overrides?.from ?? connection.userAddress ?? panic("A user address is required");
+
+/** @internal */
+export const _requireFrontendAddress = (connection: LiquityConnection): string =>
+  connection.frontendTag ?? panic("A frontend address is required");
 
 export class UnsupportedNetworkError extends Error {
   readonly unsupportedNetwork: string | number;
@@ -111,18 +122,30 @@ export class UnsupportedNetworkError extends Error {
 /** @internal */
 export const _connectToDeployment = (
   deployment: _LiquityDeploymentJSON,
-  signerOrProvider: Signer | Provider
+  signerOrProvider: Signer | Provider,
+  userAddress?: string,
+  frontendTag?: string
 ): LiquityConnection =>
   connectedDeploymentFrom(
     deployment,
     signerOrProvider,
+    userAddress,
+    frontendTag,
     _connectToContracts(signerOrProvider, deployment)
   );
 
+export interface LiquityConnectionOptionalParams {
+  userAddress?: string;
+  frontendTag?: string;
+  network?: string | number;
+}
+
 export function connectToLiquity(
   signerOrProvider: Signer | Provider,
-  network: string | number = "mainnet"
+  optionalParams?: LiquityConnectionOptionalParams
 ): LiquityConnection {
+  const network = optionalParams?.network ?? "mainnet";
+
   if (!(network in deployments)) {
     throw new UnsupportedNetworkError(network);
   }
@@ -132,6 +155,8 @@ export function connectToLiquity(
   return connectedDeploymentFrom(
     deployment,
     signerOrProvider,
+    optionalParams?.userAddress,
+    optionalParams?.frontendTag,
     _connectToContracts(signerOrProvider, deployment)
   );
 }

@@ -10,7 +10,6 @@ import {
   Trove,
   TroveWithPendingRedistribution,
   TroveAdjustmentParams,
-  ReadableLiquity,
   LiquityReceipt,
   SentLiquityTransaction,
   LiquidationDetails,
@@ -32,9 +31,10 @@ import {
   _SendableFrom,
   _TransactableFrom,
   PopulatableLiquity,
-  LiquityStore,
   TransactionFailedError,
-  FailedReceipt
+  FailedReceipt,
+  StabilityDeposit,
+  Fees
 } from "@liquity/lib-base";
 
 import {
@@ -44,10 +44,18 @@ import {
   EthersTransactionResponse
 } from "./types";
 
+import {
+  LiquityConnection,
+  _getContracts,
+  _requireAddress,
+  _requireProvider,
+  _requireSigner
+} from "./connection";
+
 import { _priceFeedIsTestnet } from "./contracts";
-import { LiquityConnection, _getContracts, _getProvider, _getSigner } from "./connection";
 import { logsToString } from "./parseLogs";
-import { _EthersLiquityBase } from "./EthersLiquityBase";
+import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
+import { EthersLiquityStore } from "./EthersLiquityStore";
 
 // With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
 /** @internal */
@@ -144,14 +152,14 @@ export class SentEthersLiquityTransaction<T = unknown>
   /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.getReceipt} */
   async getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>> {
     return this._receiptFrom(
-      await _getProvider(this._connection).getTransactionReceipt(this.rawSentTransaction.hash)
+      await _requireProvider(this._connection).getTransactionReceipt(this.rawSentTransaction.hash)
     );
   }
 
   /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.waitForReceipt} */
   async waitForReceipt(): Promise<MinedReceipt<EthersTransactionReceipt, T>> {
     const receipt = this._receiptFrom(
-      await _getProvider(this._connection).waitForTransaction(this.rawSentTransaction.hash)
+      await _requireProvider(this._connection).waitForTransaction(this.rawSentTransaction.hash)
     );
 
     assert(receipt.status !== "pending");
@@ -190,7 +198,7 @@ export class PopulatedEthersLiquityTransaction<T = unknown>
   /** {@inheritDoc @liquity/lib-base#PopulatedLiquityTransaction.send} */
   async send(): Promise<SentEthersLiquityTransaction<T>> {
     return new SentEthersLiquityTransaction(
-      await _getSigner(this._connection).sendTransaction(this.rawPopulatedTransaction),
+      await _requireSigner(this._connection).sendTransaction(this.rawPopulatedTransaction),
       this._connection,
       this._parse
     );
@@ -205,21 +213,49 @@ export interface _TroveChangeWithFees<T> {
 }
 
 /** @internal */
-export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
+export class _PopulatableEthersLiquityBase {
   protected readonly _connection: LiquityConnection;
-  protected readonly _readableLiquity: ReadableLiquity;
-  protected readonly _store?: LiquityStore;
+  protected readonly _readable: ReadableEthersLiquity;
+  protected readonly _store?: EthersLiquityStore;
 
   constructor(
     connection: LiquityConnection,
-    readableLiquity: ReadableLiquity,
-    store?: LiquityStore
+    readable?: ReadableEthersLiquity,
+    store?: EthersLiquityStore
   ) {
-    super(connection);
-
     this._connection = connection;
-    this._readableLiquity = readableLiquity;
+    this._readable = readable ?? new ReadableEthersLiquity(connection);
     this._store = store;
+  }
+
+  protected _getNumberOfTroves(): number | Promise<number> {
+    return this._store?.state.numberOfTroves ?? this._readable.getNumberOfTroves();
+  }
+
+  protected _getPrice(): Decimal | Promise<Decimal> {
+    return this._store?.state.price ?? this._readable.getPrice();
+  }
+
+  protected _getFees(): Fees | Promise<Fees> {
+    return this._store?.state.fees ?? this._readable.getFees();
+  }
+
+  protected _getTotal(): Trove | Promise<Trove> {
+    return this._store?.state.total ?? this._readable.getTotal();
+  }
+
+  protected _getTrove(address: string): Trove | Promise<Trove> {
+    return (
+      (this._store?._isMonitoringUser(address) && this._store?.state.trove) ||
+      this._readable.getTrove(address)
+    );
+  }
+
+  protected _getDeposit(address: string): StabilityDeposit | Promise<StabilityDeposit> {
+    return (
+      (this._store?._isMonitoringUser(address) && this._store?.state.deposit) ||
+      this._readable.getStabilityDeposit(address)
+    );
   }
 
   protected _wrapSimpleTransaction(
@@ -443,9 +479,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
     nominalCollateralRatio: Decimal
   ): Promise<[string, string]> {
     const { sortedTroves, hintHelpers } = _getContracts(this._connection);
-
-    const numberOfTroves =
-      this._store?.state.numberOfTroves ?? (await this._readableLiquity.getNumberOfTroves());
+    const numberOfTroves = await this._getNumberOfTroves();
 
     if (!numberOfTroves) {
       return [AddressZero, AddressZero];
@@ -499,7 +533,7 @@ export class _PopulatableEthersLiquityBase extends _EthersLiquityBase {
 
   protected async _findRedemptionHints(amount: Decimal): Promise<[string, string, string, Decimal]> {
     const { hintHelpers } = _getContracts(this._connection);
-    const price = this._store?.state.price ?? (await this._readableLiquity.getPrice());
+    const price = await this._getPrice();
 
     const { firstRedemptionHint, partialRedemptionHintNICR } = await hintHelpers.getRedemptionHints(
       amount.bigNumber,
@@ -532,10 +566,10 @@ export class PopulatableEthersLiquity
     > {
   constructor(
     connection: LiquityConnection,
-    readableLiquity: ReadableLiquity,
-    store?: LiquityStore
+    readable?: ReadableEthersLiquity,
+    store?: EthersLiquityStore
   ) {
-    super(connection, readableLiquity, store);
+    super(connection, readable, store);
   }
 
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.openTrove} */
@@ -548,7 +582,7 @@ export class PopulatableEthersLiquity
     const normalized = _normalizeTroveCreation(params);
     const { depositCollateral, borrowLUSD } = normalized;
 
-    const fees = borrowLUSD && (this._store?.state.fees ?? (await this._readableLiquity.getFees()));
+    const fees = borrowLUSD && (await this._getFees());
     const borrowingRate = fees?.borrowingRate();
     const newTrove = Trove.create(normalized, borrowingRate);
     const maxBorrowingRate = borrowingRate?.add(slippageTolerance);
@@ -613,14 +647,15 @@ export class PopulatableEthersLiquity
     params: TroveAdjustmentParams<Decimalish>,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>> {
+    const address = _requireAddress(this._connection, overrides);
     const { borrowerOperations } = _getContracts(this._connection);
 
     const normalized = _normalizeTroveAdjustment(params);
     const { depositCollateral, withdrawCollateral, borrowLUSD, repayLUSD } = normalized;
 
     const [trove, fees] = await Promise.all([
-      this._store?.state.trove ?? this._readableLiquity.getTrove(),
-      borrowLUSD && (this._store?.state.fees ?? this._readableLiquity.getFees())
+      this._getTrove(address),
+      borrowLUSD && this._getFees()
     ]);
 
     const borrowingRate = fees?.borrowingRate();
@@ -720,7 +755,7 @@ export class PopulatableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.depositLUSDInStabilityPool} */
   async depositLUSDInStabilityPool(
     amount: Decimalish,
-    frontendTag = AddressZero,
+    frontendTag?: string,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
     const { stabilityPool } = _getContracts(this._connection);
@@ -732,7 +767,7 @@ export class PopulatableEthersLiquity
         { ...overrides },
         addGasForLQTYIssuance,
         depositLUSD.bigNumber,
-        frontendTag
+        frontendTag ?? this._connection.frontendTag ?? AddressZero
       )
     );
   }
@@ -772,11 +807,14 @@ export class PopulatableEthersLiquity
   async transferCollateralGainToTrove(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<CollateralGainTransferDetails>> {
+    const address = _requireAddress(this._connection, overrides);
     const { stabilityPool } = _getContracts(this._connection);
 
-    const initialTrove = this._store?.state.trove ?? (await this._readableLiquity.getTrove());
-    const deposit =
-      this._store?.state.deposit ?? (await this._readableLiquity.getStabilityDeposit());
+    const [initialTrove, deposit] = await Promise.all([
+      this._getTrove(address),
+      this._getDeposit(address)
+    ]);
+
     const finalTrove = initialTrove.addCollateral(deposit.collateralGain);
 
     return this._wrapCollateralGainTransfer(
@@ -842,11 +880,7 @@ export class PopulatableEthersLiquity
         lowerPartialRedemptionHint,
         partialRedemptionHintNICR
       ]
-    ] = await Promise.all([
-      this._store?.state.fees ?? this._readableLiquity.getFees(),
-      this._store?.state.total ?? this._readableLiquity.getTotal(),
-      this._findRedemptionHints(amount)
-    ]);
+    ] = await Promise.all([this._getFees(), this._getTotal(), this._findRedemptionHints(amount)]);
 
     const redemptionRate = fees.redemptionRate(amount.div(total.debt));
     const maxRedemptionRate = Decimal.min(redemptionRate.add(slippageTolerance), Decimal.ONE);

@@ -7,17 +7,17 @@
 <b>Signature:</b>
 
 ```typescript
-static connect(signer: Signer, network?: string | number): Promise<EthersLiquity>;
+static connect(signerOrProvider: Signer | Provider, optionalParams?: LiquityConnectionOptionalParams): EthersLiquity;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signer | Signer |  |
-|  network | string \| number |  |
+|  signerOrProvider | Signer \| Provider |  |
+|  optionalParams | [LiquityConnectionOptionalParams](./lib-ethers.liquityconnectionoptionalparams.md) |  |
 
 <b>Returns:</b>
 
-Promise&lt;[EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->&gt;
+[EthersLiquity](./lib-ethers.ethersliquity.md)
 

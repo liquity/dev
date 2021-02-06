@@ -12,17 +12,13 @@ import {
   LiquityReceipt,
   SuccessfulReceipt,
   SentLiquityTransaction,
-  ReadableLiquity,
   TroveCreationParams,
   Fees,
   LUSD_LIQUIDATION_RESERVE,
-  MAXIMUM_BORROWING_RATE,
-  LiquityStore
+  MAXIMUM_BORROWING_RATE
 } from "@liquity/lib-base";
 
 import { HintHelpers } from "../types";
-
-import { LiquityConnection, _connectToDeployment, _LiquityDeploymentJSON } from "../src/contracts";
 
 import {
   PopulatableEthersLiquity,
@@ -30,15 +26,19 @@ import {
   _redeemMaxIterations
 } from "../src/PopulatableEthersLiquity";
 
+import { _LiquityDeploymentJSON } from "../src/contracts";
+import { LiquityConnection, _connectToDeployment } from "../src/connection";
 import { EthersLiquity } from "../src/EthersLiquity";
+import { ReadableEthersLiquity } from "../src/ReadableEthersLiquity";
+import { EthersLiquityStore } from "../src/EthersLiquityStore";
 
 const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
 chai.use(chaiSpies);
 
-const connectToDeployment = (deployment: _LiquityDeploymentJSON, signer: Signer) =>
-  EthersLiquity._from(_connectToDeployment(deployment, signer));
+const connectToDeployment = async (deployment: _LiquityDeploymentJSON, signer: Signer) =>
+  EthersLiquity._from(_connectToDeployment(deployment, signer, await signer.getAddress()));
 
 const baseRate = Fees.prototype.baseRate;
 let cumulativeTimeJumpSeconds = 0;
@@ -195,13 +195,13 @@ describe("EthersLiquity", () => {
 
       const fakeLiquity = new PopulatableEthersLiquity(
         (fakeConnection as unknown) as LiquityConnection,
-        (undefined as unknown) as ReadableLiquity,
+        (undefined as unknown) as ReadableEthersLiquity,
         {
           state: {
             numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
             fees: new Fees(new Date(), 0, 0.99, 1)
           }
-        } as LiquityStore
+        } as EthersLiquityStore
       );
 
       const nominalCollateralRatio = Decimal.ONE.div(1.0025);
@@ -367,7 +367,7 @@ describe("EthersLiquity", () => {
 
   describe("Frontend", () => {
     it("should have no frontend initially", async () => {
-      const frontend = await liquity.getFrontendStatus();
+      const frontend = await liquity.getFrontendStatus(await user.getAddress());
 
       assertStrictEqual(frontend.status, "unregistered" as const);
     });
@@ -377,7 +377,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should have a frontend now", async () => {
-      const frontend = await liquity.getFrontendStatus();
+      const frontend = await liquity.getFrontendStatus(await user.getAddress());
 
       assertStrictEqual(frontend.status, "registered" as const);
       expect(`${frontend.kickbackRate}`).to.equal("0.75");
@@ -594,7 +594,13 @@ describe("EthersLiquity", () => {
       { depositCollateral: 1, borrowLUSD: 30 }
     ];
 
-    before(async () => {
+    before(async function () {
+      if (network.name === "dev") {
+        // Redemptions are only allowed after a bootstrap phase of 2 weeks.
+        // Since we can't fast-forward time on the dev chain, skip these tests.
+        this.skip();
+      }
+
       // Deploy new instances of the contracts, for a clean slate
       deployment = await deployLiquity(deployer);
 
@@ -713,10 +719,8 @@ describe("EthersLiquity", () => {
 
     before(async function () {
       if (network.name === "dev") {
-        // Only about the first 40 accounts work when testing on the dev chain due to a not yet
-        // known issue.
-
-        // Since this test needs more than that, let's skip it on dev for now.
+        // Redemptions are only allowed after a bootstrap phase of 2 weeks.
+        // Since we can't fast-forward time on the dev chain, skip these tests.
         this.skip();
       }
 

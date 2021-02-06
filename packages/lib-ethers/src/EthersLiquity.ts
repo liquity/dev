@@ -1,10 +1,9 @@
-import assert from "assert";
-
 import { Signer } from "@ethersproject/abstract-signer";
+import { Provider } from "@ethersproject/abstract-provider";
 
 import { _glue } from "@liquity/lib-base";
 
-import { LiquityConnection, connectToLiquity } from "./connection";
+import { LiquityConnection, LiquityConnectionOptionalParams, connectToLiquity } from "./connection";
 
 import {
   PopulatableEthersLiquity,
@@ -41,17 +40,17 @@ export class EthersLiquity extends GluedEthersLiquity {
   }
 
   /** @internal */
-  static async _from(connection: LiquityConnection): Promise<EthersLiquity> {
-    assert(Signer.isSigner(connection.signerOrProvider));
-
-    const userAddress = await connection.signerOrProvider.getAddress();
-    const readable = new ReadableEthersLiquity(connection, userAddress);
+  static _from(connection: LiquityConnection): EthersLiquity {
+    const readable = new ReadableEthersLiquity(connection);
     const populatable = new PopulatableEthersLiquity(connection, readable);
 
     return new EthersLiquity(readable, populatable);
   }
 
-  static connect(signer: Signer, network: string | number = "mainnet"): Promise<EthersLiquity> {
-    return EthersLiquity._from(connectToLiquity(signer, network));
+  static connect(
+    signerOrProvider: Signer | Provider,
+    optionalParams?: LiquityConnectionOptionalParams
+  ): EthersLiquity {
+    return EthersLiquity._from(connectToLiquity(signerOrProvider, optionalParams));
   }
 }

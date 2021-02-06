@@ -9,7 +9,7 @@ Constructs a new instance of the `PopulatableEthersLiquity` class
 <b>Signature:</b>
 
 ```typescript
-constructor(connection: LiquityConnection, readableLiquity: ReadableLiquity, store?: LiquityStore);
+constructor(connection: LiquityConnection, readable: ReadableEthersLiquity, store?: EthersLiquityStore);
 ```
 
 ## Parameters
@@ -17,6 +17,6 @@ constructor(connection: LiquityConnection, readableLiquity: ReadableLiquity, sto
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  connection | [LiquityConnection](./lib-ethers.liquityconnection.md) |  |
-|  readableLiquity | [ReadableLiquity](./lib-base.readableliquity.md) |  |
-|  store | [LiquityStore](./lib-base.liquitystore.md) |  |
+|  readable | [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) |  |
+|  store | [EthersLiquityStore](./lib-ethers.ethersliquitystore.md) |  |
 
