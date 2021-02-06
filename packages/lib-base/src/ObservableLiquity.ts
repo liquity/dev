@@ -21,7 +21,7 @@ export interface ObservableLiquity {
   watchTotal(onTotalChanged: (total: Trove) => void): () => void;
 
   watchStabilityDeposit(
-    onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
+    onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void,
     address?: string
   ): () => void;
 

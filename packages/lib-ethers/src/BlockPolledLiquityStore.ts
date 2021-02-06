@@ -102,7 +102,9 @@ export class BlockPolledLiquityStore extends EthersLiquityStore<BlockPolledLiqui
               { blockTag }
             ),
 
-            deposit: this._readable.getStabilityDeposit(this._connection.userAddress, { blockTag }),
+            stabilityDeposit: this._readable.getStabilityDeposit(this._connection.userAddress, {
+              blockTag
+            }),
 
             lqtyStake: this._readable.getLQTYStake(this._connection.userAddress, { blockTag }),
 
@@ -114,7 +116,7 @@ export class BlockPolledLiquityStore extends EthersLiquityStore<BlockPolledLiqui
             lqtyBalance: Decimal.ZERO,
             collateralSurplusBalance: Decimal.ZERO,
             troveWithoutRedistribution: new TroveWithPendingRedistribution(),
-            deposit: new StabilityDeposit(),
+            stabilityDeposit: new StabilityDeposit(),
             lqtyStake: new LQTYStake(),
             ownFrontend: { status: "unregistered" }
           })

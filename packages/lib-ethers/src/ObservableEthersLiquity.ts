@@ -131,7 +131,7 @@ export class ObservableEthersLiquity implements ObservableLiquity {
   }
 
   watchStabilityDeposit(
-    onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
+    onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void,
     address?: string
   ): () => void {
     address ??= _requireAddress(this._connection);

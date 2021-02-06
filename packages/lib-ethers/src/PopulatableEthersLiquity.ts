@@ -251,9 +251,9 @@ export class _PopulatableEthersLiquityBase {
     );
   }
 
-  protected _getDeposit(address: string): StabilityDeposit | Promise<StabilityDeposit> {
+  protected _getStabilityDeposit(address: string): StabilityDeposit | Promise<StabilityDeposit> {
     return (
-      (this._store?._isMonitoringUser(address) && this._store?.state.deposit) ||
+      (this._store?._isMonitoringUser(address) && this._store?.state.stabilityDeposit) ||
       this._readable.getStabilityDeposit(address)
     );
   }
@@ -810,12 +810,12 @@ export class PopulatableEthersLiquity
     const address = _requireAddress(this._connection, overrides);
     const { stabilityPool } = _getContracts(this._connection);
 
-    const [initialTrove, deposit] = await Promise.all([
+    const [initialTrove, stabilityDeposit] = await Promise.all([
       this._getTrove(address),
-      this._getDeposit(address)
+      this._getStabilityDeposit(address)
     ]);
 
-    const finalTrove = initialTrove.addCollateral(deposit.collateralGain);
+    const finalTrove = initialTrove.addCollateral(stabilityDeposit.collateralGain);
 
     return this._wrapCollateralGainTransfer(
       await stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(

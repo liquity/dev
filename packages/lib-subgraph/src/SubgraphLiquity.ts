@@ -252,7 +252,7 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   watchStabilityDeposit(
-    onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
+    onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void,
     address?: string
   ): () => void {
     throw new Error("Method not implemented.");

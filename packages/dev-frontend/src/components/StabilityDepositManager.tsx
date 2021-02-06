@@ -127,9 +127,9 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   );
 };
 
-const init = ({ deposit }: LiquityStoreState) => ({
-  originalDeposit: deposit,
-  editedLUSD: deposit.currentLUSD,
+const init = ({ stabilityDeposit }: LiquityStoreState) => ({
+  originalDeposit: stabilityDeposit,
+  editedLUSD: stabilityDeposit.currentLUSD,
   changePending: false
 });
 
@@ -170,7 +170,7 @@ const reduce = (
 
     case "updateStore": {
       const {
-        stateChange: { deposit: updatedDeposit }
+        stateChange: { stabilityDeposit: updatedDeposit }
       } = action;
 
       if (!updatedDeposit) {

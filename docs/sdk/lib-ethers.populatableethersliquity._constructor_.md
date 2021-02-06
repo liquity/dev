@@ -9,7 +9,7 @@ Constructs a new instance of the `PopulatableEthersLiquity` class
 <b>Signature:</b>
 
 ```typescript
-constructor(connection: LiquityConnection, readable: ReadableEthersLiquity, store?: EthersLiquityStore);
+constructor(connection: LiquityConnection, readable?: ReadableEthersLiquity, store?: EthersLiquityStore);
 ```
 
 ## Parameters

@@ -163,7 +163,7 @@ export class ObservableEthersLiquity implements ObservableLiquity {
     // (undocumented)
     watchPrice(onPriceChanged: (price: Decimal) => void): () => void;
     // (undocumented)
-    watchStabilityDeposit(onStabilityDepositChanged: (deposit: StabilityDeposit) => void, address?: string): () => void;
+    watchStabilityDeposit(onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void, address?: string): () => void;
     // (undocumented)
     watchTotal(onTotalChanged: (total: Trove) => void): () => void;
     // (undocumented)
@@ -176,7 +176,7 @@ export class ObservableEthersLiquity implements ObservableLiquity {
 //
 // @public
 export class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase implements PopulatableLiquity<EthersTransactionReceipt, EthersTransactionResponse, EthersPopulatedTransaction> {
-    constructor(connection: LiquityConnection, readable: ReadableEthersLiquity, store?: EthersLiquityStore);
+    constructor(connection: LiquityConnection, readable?: ReadableEthersLiquity, store?: EthersLiquityStore);
     // (undocumented)
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
@@ -225,7 +225,7 @@ export class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase impl
 
 // @internal (undocumented)
 export class _PopulatableEthersLiquityBase {
-    constructor(connection: LiquityConnection, readable: ReadableEthersLiquity, store?: EthersLiquityStore);
+    constructor(connection: LiquityConnection, readable?: ReadableEthersLiquity, store?: EthersLiquityStore);
     // (undocumented)
     protected readonly _connection: LiquityConnection;
     // (undocumented)
@@ -233,13 +233,13 @@ export class _PopulatableEthersLiquityBase {
     // (undocumented)
     protected _findRedemptionHints(amount: Decimal): Promise<[string, string, string, Decimal]>;
     // (undocumented)
-    protected _getDeposit(address: string): StabilityDeposit | Promise<StabilityDeposit>;
-    // (undocumented)
     protected _getFees(): Fees | Promise<Fees>;
     // (undocumented)
     protected _getNumberOfTroves(): number | Promise<number>;
     // (undocumented)
     protected _getPrice(): Decimal | Promise<Decimal>;
+    // (undocumented)
+    protected _getStabilityDeposit(address: string): StabilityDeposit | Promise<StabilityDeposit>;
     // (undocumented)
     protected _getTotal(): Trove | Promise<Trove>;
     // (undocumented)

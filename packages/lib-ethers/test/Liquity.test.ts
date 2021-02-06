@@ -459,9 +459,9 @@ describe("EthersLiquity", () => {
     });
 
     it("should have a depleted stability deposit and some collateral gain", async () => {
-      const deposit = await liquity.getStabilityDeposit();
+      const stabilityDeposit = await liquity.getStabilityDeposit();
 
-      expect(deposit).to.deep.equal(
+      expect(stabilityDeposit).to.deep.equal(
         new StabilityDeposit(
           smallStabilityDeposit,
           Decimal.ZERO,
@@ -521,8 +521,8 @@ describe("EthersLiquity", () => {
           )
       });
 
-      const deposit = await liquity.getStabilityDeposit();
-      expect(deposit.isEmpty).to.be.true;
+      const stabilityDeposit = await liquity.getStabilityDeposit();
+      expect(stabilityDeposit.isEmpty).to.be.true;
     });
 
     describe("when people overstay", () => {

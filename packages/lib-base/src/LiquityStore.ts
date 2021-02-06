@@ -67,7 +67,7 @@ export interface LiquityStoreBaseState {
   troveWithoutRedistribution: TroveWithPendingRedistribution;
 
   /** User's stability deposit. */
-  deposit: StabilityDeposit;
+  stabilityDeposit: StabilityDeposit;
 
   /** Calculator for current fees. */
   fees: Fees;
@@ -352,7 +352,12 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.troveWithoutRedistribution
       ),
 
-      deposit: this._updateIfChanged(equals, "deposit", baseState.deposit, baseStateUpdate.deposit),
+      stabilityDeposit: this._updateIfChanged(
+        equals,
+        "stabilityDeposit",
+        baseState.stabilityDeposit,
+        baseStateUpdate.stabilityDeposit
+      ),
 
       fees: this._updateIfChanged(equals, "fees", baseState.fees, baseStateUpdate.fees),
 

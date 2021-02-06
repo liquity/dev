@@ -107,7 +107,6 @@ export abstract class LiquityStore<T = unknown> {
 export interface LiquityStoreBaseState {
     accountBalance: Decimal;
     collateralSurplusBalance: Decimal;
-    deposit: StabilityDeposit;
     fees: Fees;
     frontend: FrontendStatus;
     lqtyBalance: Decimal;
@@ -117,6 +116,7 @@ export interface LiquityStoreBaseState {
     numberOfTroves: number;
     ownFrontend: FrontendStatus;
     price: Decimal;
+    stabilityDeposit: StabilityDeposit;
     total: Trove;
     totalRedistributed: Trove;
     totalStakedLQTY: Decimal;
@@ -232,7 +232,7 @@ export interface ObservableLiquity {
     // (undocumented)
     watchPrice(onPriceChanged: (price: Decimal) => void): () => void;
     // (undocumented)
-    watchStabilityDeposit(onStabilityDepositChanged: (deposit: StabilityDeposit) => void, address?: string): () => void;
+    watchStabilityDeposit(onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void, address?: string): () => void;
     // (undocumented)
     watchTotal(onTotalChanged: (total: Trove) => void): () => void;
     // (undocumented)
