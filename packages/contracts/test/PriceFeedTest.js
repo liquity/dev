@@ -158,7 +158,7 @@ contract('PriceFeed', async accounts => {
     await setAddresses()
     // --- Chainlink fails, system switches to Tellor ---
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     // Chainlink breaks with negative price
     await mockChainlink.setPrevPrice(dec(1, 8))
@@ -169,7 +169,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 2: using tellor
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
 
     let price = await priceFeed.lastGoodPrice()
     assert.equal(price, dec(123, 18))
@@ -207,7 +207,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink broken by zero latest roundId, Tellor working: switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -218,13 +218,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink broken by zero latest roundId, Tellor working: use Tellor price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -235,13 +235,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink broken by zero timestamp, Tellor working, switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -252,13 +252,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking:  Chainlink broken by zero timestamp, Tellor working, return Tellor price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -276,7 +276,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink broken by future timestamp, Tellor working, switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -290,13 +290,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink broken by future timestamp, Tellor working, return Tellor price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -317,7 +317,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink broken by negative price, Tellor working,  switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await priceFeed.setLastGoodPrice(dec(999, 18))
@@ -327,13 +327,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink broken by negative price, Tellor working, return Tellor price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await priceFeed.setLastGoodPrice(dec(999, 18))
@@ -351,7 +351,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink broken - decimals call reverted, Tellor working, switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -362,13 +362,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink broken - decimals call reverted, Tellor working, return Tellor price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -386,7 +386,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink broken - latest round call reverted, Tellor working, switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -397,13 +397,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: latest round call reverted, Tellor working, return the Tellor price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -421,7 +421,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: previous round call reverted, Tellor working, switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -432,13 +432,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: previous round call reverted, Tellor working, return Tellor Price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -458,7 +458,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink frozen, Tellor working: switch to usingTellorChainlinkFrozen", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -473,13 +473,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '3') // status 3: using tellor, chainlink frozen 
+    assert.equal(statusAfter, '3') // status 3: using Tellor, Chainlink frozen 
   })
 
   it("C1 chainlinkWorking: Chainlink frozen, Tellor working: return Tellor price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -500,7 +500,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink frozen, Tellor frozen: switch to usingTellorChainlinkFrozen", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -517,13 +517,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '3') // status 3: using tellor, chainlink frozen 
+    assert.equal(statusAfter, '3') // status 3: using Tellor, Chainlink frozen
   })
 
   it("C1 chainlinkWorking: Chainlink frozen, Tellor frozen: return last good price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -544,10 +544,10 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(999, 18))
   })
 
-  it("C1 chainlinkWorking: Chainlink times out, Tellor broken by 0 price: switch to tellorBrokenChainlinkFrozen", async () => {
+  it("C1 chainlinkWorking: Chainlink times out, Tellor broken by 0 price: switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -560,13 +560,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '4') // status 4: tellor broken, chainlink frozen
+    assert.equal(statusAfter, '4') // status 4: using Chainlink, Tellor untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink times out, Tellor broken by 0 price: return last good price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -586,7 +586,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink is out of date by <3hrs: remain chainlinkWorking", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(1234, 8))
     await mockChainlink.setPrice(dec(1234, 8))
@@ -594,13 +594,13 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '0') // status 0: using chainlink
+    assert.equal(statusAfter, '0') // status 0: Chainlink working
   })
 
   it("C1 chainlinkWorking: Chainlink is out of date by <3hrs: return Chainklink price", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     const decimals = await mockChainlink.decimals()
 
@@ -620,7 +620,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -628,7 +628,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of >50%, return the Tellor price", async () => {
@@ -636,7 +636,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203,4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -653,7 +653,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -661,7 +661,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '0') // status 0: still using chainlink 
+    assert.equal(statusAfter, '0') // status 0: Chainlink working
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of 50%, return the Chainlink price", async () => {
@@ -669,7 +669,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -686,7 +686,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -694,7 +694,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '0') // status 0: still using chainlink 
+    assert.equal(statusAfter, '0') // status 0: Chainlink working 
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of <50%, return Chainlink price", async () => {
@@ -702,7 +702,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -720,7 +720,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -728,7 +728,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink price increase of >100%, return Tellor price", async () => {
@@ -736,7 +736,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -752,7 +752,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -760,7 +760,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '0') // status 0: using chainlink
+    assert.equal(statusAfter, '0') // status 0: Chainlink working
   })
 
   it("C1 chainlinkWorking: Chainlink price increase of 100%, return Chainlink price", async () => {
@@ -768,7 +768,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -784,7 +784,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -792,7 +792,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '0') // status 0: using chainlink
+    assert.equal(statusAfter, '0') // status 0: Chainlink working
   })
 
   it("C1 chainlinkWorking: Chainlink price increase of <100%,  return Chainlink price", async () => {
@@ -800,7 +800,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(203, 4))
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -816,7 +816,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
     await mockChainlink.setPrice(99999999)  // price drops to 0.99999999: a drop of > 50% from previous
@@ -824,7 +824,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '0') // status 0: using chainlink 
+    assert.equal(statusAfter, '0') // status 0: Chainlink working
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor price matches: return Chainlink price", async () => {
@@ -832,7 +832,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
     await mockChainlink.setPrice(99999999)  // price drops to 0.99999999: a drop of > 50% from previous
@@ -848,7 +848,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18))
    
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
     await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
@@ -856,7 +856,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '0') // status 0: using chainlink 
+    assert.equal(statusAfter, '0') // status 0: Chainlink working
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor price within 5% of Chainlink: return Chainlink price", async () => { 
@@ -864,7 +864,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18))
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
     
     await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
     await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
@@ -880,7 +880,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
     await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
@@ -888,7 +888,7 @@ contract('PriceFeed', async accounts => {
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor 
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor live but not within 5% of Chainlink: return Tellor price", async () => {
@@ -896,7 +896,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
     await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
@@ -911,7 +911,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor frozen: switch to usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
     await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
@@ -930,7 +930,7 @@ contract('PriceFeed', async accounts => {
     const priceFetchTx = await priceFeed.fetchPrice()
 
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 1: using tellor
+    assert.equal(statusAfter, '1') // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor frozen: return last good price", async () => {
@@ -938,7 +938,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
     await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
@@ -966,7 +966,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor is broken by 0 price: switch to bothOracleSuspect", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
     await mockChainlink.setPrice(99999999)  // price drops to 0.99999999: a drop of > 50% from previous
@@ -977,7 +977,7 @@ contract('PriceFeed', async accounts => {
     const priceFetchTx = await priceFeed.fetchPrice()
 
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '2') // status 2: both oracles suspect
+    assert.equal(statusAfter, '2') // status 2: both oracles untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor is broken by 0 price: return last good price", async () => {
@@ -985,7 +985,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(1300, 6))
 
@@ -1006,7 +1006,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor is broken by 0 timestamp: switch to bothOracleSuspect", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     // Make mock Chainlink price deviate too much
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -1017,7 +1017,7 @@ contract('PriceFeed', async accounts => {
     const priceFetchTx = await priceFeed.fetchPrice()
 
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '2') // status 2: both oracles suspect
+    assert.equal(statusAfter, '2') // status 2: both oracles untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor is broken by 0 timestamp: return last good price", async () => {
@@ -1025,7 +1025,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(1300, 6))
 
@@ -1046,7 +1046,7 @@ contract('PriceFeed', async accounts => {
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor is broken by future timestamp: Pricefeed switches to bothOracleSuspect", async () => {
     await setAddresses()
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     // Make mock Chainlink price deviate too much
     await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
@@ -1058,7 +1058,7 @@ contract('PriceFeed', async accounts => {
     const priceFetchTx = await priceFeed.fetchPrice()
 
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '2') // status 2: both oracles suspect
+    assert.equal(statusAfter, '2') // status 2: both oracles untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink price drop of >50% and Tellor is broken by future timestamp: return last good price", async () => {
@@ -1066,7 +1066,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockTellor.setPrice(dec(1300, 6))
 
@@ -1092,7 +1092,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(101, 8))
     await mockChainlink.setPrice(dec(102, 8)) 
@@ -1110,7 +1110,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(101, 8))
     await mockChainlink.setPrice(dec(102, 8)) 
@@ -1129,7 +1129,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(101, 8))
     await mockChainlink.setPrice(dec(102, 8)) 
@@ -1157,7 +1157,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) 
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(101, 8))
     await mockChainlink.setPrice(dec(102, 8)) 
@@ -1186,7 +1186,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(101, 8))
     await mockChainlink.setPrice(dec(102, 8)) 
@@ -1196,7 +1196,7 @@ contract('PriceFeed', async accounts => {
     const priceFetchTx = await priceFeed.fetchPrice()
   
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '4') // status 5: Using, Tellor untrusted
+    assert.equal(statusAfter, '4') // status 4: Using Tellor, Chainlink untrusted
   })
 
   it("C1 chainlinkWorking: Chainlink is working and Tellor breaks: return Chainlink price", async () => { 
@@ -1204,7 +1204,7 @@ contract('PriceFeed', async accounts => {
     priceFeed.setLastGoodPrice(dec(1200, 18)) // establish a "last good price" from the previous price fetch
 
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 0: using chainlink
+    assert.equal(statusBefore, '0') // status 0: Chainlink working
 
     await mockChainlink.setPrevPrice(dec(101, 8))
     await mockChainlink.setPrice(dec(102, 8)) 
@@ -1223,7 +1223,7 @@ contract('PriceFeed', async accounts => {
   // Using Tellor, Tellor breaks
   it("C2 usingTellorChainlinkUntrusted: Tellor breaks by zero price: switch to bothOraclesSuspect", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -1237,12 +1237,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 2)  // status 2: both oracles suspect
+    assert.equal(status, 2)  // status 2: both oracles untrusted
   })
 
   it("C2 usingTellorChainlinkUntrusted: Tellor breaks by zero price: return last good price", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -1262,7 +1262,7 @@ contract('PriceFeed', async accounts => {
   // Using Tellor, Tellor breaks
   it("C2 usingTellorChainlinkUntrusted: Tellor breaks by call reverted: switch to bothOraclesSuspect", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await priceFeed.setLastGoodPrice(dec(123, 18))
 
@@ -1275,12 +1275,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 2)  // status 2: both oracles suspect
+    assert.equal(status, 2)  // status 2: both oracles untrusted
   })
 
   it("C2 usingTellorChainlinkUntrusted: Tellor breaks by call reverted: return last good price", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await priceFeed.setLastGoodPrice(dec(123, 18))
 
@@ -1299,7 +1299,7 @@ contract('PriceFeed', async accounts => {
   // Using Tellor, Tellor breaks
   it("C2 usingTellorChainlinkUntrusted: Tellor breaks by zero timestamp: switch to bothOraclesSuspect", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await priceFeed.setLastGoodPrice(dec(123, 18))
 
@@ -1312,12 +1312,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 2)  // status 2: both oracles suspect
+    assert.equal(status, 2)  // status 2: both oracles untrusted
   })
 
   it("C2 usingTellorChainlinkUntrusted: Tellor breaks by zero timestamp: return last good price", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await priceFeed.setLastGoodPrice(dec(123, 18))
 
@@ -1336,7 +1336,7 @@ contract('PriceFeed', async accounts => {
   // Using Tellor, Tellor freezes
   it("C2 usingTellorChainlinkUntrusted: Tellor freezes - remain usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -1357,12 +1357,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 1)  // status 1: using Tellor
+    assert.equal(status, 1)  // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C2 usingTellorChainlinkUntrusted: Tellor freezes - return last good price", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
@@ -1390,7 +1390,7 @@ contract('PriceFeed', async accounts => {
 
   it("C2 usingTellorChainlinkUntrusted: both Tellor and Chainlink are live and <= 5% price difference - switch to chainlinkWorking", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
   
     await mockTellor.setPrice(dec(100, 6)) // price = 100
     await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Chainlink
@@ -1398,12 +1398,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 0)  // status 0: using Chainlink
+    assert.equal(status, 0)  // status 0: Chainlink working
   })
 
   it("C2 usingTellorChainlinkUntrusted: both Tellor and Chainlink are live and <= 5% price difference - return Chainlink price", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
   
     await mockTellor.setPrice(dec(100, 6)) // price = 100
     await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Chainlink
@@ -1416,7 +1416,7 @@ contract('PriceFeed', async accounts => {
 
   it("C2 usingTellorChainlinkUntrusted: both Tellor and Chainlink are live and > 5% price difference - remain usingChainlinkTellorUntrusted", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
     await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
@@ -1424,12 +1424,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
    
     const status = await priceFeed.status()
-    assert.equal(status, 1)  // status 1: using Tellor
+    assert.equal(status, 1)  // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C2 usingTellorChainlinkUntrusted: both Tellor and Chainlink are live and > 5% price difference - return Tellor price", async () => {
     await setAddresses()
-    priceFeed.setStatus(1) // status 1: using Tellor
+    priceFeed.setStatus(1) // status 1: using Tellor, Chainlink untrusted
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
     await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
@@ -1445,7 +1445,7 @@ contract('PriceFeed', async accounts => {
 
   it("C3 bothOraclesUntrusted: both Tellor and Chainlink are live and > 5% price difference remain bothOraclesSuspect", async () => {
     await setAddresses()
-    priceFeed.setStatus(2) // status 2: both oracles suspect
+    priceFeed.setStatus(2) // status 2: both oracles untrusted
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1453,12 +1453,12 @@ contract('PriceFeed', async accounts => {
     await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
 
     const status = await priceFeed.status()
-    assert.equal(status, 2)  // status 2: both oracles suspect
+    assert.equal(status, 2)  // status 2: both oracles untrusted
   })
 
   it("C3 bothOraclesUntrusted: both Tellor and Chainlink are live and > 5% price difference, return last good price", async () => {
     await setAddresses()
-    priceFeed.setStatus(2) // status 2: both oracles suspect
+    priceFeed.setStatus(2) // status 2: both oracles untrusted
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1473,7 +1473,7 @@ contract('PriceFeed', async accounts => {
 
   it("C3 bothOraclesUntrusted: both Tellor and Chainlink are live and <= 5% price difference, switch to chainlinkWorking", async () => {
     await setAddresses()
-    priceFeed.setStatus(2) // status 2: both oracles suspect
+    priceFeed.setStatus(2) // status 2: both oracles untrusted
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
     await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Tellor
@@ -1481,12 +1481,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 0)  // status 0: using Chainlink
+    assert.equal(status, 0)  // status 0: Chainlink working
   })
 
   it("C3 bothOraclesUntrusted: both Tellor and Chainlink are live and <= 5% price difference, return Chainlink price", async () => {
     await setAddresses()
-    priceFeed.setStatus(2) // status 2: both oracles suspect
+    priceFeed.setStatus(2) // status 2: both oracles untrusted
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
     await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Tellor
@@ -1500,7 +1500,7 @@ contract('PriceFeed', async accounts => {
   // --- Case 4 ---
   it("C4 usingTellorChainlinkFrozen: when both Chainlink and Tellor break, switch to bothOraclesSuspect", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: usng tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await mockChainlink.setPrevPrice(dec(999, 8))
 
@@ -1511,7 +1511,7 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 2)  // status 2: both oracles suspect
+    assert.equal(status, 2)  // status 2: both oracles untrusted
   })
 
   it("C4 usingTellorChainlinkFrozen: when both Chainlink and Tellor break, return last good price", async () => { 
@@ -1534,7 +1534,7 @@ contract('PriceFeed', async accounts => {
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink breaks and Tellor freezes, switch to usingChainlinkTellorUntrusted", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1555,12 +1555,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 1)  // status 1: using tellor
+    assert.equal(status, 1)  // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink breaks and Tellor freezes, return last good price", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1586,7 +1586,7 @@ contract('PriceFeed', async accounts => {
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink breaks and Tellor live, switch to usingChainlinkTellorUntrusted", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1602,12 +1602,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 1)  // status 1: using tellor
+    assert.equal(status, 1)  // status 1: using Tellor, Chainlink untrusted
   })
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink breaks and Tellor live, return Tellor price", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1626,7 +1626,7 @@ contract('PriceFeed', async accounts => {
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live, switch back to chainlinkWorking", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1638,12 +1638,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 0)  // status 0: using chainlink
+    assert.equal(status, 0)  // status 0: Chainlink working
   })
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live, return Chainlink current price", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1660,7 +1660,7 @@ contract('PriceFeed', async accounts => {
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor breaks, switch to usingChainlinkTellorUntrusted", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1672,12 +1672,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 4)  // status 5: Using Chainlink, Tellor untrusted
+    assert.equal(status, 4)  // status 4: Using Chainlink, Tellor untrusted
   })
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor breaks, return Chainlink current price", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1694,7 +1694,7 @@ contract('PriceFeed', async accounts => {
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink still frozen and Tellor broken, switch to tellorFrozenChainlinkBroken", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1714,12 +1714,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 4)  // status 4: chainlink frozen, tellor broken
+    assert.equal(status, 4)  // status 4: using Chainlink, Tellor untrusted
   })
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink still frozen and Tellor broken, return last good price", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1744,7 +1744,7 @@ contract('PriceFeed', async accounts => {
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink still frozen and Tellor live, remain usingTellorChainlinkFrozen", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1766,12 +1766,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 3)  // status 3: using tellor, chainlink frozn
+    assert.equal(status, 3)  // status 3: using Tellor, Chainlink frozen
   })
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink still frozen and Tellor live, return Tellor price", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1798,7 +1798,7 @@ contract('PriceFeed', async accounts => {
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink still frozen and Tellor freezes, remain usingTellorChainlinkFrozen", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1821,12 +1821,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 3)  // status 3: using tellor, chainlink frozn
+    assert.equal(status, 3)  // status 3: using Tellor, Chainlink frozen
   })
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink still frozen and Tellor freezes, return last good price", async () => { 
     await setAddresses()
-    priceFeed.setStatus(3) // status 3: using tellor, chainlink frozen
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
@@ -1902,7 +1902,7 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 0)  // status 0: using Chainlink
+    assert.equal(status, 0)  // status 0: Chainlink working
   })
 
   it("C5 usingChainlinkTellorUntrusted: when Chainlink is live and Tellor price within <5%, return Chainlink price", async () => {
@@ -1997,12 +1997,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 4) // status 4: using chainlink, Tellor untrusted
+    assert.equal(status, 4) // status 4: using Chainlink, Tellor untrusted
   })
 
   it("C5 usingChainlinkTellorUntrusted: when Chainlink frozen, return last good price", async () => {
     await setAddresses()
-    priceFeed.setStatus(4) // status 4: using chainlink, Tellor untrusted
+    priceFeed.setStatus(4) // status 4: using Chainlink, Tellor untrusted
 
     await priceFeed.setLastGoodPrice(dec(246, 18))
 
@@ -2040,12 +2040,12 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 2)  // status 2: bothOraclesSuspect
+    assert.equal(status, 2)  // status 2: both oracles untrusted
   })
 
   it("C5 usingChainlinkTellorUntrusted: Chainlink breaks too, return last good price", async () => {
     await setAddresses()
-    priceFeed.setStatus(4) // status 4: chainlink broken, tellor frozen
+    priceFeed.setStatus(4) // status 4: using chainlink, Tellor untrusted
 
     await priceFeed.setLastGoodPrice(dec(246, 18))
 
