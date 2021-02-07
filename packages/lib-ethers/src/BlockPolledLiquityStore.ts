@@ -7,12 +7,16 @@ import {
   LiquityStoreBaseState,
   TroveWithPendingRedistribution,
   StabilityDeposit,
-  LQTYStake
+  LQTYStake,
+  LiquityStore,
+  _LiquityReadCache,
+  Trove,
+  Fees
 } from "@liquity/lib-base";
 
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
-import { LiquityConnection, _requireProvider } from "./connection";
-import { EthersLiquityStore } from "./EthersLiquityStore";
+import { EthersLiquityConnection, _requireProvider } from "./EthersLiquityConnection";
+import { EthersCallOverrides } from "./types";
 
 /**
  * Extra state added to {@link @liquity/lib-base#LiquityStoreState} by
@@ -57,18 +61,23 @@ const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
  *
  * @public
  */
-export class BlockPolledLiquityStore extends EthersLiquityStore<BlockPolledLiquityStoreExtraState> {
-  private readonly _provider: Provider;
+export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
+  readonly connection: EthersLiquityConnection;
+
   private readonly _readable: ReadableEthersLiquity;
+  private readonly _provider: Provider;
 
-  constructor(connection: LiquityConnection, readable?: ReadableEthersLiquity) {
-    super(connection);
+  constructor(readable: ReadableEthersLiquity) {
+    super();
 
-    this._provider = _requireProvider(connection);
-    this._readable = readable ?? new ReadableEthersLiquity(connection);
+    this.connection = readable.connection;
+    this._readable = readable;
+    this._provider = _requireProvider(readable.connection);
   }
 
   private _get(blockTag?: number): Promise<LiquityStoreBaseState> {
+    const { userAddress, frontendTag } = this.connection;
+
     return promiseAllValues({
       price: this._readable.getPrice({ blockTag }),
       numberOfTroves: this._readable.getNumberOfTroves({ blockTag }),
@@ -78,44 +87,31 @@ export class BlockPolledLiquityStore extends EthersLiquityStore<BlockPolledLiqui
       fees: this._readable.getFees({ blockTag }),
       totalStakedLQTY: this._readable.getTotalStakedLQTY({ blockTag }),
 
-      frontend: this._connection.frontendTag
-        ? this._readable.getFrontendStatus(this._connection.frontendTag, { blockTag })
+      frontend: frontendTag
+        ? this._readable.getFrontendStatus(frontendTag, { blockTag })
         : { status: "unregistered" },
 
-      ...(this._connection.userAddress
+      ...(userAddress
         ? {
-            accountBalance: this._provider
-              .getBalance(this._connection.userAddress, blockTag)
-              .then(decimalify),
-
-            lusdBalance: this._readable.getLUSDBalance(this._connection.userAddress, { blockTag }),
-
-            lqtyBalance: this._readable.getLQTYBalance(this._connection.userAddress, { blockTag }),
-
-            collateralSurplusBalance: this._readable.getCollateralSurplusBalance(
-              this._connection.userAddress,
-              { blockTag }
-            ),
-
-            troveWithoutRedistribution: this._readable.getTroveWithoutRewards(
-              this._connection.userAddress,
-              { blockTag }
-            ),
-
-            stabilityDeposit: this._readable.getStabilityDeposit(this._connection.userAddress, {
+            accountBalance: this._provider.getBalance(userAddress, blockTag).then(decimalify),
+            lusdBalance: this._readable.getLUSDBalance(userAddress, { blockTag }),
+            lqtyBalance: this._readable.getLQTYBalance(userAddress, { blockTag }),
+            collateralSurplusBalance: this._readable.getCollateralSurplusBalance(userAddress, {
               blockTag
             }),
-
-            lqtyStake: this._readable.getLQTYStake(this._connection.userAddress, { blockTag }),
-
-            ownFrontend: this._readable.getFrontendStatus(this._connection.userAddress, { blockTag })
+            troveBeforeRedistribution: this._readable.getTroveBeforeRedistribution(userAddress, {
+              blockTag
+            }),
+            stabilityDeposit: this._readable.getStabilityDeposit(userAddress, { blockTag }),
+            lqtyStake: this._readable.getLQTYStake(userAddress, { blockTag }),
+            ownFrontend: this._readable.getFrontendStatus(userAddress, { blockTag })
           }
         : {
             accountBalance: Decimal.ZERO,
             lusdBalance: Decimal.ZERO,
             lqtyBalance: Decimal.ZERO,
             collateralSurplusBalance: Decimal.ZERO,
-            troveWithoutRedistribution: new TroveWithPendingRedistribution(),
+            troveBeforeRedistribution: new TroveWithPendingRedistribution(),
             stabilityDeposit: new StabilityDeposit(),
             lqtyStake: new LQTYStake(),
             ownFrontend: { status: "unregistered" }
@@ -154,5 +150,139 @@ export class BlockPolledLiquityStore extends EthersLiquityStore<BlockPolledLiqui
     stateUpdate: Partial<BlockPolledLiquityStoreExtraState>
   ): BlockPolledLiquityStoreExtraState {
     return { blockTag: stateUpdate.blockTag ?? oldState.blockTag };
+  }
+}
+
+/** @internal */
+export class _BlockPolledLiquityStoreBasedCache
+  implements Partial<_LiquityReadCache<[overrides?: EthersCallOverrides]>> {
+  private _store: BlockPolledLiquityStore;
+
+  constructor(store: BlockPolledLiquityStore) {
+    this._store = store;
+  }
+
+  private _blockHit(overrides?: EthersCallOverrides): boolean {
+    return (
+      !overrides ||
+      overrides.blockTag === undefined ||
+      overrides.blockTag === this._store.state.blockTag
+    );
+  }
+
+  private _userHit(address?: string, overrides?: EthersCallOverrides): boolean {
+    return (
+      this._blockHit(overrides) &&
+      (address === undefined || address === this._store.connection.userAddress)
+    );
+  }
+
+  private _frontendHit(address?: string, overrides?: EthersCallOverrides): boolean {
+    return (
+      this._blockHit(overrides) &&
+      (address === undefined || address === this._store.connection.frontendTag)
+    );
+  }
+
+  getTotalRedistributed(overrides?: EthersCallOverrides): Trove | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.totalRedistributed;
+    }
+  }
+
+  getTroveBeforeRedistribution(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): TroveWithPendingRedistribution | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.troveBeforeRedistribution;
+    }
+  }
+
+  getTrove(address?: string, overrides?: EthersCallOverrides): Trove | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.trove;
+    }
+  }
+
+  getNumberOfTroves(overrides?: EthersCallOverrides): number | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.numberOfTroves;
+    }
+  }
+
+  getPrice(overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.price;
+    }
+  }
+
+  getTotal(overrides?: EthersCallOverrides): Trove | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.total;
+    }
+  }
+
+  getStabilityDeposit(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): StabilityDeposit | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.stabilityDeposit;
+    }
+  }
+
+  getLUSDInStabilityPool(overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.lusdInStabilityPool;
+    }
+  }
+
+  getLUSDBalance(address?: string, overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.lusdBalance;
+    }
+  }
+
+  getLQTYBalance(address?: string, overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.lqtyBalance;
+    }
+  }
+
+  getCollateralSurplusBalance(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): Decimal | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.collateralSurplusBalance;
+    }
+  }
+
+  getFees(overrides?: EthersCallOverrides): Fees | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.fees;
+    }
+  }
+
+  getLQTYStake(address?: string, overrides?: EthersCallOverrides): LQTYStake | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.lqtyStake;
+    }
+  }
+
+  getTotalStakedLQTY(overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.totalStakedLQTY;
+    }
+  }
+
+  getFrontendStatus(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): { status: "unregistered" } | { status: "registered"; kickbackRate: Decimal } | undefined {
+    if (this._frontendHit(address, overrides)) {
+      return this._store.state.frontend;
+    }
   }
 }

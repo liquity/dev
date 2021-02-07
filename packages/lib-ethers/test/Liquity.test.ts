@@ -27,10 +27,9 @@ import {
 } from "../src/PopulatableEthersLiquity";
 
 import { _LiquityDeploymentJSON } from "../src/contracts";
-import { LiquityConnection, _connectToDeployment } from "../src/connection";
+import { _connectToDeployment } from "../src/EthersLiquityConnection";
 import { EthersLiquity } from "../src/EthersLiquity";
 import { ReadableEthersLiquity } from "../src/ReadableEthersLiquity";
-import { EthersLiquityStore } from "../src/EthersLiquityStore";
 
 const provider = ethers.provider;
 
@@ -38,7 +37,11 @@ chai.use(chaiAsPromised);
 chai.use(chaiSpies);
 
 const connectToDeployment = async (deployment: _LiquityDeploymentJSON, signer: Signer) =>
-  EthersLiquity._from(_connectToDeployment(deployment, signer, await signer.getAddress()));
+  EthersLiquity._from(
+    _connectToDeployment(deployment, signer, {
+      userAddress: await signer.getAddress()
+    })
+  );
 
 const baseRate = Fees.prototype.baseRate;
 let cumulativeTimeJumpSeconds = 0;
@@ -184,25 +187,19 @@ describe("EthersLiquity", () => {
         findInsertPosition: () => Promise.resolve(["fake insert position"])
       });
 
-      const fakeConnection = {
-        signerOrProvider: user,
-        _contracts: {
-          borrowerOperations,
-          hintHelpers,
-          sortedTroves
-        }
-      };
+      const fakeLiquity = new PopulatableEthersLiquity(({
+        getNumberOfTroves: () => Promise.resolve(1000000),
+        getFees: () => Promise.resolve(new Fees(new Date(), 0, 0.99, 1)),
 
-      const fakeLiquity = new PopulatableEthersLiquity(
-        (fakeConnection as unknown) as LiquityConnection,
-        (undefined as unknown) as ReadableEthersLiquity,
-        {
-          state: {
-            numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
-            fees: new Fees(new Date(), 0, 0.99, 1)
+        connection: {
+          signerOrProvider: user,
+          _contracts: {
+            borrowerOperations,
+            hintHelpers,
+            sortedTroves
           }
-        } as EthersLiquityStore
-      );
+        }
+      } as unknown) as ReadableEthersLiquity);
 
       const nominalCollateralRatio = Decimal.ONE.div(1.0025);
 

@@ -7,14 +7,6 @@ import { Decimal, Difference } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { Trove } from "@liquity/lib-base";
 import { LiquityStoreProvider } from "@liquity/lib-react";
-import { SubgraphLiquity } from "@liquity/lib-subgraph";
-
-import {
-  PopulatableEthersLiquity,
-  ReadableEthersLiquity,
-  BlockPolledLiquityStore,
-  connectToLiquity
-} from "@liquity/lib-ethers";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
 import { WalletConnector } from "./components/WalletConnector";
@@ -63,20 +55,13 @@ type LiquityFrontendProps = {
 };
 
 const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, connection, liquity, store } = useLiquity();
+  const { account, provider, liquity } = useLiquity();
 
   // For console tinkering ;-)
   Object.assign(window, {
     account,
     provider,
-    connection,
     liquity,
-    store,
-    connectToLiquity,
-    PopulatableEthersLiquity,
-    ReadableEthersLiquity,
-    BlockPolledLiquityStore,
-    SubgraphLiquity,
     Trove,
     Decimal,
     Difference,
@@ -84,7 +69,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   });
 
   return (
-    <LiquityStoreProvider {...{ store, loader }}>
+    <LiquityStoreProvider {...{ loader }} store={liquity.store}>
       <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
         <Header>
           <UserAccount />

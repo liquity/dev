@@ -11,7 +11,6 @@ export interface EthersTransactionOverrides {
 
 export interface EthersCallOverrides {
   blockTag?: BlockTag;
-  from?: string;
 }
 
 // These type aliases mostly for documentation (so we can point to the Ethers documentation).

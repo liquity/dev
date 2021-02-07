@@ -6,12 +6,10 @@ import { useWeb3React } from "@web3-react/core";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
-  EthersLiquity,
   BlockPolledLiquityStore,
-  ReadableEthersLiquity,
-  PopulatableEthersLiquity,
-  LiquityConnection,
-  connectToLiquity
+  EthersLiquity,
+  EthersLiquityWithStore,
+  _connectToLiquity
 } from "@liquity/lib-ethers";
 
 import { LiquityFrontendConfig, getConfig } from "../config";
@@ -20,9 +18,7 @@ type LiquityContextValue = {
   config: LiquityFrontendConfig;
   account: string;
   provider: Provider;
-  connection: LiquityConnection;
-  liquity: EthersLiquity;
-  store: BlockPolledLiquityStore;
+  liquity: EthersLiquityWithStore<BlockPolledLiquityStore>;
 };
 
 const LiquityContext = createContext<LiquityContextValue | undefined>(undefined);
@@ -50,10 +46,11 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   const connection = useMemo(() => {
     if (config && provider && account && chainId) {
       try {
-        return connectToLiquity(provider.getSigner(account), {
+        return _connectToLiquity(provider.getSigner(account), {
           userAddress: account,
           frontendTag: config.frontendTag,
-          network: chainId
+          network: chainId,
+          useStore: "blockPolled"
         });
       } catch {}
     }
@@ -93,24 +90,11 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
   }
 
-  const readable = new ReadableEthersLiquity(connection);
-  const store = new BlockPolledLiquityStore(connection, readable);
-  const populatable = new PopulatableEthersLiquity(connection, readable, store);
-  const liquity = new EthersLiquity(readable, populatable);
-
-  store.logging = true;
+  const liquity = EthersLiquity._from(connection);
+  liquity.store.logging = true;
 
   return (
-    <LiquityContext.Provider
-      value={{
-        config,
-        account,
-        provider,
-        connection,
-        liquity,
-        store
-      }}
-    >
+    <LiquityContext.Provider value={{ config, account, provider, liquity }}>
       {children}
     </LiquityContext.Provider>
   );

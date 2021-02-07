@@ -13,16 +13,24 @@ export declare class ReadableEthersLiquity implements ReadableLiquity
 ```
 <b>Implements:</b> [ReadableLiquity](./lib-base.readableliquity.md)
 
-## Constructors
+## Remarks
 
-|  Constructor | Modifiers | Description |
-|  --- | --- | --- |
-|  [(constructor)(connection)](./lib-ethers.readableethersliquity._constructor_.md) |  | Constructs a new instance of the <code>ReadableEthersLiquity</code> class |
+The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `ReadableEthersLiquity` class.
+
+## Properties
+
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [connection](./lib-ethers.readableethersliquity.connection.md) |  | [EthersLiquityConnection](./lib-ethers.ethersliquityconnection.md) |  |
 
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
+|  [connectWithProvider(provider, optionalParams)](./lib-ethers.readableethersliquity.connectwithprovider.md) | <code>static</code> |  |
+|  [connectWithProvider(provider, optionalParams)](./lib-ethers.readableethersliquity.connectwithprovider_1.md) | <code>static</code> |  |
+|  [connectWithSigner(provider, optionalParams)](./lib-ethers.readableethersliquity.connectwithsigner.md) | <code>static</code> |  |
+|  [connectWithSigner(provider, optionalParams)](./lib-ethers.readableethersliquity.connectwithsigner_1.md) | <code>static</code> |  |
 |  [getCollateralSurplusBalance(address, overrides)](./lib-ethers.readableethersliquity.getcollateralsurplusbalance.md) |  | Get the amount of leftover collateral available for withdrawal by an address. |
 |  [getFees(overrides)](./lib-ethers.readableethersliquity.getfees.md) |  | Get a calculator for current fees. |
 |  [getFirstTroves(startIdx, numberOfTroves, overrides)](./lib-ethers.readableethersliquity.getfirsttroves.md) |  | Get a slice from the list of Troves sorted by collateral ratio in descending order. |
@@ -39,5 +47,5 @@ export declare class ReadableEthersLiquity implements ReadableLiquity
 |  [getTotalRedistributed(overrides)](./lib-ethers.readableethersliquity.gettotalredistributed.md) |  | Get the total collateral and debt per stake that has been liquidated through redistribution. |
 |  [getTotalStakedLQTY(overrides)](./lib-ethers.readableethersliquity.gettotalstakedlqty.md) |  | Get the total amount of LQTY currently staked. |
 |  [getTrove(address, overrides)](./lib-ethers.readableethersliquity.gettrove.md) |  | Get the current state of a Trove. |
-|  [getTroveWithoutRewards(address, overrides)](./lib-ethers.readableethersliquity.gettrovewithoutrewards.md) |  | Get a Trove in its state after the last direct modification. |
+|  [getTroveBeforeRedistribution(address, overrides)](./lib-ethers.readableethersliquity.gettrovebeforeredistribution.md) |  | Get a Trove in its state after the last direct modification. |
 

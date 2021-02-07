@@ -9,7 +9,7 @@ import {
   TroveWithPendingRedistribution
 } from "@liquity/lib-base";
 
-import { LiquityConnection, _getContracts, _requireAddress } from "./connection";
+import { _getContracts, _requireAddress } from "./EthersLiquityConnection";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
 const debouncingDelayMs = 50;
@@ -38,18 +38,16 @@ const debounce = (listener: (latestBlock: number) => void) => {
 
 /** @alpha */
 export class ObservableEthersLiquity implements ObservableLiquity {
-  private readonly _connection: LiquityConnection;
   private readonly _readable: ReadableEthersLiquity;
 
-  constructor(connection: LiquityConnection, readable: ReadableEthersLiquity) {
-    this._connection = connection;
+  constructor(readable: ReadableEthersLiquity) {
     this._readable = readable;
   }
 
   watchTotalRedistributed(
     onTotalRedistributedChanged: (totalRedistributed: Trove) => void
   ): () => void {
-    const { activePool, defaultPool } = _getContracts(this._connection);
+    const { activePool, defaultPool } = _getContracts(this._readable.connection);
     const etherSent = activePool.filters.EtherSent();
 
     const redistributionListener = debounce((blockTag: number) => {
@@ -73,14 +71,14 @@ export class ObservableEthersLiquity implements ObservableLiquity {
     onTroveChanged: (trove: TroveWithPendingRedistribution) => void,
     address?: string
   ): () => void {
-    address ??= _requireAddress(this._connection);
+    address ??= _requireAddress(this._readable.connection);
 
-    const { troveManager } = _getContracts(this._connection);
+    const { troveManager } = _getContracts(this._readable.connection);
     const { TroveCreated, TroveUpdated } = troveManager.filters;
     const troveEventFilters = [TroveCreated(address), TroveUpdated(address)];
 
     const troveListener = debounce((blockTag: number) => {
-      this._readable.getTroveWithoutRewards(address, { blockTag }).then(onTroveChanged);
+      this._readable.getTroveBeforeRedistribution(address, { blockTag }).then(onTroveChanged);
     });
 
     troveEventFilters.forEach(filter => troveManager.on(filter, troveListener));
@@ -91,7 +89,7 @@ export class ObservableEthersLiquity implements ObservableLiquity {
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void): () => void {
-    const { troveManager } = _getContracts(this._connection);
+    const { troveManager } = _getContracts(this._readable.connection);
     const { TroveUpdated } = troveManager.filters;
     const troveUpdated = TroveUpdated();
 
@@ -115,7 +113,7 @@ export class ObservableEthersLiquity implements ObservableLiquity {
   }
 
   watchTotal(onTotalChanged: (total: Trove) => void): () => void {
-    const { troveManager } = _getContracts(this._connection);
+    const { troveManager } = _getContracts(this._readable.connection);
     const { TroveUpdated } = troveManager.filters;
     const troveUpdated = TroveUpdated();
 
@@ -134,9 +132,9 @@ export class ObservableEthersLiquity implements ObservableLiquity {
     onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void,
     address?: string
   ): () => void {
-    address ??= _requireAddress(this._connection);
+    address ??= _requireAddress(this._readable.connection);
 
-    const { activePool, stabilityPool } = _getContracts(this._connection);
+    const { activePool, stabilityPool } = _getContracts(this._readable.connection);
     const { UserDepositChanged } = stabilityPool.filters;
     const { EtherSent } = activePool.filters;
 
@@ -167,7 +165,7 @@ export class ObservableEthersLiquity implements ObservableLiquity {
   watchLUSDInStabilityPool(
     onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void
   ): () => void {
-    const { lusdToken, stabilityPool } = _getContracts(this._connection);
+    const { lusdToken, stabilityPool } = _getContracts(this._readable.connection);
     const { Transfer } = lusdToken.filters;
 
     const transferLUSDFromStabilityPool = Transfer(stabilityPool.address);
@@ -188,9 +186,9 @@ export class ObservableEthersLiquity implements ObservableLiquity {
   }
 
   watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
-    address ??= _requireAddress(this._connection);
+    address ??= _requireAddress(this._readable.connection);
 
-    const { lusdToken } = _getContracts(this._connection);
+    const { lusdToken } = _getContracts(this._readable.connection);
     const { Transfer } = lusdToken.filters;
     const transferLUSDFromUser = Transfer(address);
     const transferLUSDToUser = Transfer(null, address);

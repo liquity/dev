@@ -1,14 +1,15 @@
 export {
-  connectToLiquity,
-  LiquityConnection,
-  LiquityConnectionOptionalParams,
+  _connectToLiquity,
+  EthersLiquityConnection,
+  EthersLiquityConnectionOptionalParams,
+  EthersLiquityStoreOption,
   UnsupportedNetworkError
-} from "./src/connection";
+} from "./src/EthersLiquityConnection";
 
 export * from "./src/types";
 export * from "./src/ReadableEthersLiquity";
 export * from "./src/ObservableEthersLiquity";
-export * from "./src/PopulatableEthersLiquity";
-export * from "./src/EthersLiquity";
-export * from "./src/EthersLiquityStore";
 export * from "./src/BlockPolledLiquityStore";
+export * from "./src/PopulatableEthersLiquity";
+export * from "./src/SendableEthersLiquity";
+export * from "./src/EthersLiquity";

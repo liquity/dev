@@ -10,21 +10,14 @@
 |  --- | --- |
 |  [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md) | Ethers-based [LiquityStore](./lib-base.liquitystore.md) that updates state whenever there's a new block. |
 |  [EthersLiquity](./lib-ethers.ethersliquity.md) | Convenience class that combines multiple interfaces of the library in one object. |
-|  [EthersLiquityStore](./lib-ethers.ethersliquitystore.md) |  |
-|  [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) | Thrown by [TransactableEthersLiquity](./lib-ethers.transactableethersliquity.md) functions in case of transaction failure. |
+|  [EthersLiquityWithStore](./lib-ethers.ethersliquitywithstore.md) |  |
+|  [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) | Thrown by [EthersLiquity](./lib-ethers.ethersliquity.md) in case of transaction failure. |
 |  [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md) | Ethers-based implementation of [PopulatableLiquity](./lib-base.populatableliquity.md)<!-- -->. |
 |  [PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md) | A transaction that has been prepared for sending. |
 |  [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) | Ethers-based implementation of [ReadableLiquity](./lib-base.readableliquity.md)<!-- -->. |
 |  [SendableEthersLiquity](./lib-ethers.sendableethersliquity.md) | Ethers-based implementation of [SendableLiquity](./lib-base.sendableliquity.md)<!-- -->. |
 |  [SentEthersLiquityTransaction](./lib-ethers.sentethersliquitytransaction.md) | A transaction that has already been sent. |
-|  [TransactableEthersLiquity](./lib-ethers.transactableethersliquity.md) | Ethers-based implementation of [TransactableLiquity](./lib-base.transactableliquity.md)<!-- -->. |
 |  [UnsupportedNetworkError](./lib-ethers.unsupportednetworkerror.md) |  |
-
-## Functions
-
-|  Function | Description |
-|  --- | --- |
-|  [connectToLiquity(signerOrProvider, optionalParams)](./lib-ethers.connecttoliquity.md) |  |
 
 ## Interfaces
 
@@ -32,15 +25,17 @@
 |  --- | --- |
 |  [BlockPolledLiquityStoreExtraState](./lib-ethers.blockpolledliquitystoreextrastate.md) | Extra state added to [LiquityStoreState](./lib-base.liquitystorestate.md) by [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->. |
 |  [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
+|  [EthersLiquityConnection](./lib-ethers.ethersliquityconnection.md) |  |
+|  [EthersLiquityConnectionOptionalParams](./lib-ethers.ethersliquityconnectionoptionalparams.md) |  |
 |  [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
-|  [LiquityConnection](./lib-ethers.liquityconnection.md) |  |
-|  [LiquityConnectionOptionalParams](./lib-ethers.liquityconnectionoptionalparams.md) |  |
+|  [ReadableEthersLiquityWithStore](./lib-ethers.readableethersliquitywithstore.md) |  |
 
 ## Type Aliases
 
 |  Type Alias | Description |
 |  --- | --- |
 |  [BlockPolledLiquityStoreState](./lib-ethers.blockpolledliquitystorestate.md) | The type of [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->'s [state](./lib-base.liquitystore.state.md)<!-- -->. |
+|  [EthersLiquityStoreOption](./lib-ethers.ethersliquitystoreoption.md) |  |
 |  [EthersPopulatedTransaction](./lib-ethers.etherspopulatedtransaction.md) | Alias of Ethers' PopulatedTransaction type, which implements [UnsignedTransaction](https://docs.ethers.io/v5/api/utils/transactions/#UnsignedTransaction)<!-- -->. |
 |  [EthersTransactionReceipt](./lib-ethers.etherstransactionreceipt.md) | Alias of Ethers' [TransactionReceipt](https://docs.ethers.io/v5/api/providers/types/#providers-TransactionReceipt) type. |
 |  [EthersTransactionResponse](./lib-ethers.etherstransactionresponse.md) | Alias of Ethers' [TransactionResponse](https://docs.ethers.io/v5/api/providers/types/#providers-TransactionResponse) type. |

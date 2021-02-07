@@ -1,5 +1,3 @@
-export { _glue } from "./src/utils";
-
 export * from "./src/constants";
 export * from "./src/Trove";
 export * from "./src/StabilityDeposit";
@@ -9,3 +7,4 @@ export * from "./src/ReadableLiquity";
 export * from "./src/ObservableLiquity";
 export * from "./src/TransactableLiquity";
 export * from "./src/LiquityStore";
+export * from "./src/_CachedReadableLiquity";

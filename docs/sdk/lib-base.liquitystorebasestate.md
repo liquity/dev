@@ -31,5 +31,5 @@ export interface LiquityStoreBaseState
 |  [total](./lib-base.liquitystorebasestate.total.md) | [Trove](./lib-base.trove.md) | Total collateral and debt in the Liquity system. |
 |  [totalRedistributed](./lib-base.liquitystorebasestate.totalredistributed.md) | [Trove](./lib-base.trove.md) | Total collateral and debt per stake that has been liquidated through redistribution. |
 |  [totalStakedLQTY](./lib-base.liquitystorebasestate.totalstakedlqty.md) | [Decimal](./decimal.decimal.md) | Total amount of LQTY currently staked. |
-|  [troveWithoutRedistribution](./lib-base.liquitystorebasestate.trovewithoutredistribution.md) | [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | User's Trove in its state after the last direct modification. |
+|  [troveBeforeRedistribution](./lib-base.liquitystorebasestate.trovebeforeredistribution.md) | [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | User's Trove in its state after the last direct modification. |
 

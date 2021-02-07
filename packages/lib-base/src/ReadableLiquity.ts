@@ -49,7 +49,7 @@ export interface ReadableLiquity {
    * The current state of a Trove can be fetched using
    * {@link @liquity/lib-base#ReadableLiquity.getTrove | getTrove()}.
    */
-  getTroveWithoutRewards(address?: string): Promise<TroveWithPendingRedistribution>;
+  getTroveBeforeRedistribution(address?: string): Promise<TroveWithPendingRedistribution>;
 
   /**
    * Get the current state of a Trove.
