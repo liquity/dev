@@ -158,7 +158,7 @@ contract('PriceFeed', async accounts => {
     await setAddresses()
     // --- Chainlink fails, system switches to Tellor ---
     const statusBefore = await priceFeed.status()
-    assert.equal(statusBefore, '0') // status 1: using chainlink
+    assert.equal(statusBefore, '0') // status 0: using chainlink
 
     // Chainlink breaks with negative price
     await mockChainlink.setPrevPrice(dec(1, 8))
@@ -843,70 +843,69 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(99999999, 10))
   })
 
-  it("C1 usingChainlink: Chainlink price drop of >50% and Tellor price within 3% of Chainlink: remain usingChainlink", async () => { 
+  it("C1 usingChainlink: Chainlink price drop of >50% and Tellor price within 5% of Chainlink: remain usingChainlink", async () => { 
     await setAddresses()
     priceFeed.setLastGoodPrice(dec(2, 18))
    
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
 
-    await mockChainlink.setPrevPrice(dec(10, 8))  // price = 10
-    await mockChainlink.setPrice(dec(4, 8))  // price drops to 4: a drop of > 50% from previous
-    await mockTellor.setPrice(3890000) // Tellor price drops to 3.89: price difference with new Chainlink price is now just under 3%
+    await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
+    await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
+    await mockTellor.setPrice(104999999) // Tellor price drops to 104.99: price difference with new Chainlink price is now just under 5%
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
     assert.equal(statusAfter, '0') // status 0: using chainlink 
   })
 
-  it("C1 usingChainlink: Chainlink price drop of >50% and Tellor price within 3% of Chainlink: return Chainlink price", async () => { 
+  it("C1 usingChainlink: Chainlink price drop of >50% and Tellor price within 5% of Chainlink: return Chainlink price", async () => { 
     await setAddresses()
     priceFeed.setLastGoodPrice(dec(2, 18))
 
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
     
-    await mockChainlink.setPrevPrice(dec(10, 8))  // price = 10
-    await mockChainlink.setPrice(dec(4, 8))  // price drops to 4: a drop of > 50% from previous
-    await mockTellor.setPrice(3890000) // Tellor price drops to 3.89: price difference  with new Chainlink price is now just under 3%
+    await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
+    await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
+    await mockTellor.setPrice(104999999) // Tellor price drops to 104.99: price difference with new Chainlink price is now just under 5%
 
     const priceFetchTx = await priceFeed.fetchPrice()
     let price = await priceFeed.lastGoodPrice()
-    assert.equal(price, dec(4, 18))
+    assert.equal(price, dec(100, 18))
   })
 
-  
-  it("C1 usingChainlink: Chainlink price drop of >50% and Tellor live but not within 3% of Chainlink: switch to usingTellor", async () => {
+  it("C1 usingChainlink: Chainlink price drop of >50% and Tellor live but not within 5% of Chainlink: switch to usingTellor", async () => {
     await setAddresses()
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
 
-    await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
-    await mockChainlink.setPrice(99999999)  // price drops to 0.99999999: a drop of > 50% from previous
-    await mockTellor.setPrice(3880000) // Tellor price 3.88: price difference with new Chainlink price is now > 3%
+    await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
+    await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
+    await mockTellor.setPrice(105000001) // Tellor price drops to 105.000001: price difference with new Chainlink price is now > 5%
 
     const priceFetchTx = await priceFeed.fetchPrice()
     const statusAfter = await priceFeed.status()
-    assert.equal(statusAfter, '1') // status 0: using tellor 
+    assert.equal(statusAfter, '1') // status 1: using tellor 
   })
 
-  it("C1 usingChainlink: Chainlink price drop of >50% and Tellor live but not within 3% of Chainlink: return Tellor price", async () => {
+  it("C1 usingChainlink: Chainlink price drop of >50% and Tellor live but not within 5% of Chainlink: return Tellor price", async () => {
     await setAddresses()
     priceFeed.setLastGoodPrice(dec(2, 18)) 
 
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
 
-    await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
-    await mockChainlink.setPrice(99999999)  // price drops to 0.99999999: a drop of > 50% from previous
-    await mockTellor.setPrice(3880000) // Tellor price 3.88: price difference with new Chainlink price is now > 3%
+    await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
+    await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
+    await mockTellor.setPrice(105000001) // Tellor price drops to 105.000001: price difference with new Chainlink price is now > 5%
 
     const priceFetchTx = await priceFeed.fetchPrice()
     let price = await priceFeed.lastGoodPrice()
 
-    assert.equal(price, dec(388, 16)) // return Tellor price
+    assert.equal(price, dec(105000001, 12)) // return Tellor price
   })
 
   it("C1 usingChainlink: Chainlink price drop of >50% and Tellor frozen: switch to usingTellor", async () => {
@@ -914,9 +913,9 @@ contract('PriceFeed', async accounts => {
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
 
-    await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
-    await mockChainlink.setPrice(99999999)  // price drops to 0.99999999: a drop of > 50% from previous
-    await mockTellor.setPrice(3880000) // Tellor price 3.88: price difference with new Chainlink price is now > 3%
+    await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
+    await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
+    await mockTellor.setPrice(dec(100, 8)) 
 
     // 3 hours pass with no Tellor updates
     await th.fastForwardTime(10800, web3.currentProvider)
@@ -941,9 +940,9 @@ contract('PriceFeed', async accounts => {
     const statusBefore = await priceFeed.status()
     assert.equal(statusBefore, '0') // status 0: using chainlink
 
-    await mockTellor.setPrice(dec(1300, 6))
-    await mockChainlink.setPrevPrice(dec(2, 8))  // price = 2
-    await mockChainlink.setPrice(99999999)  // price drops to 0.99999999: a drop of > 50% from previous
+    await mockChainlink.setPrevPrice(dec(1000, 8))  // prev price = 1000
+    await mockChainlink.setPrice(dec(100, 8))  // price drops to 100: a drop of > 50% from previous
+    await mockTellor.setPrice(dec(100, 8)) 
 
     // 3 hours pass with no Tellor updates
     await th.fastForwardTime(10800, web3.currentProvider)
@@ -1257,12 +1256,12 @@ contract('PriceFeed', async accounts => {
   
   // Using Tellor, both Chainlink & Tellor go live
 
-  it("C2 usingTellor: both Tellor and Chainlink are live and <= 3% price difference - switch to usingChainlink", async () => {
+  it("C2 usingTellor: both Tellor and Chainlink are live and <= 5% price difference - switch to usingChainlink", async () => {
     await setAddresses()
     priceFeed.setStatus(1) // status 1: using Tellor
   
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice(dec(103, 8)) // price = 103: 3% difference from Chainlink
+    await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Chainlink
 
     await priceFeed.fetchPrice()
 
@@ -1270,25 +1269,25 @@ contract('PriceFeed', async accounts => {
     assert.equal(status, 0)  // status 0: using Chainlink
   })
 
-  it("C2 usingTellor: both Tellor and Chainlink are live and <= 3% price difference - return Chainlink price", async () => {
+  it("C2 usingTellor: both Tellor and Chainlink are live and <= 5% price difference - return Chainlink price", async () => {
     await setAddresses()
     priceFeed.setStatus(1) // status 1: using Tellor
   
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice(dec(103, 8)) // price = 103: 3% difference from Chainlink
+    await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Chainlink
 
     await priceFeed.fetchPrice()
 
     const price = await priceFeed.lastGoodPrice()
-    assert.equal(price, dec(103, 18))
+    assert.equal(price, dec(105, 18))
   })
 
-  it("C2 usingTellor: both Tellor and Chainlink are live and > 3% price difference - remain usingTellor", async () => {
+  it("C2 usingTellor: both Tellor and Chainlink are live and > 5% price difference - remain usingTellor", async () => {
     await setAddresses()
     priceFeed.setStatus(1) // status 1: using Tellor
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice('10300000001') // price = 103.00000001: > 3% difference from Tellor
+    await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
 
     await priceFeed.fetchPrice()
    
@@ -1296,12 +1295,12 @@ contract('PriceFeed', async accounts => {
     assert.equal(status, 1)  // status 1: using Tellor
   })
 
-  it("C2 usingTellor: both Tellor and Chainlink are live and > 3% price difference - return Tellor price", async () => {
+  it("C2 usingTellor: both Tellor and Chainlink are live and > 5% price difference - return Tellor price", async () => {
     await setAddresses()
     priceFeed.setStatus(1) // status 1: using Tellor
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice('10300000001') // price = 103.00000001: > 3% difference from Tellor
+    await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
 
     await priceFeed.fetchPrice()
 
@@ -1312,27 +1311,27 @@ contract('PriceFeed', async accounts => {
 
   // --- Case 3: Both Oracles suspect
 
-  it("C3 bothOraclesSuspect: both Tellor and Chainlink are live and > 3% price difference remain bothOraclesSuspect", async () => {
+  it("C3 bothOraclesSuspect: both Tellor and Chainlink are live and > 5% price difference remain bothOraclesSuspect", async () => {
     await setAddresses()
     priceFeed.setStatus(2) // status 2: both oracles suspect
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice('10300000001') // price = 103.00000001: > 3% difference from Tellor
+    await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
 
     const status = await priceFeed.status()
     assert.equal(status, 2)  // status 2: both oracles suspect
   })
 
-  it("C3 bothOraclesSuspect: both Tellor and Chainlink are live and > 3% price difference, return last good price", async () => {
+  it("C3 bothOraclesSuspect: both Tellor and Chainlink are live and > 5% price difference, return last good price", async () => {
     await setAddresses()
     priceFeed.setStatus(2) // status 2: both oracles suspect
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice('10300000001') // price = 103.00000001: > 3% difference from Tellor
+    await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
 
     await priceFeed.fetchPrice()
     const price = await priceFeed.lastGoodPrice()
@@ -1340,12 +1339,12 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(50, 18))
   })
 
-  it("C3 bothOraclesSuspect: both Tellor and Chainlink are live and <= 3% price difference, switch to usingChainlink", async () => {
+  it("C3 bothOraclesSuspect: both Tellor and Chainlink are live and <= 5% price difference, switch to usingChainlink", async () => {
     await setAddresses()
     priceFeed.setStatus(2) // status 2: both oracles suspect
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice(dec(103, 8)) // price = 103: 3% difference from Tellor
+    await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Tellor
 
     await priceFeed.fetchPrice()
 
@@ -1353,17 +1352,17 @@ contract('PriceFeed', async accounts => {
     assert.equal(status, 0)  // status 0: using Chainlink
   })
 
-  it("bothOraclesSuspect - both Tellor and Chainlink are live and <= 3% price difference, return Chainlink price", async () => {
+  it("bothOraclesSuspect - both Tellor and Chainlink are live and <= 5% price difference, return Chainlink price", async () => {
     await setAddresses()
     priceFeed.setStatus(2) // status 2: both oracles suspect
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice(dec(103, 8)) // price = 103: 3% difference from Tellor
+    await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Tellor
 
     await priceFeed.fetchPrice()
 
     const price = await priceFeed.lastGoodPrice()
-    assert.equal(price, dec(103, 18))
+    assert.equal(price, dec(105, 18))
   })
 
   // --- Case 4 ---
@@ -1688,7 +1687,7 @@ contract('PriceFeed', async accounts => {
   })
 
   // --- Case 5 ---
-  it("C5 tellorBrokenChainlinkFrozen: when Chainlink is live, switch to usingChainlink", async () => {
+  it("C5 tellorBrokenChainlinkFrozen: when Chainlink is live and Tellor price >5%, switch to usingChainlinkTellorBroken", async () => {
     await setAddresses()
     priceFeed.setStatus(4) // status 4: chainlink broken, tellor frozen
 
@@ -1697,12 +1696,29 @@ contract('PriceFeed', async accounts => {
     await mockChainlink.setPrevPrice(dec(999, 8))
     await mockChainlink.setPrice(dec(999, 8))
 
-    await mockTellor.setPrice(dec(123, 6))
+    await mockTellor.setPrice(dec(123, 6))  // Greater than 5% difference with chainlink
 
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 0)  // status 0: using Chainlink
+    assert.equal(status, 5)  // status 5: using Chainlink, Tellor broken
+  })
+
+  it("C5 tellorBrokenChainlinkFrozen: when Chainlink is live and Tellor price within <5%, switch to usingChainlink", async () => {
+    await setAddresses()
+    priceFeed.setStatus(4) // status 4: chainlink broken, tellor frozen
+
+    await priceFeed.setLastGoodPrice(dec(246, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(998, 6))  // within 5% of Chainlink
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 0)  // status 5: using Chainlink, Tellor broken
   })
 
   it("C5 tellorBrokenChainlinkFrozen: when Chainlink is live, return Chainlink price", async () => {
@@ -1898,14 +1914,14 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(50, 18))
   })
 
-  it("C6 usingChainlinkTellorBroken: both Tellor and Chainlink are live and <= 3% price difference, switch to usingChainlink", async () => { 
+  it("C6 usingChainlinkTellorBroken: both Tellor and Chainlink are live and <= 5% price difference, switch to usingChainlink", async () => { 
     await setAddresses()
     priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice(dec(103, 8)) // price = 103: 3% difference from Tellor
+    await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Tellor
     
     await priceFeed.fetchPrice()
 
@@ -1913,20 +1929,20 @@ contract('PriceFeed', async accounts => {
     assert.equal(status, 0)  // status 0: using Chainlink
   })
 
-  it("C6 usingChainlinkTellorBroken: both Tellor and Chainlink are live and <= 3% price difference, return Chainlink price", async () => { 
+  it("C6 usingChainlinkTellorBroken: both Tellor and Chainlink are live and <= 5% price difference, return Chainlink price", async () => { 
     await setAddresses()
     priceFeed.setStatus(5) // status 5: using Chainlink, Tellor is broken
 
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice(dec(103, 8)) // price = 103: 3% difference from Tellor
+    await mockChainlink.setPrice(dec(105, 8)) // price = 105: 5% difference from Tellor
     
     await priceFeed.fetchPrice()
 
     // Uses latest Chainlink price
     const price = await priceFeed.lastGoodPrice()
-    assert.equal(price, dec(103, 18))
+    assert.equal(price, dec(105, 18))
   })
 
   it("C6 usingChainlinkTellorBroken: when Chainlink and Tellor are live but dissimilar price, remain usingChainlinkTellorBroken", async () => { 
@@ -1936,7 +1952,7 @@ contract('PriceFeed', async accounts => {
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice('10300000001') // price = 103.00000001: > 3% difference from Tellor
+    await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
 
     await priceFeed.fetchPrice()
 
@@ -1951,13 +1967,13 @@ contract('PriceFeed', async accounts => {
     await priceFeed.setLastGoodPrice(dec(50, 18))
 
     await mockTellor.setPrice(dec(100, 6)) // price = 100
-    await mockChainlink.setPrice('10300000001') // price = 103.00000001: > 3% difference from Tellor
+    await mockChainlink.setPrice('10500000001') // price = 105.00000001: > 5% difference from Tellor
     
     await priceFeed.fetchPrice()
 
     // Uses latest Chainlink price
     const price = await priceFeed.lastGoodPrice()
-    assert.equal(price, dec('10300000001', 10))
+    assert.equal(price, dec('10500000001', 10))
   })
 })
 
