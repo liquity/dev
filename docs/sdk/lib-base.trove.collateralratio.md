@@ -4,6 +4,8 @@
 
 ## Trove.collateralRatio() method
 
+Calculate the Trove's collateralization ratio at a given price.
+
 <b>Signature:</b>
 
 ```typescript

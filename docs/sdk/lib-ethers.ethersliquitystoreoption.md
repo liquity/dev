@@ -4,8 +4,15 @@
 
 ## EthersLiquityStoreOption type
 
+Possible values for the optional [useStore](./lib-ethers.ethersliquityconnectionoptionalparams.usestore.md) connection parameter.
+
 <b>Signature:</b>
 
 ```typescript
 export declare type EthersLiquityStoreOption = "blockPolled";
 ```
+
+## Remarks
+
+Currently, the only supported value is `"blockPolled"`<!-- -->, in which case a [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md) will be created.
+

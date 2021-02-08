@@ -1,5 +1,12 @@
 import { Signer } from "@ethersproject/abstract-signer";
-import { Provider } from "@ethersproject/abstract-provider";
+
+import devOrNull from "../deployments/dev.json";
+import goerli from "../deployments/goerli.json";
+import kovan from "../deployments/kovan.json";
+import rinkeby from "../deployments/rinkeby.json";
+import ropsten from "../deployments/ropsten.json";
+
+import { EthersProvider, EthersSigner } from "./types";
 
 import {
   _connectToContracts,
@@ -8,41 +15,51 @@ import {
   _LiquityDeploymentJSON
 } from "./contracts";
 
-import devOrNull from "../deployments/dev.json";
-import goerli from "../deployments/goerli.json";
-import kovan from "../deployments/kovan.json";
-import rinkeby from "../deployments/rinkeby.json";
-import ropsten from "../deployments/ropsten.json";
-
 const dev: _LiquityDeploymentJSON | null = devOrNull;
 
 const deployments: {
-  [network: string]: _LiquityDeploymentJSON | undefined;
   [chainId: number]: _LiquityDeploymentJSON | undefined;
 } = {
-  goerli,
-  kovan,
-  rinkeby,
-  ropsten,
+  [ropsten.chainId]: ropsten,
+  [rinkeby.chainId]: rinkeby,
+  [goerli.chainId]: goerli,
+  [kovan.chainId]: kovan,
 
-  3: ropsten,
-  4: rinkeby,
-  5: goerli,
-  42: kovan,
-
-  ...(dev !== null ? { [17]: dev, dev } : {})
+  ...(dev !== null ? { [dev.chainId]: dev } : {})
 };
 
 declare const brand: unique symbol;
 
 const branded = <T>(t: Omit<T, typeof brand>): T => t as T;
 
+/**
+ * Information about a connection to the Liquity protocol.
+ *
+ * @remarks
+ * Provided for debugging / informational purposes.
+ *
+ * Exposed through {@link ReadableEthersLiquity.connection} and {@link EthersLiquity.connection}.
+ *
+ * @public
+ */
 export interface EthersLiquityConnection extends EthersLiquityConnectionOptionalParams {
-  readonly signerOrProvider: Signer | Provider;
+  /** Ethers `Provider` used for connecting to the network. */
+  readonly provider: EthersProvider;
 
-  readonly addresses: Record<string, string>;
+  /** Ethers `Signer` used for sending transactions. */
+  readonly signer?: EthersSigner;
+
+  /** Chain ID of the connected network. */
+  readonly chainId: number;
+
+  /** Version of the Liquity contracts (Git commit hash). */
   readonly version: string;
-  readonly deploymentDate: number;
+
+  /** Date when the Liquity contracts were deployed. */
+  readonly deploymentDate: Date;
+
+  /** A mapping of Liquity contracts' names to their addresses. */
+  readonly addresses: Record<string, string>;
 
   /** @internal */
   readonly _priceFeedIsTestnet: boolean;
@@ -60,18 +77,30 @@ export interface _InternalEthersLiquityConnection extends EthersLiquityConnectio
   readonly _contracts: _LiquityContracts;
 }
 
-const connectedDeploymentFrom = (
-  deployment: _LiquityDeploymentJSON,
-  signerOrProvider: Signer | Provider,
+const connectionFrom = (
+  provider: EthersProvider,
+  signer: EthersSigner | undefined,
   _contracts: _LiquityContracts,
+  { deploymentDate, ...deployment }: _LiquityDeploymentJSON,
   optionalParams?: EthersLiquityConnectionOptionalParams
-): _InternalEthersLiquityConnection =>
-  branded({
-    ...deployment,
-    signerOrProvider,
+): _InternalEthersLiquityConnection => {
+  if (
+    optionalParams &&
+    optionalParams.useStore !== undefined &&
+    !validStoreOptions.includes(optionalParams.useStore)
+  ) {
+    throw new Error(`Invalid useStore value ${optionalParams.useStore}`);
+  }
+
+  return branded({
+    provider,
+    signer,
     _contracts,
+    deploymentDate: new Date(deploymentDate),
+    ...deployment,
     ...optionalParams
   });
+};
 
 /** @internal */
 export const _getContracts = (connection: EthersLiquityConnection): _LiquityContracts =>
@@ -82,16 +111,12 @@ const panic = <T>(e: unknown): T => {
 };
 
 /** @internal */
-export const _requireSigner = (connection: EthersLiquityConnection): Signer =>
-  Signer.isSigner(connection.signerOrProvider)
-    ? connection.signerOrProvider
-    : panic(new Error("Must be connected through a Signer"));
+export const _requireSigner = (connection: EthersLiquityConnection): EthersSigner =>
+  connection.signer ?? panic(new Error("Must be connected through a Signer"));
 
 /** @internal */
-export const _requireProvider = (connection: EthersLiquityConnection): Provider =>
-  Signer.isSigner(connection.signerOrProvider)
-    ? connection.signerOrProvider.provider ?? panic(new Error("Signer must have a Provider"))
-    : connection.signerOrProvider;
+export const _getProvider = (connection: EthersLiquityConnection): EthersProvider =>
+  connection.provider;
 
 // TODO parameterize error message?
 /** @internal */
@@ -105,97 +130,170 @@ export const _requireAddress = (
 export const _requireFrontendAddress = (connection: EthersLiquityConnection): string =>
   connection.frontendTag ?? panic(new Error("A frontend address is required"));
 
+/** @internal */
 export const _usingStore = (
   connection: EthersLiquityConnection
 ): connection is EthersLiquityConnection & { useStore: EthersLiquityStoreOption } =>
   connection.useStore !== undefined;
 
+/**
+ * Thrown when trying to connect to a network where Liquity is not deployed.
+ *
+ * @remarks
+ * Thrown by {@link ReadableEthersLiquity.(connect:2)} and {@link EthersLiquity.(connect:2)}.
+ *
+ * @public
+ */
 export class UnsupportedNetworkError extends Error {
-  readonly unsupportedNetwork: string | number;
+  /** Chain ID of the unsupported network. */
+  readonly chainId: number;
 
   /** @internal */
-  constructor(unsupportedNetwork: string | number) {
-    super(`Unsupported network ${unsupportedNetwork}`);
+  constructor(chainId: number) {
+    super(`Unsupported network (chainId = ${chainId})`);
     this.name = "UnsupportedNetworkError";
-    this.unsupportedNetwork = unsupportedNetwork;
+    this.chainId = chainId;
   }
 }
+
+const getProviderAndSigner = (
+  signerOrProvider: EthersSigner | EthersProvider
+): [provider: EthersProvider, signer: EthersSigner | undefined] => {
+  const provider: EthersProvider = Signer.isSigner(signerOrProvider)
+    ? signerOrProvider.provider ?? panic(new Error("Signer must have a Provider"))
+    : signerOrProvider;
+
+  const signer = Signer.isSigner(signerOrProvider) ? signerOrProvider : undefined;
+
+  return [provider, signer];
+};
 
 /** @internal */
 export const _connectToDeployment = (
   deployment: _LiquityDeploymentJSON,
-  signerOrProvider: Signer | Provider,
+  signerOrProvider: EthersSigner | EthersProvider,
   optionalParams?: EthersLiquityConnectionOptionalParams
 ): EthersLiquityConnection =>
-  connectedDeploymentFrom(
-    deployment,
-    signerOrProvider,
+  connectionFrom(
+    ...getProviderAndSigner(signerOrProvider),
     _connectToContracts(signerOrProvider, deployment),
+    deployment,
     optionalParams
   );
 
+/**
+ * Possible values for the optional
+ * {@link EthersLiquityConnectionOptionalParams.useStore | useStore}
+ * connection parameter.
+ *
+ * @remarks
+ * Currently, the only supported value is `"blockPolled"`, in which case a
+ * {@link BlockPolledLiquityStore} will be created.
+ *
+ * @public
+ */
 export type EthersLiquityStoreOption = "blockPolled";
 
+const validStoreOptions = ["blockPolled"];
+
+/**
+ * Optional parameters of {@link ReadableEthersLiquity.(connect:2)} and
+ * {@link EthersLiquity.(connect:2)}.
+ *
+ * @public
+ */
 export interface EthersLiquityConnectionOptionalParams {
+  /**
+   * Address whose Trove, Stability Deposit, LQTY Stake and balances will be read by default.
+   *
+   * @remarks
+   * For example {@link EthersLiquity.getTrove | getTrove(address?)} will return the Trove owned by
+   * `userAddress` when the `address` parameter is omitted.
+   *
+   * Should be omitted when connecting through a {@link EthersSigner | Signer}. Instead `userAddress`
+   * will be automatically determined from the `Signer`.
+   */
   readonly userAddress?: string;
+
+  /**
+   * Address that will receive LQTY rewards from newly created Stability Deposits by default.
+   *
+   * @remarks
+   * For example
+   * {@link EthersLiquity.depositLUSDInStabilityPool | depositLUSDInStabilityPool(amount, frontendTag?)}
+   * will tag newly made Stability Deposits with this address when its `frontendTag` parameter is
+   * omitted.
+   */
   readonly frontendTag?: string;
-  readonly network?: string | number;
+
+  /**
+   * Create a {@link @liquity/lib-base#LiquityStore} and expose it as the `store` property.
+   *
+   * @remarks
+   * When set to one of the available {@link EthersLiquityStoreOption | options},
+   * {@link ReadableEthersLiquity.(connect:2) | ReadableEthersLiquity.connect()} will return a
+   * {@link ReadableEthersLiquityWithStore}, while
+   * {@link EthersLiquity.(connect:2) | EthersLiquity.connect()} will return an
+   * {@link EthersLiquityWithStore}.
+   *
+   * Note that the store won't start monitoring the blockchain until its
+   * {@link @liquity/lib-base#LiquityStore.start | start()} function is called.
+   */
   readonly useStore?: EthersLiquityStoreOption;
 }
 
 /** @internal */
-export function _connectToLiquity<T>(
-  signerOrProvider: Signer | Provider,
+export function _connectByChainId<T>(
+  provider: EthersProvider,
+  signer: EthersSigner | undefined,
+  chainId: number,
   optionalParams: EthersLiquityConnectionOptionalParams & { useStore: T }
 ): EthersLiquityConnection & { useStore: T };
 
 /** @internal */
-export function _connectToLiquity(
-  signerOrProvider: Signer | Provider,
+export function _connectByChainId(
+  provider: EthersProvider,
+  signer: EthersSigner | undefined,
+  chainId: number,
   optionalParams?: EthersLiquityConnectionOptionalParams
 ): EthersLiquityConnection;
 
 /** @internal */
-export function _connectToLiquity(
-  signerOrProvider: Signer | Provider,
+export function _connectByChainId(
+  provider: EthersProvider,
+  signer: EthersSigner | undefined,
+  chainId: number,
   optionalParams?: EthersLiquityConnectionOptionalParams
 ): EthersLiquityConnection {
-  const { network, ...restOfParams } = optionalParams ?? {};
-
-  const optionalParamsWithDefaults = {
-    network: network ?? "mainnet",
-    ...restOfParams
-  };
-
   const deployment: _LiquityDeploymentJSON =
-    deployments[optionalParamsWithDefaults.network] ??
-    panic(new UnsupportedNetworkError(optionalParamsWithDefaults.network));
+    deployments[chainId] ?? panic(new UnsupportedNetworkError(chainId));
 
-  return connectedDeploymentFrom(
+  return connectionFrom(
+    provider,
+    signer,
+    _connectToContracts(signer ?? provider, deployment),
     deployment,
-    signerOrProvider,
-    _connectToContracts(signerOrProvider, deployment),
-    optionalParamsWithDefaults
+    optionalParams
   );
 }
 
 /** @internal */
-export const _connectWithProvider = (
-  provider: Provider,
-  optionalParams?: EthersLiquityConnectionOptionalParams
-): EthersLiquityConnection => _connectToLiquity(provider, optionalParams);
-
-/** @internal */
-export const _connectWithSigner = async (
-  signer: Signer,
+export const _connect = async (
+  signerOrProvider: EthersSigner | EthersProvider,
   optionalParams?: EthersLiquityConnectionOptionalParams
 ): Promise<EthersLiquityConnection> => {
-  if (optionalParams?.userAddress !== undefined) {
-    throw new Error("Can't override userAddress when connecting through Signer");
+  const [provider, signer] = getProviderAndSigner(signerOrProvider);
+
+  if (signer) {
+    if (optionalParams?.userAddress !== undefined) {
+      throw new Error("Can't override userAddress when connecting through Signer");
+    }
+
+    optionalParams = {
+      ...optionalParams,
+      userAddress: await signer.getAddress()
+    };
   }
 
-  return _connectToLiquity(signer, {
-    ...optionalParams,
-    userAddress: await signer.getAddress()
-  });
+  return _connectByChainId(provider, signer, (await provider.getNetwork()).chainId, optionalParams);
 };

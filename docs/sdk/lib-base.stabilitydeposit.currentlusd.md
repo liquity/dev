@@ -4,6 +4,8 @@
 
 ## StabilityDeposit.currentLUSD property
 
+Amount of LUSD left in the Stability Deposit.
+
 <b>Signature:</b>
 
 ```typescript

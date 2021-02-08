@@ -4,7 +4,7 @@
 
 ## TroveCreationParams type
 
-Parameters of Trove creation.
+Parameters of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction.
 
 <b>Signature:</b>
 

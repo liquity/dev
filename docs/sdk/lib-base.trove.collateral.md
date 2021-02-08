@@ -4,6 +4,8 @@
 
 ## Trove.collateral property
 
+Amount of native currency (e.g. Ether) collateralized.
+
 <b>Signature:</b>
 
 ```typescript

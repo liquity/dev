@@ -1,6 +1,4 @@
 import { BigNumber } from "@ethersproject/bignumber";
-import { Provider } from "@ethersproject/abstract-provider";
-import { Signer } from "@ethersproject/abstract-signer";
 
 import { Decimal } from "@liquity/decimal";
 import {
@@ -17,17 +15,18 @@ import {
 
 import { MultiTroveGetter } from "../types";
 
-import { EthersCallOverrides } from "./types";
+import { EthersCallOverrides, EthersProvider, EthersSigner } from "./types";
 
 import {
   EthersLiquityConnection,
   EthersLiquityConnectionOptionalParams,
-  _connectWithProvider,
-  _connectWithSigner,
+  EthersLiquityStoreOption,
+  _connect,
   _getContracts,
   _requireAddress,
   _requireFrontendAddress
 } from "./EthersLiquityConnection";
+
 import {
   BlockPolledLiquityStore,
   _BlockPolledLiquityStoreBasedCache
@@ -77,38 +76,44 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       : readable;
   }
 
-  static connectWithProvider(
-    provider: Provider,
-    optionalParams: EthersLiquityConnectionOptionalParams & { useStore: "blockPolled" }
-  ): ReadableEthersLiquityWithStore<BlockPolledLiquityStore>;
-
-  static connectWithProvider(
-    provider: Provider,
-    optionalParams?: EthersLiquityConnectionOptionalParams
-  ): ReadableEthersLiquity;
-
-  static connectWithProvider(
-    provider: Provider,
-    optionalParams?: EthersLiquityConnectionOptionalParams
-  ): ReadableEthersLiquity {
-    return ReadableEthersLiquity._from(_connectWithProvider(provider, optionalParams));
-  }
-
-  static connectWithSigner(
-    provider: Signer,
+  /** @internal */
+  static connect(
+    signerOrProvider: EthersSigner | EthersProvider,
     optionalParams: EthersLiquityConnectionOptionalParams & { useStore: "blockPolled" }
   ): Promise<ReadableEthersLiquityWithStore<BlockPolledLiquityStore>>;
 
-  static connectWithSigner(
-    provider: Signer,
+  static connect(
+    signerOrProvider: EthersSigner | EthersProvider,
     optionalParams?: EthersLiquityConnectionOptionalParams
   ): Promise<ReadableEthersLiquity>;
 
-  static async connectWithSigner(
-    signer: Signer,
+  /**
+   * Connect to the Liquity protocol and create a `ReadableEthersLiquity` object.
+   *
+   * @param signerOrProvider - Ethers `Signer` or `Provider` to use for connecting to the Ethereum
+   *                           network.
+   * @param optionalParams - Optional parameters that can be used to customize the connection.
+   */
+  static async connect(
+    signerOrProvider: EthersSigner | EthersProvider,
     optionalParams?: EthersLiquityConnectionOptionalParams
   ): Promise<ReadableEthersLiquity> {
-    return ReadableEthersLiquity._from(await _connectWithSigner(signer, optionalParams));
+    return ReadableEthersLiquity._from(await _connect(signerOrProvider, optionalParams));
+  }
+
+  /**
+   * Check whether this `ReadableEthersLiquity` is a {@link ReadableEthersLiquityWithStore}.
+   */
+  hasStore(): this is ReadableEthersLiquityWithStore;
+
+  /**
+   * Check whether this `ReadableEthersLiquity` is a
+   * {@link ReadableEthersLiquityWithStore}\<{@link BlockPolledLiquityStore}\>.
+   */
+  hasStore(store: "blockPolled"): this is ReadableEthersLiquityWithStore<BlockPolledLiquityStore>;
+
+  hasStore(): boolean {
+    return false;
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotalRedistributed} */
@@ -344,8 +349,14 @@ const mapMultipleSortedTrovesToTroves = (
     )
   ]);
 
-export interface ReadableEthersLiquityWithStore<T extends LiquityStore>
+/**
+ * Variant of {@link ReadableEthersLiquity} that exposes a {@link @liquity/lib-base#LiquityStore}.
+ *
+ * @public
+ */
+export interface ReadableEthersLiquityWithStore<T extends LiquityStore = LiquityStore>
   extends ReadableEthersLiquity {
+  /** An object that implements LiquityStore. */
   readonly store: T;
 }
 
@@ -362,5 +373,9 @@ class _BlockPolledReadableEthersLiquity
 
     this.store = store;
     this.connection = readable.connection;
+  }
+
+  hasStore(store?: EthersLiquityStoreOption): boolean {
+    return store === undefined || store === "blockPolled";
   }
 }

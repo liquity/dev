@@ -20,18 +20,17 @@ The constructor for this class is marked as internal. Third-party code should no
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [collateralGain](./lib-base.stabilitydeposit.collateralgain.md) |  | [Decimal](./decimal.decimal.md) |  |
-|  [currentLUSD](./lib-base.stabilitydeposit.currentlusd.md) |  | [Decimal](./decimal.decimal.md) |  |
-|  [initialLUSD](./lib-base.stabilitydeposit.initiallusd.md) |  | [Decimal](./decimal.decimal.md) |  |
+|  [collateralGain](./lib-base.stabilitydeposit.collateralgain.md) |  | [Decimal](./decimal.decimal.md) | Amount of native currency (e.g. Ether) received in exchange for the used-up LUSD. |
+|  [currentLUSD](./lib-base.stabilitydeposit.currentlusd.md) |  | [Decimal](./decimal.decimal.md) | Amount of LUSD left in the Stability Deposit. |
+|  [initialLUSD](./lib-base.stabilitydeposit.initiallusd.md) |  | [Decimal](./decimal.decimal.md) | Amount of LUSD in the Stability Deposit at the time of the last direct modification. |
 |  [isEmpty](./lib-base.stabilitydeposit.isempty.md) |  | boolean |  |
-|  [lqtyReward](./lib-base.stabilitydeposit.lqtyreward.md) |  | [Decimal](./decimal.decimal.md) |  |
+|  [lqtyReward](./lib-base.stabilitydeposit.lqtyreward.md) |  | [Decimal](./decimal.decimal.md) | Amount of LQTY rewarded since the last modification of the Stability Deposit. |
 
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [apply(change)](./lib-base.stabilitydeposit.apply.md) |  |  |
-|  [equals(that)](./lib-base.stabilitydeposit.equals.md) |  |  |
-|  [toString()](./lib-base.stabilitydeposit.tostring.md) |  |  |
-|  [whatChanged(thatLUSD)](./lib-base.stabilitydeposit.whatchanged.md) |  |  |
+|  [apply(change)](./lib-base.stabilitydeposit.apply.md) |  | Apply a [StabilityDepositChange](./lib-base.stabilitydepositchange.md) to this Stability Deposit. |
+|  [equals(that)](./lib-base.stabilitydeposit.equals.md) |  | Compare to another instance of <code>StabilityDeposit</code>. |
+|  [whatChanged(thatLUSD)](./lib-base.stabilitydeposit.whatchanged.md) |  | Calculate the difference between the <code>currentLUSD</code> in this Stability Deposit and <code>thatLUSD</code>. |
 

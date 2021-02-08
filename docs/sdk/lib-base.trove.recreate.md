@@ -4,6 +4,8 @@
 
 ## Trove.recreate() method
 
+Calculate the parameters of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction that will result in the given Trove.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,8 +16,8 @@ static recreate(that: Trove, borrowingRate?: Decimalish): TroveCreationParams<De
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  that | [Trove](./lib-base.trove.md) |  |
-|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
+|  that | [Trove](./lib-base.trove.md) | The Trove to recreate. |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) | Current borrowing rate. |
 
 <b>Returns:</b>
 

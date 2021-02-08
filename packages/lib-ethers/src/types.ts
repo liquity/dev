@@ -1,7 +1,14 @@
 import { BigNumberish } from "@ethersproject/bignumber";
+import { Provider } from "@ethersproject/abstract-provider";
+import { Signer } from "@ethersproject/abstract-signer";
 import { BlockTag, TransactionResponse, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { PopulatedTransaction } from "@ethersproject/contracts";
 
+/**
+ * Optional parameters taken by {@link EthersLiquity} transaction functions.
+ *
+ * @public
+ */
 export interface EthersTransactionOverrides {
   from?: string;
   nonce?: BigNumberish;
@@ -9,11 +16,32 @@ export interface EthersTransactionOverrides {
   gasPrice?: BigNumberish;
 }
 
+/**
+ * Optional parameters taken by {@link ReadableEthersLiquity} functions.
+ *
+ * @public
+ */
 export interface EthersCallOverrides {
   blockTag?: BlockTag;
 }
 
-// These type aliases mostly for documentation (so we can point to the Ethers documentation).
+// These type aliases are mostly for documentation (so we can point to the Ethers documentation).
+
+/**
+ * Alias of Ethers' abstract
+ * {@link https://docs.ethers.io/v5/api/providers/ | Provider} type.
+ *
+ * @public
+ */
+export type EthersProvider = Provider;
+
+/**
+ * Alias of Ethers' abstract
+ * {@link https://docs.ethers.io/v5/api/signer/ | Signer} type.
+ *
+ * @public
+ */
+export type EthersSigner = Signer;
 
 /**
  * Alias of Ethers'
@@ -34,7 +62,7 @@ export type EthersTransactionResponse = TransactionResponse;
 export type EthersTransactionReceipt = TransactionReceipt;
 
 /**
- * Alias of Ethers' PopulatedTransaction type, which implements
+ * Alias of Ethers' `PopulatedTransaction` type, which implements
  * {@link https://docs.ethers.io/v5/api/utils/transactions/#UnsignedTransaction | UnsignedTransaction}.
  *
  * @public

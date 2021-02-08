@@ -4,6 +4,8 @@
 
 ## EthersLiquityConnection.version property
 
+Version of the Liquity contracts (Git commit hash).
+
 <b>Signature:</b>
 
 ```typescript

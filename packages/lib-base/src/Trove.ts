@@ -36,7 +36,7 @@ export type _DebtChange<T> =
 export type _NoDebtChange = _NoLUSDBorrowing & _NoLUSDRepayment;
 
 /**
- * Parameters of Trove creation.
+ * Parameters of an {@link TransactableLiquity.openTrove | openTrove()} transaction.
  *
  * @remarks
  * The type parameter `T` specifies the allowed value type(s) of the particular `TroveCreationParams`
@@ -74,7 +74,7 @@ export type TroveCreationParams<T> = _CollateralDeposit<T> &
   _NoLUSDRepayment;
 
 /**
- * Parameters of Trove closure.
+ * Parameters of a {@link TransactableLiquity.closeTrove | closeTrove()} transaction.
  *
  * @remarks
  * The type parameter `T` specifies the allowed value type(s) of the particular `TroveClosureParams`
@@ -112,7 +112,7 @@ export type TroveClosureParams<T> = _CollateralWithdrawal<T> &
   _NoLUSDBorrowing;
 
 /**
- * Parameters of Trove adjustment.
+ * Parameters of an {@link TransactableLiquity.adjustTrove | adjustTrove()} transaction.
  *
  * @remarks
  * The type parameter `T` specifies the allowed value type(s) of the particular
@@ -199,9 +199,9 @@ export type TroveCreationError = "missingLiquidationReserve";
  * Represents the change between two Trove states.
  *
  * @remarks
- * Returned by {@link Trove.whatChanged | Trove.whatChanged()}.
+ * Returned by {@link Trove.whatChanged}.
  *
- * Passed as a parameter to {@link Trove.apply | Trove.apply()}.
+ * Passed as a parameter to {@link Trove.apply}.
  *
  * @public
  */
@@ -281,7 +281,10 @@ const NOMINAL_COLLATERAL_RATIO_PRECISION = Decimal.from(100);
  * @public
  */
 export class Trove {
+  /** Amount of native currency (e.g. Ether) collateralized. */
   readonly collateral: Decimal;
+
+  /** Amount of LUSD owed. */
   readonly debt: Decimal;
 
   /** @internal */
@@ -313,22 +316,49 @@ export class Trove {
     return this.collateral.mulDiv(NOMINAL_COLLATERAL_RATIO_PRECISION, this.debt);
   }
 
+  /** Calculate the Trove's collateralization ratio at a given price. */
   collateralRatio(price: Decimalish): Decimal {
     return this.collateral.mulDiv(price, this.debt);
   }
 
+  /**
+   * Whether the Trove is undercollateralized at a given price.
+   *
+   * @returns
+   * `true` if the Trove's collateralization ratio is less than the
+   * {@link MINIMUM_COLLATERAL_RATIO}.
+   */
   collateralRatioIsBelowMinimum(price: Decimalish): boolean {
     return this.collateralRatio(price).lt(MINIMUM_COLLATERAL_RATIO);
   }
 
+  /**
+   * Whether the collateralization ratio is less than the {@link CRITICAL_COLLATERAL_RATIO} at a
+   * given price.
+   *
+   * @example
+   * Can be used to check whether the Liquity protocol is in recovery mode by using it on the return
+   * value of {@link ReadableLiquity.getTotal | getTotal()}. For example:
+   *
+   * ```typescript
+   * const total = await liquity.getTotal();
+   * const price = await liquity.getPrice();
+   *
+   * if (total.collateralRatioIsBelowCritical(price)) {
+   *   // Recovery mode is active
+   * }
+   * ```
+   */
   collateralRatioIsBelowCritical(price: Decimalish): boolean {
     return this.collateralRatio(price).lt(CRITICAL_COLLATERAL_RATIO);
   }
 
+  /** Whether the Trove is sufficiently collateralized to be opened during recovery mode. */
   isOpenableInRecoveryMode(price: Decimalish): boolean {
     return this.collateralRatio(price).gte(CRITICAL_COLLATERAL_RATIO);
   }
 
+  /** @internal */
   toString(): string {
     return `{ collateral: ${this.collateral}, debt: ${this.debt} }`;
   }
@@ -393,6 +423,15 @@ export class Trove {
       : { withdrawCollateral: this.collateral.sub(collateral) };
   }
 
+  /**
+   * Calculate the difference between this Trove and another.
+   *
+   * @param that - The other Trove.
+   * @param borrowingRate - Borrowing rate to use when calculating a borrowed amount.
+   *
+   * @returns
+   * An object representing the change, or `undefined` if the Troves are equal.
+   */
   whatChanged(
     that: Trove,
     borrowingRate: Decimalish = MINIMUM_BORROWING_RATE
@@ -437,6 +476,12 @@ export class Trove {
         );
   }
 
+  /**
+   * Make a new Trove by applying a {@link TroveChange} to this Trove.
+   *
+   * @param change - The change to apply.
+   * @param borrowingRate - Borrowing rate to use when adding a borrowed amount to the Trove's debt.
+   */
   apply(
     change: TroveChange<Decimalish> | undefined,
     borrowingRate: Decimalish = MINIMUM_BORROWING_RATE
@@ -497,20 +542,47 @@ export class Trove {
     }
   }
 
+  /**
+   * Calculate the result of an {@link TransactableLiquity.openTrove | openTrove()} transaction.
+   *
+   * @param params - Parameters of the transaction.
+   * @param borrowingRate - Borrowing rate to use when calculating the Trove's debt.
+   */
   static create(params: TroveCreationParams<Decimalish>, borrowingRate?: Decimalish): Trove {
     return _emptyTrove.apply(troveCreation(params), borrowingRate);
   }
 
+  /**
+   * Calculate the parameters of an {@link TransactableLiquity.openTrove | openTrove()} transaction
+   * that will result in the given Trove.
+   *
+   * @param that - The Trove to recreate.
+   * @param borrowingRate - Current borrowing rate.
+   */
   static recreate(that: Trove, borrowingRate?: Decimalish): TroveCreationParams<Decimal> {
     const change = _emptyTrove.whatChanged(that, borrowingRate);
     assert(change?.type === "creation");
     return change.params;
   }
 
+  /**
+   * Calculate the result of an {@link TransactableLiquity.adjustTrove | adjustTrove()} transaction
+   * on this Trove.
+   *
+   * @param params - Parameters of the transaction.
+   * @param borrowingRate - Borrowing rate to use when adding to the Trove's debt.
+   */
   adjust(params: TroveAdjustmentParams<Decimalish>, borrowingRate?: Decimalish): Trove {
     return this.apply(troveAdjustment(params), borrowingRate);
   }
 
+  /**
+   * Calculate the parameters of an {@link TransactableLiquity.adjustTrove | adjustTrove()}
+   * transaction that will change this Trove into the given Trove.
+   *
+   * @param that - The desired result of the transaction.
+   * @param borrowingRate - Current borrowing rate.
+   */
   adjustTo(that: Trove, borrowingRate?: Decimalish): TroveAdjustmentParams<Decimal> {
     const change = this.whatChanged(that, borrowingRate);
     assert(change?.type === "adjustment");

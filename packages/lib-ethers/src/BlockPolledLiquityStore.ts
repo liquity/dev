@@ -1,7 +1,7 @@
 import { BigNumber } from "@ethersproject/bignumber";
-import { Provider } from "@ethersproject/abstract-provider";
 
 import { Decimal } from "@liquity/decimal";
+
 import {
   LiquityStoreState,
   LiquityStoreBaseState,
@@ -15,8 +15,8 @@ import {
 } from "@liquity/lib-base";
 
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
-import { EthersLiquityConnection, _requireProvider } from "./EthersLiquityConnection";
-import { EthersCallOverrides } from "./types";
+import { EthersLiquityConnection, _getProvider } from "./EthersLiquityConnection";
+import { EthersCallOverrides, EthersProvider } from "./types";
 
 /**
  * Extra state added to {@link @liquity/lib-base#LiquityStoreState} by
@@ -65,14 +65,14 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
   readonly connection: EthersLiquityConnection;
 
   private readonly _readable: ReadableEthersLiquity;
-  private readonly _provider: Provider;
+  private readonly _provider: EthersProvider;
 
   constructor(readable: ReadableEthersLiquity) {
     super();
 
     this.connection = readable.connection;
     this._readable = readable;
-    this._provider = _requireProvider(readable.connection);
+    this._provider = _getProvider(readable.connection);
   }
 
   private _get(blockTag?: number): Promise<LiquityStoreBaseState> {

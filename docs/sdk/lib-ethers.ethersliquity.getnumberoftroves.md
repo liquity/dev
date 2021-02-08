@@ -4,6 +4,8 @@
 
 ## EthersLiquity.getNumberOfTroves() method
 
+Get number of Troves that are currently open.
+
 <b>Signature:</b>
 
 ```typescript

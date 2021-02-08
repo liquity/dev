@@ -31,7 +31,7 @@ The constructor for this class is marked as internal. Third-party code should no
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [apply(change)](./lib-base.lqtystake.apply.md) |  | Apply a stake change to this <code>LQTYStake</code>. |
+|  [apply(change)](./lib-base.lqtystake.apply.md) |  | Apply a [LQTYStakeChange](./lib-base.lqtystakechange.md) to this <code>LQTYStake</code>. |
 |  [equals(that)](./lib-base.lqtystake.equals.md) |  | Compare to another instance of <code>LQTYStake</code>. |
 |  [whatChanged(thatStakedLQTY)](./lib-base.lqtystake.whatchanged.md) |  | Calculate the difference between this <code>LQTYStake</code> and <code>thatStakedLQTY</code>. |
 

@@ -4,6 +4,8 @@
 
 ## EthersLiquityConnection.addresses property
 
+A mapping of Liquity contracts' names to their addresses.
+
 <b>Signature:</b>
 
 ```typescript

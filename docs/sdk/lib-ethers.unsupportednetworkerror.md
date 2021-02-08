@@ -4,6 +4,8 @@
 
 ## UnsupportedNetworkError class
 
+Thrown when trying to connect to a network where Liquity is not deployed.
+
 <b>Signature:</b>
 
 ```typescript
@@ -13,11 +15,13 @@ export declare class UnsupportedNetworkError extends Error
 
 ## Remarks
 
+Thrown by [ReadableEthersLiquity.connect()](./lib-ethers.readableethersliquity.connect_1.md) and [EthersLiquity.connect()](./lib-ethers.ethersliquity.connect_1.md)<!-- -->.
+
 The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `UnsupportedNetworkError` class.
 
 ## Properties
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [unsupportedNetwork](./lib-ethers.unsupportednetworkerror.unsupportednetwork.md) |  | string \| number |  |
+|  [chainId](./lib-ethers.unsupportednetworkerror.chainid.md) |  | number | Chain ID of the unsupported network. |
 

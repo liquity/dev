@@ -1,7 +1,7 @@
 import { JsonFragment, LogDescription } from "@ethersproject/abi";
 import { BigNumber } from "@ethersproject/bignumber";
-import { Signer } from "@ethersproject/abstract-signer";
-import { Provider, Log } from "@ethersproject/abstract-provider";
+import { Log } from "@ethersproject/abstract-provider";
+
 import {
   Contract,
   ContractInterface,
@@ -49,6 +49,8 @@ import {
   StabilityPool,
   GasPool
 } from "../types";
+
+import { EthersProvider, EthersSigner } from "./types";
 
 export interface _TypedLogDescription<T> extends Omit<LogDescription, "args"> {
   args: T;
@@ -124,7 +126,7 @@ class LiquityContract extends Contract {
   constructor(
     addressOrName: string,
     contractInterface: ContractInterface,
-    signerOrProvider?: Signer | Provider
+    signerOrProvider?: EthersSigner | EthersProvider
   ) {
     super(addressOrName, contractInterface, signerOrProvider);
 
@@ -204,6 +206,7 @@ const mapLiquityContracts = <T, U>(
 
 /** @internal */
 export interface _LiquityDeploymentJSON {
+  readonly chainId: number;
   readonly addresses: _LiquityContractAddresses;
   readonly version: string;
   readonly deploymentDate: number;
@@ -213,7 +216,7 @@ export interface _LiquityDeploymentJSON {
 
 /** @internal */
 export const _connectToContracts = (
-  signerOrProvider: Signer | Provider,
+  signerOrProvider: EthersSigner | EthersProvider,
   { addresses, _priceFeedIsTestnet }: _LiquityDeploymentJSON
 ): _LiquityContracts => {
   const abi = getAbi(_priceFeedIsTestnet);

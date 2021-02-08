@@ -112,7 +112,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
         <Box sx={{ fontSize: 0 }}>
           Contracts version: <GitHubCommit>{contractsVersion}</GitHubCommit>
         </Box>
-        <Box sx={{ fontSize: 0 }}>Deployed: {new Date(deploymentDate).toLocaleString()}</Box>
+        <Box sx={{ fontSize: 0 }}>Deployed: {deploymentDate.toLocaleString()}</Box>
         <Box sx={{ fontSize: 0 }}>
           Frontend version:{" "}
           {process.env.NODE_ENV === "development" ? (

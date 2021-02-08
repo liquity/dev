@@ -62,9 +62,9 @@
 |  [PendingReceipt](./lib-base.pendingreceipt.md) | Indicates that the transaction hasn't been mined yet. |
 |  [StabilityDepositChange](./lib-base.stabilitydepositchange.md) | Represents the change between two Stability Deposit states. |
 |  [SuccessfulReceipt](./lib-base.successfulreceipt.md) | Indicates that the transaction has succeeded. |
-|  [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md) | Parameters of Trove adjustment. |
+|  [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md) | Parameters of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) transaction. |
 |  [TroveChange](./lib-base.trovechange.md) | Represents the change between two Trove states. |
-|  [TroveClosureParams](./lib-base.troveclosureparams.md) | Parameters of Trove closure. |
+|  [TroveClosureParams](./lib-base.troveclosureparams.md) | Parameters of a [closeTrove()](./lib-base.transactableliquity.closetrove.md) transaction. |
 |  [TroveCreationError](./lib-base.trovecreationerror.md) | Describes why a Trove could not be created. |
-|  [TroveCreationParams](./lib-base.trovecreationparams.md) | Parameters of Trove creation. |
+|  [TroveCreationParams](./lib-base.trovecreationparams.md) | Parameters of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction. |
 

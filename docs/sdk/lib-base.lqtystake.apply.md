@@ -4,7 +4,7 @@
 
 ## LQTYStake.apply() method
 
-Apply a stake change to this `LQTYStake`<!-- -->.
+Apply a [LQTYStakeChange](./lib-base.lqtystakechange.md) to this `LQTYStake`<!-- -->.
 
 <b>Signature:</b>
 

@@ -9,7 +9,7 @@ import {
   BlockPolledLiquityStore,
   EthersLiquity,
   EthersLiquityWithStore,
-  _connectToLiquity
+  _connectByChainId
 } from "@liquity/lib-ethers";
 
 import { LiquityFrontendConfig, getConfig } from "../config";
@@ -46,10 +46,9 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   const connection = useMemo(() => {
     if (config && provider && account && chainId) {
       try {
-        return _connectToLiquity(provider.getSigner(account), {
+        return _connectByChainId(provider, provider.getSigner(account), chainId, {
           userAddress: account,
           frontendTag: config.frontendTag,
-          network: chainId,
           useStore: "blockPolled"
         });
       } catch {}

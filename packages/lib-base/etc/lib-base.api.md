@@ -403,23 +403,16 @@ export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = 
 export class StabilityDeposit {
     // @internal
     constructor(initialLUSD?: Decimal, currentLUSD?: Decimal, collateralGain?: Decimal, lqtyReward?: Decimal);
-    // (undocumented)
     apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
-    // (undocumented)
     readonly collateralGain: Decimal;
-    // (undocumented)
     readonly currentLUSD: Decimal;
-    // (undocumented)
     equals(that: StabilityDeposit): boolean;
-    // (undocumented)
     readonly initialLUSD: Decimal;
     // (undocumented)
     get isEmpty(): boolean;
-    // (undocumented)
     readonly lqtyReward: Decimal;
-    // (undocumented)
+    // @internal (undocumented)
     toString(): string;
-    // (undocumented)
     whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined;
 }
 
@@ -501,36 +494,25 @@ export class Trove {
     addCollateral(collateral: Decimalish): Trove;
     // (undocumented)
     addDebt(debt: Decimalish): Trove;
-    // (undocumented)
     adjust(params: TroveAdjustmentParams<Decimalish>, borrowingRate?: Decimalish): Trove;
-    // (undocumented)
     adjustTo(that: Trove, borrowingRate?: Decimalish): TroveAdjustmentParams<Decimal>;
-    // (undocumented)
     apply(change: TroveChange<Decimalish> | undefined, borrowingRate?: Decimalish): Trove;
-    // (undocumented)
     readonly collateral: Decimal;
-    // (undocumented)
     collateralRatio(price: Decimalish): Decimal;
-    // (undocumented)
     collateralRatioIsBelowCritical(price: Decimalish): boolean;
-    // (undocumented)
     collateralRatioIsBelowMinimum(price: Decimalish): boolean;
-    // (undocumented)
     static create(params: TroveCreationParams<Decimalish>, borrowingRate?: Decimalish): Trove;
-    // (undocumented)
     readonly debt: Decimal;
     // (undocumented)
     equals(that: Trove): boolean;
     // (undocumented)
     get isEmpty(): boolean;
-    // (undocumented)
     isOpenableInRecoveryMode(price: Decimalish): boolean;
     // (undocumented)
     multiply(multiplier: Decimalish): Trove;
     get netDebt(): Decimal;
     // @internal (undocumented)
     get _nominalCollateralRatio(): Decimal;
-    // (undocumented)
     static recreate(that: Trove, borrowingRate?: Decimalish): TroveCreationParams<Decimal>;
     // (undocumented)
     setCollateral(collateral: Decimalish): Trove;
@@ -542,9 +524,8 @@ export class Trove {
     subtractCollateral(collateral: Decimalish): Trove;
     // (undocumented)
     subtractDebt(debt: Decimalish): Trove;
-    // (undocumented)
+    // @internal (undocumented)
     toString(): string;
-    // (undocumented)
     whatChanged(that: Trove, borrowingRate?: Decimalish): TroveChange<Decimal> | undefined;
 }
 

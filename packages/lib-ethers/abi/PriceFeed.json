@@ -72,7 +72,7 @@
   },
   {
     "inputs": [],
-    "name": "MAX_PRICE_DEVIATION_FROM_PREVIOUS",
+    "name": "MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND",
     "outputs": [
       {
         "internalType": "uint256",
@@ -85,7 +85,7 @@
   },
   {
     "inputs": [],
-    "name": "MAX_PRICE_DIFFERENCE_FOR_RETURN",
+    "name": "MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES",
     "outputs": [
       {
         "internalType": "uint256",

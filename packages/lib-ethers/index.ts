@@ -1,5 +1,5 @@
 export {
-  _connectToLiquity,
+  _connectByChainId,
   EthersLiquityConnection,
   EthersLiquityConnectionOptionalParams,
   EthersLiquityStoreOption,

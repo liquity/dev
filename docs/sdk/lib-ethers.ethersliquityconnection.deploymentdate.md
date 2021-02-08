@@ -4,8 +4,10 @@
 
 ## EthersLiquityConnection.deploymentDate property
 
+Date when the Liquity contracts were deployed.
+
 <b>Signature:</b>
 
 ```typescript
-readonly deploymentDate: number;
+readonly deploymentDate: Date;
 ```

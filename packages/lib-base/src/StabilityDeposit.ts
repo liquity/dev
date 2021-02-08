@@ -15,9 +15,16 @@ export type StabilityDepositChange<T> =
  * @public
  */
 export class StabilityDeposit {
+  /** Amount of LUSD in the Stability Deposit at the time of the last direct modification. */
   readonly initialLUSD: Decimal;
+
+  /** Amount of LUSD left in the Stability Deposit. */
   readonly currentLUSD: Decimal;
+
+  /** Amount of native currency (e.g. Ether) received in exchange for the used-up LUSD. */
   readonly collateralGain: Decimal;
+
+  /** Amount of LQTY rewarded since the last modification of the Stability Deposit. */
   readonly lqtyReward: Decimal;
 
   /** @internal */
@@ -46,6 +53,7 @@ export class StabilityDeposit {
     );
   }
 
+  /** @internal */
   toString(): string {
     return (
       `{ initialLUSD: ${this.initialLUSD}` +
@@ -55,6 +63,9 @@ export class StabilityDeposit {
     );
   }
 
+  /**
+   * Compare to another instance of `StabilityDeposit`.
+   */
   equals(that: StabilityDeposit): boolean {
     return (
       this.initialLUSD.eq(that.initialLUSD) &&
@@ -64,6 +75,11 @@ export class StabilityDeposit {
     );
   }
 
+  /**
+   * Calculate the difference between the `currentLUSD` in this Stability Deposit and `thatLUSD`.
+   *
+   * @returns An object representing the change, or `undefined` if the deposited amounts are equal.
+   */
   whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined {
     thatLUSD = Decimal.from(thatLUSD);
 
@@ -76,6 +92,11 @@ export class StabilityDeposit {
     }
   }
 
+  /**
+   * Apply a {@link StabilityDepositChange} to this Stability Deposit.
+   *
+   * @returns The new deposited LUSD amount.
+   */
   apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal {
     if (!change) {
       return this.currentLUSD;

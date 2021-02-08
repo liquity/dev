@@ -4,6 +4,8 @@
 
 ## StabilityDeposit.initialLUSD property
 
+Amount of LUSD in the Stability Deposit at the time of the last direct modification.
+
 <b>Signature:</b>
 
 ```typescript

@@ -4,6 +4,8 @@
 
 ## EthersLiquityConnection interface
 
+Information about a connection to the Liquity protocol.
+
 <b>Signature:</b>
 
 ```typescript
@@ -11,12 +13,20 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
 ```
 <b>Extends:</b> [EthersLiquityConnectionOptionalParams](./lib-ethers.ethersliquityconnectionoptionalparams.md)
 
+## Remarks
+
+Provided for debugging / informational purposes.
+
+Exposed through [ReadableEthersLiquity.connection](./lib-ethers.readableethersliquity.connection.md) and [EthersLiquity.connection](./lib-ethers.ethersliquity.connection.md)<!-- -->.
+
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [addresses](./lib-ethers.ethersliquityconnection.addresses.md) | Record&lt;string, string&gt; |  |
-|  [deploymentDate](./lib-ethers.ethersliquityconnection.deploymentdate.md) | number |  |
-|  [signerOrProvider](./lib-ethers.ethersliquityconnection.signerorprovider.md) | Signer \| Provider |  |
-|  [version](./lib-ethers.ethersliquityconnection.version.md) | string |  |
+|  [addresses](./lib-ethers.ethersliquityconnection.addresses.md) | Record&lt;string, string&gt; | A mapping of Liquity contracts' names to their addresses. |
+|  [chainId](./lib-ethers.ethersliquityconnection.chainid.md) | number | Chain ID of the connected network. |
+|  [deploymentDate](./lib-ethers.ethersliquityconnection.deploymentdate.md) | Date | Date when the Liquity contracts were deployed. |
+|  [provider](./lib-ethers.ethersliquityconnection.provider.md) | [EthersProvider](./lib-ethers.ethersprovider.md) | Ethers <code>Provider</code> used for connecting to the network. |
+|  [signer?](./lib-ethers.ethersliquityconnection.signer.md) | [EthersSigner](./lib-ethers.etherssigner.md) | <i>(Optional)</i> Ethers <code>Signer</code> used for sending transactions. |
+|  [version](./lib-ethers.ethersliquityconnection.version.md) | string | Version of the Liquity contracts (Git commit hash). |
 

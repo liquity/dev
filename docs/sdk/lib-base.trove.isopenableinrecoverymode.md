@@ -4,6 +4,8 @@
 
 ## Trove.isOpenableInRecoveryMode() method
 
+Whether the Trove is sufficiently collateralized to be opened during recovery mode.
+
 <b>Signature:</b>
 
 ```typescript

@@ -4,6 +4,8 @@
 
 ## EthersTransactionOverrides interface
 
+Optional parameters taken by [EthersLiquity](./lib-ethers.ethersliquity.md) transaction functions.
+
 <b>Signature:</b>
 
 ```typescript

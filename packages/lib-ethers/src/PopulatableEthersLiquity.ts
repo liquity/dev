@@ -42,7 +42,7 @@ import {
   EthersLiquityConnection,
   _getContracts,
   _requireAddress,
-  _requireProvider,
+  _getProvider,
   _requireSigner
 } from "./EthersLiquityConnection";
 
@@ -145,14 +145,14 @@ export class SentEthersLiquityTransaction<T = unknown>
   /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.getReceipt} */
   async getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>> {
     return this._receiptFrom(
-      await _requireProvider(this._connection).getTransactionReceipt(this.rawSentTransaction.hash)
+      await _getProvider(this._connection).getTransactionReceipt(this.rawSentTransaction.hash)
     );
   }
 
   /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.waitForReceipt} */
   async waitForReceipt(): Promise<MinedReceipt<EthersTransactionReceipt, T>> {
     const receipt = this._receiptFrom(
-      await _requireProvider(this._connection).waitForTransaction(this.rawSentTransaction.hash)
+      await _getProvider(this._connection).waitForTransaction(this.rawSentTransaction.hash)
     );
 
     assert(receipt.status !== "pending");

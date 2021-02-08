@@ -4,8 +4,17 @@
 
 ## EthersLiquityConnectionOptionalParams.userAddress property
 
+Address whose Trove, Stability Deposit, LQTY Stake and balances will be read by default.
+
 <b>Signature:</b>
 
 ```typescript
 readonly userAddress?: string;
 ```
+
+## Remarks
+
+For example [getTrove(address?)](./lib-ethers.ethersliquity.gettrove.md) will return the Trove owned by `userAddress` when the `address` parameter is omitted.
+
+Should be omitted when connecting through a [Signer](./lib-ethers.etherssigner.md)<!-- -->. Instead `userAddress` will be automatically determined from the `Signer`<!-- -->.
+

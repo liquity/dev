@@ -270,11 +270,12 @@ export const deployAndSetupContracts = async (
   silent || (console.log("Deploying contracts..."), console.log());
 
   const deployment: _LiquityDeploymentJSON = {
-    _isDev,
-    _priceFeedIsTestnet,
-    addresses: await deployContracts(deployer, getContractFactory, _priceFeedIsTestnet, overrides),
+    chainId: (await deployer.provider.getNetwork()).chainId,
+    version: "unknown",
     deploymentDate: new Date().getTime(),
-    version: "unknown"
+    addresses: await deployContracts(deployer, getContractFactory, _priceFeedIsTestnet, overrides),
+    _priceFeedIsTestnet,
+    _isDev
   };
 
   const contracts = _connectToContracts(deployer, deployment);

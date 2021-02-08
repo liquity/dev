@@ -60,6 +60,8 @@ export class LQTYStake {
 
   /**
    * Calculate the difference between this `LQTYStake` and `thatStakedLQTY`.
+   *
+   * @returns An object representing the change, or `undefined` if the staked amounts are equal.
    */
   whatChanged(thatStakedLQTY: Decimalish): LQTYStakeChange<Decimal> | undefined {
     thatStakedLQTY = Decimal.from(thatStakedLQTY);
@@ -77,7 +79,7 @@ export class LQTYStake {
   }
 
   /**
-   * Apply a stake change to this `LQTYStake`.
+   * Apply a {@link LQTYStakeChange} to this `LQTYStake`.
    *
    * @returns The new staked LQTY amount.
    */

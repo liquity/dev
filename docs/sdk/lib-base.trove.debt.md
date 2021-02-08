@@ -4,6 +4,8 @@
 
 ## Trove.debt property
 
+Amount of LUSD owed.
+
 <b>Signature:</b>
 
 ```typescript

@@ -4,6 +4,8 @@
 
 ## StabilityDeposit.apply() method
 
+Apply a [StabilityDepositChange](./lib-base.stabilitydepositchange.md) to this Stability Deposit.
+
 <b>Signature:</b>
 
 ```typescript
@@ -19,4 +21,6 @@ apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
 <b>Returns:</b>
 
 [Decimal](./decimal.decimal.md)
+
+The new deposited LUSD amount.
 

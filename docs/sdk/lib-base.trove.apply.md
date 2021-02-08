@@ -4,6 +4,8 @@
 
 ## Trove.apply() method
 
+Make a new Trove by applying a [TroveChange](./lib-base.trovechange.md) to this Trove.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,8 +16,8 @@ apply(change: TroveChange<Decimalish> | undefined, borrowingRate?: Decimalish): 
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  change | [TroveChange](./lib-base.trovechange.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; \| undefined |  |
-|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
+|  change | [TroveChange](./lib-base.trovechange.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; \| undefined | The change to apply. |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) | Borrowing rate to use when adding a borrowed amount to the Trove's debt. |
 
 <b>Returns:</b>
 

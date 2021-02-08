@@ -4,6 +4,8 @@
 
 ## Trove.collateralRatioIsBelowMinimum() method
 
+Whether the Trove is undercollateralized at a given price.
+
 <b>Signature:</b>
 
 ```typescript
@@ -19,4 +21,6 @@ collateralRatioIsBelowMinimum(price: Decimalish): boolean;
 <b>Returns:</b>
 
 boolean
+
+`true` if the Trove's collateralization ratio is less than the [MINIMUM\_COLLATERAL\_RATIO](./lib-base.minimum_collateral_ratio.md)<!-- -->.
 

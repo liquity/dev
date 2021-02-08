@@ -76,7 +76,7 @@ export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = 
  * Indicates that the transaction hasn't been mined yet.
  *
  * @remarks
- * Returned by {@link SentLiquityTransaction.getReceipt | SentLiquityTransaction.getReceipt()}
+ * Returned by {@link SentLiquityTransaction.getReceipt}.
  *
  * @public
  */
@@ -91,8 +91,8 @@ export const _pendingReceipt: PendingReceipt = { status: "pending" };
  * @remarks
  * The `rawReceipt` property is an implementation-specific transaction receipt object.
  *
- * Returned by {@link SentLiquityTransaction.getReceipt | SentLiquityTransaction.getReceipt()} and
- * {@link SentLiquityTransaction.waitForReceipt | SentLiquityTransaction.waitForReceipt()}.
+ * Returned by {@link SentLiquityTransaction.getReceipt} and
+ * {@link SentLiquityTransaction.waitForReceipt}.
  *
  * @public
  */
@@ -114,8 +114,8 @@ export const _failedReceipt = <R>(rawReceipt: R): FailedReceipt<R> => ({
  * See the return types of {@link TransactableLiquity} functions for the exact contents of `details`
  * for each type of Liquity transaction.
  *
- * Returned by {@link SentLiquityTransaction.getReceipt | SentLiquityTransaction.getReceipt()} and
- * {@link SentLiquityTransaction.waitForReceipt | SentLiquityTransaction.waitForReceipt()}.
+ * Returned by {@link SentLiquityTransaction.getReceipt} and
+ * {@link SentLiquityTransaction.waitForReceipt}.
  *
  * @public
  */

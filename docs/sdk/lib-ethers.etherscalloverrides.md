@@ -4,6 +4,8 @@
 
 ## EthersCallOverrides interface
 
+Optional parameters taken by [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) functions.
+
 <b>Signature:</b>
 
 ```typescript

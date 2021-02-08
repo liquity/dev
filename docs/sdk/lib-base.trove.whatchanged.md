@@ -4,6 +4,8 @@
 
 ## Trove.whatChanged() method
 
+Calculate the difference between this Trove and another.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,10 +16,12 @@ whatChanged(that: Trove, borrowingRate?: Decimalish): TroveChange<Decimal> | und
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  that | [Trove](./lib-base.trove.md) |  |
-|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
+|  that | [Trove](./lib-base.trove.md) | The other Trove. |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) | Borrowing rate to use when calculating a borrowed amount. |
 
 <b>Returns:</b>
 
 [TroveChange](./lib-base.trovechange.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt; \| undefined
+
+An object representing the change, or `undefined` if the Troves are equal.
 

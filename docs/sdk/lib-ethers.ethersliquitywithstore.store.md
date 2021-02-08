@@ -4,6 +4,8 @@
 
 ## EthersLiquityWithStore.store property
 
+An object that implements LiquityStore.
+
 <b>Signature:</b>
 
 ```typescript

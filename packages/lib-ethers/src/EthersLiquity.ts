@@ -1,6 +1,3 @@
-import { Provider } from "@ethersproject/abstract-provider";
-import { Signer } from "@ethersproject/abstract-signer";
-
 import { Decimal, Decimalish } from "@liquity/decimal";
 
 import {
@@ -29,12 +26,19 @@ import {
 import {
   EthersLiquityConnection,
   EthersLiquityConnectionOptionalParams,
-  _connectWithProvider,
-  _connectWithSigner,
+  EthersLiquityStoreOption,
+  _connect,
   _usingStore
 } from "./EthersLiquityConnection";
 
-import { EthersCallOverrides, EthersTransactionOverrides, EthersTransactionReceipt } from "./types";
+import {
+  EthersCallOverrides,
+  EthersProvider,
+  EthersSigner,
+  EthersTransactionOverrides,
+  EthersTransactionReceipt
+} from "./types";
+
 import { PopulatableEthersLiquity, SentEthersLiquityTransaction } from "./PopulatableEthersLiquity";
 import { ReadableEthersLiquity, ReadableEthersLiquityWithStore } from "./ReadableEthersLiquity";
 import { SendableEthersLiquity } from "./SendableEthersLiquity";
@@ -69,8 +73,13 @@ const waitForSuccess = async <T>(tx: SentEthersLiquityTransaction<T>) => {
  * @public
  */
 export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity {
+  /** Information about the connection to the Liquity protocol. */
   readonly connection: EthersLiquityConnection;
+
+  /** Can be used to create populated (unsigned) transactions. */
   readonly populate: PopulatableEthersLiquity;
+
+  /** Can be used to send transactions without waiting for them to be mined. */
   readonly send: SendableEthersLiquity;
 
   private _readable: ReadableEthersLiquity;
@@ -94,52 +103,58 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
   /** @internal */
   static _from(connection: EthersLiquityConnection): EthersLiquity {
     if (_usingStore(connection)) {
-      return new EthersLiquityWithStore(ReadableEthersLiquity._from(connection));
+      return new _EthersLiquityWithStore(ReadableEthersLiquity._from(connection));
     } else {
       return new EthersLiquity(ReadableEthersLiquity._from(connection));
     }
   }
 
-  static connectWithProvider(
-    provider: Provider,
+  /** @internal */
+  static connect(
+    signerOrProvider: EthersSigner | EthersProvider,
     optionalParams: EthersLiquityConnectionOptionalParams & { useStore: "blockPolled" }
-  ): EthersLiquityWithStore<BlockPolledLiquityStore>;
+  ): Promise<EthersLiquityWithStore<BlockPolledLiquityStore>>;
 
-  static connectWithProvider(
-    provider: Provider,
+  /**
+   * Connect to the Liquity protocol and create an `EthersLiquity` object.
+   *
+   * @param signerOrProvider - Ethers `Signer` or `Provider` to use for connecting to the Ethereum
+   *                           network.
+   * @param optionalParams - Optional parameters that can be used to customize the connection.
+   */
+  static connect(
+    signerOrProvider: EthersSigner | EthersProvider,
     optionalParams?: EthersLiquityConnectionOptionalParams
-  ): EthersLiquity;
+  ): Promise<EthersLiquity>;
 
-  static connectWithProvider(
-    provider: Provider,
+  static async connect(
+    signerOrProvider: EthersSigner | EthersProvider,
     optionalParams?: EthersLiquityConnectionOptionalParams
-  ): EthersLiquity {
-    return EthersLiquity._from(_connectWithProvider(provider, optionalParams));
+  ): Promise<EthersLiquity> {
+    return EthersLiquity._from(await _connect(signerOrProvider, optionalParams));
   }
 
-  static connectWithSigner(
-    provider: Signer,
-    optionalParams: EthersLiquityConnectionOptionalParams & { useStore: "blockPolled" }
-  ): Promise<ReadableEthersLiquityWithStore<BlockPolledLiquityStore>>;
+  /**
+   * Check whether this `EthersLiquity` is an {@link EthersLiquityWithStore}.
+   */
+  hasStore(): this is EthersLiquityWithStore;
 
-  static connectWithSigner(
-    provider: Signer,
-    optionalParams?: EthersLiquityConnectionOptionalParams
-  ): Promise<ReadableEthersLiquity>;
+  /**
+   * Check whether this `EthersLiquity` is an
+   * {@link EthersLiquityWithStore}\<{@link BlockPolledLiquityStore}\>.
+   */
+  hasStore(store: "blockPolled"): this is EthersLiquityWithStore<BlockPolledLiquityStore>;
 
-  static async connectWithSigner(
-    signer: Signer,
-    optionalParams?: EthersLiquityConnectionOptionalParams
-  ): Promise<ReadableEthersLiquity> {
-    return EthersLiquity._from(await _connectWithSigner(signer, optionalParams));
+  hasStore(): boolean {
+    return false;
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getTotalRedistributed} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotalRedistributed} */
   getTotalRedistributed(overrides?: EthersCallOverrides): Promise<Trove> {
     return this._readable.getTotalRedistributed(overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getTroveBeforeRedistribution} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTroveBeforeRedistribution} */
   getTroveBeforeRedistribution(
     address?: string,
     overrides?: EthersCallOverrides
@@ -147,52 +162,52 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getTroveBeforeRedistribution(address, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getTrove} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTrove} */
   getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove> {
     return this._readable.getTrove(address, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getNumberOfTroves} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getNumberOfTroves} */
   getNumberOfTroves(overrides?: EthersCallOverrides): Promise<number> {
     return this._readable.getNumberOfTroves(overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getPrice} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getPrice} */
   getPrice(overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getPrice(overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getTotal} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotal} */
   getTotal(overrides?: EthersCallOverrides): Promise<Trove> {
     return this._readable.getTotal(overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getStabilityDeposit} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getStabilityDeposit} */
   getStabilityDeposit(address?: string, overrides?: EthersCallOverrides): Promise<StabilityDeposit> {
     return this._readable.getStabilityDeposit(address, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getLUSDInStabilityPool} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLUSDInStabilityPool} */
   getLUSDInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getLUSDInStabilityPool(overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getLUSDBalance} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLUSDBalance} */
   getLUSDBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getLUSDBalance(address, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getLQTYBalance} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLQTYBalance} */
   getLQTYBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getLQTYBalance(address, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getCollateralSurplusBalance} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getCollateralSurplusBalance} */
   getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getCollateralSurplusBalance(address, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getLastTroves} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLastTroves} */
   getLastTroves(
     startIdx: number,
     numberOfTroves: number,
@@ -201,7 +216,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getLastTroves(startIdx, numberOfTroves, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getFirstTroves} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFirstTroves} */
   getFirstTroves(
     startIdx: number,
     numberOfTroves: number,
@@ -210,22 +225,22 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getFirstTroves(startIdx, numberOfTroves, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getFees} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */
   getFees(overrides?: EthersCallOverrides): Promise<Fees> {
     return this._readable.getFees(overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getLQTYStake} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLQTYStake} */
   getLQTYStake(address?: string, overrides?: EthersCallOverrides): Promise<LQTYStake> {
     return this._readable.getLQTYStake(address, overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getTotalStakedLQTY} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotalStakedLQTY} */
   getTotalStakedLQTY(overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getTotalStakedLQTY(overrides);
   }
 
-  /** {@inheritDoc ReadableEthersLiquity.getFrontendStatus} */
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFrontendStatus} */
   getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus> {
     return this._readable.getFrontendStatus(address, overrides);
   }
@@ -492,13 +507,29 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
   }
 }
 
-export class EthersLiquityWithStore<T extends LiquityStore> extends EthersLiquity {
+/**
+ * Variant of {@link EthersLiquity} that exposes a {@link @liquity/lib-base#LiquityStore}.
+ *
+ * @public
+ */
+export interface EthersLiquityWithStore<T extends LiquityStore = LiquityStore>
+  extends EthersLiquity {
+  /** An object that implements LiquityStore. */
+  readonly store: T;
+}
+
+class _EthersLiquityWithStore<T extends LiquityStore = LiquityStore>
+  extends EthersLiquity
+  implements EthersLiquityWithStore<T> {
   readonly store: T;
 
-  /** @internal */
   constructor(readable: ReadableEthersLiquityWithStore<T>) {
     super(readable);
 
     this.store = readable.store;
+  }
+
+  hasStore(store?: EthersLiquityStoreOption): boolean {
+    return store === undefined || store === this.connection.useStore;
   }
 }

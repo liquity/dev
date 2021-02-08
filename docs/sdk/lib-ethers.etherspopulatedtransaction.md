@@ -4,7 +4,7 @@
 
 ## EthersPopulatedTransaction type
 
-Alias of Ethers' PopulatedTransaction type, which implements [UnsignedTransaction](https://docs.ethers.io/v5/api/utils/transactions/#UnsignedTransaction)<!-- -->.
+Alias of Ethers' `PopulatedTransaction` type, which implements [UnsignedTransaction](https://docs.ethers.io/v5/api/utils/transactions/#UnsignedTransaction)<!-- -->.
 
 <b>Signature:</b>
 

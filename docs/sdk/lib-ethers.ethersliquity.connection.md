@@ -4,6 +4,8 @@
 
 ## EthersLiquity.connection property
 
+Information about the connection to the Liquity protocol.
+
 <b>Signature:</b>
 
 ```typescript

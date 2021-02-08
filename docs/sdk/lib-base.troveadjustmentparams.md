@@ -4,7 +4,7 @@
 
 ## TroveAdjustmentParams type
 
-Parameters of Trove adjustment.
+Parameters of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) transaction.
 
 <b>Signature:</b>
 

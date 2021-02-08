@@ -4,6 +4,8 @@
 
 ## StabilityDeposit.equals() method
 
+Compare to another instance of `StabilityDeposit`<!-- -->.
+
 <b>Signature:</b>
 
 ```typescript

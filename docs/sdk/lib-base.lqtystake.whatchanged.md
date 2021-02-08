@@ -22,3 +22,5 @@ whatChanged(thatStakedLQTY: Decimalish): LQTYStakeChange<Decimal> | undefined;
 
 [LQTYStakeChange](./lib-base.lqtystakechange.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt; \| undefined
 
+An object representing the change, or `undefined` if the staked amounts are equal.
+

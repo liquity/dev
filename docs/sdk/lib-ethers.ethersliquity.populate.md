@@ -4,6 +4,8 @@
 
 ## EthersLiquity.populate property
 
+Can be used to create populated (unsigned) transactions.
+
 <b>Signature:</b>
 
 ```typescript

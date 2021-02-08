@@ -4,6 +4,8 @@
 
 ## Trove.collateralRatioIsBelowCritical() method
 
+Whether the collateralization ratio is less than the [CRITICAL\_COLLATERAL\_RATIO](./lib-base.critical_collateral_ratio.md) at a given price.
+
 <b>Signature:</b>
 
 ```typescript
@@ -19,4 +21,18 @@ collateralRatioIsBelowCritical(price: Decimalish): boolean;
 <b>Returns:</b>
 
 boolean
+
+## Example
+
+Can be used to check whether the Liquity protocol is in recovery mode by using it on the return value of [getTotal()](./lib-base.readableliquity.gettotal.md)<!-- -->. For example:
+
+```typescript
+const total = await liquity.getTotal();
+const price = await liquity.getPrice();
+
+if (total.collateralRatioIsBelowCritical(price)) {
+  // Recovery mode is active
+}
+
+```
 

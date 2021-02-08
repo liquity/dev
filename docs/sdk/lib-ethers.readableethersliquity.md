@@ -27,10 +27,7 @@ The constructor for this class is marked as internal. Third-party code should no
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [connectWithProvider(provider, optionalParams)](./lib-ethers.readableethersliquity.connectwithprovider.md) | <code>static</code> |  |
-|  [connectWithProvider(provider, optionalParams)](./lib-ethers.readableethersliquity.connectwithprovider_1.md) | <code>static</code> |  |
-|  [connectWithSigner(provider, optionalParams)](./lib-ethers.readableethersliquity.connectwithsigner.md) | <code>static</code> |  |
-|  [connectWithSigner(provider, optionalParams)](./lib-ethers.readableethersliquity.connectwithsigner_1.md) | <code>static</code> |  |
+|  [connect(signerOrProvider, optionalParams)](./lib-ethers.readableethersliquity.connect_1.md) | <code>static</code> |  |
 |  [getCollateralSurplusBalance(address, overrides)](./lib-ethers.readableethersliquity.getcollateralsurplusbalance.md) |  | Get the amount of leftover collateral available for withdrawal by an address. |
 |  [getFees(overrides)](./lib-ethers.readableethersliquity.getfees.md) |  | Get a calculator for current fees. |
 |  [getFirstTroves(startIdx, numberOfTroves, overrides)](./lib-ethers.readableethersliquity.getfirsttroves.md) |  | Get a slice from the list of Troves sorted by collateral ratio in descending order. |
@@ -48,4 +45,6 @@ The constructor for this class is marked as internal. Third-party code should no
 |  [getTotalStakedLQTY(overrides)](./lib-ethers.readableethersliquity.gettotalstakedlqty.md) |  | Get the total amount of LQTY currently staked. |
 |  [getTrove(address, overrides)](./lib-ethers.readableethersliquity.gettrove.md) |  | Get the current state of a Trove. |
 |  [getTroveBeforeRedistribution(address, overrides)](./lib-ethers.readableethersliquity.gettrovebeforeredistribution.md) |  | Get a Trove in its state after the last direct modification. |
+|  [hasStore()](./lib-ethers.readableethersliquity.hasstore.md) |  | Check whether this <code>ReadableEthersLiquity</code> is a [ReadableEthersLiquityWithStore](./lib-ethers.readableethersliquitywithstore.md)<!-- -->. |
+|  [hasStore(store)](./lib-ethers.readableethersliquity.hasstore_1.md) |  | Check whether this <code>ReadableEthersLiquity</code> is a [ReadableEthersLiquityWithStore](./lib-ethers.readableethersliquitywithstore.md)<!-- -->&lt;[BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->&gt;<!-- -->. |
 

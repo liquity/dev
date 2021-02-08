@@ -2,22 +2,20 @@
 
 [Home](./index.md) &gt; [@liquity/lib-ethers](./lib-ethers.md) &gt; [EthersLiquityWithStore](./lib-ethers.ethersliquitywithstore.md)
 
-## EthersLiquityWithStore class
+## EthersLiquityWithStore interface
+
+Variant of [EthersLiquity](./lib-ethers.ethersliquity.md) that exposes a [LiquityStore](./lib-base.liquitystore.md)<!-- -->.
 
 <b>Signature:</b>
 
 ```typescript
-export declare class EthersLiquityWithStore<T extends LiquityStore> extends EthersLiquity 
+export interface EthersLiquityWithStore<T extends LiquityStore = LiquityStore> extends EthersLiquity 
 ```
 <b>Extends:</b> [EthersLiquity](./lib-ethers.ethersliquity.md)
 
-## Remarks
-
-The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `EthersLiquityWithStore` class.
-
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [store](./lib-ethers.ethersliquitywithstore.store.md) |  | T |  |
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [store](./lib-ethers.ethersliquitywithstore.store.md) | T | An object that implements LiquityStore. |
 

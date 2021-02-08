@@ -4,6 +4,8 @@
 
 ## StabilityDeposit.lqtyReward property
 
+Amount of LQTY rewarded since the last modification of the Stability Deposit.
+
 <b>Signature:</b>
 
 ```typescript

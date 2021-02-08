@@ -4,6 +4,8 @@
 
 ## Trove.create() method
 
+Calculate the result of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,8 +16,8 @@ static create(params: TroveCreationParams<Decimalish>, borrowingRate?: Decimalis
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; |  |
-|  borrowingRate | [Decimalish](./decimal.decimalish.md) |  |
+|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; | Parameters of the transaction. |
+|  borrowingRate | [Decimalish](./decimal.decimalish.md) | Borrowing rate to use when calculating the Trove's debt. |
 
 <b>Returns:</b>
 
