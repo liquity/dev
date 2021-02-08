@@ -282,7 +282,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         uint initialDeposit = deposits[msg.sender].initialValue;
 
-        _triggerLQTYIssuance();
+        ICommunityIssuance communityIssuanceCached = communityIssuance;
+
+        _triggerLQTYIssuance(communityIssuanceCached);
 
         if (initialDeposit == 0) {_setFrontEndTag(msg.sender, _frontEndTag);}
         uint depositorETHGain = getDepositorETHGain(msg.sender);
@@ -291,7 +293,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         // First pay out any LQTY gains
         address frontEnd = deposits[msg.sender].frontEndTag;
-        _payOutLQTYGains(msg.sender, frontEnd);
+        _payOutLQTYGains(communityIssuanceCached, msg.sender, frontEnd);
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
@@ -325,7 +327,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
 
-        _triggerLQTYIssuance();
+        ICommunityIssuance communityIssuanceCached = communityIssuance;
+
+        _triggerLQTYIssuance(communityIssuanceCached);
 
         uint depositorETHGain = getDepositorETHGain(msg.sender);
 
@@ -335,7 +339,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         // First pay out any LQTY gains
         address frontEnd = deposits[msg.sender].frontEndTag;
-        _payOutLQTYGains(msg.sender, frontEnd);
+        _payOutLQTYGains(communityIssuanceCached, msg.sender, frontEnd);
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
@@ -368,7 +372,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         _requireUserHasTrove(msg.sender);
         _requireUserHasETHGain(msg.sender);
 
-        _triggerLQTYIssuance();
+        ICommunityIssuance communityIssuanceCached = communityIssuance;
+
+        _triggerLQTYIssuance(communityIssuanceCached);
 
         uint depositorETHGain = getDepositorETHGain(msg.sender);
 
@@ -377,7 +383,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         // First pay out any LQTY gains
         address frontEnd = deposits[msg.sender].frontEndTag;
-        _payOutLQTYGains(msg.sender, frontEnd);
+        _payOutLQTYGains(communityIssuanceCached, msg.sender, frontEnd);
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
@@ -402,8 +408,8 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     // --- LQTY issuance functions ---
 
-    function _triggerLQTYIssuance() internal {
-        uint LQTYIssuance = communityIssuance.issueLQTY();
+    function _triggerLQTYIssuance(ICommunityIssuance _communityIssuance) internal {
+        uint LQTYIssuance = _communityIssuance.issueLQTY();
        _updateG(LQTYIssuance);
     }
 
@@ -456,7 +462,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint totalLUSD = totalLUSDDeposits; // cached to save an SLOAD
         if (totalLUSD == 0 || _debtToOffset == 0) { return; }
 
-        _triggerLQTYIssuance();
+        _triggerLQTYIssuance(communityIssuance);
 
         (uint ETHGainPerUnitStaked,
             uint LUSDLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalLUSD);
@@ -556,14 +562,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {
+        IActivePool activePoolCached = activePool;
+
         // Cancel the liquidated LUSD debt with the LUSD in the stability pool
-        activePool.decreaseLUSDDebt(_debtToOffset);
+        activePoolCached.decreaseLUSDDebt(_debtToOffset);
         _decreaseLUSD(_debtToOffset);
 
         // Burn the debt that was successfully offset
         lusdToken.burn(address(this), _debtToOffset);
 
-        activePool.sendETH(address(this), _collToAdd);
+        activePoolCached.sendETH(address(this), _collToAdd);
     }
 
     function _decreaseLUSD(uint _amount) internal {
@@ -853,17 +861,17 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         emit FrontEndSnapshotUpdated(_frontEnd, currentP, currentG);
     }
 
-    function _payOutLQTYGains(address _depositor, address _frontEnd) internal {
+    function _payOutLQTYGains(ICommunityIssuance _communityIssuance, address _depositor, address _frontEnd) internal {
         // Pay out front end's LQTY gain
         if (_frontEnd != address(0)) {
             uint frontEndLQTYGain = getFrontEndLQTYGain(_frontEnd);
-            communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
+            _communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
             emit LQTYPaidToFrontEnd(_frontEnd, frontEndLQTYGain);
         }
 
         // Pay out depositor's LQTY gain
         uint depositorLQTYGain = getDepositorLQTYGain(_depositor);
-        communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
+        _communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
         emit LQTYPaidToDepositor(_depositor, depositorLQTYGain);
     }
 
