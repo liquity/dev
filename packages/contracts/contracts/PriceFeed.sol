@@ -120,7 +120,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     *
     * Non-view function - it stores the last good price seen by Liquity.
     *
-    * Uses a main oracle (Chainlink) and a fallback oracle(Tellor) in case Chainlink fails. If both fail, 
+    * Uses a main oracle (Chainlink) and a fallback oracle (Tellor) in case Chainlink fails. If both fail, 
     * it uses the last good price seen by Liquity.
     *
     */
@@ -134,13 +134,13 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         if (status == Status.chainlinkWorking) {
             // If Chainlink is broken, try Tellor
             if (_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse)) {
-                // If Tellor is broken then both oracles are untrusted, and we just use the last good price
+                // If Tellor is broken then both oracles are untrusted, so return the last good price
                 if (_tellorIsBroken(tellorResponse)) {
                     _changeStatus(Status.bothOraclesUntrusted);
                     return lastGoodPrice; 
                 }
                 /*
-                * If Tellor is only frozen but otherwise returning valid data, just use the last good price.
+                * If Tellor is only frozen but otherwise returning valid data, return the last good price.
                 * Tellor may need to be tipped to return current data.
                 */
                 if (_tellorIsFrozen(tellorResponse)) {
@@ -155,7 +155,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
             // If Chainlink is frozen, try Tellor
             if (_chainlinkIsFrozen(chainlinkResponse)) {          
-                // If Tellor is broken too, remember Chainlink froze & Tellor broke, and use last good price
+                // If Tellor is broken too, remember Tellor broke, and return last good price
                 if (_tellorIsBroken(tellorResponse)) {
                     _changeStatus(Status.usingChainlinkTellorUntrusted);
                     return lastGoodPrice;     
@@ -172,13 +172,13 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
             // If Chainlink price has changed by > 50% between two consecutive rounds, compare it to Tellor's price
             if (_chainlinkPriceChangeAboveMax(chainlinkResponse, prevChainlinkResponse)) {
-                // If Tellor is broken, both oracles are untrusted, and use last good price
+                // If Tellor is broken, both oracles are untrusted, and return last good price
                  if (_tellorIsBroken(tellorResponse)) {
                     _changeStatus(Status.bothOraclesUntrusted);
                     return lastGoodPrice;     
                 }
 
-                // If Tellor is frozen, switch to Tellor and use last good price now
+                // If Tellor is frozen, switch to Tellor and return last good price 
                 if (_tellorIsFrozen(tellorResponse)) { 
                     _changeStatus(Status.usingTellorChainlinkUntrusted);
                     return lastGoodPrice;
@@ -223,7 +223,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             }
 
             /*
-            * If Tellor is only frozen but otherwise returning valid data, just use the last good price.
+            * If Tellor is only frozen but otherwise returning valid data, just return the last good price.
             * Tellor may need to be tipped to return current data.
             */
             if (_tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
@@ -251,12 +251,12 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         // --- CASE 4: Using Tellor, and Chainlink is frozen ---
         if (status == Status.usingTellorChainlinkFrozen) {
             if (_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse)) {
-                // If both Oracles are broken, use last good price
+                // If both Oracles are broken, return last good price
                 if (_tellorIsBroken(tellorResponse)) {
                     _changeStatus(Status.bothOraclesUntrusted);
                     return lastGoodPrice;
                 }
-                // If Chainlink is broken and Tellor is frozen, switch purely to Tellor, and use last good price now
+                // If Chainlink is broken and Tellor is frozen, switch to using Tellor, and return last good price
                 if (_tellorIsFrozen(tellorResponse)) {
                     _changeStatus(Status.usingTellorChainlinkUntrusted);
                     return lastGoodPrice;
@@ -268,7 +268,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             }
 
             if (_chainlinkIsFrozen(chainlinkResponse)) {
-                // if Chainlink is frozen and Tellor is broken, remember Tellor broke, and use last good price
+                // if Chainlink is frozen and Tellor is broken, remember Tellor broke, and return last good price
                 if (_tellorIsBroken(tellorResponse)) {
                     _changeStatus(Status.usingChainlinkTellorUntrusted);
                     return lastGoodPrice;
@@ -300,7 +300,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 return lastGoodPrice;
             }
 
-            // If Chainlink is frozen, use last good price (no status change)
+            // If Chainlink is frozen, return last good price (no status change)
             if (_chainlinkIsFrozen(chainlinkResponse)) {
                 return lastGoodPrice;
             }
@@ -311,7 +311,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 return _storeChainlinkPrice(chainlinkResponse);
             }
 
-            // If Chainlink is working and Tellor is broken, frozen or reporting at >5% delta with Chainlink, return Chainlink price
+            // If Chainlink is working and Tellor is broken, frozen or reporting at >5% delta with Chainlink, return Chainlink price (no status change)
             return _storeChainlinkPrice(chainlinkResponse);
         }
     }
@@ -526,8 +526,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     function _getPrevChainlinkResponse(uint80 _currentRoundId, uint8 _currentDecimals) internal view returns (ChainlinkResponse memory prevChainlinkResponse) {
         /*
         * NOTE: Chainlink only offers a current decimals() value - there is no way to obtain the decimal precision used in a 
-        * previous round.  
-        * We assume the decimals used in the previous round are the same as the current round.
+        * previous round.  We assume the decimals used in the previous round are the same as the current round.
         */
 
         // Try to get the price data from the previous round:
