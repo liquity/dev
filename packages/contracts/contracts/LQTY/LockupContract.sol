@@ -61,8 +61,9 @@ contract LockupContract {
         _requireCallerIsBeneficiary();
         _requireLockupDurationHasPassed();
 
-        uint LQTYBalance = lqtyToken.balanceOf(address(this));
-        lqtyToken.transfer(beneficiary, LQTYBalance);
+        ILQTYToken lqtyTokenCached = lqtyToken;
+        uint LQTYBalance = lqtyTokenCached.balanceOf(address(this));
+        lqtyTokenCached.transfer(beneficiary, LQTYBalance);
         emit LockupContractEmptied(LQTYBalance);
     }
 

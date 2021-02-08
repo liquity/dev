@@ -50,9 +50,10 @@ contract LockupContractFactory is ILockupContractFactory, Ownable, CheckContract
     }
 
     function deployLockupContract(address _beneficiary, uint _unlockTime) external override {
-        _requireLQTYAddressIsSet();
+        address lqtyTokenAddressCached = lqtyTokenAddress;
+        _requireLQTYAddressIsSet(lqtyTokenAddressCached);
         LockupContract lockupContract = new LockupContract(
-                                                        lqtyTokenAddress, 
+                                                        lqtyTokenAddressCached,
                                                         _beneficiary, 
                                                         _unlockTime);
 
@@ -65,7 +66,7 @@ contract LockupContractFactory is ILockupContractFactory, Ownable, CheckContract
     }
 
     // --- 'require'  functions ---
-    function _requireLQTYAddressIsSet() internal view {
-        require(lqtyTokenAddress != address(0), "LCF: LQTY Address is not set");
+    function _requireLQTYAddressIsSet(address _lqtyTokenAddress) internal view {
+        require(_lqtyTokenAddress != address(0), "LCF: LQTY Address is not set");
     }
 }

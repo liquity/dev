@@ -56,11 +56,13 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
         view
         returns (address firstRedemptionHint, uint partialRedemptionHintNICR)
     {
+        ISortedTroves sortedTrovesCached = sortedTroves;
+
         uint remainingLUSD = _LUSDamount;
-        address currentTroveuser = sortedTroves.getLast();
+        address currentTroveuser = sortedTrovesCached.getLast();
 
         while (currentTroveuser != address(0) && troveManager.getCurrentICR(currentTroveuser, _price) < MCR) {
-            currentTroveuser = sortedTroves.getPrev(currentTroveuser);
+            currentTroveuser = sortedTrovesCached.getPrev(currentTroveuser);
         }
 
         firstRedemptionHint = currentTroveuser;
@@ -87,7 +89,7 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
             } else {
                 remainingLUSD = remainingLUSD.sub(LUSDDebt);
             }
-            currentTroveuser = sortedTroves.getPrev(currentTroveuser);
+            currentTroveuser = sortedTrovesCached.getPrev(currentTroveuser);
         }
     }
 
