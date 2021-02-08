@@ -23,35 +23,35 @@ contract MockAggregator is AggregatorV3Interface {
 
     // --- Functions ---
 
-    function setDecimals(uint8 _decimals) external returns (bool) {
+    function setDecimals(uint8 _decimals) external {
         decimalsVal = _decimals;
     }
 
-    function setPrice(int _price) external returns (bool) {
+    function setPrice(int _price) external {
         price = _price;
     }
 
-    function setPrevPrice(int _prevPrice) external returns (bool) {
+    function setPrevPrice(int _prevPrice) external {
         prevPrice = _prevPrice;
     }
 
-    function setPrevUpdateTime(uint _prevUpdateTime) external returns (bool) {
+    function setPrevUpdateTime(uint _prevUpdateTime) external {
         prevUpdateTime = _prevUpdateTime;
     }
 
-    function setUpdateTime(uint _updateTime) external returns (bool) {
+    function setUpdateTime(uint _updateTime) external  {
         updateTime = _updateTime;
     }
 
-    function setLatestRevert() external returns (bool) {
+    function setLatestRevert() external  {
         latestRevert = !latestRevert;
     }
 
-    function setPrevRevert() external returns (bool) {
+    function setPrevRevert() external  {
         prevRevert = !prevRevert;
     }
 
-    function setDecimalsRevert() external returns (bool) {
+    function setDecimalsRevert() external {
         decimalsRevert = !decimalsRevert;
     }
 
@@ -67,9 +67,7 @@ contract MockAggregator is AggregatorV3Interface {
     // --- Getters that adhere to the AggregatorV3 interface ---
 
     function decimals() external override view returns (uint8) {
-        if (decimalsRevert) {
-            console.log("decimals reverted");
-            require(1== 0, "decimals reverted");}
+        if (decimalsRevert) {require(1== 0, "decimals reverted");}
 
         return decimalsVal;
     }
@@ -86,9 +84,8 @@ contract MockAggregator is AggregatorV3Interface {
         uint80 answeredInRound
     ) 
     {    
-        if (latestRevert) {
-            console.log("latestRoundData reverted");
-            require(1== 0, "latestRoundData reverted");}
+        if (latestRevert) { require(1== 0, "latestRoundData reverted");}
+
         return (latestRoundId, price, 0, updateTime, 0); 
     }
 
@@ -103,9 +100,8 @@ contract MockAggregator is AggregatorV3Interface {
       uint256 updatedAt,
       uint80 answeredInRound
     ) {
-        if (prevRevert) {
-            console.log("getRoundData reverted");
-            require( 1== 0, "getRoundData reverted");}
+        if (prevRevert) {require( 1== 0, "getRoundData reverted");}
+
         return (prevRoundId, prevPrice, 0, updateTime, 0);
     }
 

@@ -18,12 +18,15 @@ const HintHelpers = artifacts.require("./HintHelpers.sol")
 const CommunityIssuanceTester = artifacts.require("./LQTY/CommunityIssuanceTester.sol")
 const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
-const MathTester = artifacts.require("./MathTester.sol")
+const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
+const { TestHelper: th } = require("../utils/testHelpers.js")
+
 const dh = require("./deploymentHelpers.js")
+const ARBITRARY_ADDRESS = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"   // placeholder for the LPrewards bounty addresses
 
 const coreContractABIs = [
   BorrowerOperations,
@@ -49,7 +52,7 @@ const TesterContractABIs  = [
   CommunityIssuanceTester,
   ActivePoolTester,
   DefaultPoolTester,
-  MathTester,
+  LiquityMathTester,
   BorrowerOperationsTester,
   TroveManagerTester,
   LUSDTokenTester,
@@ -84,7 +87,7 @@ const logContractDeploymentCosts = async (contracts) => {
     totalGasCost = totalGasCost + Number(gasCost)
   }
   console.log(`Total deployment gas costs: ${totalGasCost}`)
-  getUSDCostFromGasCost(totalGasCost, 200, 500)
+  getUSDCostFromGasCost(totalGasCost, 200, 1500)
 }
 
 const logContractBytecodeLengths = (contractABIs) => {
@@ -97,7 +100,7 @@ const logContractBytecodeLengths = (contractABIs) => {
 // Run script: log deployment gas costs and bytecode lengths for all contracts
 async function main() {
   const coreContracts = await dh.deployLiquityCoreHardhat()
-  const LQTYContracts = await dh.deployLQTYContractsHardhat()
+  const LQTYContracts = await dh.deployLQTYContractsHardhat(ARBITRARY_ADDRESS, ARBITRARY_ADDRESS)
   const testerContracts = await dh.deployTesterContractsHardhat()
 
   await dh.connectCoreContracts(coreContracts, LQTYContracts)
