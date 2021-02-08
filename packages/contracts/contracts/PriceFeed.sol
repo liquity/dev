@@ -344,12 +344,8 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     function _chainlinkIsFrozen(ChainlinkResponse memory _response) internal view returns (bool) {
-         // Check whether the oracle has frozen
-        if ((block.timestamp.sub(_response.timestamp) > TIMEOUT)) {return true;}
-
-        return false;
+        return block.timestamp.sub(_response.timestamp) > TIMEOUT; 
     }
-
 
     function _chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, ChainlinkResponse memory _prevResponse) internal view returns (bool) {
         uint currentScaledPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.answer), _currentResponse.decimals);
@@ -483,10 +479,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         ) 
         {
             // If call to Tellor succeeds, return the response and success = true
-            (tellorResponse.ifRetrieve,
-            tellorResponse.value,
-            tellorResponse.timestamp,
-            tellorResponse.success) = (ifRetrieve, value, _timestampRetrieved, true);
+            tellorResponse.ifRetrieve = ifRetrieve;
+            tellorResponse.value = value;
+            tellorResponse.timestamp = _timestampRetrieved;
+            tellorResponse.success = true;
 
             return (tellorResponse);
         }catch {
@@ -516,9 +512,9 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         )
         {
             // If call to Chainlink succeeds, return the response and success = true
-            (chainlinkResponse.roundId,
-            chainlinkResponse.answer,
-            chainlinkResponse.timestamp)  = (roundId, answer, timestamp);
+            chainlinkResponse.roundId = roundId;
+            chainlinkResponse.answer = answer;
+            chainlinkResponse.timestamp = timestamp;
             chainlinkResponse.success = true;
             return chainlinkResponse;
         } catch {
@@ -545,9 +541,9 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         )
         {
             // If call to Chainlink succeeds, return the response and success = true
-            (prevChainlinkResponse.roundId,
-            prevChainlinkResponse.answer,
-            prevChainlinkResponse.timestamp)  = (roundId, answer, timestamp);
+            prevChainlinkResponse.roundId = roundId;
+            prevChainlinkResponse.answer = answer;
+            prevChainlinkResponse.timestamp = timestamp;
             prevChainlinkResponse.decimals = _currentDecimals;
             prevChainlinkResponse.success = true;
             return prevChainlinkResponse;
