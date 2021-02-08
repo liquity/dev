@@ -15,7 +15,7 @@ import {
   _LiquityDeploymentJSON
 } from "./contracts";
 
-const dev: _LiquityDeploymentJSON | null = devOrNull;
+const dev = devOrNull as _LiquityDeploymentJSON | null;
 
 const deployments: {
   [chainId: number]: _LiquityDeploymentJSON | undefined;
