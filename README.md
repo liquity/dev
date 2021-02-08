@@ -363,13 +363,16 @@ The fallback logic distinguishes 3 different failure modes for Chainlink and 2 f
 
 There is also a return condition `bothOraclesLiveAndUnbrokenAndSimilarPrice` which is a function returning true if both oracles are live and not broken, and the percentual difference between the two reported prices is below 5%.
 
+The current `PriceFeed.sol` contract has an external `fetchPrice()` function that is called by core Liquity functions which require a current ETH:USD price.  `fetchPrice()` calls each oracle's proxy, asserts on the responses, and converts returned prices to 18 digits.
+
+### PriceFeed Logic
+
 The PriceFeed contract fetches the current price and previous price from Chainlink and changes its state (called `Status`) based on certain conditions.
 
 **Initial PriceFeed state:** `chainlinkWorking`. The initial system state that is maintained as long as Chainlink is working properly, i.e. neither broken nor frozen nor exceeding the maximum price change threshold between two consecutive rounds. PriceFeed then obeys the logic found in this table:
 
   https://docs.google.com/spreadsheets/d/18fdtTUoqgmsK3Mb6LBO-6na0oK-Y9LWBqnPCJRp5Hsg/edit?usp=sharing
 
-The current `PriceFeed.sol` contract has a `fetchPrice()` that through a helper method calls and asserts on an AggregatorV3 `getLatestRoundData()` and multiplies by 10^10 to get the required number of digits. 
 
 ### Testnet PriceFeed and PriceFeed tests
 
