@@ -577,14 +577,9 @@ export interface TransactableLiquity {
 }
 
 /** @internal */
-export type _SendMethod<A extends unknown[], T extends SentLiquityTransaction> = (
-  ...args: A
-) => Promise<T>;
-
-/** @internal */
-export type _Sendable<T, R = unknown, S = unknown> = {
+export type _SendableFrom<T, R, S> = {
   [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
-    ? _SendMethod<A, SentLiquityTransaction<S, LiquityReceipt<R, D>>>
+    ? (...args: A) => Promise<SentLiquityTransaction<S, LiquityReceipt<R, D>>>
     : never;
 };
 
@@ -600,7 +595,7 @@ export type _Sendable<T, R = unknown, S = unknown> = {
  * @public
  */
 export interface SendableLiquity<R = unknown, S = unknown>
-  extends _Sendable<TransactableLiquity, R, S> {
+  extends _SendableFrom<TransactableLiquity, R, S> {
   // Methods re-declared for documentation purposes
 
   /** {@inheritDoc TransactableLiquity.openTrove} */
@@ -706,17 +701,11 @@ export interface SendableLiquity<R = unknown, S = unknown>
 }
 
 /** @internal */
-export type _PopulateMethod<A extends unknown[], T extends PopulatedLiquityTransaction> = (
-  ...args: A
-) => Promise<T>;
-
-/** @internal */
-export type _Populatable<T, R = unknown, S = unknown, P = unknown> = {
-  [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
-    ? _PopulateMethod<
-        A,
-        PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>
-      >
+export type _PopulatableFrom<T, P> = {
+  [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer U>
+    ? U extends SentLiquityTransaction
+      ? (...args: A) => Promise<PopulatedLiquityTransaction<P, U>>
+      : never
     : never;
 };
 
@@ -732,7 +721,7 @@ export type _Populatable<T, R = unknown, S = unknown, P = unknown> = {
  * @public
  */
 export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
-  extends _Populatable<TransactableLiquity, R, S, P> {
+  extends _PopulatableFrom<SendableLiquity<R, S>, P> {
   // Methods re-declared for documentation purposes
 
   /** {@inheritDoc TransactableLiquity.openTrove} */
@@ -900,23 +889,3 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
     kickbackRate: Decimalish
   ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
 }
-
-/** @internal */
-export type _SendableFrom<T> = {
-  [M in keyof T]: T[M] extends _PopulateMethod<
-    infer A,
-    PopulatedLiquityTransaction<unknown, infer U>
-  >
-    ? _SendMethod<A, U>
-    : never;
-};
-
-/** @internal */
-export type _TransactableFrom<T> = {
-  [M in keyof T]: T[M] extends _SendMethod<
-    infer A,
-    SentLiquityTransaction<unknown, LiquityReceipt<unknown, infer D>>
-  >
-    ? (...args: A) => Promise<D>
-    : never;
-};

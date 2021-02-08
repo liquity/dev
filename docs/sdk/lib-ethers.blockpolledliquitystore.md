@@ -17,12 +17,11 @@ export declare class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiq
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(provider, account, liquity, frontendTag)](./lib-ethers.blockpolledliquitystore._constructor_.md) |  | Constructs a new instance of the <code>BlockPolledLiquityStore</code> class |
+|  [(constructor)(readable)](./lib-ethers.blockpolledliquitystore._constructor_.md) |  | Constructs a new instance of the <code>BlockPolledLiquityStore</code> class |
 
-## Methods
+## Properties
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [\_doStart()](./lib-ethers.blockpolledliquitystore._dostart.md) |  |  |
-|  [\_reduceExtra(oldState, stateUpdate)](./lib-ethers.blockpolledliquitystore._reduceextra.md) |  |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [connection](./lib-ethers.blockpolledliquitystore.connection.md) |  | [EthersLiquityConnection](./lib-ethers.ethersliquityconnection.md) |  |
 

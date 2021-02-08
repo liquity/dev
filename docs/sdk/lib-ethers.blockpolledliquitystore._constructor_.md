@@ -9,15 +9,12 @@ Constructs a new instance of the `BlockPolledLiquityStore` class
 <b>Signature:</b>
 
 ```typescript
-constructor(provider: Provider, account: string, liquity: ReadableEthersLiquity, frontendTag?: string);
+constructor(readable: ReadableEthersLiquity);
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  provider | Provider |  |
-|  account | string |  |
-|  liquity | [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) |  |
-|  frontendTag | string |  |
+|  readable | [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) |  |
 

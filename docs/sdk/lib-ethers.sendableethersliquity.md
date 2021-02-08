@@ -9,9 +9,9 @@ Ethers-based implementation of [SendableLiquity](./lib-base.sendableliquity.md)<
 <b>Signature:</b>
 
 ```typescript
-export declare class SendableEthersLiquity implements _SendableFrom<PopulatableEthersLiquity> 
+export declare class SendableEthersLiquity implements SendableLiquity<EthersTransactionReceipt, EthersTransactionResponse> 
 ```
-<b>Implements:</b> \_SendableFrom&lt;[PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md)<!-- -->&gt;
+<b>Implements:</b> [SendableLiquity](./lib-base.sendableliquity.md)<!-- -->&lt;[EthersTransactionReceipt](./lib-ethers.etherstransactionreceipt.md)<!-- -->, [EthersTransactionResponse](./lib-ethers.etherstransactionresponse.md)<!-- -->&gt;
 
 ## Constructors
 

@@ -1,18 +1,15 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-import { Signer } from "@ethersproject/abstract-signer";
 import { getNetwork } from "@ethersproject/networks";
 import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
-  EthersLiquity,
   BlockPolledLiquityStore,
-  ReadableEthersLiquity,
-  PopulatableEthersLiquity,
-  LiquityConnection,
-  connectToLiquity
+  EthersLiquity,
+  EthersLiquityWithStore,
+  _connectToLiquity
 } from "@liquity/lib-ethers";
 
 import { LiquityFrontendConfig, getConfig } from "../config";
@@ -21,9 +18,7 @@ type LiquityContextValue = {
   config: LiquityFrontendConfig;
   account: string;
   provider: Provider;
-  connection: LiquityConnection;
-  liquity: EthersLiquity;
-  store: BlockPolledLiquityStore;
+  liquity: EthersLiquityWithStore<BlockPolledLiquityStore>;
 };
 
 const LiquityContext = createContext<LiquityContextValue | undefined>(undefined);
@@ -40,14 +35,6 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
 
 const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
-const tryConnectToLiquity = (signer: Signer, chainId: number) => {
-  try {
-    return connectToLiquity(signer, chainId);
-  } catch {
-    return undefined;
-  }
-};
-
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
   loader,
@@ -56,10 +43,18 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
 
-  const connection =
-    provider && account && chainId
-      ? tryConnectToLiquity(provider.getSigner(account), chainId)
-      : undefined;
+  const connection = useMemo(() => {
+    if (config && provider && account && chainId) {
+      try {
+        return _connectToLiquity(provider.getSigner(account), {
+          userAddress: account,
+          frontendTag: config.frontendTag,
+          network: chainId,
+          useStore: "blockPolled"
+        });
+      } catch {}
+    }
+  }, [config, provider, account, chainId]);
 
   useEffect(() => {
     getConfig().then(setConfig);
@@ -95,24 +90,11 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
   }
 
-  const readable = new ReadableEthersLiquity(connection, account);
-  const store = new BlockPolledLiquityStore(provider, account, readable, config.frontendTag);
-  const populatable = new PopulatableEthersLiquity(connection, readable, store);
-  const liquity = new EthersLiquity(readable, populatable);
-
-  store.logging = true;
+  const liquity = EthersLiquity._from(connection);
+  liquity.store.logging = true;
 
   return (
-    <LiquityContext.Provider
-      value={{
-        config,
-        account,
-        provider,
-        connection,
-        liquity,
-        store
-      }}
-    >
+    <LiquityContext.Provider value={{ config, account, provider, liquity }}>
       {children}
     </LiquityContext.Provider>
   );

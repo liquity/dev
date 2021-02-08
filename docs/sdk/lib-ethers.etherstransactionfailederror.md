@@ -4,7 +4,7 @@
 
 ## EthersTransactionFailedError class
 
-Thrown by [TransactableEthersLiquity](./lib-ethers.transactableethersliquity.md) functions in case of transaction failure.
+Thrown by [EthersLiquity](./lib-ethers.ethersliquity.md) in case of transaction failure.
 
 <b>Signature:</b>
 

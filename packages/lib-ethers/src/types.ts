@@ -3,6 +3,7 @@ import { BlockTag, TransactionResponse, TransactionReceipt } from "@ethersprojec
 import { PopulatedTransaction } from "@ethersproject/contracts";
 
 export interface EthersTransactionOverrides {
+  from?: string;
   nonce?: BigNumberish;
   gasLimit?: BigNumberish;
   gasPrice?: BigNumberish;
@@ -10,7 +11,6 @@ export interface EthersTransactionOverrides {
 
 export interface EthersCallOverrides {
   blockTag?: BlockTag;
-  from?: string;
 }
 
 // These type aliases mostly for documentation (so we can point to the Ethers documentation).

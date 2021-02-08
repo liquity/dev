@@ -9,8 +9,7 @@ import {
   TroveWithPendingRedistribution
 } from "@liquity/lib-base";
 
-import { LiquityConnection, _getContracts } from "./contracts";
-import { _EthersLiquityBase } from "./EthersLiquityBase";
+import { _getContracts, _requireAddress } from "./EthersLiquityConnection";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
 const debouncingDelayMs = 50;
@@ -38,27 +37,21 @@ const debounce = (listener: (latestBlock: number) => void) => {
 };
 
 /** @alpha */
-export class ObservableEthersLiquity extends _EthersLiquityBase implements ObservableLiquity {
-  private _readableLiquity: ReadableEthersLiquity;
+export class ObservableEthersLiquity implements ObservableLiquity {
+  private readonly _readable: ReadableEthersLiquity;
 
-  constructor(
-    connection: LiquityConnection,
-    readableLiquity: ReadableEthersLiquity,
-    userAddress?: string
-  ) {
-    super(connection, userAddress);
-
-    this._readableLiquity = readableLiquity;
+  constructor(readable: ReadableEthersLiquity) {
+    this._readable = readable;
   }
 
   watchTotalRedistributed(
     onTotalRedistributedChanged: (totalRedistributed: Trove) => void
   ): () => void {
-    const { activePool, defaultPool } = _getContracts(this._connection);
+    const { activePool, defaultPool } = _getContracts(this._readable.connection);
     const etherSent = activePool.filters.EtherSent();
 
     const redistributionListener = debounce((blockTag: number) => {
-      this._readableLiquity.getTotalRedistributed({ blockTag }).then(onTotalRedistributedChanged);
+      this._readable.getTotalRedistributed({ blockTag }).then(onTotalRedistributedChanged);
     });
 
     const etherSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
@@ -76,14 +69,16 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
 
   watchTroveWithoutRewards(
     onTroveChanged: (trove: TroveWithPendingRedistribution) => void,
-    address = this._requireAddress()
+    address?: string
   ): () => void {
-    const { troveManager } = _getContracts(this._connection);
+    address ??= _requireAddress(this._readable.connection);
+
+    const { troveManager } = _getContracts(this._readable.connection);
     const { TroveCreated, TroveUpdated } = troveManager.filters;
     const troveEventFilters = [TroveCreated(address), TroveUpdated(address)];
 
     const troveListener = debounce((blockTag: number) => {
-      this._readableLiquity.getTroveWithoutRewards(address, { blockTag }).then(onTroveChanged);
+      this._readable.getTroveBeforeRedistribution(address, { blockTag }).then(onTroveChanged);
     });
 
     troveEventFilters.forEach(filter => troveManager.on(filter, troveListener));
@@ -94,12 +89,12 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void): () => void {
-    const { troveManager } = _getContracts(this._connection);
+    const { troveManager } = _getContracts(this._readable.connection);
     const { TroveUpdated } = troveManager.filters;
     const troveUpdated = TroveUpdated();
 
     const troveUpdatedListener = debounce((blockTag: number) => {
-      this._readableLiquity.getNumberOfTroves({ blockTag }).then(onNumberOfTrovesChanged);
+      this._readable.getNumberOfTroves({ blockTag }).then(onNumberOfTrovesChanged);
     });
 
     troveManager.on(troveUpdated, troveUpdatedListener);
@@ -118,12 +113,12 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
   }
 
   watchTotal(onTotalChanged: (total: Trove) => void): () => void {
-    const { troveManager } = _getContracts(this._connection);
+    const { troveManager } = _getContracts(this._readable.connection);
     const { TroveUpdated } = troveManager.filters;
     const troveUpdated = TroveUpdated();
 
     const totalListener = debounce((blockTag: number) => {
-      this._readableLiquity.getTotal({ blockTag }).then(onTotalChanged);
+      this._readable.getTotal({ blockTag }).then(onTotalChanged);
     });
 
     troveManager.on(troveUpdated, totalListener);
@@ -134,10 +129,12 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
   }
 
   watchStabilityDeposit(
-    onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
-    address = this._requireAddress()
+    onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void,
+    address?: string
   ): () => void {
-    const { activePool, stabilityPool } = _getContracts(this._connection);
+    address ??= _requireAddress(this._readable.connection);
+
+    const { activePool, stabilityPool } = _getContracts(this._readable.connection);
     const { UserDepositChanged } = stabilityPool.filters;
     const { EtherSent } = activePool.filters;
 
@@ -145,9 +142,7 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
     const etherSent = EtherSent();
 
     const depositListener = debounce((blockTag: number) => {
-      this._readableLiquity
-        .getStabilityDeposit(address, { blockTag })
-        .then(onStabilityDepositChanged);
+      this._readable.getStabilityDeposit(address, { blockTag }).then(onStabilityDepositChanged);
     });
 
     const etherSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
@@ -170,7 +165,7 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
   watchLUSDInStabilityPool(
     onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void
   ): () => void {
-    const { lusdToken, stabilityPool } = _getContracts(this._connection);
+    const { lusdToken, stabilityPool } = _getContracts(this._readable.connection);
     const { Transfer } = lusdToken.filters;
 
     const transferLUSDFromStabilityPool = Transfer(stabilityPool.address);
@@ -179,7 +174,7 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
     const stabilityPoolLUSDFilters = [transferLUSDFromStabilityPool, transferLUSDToStabilityPool];
 
     const stabilityPoolLUSDListener = debounce((blockTag: number) => {
-      this._readableLiquity.getLUSDInStabilityPool({ blockTag }).then(onLUSDInStabilityPoolChanged);
+      this._readable.getLUSDInStabilityPool({ blockTag }).then(onLUSDInStabilityPoolChanged);
     });
 
     stabilityPoolLUSDFilters.forEach(filter => lusdToken.on(filter, stabilityPoolLUSDListener));
@@ -190,11 +185,10 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
       );
   }
 
-  watchLUSDBalance(
-    onLUSDBalanceChanged: (balance: Decimal) => void,
-    address = this._requireAddress()
-  ): () => void {
-    const { lusdToken } = _getContracts(this._connection);
+  watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
+    address ??= _requireAddress(this._readable.connection);
+
+    const { lusdToken } = _getContracts(this._readable.connection);
     const { Transfer } = lusdToken.filters;
     const transferLUSDFromUser = Transfer(address);
     const transferLUSDToUser = Transfer(null, address);
@@ -202,7 +196,7 @@ export class ObservableEthersLiquity extends _EthersLiquityBase implements Obser
     const lusdTransferFilters = [transferLUSDFromUser, transferLUSDToUser];
 
     const lusdTransferListener = debounce((blockTag: number) => {
-      this._readableLiquity.getLUSDBalance(address, { blockTag }).then(onLUSDBalanceChanged);
+      this._readable.getLUSDBalance(address, { blockTag }).then(onLUSDBalanceChanged);
     });
 
     lusdTransferFilters.forEach(filter => lusdToken.on(filter, lusdTransferListener));

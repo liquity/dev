@@ -64,10 +64,10 @@ export interface LiquityStoreBaseState {
    * The current state of the user's Trove can be found as
    * {@link LiquityStoreDerivedState.trove | trove}.
    */
-  troveWithoutRedistribution: TroveWithPendingRedistribution;
+  troveBeforeRedistribution: TroveWithPendingRedistribution;
 
   /** User's stability deposit. */
-  deposit: StabilityDeposit;
+  stabilityDeposit: StabilityDeposit;
 
   /** Calculator for current fees. */
   fees: Fees;
@@ -345,14 +345,19 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.totalRedistributed
       ),
 
-      troveWithoutRedistribution: this._updateIfChanged(
+      troveBeforeRedistribution: this._updateIfChanged(
         equals,
-        "troveWithoutRedistribution",
-        baseState.troveWithoutRedistribution,
-        baseStateUpdate.troveWithoutRedistribution
+        "troveBeforeRedistribution",
+        baseState.troveBeforeRedistribution,
+        baseStateUpdate.troveBeforeRedistribution
       ),
 
-      deposit: this._updateIfChanged(equals, "deposit", baseState.deposit, baseStateUpdate.deposit),
+      stabilityDeposit: this._updateIfChanged(
+        equals,
+        "stabilityDeposit",
+        baseState.stabilityDeposit,
+        baseStateUpdate.stabilityDeposit
+      ),
 
       fees: this._updateIfChanged(equals, "fees", baseState.fees, baseStateUpdate.fees),
 
@@ -373,12 +378,12 @@ export abstract class LiquityStore<T = unknown> {
   }
 
   private _derive({
-    troveWithoutRedistribution,
+    troveBeforeRedistribution,
     totalRedistributed,
     fees
   }: LiquityStoreBaseState): LiquityStoreDerivedState {
     return {
-      trove: troveWithoutRedistribution.applyRedistribution(totalRedistributed),
+      trove: troveBeforeRedistribution.applyRedistribution(totalRedistributed),
       borrowingRate: fees.borrowingRate(),
       redemptionRate: fees.redemptionRate()
     };

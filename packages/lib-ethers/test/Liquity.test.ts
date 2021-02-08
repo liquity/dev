@@ -12,17 +12,13 @@ import {
   LiquityReceipt,
   SuccessfulReceipt,
   SentLiquityTransaction,
-  ReadableLiquity,
   TroveCreationParams,
   Fees,
   LUSD_LIQUIDATION_RESERVE,
-  MAXIMUM_BORROWING_RATE,
-  LiquityStore
+  MAXIMUM_BORROWING_RATE
 } from "@liquity/lib-base";
 
 import { HintHelpers } from "../types";
-
-import { LiquityConnection, _connectToDeployment, _LiquityDeploymentJSON } from "../src/contracts";
 
 import {
   PopulatableEthersLiquity,
@@ -30,15 +26,22 @@ import {
   _redeemMaxIterations
 } from "../src/PopulatableEthersLiquity";
 
+import { _LiquityDeploymentJSON } from "../src/contracts";
+import { _connectToDeployment } from "../src/EthersLiquityConnection";
 import { EthersLiquity } from "../src/EthersLiquity";
+import { ReadableEthersLiquity } from "../src/ReadableEthersLiquity";
 
 const provider = ethers.provider;
 
 chai.use(chaiAsPromised);
 chai.use(chaiSpies);
 
-const connectToDeployment = (deployment: _LiquityDeploymentJSON, signer: Signer) =>
-  EthersLiquity._from(_connectToDeployment(deployment, signer));
+const connectToDeployment = async (deployment: _LiquityDeploymentJSON, signer: Signer) =>
+  EthersLiquity._from(
+    _connectToDeployment(deployment, signer, {
+      userAddress: await signer.getAddress()
+    })
+  );
 
 const baseRate = Fees.prototype.baseRate;
 let cumulativeTimeJumpSeconds = 0;
@@ -184,25 +187,19 @@ describe("EthersLiquity", () => {
         findInsertPosition: () => Promise.resolve(["fake insert position"])
       });
 
-      const fakeConnection = {
-        signerOrProvider: user,
-        _contracts: {
-          borrowerOperations,
-          hintHelpers,
-          sortedTroves
-        }
-      };
+      const fakeLiquity = new PopulatableEthersLiquity(({
+        getNumberOfTroves: () => Promise.resolve(1000000),
+        getFees: () => Promise.resolve(new Fees(new Date(), 0, 0.99, 1)),
 
-      const fakeLiquity = new PopulatableEthersLiquity(
-        (fakeConnection as unknown) as LiquityConnection,
-        (undefined as unknown) as ReadableLiquity,
-        {
-          state: {
-            numberOfTroves: 1000000, // 10 * sqrt(1M) / 2500 = 4 expected getApproxHint calls
-            fees: new Fees(new Date(), 0, 0.99, 1)
+        connection: {
+          signerOrProvider: user,
+          _contracts: {
+            borrowerOperations,
+            hintHelpers,
+            sortedTroves
           }
-        } as LiquityStore
-      );
+        }
+      } as unknown) as ReadableEthersLiquity);
 
       const nominalCollateralRatio = Decimal.ONE.div(1.0025);
 
@@ -367,7 +364,7 @@ describe("EthersLiquity", () => {
 
   describe("Frontend", () => {
     it("should have no frontend initially", async () => {
-      const frontend = await liquity.getFrontendStatus();
+      const frontend = await liquity.getFrontendStatus(await user.getAddress());
 
       assertStrictEqual(frontend.status, "unregistered" as const);
     });
@@ -377,7 +374,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should have a frontend now", async () => {
-      const frontend = await liquity.getFrontendStatus();
+      const frontend = await liquity.getFrontendStatus(await user.getAddress());
 
       assertStrictEqual(frontend.status, "registered" as const);
       expect(`${frontend.kickbackRate}`).to.equal("0.75");
@@ -459,9 +456,9 @@ describe("EthersLiquity", () => {
     });
 
     it("should have a depleted stability deposit and some collateral gain", async () => {
-      const deposit = await liquity.getStabilityDeposit();
+      const stabilityDeposit = await liquity.getStabilityDeposit();
 
-      expect(deposit).to.deep.equal(
+      expect(stabilityDeposit).to.deep.equal(
         new StabilityDeposit(
           smallStabilityDeposit,
           Decimal.ZERO,
@@ -521,8 +518,8 @@ describe("EthersLiquity", () => {
           )
       });
 
-      const deposit = await liquity.getStabilityDeposit();
-      expect(deposit.isEmpty).to.be.true;
+      const stabilityDeposit = await liquity.getStabilityDeposit();
+      expect(stabilityDeposit.isEmpty).to.be.true;
     });
 
     describe("when people overstay", () => {
@@ -594,7 +591,13 @@ describe("EthersLiquity", () => {
       { depositCollateral: 1, borrowLUSD: 30 }
     ];
 
-    before(async () => {
+    before(async function () {
+      if (network.name === "dev") {
+        // Redemptions are only allowed after a bootstrap phase of 2 weeks.
+        // Since we can't fast-forward time on the dev chain, skip these tests.
+        this.skip();
+      }
+
       // Deploy new instances of the contracts, for a clean slate
       deployment = await deployLiquity(deployer);
 
@@ -713,10 +716,8 @@ describe("EthersLiquity", () => {
 
     before(async function () {
       if (network.name === "dev") {
-        // Only about the first 40 accounts work when testing on the dev chain due to a not yet
-        // known issue.
-
-        // Since this test needs more than that, let's skip it on dev for now.
+        // Redemptions are only allowed after a bootstrap phase of 2 weeks.
+        // Since we can't fast-forward time on the dev chain, skip these tests.
         this.skip();
       }
 

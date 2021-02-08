@@ -8,6 +8,45 @@ import { Decimal } from '@liquity/decimal';
 import { Decimalish } from '@liquity/decimal';
 
 // @internal (undocumented)
+export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiquityWithExtraParams<T> {
+    constructor(readable: _ReadableLiquityWithExtraParams<T>, cache: Partial<_LiquityReadCache<T>>);
+    // (undocumented)
+    getCollateralSurplusBalance(address?: string, ...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getFees(...extraParams: T): Promise<Fees>;
+    // (undocumented)
+    getFirstTroves(startIdx: number, numberOfTroves: number, ...extraParams: T): Promise<[string, TroveWithPendingRedistribution][]>;
+    // (undocumented)
+    getFrontendStatus(address?: string, ...extraParams: T): Promise<FrontendStatus>;
+    // (undocumented)
+    getLastTroves(startIdx: number, numberOfTroves: number, ...extraParams: T): Promise<[string, TroveWithPendingRedistribution][]>;
+    // (undocumented)
+    getLQTYBalance(address?: string, ...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getLQTYStake(address?: string, ...extraParams: T): Promise<LQTYStake>;
+    // (undocumented)
+    getLUSDBalance(address?: string, ...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getLUSDInStabilityPool(...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getNumberOfTroves(...extraParams: T): Promise<number>;
+    // (undocumented)
+    getPrice(...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getStabilityDeposit(address?: string, ...extraParams: T): Promise<StabilityDeposit>;
+    // (undocumented)
+    getTotal(...extraParams: T): Promise<Trove>;
+    // (undocumented)
+    getTotalRedistributed(...extraParams: T): Promise<Trove>;
+    // (undocumented)
+    getTotalStakedLQTY(...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getTrove(address?: string, ...extraParams: T): Promise<Trove>;
+    // (undocumented)
+    getTroveBeforeRedistribution(address?: string, ...extraParams: T): Promise<TroveWithPendingRedistribution>;
+    }
+
+// @internal (undocumented)
 export type _CollateralChange<T> = (_CollateralDeposit<T> & _NoCollateralWithdrawal) | (_CollateralWithdrawal<T> & _NoCollateralDeposit);
 
 // @internal (undocumented)
@@ -64,15 +103,6 @@ export type FrontendStatus = {
     kickbackRate: Decimal;
 };
 
-// @internal (undocumented)
-export function _glue<T, U>(t: new (...args: never[]) => T, u: new (...args: never[]) => U): new (t: T, u: U) => T & U;
-
-// @internal (undocumented)
-export function _glue<T, U, V>(t: new (...args: never[]) => T, u: new (...args: never[]) => U, v: new (...args: never[]) => V): new (t: T, u: U, v: V) => T & U & V;
-
-// @internal (undocumented)
-export function _glue<T, U, V, W>(t: new (...args: never[]) => T, u: new (...args: never[]) => U, v: new (...args: never[]) => V, w: new (...args: never[]) => W): new (t: T, u: U, v: V, w: W) => T & U & V & W;
-
 // @public
 export interface LiquidationDetails {
     collateralGasCompensation: Decimal;
@@ -80,6 +110,11 @@ export interface LiquidationDetails {
     lusdGasCompensation: Decimal;
     totalLiquidated: Trove;
 }
+
+// @internal (undocumented)
+export type _LiquityReadCache<T extends unknown[]> = {
+    [P in keyof ReadableLiquity]: ReadableLiquity[P] extends (...args: infer A) => Promise<infer R> ? (...params: [...originalParams: A, ...extraParams: T]) => R | undefined : never;
+};
 
 // @public
 export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
@@ -107,7 +142,6 @@ export abstract class LiquityStore<T = unknown> {
 export interface LiquityStoreBaseState {
     accountBalance: Decimal;
     collateralSurplusBalance: Decimal;
-    deposit: StabilityDeposit;
     fees: Fees;
     frontend: FrontendStatus;
     lqtyBalance: Decimal;
@@ -117,10 +151,11 @@ export interface LiquityStoreBaseState {
     numberOfTroves: number;
     ownFrontend: FrontendStatus;
     price: Decimal;
+    stabilityDeposit: StabilityDeposit;
     total: Trove;
     totalRedistributed: Trove;
     totalStakedLQTY: Decimal;
-    troveWithoutRedistribution: TroveWithPendingRedistribution;
+    troveBeforeRedistribution: TroveWithPendingRedistribution;
 }
 
 // @public
@@ -232,7 +267,7 @@ export interface ObservableLiquity {
     // (undocumented)
     watchPrice(onPriceChanged: (price: Decimal) => void): () => void;
     // (undocumented)
-    watchStabilityDeposit(onStabilityDepositChanged: (deposit: StabilityDeposit) => void, address?: string): () => void;
+    watchStabilityDeposit(onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void, address?: string): () => void;
     // (undocumented)
     watchTotal(onTotalChanged: (total: Trove) => void): () => void;
     // (undocumented)
@@ -250,14 +285,14 @@ export type PendingReceipt = {
 export const _pendingReceipt: PendingReceipt;
 
 // @internal (undocumented)
-export type _Populatable<T, R = unknown, S = unknown, P = unknown> = {
-    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? _PopulateMethod<A, PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, D>>>> : never;
+export type _PopulatableFrom<T, P> = {
+    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer U> ? U extends SentLiquityTransaction ? (...args: A) => Promise<PopulatedLiquityTransaction<P, U>> : never : never;
 };
 
-// Warning: (ae-incompatible-release-tags) The symbol "PopulatableLiquity" is marked as @public, but its signature references "_Populatable" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "PopulatableLiquity" is marked as @public, but its signature references "_PopulatableFrom" which is marked as @internal
 //
 // @public
-export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown> extends _Populatable<TransactableLiquity, R, S, P> {
+export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown> extends _PopulatableFrom<SendableLiquity<R, S>, P> {
     adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>>;
     borrowLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>>;
     claimCollateralSurplus(): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
@@ -289,9 +324,6 @@ export interface PopulatedLiquityTransaction<P = unknown, T extends SentLiquityT
     send(): Promise<T>;
 }
 
-// @internal (undocumented)
-export type _PopulateMethod<A extends unknown[], T extends PopulatedLiquityTransaction> = (...args: A) => Promise<T>;
-
 // @public
 export interface ReadableLiquity {
     getCollateralSurplusBalance(address?: string): Promise<Decimal>;
@@ -310,8 +342,13 @@ export interface ReadableLiquity {
     getTotalRedistributed(): Promise<Trove>;
     getTotalStakedLQTY(): Promise<Decimal>;
     getTrove(address?: string): Promise<Trove>;
-    getTroveWithoutRewards(address?: string): Promise<TroveWithPendingRedistribution>;
+    getTroveBeforeRedistribution(address?: string): Promise<TroveWithPendingRedistribution>;
 }
+
+// @internal (undocumented)
+export type _ReadableLiquityWithExtraParams<T extends unknown[]> = {
+    [P in keyof ReadableLiquity]: ReadableLiquity[P] extends (...params: infer A) => infer R ? (...params: [...originalParams: A, ...extraParams: T]) => R : never;
+};
 
 // @public
 export interface RedemptionDetails {
@@ -322,19 +359,14 @@ export interface RedemptionDetails {
 }
 
 // @internal (undocumented)
-export type _Sendable<T, R = unknown, S = unknown> = {
-    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? _SendMethod<A, SentLiquityTransaction<S, LiquityReceipt<R, D>>> : never;
+export type _SendableFrom<T, R, S> = {
+    [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D> ? (...args: A) => Promise<SentLiquityTransaction<S, LiquityReceipt<R, D>>> : never;
 };
 
-// @internal (undocumented)
-export type _SendableFrom<T> = {
-    [M in keyof T]: T[M] extends _PopulateMethod<infer A, PopulatedLiquityTransaction<unknown, infer U>> ? _SendMethod<A, U> : never;
-};
-
-// Warning: (ae-incompatible-release-tags) The symbol "SendableLiquity" is marked as @public, but its signature references "_Sendable" which is marked as @internal
+// Warning: (ae-incompatible-release-tags) The symbol "SendableLiquity" is marked as @public, but its signature references "_SendableFrom" which is marked as @internal
 //
 // @public
-export interface SendableLiquity<R = unknown, S = unknown> extends _Sendable<TransactableLiquity, R, S> {
+export interface SendableLiquity<R = unknown, S = unknown> extends _SendableFrom<TransactableLiquity, R, S> {
     adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
     borrowLUSD(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
     claimCollateralSurplus(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
@@ -359,9 +391,6 @@ export interface SendableLiquity<R = unknown, S = unknown> extends _Sendable<Tra
     withdrawGainsFromStaking(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>>;
 }
-
-// @internal (undocumented)
-export type _SendMethod<A extends unknown[], T extends SentLiquityTransaction> = (...args: A) => Promise<T>;
 
 // @public
 export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> {
@@ -426,11 +455,6 @@ export type SuccessfulReceipt<R = unknown, D = unknown> = {
 
 // @internal (undocumented)
 export const _successfulReceipt: <R, D>(rawReceipt: R, details: D, toString?: (() => string) | undefined) => SuccessfulReceipt<R, D>;
-
-// @internal (undocumented)
-export type _TransactableFrom<T> = {
-    [M in keyof T]: T[M] extends _SendMethod<infer A, SentLiquityTransaction<unknown, LiquityReceipt<unknown, infer D>>> ? (...args: A) => Promise<D> : never;
-};
 
 // @public
 export interface TransactableLiquity {

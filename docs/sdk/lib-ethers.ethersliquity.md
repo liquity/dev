@@ -9,20 +9,19 @@ Convenience class that combines multiple interfaces of the library in one object
 <b>Signature:</b>
 
 ```typescript
-export declare class EthersLiquity extends GluedEthersLiquity 
+export declare class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity 
 ```
-<b>Extends:</b> GluedEthersLiquity
+<b>Implements:</b> [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md)<!-- -->, [TransactableLiquity](./lib-base.transactableliquity.md)
 
-## Constructors
+## Remarks
 
-|  Constructor | Modifiers | Description |
-|  --- | --- | --- |
-|  [(constructor)(readable, populatable)](./lib-ethers.ethersliquity._constructor_.md) |  | Constructs a new instance of the <code>EthersLiquity</code> class |
+The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `EthersLiquity` class.
 
 ## Properties
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
+|  [connection](./lib-ethers.ethersliquity.connection.md) |  | [EthersLiquityConnection](./lib-ethers.ethersliquityconnection.md) |  |
 |  [populate](./lib-ethers.ethersliquity.populate.md) |  | [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md) |  |
 |  [send](./lib-ethers.ethersliquity.send.md) |  | [SendableEthersLiquity](./lib-ethers.sendableethersliquity.md) |  |
 
@@ -30,5 +29,46 @@ export declare class EthersLiquity extends GluedEthersLiquity
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [connect(signer, network)](./lib-ethers.ethersliquity.connect.md) | <code>static</code> |  |
+|  [adjustTrove(params, overrides)](./lib-ethers.ethersliquity.adjusttrove.md) |  | Adjust existing Trove by changing its collateral, debt, or both. |
+|  [borrowLUSD(amount, overrides)](./lib-ethers.ethersliquity.borrowlusd.md) |  | Adjust existing Trove by borrowing more LUSD. |
+|  [claimCollateralSurplus(overrides)](./lib-ethers.ethersliquity.claimcollateralsurplus.md) |  | Claim leftover collateral after a liquidation or redemption. |
+|  [closeTrove(overrides)](./lib-ethers.ethersliquity.closetrove.md) |  | Close existing Trove by repaying all debt and withdrawing all collateral. |
+|  [connectWithProvider(provider, optionalParams)](./lib-ethers.ethersliquity.connectwithprovider.md) | <code>static</code> |  |
+|  [connectWithProvider(provider, optionalParams)](./lib-ethers.ethersliquity.connectwithprovider_1.md) | <code>static</code> |  |
+|  [connectWithSigner(provider, optionalParams)](./lib-ethers.ethersliquity.connectwithsigner.md) | <code>static</code> |  |
+|  [connectWithSigner(provider, optionalParams)](./lib-ethers.ethersliquity.connectwithsigner_1.md) | <code>static</code> |  |
+|  [depositCollateral(amount, overrides)](./lib-ethers.ethersliquity.depositcollateral.md) |  | Adjust existing Trove by depositing more collateral. |
+|  [depositLUSDInStabilityPool(amount, frontendTag, overrides)](./lib-ethers.ethersliquity.depositlusdinstabilitypool.md) |  | Make a new Stability Deposit, or top up existing one. |
+|  [getCollateralSurplusBalance(address, overrides)](./lib-ethers.ethersliquity.getcollateralsurplusbalance.md) |  |  |
+|  [getFees(overrides)](./lib-ethers.ethersliquity.getfees.md) |  |  |
+|  [getFirstTroves(startIdx, numberOfTroves, overrides)](./lib-ethers.ethersliquity.getfirsttroves.md) |  |  |
+|  [getFrontendStatus(address, overrides)](./lib-ethers.ethersliquity.getfrontendstatus.md) |  |  |
+|  [getLastTroves(startIdx, numberOfTroves, overrides)](./lib-ethers.ethersliquity.getlasttroves.md) |  |  |
+|  [getLQTYBalance(address, overrides)](./lib-ethers.ethersliquity.getlqtybalance.md) |  |  |
+|  [getLQTYStake(address, overrides)](./lib-ethers.ethersliquity.getlqtystake.md) |  |  |
+|  [getLUSDBalance(address, overrides)](./lib-ethers.ethersliquity.getlusdbalance.md) |  |  |
+|  [getLUSDInStabilityPool(overrides)](./lib-ethers.ethersliquity.getlusdinstabilitypool.md) |  |  |
+|  [getNumberOfTroves(overrides)](./lib-ethers.ethersliquity.getnumberoftroves.md) |  |  |
+|  [getPrice(overrides)](./lib-ethers.ethersliquity.getprice.md) |  |  |
+|  [getStabilityDeposit(address, overrides)](./lib-ethers.ethersliquity.getstabilitydeposit.md) |  |  |
+|  [getTotal(overrides)](./lib-ethers.ethersliquity.gettotal.md) |  |  |
+|  [getTotalRedistributed(overrides)](./lib-ethers.ethersliquity.gettotalredistributed.md) |  |  |
+|  [getTotalStakedLQTY(overrides)](./lib-ethers.ethersliquity.gettotalstakedlqty.md) |  |  |
+|  [getTrove(address, overrides)](./lib-ethers.ethersliquity.gettrove.md) |  |  |
+|  [getTroveBeforeRedistribution(address, overrides)](./lib-ethers.ethersliquity.gettrovebeforeredistribution.md) |  |  |
+|  [liquidate(address, overrides)](./lib-ethers.ethersliquity.liquidate.md) |  | Liquidate one or more undercollateralized Troves. |
+|  [liquidateUpTo(maximumNumberOfTrovesToLiquidate, overrides)](./lib-ethers.ethersliquity.liquidateupto.md) |  | Liquidate the least collateralized Troves up to a maximum number. |
+|  [openTrove(params, overrides)](./lib-ethers.ethersliquity.opentrove.md) |  | Open a new Trove by depositing collateral and borrowing LUSD. |
+|  [redeemLUSD(amount, overrides)](./lib-ethers.ethersliquity.redeemlusd.md) |  | Redeem LUSD to native currency (e.g. Ether) at face value. |
+|  [registerFrontend(kickbackRate, overrides)](./lib-ethers.ethersliquity.registerfrontend.md) |  | Register current wallet address as a Liquity frontend. |
+|  [repayLUSD(amount, overrides)](./lib-ethers.ethersliquity.repaylusd.md) |  | Adjust existing Trove by repaying some of its debt. |
+|  [sendLQTY(toAddress, amount, overrides)](./lib-ethers.ethersliquity.sendlqty.md) |  | Send LQTY tokens to an address. |
+|  [sendLUSD(toAddress, amount, overrides)](./lib-ethers.ethersliquity.sendlusd.md) |  | Send LUSD tokens to an address. |
+|  [stakeLQTY(amount, overrides)](./lib-ethers.ethersliquity.stakelqty.md) |  | Stake LQTY to start earning fee revenue or increase existing stake. |
+|  [transferCollateralGainToTrove(overrides)](./lib-ethers.ethersliquity.transfercollateralgaintotrove.md) |  | Transfer [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) from Stability Deposit to Trove. |
+|  [unstakeLQTY(amount, overrides)](./lib-ethers.ethersliquity.unstakelqty.md) |  | Withdraw LQTY from staking. |
+|  [withdrawCollateral(amount, overrides)](./lib-ethers.ethersliquity.withdrawcollateral.md) |  | Adjust existing Trove by withdrawing some of its collateral. |
+|  [withdrawGainsFromStabilityPool(overrides)](./lib-ethers.ethersliquity.withdrawgainsfromstabilitypool.md) |  | Withdraw [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [LQTY reward](./lib-base.stabilitydeposit.lqtyreward.md) from Stability Deposit. |
+|  [withdrawGainsFromStaking(overrides)](./lib-ethers.ethersliquity.withdrawgainsfromstaking.md) |  | Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md) from LQTY stake. |
+|  [withdrawLUSDFromStabilityPool(amount, overrides)](./lib-ethers.ethersliquity.withdrawlusdfromstabilitypool.md) |  | Withdraw LUSD from Stability Deposit. |
 

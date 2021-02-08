@@ -119,7 +119,7 @@ const troveFromRawFields = ({
     )
   );
 
-const troveWithoutRedistribution = new Query<
+const troveBeforeRedistribution = new Query<
   TroveWithPendingRedistribution,
   TroveWithoutRewards,
   TroveWithoutRewardsVariables
@@ -201,22 +201,22 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     return totalRedistributed.watch(this.client, onTotalRedistributedChanged);
   }
 
-  getTroveWithoutRewards(address?: string) {
-    return troveWithoutRedistribution.get(this.client, { address: normalizeAddress(address) });
+  getTroveBeforeRedistribution(address?: string) {
+    return troveBeforeRedistribution.get(this.client, { address: normalizeAddress(address) });
   }
 
   watchTroveWithoutRewards(
     onTroveChanged: (trove: TroveWithPendingRedistribution) => void,
     address?: string
   ) {
-    return troveWithoutRedistribution.watch(this.client, onTroveChanged, {
+    return troveBeforeRedistribution.watch(this.client, onTroveChanged, {
       address: normalizeAddress(address)
     });
   }
 
   async getTrove(address?: string) {
     const [trove, totalRedistributed] = await Promise.all([
-      this.getTroveWithoutRewards(address),
+      this.getTroveBeforeRedistribution(address),
       this.getTotalRedistributed()
     ] as const);
 
@@ -252,7 +252,7 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   watchStabilityDeposit(
-    onStabilityDepositChanged: (deposit: StabilityDeposit) => void,
+    onStabilityDepositChanged: (stabilityDeposit: StabilityDeposit) => void,
     address?: string
   ): () => void {
     throw new Error("Method not implemented.");

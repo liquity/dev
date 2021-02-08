@@ -18,7 +18,6 @@ export interface LiquityStoreBaseState
 |  --- | --- | --- |
 |  [accountBalance](./lib-base.liquitystorebasestate.accountbalance.md) | [Decimal](./decimal.decimal.md) | User's native currency balance (e.g. Ether). |
 |  [collateralSurplusBalance](./lib-base.liquitystorebasestate.collateralsurplusbalance.md) | [Decimal](./decimal.decimal.md) | Amount of leftover collateral available for withdrawal to the user. |
-|  [deposit](./lib-base.liquitystorebasestate.deposit.md) | [StabilityDeposit](./lib-base.stabilitydeposit.md) | User's stability deposit. |
 |  [fees](./lib-base.liquitystorebasestate.fees.md) | [Fees](./lib-base.fees.md) | Calculator for current fees. |
 |  [frontend](./lib-base.liquitystorebasestate.frontend.md) | [FrontendStatus](./lib-base.frontendstatus.md) | Status of currently used frontend. |
 |  [lqtyBalance](./lib-base.liquitystorebasestate.lqtybalance.md) | [Decimal](./decimal.decimal.md) | User's LQTY token balance. |
@@ -28,8 +27,9 @@ export interface LiquityStoreBaseState
 |  [numberOfTroves](./lib-base.liquitystorebasestate.numberoftroves.md) | number | Number of Troves that are currently open. |
 |  [ownFrontend](./lib-base.liquitystorebasestate.ownfrontend.md) | [FrontendStatus](./lib-base.frontendstatus.md) | Status of user's own frontend. |
 |  [price](./lib-base.liquitystorebasestate.price.md) | [Decimal](./decimal.decimal.md) | Current price of the native currency (e.g. Ether) in USD. |
+|  [stabilityDeposit](./lib-base.liquitystorebasestate.stabilitydeposit.md) | [StabilityDeposit](./lib-base.stabilitydeposit.md) | User's stability deposit. |
 |  [total](./lib-base.liquitystorebasestate.total.md) | [Trove](./lib-base.trove.md) | Total collateral and debt in the Liquity system. |
 |  [totalRedistributed](./lib-base.liquitystorebasestate.totalredistributed.md) | [Trove](./lib-base.trove.md) | Total collateral and debt per stake that has been liquidated through redistribution. |
 |  [totalStakedLQTY](./lib-base.liquitystorebasestate.totalstakedlqty.md) | [Decimal](./decimal.decimal.md) | Total amount of LQTY currently staked. |
-|  [troveWithoutRedistribution](./lib-base.liquitystorebasestate.trovewithoutredistribution.md) | [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | User's Trove in its state after the last direct modification. |
+|  [troveBeforeRedistribution](./lib-base.liquitystorebasestate.trovebeforeredistribution.md) | [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | User's Trove in its state after the last direct modification. |
 
