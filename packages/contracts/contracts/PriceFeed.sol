@@ -256,14 +256,13 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                     _changeStatus(Status.bothOraclesUntrusted);
                     return lastGoodPrice;
                 }
-                // If Chainlink is broken and Tellor is frozen, switch to using Tellor, and return last good price
-                if (_tellorIsFrozen(tellorResponse)) {
-                    _changeStatus(Status.usingTellorChainlinkUntrusted);
-                    return lastGoodPrice;
-                }
 
-                // If Chainlink is broken and Tellor is working, switch purely to Tellor, and use Tellor's current price
+                // If Chainlink is broken, remember it and switch to using Tellor
                 _changeStatus(Status.usingTellorChainlinkUntrusted);
+
+                if (_tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
+
+                // If Tellor is working, return Tellor current price
                 return _storeTellorPrice(tellorResponse);
             }
 
