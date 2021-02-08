@@ -50,9 +50,9 @@ import { LiquityConnection, _getContracts, _priceFeedIsTestnet } from "./contrac
 import { logsToString } from "./parseLogs";
 import { _EthersLiquityBase } from "./EthersLiquityBase";
 
-// With 68 iterations redemption costs about ~10M gas, and each iteration accounts for ~144k more
+// With 70 iterations redemption costs about ~10M gas, and each iteration accounts for ~138k more
 /** @internal */
-export const _redeemMaxIterations = 68;
+export const _redeemMaxIterations = 70;
 
 const slippageTolerance = Decimal.from(0.005); // 0.5%
 

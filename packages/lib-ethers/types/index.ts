@@ -593,7 +593,6 @@ interface SortedTrovesCalls {
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
   owner(_overrides?: CallOverrides): Promise<string>;
   troveManager(_overrides?: CallOverrides): Promise<string>;
-  troveManagerAddress(_overrides?: CallOverrides): Promise<string>;
   validInsertPosition(_NICR: BigNumberish, _prevId: string, _nextId: string, _overrides?: CallOverrides): Promise<boolean>;
 }
 
