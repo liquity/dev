@@ -10,7 +10,8 @@ import {
   StabilityDeposit,
   Trove,
   TroveWithPendingRedistribution,
-  _CachedReadableLiquity
+  _CachedReadableLiquity,
+  _LiquityReadCache
 } from "@liquity/lib-base";
 
 import { MultiTroveGetter } from "../types";
@@ -27,10 +28,7 @@ import {
   _requireFrontendAddress
 } from "./EthersLiquityConnection";
 
-import {
-  BlockPolledLiquityStore,
-  _BlockPolledLiquityStoreBasedCache
-} from "./BlockPolledLiquityStore";
+import { BlockPolledLiquityStore } from "./BlockPolledLiquityStore";
 
 // TODO: these are constant in the contracts, so it doesn't make sense to make a call for them,
 // but to avoid having to update them here when we change them in the contracts, we could read
@@ -357,6 +355,139 @@ export interface ReadableEthersLiquityWithStore<T extends LiquityStore = Liquity
   readonly store: T;
 }
 
+class BlockPolledLiquityStoreBasedCache
+  implements Partial<_LiquityReadCache<[overrides?: EthersCallOverrides]>> {
+  private _store: BlockPolledLiquityStore;
+
+  constructor(store: BlockPolledLiquityStore) {
+    this._store = store;
+  }
+
+  private _blockHit(overrides?: EthersCallOverrides): boolean {
+    return (
+      !overrides ||
+      overrides.blockTag === undefined ||
+      overrides.blockTag === this._store.state.blockTag
+    );
+  }
+
+  private _userHit(address?: string, overrides?: EthersCallOverrides): boolean {
+    return (
+      this._blockHit(overrides) &&
+      (address === undefined || address === this._store.connection.userAddress)
+    );
+  }
+
+  private _frontendHit(address?: string, overrides?: EthersCallOverrides): boolean {
+    return (
+      this._blockHit(overrides) &&
+      (address === undefined || address === this._store.connection.frontendTag)
+    );
+  }
+
+  getTotalRedistributed(overrides?: EthersCallOverrides): Trove | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.totalRedistributed;
+    }
+  }
+
+  getTroveBeforeRedistribution(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): TroveWithPendingRedistribution | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.troveBeforeRedistribution;
+    }
+  }
+
+  getTrove(address?: string, overrides?: EthersCallOverrides): Trove | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.trove;
+    }
+  }
+
+  getNumberOfTroves(overrides?: EthersCallOverrides): number | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.numberOfTroves;
+    }
+  }
+
+  getPrice(overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.price;
+    }
+  }
+
+  getTotal(overrides?: EthersCallOverrides): Trove | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.total;
+    }
+  }
+
+  getStabilityDeposit(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): StabilityDeposit | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.stabilityDeposit;
+    }
+  }
+
+  getLUSDInStabilityPool(overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.lusdInStabilityPool;
+    }
+  }
+
+  getLUSDBalance(address?: string, overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.lusdBalance;
+    }
+  }
+
+  getLQTYBalance(address?: string, overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.lqtyBalance;
+    }
+  }
+
+  getCollateralSurplusBalance(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): Decimal | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.collateralSurplusBalance;
+    }
+  }
+
+  getFees(overrides?: EthersCallOverrides): Fees | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.fees;
+    }
+  }
+
+  getLQTYStake(address?: string, overrides?: EthersCallOverrides): LQTYStake | undefined {
+    if (this._userHit(address, overrides)) {
+      return this._store.state.lqtyStake;
+    }
+  }
+
+  getTotalStakedLQTY(overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.totalStakedLQTY;
+    }
+  }
+
+  getFrontendStatus(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): { status: "unregistered" } | { status: "registered"; kickbackRate: Decimal } | undefined {
+    if (this._frontendHit(address, overrides)) {
+      return this._store.state.frontend;
+    }
+  }
+}
+
 class _BlockPolledReadableEthersLiquity
   extends _CachedReadableLiquity<[overrides?: EthersCallOverrides]>
   implements ReadableEthersLiquityWithStore<BlockPolledLiquityStore> {
@@ -366,7 +497,7 @@ class _BlockPolledReadableEthersLiquity
   constructor(readable: ReadableEthersLiquity) {
     const store = new BlockPolledLiquityStore(readable);
 
-    super(readable, new _BlockPolledLiquityStoreBasedCache(store));
+    super(readable, new BlockPolledLiquityStoreBasedCache(store));
 
     this.store = store;
     this.connection = readable.connection;

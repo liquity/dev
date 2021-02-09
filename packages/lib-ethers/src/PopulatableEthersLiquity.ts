@@ -207,15 +207,25 @@ export interface _TroveChangeWithFees<T> {
   fee: Decimal;
 }
 
-/** @internal */
-export class _PopulatableEthersLiquityBase {
-  protected readonly _readable: ReadableEthersLiquity;
+/**
+ * Ethers-based implementation of {@link @liquity/lib-base#PopulatableLiquity}.
+ *
+ * @public
+ */
+export class PopulatableEthersLiquity
+  implements
+    PopulatableLiquity<
+      EthersTransactionReceipt,
+      EthersTransactionResponse,
+      EthersPopulatedTransaction
+    > {
+  private readonly _readable: ReadableEthersLiquity;
 
   constructor(readable: ReadableEthersLiquity) {
     this._readable = readable;
   }
 
-  protected _wrapSimpleTransaction(
+  private _wrapSimpleTransaction(
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): PopulatedEthersLiquityTransaction<void> {
     return new PopulatedEthersLiquityTransaction(
@@ -225,7 +235,7 @@ export class _PopulatableEthersLiquityBase {
     );
   }
 
-  protected _wrapTroveChangeWithFees<T>(
+  private _wrapTroveChangeWithFees<T>(
     params: T,
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): PopulatedEthersLiquityTransaction<_TroveChangeWithFees<T>> {
@@ -253,7 +263,7 @@ export class _PopulatableEthersLiquityBase {
     );
   }
 
-  protected async _wrapTroveClosure(
+  private async _wrapTroveClosure(
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): Promise<PopulatedEthersLiquityTransaction<TroveClosureDetails>> {
     const { activePool, lusdToken } = _getContracts(this._readable.connection);
@@ -280,7 +290,7 @@ export class _PopulatableEthersLiquityBase {
     );
   }
 
-  protected _wrapLiquidation(
+  private _wrapLiquidation(
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): PopulatedEthersLiquityTransaction<LiquidationDetails> {
     const { troveManager } = _getContracts(this._readable.connection);
@@ -314,7 +324,7 @@ export class _PopulatableEthersLiquityBase {
     );
   }
 
-  protected _wrapRedemption(
+  private _wrapRedemption(
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): PopulatedEthersLiquityTransaction<RedemptionDetails> {
     const { troveManager } = _getContracts(this._readable.connection);
@@ -360,7 +370,7 @@ export class _PopulatableEthersLiquityBase {
     };
   }
 
-  protected _wrapStabilityPoolGainsWithdrawal(
+  private _wrapStabilityPoolGainsWithdrawal(
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails> {
     return new PopulatedEthersLiquityTransaction(
@@ -370,7 +380,7 @@ export class _PopulatableEthersLiquityBase {
     );
   }
 
-  protected _wrapStabilityDepositTopup(
+  private _wrapStabilityDepositTopup(
     change: { depositLUSD: Decimal },
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails> {
@@ -385,7 +395,7 @@ export class _PopulatableEthersLiquityBase {
     );
   }
 
-  protected async _wrapStabilityDepositWithdrawal(
+  private async _wrapStabilityDepositWithdrawal(
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
     const { stabilityPool, lusdToken } = _getContracts(this._readable.connection);
@@ -410,7 +420,7 @@ export class _PopulatableEthersLiquityBase {
     );
   }
 
-  protected _wrapCollateralGainTransfer(
+  private _wrapCollateralGainTransfer(
     rawPopulatedTransaction: EthersPopulatedTransaction
   ): PopulatedEthersLiquityTransaction<CollateralGainTransferDetails> {
     const { borrowerOperations } = _getContracts(this._readable.connection);
@@ -476,7 +486,7 @@ export class _PopulatableEthersLiquityBase {
     return sortedTroves.findInsertPosition(nominalCollateralRatio.hex, hintAddress, hintAddress);
   }
 
-  protected async _findHints(trove: Trove): Promise<[string, string]> {
+  private async _findHints(trove: Trove): Promise<[string, string]> {
     if (trove instanceof TroveWithPendingRedistribution) {
       throw new Error("Rewards must be applied to this Trove");
     }
@@ -484,7 +494,7 @@ export class _PopulatableEthersLiquityBase {
     return this._findHintsForNominalCollateralRatio(trove._nominalCollateralRatio);
   }
 
-  protected async _findRedemptionHints(amount: Decimal): Promise<[string, string, string, Decimal]> {
+  private async _findRedemptionHints(amount: Decimal): Promise<[string, string, string, Decimal]> {
     const { hintHelpers } = _getContracts(this._readable.connection);
     const price = await this._readable.getPrice();
 
@@ -501,24 +511,6 @@ export class _PopulatableEthersLiquityBase {
       : [AddressZero, AddressZero];
 
     return [firstRedemptionHint, upperHint, lowerHint, collateralRatio];
-  }
-}
-
-/**
- * Ethers-based implementation of {@link @liquity/lib-base#PopulatableLiquity}.
- *
- * @public
- */
-export class PopulatableEthersLiquity
-  extends _PopulatableEthersLiquityBase
-  implements
-    PopulatableLiquity<
-      EthersTransactionReceipt,
-      EthersTransactionResponse,
-      EthersPopulatedTransaction
-    > {
-  constructor(readable: ReadableEthersLiquity) {
-    super(readable);
   }
 
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.openTrove} */
