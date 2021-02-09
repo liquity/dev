@@ -3,10 +3,10 @@
 
 pragma solidity 0.6.11;
 
-import "../Dependencies/DappSys/DSGuardFactory.sol";
-import "../Dependencies/DappSys/DSGuard.sol";
-import "../Dependencies/DappSys/DSAuth.sol";
+import "../Dependencies/DappSys/IDSGuard.sol";
+import "../Dependencies/DappSys/ds-auth/IDSAuth.sol";
 import "../Interfaces/ISubscription.sol";
+
 
 /// @title SubscriptionsScript handles authorization and interaction with the Subscriptions contract
 contract SubscriptionScript {
@@ -24,12 +24,12 @@ contract SubscriptionScript {
     /// @notice Called in the context of DSProxy to authorize an address
     /// @param _contractAddr Address which will be authorized
     function givePermission(address _contractAddr) public {
-        address currAuthority = address(DSAuth(address(this)).authority());
-        DSGuard guard = DSGuard(currAuthority);
+        address currAuthority = address(IDSAuth(address(this)).authority());
+        IDSGuard guard = IDSGuard(currAuthority);
 
         if (currAuthority == address(0)) {
-            guard = DSGuardFactory(FACTORY_ADDRESS).newGuard();
-            DSAuth(address(this)).setAuthority(DSAuthority(address(guard)));
+            guard = IDSGuardFactory(FACTORY_ADDRESS).newGuard();
+            IDSAuth(address(this)).setAuthority(DSAuthority(address(guard)));
         }
 
         guard.permit(_contractAddr, address(this), bytes4(keccak256("execute(address,bytes)")));
@@ -38,20 +38,20 @@ contract SubscriptionScript {
     /// @notice Called in the context of DSProxy to remove authority of an address
     /// @param _contractAddr Auth address which will be removed from authority list
     function removePermission(address _contractAddr) public {
-        address currAuthority = address(DSAuth(address(this)).authority());
-        
+        address currAuthority = address(IDSAuth(address(this)).authority());
+
         // if there is no authority, that means that contract doesn't have permission
         if (currAuthority == address(0)) {
             return;
         }
 
-        DSGuard guard = DSGuard(currAuthority);
+        IDSGuard guard = IDSGuard(currAuthority);
         guard.forbid(_contractAddr, address(this), bytes4(keccak256("execute(address,bytes)")));
     }
 
     function proxyOwner() internal view returns(address) {
-        return DSAuth(address(this)).owner();
-    } 
+        return IDSAuth(address(this)).owner();
+    }
 
     /// @notice Calls subscription contract and creates a DSGuard if non existent
     /// @param _minRatio Minimum ratio below which repay is triggered

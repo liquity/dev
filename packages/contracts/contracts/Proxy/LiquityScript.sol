@@ -3,7 +3,6 @@
 
 pragma solidity 0.6.11;
 
-import "../Dependencies/DappSys/DSProxy.sol";
 import "../Interfaces/IBorrowerOperations.sol";
 import "../Interfaces/ITroveManager.sol";
 import "./Subscriptions.sol";
@@ -49,10 +48,4 @@ contract LiquityScript {
 
         IBorrowerOperations(borrowerOperationsAddress).adjustTrove{value: ethReturned}(0, 0, 0, false, address(this), address(this));
 	}
-
-    /// @notice Returns the owner of the DSProxy that called the contract
-    function getUserAddress() internal view returns (address) {
-        DSProxy proxy = DSProxy(payable(address(this)));
-        return proxy.owner();
-    }
 }
