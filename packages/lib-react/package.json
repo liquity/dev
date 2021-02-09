@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@ethersproject/bignumber": "^5.0.0",
-    "@liquity/decimal": "^0.0.1",
     "@liquity/lib-base": "^0.0.1",
     "@types/react": "^17.0.0",
     "@typescript-eslint/eslint-plugin": "^4.4.1",

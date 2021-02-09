@@ -6,7 +6,6 @@
     "fuzzer": "ts-node src/index.ts"
   },
   "devDependencies": {
-    "@liquity/decimal": "^0.0.1",
     "@liquity/lib-base": "^0.0.1",
     "@liquity/lib-ethers": "^0.0.1",
     "@liquity/lib-subgraph": "^0.0.1",

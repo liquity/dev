@@ -1,30 +1,28 @@
 import fetch from "cross-fetch";
-import { gql, ApolloClient, InMemoryCache, NormalizedCacheObject, HttpLink } from "@apollo/client";
+import { ApolloClient, gql, HttpLink, InMemoryCache, NormalizedCacheObject } from "@apollo/client";
 import { getAddress } from "@ethersproject/address";
-import { BigNumber } from "@ethersproject/bignumber";
-
-import { Decimal } from "@liquity/decimal";
-
-import { Query } from "./Query";
 
 import {
-  ReadableLiquity,
-  ObservableLiquity,
-  TroveWithPendingRedistribution,
-  Trove,
-  _emptyTrove,
-  StabilityDeposit,
+  Decimal,
   Fees,
+  FrontendStatus,
   LQTYStake,
-  FrontendStatus
+  ObservableLiquity,
+  ReadableLiquity,
+  StabilityDeposit,
+  Trove,
+  TroveWithPendingRedistribution,
+  _emptyTrove
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
 import { Global } from "../types/Global";
-import { TroveRawFields } from "../types/TroveRawFields";
-import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
-import { Troves, TrovesVariables } from "../types/Troves";
 import { BlockNumberDummy, BlockNumberDummyVariables } from "../types/BlockNumberDummy";
+import { TroveRawFields } from "../types/TroveRawFields";
+import { Troves, TrovesVariables } from "../types/Troves";
+import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
+
+import { Query } from "./Query";
 
 const normalizeAddress = (address?: string) => {
   if (address === undefined) {
@@ -34,7 +32,7 @@ const normalizeAddress = (address?: string) => {
   return address.toLowerCase();
 };
 
-const decimalify = (bigNumberString: string) => new Decimal(BigNumber.from(bigNumberString));
+const decimalify = (bigNumberString: string) => Decimal.fromBigNumberString(bigNumberString);
 
 const queryGlobal = gql`
   query Global {

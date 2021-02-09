@@ -1,7 +1,6 @@
 import React from "react";
 
-import { Decimal, Decimalish } from "@liquity/decimal";
-import { LUSD_LIQUIDATION_RESERVE, LiquityStoreState } from "@liquity/lib-base";
+import { LUSD_LIQUIDATION_RESERVE, LiquityStoreState, Decimal, Decimalish } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { TroveEditor } from "./TroveEditor";

@@ -7,14 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-static prettify(bigNumberish: BigNumberish): string;
+prettify(precision?: number): string;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  bigNumberish | BigNumberish |  |
+|  precision | number |  |
 
 <b>Returns:</b>
 

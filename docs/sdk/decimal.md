@@ -8,11 +8,11 @@
 
 |  Class | Description |
 |  --- | --- |
-|  [Decimal](./decimal.decimal.md) |  |
+|  [Decimal](./decimal.decimal.md) | Fixed-point decimal bignumber with 18 digits of precision. |
 
 ## Type Aliases
 
 |  Type Alias | Description |
 |  --- | --- |
-|  [Decimalish](./decimal.decimalish.md) |  |
+|  [Decimalish](./decimal.decimalish.md) | Types that can be converted into a Decimal. |
 

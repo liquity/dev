@@ -1,7 +1,6 @@
 import { Signer } from "@ethersproject/abstract-signer";
 
-import { Decimal, Decimalish } from "@liquity/decimal";
-import { Trove } from "@liquity/lib-base";
+import { Decimal, Decimalish, Trove } from "@liquity/lib-base";
 import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
 
 import {
@@ -116,7 +115,7 @@ export class Fixture {
 
     await this.funder.sendTransaction({
       to: userAddress,
-      value: newTrove.collateral.bigNumber
+      value: newTrove.collateral.hex
     });
 
     console.log(

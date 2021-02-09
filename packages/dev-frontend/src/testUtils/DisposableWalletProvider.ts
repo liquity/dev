@@ -1,6 +1,7 @@
 import { hexlify } from "@ethersproject/bytes";
 import { Wallet } from "@ethersproject/wallet";
-import { Decimal, Decimalish } from "@liquity/decimal";
+
+import { Decimal, Decimalish } from "@liquity/lib-base";
 
 export class DisposableWalletProvider {
   private readonly url: string;
@@ -36,7 +37,7 @@ export class DisposableWalletProvider {
       {
         from: this.funderWallet.address,
         to: this.wallet.address,
-        value: hexlify(this.ethAmount.bigNumber),
+        value: this.ethAmount.hex,
         gas: hexlify(21000)
       }
     ]);

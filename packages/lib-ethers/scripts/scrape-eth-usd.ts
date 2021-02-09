@@ -4,7 +4,7 @@ import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { Contract, CallOverrides, EventFilter } from "@ethersproject/contracts";
 import { AlchemyProvider } from "@ethersproject/providers";
 
-import { Decimal } from "@liquity/decimal";
+import { Decimal } from "@liquity/lib-base";
 
 const outputFile = "eth-usd.csv";
 
@@ -67,10 +67,10 @@ const formatDateTime = (timestamp: number) => {
       aggregator.getTimestamp(roundId),
       aggregator.getAnswer(roundId)
     ]).then(([timestamp, answer]) => [
-      roundId.toString(),
-      timestamp.toString(),
+      `${roundId}`,
+      `${timestamp}`,
       formatDateTime(timestamp.toNumber()),
-      new Decimal(answer.mul(answerMultiplier)).toString()
+      `${Decimal.fromBigNumberString(answer.mul(answerMultiplier).toHexString())}`
     ]);
 
   const roundsPerPass = 10;

@@ -7,8 +7,8 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 import { BlockTag } from '@ethersproject/abstract-provider';
 import { CollateralGainTransferDetails } from '@liquity/lib-base';
-import { Decimal } from '@liquity/decimal';
-import { Decimalish } from '@liquity/decimal';
+import { Decimal } from '@liquity/lib-base';
+import { Decimalish } from '@liquity/lib-base';
 import { FailedReceipt } from '@liquity/lib-base';
 import { Fees } from '@liquity/lib-base';
 import { FrontendStatus } from '@liquity/lib-base';
@@ -456,7 +456,7 @@ export interface ReadableEthersLiquityWithStore<T extends LiquityStore = Liquity
 }
 
 // @internal (undocumented)
-export const _redeemMaxIterations = 68;
+export const _redeemMaxIterations = 70;
 
 // @public
 export class SendableEthersLiquity implements SendableLiquity<EthersTransactionReceipt, EthersTransactionResponse> {

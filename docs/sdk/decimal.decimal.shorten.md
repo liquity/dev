@@ -7,15 +7,8 @@
 <b>Signature:</b>
 
 ```typescript
-static shorten(bigNumber: BigNumber): string;
+shorten(): string;
 ```
-
-## Parameters
-
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  bigNumber | BigNumber |  |
-
 <b>Returns:</b>
 
 string

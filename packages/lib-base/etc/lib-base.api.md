@@ -602,6 +602,8 @@ export class TroveWithPendingRedistribution extends Trove {
     }
 
 
+export * from "@liquity/decimal";
+
 // (No @packageDocumentation comment for this package)
 
 ```

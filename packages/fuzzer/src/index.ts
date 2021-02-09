@@ -6,8 +6,7 @@ import "colors";
 import { Wallet } from "@ethersproject/wallet";
 import { JsonRpcProvider } from "@ethersproject/providers";
 
-import { Decimal, Difference } from "@liquity/decimal";
-import { Trove, TroveWithPendingRedistribution } from "@liquity/lib-base";
+import { Decimal, Difference, Trove, TroveWithPendingRedistribution } from "@liquity/lib-base";
 import { deploymentOnNetwork, EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
@@ -72,7 +71,7 @@ yargs
 
         await funder.sendTransaction({
           to: userAddress,
-          value: Decimal.from(collateral).bigNumber
+          value: Decimal.from(collateral).hex
         });
 
         await liquity.openTrove(
@@ -230,7 +229,7 @@ yargs
 
           await funder.sendTransaction({
             to: randomUser.address,
-            value: tempTrove.collateral.bigNumber
+            value: tempTrove.collateral.hex
           });
 
           await randomLiquity.openTrove(

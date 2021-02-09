@@ -14,7 +14,7 @@ import { task, HardhatUserConfig, types, extendEnvironment } from "hardhat/confi
 import { NetworkUserConfig } from "hardhat/types";
 import "@nomiclabs/hardhat-ethers";
 
-import { Decimal } from "@liquity/decimal";
+import { Decimal } from "@liquity/lib-base";
 
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import { _connectToContracts, _LiquityDeploymentJSON, _priceFeedIsTestnet } from "./src/contracts";
@@ -155,7 +155,7 @@ task("deploy", "Deploys the contracts to the network")
     types.boolean
   )
   .setAction(async ({ channel, gasPrice, useRealPriceFeed }: DeployParams, env) => {
-    const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).bigNumber };
+    const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).hex };
     const [deployer] = await env.ethers.getSigners();
 
     useRealPriceFeed ??= env.network.name === "mainnet";

@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
-import { Decimal, Percent } from "@liquity/decimal";
 import {
   MINIMUM_COLLATERAL_RATIO,
   CRITICAL_COLLATERAL_RATIO,
   LUSD_LIQUIDATION_RESERVE,
+  Decimal,
+  Percent,
   LiquityStoreState,
   Trove,
   TroveAdjustmentParams,

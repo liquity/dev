@@ -1,8 +1,7 @@
 import { BigNumber } from "@ethersproject/bignumber";
 
-import { Decimal } from "@liquity/decimal";
-
 import {
+  Decimal,
   LiquityStoreState,
   LiquityStoreBaseState,
   TroveWithPendingRedistribution,
@@ -53,7 +52,7 @@ const promiseAllValues = <T>(object: T) => {
   ) as Promise<ResolvedValues<T>>;
 };
 
-const decimalify = (bigNumber: BigNumber) => new Decimal(bigNumber);
+const decimalify = (bigNumber: BigNumber) => Decimal.fromBigNumberString(bigNumber.toHexString());
 
 /**
  * Ethers-based {@link @liquity/lib-base#LiquityStore} that updates state whenever there's a new

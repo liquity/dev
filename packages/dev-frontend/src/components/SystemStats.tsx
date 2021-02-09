@@ -1,8 +1,7 @@
 import React from "react";
 import { Card, Heading, Link, Box } from "theme-ui";
 
-import { Decimal, Percent } from "@liquity/decimal";
-import { LiquityStoreState } from "@liquity/lib-base";
+import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -93,7 +92,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Box>Borrowing fee: {borrowingFeePct.toString(2)}</Box>
       <Box>Redemption fee: {redemptionFeePct.toString(2)}</Box>
 
-      <Box sx={{ mt: 2 }}>Number of Liquity Troves: {Decimal.prettify(numberOfTroves)}</Box>
+      <Box sx={{ mt: 2 }}>Number of Liquity Troves: {Decimal.from(numberOfTroves).prettify(0)}</Box>
       <Box>
         Total {COIN} supply: {total.debt.shorten()}
       </Box>

@@ -1,8 +1,8 @@
 import { BigNumber } from "@ethersproject/bignumber";
 import { Event } from "@ethersproject/contracts";
 
-import { Decimal } from "@liquity/decimal";
 import {
+  Decimal,
   ObservableLiquity,
   StabilityDeposit,
   Trove,

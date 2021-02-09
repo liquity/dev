@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Percent, Difference, Decimalish, Decimal } from "@liquity/decimal";
 import {
   CRITICAL_COLLATERAL_RATIO,
   MINIMUM_COLLATERAL_RATIO,
+  Percent,
+  Difference,
+  Decimalish,
+  Decimal,
   Trove,
   LiquityStoreState,
   TroveChange

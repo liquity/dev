@@ -1,3 +1,5 @@
+export * from "@liquity/decimal";
+
 export * from "./src/constants";
 export * from "./src/Trove";
 export * from "./src/StabilityDeposit";
