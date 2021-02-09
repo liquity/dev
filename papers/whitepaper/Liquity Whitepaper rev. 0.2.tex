@@ -141,15 +141,15 @@ When redeemed, the system uses the LUSD to repay the riskiest Trove(s) with the 
 
 Troves that are fully redeemed from, i.e. whose debt is 0, are automatically closed, and the borrower can reclaim the ETH surplus.\\
 
-\textit{Redemption fee and base rate}. Liquity aims to determine the redemption fee in function of the current base rate and the redeemed LUSD amount as a proportion of the entire stablecoin supply. The base rate is initialized to 0\% at the start.
+\textit{Redemption fee and base rate}. Liquity aims to determine the redemption fee in function of the current base rate and the redeemed LUSD amount as a proportion of the entire stablecoin supply. The base rate is initialized to 0\% at system launch.
 
 Upon every redemption, the base rate is increased by the proportion of redeemed LUSD and then applied to the current redemption as follows:
 $$b(t):=b(t-1)+\alpha\times\frac{m}{n}$$
 where $b(t)$ is the base rate at time $t,m$ the amount of redeemed LUSD, $n$ the current supply of LUSD and $\alpha$ a constant parameter.\\
 
-The base rate decays over time due to a decay rate that is applied with every redemption and issuance of LUSD prior to calculating the resulting fee. The decay is of the form:
+The base rate decays over time due to a decay factor that is applied with every redemption and issuance of LUSD prior to calculating the resulting fee. The decay is of the form:
 $$b(t):=b(t-1)\times\delta^{\triangle t}$$
-where $\delta$ is a decay factor (e.g. 0.94) and $\triangle t$ the time elapsed since the last redemption or loan issuance. (Note: the exact formulas may be subject to change before launch)\\
+where $\delta$ is a decay factor (e.g. 0.94) and $\triangle t$ the time elapsed since the last redemption or loan issuance. The decay factor $\delta$ is chosen such that the half-life of the base rate is 12 hours. \\
 
 Redemptions are thus subject to a \textbf{redemption fee} which is a function of the \textbf{base rate} and the redeemed amount of LUSD. The minimum redemption fee is 0.5\%. The fee is subtracted from the redeemed LUSD, reducing the ETH that the redeemer receives in return.\\
 \begin{tcolorbox}
