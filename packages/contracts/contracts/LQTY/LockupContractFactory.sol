@@ -66,7 +66,7 @@ contract LockupContractFactory is ILockupContractFactory, Ownable, CheckContract
     }
 
     // --- 'require'  functions ---
-    function _requireLQTYAddressIsSet(address _lqtyTokenAddress) internal view {
+    function _requireLQTYAddressIsSet(address _lqtyTokenAddress) internal pure {
         require(_lqtyTokenAddress != address(0), "LCF: LQTY Address is not set");
     }
 }

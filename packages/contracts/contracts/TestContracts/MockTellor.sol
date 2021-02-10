@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.11;
+
 
 contract MockTellor {
 
@@ -29,16 +33,16 @@ contract MockTellor {
 
     // --- Mock data reporting functions --- 
 
-    function getTimestampbyRequestIDandIndex(uint _requestId, uint _count) external view returns (uint) {
+    function getTimestampbyRequestIDandIndex(uint, uint) external view returns (uint) {
         return updateTime;
     }
 
-    function getNewValueCountbyRequestId(uint reqId) external view returns (uint) {
+    function getNewValueCountbyRequestId(uint) external view returns (uint) {
         if (revertRequest) {require (1 == 0, "Tellor request reverted");}
         return 1;
     }
 
-    function retrieveData(uint256 _requestId, uint256 _timestamp) external view returns (uint256) {
+    function retrieveData(uint256, uint256) external view returns (uint256) {
         return price;
     }
 
