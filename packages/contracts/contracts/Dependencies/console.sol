@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.6.11;
+pragma solidity >=0.5.0 <=0.6.12;
 
 // Buidler's helper contract for console logging
 library console {
