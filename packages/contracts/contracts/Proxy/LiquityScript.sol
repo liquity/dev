@@ -6,20 +6,28 @@ pragma solidity 0.6.11;
 import "../Interfaces/IBorrowerOperations.sol";
 import "../Interfaces/ITroveManager.sol";
 import "./Subscriptions.sol";
+import "./BorrowerOperationsScript.sol";
+import "./TokenScript.sol";
+import "./ETHTransferScript.sol";
 
-contract LiquityScript {
+
+contract LiquityScript is BorrowerOperationsScript, TokenScript, ETHTransferScript {
     using SafeMath for uint256;
 
     address immutable borrowerOperationsAddress;
     address immutable troveManagerAddress;
-    
-    constructor(address _borrowerOperationsAddress, address _troveManagerAddress) public {  
+
+    constructor(
+        address _borrowerOperationsAddress,
+        address _troveManagerAddress,
+        address _lusdTokenAddress
+    )
+        BorrowerOperationsScript(IBorrowerOperations(_borrowerOperationsAddress))
+        TokenScript(_lusdTokenAddress)
+        public
+    {
         borrowerOperationsAddress = _borrowerOperationsAddress;
         troveManagerAddress = _troveManagerAddress;
-    }
-
-    function openTrove(uint _maxFee, uint _amt) external payable {
-        IBorrowerOperations(borrowerOperationsAddress).openTrove{value: msg.value}(_maxFee, _amt, msg.sender, msg.sender);
     }
 
     // TODO
