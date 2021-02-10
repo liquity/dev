@@ -1,5 +1,4 @@
-import { Decimal } from "@liquity/decimal";
-
+import { Decimal } from "./Decimal";
 import { Trove, TroveWithPendingRedistribution } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Fees } from "./Fees";
@@ -12,7 +11,7 @@ import { LQTYStake } from "./LQTYStake";
  * Returned by the {@link ReadableLiquity.getFrontendStatus | getFrontendStatus()} function.
  *
  * When `status` is `"registered"`, `kickbackRate` gives the frontend's kickback rate as a
- * {@link @liquity/decimal#Decimal} between 0 and 1.
+ * {@link Decimal} between 0 and 1.
  *
  * @public
  */

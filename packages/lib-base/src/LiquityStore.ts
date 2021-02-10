@@ -1,6 +1,6 @@
 import assert from "assert";
 
-import { Decimal } from "@liquity/decimal";
+import { Decimal } from "./Decimal";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Trove, TroveWithPendingRedistribution } from "./Trove";
 import { Fees } from "./Fees";

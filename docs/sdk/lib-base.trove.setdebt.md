@@ -14,7 +14,7 @@ setDebt(debt: Decimalish): Trove;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  debt | [Decimalish](./decimal.decimalish.md) |  |
+|  debt | [Decimalish](./lib-base.decimalish.md) |  |
 
 <b>Returns:</b>
 

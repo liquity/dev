@@ -2,9 +2,8 @@ import assert from "assert";
 import { describe, it } from "mocha";
 import fc from "fast-check";
 
-import { Decimal, Difference } from "@liquity/decimal";
-
 import { LUSD_LIQUIDATION_RESERVE } from "../src/constants";
+import { Decimal, Difference } from "../src/Decimal";
 import { Trove, _emptyTrove } from "../src/Trove";
 
 const minDebt = Number(LUSD_LIQUIDATION_RESERVE);

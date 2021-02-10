@@ -2,7 +2,6 @@ const fs = require("fs-extra");
 const path = require("path");
 
 const filesToCollect = [
-  "packages/decimal/temp/decimal.api.json",
   "packages/lib-base/temp/lib-base.api.json",
   "packages/lib-ethers/temp/lib-ethers.api.json"
 ];

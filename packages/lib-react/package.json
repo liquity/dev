@@ -11,12 +11,11 @@
     "prepare:tsc": "tsc --project tsconfig.dist.json"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^0.0.1",
+    "@liquity/lib-base": "^1.0.0",
     "react": "^16.13.1"
   },
   "devDependencies": {
     "@ethersproject/bignumber": "^5.0.0",
-    "@liquity/lib-base": "^0.0.1",
     "@types/react": "^17.0.0",
     "@typescript-eslint/eslint-plugin": "^4.4.1",
     "@typescript-eslint/parser": "^4.4.1",

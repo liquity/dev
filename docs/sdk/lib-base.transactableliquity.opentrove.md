@@ -16,7 +16,7 @@ openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; | How much to deposit and borrow. |
+|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; | How much to deposit and borrow. |
 
 <b>Returns:</b>
 

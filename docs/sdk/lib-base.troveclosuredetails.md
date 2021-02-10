@@ -16,5 +16,5 @@ export interface TroveClosureDetails
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [params](./lib-base.troveclosuredetails.params.md) | [TroveClosureParams](./lib-base.troveclosureparams.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt; | How much was withdrawn and repaid. |
+|  [params](./lib-base.troveclosuredetails.params.md) | [TroveClosureParams](./lib-base.troveclosureparams.md)<!-- -->&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt; | How much was withdrawn and repaid. |
 

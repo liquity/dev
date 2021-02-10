@@ -1,8 +1,7 @@
 import { describe, it } from "mocha";
 import fc from "fast-check";
 
-import { Decimal } from "@liquity/decimal";
-
+import { Decimal } from "../src/Decimal";
 import { LQTYStake } from "../src/LQTYStake";
 
 const arbitraryStake = () =>

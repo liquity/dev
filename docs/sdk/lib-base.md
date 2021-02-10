@@ -8,6 +8,7 @@
 
 |  Class | Description |
 |  --- | --- |
+|  [Decimal](./lib-base.decimal.md) | Fixed-point decimal bignumber with 18 digits of precision. |
 |  [Fees](./lib-base.fees.md) | Calculator for fees. |
 |  [LiquityStore](./lib-base.liquitystore.md) | Abstract base class of Liquity data store implementations. |
 |  [LQTYStake](./lib-base.lqtystake.md) | Represents a user's LQTY stake and accrued gains. |
@@ -54,6 +55,7 @@
 
 |  Type Alias | Description |
 |  --- | --- |
+|  [Decimalish](./lib-base.decimalish.md) | Types that can be converted into a Decimal. |
 |  [FailedReceipt](./lib-base.failedreceipt.md) | Indicates that the transaction has been mined, but it failed. |
 |  [FrontendStatus](./lib-base.frontendstatus.md) | Represents whether an address has been registered as a Liquity frontend. |
 |  [LiquityReceipt](./lib-base.liquityreceipt.md) | One of either a [PendingReceipt](./lib-base.pendingreceipt.md)<!-- -->, a [FailedReceipt](./lib-base.failedreceipt.md) or a [SuccessfulReceipt](./lib-base.successfulreceipt.md)<!-- -->. |

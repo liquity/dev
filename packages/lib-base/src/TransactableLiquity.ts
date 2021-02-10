@@ -1,5 +1,4 @@
-import { Decimal, Decimalish } from "@liquity/decimal";
-
+import { Decimal, Decimalish } from "./Decimal";
 import { Trove, TroveAdjustmentParams, TroveClosureParams, TroveCreationParams } from "./Trove";
 import { StabilityDepositChange } from "./StabilityDeposit";
 

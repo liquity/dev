@@ -1,4 +1,4 @@
-import { Decimal } from "@liquity/decimal";
+import { Decimal } from "./Decimal";
 
 /**
  * Total collateral ratio below which recovery mode is triggered.

@@ -16,7 +16,7 @@ unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LQTY to withdraw. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LQTY to withdraw. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

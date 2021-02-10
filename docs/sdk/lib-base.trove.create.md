@@ -16,8 +16,8 @@ static create(params: TroveCreationParams<Decimalish>, borrowingRate?: Decimalis
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; | Parameters of the transaction. |
-|  borrowingRate | [Decimalish](./decimal.decimalish.md) | Borrowing rate to use when calculating the Trove's debt. |
+|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; | Parameters of the transaction. |
+|  borrowingRate | [Decimalish](./lib-base.decimalish.md) | Borrowing rate to use when calculating the Trove's debt. |
 
 <b>Returns:</b>
 

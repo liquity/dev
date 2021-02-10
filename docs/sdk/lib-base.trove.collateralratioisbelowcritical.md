@@ -16,7 +16,7 @@ collateralRatioIsBelowCritical(price: Decimalish): boolean;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  price | [Decimalish](./decimal.decimalish.md) |  |
+|  price | [Decimalish](./lib-base.decimalish.md) |  |
 
 <b>Returns:</b>
 

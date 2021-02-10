@@ -16,7 +16,7 @@ borrowLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiqui
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | The amount of LUSD to borrow. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | The amount of LUSD to borrow. |
 
 <b>Returns:</b>
 

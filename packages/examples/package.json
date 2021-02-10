@@ -2,9 +2,7 @@
   "name": "@liquity/examples",
   "version": "0.0.1",
   "private": true,
-  "dependencies": {
-    "@liquity/lib-base": "^0.0.1",
-    "@liquity/lib-ethers": "^0.0.1",
+  "devDependencies": {
     "chalk": "^4.1.0",
     "ethers": "^5.0.0"
   },

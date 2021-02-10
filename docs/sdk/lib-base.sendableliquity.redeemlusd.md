@@ -16,7 +16,7 @@ redeemLUSD(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LUSD to be redeemed. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to be redeemed. |
 
 <b>Returns:</b>
 

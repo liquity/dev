@@ -16,11 +16,11 @@ apply(change: LQTYStakeChange<Decimalish> | undefined): Decimal;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  change | [LQTYStakeChange](./lib-base.lqtystakechange.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; \| undefined |  |
+|  change | [LQTYStakeChange](./lib-base.lqtystakechange.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; \| undefined |  |
 
 <b>Returns:</b>
 
-[Decimal](./decimal.decimal.md)
+[Decimal](./lib-base.decimal.md)
 
 The new staked LQTY amount.
 

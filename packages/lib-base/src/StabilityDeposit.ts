@@ -1,4 +1,4 @@
-import { Decimal, Decimalish } from "@liquity/decimal";
+import { Decimal, Decimalish } from "./Decimal";
 
 /**
  * Represents the change between two Stability Deposit states.

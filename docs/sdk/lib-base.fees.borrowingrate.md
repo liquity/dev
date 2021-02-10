@@ -13,7 +13,7 @@ borrowingRate(): Decimal;
 ```
 <b>Returns:</b>
 
-[Decimal](./decimal.decimal.md)
+[Decimal](./lib-base.decimal.md)
 
 ## Remarks
 

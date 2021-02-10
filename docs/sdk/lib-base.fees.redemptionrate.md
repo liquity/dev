@@ -16,11 +16,11 @@ redemptionRate(redeemedFractionOfSupply?: Decimalish): Decimal;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  redeemedFractionOfSupply | [Decimalish](./decimal.decimalish.md) | the amount of LUSD being redeemed divided by the total supply |
+|  redeemedFractionOfSupply | [Decimalish](./lib-base.decimalish.md) | the amount of LUSD being redeemed divided by the total supply |
 
 <b>Returns:</b>
 
-[Decimal](./decimal.decimal.md)
+[Decimal](./lib-base.decimal.md)
 
 ## Remarks
 

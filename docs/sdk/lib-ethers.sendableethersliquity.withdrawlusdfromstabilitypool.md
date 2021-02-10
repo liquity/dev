@@ -16,7 +16,7 @@ withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionO
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LUSD to withdraw. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to withdraw. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

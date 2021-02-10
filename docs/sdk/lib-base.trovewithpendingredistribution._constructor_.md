@@ -16,8 +16,8 @@ constructor(collateral?: Decimal, debt?: Decimal, stake?: Decimal, snapshotOfTot
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  collateral | [Decimal](./decimal.decimal.md) |  |
-|  debt | [Decimal](./decimal.decimal.md) |  |
-|  stake | [Decimal](./decimal.decimal.md) |  |
+|  collateral | [Decimal](./lib-base.decimal.md) |  |
+|  debt | [Decimal](./lib-base.decimal.md) |  |
+|  stake | [Decimal](./lib-base.decimal.md) |  |
 |  snapshotOfTotalRedistributed | [Trove](./lib-base.trove.md) |  |
 

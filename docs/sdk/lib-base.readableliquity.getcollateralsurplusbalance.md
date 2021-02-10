@@ -20,7 +20,7 @@ getCollateralSurplusBalance(address?: string): Promise<Decimal>;
 
 <b>Returns:</b>
 
-Promise&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt;
+Promise&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt;
 
 ## Remarks
 
