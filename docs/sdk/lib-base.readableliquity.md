@@ -22,9 +22,7 @@ Implemented by [EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->.
 |  --- | --- |
 |  [getCollateralSurplusBalance(address)](./lib-base.readableliquity.getcollateralsurplusbalance.md) | Get the amount of leftover collateral available for withdrawal by an address. |
 |  [getFees()](./lib-base.readableliquity.getfees.md) | Get a calculator for current fees. |
-|  [getFirstTroves(startIdx, numberOfTroves)](./lib-base.readableliquity.getfirsttroves.md) | Get a slice from the list of Troves sorted by collateral ratio in descending order. |
 |  [getFrontendStatus(address)](./lib-base.readableliquity.getfrontendstatus.md) | Check whether an address is registered as a Liquity frontend, and what its kickback rate is. |
-|  [getLastTroves(startIdx, numberOfTroves)](./lib-base.readableliquity.getlasttroves.md) | Get a slice from the list of Troves sorted by collateral ratio in ascending order. |
 |  [getLQTYBalance(address)](./lib-base.readableliquity.getlqtybalance.md) | Get the amount of LQTY held by an address. |
 |  [getLQTYStake(address)](./lib-base.readableliquity.getlqtystake.md) | Get the current state of an LQTY Stake. |
 |  [getLUSDBalance(address)](./lib-base.readableliquity.getlusdbalance.md) | Get the amount of LUSD held by an address. |
@@ -37,4 +35,5 @@ Implemented by [EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->.
 |  [getTotalStakedLQTY()](./lib-base.readableliquity.gettotalstakedlqty.md) | Get the total amount of LQTY currently staked. |
 |  [getTrove(address)](./lib-base.readableliquity.gettrove.md) | Get the current state of a Trove. |
 |  [getTroveBeforeRedistribution(address)](./lib-base.readableliquity.gettrovebeforeredistribution.md) | Get a Trove in its state after the last direct modification. |
+|  [getTroves(params)](./lib-base.readableliquity.gettroves_1.md) | Get a slice from the list of Troves. |
 

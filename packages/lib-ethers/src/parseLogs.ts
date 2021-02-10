@@ -3,7 +3,7 @@ import { AddressZero } from "@ethersproject/constants";
 import { Log, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { LogDescription, Interface } from "@ethersproject/abi";
 
-import { Decimal } from "@liquity/decimal";
+import { Decimal } from "@liquity/lib-base";
 
 import { _LiquityContracts, _TypedLiquityContract } from "./contracts";
 
@@ -76,7 +76,7 @@ const VERY_BIG = BigNumber.from(10).pow(9);
 const prettify = (arg: unknown, nameLookup: NameLookup) => {
   if (BigNumber.isBigNumber(arg)) {
     if (arg.gte(VERY_BIG)) {
-      return new Decimal(arg).toString() + "e18";
+      return `${Decimal.fromBigNumberString(arg.toHexString())}e18`;
     } else {
       return arg.toString();
     }

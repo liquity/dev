@@ -1,6 +1,6 @@
-certs
-registry
-docs
+certs/
+registry/
+docs/
 packages/decimal/
 packages/frontend/
 packages/dev-frontend/
@@ -9,6 +9,7 @@ packages/subgraph/
 packages/lib/
 glob:packages/lib-*/
 papers/
+scripts/
 .dockerignore
 .gitignore
 Dockerfile
@@ -21,3 +22,5 @@ yarn.public.lock
 README.public.md==>README.md
 README.public.md
 tsconfig.base.json
+api-documenter.json
+api-extractor.base.json

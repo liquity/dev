@@ -5,8 +5,9 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ethers, network, deployLiquity } from "hardhat";
 
-import { Decimal, Decimalish } from "@liquity/decimal";
 import {
+  Decimal,
+  Decimalish,
   Trove,
   StabilityDeposit,
   LiquityReceipt,
@@ -109,7 +110,7 @@ describe("EthersLiquity", () => {
   const sendTo = (user: Signer, value: Decimalish, nonce?: number) =>
     funder.sendTransaction({
       to: user.getAddress(),
-      value: Decimal.from(value).bigNumber,
+      value: Decimal.from(value).hex,
       nonce
     });
 
@@ -131,7 +132,7 @@ describe("EthersLiquity", () => {
 
   // Always setup same initial balance for user
   beforeEach(async () => {
-    const targetBalance = Decimal.from(100).bigNumber;
+    const targetBalance = BigNumber.from(Decimal.from(100).hex);
     const balance = await user.getBalance();
     const gasPrice = 0;
 
@@ -210,7 +211,7 @@ describe("EthersLiquity", () => {
       await fakeLiquity.openTrove(params);
 
       expect(hintHelpers.getApproxHint).to.have.been.called.exactly(4);
-      expect(hintHelpers.getApproxHint).to.have.been.called.with(nominalCollateralRatio.bigNumber);
+      expect(hintHelpers.getApproxHint).to.have.been.called.with(nominalCollateralRatio.hex);
 
       // returned latestRandomSeed should be passed back on the next call
       expect(hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(1111));
@@ -219,7 +220,7 @@ describe("EthersLiquity", () => {
 
       expect(sortedTroves.findInsertPosition).to.have.been.called.once;
       expect(sortedTroves.findInsertPosition).to.have.been.called.with(
-        nominalCollateralRatio.bigNumber,
+        nominalCollateralRatio.hex,
         "carol"
       );
     });
@@ -329,7 +330,7 @@ describe("EthersLiquity", () => {
           .adjust(repayAndWithdraw)
       );
 
-      const ethBalance = new Decimal(await user.getBalance());
+      const ethBalance = Decimal.fromBigNumberString(`${await user.getBalance()}`);
       expect(`${ethBalance}`).to.equal("100.5");
     });
 
@@ -347,7 +348,7 @@ describe("EthersLiquity", () => {
           .adjust(borrowAndDeposit)
       );
 
-      const ethBalance = new Decimal(await user.getBalance());
+      const ethBalance = Decimal.fromBigNumberString(`${await user.getBalance()}`);
       expect(`${ethBalance}`).to.equal("99.5");
     });
   });
@@ -393,7 +394,7 @@ describe("EthersLiquity", () => {
 
       await funder.sendTransaction({
         to: otherUsers[0].getAddress(),
-        value: Decimal.from(1.1).bigNumber
+        value: Decimal.from(1.1).hex
       });
     });
 
@@ -653,7 +654,7 @@ describe("EthersLiquity", () => {
       const details = await liquity.redeemLUSD(someLUSD, { gasPrice: 0 });
       expect(details).to.deep.equal(expectedDetails);
 
-      const balance = new Decimal(await provider.getBalance(user.getAddress()));
+      const balance = Decimal.fromBigNumberString(`${await provider.getBalance(user.getAddress())}`);
       expect(`${balance}`).to.equal(
         `${expectedDetails.collateralTaken.sub(expectedDetails.fee).add(100)}`
       );
@@ -695,8 +696,8 @@ describe("EthersLiquity", () => {
 
       const balanceAfter1 = await provider.getBalance(otherUsers[1].getAddress());
       const balanceAfter2 = await provider.getBalance(otherUsers[2].getAddress());
-      expect(balanceAfter1.toString()).to.equal(balanceBefore1.add(surplus1.bigNumber).toString());
-      expect(balanceAfter2.toString()).to.equal(balanceBefore2.add(surplus2.bigNumber).toString());
+      expect(`${balanceAfter1}`).to.equal(`${balanceBefore1.add(surplus1.hex)}`);
+      expect(`${balanceAfter2}`).to.equal(`${balanceBefore2.add(surplus2.hex)}`);
     });
 
     it("borrowing rate should be maxed out now", async () => {
@@ -818,7 +819,9 @@ describe("EthersLiquity", () => {
     });
 
     it("should include enough gas for one extra traversal", async () => {
-      const troves = (await liquity.getLastTroves(0, 10)).map(([, t]) => t);
+      const troves = (
+        await liquity.getTroves({ first: 10, sortedBy: "ascendingCollateralRatio" })
+      ).map(([, t]) => t);
 
       const trove = await liquity.getTrove();
       const newTrove = troveWithICRBetween(troves[3], troves[4]);
@@ -850,7 +853,10 @@ describe("EthersLiquity", () => {
     });
 
     it("should include enough gas for both when borrowing", async () => {
-      const troves = (await liquity.getLastTroves(0, 10)).map(([, t]) => t);
+      const troves = (
+        await liquity.getTroves({ first: 10, sortedBy: "ascendingCollateralRatio" })
+      ).map(([, t]) => t);
+
       const trove = await liquity.getTrove();
       const newTrove = troveWithICRBetween(troves[1], troves[2]);
 

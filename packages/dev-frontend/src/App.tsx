@@ -3,9 +3,8 @@ import { Web3ReactProvider } from "@web3-react/core";
 import { Flex, Spinner, Heading, ThemeProvider, Container } from "theme-ui";
 import { Wallet } from "@ethersproject/wallet";
 
-import { Decimal, Difference } from "@liquity/decimal";
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
-import { Trove } from "@liquity/lib-base";
+import { Decimal, Difference, Trove } from "@liquity/lib-base";
 import { LiquityStoreProvider } from "@liquity/lib-react";
 
 import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";

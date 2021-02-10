@@ -19,7 +19,3 @@ Promise&lt;[Trove](./lib-base.trove.md)<!-- -->&gt;
 
 Needed when dealing with instances of [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md)<!-- -->.
 
-## Example
-
-See [getLastTroves()](./lib-base.readableliquity.getlasttroves.md) for an example of how it's used.
-

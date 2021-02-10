@@ -4,22 +4,14 @@
 
 ```ts
 
-import { BigNumber } from '@ethersproject/bignumber';
-import { BigNumberish } from '@ethersproject/bignumber';
-
-// @public (undocumented)
+// @public
 export class Decimal {
-    constructor(bigNumber: BigNumber);
-    // (undocumented)
+    // @internal (undocumented)
     get absoluteValue(): this;
     // (undocumented)
     add(addend: Decimalish): Decimal;
-    // (undocumented)
-    readonly bigNumber: BigNumber;
-    // (undocumented)
-    static bigNumberFrom(decimalish: Decimalish): BigNumber;
-    // (undocumented)
-    static readonly DIGITS: BigNumber;
+    // @internal (undocumented)
+    get bigNumber(): string;
     // (undocumented)
     div(divider: Decimalish): Decimal;
     // (undocumented)
@@ -29,11 +21,15 @@ export class Decimal {
     // (undocumented)
     static from(decimalish: Decimalish): Decimal;
     // (undocumented)
+    static fromBigNumberString(bigNumberString: string): Decimal;
+    // (undocumented)
     gt(that: Decimalish): boolean;
     // (undocumented)
     gte(that: Decimalish): boolean;
     // (undocumented)
     static readonly HALF: Decimal;
+    // @internal (undocumented)
+    get hex(): string;
     // (undocumented)
     get infinite(): this | undefined;
     // (undocumented)
@@ -59,15 +55,9 @@ export class Decimal {
     // (undocumented)
     pow(exponent: number): Decimal;
     // (undocumented)
-    static readonly PRECISION = 18;
-    // (undocumented)
     prettify(precision?: number): string;
     // (undocumented)
-    static prettify(bigNumberish: BigNumberish): string;
-    // (undocumented)
     shorten(): string;
-    // (undocumented)
-    static shorten(bigNumber: BigNumber): string;
     // (undocumented)
     sub(subtrahend: Decimalish): Decimal;
     // (undocumented)
@@ -78,7 +68,7 @@ export class Decimal {
     get zero(): this | undefined;
 }
 
-// @public (undocumented)
+// @public
 export type Decimalish = Decimal | number | string;
 
 // @alpha (undocumented)
@@ -87,8 +77,6 @@ export class Difference {
     get absoluteValue(): Decimal | undefined;
     // (undocumented)
     static between(d1: Decimalish | undefined, d2: Decimalish | undefined): Difference;
-    // (undocumented)
-    get bigNumber(): BigNumber | undefined;
     // (undocumented)
     get finite(): this | undefined;
     // (undocumented)

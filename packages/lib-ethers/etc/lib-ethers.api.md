@@ -7,13 +7,12 @@
 import { BigNumberish } from '@ethersproject/bignumber';
 import { BlockTag } from '@ethersproject/abstract-provider';
 import { CollateralGainTransferDetails } from '@liquity/lib-base';
-import { Decimal } from '@liquity/decimal';
-import { Decimalish } from '@liquity/decimal';
+import { Decimal } from '@liquity/lib-base';
+import { Decimalish } from '@liquity/lib-base';
 import { FailedReceipt } from '@liquity/lib-base';
 import { Fees } from '@liquity/lib-base';
 import { FrontendStatus } from '@liquity/lib-base';
 import { LiquidationDetails } from '@liquity/lib-base';
-import { _LiquityReadCache } from '@liquity/lib-base';
 import { LiquityReceipt } from '@liquity/lib-base';
 import { LiquityStore } from '@liquity/lib-base';
 import { LiquityStoreState } from '@liquity/lib-base';
@@ -42,6 +41,7 @@ import { TroveAdjustmentParams } from '@liquity/lib-base';
 import { TroveClosureDetails } from '@liquity/lib-base';
 import { TroveCreationDetails } from '@liquity/lib-base';
 import { TroveCreationParams } from '@liquity/lib-base';
+import { TroveListingParams } from '@liquity/lib-base';
 import { TroveWithPendingRedistribution } from '@liquity/lib-base';
 
 // @public
@@ -54,46 +54,6 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     // @internal @override (undocumented)
     protected _reduceExtra(oldState: BlockPolledLiquityStoreExtraState, stateUpdate: Partial<BlockPolledLiquityStoreExtraState>): BlockPolledLiquityStoreExtraState;
 }
-
-// @internal (undocumented)
-export class _BlockPolledLiquityStoreBasedCache implements Partial<_LiquityReadCache<[overrides?: EthersCallOverrides]>> {
-    constructor(store: BlockPolledLiquityStore);
-    // (undocumented)
-    getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Decimal | undefined;
-    // (undocumented)
-    getFees(overrides?: EthersCallOverrides): Fees | undefined;
-    // (undocumented)
-    getFrontendStatus(address?: string, overrides?: EthersCallOverrides): {
-        status: "unregistered";
-    } | {
-        status: "registered";
-        kickbackRate: Decimal;
-    } | undefined;
-    // (undocumented)
-    getLQTYBalance(address?: string, overrides?: EthersCallOverrides): Decimal | undefined;
-    // (undocumented)
-    getLQTYStake(address?: string, overrides?: EthersCallOverrides): LQTYStake | undefined;
-    // (undocumented)
-    getLUSDBalance(address?: string, overrides?: EthersCallOverrides): Decimal | undefined;
-    // (undocumented)
-    getLUSDInStabilityPool(overrides?: EthersCallOverrides): Decimal | undefined;
-    // (undocumented)
-    getNumberOfTroves(overrides?: EthersCallOverrides): number | undefined;
-    // (undocumented)
-    getPrice(overrides?: EthersCallOverrides): Decimal | undefined;
-    // (undocumented)
-    getStabilityDeposit(address?: string, overrides?: EthersCallOverrides): StabilityDeposit | undefined;
-    // (undocumented)
-    getTotal(overrides?: EthersCallOverrides): Trove | undefined;
-    // (undocumented)
-    getTotalRedistributed(overrides?: EthersCallOverrides): Trove | undefined;
-    // (undocumented)
-    getTotalStakedLQTY(overrides?: EthersCallOverrides): Decimal | undefined;
-    // (undocumented)
-    getTrove(address?: string, overrides?: EthersCallOverrides): Trove | undefined;
-    // (undocumented)
-    getTroveBeforeRedistribution(address?: string, overrides?: EthersCallOverrides): TroveWithPendingRedistribution | undefined;
-    }
 
 // @public
 export interface BlockPolledLiquityStoreExtraState {
@@ -152,11 +112,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
-    getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRedistribution][]>;
-    // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
-    // (undocumented)
-    getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRedistribution][]>;
     // (undocumented)
     getLQTYBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
@@ -181,6 +137,12 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getTroveBeforeRedistribution(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
+    // @internal (undocumented)
+    getTroves(params: TroveListingParams & {
+        beforeRedistribution: true;
+    }, overrides?: EthersCallOverrides): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    // (undocumented)
+    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<[address: string, trove: Trove][]>;
     hasStore(): this is EthersLiquityWithStore;
     hasStore(store: "blockPolled"): this is EthersLiquityWithStore<BlockPolledLiquityStore>;
     // (undocumented)
@@ -303,10 +265,8 @@ export class ObservableEthersLiquity implements ObservableLiquity {
     watchTroveWithoutRewards(onTroveChanged: (trove: TroveWithPendingRedistribution) => void, address?: string): () => void;
 }
 
-// Warning: (ae-incompatible-release-tags) The symbol "PopulatableEthersLiquity" is marked as @public, but its signature references "_PopulatableEthersLiquityBase" which is marked as @internal
-//
 // @public
-export class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase implements PopulatableLiquity<EthersTransactionReceipt, EthersTransactionResponse, EthersPopulatedTransaction> {
+export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransactionReceipt, EthersTransactionResponse, EthersPopulatedTransaction> {
     constructor(readable: ReadableEthersLiquity);
     // (undocumented)
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
@@ -352,38 +312,7 @@ export class PopulatableEthersLiquity extends _PopulatableEthersLiquityBase impl
     withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
     withdrawLUSDFromStabilityPool(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>>;
-}
-
-// @internal (undocumented)
-export class _PopulatableEthersLiquityBase {
-    constructor(readable: ReadableEthersLiquity);
-    // (undocumented)
-    protected _findHints(trove: Trove): Promise<[string, string]>;
-    // (undocumented)
-    protected _findRedemptionHints(amount: Decimal): Promise<[string, string, string, Decimal]>;
-    // (undocumented)
-    protected readonly _readable: ReadableEthersLiquity;
-    // (undocumented)
-    protected _wrapCollateralGainTransfer(rawPopulatedTransaction: EthersPopulatedTransaction): PopulatedEthersLiquityTransaction<CollateralGainTransferDetails>;
-    // (undocumented)
-    protected _wrapLiquidation(rawPopulatedTransaction: EthersPopulatedTransaction): PopulatedEthersLiquityTransaction<LiquidationDetails>;
-    // (undocumented)
-    protected _wrapRedemption(rawPopulatedTransaction: EthersPopulatedTransaction): PopulatedEthersLiquityTransaction<RedemptionDetails>;
-    // (undocumented)
-    protected _wrapSimpleTransaction(rawPopulatedTransaction: EthersPopulatedTransaction): PopulatedEthersLiquityTransaction<void>;
-    // (undocumented)
-    protected _wrapStabilityDepositTopup(change: {
-        depositLUSD: Decimal;
-    }, rawPopulatedTransaction: EthersPopulatedTransaction): PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>;
-    // (undocumented)
-    protected _wrapStabilityDepositWithdrawal(rawPopulatedTransaction: EthersPopulatedTransaction): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>>;
-    // (undocumented)
-    protected _wrapStabilityPoolGainsWithdrawal(rawPopulatedTransaction: EthersPopulatedTransaction): PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>;
-    // (undocumented)
-    protected _wrapTroveChangeWithFees<T>(params: T, rawPopulatedTransaction: EthersPopulatedTransaction): PopulatedEthersLiquityTransaction<_TroveChangeWithFees<T>>;
-    // (undocumented)
-    protected _wrapTroveClosure(rawPopulatedTransaction: EthersPopulatedTransaction): Promise<PopulatedEthersLiquityTransaction<TroveClosureDetails>>;
-}
+    }
 
 // @public
 export class PopulatedEthersLiquityTransaction<T = unknown> implements PopulatedLiquityTransaction<EthersPopulatedTransaction, SentEthersLiquityTransaction<T>> {
@@ -417,11 +346,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
-    getFirstTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRedistribution][]>;
-    // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
-    // (undocumented)
-    getLastTroves(startIdx: number, numberOfTroves: number, overrides?: EthersCallOverrides): Promise<[string, TroveWithPendingRedistribution][]>;
     // (undocumented)
     getLQTYBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
@@ -446,6 +371,12 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getTroveBeforeRedistribution(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
+    // @internal (undocumented)
+    getTroves(params: TroveListingParams & {
+        beforeRedistribution: true;
+    }, overrides?: EthersCallOverrides): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    // (undocumented)
+    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<[address: string, trove: Trove][]>;
     hasStore(): this is ReadableEthersLiquityWithStore;
     hasStore(store: "blockPolled"): this is ReadableEthersLiquityWithStore<BlockPolledLiquityStore>;
 }
@@ -456,7 +387,7 @@ export interface ReadableEthersLiquityWithStore<T extends LiquityStore = Liquity
 }
 
 // @internal (undocumented)
-export const _redeemMaxIterations = 68;
+export const _redeemMaxIterations = 70;
 
 // @public
 export class SendableEthersLiquity implements SendableLiquity<EthersTransactionReceipt, EthersTransactionResponse> {

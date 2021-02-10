@@ -43,6 +43,6 @@ export interface Troves {
 
 export interface TrovesVariables {
   orderDirection: OrderDirection;
-  startIdx: number;
-  numberOfTroves: number;
+  startingAt: number;
+  first: number;
 }

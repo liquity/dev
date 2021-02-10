@@ -60,7 +60,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       liquidatedAccountsDict[randomDefaulter] = true
       remainingDefaulters.splice(randomDefaulterIndex, 1)
     }
-    if (await troveManager.checkRecoveryMode()) { console.log("recovery mode: TRUE") }
+    if (await troveManager.checkRecoveryMode(price)) { console.log("recovery mode: TRUE") }
 
     console.log(`Liquidation. addr: ${th.squeezeAddr(randomDefaulter)} ICR: ${ICRPercent}% coll: ${liquidatedETH} debt: ${liquidatedLUSD} SP LUSD before: ${LUSDinPoolBefore} SP LUSD after: ${LUSDinPoolAfter} tx success: ${liquidatedTx.receipt.status}`)
   }
@@ -240,9 +240,9 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     it("Defaulters' Collateral in range [1, 1e8]. SP Deposits in range [100, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(5, 29) })
+      await borrowerOperations.openTrove(0, 0, whale, whale, { from: whale, value: dec(5, 29) })
 
-      const numberOfOps = 100
+      const numberOfOps = 5
       const defaulterAccounts = accounts.slice(1, numberOfOps)
       const depositorAccounts = accounts.slice(numberOfOps + 1, numberOfOps * 2)
 
@@ -314,9 +314,9 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     it("Defaulters' Collateral in range [1, 10]. SP Deposits in range [1e8, 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(5, 29) })
+      await borrowerOperations.openTrove(0, 0, whale, whale, { from: whale, value: dec(5, 29) })
 
-      const numberOfOps = 100
+      const numberOfOps = 5
       const defaulterAccounts = accounts.slice(1, numberOfOps)
       const depositorAccounts = accounts.slice(numberOfOps + 1, numberOfOps * 2)
 
@@ -386,9 +386,9 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [100, 1000]. Every liquidation empties the Pool. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(5, 29) })
+      await borrowerOperations.openTrove(0, 0, whale, whale, { from: whale, value: dec(5, 29) })
 
-      const numberOfOps = 100
+      const numberOfOps = 5
       const defaulterAccounts = accounts.slice(1, numberOfOps)
       const depositorAccounts = accounts.slice(numberOfOps + 1, numberOfOps * 2)
 
@@ -458,10 +458,10 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     it("Defaulters' Collateral in range [1e6, 1e8]. SP Deposits in range [1e8 1e10]. ETH:USD = 100", async () => {
       // whale adds coll that holds TCR > 150%
-      await borrowerOperations.openTrove(0, 0, whale, { from: whale, value: dec(5, 29) })
+      await borrowerOperations.openTrove(0, 0, whale, whale, { from: whale, value: dec(5, 29) })
 
       // price drops, all L liquidateable
-      const numberOfOps = 100
+      const numberOfOps = 5
       const defaulterAccounts = accounts.slice(1, numberOfOps)
       const depositorAccounts = accounts.slice(numberOfOps + 1, numberOfOps * 2)
 

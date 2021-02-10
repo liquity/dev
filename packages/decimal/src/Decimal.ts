@@ -1,42 +1,64 @@
 import assert from "assert";
 
-import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+import { BigNumber } from "@ethersproject/bignumber";
 
-const MAX_UINT_256 = BigNumber.from(
-  "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
-);
-
-const TEN = BigNumber.from(10);
 const getDigits = (numDigits: number) => TEN.pow(numDigits);
 
-/** @public */
-export type Decimalish = Decimal | number | string;
+const MAX_UINT_256 = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+const PRECISION = 18;
+const TEN = BigNumber.from(10);
+const DIGITS = getDigits(PRECISION);
 
 const stringRepresentationFormat = /^[0-9]*(\.[0-9]*)?(e[-+]?[0-9]+)?$/;
 const trailingZeros = /0*$/;
 const magnitudes = ["", "K", "M", "B", "T"];
 
-const roundedMul = (x: BigNumber, y: BigNumber) =>
-  x.mul(y).add(Decimal.HALF.bigNumber).div(Decimal.DIGITS);
+const roundedMul = (x: BigNumber, y: BigNumber) => x.mul(y).add(Decimal.HALF.hex).div(DIGITS);
 
-/** @public */
+/**
+ * Types that can be converted into a Decimal.
+ *
+ * @public
+ */
+export type Decimalish = Decimal | number | string;
+
+/**
+ * Fixed-point decimal bignumber with 18 digits of precision.
+ *
+ * @remarks
+ * Used by Liquity libraries to precisely represent native currency (e.g. Ether), LUSD and LQTY
+ * amounts, as well as derived metrics like collateral ratios.
+ *
+ * @public
+ */
 export class Decimal {
-  static readonly PRECISION = 18;
-  static readonly DIGITS = getDigits(Decimal.PRECISION);
-
-  static readonly INFINITY = new Decimal(MAX_UINT_256);
+  static readonly INFINITY = Decimal.fromBigNumberString(MAX_UINT_256);
   static readonly ZERO = Decimal.from(0);
   static readonly HALF = Decimal.from(0.5);
   static readonly ONE = Decimal.from(1);
 
-  readonly bigNumber: BigNumber;
+  private readonly _bigNumber: BigNumber;
 
-  constructor(bigNumber: BigNumber) {
-    if (bigNumber.lt(0)) {
-      throw new Error("must not be negative");
+  /** @internal */
+  get hex(): string {
+    return this._bigNumber.toHexString();
+  }
+
+  /** @internal */
+  get bigNumber(): string {
+    return this._bigNumber.toString();
+  }
+
+  private constructor(bigNumber: BigNumber) {
+    if (bigNumber.isNegative()) {
+      throw new Error("negatives not supported by Decimal");
     }
 
-    this.bigNumber = bigNumber;
+    this._bigNumber = bigNumber;
+  }
+
+  static fromBigNumberString(bigNumberString: string): Decimal {
+    return new Decimal(BigNumber.from(bigNumberString));
   }
 
   private static _fromString(representation: string): Decimal {
@@ -49,7 +71,9 @@ export class Decimal {
 
       if (exponent.startsWith("-")) {
         return new Decimal(
-          Decimal._fromString(coefficient).bigNumber.div(TEN.pow(BigNumber.from(exponent.substr(1))))
+          Decimal._fromString(coefficient)._bigNumber.div(
+            TEN.pow(BigNumber.from(exponent.substr(1)))
+          )
         );
       }
 
@@ -58,25 +82,25 @@ export class Decimal {
       }
 
       return new Decimal(
-        Decimal._fromString(coefficient).bigNumber.mul(TEN.pow(BigNumber.from(exponent)))
+        Decimal._fromString(coefficient)._bigNumber.mul(TEN.pow(BigNumber.from(exponent)))
       );
     }
 
     if (!representation.includes(".")) {
-      return new Decimal(BigNumber.from(representation).mul(Decimal.DIGITS));
+      return new Decimal(BigNumber.from(representation).mul(DIGITS));
     }
 
     let [characteristic, mantissa] = representation.split(".");
 
-    if (mantissa.length < Decimal.PRECISION) {
-      mantissa += "0".repeat(Decimal.PRECISION - mantissa.length);
+    if (mantissa.length < PRECISION) {
+      mantissa += "0".repeat(PRECISION - mantissa.length);
     } else {
-      mantissa = mantissa.substr(0, Decimal.PRECISION);
+      mantissa = mantissa.substr(0, PRECISION);
     }
 
     return new Decimal(
       BigNumber.from(characteristic || 0)
-        .mul(Decimal.DIGITS)
+        .mul(DIGITS)
         .add(mantissa)
     );
   }
@@ -92,26 +116,22 @@ export class Decimal {
     }
   }
 
-  static bigNumberFrom(decimalish: Decimalish) {
-    return Decimal.from(decimalish).bigNumber;
-  }
-
   private _toStringWithAutomaticPrecision() {
-    const characteristic = this.bigNumber.div(Decimal.DIGITS);
-    const mantissa = this.bigNumber.mod(Decimal.DIGITS);
+    const characteristic = this._bigNumber.div(DIGITS);
+    const mantissa = this._bigNumber.mod(DIGITS);
 
     if (mantissa.isZero()) {
       return characteristic.toString();
     } else {
-      const paddedMantissa = mantissa.toString().padStart(Decimal.PRECISION, "0");
+      const paddedMantissa = mantissa.toString().padStart(PRECISION, "0");
       const trimmedMantissa = paddedMantissa.replace(trailingZeros, "");
       return characteristic.toString() + "." + trimmedMantissa;
     }
   }
 
   private _roundUp(precision: number) {
-    const halfDigit = getDigits(Decimal.PRECISION - 1 - precision).mul(5);
-    return this.bigNumber.add(halfDigit);
+    const halfDigit = getDigits(PRECISION - 1 - precision).mul(5);
+    return this._bigNumber.add(halfDigit);
   }
 
   private _toStringWithPrecision(precision: number) {
@@ -119,14 +139,14 @@ export class Decimal {
       throw new Error("precision must not be negative");
     }
 
-    const value = precision < Decimal.PRECISION ? this._roundUp(precision) : this.bigNumber;
-    const characteristic = value.div(Decimal.DIGITS);
-    const mantissa = value.mod(Decimal.DIGITS);
+    const value = precision < PRECISION ? this._roundUp(precision) : this._bigNumber;
+    const characteristic = value.div(DIGITS);
+    const mantissa = value.mod(DIGITS);
 
     if (precision === 0) {
       return characteristic.toString();
     } else {
-      const paddedMantissa = mantissa.toString().padStart(Decimal.PRECISION, "0");
+      const paddedMantissa = mantissa.toString().padStart(PRECISION, "0");
       const trimmedMantissa = paddedMantissa.substr(0, precision);
       return characteristic.toString() + "." + trimmedMantissa;
     }
@@ -149,34 +169,26 @@ export class Decimal {
     return mantissa !== undefined ? prettyCharacteristic + "." + mantissa : prettyCharacteristic;
   }
 
-  static prettify(bigNumberish: BigNumberish) {
-    return new Decimal(BigNumber.from(bigNumberish).mul(Decimal.DIGITS)).prettify(0);
-  }
-
   shorten() {
     const characteristicLength = this.toString(0).length;
     const magnitude = Math.min(Math.floor((characteristicLength - 1) / 3), magnitudes.length - 1);
 
     const precision = Math.max(3 * (magnitude + 1) - characteristicLength, 0);
-    const normalized = this.div(new Decimal(getDigits(Decimal.PRECISION + 3 * magnitude)));
+    const normalized = this.div(new Decimal(getDigits(PRECISION + 3 * magnitude)));
 
     return normalized.prettify(precision) + magnitudes[magnitude];
   }
 
-  static shorten(bigNumber: BigNumber) {
-    return new Decimal(bigNumber.mul(Decimal.DIGITS)).shorten();
-  }
-
   add(addend: Decimalish) {
-    return new Decimal(this.bigNumber.add(Decimal.from(addend).bigNumber));
+    return new Decimal(this._bigNumber.add(Decimal.from(addend)._bigNumber));
   }
 
   sub(subtrahend: Decimalish) {
-    return new Decimal(this.bigNumber.sub(Decimal.from(subtrahend).bigNumber));
+    return new Decimal(this._bigNumber.sub(Decimal.from(subtrahend)._bigNumber));
   }
 
   mul(multiplier: Decimalish) {
-    return new Decimal(this.bigNumber.mul(Decimal.from(multiplier).bigNumber).div(Decimal.DIGITS));
+    return new Decimal(this._bigNumber.mul(Decimal.from(multiplier)._bigNumber).div(DIGITS));
   }
 
   div(divider: Decimalish) {
@@ -186,7 +198,7 @@ export class Decimal {
       return Decimal.INFINITY;
     }
 
-    return new Decimal(this.bigNumber.mul(Decimal.DIGITS).div(divider.bigNumber));
+    return new Decimal(this._bigNumber.mul(DIGITS).div(divider._bigNumber));
   }
 
   mulDiv(multiplier: Decimalish, divider: Decimalish) {
@@ -197,7 +209,7 @@ export class Decimal {
       return Decimal.INFINITY;
     }
 
-    return new Decimal(this.bigNumber.mul(multiplier.bigNumber).div(divider.bigNumber));
+    return new Decimal(this._bigNumber.mul(multiplier._bigNumber).div(divider._bigNumber));
   }
 
   pow(exponent: number) {
@@ -212,8 +224,8 @@ export class Decimal {
       return this;
     }
 
-    let x = this.bigNumber;
-    let y = Decimal.DIGITS;
+    let x = this._bigNumber;
+    let y = DIGITS;
 
     for (; exponent > 1; exponent >>>= 1) {
       if (exponent & 1) {
@@ -227,7 +239,7 @@ export class Decimal {
   }
 
   get isZero() {
-    return this.bigNumber.isZero();
+    return this._bigNumber.isZero();
   }
 
   get zero() {
@@ -254,28 +266,29 @@ export class Decimal {
     }
   }
 
+  /** @internal */
   get absoluteValue() {
     return this;
   }
 
   lt(that: Decimalish) {
-    return this.bigNumber.lt(Decimal.from(that).bigNumber);
+    return this._bigNumber.lt(Decimal.from(that)._bigNumber);
   }
 
   eq(that: Decimalish) {
-    return this.bigNumber.eq(Decimal.from(that).bigNumber);
+    return this._bigNumber.eq(Decimal.from(that)._bigNumber);
   }
 
   gt(that: Decimalish) {
-    return this.bigNumber.gt(Decimal.from(that).bigNumber);
+    return this._bigNumber.gt(Decimal.from(that)._bigNumber);
   }
 
   gte(that: Decimalish) {
-    return this.bigNumber.gte(Decimal.from(that).bigNumber);
+    return this._bigNumber.gte(Decimal.from(that)._bigNumber);
   }
 
   lte(that: Decimalish) {
-    return this.bigNumber.lte(Decimal.from(that).bigNumber);
+    return this._bigNumber.lte(Decimal.from(that)._bigNumber);
   }
 
   static min(a: Decimalish, b: Decimalish) {
@@ -349,12 +362,6 @@ export class Difference {
         absoluteValue: this._number.absoluteValue.mul(multiplier)
       }
     );
-  }
-
-  get bigNumber() {
-    return this._number?.sign === "-"
-      ? this._number.absoluteValue.bigNumber.mul(-1)
-      : this._number?.absoluteValue.bigNumber;
   }
 
   get nonZero() {

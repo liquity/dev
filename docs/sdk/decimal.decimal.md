@@ -4,6 +4,7 @@
 
 ## Decimal class
 
+Fixed-point decimal bignumber with 18 digits of precision.
 
 <b>Signature:</b>
 
@@ -11,19 +12,14 @@
 export declare class Decimal 
 ```
 
-## Constructors
+## Remarks
 
-|  Constructor | Modifiers | Description |
-|  --- | --- | --- |
-|  [(constructor)(bigNumber)](./decimal.decimal._constructor_.md) |  | Constructs a new instance of the <code>Decimal</code> class |
+Used by Liquity libraries to precisely represent native currency (e.g. Ether), LUSD and LQTY amounts, as well as derived metrics like collateral ratios.
 
 ## Properties
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [absoluteValue](./decimal.decimal.absolutevalue.md) |  | this |  |
-|  [bigNumber](./decimal.decimal.bignumber.md) |  | BigNumber |  |
-|  [DIGITS](./decimal.decimal.digits.md) | <code>static</code> | BigNumber |  |
 |  [finite](./decimal.decimal.finite.md) |  | this \| undefined |  |
 |  [HALF](./decimal.decimal.half.md) | <code>static</code> | [Decimal](./decimal.decimal.md) |  |
 |  [infinite](./decimal.decimal.infinite.md) |  | this \| undefined |  |
@@ -31,7 +27,6 @@ export declare class Decimal
 |  [isZero](./decimal.decimal.iszero.md) |  | boolean |  |
 |  [nonZero](./decimal.decimal.nonzero.md) |  | this \| undefined |  |
 |  [ONE](./decimal.decimal.one.md) | <code>static</code> | [Decimal](./decimal.decimal.md) |  |
-|  [PRECISION](./decimal.decimal.precision.md) | <code>static</code> | (not declared) |  |
 |  [zero](./decimal.decimal.zero.md) |  | this \| undefined |  |
 |  [ZERO](./decimal.decimal.zero.md) | <code>static</code> | [Decimal](./decimal.decimal.md) |  |
 
@@ -40,10 +35,10 @@ export declare class Decimal
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [add(addend)](./decimal.decimal.add.md) |  |  |
-|  [bigNumberFrom(decimalish)](./decimal.decimal.bignumberfrom.md) | <code>static</code> |  |
 |  [div(divider)](./decimal.decimal.div.md) |  |  |
 |  [eq(that)](./decimal.decimal.eq.md) |  |  |
 |  [from(decimalish)](./decimal.decimal.from.md) | <code>static</code> |  |
+|  [fromBigNumberString(bigNumberString)](./decimal.decimal.frombignumberstring.md) | <code>static</code> |  |
 |  [gt(that)](./decimal.decimal.gt.md) |  |  |
 |  [gte(that)](./decimal.decimal.gte.md) |  |  |
 |  [lt(that)](./decimal.decimal.lt.md) |  |  |
@@ -54,9 +49,7 @@ export declare class Decimal
 |  [mulDiv(multiplier, divider)](./decimal.decimal.muldiv.md) |  |  |
 |  [pow(exponent)](./decimal.decimal.pow.md) |  |  |
 |  [prettify(precision)](./decimal.decimal.prettify.md) |  |  |
-|  [prettify(bigNumberish)](./decimal.decimal.prettify.md) | <code>static</code> |  |
 |  [shorten()](./decimal.decimal.shorten.md) |  |  |
-|  [shorten(bigNumber)](./decimal.decimal.shorten.md) | <code>static</code> |  |
 |  [sub(subtrahend)](./decimal.decimal.sub.md) |  |  |
 |  [toString(precision)](./decimal.decimal.tostring.md) |  |  |
 

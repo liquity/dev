@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
-import { Decimal, Percent } from "@liquity/decimal";
-import { LiquityStoreState } from "@liquity/lib-base";
+import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";

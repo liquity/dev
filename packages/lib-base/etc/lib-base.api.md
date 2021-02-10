@@ -9,17 +9,13 @@ import { Decimalish } from '@liquity/decimal';
 
 // @internal (undocumented)
 export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiquityWithExtraParams<T> {
-    constructor(readable: _ReadableLiquityWithExtraParams<T>, cache: Partial<_LiquityReadCache<T>>);
+    constructor(readable: _ReadableLiquityWithExtraParams<T>, cache: _LiquityReadCache<T>);
     // (undocumented)
     getCollateralSurplusBalance(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getFees(...extraParams: T): Promise<Fees>;
     // (undocumented)
-    getFirstTroves(startIdx: number, numberOfTroves: number, ...extraParams: T): Promise<[string, TroveWithPendingRedistribution][]>;
-    // (undocumented)
     getFrontendStatus(address?: string, ...extraParams: T): Promise<FrontendStatus>;
-    // (undocumented)
-    getLastTroves(startIdx: number, numberOfTroves: number, ...extraParams: T): Promise<[string, TroveWithPendingRedistribution][]>;
     // (undocumented)
     getLQTYBalance(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
@@ -44,6 +40,12 @@ export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiq
     getTrove(address?: string, ...extraParams: T): Promise<Trove>;
     // (undocumented)
     getTroveBeforeRedistribution(address?: string, ...extraParams: T): Promise<TroveWithPendingRedistribution>;
+    // (undocumented)
+    getTroves(params: TroveListingParams & {
+        beforeRedistribution: true;
+    }, ...extraParams: T): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    // (undocumented)
+    getTroves(params: TroveListingParams, ...extraParams: T): Promise<[address: string, trove: Trove][]>;
     }
 
 // @internal (undocumented)
@@ -112,7 +114,17 @@ export interface LiquidationDetails {
 }
 
 // @internal (undocumented)
-export type _LiquityReadCache<T extends unknown[]> = {
+export interface _LiquityReadCache<T extends unknown[]> extends _LiquityReadCacheBase<T> {
+    // (undocumented)
+    getTroves(params: TroveListingParams & {
+        beforeRedistribution: true;
+    }, ...extraParams: T): [address: string, trove: TroveWithPendingRedistribution][] | undefined;
+    // (undocumented)
+    getTroves(params: TroveListingParams, ...extraParams: T): [address: string, trove: Trove][] | undefined;
+}
+
+// @internal (undocumented)
+export type _LiquityReadCacheBase<T extends unknown[]> = {
     [P in keyof ReadableLiquity]: ReadableLiquity[P] extends (...args: infer A) => Promise<infer R> ? (...params: [...originalParams: A, ...extraParams: T]) => R | undefined : never;
 };
 
@@ -328,9 +340,7 @@ export interface PopulatedLiquityTransaction<P = unknown, T extends SentLiquityT
 export interface ReadableLiquity {
     getCollateralSurplusBalance(address?: string): Promise<Decimal>;
     getFees(): Promise<Fees>;
-    getFirstTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRedistribution][]>;
     getFrontendStatus(address?: string): Promise<FrontendStatus>;
-    getLastTroves(startIdx: number, numberOfTroves: number): Promise<[string, TroveWithPendingRedistribution][]>;
     getLQTYBalance(address?: string): Promise<Decimal>;
     getLQTYStake(address?: string): Promise<LQTYStake>;
     getLUSDBalance(address?: string): Promise<Decimal>;
@@ -343,10 +353,25 @@ export interface ReadableLiquity {
     getTotalStakedLQTY(): Promise<Decimal>;
     getTrove(address?: string): Promise<Trove>;
     getTroveBeforeRedistribution(address?: string): Promise<TroveWithPendingRedistribution>;
+    // @internal (undocumented)
+    getTroves(params: TroveListingParams & {
+        beforeRedistribution: true;
+    }): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    getTroves(params: TroveListingParams): Promise<[address: string, trove: Trove][]>;
 }
 
 // @internal (undocumented)
-export type _ReadableLiquityWithExtraParams<T extends unknown[]> = {
+export interface _ReadableLiquityWithExtraParams<T extends unknown[]> extends _ReadableLiquityWithExtraParamsBase<T> {
+    // (undocumented)
+    getTroves(params: TroveListingParams & {
+        beforeRedistribution: true;
+    }, ...extraParams: T): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    // (undocumented)
+    getTroves(params: TroveListingParams, ...extraParams: T): Promise<[address: string, trove: Trove][]>;
+}
+
+// @internal (undocumented)
+export type _ReadableLiquityWithExtraParamsBase<T extends unknown[]> = {
     [P in keyof ReadableLiquity]: ReadableLiquity[P] extends (...params: infer A) => infer R ? (...params: [...originalParams: A, ...extraParams: T]) => R : never;
 };
 
@@ -593,6 +618,14 @@ export type TroveCreationError = "missingLiquidationReserve";
 export type TroveCreationParams<T> = _CollateralDeposit<T> & _NoCollateralWithdrawal & Partial<_LUSDBorrowing<T>> & _NoLUSDRepayment;
 
 // @public
+export interface TroveListingParams {
+    readonly beforeRedistribution?: boolean;
+    readonly first: number;
+    readonly sortedBy: "ascendingCollateralRatio" | "descendingCollateralRatio";
+    readonly startingAt?: number;
+}
+
+// @public
 export class TroveWithPendingRedistribution extends Trove {
     constructor(collateral?: Decimal, debt?: Decimal, stake?: Decimal, snapshotOfTotalRedistributed?: Trove);
     // (undocumented)
@@ -601,6 +634,8 @@ export class TroveWithPendingRedistribution extends Trove {
     equals(that: TroveWithPendingRedistribution): boolean;
     }
 
+
+export * from "@liquity/decimal";
 
 // (No @packageDocumentation comment for this package)
 

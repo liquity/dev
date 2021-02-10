@@ -4,6 +4,7 @@
 
 ## Decimalish type
 
+Types that can be converted into a Decimal.
 
 <b>Signature:</b>
 

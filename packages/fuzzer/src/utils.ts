@@ -2,8 +2,15 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { Provider } from "@ethersproject/abstract-provider";
 import { Wallet } from "@ethersproject/wallet";
 
-import { Decimal, Decimalish, Difference, Percent } from "@liquity/decimal";
-import { Trove, TroveWithPendingRedistribution, ReadableLiquity } from "@liquity/lib-base";
+import {
+  Decimal,
+  Decimalish,
+  Difference,
+  Percent,
+  Trove,
+  TroveWithPendingRedistribution,
+  ReadableLiquity
+} from "@liquity/lib-base";
 import { EthersLiquity as Liquity, LiquityDeployment } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 

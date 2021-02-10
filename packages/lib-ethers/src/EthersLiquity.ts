@@ -1,7 +1,7 @@
-import { Decimal, Decimalish } from "@liquity/decimal";
-
 import {
   CollateralGainTransferDetails,
+  Decimal,
+  Decimalish,
   FailedReceipt,
   Fees,
   FrontendStatus,
@@ -20,6 +20,7 @@ import {
   TroveClosureDetails,
   TroveCreationDetails,
   TroveCreationParams,
+  TroveListingParams,
   TroveWithPendingRedistribution
 } from "@liquity/lib-base";
 
@@ -207,22 +208,23 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getCollateralSurplusBalance(address, overrides);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLastTroves} */
-  getLastTroves(
-    startIdx: number,
-    numberOfTroves: number,
+  /** @internal */
+  getTroves(
+    params: TroveListingParams & { beforeRedistribution: true },
     overrides?: EthersCallOverrides
-  ): Promise<[string, TroveWithPendingRedistribution][]> {
-    return this._readable.getLastTroves(startIdx, numberOfTroves, overrides);
-  }
+  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFirstTroves} */
-  getFirstTroves(
-    startIdx: number,
-    numberOfTroves: number,
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.(getTroves:2)} */
+  getTroves(
+    params: TroveListingParams,
     overrides?: EthersCallOverrides
-  ): Promise<[string, TroveWithPendingRedistribution][]> {
-    return this._readable.getFirstTroves(startIdx, numberOfTroves, overrides);
+  ): Promise<[address: string, trove: Trove][]>;
+
+  getTroves(
+    params: TroveListingParams,
+    overrides?: EthersCallOverrides
+  ): Promise<[address: string, trove: Trove][]> {
+    return this._readable.getTroves(params, overrides);
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */

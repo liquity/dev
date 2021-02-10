@@ -1,30 +1,29 @@
 import fetch from "cross-fetch";
-import { gql, ApolloClient, InMemoryCache, NormalizedCacheObject, HttpLink } from "@apollo/client";
+import { ApolloClient, gql, HttpLink, InMemoryCache, NormalizedCacheObject } from "@apollo/client";
 import { getAddress } from "@ethersproject/address";
-import { BigNumber } from "@ethersproject/bignumber";
-
-import { Decimal } from "@liquity/decimal";
-
-import { Query } from "./Query";
 
 import {
-  ReadableLiquity,
-  ObservableLiquity,
-  TroveWithPendingRedistribution,
-  Trove,
-  _emptyTrove,
-  StabilityDeposit,
+  Decimal,
   Fees,
+  FrontendStatus,
   LQTYStake,
-  FrontendStatus
+  ObservableLiquity,
+  ReadableLiquity,
+  StabilityDeposit,
+  Trove,
+  TroveListingParams,
+  TroveWithPendingRedistribution,
+  _emptyTrove
 } from "@liquity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
 import { Global } from "../types/Global";
-import { TroveRawFields } from "../types/TroveRawFields";
-import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
-import { Troves, TrovesVariables } from "../types/Troves";
 import { BlockNumberDummy, BlockNumberDummyVariables } from "../types/BlockNumberDummy";
+import { TroveRawFields } from "../types/TroveRawFields";
+import { Troves, TrovesVariables } from "../types/Troves";
+import { TroveWithoutRewards, TroveWithoutRewardsVariables } from "../types/TroveWithoutRewards";
+
+import { Query } from "./Query";
 
 const normalizeAddress = (address?: string) => {
   if (address === undefined) {
@@ -34,7 +33,7 @@ const normalizeAddress = (address?: string) => {
   return address.toLowerCase();
 };
 
-const decimalify = (bigNumberString: string) => new Decimal(BigNumber.from(bigNumberString));
+const decimalify = (bigNumberString: string) => Decimal.fromBigNumberString(bigNumberString);
 
 const queryGlobal = gql`
   query Global {
@@ -147,13 +146,13 @@ const troveBeforeRedistribution = new Query<
 
 const troves = new Query<[string, TroveWithPendingRedistribution][], Troves, TrovesVariables>(
   gql`
-    query Troves($orderDirection: OrderDirection!, $startIdx: Int!, $numberOfTroves: Int!) {
+    query Troves($orderDirection: OrderDirection!, $startingAt: Int!, $first: Int!) {
       troves(
         where: { status: open }
         orderBy: collateralRatioSortKey
         orderDirection: $orderDirection
-        skip: $startIdx
-        first: $numberOfTroves
+        skip: $startingAt
+        first: $first
       ) {
         id
         owner {
@@ -282,20 +281,33 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     throw new Error("Method not implemented.");
   }
 
-  getFirstTroves(startIdx: number, numberOfTroves: number) {
-    return troves.get(this.client, {
-      startIdx,
-      numberOfTroves,
-      orderDirection: OrderDirection.asc
-    });
-  }
+  getTroves(
+    params: TroveListingParams & { beforeRedistribution: true }
+  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
 
-  getLastTroves(startIdx: number, numberOfTroves: number) {
-    return troves.get(this.client, {
-      startIdx,
-      numberOfTroves,
-      orderDirection: OrderDirection.desc
-    });
+  getTroves(params: TroveListingParams): Promise<[address: string, trove: Trove][]>;
+
+  async getTroves(params: TroveListingParams) {
+    const { first, sortedBy, startingAt = 0, beforeRedistribution } = params;
+
+    const [totalRedistributed, _troves] = await Promise.all([
+      beforeRedistribution ? undefined : this.getTotalRedistributed(),
+      troves.get(this.client, {
+        first,
+        startingAt,
+        orderDirection:
+          sortedBy === "ascendingCollateralRatio" ? OrderDirection.asc : OrderDirection.desc
+      })
+    ]);
+
+    if (totalRedistributed) {
+      return _troves.map(([address, trove]) => [
+        address,
+        trove.applyRedistribution(totalRedistributed)
+      ]);
+    } else {
+      return _troves;
+    }
   }
 
   async waitForBlock(blockNumber: number) {

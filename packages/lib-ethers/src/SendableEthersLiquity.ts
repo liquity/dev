@@ -1,7 +1,6 @@
-import { Decimalish } from "@liquity/decimal";
-
 import {
   CollateralGainTransferDetails,
+  Decimalish,
   LiquidationDetails,
   RedemptionDetails,
   SendableLiquity,

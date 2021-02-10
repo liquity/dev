@@ -202,7 +202,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   it('Sets the correct BorrowerOperations address in SortedTroves', async () => {
     const troveManagerAddress = troveManager.address
 
-    const recordedTroveManagerAddress = await sortedTroves.troveManagerAddress()
+    const recordedTroveManagerAddress = await sortedTroves.troveManager()
     assert.equal(troveManagerAddress, recordedTroveManagerAddress)
   })
 
