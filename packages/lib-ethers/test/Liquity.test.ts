@@ -819,7 +819,9 @@ describe("EthersLiquity", () => {
     });
 
     it("should include enough gas for one extra traversal", async () => {
-      const troves = (await liquity.getLastTroves(0, 10)).map(([, t]) => t);
+      const troves = (
+        await liquity.getTroves({ first: 10, sortedBy: "ascendingCollateralRatio" })
+      ).map(([, t]) => t);
 
       const trove = await liquity.getTrove();
       const newTrove = troveWithICRBetween(troves[3], troves[4]);
@@ -851,7 +853,10 @@ describe("EthersLiquity", () => {
     });
 
     it("should include enough gas for both when borrowing", async () => {
-      const troves = (await liquity.getLastTroves(0, 10)).map(([, t]) => t);
+      const troves = (
+        await liquity.getTroves({ first: 10, sortedBy: "ascendingCollateralRatio" })
+      ).map(([, t]) => t);
+
       const trove = await liquity.getTrove();
       const newTrove = troveWithICRBetween(troves[1], troves[2]);
 

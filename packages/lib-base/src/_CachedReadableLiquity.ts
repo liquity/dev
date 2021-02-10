@@ -4,36 +4,65 @@ import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Trove, TroveWithPendingRedistribution } from "./Trove";
-import { FrontendStatus, ReadableLiquity } from "./ReadableLiquity";
+import { FrontendStatus, ReadableLiquity, TroveListingParams } from "./ReadableLiquity";
 
 /** @internal */
-export type _ReadableLiquityWithExtraParams<T extends unknown[]> = {
+export type _ReadableLiquityWithExtraParamsBase<T extends unknown[]> = {
   [P in keyof ReadableLiquity]: ReadableLiquity[P] extends (...params: infer A) => infer R
     ? (...params: [...originalParams: A, ...extraParams: T]) => R
     : never;
 };
 
 /** @internal */
-export type _LiquityReadCache<T extends unknown[]> = {
+export type _LiquityReadCacheBase<T extends unknown[]> = {
   [P in keyof ReadableLiquity]: ReadableLiquity[P] extends (...args: infer A) => Promise<infer R>
     ? (...params: [...originalParams: A, ...extraParams: T]) => R | undefined
     : never;
 };
 
+// Overloads get lost in the mapping, so we need to define them again...
+
+/** @internal */
+export interface _ReadableLiquityWithExtraParams<T extends unknown[]>
+  extends _ReadableLiquityWithExtraParamsBase<T> {
+  getTroves(
+    params: TroveListingParams & { beforeRedistribution: true },
+    ...extraParams: T
+  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+
+  getTroves(
+    params: TroveListingParams,
+    ...extraParams: T
+  ): Promise<[address: string, trove: Trove][]>;
+}
+
+/** @internal */
+export interface _LiquityReadCache<T extends unknown[]> extends _LiquityReadCacheBase<T> {
+  getTroves(
+    params: TroveListingParams & { beforeRedistribution: true },
+    ...extraParams: T
+  ): [address: string, trove: TroveWithPendingRedistribution][] | undefined;
+
+  getTroves(
+    params: TroveListingParams,
+    ...extraParams: T
+  ): [address: string, trove: Trove][] | undefined;
+}
+
 /** @internal */
 export class _CachedReadableLiquity<T extends unknown[]>
   implements _ReadableLiquityWithExtraParams<T> {
   private _readable: _ReadableLiquityWithExtraParams<T>;
-  private _cache: Partial<_LiquityReadCache<T>>;
+  private _cache: _LiquityReadCache<T>;
 
-  constructor(readable: _ReadableLiquityWithExtraParams<T>, cache: Partial<_LiquityReadCache<T>>) {
+  constructor(readable: _ReadableLiquityWithExtraParams<T>, cache: _LiquityReadCache<T>) {
     this._readable = readable;
     this._cache = cache;
   }
 
   async getTotalRedistributed(...extraParams: T): Promise<Trove> {
     return (
-      this._cache.getTotalRedistributed?.call(this._cache, ...extraParams) ??
+      this._cache.getTotalRedistributed(...extraParams) ??
       this._readable.getTotalRedistributed(...extraParams)
     );
   }
@@ -43,7 +72,7 @@ export class _CachedReadableLiquity<T extends unknown[]>
     ...extraParams: T
   ): Promise<TroveWithPendingRedistribution> {
     return (
-      this._cache.getTroveBeforeRedistribution?.call(this._cache, address, ...extraParams) ??
+      this._cache.getTroveBeforeRedistribution(address, ...extraParams) ??
       this._readable.getTroveBeforeRedistribution(address, ...extraParams)
     );
   }
@@ -59,80 +88,84 @@ export class _CachedReadableLiquity<T extends unknown[]>
 
   async getNumberOfTroves(...extraParams: T): Promise<number> {
     return (
-      this._cache.getNumberOfTroves?.call(this._cache, ...extraParams) ??
+      this._cache.getNumberOfTroves(...extraParams) ??
       this._readable.getNumberOfTroves(...extraParams)
     );
   }
 
   async getPrice(...extraParams: T): Promise<Decimal> {
-    return (
-      this._cache.getPrice?.call(this._cache, ...extraParams) ??
-      this._readable.getPrice(...extraParams)
-    );
+    return this._cache.getPrice(...extraParams) ?? this._readable.getPrice(...extraParams);
   }
 
   async getTotal(...extraParams: T): Promise<Trove> {
-    return (
-      this._cache.getTotal?.call(this._cache, ...extraParams) ??
-      this._readable.getTotal(...extraParams)
-    );
+    return this._cache.getTotal(...extraParams) ?? this._readable.getTotal(...extraParams);
   }
 
   async getStabilityDeposit(address?: string, ...extraParams: T): Promise<StabilityDeposit> {
     return (
-      this._cache.getStabilityDeposit?.call(this._cache, address, ...extraParams) ??
+      this._cache.getStabilityDeposit(address, ...extraParams) ??
       this._readable.getStabilityDeposit(address, ...extraParams)
     );
   }
 
   async getLUSDInStabilityPool(...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getLUSDInStabilityPool?.call(this._cache, ...extraParams) ??
+      this._cache.getLUSDInStabilityPool(...extraParams) ??
       this._readable.getLUSDInStabilityPool(...extraParams)
     );
   }
 
   async getLUSDBalance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getLUSDBalance?.call(this._cache, address, ...extraParams) ??
+      this._cache.getLUSDBalance(address, ...extraParams) ??
       this._readable.getLUSDBalance(address, ...extraParams)
     );
   }
 
   async getLQTYBalance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getLQTYBalance?.call(this._cache, address, ...extraParams) ??
+      this._cache.getLQTYBalance(address, ...extraParams) ??
       this._readable.getLQTYBalance(address, ...extraParams)
     );
   }
 
   async getCollateralSurplusBalance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getCollateralSurplusBalance?.call(this._cache, address, ...extraParams) ??
+      this._cache.getCollateralSurplusBalance(address, ...extraParams) ??
       this._readable.getCollateralSurplusBalance(address, ...extraParams)
     );
   }
 
-  async getLastTroves(
-    startIdx: number,
-    numberOfTroves: number,
+  getTroves(
+    params: TroveListingParams & { beforeRedistribution: true },
     ...extraParams: T
-  ): Promise<[string, TroveWithPendingRedistribution][]> {
-    return (
-      this._cache.getLastTroves?.call(this._cache, startIdx, numberOfTroves, ...extraParams) ??
-      this._readable.getLastTroves(startIdx, numberOfTroves, ...extraParams)
-    );
-  }
+  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
 
-  async getFirstTroves(
-    startIdx: number,
-    numberOfTroves: number,
+  getTroves(
+    params: TroveListingParams,
     ...extraParams: T
-  ): Promise<[string, TroveWithPendingRedistribution][]> {
-    return (
-      this._cache.getFirstTroves?.call(this._cache, startIdx, numberOfTroves, ...extraParams) ??
-      this._readable.getFirstTroves(startIdx, numberOfTroves, ...extraParams)
-    );
+  ): Promise<[address: string, trove: Trove][]>;
+
+  async getTroves(
+    params: TroveListingParams,
+    ...extraParams: T
+  ): Promise<[address: string, trove: Trove][]> {
+    const { beforeRedistribution, ...restOfParams } = params;
+
+    const [totalRedistributed, troves] = await Promise.all([
+      beforeRedistribution ? undefined : this.getTotalRedistributed(...extraParams),
+      this._cache.getTroves({ beforeRedistribution: true, ...restOfParams }, ...extraParams) ??
+        this._readable.getTroves({ beforeRedistribution: true, ...restOfParams }, ...extraParams)
+    ]);
+
+    if (totalRedistributed) {
+      return troves.map(([address, trove]) => [
+        address,
+        trove.applyRedistribution(totalRedistributed)
+      ]);
+    } else {
+      return troves;
+    }
   }
 
   async getFees(...extraParams: T): Promise<Fees> {

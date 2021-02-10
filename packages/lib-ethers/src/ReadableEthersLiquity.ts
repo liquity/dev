@@ -9,6 +9,7 @@ import {
   ReadableLiquity,
   StabilityDeposit,
   Trove,
+  TroveListingParams,
   TroveWithPendingRedistribution,
   _CachedReadableLiquity,
   _LiquityReadCache
@@ -43,6 +44,20 @@ enum TroveStatus {
 }
 
 const decimalify = (bigNumber: BigNumber) => Decimal.fromBigNumberString(bigNumber.toHexString());
+
+const validSortingOptions = ["ascendingCollateralRatio", "descendingCollateralRatio"];
+
+const expectPositiveInt = <K extends string>(obj: { [P in K]?: number }, key: K) => {
+  if (obj[key] !== undefined) {
+    if (!Number.isInteger(obj[key])) {
+      throw new Error(`${key} must be an integer`);
+    }
+
+    if (obj[key] < 0) {
+      throw new Error(`${key} must not be negative`);
+    }
+  }
+};
 
 /**
  * Ethers-based implementation of {@link @liquity/lib-base#ReadableLiquity}.
@@ -244,34 +259,54 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return collSurplusPool.getCollateral(address, { ...overrides }).then(decimalify);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLastTroves} */
-  async getLastTroves(
-    startIdx: number,
-    numberOfTroves: number,
+  /** @internal */
+  getTroves(
+    params: TroveListingParams & { beforeRedistribution: true },
     overrides?: EthersCallOverrides
-  ): Promise<[string, TroveWithPendingRedistribution][]> {
+  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.(getTroves:2)} */
+  getTroves(
+    params: TroveListingParams,
+    overrides?: EthersCallOverrides
+  ): Promise<[address: string, trove: Trove][]>;
+
+  async getTroves(
+    params: TroveListingParams,
+    overrides?: EthersCallOverrides
+  ): Promise<[address: string, trove: Trove][]> {
     const { multiTroveGetter } = _getContracts(this.connection);
 
-    const troves = await multiTroveGetter.getMultipleSortedTroves(-(startIdx + 1), numberOfTroves, {
-      ...overrides
-    });
+    expectPositiveInt(params, "first");
+    expectPositiveInt(params, "startingAt");
 
-    return mapMultipleSortedTrovesToTroves(troves);
-  }
+    if (!validSortingOptions.includes(params.sortedBy)) {
+      throw new Error(
+        `sortedBy must be one of: ${validSortingOptions.map(x => `"${x}"`).join(", ")}`
+      );
+    }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFirstTroves} */
-  async getFirstTroves(
-    startIdx: number,
-    numberOfTroves: number,
-    overrides?: EthersCallOverrides
-  ): Promise<[string, TroveWithPendingRedistribution][]> {
-    const { multiTroveGetter } = _getContracts(this.connection);
+    const [totalRedistributed, rawTroves] = await Promise.all([
+      params.beforeRedistribution ? undefined : this.getTotalRedistributed({ ...overrides }),
+      multiTroveGetter.getMultipleSortedTroves(
+        params.sortedBy === "descendingCollateralRatio"
+          ? params.startingAt ?? 0
+          : -((params.startingAt ?? 0) + 1),
+        params.first,
+        { ...overrides }
+      )
+    ]);
 
-    const troves = await multiTroveGetter.getMultipleSortedTroves(startIdx, numberOfTroves, {
-      ...overrides
-    });
+    const troves = mapRawTrovesToTroves(rawTroves);
 
-    return mapMultipleSortedTrovesToTroves(troves);
+    if (totalRedistributed) {
+      return troves.map(([address, trove]) => [
+        address,
+        trove.applyRedistribution(totalRedistributed)
+      ]);
+    } else {
+      return troves;
+    }
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */
@@ -328,11 +363,9 @@ export class ReadableEthersLiquity implements ReadableLiquity {
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
-type MultipleSortedTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSortedTroves"]>>;
+type RawTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSortedTroves"]>>;
 
-const mapMultipleSortedTrovesToTroves = (
-  troves: MultipleSortedTroves
-): [string, TroveWithPendingRedistribution][] =>
+const mapRawTrovesToTroves = (troves: RawTroves): [string, TroveWithPendingRedistribution][] =>
   troves.map(({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) => [
     owner,
 
@@ -356,7 +389,7 @@ export interface ReadableEthersLiquityWithStore<T extends LiquityStore = Liquity
 }
 
 class BlockPolledLiquityStoreBasedCache
-  implements Partial<_LiquityReadCache<[overrides?: EthersCallOverrides]>> {
+  implements _LiquityReadCache<[overrides?: EthersCallOverrides]> {
   private _store: BlockPolledLiquityStore;
 
   constructor(store: BlockPolledLiquityStore) {
@@ -485,6 +518,10 @@ class BlockPolledLiquityStoreBasedCache
     if (this._frontendHit(address, overrides)) {
       return this._store.state.frontend;
     }
+  }
+
+  getTroves() {
+    return undefined;
   }
 }
 

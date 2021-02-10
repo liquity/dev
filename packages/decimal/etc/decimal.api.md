@@ -6,7 +6,7 @@
 
 // @public
 export class Decimal {
-    // (undocumented)
+    // @internal (undocumented)
     get absoluteValue(): this;
     // (undocumented)
     add(addend: Decimalish): Decimal;

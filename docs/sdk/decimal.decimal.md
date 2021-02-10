@@ -20,7 +20,6 @@ Used by Liquity libraries to precisely represent native currency (e.g. Ether), L
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [absoluteValue](./decimal.decimal.absolutevalue.md) |  | this |  |
 |  [finite](./decimal.decimal.finite.md) |  | this \| undefined |  |
 |  [HALF](./decimal.decimal.half.md) | <code>static</code> | [Decimal](./decimal.decimal.md) |  |
 |  [infinite](./decimal.decimal.infinite.md) |  | this \| undefined |  |

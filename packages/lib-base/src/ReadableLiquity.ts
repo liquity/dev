@@ -21,6 +21,31 @@ export type FrontendStatus =
   | { status: "registered"; kickbackRate: Decimal };
 
 /**
+ * Parameters of the {@link ReadableLiquity.(getTroves:2) | getTroves()} function.
+ *
+ * @public
+ */
+export interface TroveListingParams {
+  /** Number of Troves to retrieve. */
+  readonly first: number;
+
+  /** How the Troves should be sorted. */
+  readonly sortedBy: "ascendingCollateralRatio" | "descendingCollateralRatio";
+
+  /** Index of the first Trove to retrieve from the sorted list. */
+  readonly startingAt?: number;
+
+  /**
+   * When set to `true`, the retrieved Troves won't include the liquidation shares received since
+   * the last time they were directly modified.
+   *
+   * @remarks
+   * Changes the type of returned Troves to {@link TroveWithPendingRedistribution}.
+   */
+  readonly beforeRedistribution?: boolean;
+}
+
+/**
  * Read the state of the Liquity protocol.
  *
  * @remarks
@@ -34,9 +59,6 @@ export interface ReadableLiquity {
    *
    * @remarks
    * Needed when dealing with instances of {@link @liquity/lib-base#TroveWithPendingRedistribution}.
-   *
-   * @example
-   * See {@link ReadableLiquity.getLastTroves | getLastTroves()} for an example of how it's used.
    */
   getTotalRedistributed(): Promise<Trove>;
 
@@ -110,46 +132,18 @@ export interface ReadableLiquity {
    */
   getCollateralSurplusBalance(address?: string): Promise<Decimal>;
 
-  /**
-   * Get a slice from the list of Troves sorted by collateral ratio in ascending order.
-   *
-   * @param startIdx - Index of first Trove to include from the sorted list.
-   * @param numberOfTroves - The length of the slice.
-   * @returns Pairs of owner addresses and their Troves.
-   *
-   * @example
-   * The function returns Troves in the form of {@link TroveWithPendingRedistribution} objects,
-   * which require further processing. For example:
-   *
-   * ```typescript
-   * const trovesWithoutRedistribution = await liquity.getLastTroves(0, 10);
-   * const totalRedistributed = await liquity.getTotalRedistributed();
-   * const troves = trovesWithoutRedistribution.map(
-   *   ([owner, t]) => [owner, t.applyRedistribution(totalRedistributed)]
-   * );
-   * ```
-   */
-  getLastTroves(
-    startIdx: number,
-    numberOfTroves: number
-  ): Promise<[string, TroveWithPendingRedistribution][]>;
+  /** @internal */
+  getTroves(
+    params: TroveListingParams & { beforeRedistribution: true }
+  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
 
   /**
-   * Get a slice from the list of Troves sorted by collateral ratio in descending order.
+   * Get a slice from the list of Troves.
    *
-   * @param startIdx - Index of first Trove to include from the sorted list.
-   * @param numberOfTroves - The length of the slice.
+   * @param params - Controls how the list is sorted, and where the slice begins and ends.
    * @returns Pairs of owner addresses and their Troves.
-   *
-   * @example
-   * The function returns Troves in the form of {@link TroveWithPendingRedistribution} objects,
-   * which require further processing. For an example, see
-   * {@link ReadableLiquity.getLastTroves | getLastTroves()}
    */
-  getFirstTroves(
-    startIdx: number,
-    numberOfTroves: number
-  ): Promise<[string, TroveWithPendingRedistribution][]>;
+  getTroves(params: TroveListingParams): Promise<[address: string, trove: Trove][]>;
 
   /**
    * Get a calculator for current fees.

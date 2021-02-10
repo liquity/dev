@@ -11,6 +11,7 @@ import {
   ReadableLiquity,
   StabilityDeposit,
   Trove,
+  TroveListingParams,
   TroveWithPendingRedistribution,
   _emptyTrove
 } from "@liquity/lib-base";
@@ -145,13 +146,13 @@ const troveBeforeRedistribution = new Query<
 
 const troves = new Query<[string, TroveWithPendingRedistribution][], Troves, TrovesVariables>(
   gql`
-    query Troves($orderDirection: OrderDirection!, $startIdx: Int!, $numberOfTroves: Int!) {
+    query Troves($orderDirection: OrderDirection!, $startingAt: Int!, $first: Int!) {
       troves(
         where: { status: open }
         orderBy: collateralRatioSortKey
         orderDirection: $orderDirection
-        skip: $startIdx
-        first: $numberOfTroves
+        skip: $startingAt
+        first: $first
       ) {
         id
         owner {
@@ -280,20 +281,33 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     throw new Error("Method not implemented.");
   }
 
-  getFirstTroves(startIdx: number, numberOfTroves: number) {
-    return troves.get(this.client, {
-      startIdx,
-      numberOfTroves,
-      orderDirection: OrderDirection.asc
-    });
-  }
+  getTroves(
+    params: TroveListingParams & { beforeRedistribution: true }
+  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
 
-  getLastTroves(startIdx: number, numberOfTroves: number) {
-    return troves.get(this.client, {
-      startIdx,
-      numberOfTroves,
-      orderDirection: OrderDirection.desc
-    });
+  getTroves(params: TroveListingParams): Promise<[address: string, trove: Trove][]>;
+
+  async getTroves(params: TroveListingParams) {
+    const { first, sortedBy, startingAt = 0, beforeRedistribution } = params;
+
+    const [totalRedistributed, _troves] = await Promise.all([
+      beforeRedistribution ? undefined : this.getTotalRedistributed(),
+      troves.get(this.client, {
+        first,
+        startingAt,
+        orderDirection:
+          sortedBy === "ascendingCollateralRatio" ? OrderDirection.asc : OrderDirection.desc
+      })
+    ]);
+
+    if (totalRedistributed) {
+      return _troves.map(([address, trove]) => [
+        address,
+        trove.applyRedistribution(totalRedistributed)
+      ]);
+    } else {
+      return _troves;
+    }
   }
 
   async waitForBlock(blockNumber: number) {

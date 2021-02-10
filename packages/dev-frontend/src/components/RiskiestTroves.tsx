@@ -2,7 +2,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Card, Button, Text, Box, Heading, Flex } from "theme-ui";
 
-import { Percent, MINIMUM_COLLATERAL_RATIO, CRITICAL_COLLATERAL_RATIO } from "@liquity/lib-base";
+import {
+  Percent,
+  MINIMUM_COLLATERAL_RATIO,
+  CRITICAL_COLLATERAL_RATIO,
+  Trove
+} from "@liquity/lib-base";
 import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -22,22 +27,18 @@ type RiskiestTrovesProps = {
   pageSize: number;
 };
 
-type Resolved<T> = T extends Promise<infer U> ? U : T;
-
-const select = ({
+const select = ({ numberOfTroves, price, blockTag }: BlockPolledLiquityStoreState) => ({
   numberOfTroves,
   price,
-  totalRedistributed,
   blockTag
-}: BlockPolledLiquityStoreState) => ({ numberOfTroves, price, totalRedistributed, blockTag });
+});
 
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
-  const { blockTag, numberOfTroves, price, totalRedistributed } = useLiquitySelector(select);
+  const { blockTag, numberOfTroves, price } = useLiquitySelector(select);
   const { liquity } = useLiquity();
-  type Troves = Resolved<ReturnType<typeof liquity.getLastTroves>>;
 
   const [loading, setLoading] = useState(true);
-  const [trovesWithoutRewards, setTrovesWithoutRewards] = useState<Troves>();
+  const [troves, setTroves] = useState<[string, Trove][]>();
 
   const [reload, setReload] = useState({});
   const forceReload = useCallback(() => setReload({}), []);
@@ -69,12 +70,21 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
 
     setLoading(true);
 
-    liquity.getLastTroves(clampedPage * pageSize, pageSize, { blockTag }).then(troves => {
-      if (mounted) {
-        setTrovesWithoutRewards(troves);
-        setLoading(false);
-      }
-    });
+    liquity
+      .getTroves(
+        {
+          first: pageSize,
+          sortedBy: "ascendingCollateralRatio",
+          startingAt: clampedPage * pageSize
+        },
+        { blockTag }
+      )
+      .then(troves => {
+        if (mounted) {
+          setTroves(troves);
+          setLoading(false);
+        }
+      });
 
     return () => {
       mounted = false;
@@ -104,10 +114,6 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
       };
     }
   }, [copied]);
-
-  const troves = trovesWithoutRewards?.map(
-    ([owner, trove]) => [owner, trove.applyRedistribution(totalRedistributed)] as const
-  );
 
   return (
     <Card sx={{ width: "100%" }}>
