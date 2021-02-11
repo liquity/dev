@@ -1084,9 +1084,27 @@ class TestHelper {
     return ('0'.repeat(64) + hexValue.slice(2)).slice(-64)
   }
 
+  static formatParam(param) {
+    let formattedParam = param
+    if (typeof param == 'number' || typeof param == 'object' ||
+        (typeof param == 'string' && (new RegExp('[0-9]*')).test(param))) {
+      formattedParam = web3.utils.toHex(formattedParam)
+    } else if (typeof param == 'boolean') {
+      formattedParam = param ? '0x01' : '0x00'
+    } else if (param.slice(0, 2) != '0x') {
+      formattedParam = web3.utils.asciiToHex(formattedParam)
+    }
+
+    return this.hexToParam(formattedParam)
+  }
   static getTransactionData(signatureString, params) {
+    /*
+     console.log('signatureString: ', signatureString)
+     console.log('params: ', params)
+     console.log('params: ', params.map(p => typeof p))
+     */
     return web3.utils.sha3(signatureString).slice(0,10) +
-      params.reduce((acc, p) => acc + this.hexToParam(p), '')
+      params.reduce((acc, p) => acc + this.formatParam(p), '')
   }
 }
 
