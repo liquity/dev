@@ -60,7 +60,9 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   }, []);
 
   useEffect(() => {
-    if (config && provider && chainId && connection) {
+    if (config && connection) {
+      const { provider, chainId } = connection;
+
       if (isBatchedProvider(provider)) {
         provider.chainId = chainId;
       }
@@ -79,7 +81,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
         };
       }
     }
-  }, [config, provider, chainId, connection]);
+  }, [config, connection]);
 
   if (!config || !provider || !account || !chainId) {
     return <>{loader}</>;
