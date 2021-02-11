@@ -1,7 +1,16 @@
 {
   "name": "@liquity/lib-base",
   "version": "0.0.0-semantic-release",
-  "private": true,
+  "description": "Liquity SDK shared interfaces",
+  "keywords": [
+    "Liquity",
+    "protocol",
+    "DeFi",
+    "Ethereum"
+  ],
+  "repository": "https://github.com/liquity/liquity",
+  "license": "MIT",
+  "author": "Daniel Simon <dani@liquity.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

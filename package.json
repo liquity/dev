@@ -14,6 +14,12 @@
       "**/react-scripts"
     ]
   },
+  "release": {
+    "extends": "semantic-release-monorepo",
+    "branches": [
+      "master"
+    ]
+  },
   "scripts": {
     "build": "run-s build:*",
     "build:dev-frontend": "yarn workspace @liquity/dev-frontend build",
@@ -33,6 +39,9 @@
     "prepare:subgraph": "yarn workspace @liquity/subgraph prepare",
     "prepare:docs": "run-s docs",
     "rebuild": "run-s prepare build",
+    "release": "run-s release:*",
+    "release:lib-base": "yarn workspace @liquity/lib-base semantic-release",
+    "release:lib-ethers": "yarn workspace @liquity/lib-ethers semantic-release",
     "save-live-version": "yarn workspace @liquity/lib-ethers save-live-version",
     "start-dev-chain": "run-s start-dev-chain:*",
     "start-dev-chain:openethereum": "node dev-chain/start.js",
@@ -63,6 +72,8 @@
     "@microsoft/api-documenter": "^7.12.6",
     "fs-extra": "^9.1.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.1.2"
+    "prettier": "^2.1.2",
+    "semantic-release": "^17.3.8",
+    "semantic-release-monorepo": "^7.0.4"
   }
 }

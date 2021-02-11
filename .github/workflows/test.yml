@@ -35,9 +35,13 @@ jobs:
       - run: yarn build
       - run: yarn test
 
-      - name: Test lib integration against live contracts
+      - name: Test SDK integration against live contracts
         if: ${{ github.ref == 'refs/heads/master' }}
         run: yarn test-live
+
+      - name: Release SDK on NPM
+        if: ${{ github.ref == 'refs/heads/master' }}
+        run: yarn release
 
       - uses: azure/docker-login@v1
         with:
