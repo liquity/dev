@@ -34,7 +34,7 @@ import { BlockPolledLiquityStore } from "./BlockPolledLiquityStore";
 // TODO: these are constant in the contracts, so it doesn't make sense to make a call for them,
 // but to avoid having to update them here when we change them in the contracts, we could read
 // them once after deployment and save them to LiquityDeployment.
-const MINUTE_DECAY_FACTOR = Decimal.from("0.999832508430720967");
+const MINUTE_DECAY_FACTOR = Decimal.from("0.999037758833783000");
 const BETA = Decimal.from(2);
 
 enum TroveStatus {
