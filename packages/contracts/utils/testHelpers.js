@@ -444,8 +444,6 @@ class TestHelper {
   }
 
   static async getBorrowerOpsListHint(contracts, newColl, newDebt) {
-    console.log(`newColl: ${newColl}`)
-    console.log(`newDebt: ${newDebt}`)
     const newNICR = await contracts.hintHelpers.computeNominalCR(newColl, newDebt)
     const {
       hintAddress: approxfullListHint,
@@ -512,8 +510,9 @@ class TestHelper {
     // const coll = (await contracts.troveManager.Troves(account))[1]
     // const debt = (await contracts.troveManager.Troves(account))[0]
 
+    const fee = LUSDChange.gt(this.toBN('0')) ? await contracts.troveManager.getBorrowingFee(LUSDChange) : this.toBN('0')
     const newColl = entireColl.add(ETHChange)
-    const newDebt = entireDebt.add(LUSDChange)
+    const newDebt = entireDebt.add(LUSDChange).add(fee)
 
     return { newColl, newDebt }
   }
@@ -523,7 +522,7 @@ class TestHelper {
 
   static async openTrove_allAccounts(accounts, contracts, ETHAmount, LUSDAmount) {
     const gasCostList = []
-    const totalDebt = await this.getOpenTroveTotalDebt(LUSDAmount)
+    const totalDebt = await this.getOpenTroveTotalDebt(contracts, LUSDAmount)
 
     for (const account of accounts) {
       const {upperHint, lowerHint} = await this.getBorrowerOpsListHint(contracts, ETHAmount, totalDebt)
@@ -537,7 +536,7 @@ class TestHelper {
 
   static async openTrove_allAccounts_randomETH(minETH, maxETH, accounts, contracts, LUSDAmount) {
     const gasCostList = []
-    const totalDebt = await this.getOpenTroveTotalDebt(LUSDAmount)
+    const totalDebt = await this.getOpenTroveTotalDebt(contracts, LUSDAmount)
 
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
@@ -553,11 +552,10 @@ class TestHelper {
   static async openTrove_allAccounts_randomETH_ProportionalLUSD(minETH, maxETH, accounts, contracts, proportion) {
     const gasCostList = []
   
-
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(minETH, maxETH)
       const proportionalLUSD = (web3.utils.toBN(proportion)).mul(web3.utils.toBN(randCollAmount))
-      const totalDebt = await this.getOpenTroveTotalDebt(proportionalLUSD)
+      const totalDebt = await this.getOpenTroveTotalDebt(contracts, proportionalLUSD)
 
       const {upperHint, lowerHint} = await this.getBorrowerOpsListHint(contracts, randCollAmount, totalDebt)
 
@@ -580,7 +578,7 @@ class TestHelper {
       // console.log(`randCollAmount ${randCollAmount }`)
       const randLUSDProportion = this.randAmountInWei(minLUSDProportion, maxLUSDProportion)
       const proportionalLUSD = (web3.utils.toBN(randLUSDProportion)).mul(web3.utils.toBN(randCollAmount).div(_1e18))
-      const totalDebt = await this.getOpenTroveTotalDebt(proportionalLUSD)
+      const totalDebt = await this.getOpenTroveTotalDebt(contracts, proportionalLUSD)
       const {upperHint, lowerHint} = await this.getBorrowerOpsListHint(contracts, randCollAmount, totalDebt)
 
       const feeFloor = this.dec(5, 16)
@@ -603,7 +601,7 @@ class TestHelper {
 
     for (const account of accounts) {
       const randLUSDAmount = this.randAmountInWei(minLUSD, maxLUSD)
-      const totalDebt = await this.getOpenTroveTotalDebt(randLUSDAmount)
+      const totalDebt = await this.getOpenTroveTotalDebt(contracts, randLUSDAmount)
       const {upperHint, lowerHint} = await this.getBorrowerOpsListHint(contracts, ETHAmount, totalDebt)
 
       const tx = await contracts.borrowerOperations.openTrove(this._100pct, randLUSDAmount, upperHint, lowerHint, { from: account, value: ETHAmount })
@@ -633,7 +631,7 @@ class TestHelper {
     for (const account of accounts) {
       const LUSDAmount = (maxLUSDAmount - i).toString()
       const LUSDAmountWei = web3.utils.toWei(LUSDAmount, 'ether')
-      const totalDebt = await this.getOpenTroveTotalDebt(randLUSDAmount)
+      const totalDebt = await this.getOpenTroveTotalDebt(contracts, LUSDAmountWei)
       const {upperHint, lowerHint} = await this.getBorrowerOpsListHint(contracts, ETHAmount, totalDebt)
 
       const tx = await contracts.borrowerOperations.openTrove(this._100pct, LUSDAmountWei, upperHint, lowerHint, { from: account, value: ETHAmount })
@@ -705,7 +703,7 @@ class TestHelper {
       }
 
       const gas = this.gasUsed(tx)
-      console.log(`ETH change: ${ETHChangeBN},  LUSDChange: ${LUSDChangeBN}, gas: ${gas} `)
+      // console.log(`ETH change: ${ETHChangeBN},  LUSDChange: ${LUSDChangeBN}, gas: ${gas} `)
 
       gasCostList.push(gas)
     }
@@ -973,11 +971,18 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
-  static async withdrawETHGainToTrove_allAccounts(accounts, stabilityPool) {
+  static async withdrawETHGainToTrove_allAccounts(accounts, contracts) {
     const gasCostList = []
     for (const account of accounts) {
 
-      const tx = await stabilityPool.withdrawETHGainToTrove(account, { from: account })
+      let {entireColl, entireDebt } = await this.getEntireCollAndDebt(contracts, account)
+      console.log(`entireColl: ${entireColl}`)
+      console.log(`entireDebt: ${entireDebt}`)
+      const ETHGain = await contracts.stabilityPool.getDepositorETHGain(account)
+      const newColl = entireColl.add(ETHGain)
+      const {upperHint, lowerHint} = await this.getBorrowerOpsListHint(contracts, newColl, entireDebt)
+
+      const tx = await contracts.stabilityPool.withdrawETHGainToTrove(upperHint, lowerHint, { from: account })
       const gas = this.gasUsed(tx)
       gasCostList.push(gas)
     }
