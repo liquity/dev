@@ -189,7 +189,14 @@ export class ReadableEthersLiquity implements ReadableLiquity {
   getPrice(overrides?: EthersCallOverrides): Promise<Decimal> {
     const { priceFeed } = _getContracts(this.connection);
 
-    return priceFeed.callStatic.fetchPrice({ ...overrides }).then(decimalify);
+    // fetchPrice() fails when called through BatchedProvider, because that uses a helper contract
+    // that dispatches batched calls using STATICCALL, and fetchPrice() tries to modify state, which
+    // "will result in an exception instead of performing the modification" (EIP-214).
+
+    // Passing a pointless gasPrice override ensures that the call is performed directly --
+    // bypassing the helper contract -- because BatchedProvider has no support for overrides other
+    // than blockTag.
+    return priceFeed.callStatic.fetchPrice({ ...overrides, gasPrice: 0 }).then(decimalify);
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotal} */
