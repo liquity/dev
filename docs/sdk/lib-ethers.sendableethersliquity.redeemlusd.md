@@ -16,7 +16,7 @@ redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LUSD to be redeemed. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to be redeemed. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

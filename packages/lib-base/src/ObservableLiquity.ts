@@ -1,5 +1,4 @@
-import { Decimal } from "@liquity/decimal";
-
+import { Decimal } from "./Decimal";
 import { Trove, TroveWithPendingRedistribution } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
 

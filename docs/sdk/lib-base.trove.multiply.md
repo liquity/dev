@@ -14,7 +14,7 @@ multiply(multiplier: Decimalish): Trove;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  multiplier | [Decimalish](./decimal.decimalish.md) |  |
+|  multiplier | [Decimalish](./lib-base.decimalish.md) |  |
 
 <b>Returns:</b>
 

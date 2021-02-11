@@ -121,6 +121,14 @@ const deployContracts = async (
   };
 };
 
+export const deployTellorCaller = (
+  deployer: Signer,
+  getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
+  tellorAddress: string,
+  overrides?: Overrides
+): Promise<string> =>
+  deployContract(deployer, getContractFactory, "TellorCaller", tellorAddress, { ...overrides });
+
 const connectContracts = async (
   {
     activePool,

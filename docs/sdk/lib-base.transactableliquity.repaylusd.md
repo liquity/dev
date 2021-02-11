@@ -16,7 +16,7 @@ repayLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | The amount of LUSD to repay. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | The amount of LUSD to repay. |
 
 <b>Returns:</b>
 

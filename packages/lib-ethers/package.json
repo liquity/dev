@@ -1,7 +1,16 @@
 {
   "name": "@liquity/lib-ethers",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.0.0-semantic-release",
+  "description": "Liquity SDK Ethers-based implementation",
+  "keywords": [
+    "Liquity",
+    "protocol",
+    "DeFi",
+    "Ethereum"
+  ],
+  "repository": "https://github.com/liquity/liquity",
+  "license": "MIT",
+  "author": "Daniel Simon <dani@liquity.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -23,11 +32,10 @@
     "test-live:run": "cross-env USE_LIVE_VERSION=true hardhat test"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^0.0.1",
+    "@liquity/lib-base": "^1.0.0",
     "ethers": "^5.0.0"
   },
   "devDependencies": {
-    "@liquity/lib-base": "^0.0.1",
     "@microsoft/api-extractor": "^7.13.0",
     "@nomiclabs/hardhat-ethers": "^2.0.0",
     "@types/chai": "^4.2.9",

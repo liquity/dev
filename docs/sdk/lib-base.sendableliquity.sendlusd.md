@@ -17,7 +17,7 @@ sendLUSD(toAddress: string, amount: Decimalish): Promise<SentLiquityTransaction<
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  toAddress | string | Address of receipient. |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LUSD to send. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to send. |
 
 <b>Returns:</b>
 

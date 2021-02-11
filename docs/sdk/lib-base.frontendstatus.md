@@ -16,11 +16,11 @@ export declare type FrontendStatus = {
     kickbackRate: Decimal;
 };
 ```
-<b>References:</b> [Decimal](./decimal.decimal.md)
+<b>References:</b> [Decimal](./lib-base.decimal.md)
 
 ## Remarks
 
 Returned by the [getFrontendStatus()](./lib-base.readableliquity.getfrontendstatus.md) function.
 
-When `status` is `"registered"`<!-- -->, `kickbackRate` gives the frontend's kickback rate as a [Decimal](./decimal.decimal.md) between 0 and 1.
+When `status` is `"registered"`<!-- -->, `kickbackRate` gives the frontend's kickback rate as a [Decimal](./lib-base.decimal.md) between 0 and 1.
 

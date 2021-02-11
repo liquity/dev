@@ -5,21 +5,21 @@ import { Interface, ParamType } from "@ethersproject/abi";
 
 import ActivePool from "../../contracts/artifacts/contracts/ActivePool.sol/ActivePool.json";
 import BorrowerOperations from "../../contracts/artifacts/contracts/BorrowerOperations.sol/BorrowerOperations.json";
-import TroveManager from "../../contracts/artifacts/contracts/TroveManager.sol/TroveManager.json";
-import LUSDToken from "../../contracts/artifacts/contracts/LUSDToken.sol/LUSDToken.json";
+import CollSurplusPool from "../../contracts/artifacts/contracts/CollSurplusPool.sol/CollSurplusPool.json";
 import CommunityIssuance from "../../contracts/artifacts/contracts/LQTY/CommunityIssuance.sol/CommunityIssuance.json";
 import DefaultPool from "../../contracts/artifacts/contracts/DefaultPool.sol/DefaultPool.json";
-import LQTYToken from "../../contracts/artifacts/contracts/LQTY/LQTYToken.sol/LQTYToken.json";
+import GasPool from "../../contracts/artifacts/contracts/GasPool.sol/GasPool.json";
 import HintHelpers from "../../contracts/artifacts/contracts/HintHelpers.sol/HintHelpers.json";
 import LockupContractFactory from "../../contracts/artifacts/contracts/LQTY/LockupContractFactory.sol/LockupContractFactory.json";
+import LUSDToken from "../../contracts/artifacts/contracts/LUSDToken.sol/LUSDToken.json";
 import LQTYStaking from "../../contracts/artifacts/contracts/LQTY/LQTYStaking.sol/LQTYStaking.json";
+import LQTYToken from "../../contracts/artifacts/contracts/LQTY/LQTYToken.sol/LQTYToken.json";
 import MultiTroveGetter from "../../contracts/artifacts/contracts/MultiTroveGetter.sol/MultiTroveGetter.json";
 import PriceFeed from "../../contracts/artifacts/contracts/PriceFeed.sol/PriceFeed.json";
 import PriceFeedTestnet from "../../contracts/artifacts/contracts/TestContracts/PriceFeedTestnet.sol/PriceFeedTestnet.json";
 import SortedTroves from "../../contracts/artifacts/contracts/SortedTroves.sol/SortedTroves.json";
 import StabilityPool from "../../contracts/artifacts/contracts/StabilityPool.sol/StabilityPool.json";
-import GasPool from "../../contracts/artifacts/contracts/GasPool.sol/GasPool.json";
-import CollSurplusPool from "../../contracts/artifacts/contracts/CollSurplusPool.sol/CollSurplusPool.json";
+import TroveManager from "../../contracts/artifacts/contracts/TroveManager.sol/TroveManager.json";
 
 const getTupleType = (components: ParamType[], flexible: boolean) => {
   if (components.every(component => component.name)) {
@@ -142,21 +142,21 @@ const declareInterface = ({
 const contractArtifacts = [
   ActivePool,
   BorrowerOperations,
-  TroveManager,
-  LUSDToken,
+  CollSurplusPool,
   CommunityIssuance,
   DefaultPool,
-  LQTYToken,
+  GasPool,
   HintHelpers,
   LockupContractFactory,
+  LUSDToken,
   LQTYStaking,
+  LQTYToken,
   MultiTroveGetter,
   PriceFeed,
   PriceFeedTestnet,
   SortedTroves,
   StabilityPool,
-  GasPool,
-  CollSurplusPool
+  TroveManager
 ];
 
 const contracts = contractArtifacts.map(({ contractName, abi }) => ({

@@ -1,6 +1,6 @@
 import assert from "assert";
 
-import { Decimal, Decimalish } from "@liquity/decimal";
+import { Decimal, Decimalish } from "./Decimal";
 
 import {
   MAXIMUM_BORROWING_RATE,

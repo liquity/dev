@@ -16,7 +16,7 @@ stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<S
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LQTY to add to new or existing stake. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LQTY to add to new or existing stake. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

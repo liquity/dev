@@ -8,7 +8,6 @@
 
 |  Package | Description |
 |  --- | --- |
-|  [@liquity/decimal](./decimal.md) |  |
 |  [@liquity/lib-base](./lib-base.md) |  |
 |  [@liquity/lib-ethers](./lib-ethers.md) |  |
 

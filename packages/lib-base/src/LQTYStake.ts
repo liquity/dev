@@ -1,4 +1,4 @@
-import { Decimal, Decimalish } from "@liquity/decimal";
+import { Decimal, Decimalish } from "./Decimal";
 
 /**
  * Represents the change between two states of an LQTY Stake.

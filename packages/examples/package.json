@@ -1,0 +1,12 @@
+{
+  "name": "@liquity/examples",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "chalk": "^4.1.0",
+    "ethers": "^5.0.0"
+  },
+  "scripts": {
+    "liqbot": "node src/liqbot.js"
+  }
+}

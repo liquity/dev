@@ -20,7 +20,6 @@
     "docs:collect-sdk-apis": "node scripts/collect-sdk-apis.js",
     "docs:api-documenter": "api-documenter generate -i temp/sdk-apis -o docs/sdk",
     "prepare": "run-s prepare:*",
-    "prepare:decimal": "yarn workspace @liquity/decimal prepare",
     "prepare:lib-base": "yarn workspace @liquity/lib-base prepare",
     "prepare:lib-ethers": "run-s prepare:lib-ethers:*",
     "prepare:lib-ethers:deployments": "yarn workspace @liquity/lib-ethers prepare:deployments",

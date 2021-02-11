@@ -16,7 +16,7 @@ unstakeLQTY(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceip
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LQTY to withdraw. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LQTY to withdraw. |
 
 <b>Returns:</b>
 

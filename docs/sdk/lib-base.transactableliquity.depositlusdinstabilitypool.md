@@ -16,7 +16,7 @@ depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string): Promise<St
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LUSD to add to new or existing deposit. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to add to new or existing deposit. |
 |  frontendTag | string | Address that should receive a share of this deposit's LQTY rewards. |
 
 <b>Returns:</b>

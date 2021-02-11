@@ -4,19 +4,18 @@ import path from "path";
 import dotenv from "dotenv";
 import "colors";
 
-import { AddressZero } from "@ethersproject/constants";
 import { JsonFragment } from "@ethersproject/abi";
 import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
-import { Overrides } from "@ethersproject/contracts";
+import { ContractFactory, Overrides } from "@ethersproject/contracts";
 
 import { task, HardhatUserConfig, types, extendEnvironment } from "hardhat/config";
-import { NetworkUserConfig } from "hardhat/types";
+import { HardhatRuntimeEnvironment, NetworkUserConfig } from "hardhat/types";
 import "@nomiclabs/hardhat-ethers";
 
 import { Decimal } from "@liquity/lib-base";
 
-import { deployAndSetupContracts, setSilent } from "./utils/deploy";
+import { deployAndSetupContracts, deployTellorCaller, setSilent } from "./utils/deploy";
 import { _connectToContracts, _LiquityDeploymentJSON, _priceFeedIsTestnet } from "./src/contracts";
 
 import accounts from "./accounts.json";
@@ -64,14 +63,25 @@ const infuraNetwork = (name: string): { [name: string]: NetworkUserConfig } => (
 });
 
 // https://docs.chain.link/docs/ethereum-addresses
-const aggregatorAddress = {
-  mainnet: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
-  kovan: "0x9326BFA02ADD2366b30bacB125260Af641031331",
-  rinkeby: "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e"
+// https://docs.tellor.io/tellor/integration/reference-page
+
+const oracleAddresses = {
+  mainnet: {
+    chainlink: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    tellor: "0x0Ba45A8b5d5575935B8158a88C631E9F9C95a2e5"
+  },
+  rinkeby: {
+    chainlink: "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
+    tellor: "0xFe41Cb708CD98C5B20423433309E55b53F79134a" // Core
+  },
+  kovan: {
+    chainlink: "0x9326BFA02ADD2366b30bacB125260Af641031331",
+    tellor: "0x20374E579832859f180536A69093A126Db1c8aE9" // Playground
+  }
 };
 
-const hasAggregator = (network: string): network is keyof typeof aggregatorAddress =>
-  network in aggregatorAddress;
+const hasOracles = (network: string): network is keyof typeof oracleAddresses =>
+  network in oracleAddresses;
 
 const config: HardhatUserConfig = {
   networks: {
@@ -118,16 +128,20 @@ declare module "hardhat/types/runtime" {
 const getLiveArtifact = (name: string): { abi: JsonFragment[]; bytecode: string } =>
   require(`./live/${name}.json`);
 
+const getContractFactory: (
+  env: HardhatRuntimeEnvironment
+) => (name: string, signer: Signer) => Promise<ContractFactory> = useLiveVersion
+  ? env => (name, signer) => {
+      const { abi, bytecode } = getLiveArtifact(name);
+      return env.ethers.getContractFactory(abi, bytecode, signer);
+    }
+  : env => env.ethers.getContractFactory;
+
 extendEnvironment(env => {
   env.deployLiquity = async (deployer, useRealPriceFeed = false, overrides?: Overrides) => {
     const deployment = await deployAndSetupContracts(
       deployer,
-      useLiveVersion
-        ? (name, signer) => {
-            const { abi, bytecode } = getLiveArtifact(name);
-            return env.ethers.getContractFactory(abi, bytecode, signer);
-          }
-        : env.ethers.getContractFactory,
+      getContractFactory(env),
       !useRealPriceFeed,
       env.network.name === "dev",
       overrides
@@ -160,8 +174,8 @@ task("deploy", "Deploys the contracts to the network")
 
     useRealPriceFeed ??= env.network.name === "mainnet";
 
-    if (useRealPriceFeed && !hasAggregator(env.network.name)) {
-      throw new Error(`Aggregator unavailable on ${env.network.name}`);
+    if (useRealPriceFeed && !hasOracles(env.network.name)) {
+      throw new Error(`PriceFeed not supported on ${env.network.name}`);
     }
 
     setSilent(false);
@@ -173,14 +187,19 @@ task("deploy", "Deploys the contracts to the network")
 
       assert(!_priceFeedIsTestnet(contracts.priceFeed));
 
-      if (hasAggregator(env.network.name)) {
-        console.log(
-          `Hooking up PriceFeed with aggregator at ${aggregatorAddress[env.network.name]} ...`
+      if (hasOracles(env.network.name)) {
+        const tellorCallerAddress = await deployTellorCaller(
+          deployer,
+          getContractFactory(env),
+          oracleAddresses[env.network.name].tellor,
+          overrides
         );
 
+        console.log(`Hooking up PriceFeed with oracles ...`);
+
         const tx = await contracts.priceFeed.setAddresses(
-          aggregatorAddress[env.network.name],
-          AddressZero,
+          oracleAddresses[env.network.name].chainlink,
+          tellorCallerAddress,
           overrides
         );
 

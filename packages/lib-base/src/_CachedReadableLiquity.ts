@@ -1,5 +1,4 @@
-import { Decimal } from "@liquity/decimal";
-
+import { Decimal } from "./Decimal";
 import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
 import { StabilityDeposit } from "./StabilityDeposit";

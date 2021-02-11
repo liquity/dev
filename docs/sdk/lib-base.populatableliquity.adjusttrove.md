@@ -16,7 +16,7 @@ adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<PopulatedLiquity
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./decimal.decimalish.md)<!-- -->&gt; | Parameters of the adjustment. |
+|  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; | Parameters of the adjustment. |
 
 <b>Returns:</b>
 

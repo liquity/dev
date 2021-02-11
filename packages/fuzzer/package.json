@@ -6,9 +6,6 @@
     "fuzzer": "ts-node src/index.ts"
   },
   "devDependencies": {
-    "@liquity/lib-base": "^0.0.1",
-    "@liquity/lib-ethers": "^0.0.1",
-    "@liquity/lib-subgraph": "^0.0.1",
     "@types/yargs": "^15.0.7",
     "colors": "^1.4.0",
     "dotenv": "^8.2.0",

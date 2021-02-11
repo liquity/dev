@@ -16,11 +16,11 @@ whatChanged(thatStakedLQTY: Decimalish): LQTYStakeChange<Decimal> | undefined;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  thatStakedLQTY | [Decimalish](./decimal.decimalish.md) |  |
+|  thatStakedLQTY | [Decimalish](./lib-base.decimalish.md) |  |
 
 <b>Returns:</b>
 
-[LQTYStakeChange](./lib-base.lqtystakechange.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt; \| undefined
+[LQTYStakeChange](./lib-base.lqtystakechange.md)<!-- -->&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt; \| undefined
 
 An object representing the change, or `undefined` if the staked amounts are equal.
 

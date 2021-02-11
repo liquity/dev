@@ -17,9 +17,9 @@ static recreate(that: Trove, borrowingRate?: Decimalish): TroveCreationParams<De
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  that | [Trove](./lib-base.trove.md) | The Trove to recreate. |
-|  borrowingRate | [Decimalish](./decimal.decimalish.md) | Current borrowing rate. |
+|  borrowingRate | [Decimalish](./lib-base.decimalish.md) | Current borrowing rate. |
 
 <b>Returns:</b>
 
-[TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimal](./decimal.decimal.md)<!-- -->&gt;
+[TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt;
 

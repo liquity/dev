@@ -1,7 +1,16 @@
 {
   "name": "@liquity/lib-base",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.0.0-semantic-release",
+  "description": "Liquity SDK shared interfaces",
+  "keywords": [
+    "Liquity",
+    "protocol",
+    "DeFi",
+    "Ethereum"
+  ],
+  "repository": "https://github.com/liquity/liquity",
+  "license": "MIT",
+  "author": "Daniel Simon <dani@liquity.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -12,7 +21,7 @@
     "test": "mocha --require ts-node/register"
   },
   "dependencies": {
-    "@liquity/decimal": "^0.0.1"
+    "@ethersproject/bignumber": "^5.0.0"
   },
   "devDependencies": {
     "@ethersproject/bignumber": "^5.0.0",

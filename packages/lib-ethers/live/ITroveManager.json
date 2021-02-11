@@ -87,6 +87,19 @@
         {
           "indexed": false,
           "internalType": "address",
+          "name": "_lqtyTokenAddress",
+          "type": "address"
+        }
+      ],
+      "name": "LQTYTokenAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
           "name": "_newLUSDTokenAddress",
           "type": "address"
         }
@@ -266,7 +279,13 @@
       "type": "function"
     },
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        }
+      ],
       "name": "checkRecoveryMode",
       "outputs": [
         {
@@ -355,6 +374,19 @@
         }
       ],
       "name": "getBorrowingFee",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getBorrowingRate",
       "outputs": [
         {
           "internalType": "uint256",
@@ -482,6 +514,25 @@
     },
     {
       "inputs": [],
+      "name": "getRedemptionRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_price",
+          "type": "uint256"
+        }
+      ],
       "name": "getTCR",
       "outputs": [
         {
@@ -795,6 +846,11 @@
         {
           "internalType": "address",
           "name": "_sortedTrovesAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_lqtyTokenAddress",
           "type": "address"
         },
         {

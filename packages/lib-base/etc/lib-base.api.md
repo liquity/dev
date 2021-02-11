@@ -4,9 +4,6 @@
 
 ```ts
 
-import { Decimal } from '@liquity/decimal';
-import { Decimalish } from '@liquity/decimal';
-
 // @internal (undocumented)
 export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiquityWithExtraParams<T> {
     constructor(readable: _ReadableLiquityWithExtraParams<T>, cache: _LiquityReadCache<T>);
@@ -71,6 +68,97 @@ export const CRITICAL_COLLATERAL_RATIO: Decimal;
 
 // @internal (undocumented)
 export type _DebtChange<T> = (_LUSDBorrowing<T> & _NoLUSDRepayment) | (_LUSDRepayment<T> & _NoLUSDBorrowing);
+
+// @public
+export class Decimal {
+    // @internal (undocumented)
+    get absoluteValue(): this;
+    // (undocumented)
+    add(addend: Decimalish): Decimal;
+    // @internal (undocumented)
+    get bigNumber(): string;
+    // (undocumented)
+    div(divider: Decimalish): Decimal;
+    // (undocumented)
+    eq(that: Decimalish): boolean;
+    // (undocumented)
+    get finite(): this | undefined;
+    // (undocumented)
+    static from(decimalish: Decimalish): Decimal;
+    // (undocumented)
+    static fromBigNumberString(bigNumberString: string): Decimal;
+    // (undocumented)
+    gt(that: Decimalish): boolean;
+    // (undocumented)
+    gte(that: Decimalish): boolean;
+    // (undocumented)
+    static readonly HALF: Decimal;
+    // @internal (undocumented)
+    get hex(): string;
+    // (undocumented)
+    get infinite(): this | undefined;
+    // (undocumented)
+    static readonly INFINITY: Decimal;
+    // (undocumented)
+    get isZero(): boolean;
+    // (undocumented)
+    lt(that: Decimalish): boolean;
+    // (undocumented)
+    lte(that: Decimalish): boolean;
+    // (undocumented)
+    static max(a: Decimalish, b: Decimalish): Decimal;
+    // (undocumented)
+    static min(a: Decimalish, b: Decimalish): Decimal;
+    // (undocumented)
+    mul(multiplier: Decimalish): Decimal;
+    // (undocumented)
+    mulDiv(multiplier: Decimalish, divider: Decimalish): Decimal;
+    // (undocumented)
+    get nonZero(): this | undefined;
+    // (undocumented)
+    static readonly ONE: Decimal;
+    // (undocumented)
+    pow(exponent: number): Decimal;
+    // (undocumented)
+    prettify(precision?: number): string;
+    // (undocumented)
+    shorten(): string;
+    // (undocumented)
+    sub(subtrahend: Decimalish): Decimal;
+    // (undocumented)
+    toString(precision?: number): string;
+    // (undocumented)
+    static readonly ZERO: Decimal;
+    // (undocumented)
+    get zero(): this | undefined;
+}
+
+// @public
+export type Decimalish = Decimal | number | string;
+
+// @alpha (undocumented)
+export class Difference {
+    // (undocumented)
+    get absoluteValue(): Decimal | undefined;
+    // (undocumented)
+    static between(d1: Decimalish | undefined, d2: Decimalish | undefined): Difference;
+    // (undocumented)
+    get finite(): this | undefined;
+    // (undocumented)
+    get infinite(): this | undefined;
+    // (undocumented)
+    mul(multiplier: Decimalish): Difference;
+    // (undocumented)
+    get negative(): this | undefined;
+    // (undocumented)
+    get nonZero(): this | undefined;
+    // (undocumented)
+    get positive(): this | undefined;
+    // (undocumented)
+    prettify(precision?: number): string;
+    // (undocumented)
+    toString(precision?: number): string;
+}
 
 // @internal (undocumented)
 export const _emptyTrove: Trove;
@@ -295,6 +383,24 @@ export type PendingReceipt = {
 
 // @internal (undocumented)
 export const _pendingReceipt: PendingReceipt;
+
+// @alpha (undocumented)
+export class Percent<T extends {
+    infinite?: T | undefined;
+    absoluteValue?: A | undefined;
+    mul?(hundred: 100): T;
+    toString(precision?: number): string;
+}, A extends {
+    gte(n: string): boolean;
+}> {
+    constructor(ratio: T);
+    // (undocumented)
+    nonZeroish(precision: number): this | undefined;
+    // (undocumented)
+    prettify(): string;
+    // (undocumented)
+    toString(precision: number): string;
+}
 
 // @internal (undocumented)
 export type _PopulatableFrom<T, P> = {
@@ -634,8 +740,6 @@ export class TroveWithPendingRedistribution extends Trove {
     equals(that: TroveWithPendingRedistribution): boolean;
     }
 
-
-export * from "@liquity/decimal";
 
 // (No @packageDocumentation comment for this package)
 

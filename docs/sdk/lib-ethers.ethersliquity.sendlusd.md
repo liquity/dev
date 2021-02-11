@@ -17,7 +17,7 @@ sendLUSD(toAddress: string, amount: Decimalish, overrides?: EthersTransactionOve
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  toAddress | string | Address of receipient. |
-|  amount | [Decimalish](./decimal.decimalish.md) | Amount of LUSD to send. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to send. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

@@ -16,7 +16,7 @@ borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | The amount of LUSD to borrow. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | The amount of LUSD to borrow. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>

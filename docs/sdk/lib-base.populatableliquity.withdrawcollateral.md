@@ -16,7 +16,7 @@ withdrawCollateral(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, S
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  amount | [Decimalish](./decimal.decimalish.md) | The amount of collateral to withdraw from the Trove. |
+|  amount | [Decimalish](./lib-base.decimalish.md) | The amount of collateral to withdraw from the Trove. |
 
 <b>Returns:</b>
 
