@@ -41,6 +41,9 @@ jobs:
 
       - name: Release SDK on NPM
         if: ${{ github.ref == 'refs/heads/master' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: yarn release
 
       - uses: azure/docker-login@v1
