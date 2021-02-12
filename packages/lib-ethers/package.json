@@ -8,11 +8,12 @@
     "DeFi",
     "Ethereum"
   ],
-  "repository": "https://github.com/liquity/liquity",
+  "homepage": "https://github.com/liquity/liquity#readme",
   "license": "MIT",
   "author": "Daniel Simon <dani@liquity.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": "https://github.com/liquity/dev",
   "scripts": {
     "hardhat": "hardhat",
     "check-live-version": "ts-node scripts/check-live-version.ts",
