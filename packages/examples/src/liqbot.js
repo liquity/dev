@@ -1,8 +1,5 @@
 const { red, blue, green, yellow, dim, bold } = require("chalk");
-
-const { JsonRpcProvider } = require("@ethersproject/providers");
-const { Wallet } = require("@ethersproject/wallet");
-
+const { Wallet, providers } = require("ethers");
 const { Decimal, Trove, LUSD_LIQUIDATION_RESERVE } = require("@liquity/lib-base");
 const { EthersLiquity, EthersLiquityWithStore } = require("@liquity/lib-ethers");
 
@@ -17,7 +14,7 @@ const success = message => log(`${green("✔")} ${message}`);
 
 async function main() {
   // Replace URL if not using a local node
-  const provider = new JsonRpcProvider("http://localhost:8545");
+  const provider = new providers.JsonRpcProvider("http://localhost:8545");
   const wallet = new Wallet(process.env.PRIVATE_KEY).connect(provider);
   const liquity = await EthersLiquity.connect(wallet, { useStore: "blockPolled" });
 
