@@ -213,6 +213,38 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     uint public lastETHError_Offset;
     uint public lastLUSDLossError_Offset;
 
+    // --- Events ---
+
+    event ETHBalanceUpdated(uint _newBalance);
+    event LUSDBalanceUpdated(uint _newBalance);
+
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
+    event ActivePoolAddressChanged(address _newActivePoolAddress);
+    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
+    event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
+    event SortedTrovesAddressChanged(address _newSortedTrovesAddress);
+    event PriceFeedAddressChanged(address _newPriceFeedAddress);
+    event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
+
+    event P_Updated(uint _P);
+    event S_Updated(uint _S);
+    event G_Updated(uint _G);
+
+    event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
+
+    event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
+    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
+
+    event UserDepositChanged(address indexed _depositor, uint _newDeposit);
+    event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
+
+    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _LUSDLoss);
+    event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
+    event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
+
+    event EtherSent(address _to, uint _amount);
+
     // --- Contract setters ---
 
     function setAddresses(

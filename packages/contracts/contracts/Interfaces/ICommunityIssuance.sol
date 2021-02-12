@@ -7,7 +7,6 @@ interface ICommunityIssuance {
     // --- Events ---
     
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
-    
     event StabilityPoolAddressSet(address _stabilityPoolAddress);
 
     // --- Functions ---

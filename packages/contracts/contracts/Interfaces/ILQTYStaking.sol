@@ -5,9 +5,14 @@ pragma solidity 0.6.11;
 interface ILQTYStaking {
 
     // --- Events --
+    
+    event LQTYTokenAddressSet(address _lqtyTokenAddress);
+    event LUSDTokenAddressSet(address _lusdTokenAddress);
+    event TroveManagerAddressSet(address _troveManager);
+    event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
+    event ActivePoolAddressSet(address _activePoolAddress);
 
     event StakeChanged(address indexed staker, uint newStake);
-    
     event StakingGainsWithdrawn(address indexed staker, uint LUSDGain, uint ETHGain);
 
     // --- Functions ---

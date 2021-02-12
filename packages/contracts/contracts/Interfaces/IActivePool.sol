@@ -6,5 +6,10 @@ import "./IPool.sol";
 
 
 interface IActivePool is IPool {
+    // --- Events ---
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+    event TroveManagerAddressChanged(address _newTroveManagerAddress);
+
+    // --- Functions ---
     function sendETH(address _account, uint _amount) external;
 }
