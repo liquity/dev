@@ -99,7 +99,7 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
         return finishChange(revert(newState));
       }
 
-      const change = original.whatChanged(edited);
+      const change = original.whatChanged(edited, 0);
 
       if (
         (change?.type === "creation" && !trove.isEmpty) ||
@@ -122,7 +122,7 @@ export const TroveManager: React.FC = () => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees, redeemed } = useLiquitySelector(select);
 
-  const change = original.whatChanged(edited);
+  const change = original.whatChanged(edited, 0);
   const borrowingRate = fees.borrowingRate();
   const afterFee = original.apply(change, borrowingRate);
 
