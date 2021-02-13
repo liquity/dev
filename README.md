@@ -5,7 +5,8 @@
 - [Liquity System Summary](#liquity-system-summary)
   - [Liquity Overview](#liquity-overview)
   - [Liquidation and the Stability Pool](#liquidation-and-the-stability-pool)
-    - [Liquidation Logic](#liquidation-logic)
+    - [Liquidation gas costs](#liquidation-gas-costs)
+    - [Liquidation logic](#liquidation-logic)
       - [Liquidations in Normal Mode: TCR >= 150%](#liquidations-in-normal-mode-tcr--150)
       - [Liquidations in Recovery Mode: TCR < 150%](#liquidations-in-recovery-mode-tcr--150)
   - [Gains From Liquidations](#gains-from-liquidations)
@@ -57,7 +58,7 @@
   - [Gas compensation](#gas-compensation)
     - [Gas compensation schedule](#gas-compensation-schedule)
     - [Liquidation](#liquidation)
-    - [Gas compensation and redemptions](#gas-compensation-and-redemptions)
+    - [Gas compensation helper functions](#gas-compensation-helper-functions)
   - [Gas compensation Functionality](#gas-compensation-functionality)
   - [The Stability Pool](#the-stability-pool)
     - [Mixed liquidations: offset and redistribution](#mixed-liquidations-offset-and-redistribution)
@@ -128,7 +129,11 @@ Stability Pool depositors can expect to earn net gains from liquidations, as in 
 
 If the liquidated debt is higher than the amount of LUSD in the Stability Pool, the system tries to cancel as much debt as possible with the tokens in the Stability Pool, and then redistributes the remaining liquidated collateral and debt across all active Troves.
 
-Anyone may call the public `liquidateTroves()` function, which will check for under-collateralized Troves, and liquidate them.
+Anyone may call the public `liquidateTroves()` function, which will check for under-collateralized Troves, and liquidate them. Alternatively they can call `batchLiquidateTroves()` with a custom list of trove addresses to attempt to liquidate.
+
+### Liquidation gas costs
+
+Currently, mass liquidations performed via the above functions cost 60-65k gas per trove. Thus the system can liquidate up to a maximum of 95-105 troves in a single transaction.
 
 ### Liquidation Logic
 
@@ -144,7 +149,6 @@ Here is the liquidation logic for a single Trove in Normal Mode and Recovery Mod
 | ICR < MCR & SP.LUSD < trove.debt | The total StabilityPool LUSD is offset with an equal amount of debt from the Trove.  A fraction of the Trove's collateral (equal to the ratio of its offset debt to its entire debt) is shared between depositors. The remaining debt and collateral (minus ETH gas compensation) is redistributed to active Troves |
 | ICR < MCR & SP.LUSD = 0          | Redistribute all debt and collateral (minus ETH gas compensation) to active Troves.                                                                                                                                                                                                                                 |
 | ICR  >= MCR                      | Do nothing.                                                                                                                                                                                                                                                                                                         |
-
 #### Liquidations in Recovery Mode: TCR < 150%
 
 | &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Condition                                | Liquidation behavior                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -155,7 +159,6 @@ Here is the liquidation logic for a single Trove in Normal Mode and Recovery Mod
 | MCR <= ICR < TCR & SP.LUSD >= trove.debt  |  The Pool LUSD is offset with an equal amount of debt from the Trove. A fraction of ETH collateral with dollar value equal to `1.1 * debt` is shared between depositors. Nothing is redistributed to other active Troves. Since it's ICR was > 1.1, the Trove has a collateral remainder, which is sent to the `CollSurplusPool` and is claimable by the borrower. The Trove is closed. |
 | MCR <= ICR < TCR & SP.LUSD  < trove.debt | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ICR >= TCR                               | Do nothing.                                                                                                                                                                                                                                                                                                                                                                                                  |
-
 
 ## Gains From Liquidations
 
@@ -630,7 +633,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `liquidate(address _borrower)`: callable by anyone, attempts to liquidate the Trove of `_user`. Executes successfully if `_user`’s Trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the Trove's ICR < the system MCR).  
 
-`liquidateTroves(uint n)`: callable by anyone, checks for under-collateralized Troves below MCR and liquidates up to `n`, starting from the Trove with the lowest collateralization ratio; subject to gas constraints and the actual number of under-collateralized Troves. The gas costs of `liquidateTroves(uint n)` mainly depend on the number of Troves that are liquidated, and whether the Troves are offset against the Stability Pool or redistributed. For n=1, the gas costs per liquidated Trove are roughly between 240K-400K, for n=5 between 88K-113K, for n=10 between 78K-85K, and for n=40 between 66K-72K.
+`liquidateTroves(uint n)`: callable by anyone, checks for under-collateralized Troves below MCR and liquidates up to `n`, starting from the Trove with the lowest collateralization ratio; subject to gas constraints and the actual number of under-collateralized Troves. The gas costs of `liquidateTroves(uint n)` mainly depend on the number of Troves that are liquidated, and whether the Troves are offset against the Stability Pool or redistributed. For n=1, the gas costs per liquidated Trove are roughly between 215K-400K, for n=5 between 80K-115K, for n=10 between 70K-82K, and for n=50 between 60K-65K.
 
 `batchLiquidateTroves(address[] calldata _troveArray)`: callable by anyone, accepts a custom list of Troves addresses as an argument. Steps through the provided list and attempts to liquidate every Trove, until it reaches the end or it runs out of gas. A Trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 Troves, the gas costs per liquidated Trove are roughly between 75K-83K, for a batch of 50 Troves between 54K-69K.
 
