@@ -41,6 +41,10 @@ class Proxy {
     return this.proxies[user] ? this.proxies[user].address : user
   }
 
+  getProxyFromUser(user) {
+    return this.proxies[user]
+  }
+
   getProxyFromParams(params) {
     const user = this.getFrom(params)
     return this.proxies[user]
@@ -134,6 +138,20 @@ class BorrowerOperationsProxy extends TransparentProxy {
   }
 }
 
+class BorrowerWrappersProxy extends TransparentProxy {
+  constructor(owner, proxies, borrowerWrappersScriptAddress, borrowerWrappers) {
+    super(owner, proxies, borrowerWrappersScriptAddress, borrowerWrappers)
+  }
+
+  async claimSPRewardsAndLoop(...params) {
+    return this.forwardFunction(params, 'claimSPRewardsAndLoop(uint256,address,address)')
+  }
+
+  async claimStakingGainsAndLoop(...params) {
+    return this.forwardFunction(params, 'claimStakingGainsAndLoop(uint256,address,address)')
+  }
+}
+
 class TroveManagerProxy extends TransparentProxy {
   constructor(owner, proxies, troveManagerScriptAddress, troveManager) {
     super(owner, proxies, troveManagerScriptAddress, troveManager)
@@ -149,6 +167,10 @@ class TroveManagerProxy extends TransparentProxy {
 
   async getTroveDebt(user) {
     return this.proxyFunctionWithUser('getTroveDebt', user)
+  }
+
+  async getTroveColl(user) {
+    return this.proxyFunctionWithUser('getTroveColl', user)
   }
 
   async totalStakes() {
@@ -203,8 +225,39 @@ class TroveManagerProxy extends TransparentProxy {
     return this.proxyFunction('getActualDebtFromComposite', params)
   }
 
+  async getRedemptionFeeWithDecay(...params) {
+    return this.proxyFunction('getRedemptionFeeWithDecay', params)
+  }
+
   async getBorrowingRate() {
     return this.proxyFunction('getBorrowingRate', [])
+  }
+
+  async getBorrowingFeeWithDecay(...params) {
+    console.log(params)
+    return this.proxyFunction('getBorrowingRateWithDecay', params)
+  }
+}
+
+class StabilityPoolProxy extends TransparentProxy {
+  constructor(owner, proxies, stabilityPoolScriptAddress, stabilityPool) {
+    super(owner, proxies, stabilityPoolScriptAddress, stabilityPool)
+  }
+
+  async provideToSP(...params) {
+    return this.forwardFunction(params, 'provideToSP(uint256,address)')
+  }
+
+  async getCompoundedLUSDDeposit(user) {
+    return this.proxyFunctionWithUser('getCompoundedLUSDDeposit', user)
+  }
+
+  async deposits(user) {
+    return this.proxyFunctionWithUser('deposits', user)
+  }
+
+  async getDepositorETHGain(user) {
+    return this.proxyFunctionWithUser('getDepositorETHGain', user)
   }
 }
 
@@ -242,10 +295,27 @@ class TokenProxy extends TransparentProxy {
   }
 }
 
+class LQTYStakingProxy extends TransparentProxy {
+  constructor(owner, proxies, tokenScriptAddress, token) {
+    super(owner, proxies, tokenScriptAddress, token)
+  }
+
+  async stake(...params) {
+    return this.forwardFunction(params, 'stake(uint256)')
+  }
+
+  async stakes(user) {
+    return this.proxyFunctionWithUser('stakes', user)
+  }
+}
+
 module.exports = {
   buildUserProxies,
   BorrowerOperationsProxy,
+  BorrowerWrappersProxy,
   TroveManagerProxy,
+  StabilityPoolProxy,
   SortedTrovesProxy,
-  TokenProxy
+  TokenProxy,
+  LQTYStakingProxy
 }
