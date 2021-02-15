@@ -15,10 +15,12 @@ const buildUserProxies = async (users) => {
 }
 
 class Proxy {
-  constructor (owner, proxies, scriptAddress) {
+  constructor (owner, proxies, scriptAddress, contract) {
     this.owner = owner
     this.proxies = proxies
     this.scriptAddress = scriptAddress
+    this.contract = contract
+    if (contract) this.address = contract.address
   }
 
   getFrom(params) {
@@ -61,19 +63,15 @@ class Proxy {
   }
 
   async forwardFunction(params, signature) {
-    const optionalParams = this.getOptionalParams(params)
     const proxy = this.getProxyFromParams(params)
+    if (!proxy) {
+      return this.proxyFunction(signature.slice(0, signature.indexOf('(')), params)
+    }
+    const optionalParams = this.getOptionalParams(params)
     const calldata = th.getTransactionData(signature, this.getSlicedParams(params))
     // console.log('proxy: ', proxy.address)
     // console.log(this.scriptAddress, calldata, optionalParams)
     return proxy.executeTarget(this.scriptAddress, calldata, optionalParams)
-  }
-}
-
-class TransparentProxy extends Proxy {
-  constructor(owner, proxies, scriptAddress, contract) {
-    super(owner, proxies, scriptAddress)
-    this.contract = contract
   }
 
   async proxyFunctionWithUser(functionName, user) {
@@ -88,7 +86,7 @@ class TransparentProxy extends Proxy {
   }
 }
 
-class BorrowerOperationsProxy extends TransparentProxy {
+class BorrowerOperationsProxy extends Proxy {
   constructor(owner, proxies, borrowerOperationsScriptAddress, borrowerOperations) {
     super(owner, proxies, borrowerOperationsScriptAddress, borrowerOperations)
   }
@@ -136,11 +134,15 @@ class BorrowerOperationsProxy extends TransparentProxy {
   async getCompositeDebt(...params) {
     return this.proxyFunction('getCompositeDebt', params)
   }
+
+  async LUSD_GAS_COMPENSATION(...params) {
+    return this.proxyFunction('LUSD_GAS_COMPENSATION', params)
+  }
 }
 
-class BorrowerWrappersProxy extends TransparentProxy {
-  constructor(owner, proxies, borrowerWrappersScriptAddress, borrowerWrappers) {
-    super(owner, proxies, borrowerWrappersScriptAddress, borrowerWrappers)
+class BorrowerWrappersProxy extends Proxy {
+  constructor(owner, proxies, borrowerWrappersScriptAddress) {
+    super(owner, proxies, borrowerWrappersScriptAddress, null)
   }
 
   async claimSPRewardsAndLoop(...params) {
@@ -152,7 +154,7 @@ class BorrowerWrappersProxy extends TransparentProxy {
   }
 }
 
-class TroveManagerProxy extends TransparentProxy {
+class TroveManagerProxy extends Proxy {
   constructor(owner, proxies, troveManagerScriptAddress, troveManager) {
     super(owner, proxies, troveManagerScriptAddress, troveManager)
   }
@@ -234,12 +236,11 @@ class TroveManagerProxy extends TransparentProxy {
   }
 
   async getBorrowingFeeWithDecay(...params) {
-    console.log(params)
     return this.proxyFunction('getBorrowingRateWithDecay', params)
   }
 }
 
-class StabilityPoolProxy extends TransparentProxy {
+class StabilityPoolProxy extends Proxy {
   constructor(owner, proxies, stabilityPoolScriptAddress, stabilityPool) {
     super(owner, proxies, stabilityPoolScriptAddress, stabilityPool)
   }
@@ -261,7 +262,7 @@ class StabilityPoolProxy extends TransparentProxy {
   }
 }
 
-class SortedTrovesProxy extends TransparentProxy {
+class SortedTrovesProxy extends Proxy {
   constructor(owner, proxies, sortedTroves) {
     super(owner, proxies, null, sortedTroves)
   }
@@ -273,9 +274,13 @@ class SortedTrovesProxy extends TransparentProxy {
   async isEmpty(user) {
     return this.proxyFunctionWithUser('isEmpty', user)
   }
+
+  async findInsertPosition(...params) {
+    return this.proxyFunction('findInsertPosition', params)
+  }
 }
 
-class TokenProxy extends TransparentProxy {
+class TokenProxy extends Proxy {
   constructor(owner, proxies, tokenScriptAddress, token) {
     super(owner, proxies, tokenScriptAddress, token)
   }
@@ -284,6 +289,12 @@ class TokenProxy extends TransparentProxy {
     // switch destination to proxy if any
     params[0] = this.getProxyAddressFromUser(params[0])
     return this.forwardFunction(params, 'transfer(address,uint256)')
+  }
+
+  async approve(...params) {
+    // switch destination to proxy if any
+    params[0] = this.getProxyAddressFromUser(params[0])
+    return this.forwardFunction(params, 'approve(address,uint256)')
   }
 
   async totalSupply(...params) {
@@ -295,7 +306,7 @@ class TokenProxy extends TransparentProxy {
   }
 }
 
-class LQTYStakingProxy extends TransparentProxy {
+class LQTYStakingProxy extends Proxy {
   constructor(owner, proxies, tokenScriptAddress, token) {
     super(owner, proxies, tokenScriptAddress, token)
   }
@@ -306,6 +317,10 @@ class LQTYStakingProxy extends TransparentProxy {
 
   async stakes(user) {
     return this.proxyFunctionWithUser('stakes', user)
+  }
+
+  async F_LUSD(user) {
+    return this.proxyFunctionWithUser('F_LUSD', user)
   }
 }
 

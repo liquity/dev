@@ -6,10 +6,6 @@ const NonPayable = artifacts.require('NonPayable.sol')
 const TroveManagerTester = artifacts.require("TroveManagerTester")
 const LUSDToken = artifacts.require("LUSDToken")
 
-const BorrowerOperationsScript = artifacts.require('BorrowerOperationsScript')
-const TroveManagerScript = artifacts.require('TroveManagerScript')
-const TokenScript = artifacts.require('TokenScript')
-
 const th = testHelpers.TestHelper
 
 const dec = th.dec
@@ -19,8 +15,6 @@ const timeValues = testHelpers.TimeValues
 
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const assertRevert = th.assertRevert
-
-const { buildUserProxies, BorrowerOperationsProxy, TroveManagerProxy, SortedTrovesProxy, TokenProxy } = require('../utils/proxyHelpers.js')
 
 /* NOTE: Some of the borrowing tests do not test for specific LUSD fee values. They only test that the
  * fees are non-zero when they should occur, and that they decay over time.
@@ -67,33 +61,41 @@ contract('BorrowerOperations', async accounts => {
 
   })
 
-  const deploy = async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
-    contracts.borrowerOperations = await BorrowerOperationsTester.new()
-    contracts.troveManager = await TroveManagerTester.new()
-    contracts = await deploymentHelper.deployLUSDToken(contracts)
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
+  const testCorpus = ({ withProxy = false }) => {
+    beforeEach(async () => {
+      contracts = await deploymentHelper.deployLiquityCore()
+      contracts.borrowerOperations = await BorrowerOperationsTester.new()
+      contracts.troveManager = await TroveManagerTester.new()
+      contracts = await deploymentHelper.deployLUSDToken(contracts)
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
-    priceFeed = contracts.priceFeedTestnet
-    lusdToken = contracts.lusdToken
-    sortedTroves = contracts.sortedTroves
-    troveManager = contracts.troveManager
-    activePool = contracts.activePool
-    stabilityPool = contracts.stabilityPool
-    defaultPool = contracts.defaultPool
-    borrowerOperations = contracts.borrowerOperations
+      await deploymentHelper.connectLQTYContracts(LQTYContracts)
+      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
-    lqtyStaking = LQTYContracts.lqtyStaking
-    lqtyToken = LQTYContracts.lqtyToken
+      if (withProxy) {
+        const users = [ alice, bob, carol, dennis, whale, A, B, C, D, E ]
+        await deploymentHelper.deployProxyScripts(contracts, LQTYContracts, owner, users)
+      }
 
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
-    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+      priceFeed = contracts.priceFeedTestnet
+      lusdToken = contracts.lusdToken
+      sortedTroves = contracts.sortedTroves
+      troveManager = contracts.troveManager
+      activePool = contracts.activePool
+      stabilityPool = contracts.stabilityPool
+      defaultPool = contracts.defaultPool
+      borrowerOperations = contracts.borrowerOperations
+      hintHelpers = contracts.hintHelpers
 
-    LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
-  }
+      lqtyStaking = LQTYContracts.lqtyStaking
+      lqtyToken = LQTYContracts.lqtyToken
+      communityIssuance = LQTYContracts.communityIssuance
+      lockupContractFactory = LQTYContracts.lockupContractFactory
 
-  const testCorpus = (skipSome = false) => {
+      LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
+    })
+
     it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
 
@@ -995,7 +997,7 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
     })
 
-    if (!skipSome) { // TODO: use rawLogs instead of logs
+    if (!withProxy) { // TODO: use rawLogs instead of logs
       it("withdrawLUSD(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct", async () => {
         // time fast-forwards 1 year, and owner stakes 1 LQTY
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -1776,7 +1778,7 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
     })
 
-    if (!skipSome) { // TODO: use rawLogs instead of logs
+    if (!withProxy) { // TODO: use rawLogs instead of logs
       it("adjustTrove(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct", async () => {
         // time fast-forwards 1 year, and owner stakes 1 LQTY
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -2481,7 +2483,7 @@ contract('BorrowerOperations', async accounts => {
 
     // --- Internal _adjustTrove() ---
 
-    if (!skipSome) { // no need to test this with proxies
+    if (!withProxy) { // no need to test this with proxies
       it("Internal _adjustTrove(): reverts when op is a withdrawal and _borrower param is not the msg.sender", async () => {
         await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), alice, alice, { from: alice, value: dec(1, 'ether') })
         await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), bob, bob, { from: bob, value: dec(1, 'ether') })
@@ -2766,7 +2768,7 @@ contract('BorrowerOperations', async accounts => {
       assert.equal(totalStakes_After, dec(11, 'ether'))
     })
 
-    if (!skipSome) { // TODO: wrap web3.eth.getBalance to be able to go through proxies
+    if (!withProxy) { // TODO: wrap web3.eth.getBalance to be able to go through proxies
       it("closeTrove(): sends the correct amount of ETH to the user", async () => {
         await borrowerOperations.openTrove(th._100pct, 0, dennis, dennis, { from: dennis, value: dec(10, 'ether') })
         await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
@@ -2910,7 +2912,7 @@ contract('BorrowerOperations', async accounts => {
 
     // --- openTrove() ---
 
-    if (!skipSome) { // TODO: use rawLogs instead of logs
+    if (!withProxy) { // TODO: use rawLogs instead of logs
       it("openTrove(): emits a TroveUpdated event with the correct collateral and debt", async () => { 
         const LUSDAmountA = await getNetBorrowingAmount(dec(30, 18))
         const txA = await borrowerOperations.openTrove(th._100pct, LUSDAmountA, A, A, { from: A, value: dec(1, 'ether') })
@@ -3301,7 +3303,7 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
     })
 
-    if (!skipSome) { // TODO: use rawLogs instead of logs
+    if (!withProxy) { // TODO: use rawLogs instead of logs
       it("openTrove(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct", async () => {
         // time fast-forwards 1 year, and owner stakes 1 LQTY
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -4291,7 +4293,7 @@ contract('BorrowerOperations', async accounts => {
       })
     })
 
-    if (!skipSome) {
+    if (!withProxy) {
       it('closeTrove(): fails if owner cannot receive ETH', async () => {
         const nonPayable = await NonPayable.new()
 
@@ -4310,33 +4312,11 @@ contract('BorrowerOperations', async accounts => {
   }
 
   describe('Without proxy', async () => {
-    beforeEach(async () => {
-      await deploy()
-    })
-
-    testCorpus(false)
+    testCorpus({ withProxy: false })
   })
 
   describe('With proxy', async () => {
-    beforeEach(async () => {
-      await deploy()
-
-      const users = [ alice, bob, carol, dennis, whale, A, B, C, D, E, F, G, H ]
-      const proxies = await buildUserProxies(users)
-
-      const borrowerOperationsScript = await BorrowerOperationsScript.new(borrowerOperations.address)
-      borrowerOperations = new BorrowerOperationsProxy(owner, proxies, borrowerOperationsScript.address, borrowerOperations)
-
-      const troveManagerScript = await TroveManagerScript.new(troveManager.address)
-      troveManager = new TroveManagerProxy(owner, proxies, troveManagerScript.address, troveManager)
-      contracts.troveManager = troveManager
-      sortedTroves = new SortedTrovesProxy(owner, proxies, sortedTroves)
-
-      const lusdTokenScript = await TokenScript.new(lusdToken.address)
-      lusdToken = new TokenProxy(owner, proxies, lusdTokenScript.address, lusdToken)
-    })
-
-    testCorpus(true)
+    testCorpus({ withProxy: true })
   })
 })
 

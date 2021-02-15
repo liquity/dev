@@ -4,13 +4,6 @@ const testHelpers = require("../utils/testHelpers.js")
 const TroveManagerTester = artifacts.require("TroveManagerTester")
 const LQTYTokenTester = artifacts.require("LQTYTokenTester")
 
-const BorrowerOperationsScript = artifacts.require('BorrowerOperationsScript')
-const BorrowerWrappersScript = artifacts.require('BorrowerWrappersScript')
-const TroveManagerScript = artifacts.require('TroveManagerScript')
-const StabilityPoolScript = artifacts.require('StabilityPoolScript')
-const TokenScript = artifacts.require('TokenScript')
-const LQTYStakingScript = artifacts.require('LQTYStakingScript')
-
 const th = testHelpers.TestHelper
 
 const dec = th.dec
@@ -47,14 +40,14 @@ contract('BorrowerWrappers', async accounts => {
   let priceFeed
   let lusdToken
   let sortedTroves
-  let troveManager
   let troveManagerOriginal
+  let troveManager
   let activePool
   let stabilityPool
   let defaultPool
   let borrowerOperations
   let borrowerWrappers
-  let lqtyTokenTester
+  let lqtyTokenOriginal
   let lqtyToken
   let lqtyStaking
 
@@ -71,6 +64,16 @@ contract('BorrowerWrappers', async accounts => {
     contracts = await deploymentHelper.deployLUSDToken(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
 
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+    troveManagerOriginal = contracts.troveManager
+    lqtyTokenOriginal = LQTYContracts.lqtyToken
+
+    const users = [ alice, bob, carol, dennis, whale, A, B, C, D, E, defaulter_1, defaulter_2 ]
+    await deploymentHelper.deployProxyScripts(contracts, LQTYContracts, owner, users)
+
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
@@ -79,52 +82,11 @@ contract('BorrowerWrappers', async accounts => {
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
-
+    borrowerWrappers = contracts.borrowerWrappers
     lqtyStaking = LQTYContracts.lqtyStaking
-    lqtyTokenTester = LQTYContracts.lqtyToken
-
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
-    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+    lqtyToken = LQTYContracts.lqtyToken
 
     LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
-
-    const users = [ alice, bob, carol, dennis, whale, A, B, C, D, E, defaulter_1, defaulter_2 ]
-    const proxies = await buildUserProxies(users)
-
-    const borrowerWrappersScript = await BorrowerWrappersScript.new(
-      borrowerOperations.address,
-      troveManager.address,
-      stabilityPool.address,
-      priceFeed.address,
-      lusdToken.address,
-      lqtyTokenTester.address,
-      lqtyStaking.address
-    )
-    borrowerWrappers = new BorrowerWrappersProxy(owner, proxies, borrowerWrappersScript.address, borrowerWrappers)
-
-    const borrowerOperationsScript = await BorrowerOperationsScript.new(borrowerOperations.address)
-    borrowerOperations = new BorrowerOperationsProxy(owner, proxies, borrowerOperationsScript.address, borrowerOperations)
-
-    troveManagerOriginal = troveManager
-    const troveManagerScript = await TroveManagerScript.new(troveManager.address)
-    troveManager = new TroveManagerProxy(owner, proxies, troveManagerScript.address, troveManager)
-    contracts.troveManager = troveManager
-
-    const stabilityPoolScript = await StabilityPoolScript.new(stabilityPool.address)
-    stabilityPool = new StabilityPoolProxy(owner, proxies, stabilityPoolScript.address, stabilityPool)
-    contracts.stabilityPool = stabilityPool
-
-    sortedTroves = new SortedTrovesProxy(owner, proxies, sortedTroves)
-
-    const lusdTokenScript = await TokenScript.new(lusdToken.address)
-    lusdToken = new TokenProxy(owner, proxies, lusdTokenScript.address, lusdToken)
-
-    const lqtyTokenScript = await TokenScript.new(lqtyTokenTester.address)
-    lqtyToken = new TokenProxy(owner, proxies, lqtyTokenScript.address, lqtyTokenTester)
-
-    const lqtyStakingScript = await LQTYStakingScript.new(lqtyStaking.address)
-    lqtyStaking = new LQTYStakingProxy(owner, proxies, lqtyStakingScript.address, lqtyStaking)
   })
 
   // --- claimCollateralAndOpenTrove ---
@@ -258,8 +220,8 @@ contract('BorrowerWrappers', async accounts => {
     await stabilityPool.provideToSP(dec(150, 18), ZERO_ADDRESS, { from: alice })
 
     // mint some LQTY
-    await lqtyTokenTester.unprotectedMint(borrowerOperations.getProxyAddressFromUser(whale), dec(1850, 18))
-    await lqtyTokenTester.unprotectedMint(borrowerOperations.getProxyAddressFromUser(alice), dec(150, 18))
+    await lqtyTokenOriginal.unprotectedMint(borrowerOperations.getProxyAddressFromUser(whale), dec(1850, 18))
+    await lqtyTokenOriginal.unprotectedMint(borrowerOperations.getProxyAddressFromUser(alice), dec(150, 18))
 
     // stake LQTY
     await lqtyStaking.stake(dec(1850, 18), { from: whale })
@@ -305,8 +267,8 @@ contract('BorrowerWrappers', async accounts => {
     await stabilityPool.provideToSP(dec(150, 18), ZERO_ADDRESS, { from: alice })
 
     // mint some LQTY
-    await lqtyTokenTester.unprotectedMint(borrowerOperations.getProxyAddressFromUser(whale), dec(1850, 18))
-    await lqtyTokenTester.unprotectedMint(borrowerOperations.getProxyAddressFromUser(alice), dec(150, 18))
+    await lqtyTokenOriginal.unprotectedMint(borrowerOperations.getProxyAddressFromUser(whale), dec(1850, 18))
+    await lqtyTokenOriginal.unprotectedMint(borrowerOperations.getProxyAddressFromUser(alice), dec(150, 18))
 
     // stake LQTY
     await lqtyStaking.stake(dec(1850, 18), { from: whale })
