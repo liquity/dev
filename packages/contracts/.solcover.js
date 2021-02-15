@@ -20,6 +20,8 @@ module.exports = {
     "MultiTroveGetter.sol",
     "Migrations.sol",
     "Interfaces/",
+    "LPRewards/Dependencies/",
+    "LPRewards/TestContracts/",
     "Dependencies/Context.sol",
     "Dependencies/IERC20.sol",
     "Dependencies/IERC2612.sol",
