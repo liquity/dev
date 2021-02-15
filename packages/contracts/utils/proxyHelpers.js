@@ -291,10 +291,29 @@ class TokenProxy extends Proxy {
     return this.forwardFunction(params, 'transfer(address,uint256)')
   }
 
+  async transferFrom(...params) {
+    // switch to proxies if any
+    params[0] = this.getProxyAddressFromUser(params[0])
+    params[1] = this.getProxyAddressFromUser(params[1])
+    return this.forwardFunction(params, 'transferFrom(address,address,uint256)')
+  }
+
   async approve(...params) {
     // switch destination to proxy if any
     params[0] = this.getProxyAddressFromUser(params[0])
     return this.forwardFunction(params, 'approve(address,uint256)')
+  }
+
+  async increaseAllowance(...params) {
+    // switch destination to proxy if any
+    params[0] = this.getProxyAddressFromUser(params[0])
+    return this.forwardFunction(params, 'increaseAllowance(address,uint256)')
+  }
+
+  async decreaseAllowance(...params) {
+    // switch destination to proxy if any
+    params[0] = this.getProxyAddressFromUser(params[0])
+    return this.forwardFunction(params, 'decreaseAllowance(address,uint256)')
   }
 
   async totalSupply(...params) {
@@ -303,6 +322,26 @@ class TokenProxy extends Proxy {
 
   async balanceOf(user) {
     return this.proxyFunctionWithUser('balanceOf', user)
+  }
+
+  async allowance(...params) {
+    // switch to proxies if any
+    const owner = this.getProxyAddressFromUser(params[0])
+    const spender = this.getProxyAddressFromUser(params[1])
+
+    return this.proxyFunction('allowance', [owner, spender])
+  }
+
+  async name(...params) {
+    return this.proxyFunction('name', params)
+  }
+
+  async symbol(...params) {
+    return this.proxyFunction('symbol', params)
+  }
+
+  async decimals(...params) {
+    return this.proxyFunction('decimals', params)
   }
 }
 
