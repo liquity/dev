@@ -145,12 +145,20 @@ class BorrowerWrappersProxy extends Proxy {
     super(owner, proxies, borrowerWrappersScriptAddress, null)
   }
 
+  async claimCollateralAndOpenTrove(...params) {
+    return this.forwardFunction(params, 'claimCollateralAndOpenTrove(uint256,uint256,address,address)')
+  }
+
   async claimSPRewardsAndLoop(...params) {
     return this.forwardFunction(params, 'claimSPRewardsAndLoop(uint256,address,address)')
   }
 
   async claimStakingGainsAndLoop(...params) {
     return this.forwardFunction(params, 'claimStakingGainsAndLoop(uint256,address,address)')
+  }
+
+  async transferETH(...params) {
+    return this.forwardFunction(params, 'transferETH(address,uint256)')
   }
 }
 

@@ -47,18 +47,17 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
     }
 
-    /*
     function claimCollateralAndOpenTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external {
         uint balanceBefore = address(this).balance;
         borrowerOperations.claimCollateral();
         uint balanceAfter = address(this).balance;
 
-        require(balanceAfter > balanceBefore, "BorrowerWrappersScript: Nothing was claimed");
+        // already checked in CollSurplusPool
+        assert(balanceAfter > balanceBefore);
 
         uint claimedCollateral = balanceAfter.sub(balanceBefore);
         borrowerOperations.openTrove{ value: claimedCollateral }(_maxFee, _LUSDAmount, _upperHint, _lowerHint);
     }
-    */
 
     function claimSPRewardsAndLoop(uint _maxFee, address _upperHint, address _lowerHint) external {
         uint collBalanceBefore = address(this).balance;
