@@ -77,7 +77,7 @@ jobs:
       - run: yarn coverage
         continue-on-error: true
         env:
-          NODE_OPTIONS: --max-old-space-size=4096
+          NODE_OPTIONS: --max-old-space-size=8192
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
