@@ -6,7 +6,7 @@
   - [Liquity Overview](#liquity-overview)
   - [Liquidation and the Stability Pool](#liquidation-and-the-stability-pool)
     - [Liquidation gas costs](#liquidation-gas-costs)
-    - [Liquidation logic](#liquidation-logic)
+    - [Liquidation Logic](#liquidation-logic)
       - [Liquidations in Normal Mode: TCR >= 150%](#liquidations-in-normal-mode-tcr--150)
       - [Liquidations in Recovery Mode: TCR < 150%](#liquidations-in-recovery-mode-tcr--150)
   - [Gains From Liquidations](#gains-from-liquidations)
@@ -33,6 +33,9 @@
     - [Data and Value Silo Contracts](#data-and-value-silo-contracts)
     - [Contract Interfaces](#contract-interfaces)
     - [PriceFeed and Oracle](#pricefeed-and-oracle)
+    - [PriceFeed Logic](#pricefeed-logic)
+    - [Testnet PriceFeed and PriceFeed tests](#testnet-pricefeed-and-pricefeed-tests)
+    - [PriceFeed limitations and known issues](#pricefeed-limitations-and-known-issues)
     - [Keeping a sorted list of Troves ordered by ICR](#keeping-a-sorted-list-of-troves-ordered-by-icr)
     - [Flow of Ether in Liquity](#flow-of-ether-in-liquity)
     - [Flow of LUSD tokens in Liquity](#flow-of-lusd-tokens-in-liquity)
@@ -51,15 +54,17 @@
     - [Stability Pool Functions - `StabilityPool.sol`](#stability-pool-functions---stabilitypoolsol)
     - [LQTY Staking Functions  `LQTYStaking.sol`](#lqty-staking-functions--lqtystakingsol)
     - [Lockup Contract Factory `LockupContractFactory.sol`](#lockup-contract-factory-lockupcontractfactorysol)
-    - [Lockup contracts - `LockupContract.sol`](#lockup-contract---lockupcontractsol)
+    - [Lockup contract - `LockupContract.sol`](#lockup-contract---lockupcontractsol)
     - [LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`](#lusd-token-lusdtokensol-and-lqty-token-lqtytokensol)
   - [Supplying Hints to Trove operations](#supplying-hints-to-trove-operations)
     - [Hints for `redeemCollateral`](#hints-for-redeemcollateral)
+      - [First redemption hint](#first-redemption-hint)
+      - [Partial redemption hints](#partial-redemption-hints)
   - [Gas compensation](#gas-compensation)
     - [Gas compensation schedule](#gas-compensation-schedule)
     - [Liquidation](#liquidation)
+    - [Gas compensation and redemptions](#gas-compensation-and-redemptions)
     - [Gas compensation helper functions](#gas-compensation-helper-functions)
-  - [Gas compensation Functionality](#gas-compensation-functionality)
   - [The Stability Pool](#the-stability-pool)
     - [Mixed liquidations: offset and redistribution](#mixed-liquidations-offset-and-redistribution)
     - [Stability Pool deposit losses and ETH gains - implementation](#stability-pool-deposit-losses-and-eth-gains---implementation)
@@ -212,9 +217,7 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 
 ### Directories
 
-- `packages/decimal/` - Library for manipulating 18-digit fixed-point decimal bignumbers.
 - `packages/dev-frontend/` - Liquity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
-- `packages/frontend/` - The front-end React app for the user-facing web interface
 - `packages/fuzzer/` - A very simple, purpose-built tool based on Liquity middleware for randomly interacting with the system
 - `packages/lib-base/` - Common interfaces and classes shared by the other `lib-` packages
 - `packages/lib-ethers/` - [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions
