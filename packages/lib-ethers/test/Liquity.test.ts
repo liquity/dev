@@ -16,7 +16,8 @@ import {
   TroveCreationParams,
   Fees,
   LUSD_LIQUIDATION_RESERVE,
-  MAXIMUM_BORROWING_RATE
+  MAXIMUM_BORROWING_RATE,
+  MINIMUM_BORROWING_RATE
 } from "@liquity/lib-base";
 
 import { HintHelpers } from "../types";
@@ -243,8 +244,9 @@ describe("EthersLiquity", () => {
     const withoutBorrowing = { depositCollateral: 1 };
 
     it("should create a Trove without borrowing", async () => {
-      const { newTrove } = await liquity.openTrove(withoutBorrowing);
+      const { newTrove, fee } = await liquity.openTrove(withoutBorrowing);
       expect(newTrove).to.deep.equal(Trove.create(withoutBorrowing));
+      expect(`${fee}`).to.equal("0");
 
       const trove = await liquity.getTrove();
       expect(trove).to.deep.equal(newTrove);
@@ -279,8 +281,9 @@ describe("EthersLiquity", () => {
     const withSomeBorrowing = { depositCollateral: 1, borrowLUSD: 90 };
 
     it("should create a Trove with some borrowing", async () => {
-      const { newTrove } = await liquity.openTrove(withSomeBorrowing);
+      const { newTrove, fee } = await liquity.openTrove(withSomeBorrowing);
       expect(newTrove).to.deep.equal(Trove.create(withSomeBorrowing));
+      expect(`${fee}`).to.equal(`${MINIMUM_BORROWING_RATE.mul(withSomeBorrowing.borrowLUSD)}`);
     });
 
     it("should fail to withdraw all the collateral while the Trove has debt", async () => {
@@ -292,17 +295,19 @@ describe("EthersLiquity", () => {
     const repaySomeDebt = { repayLUSD: 10 };
 
     it("should repay some debt", async () => {
-      const { newTrove } = await liquity.repayLUSD(repaySomeDebt.repayLUSD);
+      const { newTrove, fee } = await liquity.repayLUSD(repaySomeDebt.repayLUSD);
       expect(newTrove).to.deep.equal(Trove.create(withSomeBorrowing).adjust(repaySomeDebt));
+      expect(`${fee}`).to.equal("0");
     });
 
     const borrowSomeMore = { borrowLUSD: 20 };
 
     it("should borrow some more", async () => {
-      const { newTrove } = await liquity.borrowLUSD(borrowSomeMore.borrowLUSD);
+      const { newTrove, fee } = await liquity.borrowLUSD(borrowSomeMore.borrowLUSD);
       expect(newTrove).to.deep.equal(
         Trove.create(withSomeBorrowing).adjust(repaySomeDebt).adjust(borrowSomeMore)
       );
+      expect(`${fee}`).to.equal(`${MINIMUM_BORROWING_RATE.mul(borrowSomeMore.borrowLUSD)}`);
     });
 
     const depositMoreCollateral = { depositCollateral: 1 };
@@ -337,7 +342,7 @@ describe("EthersLiquity", () => {
     const borrowAndDeposit = { borrowLUSD: 60, depositCollateral: 0.5 };
 
     it("should borrow more and deposit some collateral at the same time", async () => {
-      const { newTrove } = await liquity.adjustTrove(borrowAndDeposit, { gasPrice: 0 });
+      const { newTrove, fee } = await liquity.adjustTrove(borrowAndDeposit, { gasPrice: 0 });
 
       expect(newTrove).to.deep.equal(
         Trove.create(withSomeBorrowing)
@@ -347,6 +352,8 @@ describe("EthersLiquity", () => {
           .adjust(repayAndWithdraw)
           .adjust(borrowAndDeposit)
       );
+
+      expect(`${fee}`).to.equal(`${MINIMUM_BORROWING_RATE.mul(borrowAndDeposit.borrowLUSD)}`);
 
       const ethBalance = Decimal.fromBigNumberString(`${await user.getBalance()}`);
       expect(`${ethBalance}`).to.equal("99.5");
