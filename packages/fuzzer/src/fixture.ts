@@ -1,3 +1,6 @@
+import assert from "assert";
+
+import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 
 import { Decimal, Decimalish, LUSD_LIQUIDATION_RESERVE, Trove } from "@liquity/lib-base";
@@ -16,6 +19,9 @@ export class Fixture {
   private readonly deployerLiquity: Liquity;
   private readonly funderLiquity: Liquity;
   private readonly funder: Signer;
+
+  private readonly depositGasUsedBins = new Array<number>(100).fill(0);
+  private depositTxFailures = 0;
 
   private price: Decimal;
 
@@ -156,8 +162,11 @@ export class Fixture {
     const receipt = await tx.waitForReceipt();
 
     if (receipt.status === "succeeded") {
+      this.addToDepositGasUsedHisto(receipt.rawReceipt.gasUsed);
       console.log(`// gasUsed = ${receipt.rawReceipt.gasUsed}`);
     } else {
+      this.depositTxFailures++;
+
       console.log(
         `// !!! Failed with gasLimit = ${tx.rawSentTransaction.gasLimit}, ` +
           `gasUsed = ${receipt.rawReceipt.gasUsed}`
@@ -167,6 +176,7 @@ export class Fixture {
       const receipt2 = await tx2.waitForReceipt();
 
       if (receipt2.status === "succeeded") {
+        this.addToDepositGasUsedHisto(receipt2.rawReceipt.gasUsed);
         console.log(
           `// Retry succeeded with gasLimit = ${tx2.rawSentTransaction.gasLimit}, ` +
             `gasUsed = ${receipt2.rawReceipt.gasUsed}`
@@ -180,5 +190,29 @@ export class Fixture {
   async sweepLUSD(liquity: Liquity) {
     const lusdBalance = await liquity.getLUSDBalance();
     await liquity.sendLUSD(await this.funder.getAddress(), lusdBalance, { gasPrice: 0 });
+  }
+
+  private addToDepositGasUsedHisto(gasUsed: BigNumber) {
+    const binIndex = Math.floor(gasUsed.toNumber() / 10000);
+    assert(binIndex < this.depositGasUsedBins.length);
+    this.depositGasUsedBins[binIndex]++;
+  }
+
+  summarizeDepositStats() {
+    console.log(`Number of deposit TX failures: ${this.depositTxFailures}`);
+
+    const firstNonZeroIndex = this.depositGasUsedBins.findIndex(x => x > 0);
+    const lastNonZeroIndex =
+      this.depositGasUsedBins.length -
+      1 -
+      this.depositGasUsedBins
+        .slice()
+        .reverse()
+        .findIndex(x => x > 0);
+
+    console.log("Desposit TX gas usage histogram:");
+    for (let i = firstNonZeroIndex; i <= lastNonZeroIndex; ++i) {
+      console.log(`  ${10 * i}K: ${this.depositGasUsedBins[i]}`);
+    }
   }
 }

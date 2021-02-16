@@ -179,6 +179,8 @@ yargs
       console.log(`Number of Troves: ${numberOfTroves}`);
       console.log(`Total collateral: ${total.collateral}`);
 
+      fixture.summarizeDepositStats();
+
       fs.appendFileSync(
         "chaos.csv",
         `${numberOfTroves},${fixture.totalNumberOfLiquidations},${total.collateral}\n`
