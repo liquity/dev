@@ -63,7 +63,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     if (config && connection) {
       const { provider, chainId } = connection;
 
-      if (isBatchedProvider(provider)) {
+      if (isBatchedProvider(provider) && provider.chainId !== chainId) {
         provider.chainId = chainId;
       }
 
