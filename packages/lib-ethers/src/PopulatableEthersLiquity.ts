@@ -70,7 +70,7 @@ const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add
 // An extra traversal can take ~12K.
 const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(25000);
 
-const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(40000);
+const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(50000);
 
 // To get the best entropy available, we'd do something like:
 //
