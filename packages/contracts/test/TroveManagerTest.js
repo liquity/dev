@@ -2456,6 +2456,84 @@ contract('TroveManager', async accounts => {
     th.assertIsApproximatelyEqual(dennis_LUSDBalance_After, dec(133, 18))
   })
 
+  it.only('redeemCollateral(): can redeem if first trove to redeem from in the list has zero net debt', async () => {
+    // --- SETUP ---
+
+    // alice has zero net debt and lowest ICR
+    await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getNetBorrowingAmount(dec(16, 18)), bob, bob, { from: bob, value: dec(10, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getNetBorrowingAmount(dec(18, 18)), carol, carol, { from: carol, value: dec(10, 'ether') })
+    // start Dennis with a high ICR
+    await borrowerOperations.openTrove(th._100pct, dec(150, 18), dennis, dennis, { from: dennis, value: dec(100, 'ether') })
+
+    const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
+
+    const dennis_LUSDBalance_Before = await lusdToken.balanceOf(dennis)
+    assert.equal(dennis_LUSDBalance_Before, dec(150, 18))
+
+    const price = await priceFeed.getPrice()
+    assert.equal(price, dec(200, 18))
+
+    // --- TEST --- 
+
+    // Find hints for redeeming 20 LUSD
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintNICR
+    } = await hintHelpers.getRedemptionHints(dec(20, 18), price, 0)
+
+    // We don't need to use getApproxHint for this test, since it's not the subject of this
+    // test case, and the list is very small, so the correct position is quickly found
+    const { 0: upperPartialRedemptionHint, 1: lowerPartialRedemptionHint } = await sortedTroves.findInsertPosition(
+      partialRedemptionHintNICR,
+      dennis,
+      dennis
+    )
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // Dennis redeems 20 LUSD
+    // Don't pay for gas, as it makes it easier to calculate the received Ether
+    const redemptionTx = await troveManager.redeemCollateral(
+      dec(20, 18),
+      firstRedemptionHint,
+      upperPartialRedemptionHint,
+      lowerPartialRedemptionHint,
+      partialRedemptionHintNICR,
+      0, th._100pct,
+      {
+        from: dennis,
+        gasPrice: 0
+      }
+    )
+
+    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
+
+    const alice_Trove_After = await troveManager.Troves(alice)
+    const bob_Trove_After = await troveManager.Troves(bob)
+    const carol_Trove_After = await troveManager.Troves(carol)
+
+    const alice_debt_After = alice_Trove_After[0].toString()
+    const bob_debt_After = bob_Trove_After[0].toString()
+    const carol_debt_After = carol_Trove_After[0].toString()
+
+    // check that Dennis' redeemed 20 LUSD has been cancelled with debt from Bobs's Trove (8) and Carol's Trove (10).
+    assert.equal(bob_debt_After, '0')
+    assert.equal(carol_debt_After, '0')
+
+    const dennis_ETHBalance_After = toBN(await web3.eth.getBalance(dennis))
+    const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
+
+    const expectedTotalETHDrawn = toBN(dec(20, 18)).div(toBN(200)) // convert 20 LUSD to ETH, at ETH:USD price 200
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
+
+    th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
+
+    const dennis_LUSDBalance_After = (await lusdToken.balanceOf(dennis)).toString()
+    assert.equal(dennis_LUSDBalance_After, dec(130, 18))
+  })
+
   it("redeemCollateral(): can redeem if there is zero active debt but non-zero debt in DefaultPool", async () => {
     // --- SETUP ---
 
