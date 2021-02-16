@@ -108,7 +108,7 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
         return revert(newState);
       }
 
-      return { ...newState, edited: trove.apply(change) };
+      return { ...newState, edited: trove.apply(change, 0) };
     }
   }
 };
