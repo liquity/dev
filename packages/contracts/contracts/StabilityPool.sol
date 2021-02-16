@@ -109,7 +109,7 @@ import "./Dependencies/console.sol";
  * --- UPDATING P WHEN A LIQUIDATION OCCURS ---
  *
  * Please see the implementation spec in the proof document, which closely follows on from the compounded deposit / ETH gain derivations:
- * https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf
+ * https://github.com/liquity/liquity/blob/master/papers/Scalable_Reward_Distribution_with_Compounding_Stakes.pdf
  *
  *
  * --- LQTY ISSUANCE TO STABILITY POOL DEPOSITORS ---
@@ -122,7 +122,7 @@ import "./Dependencies/console.sol";
  * by a given deposit, is split between the depositor and the front end through which the deposit was made, based on the front end's kickbackRate.
  *
  * Please see the system Readme for an overview:
- * https://github.com/liquity/dev/blob/main/README.md#lqty-issuance-to-stability-depositors
+ * https://github.com/liquity/dev/blob/main/README.md#lqty-issuance-to-stability-providers
  *
  * We use the same mathematical product-sum approach to track LQTY gains for depositors, where 'G' is the sum corresponding to LQTY gains.
  * The product P (and snapshot P_t) is re-used, as the ratio P/P_t tracks a deposit's depletion due to liquidations.
