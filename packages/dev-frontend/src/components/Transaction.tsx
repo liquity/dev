@@ -153,11 +153,7 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
     setTransactionState({ type: "waitingForApproval", id });
 
     try {
-      const tx = await send({
-        // TODO get a safe gas price from ethgasstation
-        // Note that this only applies to mainnet though, which we don't support yet
-        gasPrice: 2000000000
-      });
+      const tx = await send();
 
       setTransactionState({
         type: "waitingForConfirmation",
