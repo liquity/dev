@@ -6,8 +6,14 @@ import "colors";
 import { Wallet } from "@ethersproject/wallet";
 import { JsonRpcProvider } from "@ethersproject/providers";
 
-import { Decimal, Difference, Trove, TroveWithPendingRedistribution } from "@liquity/lib-base";
-import { deploymentOnNetwork, EthersLiquity as Liquity } from "@liquity/lib-ethers";
+import {
+  Decimal,
+  Difference,
+  LUSD_LIQUIDATION_RESERVE,
+  Trove,
+  TroveWithPendingRedistribution
+} from "@liquity/lib-base";
+import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 import {
@@ -16,7 +22,7 @@ import {
   connectUsers,
   createRandomWallets,
   dumpTroves,
-  getListOfTroves,
+  getListOfTrovesBeforeRedistribution,
   shortenAddress
 } from "./utils";
 import { Fixture } from "./fixture";
@@ -35,11 +41,6 @@ const funder = new Wallet(
   provider
 );
 
-const deployment = deploymentOnNetwork["dev"];
-if (!deployment) {
-  throw new Error("Must deploy to dev chain first");
-}
-
 yargs
   .scriptName("yarn fuzzer")
 
@@ -54,33 +55,27 @@ yargs
       }
     },
     async ({ troves }) => {
-      const deployerLiquity = await Liquity.connect(deployment, deployer);
+      const deployerLiquity = await Liquity.connect(deployer);
 
       const price = await deployerLiquity.getPrice();
-      const priceAsNumber = parseFloat(price.toString(4));
-
-      let numberOfTroves = await deployerLiquity.getNumberOfTroves();
 
       for (let i = 1; i <= troves; ++i) {
         const user = Wallet.createRandom().connect(provider);
         const userAddress = await user.getAddress();
-        const collateral = 999 * Math.random() + 1;
-        const debt = (priceAsNumber * collateral) / (3 * Math.random() + 1.11) + 10;
+        const debt = LUSD_LIQUIDATION_RESERVE.add(99999 * Math.random());
+        const collateral = debt.mul(price).mul(1.11 + 3 * Math.random());
 
-        const liquity = await Liquity.connect(deployment, user);
+        const liquity = await Liquity.connect(user);
 
         await funder.sendTransaction({
           to: userAddress,
           value: Decimal.from(collateral).hex
         });
 
-        await liquity.openTrove(
-          new Trove({ collateral, debt }),
-          { price, numberOfTroves },
-          { gasPrice: 0 }
-        );
-
-        numberOfTroves++;
+        const fees = await liquity.getFees();
+        await liquity.openTrove(Trove.recreate(new Trove(collateral, debt), fees.borrowingRate()), {
+          gasPrice: 0
+        });
 
         if (i % 4 === 0) {
           const lusdBalance = await liquity.getLUSDBalance();
@@ -119,10 +114,11 @@ yargs
     async ({ rounds: numberOfRounds, users: numberOfUsers, subgraph: shouldCheckSubgraph }) => {
       const randomUsers = createRandomWallets(numberOfUsers, provider);
 
-      const [deployerLiquity, funderLiquity, ...randomLiquities] = await connectUsers(
-        [deployer, funder, ...randomUsers],
-        deployment
-      );
+      const [deployerLiquity, funderLiquity, ...randomLiquities] = await connectUsers([
+        deployer,
+        funder,
+        ...randomUsers
+      ]);
 
       const fixture = await Fixture.setup(deployerLiquity, funderLiquity, funder);
 
@@ -139,7 +135,7 @@ yargs
         console.log(`// Round #${i}`);
 
         const price = await fixture.setRandomPrice();
-        await fixture.liquidateRandomNumberOfTroves();
+        await fixture.liquidateRandomNumberOfTroves(price);
 
         for (let i = 0; i < randomUsers.length; ++i) {
           const user = randomUsers[i];
@@ -163,7 +159,7 @@ yargs
 
           await fixture.sweepLUSD(liquity);
 
-          const listOfTroves = await getListOfTroves(deployerLiquity);
+          const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
           await checkTroveOrdering(deployerLiquity, price, listOfTroves, previousListOfTroves);
 
           previousListOfTroves = listOfTroves;
@@ -195,62 +191,47 @@ yargs
     "End chaos and restore order by liquidating every Trove except the Funder's.",
     {},
     async () => {
-      const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder], deployment);
+      const [deployerLiquity, funderLiquity] = await connectUsers([deployer, funder]);
 
       const initialPrice = await deployerLiquity.getPrice();
       let initialNumberOfTroves = await funderLiquity.getNumberOfTroves();
 
-      let [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
+      let [[firstTroveOwner]] = await funderLiquity.getTroves({
+        first: 1,
+        sortedBy: "descendingCollateralRatio"
+      });
 
       if (firstTroveOwner !== funder.address) {
-        let trove = await funderLiquity.getTrove();
-
-        if (trove.debt.isZero) {
-          await funderLiquity.borrowLUSD(1, {
-            trove,
-            price: initialPrice,
-            numberOfTroves: initialNumberOfTroves
-          });
-
-          trove = await funderLiquity.getTrove();
-        }
-
+        const trove = await funderLiquity.getTrove();
         const lusdBalance = await funderLiquity.getLUSDBalance();
 
-        if (lusdBalance.lt(trove.debt)) {
+        if (lusdBalance.lt(trove.netDebt)) {
           const [randomUser] = createRandomWallets(1, provider);
-          const randomLiquity = await Liquity.connect(deployment, randomUser);
+          const randomLiquity = await Liquity.connect(randomUser);
 
-          const lusdNeeded = trove.debt.sub(lusdBalance);
-          const tempTrove = new Trove({
-            collateral: lusdNeeded.div(initialPrice).mul(3),
-            debt: lusdNeeded
-          });
+          const lusdNeeded = trove.netDebt.sub(lusdBalance);
+          const tempTrove = {
+            depositCollateral: LUSD_LIQUIDATION_RESERVE.add(lusdNeeded).div(initialPrice).mul(3),
+            borrowLUSD: lusdNeeded
+          };
 
           await funder.sendTransaction({
             to: randomUser.address,
-            value: tempTrove.collateral.hex
+            value: tempTrove.depositCollateral.hex
           });
 
-          await randomLiquity.openTrove(
-            tempTrove,
-            { price: initialPrice, numberOfTroves: initialNumberOfTroves },
-            { gasPrice: 0 }
-          );
-
+          await randomLiquity.openTrove(tempTrove, { gasPrice: 0 });
           initialNumberOfTroves++;
-
           await randomLiquity.sendLUSD(funder.address, lusdNeeded, { gasPrice: 0 });
         }
 
-        await funderLiquity.repayLUSD(trove.debt, {
-          trove,
-          price: initialPrice,
-          numberOfTroves: initialNumberOfTroves
-        });
+        await funderLiquity.repayLUSD(trove.netDebt);
       }
 
-      [[firstTroveOwner]] = await funderLiquity.getFirstTroves(0, 1);
+      [[firstTroveOwner]] = await funderLiquity.getTroves({
+        first: 1,
+        sortedBy: "descendingCollateralRatio"
+      });
 
       if (firstTroveOwner !== funder.address) {
         throw new Error("didn't manage to hoist Funder's Trove to head of SortedTroves");
@@ -295,9 +276,9 @@ yargs
   )
 
   .command("check-sorting", "Check if Troves are sorted by ICR.", {}, async () => {
-    const deployerLiquity = await Liquity.connect(deployment, deployer);
+    const deployerLiquity = await Liquity.connect(deployer);
     const price = await deployerLiquity.getPrice();
-    const listOfTroves = await getListOfTroves(deployerLiquity);
+    const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
 
     await checkTroveOrdering(deployerLiquity, price, listOfTroves);
 
@@ -305,7 +286,7 @@ yargs
   })
 
   .command("check-subgraph", "Check that subgraph data matches layer 1.", {}, async () => {
-    const deployerLiquity = await Liquity.connect(deployment, deployer);
+    const deployerLiquity = await Liquity.connect(deployer);
 
     await checkSubgraph(subgraph, deployerLiquity);
 
@@ -313,9 +294,9 @@ yargs
   })
 
   .command("dump-troves", "Dump list of Troves.", {}, async () => {
-    const deployerLiquity = await Liquity.connect(deployment, deployer);
+    const deployerLiquity = await Liquity.connect(deployer);
 
-    const listOfTroves = await getListOfTroves(deployerLiquity);
+    const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
     const price = await deployerLiquity.getPrice();
     await dumpTroves(deployerLiquity, listOfTroves, price);
   })

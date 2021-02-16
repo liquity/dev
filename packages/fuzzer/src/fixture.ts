@@ -1,14 +1,15 @@
 import { Signer } from "@ethersproject/abstract-signer";
 
-import { Decimal, Decimalish, Trove } from "@liquity/lib-base";
-import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
+import { Decimal, Decimalish, LUSD_LIQUIDATION_RESERVE, Trove } from "@liquity/lib-base";
+import { EthersLiquity as Liquity, EthersTransactionFailedError } from "@liquity/lib-ethers";
 
 import {
   createRandomTrove,
   shortenAddress,
   benford,
   getListOfTroveOwners,
-  listDifference
+  listDifference,
+  getListOfTroves
 } from "./utils";
 
 export class Fixture {
@@ -17,7 +18,6 @@ export class Fixture {
   private readonly funder: Signer;
 
   private price: Decimal;
-  private numberOfTroves: number;
 
   totalNumberOfLiquidations = 0;
 
@@ -25,39 +25,28 @@ export class Fixture {
     deployerLiquity: Liquity,
     funderLiquity: Liquity,
     funder: Signer,
-    price: Decimal,
-    numberOfTroves: number
+    price: Decimal
   ) {
     this.deployerLiquity = deployerLiquity;
     this.funderLiquity = funderLiquity;
     this.funder = funder;
     this.price = price;
-    this.numberOfTroves = numberOfTroves;
   }
 
   static async setup(deployerLiquity: Liquity, funderLiquity: Liquity, funder: Signer) {
     const price = await deployerLiquity.getPrice();
-    let numberOfTroves = await deployerLiquity.getNumberOfTroves();
     const funderTrove = await funderLiquity.getTrove();
 
     if (funderTrove.isEmpty) {
-      await funderLiquity.openTrove(new Trove({ collateral: 10000, debt: 1000000 }), {
-        price,
-        numberOfTroves
-      });
-
-      numberOfTroves++;
+      await funderLiquity.openTrove({ depositCollateral: 10000, borrowLUSD: 1000000 });
     }
 
-    return new Fixture(deployerLiquity, funderLiquity, funder, price, numberOfTroves);
+    return new Fixture(deployerLiquity, funderLiquity, funder, price);
   }
 
   private async sendLUSDFromFunder(toAddress: string, amount: Decimalish) {
     while ((await this.funderLiquity.getLUSDBalance()).lt(amount)) {
-      await this.funderLiquity.adjustTrove(
-        { depositCollateral: 10000, borrowLUSD: 1000000 },
-        { price: this.price, numberOfTroves: this.numberOfTroves }
-      );
+      await this.funderLiquity.adjustTrove({ depositCollateral: 10000, borrowLUSD: 1000000 });
     }
 
     await this.funderLiquity.sendLUSD(toAddress, amount);
@@ -71,18 +60,25 @@ export class Fixture {
     return this.price;
   }
 
-  async liquidateRandomNumberOfTroves() {
+  async liquidateRandomNumberOfTroves(price: Decimal) {
     const lusdInStabilityPoolBefore = await this.deployerLiquity.getLUSDInStabilityPool();
     console.log(`// Stability Pool balance: ${lusdInStabilityPoolBefore}`);
 
-    const trovesBefore = await getListOfTroveOwners(this.deployerLiquity);
+    const trovesBefore = await getListOfTroves(this.deployerLiquity);
+    const troveOwnersBefore = trovesBefore.map(([owner]) => owner);
+    const [, lastTrove] = trovesBefore[trovesBefore.length - 1];
+
+    if (!lastTrove.collateralRatioIsBelowMinimum(price)) {
+      console.log("// No Troves to liquidate");
+      return;
+    }
 
     const maximumNumberOfTrovesToLiquidate = Math.floor(50 * Math.random()) + 1;
     console.log(`[deployer] liquidateUpTo(${maximumNumberOfTrovesToLiquidate})`);
     await this.deployerLiquity.liquidateUpTo(maximumNumberOfTrovesToLiquidate);
 
-    const trovesAfter = await getListOfTroveOwners(this.deployerLiquity);
-    const liquidatedTroves = listDifference(trovesBefore, trovesAfter);
+    const troveOwnersAfter = await getListOfTroveOwners(this.deployerLiquity);
+    const liquidatedTroves = listDifference(troveOwnersBefore, troveOwnersAfter);
 
     if (liquidatedTroves.length > 0) {
       for (const liquidatedTrove of liquidatedTroves) {
@@ -90,7 +86,6 @@ export class Fixture {
       }
     }
 
-    this.numberOfTroves -= liquidatedTroves.length;
     this.totalNumberOfLiquidations += liquidatedTroves.length;
 
     const lusdInStabilityPoolAfter = await this.deployerLiquity.getLUSDInStabilityPool();
@@ -99,7 +94,8 @@ export class Fixture {
 
   async openRandomTrove(userAddress: string, liquity: Liquity) {
     let newTrove: Trove;
-    let total = await liquity.getTotal();
+    const total = await liquity.getTotal();
+    const fees = await liquity.getFees();
 
     do {
       newTrove = createRandomTrove(this.price);
@@ -107,10 +103,7 @@ export class Fixture {
 
     while (total.add(newTrove).collateralRatioIsBelowCritical(this.price)) {
       // Would fail to open the Trove due to TCR
-      newTrove = new Trove({
-        collateral: newTrove.collateral.mul(2),
-        debt: 0
-      });
+      newTrove = new Trove(newTrove.collateral.mul(2), LUSD_LIQUIDATION_RESERVE);
     }
 
     await this.funder.sendTransaction({
@@ -124,13 +117,7 @@ export class Fixture {
         `debt: ${newTrove.debt} })`
     );
 
-    await liquity.openTrove(
-      newTrove,
-      { price: this.price, numberOfTroves: this.numberOfTroves },
-      { gasPrice: 0 }
-    );
-
-    this.numberOfTroves++;
+    await liquity.openTrove(Trove.recreate(newTrove, fees.borrowingRate()), { gasPrice: 0 });
   }
 
   async closeTrove(userAddress: string, liquity: Liquity, trove: Trove) {
@@ -138,10 +125,7 @@ export class Fixture {
 
     while (total.collateralRatioIsBelowCritical(this.price)) {
       // Cannot close Trove during recovery mode
-      await this.funderLiquity.depositCollateral(benford(50000), {
-        price: this.price,
-        numberOfTroves: this.numberOfTroves
-      });
+      await this.funderLiquity.depositCollateral(benford(50000));
 
       total = await liquity.getTotal();
     }
@@ -150,8 +134,6 @@ export class Fixture {
 
     console.log(`[${shortenAddress(userAddress)}] closeTrove()`);
     await liquity.closeTrove({ gasPrice: 0 });
-
-    this.numberOfTroves--;
   }
 
   async redeemRandomAmount(userAddress: string, liquity: Liquity) {
@@ -160,11 +142,7 @@ export class Fixture {
     await this.sendLUSDFromFunder(userAddress, amount);
 
     console.log(`[${shortenAddress(userAddress)}] redeemLUSD(${amount})`);
-    await liquity.redeemLUSD(
-      amount,
-      { price: this.price, numberOfTroves: this.numberOfTroves },
-      { gasPrice: 0 }
-    );
+    await liquity.redeemLUSD(amount, { gasPrice: 0 });
   }
 
   async depositRandomAmountInStabilityPool(userAddress: string, liquity: Liquity) {
@@ -174,7 +152,29 @@ export class Fixture {
 
     console.log(`[${shortenAddress(userAddress)}] depositLUSDInStabilityPool(${amount})`);
 
-    await liquity.depositLUSDInStabilityPool(amount, undefined, { gasPrice: 0 });
+    const tx = await liquity.send.depositLUSDInStabilityPool(amount, undefined, { gasPrice: 0 });
+    const receipt = await tx.waitForReceipt();
+
+    if (receipt.status === "succeeded") {
+      console.log(`// gasUsed = ${receipt.rawReceipt.gasUsed}`);
+    } else {
+      console.log(
+        `// !!! Failed with gasLimit = ${tx.rawSentTransaction.gasLimit}, ` +
+          `gasUsed = ${receipt.rawReceipt.gasUsed}`
+      );
+
+      const tx2 = await liquity.send.depositLUSDInStabilityPool(amount, undefined, { gasPrice: 0 });
+      const receipt2 = await tx2.waitForReceipt();
+
+      if (receipt2.status === "succeeded") {
+        console.log(
+          `// Retry succeeded with gasLimit = ${tx2.rawSentTransaction.gasLimit}, ` +
+            `gasUsed = ${receipt2.rawReceipt.gasUsed}`
+        );
+      } else {
+        throw new EthersTransactionFailedError("Transaction failed", receipt2);
+      }
+    }
   }
 
   async sweepLUSD(liquity: Liquity) {

@@ -9,9 +9,11 @@ import {
   Percent,
   Trove,
   TroveWithPendingRedistribution,
-  ReadableLiquity
+  ReadableLiquity,
+  LUSD_LIQUIDATION_RESERVE,
+  MINIMUM_COLLATERAL_RATIO
 } from "@liquity/lib-base";
-import { EthersLiquity as Liquity, LiquityDeployment } from "@liquity/lib-ethers";
+import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 export const createRandomWallets = (numberOfWallets: number, provider: Provider) => {
@@ -31,11 +33,14 @@ export const createRandomTrove = (price: Decimal) => {
   if (Math.random() < 0.5) {
     collateral = Decimal.from(randomValue);
 
-    const maxDebt = parseInt(price.mul(collateral).div(1.1).toString(0));
+    const maxDebt = parseInt(
+      price.mul(collateral).div(MINIMUM_COLLATERAL_RATIO).sub(LUSD_LIQUIDATION_RESERVE).toString(0)
+    );
 
-    debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
+    debt = LUSD_LIQUIDATION_RESERVE.add(truncateLastDigits(maxDebt - benford(maxDebt)));
   } else {
-    debt = Decimal.from(100 * randomValue);
+    debt = LUSD_LIQUIDATION_RESERVE.add(100 * randomValue);
+
     collateral = Decimal.from(
       debt
         .div(price)
@@ -45,14 +50,25 @@ export const createRandomTrove = (price: Decimal) => {
     );
   }
 
-  return new Trove({ collateral, debt });
+  return new Trove(collateral, debt);
 };
 
 export const getListOfTroves = async (liquity: ReadableLiquity) =>
-  liquity.getFirstTroves(0, await liquity.getNumberOfTroves());
+  liquity.getTroves({
+    first: await liquity.getNumberOfTroves(),
+    sortedBy: "descendingCollateralRatio",
+    beforeRedistribution: false
+  });
+
+export const getListOfTrovesBeforeRedistribution = async (liquity: ReadableLiquity) =>
+  liquity.getTroves({
+    first: await liquity.getNumberOfTroves(),
+    sortedBy: "descendingCollateralRatio",
+    beforeRedistribution: true
+  });
 
 export const getListOfTroveOwners = async (liquity: ReadableLiquity) =>
-  getListOfTroves(liquity).then(troves => troves.map(([owner]) => owner));
+  getListOfTrovesBeforeRedistribution(liquity).then(troves => troves.map(([owner]) => owner));
 
 const tinyDifference = Decimal.from("0.000000001");
 
@@ -176,8 +192,8 @@ const checks = [
 export const checkSubgraph = async (subgraph: SubgraphLiquity, l1Liquity: ReadableLiquity) => {
   await Promise.all(checks.map(check => check.allEqual([subgraph, l1Liquity])));
 
-  const l1ListOfTroves = await getListOfTroves(l1Liquity);
-  const subgraphListOfTroves = await getListOfTroves(subgraph);
+  const l1ListOfTroves = await getListOfTrovesBeforeRedistribution(l1Liquity);
+  const subgraphListOfTroves = await getListOfTrovesBeforeRedistribution(subgraph);
   listOfTrovesShouldBeEqual(l1ListOfTroves, subgraphListOfTroves);
 
   const price = await l1Liquity.getPrice();
@@ -204,7 +220,6 @@ const troveToString = (
     `[${shortenAddress(address)}]: ` +
     `ICR = ${new Percent(trove.collateralRatio(price)).toString(2)}, ` +
     `ICR w/o reward = ${new Percent(troveWithPendingRewards.collateralRatio(price)).toString(2)}, ` +
-    `stake = ${troveWithPendingRewards.stake.toString(2)}, ` +
     `coll = ${trove.collateral.toString(2)}, ` +
     `debt = ${trove.debt.toString(2)}, ` +
     `coll reward = ${rewards.collateral.toString(2)}, ` +
@@ -258,5 +273,5 @@ const truncateLastDigits = (n: number) => {
   }
 };
 
-export const connectUsers = (users: Signer[], deployment: LiquityDeployment) =>
-  Promise.all(users.map(user => Liquity.connect(deployment, user)));
+export const connectUsers = (users: Signer[]) =>
+  Promise.all(users.map(user => Liquity.connect(user)));
