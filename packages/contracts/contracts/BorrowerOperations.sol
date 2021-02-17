@@ -242,12 +242,11 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         _requireNonZeroAdjustment(_collWithdrawal, _debtChange);
         _requireTroveisActive(contractsCache.troveManager, _borrower);
         
-        /*
-        * The adjustment is considered a withdrawal if it removes ETH collateral, and/or issues new LUSD debt. 
-        * The caller may make a withdrawal only from their own trove.
-        */
+        // The adjustment is considered a withdrawal if it removes ETH collateral, and/or issues new LUSD debt. 
         bool isWithdrawal = _collWithdrawal != 0 || _isDebtIncrease; 
-        if (isWithdrawal) {_requireCallerIsBorrower(_borrower);}
+
+        // Confirm the operation is either a borrower adjusting their own trove, or an ETH transfer from the Stability Pool to a trove
+        assert(msg.sender == _borrower || (msg.sender == stabilityPoolAddress && !isWithdrawal));
 
         LocalVariables_adjustTrove memory vars;
 
