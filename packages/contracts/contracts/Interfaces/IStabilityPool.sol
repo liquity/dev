@@ -84,12 +84,12 @@ interface IStabilityPool {
     ) external;
 
     /*
-     * Previous checks:
+     * Initial checks:
      * - Frontend is registered or zero address
      * - Sender is not a registered frontend
      * - _amount is not zero
      * ---
-     * - Triggers a LQTY issuance, based on time passed since the last. The LQTY issuance is shared between *all* depositors and front ends
+     * - Triggers a LQTY issuance, based on time passed since the last issuance. The LQTY issuance is shared between *all* depositors and front ends
      * - Tags the deposit with the provided front end tag param, if it's a new deposit
      * - Sends depositor's accumulated gains (LQTY, ETH) to depositor
      * - Sends the tagged front end's accumulated LQTY gains to the tagged front end
@@ -98,11 +98,11 @@ interface IStabilityPool {
     function provideToSP(uint _amount, address _frontEndTag) external;
 
     /*
-     * Previous checks:
+     * Initial checks:
      * - _amount is zero or there are no under collateralized troves left in the system
      * - User has a non zero deposit
      * ---
-     * - Triggers a LQTY issuance, based on time passed since the last. The LQTY issuance is shared between *all* depositors and front ends
+     * - Triggers a LQTY issuance, based on time passed since the last issuance. The LQTY issuance is shared between *all* depositors and front ends
      * - Removes the deposit's front end tag if it is a full withdrawal
      * - Sends all depositor's accumulated gains (LQTY, ETH) to depositor
      * - Sends the tagged front end's accumulated LQTY gains to the tagged front end
@@ -113,12 +113,12 @@ interface IStabilityPool {
     function withdrawFromSP(uint _amount) external;
 
     /*
-     * Previous checks:
+     * Initial checks:
      * - User has a non zero deposit
      * - User has an open trove
      * - User has some ETH gain
      * ---
-     * - Triggers a LQTY issuance, based on time passed since the last. The LQTY issuance is shared between *all* depositors and front ends
+     * - Triggers a LQTY issuance, based on time passed since the last issuance. The LQTY issuance is shared between *all* depositors and front ends
      * - Sends all depositor's LQTY gain to  depositor
      * - Sends all tagged front end's LQTY gain to the tagged front end
      * - Transfers the depositor's entire ETH gain from the Stability Pool to the caller's trove
@@ -128,7 +128,7 @@ interface IStabilityPool {
     function withdrawETHGainToTrove(address _upperHint, address _lowerHint) external;
 
     /*
-     * Previous checks:
+     * Initial checks:
      * - Frontend (sender) not already registered
      * - User (sender) has no deposit
      * - _kickbackRate is in the range [0, 100%]
@@ -138,10 +138,10 @@ interface IStabilityPool {
     function registerFrontEnd(uint _kickbackRate) external;
 
     /*
-     * Previous checks:
+     * Initial checks:
      * - Caller is TroveManager
      * ---
-     * Cancel out the specified debt against the LUSD contained in the Stability Pool (as far as possible)
+     * Cancels out the specified debt against the LUSD contained in the Stability Pool (as far as possible)
      * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
      * Only called by liquidation functions in the TroveManager.
      */
