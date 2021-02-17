@@ -272,12 +272,17 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         // Get the trove's old ICR before the adjustment, and what its new ICR will be after the adjustment
         vars.oldICR = LiquityMath._computeCR(vars.coll, vars.debt, vars.price);
         vars.newICR = _getNewICRFromTroveChange(vars.coll, vars.debt, vars.collChange, vars.isCollIncrease, vars.rawDebtChange, _isDebtIncrease, vars.price);
-        assert(_collWithdrawal <= vars.coll); 
-
-        // Make sure it is a valid change for the trove's ICR and for the system TCR, given the current system mode.
-        uint newTCR = _getNewTCRFromTroveChange(vars.collChange, vars.isCollIncrease, vars.rawDebtChange, _isDebtIncrease, vars.price);
-        _requireValidNewICRandValidNewTCR(isRecoveryMode, vars.oldICR, vars.newICR, newTCR);
         
+        /*
+        * When the adjustment withdraws collateral or increases debt, make sure it is a valid change for the trove's 
+        * ICR and for the system TCR, given the current system mode.
+        */
+        if (_collWithdrawal != 0 || _isDebtIncrease) { 
+            assert(_collWithdrawal <= vars.coll); 
+            uint newTCR = _getNewTCRFromTroveChange(vars.collChange, vars.isCollIncrease, vars.rawDebtChange, _isDebtIncrease, vars.price);
+            _requireValidNewICRandValidNewTCR(isRecoveryMode, vars.oldICR, vars.newICR, newTCR);
+        }
+
         // When the adjustment is a debt repayment, check it's a valid amount and that the caller has enough LUSD
         if (!_isDebtIncrease && _LUSDChange > 0) {
             _requireValidLUSDRepayment(vars.debt, vars.rawDebtChange);
