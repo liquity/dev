@@ -230,11 +230,11 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     event P_Updated(uint _P);
     event S_Updated(uint _S, uint128 _epoch, uint128 _scale);
     event G_Updated(uint _G, uint128 _epoch, uint128 _scale);
-    event EpochUpdated(uint _currentEpoch);
-    event ScaleUpdated(uint _currentScale);
+    event EpochUpdated(uint128 _currentEpoch);
+    event ScaleUpdated(uint128 _currentScale);
 
     event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
-    event FrontEndTagSet(address indexed _depositor, uint _frontEnd);
+    event FrontEndTagSet(address indexed _depositor, address indexed _frontEnd);
 
     event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
     event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
@@ -620,7 +620,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     function _decreaseLUSD(uint _amount) internal {
         uint newTotalLUSDDeposits = totalLUSDDeposits.sub(_amount);
         totalLUSDDeposits = newTotalLUSDDeposits;
-        emit LUSDBalanceUpdated(newTotalLUSDDeposits);
+        emit StabilityPoolLUSDBalanceUpdated(newTotalLUSDDeposits);
     }
 
     // --- Reward calculator functions for depositor and front end ---
@@ -809,7 +809,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         lusdToken.sendToPool(_address, address(this), _amount);
         uint newTotalLUSDDeposits = totalLUSDDeposits.add(_amount);
         totalLUSDDeposits = newTotalLUSDDeposits;
-        emit LUSDBalanceUpdated(newTotalLUSDDeposits);
+        emit StabilityPoolLUSDBalanceUpdated(newTotalLUSDDeposits);
     }
 
     function _sendETHGainToDepositor(uint _amount) internal {

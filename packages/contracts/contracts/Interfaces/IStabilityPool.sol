@@ -25,18 +25,16 @@ interface IStabilityPool {
     event ScaleUpdated(uint128 _currentScale);
 
     event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
-     event FrontEndTagSet(address indexed _depositor, uint _frontEnd);
+    event FrontEndTagSet(address indexed _depositor, address indexed _frontEnd);
 
     event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
     event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
-
     event UserDepositChanged(address indexed _depositor, uint _newDeposit);
     event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
 
     event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _LUSDLoss);
     event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
     event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
-
     event EtherSent(address _to, uint _amount);
 
     // --- Functions ---

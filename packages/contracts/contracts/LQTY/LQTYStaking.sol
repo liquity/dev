@@ -203,7 +203,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     function _updateUserSnapshots(address _user) internal {
         snapshots[_user].F_ETH_Snapshot = F_ETH;
         snapshots[_user].F_LUSD_Snapshot = F_LUSD;
-        emit StakerSnapshotsUpdated(_staker, _F_ETH, _F_LUSD);
+        emit StakerSnapshotsUpdated(_user, F_ETH, F_LUSD);
     }
 
     function _sendETHGainToUser(uint ETHGain) internal {
