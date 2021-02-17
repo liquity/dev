@@ -749,8 +749,6 @@ Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
 
 Hints allow cheaper Trove operations for the user, at the expense of a slightly longer time to completion, due to the need to await the result of the two read calls in steps 1 and 2 - which may be sent as JSON-RPC requests to Infura, unless the Frontend Operator is running a full Ethereum node.
 
-Each BorrowerOperations function that reinserts a Trove takes a single hint, as does `StabilityPool::withdrawFromSPtoTrove(...)`.
-
 ### Hints for `redeemCollateral`
 
 `TroveManager::redeemCollateral` as a special case requires additional hints:
