@@ -78,7 +78,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     Status public status;
 
     event LastGoodPriceUpdated(uint _lastGoodPrice);
-    event StatusChanged(Status newStatus);
+    event PriceFeedStatusChanged(Status newStatus);
 
     // --- Dependency setters ---
     
@@ -445,7 +445,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
     function _changeStatus(Status _status) internal {
         status = _status;
-        emit StatusChanged(_status);
+        emit PriceFeedStatusChanged(_status);
     }
 
     function _storePrice(uint _currentPrice) internal {

@@ -53,6 +53,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
     event StabilityPoolAddressSet(address _stabilityPoolAddress);
+    event TotalLQTYIssuedUpdated(uint _totalLQTYIssued);
 
     // --- Functions ---
 
@@ -92,6 +93,8 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
         uint issuance = latestTotalLQTYIssued.sub(totalLQTYIssued);
 
         totalLQTYIssued = latestTotalLQTYIssued;
+        emit TotalLQTYIssuedUpdated(latestTotalLQTYIssued);
+        
         return issuance;
     }
 

@@ -9,6 +9,8 @@ interface ISortedTroves {
     
     event SortedTrovesAddressChanged(address _sortedDoublyLLAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
+    event NodeAdded(address _id, uint _NICR);
+    event NodeRemoved(address _id);
 
     // --- Functions ---
     

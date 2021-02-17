@@ -48,6 +48,8 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
 
     event TroveManagerAddressChanged(address _troveManagerAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
+    event NodeAdded(address _id, uint _NICR);
+    event NodeRemoved(address _id);
 
     address public borrowerOperationsAddress;
 
@@ -148,6 +150,7 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
         }
 
         data.size = data.size.add(1);
+        emit NodeAdded(_id, _NICR);
     }
 
     function remove(address _id) external override {
@@ -193,6 +196,7 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
 
         delete data.nodes[_id];
         data.size = data.size.sub(1);
+        NodeRemoved(_id);
     }
 
     /*

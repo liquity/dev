@@ -6,8 +6,8 @@ interface IStabilityPool {
     
     // --- Events ---
     
-    event ETHBalanceUpdated(uint _newBalance);
-    event LUSDBalanceUpdated(uint _newBalance);
+    event StabilityPoolETHBalanceUpdated(uint _newBalance);
+    event StabilityPoolLUSDBalanceUpdated(uint _newBalance);
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
@@ -19,10 +19,13 @@ interface IStabilityPool {
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
 
     event P_Updated(uint _P);
-    event S_Updated(uint _S);
-    event G_Updated(uint _G);
+    event S_Updated(uint _S, uint128 _epoch, uint128 _scale);
+    event G_Updated(uint _G, uint128 _epoch, uint128 _scale);
+    event EpochUpdated(uint128 _currentEpoch);
+    event ScaleUpdated(uint128 _currentScale);
 
     event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
+     event FrontEndTagSet(address indexed _depositor, uint _frontEnd);
 
     event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
     event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);

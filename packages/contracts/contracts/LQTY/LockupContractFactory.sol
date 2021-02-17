@@ -36,7 +36,7 @@ contract LockupContractFactory is ILockupContractFactory, Ownable, CheckContract
     // --- Events ---
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
-    event LockupContractDeployed(address _lockupContractAddress, address _beneficiary, uint _unlockTime);
+    event LockupContractDeployedThroughFactory(address _lockupContractAddress, address _beneficiary, uint _unlockTime, address _deployer);
 
     // --- Functions ---
 
@@ -58,7 +58,7 @@ contract LockupContractFactory is ILockupContractFactory, Ownable, CheckContract
                                                         _unlockTime);
 
         lockupContractToDeployer[address(lockupContract)] = msg.sender;
-        emit LockupContractDeployed(address(lockupContract), _beneficiary, _unlockTime);
+        emit LockupContractDeployedThroughFactory(address(lockupContract), _beneficiary, _unlockTime, msg.sender);
     }
 
     function isRegisteredLockup(address _contractAddress) public view override returns (bool) {

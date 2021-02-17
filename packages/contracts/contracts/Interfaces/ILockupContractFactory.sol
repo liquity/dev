@@ -7,7 +7,7 @@ interface ILockupContractFactory {
     // --- Events ---
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
-    event LockupContractDeployed(address _lockupContractAddress, address _beneficiary, uint _unlockTime);
+    event LockupContractDeployedThroughFactory(address _lockupContractAddress, address _beneficiary, uint _unlockTime, address _deployer);
 
     // --- Functions ---
 
