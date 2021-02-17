@@ -1158,9 +1158,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint oldStake = Troves[_borrower].stake;
         Troves[_borrower].stake = newStake;
 
-        uint newTotalStakes = totalStakes.sub(oldStake).add(newStake);
-        totalStakes = newTotalStakes;
-        emit TotalStakesUpdated(newTotalStakes);
+        totalStakes = totalStakes.sub(oldStake).add(newStake);;
+        emit TotalStakesUpdated(totalStakes);
 
         return newStake;
     }

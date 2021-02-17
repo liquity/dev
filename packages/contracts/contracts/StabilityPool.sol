@@ -238,14 +238,12 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
     event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
-
     event UserDepositChanged(address indexed _depositor, uint _newDeposit);
     event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
 
     event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _LUSDLoss);
     event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
     event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
-
     event EtherSent(address _to, uint _amount);
 
     // --- Contract setters ---
@@ -457,17 +455,13 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         */
         if (totalLUSD == 0 || _LQTYIssuance == 0) {return;}
 
-        uint128 currentScaleCached = currentScale;
-        uint128 currentEpochCached = currentEpoch;
-
         uint LQTYPerUnitStaked;
         LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalLUSD);
 
         uint marginalLQTYGain = LQTYPerUnitStaked.mul(P);
-        uint newG = epochToScaleToG[currentEpochCached][currentScaleCached].add(marginalLQTYGain);
+        epochToScaleToG[currentEpoch][currentScale] = epochToScaleToG[currentEpoch][currentScale].add(marginalLQTYGain);
 
-        epochToScaleToG[currentEpochCached][currentScaleCached] = newG;
-        emit G_Updated(newG, currentEpochCached, currentScaleCached);
+        emit G_Updated(G, currentEpoch, currentScale);
     }
 
     function _computeLQTYPerUnitStaked(uint _LQTYIssuance, uint _totalLUSDDeposits) internal returns (uint) {
