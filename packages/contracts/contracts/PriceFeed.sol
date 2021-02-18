@@ -198,13 +198,12 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 return _storeTellorPrice(tellorResponse);
             }
 
-            // If Chainlink is working and Tellor is broken, remember it, and return Chainlink price
-                if (_tellorIsBroken(tellorResponse)) {
-                _changeStatus(Status.usingChainlinkTellorUntrusted);
-                return _storeChainlinkPrice(chainlinkResponse);     
+            // If Chainlink is working and Tellor is broken, remember Tellor is broken
+            if (_tellorIsBroken(tellorResponse)) {
+                _changeStatus(Status.usingChainlinkTellorUntrusted);    
             }   
 
-            // If Chainlink is working and Tellor is frozen or working, return Chainlink current price (no status change)
+            // If Chainlink is working, return Chainlink current price (no status change)
             return _storeChainlinkPrice(chainlinkResponse);
         }
 
