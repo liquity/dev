@@ -723,13 +723,11 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedColl_A = aliceColl.sub(expectedGasComp_A)
     const expectedLiquidatedDebt_A =  aliceDebt
 
-    const loggedLiquidatedDebt_A = liquidationTxA.logs[1].args[0]
-    const loggedLiquidatedColl_A = liquidationTxA.logs[1].args[1]
-    const loggedGasCompensation_A = liquidationTxA.logs[1].args[2]
+    const [loggedDebt_A, loggedColl_A, loggedGasComp_A, ] = th.getEmittedLiquidationValues(liquidationTxA)
 
-    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_A, loggedLiquidatedDebt_A), 1000)
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl_A, loggedLiquidatedColl_A), 1000)
-    assert.isAtMost(th.getDifference(expectedGasComp_A, loggedGasCompensation_A), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_A, loggedDebt_A), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl_A, loggedColl_A), 1000)
+    assert.isAtMost(th.getDifference(expectedGasComp_A, loggedGasComp_A), 1000)
 
       // --- Price drops to 3 ---
       await priceFeed.setPrice(dec(3, 18))
@@ -754,13 +752,11 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedColl_B = bobColl.sub(expectedGasComp_B)
     const expectedLiquidatedDebt_B =  bobDebt
 
-    const loggedLiquidatedDebt_B = liquidationTxB.logs[1].args[0]
-    const loggedLiquidatedColl_B = liquidationTxB.logs[1].args[1]
-    const loggedGasCompensation_B = liquidationTxB.logs[1].args[2]
+    const [loggedDebt_B, loggedColl_B, loggedGasComp_B, ] = th.getEmittedLiquidationValues(liquidationTxB)
 
-    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_B, loggedLiquidatedDebt_B), 1000)
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl_B, loggedLiquidatedColl_B), 1000)
-    assert.isAtMost(th.getDifference(expectedGasComp_B, loggedGasCompensation_B), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_B, loggedDebt_B), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl_B, loggedColl_B), 1000)
+    assert.isAtMost(th.getDifference(expectedGasComp_B, loggedGasComp_B), 1000)
   })
 
 
@@ -818,13 +814,11 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedColl_A = aliceColl.sub(expectedGasComp_A)
     const expectedLiquidatedDebt_A =  aliceDebt
 
-    const loggedLiquidatedDebt_A = liquidationTxA.logs[1].args[0]
-    const loggedLiquidatedColl_A = liquidationTxA.logs[1].args[1]
-    const loggedGasCompensation_A = liquidationTxA.logs[1].args[2]
+    const [loggedDebt_A, loggedColl_A, loggedGasComp_A, ] = th.getEmittedLiquidationValues(liquidationTxA)
 
-    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_A, loggedLiquidatedDebt_A), 1000)
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl_A, loggedLiquidatedColl_A), 1000)
-    assert.isAtMost(th.getDifference(expectedGasComp_A, loggedGasCompensation_A), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_A, loggedDebt_A), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl_A, loggedColl_A), 1000)
+    assert.isAtMost(th.getDifference(expectedGasComp_A, loggedGasComp_A), 1000)
 
       // --- Price drops to 15 ---
       await priceFeed.setPrice(dec(15, 18))
@@ -861,13 +855,11 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedColl_B = bobColl.sub(expectedGasComp_B)
     const expectedLiquidatedDebt_B =  bobDebt
 
-    const loggedLiquidatedDebt_B = liquidationTxB.logs[1].args[0]
-    const loggedLiquidatedColl_B = liquidationTxB.logs[1].args[1]
-    const loggedGasCompensation_B = liquidationTxB.logs[1].args[2]
+    const [loggedDebt_B, loggedColl_B, loggedGasComp_B, ] = th.getEmittedLiquidationValues(liquidationTxB)
 
-    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_B, loggedLiquidatedDebt_B), 1000)
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl_B, loggedLiquidatedColl_B), 1000)
-    assert.isAtMost(th.getDifference(expectedGasComp_B, loggedGasCompensation_B), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_B, loggedDebt_B), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl_B, loggedColl_B), 1000)
+    assert.isAtMost(th.getDifference(expectedGasComp_B, loggedGasComp_B), 1000)
   })
 
 
@@ -922,13 +914,11 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedColl_A = aliceColl.sub(_0pt5percent_aliceColl)
     const expectedLiquidatedDebt_A =  aliceDebt
 
-    const loggedLiquidatedDebt_A = liquidationTxA.logs[1].args[0]
-    const loggedLiquidatedColl_A = liquidationTxA.logs[1].args[1]
-    const loggedGasCompensation_A = liquidationTxA.logs[1].args[2]
+    const [loggedDebt_A, loggedColl_A, loggedGasComp_A, ] = th.getEmittedLiquidationValues(liquidationTxA)
 
-    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_A, loggedLiquidatedDebt_A), 1000)
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl_A, loggedLiquidatedColl_A), 1000)
-    assert.isAtMost(th.getDifference(expectedGasComp_A, loggedGasCompensation_A), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_A, loggedDebt_A), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl_A, loggedColl_A), 1000)
+    assert.isAtMost(th.getDifference(expectedGasComp_A, loggedGasComp_A), 1000)
 
 
     /* 
@@ -960,14 +950,11 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedColl_B = bobColl.sub(_0pt5percent_bobColl)
     const expectedLiquidatedDebt_B =  bobDebt
 
-    const loggedLiquidatedDebt_B = liquidationTxB.logs[1].args[0]
-    const loggedLiquidatedColl_B = liquidationTxB.logs[1].args[1]
-    const loggedGasCompensation_B = liquidationTxB.logs[1].args[2]
+    const [loggedDebt_B, loggedColl_B, loggedGasComp_B, ] = th.getEmittedLiquidationValues(liquidationTxB)
 
-    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_B, loggedLiquidatedDebt_B), 1000)
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl_B, loggedLiquidatedColl_B), 1000)
-    assert.isAtMost(th.getDifference(expectedGasComp_B, loggedGasCompensation_B), 1000)
-
+    assert.isAtMost(th.getDifference(expectedLiquidatedDebt_B, loggedDebt_B), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl_B, loggedColl_B), 1000)
+    assert.isAtMost(th.getDifference(expectedGasComp_B, loggedGasComp_B), 1000)
   })
 
 
@@ -1283,13 +1270,11 @@ contract('Gas compensation tests', async accounts => {
     const liquidationTxData = await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
 
     // Get data from the liquidation event logs
-    const loggedLiquidatedDebt = liquidationTxData.logs[4].args[0]
-    const loggedLiquidatedColl = liquidationTxData.logs[4].args[1]
-    const loggedGasCompensation = liquidationTxData.logs[4].args[2]
-
-    assert.isAtMost(th.getDifference(expectedLiquidatedDebt, loggedLiquidatedDebt), 1000)
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl, loggedLiquidatedColl), 1000)
-    assert.isAtMost(th.getDifference(expectedGasComp, loggedGasCompensation), 1000)
+    const [loggedDebt, loggedColl, loggedGasComp, ] = th.getEmittedLiquidationValues(liquidationTxData)
+    
+    assert.isAtMost(th.getDifference(expectedLiquidatedDebt, loggedDebt), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl, loggedColl), 1000)
+    assert.isAtMost(th.getDifference(expectedGasComp, loggedGasComp), 1000)
   })
 
   it('liquidateTroves(): full redistribution. Liquidation event emits the correct gas compensation and total liquidated coll and debt', async () => {
@@ -1376,13 +1361,11 @@ contract('Gas compensation tests', async accounts => {
     const liquidationTxData = await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
 
     // Get data from the liquidation event logs
-    const loggedLiquidatedDebt = liquidationTxData.logs[4].args[0]
-    const loggedLiquidatedColl = liquidationTxData.logs[4].args[1]
-    const loggedGasCompensation = liquidationTxData.logs[4].args[2]
+    const [loggedDebt, loggedColl, loggedGasComp, ] = th.getEmittedLiquidationValues(liquidationTxData)
 
-    assert.isAtMost(th.getDifference(expectedLiquidatedDebt, loggedLiquidatedDebt), 1000)
-    assert.isAtMost(th.getDifference(expectedLiquidatedColl, loggedLiquidatedColl), 1000)
-    assert.isAtMost(th.getDifference(expectedGasComp, loggedGasCompensation), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedDebt, loggedDebt), 1000)
+    assert.isAtMost(th.getDifference(expectedLiquidatedColl, loggedColl), 1000)
+    assert.isAtMost(th.getDifference(expectedGasComp, loggedGasComp), 1000)
   })
 
   // --- Trove ordering by ICR tests ---
