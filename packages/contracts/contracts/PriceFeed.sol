@@ -266,15 +266,15 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 return _storeTellorPrice(tellorResponse);
             }
 
+            // If Chainlink is not broken and Tellor is frozen, just use last good price (no status change) since we have no basis for comparison
+            if (_tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
+
             if (_chainlinkIsFrozen(chainlinkResponse)) {
                 // if Chainlink is frozen and Tellor is broken, remember Tellor broke, and return last good price
                 if (_tellorIsBroken(tellorResponse)) {
                     _changeStatus(Status.usingChainlinkTellorUntrusted);
                     return lastGoodPrice;
                 }
-
-                // If Chainlink is frozen and Tellor is frozen, just return last good price (no status change)
-                if (_tellorIsFrozen(tellorResponse)) {return lastGoodPrice;}
 
                 // if Chainlink is frozen and Tellor is working, keep using Tellor (no status change)
                 return _storeTellorPrice(tellorResponse);
@@ -286,9 +286,16 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
                 return _storeChainlinkPrice(chainlinkResponse);
             }
 
-            // If Chainlink is working and Tellor is frozen or working, switch to Chainlink, and return Chainlink price
-            _changeStatus(Status.chainlinkWorking);
-            return _storeChainlinkPrice(chainlinkResponse);
+            // If Chainlink is live and Tellor is working, compare prices. Switch to Chainlink
+            // if prices are within 5%, and return Chainlink price.
+            if (_bothOraclesSimilarPrice(chainlinkResponse, tellorResponse)) {
+                _changeStatus(Status.chainlinkWorking);
+                return _storeChainlinkPrice(chainlinkResponse);
+            }
+
+            // Otherwise if Chainlink is live but price not within 5% of Tellor, distrust Chainlink, and return Tellor price
+            _changeStatus(Status.usingTellorChainlinkUntrusted);
+            return _storeTellorPrice(tellorResponse);
         }
 
         // --- CASE 5: Using Chainlink, Tellor is untrusted ---

@@ -1624,7 +1624,41 @@ contract('PriceFeed', async accounts => {
     assert.equal(price, dec(123, 18))
   })
 
-  it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live, switch back to chainlinkWorking", async () => { 
+  it.only("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live with <5% price difference, switch back to chainlinkWorking", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(998, 6))
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 0)  // status 0: Chainlink working
+  })
+
+  it.only("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live with <5% price difference, return Chainlink current price", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(998, 6))
+
+    await priceFeed.fetchPrice()
+
+    const price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(999, 18))  // Chainlink price
+  })
+
+  it.only("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live with >5% price difference, switch back to usingChainlinkTellorUntrusted", async () => { 
     await setAddresses()
     priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
@@ -1638,10 +1672,10 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const status = await priceFeed.status()
-    assert.equal(status, 0)  // status 0: Chainlink working
+    assert.equal(status, 1)  // status 1: Using Tellor, Chainlink untrusted
   })
 
-  it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live, return Chainlink current price", async () => { 
+  it.only("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live with >5% price difference, return Chainlink current price", async () => { 
     await setAddresses()
     priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
 
@@ -1655,7 +1689,41 @@ contract('PriceFeed', async accounts => {
     await priceFeed.fetchPrice()
 
     const price = await priceFeed.lastGoodPrice()
-    assert.equal(price, dec(999, 18))
+    assert.equal(price, dec(123, 18))  // Tellor price
+  })
+
+  it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live with similar price, switch back to chainlinkWorking", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(998, 6))
+
+    await priceFeed.fetchPrice()
+
+    const status = await priceFeed.status()
+    assert.equal(status, 0)  // status 0: Chainlink working
+  })
+
+  it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor is live with similar price, return Chainlink current price", async () => { 
+    await setAddresses()
+    priceFeed.setStatus(3) // status 3: using Tellor, Chainlink frozen
+
+    await priceFeed.setLastGoodPrice(dec(50, 18))
+
+    await mockChainlink.setPrevPrice(dec(999, 8))
+    await mockChainlink.setPrice(dec(999, 8))
+
+    await mockTellor.setPrice(dec(998, 6))
+
+    await priceFeed.fetchPrice()
+
+    const price = await priceFeed.lastGoodPrice()
+    assert.equal(price, dec(999, 18))  // Chainlink price
   })
 
   it("C4 usingTellorChainlinkFrozen: when Chainlink is live and Tellor breaks, switch to usingChainlinkTellorUntrusted", async () => { 
@@ -1851,6 +1919,7 @@ contract('PriceFeed', async accounts => {
     const price = await priceFeed.lastGoodPrice()
     assert.equal(price, dec(50, 18))
   })
+
 
 
   // --- Case 5 ---
