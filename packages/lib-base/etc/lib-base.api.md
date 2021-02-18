@@ -12,6 +12,8 @@ export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiq
     // (undocumented)
     getFees(...extraParams: T): Promise<Fees>;
     // (undocumented)
+    _getFeesInNormalMode(...extraParams: T): Promise<Fees>;
+    // (undocumented)
     getFrontendStatus(address?: string, ...extraParams: T): Promise<FrontendStatus>;
     // (undocumented)
     getLQTYBalance(address?: string, ...extraParams: T): Promise<Decimal>;
@@ -175,12 +177,14 @@ export const _failedReceipt: <R>(rawReceipt: R) => FailedReceipt<R>;
 // @public
 export class Fees {
     // @internal
-    constructor(lastFeeOperation: Date, baseRateWithoutDecay: Decimalish, minuteDecayFactor: Decimalish, beta: Decimalish);
+    constructor(lastFeeOperation: Date, baseRateWithoutDecay: Decimalish, minuteDecayFactor: Decimalish, beta: Decimalish, recoveryMode?: boolean);
     // @internal (undocumented)
     baseRate(when: Date): Decimal;
     borrowingRate(): Decimal;
     equals(that: Fees): boolean;
     redemptionRate(redeemedFractionOfSupply?: Decimalish): Decimal;
+    // @internal (undocumented)
+    _setRecoveryMode(recoveryMode: boolean): Fees;
     // @internal (undocumented)
     toString(): string;
 }
@@ -242,7 +246,8 @@ export abstract class LiquityStore<T = unknown> {
 export interface LiquityStoreBaseState {
     accountBalance: Decimal;
     collateralSurplusBalance: Decimal;
-    fees: Fees;
+    // @internal (undocumented)
+    _feesInNormalMode: Fees;
     frontend: FrontendStatus;
     lqtyBalance: Decimal;
     lqtyStake: LQTYStake;
@@ -261,6 +266,7 @@ export interface LiquityStoreBaseState {
 // @public
 export interface LiquityStoreDerivedState {
     borrowingRate: Decimal;
+    fees: Fees;
     redemptionRate: Decimal;
     trove: Trove;
 }
@@ -446,6 +452,8 @@ export interface PopulatedLiquityTransaction<P = unknown, T extends SentLiquityT
 export interface ReadableLiquity {
     getCollateralSurplusBalance(address?: string): Promise<Decimal>;
     getFees(): Promise<Fees>;
+    // @internal (undocumented)
+    _getFeesInNormalMode(): Promise<Fees>;
     getFrontendStatus(address?: string): Promise<FrontendStatus>;
     getLQTYBalance(address?: string): Promise<Decimal>;
     getLQTYStake(address?: string): Promise<LQTYStake>;

@@ -168,12 +168,10 @@ export class ReadableEthersLiquity implements ReadableLiquity {
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTrove} */
   async getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove> {
-    address ??= _requireAddress(this.connection);
-
     const [trove, totalRedistributed] = await Promise.all([
-      this.getTroveBeforeRedistribution(address, { ...overrides }),
-      this.getTotalRedistributed({ ...overrides })
-    ] as const);
+      this.getTroveBeforeRedistribution(address, overrides),
+      this.getTotalRedistributed(overrides)
+    ]);
 
     return trove.applyRedistribution(totalRedistributed);
   }
@@ -316,8 +314,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     }
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */
-  async getFees(overrides?: EthersCallOverrides): Promise<Fees> {
+  /** @internal */
+  async _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees> {
     const { troveManager } = _getContracts(this.connection);
 
     const [lastFeeOperationTime, baseRateWithoutDecay] = await Promise.all([
@@ -328,6 +326,17 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     const lastFeeOperation = new Date(1000 * lastFeeOperationTime.toNumber());
 
     return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR, BETA);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */
+  async getFees(overrides?: EthersCallOverrides): Promise<Fees> {
+    const [feesInNormalMode, total, price] = await Promise.all([
+      this._getFeesInNormalMode(overrides),
+      this.getTotal(overrides),
+      this.getPrice(overrides)
+    ]);
+
+    return feesInNormalMode._setRecoveryMode(total.collateralRatioIsBelowCritical(price));
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLQTYStake} */
@@ -497,6 +506,12 @@ class BlockPolledLiquityStoreBasedCache
   ): Decimal | undefined {
     if (this._userHit(address, overrides)) {
       return this._store.state.collateralSurplusBalance;
+    }
+  }
+
+  _getFeesInNormalMode(overrides?: EthersCallOverrides): Fees | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state._feesInNormalMode;
     }
   }
 

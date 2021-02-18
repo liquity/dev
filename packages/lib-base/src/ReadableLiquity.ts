@@ -144,6 +144,9 @@ export interface ReadableLiquity {
    */
   getTroves(params: TroveListingParams): Promise<[address: string, trove: Trove][]>;
 
+  /** @internal */
+  _getFeesInNormalMode(): Promise<Fees>;
+
   /**
    * Get a calculator for current fees.
    */

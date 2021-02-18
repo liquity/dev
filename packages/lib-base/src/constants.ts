@@ -24,6 +24,10 @@ export const LUSD_LIQUIDATION_RESERVE = Decimal.from(50);
 /**
  * Value that the {@link Fees.borrowingRate | borrowing rate} will never decay below.
  *
+ * @remarks
+ * Note that the borrowing rate can still be lower than this during recovery mode, when it's
+ * overridden by zero.
+ *
  * @public
  */
 export const MINIMUM_BORROWING_RATE = Decimal.from(0.005);

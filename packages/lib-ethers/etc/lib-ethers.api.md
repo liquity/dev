@@ -111,6 +111,8 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
+    // @internal (undocumented)
+    _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
     // (undocumented)
@@ -345,6 +347,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
+    // @internal (undocumented)
+    _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
     // (undocumented)

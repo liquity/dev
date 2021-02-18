@@ -21,20 +21,34 @@ export class Fees {
   private readonly _minuteDecayFactor: Decimal;
   private readonly _beta: Decimal;
   private readonly _lastFeeOperation: Date;
+  private readonly _recoveryMode: boolean;
 
   /** @internal */
   constructor(
     lastFeeOperation: Date,
     baseRateWithoutDecay: Decimalish,
     minuteDecayFactor: Decimalish,
-    beta: Decimalish
+    beta: Decimalish,
+    recoveryMode = false
   ) {
     this._lastFeeOperation = lastFeeOperation;
     this._baseRateWithoutDecay = Decimal.from(baseRateWithoutDecay);
     this._minuteDecayFactor = Decimal.from(minuteDecayFactor);
     this._beta = Decimal.from(beta);
+    this._recoveryMode = recoveryMode;
 
     assert(this._minuteDecayFactor.lt(1));
+  }
+
+  /** @internal */
+  _setRecoveryMode(recoveryMode: boolean): Fees {
+    return new Fees(
+      this._lastFeeOperation,
+      this._baseRateWithoutDecay,
+      this._minuteDecayFactor,
+      this._beta,
+      recoveryMode
+    );
   }
 
   /**
@@ -45,7 +59,8 @@ export class Fees {
       this._baseRateWithoutDecay.eq(that._baseRateWithoutDecay) &&
       this._minuteDecayFactor.eq(that._minuteDecayFactor) &&
       this._beta.eq(that._beta) &&
-      this._lastFeeOperation.getTime() === that._lastFeeOperation.getTime()
+      this._lastFeeOperation.getTime() === that._lastFeeOperation.getTime() &&
+      this._recoveryMode === that._recoveryMode
     );
   }
 
@@ -53,7 +68,8 @@ export class Fees {
   toString(): string {
     return (
       `{ baseRateWithoutDecay: ${this._baseRateWithoutDecay}` +
-      `, lastFeeOperation: "${this._lastFeeOperation.toLocaleString()}" } `
+      `, lastFeeOperation: "${this._lastFeeOperation.toLocaleString()}"` +
+      `, recoveryMode: ${this._recoveryMode} } `
     );
   }
 
@@ -86,10 +102,9 @@ export class Fees {
    * ```
    */
   borrowingRate(): Decimal {
-    return Decimal.min(
-      MINIMUM_BORROWING_RATE.add(this.baseRate(new Date())),
-      MAXIMUM_BORROWING_RATE
-    );
+    return this._recoveryMode
+      ? Decimal.ZERO
+      : Decimal.min(MINIMUM_BORROWING_RATE.add(this.baseRate(new Date())), MAXIMUM_BORROWING_RATE);
   }
 
   /**
