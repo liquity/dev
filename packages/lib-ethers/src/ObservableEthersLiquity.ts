@@ -73,18 +73,20 @@ export class ObservableEthersLiquity implements ObservableLiquity {
   ): () => void {
     address ??= _requireAddress(this._readable.connection);
 
-    const { troveManager } = _getContracts(this._readable.connection);
-    const { TroveCreated, TroveUpdated } = troveManager.filters;
-    const troveEventFilters = [TroveCreated(address), TroveUpdated(address)];
+    const { troveManager, borrowerOperations } = _getContracts(this._readable.connection);
+    const troveUpdatedByTroveManager = troveManager.filters.TroveUpdated(address);
+    const troveUpdatedByBorrowerOperations = borrowerOperations.filters.TroveUpdated(address);
 
     const troveListener = debounce((blockTag: number) => {
       this._readable.getTroveBeforeRedistribution(address, { blockTag }).then(onTroveChanged);
     });
 
-    troveEventFilters.forEach(filter => troveManager.on(filter, troveListener));
+    troveManager.on(troveUpdatedByTroveManager, troveListener);
+    borrowerOperations.on(troveUpdatedByBorrowerOperations, troveListener);
 
     return () => {
-      troveEventFilters.forEach(filter => troveManager.removeListener(filter, troveListener));
+      troveManager.removeListener(troveUpdatedByTroveManager, troveListener);
+      borrowerOperations.removeListener(troveUpdatedByBorrowerOperations, troveListener);
     };
   }
 
