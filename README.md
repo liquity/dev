@@ -1147,7 +1147,7 @@ _**Entire debt:**_ the sum of a Trove’s active debt plus its pending debt rewa
 
 _**Individual collateralization ratio (ICR):**_ a Trove's ICR is the ratio of the dollar value of its entire collateral at the current ETH:USD price, to its entire debt
 
-_**Nominal collateralization ratio (nominal ICR, NICR):**_ a Trove's nominal ICR is the ratio of its entire collateral (in ETH) to its entire debt, without factoring in the current ETH:USD price.
+_**Nominal collateralization ratio (nominal ICR, NICR):**_ a Trove's nominal ICR is its entire collateral (in ETH) multiplied by 100e18 and divided by its entire debt.
 
 _**Total active collateral:**_ the sum of active collateral over all Troves. Equal to the ETH in the ActivePool.
 
