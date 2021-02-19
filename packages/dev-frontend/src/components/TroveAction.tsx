@@ -134,12 +134,9 @@ export const TroveAction: React.FC<TroveActionProps> = ({
           liquity.adjustTrove.bind(liquity, change.params),
           [
             [
-              !change.params.withdrawCollateral || !total.collateralRatioIsBelowCritical(price),
-              "Can't withdraw ETH during recovery mode"
-            ],
-            [
-              !change.params.borrowLUSD || !total.collateralRatioIsBelowCritical(price),
-              `Can't borrow ${COIN} during recovery mode`
+              afterFee.collateralRatio(price).gte(original.collateralRatio(price)) ||
+                !total.collateralRatioIsBelowCritical(price),
+              "Can't decrease collateral ratio during recovery mode"
             ]
           ]
         ] as const);
@@ -172,7 +169,9 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             !(
               change.type === "creation" ||
               (change.type === "adjustment" && change.params.borrowLUSD)
-            ) || !total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price),
+            ) ||
+              total.collateralRatioIsBelowCritical(price) ||
+              !total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price),
             `Total collateral ratio would fall below ${ccrPercent}`
           ],
           [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`],
