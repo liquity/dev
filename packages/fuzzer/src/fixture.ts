@@ -3,7 +3,7 @@ import assert from "assert";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 
-import { Decimal, Decimalish, LUSD_LIQUIDATION_RESERVE, Trove } from "@liquity/lib-base";
+import { Decimal, Decimalish, Trove } from "@liquity/lib-base";
 import { EthersLiquity as Liquity, EthersTransactionFailedError } from "@liquity/lib-ethers";
 
 import {
@@ -14,6 +14,13 @@ import {
   listDifference,
   getListOfTroves
 } from "./utils";
+
+const objToString = (o: Record<string, unknown>) =>
+  "{ " +
+  Object.entries(o)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(", ") +
+  " }";
 
 export class Fixture {
   private readonly deployerLiquity: Liquity;
@@ -44,22 +51,33 @@ export class Fixture {
     const funderTrove = await funderLiquity.getTrove();
 
     if (funderTrove.isEmpty) {
-      await funderLiquity.openTrove({ depositCollateral: 10000, borrowLUSD: 1000000 });
+      await funderLiquity.openTrove({ depositCollateral: 1000, borrowLUSD: 132000 });
     }
 
     return new Fixture(deployerLiquity, funderLiquity, funder, price);
   }
 
   private async sendLUSDFromFunder(toAddress: string, amount: Decimalish) {
-    while ((await this.funderLiquity.getLUSDBalance()).lt(amount)) {
-      await this.funderLiquity.adjustTrove({ depositCollateral: 10000, borrowLUSD: 1000000 });
+    amount = Decimal.from(amount);
+
+    const lusdBalance = await this.funderLiquity.getLUSDBalance();
+
+    if (lusdBalance.lt(amount)) {
+      const trove = await this.funderLiquity.getTrove();
+
+      let newTrove = trove.adjust({ borrowLUSD: amount.sub(lusdBalance).mul(2) });
+      newTrove = trove.setCollateral(newTrove.debt.mulDiv(1.51, this.price));
+
+      const params = trove.adjustTo(newTrove);
+      console.log(`[deployer] adjustTrove(${objToString(params)})`);
+      await this.funderLiquity.adjustTrove(trove.adjustTo(newTrove));
     }
 
     await this.funderLiquity.sendLUSD(toAddress, amount);
   }
 
   async setRandomPrice() {
-    this.price = this.price.add(100 * Math.random() + 150).div(2);
+    this.price = this.price.add(200 * Math.random() + 100).div(2);
     console.log(`[deployer] setPrice(${this.price})`);
     await this.deployerLiquity.setPrice(this.price);
 
@@ -103,37 +121,33 @@ export class Fixture {
     const total = await liquity.getTotal();
     const fees = await liquity.getFees();
 
+    const cannotOpen = (newTrove: Trove) =>
+      total.collateralRatioIsBelowCritical(this.price)
+        ? newTrove.collateralRatioIsBelowCritical(this.price)
+        : newTrove.collateralRatioIsBelowMinimum(this.price) ||
+          total.add(newTrove).collateralRatioIsBelowCritical(this.price);
+
     do {
       newTrove = createRandomTrove(this.price);
-    } while (newTrove.collateralRatioIsBelowMinimum(this.price));
-
-    while (total.add(newTrove).collateralRatioIsBelowCritical(this.price)) {
-      // Would fail to open the Trove due to TCR
-      newTrove = new Trove(newTrove.collateral.mul(2), LUSD_LIQUIDATION_RESERVE);
-    }
+    } while (cannotOpen(newTrove));
 
     await this.funder.sendTransaction({
       to: userAddress,
       value: newTrove.collateral.hex
     });
 
-    console.log(
-      `[${shortenAddress(userAddress)}] openTrove({ ` +
-        `collateral: ${newTrove.collateral}, ` +
-        `debt: ${newTrove.debt} })`
-    );
-
-    await liquity.openTrove(Trove.recreate(newTrove, fees.borrowingRate()), { gasPrice: 0 });
+    const params = Trove.recreate(newTrove, fees.borrowingRate());
+    console.log(`[${shortenAddress(userAddress)}] openTrove(${objToString(params)})`);
+    await liquity.openTrove(params, { gasPrice: 0 });
   }
 
   async closeTrove(userAddress: string, liquity: Liquity, trove: Trove) {
-    let total = await liquity.getTotal();
+    const total = await liquity.getTotal();
 
-    while (total.collateralRatioIsBelowCritical(this.price)) {
+    if (total.collateralRatioIsBelowCritical(this.price)) {
       // Cannot close Trove during recovery mode
-      await this.funderLiquity.depositCollateral(benford(50000));
-
-      total = await liquity.getTotal();
+      console.log("// Skipping closeTrove() in recovery mode");
+      return;
     }
 
     await this.sendLUSDFromFunder(userAddress, trove.debt);
@@ -143,7 +157,7 @@ export class Fixture {
   }
 
   async redeemRandomAmount(userAddress: string, liquity: Liquity) {
-    const amount = benford(100000);
+    const amount = benford(10000);
 
     await this.sendLUSDFromFunder(userAddress, amount);
 
@@ -152,7 +166,7 @@ export class Fixture {
   }
 
   async depositRandomAmountInStabilityPool(userAddress: string, liquity: Liquity) {
-    const amount = benford(10000);
+    const amount = benford(20000);
 
     await this.sendLUSDFromFunder(userAddress, amount);
 
@@ -212,7 +226,7 @@ export class Fixture {
 
     console.log("Desposit TX gas usage histogram:");
     for (let i = firstNonZeroIndex; i <= lastNonZeroIndex; ++i) {
-      console.log(`  ${10 * i}K: ${this.depositGasUsedBins[i]}`);
+      console.log(`  ${i}?K: ${this.depositGasUsedBins[i]}`);
     }
   }
 }
