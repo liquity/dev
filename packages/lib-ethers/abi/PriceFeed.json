@@ -41,7 +41,7 @@
         "type": "uint8"
       }
     ],
-    "name": "StatusChanged",
+    "name": "PriceFeedStatusChanged",
     "type": "event"
   },
   {

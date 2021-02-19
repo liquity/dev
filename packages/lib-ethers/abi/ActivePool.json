@@ -17,6 +17,32 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "_ETH",
+        "type": "uint256"
+      }
+    ],
+    "name": "ActivePoolETHBalanceUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_LUSDDebt",
+        "type": "uint256"
+      }
+    ],
+    "name": "ActivePoolLUSDDebtUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_newBorrowerOperationsAddress",
         "type": "address"

@@ -50,6 +50,19 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_totalLQTYIssued",
+        "type": "uint256"
+      }
+    ],
+    "name": "TotalLQTYIssuedUpdated",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "DECIMAL_PRECISION",
     "outputs": [
