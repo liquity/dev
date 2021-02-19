@@ -178,6 +178,16 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getPrice(overrides);
   }
 
+  /** @internal */
+  _getActivePool(overrides?: EthersCallOverrides): Promise<Trove> {
+    return this._readable._getActivePool(overrides);
+  }
+
+  /** @internal */
+  _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove> {
+    return this._readable._getDefaultPool(overrides);
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotal} */
   getTotal(overrides?: EthersCallOverrides): Promise<Trove> {
     return this._readable.getTotal(overrides);

@@ -17,6 +17,7 @@ import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 import {
+  checkPoolBalances,
   checkSubgraph,
   checkTroveOrdering,
   connectUsers,
@@ -157,10 +158,13 @@ yargs
             }
           }
 
-          await fixture.sweepLUSD(liquity);
+          // await fixture.sweepLUSD(liquity);
 
           const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
-          await checkTroveOrdering(deployerLiquity, price, listOfTroves, previousListOfTroves);
+          const totalRedistributed = await deployerLiquity.getTotalRedistributed();
+
+          checkTroveOrdering(listOfTroves, totalRedistributed, price, previousListOfTroves);
+          await checkPoolBalances(deployerLiquity, listOfTroves, totalRedistributed);
 
           previousListOfTroves = listOfTroves;
         }
@@ -279,10 +283,11 @@ yargs
 
   .command("check-sorting", "Check if Troves are sorted by ICR.", {}, async () => {
     const deployerLiquity = await Liquity.connect(deployer);
-    const price = await deployerLiquity.getPrice();
     const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
+    const totalRedistributed = await deployerLiquity.getTotalRedistributed();
+    const price = await deployerLiquity.getPrice();
 
-    await checkTroveOrdering(deployerLiquity, price, listOfTroves);
+    checkTroveOrdering(listOfTroves, totalRedistributed, price);
 
     console.log("All Troves are sorted.");
   })
@@ -297,10 +302,11 @@ yargs
 
   .command("dump-troves", "Dump list of Troves.", {}, async () => {
     const deployerLiquity = await Liquity.connect(deployer);
-
     const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
+    const totalRedistributed = await deployerLiquity.getTotalRedistributed();
     const price = await deployerLiquity.getPrice();
-    await dumpTroves(deployerLiquity, listOfTroves, price);
+
+    dumpTroves(listOfTroves, totalRedistributed, price);
   })
 
   .demandCommand()

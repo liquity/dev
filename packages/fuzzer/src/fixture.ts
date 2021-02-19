@@ -48,12 +48,6 @@ export class Fixture {
 
   static async setup(deployerLiquity: Liquity, funderLiquity: Liquity, funder: Signer) {
     const price = await deployerLiquity.getPrice();
-    const funderTrove = await funderLiquity.getTrove();
-
-    if (funderTrove.isEmpty) {
-      await funderLiquity.openTrove({ depositCollateral: 1000, borrowLUSD: 132000 });
-    }
-
     return new Fixture(deployerLiquity, funderLiquity, funder, price);
   }
 
@@ -64,13 +58,26 @@ export class Fixture {
 
     if (lusdBalance.lt(amount)) {
       const trove = await this.funderLiquity.getTrove();
+      const total = await this.funderLiquity.getTotal();
 
-      let newTrove = trove.adjust({ borrowLUSD: amount.sub(lusdBalance).mul(2) });
-      newTrove = trove.setCollateral(newTrove.debt.mulDiv(1.51, this.price));
+      const targetCollateralRatio =
+        trove.isEmpty || !total.collateralRatioIsBelowCritical(this.price)
+          ? 1.51
+          : Decimal.max(trove.collateralRatio(this.price).add(0.00001), 1.11);
 
-      const params = trove.adjustTo(newTrove);
-      console.log(`[deployer] adjustTrove(${objToString(params)})`);
-      await this.funderLiquity.adjustTrove(trove.adjustTo(newTrove));
+      let newTrove = trove.isEmpty ? Trove.create({ depositCollateral: 1 }) : trove;
+      newTrove = newTrove.adjust({ borrowLUSD: amount.sub(lusdBalance).mul(2) });
+      newTrove = newTrove.setCollateral(newTrove.debt.mulDiv(targetCollateralRatio, this.price));
+
+      if (trove.isEmpty) {
+        const params = Trove.recreate(newTrove);
+        console.log(`[funder] openTrove(${objToString(params)})`);
+        await this.funderLiquity.openTrove(params);
+      } else {
+        const params = trove.adjustTo(newTrove);
+        console.log(`[funder] adjustTrove(${objToString(params)})`);
+        await this.funderLiquity.adjustTrove(params);
+      }
     }
 
     await this.funderLiquity.sendLUSD(toAddress, amount);
@@ -89,6 +96,12 @@ export class Fixture {
     console.log(`// Stability Pool balance: ${lusdInStabilityPoolBefore}`);
 
     const trovesBefore = await getListOfTroves(this.deployerLiquity);
+
+    if (trovesBefore.length === 0) {
+      console.log("// No Troves to liquidate");
+      return;
+    }
+
     const troveOwnersBefore = trovesBefore.map(([owner]) => owner);
     const [, lastTrove] = trovesBefore[trovesBefore.length - 1];
 
@@ -157,8 +170,14 @@ export class Fixture {
   }
 
   async redeemRandomAmount(userAddress: string, liquity: Liquity) {
-    const amount = benford(10000);
+    const total = await liquity.getTotal();
 
+    if (total.collateralRatioIsBelowMinimum(this.price)) {
+      console.log("// Skipping redeemLUSD() when TCR < MCR");
+      return;
+    }
+
+    const amount = benford(10000);
     await this.sendLUSDFromFunder(userAddress, amount);
 
     console.log(`[${shortenAddress(userAddress)}] redeemLUSD(${amount})`);

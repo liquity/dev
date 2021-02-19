@@ -199,20 +199,42 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return priceFeed.callStatic.fetchPrice({ ...overrides, gasPrice: 0 }).then(decimalify);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotal} */
-  async getTotal(overrides?: EthersCallOverrides): Promise<Trove> {
-    const { activePool, defaultPool } = _getContracts(this.connection);
+  /** @internal */
+  async _getActivePool(overrides?: EthersCallOverrides): Promise<Trove> {
+    const { activePool } = _getContracts(this.connection);
 
-    const [activeCollateral, activeDebt, liquidatedCollateral, closedDebt] = await Promise.all(
+    const [activeCollateral, activeDebt] = await Promise.all(
       [
         activePool.getETH({ ...overrides }),
-        activePool.getLUSDDebt({ ...overrides }),
+        activePool.getLUSDDebt({ ...overrides })
+      ].map(getBigNumber => getBigNumber.then(decimalify))
+    );
+
+    return new Trove(activeCollateral, activeDebt);
+  }
+
+  /** @internal */
+  async _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove> {
+    const { defaultPool } = _getContracts(this.connection);
+
+    const [liquidatedCollateral, closedDebt] = await Promise.all(
+      [
         defaultPool.getETH({ ...overrides }),
         defaultPool.getLUSDDebt({ ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
-    return new Trove(activeCollateral.add(liquidatedCollateral), activeDebt.add(closedDebt));
+    return new Trove(liquidatedCollateral, closedDebt);
+  }
+
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotal} */
+  async getTotal(overrides?: EthersCallOverrides): Promise<Trove> {
+    const [activePool, defaultPool] = await Promise.all([
+      this._getActivePool(overrides),
+      this._getDefaultPool(overrides)
+    ]);
+
+    return activePool.add(defaultPool);
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getStabilityDeposit} */
@@ -549,5 +571,13 @@ class _BlockPolledReadableEthersLiquity
 
   hasStore(store?: EthersLiquityStoreOption): boolean {
     return store === undefined || store === "blockPolled";
+  }
+
+  _getActivePool(): Promise<Trove> {
+    throw new Error("Method not implemented.");
+  }
+
+  _getDefaultPool(): Promise<Trove> {
+    throw new Error("Method not implemented.");
   }
 }
