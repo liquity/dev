@@ -678,14 +678,12 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             vars.user = _troveArray[vars.i];
             vars.ICR = getCurrentICR(vars.user, _price);
 
-            console.log("batchLiq. trove: %s, ICR: %s, back to normal mode %s",vars.user, vars.ICR, vars.backToNormalMode);
             if (!vars.backToNormalMode) {
 
                 // Skip this trove if ICR is greater than MCR and Stability Pool is empty
                 if (vars.ICR >= MCR && vars.remainingLUSDInStabPool == 0) { continue; }
 
                 uint TCR = LiquityMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
-                console.log("batchLiq TCR: %s", TCR);
 
                 singleLiquidation = _liquidateRecoveryMode(_activePool, _defaultPool, vars.user, vars.ICR, vars.remainingLUSDInStabPool, TCR, _price);
 

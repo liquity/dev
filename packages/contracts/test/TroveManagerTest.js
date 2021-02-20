@@ -1051,7 +1051,7 @@ contract('TroveManager', async accounts => {
 
   // --- liquidateTroves() ---
 
-  it.only('liquidateTroves(): liquidates a Trove that a) was skipped in a previous liquidation and b) has pending rewards', async () => {
+  it('liquidateTroves(): liquidates a Trove that a) was skipped in a previous liquidation and b) has pending rewards', async () => {
     // A, B, C, D open troves 
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(150, 18)), B, B, { from: B, value: dec(1, 'ether') })
@@ -1804,7 +1804,7 @@ contract('TroveManager', async accounts => {
 
   // --- batchLiquidateTroves() ---
 
-  it.only('liquidateTroves(): liquidates a Trove that a) was skipped in a previous liquidation and b) has pending rewards', async () => {
+  it('liquidateTroves(): liquidates a Trove that a) was skipped in a previous liquidation and b) has pending rewards', async () => {
     // A, B, C, D open troves 
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), A, A, { from: A, value: dec(1, 'ether') })
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(150, 18)), B, B, { from: B, value: dec(1, 'ether') })
