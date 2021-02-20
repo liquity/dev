@@ -1054,18 +1054,16 @@ contract('TroveManager', async accounts => {
   it.only('liquidateTroves(): liquidates a Trove that a) was skipped in a previous liquidation and b) has pending rewards', async () => {
     // A, B, C, D open troves 
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), A, A, { from: A, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), B, B, { from: B, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), C, C, { from: C, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), D, D, { from: D, value: dec(1, 'ether') })
-    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), E, E, { from: E, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(150, 18)), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(70, 18)), C, C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), D, D, { from: D, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), E, E, { from: E, value: dec(2, 'ether') })
 
     await borrowerOperations.withdrawLUSD(th._100pct, dec(60, 18), A, A, {from: A})
     
     // Price drops
     await priceFeed.setPrice(dec(175, 18))
     let price = await priceFeed.getPrice()
-    console.log(`TCR 1: ${await troveManager.getTCR(price)}`)
-    console.log(`ICR A: ${await troveManager.getCurrentICR(A, price)}`)
     
     // Confirm system is not in Recovery Mode
     assert.isFalse(await th.checkRecoveryMode(contracts))
@@ -1075,8 +1073,8 @@ contract('TroveManager', async accounts => {
     assert.isTrue(liqTxA.receipt.status)
     assert.isFalse(await sortedTroves.contains(A))
 
-    // C repays some debt, bringing his ICR > TCR
-    await borrowerOperations.repayLUSD(dec(40, 18), C, C, {from: C})
+    // A adds 10 LUSD to the SP, but less than C's debt
+    await stabilityPool.provideToSP(dec(10, 18), ZERO_ADDRESS, {from: A})
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -1087,37 +1085,54 @@ contract('TroveManager', async accounts => {
     // Confirm C has ICR > TCR
     const TCR = await troveManager.getTCR(price)
     const ICR_C = await troveManager.getCurrentICR(C, price)
-    const ICR_B = await troveManager.getCurrentICR(B, price)
-    console.log(`TCR 2: ${TCR}`)
-    console.log(`ICR_C: ${ICR_C}`)
-    assert.isTrue(ICR_C.gt(TCR))
-    console.log(`ICR_B: ${ICR_B}`)
   
+    assert.isTrue(ICR_C.gt(TCR))
+
     // Attempt to liquidate B and C, which skips C in the liquidation since it is immune
-    const liqTxBC = await troveManager.batchLiquidateTroves([B,C])
+    const liqTxBC = await troveManager.liquidateTroves(2)
     assert.isTrue(liqTxBC.receipt.status)
     assert.isFalse(await sortedTroves.contains(B))
     assert.isTrue(await sortedTroves.contains(C))
+    assert.isTrue(await sortedTroves.contains(D))
+    assert.isTrue(await sortedTroves.contains(E))
 
-    // All remaining troves D and E repay a little debt, applying their pending rewards
+    // // All remaining troves D and E repay a little debt, applying their pending rewards
     assert.isTrue((await sortedTroves.getSize()).eq(toBN('3')))
-    await borrowerOperations.repayLUSD(dec(1, 18), D, D, {from: E})
+    await borrowerOperations.repayLUSD(dec(1, 18), D, D, {from: D})
     await borrowerOperations.repayLUSD(dec(1, 18), E, E, {from: E})
+
+    // Check C is the only trove that has pending rewards
+    assert.isTrue(await troveManager.hasPendingRewards(C))
+    assert.isFalse(await troveManager.hasPendingRewards(D))
+    assert.isFalse(await troveManager.hasPendingRewards(E))
+
+    // Check C's pending coll and debt rewards are <= the coll and debt in the DefaultPool
+    const pendingETH_C = await troveManager.getPendingETHReward(C)
+    const pendingLUSDDebt_C = await troveManager.getPendingLUSDDebtReward(C)
+    const defaultPoolETH = await defaultPool.getETH()
+    const defaultPoolLUSDDebt = await defaultPool.getLUSDDebt()
+    assert.isTrue(pendingETH_C.lte(defaultPoolETH))
+    assert.isTrue(pendingLUSDDebt_C.lte(defaultPoolLUSDDebt))
+    //Check only difference is dust
+    assert.isAtMost(th.getDifference(pendingETH_C, defaultPoolETH), 1000)
+    assert.isAtMost(th.getDifference(pendingLUSDDebt_C, defaultPoolLUSDDebt), 1000)
 
     // Confirm system is still in Recovery Mode
     assert.isTrue(await th.checkRecoveryMode(contracts))
 
-    // D and E fill the Stability Pool, enough to completely absorb C's debt
+    // D and E fill the Stability Pool, enough to completely absorb C's debt of 70
     await stabilityPool.provideToSP(dec(50, 18), ZERO_ADDRESS, {from: D})
     await stabilityPool.provideToSP(dec(50, 18), ZERO_ADDRESS, {from: E})
 
     await priceFeed.setPrice(dec(50, 18))
 
     // Try to liquidate C again. Check it succeeds and closes C's trove
-    const liqTxCD = await troveManager.batchLiquidateTroves([C,D])
-    assert.isTrue(liqTxCD.receipt.status)
+    const liqTx2 = await troveManager.liquidateTroves(2)
+    assert.isTrue(liqTx2.receipt.status)
     assert.isFalse(await sortedTroves.contains(C))
     assert.isFalse(await sortedTroves.contains(D))
+    assert.isTrue(await sortedTroves.contains(E))
+    assert.isTrue((await sortedTroves.getSize()).eq(toBN('1')))
   })
 
   it('liquidateTroves(): closes every Trove with ICR < MCR, when n > number of undercollateralized troves', async () => {
@@ -1788,6 +1803,90 @@ contract('TroveManager', async accounts => {
 
 
   // --- batchLiquidateTroves() ---
+
+  it.only('liquidateTroves(): liquidates a Trove that a) was skipped in a previous liquidation and b) has pending rewards', async () => {
+    // A, B, C, D open troves 
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100, 18)), A, A, { from: A, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(150, 18)), B, B, { from: B, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(70, 18)), C, C, { from: C, value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), D, D, { from: D, value: dec(2, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(110, 18)), E, E, { from: E, value: dec(2, 'ether') })
+
+    await borrowerOperations.withdrawLUSD(th._100pct, dec(60, 18), A, A, {from: A})
+    
+    // Price drops
+    await priceFeed.setPrice(dec(175, 18))
+    let price = await priceFeed.getPrice()
+    
+    // Confirm system is not in Recovery Mode
+    assert.isFalse(await th.checkRecoveryMode(contracts))
+
+    // A gets liquidated, creates pending rewards for all
+    const liqTxA = await troveManager.liquidate(A)
+    assert.isTrue(liqTxA.receipt.status)
+    assert.isFalse(await sortedTroves.contains(A))
+
+    // A adds 10 LUSD to the SP, but less than C's debt
+    await stabilityPool.provideToSP(dec(10, 18), ZERO_ADDRESS, {from: A})
+
+    // Price drops
+    await priceFeed.setPrice(dec(100, 18))
+    price = await priceFeed.getPrice()
+    // Confirm system is now in Recovery Mode
+    assert.isTrue(await th.checkRecoveryMode(contracts))
+
+    // Confirm C has ICR > TCR
+    const TCR = await troveManager.getTCR(price)
+    const ICR_C = await troveManager.getCurrentICR(C, price)
+  
+    assert.isTrue(ICR_C.gt(TCR))
+
+    // Attempt to liquidate B and C, which skips C in the liquidation since it is immune
+    const liqTxBC = await troveManager.liquidateTroves(2)
+    assert.isTrue(liqTxBC.receipt.status)
+    assert.isFalse(await sortedTroves.contains(B))
+    assert.isTrue(await sortedTroves.contains(C))
+    assert.isTrue(await sortedTroves.contains(D))
+    assert.isTrue(await sortedTroves.contains(E))
+
+    // // All remaining troves D and E repay a little debt, applying their pending rewards
+    assert.isTrue((await sortedTroves.getSize()).eq(toBN('3')))
+    await borrowerOperations.repayLUSD(dec(1, 18), D, D, {from: D})
+    await borrowerOperations.repayLUSD(dec(1, 18), E, E, {from: E})
+
+    // Check C is the only trove that has pending rewards
+    assert.isTrue(await troveManager.hasPendingRewards(C))
+    assert.isFalse(await troveManager.hasPendingRewards(D))
+    assert.isFalse(await troveManager.hasPendingRewards(E))
+
+    // Check C's pending coll and debt rewards are <= the coll and debt in the DefaultPool
+    const pendingETH_C = await troveManager.getPendingETHReward(C)
+    const pendingLUSDDebt_C = await troveManager.getPendingLUSDDebtReward(C)
+    const defaultPoolETH = await defaultPool.getETH()
+    const defaultPoolLUSDDebt = await defaultPool.getLUSDDebt()
+    assert.isTrue(pendingETH_C.lte(defaultPoolETH))
+    assert.isTrue(pendingLUSDDebt_C.lte(defaultPoolLUSDDebt))
+    //Check only difference is dust
+    assert.isAtMost(th.getDifference(pendingETH_C, defaultPoolETH), 1000)
+    assert.isAtMost(th.getDifference(pendingLUSDDebt_C, defaultPoolLUSDDebt), 1000)
+
+    // Confirm system is still in Recovery Mode
+    assert.isTrue(await th.checkRecoveryMode(contracts))
+
+    // D and E fill the Stability Pool, enough to completely absorb C's debt of 70
+    await stabilityPool.provideToSP(dec(50, 18), ZERO_ADDRESS, {from: D})
+    await stabilityPool.provideToSP(dec(50, 18), ZERO_ADDRESS, {from: E})
+
+    await priceFeed.setPrice(dec(50, 18))
+
+    // Try to liquidate C again. Check it succeeds and closes C's trove
+    const liqTx2 = await troveManager.batchLiquidateTroves([C,D])
+    assert.isTrue(liqTx2.receipt.status)
+    assert.isFalse(await sortedTroves.contains(C))
+    assert.isFalse(await sortedTroves.contains(D))
+    assert.isTrue(await sortedTroves.contains(E))
+    assert.isTrue((await sortedTroves.getSize()).eq(toBN('1')))
+  })
 
   it('batchLiquidateTroves(): closes every trove with ICR < MCR in the given array', async () => {
     // --- SETUP ---
