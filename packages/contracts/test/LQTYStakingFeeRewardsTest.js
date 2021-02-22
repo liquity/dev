@@ -59,6 +59,20 @@ contract('Fee arithmetic tests', async accounts => {
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
+  it('stake(): reverts if amount is zero', async () => {
+    // FF time one year so owner can transfer LQTY
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+
+    // Owner transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+
+    // console.log(`A lqty bal: ${await lqtyToken.balanceOf(A)}`)
+
+    // A makes stake
+    await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
+    await assertRevert(lqtyStaking.stake(0, {from: A}), "LQTYStaking: Amount must be non-zero")
+  })
+
   it("ETH fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
     await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
     await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
