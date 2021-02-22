@@ -494,6 +494,8 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 
 ### Flow of LUSD tokens in Liquity
 
+![Flow of LUSD](images/LUSD_flows.svg)
+
 When a user issues debt from their Trove, LUSD tokens are minted to their own address, and a debt is recorded on the Trove. Conversely, when they repay their Trove’s LUSD debt, LUSD is burned from their address, and the debt on their Trove is reduced.
 
 Redemptions burn LUSD from the redeemer’s balance, and reduce the debt of the Trove redeemed against.
@@ -540,6 +542,8 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | unstake  | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
 
 ### Flow of LQTY Tokens in Liquity
+
+![Flow of LQTY](images/LQTY_flows.svg)
 
 Stability Providers and Frontend Operators receive LQTY gains according to their share of the total LUSD deposits, and the LQTY community issuance schedule.  Once obtained, LQTY can be staked and unstaked with the `LQTYStaking` contract.
 
