@@ -27,6 +27,24 @@ const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.s
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
+// Proxy scripts
+const BorrowerOperationsScript = artifacts.require('BorrowerOperationsScript')
+const BorrowerWrappersScript = artifacts.require('BorrowerWrappersScript')
+const TroveManagerScript = artifacts.require('TroveManagerScript')
+const StabilityPoolScript = artifacts.require('StabilityPoolScript')
+const TokenScript = artifacts.require('TokenScript')
+const LQTYStakingScript = artifacts.require('LQTYStakingScript')
+const {
+  buildUserProxies,
+  BorrowerOperationsProxy,
+  BorrowerWrappersProxy,
+  TroveManagerProxy,
+  StabilityPoolProxy,
+  SortedTrovesProxy,
+  TokenProxy,
+  LQTYStakingProxy
+} = require('../utils/proxyHelpers.js')
+
 /* "Liquity core" consists of all contracts in the core Liquity system.
 
 LQTY contracts consist of only those contracts related to the LQTY Token:
@@ -260,6 +278,41 @@ class DeploymentHelper {
       contracts.borrowerOperations.address
     )
     return contracts
+  }
+
+  static async deployProxyScripts(contracts, LQTYContracts, owner, users) {
+    const proxies = await buildUserProxies(users)
+
+    const borrowerWrappersScript = await BorrowerWrappersScript.new(
+      contracts.borrowerOperations.address,
+      contracts.troveManager.address,
+      contracts.stabilityPool.address,
+      contracts.priceFeedTestnet.address,
+      contracts.lusdToken.address,
+      LQTYContracts.lqtyToken.address,
+      LQTYContracts.lqtyStaking.address
+    )
+    contracts.borrowerWrappers = new BorrowerWrappersProxy(owner, proxies, borrowerWrappersScript.address)
+
+    const borrowerOperationsScript = await BorrowerOperationsScript.new(contracts.borrowerOperations.address)
+    contracts.borrowerOperations = new BorrowerOperationsProxy(owner, proxies, borrowerOperationsScript.address, contracts.borrowerOperations)
+
+    const troveManagerScript = await TroveManagerScript.new(contracts.troveManager.address)
+    contracts.troveManager = new TroveManagerProxy(owner, proxies, troveManagerScript.address, contracts.troveManager)
+
+    const stabilityPoolScript = await StabilityPoolScript.new(contracts.stabilityPool.address)
+    contracts.stabilityPool = new StabilityPoolProxy(owner, proxies, stabilityPoolScript.address, contracts.stabilityPool)
+
+    contracts.sortedTroves = new SortedTrovesProxy(owner, proxies, contracts.sortedTroves)
+
+    const lusdTokenScript = await TokenScript.new(contracts.lusdToken.address)
+    contracts.lusdToken = new TokenProxy(owner, proxies, lusdTokenScript.address, contracts.lusdToken)
+
+    const lqtyTokenScript = await TokenScript.new(LQTYContracts.lqtyToken.address)
+    LQTYContracts.lqtyToken = new TokenProxy(owner, proxies, lqtyTokenScript.address, LQTYContracts.lqtyToken)
+
+    const lqtyStakingScript = await LQTYStakingScript.new(LQTYContracts.lqtyStaking.address)
+    LQTYContracts.lqtyStaking = new LQTYStakingProxy(owner, proxies, lqtyStakingScript.address, LQTYContracts.lqtyStaking)
   }
 
   // Connect contracts to their dependencies

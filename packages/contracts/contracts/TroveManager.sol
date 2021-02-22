@@ -1326,14 +1326,30 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function getRedemptionRate() public view override returns (uint) {
+        return _calcRedemptionRate(baseRate);
+    }
+
+    function getRedemptionRateWithDecay() public view override returns (uint) {
+        return _calcRedemptionRate(_calcDecayedBaseRate());
+    }
+
+    function _calcRedemptionRate(uint _baseRate) internal pure returns (uint) {
         return LiquityMath._min(
-            REDEMPTION_FEE_FLOOR.add(baseRate),
+            REDEMPTION_FEE_FLOOR.add(_baseRate),
             DECIMAL_PRECISION // cap at a maximum of 100%
         );
     }
 
     function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
-        uint redemptionFee = getRedemptionRate().mul(_ETHDrawn).div(DECIMAL_PRECISION);
+        return _calcRedemptionFee(getRedemptionRate(), _ETHDrawn);
+    }
+
+    function getRedemptionFeeWithDecay(uint _ETHDrawn) external view override returns (uint) {
+        return _calcRedemptionFee(getRedemptionRateWithDecay(), _ETHDrawn);
+    }
+
+    function _calcRedemptionFee(uint _redemptionRate, uint _ETHDrawn) internal view returns (uint) {
+        uint redemptionFee = _redemptionRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
         require(redemptionFee < _ETHDrawn, "TroveManager: Fee would eat up all returned collateral");
         return redemptionFee;
     }
@@ -1341,15 +1357,32 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // --- Borrowing fee functions ---
 
     function getBorrowingRate() public view override returns (uint) {
+        return _calcBorrowingRate(baseRate);
+    }
+
+    function getBorrowingRateWithDecay() public view override returns (uint) {
+        return _calcBorrowingRate(_calcDecayedBaseRate());
+    }
+
+    function _calcBorrowingRate(uint _baseRate) internal pure returns (uint) {
         return LiquityMath._min(
-            BORROWING_FEE_FLOOR.add(baseRate),
+            BORROWING_FEE_FLOOR.add(_baseRate),
             MAX_BORROWING_FEE
         );
     }
 
     function getBorrowingFee(uint _LUSDDebt) external view override returns (uint) {
-        return getBorrowingRate().mul(_LUSDDebt).div(DECIMAL_PRECISION);
+        return _calcBorrowingFee(getBorrowingRate(), _LUSDDebt);
     }
+
+    function getBorrowingFeeWithDecay(uint _LUSDDebt) external view override returns (uint) {
+        return _calcBorrowingFee(getBorrowingRateWithDecay(), _LUSDDebt);
+    }
+
+    function _calcBorrowingFee(uint _borrowingRate, uint _LUSDDebt) internal pure returns (uint) {
+        return _borrowingRate.mul(_LUSDDebt).div(DECIMAL_PRECISION);
+    }
+
 
     // Updates the baseRate state variable based on time elapsed since the last redemption or LUSD borrowing operation.
     function decayBaseRateFromBorrowing() external override {
