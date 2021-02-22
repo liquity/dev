@@ -228,9 +228,9 @@ contract('BorrowerWrappers', async accounts => {
     th.assertIsApproximatelyEqual(await troveManager.getTroveColl(proxyAddress), expectedSurplus.add(addedValue))
   })
 
-  // --- claimSPRewardsAndLoop ---
+  // --- claimSPRewardsAndRecycle ---
 
-  it('claimSPRewardsAndLoop(): only owner can call it', async () => {
+  it('claimSPRewardsAndRecycle(): only owner can call it', async () => {
     // Whale deposits 1850 LUSD in StabilityPool
     await borrowerOperations.openTrove(th._100pct, dec(1850, 18), whale, whale, { from: whale, value: dec(50, 'ether') })
     await stabilityPool.provideToSP(dec(1850, 18), ZERO_ADDRESS, { from: whale })
@@ -253,12 +253,12 @@ contract('BorrowerWrappers', async accounts => {
 
     // Bob tries to claims SP rewards in behalf of Alice
     const proxy = borrowerWrappers.getProxyFromUser(alice)
-    const signature = 'claimSPRewardsAndLoop(uint256,address,address)'
+    const signature = 'claimSPRewardsAndRecycle(uint256,address,address)'
     const calldata = th.getTransactionData(signature, [th._100pct, alice, alice])
     await assertRevert(proxy.executeTarget(borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
   })
 
-  it('claimSPRewardsAndLoop():', async () => {
+  it('claimSPRewardsAndRecycle():', async () => {
     // Whale deposits 1850 LUSD in StabilityPool
     await borrowerOperations.openTrove(th._100pct, dec(1850, 18), whale, whale, { from: whale, value: dec(50, 'ether') })
     await stabilityPool.provideToSP(dec(1850, 18), ZERO_ADDRESS, { from: whale })
@@ -308,7 +308,7 @@ contract('BorrowerWrappers', async accounts => {
     const expectedLQTYGain_A = toBN('62966780249258131199914')
 
     // Alice claims SP rewards and puts them back in the system through the proxy
-    await borrowerWrappers.claimSPRewardsAndLoop(th._100pct, alice, alice, { from: alice })
+    await borrowerWrappers.claimSPRewardsAndRecycle(th._100pct, alice, alice, { from: alice })
 
     const ethBalanceAfter = await web3.eth.getBalance(borrowerOperations.getProxyAddressFromUser(alice))
     const troveCollAfter = await troveManager.getTroveColl(alice)
@@ -343,9 +343,9 @@ contract('BorrowerWrappers', async accounts => {
   })
 
 
-  // --- claimStakingGainsAndLoop ---
+  // --- claimStakingGainsAndRecycle ---
 
-  it('claimStakingGainsAndLoop(): only owner can call it', async () => {
+  it('claimStakingGainsAndRecycle(): only owner can call it', async () => {
     // Whale deposits 1850 LUSD in StabilityPool
     await borrowerOperations.openTrove(th._100pct, dec(1850, 18), whale, whale, { from: whale, value: dec(50, 'ether') })
 
@@ -376,12 +376,12 @@ contract('BorrowerWrappers', async accounts => {
 
     // Bob tries to claims staking gains in behalf of Alice
     const proxy = borrowerWrappers.getProxyFromUser(alice)
-    const signature = 'claimStakingGainsAndLoop(uint256,address,address)'
+    const signature = 'claimStakingGainsAndRecycle(uint256,address,address)'
     const calldata = th.getTransactionData(signature, [th._100pct, alice, alice])
     await assertRevert(proxy.executeTarget(borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
   })
 
-  it('claimStakingGainsAndLoop(): reverts if user has no trove', async () => {
+  it('claimStakingGainsAndRecycle(): reverts if user has no trove', async () => {
     const price = toBN(dec(200, 18))
 
     // Whale deposits 1850 LUSD in StabilityPool
@@ -427,7 +427,7 @@ contract('BorrowerWrappers', async accounts => {
 
     // Alice claims staking rewards and puts them back in the system through the proxy
     await assertRevert(
-      borrowerWrappers.claimStakingGainsAndLoop(th._100pct, alice, alice, { from: alice }),
+      borrowerWrappers.claimStakingGainsAndRecycle(th._100pct, alice, alice, { from: alice }),
       'BorrowerWrappersScript: caller must have an active trove'
     )
 
@@ -457,7 +457,7 @@ contract('BorrowerWrappers', async accounts => {
     assert.equal(alice_pendingETHGain, 0)
   })
 
-  it('claimStakingGainsAndLoop(): with only ETH gain', async () => {
+  it('claimStakingGainsAndRecycle(): with only ETH gain', async () => {
     const price = toBN(dec(200, 18))
 
     // Whale deposits 1850 LUSD in StabilityPool
@@ -509,7 +509,7 @@ contract('BorrowerWrappers', async accounts => {
     const expectedLQTYGain_A = toBN('839557069990108416000000')
 
     // Alice claims staking rewards and puts them back in the system through the proxy
-    await borrowerWrappers.claimStakingGainsAndLoop(th._100pct, alice, alice, { from: alice })
+    await borrowerWrappers.claimStakingGainsAndRecycle(th._100pct, alice, alice, { from: alice })
 
     // Alice new LUSD gain due to her own Trove adjustment: ((150/2000) * (borrowing fee over netDebtChange))
     const newBorrowingFee = await troveManagerOriginal.getBorrowingFeeWithDecay(netDebtChange)
@@ -548,7 +548,7 @@ contract('BorrowerWrappers', async accounts => {
     assert.equal(alice_pendingETHGain, 0)
   })
 
-  it('claimStakingGainsAndLoop(): with only LUSD gain', async () => {
+  it('claimStakingGainsAndRecycle(): with only LUSD gain', async () => {
     const price = toBN(dec(200, 18))
 
     // Whale deposits 1850 LUSD in StabilityPool
@@ -589,7 +589,7 @@ contract('BorrowerWrappers', async accounts => {
     const borrowingRate = await troveManagerOriginal.getBorrowingRateWithDecay()
 
     // Alice claims staking rewards and puts them back in the system through the proxy
-    await borrowerWrappers.claimStakingGainsAndLoop(th._100pct, alice, alice, { from: alice })
+    await borrowerWrappers.claimStakingGainsAndRecycle(th._100pct, alice, alice, { from: alice })
 
     const ethBalanceAfter = await web3.eth.getBalance(borrowerOperations.getProxyAddressFromUser(alice))
     const troveCollAfter = await troveManager.getTroveColl(alice)
@@ -621,7 +621,7 @@ contract('BorrowerWrappers', async accounts => {
     assert.equal(alice_pendingETHGain, 0)
   })
 
-  it('claimStakingGainsAndLoop(): with both ETH and LUSD gains', async () => {
+  it('claimStakingGainsAndRecycle(): with both ETH and LUSD gains', async () => {
     const price = toBN(dec(200, 18))
 
     // Whale deposits 1850 LUSD in StabilityPool
@@ -678,7 +678,7 @@ contract('BorrowerWrappers', async accounts => {
     const expectedLQTYGain_A = toBN('839557069990108416000000')
 
     // Alice claims staking rewards and puts them back in the system through the proxy
-    await borrowerWrappers.claimStakingGainsAndLoop(th._100pct, alice, alice, { from: alice })
+    await borrowerWrappers.claimStakingGainsAndRecycle(th._100pct, alice, alice, { from: alice })
 
     // Alice new LUSD gain due to her own Trove adjustment: ((150/2000) * (borrowing fee over netDebtChange))
     const newBorrowingFee = await troveManagerOriginal.getBorrowingFeeWithDecay(netDebtChange)

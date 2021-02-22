@@ -149,12 +149,12 @@ class BorrowerWrappersProxy extends Proxy {
     return this.forwardFunction(params, 'claimCollateralAndOpenTrove(uint256,uint256,address,address)')
   }
 
-  async claimSPRewardsAndLoop(...params) {
-    return this.forwardFunction(params, 'claimSPRewardsAndLoop(uint256,address,address)')
+  async claimSPRewardsAndRecycle(...params) {
+    return this.forwardFunction(params, 'claimSPRewardsAndRecycle(uint256,address,address)')
   }
 
-  async claimStakingGainsAndLoop(...params) {
-    return this.forwardFunction(params, 'claimStakingGainsAndLoop(uint256,address,address)')
+  async claimStakingGainsAndRecycle(...params) {
+    return this.forwardFunction(params, 'claimStakingGainsAndRecycle(uint256,address,address)')
   }
 
   async transferETH(...params) {
