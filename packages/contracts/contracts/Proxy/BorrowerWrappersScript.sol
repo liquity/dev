@@ -47,7 +47,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
     }
 
-    function claimCollateralAndOpenTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external {
+    function claimCollateralAndOpenTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external payable {
         uint balanceBefore = address(this).balance;
 
         // Claim collateral
@@ -58,10 +58,10 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         // already checked in CollSurplusPool
         assert(balanceAfter > balanceBefore);
 
-        uint claimedCollateral = balanceAfter.sub(balanceBefore);
+        uint totalCollateral = balanceAfter.sub(balanceBefore).add(msg.value);
 
-        // Open trove with obtained collateral
-        borrowerOperations.openTrove{ value: claimedCollateral }(_maxFee, _LUSDAmount, _upperHint, _lowerHint);
+        // Open trove with obtained collateral, plus collateral sent by user
+        borrowerOperations.openTrove{ value: totalCollateral }(_maxFee, _LUSDAmount, _upperHint, _lowerHint);
     }
 
     function claimSPRewardsAndLoop(uint _maxFee, address _upperHint, address _lowerHint) external {

@@ -161,7 +161,7 @@ contract('BorrowerWrappers', async accounts => {
     th.assertIsApproximatelyEqual(await troveManager.getTroveColl(proxyAddress), dec(5, 18))
   })
 
-  it('claimCollateralAndOpenTrove():', async () => {
+  it('claimCollateralAndOpenTrove(): without sending any value', async () => {
     // Whale opens Trove and gets 1850 LUSD
     await borrowerOperations.openTrove(th._100pct, dec(1850, 18), whale, whale, { from: whale, value: dec(50, 'ether') })
     // alice opens Trove with debt 150 LUSD (excluding gas reserve)
@@ -192,6 +192,40 @@ contract('BorrowerWrappers', async accounts => {
     th.assertIsApproximatelyEqual(await lusdToken.balanceOf(proxyAddress), netBorrowingAmount.add(amount))
     assert.equal(await troveManager.getTroveStatus(proxyAddress), 1)
     th.assertIsApproximatelyEqual(await troveManager.getTroveColl(proxyAddress), expectedSurplus)
+  })
+
+  it('claimCollateralAndOpenTrove(): sending value in the transaction', async () => {
+    // Whale opens Trove and gets 1850 LUSD
+    await borrowerOperations.openTrove(th._100pct, dec(1850, 18), whale, whale, { from: whale, value: dec(50, 'ether') })
+    // alice opens Trove with debt 150 LUSD (excluding gas reserve)
+    const amount = toBN(dec(150, 18))
+    const netBorrowingAmount = await getNetBorrowingAmount(amount)
+    await borrowerOperations.openTrove(th._100pct, netBorrowingAmount, alice, alice, { from: alice, value: dec(5, 'ether') })
+
+    const proxyAddress = borrowerWrappers.getProxyAddressFromUser(alice)
+    assert.equal(await web3.eth.getBalance(proxyAddress), '0')
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // whale redeems 150 LUSD
+    await th.redeemCollateral(whale, contracts, amount)
+    assert.equal(await web3.eth.getBalance(proxyAddress), '0')
+
+    // surplus: 5 - 150/200
+    const expectedSurplus = toBN(dec(425, 16))
+    th.assertIsApproximatelyEqual(await collSurplusPool.getCollateral(proxyAddress), expectedSurplus)
+    assert.equal(await troveManager.getTroveStatus(proxyAddress), 2)
+
+    // alice claims collateral and re-opens the trove, adding 0.5 ETH from her own pocket
+    const addedValue = toBN(dec(5, 17))
+    await borrowerWrappers.claimCollateralAndOpenTrove(th._100pct, amount, alice, alice, { from: alice, value: addedValue })
+
+    assert.equal(await web3.eth.getBalance(proxyAddress), '0')
+    th.assertIsApproximatelyEqual(await collSurplusPool.getCollateral(proxyAddress), '0')
+    th.assertIsApproximatelyEqual(await lusdToken.balanceOf(proxyAddress), netBorrowingAmount.add(amount))
+    assert.equal(await troveManager.getTroveStatus(proxyAddress), 1)
+    th.assertIsApproximatelyEqual(await troveManager.getTroveColl(proxyAddress), expectedSurplus.add(addedValue))
   })
 
   // --- claimSPRewardsAndLoop ---
