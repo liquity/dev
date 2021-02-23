@@ -1420,6 +1420,32 @@ contract('BorrowerOperations', async accounts => {
     
     // --- repayLUSD() ---
 
+    it("repayLUSD(): Succeeds when it would leave trove with net debt >= minimum net debt", async () => { 
+      // Make the LUSD request 2e-18 above 1950 LUSD to correct for floor division, and make net debt = 1950.000...001
+      await borrowerOperations.openTrove(th._100pct, (await getNetBorrowingAmount('1950'+'0'.repeat(17)+'2')), A, A, { from: A, value: dec(100, 30) })
+      
+      const repayTxA = await borrowerOperations.repayLUSD(1, A, A, {from: A})
+      assert.isTrue(repayTxA.receipt.status)
+    
+      await borrowerOperations.openTrove(th._100pct, dec(20, 25), B, B, { from: B, value: dec(100, 30) })
+      
+      const repayTxB = await borrowerOperations.repayLUSD(dec(19, 25), B, B, {from: B})
+      assert.isTrue(repayTxB.receipt.status)
+    })
+
+    it.only("repayLUSD(): reverts when it would leave trove with net debt < minimum net debt", async () => { 
+      // Make the LUSD request 2e-18 above 1950 LUSD to correct for floor division, and make net debt = 1950.000...001
+      await borrowerOperations.openTrove(th._100pct, (await getNetBorrowingAmount('1950'+'0'.repeat(17)+'2')), A, A, { from: A, value: dec(100, 30) })
+      
+      const repayTxAPromise = borrowerOperations.repayLUSD(2, A, A, {from: A})
+      await assertRevert(repayTxAPromise, "BorrowerOps: Trove's net debt must be greater than minimum")
+
+      await borrowerOperations.openTrove(th._100pct, await getNetBorrowingAmount(dec(20, 21)), B, B, { from: B, value: dec(100, 30) })
+      
+      const repayTxBPromise = borrowerOperations.repayLUSD(dec(20, 21), B, B, {from: B})
+      await assertRevert(repayTxBPromise, "BorrowerOps: Trove's net debt must be greater than minimum")
+    })
+
     it("repayLUSD(): reverts when calling address does not have active trove", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(1, 'ether') })
@@ -2972,6 +2998,32 @@ contract('BorrowerOperations', async accounts => {
         }
       })
     }
+
+    it("openTrove(): Opens a trove with net debt >= minimum net debt", async () => { 
+      // Make the LUSD request 1e-18 above 1950 LUSD to correct for floor division
+      const txA = await borrowerOperations.openTrove(th._100pct, (await getNetBorrowingAmount('1950'+'0'.repeat(17)+'1')), A, A, { from: A, value: dec(100, 30) })
+      assert.isTrue(txA.receipt.status)
+      assert.isTrue(await sortedTroves.contains(A))
+      
+      const txB = await borrowerOperations.openTrove(th._100pct, dec(1950, 18), A, A, { from: B, value: dec(100, 30) })
+      assert.isTrue(txB.receipt.status)
+      assert.isTrue(await sortedTroves.contains(B))
+
+      const txC = await borrowerOperations.openTrove(th._100pct, dec(47789898, 22), A, A, { from: C, value: dec(100, 30) })
+      assert.isTrue(txC.receipt.status)
+      assert.isTrue(await sortedTroves.contains(C))
+    })
+
+    it("openTrove(): reverts if net debt < minimum net debt", async () => { 
+      const txAPromise = borrowerOperations.openTrove(th._100pct, 0, A, A, { from: A, value: dec(100, 30) })
+      await assertRevert(txAPromise, "BorrowerOps: Trove's net debt must be greater than minimum")
+
+      const txBPromise = borrowerOperations.openTrove(th._100pct, await getNetBorrowingAmount('1949'+'9'.repeat(18)), B, B, { from: B, value: dec(100, 30) })
+      await assertRevert(txBPromise, "BorrowerOps: Trove's net debt must be greater than minimum")
+
+      const txCPromise = borrowerOperations.openTrove(th._100pct, dec(459, 18), C, C, { from: C, value: dec(100, 30) })
+      await assertRevert(txCPromise, "BorrowerOps: Trove's net debt must be greater than minimum")
+    })
 
     it("openTrove(): decays a non-zero base rate", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, A, A, { from: whale, value: dec(100, 'ether') })
