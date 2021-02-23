@@ -334,15 +334,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         returns (LiquidationValues memory singleLiquidation)
     {
         LocalVariables_InnerSingleLiquidateFunction memory vars;
-
         if (TroveOwners.length <= 1) {return singleLiquidation;} // don't liquidate if last trove
-
         (singleLiquidation.entireTroveDebt,
         singleLiquidation.entireTroveColl,
         vars.pendingDebtReward,
         vars.pendingCollReward) = getEntireDebtAndColl(_borrower);
-
-        _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, vars.pendingDebtReward, vars.pendingCollReward);
 
         singleLiquidation.collGasCompensation = _getCollGasCompensation(singleLiquidation.entireTroveColl);
         singleLiquidation.LUSDGasCompensation = LUSD_GAS_COMPENSATION;
@@ -350,8 +346,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         // If ICR <= 100%, purely redistribute the Trove across all active Troves
         if (_ICR <= _100pct) {
+            _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, vars.pendingDebtReward, vars.pendingCollReward);
             _removeStake(_borrower);
-
+           
             singleLiquidation.debtToOffset = 0;
             singleLiquidation.collToSendToSP = 0;
             singleLiquidation.debtToRedistribute = singleLiquidation.entireTroveDebt;
@@ -362,6 +359,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         // If 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > _100pct) && (_ICR < MCR)) {
+             _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, vars.pendingDebtReward, vars.pendingCollReward);
             _removeStake(_borrower);
 
             (singleLiquidation.debtToOffset,
@@ -379,10 +377,10 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         * The remainder due to the capped rate will be claimable as collateral surplus.
         */
         } else if ((_ICR >= MCR) && (_ICR < _TCR) && (singleLiquidation.entireTroveDebt <= _LUSDInStabPool)) {
+            _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, vars.pendingDebtReward, vars.pendingCollReward);
             assert(_LUSDInStabPool != 0);
 
             _removeStake(_borrower);
-
             singleLiquidation = _getCappedOffsetVals(singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, _price);
 
             _closeTrove(_borrower);
@@ -392,7 +390,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
             emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.collToSendToSP, TroveManagerOperation.liquidateInRecoveryMode);
 
-        } else { // if (_ICR >= _TCR || (MCR <= _ICR < _TCR && singleLiquidation.entireTroveDebt > _LUSDInStabPool))
+        } else { // if (_ICR >= MCR && ( _ICR >= _TCR || singleLiquidation.entireTroveDebt > _LUSDInStabPool))
             LiquidationValues memory zeroVals;
             return zeroVals;
         }
@@ -1063,7 +1061,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint snapshotETH = rewardSnapshots[_borrower].ETH;
         uint rewardPerUnitStaked = L_ETH.sub(snapshotETH);
 
-        if ( rewardPerUnitStaked == 0 ) { return 0; }
+        if ( rewardPerUnitStaked == 0 || Troves[_borrower].status != Status.active) { return 0; }
 
         uint stake = Troves[_borrower].stake;
 
@@ -1071,13 +1069,13 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         return pendingETHReward;
     }
-
-     // Get the borrower's pending accumulated LUSD reward, earned by their stake
+    
+    // Get the borrower's pending accumulated LUSD reward, earned by their stake
     function getPendingLUSDDebtReward(address _borrower) public view override returns (uint) {
         uint snapshotLUSDDebt = rewardSnapshots[_borrower].LUSDDebt;
         uint rewardPerUnitStaked = L_LUSDDebt.sub(snapshotLUSDDebt);
 
-        if ( rewardPerUnitStaked == 0 ) { return 0; }
+        if ( rewardPerUnitStaked == 0 || Troves[_borrower].status != Status.active) { return 0; }
 
         uint stake =  Troves[_borrower].stake;
 
@@ -1092,6 +1090,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         * this indicates that rewards have occured since the snapshot was made, and the user therefore has
         * pending rewards
         */
+        if (Troves[_borrower].status != Status.active) {return false;}
+       
         return (rewardSnapshots[_borrower].ETH < L_ETH);
     }
 
