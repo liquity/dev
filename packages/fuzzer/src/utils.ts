@@ -9,9 +9,11 @@ import {
   Percent,
   Trove,
   TroveWithPendingRedistribution,
-  ReadableLiquity
+  ReadableLiquity,
+  LUSD_LIQUIDATION_RESERVE,
+  MINIMUM_COLLATERAL_RATIO
 } from "@liquity/lib-base";
-import { EthersLiquity as Liquity, LiquityDeployment } from "@liquity/lib-ethers";
+import { EthersLiquity, ReadableEthersLiquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
 export const createRandomWallets = (numberOfWallets: number, provider: Provider) => {
@@ -31,11 +33,14 @@ export const createRandomTrove = (price: Decimal) => {
   if (Math.random() < 0.5) {
     collateral = Decimal.from(randomValue);
 
-    const maxDebt = parseInt(price.mul(collateral).div(1.1).toString(0));
+    const maxDebt = parseInt(
+      price.mul(collateral).div(MINIMUM_COLLATERAL_RATIO).sub(LUSD_LIQUIDATION_RESERVE).toString(0)
+    );
 
-    debt = Decimal.from(truncateLastDigits(maxDebt - benford(maxDebt)));
+    debt = LUSD_LIQUIDATION_RESERVE.add(truncateLastDigits(maxDebt - benford(maxDebt)));
   } else {
-    debt = Decimal.from(100 * randomValue);
+    debt = LUSD_LIQUIDATION_RESERVE.add(100 * randomValue);
+
     collateral = Decimal.from(
       debt
         .div(price)
@@ -45,27 +50,37 @@ export const createRandomTrove = (price: Decimal) => {
     );
   }
 
-  return new Trove({ collateral, debt });
+  return new Trove(collateral, debt);
 };
 
 export const getListOfTroves = async (liquity: ReadableLiquity) =>
-  liquity.getFirstTroves(0, await liquity.getNumberOfTroves());
+  liquity.getTroves({
+    first: await liquity.getNumberOfTroves(),
+    sortedBy: "descendingCollateralRatio",
+    beforeRedistribution: false
+  });
+
+export const getListOfTrovesBeforeRedistribution = async (liquity: ReadableLiquity) =>
+  liquity.getTroves({
+    first: await liquity.getNumberOfTroves(),
+    sortedBy: "descendingCollateralRatio",
+    beforeRedistribution: true
+  });
 
 export const getListOfTroveOwners = async (liquity: ReadableLiquity) =>
-  getListOfTroves(liquity).then(troves => troves.map(([owner]) => owner));
+  getListOfTrovesBeforeRedistribution(liquity).then(troves => troves.map(([owner]) => owner));
 
 const tinyDifference = Decimal.from("0.000000001");
 
-const sortedByICR = async (
-  liquity: ReadableLiquity,
+const sortedByICR = (
   listOfTroves: [string, TroveWithPendingRedistribution][],
+  totalRedistributed: Trove,
   price: Decimalish
 ) => {
   if (listOfTroves.length < 2) {
     return true;
   }
 
-  const totalRedistributed = await liquity.getTotalRedistributed();
   let currentTrove = listOfTroves[0][1].applyRedistribution(totalRedistributed);
 
   for (let i = 1; i < listOfTroves.length; ++i) {
@@ -111,23 +126,62 @@ export const listOfTrovesShouldBeEqual = (
   });
 };
 
-export const checkTroveOrdering = async (
-  liquity: ReadableLiquity,
-  price: Decimal,
+export const checkTroveOrdering = (
   listOfTroves: [string, TroveWithPendingRedistribution][],
+  totalRedistributed: Trove,
+  price: Decimal,
   previousListOfTroves?: [string, TroveWithPendingRedistribution][]
 ) => {
-  if (!(await sortedByICR(liquity, listOfTroves, price))) {
+  if (!sortedByICR(listOfTroves, totalRedistributed, price)) {
     if (previousListOfTroves) {
       console.log();
       console.log("// List of Troves before:");
-      await dumpTroves(liquity, previousListOfTroves, price);
+      dumpTroves(previousListOfTroves, totalRedistributed, price);
+
       console.log();
       console.log("// List of Troves after:");
     }
 
-    await dumpTroves(liquity, listOfTroves, price);
+    dumpTroves(listOfTroves, totalRedistributed, price);
     throw new Error("ordering is broken");
+  }
+};
+
+export const checkPoolBalances = async (
+  liquity: ReadableEthersLiquity,
+  listOfTroves: [string, TroveWithPendingRedistribution][],
+  totalRedistributed: Trove
+) => {
+  const activePool = await liquity._getActivePool();
+  const defaultPool = await liquity._getDefaultPool();
+
+  const [activeTotal, defaultTotal] = listOfTroves.reduce(
+    ([activeTotal, defaultTotal], [, troveActive]) => {
+      const troveTotal = troveActive.applyRedistribution(totalRedistributed);
+      const troveDefault = troveTotal.subtract(troveActive);
+
+      return [activeTotal.add(troveActive), defaultTotal.add(troveDefault)];
+    },
+    [new Trove(), new Trove()]
+  );
+
+  const diffs = [
+    Difference.between(activePool.collateral, activeTotal.collateral),
+    Difference.between(activePool.debt, activeTotal.debt),
+    Difference.between(defaultPool.collateral, defaultTotal.collateral),
+    Difference.between(defaultPool.debt, defaultTotal.debt)
+  ];
+
+  if (!diffs.every(diff => diff.absoluteValue?.lt(tinyDifference))) {
+    console.log();
+    console.log(`  ActivePool:    ${activePool}`);
+    console.log(`  Total active:  ${activeTotal}`);
+    console.log();
+    console.log(`  DefaultPool:   ${defaultPool}`);
+    console.log(`  Total default: ${defaultTotal}`);
+    console.log();
+
+    throw new Error("discrepancy between Troves & Pools");
   }
 };
 
@@ -176,15 +230,17 @@ const checks = [
 export const checkSubgraph = async (subgraph: SubgraphLiquity, l1Liquity: ReadableLiquity) => {
   await Promise.all(checks.map(check => check.allEqual([subgraph, l1Liquity])));
 
-  const l1ListOfTroves = await getListOfTroves(l1Liquity);
-  const subgraphListOfTroves = await getListOfTroves(subgraph);
+  const l1ListOfTroves = await getListOfTrovesBeforeRedistribution(l1Liquity);
+  const subgraphListOfTroves = await getListOfTrovesBeforeRedistribution(subgraph);
   listOfTrovesShouldBeEqual(l1ListOfTroves, subgraphListOfTroves);
 
-  const price = await l1Liquity.getPrice();
-  if (!(await sortedByICR(subgraph, subgraphListOfTroves, price))) {
+  const totalRedistributed = await subgraph.getTotalRedistributed();
+  const price = await subgraph.getPrice();
+
+  if (!sortedByICR(subgraphListOfTroves, totalRedistributed, price)) {
     console.log();
     console.log("// List of Troves returned by subgraph:");
-    await dumpTroves(subgraph, subgraphListOfTroves, price);
+    dumpTroves(subgraphListOfTroves, totalRedistributed, price);
     throw new Error("subgraph sorting broken");
   }
 };
@@ -204,7 +260,6 @@ const troveToString = (
     `[${shortenAddress(address)}]: ` +
     `ICR = ${new Percent(trove.collateralRatio(price)).toString(2)}, ` +
     `ICR w/o reward = ${new Percent(troveWithPendingRewards.collateralRatio(price)).toString(2)}, ` +
-    `stake = ${troveWithPendingRewards.stake.toString(2)}, ` +
     `coll = ${trove.collateral.toString(2)}, ` +
     `debt = ${trove.debt.toString(2)}, ` +
     `coll reward = ${rewards.collateral.toString(2)}, ` +
@@ -212,16 +267,15 @@ const troveToString = (
   );
 };
 
-export const dumpTroves = async (
-  liquity: ReadableLiquity,
+export const dumpTroves = (
   listOfTroves: [string, TroveWithPendingRedistribution][],
+  totalRedistributed: Trove,
   price: Decimalish
 ) => {
   if (listOfTroves.length === 0) {
     return;
   }
 
-  const totalRedistributed = await liquity.getTotalRedistributed();
   let [currentOwner, currentTrove] = listOfTroves[0];
   console.log(`   ${troveToString(currentOwner, currentTrove, totalRedistributed, price)}`);
 
@@ -258,5 +312,5 @@ const truncateLastDigits = (n: number) => {
   }
 };
 
-export const connectUsers = (users: Signer[], deployment: LiquityDeployment) =>
-  Promise.all(users.map(user => Liquity.connect(deployment, user)));
+export const connectUsers = (users: Signer[]) =>
+  Promise.all(users.map(user => EthersLiquity.connect(user)));

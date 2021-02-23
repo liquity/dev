@@ -55,6 +55,7 @@ contract('LUSDToken', async accounts => {
   const alicePrivateKey = '0xeaa445c85f7b438dEd6e831d06a4eD0CEBDc2f8527f84Fcda6EBB5fCfAd4C0e9'
 
   let chainId
+  let lusdTokenOriginal
   let lusdTokenTester
   let stabilityPool
   let troveManager
@@ -63,33 +64,46 @@ contract('LUSDToken', async accounts => {
   let tokenName
   let tokenVersion
 
-  describe('Basic token functions', async () => {
+  const testCorpus = ({ withProxy = false }) => {
     beforeEach(async () => {
-  
+
       const contracts = await deploymentHelper.deployTesterContractsHardhat()
- 
+
+
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
+
+      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+      await deploymentHelper.connectLQTYContracts(LQTYContracts)
+      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+
+      lusdTokenOriginal = contracts.lusdToken
+      if (withProxy) {
+        const users = [ alice, bob, carol, dennis ]
+        await deploymentHelper.deployProxyScripts(contracts, LQTYContracts, owner, users)
+      }
+
       lusdTokenTester = contracts.lusdToken
       // for some reason this doesn’t work with coverage network
       //chainId = await web3.eth.getChainId()
-      chainId = await lusdTokenTester.getChainId()
+      chainId = await lusdTokenOriginal.getChainId()
 
       stabilityPool = contracts.stabilityPool
       troveManager = contracts.stabilityPool
       borrowerOperations = contracts.borrowerOperations
 
-      tokenVersion = await lusdTokenTester.version()
-      tokenName = await lusdTokenTester.name()
-    
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
-  
-      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-      await deploymentHelper.connectLQTYContracts(LQTYContracts)
-      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+      tokenVersion = await lusdTokenOriginal.version()
+      tokenName = await lusdTokenOriginal.name()
 
       // mint some tokens
-      await lusdTokenTester.unprotectedMint(alice, 150)
-      await lusdTokenTester.unprotectedMint(bob, 100)
-      await lusdTokenTester.unprotectedMint(carol, 50)
+      if (withProxy) {
+        await lusdTokenOriginal.unprotectedMint(lusdTokenTester.getProxyAddressFromUser(alice), 150)
+        await lusdTokenOriginal.unprotectedMint(lusdTokenTester.getProxyAddressFromUser(bob), 100)
+        await lusdTokenOriginal.unprotectedMint(lusdTokenTester.getProxyAddressFromUser(carol), 50)
+      } else {
+        await lusdTokenOriginal.unprotectedMint(alice, 150)
+        await lusdTokenOriginal.unprotectedMint(bob, 100)
+        await lusdTokenOriginal.unprotectedMint(carol, 50)
+      }
     })
 
     it('balanceOf(): gets the balance of the account', async () => {
@@ -117,11 +131,6 @@ contract('LUSDToken', async accounts => {
       assert.equal(symbol, "LUSD")
     })
 
-    it("version(): returns the token contract's version", async () => {
-      const version = await lusdTokenTester.version()
-      assert.equal(version, "1")
-    })
-
     it("decimal(): returns the number of decimal digits used", async () => {
       const decimals = await lusdTokenTester.decimals()
       assert.equal(decimals, "18")
@@ -147,15 +156,17 @@ contract('LUSDToken', async accounts => {
       assert.equal(allowance_A_after, 100)
     })
 
-    it("approve(): reverts when spender param is address(0)", async () => {
-      const txPromise = lusdTokenTester.approve(ZERO_ADDRESS, 100, {from: bob})
-      await assertAssert(txPromise)
-    })
+    if (!withProxy) {
+      it("approve(): reverts when spender param is address(0)", async () => {
+        const txPromise = lusdTokenTester.approve(ZERO_ADDRESS, 100, {from: bob})
+        await assertAssert(txPromise)
+      })
 
-    it("approve(): reverts when owner param is address(0)", async () => {
-      const txPromise = lusdTokenTester.callInternalApprove(ZERO_ADDRESS, alice, dec(1000, 18), {from: bob})
-      await assertAssert(txPromise)
-    })
+      it("approve(): reverts when owner param is address(0)", async () => {
+        const txPromise = lusdTokenTester.callInternalApprove(ZERO_ADDRESS, alice, dec(1000, 18), {from: bob})
+        await assertAssert(txPromise)
+      })
+    }
 
     it("transferFrom(): successfully transfers from an account which is it approved to transfer from", async () => {
       const allowance_A_0 = await lusdTokenTester.allowance(bob, alice)
@@ -219,58 +230,60 @@ contract('LUSDToken', async accounts => {
       assert.equal(allowance_A_After, 100)
     })
 
-    it('mint(): issues correct amount of tokens to the given address', async () => {
-      const alice_balanceBefore = await lusdTokenTester.balanceOf(alice)
-      assert.equal(alice_balanceBefore, 150)
+    if (!withProxy) {
+      it('mint(): issues correct amount of tokens to the given address', async () => {
+        const alice_balanceBefore = await lusdTokenTester.balanceOf(alice)
+        assert.equal(alice_balanceBefore, 150)
 
-      await lusdTokenTester.unprotectedMint(alice, 100)
+        await lusdTokenTester.unprotectedMint(alice, 100)
 
-      const alice_BalanceAfter = await lusdTokenTester.balanceOf(alice)
-      assert.equal(alice_BalanceAfter, 250)
-    })
+        const alice_BalanceAfter = await lusdTokenTester.balanceOf(alice)
+        assert.equal(alice_BalanceAfter, 250)
+      })
 
-    it('burn(): burns correct amount of tokens from the given address', async () => {
-      const alice_balanceBefore = await lusdTokenTester.balanceOf(alice)
-      assert.equal(alice_balanceBefore, 150)
+      it('burn(): burns correct amount of tokens from the given address', async () => {
+        const alice_balanceBefore = await lusdTokenTester.balanceOf(alice)
+        assert.equal(alice_balanceBefore, 150)
 
-      await lusdTokenTester.unprotectedBurn(alice, 70)
+        await lusdTokenTester.unprotectedBurn(alice, 70)
 
-      const alice_BalanceAfter = await lusdTokenTester.balanceOf(alice)
-      assert.equal(alice_BalanceAfter, 80)
-    })
+        const alice_BalanceAfter = await lusdTokenTester.balanceOf(alice)
+        assert.equal(alice_BalanceAfter, 80)
+      })
 
-    // TODO: Rewrite this test - it should check the actual lusdTokenTester's balance.
-    it('sendToPool(): changes balances of Stability pool and user by the correct amounts', async () => {
-      const stabilityPool_BalanceBefore = await lusdTokenTester.balanceOf(stabilityPool.address)
-      const bob_BalanceBefore = await lusdTokenTester.balanceOf(bob)
-      assert.equal(stabilityPool_BalanceBefore, 0)
-      assert.equal(bob_BalanceBefore, 100)
+      // TODO: Rewrite this test - it should check the actual lusdTokenTester's balance.
+      it('sendToPool(): changes balances of Stability pool and user by the correct amounts', async () => {
+        const stabilityPool_BalanceBefore = await lusdTokenTester.balanceOf(stabilityPool.address)
+        const bob_BalanceBefore = await lusdTokenTester.balanceOf(bob)
+        assert.equal(stabilityPool_BalanceBefore, 0)
+        assert.equal(bob_BalanceBefore, 100)
 
-      await lusdTokenTester.unprotectedSendToPool(bob, stabilityPool.address, 75)
+        await lusdTokenTester.unprotectedSendToPool(bob, stabilityPool.address, 75)
 
-      const stabilityPool_BalanceAfter = await lusdTokenTester.balanceOf(stabilityPool.address)
-      const bob_BalanceAfter = await lusdTokenTester.balanceOf(bob)
-      assert.equal(stabilityPool_BalanceAfter, 75)
-      assert.equal(bob_BalanceAfter, 25)
-    })
+        const stabilityPool_BalanceAfter = await lusdTokenTester.balanceOf(stabilityPool.address)
+        const bob_BalanceAfter = await lusdTokenTester.balanceOf(bob)
+        assert.equal(stabilityPool_BalanceAfter, 75)
+        assert.equal(bob_BalanceAfter, 25)
+      })
 
-    it('returnFromPool(): changes balances of Stability pool and user by the correct amounts', async () => {
-      /// --- SETUP --- give pool 100 LUSD
-      await lusdTokenTester.unprotectedMint(stabilityPool.address, 100)
-      
-      /// --- TEST --- 
-      const stabilityPool_BalanceBefore = await lusdTokenTester.balanceOf(stabilityPool.address)
-      const  bob_BalanceBefore = await lusdTokenTester.balanceOf(bob)
-      assert.equal(stabilityPool_BalanceBefore, 100)
-      assert.equal(bob_BalanceBefore, 100)
+      it('returnFromPool(): changes balances of Stability pool and user by the correct amounts', async () => {
+        /// --- SETUP --- give pool 100 LUSD
+        await lusdTokenTester.unprotectedMint(stabilityPool.address, 100)
 
-      await lusdTokenTester.unprotectedReturnFromPool(stabilityPool.address, bob, 75)
+        /// --- TEST ---
+        const stabilityPool_BalanceBefore = await lusdTokenTester.balanceOf(stabilityPool.address)
+        const  bob_BalanceBefore = await lusdTokenTester.balanceOf(bob)
+        assert.equal(stabilityPool_BalanceBefore, 100)
+        assert.equal(bob_BalanceBefore, 100)
 
-      const stabilityPool_BalanceAfter = await lusdTokenTester.balanceOf(stabilityPool.address)
-      const bob_BalanceAfter = await lusdTokenTester.balanceOf(bob)
-      assert.equal(stabilityPool_BalanceAfter, 25)
-      assert.equal(bob_BalanceAfter, 175)
-    })
+        await lusdTokenTester.unprotectedReturnFromPool(stabilityPool.address, bob, 75)
+
+        const stabilityPool_BalanceAfter = await lusdTokenTester.balanceOf(stabilityPool.address)
+        const bob_BalanceAfter = await lusdTokenTester.balanceOf(bob)
+        assert.equal(stabilityPool_BalanceAfter, 25)
+        assert.equal(bob_BalanceAfter, 175)
+      })
+    }
 
     it('transfer(): transferring to a blacklisted address reverts', async () => {
       await assertRevert(lusdTokenTester.transfer(lusdTokenTester.address, 1, { from: alice }))
@@ -296,89 +309,103 @@ contract('LUSDToken', async accounts => {
 
     // EIP2612 tests
 
-    it('Initializes PERMIT_TYPEHASH correctly', async () => {
-      assert.equal(await lusdTokenTester.permitTypeHash(), PERMIT_TYPEHASH)
-    })
+    if (!withProxy) {
+      it("version(): returns the token contract's version", async () => {
+        const version = await lusdTokenTester.version()
+        assert.equal(version, "1")
+      })
 
-    it('Initializes DOMAIN_SEPARATOR correctly', async () => {
-      assert.equal(await lusdTokenTester.domainSeparator(), 
-      getDomainSeparator(tokenName, lusdTokenTester.address, chainId, tokenVersion))
-    })
+      it('Initializes PERMIT_TYPEHASH correctly', async () => {
+        assert.equal(await lusdTokenTester.permitTypeHash(), PERMIT_TYPEHASH)
+      })
 
-    it('Initial nonce for a given address is 0', async function () {
-      assert.equal(toBN(await lusdTokenTester.nonces(alice)).toString(), '0');
-    });
-    
-    // Create the approval tx data
-    const approve = {
-      owner: alice,
-      spender: bob,
-      value: 1,
+      it('Initializes DOMAIN_SEPARATOR correctly', async () => {
+        assert.equal(await lusdTokenTester.domainSeparator(),
+                     getDomainSeparator(tokenName, lusdTokenTester.address, chainId, tokenVersion))
+      })
+
+      it('Initial nonce for a given address is 0', async function () {
+        assert.equal(toBN(await lusdTokenTester.nonces(alice)).toString(), '0');
+      });
+
+      // Create the approval tx data
+      const approve = {
+        owner: alice,
+        spender: bob,
+        value: 1,
+      }
+
+      const buildPermitTx = async (deadline) => {
+        const nonce = (await lusdTokenTester.nonces(approve.owner)).toString()
+
+        // Get the EIP712 digest
+        const digest = getPermitDigest(
+          tokenName, lusdTokenTester.address,
+          chainId, tokenVersion,
+          approve.owner, approve.spender,
+          approve.value, nonce, deadline
+        )
+
+        const { v, r, s } = sign(digest, alicePrivateKey)
+
+        const tx = lusdTokenTester.permit(
+          approve.owner, approve.spender, approve.value,
+          deadline, v, hexlify(r), hexlify(s)
+        )
+
+        return { v, r, s, tx }
+      }
+
+      it('permits and emits an Approval event (replay protected)', async () => {
+        const deadline = 100000000000000
+
+        // Approve it
+        const { v, r, s, tx } = await buildPermitTx(deadline)
+        const receipt = await tx
+        const event = receipt.logs[0]
+
+        // Check that approval was successful
+        assert.equal(event.event, 'Approval')
+        assert.equal(await lusdTokenTester.nonces(approve.owner), 1)
+        assert.equal(await lusdTokenTester.allowance(approve.owner, approve.spender), approve.value)
+
+        // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
+        await assertRevert(lusdTokenTester.permit(
+          approve.owner, approve.spender, approve.value,
+          deadline, v, r, s), 'LUSD: invalid signature')
+
+        // Check that the zero address fails
+        await assertAssert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000',
+                                                  approve.spender, approve.value, deadline, '0x99', r, s))
+      })
+
+      it('permits(): fails with expired deadline', async () => {
+        const deadline = 1
+
+        const { v, r, s, tx } = await buildPermitTx(deadline)
+        await assertRevert(tx, 'LUSD: expired deadline')
+      })
+
+      it('permits(): fails with the wrong signature', async () => {
+        const deadline = 100000000000000
+
+        const { v, r, s } = await buildPermitTx(deadline)
+
+        const tx = lusdTokenTester.permit(
+          carol, approve.spender, approve.value,
+          deadline, v, hexlify(r), hexlify(s)
+        )
+
+        await assertRevert(tx, 'LUSD: invalid signature')
+      })
     }
+  }
+  describe('Basic token functions, without Proxy', async () => {
+    testCorpus({ withProxy: false })
+  })
 
-    const buildPermitTx = async (deadline) => {
-      const nonce = (await lusdTokenTester.nonces(approve.owner)).toString()
-      
-      // Get the EIP712 digest
-      const digest = getPermitDigest(
-        tokenName, lusdTokenTester.address, 
-        chainId, tokenVersion, 
-        approve.owner, approve.spender,
-        approve.value, nonce, deadline
-      )
-      
-      const { v, r, s } = sign(digest, alicePrivateKey)
-      
-      const tx = lusdTokenTester.permit(
-        approve.owner, approve.spender, approve.value, 
-        deadline, v, hexlify(r), hexlify(s)
-      )
-
-      return { v, r, s, tx }
-    }
-
-    it('permits and emits an Approval event (replay protected)', async () => {
-      const deadline = 100000000000000
-
-      // Approve it
-      const { v, r, s, tx } = await buildPermitTx(deadline)
-      const receipt = await tx
-      const event = receipt.logs[0]
-
-      // Check that approval was successful
-      assert.equal(event.event, 'Approval')
-      assert.equal(await lusdTokenTester.nonces(approve.owner), 1)
-      assert.equal(await lusdTokenTester.allowance(approve.owner, approve.spender), approve.value)
-      
-      // Check that we can not use re-use the same signature, since the user's nonce has been incremented (replay protection)
-      await assertRevert(lusdTokenTester.permit(
-        approve.owner, approve.spender, approve.value, 
-        deadline, v, r, s), 'LUSD: invalid signature')
-     
-      // Check that the zero address fails
-      await assertAssert(lusdTokenTester.permit('0x0000000000000000000000000000000000000000',
-        approve.spender, approve.value, deadline, '0x99', r, s))
-    })
-
-    it('permits(): fails with expired deadline', async () => {
-      const deadline = 1
-
-      const { v, r, s, tx } = await buildPermitTx(deadline)
-      await assertRevert(tx, 'LUSD: expired deadline')
-    })
-
-    it('permits(): fails with the wrong signature', async () => {
-      const deadline = 100000000000000
-
-      const { v, r, s } = await buildPermitTx(deadline)
-
-      const tx = lusdTokenTester.permit(
-        carol, approve.spender, approve.value,
-        deadline, v, hexlify(r), hexlify(s)
-      )
-
-      await assertRevert(tx, 'LUSD: invalid signature')
-    })
+  describe('Basic token functions, with Proxy', async () => {
+    testCorpus({ withProxy: true })
   })
 })
 

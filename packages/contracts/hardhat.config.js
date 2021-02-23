@@ -13,13 +13,26 @@ module.exports = {
         // artifacts: "./artifacts"
     },
     solidity: {
-        version: "0.6.11",
-        settings: {
-            optimizer: {
-                enabled: true,
-                runs: 100
-            }
-        }
+        compilers: [
+            {
+                version: "0.5.17",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 100
+                    }
+                }
+            },
+            {
+                version: "0.6.11",
+                settings: {
+                    optimizer: {
+                        enabled: true,
+                        runs: 100
+                    }
+                }
+            },
+        ]
     },
     networks: {
         hardhat: {

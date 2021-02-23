@@ -31,7 +31,6 @@ These are the Liquity components that have been made visible in this repo. They 
 
 | Package               | Description                                                                                                                                 |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| @liquity/decimal      | Decimal math using [ethers.js](https://github.com/ethers-io/ethers.js/)'s BigNumber                                                         |
 | @liquity/dev-frontend | [Dev UI](https://devui.liquity.org): a bare-bones but functional React app used for interfacing with the smart contracts during development |
 | @liquity/lib-base     | Common interfaces and classes shared by the other `lib-` packages                                                                           |
 | @liquity/lib-ethers   | [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions                        |

@@ -346,7 +346,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_debtChange",
+        "name": "_LUSDChange",
         "type": "uint256"
       },
       {

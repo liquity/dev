@@ -102,6 +102,7 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
   const batchedProvider = class extends Base implements BatchedProvider {
     batchingDelayMs = 10;
 
+    _chainId = 0;
     _multiCaller?: MultiCaller;
     _timeoutId: any;
     _batched: BatchedCalls = emptyBatch();
@@ -109,6 +110,10 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
     _numberOfBatchedCalls = 0;
     _numberOfActualCalls = 0;
     _timeOfLastRatioCheck?: number;
+
+    get chainId() {
+      return this._chainId;
+    }
 
     set chainId(chainId: number) {
       if (this._multiCaller) {
@@ -122,6 +127,8 @@ export const Batched = <T extends new (...args: any[]) => BaseProvider>(Base: T)
           this
         ) as MultiCaller;
       }
+
+      this._chainId = chainId;
     }
 
     async _dispatchCalls() {

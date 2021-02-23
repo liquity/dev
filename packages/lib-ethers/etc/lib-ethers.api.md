@@ -107,8 +107,12 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     }): EthersLiquityWithStore<BlockPolledLiquityStore>;
     // @internal (undocumented)
     static _from(connection: EthersLiquityConnection): EthersLiquity;
+    // @internal (undocumented)
+    _getActivePool(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // @internal (undocumented)
+    _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
@@ -341,8 +345,12 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     }): ReadableEthersLiquityWithStore<BlockPolledLiquityStore>;
     // @internal (undocumented)
     static _from(connection: EthersLiquityConnection): ReadableEthersLiquity;
+    // @internal (undocumented)
+    _getActivePool(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // @internal (undocumented)
+    _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
