@@ -2529,6 +2529,64 @@ contract('TroveManager', async accounts => {
     assert.equal(carol_Status, 1)
   })
 
+  it("redeemCollateral(): performs partial redemption if resultant debt is > minimum net debt", async () => {
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), A, A, { from: A, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(20000, 18)), B, B, { from: B, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(30000, 18)), C, C, { from: C, value: dec(1000, 'ether') })
+
+    // A and C send all their tokens to B
+    await lusdToken.transfer(B, await lusdToken.balanceOf(A), {from: A})
+    await lusdToken.transfer(B, await lusdToken.balanceOf(C), {from: C})
+    
+    await troveManager.setBaseRate(0) 
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // LUSD redemption is 55000 US
+    const LUSDRedemption = dec(55000, 18)
+    const tx1 = await th.redeemCollateralAndGetTxObject(B, contracts, LUSDRedemption, th._100pct)
+    
+    // Check B, C closed and A remains active
+    assert.isTrue(await sortedTroves.contains(A))
+    assert.isFalse(await sortedTroves.contains(B))
+    assert.isFalse(await sortedTroves.contains(C))
+
+    // A's remaining debt = 29950 + 19950 + 9950 + 50 - 55000 = 4900
+    const A_debt = await troveManager.getTroveDebt(A)
+    await th.assertIsApproximatelyEqual(A_debt, dec(4900, 18), 1000) 
+  })
+
+  it("redeemCollateral(): doesn't perform partial redemption if resultant debt would be < minimum net debt", async () => {
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(6000, 18)), A, A, { from: A, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(20000, 18)), B, B, { from: B, value: dec(1000, 'ether') })
+    await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(30000, 18)), C, C, { from: C, value: dec(1000, 'ether') })
+
+    // A and C send all their tokens to B
+    await lusdToken.transfer(B, await lusdToken.balanceOf(A), {from: A})
+    await lusdToken.transfer(B, await lusdToken.balanceOf(C), {from: C})
+
+    await troveManager.setBaseRate(0) 
+
+    // Skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // LUSD redemption is 55000 LUSD
+    const LUSDRedemption = dec(55000, 18)
+    const tx1 = await th.redeemCollateralAndGetTxObject(B, contracts, LUSDRedemption, th._100pct)
+    
+    // Check B, C closed and A remains active
+    assert.isTrue(await sortedTroves.contains(A))
+    assert.isFalse(await sortedTroves.contains(B))
+    assert.isFalse(await sortedTroves.contains(C))
+
+    // A's remaining debt would be 29950 + 19950 + 5950 + 50 - 55000 = 900.
+    // Since this is below the min net debt of 100, A should be skipped and untouched by the redemption
+    const A_debt = await troveManager.getTroveDebt(A)
+    console.log(`A debt after: ${await troveManager.getTroveDebt(A)}`)
+    await th.assertIsApproximatelyEqual(A_debt, dec(6000, 18))
+  })
+
   it('redeemCollateral(): doesnt perform the final partial redemption in the sequence if the hint is out-of-date', async () => {
     // --- SETUP ---
 

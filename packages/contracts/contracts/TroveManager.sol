@@ -186,6 +186,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     struct SingleRedemptionValues {
         uint LUSDLot;
         uint ETHLot;
+        bool cancelledPartial;
     }
 
     // --- Events ---
@@ -829,11 +830,14 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         } else {
             uint newNICR = LiquityMath._computeNominalCR(newColl, newDebt);
 
-            // Check if the provided hint is fresh. If not, we bail since trying to reinsert without a good hint will almost
-            // certainly result in running out of gas.
-            if (newNICR != _partialRedemptionHintNICR) {
-                singleRedemption.LUSDLot = 0;
-                singleRedemption.ETHLot = 0;
+            /*
+            * If the provided hint is out of date, we bail since trying to reinsert without a good hint will almost
+            * certainly result in running out of gas. 
+            *
+            * If the resultant net debt of the partial is less than the minimum, net debt we bail.
+            */
+            if (newNICR != _partialRedemptionHintNICR || _getNetDebt(newDebt) <= MIN_NET_DEBT) {
+                singleRedemption.cancelledPartial = true;
                 return singleRedemption;
             }
 
@@ -970,7 +974,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
                 _partialRedemptionHintNICR
             );
 
-            if (singleRedemption.LUSDLot == 0) break; // Partial redemption hint got out-of-date, therefore we could not redeem from the last Trove
+            if (singleRedemption.cancelledPartial) break; // Partial redemption was cancelled (out-of-date hint, or new net debt < minimum), therefore we could not redeem from the last Trove
 
             totals.totalLUSDToRedeem  = totals.totalLUSDToRedeem.add(singleRedemption.LUSDLot);
             totals.totalETHDrawn = totals.totalETHDrawn.add(singleRedemption.ETHLot);
