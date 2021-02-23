@@ -1433,7 +1433,7 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(repayTxB.receipt.status)
     })
 
-    it.only("repayLUSD(): reverts when it would leave trove with net debt < minimum net debt", async () => { 
+    it("repayLUSD(): reverts when it would leave trove with net debt < minimum net debt", async () => { 
       // Make the LUSD request 2e-18 above 1950 LUSD to correct for floor division, and make net debt = 1950.000...001
       await borrowerOperations.openTrove(th._100pct, (await getNetBorrowingAmount('1950'+'0'.repeat(17)+'2')), A, A, { from: A, value: dec(100, 30) })
       

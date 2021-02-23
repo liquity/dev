@@ -28,6 +28,7 @@ contract LiquityBase is BaseMath {
 
     // Minimum amount of net LUSD debt a trove must have
     uint constant public MIN_NET_DEBT = 1950e18;  
+    // uint constant public MIN_NET_DEBT = 0; 
 
     uint constant public PERCENT_DIVISOR = 200; // dividing by 200 yields 0.5%
 
