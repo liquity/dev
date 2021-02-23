@@ -31,6 +31,51 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "EtherSent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_F_ETH",
+        "type": "uint256"
+      }
+    ],
+    "name": "F_ETHUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_F_LUSD",
+        "type": "uint256"
+      }
+    ],
+    "name": "F_LUSDUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "_lqtyTokenAddress",
         "type": "address"
       }
@@ -93,6 +138,31 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_staker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_F_ETH",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_F_LUSD",
+        "type": "uint256"
+      }
+    ],
+    "name": "StakerSnapshotsUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "staker",
@@ -112,6 +182,19 @@
       }
     ],
     "name": "StakingGainsWithdrawn",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_totalLQTYStaked",
+        "type": "uint256"
+      }
+    ],
+    "name": "TotalLQTYStakedUpdated",
     "type": "event"
   },
   {

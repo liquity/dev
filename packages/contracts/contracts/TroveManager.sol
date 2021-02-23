@@ -190,19 +190,37 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     // --- Events ---
 
+    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+    event PriceFeedAddressChanged(address _newPriceFeedAddress);
+    event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
+    event ActivePoolAddressChanged(address _activePoolAddress);
+    event DefaultPoolAddressChanged(address _defaultPoolAddress);
+    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
+    event GasPoolAddressChanged(address _gasPoolAddress);
+    event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
+    event SortedTrovesAddressChanged(address _sortedTrovesAddress);
+    event LQTYTokenAddressChanged(address _lqtyTokenAddress);
+    event LQTYStakingAddressChanged(address _lqtyStakingAddress);
+
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _collGasCompensation, uint _LUSDGasCompensation);
     event Redemption(uint _attemptedLUSDAmount, uint _actualLUSDAmount, uint _ETHSent, uint _ETHFee);
+    event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint _stake, TroveManagerOperation _operation);
+    event TroveLiquidated(address indexed _borrower, uint _debt, uint _coll, TroveManagerOperation _operation);
+    event BaseRateUpdated(uint _baseRate);
+    event LastFeeOpTimeUpdated(uint _lastFeeOpTime);
+    event TotalStakesUpdated(uint _newTotalStakes);
+    event SystemSnapshotsUpdated(uint _totalStakesSnapshot, uint _totalCollateralSnapshot);
+    event LTermsUpdated(uint _L_ETH, uint _L_LUSDDebt);
+    event TroveSnapshotsUpdated(uint _L_ETH, uint _L_LUSDDebt);
+    event TroveIndexUpdated(address _borrower, uint _newIndex);
 
-    enum TroveManagerOperation {
+     enum TroveManagerOperation {
         applyPendingRewards,
         liquidateInNormalMode,
         liquidateInRecoveryMode,
         redeemCollateral
     }
 
-    event TroveCreated(address indexed _borrower, uint _arrayIndex);
-    event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint _stake, TroveManagerOperation _operation);
-    event TroveLiquidated(address indexed _borrower, uint _debt, uint _coll, TroveManagerOperation _operation);
 
     // --- Dependency setter ---
 
@@ -316,7 +334,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         _closeTrove(_borrower);
         emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, TroveManagerOperation.liquidateInNormalMode);
-
+        emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.liquidateInNormalMode);
         return singleLiquidation;
     }
 
@@ -356,7 +374,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
             _closeTrove(_borrower);
             emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, TroveManagerOperation.liquidateInRecoveryMode);
-
+            emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.liquidateInRecoveryMode);
+            
         // If 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
         } else if ((_ICR > _100pct) && (_ICR < MCR)) {
              _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, vars.pendingDebtReward, vars.pendingCollReward);
@@ -369,7 +388,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
             _closeTrove(_borrower);
             emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, TroveManagerOperation.liquidateInRecoveryMode);
-
+            emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.liquidateInRecoveryMode);
         /*
         * If 110% <= ICR < current TCR (accounting for the preceding liquidations in the current sequence)
         * and there is LUSD in the Stability Pool, only offset, with no redistribution,
@@ -389,6 +408,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             }
 
             emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.collToSendToSP, TroveManagerOperation.liquidateInRecoveryMode);
+            emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.liquidateInRecoveryMode);
 
         } else { // if (_ICR >= MCR && ( _ICR >= _TCR || singleLiquidation.entireTroveDebt > _LUSDInStabPool))
             LiquidationValues memory zeroVals;
@@ -1054,6 +1074,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     function _updateTroveRewardSnapshots(address _borrower) internal {
         rewardSnapshots[_borrower].ETH = L_ETH;
         rewardSnapshots[_borrower].LUSDDebt = L_LUSDDebt;
+        emit TroveSnapshotsUpdated(L_ETH, L_LUSDDebt);
     }
 
     // Get the borrower's pending accumulated ETH reward, earned by their stake
@@ -1136,7 +1157,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint newStake = _computeNewStake(Troves[_borrower].coll);
         uint oldStake = Troves[_borrower].stake;
         Troves[_borrower].stake = newStake;
+
         totalStakes = totalStakes.sub(oldStake).add(newStake);
+        emit TotalStakesUpdated(totalStakes);
 
         return newStake;
     }
@@ -1187,6 +1210,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
         L_LUSDDebt = L_LUSDDebt.add(LUSDDebtRewardPerUnitStaked);
 
+        emit LTermsUpdated(L_ETH, L_LUSDDebt);
+
         // Transfer coll and debt from ActivePool to DefaultPool
         _activePool.decreaseLUSDDebt(_debt);
         _defaultPool.increaseLUSDDebt(_debt);
@@ -1229,6 +1254,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint activeColl = _activePool.getETH();
         uint liquidatedColl = defaultPool.getETH();
         totalCollateralSnapshot = activeColl.sub(_collRemainder).add(liquidatedColl);
+
+        emit SystemSnapshotsUpdated(totalStakesSnapshot, totalCollateralSnapshot);
     }
 
     // Push the owner's address to the Trove owners list, and record the corresponding array index on the Trove struct
@@ -1269,6 +1296,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         TroveOwners[index] = addressToMove;
         Troves[addressToMove].arrayIndex = index;
+        emit TroveIndexUpdated(addressToMove, index);
+
         TroveOwners.pop();
     }
 
@@ -1319,7 +1348,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         // Update the baseRate state variable
         baseRate = newBaseRate;
-
+        emit BaseRateUpdated(newBaseRate);
+        
         _updateLastFeeOpTime();
 
         return newBaseRate;
@@ -1392,6 +1422,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         assert(decayedBaseRate <= DECIMAL_PRECISION);  // The baseRate can decay to 0
 
         baseRate = decayedBaseRate;
+        emit BaseRateUpdated(decayedBaseRate);
 
         _updateLastFeeOpTime();
     }
@@ -1404,6 +1435,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         if (timePassed >= SECONDS_IN_ONE_MINUTE) {
             lastFeeOperationTime = block.timestamp;
+            emit LastFeeOpTimeUpdated(block.timestamp);
         }
     }
 

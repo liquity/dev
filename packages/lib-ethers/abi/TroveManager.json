@@ -17,6 +17,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "_baseRate",
+        "type": "uint256"
+      }
+    ],
+    "name": "BaseRateUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_newBorrowerOperationsAddress",
         "type": "address"
@@ -95,12 +108,44 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "_L_ETH",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_L_LUSDDebt",
+        "type": "uint256"
+      }
+    ],
+    "name": "LTermsUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_newLUSDTokenAddress",
         "type": "address"
       }
     ],
     "name": "LUSDTokenAddressChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_lastFeeOpTime",
+        "type": "uint256"
+      }
+    ],
+    "name": "LastFeeOpTimeUpdated",
     "type": "event"
   },
   {
@@ -227,7 +272,39 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_totalStakesSnapshot",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_totalCollateralSnapshot",
+        "type": "uint256"
+      }
+    ],
+    "name": "SystemSnapshotsUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_newTotalStakes",
+        "type": "uint256"
+      }
+    ],
+    "name": "TotalStakesUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_borrower",
         "type": "address"
@@ -235,11 +312,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_arrayIndex",
+        "name": "_newIndex",
         "type": "uint256"
       }
     ],
-    "name": "TroveCreated",
+    "name": "TroveIndexUpdated",
     "type": "event"
   },
   {
@@ -271,6 +348,25 @@
       }
     ],
     "name": "TroveLiquidated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_L_ETH",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_L_LUSDDebt",
+        "type": "uint256"
+      }
+    ],
+    "name": "TroveSnapshotsUpdated",
     "type": "event"
   },
   {

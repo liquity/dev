@@ -32,9 +32,15 @@
         "internalType": "uint256",
         "name": "_unlockTime",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_deployer",
+        "type": "address"
       }
     ],
-    "name": "LockupContractDeployed",
+    "name": "LockupContractDeployedThroughFactory",
     "type": "event"
   },
   {

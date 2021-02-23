@@ -8,10 +8,12 @@ import "../Dependencies/IERC2612.sol";
 interface ILUSDToken is IERC20, IERC2612 { 
     
     // --- Events ---
-    event LUSDTokenBalanceUpdated(address _user, uint _amount);
+
     event TroveManagerAddressChanged(address _troveManagerAddress);
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+
+    event LUSDTokenBalanceUpdated(address _user, uint _amount);
 
     // --- Functions ---
 

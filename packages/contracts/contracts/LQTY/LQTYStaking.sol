@@ -47,6 +47,11 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
 
     event StakeChanged(address indexed staker, uint newStake);
     event StakingGainsWithdrawn(address indexed staker, uint LUSDGain, uint ETHGain);
+    event F_ETHUpdated(uint _F_ETH);
+    event F_LUSDUpdated(uint _F_LUSD);
+    event TotalLQTYStakedUpdated(uint _totalLQTYStaked);
+    event EtherSent(address _account, uint _amount);
+    event StakerSnapshotsUpdated(address _staker, uint _F_ETH, uint _F_LUSD);
 
     // --- Functions ---
 
@@ -104,6 +109,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
         // Increase user’s stake and total LQTY staked
         stakes[msg.sender] = newStake;
         totalLQTYStaked = totalLQTYStaked.add(_LQTYamount);
+        emit TotalLQTYStakedUpdated(totalLQTYStaked);
 
         // Transfer LQTY from caller to this contract
         lqtyToken.sendToLQTYStaking(msg.sender, _LQTYamount);
@@ -138,6 +144,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
             // Decrease user's stake and total LQTY staked
             stakes[msg.sender] = newStake;
             totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);
+            emit TotalLQTYStakedUpdated(totalLQTYStaked);
 
             // Transfer unstaked LQTY to user
             lqtyToken.transfer(msg.sender, LQTYToWithdraw);
@@ -161,6 +168,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
         if (totalLQTYStaked > 0) {ETHFeePerLQTYStaked = _ETHFee.mul(DECIMAL_PRECISION).div(totalLQTYStaked);}
 
         F_ETH = F_ETH.add(ETHFeePerLQTYStaked); 
+        emit F_ETHUpdated(F_ETH);
     }
 
     function increaseF_LUSD(uint _LUSDFee) external override {
@@ -170,6 +178,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
         if (totalLQTYStaked > 0) {LUSDFeePerLQTYStaked = _LUSDFee.mul(DECIMAL_PRECISION).div(totalLQTYStaked);}
         
         F_LUSD = F_LUSD.add(LUSDFeePerLQTYStaked);
+        emit F_LUSDUpdated(F_LUSD);
     }
 
     // --- Pending reward functions ---
@@ -199,11 +208,13 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     function _updateUserSnapshots(address _user) internal {
         snapshots[_user].F_ETH_Snapshot = F_ETH;
         snapshots[_user].F_LUSD_Snapshot = F_LUSD;
+        emit StakerSnapshotsUpdated(_user, F_ETH, F_LUSD);
     }
 
     function _sendETHGainToUser(uint ETHGain) internal {
         (bool success, ) = msg.sender.call{value: ETHGain}("");
         require(success, "LQTYStaking: Failed to send accumulated ETHGain");
+        emit EtherSent(msg.sender, ETHGain);
     }
 
     // --- 'require' functions ---

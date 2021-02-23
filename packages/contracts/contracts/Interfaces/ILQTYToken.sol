@@ -10,9 +10,7 @@ interface ILQTYToken is IERC20, IERC2612 {
     // --- Events ---
     
     event CommunityIssuanceAddressSet(address _communityIssuanceAddress);
-
     event LQTYStakingAddressSet(address _lqtyStakingAddress);
-    
     event LockupContractFactoryAddressSet(address _lockupContractFactoryAddress);
 
     // --- Functions ---

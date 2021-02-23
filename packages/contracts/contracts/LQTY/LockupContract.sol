@@ -32,7 +32,7 @@ contract LockupContract {
 
     // --- Events ---
 
-    event LockupContractDeployed(uint _unlockTime);
+    event LockupContractCreated(address _beneficiary, uint _unlockTime);
     event LockupContractEmptied(uint _LQTYwithdrawal);
 
     // --- Functions ---
@@ -55,6 +55,7 @@ contract LockupContract {
         unlockTime = _unlockTime;
         
         beneficiary =  _beneficiary;
+        emit LockupContractCreated(_beneficiary, _unlockTime);
     }
 
     function withdrawLQTY() external {

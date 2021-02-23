@@ -8,24 +8,19 @@ interface IBorrowerOperations {
     // --- Events ---
 
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
-
     event ActivePoolAddressChanged(address _activePoolAddress);
-
     event DefaultPoolAddressChanged(address _defaultPoolAddress);
-
     event StabilityPoolAddressChanged(address _stabilityPoolAddress);
-
     event GasPoolAddressChanged(address _gasPoolAddress);
-
     event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
-
     event PriceFeedAddressChanged(address  _newPriceFeedAddress);
-
     event SortedTrovesAddressChanged(address _sortedTrovesAddress);
-
     event LUSDTokenAddressChanged(address _lusdTokenAddress);
-
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
+
+    event TroveCreated(address indexed _borrower, uint arrayIndex);
+    event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, uint8 operation);
+    event LUSDBorrowingFeePaid(address indexed _borrower, uint _LUSDFee);
 
     // --- Functions ---
 

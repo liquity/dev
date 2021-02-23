@@ -6,11 +6,11 @@ pragma solidity 0.6.11;
 /**
  * The purpose of this contract is to hold LUSD tokens for gas compensation:
  * https://github.com/liquity/dev#gas-compensation
- * When a borrower opens a trove, an additional 10 LUSD debt is issued,
- * and 10 LUSD is minted and sent to this contract.
+ * When a borrower opens a trove, an additional 50 LUSD debt is issued,
+ * and 50 LUSD is minted and sent to this contract.
  * When a borrower closes their active trove, this gas compensation is refunded:
- * 10 LUSD is burned from the this contract's balance, and the corresponding
- * 10 LUSD debt on the trove is cancelled.
+ * 50 LUSD is burned from the this contract's balance, and the corresponding
+ * 50 LUSD debt on the trove is cancelled.
  * See this issue for more context: https://github.com/liquity/dev/issues/186
  */
 contract GasPool {

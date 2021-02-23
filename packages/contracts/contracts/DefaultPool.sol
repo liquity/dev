@@ -24,6 +24,8 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     uint256 internal LUSDDebt;  // debt
 
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
+    event DefaultPoolLUSDDebtUpdated(uint _LUSDDebt);
+    event DefaultPoolETHBalanceUpdated(uint _ETH);
 
     // --- Dependency setters ---
 
@@ -67,6 +69,7 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
         _requireCallerIsTroveManager();
         address activePool = activePoolAddress; // cache to save an SLOAD
         ETH = ETH.sub(_amount);
+        emit DefaultPoolETHBalanceUpdated(ETH);
         emit EtherSent(activePool, _amount);
 
         (bool success, ) = activePool.call{ value: _amount }("");
@@ -76,11 +79,13 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     function increaseLUSDDebt(uint _amount) external override {
         _requireCallerIsTroveManager();
         LUSDDebt = LUSDDebt.add(_amount);
+        emit DefaultPoolLUSDDebtUpdated(LUSDDebt);
     }
 
     function decreaseLUSDDebt(uint _amount) external override {
         _requireCallerIsTroveManager();
         LUSDDebt = LUSDDebt.sub(_amount);
+        emit DefaultPoolLUSDDebtUpdated(LUSDDebt);
     }
 
     // --- 'require' functions ---
@@ -98,5 +103,6 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     receive() external payable {
         _requireCallerIsActivePool();
         ETH = ETH.add(msg.value);
+        emit DefaultPoolETHBalanceUpdated(ETH);
     }
 }
