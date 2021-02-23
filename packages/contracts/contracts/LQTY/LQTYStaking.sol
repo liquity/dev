@@ -85,6 +85,8 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
 
     // If caller has a pre-existing stake, send any accumulated ETH and LUSD gains to them. 
     function stake(uint _LQTYamount) external override {
+        _requireNonZeroAmount(_LQTYamount);
+
         uint currentStake = stakes[msg.sender];
 
         uint ETHGain;
@@ -128,18 +130,21 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
         
         _updateUserSnapshots(msg.sender);
 
-        uint LQTYToWithdraw = LiquityMath._min(_LQTYamount, currentStake);
+        if (_LQTYamount > 0) {
+            uint LQTYToWithdraw = LiquityMath._min(_LQTYamount, currentStake);
 
-        uint newStake = currentStake.sub(LQTYToWithdraw);
+            uint newStake = currentStake.sub(LQTYToWithdraw);
 
-        // Decrease user's stake and total LQTY staked
-        stakes[msg.sender] = newStake;
-        totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);  
+            // Decrease user's stake and total LQTY staked
+            stakes[msg.sender] = newStake;
+            totalLQTYStaked = totalLQTYStaked.sub(LQTYToWithdraw);
 
-        // Transfer unstaked LQTY to user
-        lqtyToken.transfer(msg.sender, LQTYToWithdraw);
+            // Transfer unstaked LQTY to user
+            lqtyToken.transfer(msg.sender, LQTYToWithdraw);
 
-        emit StakeChanged(msg.sender, newStake);
+            emit StakeChanged(msg.sender, newStake);
+        }
+
         emit StakingGainsWithdrawn(msg.sender, LUSDGain, ETHGain);
 
         // Send accumulated LUSD and ETH gains to the caller
@@ -217,6 +222,10 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
 
     function _requireUserHasStake(uint currentStake) internal pure {  
         require(currentStake > 0, 'LQTYStaking: User must have a non-zero stake');  
+    }
+
+    function _requireNonZeroAmount(uint _amount) internal pure {
+        require(_amount > 0, 'LQTYStaking: Amount must be non-zero');
     }
 
     receive() external payable {
