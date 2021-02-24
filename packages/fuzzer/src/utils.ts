@@ -10,11 +10,27 @@ import {
   Trove,
   TroveWithPendingRedistribution,
   ReadableLiquity,
-  LUSD_LIQUIDATION_RESERVE,
-  MINIMUM_COLLATERAL_RATIO
+  LUSD_LIQUIDATION_RESERVE
 } from "@liquity/lib-base";
 import { EthersLiquity, ReadableEthersLiquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
+
+export const objToString = (o: Record<string, unknown>) =>
+  "{ " +
+  Object.entries(o)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join(", ") +
+  " }";
+
+export const expectFailure = async (f: () => Promise<unknown>) => {
+  try {
+    await f();
+  } catch {
+    return;
+  }
+
+  throw new Error("Unexpected success");
+};
 
 export const createRandomWallets = (numberOfWallets: number, provider: Provider) => {
   const accounts = new Array<Wallet>(numberOfWallets);
@@ -27,31 +43,38 @@ export const createRandomWallets = (numberOfWallets: number, provider: Provider)
 };
 
 export const createRandomTrove = (price: Decimal) => {
-  let collateral: Decimal, debt: Decimal;
   let randomValue = truncateLastDigits(benford(1000));
 
   if (Math.random() < 0.5) {
-    collateral = Decimal.from(randomValue);
+    const collateral = Decimal.from(randomValue);
+    const maxDebt = parseInt(price.mul(collateral).toString(0));
+    const debt = LUSD_LIQUIDATION_RESERVE.add(truncateLastDigits(maxDebt - benford(maxDebt)));
 
-    const maxDebt = parseInt(
-      price.mul(collateral).div(MINIMUM_COLLATERAL_RATIO).sub(LUSD_LIQUIDATION_RESERVE).toString(0)
-    );
-
-    debt = LUSD_LIQUIDATION_RESERVE.add(truncateLastDigits(maxDebt - benford(maxDebt)));
+    return new Trove(collateral, debt);
   } else {
-    debt = LUSD_LIQUIDATION_RESERVE.add(100 * randomValue);
+    const debt = LUSD_LIQUIDATION_RESERVE.add(100 * randomValue);
 
-    collateral = Decimal.from(
+    const collateral = Decimal.from(
       debt
         .div(price)
-        .mul(10 + benford(20))
-        .div(10)
-        .toString(1)
+        .mul(100 + benford(200))
+        .div(100)
+        .toString(4)
     );
-  }
 
-  return new Trove(collateral, debt);
+    return new Trove(collateral, debt);
+  }
 };
+
+export const randomCollateralChange = ({ collateral }: Trove) =>
+  Math.random() < 0.5
+    ? { withdrawCollateral: collateral.mul(1.1 * Math.random()) }
+    : { depositCollateral: collateral.mul(0.5 * Math.random()) };
+
+export const randomDebtChange = ({ debt }: Trove) =>
+  Math.random() < 0.5
+    ? { repayLUSD: debt.mul(1.1 * Math.random()) }
+    : { borrowLUSD: debt.mul(0.5 * Math.random()) };
 
 export const getListOfTroves = async (liquity: ReadableLiquity) =>
   liquity.getTroves({

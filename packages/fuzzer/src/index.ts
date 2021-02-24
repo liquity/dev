@@ -13,6 +13,7 @@ import {
   Trove,
   TroveWithPendingRedistribution
 } from "@liquity/lib-base";
+
 import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
 
@@ -26,7 +27,8 @@ import {
   getListOfTrovesBeforeRedistribution,
   shortenAddress
 } from "./utils";
-import { Fixture } from "./fixture";
+
+import { Fixture } from "./Fixture";
 
 dotenv.config();
 
@@ -113,20 +115,28 @@ yargs
       }
     },
     async ({ rounds: numberOfRounds, users: numberOfUsers, subgraph: shouldCheckSubgraph }) => {
-      const randomUsers = createRandomWallets(numberOfUsers, provider);
+      const [frontend, ...randomUsers] = createRandomWallets(numberOfUsers + 1, provider);
 
-      const [deployerLiquity, funderLiquity, ...randomLiquities] = await connectUsers([
-        deployer,
+      const [
+        deployerLiquity,
+        funderLiquity,
+        frontendLiquity,
+        ...randomLiquities
+      ] = await connectUsers([deployer, funder, frontend, ...randomUsers]);
+
+      const fixture = await Fixture.setup(
+        deployerLiquity,
         funder,
-        ...randomUsers
-      ]);
-
-      const fixture = await Fixture.setup(deployerLiquity, funderLiquity, funder);
+        funderLiquity,
+        frontend.address,
+        frontendLiquity
+      );
 
       let previousListOfTroves: [string, TroveWithPendingRedistribution][] | undefined = undefined;
 
       console.log();
       console.log("// Keys");
+      console.log(`[frontend]: ${frontend.privateKey}`);
       randomUsers.forEach(user =>
         console.log(`[${shortenAddress(user.address)}]: ${user.privateKey}`)
       );
@@ -142,23 +152,42 @@ yargs
           const user = randomUsers[i];
           const liquity = randomLiquities[i];
 
-          if (Math.random() < 0.5) {
+          const x = Math.random();
+
+          if (x < 0.5) {
             const trove = await liquity.getTrove();
 
             if (trove.isEmpty) {
               await fixture.openRandomTrove(user.address, liquity);
             } else {
-              await fixture.closeTrove(user.address, liquity, trove);
+              if (x < 0.4) {
+                await fixture.randomlyAdjustTrove(user.address, liquity, trove);
+              } else {
+                await fixture.closeTrove(user.address, liquity, trove);
+              }
+            }
+          } else if (x < 0.7) {
+            const deposit = await liquity.getStabilityDeposit();
+
+            if (deposit.initialLUSD.isZero || x < 0.6) {
+              await fixture.depositRandomAmountInStabilityPool(user.address, liquity);
+            } else {
+              await fixture.withdrawRandomAmountFromStabilityPool(user.address, liquity, deposit);
+            }
+          } else if (x < 0.9) {
+            const stake = await liquity.getLQTYStake();
+
+            if (stake.stakedLQTY.isZero || x < 0.8) {
+              await fixture.stakeRandomAmount(user.address, liquity);
+            } else {
+              await fixture.unstakeRandomAmount(user.address, liquity, stake);
             }
           } else {
-            if (Math.random() < 0.5) {
-              await fixture.redeemRandomAmount(user.address, liquity);
-            } else {
-              await fixture.depositRandomAmountInStabilityPool(user.address, liquity);
-            }
+            await fixture.redeemRandomAmount(user.address, liquity);
           }
 
           // await fixture.sweepLUSD(liquity);
+          await fixture.sweepLQTY(liquity);
 
           const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
           const totalRedistributed = await deployerLiquity.getTotalRedistributed();
@@ -208,7 +237,13 @@ yargs
       });
 
       if (firstTroveOwner !== funder.address) {
-        const trove = await funderLiquity.getTrove();
+        let trove = await funderLiquity.getTrove();
+
+        if (trove.isEmpty) {
+          await funderLiquity.openTrove({ depositCollateral: 1000 });
+          trove = await funderLiquity.getTrove();
+        }
+
         const lusdBalance = await funderLiquity.getLUSDBalance();
 
         if (lusdBalance.lt(trove.netDebt)) {
