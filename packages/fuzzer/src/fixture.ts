@@ -1,6 +1,3 @@
-import assert from "assert";
-
-import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 
 import {
@@ -8,10 +5,12 @@ import {
   Decimalish,
   LQTYStake,
   StabilityDeposit,
+  TransactableLiquity,
   Trove,
   TroveAdjustmentParams
 } from "@liquity/lib-base";
-import { EthersLiquity as Liquity, EthersTransactionFailedError } from "@liquity/lib-ethers";
+
+import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
 
 import {
   createRandomTrove,
@@ -22,9 +21,26 @@ import {
   getListOfTroves,
   randomCollateralChange,
   randomDebtChange,
-  objToString,
-  expectFailure
+  objToString
 } from "./utils";
+
+import { GasHistogram } from "./GasHistogram";
+
+type _GasHistogramsFrom<T> = {
+  [P in keyof T]: T[P] extends (...args: never[]) => Promise<infer R> ? GasHistogram<R> : never;
+};
+
+type GasHistograms = Pick<
+  _GasHistogramsFrom<TransactableLiquity>,
+  | "openTrove"
+  | "adjustTrove"
+  | "closeTrove"
+  | "redeemLUSD"
+  | "depositLUSDInStabilityPool"
+  | "withdrawLUSDFromStabilityPool"
+  | "stakeLQTY"
+  | "unstakeLQTY"
+>;
 
 export class Fixture {
   private readonly deployerLiquity: Liquity;
@@ -32,9 +48,7 @@ export class Fixture {
   private readonly funderLiquity: Liquity;
   private readonly funderAddress: string;
   private readonly frontendAddress: string;
-
-  private readonly depositGasUsedBins = new Array<number>(100).fill(0);
-  private depositTxFailures = 0;
+  private readonly gasHistograms: GasHistograms;
 
   private price: Decimal;
 
@@ -54,6 +68,17 @@ export class Fixture {
     this.funderAddress = funderAddress;
     this.frontendAddress = frontendAddress;
     this.price = price;
+
+    this.gasHistograms = {
+      openTrove: new GasHistogram(),
+      adjustTrove: new GasHistogram(),
+      closeTrove: new GasHistogram(),
+      redeemLUSD: new GasHistogram(),
+      depositLUSDInStabilityPool: new GasHistogram(),
+      withdrawLUSDFromStabilityPool: new GasHistogram(),
+      stakeLQTY: new GasHistogram(),
+      unstakeLQTY: new GasHistogram()
+    };
   }
 
   static async setup(
@@ -195,10 +220,15 @@ export class Fixture {
         `// [${shortenAddress(userAddress)}] openTrove(${objToString(params)}) expected to fail`
       );
 
-      await expectFailure(() => liquity.openTrove(params, { gasPrice: 0 }));
+      await this.gasHistograms.openTrove.expectFailure(() =>
+        liquity.openTrove(params, { gasPrice: 0 })
+      );
     } else {
       console.log(`[${shortenAddress(userAddress)}] openTrove(${objToString(params)})`);
-      await liquity.openTrove(params, { gasPrice: 0 });
+
+      await this.gasHistograms.openTrove.expectSuccess(() =>
+        liquity.send.openTrove(params, { gasPrice: 0 })
+      );
     }
   }
 
@@ -246,10 +276,15 @@ export class Fixture {
         `// [${shortenAddress(userAddress)}] adjustTrove(${objToString(params)}) expected to fail`
       );
 
-      await expectFailure(() => liquity.adjustTrove(params, { gasPrice: 0 }));
+      await this.gasHistograms.adjustTrove.expectFailure(() =>
+        liquity.adjustTrove(params, { gasPrice: 0 })
+      );
     } else {
       console.log(`[${shortenAddress(userAddress)}] adjustTrove(${objToString(params)})`);
-      await liquity.adjustTrove(params, { gasPrice: 0 });
+
+      await this.gasHistograms.adjustTrove.expectSuccess(() =>
+        liquity.send.adjustTrove(params, { gasPrice: 0 })
+      );
     }
   }
 
@@ -265,7 +300,10 @@ export class Fixture {
     await this.sendLUSDFromFunder(userAddress, trove.netDebt);
 
     console.log(`[${shortenAddress(userAddress)}] closeTrove()`);
-    await liquity.closeTrove({ gasPrice: 0 });
+
+    await this.gasHistograms.closeTrove.expectSuccess(() =>
+      liquity.send.closeTrove({ gasPrice: 0 })
+    );
   }
 
   async redeemRandomAmount(userAddress: string, liquity: Liquity) {
@@ -280,7 +318,10 @@ export class Fixture {
     await this.sendLUSDFromFunder(userAddress, amount);
 
     console.log(`[${shortenAddress(userAddress)}] redeemLUSD(${amount})`);
-    await liquity.redeemLUSD(amount, { gasPrice: 0 });
+
+    await this.gasHistograms.redeemLUSD.expectSuccess(() =>
+      liquity.send.redeemLUSD(amount, { gasPrice: 0 })
+    );
   }
 
   async depositRandomAmountInStabilityPool(userAddress: string, liquity: Liquity) {
@@ -289,36 +330,12 @@ export class Fixture {
     await this.sendLUSDFromFunder(userAddress, amount);
 
     console.log(`[${shortenAddress(userAddress)}] depositLUSDInStabilityPool(${amount})`);
-    const tx = await liquity.send.depositLUSDInStabilityPool(amount, this.frontendAddress, {
-      gasPrice: 0
-    });
 
-    const receipt = await tx.waitForReceipt();
-
-    if (receipt.status === "succeeded") {
-      this.addToDepositGasUsedHisto(receipt.rawReceipt.gasUsed);
-      console.log(`// gasUsed = ${receipt.rawReceipt.gasUsed}`);
-    } else {
-      this.depositTxFailures++;
-
-      console.log(
-        `// !!! Failed with gasLimit = ${tx.rawSentTransaction.gasLimit}, ` +
-          `gasUsed = ${receipt.rawReceipt.gasUsed}`
-      );
-
-      const tx2 = await liquity.send.depositLUSDInStabilityPool(amount, undefined, { gasPrice: 0 });
-      const receipt2 = await tx2.waitForReceipt();
-
-      if (receipt2.status === "succeeded") {
-        this.addToDepositGasUsedHisto(receipt2.rawReceipt.gasUsed);
-        console.log(
-          `// Retry succeeded with gasLimit = ${tx2.rawSentTransaction.gasLimit}, ` +
-            `gasUsed = ${receipt2.rawReceipt.gasUsed}`
-        );
-      } else {
-        throw new EthersTransactionFailedError("Transaction failed", receipt2);
-      }
-    }
+    await this.gasHistograms.depositLUSDInStabilityPool.expectSuccess(() =>
+      liquity.send.depositLUSDInStabilityPool(amount, this.frontendAddress, {
+        gasPrice: 0
+      })
+    );
   }
 
   async withdrawRandomAmountFromStabilityPool(
@@ -342,10 +359,15 @@ export class Fixture {
           `withdrawLUSDFromStabilityPool(${amount}) expected to fail`
       );
 
-      await expectFailure(() => liquity.withdrawLUSDFromStabilityPool(amount, { gasPrice: 0 }));
+      await this.gasHistograms.withdrawLUSDFromStabilityPool.expectFailure(() =>
+        liquity.withdrawLUSDFromStabilityPool(amount, { gasPrice: 0 })
+      );
     } else {
       console.log(`[${shortenAddress(userAddress)}] withdrawLUSDFromStabilityPool(${amount})`);
-      await liquity.withdrawLUSDFromStabilityPool(amount, { gasPrice: 0 });
+
+      await this.gasHistograms.withdrawLUSDFromStabilityPool.expectSuccess(() =>
+        liquity.send.withdrawLUSDFromStabilityPool(amount, { gasPrice: 0 })
+      );
     }
   }
 
@@ -356,14 +378,20 @@ export class Fixture {
     await this.funderLiquity.sendLQTY(userAddress, amount);
 
     console.log(`[${shortenAddress(userAddress)}] stakeLQTY(${amount})`);
-    await liquity.stakeLQTY(amount, { gasPrice: 0 });
+
+    await this.gasHistograms.stakeLQTY.expectSuccess(() =>
+      liquity.send.stakeLQTY(amount, { gasPrice: 0 })
+    );
   }
 
   async unstakeRandomAmount(userAddress: string, liquity: Liquity, stake: LQTYStake) {
     const amount = stake.stakedLQTY.mul(1.1 * Math.random()).add(10 * Math.random());
 
     console.log(`[${shortenAddress(userAddress)}] unstakeLQTY(${amount})`);
-    await liquity.unstakeLQTY(amount, { gasPrice: 0 });
+
+    await this.gasHistograms.unstakeLQTY.expectSuccess(() =>
+      liquity.send.unstakeLQTY(amount, { gasPrice: 0 })
+    );
   }
 
   async sweepLUSD(liquity: Liquity) {
@@ -382,27 +410,19 @@ export class Fixture {
     }
   }
 
-  private addToDepositGasUsedHisto(gasUsed: BigNumber) {
-    const binIndex = Math.floor(gasUsed.toNumber() / 10000);
-    assert(binIndex < this.depositGasUsedBins.length);
-    this.depositGasUsedBins[binIndex]++;
-  }
+  summarizeGasStats(): string {
+    return Object.entries(this.gasHistograms)
+      .map(([name, histo]) => {
+        const results = histo.getResults();
 
-  summarizeDepositStats() {
-    console.log(`Number of deposit TX failures: ${this.depositTxFailures}`);
-
-    const firstNonZeroIndex = this.depositGasUsedBins.findIndex(x => x > 0);
-    const lastNonZeroIndex =
-      this.depositGasUsedBins.length -
-      1 -
-      this.depositGasUsedBins
-        .slice()
-        .reverse()
-        .findIndex(x => x > 0);
-
-    console.log("Desposit TX gas usage histogram:");
-    for (let i = firstNonZeroIndex; i <= lastNonZeroIndex; ++i) {
-      console.log(`  ${i}?K: ${this.depositGasUsedBins[i]}`);
-    }
+        return (
+          `${name},outOfGas,${histo.outOfGasFailures}\n` +
+          `${name},failure,${histo.expectedFailures}\n` +
+          results
+            .map(([intervalMin, frequency]) => `${name},success,${frequency},${intervalMin}\n`)
+            .join("")
+        );
+      })
+      .join("");
   }
 }

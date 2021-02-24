@@ -22,16 +22,6 @@ export const objToString = (o: Record<string, unknown>) =>
     .join(", ") +
   " }";
 
-export const expectFailure = async (f: () => Promise<unknown>) => {
-  try {
-    await f();
-  } catch {
-    return;
-  }
-
-  throw new Error("Unexpected success");
-};
-
 export const createRandomWallets = (numberOfWallets: number, provider: Provider) => {
   const accounts = new Array<Wallet>(numberOfWallets);
 

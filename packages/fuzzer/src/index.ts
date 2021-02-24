@@ -205,19 +205,7 @@ yargs
         }
       }
 
-      const total = await funderLiquity.getTotal();
-      const numberOfTroves = await funderLiquity.getNumberOfTroves();
-
-      console.log();
-      console.log(`Number of Troves: ${numberOfTroves}`);
-      console.log(`Total collateral: ${total.collateral}`);
-
-      fixture.summarizeDepositStats();
-
-      fs.appendFileSync(
-        "chaos.csv",
-        `${numberOfTroves},${fixture.totalNumberOfLiquidations},${total.collateral}\n`
-      );
+      fs.appendFileSync("chaos.csv", fixture.summarizeGasStats());
     }
   )
 
@@ -304,15 +292,6 @@ yargs
       console.log("Discrepancies:");
       console.log(`Collateral: ${collateralDifference}`);
       console.log(`Debt: ${debtDifference}`);
-
-      fs.appendFileSync(
-        "chaos.csv",
-        `${numberOfTroves},` +
-          `${initialNumberOfTroves - 1},` +
-          `${total.collateral},` +
-          `${collateralDifference.absoluteValue?.bigNumber},` +
-          `${debtDifference.absoluteValue?.bigNumber}\n`
-      );
     }
   )
 
