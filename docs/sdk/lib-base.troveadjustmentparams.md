@@ -9,7 +9,7 @@ Parameters of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) 
 <b>Signature:</b>
 
 ```typescript
-export declare type TroveAdjustmentParams<T> = (_CollateralChange<T> & _NoDebtChange) | (_DebtChange<T> & _NoCollateralChange) | (_CollateralChange<T> & _DebtChange<T>);
+export declare type TroveAdjustmentParams<T = unknown> = (_CollateralChange<T> & _NoDebtChange) | (_DebtChange<T> & _NoCollateralChange) | (_CollateralChange<T> & _DebtChange<T>);
 ```
 
 ## Remarks

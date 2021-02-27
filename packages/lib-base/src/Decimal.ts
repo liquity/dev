@@ -110,11 +110,17 @@ export class Decimal {
   static from(decimalish: Decimalish): Decimal {
     switch (typeof decimalish) {
       case "object":
-        return decimalish;
+        if (decimalish instanceof Decimal) {
+          return decimalish;
+        } else {
+          throw new Error("invalid Decimalish value");
+        }
       case "string":
         return Decimal._fromString(decimalish);
       case "number":
         return Decimal._fromString(decimalish.toString());
+      default:
+        throw new Error("invalid Decimalish value");
     }
   }
 

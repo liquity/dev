@@ -46,6 +46,8 @@
 |  --- | --- |
 |  [CRITICAL\_COLLATERAL\_RATIO](./lib-base.critical_collateral_ratio.md) | Total collateral ratio below which recovery mode is triggered. |
 |  [LUSD\_LIQUIDATION\_RESERVE](./lib-base.lusd_liquidation_reserve.md) | Amount of LUSD that's reserved for compensating the liquidator of a Trove. |
+|  [LUSD\_MINIMUM\_DEBT](./lib-base.lusd_minimum_debt.md) | A Trove must always have at least this much debt. |
+|  [LUSD\_MINIMUM\_NET\_DEBT](./lib-base.lusd_minimum_net_debt.md) | A Trove must always have at least this much debt on top of the [liquidation reserve](./lib-base.lusd_liquidation_reserve.md)<!-- -->. |
 |  [MAXIMUM\_BORROWING\_RATE](./lib-base.maximum_borrowing_rate.md) | Value that the [borrowing rate](./lib-base.fees.borrowingrate.md) will never exceed. |
 |  [MINIMUM\_BORROWING\_RATE](./lib-base.minimum_borrowing_rate.md) | Value that the [borrowing rate](./lib-base.fees.borrowingrate.md) will never decay below. |
 |  [MINIMUM\_COLLATERAL\_RATIO](./lib-base.minimum_collateral_ratio.md) | Collateral ratio below which a Trove can be liquidated in normal mode. |

@@ -523,18 +523,18 @@ export class PopulatableEthersLiquity
     const normalized = _normalizeTroveCreation(params);
     const { depositCollateral, borrowLUSD } = normalized;
 
-    const fees = borrowLUSD && (await this._readable.getFees());
-    const borrowingRate = fees?.borrowingRate();
+    const fees = await this._readable.getFees();
+    const borrowingRate = fees.borrowingRate();
     const newTrove = Trove.create(normalized, borrowingRate);
-    const maxBorrowingRate = borrowingRate?.add(slippageTolerance);
+    const maxBorrowingRate = borrowingRate.add(slippageTolerance);
 
     return this._wrapTroveChangeWithFees(
       normalized,
       await borrowerOperations.estimateAndPopulate.openTrove(
         { value: depositCollateral.hex, ...overrides },
         compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
-        maxBorrowingRate?.hex ?? 0,
-        borrowLUSD?.hex ?? 0,
+        maxBorrowingRate.hex,
+        borrowLUSD.hex,
         ...(await this._findHints(newTrove))
       )
     );

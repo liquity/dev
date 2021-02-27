@@ -304,6 +304,12 @@ export type LQTYStakeChange<T> = {
 // @public
 export const LUSD_LIQUIDATION_RESERVE: Decimal;
 
+// @public
+export const LUSD_MINIMUM_DEBT: Decimal;
+
+// @public
+export const LUSD_MINIMUM_NET_DEBT: Decimal;
+
 // @internal (undocumented)
 export type _LUSDBorrowing<T> = {
     borrowLUSD: T;
@@ -348,13 +354,10 @@ export type _NoLUSDBorrowing = Partial<_LUSDBorrowing<undefined>>;
 export type _NoLUSDRepayment = Partial<_LUSDRepayment<undefined>>;
 
 // @internal (undocumented)
-export type _Normalizer<T, U> = (params: T) => U;
+export const _normalizeTroveAdjustment: (params: Record<string, Decimalish | undefined>) => TroveAdjustmentParams<Decimal>;
 
 // @internal (undocumented)
-export const _normalizeTroveAdjustment: _Normalizer<TroveAdjustmentParams<Decimalish>, TroveAdjustmentParams<Decimal>>;
-
-// @internal (undocumented)
-export const _normalizeTroveCreation: _Normalizer<TroveCreationParams<Decimalish>, TroveCreationParams<Decimal>>;
+export const _normalizeTroveCreation: (params: Record<string, Decimalish | undefined>) => TroveCreationParams<Decimal>;
 
 // @alpha (undocumented)
 export interface ObservableLiquity {
@@ -673,7 +676,7 @@ export interface TroveAdjustmentDetails {
 // Warning: (ae-incompatible-release-tags) The symbol "TroveAdjustmentParams" is marked as @public, but its signature references "_NoCollateralChange" which is marked as @internal
 //
 // @public
-export type TroveAdjustmentParams<T> = (_CollateralChange<T> & _NoDebtChange) | (_DebtChange<T> & _NoCollateralChange) | (_CollateralChange<T> & _DebtChange<T>);
+export type TroveAdjustmentParams<T = unknown> = (_CollateralChange<T> & _NoDebtChange) | (_DebtChange<T> & _NoCollateralChange) | (_CollateralChange<T> & _DebtChange<T>);
 
 // @public
 export type TroveChange<T> = {
@@ -721,7 +724,7 @@ export type TroveCreationError = "missingLiquidationReserve";
 // Warning: (ae-incompatible-release-tags) The symbol "TroveCreationParams" is marked as @public, but its signature references "_NoLUSDRepayment" which is marked as @internal
 //
 // @public
-export type TroveCreationParams<T> = _CollateralDeposit<T> & _NoCollateralWithdrawal & Partial<_LUSDBorrowing<T>> & _NoLUSDRepayment;
+export type TroveCreationParams<T = unknown> = _CollateralDeposit<T> & _NoCollateralWithdrawal & _LUSDBorrowing<T> & _NoLUSDRepayment;
 
 // @public
 export interface TroveListingParams {
