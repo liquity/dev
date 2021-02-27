@@ -13,6 +13,9 @@
 # Exported function gas costs and test outputs
 /gasTest/outputs
 
+# Trove stake decrease outputs
+/stakeModel/outputs
+
 /secrets.js
 
 /.vscode

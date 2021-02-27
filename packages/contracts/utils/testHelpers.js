@@ -120,20 +120,28 @@ class TestHelper {
     return accountLast2bytes
   }
 
+  static randomFloat(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  static randomInt(min, max) {
+    return Math.floor(this.randomFloat(min, max))
+  }
+  
   static randDecayFactor(min, max) {
-    const amount = Math.random() * (max - min) + min;
+    const amount = this.randomFloat(min, max)
     const amountInWei = web3.utils.toWei(amount.toFixed(18), 'ether')
     return amountInWei
   }
 
   static randAmountInWei(min, max) {
-    const amount = Math.random() * (max - min) + min;
+    const amount = this.randomFloat(min, max)
     const amountInWei = web3.utils.toWei(amount.toString(), 'ether')
     return amountInWei
   }
 
   static randAmountInGWei(min, max) {
-    const amount = Math.floor(Math.random() * (max - min) + min);
+    const amount =this.randomInt(min, max);
     const amountInWei = web3.utils.toWei(amount.toString(), 'gwei')
     return amountInWei
   }
@@ -142,7 +150,7 @@ class TestHelper {
     return web3.utils.toWei(num.toString(), 'ether')
   }
 
-  static appendData(results, message, data) {
+  static appendData(results, message = "", data) {
     data.push(message + `\n`)
     for (const key in results) {
       data.push(key + "," + results[key] + '\n')
@@ -150,7 +158,7 @@ class TestHelper {
   }
 
   static getRandICR(min, max) {
-    const ICR_Percent = (Math.floor(Math.random() * (max - min) + min))
+    const ICR_Percent = randomInt(min, max)
 
     // Convert ICR to a duint
     const ICR = web3.utils.toWei((ICR_Percent * 10).toString(), 'finney')
