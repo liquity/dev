@@ -14,6 +14,12 @@ import "../Dependencies/console.sol";
 
 
 // Adapted from: https://github.com/Synthetixio/Unipool/blob/master/contracts/Unipool.sol
+// Some more useful references:
+// Synthetix proposal: https://sips.synthetix.io/sips/sip-31
+// Original audit: https://github.com/sigp/public-audits/blob/master/synthetix/unipool/review.pdf
+// Incremental changes (commit by commit) from the original to this version: https://github.com/liquity/dev/pull/271
+
+// LPTokenWrapper contains the basic staking functionality
 contract LPTokenWrapper is ILPTokenWrapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -44,6 +50,27 @@ contract LPTokenWrapper is ILPTokenWrapper {
     }
 }
 
+/*
+ * On deployment a new Uniswap pool will be created for the pair LUSD/ETH and its token will be set here.
+
+ * Essentially the way it works is:
+
+ * - Liqudity providers add funds to the Uniswap pool, and get UNIv2 tokens in exchange
+ * - Liqudity providers stake those UNIv2 tokens into Unipool rewards contract
+ * - Liqudity providers accrue rewards, proportional to the amount of staked tokens and staking time
+ * - Liqudity providers can claim their rewards when they want
+ * - Liqudity providers can unstake UNIv2 tokens to exit the program (i.e., stop earning rewards) when they want
+
+ * Funds for rewards will only be added once, on deployment of LQTY token,
+ * which will happen after this contract is deployed and before this `setParams` in this contract is called.
+
+ * If at some point the total amount of staked tokens is zero, the clock will be “stopped”,
+ * so the period will be extended by the time during which the staking pool is empty,
+ * in order to avoid getting LQTY tokens locked.
+ * That also means that the start time for the program will be the event that occurs first:
+ * either LQTY token contract is deployed, and therefore LQTY tokens are minted to Unipool contract,
+ * or first liquidity provider stakes UNIv2 tokens into it.
+ */
 contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     uint256 public duration;
     ILQTYToken public lqtyToken;
@@ -62,6 +89,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     event Withdrawn(address indexed user, uint256 amount);
     event RewardPaid(address indexed user, uint256 reward);
 
+    // initialization function
     function setParams(
         address _lqtyTokenAddress,
         address _uniTokenAddress,
@@ -86,10 +114,12 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         _renounceOwnership();
     }
 
+    // Returns current timestamp if the rewards program has not finished yet, end time otherwise
     function lastTimeRewardApplicable() public view override returns (uint256) {
         return LiquityMath._min(block.timestamp, periodFinish);
     }
 
+    // Returns the amount of rewards that correspond to each staked token
     function rewardPerToken() public view override returns (uint256) {
         if (totalSupply() == 0) {
             return rewardPerTokenStored;
@@ -104,6 +134,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
             );
     }
 
+    // Returns the amount that an account can claim
     function earned(address account) public view override returns (uint256) {
         return
             balanceOf(account)
@@ -118,7 +149,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
 
         _updatePeriodFinish();
-        _updateReward(msg.sender);
+        _updateAccountReward(msg.sender);
 
         super.stake(amount);
 
@@ -129,14 +160,15 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         require(amount > 0, "Cannot withdraw 0");
         require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
 
-        _updateReward(msg.sender);
+        _updateAccountReward(msg.sender);
 
         super.withdraw(amount);
 
         emit Withdrawn(msg.sender, amount);
     }
 
-    function exit() external override {
+    // Shortcut to be able to unstake tokens and claim rewards in one transaction
+    function withdrawAndClaim() external override {
         withdraw(balanceOf(msg.sender));
         claimReward();
     }
@@ -145,7 +177,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
 
         _updatePeriodFinish();
-        _updateReward(msg.sender);
+        _updateAccountReward(msg.sender);
 
         uint256 reward = earned(msg.sender);
 
@@ -156,12 +188,13 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         emit RewardPaid(msg.sender, reward);
     }
 
+    // Used only on initialization, sets the reward rate and the end time for the program
     function _notifyRewardAmount(uint256 _reward, uint256 _duration) internal {
         assert(_reward > 0);
         assert(_reward == lqtyToken.balanceOf(address(this)));
         assert(periodFinish == 0);
 
-        _updateReward(address(0));
+        _updateReward();
 
         rewardRate = _reward.div(_duration);
 
@@ -170,6 +203,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         emit RewardAdded(_reward);
     }
 
+    // Adjusts end time for the program after periods of zero total supply
     function _updatePeriodFinish() internal {
         if (totalSupply() == 0) {
             assert(periodFinish > 0);
@@ -191,16 +225,17 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         }
     }
 
-    function _updateReward(address account) internal {
+    function _updateReward() internal {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = lastTimeRewardApplicable();
-        if (account != address(0)) {
-            rewards[account] = earned(account);
-            userRewardPerTokenPaid[account] = rewardPerTokenStored;
-        }
     }
 
-    function _requireCallerIsLQTYToken() internal view {
-        require(msg.sender == address(lqtyToken), "Unipool: Caller must be the LQTY token");
+    function _updateAccountReward(address account) internal {
+        _updateReward();
+
+        assert(account != address(0));
+
+        rewards[account] = earned(account);
+        userRewardPerTokenPaid[account] = rewardPerTokenStored;
     }
 }

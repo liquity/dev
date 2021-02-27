@@ -1014,7 +1014,7 @@ Essentially the way it works is:
 
 Our implementation is simpler because funds for rewards will only be added once, on deployment of LQTY token (for more technical details about the differences, see PR #271 on our repo).
 
-The amount of LQTY tokens that will be minted to rewards contract is 1.33M, and the duration of the program will be 30 days. If at some point the total amount of staked tokens is zero, the clock will “stopped”, so the period will be extended by the time during which the staking pool is empty, in order to avoid getting LQTY tokens locked. That also means that the start time for the program will be the event that occurs first: either LQTY token contract is deployed, and therefore LQTY tokens are minted to Unipool contract, or first liquidity provider stakes UNIv2 tokens into it.
+The amount of LQTY tokens that will be minted to rewards contract is 1.33M, and the duration of the program will be 30 days. If at some point the total amount of staked tokens is zero, the clock will be “stopped”, so the period will be extended by the time during which the staking pool is empty, in order to avoid getting LQTY tokens locked. That also means that the start time for the program will be the event that occurs first: either LQTY token contract is deployed, and therefore LQTY tokens are minted to Unipool contract, or first liquidity provider stakes UNIv2 tokens into it.
 
 ## Liquity System Fees
 
