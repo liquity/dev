@@ -80,7 +80,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       totalRedistributed: this._readable.getTotalRedistributed({ blockTag }),
       total: this._readable.getTotal({ blockTag }),
       lusdInStabilityPool: this._readable.getLUSDInStabilityPool({ blockTag }),
-      fees: this._readable.getFees({ blockTag }),
+      _feesInNormalMode: this._readable._getFeesInNormalMode({ blockTag }),
       totalStakedLQTY: this._readable.getTotalStakedLQTY({ blockTag }),
 
       frontend: frontendTag

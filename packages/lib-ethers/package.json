@@ -33,7 +33,7 @@
     "test-live:run": "cross-env USE_LIVE_VERSION=true hardhat test"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^1.0.0",
+    "@liquity/lib-base": "^2.0.0",
     "ethers": "^5.0.0"
   },
   "devDependencies": {

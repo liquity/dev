@@ -167,30 +167,40 @@ export class _CachedReadableLiquity<T extends unknown[]>
     }
   }
 
-  async getFees(...extraParams: T): Promise<Fees> {
+  async _getFeesInNormalMode(...extraParams: T): Promise<Fees> {
     return (
-      this._cache.getFees?.call(this._cache, ...extraParams) ??
-      this._readable.getFees(...extraParams)
+      this._cache._getFeesInNormalMode(...extraParams) ??
+      this._readable._getFeesInNormalMode(...extraParams)
     );
+  }
+
+  async getFees(...extraParams: T): Promise<Fees> {
+    const [feesInNormalMode, total, price] = await Promise.all([
+      this._getFeesInNormalMode(...extraParams),
+      this.getTotal(...extraParams),
+      this.getPrice(...extraParams)
+    ]);
+
+    return feesInNormalMode._setRecoveryMode(total.collateralRatioIsBelowCritical(price));
   }
 
   async getLQTYStake(address?: string, ...extraParams: T): Promise<LQTYStake> {
     return (
-      this._cache.getLQTYStake?.call(this._cache, address, ...extraParams) ??
+      this._cache.getLQTYStake(address, ...extraParams) ??
       this._readable.getLQTYStake(address, ...extraParams)
     );
   }
 
   async getTotalStakedLQTY(...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getTotalStakedLQTY?.call(this._cache, ...extraParams) ??
+      this._cache.getTotalStakedLQTY(...extraParams) ??
       this._readable.getTotalStakedLQTY(...extraParams)
     );
   }
 
   async getFrontendStatus(address?: string, ...extraParams: T): Promise<FrontendStatus> {
     return (
-      this._cache.getFrontendStatus?.call(this._cache, address, ...extraParams) ??
+      this._cache.getFrontendStatus(address, ...extraParams) ??
       this._readable.getFrontendStatus(address, ...extraParams)
     );
   }

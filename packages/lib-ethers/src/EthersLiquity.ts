@@ -237,6 +237,11 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getTroves(params, overrides);
   }
 
+  /** @internal */
+  _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees> {
+    return this._readable._getFeesInNormalMode(overrides);
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */
   getFees(overrides?: EthersCallOverrides): Promise<Fees> {
     return this._readable.getFees(overrides);

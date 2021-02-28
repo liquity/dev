@@ -115,6 +115,8 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
+    // @internal (undocumented)
+    _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
     // (undocumented)
@@ -353,6 +355,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
+    // @internal (undocumented)
+    _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
     // (undocumented)

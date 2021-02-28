@@ -11,7 +11,7 @@
     "prepare:tsc": "tsc --project tsconfig.dist.json"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^1.0.0",
+    "@liquity/lib-base": "^2.0.0",
     "react": "^16.13.1"
   },
   "devDependencies": {
