@@ -638,7 +638,7 @@ export class Trove {
     addDebt(debt: Decimalish): Trove;
     adjust(params: TroveAdjustmentParams<Decimalish>, borrowingRate?: Decimalish): Trove;
     adjustTo(that: Trove, borrowingRate?: Decimalish): TroveAdjustmentParams<Decimal>;
-    apply(change: TroveChange<Decimalish> | undefined, borrowingRate?: Decimalish): Trove;
+    apply(change: TroveChange<Decimal> | undefined, borrowingRate?: Decimalish): Trove;
     readonly collateral: Decimal;
     collateralRatio(price: Decimalish): Decimal;
     collateralRatioIsBelowCritical(price: Decimalish): boolean;
