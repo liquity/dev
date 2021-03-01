@@ -32,6 +32,8 @@ contract LiquityBase is BaseMath {
 
     uint constant public PERCENT_DIVISOR = 200; // dividing by 200 yields 0.5%
 
+    uint constant public BORROWING_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+
     IActivePool public activePool;
 
     IDefaultPool public defaultPool;
@@ -86,10 +88,5 @@ contract LiquityBase is BaseMath {
     function _requireUserAcceptsFee(uint _fee, uint _amount, uint _maxFeePercentage) internal pure {
         uint feePercentage = _fee.mul(DECIMAL_PRECISION).div(_amount);
         require(feePercentage <= _maxFeePercentage, "Fee exceeded provided maximum");
-    }
-
-    function _requireValidMaxFeePercentage(uint _maxFeePercentage) internal pure {
-        require(_maxFeePercentage >= 5e15 && _maxFeePercentage <= DECIMAL_PRECISION,
-         "Max fee percentage must be between 0.5% and 100%");
     }
 }
