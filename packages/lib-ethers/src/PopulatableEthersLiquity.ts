@@ -10,6 +10,7 @@ import {
   Decimalish,
   LiquidationDetails,
   LiquityReceipt,
+  LUSD_MINIMUM_NET_DEBT,
   MinedReceipt,
   PopulatableLiquity,
   PopulatedLiquityTransaction,
@@ -494,23 +495,40 @@ export class PopulatableEthersLiquity
     return this._findHintsForNominalCollateralRatio(trove._nominalCollateralRatio);
   }
 
-  private async _findRedemptionHints(amount: Decimal): Promise<[string, string, string, Decimal]> {
+  private async _findRedemptionHints(
+    amount: Decimal
+  ): Promise<
+    [
+      truncatedAmount: Decimal,
+      firstRedemptionHint: string,
+      partialRedemptionUpperHint: string,
+      partialRedemptionLowerHint: string,
+      partialRedemptionHintNICR: BigNumber
+    ]
+  > {
     const { hintHelpers } = _getContracts(this._readable.connection);
     const price = await this._readable.getPrice();
 
-    const { firstRedemptionHint, partialRedemptionHintNICR } = await hintHelpers.getRedemptionHints(
-      amount.hex,
-      price.hex,
-      _redeemMaxIterations
-    );
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintNICR,
+      truncatedLUSDamount
+    } = await hintHelpers.getRedemptionHints(amount.hex, price.hex, _redeemMaxIterations);
 
-    const collateralRatio = decimalify(partialRedemptionHintNICR);
+    const [
+      partialRedemptionUpperHint,
+      partialRedemptionLowerHint
+    ] = partialRedemptionHintNICR.isZero()
+      ? [AddressZero, AddressZero]
+      : await this._findHintsForNominalCollateralRatio(decimalify(partialRedemptionHintNICR));
 
-    const [upperHint, lowerHint] = collateralRatio.nonZero
-      ? await this._findHintsForNominalCollateralRatio(collateralRatio)
-      : [AddressZero, AddressZero];
-
-    return [firstRedemptionHint, upperHint, lowerHint, collateralRatio];
+    return [
+      decimalify(truncatedLUSDamount),
+      firstRedemptionHint,
+      partialRedemptionUpperHint,
+      partialRedemptionLowerHint,
+      partialRedemptionHintNICR
+    ];
   }
 
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.openTrove} */
@@ -806,35 +824,27 @@ export class PopulatableEthersLiquity
   ): Promise<PopulatedEthersLiquityTransaction<RedemptionDetails>> {
     const { troveManager } = _getContracts(this._readable.connection);
 
-    amount = Decimal.from(amount);
-
-    const [
-      fees,
-      total,
-      [
-        firstRedemptionHint,
-        upperPartialRedemptionHint,
-        lowerPartialRedemptionHint,
-        partialRedemptionHintNICR
-      ]
-    ] = await Promise.all([
+    const [fees, total, [truncatedAmount, ...hints]] = await Promise.all([
       this._readable.getFees(),
       this._readable.getTotal(),
-      this._findRedemptionHints(amount)
+      this._findRedemptionHints(Decimal.from(amount))
     ]);
 
-    const redemptionRate = fees.redemptionRate(amount.div(total.debt));
+    if (truncatedAmount.isZero) {
+      throw new Error(
+        `redeemLUSD: amount too low to redeem (try at least ${LUSD_MINIMUM_NET_DEBT})`
+      );
+    }
+
+    const redemptionRate = fees.redemptionRate(truncatedAmount.div(total.debt));
     const maxRedemptionRate = Decimal.min(redemptionRate.add(slippageTolerance), Decimal.ONE);
 
     return this._wrapRedemption(
       await troveManager.estimateAndPopulate.redeemCollateral(
         { ...overrides },
         addGasForPotentialLastFeeOperationTimeUpdate,
-        amount.hex,
-        firstRedemptionHint,
-        upperPartialRedemptionHint,
-        lowerPartialRedemptionHint,
-        partialRedemptionHintNICR.hex,
+        truncatedAmount.hex,
+        ...hints,
         _redeemMaxIterations,
         maxRedemptionRate.hex
       )

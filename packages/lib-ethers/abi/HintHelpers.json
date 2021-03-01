@@ -308,6 +308,11 @@
         "internalType": "uint256",
         "name": "partialRedemptionHintNICR",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "truncatedLUSDamount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
