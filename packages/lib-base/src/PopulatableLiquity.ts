@@ -1,4 +1,4 @@
-import { Decimalish } from "./Decimal";
+import { Decimal, Decimalish } from "./Decimal";
 import { TroveAdjustmentParams, TroveCreationParams } from "./Trove";
 import { LiquityReceipt, SendableLiquity, SentLiquityTransaction } from "./SendableLiquity";
 
@@ -34,6 +34,46 @@ export interface PopulatedLiquityTransaction<
    * @returns An object that implements {@link @liquity/lib-base#SentLiquityTransaction}.
    */
   send(): Promise<T>;
+}
+
+/**
+ * A redemption transaction that has been prepared for sending.
+ *
+ * @remarks
+ * The Liquity protocol fulfills redemptions by repaying the debt of Troves in ascending order of
+ * their collateralization ratio, and taking a portion of their collateral in exchange. Due to the
+ * {@link @liquity/lib-base#LUSD_MINIMUM_DEBT | minimum debt} requirement that Troves must fulfill,
+ * some LUSD amounts are not possible to redeem exactly.
+ *
+ * When {@link @liquity/lib-base#PopulatableLiquity.redeemLUSD | redeemLUSD()} is called with an
+ * amount that can't be fully redeemed, the amount will be truncated (see the `redeemableLUSDAmount`
+ * property). When this happens, the redeemer can either redeem the truncated amount by sending the
+ * transaction unchanged, or prepare a new transaction by
+ * {@link @liquity/lib-base#PopulatedRedemption.increaseAmountByMinimumNetDebt | increasing the amount}
+ * to the next lowest possible value, which is the sum of the truncated amount and
+ * {@link @liquity/lib-base#LUSD_MINIMUM_NET_DEBT}.
+ *
+ * @public
+ */
+export interface PopulatedRedemption<P = unknown, S = unknown, R = unknown>
+  extends PopulatedLiquityTransaction<
+    P,
+    SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>
+  > {
+  /** Amount of LUSD the redeemer is trying to redeem. */
+  readonly attemptedLUSDAmount: Decimal;
+
+  /** Maximum amount of LUSD that is currently redeemable from `attemptedLUSDAmount`. */
+  readonly redeemableLUSDAmount: Decimal;
+
+  /** Whether `redeemableLUSDAmount` is less than `attemptedLUSDAmount`. */
+  readonly isTruncated: boolean;
+
+  /**
+   * Prepare a new transaction by increasing the attempted amount to the next lowest redeemable
+   * value.
+   */
+  increaseAmountByMinimumNetDebt(): Promise<PopulatedRedemption<P, S, R>>;
 }
 
 /** @internal */
@@ -194,11 +234,7 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
   ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
 
   /** {@inheritDoc TransactableLiquity.redeemLUSD} */
-  redeemLUSD(
-    amount: Decimalish
-  ): Promise<
-    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>
-  >;
+  redeemLUSD(amount: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
 
   /** {@inheritDoc TransactableLiquity.claimCollateralSurplus} */
   claimCollateralSurplus(): Promise<

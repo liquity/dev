@@ -608,9 +608,9 @@ describe("EthersLiquity", () => {
     ];
 
     before(async function () {
-      if (network.name === "dev") {
+      if (network.name !== "hardhat") {
         // Redemptions are only allowed after a bootstrap phase of 2 weeks.
-        // Since we can't fast-forward time on the dev chain, skip these tests.
+        // Since fast-forwarding only works on Hardhat EVM, skip these tests elsewhere.
         this.skip();
       }
 
@@ -727,6 +727,80 @@ describe("EthersLiquity", () => {
     });
   });
 
+  describe("Redemption (truncation)", () => {
+    const troveCreationParams = { depositCollateral: 20, borrowLUSD: 2000 };
+    const netDebtPerTrove = Trove.create(troveCreationParams).netDebt;
+    const amountToAttempt = Decimal.from(3000);
+    const expectedRedeemable = netDebtPerTrove.mul(2).sub(LUSD_MINIMUM_NET_DEBT);
+
+    before(function () {
+      if (network.name !== "hardhat") {
+        // Redemptions are only allowed after a bootstrap phase of 2 weeks.
+        // Since fast-forwarding only works on Hardhat EVM, skip these tests elsewhere.
+        this.skip();
+      }
+    });
+
+    beforeEach(async () => {
+      // Deploy new instances of the contracts, for a clean slate
+      deployment = await deployLiquity(deployer);
+
+      const otherUsersSubset = otherUsers.slice(0, 3);
+      [deployerLiquity, liquity, ...otherLiquities] = await connectUsers([
+        deployer,
+        user,
+        ...otherUsersSubset
+      ]);
+
+      await sendToEach(otherUsersSubset, 20.1);
+
+      await liquity.openTrove({ depositCollateral: 99, borrowLUSD: 5000 });
+      await otherLiquities[0].openTrove(troveCreationParams);
+      await otherLiquities[1].openTrove(troveCreationParams);
+      await otherLiquities[2].openTrove(troveCreationParams);
+
+      increaseTime(60 * 60 * 24 * 15);
+    });
+
+    afterEach(() => {
+      cumulativeTimeJumpSeconds = 0;
+    });
+
+    it("should truncate the amount if it would put the last Trove below the min debt", async () => {
+      const redemption = await liquity.populate.redeemLUSD(amountToAttempt);
+      expect(`${redemption.attemptedLUSDAmount}`).to.equal(`${amountToAttempt}`);
+      expect(`${redemption.redeemableLUSDAmount}`).to.equal(`${expectedRedeemable}`);
+      expect(redemption.isTruncated).to.be.true;
+
+      const { details } = await waitForSuccess(redemption.send());
+      expect(`${details.attemptedLUSDAmount}`).to.equal(`${expectedRedeemable}`);
+      expect(`${details.actualLUSDAmount}`).to.equal(`${expectedRedeemable}`);
+    });
+
+    it("should increase the amount to the next lowest redeemable value", async () => {
+      const increasedRedeemable = expectedRedeemable.add(LUSD_MINIMUM_NET_DEBT);
+
+      const initialRedemption = await liquity.populate.redeemLUSD(amountToAttempt);
+      const increasedRedemption = await initialRedemption.increaseAmountByMinimumNetDebt();
+      expect(`${increasedRedemption.attemptedLUSDAmount}`).to.equal(`${increasedRedeemable}`);
+      expect(`${increasedRedemption.redeemableLUSDAmount}`).to.equal(`${increasedRedeemable}`);
+      expect(increasedRedemption.isTruncated).to.be.false;
+
+      const { details } = await waitForSuccess(increasedRedemption.send());
+      expect(`${details.attemptedLUSDAmount}`).to.equal(`${increasedRedeemable}`);
+      expect(`${details.actualLUSDAmount}`).to.equal(`${increasedRedeemable}`);
+    });
+
+    it("should fail to increase the amount if it's not truncated", async () => {
+      const redemption = await liquity.populate.redeemLUSD(netDebtPerTrove);
+      expect(redemption.isTruncated).to.be.false;
+
+      expect(() => redemption.increaseAmountByMinimumNetDebt()).to.throw(
+        "can only be called when amount is truncated"
+      );
+    });
+  });
+
   describe("Redemption (gas checks)", function () {
     this.timeout("5m");
 
@@ -745,9 +819,9 @@ describe("EthersLiquity", () => {
       .mulDiv(2, massivePrice);
 
     before(async function () {
-      if (network.name === "dev") {
+      if (network.name !== "hardhat") {
         // Redemptions are only allowed after a bootstrap phase of 2 weeks.
-        // Since we can't fast-forward time on the dev chain, skip these tests.
+        // Since fast-forwarding only works on Hardhat EVM, skip these tests elsewhere.
         this.skip();
       }
 

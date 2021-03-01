@@ -429,7 +429,7 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown> exten
     liquidate(address: string | string[]): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, LiquidationDetails>>>>;
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, LiquidationDetails>>>>;
     openTrove(params: TroveCreationParams<Decimalish>): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveCreationDetails>>>>;
-    redeemLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>>;
+    redeemLUSD(amount: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
     registerFrontend(kickbackRate: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     repayLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>>;
     sendLQTY(toAddress: string, amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
@@ -449,6 +449,14 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown> exten
 export interface PopulatedLiquityTransaction<P = unknown, T extends SentLiquityTransaction = SentLiquityTransaction> {
     readonly rawPopulatedTransaction: P;
     send(): Promise<T>;
+}
+
+// @public
+export interface PopulatedRedemption<P = unknown, S = unknown, R = unknown> extends PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>> {
+    readonly attemptedLUSDAmount: Decimal;
+    increaseAmountByMinimumNetDebt(): Promise<PopulatedRedemption<P, S, R>>;
+    readonly isTruncated: boolean;
+    readonly redeemableLUSDAmount: Decimal;
 }
 
 // @public

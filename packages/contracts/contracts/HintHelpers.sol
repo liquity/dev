@@ -41,10 +41,21 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
 
     // --- Functions ---
 
-    /* getRedemptionHints() - Helper function for redeemCollateral().
+    /* getRedemptionHints() - Helper function for finding the right hints to pass to redeemCollateral().
      *
-     * Find the first and last Troves that will modified by calling redeemCollateral() with the same _LUSDamount and _price,
-     * and return the address of the first one and the final ICR of the last one.
+     * It simulates a redemption of `_LUSDamount` to figure out where the redemption sequence will start and what state the final Trove
+     * of the sequence will end up in.
+     *
+     * Returns three hints:
+     *  - `firstRedemptionHint` is the address of the first Trove with ICR >= MCR (i.e. the first Trove that will be redeemed).
+     *  - `partialRedemptionHintNICR` is the final nominal ICR of the last Trove of the sequence after being hit by partial redemption,
+     *     or zero in case of no partial redemption.
+     *  - `truncatedLUSDamount` is the maximum amount that can be redeemed out of the the provided `_LUSDamount`. This can be lower than
+     *    `_LUSDamount` when redeeming the full amount would leave the last Trove of the redemption sequence with less net debt than the
+     *    minimum allowed value (i.e. MIN_NET_DEBT).
+     *
+     * The number of Troves to consider for redemption can be capped by passing a non-zero value as `_maxIterations`, while passing zero
+     * will leave it uncapped.
      */
 
     function getRedemptionHints(
@@ -80,9 +91,9 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
                 .add(troveManager.getPendingLUSDDebtReward(currentTroveuser));
 
             if (netLUSDDebt > remainingLUSD) {
-                uint maxRedeemableLUSD = LiquityMath._min(remainingLUSD, netLUSDDebt.sub(MIN_NET_DEBT));
+                if (netLUSDDebt > MIN_NET_DEBT) {
+                    uint maxRedeemableLUSD = LiquityMath._min(remainingLUSD, netLUSDDebt.sub(MIN_NET_DEBT));
 
-                if (maxRedeemableLUSD > 0) {
                     uint ETH = troveManager.getTroveColl(currentTroveuser)
                         .add(troveManager.getPendingETHReward(currentTroveuser));
 
