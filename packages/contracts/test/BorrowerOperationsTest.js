@@ -3502,6 +3502,7 @@ contract('BorrowerOperations', async accounts => {
       assert.equal(lqtyStaking_LUSDBalance_After, '0')
     })
 
+    // TODO: Rephrase. It’s impossible to borrow at zero rate now
     it("openTrove(): Borrowing at zero base rate does not change LQTY staking contract LUSD fees-per-unit-staked", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, A, A, { from: whale, value: dec(100, 'ether') })
 
@@ -3528,6 +3529,7 @@ contract('BorrowerOperations', async accounts => {
       assert.equal(F_LUSD_After, '0')
     })
 
+    // TODO: Rephrase. It’s impossible to borrow at zero rate now
     it("openTrove(): Borrowing at zero base rate sends total requested LUSD to the user", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, A, A, { from: whale, value: dec(100, 'ether') })
 
@@ -3709,13 +3711,11 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(carolICR.gt(toBN(dec(150, 16))))
     })
 
-    it("openTrove(): Can open a trove with zero debt (plus gas comp) when system is in Recovery Mode", async () => {
+    it("openTrove(): Reverts opening a trove with zero debt (plus gas comp) when system is in Recovery Mode", async () => {
       // --- SETUP ---
       //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
-      await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(3, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount('400000000000000000000'), alice, alice, { from: alice })
-      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount('400000000000000000000'), bob, bob, { from: bob })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(4000, 18)), alice, alice, { from: alice, value: dec(30, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(4000, 18)), bob, bob, { from: bob, value: dec(30, 'ether') })
 
       const TCR = (await th.getTCR(contracts)).toString()
       assert.equal(TCR, '1500000000000000000')
@@ -3727,17 +3727,7 @@ contract('BorrowerOperations', async accounts => {
 
       const lqtyStakingLUSDBalanceBefore = await lusdToken.balanceOf(lqtyStaking.address)
 
-      const txCarol = await borrowerOperations.openTrove(th._100pct, 0, carol, carol, { from: carol, value: dec(1, 'ether') })
-      assert.isTrue(txCarol.receipt.status)
-
-      assert.isTrue(await sortedTroves.contains(carol))
-
-      const carol_TroveStatus = await troveManager.getTroveStatus(carol)
-      assert.equal(carol_TroveStatus, 1)
-
-      // check no fee was charged
-      const lqtyStakingLUSDBalanceAfter = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStakingLUSDBalanceAfter.toString(), lqtyStakingLUSDBalanceBefore.toString())
+      await assertRevert(borrowerOperations.openTrove(th._100pct, 0, carol, carol, { from: carol, value: dec(1, 'ether') }))
     })
 
 
