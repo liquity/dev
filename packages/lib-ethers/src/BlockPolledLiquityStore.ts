@@ -12,7 +12,7 @@ import {
 
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 import { EthersLiquityConnection, _getProvider } from "./EthersLiquityConnection";
-import { EthersProvider } from "./types";
+import { EthersCallOverrides, EthersProvider } from "./types";
 
 /**
  * Extra state added to {@link @liquity/lib-base#LiquityStoreState} by
@@ -71,6 +71,21 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     this._provider = _getProvider(readable.connection);
   }
 
+  private async _getRiskiestTroveBeforeRedistribution(
+    overrides?: EthersCallOverrides
+  ): Promise<TroveWithPendingRedistribution> {
+    const riskiestTroves = await this._readable.getTroves(
+      { first: 1, sortedBy: "ascendingCollateralRatio", beforeRedistribution: true },
+      overrides
+    );
+
+    if (riskiestTroves.length === 0) {
+      return new TroveWithPendingRedistribution();
+    }
+
+    return riskiestTroves[0][1];
+  }
+
   private _get(blockTag?: number): Promise<LiquityStoreBaseState> {
     const { userAddress, frontendTag } = this.connection;
 
@@ -82,6 +97,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       lusdInStabilityPool: this._readable.getLUSDInStabilityPool({ blockTag }),
       _feesInNormalMode: this._readable._getFeesInNormalMode({ blockTag }),
       totalStakedLQTY: this._readable.getTotalStakedLQTY({ blockTag }),
+      _riskiestTroveBeforeRedistribution: this._getRiskiestTroveBeforeRedistribution({ blockTag }),
 
       frontend: frontendTag
         ? this._readable.getFrontendStatus(frontendTag, { blockTag })

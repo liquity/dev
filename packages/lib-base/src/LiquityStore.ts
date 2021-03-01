@@ -77,6 +77,9 @@ export interface LiquityStoreBaseState {
 
   /** Total amount of LQTY currently staked. */
   totalStakedLQTY: Decimal;
+
+  /** @internal */
+  _riskiestTroveBeforeRedistribution: TroveWithPendingRedistribution;
 }
 
 /**
@@ -112,6 +115,12 @@ export interface LiquityStoreDerivedState {
    * Use {@link Fees.redemptionRate} to calculate a precise redemption rate.
    */
   redemptionRate: Decimal;
+
+  /**
+   * Whether there are any Troves with collateral ratio below the
+   * {@link MINIMUM_COLLATERAL_RATIO | minimum}.
+   */
+  haveUndercollateralizedTroves: boolean;
 }
 
 /**
@@ -380,6 +389,12 @@ export abstract class LiquityStore<T = unknown> {
         "totalStakedLQTY",
         baseState.totalStakedLQTY,
         baseStateUpdate.totalStakedLQTY
+      ),
+
+      _riskiestTroveBeforeRedistribution: this._silentlyUpdateIfChanged(
+        equals,
+        baseState._riskiestTroveBeforeRedistribution,
+        baseStateUpdate._riskiestTroveBeforeRedistribution
       )
     };
   }
@@ -389,7 +404,8 @@ export abstract class LiquityStore<T = unknown> {
     totalRedistributed,
     _feesInNormalMode,
     total,
-    price
+    price,
+    _riskiestTroveBeforeRedistribution
   }: LiquityStoreBaseState): LiquityStoreDerivedState {
     const fees = _feesInNormalMode._setRecoveryMode(total.collateralRatioIsBelowCritical(price));
 
@@ -397,7 +413,10 @@ export abstract class LiquityStore<T = unknown> {
       trove: troveBeforeRedistribution.applyRedistribution(totalRedistributed),
       fees,
       borrowingRate: fees.borrowingRate(),
-      redemptionRate: fees.redemptionRate()
+      redemptionRate: fees.redemptionRate(),
+      haveUndercollateralizedTroves: _riskiestTroveBeforeRedistribution
+        .applyRedistribution(totalRedistributed)
+        .collateralRatioIsBelowMinimum(price)
     };
   }
 
@@ -420,6 +439,13 @@ export abstract class LiquityStore<T = unknown> {
         eq,
         derivedState.redemptionRate,
         derivedStateUpdate.redemptionRate
+      ),
+
+      haveUndercollateralizedTroves: this._updateIfChanged(
+        strictEquals,
+        "haveUndercollateralizedTroves",
+        derivedState.haveUndercollateralizedTroves,
+        derivedStateUpdate.haveUndercollateralizedTroves
       )
     };
   }
