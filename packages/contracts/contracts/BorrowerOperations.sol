@@ -113,6 +113,9 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         override
         onlyOwner
     {
+        // This makes impossible to open a trove with zero withdrawn LUSD
+        assert(MIN_NET_DEBT > 0);
+
         checkContract(_troveManagerAddress);
         checkContract(_activePoolAddress);
         checkContract(_defaultPoolAddress);
@@ -156,7 +159,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         ContractsCache memory contractsCache = ContractsCache(troveManager, activePool, lusdToken);
         LocalVariables_openTrove memory vars;
 
-        if (_LUSDAmount > 0) {_requireValidMaxFeePercentage(_maxFeePercentage);}
+        _requireValidMaxFeePercentage(_maxFeePercentage);
         _requireTroveisNotActive(contractsCache.troveManager, msg.sender);
 
         vars.price = priceFeed.fetchPrice();
@@ -166,7 +169,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         bool isRecoveryMode = _checkRecoveryMode(vars.price);
 
-        if (!isRecoveryMode && _LUSDAmount > 0) {
+        if (!isRecoveryMode) {
             vars.LUSDFee = _triggerBorrowingFee(contractsCache.troveManager, contractsCache.lusdToken, _LUSDAmount, _maxFeePercentage);
             vars.netDebt = vars.netDebt.add(vars.LUSDFee);
         }
@@ -201,7 +204,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         // Move the ether to the Active Pool, and mint the LUSDAmount to the borrower
         _activePoolAddColl(contractsCache.activePool, msg.value);
-        if (_LUSDAmount > 0) {_withdrawLUSD(contractsCache.activePool, contractsCache.lusdToken, msg.sender, _LUSDAmount, vars.netDebt);}
+        _withdrawLUSD(contractsCache.activePool, contractsCache.lusdToken, msg.sender, _LUSDAmount, vars.netDebt);
         // Move the LUSD gas compensation to the Gas Pool
         _withdrawLUSD(contractsCache.activePool, contractsCache.lusdToken, gasPoolAddress, LUSD_GAS_COMPENSATION, LUSD_GAS_COMPENSATION);
 
