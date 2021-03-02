@@ -138,6 +138,10 @@ class BorrowerOperationsProxy extends Proxy {
   async LUSD_GAS_COMPENSATION(...params) {
     return this.proxyFunction('LUSD_GAS_COMPENSATION', params)
   }
+
+  async MIN_NET_DEBT(...params) {
+    return this.proxyFunction('MIN_NET_DEBT', params)
+  }
 }
 
 class BorrowerWrappersProxy extends Proxy {
@@ -243,8 +247,12 @@ class TroveManagerProxy extends Proxy {
     return this.proxyFunction('getBorrowingRate', [])
   }
 
+  async getBorrowingFee(...params) {
+    return this.proxyFunction('getBorrowingFee', params)
+  }
+
   async getBorrowingFeeWithDecay(...params) {
-    return this.proxyFunction('getBorrowingRateWithDecay', params)
+    return this.proxyFunction('getBorrowingFeeWithDecay', params)
   }
 }
 

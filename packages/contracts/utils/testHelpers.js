@@ -642,6 +642,45 @@ class TestHelper {
     return this.getGasMetrics(gasCostList)
   }
 
+  static async openTrove(contracts, {
+    maxFeePercentage,
+    extraLUSDAmount,
+    upperHint,
+    lowerHint,
+    ICR,
+    extraParams
+  }) {
+    if (!maxFeePercentage) maxFeePercentage = this._100pct
+    if (!extraLUSDAmount) extraLUSDAmount = this.toBN(0)
+    if (!upperHint) upperHint = this.ZERO_ADDRESS
+    if (!lowerHint) lowerHint = this.ZERO_ADDRESS
+
+    const MIN_DEBT = (
+      await this.getNetBorrowingAmount(contracts, await contracts.borrowerOperations.MIN_NET_DEBT())
+    ).add(this.toBN(1)) // add 1 to avoid rounding issues
+    const lusdAmount = MIN_DEBT.add(extraLUSDAmount)
+
+    if (!ICR && !extraParams.value) ICR = this.toBN(this.dec(15, 17)) // 150%
+
+    const totalDebt = await this.getOpenTroveTotalDebt(contracts, lusdAmount)
+    const netDebt = await this.getActualDebtFromComposite(totalDebt, contracts)
+
+    if (ICR) {
+      const price = await contracts.priceFeedTestnet.getPrice()
+      extraParams.value = ICR.mul(totalDebt).div(price)
+    }
+
+    await contracts.borrowerOperations.openTrove(maxFeePercentage, lusdAmount, upperHint, lowerHint, extraParams)
+
+    return {
+      lusdAmount,
+      netDebt,
+      totalDebt,
+      ICR,
+      collateral: extraParams.value
+    }
+  }
+
   static async adjustTrove_allAccounts(accounts, contracts, ETHAmount, LUSDAmount) {
     const gasCostList = []
     const price = await contracts.priceFeedTestnet.getPrice()
