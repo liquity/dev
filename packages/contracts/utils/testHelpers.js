@@ -313,7 +313,7 @@ class TestHelper {
   }
 
   /*
-   * given the desired total debt, returns the LUSD amomunt that needs to be requested in openTrove
+   * given the desired total debt, returns the LUSD amount that needs to be requested in openTrove
    * So, it subtracts the gas compensation and then the borrowing fee
    */
   static async getOpenTroveLUSDAmount(contracts, totalDebt) {
