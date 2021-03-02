@@ -66,9 +66,12 @@ import "./Dependencies/console.sol";
  * A series of liquidations that nearly empty the Pool (and thus each multiply P by a very small number in range ]0,1[ ) may push P
  * to its 18 digit decimal limit, and round it to 0, when in fact the Pool hasn't been emptied: this would break deposit tracking.
  *
- * So, to track P accurately, we use a scale factor: if a liquidation would cause P to decrease to <1e-18 (and be rounded to 0 by Solidity),
+ * So, to track P accurately, we use a scale factor: if a liquidation would cause P to decrease to <1e-9 (and be rounded to 0 by Solidity),
  * we first multiply P by 1e9, and increment a currentScale factor by 1.
  *
+ * The added benefit of using 1e9 for the scale factor (rather than 1e18) is that  itensures negligible precision loss close to the 
+ * scale boundary: when P is at its minimum value of 1e9, the relative precision loss in P due to floor division is only on the 
+ * order of 1e-9. 
  *
  * --- EPOCHS ---
  *
@@ -86,7 +89,7 @@ import "./Dependencies/console.sol";
  *
  * Otherwise, we then compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
  * If it spans one scale change, it is given by d_t * P/(P_t * 1e9). If it spans more than one scale change, we define the compounded deposit
- * as 0, since it is now less than 1e-18'th of its initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
+ * as 0, since it is now less than 1e-9'th of its initial value (e.g. a deposit of 1 billion LUSD has depleted to < 1 LUSD).
  *
  *
  *  --- TRACKING DEPOSITOR'S ETH GAIN OVER SCALE CHANGES AND EPOCHS ---
@@ -184,7 +187,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     uint public constant SCALE_FACTOR = 1e9;
 
-    // Each time the scale of P shifts by 1e9, the scale is incremented by 1
+    // Each time the scale of P shifts by SCALE_FACTOR, the scale is incremented by 1
     uint128 public currentScale;
 
     // With each offset that fully empties the Pool, the epoch is incremented by 1
