@@ -18,6 +18,7 @@ export interface LiquityStoreDerivedState
 |  --- | --- | --- |
 |  [borrowingRate](./lib-base.liquitystorederivedstate.borrowingrate.md) | [Decimal](./lib-base.decimal.md) | Current borrowing rate. |
 |  [fees](./lib-base.liquitystorederivedstate.fees.md) | [Fees](./lib-base.fees.md) | Calculator for current fees. |
+|  [haveUndercollateralizedTroves](./lib-base.liquitystorederivedstate.haveundercollateralizedtroves.md) | boolean | Whether there are any Troves with collateral ratio below the [minimum](./lib-base.minimum_collateral_ratio.md)<!-- -->. |
 |  [redemptionRate](./lib-base.liquitystorederivedstate.redemptionrate.md) | [Decimal](./lib-base.decimal.md) | Current redemption rate. |
 |  [trove](./lib-base.liquitystorederivedstate.trove.md) | [Trove](./lib-base.trove.md) | Current state of user's Trove |
 

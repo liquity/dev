@@ -17,11 +17,18 @@ type StabilityDepositActionProps = {
   dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
 
-const select = ({ trove, lusdBalance, frontend, ownFrontend }: LiquityStoreState) => ({
+const select = ({
+  trove,
+  lusdBalance,
+  frontend,
+  ownFrontend,
+  haveUndercollateralizedTroves
+}: LiquityStoreState) => ({
   trove,
   lusdBalance,
   frontendRegistered: frontend.status === "registered",
-  noOwnFrontend: ownFrontend.status === "unregistered"
+  noOwnFrontend: ownFrontend.status === "unregistered",
+  haveUndercollateralizedTroves
 });
 
 type Action = [name: string, send: TransactionFunction, requirements?: [boolean, string][]];
@@ -32,7 +39,13 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   changePending,
   dispatch
 }) => {
-  const { trove, lusdBalance, frontendRegistered, noOwnFrontend } = useLiquitySelector(select);
+  const {
+    trove,
+    lusdBalance,
+    frontendRegistered,
+    noOwnFrontend,
+    haveUndercollateralizedTroves
+  } = useLiquitySelector(select);
 
   const {
     config,
@@ -83,7 +96,13 @@ const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
           gains
             ? `Withdraw ${withdrawLUSD.prettify()} ${COIN} & claim ${gains}`
             : `Withdraw ${withdrawLUSD.prettify()} ${COIN}`,
-          liquity.withdrawLUSDFromStabilityPool.bind(liquity, withdrawLUSD)
+          liquity.withdrawLUSDFromStabilityPool.bind(liquity, withdrawLUSD),
+          [
+            [
+              !haveUndercollateralizedTroves,
+              "Can't withdraw when there are undercollateralized Troves"
+            ]
+          ]
         ]
       ]
     : gains

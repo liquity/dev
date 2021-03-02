@@ -256,6 +256,8 @@ export interface LiquityStoreBaseState {
     numberOfTroves: number;
     ownFrontend: FrontendStatus;
     price: Decimal;
+    // @internal (undocumented)
+    _riskiestTroveBeforeRedistribution: TroveWithPendingRedistribution;
     stabilityDeposit: StabilityDeposit;
     total: Trove;
     totalRedistributed: Trove;
@@ -267,6 +269,7 @@ export interface LiquityStoreBaseState {
 export interface LiquityStoreDerivedState {
     borrowingRate: Decimal;
     fees: Fees;
+    haveUndercollateralizedTroves: boolean;
     redemptionRate: Decimal;
     trove: Trove;
 }
