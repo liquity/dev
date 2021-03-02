@@ -588,7 +588,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
             newP = DECIMAL_PRECISION;
 
         // If multiplying P by a non-zero product factor would reduce P below the scale boundary, increment the scale
-        } else if (currentP.mul(newProductFactor) < SCALE_FACTOR) {
+        } else if (currentP.mul(newProductFactor).div(DECIMAL_PRECISION) < SCALE_FACTOR) {
             newP = currentP.mul(newProductFactor).div(SCALE_FACTOR);  // .mul(1e9).div(1e18) is equivalent to .div(1e9)
             currentScale = currentScaleCached.add(1);
             emit ScaleUpdated(currentScale);
@@ -780,9 +780,20 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
             compoundedStake = initialStake.mul(P).div(snapshot_P);
         } else if (scaleDiff == 1) {
             compoundedStake = initialStake.mul(P).div(snapshot_P).div(SCALE_FACTOR);
-        } else {
+        } else { // if scaleDiff >= 2
             compoundedStake = 0;
         }
+
+        /*
+        * If compounded deposit is less than a billionth of the initial deposit, return 0.
+        *
+        * NOTE: originally, this line was in place to stop rounding errors making the deposit too large. However, the error
+        * corrections should ensure the error in P "favors the Pool", i.e. any given compounded deposit should slightly less
+        * than it's theoretical value.
+        *
+        * Thus it's unclear whether this line is still really needed.
+        */
+        if (compoundedStake < initialStake.div(1e9)) {return 0;}
 
         return compoundedStake;
     }
