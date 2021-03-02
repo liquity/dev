@@ -2,13 +2,15 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/CheckContract.sol";
 import "../Interfaces/IStabilityPool.sol";
 
 
-contract StabilityPoolScript {
+contract StabilityPoolScript is CheckContract {
     IStabilityPool immutable stabilityPool;
 
     constructor(IStabilityPool _stabilityPool) public {
+        checkContract(address(_stabilityPool));
         stabilityPool = _stabilityPool;
     }
 

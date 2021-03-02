@@ -20,17 +20,17 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     address public borrowerOperationsAddress;
 
-    IStabilityPool public stabilityPool;
+    IStabilityPool public override stabilityPool;
 
     address gasPoolAddress;
 
     ICollSurplusPool collSurplusPool;
 
-    ILUSDToken public lusdToken;
+    ILUSDToken public override lusdToken;
 
-    ILQTYToken public lqtyToken;
+    ILQTYToken public override lqtyToken;
 
-    ILQTYStaking public lqtyStaking;
+    ILQTYStaking public override lqtyStaking;
 
     // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
     ISortedTroves public sortedTroves;
