@@ -13,9 +13,6 @@
 # Exported function gas costs and test outputs
 /gasTest/outputs
 
-# Stake model outputs
-/stakeModel/outputs
-
 /secrets.js
 
 /.vscode
