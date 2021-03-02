@@ -21,6 +21,7 @@ import { MinedReceipt } from '@liquity/lib-base';
 import { ObservableLiquity } from '@liquity/lib-base';
 import { PopulatableLiquity } from '@liquity/lib-base';
 import { PopulatedLiquityTransaction } from '@liquity/lib-base';
+import { PopulatedRedemption } from '@liquity/lib-base';
 import { PopulatedTransaction } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/abstract-provider';
 import { ReadableLiquity } from '@liquity/lib-base';
@@ -293,7 +294,7 @@ export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransa
     // (undocumented)
     openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>>;
     // (undocumented)
-    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<RedemptionDetails>>;
+    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersRedemption>;
     // (undocumented)
     registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
@@ -327,6 +328,20 @@ export class PopulatedEthersLiquityTransaction<T = unknown> implements Populated
     readonly rawPopulatedTransaction: EthersPopulatedTransaction;
     // (undocumented)
     send(): Promise<SentEthersLiquityTransaction<T>>;
+}
+
+// @public (undocumented)
+export class PopulatedEthersRedemption extends PopulatedEthersLiquityTransaction<RedemptionDetails> implements PopulatedRedemption<EthersPopulatedTransaction, EthersTransactionResponse, EthersTransactionReceipt> {
+    // @internal
+    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, connection: EthersLiquityConnection, attemptedLUSDAmount: Decimal, redeemableLUSDAmount: Decimal, bumpAmount?: () => Promise<PopulatedEthersRedemption>);
+    // (undocumented)
+    readonly attemptedLUSDAmount: Decimal;
+    // (undocumented)
+    increaseAmountByMinimumNetDebt(): Promise<PopulatedEthersRedemption>;
+    // (undocumented)
+    readonly isTruncated: boolean;
+    // (undocumented)
+    readonly redeemableLUSDAmount: Decimal;
 }
 
 // @public

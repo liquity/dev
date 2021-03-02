@@ -9,7 +9,7 @@ Redeem LUSD to native currency (e.g. Ether) at face value.
 <b>Signature:</b>
 
 ```typescript
-redeemLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>>;
+redeemLUSD(amount: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
 ```
 
 ## Parameters
@@ -20,5 +20,5 @@ redeemLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiqui
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.md)<!-- -->&lt;P, [SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- -->&lt;S, [LiquityReceipt](./lib-base.liquityreceipt.md)<!-- -->&lt;R, [RedemptionDetails](./lib-base.redemptiondetails.md)<!-- -->&gt;&gt;&gt;&gt;
+Promise&lt;[PopulatedRedemption](./lib-base.populatedredemption.md)<!-- -->&lt;P, S, R&gt;&gt;
 
