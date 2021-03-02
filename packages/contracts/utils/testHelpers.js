@@ -597,7 +597,6 @@ class TestHelper {
 
   static async openTrove_allAccounts_randomLUSD(minLUSD, maxLUSD, accounts, contracts, ETHAmount) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       const randLUSDAmount = this.randAmountInWei(minLUSD, maxLUSD)
@@ -613,7 +612,6 @@ class TestHelper {
 
   static async closeTrove_allAccounts(accounts, contracts) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       const tx = await contracts.borrowerOperations.closeTrove({ from: account })
@@ -625,7 +623,6 @@ class TestHelper {
 
   static async openTrove_allAccounts_decreasingLUSDAmounts(accounts, contracts, ETHAmount, maxLUSDAmount) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     let i = 0
     for (const account of accounts) {
@@ -683,7 +680,6 @@ class TestHelper {
 
   static async adjustTrove_allAccounts(accounts, contracts, ETHAmount, LUSDAmount) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       let tx;
@@ -716,7 +712,6 @@ class TestHelper {
 
   static async adjustTrove_allAccounts_randomAmount(accounts, contracts, ETHMin, ETHMax, LUSDMin, LUSDMax) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       let tx;
@@ -750,8 +745,6 @@ class TestHelper {
   }
 
   static async addColl_allAccounts(accounts, contracts, amount) {
-    const price = await contracts.priceFeedTestnet.getPrice()
-
     const gasCostList = []
     for (const account of accounts) {
 
@@ -766,8 +759,6 @@ class TestHelper {
   }
 
   static async addColl_allAccounts_randomAmount(min, max, accounts, contracts) {
-    const price = await contracts.priceFeedTestnet.getPrice()
-
     const gasCostList = []
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(min, max)
@@ -783,8 +774,6 @@ class TestHelper {
   }
 
   static async withdrawColl_allAccounts(accounts, contracts, amount) {
-    const price = await contracts.priceFeedTestnet.getPrice()
-
     const gasCostList = []
     for (const account of accounts) {
       const { newColl, newDebt } = await this.getCollAndDebtFromWithdrawColl(contracts, account, amount)
@@ -801,7 +790,6 @@ class TestHelper {
 
   static async withdrawColl_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       const randCollAmount = this.randAmountInWei(min, max)
@@ -819,7 +807,6 @@ class TestHelper {
 
   static async withdrawLUSD_allAccounts(accounts, contracts, amount) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       const { newColl, newDebt } = await this.getCollAndDebtFromWithdrawLUSD(contracts, account, amount)
@@ -834,7 +821,6 @@ class TestHelper {
 
   static async withdrawLUSD_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       const randLUSDAmount = this.randAmountInWei(min, max)
@@ -851,7 +837,6 @@ class TestHelper {
 
   static async repayLUSD_allAccounts(accounts, contracts, amount) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       const { newColl, newDebt } = await this.getCollAndDebtFromRepayLUSD(contracts, account, amount)
@@ -866,7 +851,6 @@ class TestHelper {
 
   static async repayLUSD_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
 
     for (const account of accounts) {
       const randLUSDAmount = this.randAmountInWei(min, max)
@@ -953,8 +937,6 @@ class TestHelper {
   // --- Composite functions ---
 
   static async makeTrovesIncreasingICR(accounts, contracts) {
-    const price = await contracts.priceFeedTestnet.getPrice()
-
     let amountFinney = 2000
 
     for (const account of accounts) {
