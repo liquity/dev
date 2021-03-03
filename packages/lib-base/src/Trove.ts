@@ -397,7 +397,7 @@ const applyFee = (borrowingRate: Decimalish, debtIncrease: Decimal) =>
   debtIncrease.mul(Decimal.ONE.add(borrowingRate));
 
 const unapplyFee = (borrowingRate: Decimalish, debtIncrease: Decimal) =>
-  debtIncrease.div(Decimal.ONE.add(borrowingRate));
+  debtIncrease._divCeil(Decimal.ONE.add(borrowingRate));
 
 const NOMINAL_COLLATERAL_RATIO_PRECISION = Decimal.from(100);
 

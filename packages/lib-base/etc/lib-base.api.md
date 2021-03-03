@@ -81,6 +81,8 @@ export class Decimal {
     get bigNumber(): string;
     // (undocumented)
     div(divider: Decimalish): Decimal;
+    // @internal (undocumented)
+    _divCeil(divider: Decimalish): Decimal;
     // (undocumented)
     eq(that: Decimalish): boolean;
     // (undocumented)
