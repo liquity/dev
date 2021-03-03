@@ -131,10 +131,10 @@ Liquity’s token, LUSD, is a fully redeemable stablecoin. At any time\footnote{
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=7cm]{a1.png}
-\includegraphics[width=7cm]{a2.png}
-\includegraphics[width=7cm]{a3.png}
-\includegraphics[width=7cm]{a4.png}
+\includegraphics[width=6.75cm]{a1.png}
+\includegraphics[width=6.75cm]{a2.png}
+\includegraphics[width=6.75cm]{a3.png}
+\includegraphics[width=6.75cm]{a4.png}
 \end{figure}
 
 When redeemed, the system uses the LUSD to repay the riskiest Trove(s) with the currently lowest collateral ratio, and transfers the respective amount of ETH from the affected positions to the redeemer. The amount taken from each borrower is capped by their corresponding debt, so the affected borrowers can keep their collateral surpluses. In other words, borrowers lose the same nominal amount of debt (in LUSD) as they lose collateral (in USD) and do not suffer a net loss from redemptions. On the flipside, redemptions have a positive effect on the total collateralization of the system, increasing robustness and price stability.
@@ -186,12 +186,12 @@ When a Trove becomes undercollateralized ($<$110\%) due to a drop in the ETH pri
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=7cm]{a5.png}
-\includegraphics[width=7cm]{a6.png}
-\includegraphics[width=7cm]{a7.png}
-\includegraphics[width=7cm]{a8.png}
-\includegraphics[width=7cm]{a9.png}
-\includegraphics[width=7cm]{a10.png}
+\includegraphics[width=6.75cm]{a5.png}
+\includegraphics[width=6.75cm]{a6.png}
+\includegraphics[width=6.75cm]{a7.png}
+\includegraphics[width=6.75cm]{a8.png}
+\includegraphics[width=6.75cm]{a9.png}
+\includegraphics[width=6.75cm]{a10.png}
 \end{figure}
 
 The LUSD tokens in the Stability Pool will thus be replaced by ETH over time. Generally, each liquidation contributes a \textbf{collateral surplus gain} to the pool: the collateral is almost always worth more (in USD) than the burned LUSD tokens. This holds because the liquidation is triggered below a collateral ratio of 110\%, but with a very high probability significantly above 100\%\footnote{The actual liquidation ratio depends on the price volatility and the update frequency of the price oracle and will be slightly lower than 110\%. Liquity uses the Chainlink oracle which updates the ETH:USD price every 3 hours and whenever the price changes by more than 0.5\%.} (unless ETH drops by $>$9.09\% between two price feed updates).
