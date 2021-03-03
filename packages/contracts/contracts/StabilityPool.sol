@@ -535,9 +535,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
         uint ETHNumerator = _collToAdd.mul(DECIMAL_PRECISION).add(lastETHError_Offset);
 
-
+        
         if (_debtToOffset >= _totalLUSDDeposits) {
-            LUSDLossPerUnitStaked = DECIMAL_PRECISION;
+            LUSDLossPerUnitStaked = DECIMAL_PRECISION;  // When the Pool depletes to 0, so does each deposit 
             lastLUSDLossError_Offset = 0;
         } else {
             /*
@@ -564,7 +564,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool LUSD in the liquidation.
         * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - LUSDLossPerUnitStaked)
         */
-        uint newProductFactor = _LUSDLossPerUnitStaked >= DECIMAL_PRECISION ? 0 : uint(DECIMAL_PRECISION).sub(_LUSDLossPerUnitStaked);
+        uint newProductFactor = uint(DECIMAL_PRECISION).sub(_LUSDLossPerUnitStaked);
 
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
