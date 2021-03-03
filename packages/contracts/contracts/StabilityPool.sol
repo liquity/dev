@@ -66,9 +66,12 @@ import "./Dependencies/console.sol";
  * A series of liquidations that nearly empty the Pool (and thus each multiply P by a very small number in range ]0,1[ ) may push P
  * to its 18 digit decimal limit, and round it to 0, when in fact the Pool hasn't been emptied: this would break deposit tracking.
  *
- * So, to track P accurately, we use a scale factor: if a liquidation would cause P to decrease to <1e-18 (and be rounded to 0 by Solidity),
- * we first multiply P by 1e18, and increment a currentScale factor by 1.
+ * So, to track P accurately, we use a scale factor: if a liquidation would cause P to decrease to <1e-9 (and be rounded to 0 by Solidity),
+ * we first multiply P by 1e9, and increment a currentScale factor by 1.
  *
+ * The added benefit of using 1e9 for the scale factor (rather than 1e18) is that it ensures negligible precision loss close to the 
+ * scale boundary: when P is at its minimum value of 1e9, the relative precision loss in P due to floor division is only on the 
+ * order of 1e-9. 
  *
  * --- EPOCHS ---
  *
@@ -85,8 +88,8 @@ import "./Dependencies/console.sol";
  * then the deposit was present during a pool-emptying liquidation, and necessarily has been depleted to 0.
  *
  * Otherwise, we then compare the current scale to the deposit's scale snapshot. If they're equal, the compounded deposit is given by d_t * P/P_t.
- * If it spans one scale change, it is given by d_t * P/(P_t * 1e18). If it spans more than one scale change, we define the compounded deposit
- * as 0, since it is now less than 1e-18'th of its initial value (e.g. a deposit of 1 billion LUSD has depleted to 1 billionth of an LUSD).
+ * If it spans one scale change, it is given by d_t * P/(P_t * 1e9). If it spans more than one scale change, we define the compounded deposit
+ * as 0, since it is now less than 1e-9'th of its initial value (e.g. a deposit of 1 billion LUSD has depleted to < 1 LUSD).
  *
  *
  *  --- TRACKING DEPOSITOR'S ETH GAIN OVER SCALE CHANGES AND EPOCHS ---
@@ -98,8 +101,8 @@ import "./Dependencies/console.sol";
  * We calculate the depositor's accumulated ETH gain for the scale at which they made the deposit, using the ETH gain formula:
  * e_1 = d_t * (S - S_t) / P_t
  *
- * and also for scale after, taking care to divide the latter by a factor of 1e18:
- * e_2 = d_t * (S - S_t) / (P_t * 1e18)
+ * and also for scale after, taking care to divide the latter by a factor of 1e9:
+ * e_2 = d_t * (S - S_t) / (P_t * 1e9)
  *
  * The sum of (e_1 + e_2) captures the depositor's total accumulated ETH gain, handling the case where their
  * deposit spanned one scale change. We only care about gains across one scale change, since the compounded
@@ -182,7 +185,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     */
     uint public P = DECIMAL_PRECISION;
 
-    // Each time the scale of P shifts by 1e18, the scale is incremented by 1
+    uint public constant SCALE_FACTOR = 1e9;
+
+    // Each time the scale of P shifts by SCALE_FACTOR, the scale is incremented by 1
     uint128 public currentScale;
 
     // With each offset that fully empties the Pool, the epoch is incremented by 1
@@ -530,9 +535,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
         uint ETHNumerator = _collToAdd.mul(DECIMAL_PRECISION).add(lastETHError_Offset);
 
-
+        
         if (_debtToOffset >= _totalLUSDDeposits) {
-            LUSDLossPerUnitStaked = DECIMAL_PRECISION;
+            LUSDLossPerUnitStaked = DECIMAL_PRECISION;  // When the Pool depletes to 0, so does each deposit 
             lastLUSDLossError_Offset = 0;
         } else {
             /*
@@ -559,7 +564,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool LUSD in the liquidation.
         * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - LUSDLossPerUnitStaked)
         */
-        uint newProductFactor = _LUSDLossPerUnitStaked >= DECIMAL_PRECISION ? 0 : uint(DECIMAL_PRECISION).sub(_LUSDLossPerUnitStaked);
+        uint newProductFactor = uint(DECIMAL_PRECISION).sub(_LUSDLossPerUnitStaked);
 
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
@@ -585,16 +590,18 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
             emit ScaleUpdated(currentScale);
             newP = DECIMAL_PRECISION;
 
-        // If multiplying P by a non-zero product factor would round P to zero, increment the scale
-        } else if (currentP.mul(newProductFactor) < DECIMAL_PRECISION) {
-            newP = currentP.mul(newProductFactor);
+        // If multiplying P by a non-zero product factor would reduce P below the scale boundary, increment the scale
+        } else if (currentP.mul(newProductFactor).div(DECIMAL_PRECISION) < SCALE_FACTOR) {
+            newP = currentP.mul(newProductFactor).mul(SCALE_FACTOR).div(DECIMAL_PRECISION); 
             currentScale = currentScaleCached.add(1);
             emit ScaleUpdated(currentScale);
         } else {
             newP = currentP.mul(newProductFactor).div(DECIMAL_PRECISION);
         }
 
+        assert(newP > 0);
         P = newP;
+
         emit P_Updated(newP);
     }
 
@@ -638,7 +645,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     function _getETHGainFromSnapshots(uint initialDeposit, Snapshots memory snapshots) internal view returns (uint) {
         /*
         * Grab the sum 'S' from the epoch at which the stake was made. The ETH gain may span up to one scale change.
-        * If it does, the second portion of the ETH gain is scaled by 1e18.
+        * If it does, the second portion of the ETH gain is scaled by 1e9.
         * If the gain spans no scale change, the second portion will be 0.
         */
         uint128 epochSnapshot = snapshots.epoch;
@@ -647,7 +654,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint P_Snapshot = snapshots.P;
 
         uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot].sub(S_Snapshot);
-        uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(DECIMAL_PRECISION);
+        uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot.add(1)].div(SCALE_FACTOR);
 
         uint ETHGain = initialDeposit.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(DECIMAL_PRECISION);
 
@@ -702,7 +709,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     function _getLQTYGainFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view returns (uint) {
        /*
         * Grab the sum 'G' from the epoch at which the stake was made. The LQTY gain may span up to one scale change.
-        * If it does, the second portion of the LQTY gain is scaled by 1e18.
+        * If it does, the second portion of the LQTY gain is scaled by 1e9.
         * If the gain spans no scale change, the second portion will be 0.
         */
         uint128 epochSnapshot = snapshots.epoch;
@@ -711,7 +718,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint P_Snapshot = snapshots.P;
 
         uint firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot].sub(G_Snapshot);
-        uint secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot.add(1)].div(DECIMAL_PRECISION);
+        uint secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot.add(1)].div(SCALE_FACTOR);
 
         uint LQTYGain = initialStake.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(DECIMAL_PRECISION);
 
@@ -772,13 +779,13 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         /* Compute the compounded stake. If a scale change in P was made during the stake's lifetime,
         * account for it. If more than one scale change was made, then the stake has decreased by a factor of
-        * at least 1e-18 -- so return 0.
+        * at least 1e-9 -- so return 0.
         */
         if (scaleDiff == 0) {
             compoundedStake = initialStake.mul(P).div(snapshot_P);
         } else if (scaleDiff == 1) {
-            compoundedStake = initialStake.mul(P).div(snapshot_P).div(DECIMAL_PRECISION);
-        } else {
+            compoundedStake = initialStake.mul(P).div(snapshot_P).div(SCALE_FACTOR);
+        } else { // if scaleDiff >= 2
             compoundedStake = 0;
         }
 
