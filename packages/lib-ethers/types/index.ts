@@ -58,6 +58,7 @@ export interface ActivePool
 }
 
 interface BorrowerOperationsCalls {
+  BORROWING_FEE_FLOOR(_overrides?: CallOverrides): Promise<BigNumber>;
   CCR(_overrides?: CallOverrides): Promise<BigNumber>;
   DECIMAL_PRECISION(_overrides?: CallOverrides): Promise<BigNumber>;
   LUSD_GAS_COMPENSATION(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -249,6 +250,7 @@ export interface GasPool
 }
 
 interface HintHelpersCalls {
+  BORROWING_FEE_FLOOR(_overrides?: CallOverrides): Promise<BigNumber>;
   CCR(_overrides?: CallOverrides): Promise<BigNumber>;
   DECIMAL_PRECISION(_overrides?: CallOverrides): Promise<BigNumber>;
   LUSD_GAS_COMPENSATION(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -574,6 +576,7 @@ export interface SortedTroves
 }
 
 interface StabilityPoolCalls {
+  BORROWING_FEE_FLOOR(_overrides?: CallOverrides): Promise<BigNumber>;
   CCR(_overrides?: CallOverrides): Promise<BigNumber>;
   DECIMAL_PRECISION(_overrides?: CallOverrides): Promise<BigNumber>;
   LUSD_GAS_COMPENSATION(_overrides?: CallOverrides): Promise<BigNumber>;
