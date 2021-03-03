@@ -81,7 +81,9 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
             uint LUSDAmount = _getNetLUSDAmount(claimedCollateral);
             borrowerOperations.adjustTrove{ value: claimedCollateral }(_maxFee, 0, LUSDAmount, true, _upperHint, _lowerHint);
             // Provide withdrawn LUSD to Stability Pool
-            stabilityPool.provideToSP(LUSDAmount, address(0));
+            if (LUSDAmount > 0) {
+                stabilityPool.provideToSP(LUSDAmount, address(0));
+            }
         }
 
         // Stake claimed LQTY
