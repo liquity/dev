@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button, Box, Flex, Spinner, Card, Heading } from "theme-ui";
 
-import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal, Percent, LiquityStoreState, MINIMUM_COLLATERAL_RATIO } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -12,6 +12,8 @@ import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { EditableRow, StaticRow } from "./Editor";
 
+const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
+
 type RedemptionActionProps = {
   amount: Decimal;
   setAmount: (amount: Decimal) => void;
@@ -19,7 +21,11 @@ type RedemptionActionProps = {
   setChangePending: (isPending: boolean) => void;
 };
 
-const selectLUSDBalance = ({ lusdBalance }: LiquityStoreState) => lusdBalance;
+const selectForRedemptionAction = ({ lusdBalance, total, price }: LiquityStoreState) => ({
+  lusdBalance,
+  total,
+  price
+});
 
 const RedemptionAction: React.FC<RedemptionActionProps> = ({
   amount,
@@ -27,7 +33,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   changePending,
   setChangePending
 }) => {
-  const lusdBalance = useLiquitySelector(selectLUSDBalance);
+  const { lusdBalance, total, price } = useLiquitySelector(selectForRedemptionAction);
 
   const {
     liquity: { send: liquity }
@@ -64,7 +70,13 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     <Flex variant="layout.actions">
       <Transaction
         id={myTransactionId}
-        requires={[[lusdBalance.gte(amount), `You don't have enough ${COIN}`]]}
+        requires={[
+          [
+            !total.collateralRatioIsBelowMinimum(price),
+            `Can't redeem when total collateral ratio is less than ${mcrPercent}`
+          ],
+          [lusdBalance.gte(amount), `You don't have enough ${COIN}`]
+        ]}
         {...{ send }}
       >
         <Button sx={{ mx: 2 }}>
