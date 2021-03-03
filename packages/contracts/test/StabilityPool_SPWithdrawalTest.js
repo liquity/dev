@@ -1183,7 +1183,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // L1 brings P close to boundary, i.e. 9e-9: liquidate 9999.99991
     // A withdraws all
     // B deposits 10000
-    // L2 of 9000 LUSD, should bring P slightly past boundary i.e. 1e-18 -> 1e-19
+    // L2 of 9900 LUSD, should bring P slightly past boundary i.e. 1e-9 -> 1e-10
 
     // expect d(B) = d0(B)/10
     // expect correct ETH gain, i.e. all of the reward
@@ -1205,7 +1205,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // price drops by 50%
       await priceFeed.setPrice(dec(100, 18));
 
-      // Defaulter 1 liquidated.  Value of P reduced to 9.
+      // Defaulter 1 liquidated.  Value of P reduced to 9e9.
       await troveManager.liquidate(defaulter_1, { from: owner });
       assert.equal((await stabilityPool.P()).toString(), dec(9, 9))
 
@@ -1220,7 +1220,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await lusdToken.transfer(bob, dec(10000, 18), { from: whale })
       await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: bob })
 
-      // Defaulter 2 liquidated.  9000 LUSD liquidated. P altered by a factor of 1-(9900/10000) = 0.01.  Scale changed.
+      // Defaulter 2 liquidated.  9900 LUSD liquidated. P altered by a factor of 1-(9900/10000) = 0.01.  Scale changed.
       await troveManager.liquidate(defaulter_2, { from: owner });
 
       assert.equal(await stabilityPool.currentScale(), '1')

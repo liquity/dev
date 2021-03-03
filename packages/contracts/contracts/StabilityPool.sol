@@ -69,7 +69,7 @@ import "./Dependencies/console.sol";
  * So, to track P accurately, we use a scale factor: if a liquidation would cause P to decrease to <1e-9 (and be rounded to 0 by Solidity),
  * we first multiply P by 1e9, and increment a currentScale factor by 1.
  *
- * The added benefit of using 1e9 for the scale factor (rather than 1e18) is that  itensures negligible precision loss close to the 
+ * The added benefit of using 1e9 for the scale factor (rather than 1e18) is that it ensures negligible precision loss close to the 
  * scale boundary: when P is at its minimum value of 1e9, the relative precision loss in P due to floor division is only on the 
  * order of 1e-9. 
  *
