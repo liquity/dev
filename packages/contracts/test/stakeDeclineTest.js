@@ -83,10 +83,10 @@ contract('TroveManager', async accounts => {
   it("A given trove's stake decline is negligible with adjustments and tiny liquidations", async () => {
     await priceFeed.setPrice(dec(100, 18))
   
-    // Make 1 mega troves B at ~50% total collateral
+    // Make 1 mega troves A at ~50% total collateral
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1, 31)), ZERO_ADDRESS, ZERO_ADDRESS, { from: A, value: dec(2, 29) })
     
-    // Make 5 large troves A, C, D, E, F at ~10% total collateral
+    // Make 5 large troves B, C, D, E, F at ~10% total collateral
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(2, 30)), ZERO_ADDRESS, ZERO_ADDRESS, { from: B, value: dec(4, 28) })
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(2, 30)), ZERO_ADDRESS, ZERO_ADDRESS, { from: C, value: dec(4, 28) })
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(2, 30)), ZERO_ADDRESS, ZERO_ADDRESS, { from: D, value: dec(4, 28) })
