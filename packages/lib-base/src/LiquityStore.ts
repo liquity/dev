@@ -283,6 +283,19 @@ export abstract class LiquityStore<T = unknown> {
     return next !== undefined && !equals(prev, next) ? next : prev;
   }
 
+  private _updateFees(name: string, prev: Fees, next?: Fees): Fees {
+    if (next && !next.equals(prev)) {
+      // Filter out fee update spam that happens on every new block by only logging when string
+      // representation changes.
+      if (`${next}` !== `${prev}`) {
+        this._logUpdate(name, next);
+      }
+      return next;
+    } else {
+      return prev;
+    }
+  }
+
   private _reduce(
     baseState: LiquityStoreBaseState,
     baseStateUpdate: Partial<LiquityStoreBaseState>
@@ -425,9 +438,9 @@ export abstract class LiquityStore<T = unknown> {
     derivedStateUpdate: LiquityStoreDerivedState
   ): LiquityStoreDerivedState {
     return {
-      trove: this._updateIfChanged(equals, "trove", derivedState.trove, derivedStateUpdate.trove),
+      fees: this._updateFees("fees", derivedState.fees, derivedStateUpdate.fees),
 
-      fees: this._updateIfChanged(equals, "fees", derivedState.fees, derivedStateUpdate.fees),
+      trove: this._updateIfChanged(equals, "trove", derivedState.trove, derivedStateUpdate.trove),
 
       borrowingRate: this._silentlyUpdateIfChanged(
         eq,

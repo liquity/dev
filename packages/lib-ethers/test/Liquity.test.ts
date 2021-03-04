@@ -47,17 +47,8 @@ const connectToDeployment = async (deployment: _LiquityDeploymentJSON, signer: S
     })
   );
 
-const baseRate = Fees.prototype.baseRate;
-let cumulativeTimeJumpSeconds = 0;
-
-// Patch baseRate to work with increaseTime
-Fees.prototype.baseRate = function (when) {
-  return baseRate.call(this, new Date(when.getTime() + cumulativeTimeJumpSeconds * 1000));
-};
-
 const increaseTime = async (timeJumpSeconds: number) => {
   await provider.send("evm_increaseTime", [timeJumpSeconds]);
-  cumulativeTimeJumpSeconds += timeJumpSeconds;
 };
 
 function assertStrictEqual<T, U extends T>(
@@ -193,7 +184,7 @@ describe("EthersLiquity", () => {
 
       const fakeLiquity = new PopulatableEthersLiquity(({
         getNumberOfTroves: () => Promise.resolve(1000000),
-        getFees: () => Promise.resolve(new Fees(new Date(), 0, 0.99, 1)),
+        getFees: () => Promise.resolve(new Fees(0, 0.99, 1, new Date(), new Date(), false)),
 
         connection: {
           signerOrProvider: user,
@@ -625,18 +616,14 @@ describe("EthersLiquity", () => {
       ]);
 
       await sendToEach(otherUsersSubset, 20.1);
+    });
 
+    it("should fail to redeem during the bootstrap phase", async () => {
       await liquity.openTrove(troveCreations[0]);
       await otherLiquities[0].openTrove(troveCreations[1]);
       await otherLiquities[1].openTrove(troveCreations[2]);
       await otherLiquities[2].openTrove(troveCreations[3]);
-    });
 
-    after(() => {
-      cumulativeTimeJumpSeconds = 0;
-    });
-
-    it("should fail to redeem during the bootstrap phase", async () => {
       await expect(liquity.redeemLUSD(4326.5, { gasPrice: 0 })).to.eventually.be.rejected;
     });
 
@@ -661,7 +648,7 @@ describe("EthersLiquity", () => {
         attemptedLUSDAmount: someLUSD,
         actualLUSDAmount: someLUSD,
         collateralTaken: someLUSD.div(200),
-        fee: new Fees(new Date(), 0, 0.99, 2)
+        fee: new Fees(0, 0.99, 2, new Date(), new Date(), false)
           .redemptionRate(someLUSD.div(total.debt))
           .mul(someLUSD.div(200))
       };
@@ -762,10 +749,6 @@ describe("EthersLiquity", () => {
       increaseTime(60 * 60 * 24 * 15);
     });
 
-    afterEach(() => {
-      cumulativeTimeJumpSeconds = 0;
-    });
-
     it("should truncate the amount if it would put the last Trove below the min debt", async () => {
       const redemption = await liquity.populate.redeemLUSD(amountToAttempt);
       expect(`${redemption.attemptedLUSDAmount}`).to.equal(`${amountToAttempt}`);
@@ -852,10 +835,6 @@ describe("EthersLiquity", () => {
       increaseTime(60 * 60 * 24 * 15);
     });
 
-    after(() => {
-      cumulativeTimeJumpSeconds = 0;
-    });
-
     it("should redeem using the maximum iterations and almost all gas", async () => {
       await liquity.openTrove({
         depositCollateral: amountToDeposit,
@@ -903,10 +882,6 @@ describe("EthersLiquity", () => {
       ]);
 
       increaseTime(60 * 60 * 24 * 15);
-    });
-
-    after(() => {
-      cumulativeTimeJumpSeconds = 0;
     });
 
     it("should include enough gas for updating lastFeeOperationTime", async () => {

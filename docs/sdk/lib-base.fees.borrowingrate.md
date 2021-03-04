@@ -9,13 +9,22 @@ Calculate the current borrowing rate.
 <b>Signature:</b>
 
 ```typescript
-borrowingRate(): Decimal;
+borrowingRate(when?: Date): Decimal;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  when | Date | Optional timestamp that can be used to calculate what the borrowing rate would decay to at a point of time in the future. |
+
 <b>Returns:</b>
 
 [Decimal](./lib-base.decimal.md)
 
 ## Remarks
+
+By default, the fee is calculated at the time of the latest block. This can be overridden using the `when` parameter.
 
 To calculate the borrowing fee in LUSD, multiply the borrowed LUSD amount by the borrowing rate.
 

@@ -9,20 +9,23 @@ Calculate the current redemption rate.
 <b>Signature:</b>
 
 ```typescript
-redemptionRate(redeemedFractionOfSupply?: Decimalish): Decimal;
+redemptionRate(redeemedFractionOfSupply?: Decimalish, when?: Date): Decimal;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  redeemedFractionOfSupply | [Decimalish](./lib-base.decimalish.md) | the amount of LUSD being redeemed divided by the total supply |
+|  redeemedFractionOfSupply | [Decimalish](./lib-base.decimalish.md) | The amount of LUSD being redeemed divided by the total supply. |
+|  when | Date | Optional timestamp that can be used to calculate what the redemption rate would decay to at a point of time in the future. |
 
 <b>Returns:</b>
 
 [Decimal](./lib-base.decimal.md)
 
 ## Remarks
+
+By default, the fee is calculated at the time of the latest block. This can be overridden using the `when` parameter.
 
 Unlike the borrowing rate, the redemption rate depends on the amount being redeemed. To be more precise, it depends on the fraction of the redeemed amount compared to the total LUSD supply, which must be passed as a parameter.
 

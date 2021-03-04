@@ -179,12 +179,12 @@ export const _failedReceipt: <R>(rawReceipt: R) => FailedReceipt<R>;
 // @public
 export class Fees {
     // @internal
-    constructor(lastFeeOperation: Date, baseRateWithoutDecay: Decimalish, minuteDecayFactor: Decimalish, beta: Decimalish, recoveryMode?: boolean);
+    constructor(baseRateWithoutDecay: Decimalish, minuteDecayFactor: Decimalish, beta: Decimalish, lastFeeOperation: Date, timeOfLatestBlock: Date, recoveryMode: boolean);
     // @internal (undocumented)
-    baseRate(when: Date): Decimal;
-    borrowingRate(): Decimal;
+    baseRate(when?: Date): Decimal;
+    borrowingRate(when?: Date): Decimal;
     equals(that: Fees): boolean;
-    redemptionRate(redeemedFractionOfSupply?: Decimalish): Decimal;
+    redemptionRate(redeemedFractionOfSupply?: Decimalish, when?: Date): Decimal;
     // @internal (undocumented)
     _setRecoveryMode(recoveryMode: boolean): Fees;
     // @internal (undocumented)
