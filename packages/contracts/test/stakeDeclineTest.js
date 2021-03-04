@@ -20,9 +20,7 @@ const timeValues = testHelpers.TimeValues
  */
 contract('TroveManager', async accounts => {
 
-  const _18_zeros = '000000000000000000'
   const ZERO_ADDRESS = th.ZERO_ADDRESS
-
   const [owner, A, B, C, D, E, F] = accounts.slice(0, 7);
 
   const bountyAddress = accounts[998]
@@ -41,11 +39,8 @@ contract('TroveManager', async accounts => {
 
   let contracts
 
-  const getOpenTroveTotalDebt = async (lusdAmount) => th.getOpenTroveTotalDebt(contracts, lusdAmount)
   const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
-  const getActualDebtFromComposite = async (compositeDebt) => th.getActualDebtFromComposite(compositeDebt, contracts)
-  const getNetBorrowingAmount = async (debtWithFee) => th.getNetBorrowingAmount(contracts, debtWithFee)
-
+ 
   const getSnapshotsRatio = async () => {
     const ratio = (await troveManager.totalStakesSnapshot())
       .mul(toBN(dec(1, 18)))
@@ -87,9 +82,7 @@ contract('TroveManager', async accounts => {
 
   it("A given trove's stake decline is negligible with adjustments and tiny liquidations", async () => {
     await priceFeed.setPrice(dec(100, 18))
-    // Setup: 
-    // make system such that totalStakesSnapshot / totalCollateralSnapshot = 0.5
-
+  
     // Make 1 mega troves B at ~50% total collateral
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1, 31)), ZERO_ADDRESS, ZERO_ADDRESS, { from: A, value: dec(2, 29) })
     
@@ -100,18 +93,12 @@ contract('TroveManager', async accounts => {
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(2, 30)), ZERO_ADDRESS, ZERO_ADDRESS, { from: E, value: dec(4, 28) })
     await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(2, 30)), ZERO_ADDRESS, ZERO_ADDRESS, { from: F, value: dec(4, 28) })
   
-    console.log(`B ICR: ${await troveManager.getCurrentICR(B, await priceFeed.getPrice())}`)
-    
-    // Make 10 tiny troves at relatively negligible collateral (~1e-8 of A)
+    // Make 10 tiny troves at relatively negligible collateral (~1e-9 of total)
     const tinyTroves = accounts.slice(10, 20)
     for (account of tinyTroves) {
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(1, 22)), ZERO_ADDRESS, ZERO_ADDRESS, { from: account, value: dec(2, 20) })
     }
-    
-    console.log(`${await troveManager.totalStakesSnapshot()}`)
-    console.log(`${await troveManager.totalCollateralSnapshot()}`)
 
-    // console.log(`snapshotRatio before L1: ${await getSnapshotsRatio() } `)
     // liquidate 1 trove at ~50% total system collateral
     await priceFeed.setPrice(dec(50, 18))
     assert.isTrue(await troveManager.checkRecoveryMode(await priceFeed.getPrice()))
@@ -120,25 +107,25 @@ contract('TroveManager', async accounts => {
     console.log(`totalStakesSnapshot after L1: ${await troveManager.totalStakesSnapshot()}`)
     console.log(`totalCollateralSnapshot after L1: ${await troveManager.totalCollateralSnapshot()}`)
     console.log(`Snapshots ratio after L1: ${await getSnapshotsRatio()}`)
-    console.log(`B's pending ETH reward after L1: ${await troveManager.getPendingETHReward(B)}`)
-    console.log(`B's stake after L1: ${(await troveManager.Troves(B))[2]}`)
+    console.log(`B pending ETH reward after L1: ${await troveManager.getPendingETHReward(B)}`)
+    console.log(`B stake after L1: ${(await troveManager.Troves(B))[2]}`)
 
     // adjust trove B 1 wei: apply rewards
     await borrowerOperations.adjustTrove(th._100pct, 0, 1, false, ZERO_ADDRESS, ZERO_ADDRESS, {from: B})  // B repays 1 wei
-    console.log(`B's stake after A1: ${(await troveManager.Troves(B))[2]}`)
-    console.log(`ratio after A1: ${await getSnapshotsRatio()}`)
+    console.log(`B stake after A1: ${(await troveManager.Troves(B))[2]}`)
+    console.log(`Snapshots ratio after A1: ${await getSnapshotsRatio()}`)
 
     // Loop over tiny troves, and alternately:
     // - Liquidate a tiny trove
     // - Adjust B's collateral by 1 wei
     for (let [idx, trove] of tinyTroves.entries()) {
       await troveManager.liquidate(trove)
-      console.log(`B's stake after L${idx + 2}: ${(await troveManager.Troves(B))[2]}`)
+      console.log(`B stake after L${idx + 2}: ${(await troveManager.Troves(B))[2]}`)
       console.log(`Snapshots ratio after L${idx + 2}: ${await getSnapshotsRatio()}`)
       await borrowerOperations.adjustTrove(th._100pct, 0, 1, false, ZERO_ADDRESS, ZERO_ADDRESS, {from: B})  // A repays 1 wei
-      console.log(`B's stake after A${idx + 2}: ${(await troveManager.Troves(B))[2]}`)
+      console.log(`B stake after A${idx + 2}: ${(await troveManager.Troves(B))[2]}`)
     }
   })
 
-  // TODO: stake decline for adjustments with sizable liquidations
+  // TODO: stake decline for adjustments with sizable liquidations, for comparison
 })
