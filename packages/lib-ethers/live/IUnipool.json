@@ -31,13 +31,6 @@
     },
     {
       "inputs": [],
-      "name": "exit",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
       "name": "lastTimeRewardApplicable",
       "outputs": [
         {
@@ -81,6 +74,13 @@
         }
       ],
       "name": "setParams",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdrawAndClaim",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
