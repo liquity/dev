@@ -584,6 +584,7 @@ interface StabilityPoolCalls {
   MIN_NET_DEBT(_overrides?: CallOverrides): Promise<BigNumber>;
   P(_overrides?: CallOverrides): Promise<BigNumber>;
   PERCENT_DIVISOR(_overrides?: CallOverrides): Promise<BigNumber>;
+  SCALE_FACTOR(_overrides?: CallOverrides): Promise<BigNumber>;
   _100pct(_overrides?: CallOverrides): Promise<BigNumber>;
   activePool(_overrides?: CallOverrides): Promise<string>;
   borrowerOperations(_overrides?: CallOverrides): Promise<string>;
