@@ -43,9 +43,10 @@ export class SendableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.openTrove} */
   openTrove(
     params: TroveCreationParams<Decimalish>,
+    maxBorrowingRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<TroveCreationDetails>> {
-    return this._populate.openTrove(params, overrides).then(sendTransaction);
+    return this._populate.openTrove(params, maxBorrowingRate, overrides).then(sendTransaction);
   }
 
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.closeTrove} */
@@ -58,9 +59,10 @@ export class SendableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.adjustTrove} */
   adjustTrove(
     params: TroveAdjustmentParams<Decimalish>,
+    maxBorrowingRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>> {
-    return this._populate.adjustTrove(params, overrides).then(sendTransaction);
+    return this._populate.adjustTrove(params, maxBorrowingRate, overrides).then(sendTransaction);
   }
 
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.depositCollateral} */
@@ -82,9 +84,10 @@ export class SendableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.borrowLUSD} */
   borrowLUSD(
     amount: Decimalish,
+    maxBorrowingRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>> {
-    return this._populate.borrowLUSD(amount, overrides).then(sendTransaction);
+    return this._populate.borrowLUSD(amount, maxBorrowingRate, overrides).then(sendTransaction);
   }
 
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.repayLUSD} */
@@ -175,9 +178,10 @@ export class SendableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.redeemLUSD} */
   redeemLUSD(
     amount: Decimalish,
+    maxRedemptionRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<RedemptionDetails>> {
-    return this._populate.redeemLUSD(amount, overrides).then(sendTransaction);
+    return this._populate.redeemLUSD(amount, maxRedemptionRate, overrides).then(sendTransaction);
   }
 
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.claimCollateralSurplus} */

@@ -96,7 +96,7 @@ describe("EthersLiquity", () => {
           connectToDeployment(deployment, users[i]),
           sendTo(users[i], params.depositCollateral).then(tx => tx.wait())
         ]).then(async ([liquity]) => {
-          await liquity.openTrove(params, { gasPrice: 0 });
+          await liquity.openTrove(params, undefined, { gasPrice: 0 });
         })
       )
       .reduce((a, b) => a.then(b), Promise.resolve());
@@ -286,7 +286,7 @@ describe("EthersLiquity", () => {
     const repayAndWithdraw = { repayLUSD: 60, withdrawCollateral: 0.5 };
 
     it("should repay some debt and withdraw some collateral at the same time", async () => {
-      const { newTrove } = await liquity.adjustTrove(repayAndWithdraw, { gasPrice: 0 });
+      const { newTrove } = await liquity.adjustTrove(repayAndWithdraw, undefined, { gasPrice: 0 });
 
       expect(newTrove).to.deep.equal(
         Trove.create(withSomeBorrowing)
@@ -303,7 +303,9 @@ describe("EthersLiquity", () => {
     const borrowAndDeposit = { borrowLUSD: 60, depositCollateral: 0.5 };
 
     it("should borrow more and deposit some collateral at the same time", async () => {
-      const { newTrove, fee } = await liquity.adjustTrove(borrowAndDeposit, { gasPrice: 0 });
+      const { newTrove, fee } = await liquity.adjustTrove(borrowAndDeposit, undefined, {
+        gasPrice: 0
+      });
 
       expect(newTrove).to.deep.equal(
         Trove.create(withSomeBorrowing)
@@ -351,6 +353,7 @@ describe("EthersLiquity", () => {
       // By passing a gasLimit, we avoid automatic use of estimateGas which would throw
       const tx = await liquity.send.openTrove(
         { depositCollateral: 0.01, borrowLUSD: 0.01 },
+        undefined,
         { gasLimit: 1e6 }
       );
       const { status } = await tx.waitForReceipt();
@@ -624,7 +627,7 @@ describe("EthersLiquity", () => {
       await otherLiquities[1].openTrove(troveCreations[2]);
       await otherLiquities[2].openTrove(troveCreations[3]);
 
-      await expect(liquity.redeemLUSD(4326.5, { gasPrice: 0 })).to.eventually.be.rejected;
+      await expect(liquity.redeemLUSD(4326.5, undefined, { gasPrice: 0 })).to.eventually.be.rejected;
     });
 
     const someLUSD = Decimal.from(4326.5);
@@ -653,7 +656,7 @@ describe("EthersLiquity", () => {
           .mul(someLUSD.div(200))
       };
 
-      const details = await liquity.redeemLUSD(someLUSD, { gasPrice: 0 });
+      const details = await liquity.redeemLUSD(someLUSD, undefined, { gasPrice: 0 });
       expect(details).to.deep.equal(expectedDetails);
 
       const balance = Decimal.fromBigNumberString(`${await provider.getBalance(user.getAddress())}`);
@@ -828,6 +831,7 @@ describe("EthersLiquity", () => {
             depositCollateral: collateralPerTrove,
             borrowLUSD: amountToBorrowPerTrove
           },
+          undefined,
           { gasPrice: 0 }
         );
       }
