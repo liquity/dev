@@ -120,6 +120,7 @@ export const TroveManager: React.FC = () => {
   // Reapply change to get the exact state the Trove will end up in (which could be slightly
   // different from `edited` due to imprecision).
   const afterFee = original.apply(change, borrowingRate);
+  const maxBorrowingRate = borrowingRate.add(0.005); // TODO slippage tolerance
 
   return (
     <>
@@ -130,7 +131,9 @@ export const TroveManager: React.FC = () => {
       {redeemed ? (
         <CollateralSurplusAction />
       ) : (
-        <TroveAction {...{ original, edited, afterFee, change, changePending, dispatch }} />
+        <TroveAction
+          {...{ original, edited, maxBorrowingRate, afterFee, change, changePending, dispatch }}
+        />
       )}
     </>
   );

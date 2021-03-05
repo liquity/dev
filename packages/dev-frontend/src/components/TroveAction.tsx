@@ -22,6 +22,7 @@ import { Transaction, TransactionFunction, useMyTransactionState } from "./Trans
 type TroveActionProps = {
   original: Trove;
   edited: Trove;
+  maxBorrowingRate: Decimal;
   afterFee: Trove;
   change?: TroveChange<Decimal>;
   changePending: boolean;
@@ -67,6 +68,7 @@ type Action = [name: string, send: TransactionFunction, requirements?: [boolean,
 export const TroveAction: React.FC<TroveActionProps> = ({
   original,
   edited,
+  maxBorrowingRate,
   afterFee,
   change,
   changePending,
@@ -113,7 +115,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
     change.type === "creation"
       ? [
           describeAdjustment(change.params),
-          liquity.openTrove.bind(liquity, change.params),
+          liquity.openTrove.bind(liquity, change.params, maxBorrowingRate),
           [
             [
               afterFee.isOpenableInRecoveryMode(price) ||
@@ -133,7 +135,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         ]
       : [
           describeAdjustment(change.params),
-          liquity.adjustTrove.bind(liquity, change.params),
+          liquity.adjustTrove.bind(liquity, change.params, maxBorrowingRate),
           [
             [
               afterFee.collateralRatio(price).gte(original.collateralRatio(price)) ||

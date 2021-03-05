@@ -15,10 +15,11 @@ import { EditableRow, StaticRow } from "./Editor";
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 
 type RedemptionActionProps = {
-  amount: Decimal;
-  setAmount: (amount: Decimal) => void;
+  lusdAmount: Decimal;
+  setLUSDAmount: (lusdAmount: Decimal) => void;
   changePending: boolean;
   setChangePending: (isPending: boolean) => void;
+  maxRedemptionRate: Decimal;
 };
 
 const selectForRedemptionAction = ({ lusdBalance, total, price }: LiquityStoreState) => ({
@@ -28,10 +29,11 @@ const selectForRedemptionAction = ({ lusdBalance, total, price }: LiquityStoreSt
 });
 
 const RedemptionAction: React.FC<RedemptionActionProps> = ({
-  amount,
-  setAmount,
+  lusdAmount,
+  setLUSDAmount,
   changePending,
-  setChangePending
+  setChangePending,
+  maxRedemptionRate
 }) => {
   const { lusdBalance, total, price } = useLiquitySelector(selectForRedemptionAction);
 
@@ -48,16 +50,16 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       setChangePending(false);
     } else if (myTransactionState.type === "confirmed") {
-      setAmount(Decimal.ZERO);
+      setLUSDAmount(Decimal.ZERO);
       setChangePending(false);
     }
-  }, [myTransactionState.type, setChangePending, setAmount]);
+  }, [myTransactionState.type, setChangePending, setLUSDAmount]);
 
-  if (amount.isZero) {
+  if (lusdAmount.isZero) {
     return null;
   }
 
-  const send = liquity.redeemLUSD.bind(liquity, amount);
+  const send = liquity.redeemLUSD.bind(liquity, lusdAmount, maxRedemptionRate);
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">
@@ -75,12 +77,12 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
             !total.collateralRatioIsBelowMinimum(price),
             `Can't redeem when total collateral ratio is less than ${mcrPercent}`
           ],
-          [lusdBalance.gte(amount), `You don't have enough ${COIN}`]
+          [lusdBalance.gte(lusdAmount), `You don't have enough ${COIN}`]
         ]}
         {...{ send }}
       >
         <Button sx={{ mx: 2 }}>
-          Exchange {amount.prettify()} {COIN}
+          Exchange {lusdAmount.prettify()} {COIN}
         </Button>
       </Transaction>
     </Flex>
@@ -100,6 +102,7 @@ export const RedemptionManager: React.FC = () => {
   const redemptionRate = fees.redemptionRate(lusdAmount.div(total.debt));
   const feePct = new Percent(redemptionRate);
   const ethFee = ethAmount.mul(redemptionRate);
+  const maxRedemptionRate = redemptionRate.add(0.001); // TODO slippage tolerance
 
   return (
     <>
@@ -154,7 +157,7 @@ export const RedemptionManager: React.FC = () => {
       </Card>
 
       <RedemptionAction
-        {...{ amount: lusdAmount, setAmount: setLUSDAmount, changePending, setChangePending }}
+        {...{ lusdAmount, setLUSDAmount, changePending, setChangePending, maxRedemptionRate }}
       />
     </>
   );
