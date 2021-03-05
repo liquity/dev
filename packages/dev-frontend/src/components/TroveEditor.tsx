@@ -23,7 +23,6 @@ import { LoadingOverlay } from "./LoadingOverlay";
 type TroveEditorProps = {
   original: Trove;
   edited: Trove;
-  afterFee: Trove;
   borrowingRate: Decimal;
   change?: TroveChange<Decimal>;
   changePending: boolean;
@@ -34,11 +33,18 @@ type TroveEditorProps = {
 
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
+const feeFrom = (
+  change: TroveChange<Decimal> | undefined,
+  borrowingRate: Decimal
+): Decimal | undefined =>
+  change && change.type !== "invalidCreation"
+    ? change.params.borrowLUSD?.mul(borrowingRate)
+    : undefined;
+
 export const TroveEditor: React.FC<TroveEditorProps> = ({
   children,
   original,
   edited,
-  afterFee,
   borrowingRate,
   change,
   changePending,
@@ -48,7 +54,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   const editingState = useState<string>();
 
-  const fee = afterFee.subtract(edited).debt.nonZero;
+  const fee = feeFrom(change, borrowingRate);
   const feePct = new Percent(borrowingRate);
 
   const pendingCollateral = Difference.between(edited.collateral, original.collateral.nonZero)
@@ -56,7 +62,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   const pendingDebt = Difference.between(edited.debt, original.debt.nonZero).nonZero;
 
   const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
-  const collateralRatio = !afterFee.isEmpty ? afterFee.collateralRatio(price) : undefined;
+  const collateralRatio = !edited.isEmpty ? edited.collateralRatio(price) : undefined;
   const collateralRatioPct = new Percent(collateralRatio || { toString: () => "N/A" });
   const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
   const collateralRatioChangePct = collateralRatioChange && new Percent(collateralRatioChange);
