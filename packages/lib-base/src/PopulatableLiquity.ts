@@ -72,8 +72,19 @@ export interface PopulatedRedemption<P = unknown, S = unknown, R = unknown>
   /**
    * Prepare a new transaction by increasing the attempted amount to the next lowest redeemable
    * value.
+   *
+   * @param maxRedemptionRate - Maximum acceptable
+   *                            {@link @liquity/lib-base#Fees.redemptionRate | redemption rate} to
+   *                            use in the new transaction.
+   *
+   * @remarks
+   * If `maxRedemptionRate` is omitted, the original transaction's `maxRedemptionRate` is reused
+   * unless that was also omitted, in which case the current redemption rate (based on the increased
+   * amount) plus 0.1% is used as maximum acceptable rate.
    */
-  increaseAmountByMinimumNetDebt(): Promise<PopulatedRedemption<P, S, R>>;
+  increaseAmountByMinimumNetDebt(
+    maxRedemptionRate?: Decimalish
+  ): Promise<PopulatedRedemption<P, S, R>>;
 }
 
 /** @internal */
@@ -102,7 +113,8 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
 
   /** {@inheritDoc TransactableLiquity.openTrove} */
   openTrove(
-    params: TroveCreationParams<Decimalish>
+    params: TroveCreationParams<Decimalish>,
+    maxBorrowingRate?: Decimalish
   ): Promise<
     PopulatedLiquityTransaction<
       P,
@@ -117,7 +129,8 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
 
   /** {@inheritDoc TransactableLiquity.adjustTrove} */
   adjustTrove(
-    params: TroveAdjustmentParams<Decimalish>
+    params: TroveAdjustmentParams<Decimalish>,
+    maxBorrowingRate?: Decimalish
   ): Promise<
     PopulatedLiquityTransaction<
       P,
@@ -147,7 +160,8 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
 
   /** {@inheritDoc TransactableLiquity.borrowLUSD} */
   borrowLUSD(
-    amount: Decimalish
+    amount: Decimalish,
+    maxBorrowingRate?: Decimalish
   ): Promise<
     PopulatedLiquityTransaction<
       P,
@@ -234,7 +248,10 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
   ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
 
   /** {@inheritDoc TransactableLiquity.redeemLUSD} */
-  redeemLUSD(amount: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
+  redeemLUSD(
+    amount: Decimalish,
+    maxRedemptionRate?: Decimalish
+  ): Promise<PopulatedRedemption<P, S, R>>;
 
   /** {@inheritDoc TransactableLiquity.claimCollateralSurplus} */
   claimCollateralSurplus(): Promise<
