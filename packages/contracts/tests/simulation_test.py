@@ -127,6 +127,7 @@ def contracts():
 
 @pytest.fixture
 def print_expectations():
+    ether_price_one_year = price_ether_initial * (1 + drift_ether)**8760
     print("Expected ether price at the end of the year: $", ether_price_one_year)
 
     print("\n Open troves")
@@ -180,8 +181,10 @@ def test_run_simulation(contracts):
     price_LUSD = 1
 
     data = {"airdrop_gain": [0] * n_sim, "liquidation_gain": [0] * n_sim}
+    total_coll_added = 0
+    total_coll_liquidated = 0
 
-    logGlobalState(contracts, price_ether[0])
+    logGlobalState(contracts)
     #Simulation Process
     for index in range(1, n_sim):
         print('\n  --> Iteration', index)
@@ -192,16 +195,20 @@ def test_run_simulation(contracts):
         #price_LQTY_previous = data.loc[index-1,'price_LQTY']
 
         #trove liquidation & return of stability pool
-        return_stability = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, data, index)
+        result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, data, index)
+        total_coll_liquidated = total_coll_liquidated + result_liquidation[0]
+        return_stability = result_liquidation[1]
 
         #close troves
         result_close = close_troves(accounts, contracts, active_accounts, inactive_accounts, index, price_LUSD)
 
         #adjust troves
-        adjust_troves(accounts, contracts, active_accounts, price_ether_current, index)
+        coll_added_adjust = adjust_troves(accounts, contracts, active_accounts, price_ether_current, index)
 
         #open troves
-        result_open = open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
+        coll_added_open = open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
+        total_coll_added = total_coll_added + coll_added_adjust + coll_added_open
+        #active_accounts.sort(key=lambda a : a.get('CR_initial'))
 
         #Stability Pool
         stability_update(accounts, contracts, return_stability, index)
@@ -218,6 +225,10 @@ def test_run_simulation(contracts):
         MC_LQTY_current = result_LQTY[2]
         """
 
-        logGlobalState(contracts, price_ether_current)
+        logGlobalState(contracts)
+        print('Total ETH added ', total_coll_added)
+        print('Total ETH liquid', total_coll_liquidated)
+        print(f'Ratio ETH liquid {100 * total_coll_liquidated / total_coll_added}%')
+        print(' ----------------------\n')
 
         assert price_LUSD > 0

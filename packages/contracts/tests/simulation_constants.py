@@ -1,6 +1,7 @@
 from brownie import *
 import random
 import numpy as np
+from bisect import bisect_left
 
 from helpers import *
 
@@ -33,7 +34,6 @@ price_ether_initial = 1000
 price_ether = [price_ether_initial]
 sd_ether=0.02
 drift_ether = 0
-ether_price_one_year = price_ether_initial * (1 + drift_ether)**8760
 
 
 """# Liquidity Pool
@@ -162,7 +162,7 @@ collateral_gamma_k = 10
 collateral_gamma_theta = 500
 
 target_cr_a = 1.1
-target_cr_b = 0.1
+target_cr_b = 0.03
 target_cr_chi_square_df = 16
 
 rational_inattention_gamma_k = 4
@@ -225,8 +225,8 @@ Ether Price
 #ether price
 for i in range(1, period):
   random.seed(2019375+10000*i)
-  shock_ether = random.normalvariate(0,sd_ether)
-  price_ether.append(price_ether[i-1]*(1+shock_ether)*(1+drift_ether))
+  shock_ether = random.normalvariate(0, sd_ether)
+  price_ether.append(price_ether[i-1] * (1 + shock_ether) * (1 + drift_ether))
 
 """Natural Rate"""
 
@@ -255,7 +255,7 @@ def pending_liquidations(contracts, price_ether_current):
 
 def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, data, index):
     if len(active_accounts) == 0:
-        return 0
+        return [0, 0]
 
     stability_pool_previous = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
     stability_pool_eth_previous = contracts.stabilityPool.getETH() / 1e18
@@ -276,7 +276,9 @@ def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, pr
     data['liquidation_gain'][index] = liquidation_gain
     data['airdrop_gain'][index] = 0 # TODO!
 
-    return calculate_stability_return(contracts, price_LUSD, data, index)
+    return_stability = calculate_stability_return(contracts, price_LUSD, data, index)
+
+    return [ether_liquidated, return_stability]
 
 def calculate_stability_return(contracts, price_LUSD, data, index):
     stability_pool_previous = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
@@ -347,15 +349,36 @@ def get_lusd_to_repay(accounts, contracts, account, debt):
     if debt > lusdBalance:
         contracts.lusdToken.transfer(account, debt - lusdBalance, { 'from': accounts[0] })
 
-def getHints(contracts, coll, debt):
+'''
+def get_hints(contracts, coll, debt):
     NICR = contracts.hintHelpers.computeNominalCR(floatToWei(coll), floatToWei(debt))
     approxHint = contracts.hintHelpers.getApproxHint(NICR, 100, 0)
     #print("approx hint", approxHint)
     return contracts.sortedTroves.findInsertPosition(NICR, approxHint[0], approxHint[0])
+'''
+
+#def get_address_from_active_index(accounts, active_accounts, index):
+def index2address(accounts, active_accounts, index):
+    return accounts[active_accounts[index]['index']]
+
+def get_hints_from_amounts(accounts, active_accounts, coll, debt, price_ether_current):
+    ICR = coll * price_ether_current / debt
+    return get_hints_from_ICR(accounts, active_accounts, ICR)
+
+def get_hints_from_ICR(accounts, active_accounts, ICR):
+    l = len(active_accounts)
+    if l == 0:
+        return [ZERO_ADDRESS, ZERO_ADDRESS, 0]
+    else:
+        keys = [a['CR_initial'] for a in active_accounts]
+        i = bisect_left(keys, ICR)
+        return [index2address(accounts, active_accounts, min(i, l-1)), index2address(accounts, active_accounts, max(i-1, 0)), i]
+
 
 def adjust_troves(accounts, contracts, active_accounts, price_ether_current, index):
     random.seed(57984-3*index)
     ratio = random.uniform(0,1)
+    coll_added_float = 0
 
     for i, working_trove in enumerate(active_accounts):
         #print("i", i)
@@ -375,7 +398,7 @@ def adjust_troves(accounts, contracts, active_accounts, price_ether_current, ind
         #A part of the troves are adjusted by adjusting debt
         if p >= ratio:
             debt_new = price_ether_current * coll / working_trove['CR_initial']
-            hints = getHints(contracts, coll, debt_new)
+            hints = get_hints_from_amounts(accounts, active_accounts, coll, debt, price_ether_current)
             if debt_new < MIN_NET_DEBT:
                 continue
             if check < -1:
@@ -390,16 +413,18 @@ def adjust_troves(accounts, contracts, active_accounts, price_ether_current, ind
         #Another part of the troves are adjusted by adjusting collaterals
         elif p < ratio:
             coll_new = working_trove['CR_initial'] * debt / price_ether_current
-            hints = getHints(contracts, coll_new, debt)
+            hints = get_hints_from_amounts(accounts, active_accounts, coll, debt, price_ether_current)
             if check < -1:
                 # add coll
-                coll_added = floatToWei(coll_new - coll)
+                coll_added_float = coll_new - coll
+                coll_added = floatToWei(coll_added_float)
                 contracts.borrowerOperations.addColl(hints[0], hints[1], { 'from': account, 'value': coll_added })
             elif check > 2:
                 # withdraw ETH
                 coll_withdrawn = floatToWei(coll - coll_new)
                 contracts.borrowerOperations.withdrawColl(coll_withdrawn, hints[0], hints[1], { 'from': account })
 
+    return coll_added_float
 
 """Open Troves"""
 
@@ -408,18 +433,19 @@ def open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_t
         return
     #print(len(accounts))
     #print(len(inactive_accounts))
-    contracts.borrowerOperations.openTrove(MAX_FEE, floatToWei(supply_trove), ZERO_ADDRESS, ZERO_ADDRESS,
+    hints = get_hints_from_ICR(accounts, active_accounts, CR_ratio)
+    contracts.borrowerOperations.openTrove(MAX_FEE, floatToWei(supply_trove), hints[0], hints[1],
                                            { 'from': accounts[inactive_accounts[0]], 'value': floatToWei(quantity_ether) })
     new_account = {"index": inactive_accounts[0], "CR_initial": CR_ratio, "Rational_inattention": rational_inattention}
-    active_accounts.append(new_account)
+    active_accounts.insert(hints[2], new_account)
     inactive_accounts.pop(0)
 
 def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index):
     random.seed(2019*index)
-    issuance_LUSD_open = 0
     shock_opentroves = random.normalvariate(0,sd_opentroves)
     n_troves = len(active_accounts)
     rate_issuance = contracts.troveManager.getBorrowingRateWithDecay() / 1e18
+    coll_added = 0
 
     if index <= 0:
         number_opentroves = initial_open
@@ -460,8 +486,9 @@ def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_e
         #print('coll', floatToWei(quantity_ether))
 
         open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_trove, quantity_ether, CR_ratio, rational_inattention)
+        coll_added = coll_added + quantity_ether
 
-    return [number_opentroves]
+    return coll_added
 
 
 """# LUSD Market
@@ -644,7 +671,7 @@ def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
         supply_wanted = stability_pool + \
                         liquidity_pool_next * \
                         ((1.1+rate_issuance) / price_LUSD)**delta
-        supply_trove = supply_wanted - supply
+        supply_trove = min(supply_wanted - supply, MIN_NET_DEBT)
 
         CR_ratio = 1.1
         rational_inattention = 0.1
@@ -685,3 +712,6 @@ def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
 
     return price_LUSD_current
 
+def logICRs(accounts, active_accounts):
+    for account in active_accounts:
+        print(f"Address: {accounts[account['index']]}, ICR: {account['CR_initial']}")
