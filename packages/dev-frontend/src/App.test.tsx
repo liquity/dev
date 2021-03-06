@@ -6,7 +6,7 @@ import { Decimal, LUSD_MINIMUM_NET_DEBT, Trove } from "@liquity/lib-base";
 import App from "./App";
 
 const params = { depositCollateral: Decimal.from(20), borrowLUSD: LUSD_MINIMUM_NET_DEBT };
-const trove = Trove.create(params, 0);
+const trove = Trove.create(params);
 
 console.log(`${trove}`);
 
