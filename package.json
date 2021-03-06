@@ -18,6 +18,20 @@
     "extends": "semantic-release-monorepo",
     "branches": [
       "master"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "angular",
+          "parserOpts": {
+            "headerPattern": "^(\\w*)(?:\\((.*)\\))?!?: (.*)$"
+          }
+        }
+      ],
+      "@semantic-release/npm",
+      "@semantic-release/github"
     ]
   },
   "commitlint": {
