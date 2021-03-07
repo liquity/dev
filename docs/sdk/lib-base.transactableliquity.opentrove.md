@@ -9,7 +9,7 @@ Open a new Trove by depositing collateral and borrowing LUSD.
 <b>Signature:</b>
 
 ```typescript
-openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails>;
+openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRate?: Decimalish): Promise<TroveCreationDetails>;
 ```
 
 ## Parameters
@@ -17,6 +17,7 @@ openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; | How much to deposit and borrow. |
+|  maxBorrowingRate | [Decimalish](./lib-base.decimalish.md) | Maximum acceptable [borrowing rate](./lib-base.fees.borrowingrate.md)<!-- -->. |
 
 <b>Returns:</b>
 
@@ -25,4 +26,8 @@ Promise&lt;[TroveCreationDetails](./lib-base.trovecreationdetails.md)<!-- -->&gt
 ## Exceptions
 
 Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
+
+## Remarks
+
+If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum acceptable rate.
 

@@ -9,7 +9,7 @@ Adjust existing Trove by borrowing more LUSD.
 <b>Signature:</b>
 
 ```typescript
-borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
 ```
 
 ## Parameters
@@ -17,6 +17,7 @@ borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  amount | [Decimalish](./lib-base.decimalish.md) | The amount of LUSD to borrow. |
+|  maxBorrowingRate | [Decimalish](./lib-base.decimalish.md) | Maximum acceptable [borrowing rate](./lib-base.fees.borrowingrate.md)<!-- -->. |
 |  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
 
 <b>Returns:</b>
@@ -32,7 +33,7 @@ Throws [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.
 Equivalent to:
 
 ```typescript
-adjustTrove({ borrowLUSD: amount })
+adjustTrove({ borrowLUSD: amount }, maxBorrowingRate)
 
 ```
 

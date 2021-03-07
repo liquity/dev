@@ -9,9 +9,20 @@ Prepare a new transaction by increasing the attempted amount to the next lowest 
 <b>Signature:</b>
 
 ```typescript
-increaseAmountByMinimumNetDebt(): Promise<PopulatedEthersRedemption>;
+increaseAmountByMinimumNetDebt(maxRedemptionRate?: Decimalish): Promise<PopulatedEthersRedemption>;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  maxRedemptionRate | [Decimalish](./lib-base.decimalish.md) | Maximum acceptable [redemption rate](./lib-base.fees.redemptionrate.md) to use in the new transaction. |
+
 <b>Returns:</b>
 
 Promise&lt;[PopulatedEthersRedemption](./lib-ethers.populatedethersredemption.md)<!-- -->&gt;
+
+## Remarks
+
+If `maxRedemptionRate` is omitted, the original transaction's `maxRedemptionRate` is reused unless that was also omitted, in which case the current redemption rate (based on the increased amount) plus 0.1% is used as maximum acceptable rate.
 

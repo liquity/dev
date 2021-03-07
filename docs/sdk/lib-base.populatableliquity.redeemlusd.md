@@ -9,7 +9,7 @@ Redeem LUSD to native currency (e.g. Ether) at face value.
 <b>Signature:</b>
 
 ```typescript
-redeemLUSD(amount: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
+redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
 ```
 
 ## Parameters
@@ -17,8 +17,13 @@ redeemLUSD(amount: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to be redeemed. |
+|  maxRedemptionRate | [Decimalish](./lib-base.decimalish.md) | Maximum acceptable [redemption rate](./lib-base.fees.redemptionrate.md)<!-- -->. |
 
 <b>Returns:</b>
 
 Promise&lt;[PopulatedRedemption](./lib-base.populatedredemption.md)<!-- -->&lt;P, S, R&gt;&gt;
+
+## Remarks
+
+If `maxRedemptionRate` is omitted, the current redemption rate (based on `amount`<!-- -->) plus 0.1% is used as maximum acceptable rate.
 

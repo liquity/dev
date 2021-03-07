@@ -2,29 +2,41 @@ import assert from "assert";
 import { describe, it } from "mocha";
 import fc from "fast-check";
 
-import { LUSD_LIQUIDATION_RESERVE } from "../src/constants";
+import {
+  LUSD_LIQUIDATION_RESERVE,
+  LUSD_MINIMUM_DEBT,
+  MAXIMUM_BORROWING_RATE
+} from "../src/constants";
+
 import { Decimal, Difference } from "../src/Decimal";
 import { Trove, _emptyTrove } from "../src/Trove";
 
-const minDebt = Number(LUSD_LIQUIDATION_RESERVE);
+const liquidationReserve = Number(LUSD_LIQUIDATION_RESERVE);
+const maximumBorrowingRate = Number(MAXIMUM_BORROWING_RATE);
 
 const trove = ({ collateral = 0, debt = 0 }) =>
   new Trove(Decimal.from(collateral), Decimal.from(debt));
 
 const onlyCollateral = () => fc.record({ collateral: fc.float({ min: 0.1 }) }).map(trove);
 
-const onlyDebt = () => fc.record({ debt: fc.float({ min: minDebt, max: 100 }) }).map(trove);
+const onlyDebt = () =>
+  fc.record({ debt: fc.float({ min: liquidationReserve, max: 100 }) }).map(trove);
 
 const bothCollateralAndDebt = () =>
   fc
-    .record({ collateral: fc.float({ min: 0.1 }), debt: fc.float({ min: minDebt, max: 100 }) })
+    .record({
+      collateral: fc.float({ min: 0.1 }),
+      debt: fc.float({ min: liquidationReserve, max: 100 })
+    })
     .map(trove);
 
 const arbitraryTrove = () =>
   fc.record({ collateral: fc.float(), debt: fc.float({ max: 100 }) }).map(trove);
 
 const validTrove = () =>
-  fc.record({ collateral: fc.float(), debt: fc.float({ min: minDebt, max: 100 }) }).map(trove);
+  fc
+    .record({ collateral: fc.float(), debt: fc.float({ min: liquidationReserve, max: 100 }) })
+    .map(trove);
 
 const validNonEmptyTrove = () => validTrove().filter(t => !t.isEmpty);
 
@@ -104,6 +116,25 @@ describe("Trove", () => {
               !change.params.borrowLUSD?.isZero &&
               !change.params.repayLUSD?.isZero)
           );
+        })
+      );
+    });
+
+    it("should recreate a Trove with minimum debt at any borrowing rate", () => {
+      fc.assert(
+        fc.property(fc.float({ max: maximumBorrowingRate }), borrowingRate => {
+          const withMinimumDebt = Trove.recreate(
+            new Trove(Decimal.ONE, LUSD_MINIMUM_DEBT),
+            borrowingRate
+          );
+
+          const ret = Trove.create(withMinimumDebt, borrowingRate).debt.gte(LUSD_MINIMUM_DEBT);
+
+          if (!ret) {
+            console.log(`${Trove.create(withMinimumDebt, borrowingRate).debt}`);
+          }
+
+          return ret;
         })
       );
     });

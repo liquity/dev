@@ -270,9 +270,10 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    */
   openTrove(
     params: TroveCreationParams<Decimalish>,
+    maxBorrowingRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<TroveCreationDetails> {
-    return this.send.openTrove(params, overrides).then(waitForSuccess);
+    return this.send.openTrove(params, maxBorrowingRate, overrides).then(waitForSuccess);
   }
 
   /**
@@ -293,9 +294,10 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    */
   adjustTrove(
     params: TroveAdjustmentParams<Decimalish>,
+    maxBorrowingRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<TroveAdjustmentDetails> {
-    return this.send.adjustTrove(params, overrides).then(waitForSuccess);
+    return this.send.adjustTrove(params, maxBorrowingRate, overrides).then(waitForSuccess);
   }
 
   /**
@@ -332,9 +334,10 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    */
   borrowLUSD(
     amount: Decimalish,
+    maxBorrowingRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<TroveAdjustmentDetails> {
-    return this.send.borrowLUSD(amount, overrides).then(waitForSuccess);
+    return this.send.borrowLUSD(amount, maxBorrowingRate, overrides).then(waitForSuccess);
   }
 
   /**
@@ -468,9 +471,10 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    */
   redeemLUSD(
     amount: Decimalish,
+    maxRedemptionRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<RedemptionDetails> {
-    return this.send.redeemLUSD(amount, overrides).then(waitForSuccess);
+    return this.send.redeemLUSD(amount, maxRedemptionRate, overrides).then(waitForSuccess);
   }
 
   /**

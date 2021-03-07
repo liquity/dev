@@ -170,11 +170,20 @@ export interface TransactableLiquity {
    * Open a new Trove by depositing collateral and borrowing LUSD.
    *
    * @param params - How much to deposit and borrow.
+   * @param maxBorrowingRate - Maximum acceptable
+   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
+   *
+   * @remarks
+   * If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum
+   * acceptable rate.
    */
-  openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails>;
+  openTrove(
+    params: TroveCreationParams<Decimalish>,
+    maxBorrowingRate?: Decimalish
+  ): Promise<TroveCreationDetails>;
 
   /**
    * Close existing Trove by repaying all debt and withdrawing all collateral.
@@ -188,15 +197,24 @@ export interface TransactableLiquity {
    * Adjust existing Trove by changing its collateral, debt, or both.
    *
    * @param params - Parameters of the adjustment.
+   * @param maxBorrowingRate - Maximum acceptable
+   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate} if
+   *                           `params` includes `borrowLUSD`.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    *
    * @remarks
    * The transaction will fail if the Trove's debt would fall below
-   * {@link @liquity/lib-base#LUSD_LIQUIDATION_RESERVE}.
+   * {@link @liquity/lib-base#LUSD_MINIMUM_DEBT}.
+   *
+   * If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum
+   * acceptable rate.
    */
-  adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentDetails>;
+  adjustTrove(
+    params: TroveAdjustmentParams<Decimalish>,
+    maxBorrowingRate?: Decimalish
+  ): Promise<TroveAdjustmentDetails>;
 
   /**
    * Adjust existing Trove by depositing more collateral.
@@ -236,6 +254,8 @@ export interface TransactableLiquity {
    * Adjust existing Trove by borrowing more LUSD.
    *
    * @param amount - The amount of LUSD to borrow.
+   * @param maxBorrowingRate - Maximum acceptable
+   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -244,10 +264,10 @@ export interface TransactableLiquity {
    * Equivalent to:
    *
    * ```typescript
-   * adjustTrove({ borrowLUSD: amount })
+   * adjustTrove({ borrowLUSD: amount }, maxBorrowingRate)
    * ```
    */
-  borrowLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
+  borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish): Promise<TroveAdjustmentDetails>;
 
   /**
    * Adjust existing Trove by repaying some of its debt.
@@ -375,11 +395,17 @@ export interface TransactableLiquity {
    * Redeem LUSD to native currency (e.g. Ether) at face value.
    *
    * @param amount - Amount of LUSD to be redeemed.
+   * @param maxRedemptionRate - Maximum acceptable
+   *                            {@link @liquity/lib-base#Fees.redemptionRate | redemption rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
+   *
+   * @remarks
+   * If `maxRedemptionRate` is omitted, the current redemption rate (based on `amount`) plus 0.1%
+   * is used as maximum acceptable rate.
    */
-  redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
+  redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish): Promise<RedemptionDetails>;
 
   /**
    * Claim leftover collateral after a liquidation or redemption.

@@ -24,6 +24,7 @@ import {
   EthersLiquityConnectionOptionalParams,
   EthersLiquityStoreOption,
   _connect,
+  _getBlockTimestamp,
   _getContracts,
   _requireAddress,
   _requireFrontendAddress
@@ -340,14 +341,22 @@ export class ReadableEthersLiquity implements ReadableLiquity {
   async _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees> {
     const { troveManager } = _getContracts(this.connection);
 
-    const [lastFeeOperationTime, baseRateWithoutDecay] = await Promise.all([
+    const [lastFeeOperationTime, baseRateWithoutDecay, blockTimestamp] = await Promise.all([
       troveManager.lastFeeOperationTime({ ...overrides }),
-      troveManager.baseRate({ ...overrides }).then(decimalify)
+      troveManager.baseRate({ ...overrides }).then(decimalify),
+      _getBlockTimestamp(this.connection, overrides?.blockTag)
     ]);
 
     const lastFeeOperation = new Date(1000 * lastFeeOperationTime.toNumber());
 
-    return new Fees(lastFeeOperation, baseRateWithoutDecay, MINUTE_DECAY_FACTOR, BETA);
+    return new Fees(
+      baseRateWithoutDecay,
+      MINUTE_DECAY_FACTOR,
+      BETA,
+      lastFeeOperation,
+      blockTimestamp,
+      false
+    );
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */

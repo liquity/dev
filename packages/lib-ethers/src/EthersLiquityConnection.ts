@@ -1,3 +1,5 @@
+import { BigNumber } from "@ethersproject/bignumber";
+import { Block, BlockTag } from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
 
 import devOrNull from "../deployments/dev.json";
@@ -14,6 +16,8 @@ import {
   _LiquityContracts,
   _LiquityDeploymentJSON
 } from "./contracts";
+
+import { _connectToMulticall, _Multicall } from "./_Multicall";
 
 const dev = devOrNull as _LiquityDeploymentJSON | null;
 
@@ -75,12 +79,14 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
 export interface _InternalEthersLiquityConnection extends EthersLiquityConnection {
   readonly addresses: _LiquityContractAddresses;
   readonly _contracts: _LiquityContracts;
+  readonly _multicall?: _Multicall;
 }
 
 const connectionFrom = (
   provider: EthersProvider,
   signer: EthersSigner | undefined,
   _contracts: _LiquityContracts,
+  _multicall: _Multicall | undefined,
   { deploymentDate, ...deployment }: _LiquityDeploymentJSON,
   optionalParams?: EthersLiquityConnectionOptionalParams
 ): _InternalEthersLiquityConnection => {
@@ -96,6 +102,7 @@ const connectionFrom = (
     provider,
     signer,
     _contracts,
+    _multicall,
     deploymentDate: new Date(deploymentDate),
     ...deployment,
     ...optionalParams
@@ -105,6 +112,25 @@ const connectionFrom = (
 /** @internal */
 export const _getContracts = (connection: EthersLiquityConnection): _LiquityContracts =>
   (connection as _InternalEthersLiquityConnection)._contracts;
+
+const getMulticall = (connection: EthersLiquityConnection): _Multicall | undefined =>
+  (connection as _InternalEthersLiquityConnection)._multicall;
+
+const convertToDate = (timestamp: number | BigNumber) =>
+  new Date((typeof timestamp === "number" ? timestamp : timestamp.toNumber()) * 1000);
+
+const getTimestampFromBlock = ({ timestamp }: Block) => timestamp;
+
+/** @internal */
+export const _getBlockTimestamp = (
+  connection: EthersLiquityConnection,
+  blockTag: BlockTag = "latest"
+): Promise<Date> =>
+  // Get the timestamp via a contract call whenever possible, to make it batchable with other calls
+  (
+    getMulticall(connection)?.getCurrentBlockTimestamp({ blockTag }) ??
+    _getProvider(connection).getBlock(blockTag).then(getTimestampFromBlock)
+  ).then(convertToDate);
 
 const panic = <T>(e: unknown): T => {
   throw e;
@@ -177,6 +203,7 @@ export const _connectToDeployment = (
   connectionFrom(
     ...getProviderAndSigner(signerOrProvider),
     _connectToContracts(signerOrProvider, deployment),
+    undefined,
     deployment,
     optionalParams
   );
@@ -272,6 +299,7 @@ export function _connectByChainId(
     provider,
     signer,
     _connectToContracts(signer ?? provider, deployment),
+    _connectToMulticall(signer ?? provider, chainId),
     deployment,
     optionalParams
   );

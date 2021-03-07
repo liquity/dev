@@ -33,5 +33,5 @@ When [redeemLUSD()](./lib-base.populatableliquity.redeemlusd.md) is called with 
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [increaseAmountByMinimumNetDebt()](./lib-ethers.populatedethersredemption.increaseamountbyminimumnetdebt.md) |  | Prepare a new transaction by increasing the attempted amount to the next lowest redeemable value. |
+|  [increaseAmountByMinimumNetDebt(maxRedemptionRate)](./lib-ethers.populatedethersredemption.increaseamountbyminimumnetdebt.md) |  | Prepare a new transaction by increasing the attempted amount to the next lowest redeemable value. |
 

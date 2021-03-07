@@ -146,7 +146,8 @@ export interface SendableLiquity<R = unknown, S = unknown>
 
   /** {@inheritDoc TransactableLiquity.openTrove} */
   openTrove(
-    params: TroveCreationParams<Decimalish>
+    params: TroveCreationParams<Decimalish>,
+    maxBorrowingRate?: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveCreationDetails>>>;
 
   /** {@inheritDoc TransactableLiquity.closeTrove} */
@@ -154,7 +155,8 @@ export interface SendableLiquity<R = unknown, S = unknown>
 
   /** {@inheritDoc TransactableLiquity.adjustTrove} */
   adjustTrove(
-    params: TroveAdjustmentParams<Decimalish>
+    params: TroveAdjustmentParams<Decimalish>,
+    maxBorrowingRate?: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
 
   /** {@inheritDoc TransactableLiquity.depositCollateral} */
@@ -169,7 +171,8 @@ export interface SendableLiquity<R = unknown, S = unknown>
 
   /** {@inheritDoc TransactableLiquity.borrowLUSD} */
   borrowLUSD(
-    amount: Decimalish
+    amount: Decimalish,
+    maxBorrowingRate?: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
 
   /** {@inheritDoc TransactableLiquity.repayLUSD} */
@@ -225,7 +228,8 @@ export interface SendableLiquity<R = unknown, S = unknown>
 
   /** {@inheritDoc TransactableLiquity.redeemLUSD} */
   redeemLUSD(
-    amount: Decimalish
+    amount: Decimalish,
+    maxRedemptionRate?: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>;
 
   /** {@inheritDoc TransactableLiquity.claimCollateralSurplus} */
