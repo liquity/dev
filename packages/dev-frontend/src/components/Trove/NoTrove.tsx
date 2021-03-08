@@ -27,7 +27,7 @@ export const NoTrove: React.FC = (props) => {
           </Text>
         </Box>
 
-        <Flex sx={{ justifyContent: "flex-end" }} variant="layout.actions">
+        <Flex variant="layout.actions">
           <Button onClick={handleOpenTrove}>Open trove</Button>
         </Flex>
       </Box>

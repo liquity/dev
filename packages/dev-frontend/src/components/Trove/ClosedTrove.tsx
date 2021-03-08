@@ -21,7 +21,7 @@ export const ClosedTrove: React.FC = () => {
           </Text>
         </Box>
 
-        <Flex sx={{ justifyContent: "flex-end" }} variant="layout.actions">
+        <Flex variant="layout.actions">
           <CollateralSurplusAction />
         </Flex>
       </Box>
