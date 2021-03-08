@@ -2,7 +2,7 @@ import { Decimal } from "./Decimal";
 import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
 import { StabilityDeposit } from "./StabilityDeposit";
-import { Trove, TroveWithPendingRedistribution } from "./Trove";
+import { Trove, TroveWithPendingRedistribution, UserTrove } from "./Trove";
 import { FrontendStatus, ReadableLiquity, TroveListingParams } from "./ReadableLiquity";
 
 /** @internal */
@@ -27,12 +27,9 @@ export interface _ReadableLiquityWithExtraParams<T extends unknown[]>
   getTroves(
     params: TroveListingParams & { beforeRedistribution: true },
     ...extraParams: T
-  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+  ): Promise<TroveWithPendingRedistribution[]>;
 
-  getTroves(
-    params: TroveListingParams,
-    ...extraParams: T
-  ): Promise<[address: string, trove: Trove][]>;
+  getTroves(params: TroveListingParams, ...extraParams: T): Promise<UserTrove[]>;
 }
 
 /** @internal */
@@ -40,12 +37,9 @@ export interface _LiquityReadCache<T extends unknown[]> extends _LiquityReadCach
   getTroves(
     params: TroveListingParams & { beforeRedistribution: true },
     ...extraParams: T
-  ): [address: string, trove: TroveWithPendingRedistribution][] | undefined;
+  ): TroveWithPendingRedistribution[] | undefined;
 
-  getTroves(
-    params: TroveListingParams,
-    ...extraParams: T
-  ): [address: string, trove: Trove][] | undefined;
+  getTroves(params: TroveListingParams, ...extraParams: T): UserTrove[] | undefined;
 }
 
 /** @internal */
@@ -76,7 +70,7 @@ export class _CachedReadableLiquity<T extends unknown[]>
     );
   }
 
-  async getTrove(address?: string, ...extraParams: T): Promise<Trove> {
+  async getTrove(address?: string, ...extraParams: T): Promise<UserTrove> {
     const [troveBeforeRedistribution, totalRedistributed] = await Promise.all([
       this.getTroveBeforeRedistribution(address, ...extraParams),
       this.getTotalRedistributed(...extraParams)
@@ -138,17 +132,11 @@ export class _CachedReadableLiquity<T extends unknown[]>
   getTroves(
     params: TroveListingParams & { beforeRedistribution: true },
     ...extraParams: T
-  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+  ): Promise<TroveWithPendingRedistribution[]>;
 
-  getTroves(
-    params: TroveListingParams,
-    ...extraParams: T
-  ): Promise<[address: string, trove: Trove][]>;
+  getTroves(params: TroveListingParams, ...extraParams: T): Promise<UserTrove[]>;
 
-  async getTroves(
-    params: TroveListingParams,
-    ...extraParams: T
-  ): Promise<[address: string, trove: Trove][]> {
+  async getTroves(params: TroveListingParams, ...extraParams: T): Promise<UserTrove[]> {
     const { beforeRedistribution, ...restOfParams } = params;
 
     const [totalRedistributed, troves] = await Promise.all([
@@ -158,10 +146,7 @@ export class _CachedReadableLiquity<T extends unknown[]>
     ]);
 
     if (totalRedistributed) {
-      return troves.map(([address, trove]) => [
-        address,
-        trove.applyRedistribution(totalRedistributed)
-      ]);
+      return troves.map(trove => trove.applyRedistribution(totalRedistributed));
     } else {
       return troves;
     }

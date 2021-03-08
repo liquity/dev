@@ -6,7 +6,7 @@ import {
   Percent,
   MINIMUM_COLLATERAL_RATIO,
   CRITICAL_COLLATERAL_RATIO,
-  Trove
+  UserTrove
 } from "@liquity/lib-base";
 import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -38,7 +38,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
   const { liquity } = useLiquity();
 
   const [loading, setLoading] = useState(true);
-  const [troves, setTroves] = useState<[string, Trove][]>();
+  const [troves, setTroves] = useState<UserTrove[]>();
 
   const [reload, setReload] = useState({});
   const forceReload = useCallback(() => setReload({}), []);
@@ -206,10 +206,10 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
 
             <tbody>
               {troves.map(
-                ([owner, trove]) =>
+                trove =>
                   !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
                     // (TODO: remove check after we can fetch multiple Troves in one call)
-                    <tr key={owner}>
+                    <tr key={trove.ownerAddress}>
                       <td
                         style={{
                           display: "flex",
@@ -217,7 +217,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                           height: rowHeight
                         }}
                       >
-                        <Tooltip message={owner} placement="top">
+                        <Tooltip message={trove.ownerAddress} placement="top">
                           <Text
                             variant="address"
                             sx={{
@@ -226,7 +226,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                               position: "relative"
                             }}
                           >
-                            {shortenAddress(owner)}
+                            {shortenAddress(trove.ownerAddress)}
                             <Box
                               sx={{
                                 display: ["block", "none"],
@@ -242,10 +242,13 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                           </Text>
                         </Tooltip>
 
-                        <CopyToClipboard text={owner} onCopy={() => setCopied(owner)}>
+                        <CopyToClipboard
+                          text={trove.ownerAddress}
+                          onCopy={() => setCopied(trove.ownerAddress)}
+                        >
                           <Button variant="icon" sx={{ width: "24px", height: "24px" }}>
                             <Icon
-                              name={copied === owner ? "clipboard-check" : "clipboard"}
+                              name={copied === trove.ownerAddress ? "clipboard-check" : "clipboard"}
                               size="sm"
                             />
                           </Button>
@@ -280,7 +283,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                       </td>
                       <td>
                         <Transaction
-                          id={`liquidate-${owner}`}
+                          id={`liquidate-${trove.ownerAddress}`}
                           tooltip="Liquidate"
                           requires={[
                             [
@@ -289,7 +292,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                             ],
                             [numberOfTroves > 1, "Can't liquidate when only one Trove exists"]
                           ]}
-                          send={liquity.send.liquidate.bind(liquity.send, owner)}
+                          send={liquity.send.liquidate.bind(liquity.send, trove.ownerAddress)}
                         >
                           <Button variant="dangerIcon">
                             <Icon name="trash" />
