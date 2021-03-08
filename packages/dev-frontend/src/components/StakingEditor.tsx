@@ -6,7 +6,7 @@ import { Decimal, Decimalish, Difference, LQTYStake } from "@liquity/lib-base";
 import { COIN, GT } from "../strings";
 
 import { Icon } from "./Icon";
-import { EditableRow, StaticRow } from "./Editor";
+import { EditableRow, StaticRow } from "./Trove/Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 
 type StakingEditorProps = {
@@ -14,7 +14,9 @@ type StakingEditorProps = {
   originalStake: LQTYStake;
   editedLQTY: Decimal;
   changePending: boolean;
-  dispatch: (action: { type: "setStake"; newValue: Decimalish } | { type: "revert" }) => void;
+  dispatch: (
+    action: { type: "setStake"; newValue: Decimalish } | { type: "revert" }
+  ) => void;
 };
 
 export const StakingEditor: React.FC<StakingEditorProps> = ({
@@ -22,11 +24,14 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
   originalStake,
   editedLQTY,
   changePending,
-  dispatch
+  dispatch,
 }) => {
   const editingState = useState<string>();
 
-  const pendingStakeChange = Difference.between(editedLQTY, originalStake.stakedLQTY.nonZero);
+  const pendingStakeChange = Difference.between(
+    editedLQTY,
+    originalStake.stakedLQTY.nonZero
+  );
   const edited = !editedLQTY.eq(originalStake.stakedLQTY);
 
   return (
@@ -56,7 +61,9 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
           unit={GT}
           {...{ editingState }}
           editedAmount={editedLQTY.toString(2)}
-          setEditedAmount={newValue => dispatch({ type: "setStake", newValue })}
+          setEditedAmount={(newValue) =>
+            dispatch({ type: "setStake", newValue })
+          }
         ></EditableRow>
 
         {!originalStake.isEmpty && (

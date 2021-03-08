@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Decimalish, Difference, StabilityDeposit } from "@liquity/lib-base";
+import {
+  Decimal,
+  Decimalish,
+  Difference,
+  StabilityDeposit,
+} from "@liquity/lib-base";
 
 import { COIN, GT } from "../strings";
 
 import { Icon } from "./Icon";
-import { EditableRow, StaticRow } from "./Editor";
+import { EditableRow, StaticRow } from "./Trove/Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 
 type StabilityDepositEditorProps = {
@@ -14,7 +19,9 @@ type StabilityDepositEditorProps = {
   originalDeposit: StabilityDeposit;
   editedLUSD: Decimal;
   changePending: boolean;
-  dispatch: (action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }) => void;
+  dispatch: (
+    action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }
+  ) => void;
 };
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
@@ -22,11 +29,14 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   originalDeposit,
   editedLUSD,
   changePending,
-  dispatch
+  dispatch,
 }) => {
   const editingState = useState<string>();
 
-  const pendingDepositChange = Difference.between(editedLUSD, originalDeposit.currentLUSD.nonZero);
+  const pendingDepositChange = Difference.between(
+    editedLUSD,
+    originalDeposit.currentLUSD.nonZero
+  );
   const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
 
   return (
@@ -56,7 +66,9 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           unit={COIN}
           {...{ editingState }}
           editedAmount={editedLUSD.toString(2)}
-          setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
+          setEditedAmount={(newValue) =>
+            dispatch({ type: "setDeposit", newValue })
+          }
         ></EditableRow>
 
         {!originalDeposit.isEmpty && (

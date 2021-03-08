@@ -1,19 +1,27 @@
-import React from "react";
+import React, { useCallback } from "react";
 
-import { LUSD_LIQUIDATION_RESERVE, LiquityStoreState, Decimal, Decimalish } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
-
+import {
+  LUSD_LIQUIDATION_RESERVE,
+  LiquityStoreState,
+  Decimal,
+  Decimalish,
+} from "@liquity/lib-base";
+import {
+  LiquityStoreUpdate,
+  useLiquityReducer,
+  useLiquitySelector,
+} from "@liquity/lib-react";
+import { Flex, Button } from "theme-ui";
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
-import { RedeemedTroveOverlay } from "./RedeemedTroveOverlay";
-import { CollateralSurplusAction } from "./CollateralSurplusAction";
+import { useTroveView } from "./context/TroveViewContext";
 
 const init = ({ trove }: LiquityStoreState) => ({
   original: trove,
   edited: trove,
   changePending: false,
   debtDirty: false,
-  addedGasCompensation: false
+  addedGasCompensation: false,
 });
 
 type TroveManagerState = ReturnType<typeof init>;
@@ -29,23 +37,35 @@ type TroveManagerAction =
     }
   | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
 
-const reduceWith = (action: TroveManagerAction) => (state: TroveManagerState): TroveManagerState =>
-  reduce(state, action);
+const reduceWith = (action: TroveManagerAction) => (
+  state: TroveManagerState
+): TroveManagerState => reduce(state, action);
 
 const addDebtCompensation = reduceWith({ type: "addDebtCompensation" });
 const removeDebtCompensation = reduceWith({ type: "removeDebtCompensation" });
 const finishChange = reduceWith({ type: "finishChange" });
 const revert = reduceWith({ type: "revert" });
 
-const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveManagerState => {
+const reduce = (
+  state: TroveManagerState,
+  action: TroveManagerAction
+): TroveManagerState => {
   // console.log(state);
   // console.log(action);
 
-  const { original, edited, changePending, debtDirty, addedGasCompensation } = state;
+  const {
+    original,
+    edited,
+    changePending,
+    debtDirty,
+    addedGasCompensation,
+  } = state;
 
   switch (action.type) {
-    case "startChange":
+    case "startChange": {
+      console.log("starting change");
       return { ...state, changePending: true };
+    }
 
     case "finishChange":
       return { ...state, changePending: false };
@@ -53,7 +73,10 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
     case "setCollateral": {
       const newCollateral = Decimal.from(action.newValue);
 
-      const newState = { ...state, edited: edited.setCollateral(newCollateral) };
+      const newState = {
+        ...state,
+        edited: edited.setCollateral(newCollateral),
+      };
 
       if (!debtDirty) {
         if (edited.isEmpty && newCollateral.nonZero) {
@@ -68,32 +91,44 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
     }
 
     case "setDebt":
-      return { ...state, edited: edited.setDebt(action.newValue), debtDirty: true };
+      return {
+        ...state,
+        edited: edited.setDebt(action.newValue),
+        debtDirty: true,
+      };
 
     case "addDebtCompensation":
       return {
         ...state,
         edited: edited.setDebt(LUSD_LIQUIDATION_RESERVE),
-        addedGasCompensation: true
+        addedGasCompensation: true,
       };
 
     case "removeDebtCompensation":
       return {
         ...state,
         edited: edited.setDebt(0),
-        addedGasCompensation: false
+        addedGasCompensation: false,
       };
 
     case "revert":
-      return { ...state, edited: original, debtDirty: false, addedGasCompensation: false };
+      return {
+        ...state,
+        edited: original,
+        debtDirty: false,
+        addedGasCompensation: false,
+      };
 
     case "updateStore": {
       const {
         newState: { trove },
-        stateChange: { troveBeforeRedistribution: changeCommitted }
+        stateChange: { troveBeforeRedistribution: changeCommitted },
       } = action;
 
-      const newState = { ...state, original: trove };
+      const newState = {
+        ...state,
+        original: trove,
+      };
 
       if (changePending && changeCommitted) {
         return finishChange(revert(newState));
@@ -113,32 +148,52 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
   }
 };
 
-const select = ({ fees, collateralSurplusBalance }: LiquityStoreState) => ({
+const select = ({ fees }: LiquityStoreState) => ({
   fees,
-  redeemed: !collateralSurplusBalance.isZero
 });
 
 export const TroveManager: React.FC = () => {
-  const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
-  const { fees, redeemed } = useLiquitySelector(select);
+  const [{ original, edited, changePending }, dispatch] = useLiquityReducer(
+    reduce,
+    init
+  );
+  const { fees } = useLiquitySelector(select);
 
   const change = original.whatChanged(edited, 0);
   const borrowingRate = fees.borrowingRate();
   const afterFee = original.apply(change, borrowingRate);
+  console.log({ original, change });
+  const { recordEvent } = useTroveView();
+
+  const handleCancel = useCallback(() => {
+    recordEvent("ADJUST_TROVE_CANCELLED");
+  }, []);
 
   return (
-    <>
-      <TroveEditor
-        {...{ original, edited, afterFee, borrowingRate, change, changePending, dispatch }}
-      >
-        {redeemed && <RedeemedTroveOverlay />}
-      </TroveEditor>
-
-      {redeemed ? (
-        <CollateralSurplusAction />
-      ) : (
-        <TroveAction {...{ original, edited, afterFee, change, changePending, dispatch }} />
-      )}
-    </>
+    <TroveEditor
+      original={original}
+      edited={edited}
+      afterFee={afterFee}
+      borrowingRate={borrowingRate}
+      change={change}
+      changePending={changePending}
+      dispatch={dispatch}
+    >
+      <Flex variant="layout.actions">
+        <Flex>
+          <Button variant="cancel" onClick={handleCancel}>
+            Cancel
+          </Button>
+        </Flex>
+        <TroveAction
+          original={original}
+          edited={edited}
+          afterFee={afterFee}
+          change={change}
+          changePending={changePending}
+          dispatch={dispatch}
+        />
+      </Flex>
+    </TroveEditor>
   );
 };
