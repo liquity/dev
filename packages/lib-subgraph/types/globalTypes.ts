@@ -12,6 +12,12 @@ export enum OrderDirection {
   desc = "desc",
 }
 
+export enum TroveStatus {
+  closedByLiquidation = "closedByLiquidation",
+  closedByOwner = "closedByOwner",
+  open = "open",
+}
+
 //==============================================================
 // END Enums and Input Objects
 //==============================================================

@@ -3,9 +3,19 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
+import { TroveStatus } from "./globalTypes";
+
 // ====================================================
 // GraphQL query operation: TroveWithoutRewards
 // ====================================================
+
+export interface TroveWithoutRewards_user_currentTrove_owner {
+  __typename: "User";
+  /**
+   * User's Ethereum address as a hex-string
+   */
+  id: string;
+}
 
 export interface TroveWithoutRewards_user_currentTrove {
   __typename: "Trove";
@@ -13,6 +23,8 @@ export interface TroveWithoutRewards_user_currentTrove {
    * Owner's ID + '-' + an incremented integer
    */
   id: string;
+  owner: TroveWithoutRewards_user_currentTrove_owner;
+  status: TroveStatus;
   rawCollateral: any;
   rawDebt: any;
   rawStake: any;
