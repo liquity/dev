@@ -78,7 +78,12 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
       };
 
     case "revert":
-      return { ...state, edited: original, debtDirty: false, addedMinimumDebt: false };
+      return {
+        ...state,
+        edited: new Trove(original.collateral, original.debt),
+        debtDirty: false,
+        addedMinimumDebt: false
+      };
 
     case "updateStore": {
       const {
