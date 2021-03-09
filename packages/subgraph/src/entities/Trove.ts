@@ -9,6 +9,7 @@ import { isLiquidation, isRedemption } from "../types/TroveOperation";
 
 import {
   increaseNumberOfLiquidatedTroves,
+  increaseNumberOfRedeemedTroves,
   increaseNumberOfOpenTroves,
   increaseNumberOfTrovesClosedByOwner
 } from "./Global";
@@ -130,6 +131,9 @@ export function updateTrove(
     if (isLiquidation(operation)) {
       trove.status = "closedByLiquidation";
       increaseNumberOfLiquidatedTroves();
+    } else if (isRedemption(operation)) {
+      trove.status = "closedByRedemption";
+      increaseNumberOfRedeemedTroves();
     } else {
       trove.status = "closedByOwner";
       increaseNumberOfTrovesClosedByOwner();
