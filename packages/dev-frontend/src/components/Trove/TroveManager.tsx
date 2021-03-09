@@ -144,7 +144,7 @@ export const TroveManager: React.FC = () => {
   const { recordEvent } = useTroveView();
 
   const handleCancel = useCallback(() => {
-    recordEvent("ADJUST_TROVE_CANCELLED");
+    recordEvent("CANCEL_ADJUST_TROVE_PRESSED");
   }, []);
 
   return (

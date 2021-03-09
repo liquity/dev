@@ -26,7 +26,7 @@ export const CollateralSurplusAction: React.FC = () => {
 
   useEffect(() => {
     if (myTransactionState.type === "confirmedOneShot") {
-      recordEvent("COLLATERAL_CLAIMED");
+      recordEvent("TROVE_SURPLUS_COLLATERAL_CLAIMED");
     }
   }, [myTransactionState.type]);
 

@@ -7,7 +7,7 @@ export const NoTrove: React.FC = props => {
   const { recordEvent } = useTroveView();
 
   const handleOpenTrove = useCallback(() => {
-    recordEvent("OPEN_TROVE");
+    recordEvent("OPEN_TROVE_PRESSED");
   }, []);
 
   return (
