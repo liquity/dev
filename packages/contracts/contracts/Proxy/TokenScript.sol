@@ -2,13 +2,15 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/CheckContract.sol";
 import "../Dependencies/IERC20.sol";
 
 
-contract TokenScript {
+contract TokenScript is CheckContract {
     IERC20 immutable token;
 
     constructor(address _tokenAddress) public {
+        checkContract(_tokenAddress);
         token = IERC20(_tokenAddress);
     }
 
