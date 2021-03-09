@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { Card, Heading, Box, Flex, Text, Button } from "theme-ui";
 import { useLiquitySelector } from "@liquity/lib-react";
-import type { Trove } from "@liquity/lib-base";
 import {
   LiquityStoreState,
   Percent,
@@ -20,6 +19,8 @@ export const ReadOnlyTrove: React.FC = props => {
   }, []);
 
   const { price, trove } = useLiquitySelector(selectPrice);
+
+  // console.log("READONLY TROVE", trove.collateral.prettify(4));
   const collateralRatio = trove.collateralRatio(price);
   const collateralRatioPct = new Percent(collateralRatio);
   const prettyCollateralRatio = collateralRatio?.gt(10)

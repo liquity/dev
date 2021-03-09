@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, Flex, Label, Input } from "theme-ui";
+import { Text, Flex, Box, Label, Input } from "theme-ui";
 
 import { Icon } from "../Icon";
 
@@ -56,11 +56,10 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
       }}
       {...{ onClick, invalid }}
     >
-      <Flex sx={{ justifyContent: "space-between", alignItems: "center" }}>
+      <Flex sx={{ justifyContent: "space-between", alignItems: "center", width: "100%" }}>
         <Text sx={{ fontSize: 3 }} {...{ color }}>
           {amount}
         </Text>
-
         {pendingAmount ? (
           <Text sx={{ fontSize: 2, color: pendingColor }}>
             {pendingAmount === "++" ? (
@@ -112,14 +111,21 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   label,
   inputId,
   unit,
+  amount,
+  color,
+  pendingAmount,
+  pendingColor,
+  editingState,
   editedAmount,
-  setEditedAmount
+  setEditedAmount,
+  variant = "input"
 }) => {
+  const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
 
   return (
     <Row {...{ label, labelFor: inputId, unit }}>
-      {
+      {editing === inputId ? (
         <Input
           autoFocus
           sx={invalid ? { backgroundColor: "invalid" } : {}}
@@ -137,10 +143,22 @@ export const EditableRow: React.FC<EditableRowProps> = ({
             }
           }}
           onBlur={() => {
+            setEditing(undefined);
             setInvalid(false);
           }}
         />
-      }
+      ) : (
+        <StaticAmounts
+          inputId={inputId}
+          amount={amount}
+          color={color}
+          pendingAmount={pendingAmount}
+          pendingColor={pendingColor}
+          invalid={invalid}
+          variant={variant}
+          onClick={() => setEditing(inputId)}
+        />
+      )}
     </Row>
   );
 };

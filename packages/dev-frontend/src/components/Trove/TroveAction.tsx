@@ -90,7 +90,9 @@ export const TroveAction: React.FC<TroveActionProps> = ({
     }
   }, [myTransactionState.type, dispatch]);
 
-  if (!change && !original.isEmpty) {
+  const hasActiveTrove = !original.isEmpty;
+
+  if (!change && hasActiveTrove) {
     return (
       <Flex variant="layout.actions">
         <Button disabled sx={{ mx: 2 }}>

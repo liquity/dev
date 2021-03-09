@@ -140,7 +140,8 @@ export const TroveManager: React.FC = () => {
   const change = original.whatChanged(edited, 0);
   const borrowingRate = fees.borrowingRate();
   const afterFee = original.apply(change, borrowingRate);
-  console.log({ original, change });
+
+  // console.log("TroveManager render", { original, edited, change });
   const { recordEvent } = useTroveView();
 
   const handleCancel = useCallback(() => {
