@@ -21,7 +21,8 @@ import {
   TroveCreationDetails,
   TroveCreationParams,
   TroveListingParams,
-  TroveWithPendingRedistribution
+  TroveWithPendingRedistribution,
+  UserTrove
 } from "@liquity/lib-base";
 
 import {
@@ -164,7 +165,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTrove} */
-  getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove> {
+  getTrove(address?: string, overrides?: EthersCallOverrides): Promise<UserTrove> {
     return this._readable.getTrove(address, overrides);
   }
 
@@ -222,18 +223,12 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
   getTroves(
     params: TroveListingParams & { beforeRedistribution: true },
     overrides?: EthersCallOverrides
-  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+  ): Promise<TroveWithPendingRedistribution[]>;
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.(getTroves:2)} */
-  getTroves(
-    params: TroveListingParams,
-    overrides?: EthersCallOverrides
-  ): Promise<[address: string, trove: Trove][]>;
+  getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<UserTrove[]>;
 
-  getTroves(
-    params: TroveListingParams,
-    overrides?: EthersCallOverrides
-  ): Promise<[address: string, trove: Trove][]> {
+  getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<UserTrove[]> {
     return this._readable.getTroves(params, overrides);
   }
 

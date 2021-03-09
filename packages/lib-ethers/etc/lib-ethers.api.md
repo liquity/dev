@@ -44,6 +44,7 @@ import { TroveCreationDetails } from '@liquity/lib-base';
 import { TroveCreationParams } from '@liquity/lib-base';
 import { TroveListingParams } from '@liquity/lib-base';
 import { TroveWithPendingRedistribution } from '@liquity/lib-base';
+import { UserTrove } from '@liquity/lib-base';
 
 // @public
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
@@ -141,15 +142,15 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     // (undocumented)
     getTotalStakedLQTY(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
-    getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove>;
+    getTrove(address?: string, overrides?: EthersCallOverrides): Promise<UserTrove>;
     // (undocumented)
     getTroveBeforeRedistribution(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
     // @internal (undocumented)
     getTroves(params: TroveListingParams & {
         beforeRedistribution: true;
-    }, overrides?: EthersCallOverrides): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    }, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution[]>;
     // (undocumented)
-    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<[address: string, trove: Trove][]>;
+    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<UserTrove[]>;
     hasStore(): this is EthersLiquityWithStore;
     hasStore(store: "blockPolled"): this is EthersLiquityWithStore<BlockPolledLiquityStore>;
     // (undocumented)
@@ -395,15 +396,15 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     // (undocumented)
     getTotalStakedLQTY(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
-    getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove>;
+    getTrove(address?: string, overrides?: EthersCallOverrides): Promise<UserTrove>;
     // (undocumented)
     getTroveBeforeRedistribution(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
     // @internal (undocumented)
     getTroves(params: TroveListingParams & {
         beforeRedistribution: true;
-    }, overrides?: EthersCallOverrides): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    }, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution[]>;
     // (undocumented)
-    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<[address: string, trove: Trove][]>;
+    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<UserTrove[]>;
     hasStore(): this is ReadableEthersLiquityWithStore;
     hasStore(store: "blockPolled"): this is ReadableEthersLiquityWithStore<BlockPolledLiquityStore>;
 }

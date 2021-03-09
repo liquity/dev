@@ -29,22 +29,35 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
     constructor(
         address _borrowerOperationsAddress,
         address _troveManagerAddress,
-        address _stabilityPoolAddress,
-        address _priceFeedAddress,
-        address _lusdTokenAddress,
-        address _lqtyTokenAddress,
         address _lqtyStakingAddress
     )
         BorrowerOperationsScript(IBorrowerOperations(_borrowerOperationsAddress))
         LQTYStakingScript(_lqtyStakingAddress)
         public
     {
-        troveManager = ITroveManager(_troveManagerAddress);
-        stabilityPool = IStabilityPool(_stabilityPoolAddress);
-        priceFeed = IPriceFeed(_priceFeedAddress);
-        lusdToken = IERC20(_lusdTokenAddress);
-        lqtyToken = IERC20(_lqtyTokenAddress);
-        lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
+        checkContract(_troveManagerAddress);
+        ITroveManager troveManagerCached = ITroveManager(_troveManagerAddress);
+        troveManager = troveManagerCached;
+
+        IStabilityPool stabilityPoolCached = troveManagerCached.stabilityPool();
+        checkContract(address(stabilityPoolCached));
+        stabilityPool = stabilityPoolCached;
+
+        IPriceFeed priceFeedCached = troveManagerCached.priceFeed();
+        checkContract(address(priceFeedCached));
+        priceFeed = priceFeedCached;
+
+        address lusdTokenCached = address(troveManagerCached.lusdToken());
+        checkContract(lusdTokenCached);
+        lusdToken = IERC20(lusdTokenCached);
+
+        address lqtyTokenCached = address(troveManagerCached.lqtyToken());
+        checkContract(lqtyTokenCached);
+        lqtyToken = IERC20(lqtyTokenCached);
+
+        ILQTYStaking lqtyStakingCached = troveManagerCached.lqtyStaking();
+        require(_lqtyStakingAddress == address(lqtyStakingCached), "BorrowerWrappersScript: Wrong LQTYStaking address");
+        lqtyStaking = lqtyStakingCached;
     }
 
     function claimCollateralAndOpenTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external payable {

@@ -562,7 +562,7 @@ export class Trove {
     that: Trove,
     borrowingRate: Decimalish = MINIMUM_BORROWING_RATE
   ): TroveChange<Decimal> | undefined {
-    if (this.equals(that)) {
+    if (this.collateral.eq(that.collateral) && this.debt.eq(that.debt)) {
       return undefined;
     }
 
@@ -716,6 +716,63 @@ export class Trove {
 export const _emptyTrove = new Trove();
 
 /**
+ * Represents whether a UserTrove is open or not, or why it was closed.
+ *
+ * @public
+ */
+export type UserTroveStatus =
+  | "nonExistent"
+  | "open"
+  | "closedByOwner"
+  | "closedByLiquidation"
+  | "closedByRedemption";
+
+/**
+ * A Trove that is associated with a single owner.
+ *
+ * @remarks
+ * The SDK uses the base {@link Trove} class as a generic container of collateral and debt, for
+ * example to represent the {@link ReadableLiquity.getTotal | total collateral and debt} locked up
+ * in the protocol.
+ *
+ * The `UserTrove` class extends `Trove` with extra information that's only available for Troves
+ * that are associated with a single owner (such as the owner's address, or the Trove's status).
+ *
+ * @public
+ */
+export class UserTrove extends Trove {
+  /** Address that owns this Trove. */
+  readonly ownerAddress: string;
+
+  /** Provides more information when the UserTrove is empty. */
+  readonly status: UserTroveStatus;
+
+  /** @internal */
+  constructor(ownerAddress: string, status: UserTroveStatus, collateral?: Decimal, debt?: Decimal) {
+    super(collateral, debt);
+
+    this.ownerAddress = ownerAddress;
+    this.status = status;
+  }
+
+  equals(that: UserTrove): boolean {
+    return (
+      super.equals(that) && this.ownerAddress === that.ownerAddress && this.status === that.status
+    );
+  }
+
+  /** @internal */
+  toString(): string {
+    return (
+      `{ ownerAddress: "${this.ownerAddress}"` +
+      `, collateral: ${this.collateral}` +
+      `, debt: ${this.debt}` +
+      `, status: "${this.status}" }`
+    );
+  }
+}
+
+/**
  * A Trove in its state after the last direct modification.
  *
  * @remarks
@@ -725,25 +782,35 @@ export const _emptyTrove = new Trove();
  *
  * @public
  */
-export class TroveWithPendingRedistribution extends Trove {
+export class TroveWithPendingRedistribution extends UserTrove {
   private readonly stake: Decimal;
   private readonly snapshotOfTotalRedistributed: Trove;
 
+  /** @internal */
   constructor(
+    ownerAddress: string,
+    status: UserTroveStatus,
     collateral?: Decimal,
     debt?: Decimal,
     stake = Decimal.ZERO,
     snapshotOfTotalRedistributed = _emptyTrove
   ) {
-    super(collateral, debt);
+    super(ownerAddress, status, collateral, debt);
 
     this.stake = stake;
     this.snapshotOfTotalRedistributed = snapshotOfTotalRedistributed;
   }
 
-  applyRedistribution(totalRedistributed: Trove): Trove {
-    return this.add(
+  applyRedistribution(totalRedistributed: Trove): UserTrove {
+    const afterRedistribution = this.add(
       totalRedistributed.subtract(this.snapshotOfTotalRedistributed).multiply(this.stake)
+    );
+
+    return new UserTrove(
+      this.ownerAddress,
+      this.status,
+      afterRedistribution.collateral,
+      afterRedistribution.debt
     );
   }
 

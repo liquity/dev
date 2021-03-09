@@ -16,6 +16,7 @@
 |  [TransactionFailedError](./lib-base.transactionfailederror.md) | Thrown by [TransactableLiquity](./lib-base.transactableliquity.md) functions in case of transaction failure. |
 |  [Trove](./lib-base.trove.md) | A combination of collateral and debt. |
 |  [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | A Trove in its state after the last direct modification. |
+|  [UserTrove](./lib-base.usertrove.md) | A Trove that is associated with a single owner. |
 
 ## Interfaces
 
@@ -73,4 +74,5 @@
 |  [TroveClosureParams](./lib-base.troveclosureparams.md) | Parameters of a [closeTrove()](./lib-base.transactableliquity.closetrove.md) transaction. |
 |  [TroveCreationError](./lib-base.trovecreationerror.md) | Describes why a Trove could not be created. |
 |  [TroveCreationParams](./lib-base.trovecreationparams.md) | Parameters of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction. |
+|  [UserTroveStatus](./lib-base.usertrovestatus.md) | Represents whether a UserTrove is open or not, or why it was closed. |
 

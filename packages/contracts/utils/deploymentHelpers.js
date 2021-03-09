@@ -286,10 +286,6 @@ class DeploymentHelper {
     const borrowerWrappersScript = await BorrowerWrappersScript.new(
       contracts.borrowerOperations.address,
       contracts.troveManager.address,
-      contracts.stabilityPool.address,
-      contracts.priceFeedTestnet.address,
-      contracts.lusdToken.address,
-      LQTYContracts.lqtyToken.address,
       LQTYContracts.lqtyStaking.address
     )
     contracts.borrowerWrappers = new BorrowerWrappersProxy(owner, proxies, borrowerWrappersScript.address)

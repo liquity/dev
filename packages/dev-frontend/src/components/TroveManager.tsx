@@ -1,6 +1,6 @@
 import React from "react";
 
-import { LiquityStoreState, Decimal, Decimalish, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
+import { LiquityStoreState, Decimal, Decimalish, LUSD_MINIMUM_DEBT, Trove } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { TroveEditor } from "./TroveEditor";
@@ -10,7 +10,7 @@ import { CollateralSurplusAction } from "./CollateralSurplusAction";
 
 const init = ({ trove }: LiquityStoreState) => ({
   original: trove,
-  edited: trove,
+  edited: new Trove(trove.collateral, trove.debt),
   changePending: false,
   debtDirty: false,
   addedMinimumDebt: false
@@ -78,7 +78,12 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
       };
 
     case "revert":
-      return { ...state, edited: original, debtDirty: false, addedMinimumDebt: false };
+      return {
+        ...state,
+        edited: new Trove(original.collateral, original.debt),
+        debtDirty: false,
+        addedMinimumDebt: false
+      };
 
     case "updateStore": {
       const {

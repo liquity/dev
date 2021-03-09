@@ -3,7 +3,7 @@
 // @generated
 // This file was automatically generated and should not be edited.
 
-import { OrderDirection } from "./globalTypes";
+import { OrderDirection, TroveStatus } from "./globalTypes";
 
 // ====================================================
 // GraphQL query operation: Troves
@@ -24,6 +24,7 @@ export interface Troves_troves {
    */
   id: string;
   owner: Troves_troves_owner;
+  status: TroveStatus;
   rawCollateral: any;
   rawDebt: any;
   rawStake: any;

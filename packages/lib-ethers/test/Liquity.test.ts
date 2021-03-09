@@ -482,8 +482,11 @@ describe("EthersLiquity", () => {
     it("the Trove should have received some liquidation shares", async () => {
       const trove = await liquity.getTrove();
 
-      expect(trove).to.deep.equal(
-        initialTroveOfDepositor
+      expect(trove).to.deep.equal({
+        ownerAddress: await user.getAddress(),
+        status: "open",
+
+        ...initialTroveOfDepositor
           .addDebt(troveWithVeryLowICR.debt.sub(smallStabilityDeposit))
           .addCollateral(
             troveWithVeryLowICR.collateral
@@ -491,7 +494,7 @@ describe("EthersLiquity", () => {
               .mulDiv(troveWithVeryLowICR.debt.sub(smallStabilityDeposit), troveWithVeryLowICR.debt)
               .sub("0.000000000000000007")
           )
-      );
+      });
     });
 
     it("total should equal the Trove", async () => {
@@ -912,9 +915,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should include enough gas for one extra traversal", async () => {
-      const troves = (
-        await liquity.getTroves({ first: 10, sortedBy: "ascendingCollateralRatio" })
-      ).map(([, t]) => t);
+      const troves = await liquity.getTroves({ first: 10, sortedBy: "ascendingCollateralRatio" });
 
       const trove = await liquity.getTrove();
       const newTrove = troveWithICRBetween(troves[3], troves[4]);
@@ -946,9 +947,7 @@ describe("EthersLiquity", () => {
     });
 
     it("should include enough gas for both when borrowing", async () => {
-      const troves = (
-        await liquity.getTroves({ first: 10, sortedBy: "ascendingCollateralRatio" })
-      ).map(([, t]) => t);
+      const troves = await liquity.getTroves({ first: 10, sortedBy: "ascendingCollateralRatio" });
 
       const trove = await liquity.getTrove();
       const newTrove = troveWithICRBetween(troves[1], troves[2]);

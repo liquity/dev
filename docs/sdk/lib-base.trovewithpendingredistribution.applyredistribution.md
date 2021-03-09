@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-applyRedistribution(totalRedistributed: Trove): Trove;
+applyRedistribution(totalRedistributed: Trove): UserTrove;
 ```
 
 ## Parameters
@@ -18,5 +18,5 @@ applyRedistribution(totalRedistributed: Trove): Trove;
 
 <b>Returns:</b>
 
-[Trove](./lib-base.trove.md)
+[UserTrove](./lib-base.usertrove.md)
 

@@ -2,13 +2,15 @@
 
 pragma solidity 0.6.11;
 
+import "../Dependencies/CheckContract.sol";
 import "../Interfaces/ITroveManager.sol";
 
 
-contract TroveManagerScript {
+contract TroveManagerScript is CheckContract {
     ITroveManager immutable troveManager;
 
     constructor(ITroveManager _troveManager) public {
+        checkContract(address(_troveManager));
         troveManager = _troveManager;
     }
 
