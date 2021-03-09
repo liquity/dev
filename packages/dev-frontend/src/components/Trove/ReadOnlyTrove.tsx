@@ -6,14 +6,14 @@ import {
   LiquityStoreState,
   Percent,
   CRITICAL_COLLATERAL_RATIO,
-  MINIMUM_COLLATERAL_RATIO,
+  MINIMUM_COLLATERAL_RATIO
 } from "@liquity/lib-base";
 import { StaticRow } from "./Editor";
 import { useTroveView } from "./context/TroveViewContext";
 
 const selectPrice = ({ price, trove }: LiquityStoreState) => ({ price, trove });
 
-export const ReadOnlyTrove: React.FC = (props) => {
+export const ReadOnlyTrove: React.FC = props => {
   const { recordEvent } = useTroveView();
   const handleAdjustTrove = useCallback(() => {
     recordEvent("ADJUST_TROVE");
@@ -36,12 +36,7 @@ export const ReadOnlyTrove: React.FC = (props) => {
             amount={trove.collateral.prettify(4)}
             unit="ETH"
           />
-          <StaticRow
-            label="Debt"
-            inputId="trove-debt"
-            amount={trove.debt.prettify(4)}
-            unit="LUSD"
-          />
+          <StaticRow label="Debt" inputId="trove-debt" amount={trove.debt.prettify(4)} unit="LUSD" />
           <StaticRow
             label="Collateral ratio"
             inputId="trove-collateral-ratio"

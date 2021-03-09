@@ -10,7 +10,7 @@ import {
   Decimal,
   Trove,
   LiquityStoreState,
-  TroveChange,
+  TroveChange
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -28,9 +28,7 @@ type TroveEditorProps = {
   change?: TroveChange<Decimal>;
   changePending: boolean;
   dispatch: (
-    action:
-      | { type: "setCollateral" | "setDebt"; newValue: Decimalish }
-      | { type: "revert" }
+    action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
   ) => void;
 };
 
@@ -44,7 +42,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   borrowingRate,
   change,
   changePending,
-  dispatch,
+  dispatch
 }) => {
   const price = useLiquitySelector(selectPrice);
 
@@ -53,28 +51,15 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   const fee = afterFee.subtract(edited).debt.nonZero;
   const feePct = new Percent(borrowingRate);
 
-  const pendingCollateral = Difference.between(
-    edited.collateral,
-    original.collateral.nonZero
-  ).nonZero;
-  const pendingDebt = Difference.between(edited.debt, original.debt.nonZero)
+  const pendingCollateral = Difference.between(edited.collateral, original.collateral.nonZero)
     .nonZero;
+  const pendingDebt = Difference.between(edited.debt, original.debt.nonZero).nonZero;
 
-  const originalCollateralRatio = !original.isEmpty
-    ? original.collateralRatio(price)
-    : undefined;
-  const collateralRatio = !afterFee.isEmpty
-    ? afterFee.collateralRatio(price)
-    : undefined;
-  const collateralRatioPct = new Percent(
-    collateralRatio || { toString: () => "N/A" }
-  );
-  const collateralRatioChange = Difference.between(
-    collateralRatio,
-    originalCollateralRatio
-  );
-  const collateralRatioChangePct =
-    collateralRatioChange && new Percent(collateralRatioChange);
+  const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
+  const collateralRatio = !afterFee.isEmpty ? afterFee.collateralRatio(price) : undefined;
+  const collateralRatioPct = new Percent(collateralRatio || { toString: () => "N/A" });
+  const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
+  const collateralRatioChangePct = collateralRatioChange && new Percent(collateralRatioChange);
 
   return (
     <Card>

@@ -18,34 +18,27 @@ Structure of dumb state machine:
     }
   }
 } */
-type TroveTransitions = Record<
-  TroveView,
-  Partial<Record<TroveEvent, TroveView>>
->;
+type TroveTransitions = Record<TroveView, Partial<Record<TroveEvent, TroveView>>>;
 
-const transition = (
-  trove: TroveState,
-  view: TroveView,
-  event: TroveEvent
-): TroveView => {
+const transition = (trove: TroveState, view: TroveView, event: TroveEvent): TroveView => {
   const transitions: TroveTransitions = {
     NONE: {
       OPEN_TROVE: "ADJUSTING",
-      TROVE_RECEIVED: "ACTIVE",
+      TROVE_RECEIVED: "ACTIVE"
     },
     CLOSED: {
       COLLATERAL_CLAIMED: "NONE",
-      TROVE_RECEIVED: "ACTIVE",
+      TROVE_RECEIVED: "ACTIVE"
     },
     ADJUSTING: {
       ADJUST_TROVE_CANCELLED: trove.isActive ? "ACTIVE" : "NONE",
       TROVE_ADJUSTED: "ACTIVE",
-      TROVE_CLOSED: "CLOSED",
+      TROVE_CLOSED: "CLOSED"
     },
     ACTIVE: {
       ADJUST_TROVE: "ADJUSTING",
-      TROVE_CLOSED: "CLOSED",
-    },
+      TROVE_CLOSED: "CLOSED"
+    }
   };
   const nextView = transitions[view][event] || view;
   return nextView;
@@ -55,13 +48,10 @@ type TroveState = {
   isClosed: boolean;
   isActive: boolean;
 };
-const select = ({
-  trove,
-  collateralSurplusBalance,
-}: LiquityStoreState): TroveState => ({
+const select = ({ trove, collateralSurplusBalance }: LiquityStoreState): TroveState => ({
   isClosed: !collateralSurplusBalance.isZero, // only works for Recovery mode - wait for dani's PR then merge
   // isClosed: !trove.status === "closed" closedByRedemption etc., // TODO: wait for dani's PR to merge
-  isActive: !trove.isEmpty,
+  isActive: !trove.isEmpty
 });
 
 const getInitialView = (trove: TroveState): TroveView => {
@@ -74,7 +64,7 @@ const getInitialView = (trove: TroveState): TroveView => {
   return "NONE";
 };
 
-export const TroveViewProvider: React.FC = (props) => {
+export const TroveViewProvider: React.FC = props => {
   const { children } = props;
   const trove = useLiquitySelector(select);
 
@@ -85,12 +75,7 @@ export const TroveViewProvider: React.FC = (props) => {
       const nextView = transition(trove, view, event);
 
       // TODO: remove this (and other) console logs
-      console.log(
-        "recordEvent() (current-view, event, next-view)",
-        view,
-        event,
-        nextView
-      );
+      console.log("recordEvent() (current-view, event, next-view)", view, event, nextView);
 
       setView(nextView);
     },
@@ -119,11 +104,7 @@ export const TroveViewProvider: React.FC = (props) => {
 
   const provider = {
     view,
-    recordEvent,
+    recordEvent
   };
-  return (
-    <TroveViewContext.Provider value={provider}>
-      {children}
-    </TroveViewContext.Provider>
-  );
+  return <TroveViewContext.Provider value={provider}>{children}</TroveViewContext.Provider>;
 };

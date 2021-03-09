@@ -10,13 +10,13 @@ import { Transaction, useMyTransactionState } from "./Transaction";
 import { useTroveView } from "./Trove/context/TroveViewContext";
 
 const select = ({ collateralSurplusBalance }: LiquityStoreState) => ({
-  collateralSurplusBalance,
+  collateralSurplusBalance
 });
 
 export const CollateralSurplusAction: React.FC = () => {
   const { collateralSurplusBalance } = useLiquitySelector(select);
   const {
-    liquity: { send: liquity },
+    liquity: { send: liquity }
   } = useLiquity();
 
   const myTransactionId = "claim-coll-surplus";
@@ -45,9 +45,7 @@ export const CollateralSurplusAction: React.FC = () => {
         id={myTransactionId}
         send={liquity.claimCollateralSurplus.bind(liquity, undefined)}
       >
-        <Button sx={{ mx: 2 }}>
-          Claim {collateralSurplusBalance.prettify()} ETH
-        </Button>
+        <Button sx={{ mx: 2 }}>Claim {collateralSurplusBalance.prettify()} ETH</Button>
       </Transaction>
     </Flex>
   ) : null;

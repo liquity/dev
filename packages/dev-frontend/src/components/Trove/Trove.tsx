@@ -5,7 +5,7 @@ import { NoTrove } from "./NoTrove";
 import { ClosedTrove } from "./ClosedTrove";
 import { useTroveView } from "./context/TroveViewContext";
 
-export const Trove: React.FC = (props) => {
+export const Trove: React.FC = props => {
   const { view } = useTroveView();
 
   switch (view) {

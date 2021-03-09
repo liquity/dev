@@ -44,7 +44,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   pendingColor,
   onClick,
   invalid,
-  variant,
+  variant
 }) => {
   return (
     <Label
@@ -52,7 +52,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
       id={inputId}
       sx={{
         ...(invalid ? { backgroundColor: "invalid" } : {}),
-        ...(onClick ? { cursor: "text" } : {}),
+        ...(onClick ? { cursor: "text" } : {})
       }}
       {...{ onClick, invalid }}
     >
@@ -80,9 +80,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
             )}
           </Text>
         ) : onClick ? (
-          <Text
-            sx={{ display: "flex", alignItems: "center", ml: 1, fontSize: 1 }}
-          >
+          <Text sx={{ display: "flex", alignItems: "center", ml: 1, fontSize: 1 }}>
             <Icon name="pen" />
           </Text>
         ) : undefined}
@@ -93,7 +91,7 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
 
 type StaticRowProps = RowProps & StaticAmountsProps;
 
-export const StaticRow: React.FC<StaticRowProps> = (props) => {
+export const StaticRow: React.FC<StaticRowProps> = props => {
   return (
     <Row {...props}>
       <StaticAmounts {...props} />
@@ -120,7 +118,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   pendingColor,
   editingState,
   editedAmount,
-  setEditedAmount,
+  setEditedAmount
 }) => {
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
@@ -136,7 +134,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
           step="any"
           defaultValue={editedAmount}
           {...{ invalid }}
-          onChange={(e) => {
+          onChange={e => {
             try {
               setEditedAmount(e.target.value);
               setInvalid(false);

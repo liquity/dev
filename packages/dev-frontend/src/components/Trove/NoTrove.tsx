@@ -3,7 +3,7 @@ import { Card, Heading, Box, Flex, Text, Button } from "theme-ui";
 import { Icon } from "../Icon";
 import { useTroveView } from "./context/TroveViewContext";
 
-export const NoTrove: React.FC = (props) => {
+export const NoTrove: React.FC = props => {
   const { recordEvent } = useTroveView();
 
   const handleOpenTrove = useCallback(() => {
@@ -22,9 +22,7 @@ export const NoTrove: React.FC = (props) => {
             </Heading>
           </Flex>
 
-          <Text sx={{ fontSize: 2 }}>
-            You can borrow LUSD by opening a Trove
-          </Text>
+          <Text sx={{ fontSize: 2 }}>You can borrow LUSD by opening a Trove</Text>
         </Box>
 
         <Flex variant="layout.actions">

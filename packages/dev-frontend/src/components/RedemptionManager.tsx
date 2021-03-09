@@ -25,12 +25,12 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   amount,
   setAmount,
   changePending,
-  setChangePending,
+  setChangePending
 }) => {
   const lusdBalance = useLiquitySelector(selectLUSDBalance);
 
   const {
-    liquity: { send: liquity },
+    liquity: { send: liquity }
   } = useLiquity();
 
   const myTransactionId = "redemption";
@@ -39,10 +39,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
       setChangePending(true);
-    } else if (
-      myTransactionState.type === "failed" ||
-      myTransactionState.type === "cancelled"
-    ) {
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       setChangePending(false);
     } else if (myTransactionState.type === "confirmed") {
       setAmount(Decimal.ZERO);
@@ -81,7 +78,7 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
 const select = ({ price, fees, total }: LiquityStoreState) => ({
   price,
   fees,
-  total,
+  total
 });
 
 export const RedemptionManager: React.FC = () => {
@@ -122,7 +119,7 @@ export const RedemptionManager: React.FC = () => {
             unit={COIN}
             {...{ editingState }}
             editedAmount={lusdAmount.toString(2)}
-            setEditedAmount={(amount) => setLUSDAmount(Decimal.from(amount))}
+            setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
           />
 
           {edited && (
@@ -153,7 +150,7 @@ export const RedemptionManager: React.FC = () => {
           amount: lusdAmount,
           setAmount: setLUSDAmount,
           changePending,
-          setChangePending,
+          setChangePending
         }}
       />
     </>

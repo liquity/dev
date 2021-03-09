@@ -14,9 +14,7 @@ type StakingEditorProps = {
   originalStake: LQTYStake;
   editedLQTY: Decimal;
   changePending: boolean;
-  dispatch: (
-    action: { type: "setStake"; newValue: Decimalish } | { type: "revert" }
-  ) => void;
+  dispatch: (action: { type: "setStake"; newValue: Decimalish } | { type: "revert" }) => void;
 };
 
 export const StakingEditor: React.FC<StakingEditorProps> = ({
@@ -24,14 +22,11 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
   originalStake,
   editedLQTY,
   changePending,
-  dispatch,
+  dispatch
 }) => {
   const editingState = useState<string>();
 
-  const pendingStakeChange = Difference.between(
-    editedLQTY,
-    originalStake.stakedLQTY.nonZero
-  );
+  const pendingStakeChange = Difference.between(editedLQTY, originalStake.stakedLQTY.nonZero);
   const edited = !editedLQTY.eq(originalStake.stakedLQTY);
 
   return (
@@ -61,9 +56,7 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
           unit={GT}
           {...{ editingState }}
           editedAmount={editedLQTY.toString(2)}
-          setEditedAmount={(newValue) =>
-            dispatch({ type: "setStake", newValue })
-          }
+          setEditedAmount={newValue => dispatch({ type: "setStake", newValue })}
         ></EditableRow>
 
         {!originalStake.isEmpty && (

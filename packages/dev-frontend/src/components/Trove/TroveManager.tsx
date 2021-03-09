@@ -1,16 +1,7 @@
 import React, { useCallback } from "react";
 
-import {
-  LUSD_LIQUIDATION_RESERVE,
-  LiquityStoreState,
-  Decimal,
-  Decimalish,
-} from "@liquity/lib-base";
-import {
-  LiquityStoreUpdate,
-  useLiquityReducer,
-  useLiquitySelector,
-} from "@liquity/lib-react";
+import { LUSD_LIQUIDATION_RESERVE, LiquityStoreState, Decimal, Decimalish } from "@liquity/lib-base";
+import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 import { Flex, Button } from "theme-ui";
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
@@ -21,7 +12,7 @@ const init = ({ trove }: LiquityStoreState) => ({
   edited: trove,
   changePending: false,
   debtDirty: false,
-  addedGasCompensation: false,
+  addedGasCompensation: false
 });
 
 type TroveManagerState = ReturnType<typeof init>;
@@ -37,29 +28,19 @@ type TroveManagerAction =
     }
   | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
 
-const reduceWith = (action: TroveManagerAction) => (
-  state: TroveManagerState
-): TroveManagerState => reduce(state, action);
+const reduceWith = (action: TroveManagerAction) => (state: TroveManagerState): TroveManagerState =>
+  reduce(state, action);
 
 const addDebtCompensation = reduceWith({ type: "addDebtCompensation" });
 const removeDebtCompensation = reduceWith({ type: "removeDebtCompensation" });
 const finishChange = reduceWith({ type: "finishChange" });
 const revert = reduceWith({ type: "revert" });
 
-const reduce = (
-  state: TroveManagerState,
-  action: TroveManagerAction
-): TroveManagerState => {
+const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveManagerState => {
   // console.log(state);
   // console.log(action);
 
-  const {
-    original,
-    edited,
-    changePending,
-    debtDirty,
-    addedGasCompensation,
-  } = state;
+  const { original, edited, changePending, debtDirty, addedGasCompensation } = state;
 
   switch (action.type) {
     case "startChange": {
@@ -75,7 +56,7 @@ const reduce = (
 
       const newState = {
         ...state,
-        edited: edited.setCollateral(newCollateral),
+        edited: edited.setCollateral(newCollateral)
       };
 
       if (!debtDirty) {
@@ -94,21 +75,21 @@ const reduce = (
       return {
         ...state,
         edited: edited.setDebt(action.newValue),
-        debtDirty: true,
+        debtDirty: true
       };
 
     case "addDebtCompensation":
       return {
         ...state,
         edited: edited.setDebt(LUSD_LIQUIDATION_RESERVE),
-        addedGasCompensation: true,
+        addedGasCompensation: true
       };
 
     case "removeDebtCompensation":
       return {
         ...state,
         edited: edited.setDebt(0),
-        addedGasCompensation: false,
+        addedGasCompensation: false
       };
 
     case "revert":
@@ -116,18 +97,18 @@ const reduce = (
         ...state,
         edited: original,
         debtDirty: false,
-        addedGasCompensation: false,
+        addedGasCompensation: false
       };
 
     case "updateStore": {
       const {
         newState: { trove },
-        stateChange: { troveBeforeRedistribution: changeCommitted },
+        stateChange: { troveBeforeRedistribution: changeCommitted }
       } = action;
 
       const newState = {
         ...state,
-        original: trove,
+        original: trove
       };
 
       if (changePending && changeCommitted) {
@@ -149,14 +130,11 @@ const reduce = (
 };
 
 const select = ({ fees }: LiquityStoreState) => ({
-  fees,
+  fees
 });
 
 export const TroveManager: React.FC = () => {
-  const [{ original, edited, changePending }, dispatch] = useLiquityReducer(
-    reduce,
-    init
-  );
+  const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees } = useLiquitySelector(select);
 
   const change = original.whatChanged(edited, 0);

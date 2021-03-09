@@ -6,9 +6,7 @@ type TroveViewContextType = {
   recordEvent: (event: TroveEvent) => void;
 };
 
-export const TroveViewContext = createContext<TroveViewContextType | null>(
-  null
-);
+export const TroveViewContext = createContext<TroveViewContextType | null>(null);
 
 export const useTroveView = (): TroveViewContextType => {
   const context: TroveViewContextType | null = useContext(TroveViewContext);

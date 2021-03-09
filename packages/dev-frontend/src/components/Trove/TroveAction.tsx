@@ -10,7 +10,7 @@ import {
   LiquityStoreState,
   Trove,
   TroveAdjustmentParams,
-  TroveChange,
+  TroveChange
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -36,7 +36,7 @@ const describeAdjustment = ({
   depositCollateral,
   withdrawCollateral,
   borrowLUSD,
-  repayLUSD,
+  repayLUSD
 }: TroveAdjustmentParams<Decimal>) =>
   depositCollateral && borrowLUSD
     ? `Deposit ${depositCollateral.prettify()} ETH & borrow ${borrowLUSD.prettify()} ${COIN}`
@@ -56,16 +56,11 @@ const describeAdjustment = ({
     ? `Repay ${repayLUSD.prettify()} ${COIN}`
     : "";
 
-const select = ({
+const select = ({ price, total, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
   price,
   total,
   lusdBalance,
-  numberOfTroves,
-}: LiquityStoreState) => ({
-  price,
-  total,
-  lusdBalance,
-  numberOfTroves,
+  numberOfTroves
 });
 
 export const TroveAction: React.FC<TroveActionProps> = ({
@@ -74,13 +69,11 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   afterFee,
   change,
   changePending,
-  dispatch,
+  dispatch
 }) => {
-  const { numberOfTroves, price, lusdBalance, total } = useLiquitySelector(
-    select
-  );
+  const { numberOfTroves, price, lusdBalance, total } = useLiquitySelector(select);
   const {
-    liquity: { send: liquity },
+    liquity: { send: liquity }
   } = useLiquity();
 
   const myTransactionId = "trove";
@@ -90,10 +83,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
       dispatch({ type: "startChange" });
-    } else if (
-      myTransactionState.type === "failed" ||
-      myTransactionState.type === "cancelled"
-    ) {
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
     } else if (myTransactionState.type === "confirmedOneShot") {
       recordEvent("TROVE_ADJUSTED");
@@ -127,10 +117,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         <Transaction
           id={myTransactionId}
           requires={[
-            [
-              false,
-              `Need at least ${LUSD_LIQUIDATION_RESERVE} ${COIN} for gas compensation`,
-            ],
+            [false, `Need at least ${LUSD_LIQUIDATION_RESERVE} ${COIN} for gas compensation`]
           ]}
           send={(() => {}) as any}
         >
@@ -149,34 +136,29 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             [
               afterFee.isOpenableInRecoveryMode(price) ||
                 !total.collateralRatioIsBelowCritical(price),
-              `Can't open Trove with less than ${ccrPercent} collateral ratio during recovery mode`,
-            ],
-          ],
+              `Can't open Trove with less than ${ccrPercent} collateral ratio during recovery mode`
+            ]
+          ]
         ] as const)
       : change.type === "closure"
       ? ([
           "Close Trove",
           liquity.closeTrove.bind(liquity),
           [
-            [
-              !total.collateralRatioIsBelowCritical(price),
-              "Can't close Trove during recovery mode",
-            ],
-            [numberOfTroves > 1, "Can't close when no other Trove exists"],
-          ],
+            [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
+            [numberOfTroves > 1, "Can't close when no other Trove exists"]
+          ]
         ] as const)
       : ([
           describeAdjustment(change.params),
           liquity.adjustTrove.bind(liquity, change.params),
           [
             [
-              afterFee
-                .collateralRatio(price)
-                .gte(original.collateralRatio(price)) ||
+              afterFee.collateralRatio(price).gte(original.collateralRatio(price)) ||
                 !total.collateralRatioIsBelowCritical(price),
-              "Can't decrease collateral ratio during recovery mode",
-            ],
-          ],
+              "Can't decrease collateral ratio during recovery mode"
+            ]
+          ]
         ] as const);
 
   return myTransactionState.type === "waitingForApproval" ? (
@@ -193,7 +175,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         requires={[
           [
             edited.isEmpty || edited.debt.gte(LUSD_LIQUIDATION_RESERVE),
-            `Need at least ${LUSD_LIQUIDATION_RESERVE} ${COIN} for gas compensation`,
+            `Need at least ${LUSD_LIQUIDATION_RESERVE} ${COIN} for gas compensation`
           ],
           [
             !(
@@ -201,7 +183,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
               (change.type === "adjustment" &&
                 (change.params.withdrawCollateral || change.params.borrowLUSD))
             ) || !afterFee.collateralRatioIsBelowMinimum(price),
-            `Collateral ratio must be at least ${mcrPercent}`,
+            `Collateral ratio must be at least ${mcrPercent}`
           ],
           [
             !(
@@ -209,17 +191,11 @@ export const TroveAction: React.FC<TroveActionProps> = ({
               (change.type === "adjustment" && change.params.borrowLUSD)
             ) ||
               total.collateralRatioIsBelowCritical(price) ||
-              !total
-                .subtract(original)
-                .add(afterFee)
-                .collateralRatioIsBelowCritical(price),
-            `Total collateral ratio would fall below ${ccrPercent}`,
+              !total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price),
+            `Total collateral ratio would fall below ${ccrPercent}`
           ],
-          [
-            lusdBalance.gte(change.params.repayLUSD ?? 0),
-            `You don't have enough ${COIN}`,
-          ],
-          ...extraRequirements,
+          [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`],
+          ...extraRequirements
         ]}
         {...{ send }}
       >
