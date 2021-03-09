@@ -562,7 +562,7 @@ export class Trove {
     that: Trove,
     borrowingRate: Decimalish = MINIMUM_BORROWING_RATE
   ): TroveChange<Decimal> | undefined {
-    if (this.equals(that)) {
+    if (this.collateral.eq(that.collateral) && this.debt.eq(that.debt)) {
       return undefined;
     }
 
