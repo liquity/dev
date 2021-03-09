@@ -181,6 +181,7 @@ def test_run_simulation(contracts):
     price_LUSD = 1
 
     data = {"airdrop_gain": [0] * n_sim, "liquidation_gain": [0] * n_sim}
+    total_lusd_redempted = 0
     total_coll_added = 0
     total_coll_liquidated = 0
 
@@ -200,10 +201,10 @@ def test_run_simulation(contracts):
         return_stability = result_liquidation[1]
 
         #close troves
-        result_close = close_troves(accounts, contracts, active_accounts, inactive_accounts, index, price_LUSD)
+        result_close = close_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
 
         #adjust troves
-        coll_added_adjust = adjust_troves(accounts, contracts, active_accounts, price_ether_current, index)
+        coll_added_adjust = adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, index)
 
         #open troves
         coll_added_open = open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
@@ -214,7 +215,8 @@ def test_run_simulation(contracts):
         stability_update(accounts, contracts, return_stability, index)
 
         #Calculating Price, Liquidity Pool, and Redemption
-        price_LUSD = price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index)
+        [price_LUSD, redemption_pool] = price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index)
+        total_lusd_redempted = total_lusd_redempted + redemption_pool
         print('LUSD price', price_LUSD)
 
         """
@@ -226,6 +228,7 @@ def test_run_simulation(contracts):
         """
 
         logGlobalState(contracts)
+        print('Total redempted ', total_lusd_redempted)
         print('Total ETH added ', total_coll_added)
         print('Total ETH liquid', total_coll_liquidated)
         print(f'Ratio ETH liquid {100 * total_coll_liquidated / total_coll_added}%')

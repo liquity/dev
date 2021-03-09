@@ -242,16 +242,40 @@ for i in range(1, period):
 Liquidate Troves
 """
 
-def pending_liquidations(contracts, price_ether_current):
+def is_recovery_mode(contracts, price_ether_current):
     price = Wei(price_ether_current * 1e18)
-    is_recovery_mode = contracts.troveManager.checkRecoveryMode(price)
-    #print('RM', is_recovery_mode)
-    last_trove = contracts.sortedTroves.getLast()
-    #print('last', last_trove)
-    last_ICR = contracts.troveManager.getCurrentICR(last_trove, price)
-    #print('ICR', last_ICR)
+    return contracts.troveManager.checkRecoveryMode(price)
 
-    return last_trove != ZERO_ADDRESS and (last_ICR < Wei(11e17) or (is_recovery_mode and last_ICR < Wei(15e17)))
+def pending_liquidations(contracts, price_ether_current):
+    last_trove = contracts.sortedTroves.getLast()
+    last_ICR = contracts.troveManager.getCurrentICR(last_trove, Wei(price_ether_current * 1e18))
+
+    if last_trove == ZERO_ADDRESS:
+        return False
+    if last_ICR >= Wei(15e17):
+        return False
+    if last_ICR < Wei(11e17):
+        return True
+    if not is_recovery_mode(contracts, price_ether_current):
+        return False
+
+    stability_pool_balance = contracts.stabilityPool.getTotalLUSDDeposits()
+    if stability_pool_balance > 0:
+        return True
+
+    return False
+
+def remove_account(accounts, active_accounts, inactive_accounts, address):
+    try:
+        active_index = next(i for i, a in enumerate(active_accounts) if accounts[a['index']] == address)
+        inactive_accounts.append(active_accounts[active_index]['index'])
+        active_accounts.pop(active_index)
+    except StopIteration: # TODO
+        print(f"\n ***Error: {address} not found in active accounts!")
+
+def remove_accounts_from_events(accounts, active_accounts, inactive_accounts, events, field):
+    for event in events:
+        remove_account(accounts, active_accounts, inactive_accounts, event[field])
 
 def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, data, index):
     if len(active_accounts) == 0:
@@ -260,9 +284,10 @@ def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, pr
     stability_pool_previous = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
     stability_pool_eth_previous = contracts.stabilityPool.getETH() / 1e18
 
-    # TODO: active/inactive
     while pending_liquidations(contracts, price_ether_current):
-        contracts.troveManager.liquidateTroves(10)
+        tx = contracts.troveManager.liquidateTroves(10)
+        #print(tx.events['TroveLiquidated'])
+        remove_accounts_from_events(accounts, active_accounts, inactive_accounts, tx.events['TroveLiquidated'], '_borrower')
 
     stability_pool_current = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
     stability_pool_eth_current = contracts.stabilityPool.getETH() / 1e18
@@ -270,7 +295,6 @@ def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, pr
     debt_liquidated = stability_pool_current - stability_pool_previous
     ether_liquidated = stability_pool_eth_current - stability_pool_eth_previous
     liquidation_gain = ether_liquidated * price_ether_current - debt_liquidated * price_LUSD
-    print("liquidation_gain", liquidation_gain)
     #airdrop_gain = price_LQTY_previous * quantity_LQTY_airdrop
 
     data['liquidation_gain'][index] = liquidation_gain
@@ -282,20 +306,11 @@ def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, pr
 
 def calculate_stability_return(contracts, price_LUSD, data, index):
     stability_pool_previous = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
-    print("stability_pool_previous", stability_pool_previous)
     if index == 0:
         return_stability = initial_return
     if stability_pool_previous == 0:
         return_stability = 0
     elif index < month:
-        '''
-        print("year", year)
-        print("index", index)
-        print("liq", sum(data['liquidation_gain'][0:index]))
-        print("air", sum(data['airdrop_gain'][0:index]))
-        print("lusd price", price_LUSD)
-        print("sp", stability_pool_previous)
-        '''
         return_stability = (year/index) * \
             (sum(data['liquidation_gain'][0:index]) +
              sum(data['airdrop_gain'][0:index])
@@ -310,14 +325,18 @@ def calculate_stability_return(contracts, price_LUSD, data, index):
 
 """Close Troves"""
 
-def close_troves(accounts, contracts, active_accounts, inactive_accounts, index2, price_LUSD):
+def close_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index):
     if len(active_accounts) == 0:
         return [0]
-    np.random.seed(208+index2)
+
+    if is_recovery_mode(contracts, price_ether_current):
+        return [0]
+
+    np.random.seed(208+index)
     shock_closetroves = np.random.normal(0,sd_closetroves)
     n_troves = contracts.sortedTroves.getSize()
 
-    if index2 <= 240:
+    if index <= 240:
         number_closetroves = np.random.uniform(0,1)
     elif price_LUSD >=1:
         number_closetroves = max(0, n_steady * (1+shock_closetroves))
@@ -325,29 +344,65 @@ def close_troves(accounts, contracts, active_accounts, inactive_accounts, index2
         number_closetroves = max(0, n_steady * (1+shock_closetroves)) + beta*(1-price_LUSD)*n_troves
 
     number_closetroves = min(int(round(number_closetroves)), len(active_accounts) - 1)
-    random.seed(293+100*index2)
-    #print('ac', len(active_accounts))
-    #print('nc', number_closetroves)
+    random.seed(293+100*index)
     drops = list(random.sample(range(len(active_accounts)), number_closetroves))
-    #print('drops', drops)
-    #print('drops len', len(drops))
     for i in range(0, len(drops)):
         account_index = active_accounts[drops[i]]['index']
         account = accounts[account_index]
-        debt = contracts.troveManager.getTroveDebt(account)
-        get_lusd_to_repay(accounts, contracts, account, debt)
-        contracts.borrowerOperations.closeTrove({ 'from': account })
-        inactive_accounts.append(account_index)
-        active_accounts.pop(drops[i])
+        pending = get_lusd_to_repay(accounts, contracts, active_accounts, inactive_accounts, account, get_total_debt(contracts, account))
+        if pending == 0:
+            contracts.borrowerOperations.closeTrove({ 'from': account })
+            inactive_accounts.append(account_index)
+            active_accounts.pop(drops[i])
 
     return [number_closetroves]
 
 """Adjust Troves"""
 
-def get_lusd_to_repay(accounts, contracts, account, debt):
+def get_total_coll(contracts, account):
+    amounts = contracts.troveManager.getEntireDebtAndColl(account)
+    return amounts['coll']
+
+def get_total_debt(contracts, account):
+    amounts = contracts.troveManager.getEntireDebtAndColl(account)
+    return amounts['debt']
+
+def transfer_from_to(contracts, from_account, to_account, amount):
+    balance = contracts.lusdToken.balanceOf(from_account)
+    transfer_amount = min(balance, amount)
+    if transfer_amount == 0:
+        return amount
+    if from_account == to_account:
+        return amount
+    contracts.lusdToken.transfer(to_account, transfer_amount, { 'from': from_account })
+    pending = amount - transfer_amount
+
+    return pending
+
+def get_lusd_to_repay(accounts, contracts, active_accounts, inactive_accounts, account, debt):
     lusdBalance = contracts.lusdToken.balanceOf(account)
     if debt > lusdBalance:
-        contracts.lusdToken.transfer(account, debt - lusdBalance, { 'from': accounts[0] })
+        pending = debt - lusdBalance
+        # first try with whale
+        pending = transfer_from_to(contracts, accounts[0], account, pending)
+        # first try with active accounts, which are more likely to hold LUSD
+        for a in active_accounts:
+            if pending <= 0:
+                break
+            a_address = accounts[a['index']]
+            pending = transfer_from_to(contracts, a_address, account, pending)
+        for i in inactive_accounts:
+            if pending <= 0:
+                break
+            i_address = accounts[i]
+            pending = transfer_from_to(contracts, i_address, account, pending)
+
+        if pending > 0:
+            print(f"\n ***Error: not enough LUSD to repay! {debt / 1e18} LUSD for {account}")
+
+        return pending
+
+    return 0
 
 '''
 def get_hints(contracts, coll, debt):
@@ -375,70 +430,79 @@ def get_hints_from_ICR(accounts, active_accounts, ICR):
         return [index2address(accounts, active_accounts, min(i, l-1)), index2address(accounts, active_accounts, max(i-1, 0)), i]
 
 
-def adjust_troves(accounts, contracts, active_accounts, price_ether_current, index):
+def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, index):
     random.seed(57984-3*index)
     ratio = random.uniform(0,1)
     coll_added_float = 0
 
     for i, working_trove in enumerate(active_accounts):
-        #print("i", i)
-        #print("trove", working_trove)
         account = accounts[working_trove['index']]
         currentICR = contracts.troveManager.getCurrentICR(account, floatToWei(price_ether_current)) / 1e18
-        trove = contracts.troveManager.Troves(account)
-        #print("Trove", trove)
-        coll = trove['coll'] / 1e18
-        debt = trove['debt'] / 1e18
+        coll = get_total_coll(contracts, account) / 1e18
+        debt = get_total_debt(contracts, account) / 1e18
 
         random.seed(187*index + 3*i)
         p = random.uniform(0,1)
         check = (currentICR - working_trove['CR_initial']) / (working_trove['CR_initial'] * working_trove['Rational_inattention'])
 
-        # TODO
+        if check >= -1 and check <= 2:
+            continue
+
         #A part of the troves are adjusted by adjusting debt
         if p >= ratio:
             debt_new = price_ether_current * coll / working_trove['CR_initial']
-            hints = get_hints_from_amounts(accounts, active_accounts, coll, debt, price_ether_current)
+            hints = get_hints_from_amounts(accounts, active_accounts, coll, debt_new, price_ether_current)
             if debt_new < MIN_NET_DEBT:
                 continue
             if check < -1:
                 # pay back
                 repay_amount = floatToWei(debt - debt_new)
-                get_lusd_to_repay(accounts, contracts, account, repay_amount)
-                contracts.borrowerOperations.repayLUSD(repay_amount, hints[0], hints[1], { 'from': account })
-            elif check > 2:
+                pending = get_lusd_to_repay(accounts, contracts, active_accounts, inactive_accounts, account, repay_amount)
+                if pending == 0:
+                    contracts.borrowerOperations.repayLUSD(repay_amount, hints[0], hints[1], { 'from': account })
+            elif check > 2 and not is_recovery_mode(contracts, price_ether_current):
                 # withdraw LUSD
                 withdraw_amount = floatToWei(debt_new - debt)
-                contracts.borrowerOperations.withdrawLUSD(MAX_FEE, withdraw_amount, hints[0], hints[1], { 'from': account })
+                try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
+                    contracts.borrowerOperations.withdrawLUSD(MAX_FEE, withdraw_amount, hints[0], hints[1], { 'from': account })
+                except:
+                    print("\n ***Error withdrawing LUSD!")
         #Another part of the troves are adjusted by adjusting collaterals
         elif p < ratio:
             coll_new = working_trove['CR_initial'] * debt / price_ether_current
-            hints = get_hints_from_amounts(accounts, active_accounts, coll, debt, price_ether_current)
+            hints = get_hints_from_amounts(accounts, active_accounts, coll_new, debt, price_ether_current)
             if check < -1:
                 # add coll
                 coll_added_float = coll_new - coll
                 coll_added = floatToWei(coll_added_float)
                 contracts.borrowerOperations.addColl(hints[0], hints[1], { 'from': account, 'value': coll_added })
-            elif check > 2:
+            elif check > 2 and not is_recovery_mode(contracts, price_ether_current):
                 # withdraw ETH
                 coll_withdrawn = floatToWei(coll - coll_new)
-                contracts.borrowerOperations.withdrawColl(coll_withdrawn, hints[0], hints[1], { 'from': account })
+                try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
+                    contracts.borrowerOperations.withdrawColl(coll_withdrawn, hints[0], hints[1], { 'from': account })
+                except:
+                    print("\n ***Error withdrawing ETH!")
 
     return coll_added_float
 
 """Open Troves"""
 
-def open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_trove, quantity_ether, CR_ratio, rational_inattention):
+def open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_trove, quantity_ether, CR_ratio, rational_inattention, price_ether_current):
     if len(inactive_accounts) == 0:
         return
-    #print(len(accounts))
-    #print(len(inactive_accounts))
+    if is_recovery_mode(contracts, price_ether_current) and CR_ratio < 1.5:
+        return
+
     hints = get_hints_from_ICR(accounts, active_accounts, CR_ratio)
-    contracts.borrowerOperations.openTrove(MAX_FEE, floatToWei(supply_trove), hints[0], hints[1],
-                                           { 'from': accounts[inactive_accounts[0]], 'value': floatToWei(quantity_ether) })
-    new_account = {"index": inactive_accounts[0], "CR_initial": CR_ratio, "Rational_inattention": rational_inattention}
-    active_accounts.insert(hints[2], new_account)
-    inactive_accounts.pop(0)
+    try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
+        contracts.borrowerOperations.openTrove(MAX_FEE, floatToWei(supply_trove), hints[0], hints[1],
+                                               { 'from': accounts[inactive_accounts[0]], 'value': floatToWei(quantity_ether) })
+        new_account = {"index": inactive_accounts[0], "CR_initial": CR_ratio, "Rational_inattention": rational_inattention}
+        active_accounts.insert(hints[2], new_account)
+        inactive_accounts.pop(0)
+    except:
+        print("\n ***Error opening trove!")
 
 def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index):
     random.seed(2019*index)
@@ -451,21 +515,13 @@ def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_e
         number_opentroves = initial_open
     elif price_LUSD <= 1 + rate_issuance:
         number_opentroves = max(0, n_steady * (1+shock_opentroves))
-        #print("n_steady", n_steady)
-        #print("shock_opentroves", shock_opentroves)
     else:
-        #print("n_steady", n_steady)
-        #print("shock_opentroves", shock_opentroves)
-        #print("alpha", alpha)
-        #print("n_troves", n_troves)
         number_opentroves = max(0, n_steady * (1+shock_opentroves)) + \
                         alpha * (price_LUSD - rate_issuance - 1) * n_troves
 
     number_opentroves = min(int(round(float(number_opentroves))), len(inactive_accounts))
-    print("number of troves to open", number_opentroves)
 
     for i in range(0, number_opentroves):
-        #print("\n trove ", i)
         np.random.seed(2033 + index + i*i)
         CR_ratio = target_cr_a + target_cr_b * np.random.chisquare(df=target_cr_chi_square_df)
 
@@ -475,17 +531,12 @@ def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_e
         np.random.seed(209870- index + i*i)
         rational_inattention = np.random.gamma(rational_inattention_gamma_k, scale=rational_inattention_gamma_theta)
         supply_trove = price_ether_current * quantity_ether / CR_ratio
-        #print('ICR', CR_ratio)
-        #print('price', price_ether_current)
-        #print('supply_trove', supply_trove)
         if supply_trove < MIN_NET_DEBT:
             supply_trove = MIN_NET_DEBT
             quantity_ether = CR_ratio * supply_trove / price_ether_current
-        #print('supply_trove', supply_trove)
-        #print('coll', quantity_ether)
-        #print('coll', floatToWei(quantity_ether))
 
-        open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_trove, quantity_ether, CR_ratio, rational_inattention)
+        open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_trove, quantity_ether, CR_ratio, rational_inattention, price_ether_current)
+
         coll_added = coll_added + quantity_ether
 
     return coll_added
@@ -503,22 +554,7 @@ def stability_update(accounts, contracts, return_stability, index):
     np.random.seed(27+3*index)
     shock_stability = np.random.normal(0,sd_stability)
     natural_rate_current = natural_rate[index]
-    #print("index:    ", index)
-    #print("month:    ", month)
-    #print("SP previous:    ", stability_pool_previous)
-    #print("Drift:    ", drift_stability)
-    #print("Shock:    ", 1+shock_stability)
-    #print("Return-natural:    ", 1 + return_stability - natural_rate_current)
-    #print("Theta: ", theta)
     if index <= month:
-        '''
-        print("stability_pool_previous", stability_pool_previous)
-        print("drift_stability", drift_stability)
-        print("shock_stability", shock_stability)
-        print("return_stability", return_stability)
-        print("natural_rate_current", natural_rate_current)
-        print("theta", theta)
-        '''
         stability_pool = stability_pool_previous * drift_stability * (1+shock_stability) * (1 + return_stability - natural_rate_current)**theta
     else:
         stability_pool = stability_pool_previous * (1+shock_stability) * (1 + return_stability - natural_rate_current)**theta
@@ -536,8 +572,10 @@ def stability_update(accounts, contracts, return_stability, index):
             else:
                 contracts.stabilityPool.provideToSP(floatToWei(new_deposit), ZERO_ADDRESS, { 'from': accounts[0] })
         else:
-            new_withdraw = floatToWei(stability_pool_previous - stability_pool)
-            contracts.stabilityPool.withdrawFromSP(new_withdraw, { 'from': accounts[0] })
+            current_deposit = contracts.stabilityPool.getCompoundedLUSDDeposit(accounts[0])
+            if current_deposit > 0:
+                new_withdraw = min(floatToWei(stability_pool_previous - stability_pool), current_deposit)
+                contracts.stabilityPool.withdrawFromSP(new_withdraw, { 'from': accounts[0] })
 
 
 """LUSD Price, liquidity pool, and redemption
@@ -630,40 +668,24 @@ sd_redemption = 0.001
 redemption_start = 0.8
 
 def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
-    #print("index:    ", index)
-    #print("SP:       ", stability_pool)
-    #print("n open:   ", n_open)
 
-    n_open = len(active_accounts)
     stability_pool = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
-    issuance_LUSD_stabilizer = 0
-    redemption_fee = 0
-    n_redempt = 0
-    redempted = 0
     redemption_pool = 0
 
     supply = contracts.lusdToken.totalSupply() / 1e18
     #Liquidity Pool
     liquidity_pool = supply - stability_pool
-    #print("liquidity_pool before:", liquidity_pool)
-    #print("price_LUSD:    ", price_LUSD)
-    #print("supply:    ", supply)
 
     # next iteration step for liquidity pool
     np.random.seed(20*index)
     shock_liquidity = np.random.normal(0,sd_liquidity)
 
     liquidity_pool_next = liquidity_pool * drift_liquidity * (1+shock_liquidity)
-    #print("liquidity_pool_next:    ", liquidity_pool_next)
-
 
     #Calculating Price
     price_LUSD_current = calculate_price(price_LUSD, liquidity_pool, liquidity_pool_next)
     rate_issuance = contracts.troveManager.getBorrowingRateWithDecay() / 1e18
     rate_redemption = contracts.troveManager.getRedemptionRateWithDecay() / 1e18
-    #print("LUSD price:    ", price_LUSD_current)
-    #print("Ceil:          ", 1.1 + rate_issuance)
-    #print("Floor:         ", 1 - rate_redemption)
 
     #Stabilizer
     #Ceiling Arbitrageurs
@@ -676,7 +698,6 @@ def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
         CR_ratio = 1.1
         rational_inattention = 0.1
         quantity_ether = supply_trove * CR_ratio / price_ether_current
-        issuance_LUSD_stabilizer = rate_issuance * supply_trove
         open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_trove, quantity_ether, CR_ratio, rational_inattention)
         price_LUSD_current = 1.1 + rate_issuance
         #missing in the previous version
@@ -707,11 +728,14 @@ def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
         if redemption_pool > whale_balance:
             print("Warning! Redemption amount supposed to be greater than whale balance", stability_pool, whale_balance)
         else:
-            contracts.troveManager.redeemCollateral(floatToWei(redemption_pool), { 'from': accounts[0] })
+            tx = contracts.troveManager.redeemCollateral(floatToWei(redemption_pool), { 'from': accounts[0] })
+            remove_accounts_from_events(
+                accounts,
+                active_accounts,
+                inactive_accounts,
+                filter(lambda e: e['coll'] == 0, tx.events['TroveUpdated']),
+                '_borrower'
+            )
 
 
-    return price_LUSD_current
-
-def logICRs(accounts, active_accounts):
-    for account in active_accounts:
-        print(f"Address: {accounts[account['index']]}, ICR: {account['CR_initial']}")
+    return [price_LUSD_current, redemption_pool]
