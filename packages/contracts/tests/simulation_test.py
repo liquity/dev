@@ -131,12 +131,12 @@ def print_expectations():
     print("Expected ether price at the end of the year: $", ether_price_one_year)
 
     print("\n Open troves")
-    print("E(Q_t^e) = ", collateral_gamma_k * collateral_gamma_theta)
-    print("SD(Q_t^e) = ", collateral_gamma_k**(0.5) * collateral_gamma_theta)
-    print("E(CR^*(i)) = ", target_cr_a + target_cr_b * target_cr_chi_square_df * 100, "%")
+    print("E(Q_t^e)    = ", collateral_gamma_k * collateral_gamma_theta)
+    print("SD(Q_t^e)   = ", collateral_gamma_k**(0.5) * collateral_gamma_theta)
+    print("E(CR^*(i))  = ", (target_cr_a + target_cr_b * target_cr_chi_square_df) * 100, "%")
     print("SD(CR^*(i)) = ", target_cr_b * (2*target_cr_chi_square_df)**(1/2) * 100, "%")
-    print("E(tau) = ", rational_inattention_gamma_k * rational_inattention_gamma_theta * 100, "%")
-    print("SD(tau) = ", rational_inattention_gamma_k**(0.5) * rational_inattention_gamma_theta * 100, "%")
+    print("E(tau)      = ", rational_inattention_gamma_k * rational_inattention_gamma_theta * 100, "%")
+    print("SD(tau)     = ", rational_inattention_gamma_k**(0.5) * rational_inattention_gamma_theta * 100, "%")
 
 def _test_test(contracts):
     print(len(accounts))
@@ -166,7 +166,7 @@ def _test_test(contracts):
 * redemption & redemption fee
 * LQTY pool return determined
 """
-def test_run_simulation(contracts):
+def test_run_simulation(contracts, print_expectations):
     MIN_NET_DEBT = contracts.troveManager.MIN_NET_DEBT() / 1e18
 
     price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]))

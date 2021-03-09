@@ -133,7 +133,7 @@ $CR^*(i)$ follows a chi-squared distribution with $df=target\_cr\_chi\_square\_d
 > $CR^*(i) = target\_cr\_a + target\_cr\_b \cdot \chi_{df}^2$. 
 
 Then:\
-$E(CR^*(i)) = target\_cr\_a + target\_cr\_a * target\_cr\_chi\_square\_df$, \\
+$E(CR^*(i)) = target\_cr\_a + target\_cr\_b * target\_cr\_chi\_square\_df$, \\
 $SD(CR^*(i))=target\_cr\_b*\sqrt{2*target\_cr\_chi\_square\_df}$
 
 
