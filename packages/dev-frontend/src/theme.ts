@@ -7,7 +7,7 @@ const baseColors = {
   green: "#28c081",
   yellow: "#fd9d28",
   red: "#dc2c10",
-  lightRed: "#ff755f",
+  lightRed: "#ff755f"
 };
 
 const colors = {
@@ -24,7 +24,7 @@ const colors = {
 
   text: "#293147",
   background: "white",
-  muted: "#eaebed",
+  muted: "#eaebed"
 };
 
 const buttonBase: ThemeUIStyleObject = {
@@ -32,7 +32,7 @@ const buttonBase: ThemeUIStyleObject = {
   alignItems: "center",
   justifyContent: "center",
 
-  ":enabled": { cursor: "pointer" },
+  ":enabled": { cursor: "pointer" }
 };
 
 const button: ThemeUIStyleObject = {
@@ -46,8 +46,8 @@ const button: ThemeUIStyleObject = {
   fontWeight: "bold",
 
   ":disabled": {
-    opacity: 0.5,
-  },
+    opacity: 0.5
+  }
 };
 
 const iconButton: ThemeUIStyleObject = {
@@ -61,8 +61,8 @@ const iconButton: ThemeUIStyleObject = {
 
   ":disabled": {
     color: "text",
-    opacity: 0.25,
-  },
+    opacity: 0.25
+  }
 };
 
 const cardHeadingFontSize = 18.7167;
@@ -74,7 +74,7 @@ const card: ThemeUIStyleObject = {
   position: "relative",
   mt: cardGapY,
   border: 1,
-  boxShadow: [1, null, 2],
+  boxShadow: [1, null, 2]
 };
 
 const infoCard: ThemeUIStyleObject = {
@@ -87,8 +87,8 @@ const infoCard: ThemeUIStyleObject = {
 
   h2: {
     mb: 2,
-    fontSize: cardHeadingFontSize,
-  },
+    fontSize: cardHeadingFontSize
+  }
 };
 
 const formBase: ThemeUIStyleObject = {
@@ -96,7 +96,7 @@ const formBase: ThemeUIStyleObject = {
   width: "auto",
   flexShrink: 0,
   padding: 2,
-  fontSize: 3,
+  fontSize: 3
 };
 
 const formCell: ThemeUIStyleObject = {
@@ -106,7 +106,7 @@ const formCell: ThemeUIStyleObject = {
   border: 1,
   borderColor: "muted",
   borderRadius: 0,
-  boxShadow: [1, 2],
+  boxShadow: [1, 2]
 };
 
 const overlay: ThemeUIStyleObject = {
@@ -115,7 +115,7 @@ const overlay: ThemeUIStyleObject = {
   left: 0,
   top: 0,
   width: "100%",
-  height: "100%",
+  height: "100%"
 };
 
 const modalOverlay: ThemeUIStyleObject = {
@@ -124,7 +124,7 @@ const modalOverlay: ThemeUIStyleObject = {
   left: 0,
   top: 0,
   width: "100vw",
-  height: "100vh",
+  height: "100vh"
 };
 
 const theme: Theme = {
@@ -140,10 +140,10 @@ const theme: Theme = {
       '"Segoe UI"',
       "Roboto",
       '"Helvetica Neue"',
-      "sans-serif",
+      "sans-serif"
     ].join(", "),
     heading: "inherit",
-    monospace: "Menlo, monospace",
+    monospace: "Menlo, monospace"
   },
 
   fontSizes: [12, 14, 16, 20, 24, 32, 48, 64, 96],
@@ -151,67 +151,63 @@ const theme: Theme = {
   fontWeights: {
     body: 400,
     heading: 600,
-    bold: 600,
+    bold: 600
   },
 
   lineHeights: {
     body: 1.5,
-    heading: 1.25,
+    heading: 1.25
   },
 
   colors,
 
   borders: [0, "1px solid"],
 
-  shadows: [
-    "0",
-    "0px 4px 8px rgba(41, 49, 71, 0.1)",
-    "0px 8px 16px rgba(41, 49, 71, 0.1)",
-  ],
+  shadows: ["0", "0px 4px 8px rgba(41, 49, 71, 0.1)", "0px 8px 16px rgba(41, 49, 71, 0.1)"],
 
   text: {
     address: {
       fontFamily: "monospace",
-      fontSize: 1,
-    },
+      fontSize: 1
+    }
   },
 
   buttons: {
     primary: {
       ...button,
       bg: "primary",
-      ":enabled:hover": { bg: "secondary" },
+      ":enabled:hover": { bg: "secondary" }
     },
 
     cancel: {
       ...button,
       bg: "accent",
-      ":enabled:hover": { bg: "secondary" },
+      ":enabled:hover": { bg: "secondary" }
     },
 
     danger: {
       ...button,
       bg: "danger",
-      ":enabled:hover": { bg: "dangerHover" },
+      ":enabled:hover": { bg: "dangerHover" }
     },
 
     icon: {
       ...iconButton,
       color: "primary",
-      ":enabled:hover": { color: "accent" },
+      ":enabled:hover": { color: "accent" }
     },
 
     dangerIcon: {
       ...iconButton,
       color: "danger",
-      ":enabled:hover": { color: "dangerHover" },
+      ":enabled:hover": { color: "dangerHover" }
     },
 
     titleIcon: {
       ...iconButton,
       color: "text",
-      ":enabled:hover": { color: "success" },
-    },
+      ":enabled:hover": { color: "success" }
+    }
   },
 
   cards: {
@@ -236,18 +232,18 @@ const theme: Theme = {
 
         bg: "muted",
 
-        fontSize: cardHeadingFontSize,
+        fontSize: cardHeadingFontSize
       },
 
       "> :last-child": {
-        padding: 2,
-      },
+        padding: 2
+      }
     },
 
     info: {
       ...infoCard,
 
-      display: ["none", "block"],
+      display: ["none", "block"]
     },
 
     infoPopup: {
@@ -257,7 +253,7 @@ const theme: Theme = {
       top: 0,
       right: 3,
       left: 3,
-      mt: "72px",
+      mt: "72px"
     },
 
     tooltip: {
@@ -271,27 +267,27 @@ const theme: Theme = {
 
       fontSize: 1,
 
-      zIndex: 1,
-    },
+      zIndex: 1
+    }
   },
 
   forms: {
     label: {
-      ...formBase,
+      ...formBase
     },
 
     unit: {
       ...formCell,
 
       textAlign: "center",
-      bg: "muted",
+      bg: "muted"
     },
 
     input: {
       ...formCell,
 
-      flex: 1,
-    },
+      flex: 1
+    }
   },
 
   layout: {
@@ -309,7 +305,7 @@ const theme: Theme = {
       py: [2, "12px", "12px"],
 
       background: `linear-gradient(90deg, ${colors.background}, ${colors.muted})`,
-      boxShadow: [1, "none"],
+      boxShadow: [1, "none"]
     },
 
     footer: {
@@ -321,7 +317,7 @@ const theme: Theme = {
       px: 3,
       minHeight: "72px",
 
-      bg: "muted",
+      bg: "muted"
     },
 
     main: {
@@ -329,32 +325,32 @@ const theme: Theme = {
       maxWidth: "894px",
       mx: "auto",
       mt: ["40px", 0],
-      px: cardGapX,
+      px: cardGapX
     },
 
     columns: {
       display: "flex",
       flexWrap: "wrap",
-      justifyItems: "center",
+      justifyItems: "center"
     },
 
     left: {
       pr: cardGapX,
-      width: ["100%", "60%"],
+      width: ["100%", "60%"]
     },
 
     right: {
-      width: ["100%", "40%"],
+      width: ["100%", "40%"]
     },
 
     actions: {
-      justifyContent: "flex-end",
+      justifyContent: "flex-end"
     },
 
     disabledOverlay: {
       ...overlay,
 
-      bg: "rgba(255, 255, 255, 0.5)",
+      bg: "rgba(255, 255, 255, 0.5)"
     },
 
     modalOverlay: {
@@ -364,12 +360,12 @@ const theme: Theme = {
 
       display: "flex",
       justifyContent: "center",
-      alignItems: "center",
+      alignItems: "center"
     },
 
     modal: {
       padding: 3,
-      width: ["100%", "40em"],
+      width: ["100%", "40em"]
     },
 
     infoOverlay: {
@@ -377,8 +373,8 @@ const theme: Theme = {
 
       display: ["block", "none"],
 
-      bg: "rgba(255, 255, 255, 0.8)",
-    },
+      bg: "rgba(255, 255, 255, 0.8)"
+    }
   },
 
   styles: {
@@ -390,17 +386,17 @@ const theme: Theme = {
       height: "100%",
 
       "#root": {
-        height: "100%",
-      },
+        height: "100%"
+      }
     },
 
     a: {
       color: "primary",
       ":hover": { color: "accent" },
       textDecoration: "none",
-      fontWeight: "bold",
-    },
-  },
+      fontWeight: "bold"
+    }
+  }
 };
 
 export default theme;
