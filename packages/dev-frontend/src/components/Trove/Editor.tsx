@@ -112,20 +112,14 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   label,
   inputId,
   unit,
-  amount,
-  color,
-  pendingAmount,
-  pendingColor,
-  editingState,
   editedAmount,
   setEditedAmount
 }) => {
-  const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
 
   return (
     <Row {...{ label, labelFor: inputId, unit }}>
-      {editing === inputId ? (
+      {
         <Input
           autoFocus
           sx={invalid ? { backgroundColor: "invalid" } : {}}
@@ -143,17 +137,10 @@ export const EditableRow: React.FC<EditableRowProps> = ({
             }
           }}
           onBlur={() => {
-            setEditing(undefined);
             setInvalid(false);
           }}
         />
-      ) : (
-        <StaticAmounts
-          {...{ inputId, amount, color, pendingAmount, pendingColor, invalid }}
-          onClick={() => setEditing(inputId)}
-          variant="input"
-        />
-      )}
+      }
     </Row>
   );
 };

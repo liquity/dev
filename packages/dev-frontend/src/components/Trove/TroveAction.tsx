@@ -88,7 +88,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
     } else if (myTransactionState.type === "confirmedOneShot") {
       recordEvent("TROVE_ADJUSTED");
     }
-  }, [myTransactionState.type, dispatch, recordEvent]);
+  }, [myTransactionState.type, dispatch]);
 
   if (!change && !original.isEmpty) {
     return (
