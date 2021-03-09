@@ -2,7 +2,7 @@ import pytest
 
 from brownie import *
 from helpers import *
-from simulation_constants import *
+from simulation_helpers import *
 
 class Contracts: pass
 
