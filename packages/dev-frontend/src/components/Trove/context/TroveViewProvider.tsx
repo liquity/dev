@@ -69,18 +69,25 @@ export const TroveViewProvider: React.FC = props => {
   const trove = useLiquitySelector(select);
 
   const [view, setView] = useState<TroveView>(getInitialView(trove));
+  const viewRef = useRef<TroveView>(view);
+  const troveRef = useRef<TroveState>(trove);
 
-  const recordEvent = useCallback(
-    (event: TroveEvent) => {
-      const nextView = transition(trove, view, event);
+  const recordEvent = useCallback((event: TroveEvent) => {
+    const nextView = transition(troveRef.current, viewRef.current, event);
 
-      // TODO: remove this (and other) console logs
-      console.log("recordEvent() (current-view, event, next-view)", view, event, nextView);
+    // TODO: remove this (and other) console logs
+    console.log("recordEvent() [current-view, event, next-view]", viewRef.current, event, nextView);
 
-      setView(nextView);
-    },
-    [trove.isClosed, trove.isActive, view]
-  );
+    setView(nextView);
+  }, []);
+
+  useEffect(() => {
+    viewRef.current = view;
+  }, [view]);
+
+  useEffect(() => {
+    troveRef.current = trove;
+  }, [trove.isClosed, trove.isActive]);
 
   let previousTrove = useRef<TroveState>(trove);
 

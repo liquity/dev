@@ -8,7 +8,7 @@ export const NoTrove: React.FC = props => {
 
   const handleOpenTrove = useCallback(() => {
     recordEvent("OPEN_TROVE");
-  }, [recordEvent]);
+  }, []);
 
   return (
     <Card>

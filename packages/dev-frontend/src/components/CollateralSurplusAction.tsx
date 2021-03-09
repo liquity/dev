@@ -26,10 +26,9 @@ export const CollateralSurplusAction: React.FC = () => {
 
   useEffect(() => {
     if (myTransactionState.type === "confirmedOneShot") {
-      console.log("DISPATCHING COLLATERAL_CLAIMED");
       recordEvent("COLLATERAL_CLAIMED");
     }
-  }, [myTransactionState.type, recordEvent]);
+  }, [myTransactionState.type]);
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">
