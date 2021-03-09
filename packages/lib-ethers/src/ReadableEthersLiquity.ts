@@ -11,6 +11,8 @@ import {
   Trove,
   TroveListingParams,
   TroveWithPendingRedistribution,
+  UserTrove,
+  UserTroveStatus,
   _CachedReadableLiquity,
   _LiquityReadCache
 } from "@liquity/lib-base";
@@ -38,11 +40,30 @@ import { BlockPolledLiquityStore } from "./BlockPolledLiquityStore";
 const MINUTE_DECAY_FACTOR = Decimal.from("0.999037758833783000");
 const BETA = Decimal.from(2);
 
-enum TroveStatus {
+enum BackendTroveStatus {
   nonExistent,
   active,
-  closed
+  closedByOwner,
+  closedByLiquidation,
+  closedByRedemption
 }
+
+const panic = <T>(error: Error): T => {
+  throw error;
+};
+
+const userTroveStatusFrom = (backendStatus: BackendTroveStatus): UserTroveStatus =>
+  backendStatus === BackendTroveStatus.nonExistent
+    ? "nonExistent"
+    : backendStatus === BackendTroveStatus.active
+    ? "open"
+    : backendStatus === BackendTroveStatus.closedByOwner
+    ? "closedByOwner"
+    : backendStatus === BackendTroveStatus.closedByLiquidation
+    ? "closedByLiquidation"
+    : backendStatus === BackendTroveStatus.closedByRedemption
+    ? "closedByRedemption"
+    : panic(new Error(`invalid backendStatus ${backendStatus}`));
 
 const decimalify = (bigNumber: BigNumber) => Decimal.fromBigNumberString(bigNumber.toHexString());
 
@@ -155,20 +176,22 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       troveManager.rewardSnapshots(address, { ...overrides })
     ]);
 
-    if (trove.status === TroveStatus.active) {
+    if (trove.status === BackendTroveStatus.active) {
       return new TroveWithPendingRedistribution(
+        address,
+        userTroveStatusFrom(trove.status),
         decimalify(trove.coll),
         decimalify(trove.debt),
         decimalify(trove.stake),
         new Trove(decimalify(snapshot.ETH), decimalify(snapshot.LUSDDebt))
       );
     } else {
-      return new TroveWithPendingRedistribution();
+      return new TroveWithPendingRedistribution(address, userTroveStatusFrom(trove.status));
     }
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTrove} */
-  async getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove> {
+  async getTrove(address?: string, overrides?: EthersCallOverrides): Promise<UserTrove> {
     const [trove, totalRedistributed] = await Promise.all([
       this.getTroveBeforeRedistribution(address, overrides),
       this.getTotalRedistributed(overrides)
@@ -291,18 +314,15 @@ export class ReadableEthersLiquity implements ReadableLiquity {
   getTroves(
     params: TroveListingParams & { beforeRedistribution: true },
     overrides?: EthersCallOverrides
-  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+  ): Promise<TroveWithPendingRedistribution[]>;
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.(getTroves:2)} */
-  getTroves(
-    params: TroveListingParams,
-    overrides?: EthersCallOverrides
-  ): Promise<[address: string, trove: Trove][]>;
+  getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<UserTrove[]>;
 
   async getTroves(
     params: TroveListingParams,
     overrides?: EthersCallOverrides
-  ): Promise<[address: string, trove: Trove][]> {
+  ): Promise<UserTrove[]> {
     const { multiTroveGetter } = _getContracts(this.connection);
 
     expectPositiveInt(params, "first");
@@ -314,7 +334,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       );
     }
 
-    const [totalRedistributed, rawTroves] = await Promise.all([
+    const [totalRedistributed, backendTroves] = await Promise.all([
       params.beforeRedistribution ? undefined : this.getTotalRedistributed({ ...overrides }),
       multiTroveGetter.getMultipleSortedTroves(
         params.sortedBy === "descendingCollateralRatio"
@@ -325,13 +345,10 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       )
     ]);
 
-    const troves = mapRawTrovesToTroves(rawTroves);
+    const troves = mapBackendTroves(backendTroves);
 
     if (totalRedistributed) {
-      return troves.map(([address, trove]) => [
-        address,
-        trove.applyRedistribution(totalRedistributed)
-      ]);
+      return troves.map(trove => trove.applyRedistribution(totalRedistributed));
     } else {
       return troves;
     }
@@ -410,19 +427,20 @@ export class ReadableEthersLiquity implements ReadableLiquity {
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
-type RawTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSortedTroves"]>>;
+type BackendTroves = Resolved<ReturnType<MultiTroveGetter["getMultipleSortedTroves"]>>;
 
-const mapRawTrovesToTroves = (troves: RawTroves): [string, TroveWithPendingRedistribution][] =>
-  troves.map(({ owner, coll, debt, stake, snapshotLUSDDebt, snapshotETH }) => [
-    owner,
-
-    new TroveWithPendingRedistribution(
-      decimalify(coll),
-      decimalify(debt),
-      decimalify(stake),
-      new Trove(decimalify(snapshotETH), decimalify(snapshotLUSDDebt))
-    )
-  ]);
+const mapBackendTroves = (troves: BackendTroves): TroveWithPendingRedistribution[] =>
+  troves.map(
+    trove =>
+      new TroveWithPendingRedistribution(
+        trove.owner,
+        "open", // These Troves are coming from the SortedTroves list, so they must be open
+        decimalify(trove.coll),
+        decimalify(trove.debt),
+        decimalify(trove.stake),
+        new Trove(decimalify(trove.snapshotETH), decimalify(trove.snapshotLUSDDebt))
+      )
+  );
 
 /**
  * Variant of {@link ReadableEthersLiquity} that exposes a {@link @liquity/lib-base#LiquityStore}.
@@ -480,7 +498,7 @@ class BlockPolledLiquityStoreBasedCache
     }
   }
 
-  getTrove(address?: string, overrides?: EthersCallOverrides): Trove | undefined {
+  getTrove(address?: string, overrides?: EthersCallOverrides): UserTrove | undefined {
     if (this._userHit(address, overrides)) {
       return this._store.state.trove;
     }

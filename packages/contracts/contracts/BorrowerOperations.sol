@@ -73,10 +73,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     enum BorrowerOperation {
         openTrove,
         closeTrove,
-        addColl,
-        withdrawColl,
-        withdrawLUSD,
-        repayLUSD,
         adjustTrove
     }
 

@@ -21,6 +21,7 @@ export function getGlobal(): Global {
     newGlobal.redemptionCount = 0;
     newGlobal.numberOfOpenTroves = 0;
     newGlobal.numberOfLiquidatedTroves = 0;
+    newGlobal.numberOfRedeemedTroves = 0;
     newGlobal.numberOfTrovesClosedByOwner = 0;
     newGlobal.totalNumberOfTroves = 0;
     newGlobal.rawTotalRedistributedCollateral = BIGINT_ZERO;
@@ -91,6 +92,14 @@ export function increaseNumberOfLiquidatedTroves(): void {
   let global = getGlobal();
 
   global.numberOfLiquidatedTroves++;
+  global.numberOfOpenTroves--;
+  global.save();
+}
+
+export function increaseNumberOfRedeemedTroves(): void {
+  let global = getGlobal();
+
+  global.numberOfRedeemedTroves++;
   global.numberOfOpenTroves--;
   global.save();
 }

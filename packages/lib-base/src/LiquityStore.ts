@@ -2,7 +2,7 @@ import assert from "assert";
 
 import { Decimal } from "./Decimal";
 import { StabilityDeposit } from "./StabilityDeposit";
-import { Trove, TroveWithPendingRedistribution } from "./Trove";
+import { Trove, TroveWithPendingRedistribution, UserTrove } from "./Trove";
 import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
 import { FrontendStatus } from "./ReadableLiquity";
@@ -89,7 +89,7 @@ export interface LiquityStoreBaseState {
  */
 export interface LiquityStoreDerivedState {
   /** Current state of user's Trove */
-  trove: Trove;
+  trove: UserTrove;
 
   /** Calculator for current fees. */
   fees: Fees;

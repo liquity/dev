@@ -1,6 +1,6 @@
 const { red, blue, green, yellow, dim, bold } = require("chalk");
 const { Wallet, providers } = require("ethers");
-const { Decimal, Trove, LUSD_LIQUIDATION_RESERVE } = require("@liquity/lib-base");
+const { Decimal, UserTrove, LUSD_LIQUIDATION_RESERVE } = require("@liquity/lib-base");
 const { EthersLiquity, EthersLiquityWithStore } = require("@liquity/lib-ethers");
 
 function log(message) {
@@ -35,26 +35,16 @@ async function main() {
 
 /**
  * @param {Decimal} [price]
- * @returns {(trove: [string, Trove]) => boolean}
+ * @returns {(trove: UserTrove) => boolean}
  */
-const underCollateralized = price => ([, trove]) => trove.collateralRatioIsBelowMinimum(price);
+const underCollateralized = price => trove => trove.collateralRatioIsBelowMinimum(price);
 
 /**
- * @param {[string, Trove]}
- * @param {[string, Trove]}
+ * @param {UserTrove}
+ * @param {UserTrove}
  */
-const byDescendingCollateral = ([, { collateral: a }], [, { collateral: b }]) =>
+const byDescendingCollateral = ({ collateral: a }, { collateral: b }) =>
   b.gt(a) ? 1 : b.lt(a) ? -1 : 0;
-
-/**
- * @param {[string[], Trove[]]}
- * @param {[string, Trove]}
- * @returns {[string[], Trove[]]}
- */
-const unzip = ([addresses, troves], [address, trove]) => [
-  addresses.concat(address),
-  troves.concat(trove)
-];
 
 /**
  * @param {EthersLiquityWithStore} [liquity]
@@ -73,16 +63,17 @@ async function tryToLiquidate(liquity) {
     })
   ]);
 
-  const [addresses, troves] = riskiestTroves
+  const troves = riskiestTroves
     .filter(underCollateralized(store.state.price))
     .sort(byDescendingCollateral)
-    .slice(0, 40)
-    .reduce(unzip, [[], []]);
+    .slice(0, 40);
 
   if (troves.length === 0) {
     // Nothing to liquidate
     return;
   }
+
+  const addresses = troves.map(trove => trove.ownerAddress);
 
   try {
     const liquidation = await liquity.populate.liquidate(addresses, { gasPrice: gasPrice.hex });

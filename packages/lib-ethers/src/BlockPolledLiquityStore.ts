@@ -1,4 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber";
+import { AddressZero } from "@ethersproject/constants";
 
 import {
   Decimal,
@@ -80,10 +81,10 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     );
 
     if (riskiestTroves.length === 0) {
-      return new TroveWithPendingRedistribution();
+      return new TroveWithPendingRedistribution(AddressZero, "nonExistent");
     }
 
-    return riskiestTroves[0][1];
+    return riskiestTroves[0];
   }
 
   private _get(blockTag?: number): Promise<LiquityStoreBaseState> {
@@ -123,7 +124,10 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
             lusdBalance: Decimal.ZERO,
             lqtyBalance: Decimal.ZERO,
             collateralSurplusBalance: Decimal.ZERO,
-            troveBeforeRedistribution: new TroveWithPendingRedistribution(),
+            troveBeforeRedistribution: new TroveWithPendingRedistribution(
+              AddressZero,
+              "nonExistent"
+            ),
             stabilityDeposit: new StabilityDeposit(),
             lqtyStake: new LQTYStake(),
             ownFrontend: { status: "unregistered" }

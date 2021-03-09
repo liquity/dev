@@ -9,7 +9,7 @@ Get a slice from the list of Troves.
 <b>Signature:</b>
 
 ```typescript
-getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<[address: string, trove: Trove][]>;
+getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<UserTrove[]>;
 ```
 
 ## Parameters
@@ -21,7 +21,7 @@ getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<
 
 <b>Returns:</b>
 
-Promise&lt;\[address: string, trove: [Trove](./lib-base.trove.md)<!-- -->\]\[\]&gt;
+Promise&lt;[UserTrove](./lib-base.usertrove.md)<!-- -->\[\]&gt;
 
 Pairs of owner addresses and their Troves.
 

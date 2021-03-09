@@ -36,15 +36,15 @@ export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiq
     // (undocumented)
     getTotalStakedLQTY(...extraParams: T): Promise<Decimal>;
     // (undocumented)
-    getTrove(address?: string, ...extraParams: T): Promise<Trove>;
+    getTrove(address?: string, ...extraParams: T): Promise<UserTrove>;
     // (undocumented)
     getTroveBeforeRedistribution(address?: string, ...extraParams: T): Promise<TroveWithPendingRedistribution>;
     // (undocumented)
     getTroves(params: TroveListingParams & {
         beforeRedistribution: true;
-    }, ...extraParams: T): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    }, ...extraParams: T): Promise<TroveWithPendingRedistribution[]>;
     // (undocumented)
-    getTroves(params: TroveListingParams, ...extraParams: T): Promise<[address: string, trove: Trove][]>;
+    getTroves(params: TroveListingParams, ...extraParams: T): Promise<UserTrove[]>;
     }
 
 // @internal (undocumented)
@@ -212,9 +212,9 @@ export interface _LiquityReadCache<T extends unknown[]> extends _LiquityReadCach
     // (undocumented)
     getTroves(params: TroveListingParams & {
         beforeRedistribution: true;
-    }, ...extraParams: T): [address: string, trove: TroveWithPendingRedistribution][] | undefined;
+    }, ...extraParams: T): TroveWithPendingRedistribution[] | undefined;
     // (undocumented)
-    getTroves(params: TroveListingParams, ...extraParams: T): [address: string, trove: Trove][] | undefined;
+    getTroves(params: TroveListingParams, ...extraParams: T): UserTrove[] | undefined;
 }
 
 // @internal (undocumented)
@@ -273,7 +273,7 @@ export interface LiquityStoreDerivedState {
     fees: Fees;
     haveUndercollateralizedTroves: boolean;
     redemptionRate: Decimal;
-    trove: Trove;
+    trove: UserTrove;
 }
 
 // @public
@@ -481,13 +481,13 @@ export interface ReadableLiquity {
     getTotal(): Promise<Trove>;
     getTotalRedistributed(): Promise<Trove>;
     getTotalStakedLQTY(): Promise<Decimal>;
-    getTrove(address?: string): Promise<Trove>;
+    getTrove(address?: string): Promise<UserTrove>;
     getTroveBeforeRedistribution(address?: string): Promise<TroveWithPendingRedistribution>;
     // @internal (undocumented)
     getTroves(params: TroveListingParams & {
         beforeRedistribution: true;
-    }): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
-    getTroves(params: TroveListingParams): Promise<[address: string, trove: Trove][]>;
+    }): Promise<TroveWithPendingRedistribution[]>;
+    getTroves(params: TroveListingParams): Promise<UserTrove[]>;
 }
 
 // @internal (undocumented)
@@ -495,9 +495,9 @@ export interface _ReadableLiquityWithExtraParams<T extends unknown[]> extends _R
     // (undocumented)
     getTroves(params: TroveListingParams & {
         beforeRedistribution: true;
-    }, ...extraParams: T): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    }, ...extraParams: T): Promise<TroveWithPendingRedistribution[]>;
     // (undocumented)
-    getTroves(params: TroveListingParams, ...extraParams: T): Promise<[address: string, trove: Trove][]>;
+    getTroves(params: TroveListingParams, ...extraParams: T): Promise<UserTrove[]>;
 }
 
 // @internal (undocumented)
@@ -756,13 +756,29 @@ export interface TroveListingParams {
 }
 
 // @public
-export class TroveWithPendingRedistribution extends Trove {
-    constructor(collateral?: Decimal, debt?: Decimal, stake?: Decimal, snapshotOfTotalRedistributed?: Trove);
+export class TroveWithPendingRedistribution extends UserTrove {
+    // @internal
+    constructor(ownerAddress: string, status: UserTroveStatus, collateral?: Decimal, debt?: Decimal, stake?: Decimal, snapshotOfTotalRedistributed?: Trove);
     // (undocumented)
-    applyRedistribution(totalRedistributed: Trove): Trove;
+    applyRedistribution(totalRedistributed: Trove): UserTrove;
     // (undocumented)
     equals(that: TroveWithPendingRedistribution): boolean;
     }
+
+// @public
+export class UserTrove extends Trove {
+    // @internal
+    constructor(ownerAddress: string, status: UserTroveStatus, collateral?: Decimal, debt?: Decimal);
+    // (undocumented)
+    equals(that: UserTrove): boolean;
+    readonly ownerAddress: string;
+    readonly status: UserTroveStatus;
+    // @internal (undocumented)
+    toString(): string;
+}
+
+// @public
+export type UserTroveStatus = "nonExistent" | "open" | "closedByOwner" | "closedByLiquidation" | "closedByRedemption";
 
 
 // (No @packageDocumentation comment for this package)
