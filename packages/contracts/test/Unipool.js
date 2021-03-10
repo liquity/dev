@@ -192,7 +192,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
 
       await time.increaseTo(stakeTime1.add(this.DURATION.mul(new BN(2)).div(new BN(3))));
 
-      await this.pool.exit({ from: wallet2 });
+      await this.pool.withdrawAndClaim({ from: wallet2 });
       const exitTime2 = await time.latest();
 
       const timeDiff3 = exitTime2.sub(stakeTime3);
@@ -235,7 +235,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
 
       await time.increase(this.DURATION.div(new BN(6)));
 
-      await this.pool.exit({ from: wallet1 });
+      await this.pool.withdrawAndClaim({ from: wallet1 });
       const exitTime1 = await time.latest();
 
       expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
@@ -251,7 +251,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
 
       await time.increase(this.DURATION.div(new BN(6)));
 
-      await this.pool.exit({ from: wallet2 });
+      await this.pool.withdrawAndClaim({ from: wallet2 });
       const exitTime2 = await time.latest();
 
       expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(this.DURATION));
@@ -279,7 +279,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
 
       await time.increase(this.DURATION.div(new BN(6)));
 
-      await this.pool.exit({ from: wallet3 });
+      await this.pool.withdrawAndClaim({ from: wallet3 });
       const exitTime3 = await time.latest();
 
       expect(await this.pool.periodFinish()).to.be.bignumber.equal(stakeTime1.add(emptyPeriod1).add(this.DURATION));
@@ -443,7 +443,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
     });
 
     it('Exit fails', async function () {
-      await assertRevert(this.pool.exit({ from: wallet1 }), "Cannot withdraw 0");
+      await assertRevert(this.pool.withdrawAndClaim({ from: wallet1 }), "Cannot withdraw 0");
     });
   });
 });

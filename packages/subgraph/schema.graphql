@@ -12,6 +12,7 @@ type Global @entity {
 
   numberOfOpenTroves: Int!
   numberOfLiquidatedTroves: Int!
+  numberOfRedeemedTroves: Int!
   numberOfTrovesClosedByOwner: Int!
   totalNumberOfTroves: Int!
 
@@ -70,6 +71,7 @@ enum TroveStatus {
   open
   closedByOwner
   closedByLiquidation
+  closedByRedemption
 }
 
 type Trove @entity {
@@ -141,15 +143,10 @@ interface Change {
 enum TroveOperation {
   openTrove
   closeTrove
-  depositCollateral
-  withdrawCollateral
-  mint
-  repay
   adjustTrove
   accrueRewards
   liquidateInNormalMode
   liquidateInRecoveryMode
-  partiallyLiquidateInRecoveryMode
   redeemCollateral
 }
 

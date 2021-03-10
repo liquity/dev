@@ -9,7 +9,7 @@ Parameters of an [openTrove()](./lib-base.transactableliquity.opentrove.md) tran
 <b>Signature:</b>
 
 ```typescript
-export declare type TroveCreationParams<T> = _CollateralDeposit<T> & _NoCollateralWithdrawal & Partial<_LUSDBorrowing<T>> & _NoLUSDRepayment;
+export declare type TroveCreationParams<T = unknown> = _CollateralDeposit<T> & _NoCollateralWithdrawal & _LUSDBorrowing<T> & _NoLUSDRepayment;
 ```
 
 ## Remarks
@@ -24,7 +24,7 @@ The type parameter `T` specifies the allowed value type(s) of the particular `Tr
 
 <tr> <td> depositCollateral </td> <td> T </td> <td> The amount of collateral that's deposited. </td> </tr>
 
-<tr> <td> borrowLUSD? </td> <td> T </td> <td> <i>(Optional)</i> The amount of LUSD that's borrowed. </td> </tr>
+<tr> <td> borrowLUSD </td> <td> T </td> <td> The amount of LUSD that's borrowed. </td> </tr>
 
 </table>
 

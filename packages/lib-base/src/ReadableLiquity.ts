@@ -1,5 +1,5 @@
 import { Decimal } from "./Decimal";
-import { Trove, TroveWithPendingRedistribution } from "./Trove";
+import { Trove, TroveWithPendingRedistribution, UserTrove } from "./Trove";
 import { StabilityDeposit } from "./StabilityDeposit";
 import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
@@ -77,7 +77,7 @@ export interface ReadableLiquity {
    *
    * @param address - Address that owns the Trove.
    */
-  getTrove(address?: string): Promise<Trove>;
+  getTrove(address?: string): Promise<UserTrove>;
 
   /**
    * Get number of Troves that are currently open.
@@ -134,7 +134,7 @@ export interface ReadableLiquity {
   /** @internal */
   getTroves(
     params: TroveListingParams & { beforeRedistribution: true }
-  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+  ): Promise<TroveWithPendingRedistribution[]>;
 
   /**
    * Get a slice from the list of Troves.
@@ -142,7 +142,10 @@ export interface ReadableLiquity {
    * @param params - Controls how the list is sorted, and where the slice begins and ends.
    * @returns Pairs of owner addresses and their Troves.
    */
-  getTroves(params: TroveListingParams): Promise<[address: string, trove: Trove][]>;
+  getTroves(params: TroveListingParams): Promise<UserTrove[]>;
+
+  /** @internal */
+  _getFeesInNormalMode(): Promise<Fees>;
 
   /**
    * Get a calculator for current fees.

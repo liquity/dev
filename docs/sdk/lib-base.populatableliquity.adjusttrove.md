@@ -9,7 +9,7 @@ Adjust existing Trove by changing its collateral, debt, or both.
 <b>Signature:</b>
 
 ```typescript
-adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>>;
+adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>>;
 ```
 
 ## Parameters
@@ -17,6 +17,7 @@ adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<PopulatedLiquity
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; | Parameters of the adjustment. |
+|  maxBorrowingRate | [Decimalish](./lib-base.decimalish.md) | Maximum acceptable [borrowing rate](./lib-base.fees.borrowingrate.md) if <code>params</code> includes <code>borrowLUSD</code>. |
 
 <b>Returns:</b>
 
@@ -24,5 +25,7 @@ Promise&lt;[PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.
 
 ## Remarks
 
-The transaction will fail if the Trove's debt would fall below [LUSD\_LIQUIDATION\_RESERVE](./lib-base.lusd_liquidation_reserve.md)<!-- -->.
+The transaction will fail if the Trove's debt would fall below [LUSD\_MINIMUM\_DEBT](./lib-base.lusd_minimum_debt.md)<!-- -->.
+
+If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum acceptable rate.
 

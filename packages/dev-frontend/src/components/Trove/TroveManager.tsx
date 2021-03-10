@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 
-import { LUSD_LIQUIDATION_RESERVE, LiquityStoreState, Decimal, Decimalish } from "@liquity/lib-base";
+import { LiquityStoreState, Decimal, Decimalish, LUSD_MINIMUM_DEBT, Trove } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 import { Flex, Button } from "theme-ui";
 import { TroveEditor } from "./TroveEditor";
@@ -9,30 +9,23 @@ import { useTroveView } from "./context/TroveViewContext";
 
 const init = ({ trove }: LiquityStoreState) => ({
   original: trove,
-  edited: trove,
+  edited: new Trove(trove.collateral, trove.debt),
   changePending: false,
   debtDirty: false,
-  addedGasCompensation: false
+  addedMinimumDebt: false
 });
 
 type TroveManagerState = ReturnType<typeof init>;
 type TroveManagerAction =
   | LiquityStoreUpdate
-  | {
-      type:
-        | "startChange"
-        | "finishChange"
-        | "revert"
-        | "addDebtCompensation"
-        | "removeDebtCompensation";
-    }
+  | { type: "startChange" | "finishChange" | "revert" | "addMinimumDebt" | "removeMinimumDebt" }
   | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
 
 const reduceWith = (action: TroveManagerAction) => (state: TroveManagerState): TroveManagerState =>
   reduce(state, action);
 
-const addDebtCompensation = reduceWith({ type: "addDebtCompensation" });
-const removeDebtCompensation = reduceWith({ type: "removeDebtCompensation" });
+const addMinimumDebt = reduceWith({ type: "addMinimumDebt" });
+const removeMinimumDebt = reduceWith({ type: "removeMinimumDebt" });
 const finishChange = reduceWith({ type: "finishChange" });
 const revert = reduceWith({ type: "revert" });
 
@@ -40,7 +33,7 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
   // console.log(state);
   // console.log(action);
 
-  const { original, edited, changePending, debtDirty, addedGasCompensation } = state;
+  const { original, edited, changePending, debtDirty, addedMinimumDebt } = state;
 
   switch (action.type) {
     case "startChange": {
@@ -61,10 +54,10 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
 
       if (!debtDirty) {
         if (edited.isEmpty && newCollateral.nonZero) {
-          return addDebtCompensation(newState);
+          return addMinimumDebt(newState);
         }
-        if (addedGasCompensation && newCollateral.isZero) {
-          return removeDebtCompensation(newState);
+        if (addedMinimumDebt && newCollateral.isZero) {
+          return removeMinimumDebt(newState);
         }
       }
 
@@ -78,26 +71,26 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
         debtDirty: true
       };
 
-    case "addDebtCompensation":
+    case "addMinimumDebt":
       return {
         ...state,
-        edited: edited.setDebt(LUSD_LIQUIDATION_RESERVE),
-        addedGasCompensation: true
+        edited: edited.setDebt(LUSD_MINIMUM_DEBT),
+        addedMinimumDebt: true
       };
 
-    case "removeDebtCompensation":
+    case "removeMinimumDebt":
       return {
         ...state,
         edited: edited.setDebt(0),
-        addedGasCompensation: false
+        addedMinimumDebt: false
       };
 
     case "revert":
       return {
         ...state,
-        edited: original,
+        edited: new Trove(original.collateral, original.debt),
         debtDirty: false,
-        addedGasCompensation: false
+        addedMinimumDebt: false
       };
 
     case "updateStore": {
@@ -137,9 +130,12 @@ export const TroveManager: React.FC = () => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees } = useLiquitySelector(select);
 
-  const change = original.whatChanged(edited, 0);
   const borrowingRate = fees.borrowingRate();
+  const change = original.whatChanged(edited, borrowingRate);
+  // Reapply change to get the exact state the Trove will end up in (which could be slightly
+  // different from `edited` due to imprecision).
   const afterFee = original.apply(change, borrowingRate);
+  const maxBorrowingRate = borrowingRate.add(0.005); // TODO slippage tolerance
 
   // console.log("TroveManager render", { original, edited, change });
   const { recordEvent } = useTroveView();
@@ -152,7 +148,6 @@ export const TroveManager: React.FC = () => {
     <TroveEditor
       original={original}
       edited={edited}
-      afterFee={afterFee}
       borrowingRate={borrowingRate}
       change={change}
       changePending={changePending}
@@ -167,6 +162,7 @@ export const TroveManager: React.FC = () => {
         <TroveAction
           original={original}
           edited={edited}
+          maxBorrowingRate={maxBorrowingRate}
           afterFee={afterFee}
           change={change}
           changePending={changePending}

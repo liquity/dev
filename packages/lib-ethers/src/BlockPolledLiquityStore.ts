@@ -1,4 +1,5 @@
 import { BigNumber } from "@ethersproject/bignumber";
+import { AddressZero } from "@ethersproject/constants";
 
 import {
   Decimal,
@@ -12,7 +13,7 @@ import {
 
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 import { EthersLiquityConnection, _getProvider } from "./EthersLiquityConnection";
-import { EthersProvider } from "./types";
+import { EthersCallOverrides, EthersProvider } from "./types";
 
 /**
  * Extra state added to {@link @liquity/lib-base#LiquityStoreState} by
@@ -71,6 +72,21 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     this._provider = _getProvider(readable.connection);
   }
 
+  private async _getRiskiestTroveBeforeRedistribution(
+    overrides?: EthersCallOverrides
+  ): Promise<TroveWithPendingRedistribution> {
+    const riskiestTroves = await this._readable.getTroves(
+      { first: 1, sortedBy: "ascendingCollateralRatio", beforeRedistribution: true },
+      overrides
+    );
+
+    if (riskiestTroves.length === 0) {
+      return new TroveWithPendingRedistribution(AddressZero, "nonExistent");
+    }
+
+    return riskiestTroves[0];
+  }
+
   private _get(blockTag?: number): Promise<LiquityStoreBaseState> {
     const { userAddress, frontendTag } = this.connection;
 
@@ -80,8 +96,9 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       totalRedistributed: this._readable.getTotalRedistributed({ blockTag }),
       total: this._readable.getTotal({ blockTag }),
       lusdInStabilityPool: this._readable.getLUSDInStabilityPool({ blockTag }),
-      fees: this._readable.getFees({ blockTag }),
+      _feesInNormalMode: this._readable._getFeesInNormalMode({ blockTag }),
       totalStakedLQTY: this._readable.getTotalStakedLQTY({ blockTag }),
+      _riskiestTroveBeforeRedistribution: this._getRiskiestTroveBeforeRedistribution({ blockTag }),
 
       frontend: frontendTag
         ? this._readable.getFrontendStatus(frontendTag, { blockTag })
@@ -107,7 +124,10 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
             lusdBalance: Decimal.ZERO,
             lqtyBalance: Decimal.ZERO,
             collateralSurplusBalance: Decimal.ZERO,
-            troveBeforeRedistribution: new TroveWithPendingRedistribution(),
+            troveBeforeRedistribution: new TroveWithPendingRedistribution(
+              AddressZero,
+              "nonExistent"
+            ),
             stabilityDeposit: new StabilityDeposit(),
             lqtyStake: new LQTYStake(),
             ownFrontend: { status: "unregistered" }

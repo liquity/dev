@@ -1,29 +1,7 @@
 import { Decimal, Decimalish } from "./Decimal";
 import { Trove, TroveAdjustmentParams, TroveClosureParams, TroveCreationParams } from "./Trove";
 import { StabilityDepositChange } from "./StabilityDeposit";
-
-/**
- * A transaction that has been prepared for sending.
- *
- * @remarks
- * Implemented by {@link @liquity/lib-ethers#PopulatedEthersLiquityTransaction}.
- *
- * @public
- */
-export interface PopulatedLiquityTransaction<
-  P = unknown,
-  T extends SentLiquityTransaction = SentLiquityTransaction
-> {
-  /** Implementation-specific populated transaction object. */
-  readonly rawPopulatedTransaction: P;
-
-  /**
-   * Send the transaction.
-   *
-   * @returns An object that implements {@link @liquity/lib-base#SentLiquityTransaction}.
-   */
-  send(): Promise<T>;
-}
+import { FailedReceipt } from "./SendableLiquity";
 
 /**
  * Thrown by {@link TransactableLiquity} functions in case of transaction failure.
@@ -40,115 +18,6 @@ export class TransactionFailedError<T extends FailedReceipt = FailedReceipt> ext
     this.failedReceipt = failedReceipt;
   }
 }
-
-/**
- * A transaction that has already been sent.
- *
- * @remarks
- * Implemented by {@link @liquity/lib-ethers#SentEthersLiquityTransaction}.
- *
- * @public
- */
-export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = LiquityReceipt> {
-  /** Implementation-specific sent transaction object. */
-  readonly rawSentTransaction: S;
-
-  /**
-   * Check whether the transaction has been mined, and whether it was successful.
-   *
-   * @remarks
-   * Unlike {@link @liquity/lib-base#SentLiquityTransaction.waitForReceipt | waitForReceipt()},
-   * this function doesn't wait for the transaction to be mined.
-   */
-  getReceipt(): Promise<T>;
-
-  /**
-   * Wait for the transaction to be mined, and check whether it was successful.
-   *
-   * @returns Either a {@link @liquity/lib-base#FailedReceipt} or a
-   *          {@link @liquity/lib-base#SuccessfulReceipt}.
-   */
-  waitForReceipt(): Promise<Extract<T, MinedReceipt>>;
-}
-
-/**
- * Indicates that the transaction hasn't been mined yet.
- *
- * @remarks
- * Returned by {@link SentLiquityTransaction.getReceipt}.
- *
- * @public
- */
-export type PendingReceipt = { status: "pending" };
-
-/** @internal */
-export const _pendingReceipt: PendingReceipt = { status: "pending" };
-
-/**
- * Indicates that the transaction has been mined, but it failed.
- *
- * @remarks
- * The `rawReceipt` property is an implementation-specific transaction receipt object.
- *
- * Returned by {@link SentLiquityTransaction.getReceipt} and
- * {@link SentLiquityTransaction.waitForReceipt}.
- *
- * @public
- */
-export type FailedReceipt<R = unknown> = { status: "failed"; rawReceipt: R };
-
-/** @internal */
-export const _failedReceipt = <R>(rawReceipt: R): FailedReceipt<R> => ({
-  status: "failed",
-  rawReceipt
-});
-
-/**
- * Indicates that the transaction has succeeded.
- *
- * @remarks
- * The `rawReceipt` property is an implementation-specific transaction receipt object.
- *
- * The `details` property may contain more information about the transaction.
- * See the return types of {@link TransactableLiquity} functions for the exact contents of `details`
- * for each type of Liquity transaction.
- *
- * Returned by {@link SentLiquityTransaction.getReceipt} and
- * {@link SentLiquityTransaction.waitForReceipt}.
- *
- * @public
- */
-export type SuccessfulReceipt<R = unknown, D = unknown> = {
-  status: "succeeded";
-  rawReceipt: R;
-  details: D;
-};
-
-/** @internal */
-export const _successfulReceipt = <R, D>(
-  rawReceipt: R,
-  details: D,
-  toString?: () => string
-): SuccessfulReceipt<R, D> => ({
-  status: "succeeded",
-  rawReceipt,
-  details,
-  ...(toString ? { toString } : {})
-});
-
-/**
- * Either a {@link FailedReceipt} or a {@link SuccessfulReceipt}.
- *
- * @public
- */
-export type MinedReceipt<R = unknown, D = unknown> = FailedReceipt<R> | SuccessfulReceipt<R, D>;
-
-/**
- * One of either a {@link PendingReceipt}, a {@link FailedReceipt} or a {@link SuccessfulReceipt}.
- *
- * @public
- */
-export type LiquityReceipt<R = unknown, D = unknown> = PendingReceipt | MinedReceipt<R, D>;
 
 /**
  * Details of an {@link TransactableLiquity.openTrove | openTrove()} transaction.
@@ -301,11 +170,20 @@ export interface TransactableLiquity {
    * Open a new Trove by depositing collateral and borrowing LUSD.
    *
    * @param params - How much to deposit and borrow.
+   * @param maxBorrowingRate - Maximum acceptable
+   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
+   *
+   * @remarks
+   * If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum
+   * acceptable rate.
    */
-  openTrove(params: TroveCreationParams<Decimalish>): Promise<TroveCreationDetails>;
+  openTrove(
+    params: TroveCreationParams<Decimalish>,
+    maxBorrowingRate?: Decimalish
+  ): Promise<TroveCreationDetails>;
 
   /**
    * Close existing Trove by repaying all debt and withdrawing all collateral.
@@ -319,15 +197,24 @@ export interface TransactableLiquity {
    * Adjust existing Trove by changing its collateral, debt, or both.
    *
    * @param params - Parameters of the adjustment.
+   * @param maxBorrowingRate - Maximum acceptable
+   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate} if
+   *                           `params` includes `borrowLUSD`.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    *
    * @remarks
    * The transaction will fail if the Trove's debt would fall below
-   * {@link @liquity/lib-base#LUSD_LIQUIDATION_RESERVE}.
+   * {@link @liquity/lib-base#LUSD_MINIMUM_DEBT}.
+   *
+   * If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum
+   * acceptable rate.
    */
-  adjustTrove(params: TroveAdjustmentParams<Decimalish>): Promise<TroveAdjustmentDetails>;
+  adjustTrove(
+    params: TroveAdjustmentParams<Decimalish>,
+    maxBorrowingRate?: Decimalish
+  ): Promise<TroveAdjustmentDetails>;
 
   /**
    * Adjust existing Trove by depositing more collateral.
@@ -367,6 +254,8 @@ export interface TransactableLiquity {
    * Adjust existing Trove by borrowing more LUSD.
    *
    * @param amount - The amount of LUSD to borrow.
+   * @param maxBorrowingRate - Maximum acceptable
+   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -375,10 +264,10 @@ export interface TransactableLiquity {
    * Equivalent to:
    *
    * ```typescript
-   * adjustTrove({ borrowLUSD: amount })
+   * adjustTrove({ borrowLUSD: amount }, maxBorrowingRate)
    * ```
    */
-  borrowLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
+  borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish): Promise<TroveAdjustmentDetails>;
 
   /**
    * Adjust existing Trove by repaying some of its debt.
@@ -506,11 +395,17 @@ export interface TransactableLiquity {
    * Redeem LUSD to native currency (e.g. Ether) at face value.
    *
    * @param amount - Amount of LUSD to be redeemed.
+   * @param maxRedemptionRate - Maximum acceptable
+   *                            {@link @liquity/lib-base#Fees.redemptionRate | redemption rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
+   *
+   * @remarks
+   * If `maxRedemptionRate` is omitted, the current redemption rate (based on `amount`) plus 0.1%
+   * is used as maximum acceptable rate.
    */
-  redeemLUSD(amount: Decimalish): Promise<RedemptionDetails>;
+  redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish): Promise<RedemptionDetails>;
 
   /**
    * Claim leftover collateral after a liquidation or redemption.
@@ -573,318 +468,4 @@ export interface TransactableLiquity {
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
   registerFrontend(kickbackRate: Decimalish): Promise<void>;
-}
-
-/** @internal */
-export type _SendableFrom<T, R, S> = {
-  [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer D>
-    ? (...args: A) => Promise<SentLiquityTransaction<S, LiquityReceipt<R, D>>>
-    : never;
-};
-
-/**
- * Send Liquity transactions.
- *
- * @remarks
- * The functions return an object implementing {@link SentLiquityTransaction}, which can be used
- * to monitor the transaction and get its details when it succeeds.
- *
- * Implemented by {@link @liquity/lib-ethers#SendableEthersLiquity}.
- *
- * @public
- */
-export interface SendableLiquity<R = unknown, S = unknown>
-  extends _SendableFrom<TransactableLiquity, R, S> {
-  // Methods re-declared for documentation purposes
-
-  /** {@inheritDoc TransactableLiquity.openTrove} */
-  openTrove(
-    params: TroveCreationParams<Decimalish>
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveCreationDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.closeTrove} */
-  closeTrove(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveClosureDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.adjustTrove} */
-  adjustTrove(
-    params: TroveAdjustmentParams<Decimalish>
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.depositCollateral} */
-  depositCollateral(
-    amount: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.withdrawCollateral} */
-  withdrawCollateral(
-    amount: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.borrowLUSD} */
-  borrowLUSD(
-    amount: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.repayLUSD} */
-  repayLUSD(
-    amount: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
-
-  /** @internal */
-  setPrice(price: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-
-  /** {@inheritDoc TransactableLiquity.liquidate} */
-  liquidate(
-    address: string | string[]
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, LiquidationDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.liquidateUpTo} */
-  liquidateUpTo(
-    maximumNumberOfTrovesToLiquidate: number
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, LiquidationDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.depositLUSDInStabilityPool} */
-  depositLUSDInStabilityPool(
-    amount: Decimalish,
-    frontendTag?: string
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.withdrawLUSDFromStabilityPool} */
-  withdrawLUSDFromStabilityPool(
-    amount: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.withdrawGainsFromStabilityPool} */
-  withdrawGainsFromStabilityPool(): Promise<
-    SentLiquityTransaction<S, LiquityReceipt<R, StabilityPoolGainsWithdrawalDetails>>
-  >;
-
-  /** {@inheritDoc TransactableLiquity.transferCollateralGainToTrove} */
-  transferCollateralGainToTrove(): Promise<
-    SentLiquityTransaction<S, LiquityReceipt<R, CollateralGainTransferDetails>>
-  >;
-
-  /** {@inheritDoc TransactableLiquity.sendLUSD} */
-  sendLUSD(
-    toAddress: string,
-    amount: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-
-  /** {@inheritDoc TransactableLiquity.sendLQTY} */
-  sendLQTY(
-    toAddress: string,
-    amount: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-
-  /** {@inheritDoc TransactableLiquity.redeemLUSD} */
-  redeemLUSD(
-    amount: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>;
-
-  /** {@inheritDoc TransactableLiquity.claimCollateralSurplus} */
-  claimCollateralSurplus(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-
-  /** {@inheritDoc TransactableLiquity.stakeLQTY} */
-  stakeLQTY(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-
-  /** {@inheritDoc TransactableLiquity.unstakeLQTY} */
-  unstakeLQTY(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-
-  /** {@inheritDoc TransactableLiquity.withdrawGainsFromStaking} */
-  withdrawGainsFromStaking(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-
-  /** {@inheritDoc TransactableLiquity.registerFrontend} */
-  registerFrontend(
-    kickbackRate: Decimalish
-  ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-}
-
-/** @internal */
-export type _PopulatableFrom<T, P> = {
-  [M in keyof T]: T[M] extends (...args: infer A) => Promise<infer U>
-    ? U extends SentLiquityTransaction
-      ? (...args: A) => Promise<PopulatedLiquityTransaction<P, U>>
-      : never
-    : never;
-};
-
-/**
- * Prepare Liquity transactions for sending.
- *
- * @remarks
- * The functions return an object implementing {@link PopulatedLiquityTransaction}, which can be
- * used to send the transaction and get a {@link SentLiquityTransaction}.
- *
- * Implemented by {@link @liquity/lib-ethers#PopulatableEthersLiquity}.
- *
- * @public
- */
-export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
-  extends _PopulatableFrom<SendableLiquity<R, S>, P> {
-  // Methods re-declared for documentation purposes
-
-  /** {@inheritDoc TransactableLiquity.openTrove} */
-  openTrove(
-    params: TroveCreationParams<Decimalish>
-  ): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, TroveCreationDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.closeTrove} */
-  closeTrove(): Promise<
-    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveClosureDetails>>>
-  >;
-
-  /** {@inheritDoc TransactableLiquity.adjustTrove} */
-  adjustTrove(
-    params: TroveAdjustmentParams<Decimalish>
-  ): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.depositCollateral} */
-  depositCollateral(
-    amount: Decimalish
-  ): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.withdrawCollateral} */
-  withdrawCollateral(
-    amount: Decimalish
-  ): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.borrowLUSD} */
-  borrowLUSD(
-    amount: Decimalish
-  ): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.repayLUSD} */
-  repayLUSD(
-    amount: Decimalish
-  ): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>
-    >
-  >;
-
-  /** @internal */
-  setPrice(
-    price: Decimalish
-  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
-
-  /** {@inheritDoc TransactableLiquity.liquidate} */
-  liquidate(
-    address: string | string[]
-  ): Promise<
-    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, LiquidationDetails>>>
-  >;
-
-  /** {@inheritDoc TransactableLiquity.liquidateUpTo} */
-  liquidateUpTo(
-    maximumNumberOfTrovesToLiquidate: number
-  ): Promise<
-    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, LiquidationDetails>>>
-  >;
-
-  /** {@inheritDoc TransactableLiquity.depositLUSDInStabilityPool} */
-  depositLUSDInStabilityPool(
-    amount: Decimalish,
-    frontendTag?: string
-  ): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.withdrawLUSDFromStabilityPool} */
-  withdrawLUSDFromStabilityPool(
-    amount: Decimalish
-  ): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.withdrawGainsFromStabilityPool} */
-  withdrawGainsFromStabilityPool(): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, StabilityPoolGainsWithdrawalDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.transferCollateralGainToTrove} */
-  transferCollateralGainToTrove(): Promise<
-    PopulatedLiquityTransaction<
-      P,
-      SentLiquityTransaction<S, LiquityReceipt<R, CollateralGainTransferDetails>>
-    >
-  >;
-
-  /** {@inheritDoc TransactableLiquity.sendLUSD} */
-  sendLUSD(
-    toAddress: string,
-    amount: Decimalish
-  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
-
-  /** {@inheritDoc TransactableLiquity.sendLQTY} */
-  sendLQTY(
-    toAddress: string,
-    amount: Decimalish
-  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
-
-  /** {@inheritDoc TransactableLiquity.redeemLUSD} */
-  redeemLUSD(
-    amount: Decimalish
-  ): Promise<
-    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>
-  >;
-
-  /** {@inheritDoc TransactableLiquity.claimCollateralSurplus} */
-  claimCollateralSurplus(): Promise<
-    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>
-  >;
-
-  /** {@inheritDoc TransactableLiquity.stakeLQTY} */
-  stakeLQTY(
-    amount: Decimalish
-  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
-
-  /** {@inheritDoc TransactableLiquity.unstakeLQTY} */
-  unstakeLQTY(
-    amount: Decimalish
-  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
-
-  /** {@inheritDoc TransactableLiquity.withdrawGainsFromStaking} */
-  withdrawGainsFromStaking(): Promise<
-    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>
-  >;
-
-  /** {@inheritDoc TransactableLiquity.registerFrontend} */
-  registerFrontend(
-    kickbackRate: Decimalish
-  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
 }

@@ -23,16 +23,16 @@ Implemented by [SendableEthersLiquity](./lib-ethers.sendableethersliquity.md)<!-
 
 |  Method | Description |
 |  --- | --- |
-|  [adjustTrove(params)](./lib-base.sendableliquity.adjusttrove.md) | Adjust existing Trove by changing its collateral, debt, or both. |
-|  [borrowLUSD(amount)](./lib-base.sendableliquity.borrowlusd.md) | Adjust existing Trove by borrowing more LUSD. |
+|  [adjustTrove(params, maxBorrowingRate)](./lib-base.sendableliquity.adjusttrove.md) | Adjust existing Trove by changing its collateral, debt, or both. |
+|  [borrowLUSD(amount, maxBorrowingRate)](./lib-base.sendableliquity.borrowlusd.md) | Adjust existing Trove by borrowing more LUSD. |
 |  [claimCollateralSurplus()](./lib-base.sendableliquity.claimcollateralsurplus.md) | Claim leftover collateral after a liquidation or redemption. |
 |  [closeTrove()](./lib-base.sendableliquity.closetrove.md) | Close existing Trove by repaying all debt and withdrawing all collateral. |
 |  [depositCollateral(amount)](./lib-base.sendableliquity.depositcollateral.md) | Adjust existing Trove by depositing more collateral. |
 |  [depositLUSDInStabilityPool(amount, frontendTag)](./lib-base.sendableliquity.depositlusdinstabilitypool.md) | Make a new Stability Deposit, or top up existing one. |
 |  [liquidate(address)](./lib-base.sendableliquity.liquidate.md) | Liquidate one or more undercollateralized Troves. |
 |  [liquidateUpTo(maximumNumberOfTrovesToLiquidate)](./lib-base.sendableliquity.liquidateupto.md) | Liquidate the least collateralized Troves up to a maximum number. |
-|  [openTrove(params)](./lib-base.sendableliquity.opentrove.md) | Open a new Trove by depositing collateral and borrowing LUSD. |
-|  [redeemLUSD(amount)](./lib-base.sendableliquity.redeemlusd.md) | Redeem LUSD to native currency (e.g. Ether) at face value. |
+|  [openTrove(params, maxBorrowingRate)](./lib-base.sendableliquity.opentrove.md) | Open a new Trove by depositing collateral and borrowing LUSD. |
+|  [redeemLUSD(amount, maxRedemptionRate)](./lib-base.sendableliquity.redeemlusd.md) | Redeem LUSD to native currency (e.g. Ether) at face value. |
 |  [registerFrontend(kickbackRate)](./lib-base.sendableliquity.registerfrontend.md) | Register current wallet address as a Liquity frontend. |
 |  [repayLUSD(amount)](./lib-base.sendableliquity.repaylusd.md) | Adjust existing Trove by repaying some of its debt. |
 |  [sendLQTY(toAddress, amount)](./lib-base.sendableliquity.sendlqty.md) | Send LQTY tokens to an address. |

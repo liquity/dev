@@ -6,6 +6,7 @@ const getDigits = (numDigits: number) => TEN.pow(numDigits);
 
 const MAX_UINT_256 = "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 const PRECISION = 18;
+const ONE = BigNumber.from(1);
 const TEN = BigNumber.from(10);
 const DIGITS = getDigits(PRECISION);
 
@@ -110,11 +111,17 @@ export class Decimal {
   static from(decimalish: Decimalish): Decimal {
     switch (typeof decimalish) {
       case "object":
-        return decimalish;
+        if (decimalish instanceof Decimal) {
+          return decimalish;
+        } else {
+          throw new Error("invalid Decimalish value");
+        }
       case "string":
         return Decimal._fromString(decimalish);
       case "number":
         return Decimal._fromString(decimalish.toString());
+      default:
+        throw new Error("invalid Decimalish value");
     }
   }
 
@@ -201,6 +208,19 @@ export class Decimal {
     }
 
     return new Decimal(this._bigNumber.mul(DIGITS).div(divider._bigNumber));
+  }
+
+  /** @internal */
+  _divCeil(divider: Decimalish): Decimal {
+    divider = Decimal.from(divider);
+
+    if (divider.isZero) {
+      return Decimal.INFINITY;
+    }
+
+    return new Decimal(
+      this._bigNumber.mul(DIGITS).add(divider._bigNumber.sub(ONE)).div(divider._bigNumber)
+    );
   }
 
   mulDiv(multiplier: Decimalish, divider: Decimalish): Decimal {

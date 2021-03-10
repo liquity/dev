@@ -16,6 +16,7 @@
 |  [TransactionFailedError](./lib-base.transactionfailederror.md) | Thrown by [TransactableLiquity](./lib-base.transactableliquity.md) functions in case of transaction failure. |
 |  [Trove](./lib-base.trove.md) | A combination of collateral and debt. |
 |  [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | A Trove in its state after the last direct modification. |
+|  [UserTrove](./lib-base.usertrove.md) | A Trove that is associated with a single owner. |
 
 ## Interfaces
 
@@ -28,6 +29,7 @@
 |  [LiquityStoreListenerParams](./lib-base.liquitystorelistenerparams.md) | Parameters passed to [LiquityStore](./lib-base.liquitystore.md) listeners. |
 |  [PopulatableLiquity](./lib-base.populatableliquity.md) | Prepare Liquity transactions for sending. |
 |  [PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.md) | A transaction that has been prepared for sending. |
+|  [PopulatedRedemption](./lib-base.populatedredemption.md) | A redemption transaction that has been prepared for sending. |
 |  [ReadableLiquity](./lib-base.readableliquity.md) | Read the state of the Liquity protocol. |
 |  [RedemptionDetails](./lib-base.redemptiondetails.md) | Details of a [redeemLUSD()](./lib-base.transactableliquity.redeemlusd.md) transaction. |
 |  [SendableLiquity](./lib-base.sendableliquity.md) | Send Liquity transactions. |
@@ -46,6 +48,8 @@
 |  --- | --- |
 |  [CRITICAL\_COLLATERAL\_RATIO](./lib-base.critical_collateral_ratio.md) | Total collateral ratio below which recovery mode is triggered. |
 |  [LUSD\_LIQUIDATION\_RESERVE](./lib-base.lusd_liquidation_reserve.md) | Amount of LUSD that's reserved for compensating the liquidator of a Trove. |
+|  [LUSD\_MINIMUM\_DEBT](./lib-base.lusd_minimum_debt.md) | A Trove must always have at least this much debt. |
+|  [LUSD\_MINIMUM\_NET\_DEBT](./lib-base.lusd_minimum_net_debt.md) | A Trove must always have at least this much debt on top of the [liquidation reserve](./lib-base.lusd_liquidation_reserve.md)<!-- -->. |
 |  [MAXIMUM\_BORROWING\_RATE](./lib-base.maximum_borrowing_rate.md) | Value that the [borrowing rate](./lib-base.fees.borrowingrate.md) will never exceed. |
 |  [MINIMUM\_BORROWING\_RATE](./lib-base.minimum_borrowing_rate.md) | Value that the [borrowing rate](./lib-base.fees.borrowingrate.md) will never decay below. |
 |  [MINIMUM\_COLLATERAL\_RATIO](./lib-base.minimum_collateral_ratio.md) | Collateral ratio below which a Trove can be liquidated in normal mode. |
@@ -70,4 +74,5 @@
 |  [TroveClosureParams](./lib-base.troveclosureparams.md) | Parameters of a [closeTrove()](./lib-base.transactableliquity.closetrove.md) transaction. |
 |  [TroveCreationError](./lib-base.trovecreationerror.md) | Describes why a Trove could not be created. |
 |  [TroveCreationParams](./lib-base.trovecreationparams.md) | Parameters of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction. |
+|  [UserTroveStatus](./lib-base.usertrovestatus.md) | Represents whether a UserTrove is open or not, or why it was closed. |
 

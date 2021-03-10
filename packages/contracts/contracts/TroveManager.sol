@@ -20,17 +20,17 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     address public borrowerOperationsAddress;
 
-    IStabilityPool public stabilityPool;
+    IStabilityPool public override stabilityPool;
 
     address gasPoolAddress;
 
     ICollSurplusPool collSurplusPool;
 
-    ILUSDToken public lusdToken;
+    ILUSDToken public override lusdToken;
 
-    ILQTYToken public lqtyToken;
+    ILQTYToken public override lqtyToken;
 
-    ILQTYStaking public lqtyStaking;
+    ILQTYStaking public override lqtyStaking;
 
     // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
     ISortedTroves public sortedTroves;
@@ -44,7 +44,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
      */
     uint constant public MINUTE_DECAY_FACTOR = 999037758833783000;
     uint constant public REDEMPTION_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
-    uint constant public BORROWING_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
     uint constant public MAX_BORROWING_FEE = DECIMAL_PRECISION / 100 * 5; // 5%
 
     // During bootsrap period redemptions are not allowed
@@ -61,7 +60,13 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // The timestamp of the latest fee operation (redemption or new LUSD issuance)
     uint public lastFeeOperationTime;
 
-    enum Status { nonExistent, active, closed }
+    enum Status {
+        nonExistent,
+        active,
+        closedByOwner,
+        closedByLiquidation,
+        closedByRedemption
+    }
 
     // Store the necessary data for a trove
     struct Trove {
@@ -333,7 +338,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         singleLiquidation.debtToRedistribute,
         singleLiquidation.collToRedistribute) = _getOffsetAndRedistributionVals(singleLiquidation.entireTroveDebt, collToLiquidate, _LUSDInStabPool);
 
-        _closeTrove(_borrower);
+        _closeTrove(_borrower, Status.closedByLiquidation);
         emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, TroveManagerOperation.liquidateInNormalMode);
         emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.liquidateInNormalMode);
         return singleLiquidation;
@@ -373,7 +378,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             singleLiquidation.debtToRedistribute = singleLiquidation.entireTroveDebt;
             singleLiquidation.collToRedistribute = vars.collToLiquidate;
 
-            _closeTrove(_borrower);
+            _closeTrove(_borrower, Status.closedByLiquidation);
             emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, TroveManagerOperation.liquidateInRecoveryMode);
             emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.liquidateInRecoveryMode);
             
@@ -387,7 +392,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             singleLiquidation.debtToRedistribute,
             singleLiquidation.collToRedistribute) = _getOffsetAndRedistributionVals(singleLiquidation.entireTroveDebt, vars.collToLiquidate, _LUSDInStabPool);
 
-            _closeTrove(_borrower);
+            _closeTrove(_borrower, Status.closedByLiquidation);
             emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, TroveManagerOperation.liquidateInRecoveryMode);
             emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.liquidateInRecoveryMode);
         /*
@@ -403,7 +408,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             _removeStake(_borrower);
             singleLiquidation = _getCappedOffsetVals(singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, _price);
 
-            _closeTrove(_borrower);
+            _closeTrove(_borrower, Status.closedByLiquidation);
             if (singleLiquidation.collSurplus > 0) {
                 collSurplusPool.accountSurplus(_borrower, singleLiquidation.collSurplus);
             }
@@ -823,7 +828,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         if (newDebt == LUSD_GAS_COMPENSATION) {
             // No debt left in the Trove (except for the gas compensation), therefore the trove gets closed
             _removeStake(_borrower);
-            _closeTrove(_borrower);
+            _closeTrove(_borrower, Status.closedByRedemption);
             _redeemCloseTrove(_contractsCache, _borrower, LUSD_GAS_COMPENSATION, newColl);
             emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.redeemCollateral);
 
@@ -836,7 +841,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             *
             * If the resultant net debt of the partial is less than the minimum, net debt we bail.
             */
-            if (newNICR != _partialRedemptionHintNICR || _getNetDebt(newDebt) <= MIN_NET_DEBT) {
+            if (newNICR != _partialRedemptionHintNICR || _getNetDebt(newDebt) < MIN_NET_DEBT) {
                 singleRedemption.cancelledPartial = true;
                 return singleRedemption;
             }
@@ -1224,14 +1229,16 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     function closeTrove(address _borrower) external override {
         _requireCallerIsBorrowerOperations();
-        return _closeTrove(_borrower);
+        return _closeTrove(_borrower, Status.closedByOwner);
     }
 
-    function _closeTrove(address _borrower) internal {
+    function _closeTrove(address _borrower, Status closedStatus) internal {
+        assert(closedStatus != Status.nonExistent && closedStatus != Status.active);
+
         uint TroveOwnersArrayLength = TroveOwners.length;
         _requireMoreThanOneTroveInSystem(TroveOwnersArrayLength);
 
-        Troves[_borrower].status = Status.closed;
+        Troves[_borrower].status = closedStatus;
         Troves[_borrower].coll = 0;
         Troves[_borrower].debt = 0;
 
@@ -1287,8 +1294,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     * [A B C D E] => [A E C D], and updates E's Trove struct to point to its new array index.
     */
     function _removeTroveOwner(address _borrower, uint TroveOwnersArrayLength) internal {
+        Status troveStatus = Troves[_borrower].status;
         // It’s set in caller function `_closeTrove`
-        assert(Troves[_borrower].status == Status.closed);
+        assert(troveStatus != Status.nonExistent && troveStatus != Status.active);
 
         uint128 index = Troves[_borrower].arrayIndex;
         uint length = TroveOwnersArrayLength;
@@ -1483,6 +1491,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     function _requireAfterBootstrapPeriod() internal view {
         uint systemDeploymentTime = lqtyToken.getDeploymentStartTime();
         require(block.timestamp >= systemDeploymentTime.add(BOOTSTRAP_PERIOD), "TroveManager: Redemptions are not allowed during bootstrap phase");
+    }
+
+    function _requireValidMaxFeePercentage(uint _maxFeePercentage) internal pure {
+        require(_maxFeePercentage >= REDEMPTION_FEE_FLOOR && _maxFeePercentage <= DECIMAL_PRECISION,
+            "Max fee percentage must be between 0.5% and 100%");
     }
 
     // --- Trove property getters ---

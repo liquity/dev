@@ -90,19 +90,6 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "_newBalance",
-          "type": "uint256"
-        }
-      ],
-      "name": "ETHBalanceUpdated",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
           "indexed": true,
           "internalType": "address",
           "name": "_depositor",
@@ -122,6 +109,19 @@
         }
       ],
       "name": "ETHGainWithdrawn",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "_currentEpoch",
+          "type": "uint128"
+        }
+      ],
+      "name": "EpochUpdated",
       "type": "event"
     },
     {
@@ -216,10 +216,41 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_depositor",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "_frontEnd",
+          "type": "address"
+        }
+      ],
+      "name": "FrontEndTagSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": false,
           "internalType": "uint256",
           "name": "_G",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "_epoch",
+          "type": "uint128"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "_scale",
+          "type": "uint128"
         }
       ],
       "name": "G_Updated",
@@ -261,19 +292,6 @@
         }
       ],
       "name": "LQTYPaidToFrontEnd",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "_newBalance",
-          "type": "uint256"
-        }
-      ],
-      "name": "LUSDBalanceUpdated",
       "type": "event"
     },
     {
@@ -323,9 +341,34 @@
           "internalType": "uint256",
           "name": "_S",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "_epoch",
+          "type": "uint128"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "_scale",
+          "type": "uint128"
         }
       ],
       "name": "S_Updated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint128",
+          "name": "_currentScale",
+          "type": "uint128"
+        }
+      ],
+      "name": "ScaleUpdated",
       "type": "event"
     },
     {
@@ -339,6 +382,32 @@
         }
       ],
       "name": "SortedTrovesAddressChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_newBalance",
+          "type": "uint256"
+        }
+      ],
+      "name": "StabilityPoolETHBalanceUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_newBalance",
+          "type": "uint256"
+        }
+      ],
+      "name": "StabilityPoolLUSDBalanceUpdated",
       "type": "event"
     },
     {

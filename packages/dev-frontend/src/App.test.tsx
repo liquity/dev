@@ -1,12 +1,14 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 
-import { Trove } from "@liquity/lib-base";
+import { Decimal, LUSD_MINIMUM_NET_DEBT, Trove } from "@liquity/lib-base";
 
 import App from "./App";
 
-const params = { depositCollateral: 1, borrowLUSD: 50 };
+const params = { depositCollateral: Decimal.from(20), borrowLUSD: LUSD_MINIMUM_NET_DEBT };
 const trove = Trove.create(params);
+
+console.log(`${trove}`);
 
 /*
  * Just a quick and dirty testcase to prove that the approach can work in our CI pipeline.
@@ -23,8 +25,8 @@ test("there's no smoke", async () => {
   fireEvent.change(getByLabelText(/^debt$/i), { target: { value: `${trove.debt}` } });
 
   const openTroveButton = new RegExp(
-    `^deposit ${params.depositCollateral}(\\.[0-9]+)? eth & ` +
-      `borrow ${params.borrowLUSD}(\\.[0-9]+) lusd$`,
+    `^deposit ${params.depositCollateral.prettify()} eth & ` +
+      `borrow ${params.borrowLUSD.prettify()} lusd$`,
     "i"
   );
   fireEvent.click(getByText(openTroveButton));

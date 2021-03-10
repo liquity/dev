@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IDSGuardFactory",
+  "sourceName": "contracts/Dependencies/DappSys/IDSGuard.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "newGuard",
+      "outputs": [
+        {
+          "internalType": "contract IDSGuard",
+          "name": "guard",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

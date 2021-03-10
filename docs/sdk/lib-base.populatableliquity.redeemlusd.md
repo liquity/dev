@@ -9,7 +9,7 @@ Redeem LUSD to native currency (e.g. Ether) at face value.
 <b>Signature:</b>
 
 ```typescript
-redeemLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>>;
+redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
 ```
 
 ## Parameters
@@ -17,8 +17,13 @@ redeemLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiqui
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to be redeemed. |
+|  maxRedemptionRate | [Decimalish](./lib-base.decimalish.md) | Maximum acceptable [redemption rate](./lib-base.fees.redemptionrate.md)<!-- -->. |
 
 <b>Returns:</b>
 
-Promise&lt;[PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.md)<!-- -->&lt;P, [SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- -->&lt;S, [LiquityReceipt](./lib-base.liquityreceipt.md)<!-- -->&lt;R, [RedemptionDetails](./lib-base.redemptiondetails.md)<!-- -->&gt;&gt;&gt;&gt;
+Promise&lt;[PopulatedRedemption](./lib-base.populatedredemption.md)<!-- -->&lt;P, S, R&gt;&gt;
+
+## Remarks
+
+If `maxRedemptionRate` is omitted, the current redemption rate (based on `amount`<!-- -->) plus 0.1% is used as maximum acceptable rate.
 

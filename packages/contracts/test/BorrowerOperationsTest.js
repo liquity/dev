@@ -738,7 +738,7 @@ contract('BorrowerOperations', async accounts => {
       await assertRevert(borrowerOperations.withdrawLUSD('1000000000000000001', dec(1, 18), A, A, { from: A }), "Max fee percentage must be between 0.5% and 100%")
     })
 
-    it("withdrawLUSD(): reverts if max fee < 0.5%", async () => {
+    it("withdrawLUSD(): reverts if max fee < 0.5% in Normal mode", async () => {
       await borrowerOperations.openTrove(th._100pct, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, dec(20, 18), B, B, { from: B, value: dec(1, 'ether') })
       await borrowerOperations.openTrove(th._100pct, dec(40, 18), C, C, { from: C, value: dec(1, 'ether') })
@@ -1571,6 +1571,28 @@ contract('BorrowerOperations', async accounts => {
     })
 
     // --- adjustTrove() ---
+
+    it("adjustTrove(): reverts if max fee < 0.5% in Normal mode", async () => {
+      await borrowerOperations.openTrove(th._100pct, dec(1950, 18), B, B, { from: B, value: dec(20, 'ether') })
+
+      await assertRevert(borrowerOperations.adjustTrove(0, 0, dec(1, 18), true, A, A, { from: A, value: dec(2, 16) }), "Max fee percentage must be between 0.5% and 100%")
+      await assertRevert(borrowerOperations.adjustTrove(1, 0, dec(1, 18), true, A, A, { from: A, value: dec(2, 16) }), "Max fee percentage must be between 0.5% and 100%")
+      await assertRevert(borrowerOperations.adjustTrove('4999999999999999', 0, dec(1, 18), true, A, A, { from: A, value: dec(2, 16) }), "Max fee percentage must be between 0.5% and 100%")
+    })
+
+    it("adjustTrove(): allows max fee < 0.5% in Recovery mode", async () => {
+      await borrowerOperations.openTrove(th._100pct, dec(1950, 18), A, A, { from: A, value: dec(20, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, dec(1950, 18), A, A, { from: B, value: dec(20, 'ether') })
+
+      await priceFeed.setPrice(dec(100, 18))
+      assert.isTrue(await th.checkRecoveryMode(contracts))
+
+      await borrowerOperations.adjustTrove(0, 0, dec(1, 18), true, A, A, { from: A, value: dec(3, 18) })
+      assert.isTrue(await th.checkRecoveryMode(contracts))
+      await borrowerOperations.adjustTrove(1, 0, dec(1, 18), true, A, A, { from: A, value: dec(2, 16) })
+      assert.isTrue(await th.checkRecoveryMode(contracts))
+      await borrowerOperations.adjustTrove('4999999999999999', 0, dec(1, 18), true, A, A, { from: A, value: dec(2, 16) })
+    })
 
     it("adjustTrove(): decays a non-zero base rate", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, A, A, { from: whale, value: dec(100, 'ether') })
@@ -3183,12 +3205,24 @@ contract('BorrowerOperations', async accounts => {
       await assertRevert(borrowerOperations.openTrove('1000000000000000001', dec(20, 18), B, B, { from: B, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
     })
 
-    it("openTrove(): reverts if max fee < 0.5%", async () => {
-      await assertRevert(borrowerOperations.openTrove(0, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
-      await assertRevert(borrowerOperations.openTrove(1, dec(10, 18), A, A, { from: A, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
-      await assertRevert(borrowerOperations.openTrove('4999999999999999', dec(20, 18), B, B, { from: B, value: dec(1, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
+    it("openTrove(): reverts if max fee < 0.5% in Normal mode", async () => {
+      await assertRevert(borrowerOperations.openTrove(0, dec(1950, 18), A, A, { from: A, value: dec(12, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
+      await assertRevert(borrowerOperations.openTrove(1, dec(1950, 18), A, A, { from: A, value: dec(12, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
+      await assertRevert(borrowerOperations.openTrove('4999999999999999', dec(1950, 18), B, B, { from: B, value: dec(12, 'ether') }), "Max fee percentage must be between 0.5% and 100%")
     })
 
+    it("openTrove(): allows max fee < 0.5% in Recovery Mode", async () => {
+      await borrowerOperations.openTrove(th._100pct, dec(1950, 18), A, A, { from: A, value: dec(20, 'ether') })
+
+      await priceFeed.setPrice(dec(100, 18))
+      assert.isTrue(await th.checkRecoveryMode(contracts))
+
+      await borrowerOperations.openTrove(0, dec(1950, 18), B, B, { from: B, value: dec(31, 'ether') })
+      assert.isTrue(await th.checkRecoveryMode(contracts))
+      await borrowerOperations.openTrove(1, dec(1950, 18), C, C, { from: C, value: dec(31, 'ether') })
+      assert.isTrue(await th.checkRecoveryMode(contracts))
+      await borrowerOperations.openTrove('4999999999999999', dec(1950, 18), D, D, { from: D, value: dec(31, 'ether') })
+    })
 
     it("openTrove(): succeeds if max fee < 0.5% when drawn debt = 0", async () => {
       const tx1 = await borrowerOperations.openTrove(0, 0, A, A, { from: A, value: dec(1, 'ether') })
@@ -3502,6 +3536,7 @@ contract('BorrowerOperations', async accounts => {
       assert.equal(lqtyStaking_LUSDBalance_After, '0')
     })
 
+    // TODO: Rephrase. It’s impossible to borrow at zero rate now
     it("openTrove(): Borrowing at zero base rate does not change LQTY staking contract LUSD fees-per-unit-staked", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, A, A, { from: whale, value: dec(100, 'ether') })
 
@@ -3528,6 +3563,7 @@ contract('BorrowerOperations', async accounts => {
       assert.equal(F_LUSD_After, '0')
     })
 
+    // TODO: Rephrase. It’s impossible to borrow at zero rate now
     it("openTrove(): Borrowing at zero base rate sends total requested LUSD to the user", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, A, A, { from: whale, value: dec(100, 'ether') })
 
@@ -3709,13 +3745,11 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(carolICR.gt(toBN(dec(150, 16))))
     })
 
-    it("openTrove(): Can open a trove with zero debt (plus gas comp) when system is in Recovery Mode", async () => {
+    it("openTrove(): Reverts opening a trove with zero debt (plus gas comp) when system is in Recovery Mode", async () => {
       // --- SETUP ---
       //  Alice and Bob add coll and withdraw such  that the TCR is ~150%
-      await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(3, 'ether') })
-      await borrowerOperations.openTrove(th._100pct, 0, bob, bob, { from: bob, value: dec(3, 'ether') })
-      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount('400000000000000000000'), alice, alice, { from: alice })
-      await borrowerOperations.withdrawLUSD(th._100pct, await getOpenTroveLUSDAmount('400000000000000000000'), bob, bob, { from: bob })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(4000, 18)), alice, alice, { from: alice, value: dec(30, 'ether') })
+      await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(4000, 18)), bob, bob, { from: bob, value: dec(30, 'ether') })
 
       const TCR = (await th.getTCR(contracts)).toString()
       assert.equal(TCR, '1500000000000000000')
@@ -3727,17 +3761,7 @@ contract('BorrowerOperations', async accounts => {
 
       const lqtyStakingLUSDBalanceBefore = await lusdToken.balanceOf(lqtyStaking.address)
 
-      const txCarol = await borrowerOperations.openTrove(th._100pct, 0, carol, carol, { from: carol, value: dec(1, 'ether') })
-      assert.isTrue(txCarol.receipt.status)
-
-      assert.isTrue(await sortedTroves.contains(carol))
-
-      const carol_TroveStatus = await troveManager.getTroveStatus(carol)
-      assert.equal(carol_TroveStatus, 1)
-
-      // check no fee was charged
-      const lqtyStakingLUSDBalanceAfter = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStakingLUSDBalanceAfter.toString(), lqtyStakingLUSDBalanceBefore.toString())
+      await assertRevert(borrowerOperations.openTrove(th._100pct, 0, carol, carol, { from: carol, value: dec(1, 'ether') }))
     })
 
 

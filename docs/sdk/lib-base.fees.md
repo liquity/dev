@@ -22,7 +22,7 @@ The constructor for this class is marked as internal. Third-party code should no
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [borrowingRate()](./lib-base.fees.borrowingrate.md) |  | Calculate the current borrowing rate. |
+|  [borrowingRate(when)](./lib-base.fees.borrowingrate.md) |  | Calculate the current borrowing rate. |
 |  [equals(that)](./lib-base.fees.equals.md) |  | Compare to another instance of <code>Fees</code>. |
-|  [redemptionRate(redeemedFractionOfSupply)](./lib-base.fees.redemptionrate.md) |  | Calculate the current redemption rate. |
+|  [redemptionRate(redeemedFractionOfSupply, when)](./lib-base.fees.redemptionrate.md) |  | Calculate the current redemption rate. |
 

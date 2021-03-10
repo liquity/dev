@@ -13,6 +13,7 @@
 |  [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) | Thrown by [EthersLiquity](./lib-ethers.ethersliquity.md) in case of transaction failure. |
 |  [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md) | Ethers-based implementation of [PopulatableLiquity](./lib-base.populatableliquity.md)<!-- -->. |
 |  [PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md) | A transaction that has been prepared for sending. |
+|  [PopulatedEthersRedemption](./lib-ethers.populatedethersredemption.md) | A redemption transaction that has been prepared for sending. |
 |  [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) | Ethers-based implementation of [ReadableLiquity](./lib-base.readableliquity.md)<!-- -->. |
 |  [SendableEthersLiquity](./lib-ethers.sendableethersliquity.md) | Ethers-based implementation of [SendableLiquity](./lib-base.sendableliquity.md)<!-- -->. |
 |  [SentEthersLiquityTransaction](./lib-ethers.sentethersliquitytransaction.md) | A transaction that has already been sent. |

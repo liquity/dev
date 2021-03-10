@@ -8,7 +8,7 @@ interface IUnipool {
     function lastTimeRewardApplicable() external view returns (uint256);
     function rewardPerToken() external view returns (uint256);
     function earned(address account) external view returns (uint256);
-    function exit() external;
+    function withdrawAndClaim() external;
     function claimReward() external;
     //function notifyRewardAmount(uint256 reward) external;
 }

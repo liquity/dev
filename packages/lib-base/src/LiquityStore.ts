@@ -2,7 +2,7 @@ import assert from "assert";
 
 import { Decimal } from "./Decimal";
 import { StabilityDeposit } from "./StabilityDeposit";
-import { Trove, TroveWithPendingRedistribution } from "./Trove";
+import { Trove, TroveWithPendingRedistribution, UserTrove } from "./Trove";
 import { Fees } from "./Fees";
 import { LQTYStake } from "./LQTYStake";
 import { FrontendStatus } from "./ReadableLiquity";
@@ -69,14 +69,17 @@ export interface LiquityStoreBaseState {
   /** User's stability deposit. */
   stabilityDeposit: StabilityDeposit;
 
-  /** Calculator for current fees. */
-  fees: Fees;
+  /** @internal */
+  _feesInNormalMode: Fees;
 
   /** User's LQTY stake. */
   lqtyStake: LQTYStake;
 
   /** Total amount of LQTY currently staked. */
   totalStakedLQTY: Decimal;
+
+  /** @internal */
+  _riskiestTroveBeforeRedistribution: TroveWithPendingRedistribution;
 }
 
 /**
@@ -86,7 +89,10 @@ export interface LiquityStoreBaseState {
  */
 export interface LiquityStoreDerivedState {
   /** Current state of user's Trove */
-  trove: Trove;
+  trove: UserTrove;
+
+  /** Calculator for current fees. */
+  fees: Fees;
 
   /**
    * Current borrowing rate.
@@ -109,6 +115,12 @@ export interface LiquityStoreDerivedState {
    * Use {@link Fees.redemptionRate} to calculate a precise redemption rate.
    */
   redemptionRate: Decimal;
+
+  /**
+   * Whether there are any Troves with collateral ratio below the
+   * {@link MINIMUM_COLLATERAL_RATIO | minimum}.
+   */
+  haveUndercollateralizedTroves: boolean;
 }
 
 /**
@@ -271,6 +283,19 @@ export abstract class LiquityStore<T = unknown> {
     return next !== undefined && !equals(prev, next) ? next : prev;
   }
 
+  private _updateFees(name: string, prev: Fees, next?: Fees): Fees {
+    if (next && !next.equals(prev)) {
+      // Filter out fee update spam that happens on every new block by only logging when string
+      // representation changes.
+      if (`${next}` !== `${prev}`) {
+        this._logUpdate(name, next);
+      }
+      return next;
+    } else {
+      return prev;
+    }
+  }
+
   private _reduce(
     baseState: LiquityStoreBaseState,
     baseStateUpdate: Partial<LiquityStoreBaseState>
@@ -359,7 +384,11 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.stabilityDeposit
       ),
 
-      fees: this._updateIfChanged(equals, "fees", baseState.fees, baseStateUpdate.fees),
+      _feesInNormalMode: this._silentlyUpdateIfChanged(
+        equals,
+        baseState._feesInNormalMode,
+        baseStateUpdate._feesInNormalMode
+      ),
 
       lqtyStake: this._updateIfChanged(
         equals,
@@ -373,6 +402,12 @@ export abstract class LiquityStore<T = unknown> {
         "totalStakedLQTY",
         baseState.totalStakedLQTY,
         baseStateUpdate.totalStakedLQTY
+      ),
+
+      _riskiestTroveBeforeRedistribution: this._silentlyUpdateIfChanged(
+        equals,
+        baseState._riskiestTroveBeforeRedistribution,
+        baseStateUpdate._riskiestTroveBeforeRedistribution
       )
     };
   }
@@ -380,12 +415,21 @@ export abstract class LiquityStore<T = unknown> {
   private _derive({
     troveBeforeRedistribution,
     totalRedistributed,
-    fees
+    _feesInNormalMode,
+    total,
+    price,
+    _riskiestTroveBeforeRedistribution
   }: LiquityStoreBaseState): LiquityStoreDerivedState {
+    const fees = _feesInNormalMode._setRecoveryMode(total.collateralRatioIsBelowCritical(price));
+
     return {
       trove: troveBeforeRedistribution.applyRedistribution(totalRedistributed),
+      fees,
       borrowingRate: fees.borrowingRate(),
-      redemptionRate: fees.redemptionRate()
+      redemptionRate: fees.redemptionRate(),
+      haveUndercollateralizedTroves: _riskiestTroveBeforeRedistribution
+        .applyRedistribution(totalRedistributed)
+        .collateralRatioIsBelowMinimum(price)
     };
   }
 
@@ -394,6 +438,8 @@ export abstract class LiquityStore<T = unknown> {
     derivedStateUpdate: LiquityStoreDerivedState
   ): LiquityStoreDerivedState {
     return {
+      fees: this._updateFees("fees", derivedState.fees, derivedStateUpdate.fees),
+
       trove: this._updateIfChanged(equals, "trove", derivedState.trove, derivedStateUpdate.trove),
 
       borrowingRate: this._silentlyUpdateIfChanged(
@@ -406,6 +452,13 @@ export abstract class LiquityStore<T = unknown> {
         eq,
         derivedState.redemptionRate,
         derivedStateUpdate.redemptionRate
+      ),
+
+      haveUndercollateralizedTroves: this._updateIfChanged(
+        strictEquals,
+        "haveUndercollateralizedTroves",
+        derivedState.haveUndercollateralizedTroves,
+        derivedStateUpdate.haveUndercollateralizedTroves
       )
     };
   }

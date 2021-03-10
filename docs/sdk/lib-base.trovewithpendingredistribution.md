@@ -9,19 +9,15 @@ A Trove in its state after the last direct modification.
 <b>Signature:</b>
 
 ```typescript
-export declare class TroveWithPendingRedistribution extends Trove 
+export declare class TroveWithPendingRedistribution extends UserTrove 
 ```
-<b>Extends:</b> [Trove](./lib-base.trove.md)
+<b>Extends:</b> [UserTrove](./lib-base.usertrove.md)
 
 ## Remarks
 
 The Trove may have received collateral and debt shares from liquidations since then. Use [applyRedistribution()](./lib-base.trovewithpendingredistribution.applyredistribution.md) to calculate the Trove's most up-to-date state.
 
-## Constructors
-
-|  Constructor | Modifiers | Description |
-|  --- | --- | --- |
-|  [(constructor)(collateral, debt, stake, snapshotOfTotalRedistributed)](./lib-base.trovewithpendingredistribution._constructor_.md) |  | Constructs a new instance of the <code>TroveWithPendingRedistribution</code> class |
+The constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the `TroveWithPendingRedistribution` class.
 
 ## Methods
 

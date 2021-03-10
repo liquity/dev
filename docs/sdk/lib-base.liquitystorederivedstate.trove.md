@@ -9,5 +9,5 @@ Current state of user's Trove
 <b>Signature:</b>
 
 ```typescript
-trove: Trove;
+trove: UserTrove;
 ```

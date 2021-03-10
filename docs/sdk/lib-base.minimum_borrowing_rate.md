@@ -11,3 +11,8 @@ Value that the [borrowing rate](./lib-base.fees.borrowingrate.md) will never dec
 ```typescript
 MINIMUM_BORROWING_RATE: Decimal
 ```
+
+## Remarks
+
+Note that the borrowing rate can still be lower than this during recovery mode, when it's overridden by zero.
+

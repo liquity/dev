@@ -59,18 +59,18 @@ export type _NoDebtChange = _NoLUSDBorrowing & _NoLUSDRepayment;
  *   </tr>
  *
  *   <tr>
- *     <td> borrowLUSD? </td>
+ *     <td> borrowLUSD </td>
  *     <td> T </td>
- *     <td> <i>(Optional)</i> The amount of LUSD that's borrowed. </td>
+ *     <td> The amount of LUSD that's borrowed. </td>
  *   </tr>
  *
  * </table>
  *
  * @public
  */
-export type TroveCreationParams<T> = _CollateralDeposit<T> &
+export type TroveCreationParams<T = unknown> = _CollateralDeposit<T> &
   _NoCollateralWithdrawal &
-  Partial<_LUSDBorrowing<T>> &
+  _LUSDBorrowing<T> &
   _NoLUSDRepayment;
 
 /**
@@ -162,7 +162,7 @@ export type TroveClosureParams<T> = _CollateralWithdrawal<T> &
  *
  * @public
  */
-export type TroveAdjustmentParams<T> =
+export type TroveAdjustmentParams<T = unknown> =
   | (_CollateralChange<T> & _NoDebtChange)
   | (_DebtChange<T> & _NoCollateralChange)
   | (_CollateralChange<T> & _DebtChange<T>);
@@ -245,33 +245,159 @@ const troveAdjustment = <T>(
   setToZero
 });
 
-const normalize = (params: Record<string, Decimalish | undefined>): Record<string, Decimal> =>
-  Object.fromEntries(
-    Object.entries(params)
-      .filter((kv): kv is [string, Decimalish] => kv[1] !== undefined)
-      .map(([k, v]): [string, Decimal] => [k, Decimal.from(v)])
-      .filter(([, v]) => v.nonZero)
-  );
+const valueIsDefined = <T>(entry: [string, T | undefined]): entry is [string, T] =>
+  entry[1] !== undefined;
 
-/** @internal */ export type _Normalizer<T, U> = (params: T) => U;
-
-/** @internal */
-export const _normalizeTroveCreation = (normalize as unknown) as _Normalizer<
-  TroveCreationParams<Decimalish>,
-  TroveCreationParams<Decimal>
+type AllowedKey<T> = Exclude<
+  {
+    [P in keyof T]: T[P] extends undefined ? never : P;
+  }[keyof T],
+  undefined
 >;
 
+const allowedTroveCreationKeys: AllowedKey<TroveCreationParams>[] = [
+  "depositCollateral",
+  "borrowLUSD"
+];
+
+function checkAllowedTroveCreationKeys<T>(
+  entries: [string, T][]
+): asserts entries is [AllowedKey<TroveCreationParams>, T][] {
+  const badKeys = entries
+    .filter(([k]) => !(allowedTroveCreationKeys as string[]).includes(k))
+    .map(([k]) => `'${k}'`);
+
+  if (badKeys.length > 0) {
+    throw new Error(`TroveCreationParams: property ${badKeys.join(", ")} not allowed`);
+  }
+}
+
+const troveCreationParamsFromEntries = <T>(
+  entries: [AllowedKey<TroveCreationParams>, T][]
+): TroveCreationParams<T> => {
+  const params = Object.fromEntries(entries) as Record<AllowedKey<TroveCreationParams>, T>;
+  const missingKeys = allowedTroveCreationKeys.filter(k => !(k in params)).map(k => `'${k}'`);
+
+  if (missingKeys.length > 0) {
+    throw new Error(`TroveCreationParams: property ${missingKeys.join(", ")} missing`);
+  }
+
+  return params;
+};
+
+const decimalize = <T>([k, v]: [T, Decimalish]): [T, Decimal] => [k, Decimal.from(v)];
+const nonZero = <T>([, v]: [T, Decimal]): boolean => !v.isZero;
+
 /** @internal */
-export const _normalizeTroveAdjustment = (normalize as unknown) as _Normalizer<
-  TroveAdjustmentParams<Decimalish>,
-  TroveAdjustmentParams<Decimal>
->;
+export const _normalizeTroveCreation = (
+  params: Record<string, Decimalish | undefined>
+): TroveCreationParams<Decimal> => {
+  const definedEntries = Object.entries(params).filter(valueIsDefined);
+  checkAllowedTroveCreationKeys(definedEntries);
+  const nonZeroEntries = definedEntries.map(decimalize);
 
-const applyFee = (borrowingRate: Decimalish, debtIncrease: Decimalish) =>
-  Decimal.ONE.add(borrowingRate).mul(debtIncrease);
+  return troveCreationParamsFromEntries(nonZeroEntries);
+};
 
-const unapplyFee = (borrowingRate: Decimalish, debtIncrease: Decimalish) =>
-  Decimal.from(debtIncrease).div(Decimal.ONE.add(borrowingRate));
+const allowedTroveAdjustmentKeys: AllowedKey<TroveAdjustmentParams>[] = [
+  "depositCollateral",
+  "withdrawCollateral",
+  "borrowLUSD",
+  "repayLUSD"
+];
+
+function checkAllowedTroveAdjustmentKeys<T>(
+  entries: [string, T][]
+): asserts entries is [AllowedKey<TroveAdjustmentParams>, T][] {
+  const badKeys = entries
+    .filter(([k]) => !(allowedTroveAdjustmentKeys as string[]).includes(k))
+    .map(([k]) => `'${k}'`);
+
+  if (badKeys.length > 0) {
+    throw new Error(`TroveAdjustmentParams: property ${badKeys.join(", ")} not allowed`);
+  }
+}
+
+const collateralChangeFrom = <T>({
+  depositCollateral,
+  withdrawCollateral
+}: Partial<Record<AllowedKey<TroveAdjustmentParams>, T>>): _CollateralChange<T> | undefined => {
+  if (depositCollateral !== undefined && withdrawCollateral !== undefined) {
+    throw new Error(
+      "TroveAdjustmentParams: 'depositCollateral' and 'withdrawCollateral' " +
+        "can't be present at the same time"
+    );
+  }
+
+  if (depositCollateral !== undefined) {
+    return { depositCollateral };
+  }
+
+  if (withdrawCollateral !== undefined) {
+    return { withdrawCollateral };
+  }
+};
+
+const debtChangeFrom = <T>({
+  borrowLUSD,
+  repayLUSD
+}: Partial<Record<AllowedKey<TroveAdjustmentParams>, T>>): _DebtChange<T> | undefined => {
+  if (borrowLUSD !== undefined && repayLUSD !== undefined) {
+    throw new Error(
+      "TroveAdjustmentParams: 'borrowLUSD' and 'repayLUSD' can't be present at the same time"
+    );
+  }
+
+  if (borrowLUSD !== undefined) {
+    return { borrowLUSD };
+  }
+
+  if (repayLUSD !== undefined) {
+    return { repayLUSD };
+  }
+};
+
+const troveAdjustmentParamsFromEntries = <T>(
+  entries: [AllowedKey<TroveAdjustmentParams>, T][]
+): TroveAdjustmentParams<T> => {
+  const params = Object.fromEntries(entries) as Partial<
+    Record<AllowedKey<TroveAdjustmentParams>, T>
+  >;
+
+  const collateralChange = collateralChangeFrom(params);
+  const debtChange = debtChangeFrom(params);
+
+  if (collateralChange !== undefined && debtChange !== undefined) {
+    return { ...collateralChange, ...debtChange };
+  }
+
+  if (collateralChange !== undefined) {
+    return collateralChange;
+  }
+
+  if (debtChange !== undefined) {
+    return debtChange;
+  }
+
+  throw new Error("TroveAdjustmentParams: must include at least one non-zero parameter");
+};
+
+/** @internal */
+export const _normalizeTroveAdjustment = (
+  params: Record<string, Decimalish | undefined>
+): TroveAdjustmentParams<Decimal> => {
+  const definedEntries = Object.entries(params).filter(valueIsDefined);
+  checkAllowedTroveAdjustmentKeys(definedEntries);
+  const nonZeroEntries = definedEntries.map(decimalize).filter(nonZero);
+
+  return troveAdjustmentParamsFromEntries(nonZeroEntries);
+};
+
+const applyFee = (borrowingRate: Decimalish, debtIncrease: Decimal) =>
+  debtIncrease.mul(Decimal.ONE.add(borrowingRate));
+
+const unapplyFee = (borrowingRate: Decimalish, debtIncrease: Decimal) =>
+  debtIncrease._divCeil(Decimal.ONE.add(borrowingRate));
 
 const NOMINAL_COLLATERAL_RATIO_PRECISION = Decimal.from(100);
 
@@ -436,7 +562,7 @@ export class Trove {
     that: Trove,
     borrowingRate: Decimalish = MINIMUM_BORROWING_RATE
   ): TroveChange<Decimal> | undefined {
-    if (this.equals(that)) {
+    if (this.collateral.eq(that.collateral) && this.debt.eq(that.debt)) {
       return undefined;
     }
 
@@ -445,14 +571,10 @@ export class Trove {
         return invalidTroveCreation(that, "missingLiquidationReserve");
       }
 
-      return troveCreation(
-        that.netDebt.nonZero
-          ? {
-              depositCollateral: that.collateral,
-              borrowLUSD: unapplyFee(borrowingRate, that.netDebt)
-            }
-          : { depositCollateral: that.collateral }
-      );
+      return troveCreation({
+        depositCollateral: that.collateral,
+        borrowLUSD: unapplyFee(borrowingRate, that.netDebt)
+      });
     }
 
     if (that.isEmpty) {
@@ -483,7 +605,7 @@ export class Trove {
    * @param borrowingRate - Borrowing rate to use when adding a borrowed amount to the Trove's debt.
    */
   apply(
-    change: TroveChange<Decimalish> | undefined,
+    change: TroveChange<Decimal> | undefined,
     borrowingRate: Decimalish = MINIMUM_BORROWING_RATE
   ): Trove {
     if (!change) {
@@ -506,10 +628,8 @@ export class Trove {
         const { depositCollateral, borrowLUSD } = change.params;
 
         return new Trove(
-          Decimal.from(depositCollateral),
-          borrowLUSD
-            ? LUSD_LIQUIDATION_RESERVE.add(applyFee(borrowingRate, borrowLUSD))
-            : LUSD_LIQUIDATION_RESERVE
+          depositCollateral,
+          LUSD_LIQUIDATION_RESERVE.add(applyFee(borrowingRate, borrowLUSD))
         );
       }
 
@@ -526,15 +646,17 @@ export class Trove {
           params: { depositCollateral, withdrawCollateral, borrowLUSD, repayLUSD }
         } = change;
 
-        const collateralDecrease = Decimal.from(withdrawCollateral ?? 0);
-        const collateralIncrease = Decimal.from(depositCollateral ?? 0);
-        const debtDecrease = Decimal.from(repayLUSD ?? 0);
+        const collateralDecrease = withdrawCollateral ?? Decimal.ZERO;
+        const collateralIncrease = depositCollateral ?? Decimal.ZERO;
+        const debtDecrease = repayLUSD ?? Decimal.ZERO;
         const debtIncrease = borrowLUSD ? applyFee(borrowingRate, borrowLUSD) : Decimal.ZERO;
 
         return setToZero === "collateral"
-          ? this.setCollateral(0).addDebt(debtIncrease).subtractDebt(debtDecrease)
+          ? this.setCollateral(Decimal.ZERO).addDebt(debtIncrease).subtractDebt(debtDecrease)
           : setToZero === "debt"
-          ? this.setDebt(0).addCollateral(collateralIncrease).subtractCollateral(collateralDecrease)
+          ? this.setDebt(Decimal.ZERO)
+              .addCollateral(collateralIncrease)
+              .subtractCollateral(collateralDecrease)
           : this.add(new Trove(collateralIncrease, debtIncrease)).subtract(
               new Trove(collateralDecrease, debtDecrease)
             );
@@ -549,7 +671,7 @@ export class Trove {
    * @param borrowingRate - Borrowing rate to use when calculating the Trove's debt.
    */
   static create(params: TroveCreationParams<Decimalish>, borrowingRate?: Decimalish): Trove {
-    return _emptyTrove.apply(troveCreation(params), borrowingRate);
+    return _emptyTrove.apply(troveCreation(_normalizeTroveCreation(params)), borrowingRate);
   }
 
   /**
@@ -573,7 +695,7 @@ export class Trove {
    * @param borrowingRate - Borrowing rate to use when adding to the Trove's debt.
    */
   adjust(params: TroveAdjustmentParams<Decimalish>, borrowingRate?: Decimalish): Trove {
-    return this.apply(troveAdjustment(params), borrowingRate);
+    return this.apply(troveAdjustment(_normalizeTroveAdjustment(params)), borrowingRate);
   }
 
   /**
@@ -594,6 +716,63 @@ export class Trove {
 export const _emptyTrove = new Trove();
 
 /**
+ * Represents whether a UserTrove is open or not, or why it was closed.
+ *
+ * @public
+ */
+export type UserTroveStatus =
+  | "nonExistent"
+  | "open"
+  | "closedByOwner"
+  | "closedByLiquidation"
+  | "closedByRedemption";
+
+/**
+ * A Trove that is associated with a single owner.
+ *
+ * @remarks
+ * The SDK uses the base {@link Trove} class as a generic container of collateral and debt, for
+ * example to represent the {@link ReadableLiquity.getTotal | total collateral and debt} locked up
+ * in the protocol.
+ *
+ * The `UserTrove` class extends `Trove` with extra information that's only available for Troves
+ * that are associated with a single owner (such as the owner's address, or the Trove's status).
+ *
+ * @public
+ */
+export class UserTrove extends Trove {
+  /** Address that owns this Trove. */
+  readonly ownerAddress: string;
+
+  /** Provides more information when the UserTrove is empty. */
+  readonly status: UserTroveStatus;
+
+  /** @internal */
+  constructor(ownerAddress: string, status: UserTroveStatus, collateral?: Decimal, debt?: Decimal) {
+    super(collateral, debt);
+
+    this.ownerAddress = ownerAddress;
+    this.status = status;
+  }
+
+  equals(that: UserTrove): boolean {
+    return (
+      super.equals(that) && this.ownerAddress === that.ownerAddress && this.status === that.status
+    );
+  }
+
+  /** @internal */
+  toString(): string {
+    return (
+      `{ ownerAddress: "${this.ownerAddress}"` +
+      `, collateral: ${this.collateral}` +
+      `, debt: ${this.debt}` +
+      `, status: "${this.status}" }`
+    );
+  }
+}
+
+/**
  * A Trove in its state after the last direct modification.
  *
  * @remarks
@@ -603,25 +782,35 @@ export const _emptyTrove = new Trove();
  *
  * @public
  */
-export class TroveWithPendingRedistribution extends Trove {
+export class TroveWithPendingRedistribution extends UserTrove {
   private readonly stake: Decimal;
   private readonly snapshotOfTotalRedistributed: Trove;
 
+  /** @internal */
   constructor(
+    ownerAddress: string,
+    status: UserTroveStatus,
     collateral?: Decimal,
     debt?: Decimal,
     stake = Decimal.ZERO,
     snapshotOfTotalRedistributed = _emptyTrove
   ) {
-    super(collateral, debt);
+    super(ownerAddress, status, collateral, debt);
 
     this.stake = stake;
     this.snapshotOfTotalRedistributed = snapshotOfTotalRedistributed;
   }
 
-  applyRedistribution(totalRedistributed: Trove): Trove {
-    return this.add(
+  applyRedistribution(totalRedistributed: Trove): UserTrove {
+    const afterRedistribution = this.add(
       totalRedistributed.subtract(this.snapshotOfTotalRedistributed).multiply(this.stake)
+    );
+
+    return new UserTrove(
+      this.ownerAddress,
+      this.status,
+      afterRedistribution.collateral,
+      afterRedistribution.debt
     );
   }
 

@@ -7,12 +7,13 @@ import "./LiquityMath.sol";
 import "../Interfaces/IActivePool.sol";
 import "../Interfaces/IDefaultPool.sol";
 import "../Interfaces/IPriceFeed.sol";
+import "../Interfaces/ILiquityBase.sol";
 
 /* 
 * Base contract for TroveManager, BorrowerOperations and StabilityPool. Contains global system constants and
 * common functions. 
 */
-contract LiquityBase is BaseMath {
+contract LiquityBase is BaseMath, ILiquityBase {
     using SafeMath for uint;
 
     uint constant public _100pct = 1000000000000000000; // 1e18 == 100%
@@ -32,11 +33,13 @@ contract LiquityBase is BaseMath {
 
     uint constant public PERCENT_DIVISOR = 200; // dividing by 200 yields 0.5%
 
+    uint constant public BORROWING_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+
     IActivePool public activePool;
 
     IDefaultPool public defaultPool;
 
-    IPriceFeed public priceFeed;
+    IPriceFeed public override priceFeed;
 
     // --- Gas compensation functions ---
 
@@ -86,10 +89,5 @@ contract LiquityBase is BaseMath {
     function _requireUserAcceptsFee(uint _fee, uint _amount, uint _maxFeePercentage) internal pure {
         uint feePercentage = _fee.mul(DECIMAL_PRECISION).div(_amount);
         require(feePercentage <= _maxFeePercentage, "Fee exceeded provided maximum");
-    }
-
-    function _requireValidMaxFeePercentage(uint _maxFeePercentage) internal pure {
-        require(_maxFeePercentage >= 5e15 && _maxFeePercentage <= DECIMAL_PRECISION,
-         "Max fee percentage must be between 0.5% and 100%");
     }
 }

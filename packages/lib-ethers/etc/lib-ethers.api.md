@@ -21,6 +21,7 @@ import { MinedReceipt } from '@liquity/lib-base';
 import { ObservableLiquity } from '@liquity/lib-base';
 import { PopulatableLiquity } from '@liquity/lib-base';
 import { PopulatedLiquityTransaction } from '@liquity/lib-base';
+import { PopulatedRedemption } from '@liquity/lib-base';
 import { PopulatedTransaction } from '@ethersproject/contracts';
 import { Provider } from '@ethersproject/abstract-provider';
 import { ReadableLiquity } from '@liquity/lib-base';
@@ -43,6 +44,7 @@ import { TroveCreationDetails } from '@liquity/lib-base';
 import { TroveCreationParams } from '@liquity/lib-base';
 import { TroveListingParams } from '@liquity/lib-base';
 import { TroveWithPendingRedistribution } from '@liquity/lib-base';
+import { UserTrove } from '@liquity/lib-base';
 
 // @public
 export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStoreExtraState> {
@@ -84,9 +86,9 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     // @internal
     constructor(readable: ReadableEthersLiquity);
     // (undocumented)
-    adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
     // (undocumented)
-    borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+    borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
     // (undocumented)
     claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
@@ -115,6 +117,8 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
+    // @internal (undocumented)
+    _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
     // (undocumented)
@@ -138,15 +142,15 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     // (undocumented)
     getTotalStakedLQTY(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
-    getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove>;
+    getTrove(address?: string, overrides?: EthersCallOverrides): Promise<UserTrove>;
     // (undocumented)
     getTroveBeforeRedistribution(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
     // @internal (undocumented)
     getTroves(params: TroveListingParams & {
         beforeRedistribution: true;
-    }, overrides?: EthersCallOverrides): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    }, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution[]>;
     // (undocumented)
-    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<[address: string, trove: Trove][]>;
+    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<UserTrove[]>;
     hasStore(): this is EthersLiquityWithStore;
     hasStore(store: "blockPolled"): this is EthersLiquityWithStore<BlockPolledLiquityStore>;
     // (undocumented)
@@ -154,10 +158,10 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<LiquidationDetails>;
     // (undocumented)
-    openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<TroveCreationDetails>;
+    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveCreationDetails>;
     readonly populate: PopulatableEthersLiquity;
     // (undocumented)
-    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<RedemptionDetails>;
+    redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<RedemptionDetails>;
     // (undocumented)
     registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
@@ -273,9 +277,9 @@ export class ObservableEthersLiquity implements ObservableLiquity {
 export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransactionReceipt, EthersTransactionResponse, EthersPopulatedTransaction> {
     constructor(readable: ReadableEthersLiquity);
     // (undocumented)
-    adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
@@ -289,9 +293,9 @@ export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransa
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<LiquidationDetails>>;
     // (undocumented)
-    openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>>;
+    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>>;
     // (undocumented)
-    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<RedemptionDetails>>;
+    redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersRedemption>;
     // (undocumented)
     registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
@@ -327,6 +331,20 @@ export class PopulatedEthersLiquityTransaction<T = unknown> implements Populated
     send(): Promise<SentEthersLiquityTransaction<T>>;
 }
 
+// @public (undocumented)
+export class PopulatedEthersRedemption extends PopulatedEthersLiquityTransaction<RedemptionDetails> implements PopulatedRedemption<EthersPopulatedTransaction, EthersTransactionResponse, EthersTransactionReceipt> {
+    // @internal
+    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, connection: EthersLiquityConnection, attemptedLUSDAmount: Decimal, redeemableLUSDAmount: Decimal, increaseAmountByMinimumNetDebt?: (maxRedemptionRate?: Decimalish) => Promise<PopulatedEthersRedemption>);
+    // (undocumented)
+    readonly attemptedLUSDAmount: Decimal;
+    // (undocumented)
+    increaseAmountByMinimumNetDebt(maxRedemptionRate?: Decimalish): Promise<PopulatedEthersRedemption>;
+    // (undocumented)
+    readonly isTruncated: boolean;
+    // (undocumented)
+    readonly redeemableLUSDAmount: Decimal;
+}
+
 // @public
 export class ReadableEthersLiquity implements ReadableLiquity {
     // @internal
@@ -353,6 +371,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
+    // @internal (undocumented)
+    _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees>;
     // (undocumented)
     getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus>;
     // (undocumented)
@@ -376,15 +396,15 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     // (undocumented)
     getTotalStakedLQTY(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
-    getTrove(address?: string, overrides?: EthersCallOverrides): Promise<Trove>;
+    getTrove(address?: string, overrides?: EthersCallOverrides): Promise<UserTrove>;
     // (undocumented)
     getTroveBeforeRedistribution(address?: string, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution>;
     // @internal (undocumented)
     getTroves(params: TroveListingParams & {
         beforeRedistribution: true;
-    }, overrides?: EthersCallOverrides): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+    }, overrides?: EthersCallOverrides): Promise<TroveWithPendingRedistribution[]>;
     // (undocumented)
-    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<[address: string, trove: Trove][]>;
+    getTroves(params: TroveListingParams, overrides?: EthersCallOverrides): Promise<UserTrove[]>;
     hasStore(): this is ReadableEthersLiquityWithStore;
     hasStore(store: "blockPolled"): this is ReadableEthersLiquityWithStore<BlockPolledLiquityStore>;
 }
@@ -401,9 +421,9 @@ export const _redeemMaxIterations = 70;
 export class SendableEthersLiquity implements SendableLiquity<EthersTransactionReceipt, EthersTransactionResponse> {
     constructor(populatable: PopulatableEthersLiquity);
     // (undocumented)
-    adjustTrove(params: TroveAdjustmentParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
-    borrowLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
     // (undocumented)
@@ -417,9 +437,9 @@ export class SendableEthersLiquity implements SendableLiquity<EthersTransactionR
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<LiquidationDetails>>;
     // (undocumented)
-    openTrove(params: TroveCreationParams<Decimalish>, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveCreationDetails>>;
+    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveCreationDetails>>;
     // (undocumented)
-    redeemLUSD(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<RedemptionDetails>>;
+    redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<RedemptionDetails>>;
     // (undocumented)
     registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
     // (undocumented)

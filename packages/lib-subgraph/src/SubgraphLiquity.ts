@@ -13,6 +13,7 @@ import {
   Trove,
   TroveListingParams,
   TroveWithPendingRedistribution,
+  UserTrove,
   _emptyTrove
 } from "@liquity/lib-base";
 
@@ -92,6 +93,10 @@ const tokensInStabilityPool = new Query<Decimal, Global>(queryGlobal, ({ data: {
 
 const troveRawFields = gql`
   fragment TroveRawFields on Trove {
+    owner {
+      id
+    }
+    status
     rawCollateral
     rawDebt
     rawStake
@@ -101,6 +106,8 @@ const troveRawFields = gql`
 `;
 
 const troveFromRawFields = ({
+  owner: { id: ownerAddress },
+  status,
   rawCollateral,
   rawDebt,
   rawStake,
@@ -108,6 +115,8 @@ const troveFromRawFields = ({
   rawSnapshotOfTotalRedistributedDebt
 }: TroveRawFields) =>
   new TroveWithPendingRedistribution(
+    ownerAddress,
+    status,
     decimalify(rawCollateral),
     decimalify(rawDebt),
     decimalify(rawStake),
@@ -135,16 +144,16 @@ const troveBeforeRedistribution = new Query<
     }
     ${troveRawFields}
   `,
-  ({ data: { user } }) => {
+  ({ data: { user } }, { address }) => {
     if (user?.currentTrove) {
       return troveFromRawFields(user.currentTrove);
     } else {
-      return new TroveWithPendingRedistribution();
+      return new TroveWithPendingRedistribution(address, "nonExistent");
     }
   }
 );
 
-const troves = new Query<[string, TroveWithPendingRedistribution][], Troves, TrovesVariables>(
+const troves = new Query<TroveWithPendingRedistribution[], Troves, TrovesVariables>(
   gql`
     query Troves($orderDirection: OrderDirection!, $startingAt: Int!, $first: Int!) {
       troves(
@@ -155,16 +164,12 @@ const troves = new Query<[string, TroveWithPendingRedistribution][], Troves, Tro
         first: $first
       ) {
         id
-        owner {
-          id
-        }
         ...TroveRawFields
       }
     }
     ${troveRawFields}
   `,
-  ({ data: { troves } }) =>
-    troves.map(({ owner: { id }, ...rawFields }) => [getAddress(id), troveFromRawFields(rawFields)])
+  ({ data: { troves } }) => troves.map(trove => troveFromRawFields(trove))
 );
 
 const blockNumberDummy = new Query<void, BlockNumberDummy, BlockNumberDummyVariables>(
@@ -193,11 +198,11 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getTotalRedistributed() {
-    return totalRedistributed.get(this.client);
+    return totalRedistributed.get(this.client, undefined);
   }
 
   watchTotalRedistributed(onTotalRedistributedChanged: (totalRedistributed: Trove) => void) {
-    return totalRedistributed.watch(this.client, onTotalRedistributedChanged);
+    return totalRedistributed.watch(this.client, onTotalRedistributedChanged, undefined);
   }
 
   getTroveBeforeRedistribution(address?: string) {
@@ -223,27 +228,27 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getNumberOfTroves(): Promise<number> {
-    return numberOfTroves.get(this.client);
+    return numberOfTroves.get(this.client, undefined);
   }
 
   watchNumberOfTroves(onNumberOfTrovesChanged: (numberOfTroves: number) => void): () => void {
-    return numberOfTroves.watch(this.client, onNumberOfTrovesChanged);
+    return numberOfTroves.watch(this.client, onNumberOfTrovesChanged, undefined);
   }
 
   getPrice() {
-    return price.get(this.client);
+    return price.get(this.client, undefined);
   }
 
   watchPrice(onPriceChanged: (price: Decimal) => void) {
-    return price.watch(this.client, onPriceChanged);
+    return price.watch(this.client, onPriceChanged, undefined);
   }
 
   getTotal() {
-    return total.get(this.client);
+    return total.get(this.client, undefined);
   }
 
   watchTotal(onTotalChanged: (total: Trove) => void) {
-    return total.watch(this.client, onTotalChanged);
+    return total.watch(this.client, onTotalChanged, undefined);
   }
 
   getStabilityDeposit(address?: string): Promise<StabilityDeposit> {
@@ -258,11 +263,11 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getLUSDInStabilityPool() {
-    return tokensInStabilityPool.get(this.client);
+    return tokensInStabilityPool.get(this.client, undefined);
   }
 
   watchLUSDInStabilityPool(onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void) {
-    return tokensInStabilityPool.watch(this.client, onLUSDInStabilityPoolChanged);
+    return tokensInStabilityPool.watch(this.client, onLUSDInStabilityPoolChanged, undefined);
   }
 
   getLUSDBalance(address?: string): Promise<Decimal> {
@@ -283,9 +288,9 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
 
   getTroves(
     params: TroveListingParams & { beforeRedistribution: true }
-  ): Promise<[address: string, trove: TroveWithPendingRedistribution][]>;
+  ): Promise<TroveWithPendingRedistribution[]>;
 
-  getTroves(params: TroveListingParams): Promise<[address: string, trove: Trove][]>;
+  getTroves(params: TroveListingParams): Promise<UserTrove[]>;
 
   async getTroves(params: TroveListingParams) {
     const { first, sortedBy, startingAt = 0, beforeRedistribution } = params;
@@ -301,10 +306,7 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     ]);
 
     if (totalRedistributed) {
-      return _troves.map(([address, trove]) => [
-        address,
-        trove.applyRedistribution(totalRedistributed)
-      ]);
+      return _troves.map(trove => trove.applyRedistribution(totalRedistributed));
     } else {
       return _troves;
     }
@@ -320,6 +322,10 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
       }
       return;
     }
+  }
+
+  _getFeesInNormalMode(): Promise<Fees> {
+    throw new Error("Method not implemented.");
   }
 
   getFees(): Promise<Fees> {
