@@ -1,46 +1,57 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { LiquityStoreState } from "@liquity/lib-base";
+import { LiquityStoreState, UserTroveStatus } from "@liquity/lib-base";
 import { TroveViewContext } from "./TroveViewContext";
-import type { TroveView, TroveEvent, TroveState } from "./types";
+import type { TroveView, TroveEvent } from "./types";
 
 type TroveTransitions = Record<TroveView, Partial<Record<TroveEvent, TroveView>>>;
 
-const transition = (trove: TroveState, view: TroveView, event: TroveEvent): TroveView => {
+const transition = (view: TroveView, event: TroveEvent): TroveView => {
   const transitions: TroveTransitions = {
     NONE: {
-      OPEN_TROVE_PRESSED: "ADJUSTING",
+      OPEN_TROVE_PRESSED: "OPENING",
       TROVE_OPENED: "ACTIVE"
     },
-    CLOSED: {
+    LIQUIDATED: {
       TROVE_SURPLUS_COLLATERAL_CLAIMED: "NONE",
       TROVE_OPENED: "ACTIVE"
     },
+    REDEEMED: {
+      TROVE_SURPLUS_COLLATERAL_CLAIMED: "NONE",
+      TROVE_OPENED: "ACTIVE"
+    },
+    OPENING: {
+      CANCEL_ADJUST_TROVE_PRESSED: "NONE",
+      TROVE_OPENED: "ACTIVE"
+    },
     ADJUSTING: {
-      CANCEL_ADJUST_TROVE_PRESSED: trove.isActive ? "ACTIVE" : "NONE",
+      CANCEL_ADJUST_TROVE_PRESSED: "ACTIVE",
       TROVE_ADJUSTED: "ACTIVE",
-      TROVE_CLOSED: "CLOSED"
+      TROVE_CLOSED: "NONE",
+      TROVE_LIQUIDATED: "LIQUIDATED",
+      TROVE_REDEEMED: "REDEEMED"
     },
     ACTIVE: {
       ADJUST_TROVE_PRESSED: "ADJUSTING",
-      TROVE_CLOSED: "CLOSED"
+      TROVE_CLOSED: "NONE",
+      TROVE_LIQUIDATED: "LIQUIDATED",
+      TROVE_REDEEMED: "REDEEMED"
     }
   };
-  const nextView = transitions[view][event] || view;
+  const nextView = transitions[view][event] ?? view;
   return nextView;
 };
 
-const select = ({ trove, collateralSurplusBalance }: LiquityStoreState): TroveState => ({
-  isClosed: !collateralSurplusBalance.isZero, // only works for Recovery mode - wait for dani's PR then merge
-  // isClosed: !trove.status === "closed" closedByRedemption etc., // TODO: wait for dani's PR to merge
-  isActive: !trove.isEmpty
-});
+const select = ({ trove: { status } }: LiquityStoreState) => status;
 
-const getInitialView = (trove: TroveState): TroveView => {
-  if (trove.isClosed) {
-    return "CLOSED";
+const getInitialView = (troveStatus: UserTroveStatus): TroveView => {
+  if (troveStatus === "closedByLiquidation") {
+    return "LIQUIDATED";
   }
-  if (trove.isActive) {
+  if (troveStatus === "closedByRedemption") {
+    return "REDEEMED";
+  }
+  if (troveStatus === "open") {
     return "ACTIVE";
   }
   return "NONE";
@@ -48,14 +59,13 @@ const getInitialView = (trove: TroveState): TroveView => {
 
 export const TroveViewProvider: React.FC = props => {
   const { children } = props;
-  const trove = useLiquitySelector(select);
+  const troveStatus = useLiquitySelector(select);
 
-  const [view, setView] = useState<TroveView>(getInitialView(trove));
+  const [view, setView] = useState<TroveView>(getInitialView(troveStatus));
   const viewRef = useRef<TroveView>(view);
-  const troveRef = useRef<TroveState>(trove);
 
   const recordEvent = useCallback((event: TroveEvent) => {
-    const nextView = transition(troveRef.current, viewRef.current, event);
+    const nextView = transition(viewRef.current, event);
 
     // TODO: remove this (and other) console logs
     console.log("recordEvent() [current-view, event, next-view]", viewRef.current, event, nextView);
@@ -68,31 +78,20 @@ export const TroveViewProvider: React.FC = props => {
   }, [view]);
 
   useEffect(() => {
-    troveRef.current = trove;
-  }, [trove.isClosed, trove.isActive]);
-
-  let previousTrove = useRef<TroveState>(trove);
-
-  useEffect(() => {
     // this area is where you trigger trove events in response to backend changes
     // e.g. a trove was closed by someone else
-    if (previousTrove.current.isActive && trove.isClosed) {
-      recordEvent("TROVE_CLOSED");
-    }
-    // e.g. user has two tabs open with liquity and opens a trove in one tab
-    if (!previousTrove.current.isActive && trove.isActive) {
-      recordEvent("TROVE_OPENED");
-    }
-
-    // e.g. user has two tabs open and has been liquidated/redeemed and opens a trove in one tab
-    if (previousTrove.current.isClosed && trove.isActive) {
-      recordEvent("TROVE_OPENED");
-    }
-  }, [trove.isActive, trove.isClosed]);
-
-  useEffect(() => {
-    previousTrove.current = trove;
-  }, [trove.isClosed, trove.isActive]);
+    recordEvent(
+      troveStatus === "open"
+        ? "TROVE_OPENED"
+        : troveStatus === "closedByOwner"
+        ? "TROVE_CLOSED"
+        : troveStatus === "closedByLiquidation"
+        ? "TROVE_LIQUIDATED"
+        : troveStatus === "closedByRedemption"
+        ? "TROVE_REDEEMED"
+        : "TROVE_CLOSED" // === "nonExistent"; shouldn't happen (TODO: panic?)
+    );
+  }, [troveStatus, recordEvent]);
 
   const provider = {
     view,

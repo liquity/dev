@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import {
@@ -92,7 +92,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
     } else if (myTransactionState.type === "confirmedOneShot") {
       recordEvent("TROVE_ADJUSTED");
     }
-  }, [myTransactionState.type, dispatch]);
+  }, [myTransactionState.type, dispatch, recordEvent]);
 
   const hasActiveTrove = !original.isEmpty;
 

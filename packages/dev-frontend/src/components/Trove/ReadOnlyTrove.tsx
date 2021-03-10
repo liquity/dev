@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Card, Heading, Box, Flex, Text, Button } from "theme-ui";
+import { Card, Heading, Box, Flex, Button } from "theme-ui";
 import { useLiquitySelector } from "@liquity/lib-react";
 import {
   LiquityStoreState,
@@ -12,11 +12,11 @@ import { useTroveView } from "./context/TroveViewContext";
 
 const selectPrice = ({ price, trove }: LiquityStoreState) => ({ price, trove });
 
-export const ReadOnlyTrove: React.FC = props => {
+export const ReadOnlyTrove: React.FC = () => {
   const { recordEvent } = useTroveView();
   const handleAdjustTrove = useCallback(() => {
     recordEvent("ADJUST_TROVE_PRESSED");
-  }, []);
+  }, [recordEvent]);
 
   const { price, trove } = useLiquitySelector(selectPrice);
 

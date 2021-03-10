@@ -16,7 +16,13 @@ export const Trove: React.FC = props => {
     case "ADJUSTING": {
       return <TroveManager {...props} />;
     }
-    case "CLOSED": {
+    case "OPENING": {
+      return <TroveManager {...props} />;
+    }
+    case "LIQUIDATED": {
+      return <ClosedTrove {...props} />;
+    }
+    case "REDEEMED": {
       return <ClosedTrove {...props} />;
     }
     case "NONE": {
