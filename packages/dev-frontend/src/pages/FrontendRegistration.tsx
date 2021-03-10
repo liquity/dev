@@ -21,19 +21,15 @@ const FrontendRegistrationAction: React.FC<FrontendRegistrationActionProps> = ({
   const myTransactionState = useMyTransactionState(myTransactionId);
 
   return myTransactionState.type === "waitingForApproval" ? (
-    <Flex variant="layout.actions">
-      <Button disabled sx={{ mx: 2 }}>
-        <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
-        Waiting for your approval
-      </Button>
-    </Flex>
+    <Button disabled>
+      <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
+      Waiting for your approval
+    </Button>
   ) : myTransactionState.type !== "waitingForConfirmation" &&
     myTransactionState.type !== "confirmed" ? (
-    <Flex variant="layout.actions">
-      <Transaction id={myTransactionId} send={liquity.registerFrontend.bind(liquity, kickbackRate)}>
-        <Button sx={{ mx: 2 }}>Register</Button>
-      </Transaction>
-    </Flex>
+    <Transaction id={myTransactionId} send={liquity.registerFrontend.bind(liquity, kickbackRate)}>
+      <Button>Register</Button>
+    </Transaction>
   ) : null;
 };
 
@@ -85,7 +81,7 @@ export const FrontendRegistration: React.FC = () => {
 
           m: 3,
           mt: [3, null, 4],
-          mb: 0,
+          mb: 4,
           p: 3,
           maxWidth: "450px",
 

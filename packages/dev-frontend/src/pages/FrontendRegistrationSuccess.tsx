@@ -18,7 +18,7 @@ export const FrontendRegistrationSuccess: React.FC<FrontendRegistrationSuccessPr
 
         m: 3,
         mt: 4,
-        mb: 0,
+        mb: 4,
         p: 4,
         maxWidth: "500px",
 
@@ -39,10 +39,6 @@ export const FrontendRegistrationSuccess: React.FC<FrontendRegistrationSuccessPr
       <Paragraph sx={{ fontSize: 2 }}>Your frontend is now ready to receive LQTY rewards.</Paragraph>
     </Box>
 
-    <Flex variant="layout.actions">
-      <Button sx={{ mx: 2 }} onClick={onDismiss}>
-        Go to Dashboard
-      </Button>
-    </Flex>
+    <Button onClick={onDismiss}>Go to Dashboard</Button>
   </>
 );
