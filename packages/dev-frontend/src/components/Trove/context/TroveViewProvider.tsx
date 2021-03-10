@@ -64,11 +64,16 @@ export const TroveViewProvider: React.FC = props => {
   const [view, setView] = useState<TroveView>(getInitialView(troveStatus));
   const viewRef = useRef<TroveView>(view);
 
-  const recordEvent = useCallback((event: TroveEvent) => {
+  const dispatchEvent = useCallback((event: TroveEvent) => {
     const nextView = transition(viewRef.current, event);
 
     // TODO: remove this (and other) console logs
-    console.log("recordEvent() [current-view, event, next-view]", viewRef.current, event, nextView);
+    console.log(
+      "dispatchEvent() [current-view, event, next-view]",
+      viewRef.current,
+      event,
+      nextView
+    );
 
     setView(nextView);
   }, []);
@@ -80,7 +85,7 @@ export const TroveViewProvider: React.FC = props => {
   useEffect(() => {
     // this area is where you trigger trove events in response to backend changes
     // e.g. a trove was closed by someone else
-    recordEvent(
+    dispatchEvent(
       troveStatus === "open"
         ? "TROVE_OPENED"
         : troveStatus === "closedByOwner"
@@ -91,11 +96,11 @@ export const TroveViewProvider: React.FC = props => {
         ? "TROVE_REDEEMED"
         : "TROVE_CLOSED" // === "nonExistent"; shouldn't happen (TODO: panic?)
     );
-  }, [troveStatus, recordEvent]);
+  }, [troveStatus, dispatchEvent]);
 
   const provider = {
     view,
-    recordEvent
+    dispatchEvent
   };
   return <TroveViewContext.Provider value={provider}>{children}</TroveViewContext.Provider>;
 };

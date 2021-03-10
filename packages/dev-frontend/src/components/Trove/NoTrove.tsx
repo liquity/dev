@@ -4,11 +4,11 @@ import { Icon } from "../Icon";
 import { useTroveView } from "./context/TroveViewContext";
 
 export const NoTrove: React.FC = props => {
-  const { recordEvent } = useTroveView();
+  const { dispatchEvent: dispatchEvent } = useTroveView();
 
   const handleOpenTrove = useCallback(() => {
-    recordEvent("OPEN_TROVE_PRESSED");
-  }, []);
+    dispatchEvent("OPEN_TROVE_PRESSED");
+  }, [dispatchEvent]);
 
   return (
     <Card>

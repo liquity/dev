@@ -22,13 +22,13 @@ export const CollateralSurplusAction: React.FC = () => {
   const myTransactionId = "claim-coll-surplus";
   const myTransactionState = useMyTransactionState(myTransactionId);
 
-  const { recordEvent } = useTroveView();
+  const { dispatchEvent } = useTroveView();
 
   useEffect(() => {
     if (myTransactionState.type === "confirmedOneShot") {
-      recordEvent("TROVE_SURPLUS_COLLATERAL_CLAIMED");
+      dispatchEvent("TROVE_SURPLUS_COLLATERAL_CLAIMED");
     }
-  }, [myTransactionState.type]);
+  }, [myTransactionState.type, dispatchEvent]);
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">

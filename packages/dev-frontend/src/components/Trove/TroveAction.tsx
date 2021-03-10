@@ -82,7 +82,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
-  const { recordEvent } = useTroveView();
+  const { dispatchEvent: dispatchEvent } = useTroveView();
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
@@ -90,9 +90,9 @@ export const TroveAction: React.FC<TroveActionProps> = ({
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
     } else if (myTransactionState.type === "confirmedOneShot") {
-      recordEvent("TROVE_ADJUSTED");
+      dispatchEvent("TROVE_ADJUSTED");
     }
-  }, [myTransactionState.type, dispatch, recordEvent]);
+  }, [myTransactionState.type, dispatch, dispatchEvent]);
 
   const hasActiveTrove = !original.isEmpty;
 

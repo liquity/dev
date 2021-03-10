@@ -3,7 +3,7 @@ import type { TroveView, TroveEvent } from "./types";
 
 type TroveViewContextType = {
   view: TroveView;
-  recordEvent: (event: TroveEvent) => void;
+  dispatchEvent: (event: TroveEvent) => void;
 };
 
 export const TroveViewContext = createContext<TroveViewContextType | null>(null);
