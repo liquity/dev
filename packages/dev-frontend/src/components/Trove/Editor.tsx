@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, Flex, Box, Label, Input } from "theme-ui";
+import { Text, Flex, Label, Input } from "theme-ui";
 
 import { Icon } from "../Icon";
 

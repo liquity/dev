@@ -13,7 +13,7 @@ import { useTroveView } from "./context/TroveViewContext";
 const selectPrice = ({ price, trove }: LiquityStoreState) => ({ price, trove });
 
 export const ReadOnlyTrove: React.FC = () => {
-  const { dispatchEvent: dispatchEvent } = useTroveView();
+  const { dispatchEvent } = useTroveView();
   const handleAdjustTrove = useCallback(() => {
     dispatchEvent("ADJUST_TROVE_PRESSED");
   }, [dispatchEvent]);

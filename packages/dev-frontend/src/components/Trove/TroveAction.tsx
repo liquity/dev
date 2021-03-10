@@ -82,7 +82,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
-  const { dispatchEvent: dispatchEvent } = useTroveView();
+  const { dispatchEvent } = useTroveView();
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {

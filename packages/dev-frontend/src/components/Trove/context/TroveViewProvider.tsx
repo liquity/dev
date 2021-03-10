@@ -4,45 +4,53 @@ import { LiquityStoreState, UserTroveStatus } from "@liquity/lib-base";
 import { TroveViewContext } from "./TroveViewContext";
 import type { TroveView, TroveEvent } from "./types";
 
-type TroveTransitions = Record<TroveView, Partial<Record<TroveEvent, TroveView>>>;
+type TroveEventTransitions = Record<TroveView, Partial<Record<TroveEvent, TroveView>>>;
+
+const transitions: TroveEventTransitions = {
+  NONE: {
+    OPEN_TROVE_PRESSED: "OPENING",
+    TROVE_OPENED: "ACTIVE"
+  },
+  LIQUIDATED: {
+    TROVE_SURPLUS_COLLATERAL_CLAIMED: "NONE",
+    TROVE_OPENED: "ACTIVE"
+  },
+  REDEEMED: {
+    TROVE_SURPLUS_COLLATERAL_CLAIMED: "NONE",
+    TROVE_OPENED: "ACTIVE"
+  },
+  OPENING: {
+    CANCEL_ADJUST_TROVE_PRESSED: "NONE",
+    TROVE_OPENED: "ACTIVE"
+  },
+  ADJUSTING: {
+    CANCEL_ADJUST_TROVE_PRESSED: "ACTIVE",
+    TROVE_ADJUSTED: "ACTIVE",
+    TROVE_CLOSED: "NONE",
+    TROVE_LIQUIDATED: "LIQUIDATED",
+    TROVE_REDEEMED: "REDEEMED"
+  },
+  ACTIVE: {
+    ADJUST_TROVE_PRESSED: "ADJUSTING",
+    TROVE_CLOSED: "NONE",
+    TROVE_LIQUIDATED: "LIQUIDATED",
+    TROVE_REDEEMED: "REDEEMED"
+  }
+};
+
+type TroveStateEvents = Partial<Record<UserTroveStatus, TroveEvent>>;
+
+const troveStatusEvents: TroveStateEvents = {
+  open: "TROVE_OPENED",
+  closedByOwner: "TROVE_CLOSED",
+  closedByLiquidation: "TROVE_LIQUIDATED",
+  closedByRedemption: "TROVE_REDEEMED"
+};
 
 const transition = (view: TroveView, event: TroveEvent): TroveView => {
-  const transitions: TroveTransitions = {
-    NONE: {
-      OPEN_TROVE_PRESSED: "OPENING",
-      TROVE_OPENED: "ACTIVE"
-    },
-    LIQUIDATED: {
-      TROVE_SURPLUS_COLLATERAL_CLAIMED: "NONE",
-      TROVE_OPENED: "ACTIVE"
-    },
-    REDEEMED: {
-      TROVE_SURPLUS_COLLATERAL_CLAIMED: "NONE",
-      TROVE_OPENED: "ACTIVE"
-    },
-    OPENING: {
-      CANCEL_ADJUST_TROVE_PRESSED: "NONE",
-      TROVE_OPENED: "ACTIVE"
-    },
-    ADJUSTING: {
-      CANCEL_ADJUST_TROVE_PRESSED: "ACTIVE",
-      TROVE_ADJUSTED: "ACTIVE",
-      TROVE_CLOSED: "NONE",
-      TROVE_LIQUIDATED: "LIQUIDATED",
-      TROVE_REDEEMED: "REDEEMED"
-    },
-    ACTIVE: {
-      ADJUST_TROVE_PRESSED: "ADJUSTING",
-      TROVE_CLOSED: "NONE",
-      TROVE_LIQUIDATED: "LIQUIDATED",
-      TROVE_REDEEMED: "REDEEMED"
-    }
-  };
   const nextView = transitions[view][event] ?? view;
   return nextView;
 };
-
-const select = ({ trove: { status } }: LiquityStoreState) => status;
 
 const getInitialView = (troveStatus: UserTroveStatus): TroveView => {
   if (troveStatus === "closedByLiquidation") {
@@ -57,6 +65,8 @@ const getInitialView = (troveStatus: UserTroveStatus): TroveView => {
   return "NONE";
 };
 
+const select = ({ trove: { status } }: LiquityStoreState) => status;
+
 export const TroveViewProvider: React.FC = props => {
   const { children } = props;
   const troveStatus = useLiquitySelector(select);
@@ -67,14 +77,12 @@ export const TroveViewProvider: React.FC = props => {
   const dispatchEvent = useCallback((event: TroveEvent) => {
     const nextView = transition(viewRef.current, event);
 
-    // TODO: remove this (and other) console logs
     console.log(
       "dispatchEvent() [current-view, event, next-view]",
       viewRef.current,
       event,
       nextView
     );
-
     setView(nextView);
   }, []);
 
@@ -83,19 +91,10 @@ export const TroveViewProvider: React.FC = props => {
   }, [view]);
 
   useEffect(() => {
-    // this area is where you trigger trove events in response to backend changes
-    // e.g. a trove was closed by someone else
-    dispatchEvent(
-      troveStatus === "open"
-        ? "TROVE_OPENED"
-        : troveStatus === "closedByOwner"
-        ? "TROVE_CLOSED"
-        : troveStatus === "closedByLiquidation"
-        ? "TROVE_LIQUIDATED"
-        : troveStatus === "closedByRedemption"
-        ? "TROVE_REDEEMED"
-        : "TROVE_CLOSED" // === "nonExistent"; shouldn't happen (TODO: panic?)
-    );
+    const event = troveStatusEvents[troveStatus] ?? null;
+    if (event !== null) {
+      dispatchEvent(event);
+    }
   }, [troveStatus, dispatchEvent]);
 
   const provider = {

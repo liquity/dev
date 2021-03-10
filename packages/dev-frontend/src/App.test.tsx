@@ -16,22 +16,22 @@ console.log(`${trove}`);
 test("there's no smoke", async () => {
   const { getByText, getByLabelText, findByText, queryByText } = render(<App />);
 
-  expect(await findByText(/open a trove to borrow lusd/i)).toBeInTheDocument();
+  expect(await findByText(/you can borrow lusd by opening a trove/i)).toBeInTheDocument();
   expect(await findByText(/there are no troves yet/i)).toBeInTheDocument();
 
-  fireEvent.click(getByLabelText(/^collateral$/i));
+  fireEvent.click(getByText(/open trove/i));
+  fireEvent.click(getByLabelText(/collateral/i));
   fireEvent.change(getByLabelText(/^collateral$/i), { target: { value: `${trove.collateral}` } });
   fireEvent.click(getByLabelText(/^debt$/i));
   fireEvent.change(getByLabelText(/^debt$/i), { target: { value: `${trove.debt}` } });
 
-  const openTroveButton = new RegExp(
+  const depositButton = new RegExp(
     `^deposit ${params.depositCollateral.prettify()} eth & ` +
       `borrow ${params.borrowLUSD.prettify()} lusd$`,
     "i"
   );
-  fireEvent.click(getByText(openTroveButton));
+  fireEvent.click(getByText(depositButton));
 
-  expect(queryByText(openTroveButton)).not.toBeInTheDocument();
-  expect(await findByText(/my trove/i)).toBeInTheDocument();
+  expect(queryByText(depositButton)).not.toBeInTheDocument();
   expect(await findByText(/1-1 of 1/i)).toBeInTheDocument();
 });

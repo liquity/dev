@@ -4,7 +4,7 @@ import { Icon } from "../Icon";
 import { useTroveView } from "./context/TroveViewContext";
 
 export const NoTrove: React.FC = props => {
-  const { dispatchEvent: dispatchEvent } = useTroveView();
+  const { dispatchEvent } = useTroveView();
 
   const handleOpenTrove = useCallback(() => {
     dispatchEvent("OPEN_TROVE_PRESSED");

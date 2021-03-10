@@ -138,7 +138,7 @@ export const TroveManager: React.FC = () => {
   const maxBorrowingRate = borrowingRate.add(0.005); // TODO slippage tolerance
 
   // console.log("TroveManager render", { original, edited, change });
-  const { dispatchEvent: dispatchEvent } = useTroveView();
+  const { dispatchEvent } = useTroveView();
 
   const handleCancel = useCallback(() => {
     dispatchEvent("CANCEL_ADJUST_TROVE_PRESSED");
