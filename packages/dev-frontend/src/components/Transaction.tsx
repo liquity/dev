@@ -70,13 +70,19 @@ type TransactionConfirmed = {
   id: string;
 };
 
+type TransactionConfirmedOneShot = {
+  type: "confirmedOneShot";
+  id: string;
+};
+
 type TransactionState =
   | TransactionIdle
   | TransactionFailed
   | TransactionWaitingForApproval
   | TransactionCancelled
   | TransactionWaitingForConfirmations
-  | TransactionConfirmed;
+  | TransactionConfirmed
+  | TransactionConfirmedOneShot;
 
 const TransactionContext = React.createContext<
   [TransactionState, (state: TransactionState) => void] | undefined
@@ -298,7 +304,7 @@ export const TransactionMonitor: React.FC = () => {
             console.log(`${receipt}`);
 
             setTransactionState({
-              type: "confirmed",
+              type: "confirmedOneShot",
               id
             });
           } else {
@@ -352,7 +358,10 @@ export const TransactionMonitor: React.FC = () => {
   }, [provider, id, tx, setTransactionState]);
 
   useEffect(() => {
-    if (
+    if (transactionState.type === "confirmedOneShot" && id) {
+      // hack: the txn confirmed state lasts 5 seconds which blocks other states, review with Dani
+      setTransactionState({ type: "confirmed", id });
+    } else if (
       transactionState.type === "confirmed" ||
       transactionState.type === "failed" ||
       transactionState.type === "cancelled"
@@ -369,7 +378,7 @@ export const TransactionMonitor: React.FC = () => {
         cancelled = true;
       };
     }
-  }, [transactionState.type, setTransactionState]);
+  }, [transactionState.type, setTransactionState, id]);
 
   if (transactionState.type === "idle" || transactionState.type === "waitingForApproval") {
     return null;

@@ -6,7 +6,7 @@ import { Decimal, Decimalish, Difference, StabilityDeposit } from "@liquity/lib-
 import { COIN, GT } from "../strings";
 
 import { Icon } from "./Icon";
-import { EditableRow, StaticRow } from "./Editor";
+import { EditableRow, StaticRow } from "./Trove/Editor";
 import { LoadingOverlay } from "./LoadingOverlay";
 
 type StabilityDepositEditorProps = {

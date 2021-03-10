@@ -179,6 +179,12 @@ const theme: Theme = {
       ":enabled:hover": { bg: "secondary" }
     },
 
+    cancel: {
+      ...button,
+      bg: "accent",
+      ":enabled:hover": { bg: "secondary" }
+    },
+
     danger: {
       ...button,
       bg: "danger",
@@ -338,8 +344,7 @@ const theme: Theme = {
     },
 
     actions: {
-      mt: cardGapY,
-      justifyContent: "center"
+      justifyContent: "flex-end"
     },
 
     disabledOverlay: {

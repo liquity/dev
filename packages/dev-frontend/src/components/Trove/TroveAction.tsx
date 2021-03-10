@@ -14,10 +14,11 @@ import {
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
-import { useLiquity } from "../hooks/LiquityContext";
-import { COIN } from "../strings";
+import { useLiquity } from "../../hooks/LiquityContext";
+import { COIN } from "../../strings";
 
-import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
+import { Transaction, TransactionFunction, useMyTransactionState } from "../Transaction";
+import { useTroveView } from "./context/TroveViewContext";
 
 type TroveActionProps = {
   original: Trove;
@@ -81,17 +82,38 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
+  const { dispatchEvent } = useTroveView();
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
       dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
+    } else if (myTransactionState.type === "confirmedOneShot") {
+      dispatchEvent("TROVE_ADJUSTED");
     }
-  }, [myTransactionState.type, dispatch]);
+  }, [myTransactionState.type, dispatch, dispatchEvent]);
+
+  const hasActiveTrove = !original.isEmpty;
+
+  if (!change && hasActiveTrove) {
+    return (
+      <Flex variant="layout.actions">
+        <Button disabled sx={{ mx: 2 }}>
+          Confirm
+        </Button>
+      </Flex>
+    );
+  }
 
   if (!change) {
-    return null;
+    return (
+      <Flex variant="layout.actions">
+        <Button disabled sx={{ mx: 2 }}>
+          Borrow
+        </Button>
+      </Flex>
+    );
   }
 
   if (change.type === "invalidCreation") {

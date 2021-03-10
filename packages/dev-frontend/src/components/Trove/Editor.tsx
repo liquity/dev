@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Text, Flex, Label, Input } from "theme-ui";
 
-import { Icon } from "./Icon";
+import { Icon } from "../Icon";
 
 type RowProps = {
   label: string;
@@ -33,6 +33,7 @@ type StaticAmountsProps = {
   pendingColor?: string;
   onClick?: () => void;
   invalid?: boolean;
+  variant?: string;
 };
 
 const StaticAmounts: React.FC<StaticAmountsProps> = ({
@@ -42,11 +43,12 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   pendingAmount,
   pendingColor,
   onClick,
-  invalid
+  invalid,
+  variant
 }) => {
   return (
     <Label
-      variant="input"
+      variant={variant}
       id={inputId}
       sx={{
         ...(invalid ? { backgroundColor: "invalid" } : {}),
@@ -54,11 +56,10 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
       }}
       {...{ onClick, invalid }}
     >
-      <Flex sx={{ justifyContent: "space-between", alignItems: "center" }}>
+      <Flex sx={{ justifyContent: "space-between", alignItems: "center", width: "100%" }}>
         <Text sx={{ fontSize: 3 }} {...{ color }}>
           {amount}
         </Text>
-
         {pendingAmount ? (
           <Text sx={{ fontSize: 2, color: pendingColor }}>
             {pendingAmount === "++" ? (
@@ -116,7 +117,8 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   pendingColor,
   editingState,
   editedAmount,
-  setEditedAmount
+  setEditedAmount,
+  variant = "input"
 }) => {
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
@@ -147,7 +149,13 @@ export const EditableRow: React.FC<EditableRowProps> = ({
         />
       ) : (
         <StaticAmounts
-          {...{ inputId, amount, color, pendingAmount, pendingColor, invalid }}
+          inputId={inputId}
+          amount={amount}
+          color={color}
+          pendingAmount={pendingAmount}
+          pendingColor={pendingColor}
+          invalid={invalid}
+          variant={variant}
           onClick={() => setEditing(inputId)}
         />
       )}
