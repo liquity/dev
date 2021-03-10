@@ -2,8 +2,9 @@ import React from "react";
 import { TroveManager } from "./TroveManager";
 import { ReadOnlyTrove } from "./ReadOnlyTrove";
 import { NoTrove } from "./NoTrove";
-import { ClosedTrove } from "./ClosedTrove";
+import { RedeemedTrove } from "./RedeemedTrove";
 import { useTroveView } from "./context/TroveViewContext";
+import { LiquidatedTrove } from "./LiquidatedTrove";
 
 export const Trove: React.FC = props => {
   const { view } = useTroveView();
@@ -20,10 +21,10 @@ export const Trove: React.FC = props => {
       return <TroveManager {...props} />;
     }
     case "LIQUIDATED": {
-      return <ClosedTrove {...props} />;
+      return <LiquidatedTrove {...props} />;
     }
     case "REDEEMED": {
-      return <ClosedTrove {...props} />;
+      return <RedeemedTrove {...props} />;
     }
     case "NONE": {
       return <NoTrove {...props} />;

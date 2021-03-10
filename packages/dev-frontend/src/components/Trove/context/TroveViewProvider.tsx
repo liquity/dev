@@ -12,6 +12,7 @@ const transitions: TroveEventTransitions = {
     TROVE_OPENED: "ACTIVE"
   },
   LIQUIDATED: {
+    OPEN_TROVE_PRESSED: "OPENING",
     TROVE_SURPLUS_COLLATERAL_CLAIMED: "NONE",
     TROVE_OPENED: "ACTIVE"
   },
