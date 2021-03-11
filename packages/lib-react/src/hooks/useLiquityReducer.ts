@@ -1,21 +1,22 @@
 import { useCallback, useEffect, useReducer, useRef } from "react";
 
-import { LiquityStoreState } from "@liquity/lib-base";
+import { LiquityStoreListenerParams, LiquityStoreState } from "@liquity/lib-base";
 
 import { equals } from "../utils/equals";
 import { useLiquityStore } from "./useLiquityStore";
 
-export type LiquityStoreUpdate<T = unknown> = {
+export interface LiquityStoreUpdate<T = unknown> extends LiquityStoreListenerParams<T> {
   type: "updateStore";
-  newState: LiquityStoreState<T>;
-  oldState: LiquityStoreState<T>;
-  stateChange: Partial<LiquityStoreState<T>>;
-};
+}
 
-export const useLiquityReducer = <S, A, T>(
-  reduce: (state: S, action: A | LiquityStoreUpdate<T>) => S,
-  init: (storeState: LiquityStoreState<T>) => S
-): [S, (action: A | LiquityStoreUpdate<T>) => void] => {
+export type LiquityReducer<S, A, T = unknown> = (state: S, action: A | LiquityStoreUpdate<T>) => S;
+export type LiquityReducerInitializer<S, T = unknown> = (storeState: LiquityStoreState<T>) => S;
+export type LiquityReducerDispatch<A, T = unknown> = (action: A | LiquityStoreUpdate<T>) => void;
+
+export const useLiquityReducer = <S, A, T = unknown>(
+  reduce: LiquityReducer<S, A, T>,
+  init: LiquityReducerInitializer<S, T>
+): [state: S, dispatch: LiquityReducerDispatch<A, T>] => {
   const store = useLiquityStore<T>();
   const oldStore = useRef(store);
   const state = useRef(init(store.state));

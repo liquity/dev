@@ -1,7 +1,6 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useLiquitySelector } from "@liquity/lib-react";
-import { LiquityStoreState, UserTroveStatus } from "@liquity/lib-base";
-import { TroveViewContext } from "./TroveViewContext";
+import { createLiquityFSMReducer, useLiquityReducer } from "@liquity/lib-react";
+import { LiquityStoreListenerParams, LiquityStoreState, UserTroveStatus } from "@liquity/lib-base";
+import { TroveViewContext, TroveViewContextType } from "./TroveViewContext";
 import type { TroveView, TroveEvent } from "./types";
 
 type TroveEventTransitions = Record<TroveView, Partial<Record<TroveEvent, TroveView>>>;
@@ -47,12 +46,16 @@ const troveStatusEvents: TroveStateEvents = {
   closedByRedemption: "TROVE_REDEEMED"
 };
 
-const transition = (view: TroveView, event: TroveEvent): TroveView => {
-  const nextView = transitions[view][event] ?? view;
-  return nextView;
+const mapTroveStatusUpdateToEvent = ({
+  oldState,
+  newState
+}: LiquityStoreListenerParams): TroveEvent | undefined => {
+  if (newState.trove.status !== oldState.trove.status) {
+    return troveStatusEvents[newState.trove.status];
+  }
 };
 
-const getInitialView = (troveStatus: UserTroveStatus): TroveView => {
+const getInitialView = ({ trove: { status: troveStatus } }: LiquityStoreState): TroveView => {
   if (troveStatus === "closedByLiquidation") {
     return "LIQUIDATED";
   }
@@ -65,41 +68,16 @@ const getInitialView = (troveStatus: UserTroveStatus): TroveView => {
   return "NONE";
 };
 
-const select = ({ trove: { status } }: LiquityStoreState) => status;
+const troveViewFSMReducer = createLiquityFSMReducer(transitions, mapTroveStatusUpdateToEvent);
 
 export const TroveViewProvider: React.FC = props => {
   const { children } = props;
-  const troveStatus = useLiquitySelector(select);
+  const [view, dispatch] = useLiquityReducer(troveViewFSMReducer, getInitialView);
 
-  const [view, setView] = useState<TroveView>(getInitialView(troveStatus));
-  const viewRef = useRef<TroveView>(view);
-
-  const dispatchEvent = useCallback((event: TroveEvent) => {
-    const nextView = transition(viewRef.current, event);
-
-    console.log(
-      "dispatchEvent() [current-view, event, next-view]",
-      viewRef.current,
-      event,
-      nextView
-    );
-    setView(nextView);
-  }, []);
-
-  useEffect(() => {
-    viewRef.current = view;
-  }, [view]);
-
-  useEffect(() => {
-    const event = troveStatusEvents[troveStatus] ?? null;
-    if (event !== null) {
-      dispatchEvent(event);
-    }
-  }, [troveStatus, dispatchEvent]);
-
-  const provider = {
+  const provider: TroveViewContextType = {
     view,
-    dispatchEvent
+    dispatchEvent: event => dispatch({ type: "fireFSMEvent", event })
   };
+
   return <TroveViewContext.Provider value={provider}>{children}</TroveViewContext.Provider>;
 };

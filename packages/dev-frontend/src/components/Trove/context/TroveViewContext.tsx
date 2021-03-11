@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import type { TroveView, TroveEvent } from "./types";
 
-type TroveViewContextType = {
+export type TroveViewContextType = {
   view: TroveView;
   dispatchEvent: (event: TroveEvent) => void;
 };
