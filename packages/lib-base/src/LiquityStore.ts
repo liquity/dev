@@ -467,7 +467,17 @@ export abstract class LiquityStore<T = unknown> {
   protected abstract _reduceExtra(extraState: T, extraStateUpdate: Partial<T>): T;
 
   private _notify(params: LiquityStoreListenerParams<T>) {
-    [...this._listeners].forEach(listener => listener(params));
+    // Iterate on a copy of `_listeners`, to avoid notifying any new listeners subscribed by
+    // existing listeners, as that could result in infinite loops.
+    //
+    // Before calling a listener from our copy of `_listeners`, check if it has been removed from
+    // the original set. This way we avoid calling listeners that have already been unsubscribed
+    // by an earlier listener callback.
+    [...this._listeners].forEach(listener => {
+      if (this._listeners.has(listener)) {
+        listener(params);
+      }
+    });
   }
 
   /**
