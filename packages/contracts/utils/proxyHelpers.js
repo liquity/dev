@@ -254,6 +254,10 @@ class TroveManagerProxy extends Proxy {
   async getBorrowingFeeWithDecay(...params) {
     return this.proxyFunction('getBorrowingFeeWithDecay', params)
   }
+
+  async getEntireDebtAndColl(...params) {
+    return this.proxyFunction('getEntireDebtAndColl', params)
+  }
 }
 
 class StabilityPoolProxy extends Proxy {

@@ -47,7 +47,8 @@ contract('StabilityPool', async accounts => {
   let gasPriceInWei
 
   const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
-
+  const openTrove = async (params) => th.openTrove(contracts, params)
+  
   describe("Stability Pool Mechanisms", async () => {
 
     before(async () => {

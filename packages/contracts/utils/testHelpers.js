@@ -302,6 +302,18 @@ class TestHelper {
     return compositeDebt
   }
 
+  static async getTroveEntireColl(contracts, trove) {
+    return this.toBN((await contracts.troveManager.getEntireDebtAndColl(trove))[1])
+  }
+
+  static async getTroveEntireDebt(contracts, trove) {
+    return this.toBN((await contracts.troveManager.getEntireDebtAndColl(trove))[0])
+  }
+
+  static async getTroveStake(contracts, trove) {
+    return (contracts.troveManager.getTroveStake(trove))
+  }
+
   /*
    * given the requested LUSD amomunt in openTrove, returns the total debt
    * So, it adds the gas compensation and the borrowing fee
@@ -667,14 +679,15 @@ class TestHelper {
       extraParams.value = ICR.mul(totalDebt).div(price)
     }
 
-    await contracts.borrowerOperations.openTrove(maxFeePercentage, lusdAmount, upperHint, lowerHint, extraParams)
+    const tx = await contracts.borrowerOperations.openTrove(maxFeePercentage, lusdAmount, upperHint, lowerHint, extraParams)
 
     return {
       lusdAmount,
       netDebt,
       totalDebt,
       ICR,
-      collateral: extraParams.value
+      collateral: extraParams.value,
+      tx
     }
   }
 
