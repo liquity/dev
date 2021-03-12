@@ -46,6 +46,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
   const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
 
+  const openTrove = async (params) => th.openTrove(contracts, params)
   describe("LQTY Rewards", async () => {
 
     beforeEach(async () => {
@@ -97,6 +98,55 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       issuance_M5 = toBN('44093311972020200').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
       issuance_M6 = toBN('41651488815552900').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
     })
+
+    it.only("liquidation < 1 minute after a deposit does not change totalLQTYIssued", async () => {
+      
+      
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: {from: A } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: {from: B } })
+
+      // A, B provide to SP
+      await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: A })
+      await stabilityPool.provideToSP(dec(5000, 18), ZERO_ADDRESS, { from: B })
+
+      await th.fastForwardTime(timeValues.MINUTES_IN_ONE_WEEK, web3.currentProvider)
+
+      await priceFeed.setPrice(dec(105, 18))
+
+      // B adjusts, triggering LQTY issuance for all
+      await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: B })
+      const blockTimestamp_1 = th.toBN(await th.getLatestBlockTimestamp(web3))
+
+      // Check LQTY has been issued
+      const totalLQTYIssued_1 = await communityIssuanceTester.totalLQTYIssued()
+      assert.isTrue(totalLQTYIssued_1.gt(toBN('0')))
+      
+      await troveManager.liquidate(B)
+      const blockTimestamp_2 = th.toBN(await th.getLatestBlockTimestamp(web3))
+
+      assert.isFalse(await sortedTroves.contains(B))
+
+      const totalLQTYIssued_2 = await communityIssuanceTester.totalLQTYIssued()
+
+      console.log(`totalLQTYIssued_1: ${totalLQTYIssued_1}`)
+      console.log(`totalLQTYIssued_2: ${totalLQTYIssued_2}`)
+
+      // check blockTimestamp diff < 60s
+      const timestampDiff = blockTimestamp_2.sub(blockTimestamp_1)
+      assert.isTrue(timestampDiff.lt(toBN(60)))
+
+      // Check that the liquidation did not alter total LQTY issued
+      assert.isTrue(totalLQTYIssued_2.eq(totalLQTYIssued_1))
+
+      // Check that depositor B has no LQTY gain
+      const B_pendingLQTYGain = await stabilityPool.getDepositorLQTYGain(B)
+      assert.equal(B_pendingLQTYGain, '0')
+
+      // Check depositor B has a pending ETH gain
+      const B_pendingETHGain = await stabilityPool.getDepositorETHGain(B)
+      assert.isTrue(B_pendingETHGain.gt(toBN('0')))
+    })
+
 
     it("withdrawFromSP(): reward term G does not update when no LQTY is issued", async () => {
       await borrowerOperations.openTrove(th._100pct, dec(10000, 18), A, A, { from: A, value: dec(1000, 'ether') })
