@@ -37,7 +37,7 @@ export const ReadOnlyTrove: React.FC = () => {
             amount={trove.collateral.prettify(4)}
             unit="ETH"
           />
-          <StaticRow label="Debt" inputId="trove-debt" amount={trove.debt.prettify(4)} unit="LUSD" />
+          <StaticRow label="Debt" inputId="trove-debt" amount={trove.debt.prettify(2)} unit="LUSD" />
           <StaticRow
             label="Collateral ratio"
             inputId="trove-collateral-ratio"

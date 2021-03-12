@@ -99,7 +99,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   if (!change && hasActiveTrove) {
     return (
       <Flex variant="layout.actions">
-        <Button disabled sx={{ mx: 2 }}>
+        <Button disabled sx={{ ml: 2 }}>
           Confirm
         </Button>
       </Flex>
@@ -109,7 +109,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   if (!change) {
     return (
       <Flex variant="layout.actions">
-        <Button disabled sx={{ mx: 2 }}>
+        <Button disabled sx={{ ml: 2 }}>
           Borrow
         </Button>
       </Flex>
@@ -127,7 +127,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             throw new Error("shouldn't be called");
           }}
         >
-          <Button sx={{ mx: 2 }} />
+          <Button sx={{ ml: 2 }} />
         </Transaction>
       </Flex>
     );
@@ -169,7 +169,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">
-      <Button disabled sx={{ mx: 2 }}>
+      <Button disabled sx={{ ml: 2 }}>
         <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
         Waiting for your approval
       </Button>
@@ -205,7 +205,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         ]}
         {...{ send }}
       >
-        <Button sx={{ mx: 2 }}>{actionName}</Button>
+        <Button sx={{ ml: 2 }}>{actionName}</Button>
       </Transaction>
     </Flex>
   );

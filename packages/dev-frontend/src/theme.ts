@@ -287,6 +287,12 @@ const theme: Theme = {
       ...formCell,
 
       flex: 1
+    },
+
+    readonly: {
+      ...formBase,
+
+      m: "1px"
     }
   },
 

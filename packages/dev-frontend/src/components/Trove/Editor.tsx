@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, Flex, Label, Input } from "theme-ui";
+import { Text, Flex, Label, Input, SxProp } from "theme-ui";
 
 import { Icon } from "../Icon";
 
@@ -36,7 +36,8 @@ type StaticAmountsProps = {
   variant?: string;
 };
 
-const StaticAmounts: React.FC<StaticAmountsProps> = ({
+const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
+  sx,
   inputId,
   amount,
   color,
@@ -44,19 +45,20 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
   pendingColor,
   onClick,
   invalid,
-  variant
+  variant = "readonly"
 }) => {
   return (
     <Label
       variant={variant}
       id={inputId}
       sx={{
+        ...sx,
         ...(invalid ? { backgroundColor: "invalid" } : {}),
         ...(onClick ? { cursor: "text" } : {})
       }}
       {...{ onClick, invalid }}
     >
-      <Flex sx={{ justifyContent: "space-between", alignItems: "center", width: "100%" }}>
+      <Flex sx={{ justifyContent: "space-between", alignItems: "center" }}>
         <Text sx={{ fontSize: 3 }} {...{ color }}>
           {amount}
         </Text>
@@ -93,7 +95,7 @@ type StaticRowProps = RowProps & StaticAmountsProps;
 export const StaticRow: React.FC<StaticRowProps> = props => {
   return (
     <Row {...props}>
-      <StaticAmounts {...props} />
+      <StaticAmounts sx={{ flexGrow: 1 }} {...props} />
     </Row>
   );
 };

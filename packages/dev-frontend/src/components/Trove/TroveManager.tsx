@@ -154,11 +154,10 @@ export const TroveManager: React.FC = () => {
       dispatch={dispatch}
     >
       <Flex variant="layout.actions">
-        <Flex>
-          <Button variant="cancel" onClick={handleCancel}>
-            Cancel
-          </Button>
-        </Flex>
+        <Button variant="cancel" onClick={handleCancel}>
+          Cancel
+        </Button>
+
         <TroveAction
           original={original}
           edited={edited}
