@@ -50,6 +50,18 @@ const button: ThemeUIStyleObject = {
   }
 };
 
+const buttonOutline = (color: string, hoverColor: string): ThemeUIStyleObject => ({
+  color,
+  background: "none",
+  border: 2,
+
+  ":enabled:hover": {
+    color: "background",
+    bg: hoverColor,
+    borderColor: hoverColor
+  }
+});
+
 const iconButton: ThemeUIStyleObject = {
   ...buttonBase,
 
@@ -161,7 +173,7 @@ const theme: Theme = {
 
   colors,
 
-  borders: [0, "1px solid"],
+  borders: [0, "1px solid", "2px solid"],
 
   shadows: ["0", "0px 4px 8px rgba(41, 49, 71, 0.1)", "0px 8px 16px rgba(41, 49, 71, 0.1)"],
 
@@ -177,6 +189,11 @@ const theme: Theme = {
       ...button,
       bg: "primary",
       ":enabled:hover": { bg: "secondary" }
+    },
+
+    outline: {
+      ...button,
+      ...buttonOutline("primary", "secondary")
     },
 
     cancel: {
