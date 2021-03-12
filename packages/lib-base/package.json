@@ -29,7 +29,7 @@
     "@microsoft/api-extractor": "^7.13.0",
     "@types/mocha": "^8.0.4",
     "@typescript-eslint/eslint-plugin": "^4.4.1",
-    "@typescript-eslint/parser": "^4.4.1",
+    "@typescript-eslint/parser": "^4.17.0",
     "eslint": "^7.11.0",
     "eslint-plugin-tsdoc": "^0.2.11",
     "fast-check": "^2.7.0",
