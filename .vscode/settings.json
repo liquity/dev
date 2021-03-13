@@ -1,5 +1,6 @@
 {
     "slither.solcPath": "",
     "slither.hiddenDetectors": [],
-    "solidity.compileUsingRemoteVersion": "v0.6.11+commit.5ef660b1"
+    "solidity.compileUsingRemoteVersion": "v0.6.11+commit.5ef660b1",
+    "typescript.tsdk": "node_modules/typescript/lib"
 }
