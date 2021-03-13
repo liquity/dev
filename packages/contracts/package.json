@@ -23,7 +23,7 @@
     "decimal.js": "^10.2.0",
     "eth-mutants": "^0.1.1",
     "ethereumjs-util": "^7.0.7",
-    "ethers": "^5.0.0",
+    "ethers": "^5.0.32",
     "solc": "^0.6.11",
     "xmlhttprequest": "^1.8.0"
   },
