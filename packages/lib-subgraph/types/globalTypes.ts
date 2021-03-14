@@ -15,6 +15,7 @@ export enum OrderDirection {
 export enum TroveStatus {
   closedByLiquidation = "closedByLiquidation",
   closedByOwner = "closedByOwner",
+  closedByRedemption = "closedByRedemption",
   open = "open",
 }
 
