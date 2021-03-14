@@ -5,14 +5,15 @@ import { Icon } from "../Icon";
 
 type RowProps = {
   label: string;
+  labelId?: string;
   labelFor?: string;
   unit?: string;
 };
 
-const Row: React.FC<RowProps> = ({ label, labelFor, unit, children }) => {
+const Row: React.FC<RowProps> = ({ label, labelId, labelFor, unit, children }) => {
   return (
     <Flex sx={{ alignItems: "stretch" }}>
-      <Label htmlFor={labelFor} sx={{ width: unit ? "106px" : "170px" }}>
+      <Label id={labelId} htmlFor={labelFor} sx={{ width: unit ? "106px" : "170px" }}>
         {label}
       </Label>
       {unit && (
@@ -27,6 +28,7 @@ const Row: React.FC<RowProps> = ({ label, labelFor, unit, children }) => {
 
 type StaticAmountsProps = {
   inputId: string;
+  labelledBy?: string;
   amount: string;
   color?: string;
   pendingAmount?: string;
@@ -39,6 +41,7 @@ type StaticAmountsProps = {
 const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
   sx,
   inputId,
+  labelledBy,
   amount,
   color,
   pendingAmount,
@@ -51,6 +54,7 @@ const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
     <Label
       variant={variant}
       id={inputId}
+      aria-labelledby={labelledBy}
       sx={{
         ...sx,
         ...(invalid ? { backgroundColor: "invalid" } : {}),
@@ -125,42 +129,43 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
 
-  return (
+  return editing === inputId ? (
     <Row {...{ label, labelFor: inputId, unit }}>
-      {editing === inputId ? (
-        <Input
-          autoFocus
-          sx={invalid ? { backgroundColor: "invalid" } : {}}
-          id={inputId}
-          type="number"
-          step="any"
-          defaultValue={editedAmount}
-          {...{ invalid }}
-          onChange={e => {
-            try {
-              setEditedAmount(e.target.value);
-              setInvalid(false);
-            } catch {
-              setInvalid(true);
-            }
-          }}
-          onBlur={() => {
-            setEditing(undefined);
+      <Input
+        autoFocus
+        sx={invalid ? { backgroundColor: "invalid" } : {}}
+        id={inputId}
+        type="number"
+        step="any"
+        defaultValue={editedAmount}
+        {...{ invalid }}
+        onChange={e => {
+          try {
+            setEditedAmount(e.target.value);
             setInvalid(false);
-          }}
-        />
-      ) : (
-        <StaticAmounts
-          inputId={inputId}
-          amount={amount}
-          color={color}
-          pendingAmount={pendingAmount}
-          pendingColor={pendingColor}
-          invalid={invalid}
-          variant={variant}
-          onClick={() => setEditing(inputId)}
-        />
-      )}
+          } catch {
+            setInvalid(true);
+          }
+        }}
+        onBlur={() => {
+          setEditing(undefined);
+          setInvalid(false);
+        }}
+      />
+    </Row>
+  ) : (
+    <Row labelId={`${inputId}-label`} {...{ label, unit }}>
+      <StaticAmounts
+        inputId={inputId}
+        labelledBy={`${inputId}-label`}
+        amount={amount}
+        color={color}
+        pendingAmount={pendingAmount}
+        pendingColor={pendingColor}
+        invalid={invalid}
+        variant={variant}
+        onClick={() => setEditing(inputId)}
+      />
     </Row>
   );
 };
