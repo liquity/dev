@@ -67,9 +67,10 @@ const fetchConfig = async () => {
 };
 
 export const getConfig = (): Promise<LiquityFrontendConfig> => {
-  if (!configPromise) {
-    configPromise = fetchConfig();
-  }
+  return Promise.resolve(defaultConfig);
+  // if (!configPromise) {
+  //   configPromise = fetchConfig();
+  // }
 
-  return configPromise;
+  // return configPromise;
 };

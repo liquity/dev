@@ -142,6 +142,7 @@ type TransactionProps<C> = {
   requires?: readonly (readonly [boolean, string])[];
   send: TransactionFunction;
   children: C;
+  failureDisplayType?: "asTooltip" | "asChildText" | null;
 };
 
 export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hoverable>>({
@@ -150,7 +151,8 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
   tooltipPlacement,
   requires,
   send,
-  children
+  children,
+  failureDisplayType
 }: TransactionProps<C>) {
   const [transactionState, setTransactionState] = useTransactionState();
   const trigger = React.Children.only<C>(children);
@@ -192,7 +194,8 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
     failureReasons.push("You must wait for confirmation");
   }
 
-  const showFailure = failureReasons.length > 0 && (tooltip ? "asTooltip" : "asChildText");
+  const showFailure =
+    failureReasons.length > 0 && (failureDisplayType ?? (tooltip ? "asTooltip" : "asChildText"));
 
   const clonedTrigger =
     showFailure === "asChildText"

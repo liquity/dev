@@ -367,7 +367,12 @@ const theme: Theme = {
     },
 
     actions: {
-      justifyContent: "flex-end"
+      justifyContent: "flex-end",
+      mt: 2,
+
+      button: {
+        ml: 2
+      }
     },
 
     disabledOverlay: {
@@ -397,6 +402,13 @@ const theme: Theme = {
       display: ["block", "none"],
 
       bg: "rgba(255, 255, 255, 0.8)"
+    },
+
+    infoMessage: {
+      display: "flex",
+      justifyContent: "center",
+      m: 3,
+      alignItems: "center"
     }
   },
 
