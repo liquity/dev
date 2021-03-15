@@ -367,7 +367,13 @@ const theme: Theme = {
     },
 
     actions: {
-      justifyContent: "flex-end"
+      justifyContent: "flex-end",
+
+      mt: 2,
+
+      button: {
+        ml: 2
+      }
     },
 
     disabledOverlay: {
