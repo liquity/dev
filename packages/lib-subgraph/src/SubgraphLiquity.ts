@@ -115,7 +115,7 @@ const troveFromRawFields = ({
   rawSnapshotOfTotalRedistributedDebt
 }: TroveRawFields) =>
   new TroveWithPendingRedistribution(
-    ownerAddress,
+    getAddress(ownerAddress),
     status,
     decimalify(rawCollateral),
     decimalify(rawDebt),

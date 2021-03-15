@@ -67,8 +67,15 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   // Accuracy tests
-  it("getCumulativeIssuanceFraction(): fraction doesn't increase if less than a minute has passed", async () => {
+  it.only("getCumulativeIssuanceFraction(): fraction doesn't increase if less than a minute has passed", async () => {
+   // progress time 1 week 
+    await th.fastForwardTime(timeValues.MINUTES_IN_ONE_WEEK, web3.currentProvider)
+
+    await communityIssuanceTester.unprotectedIssueLQTY()
+   
     const issuanceFractionBefore = await communityIssuanceTester.getCumulativeIssuanceFraction()
+    assert.isTrue(issuanceFractionBefore.gt(th.toBN('0')))
+    console.log(`issuance fraction before: ${issuanceFractionBefore}`)
     const blockTimestampBefore = th.toBN(await th.getLatestBlockTimestamp(web3))
 
     // progress time 10 seconds
@@ -81,6 +88,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     // check blockTimestamp diff < 60s
     assert.isTrue(timestampDiff.lt(th.toBN(60)))
 
+    console.log(`issuance fraction after: ${issuanceFractionBefore}`)
     assert.isTrue(issuanceFractionBefore.eq(issuanceFractionAfter))
   })
 
