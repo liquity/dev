@@ -54,6 +54,7 @@ contract('BorrowerOperations', async accounts => {
   const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
   const getNetBorrowingAmount = async (debtWithFee) => th.getNetBorrowingAmount(contracts, debtWithFee)
   const getActualDebtFromComposite = async (compositeDebt) => th.getActualDebtFromComposite(compositeDebt, contracts)
+  const openTrove = async (params) => th.openTrove(contracts, params)
 
   let LUSD_GAS_COMPENSATION
 
@@ -2547,6 +2548,19 @@ contract('BorrowerOperations', async accounts => {
     }
 
     // --- closeTrove() ---
+
+    it("closeTrove(): reverts if lowers the TCR", async () => {
+      await openTrove({ ICR: toBN(dec(300, 18)), extraParams:{ from: alice } })
+      await openTrove({ ICR: toBN(dec(120, 18)), extraLUSDAmount: toBN(dec(300, 18)), extraParams:{ from: bob } })
+
+      // to compensate borrowing fees
+      await lusdToken.transfer(alice, dec(300, 18), { from: bob })
+
+      await assertRevert(
+        borrowerOperations.closeTrove({ from: alice }),
+        "BorrowerOps: An operation that would result in TCR < CCR is not permitted"
+      )
+    })
 
     it("closeTrove(): reverts when calling address does not have active trove", async () => {
       await borrowerOperations.openTrove(th._100pct, 0, alice, alice, { from: alice, value: dec(1, 'ether') })
