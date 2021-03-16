@@ -525,7 +525,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         require(_collWithdrawal <= _troveColl, "BorrowerOps: Collateral withdrawal must not be larger than the trove's collateral");
     }
 
-    function _requireAtLeastMinNetDebt(uint _netDebt) internal view {
+    function _requireAtLeastMinNetDebt(uint _netDebt) internal pure {
         require (_netDebt >= MIN_NET_DEBT, "BorrowerOps: Trove's net debt must be greater than minimum");
     }
 
