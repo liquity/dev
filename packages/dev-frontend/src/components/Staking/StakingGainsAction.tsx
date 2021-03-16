@@ -28,7 +28,7 @@ export const StakingGainsAction: React.FC = () => {
   return (
     <Transaction
       id="stake"
-      failureDisplayType="asTooltip"
+      showFailure="asTooltip"
       tooltipPlacement="bottom"
       send={liquity.withdrawGainsFromStaking.bind(liquity)}
     >

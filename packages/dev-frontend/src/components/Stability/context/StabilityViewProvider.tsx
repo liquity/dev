@@ -19,7 +19,6 @@ const transitions: StabilityEventTransitions = {
   },
   ACTIVE: {
     REWARDS_CLAIMED: "ACTIVE",
-    LQTY_CLAIMED_AND_ETH_MOVED: "ACTIVE",
     ADJUST_DEPOSIT_PRESSED: "ADJUSTING",
     DEPOSIT_EMPTIED: "NONE"
   },
@@ -36,9 +35,7 @@ const transition = (view: StabilityView, event: StabilityEvent): StabilityView =
 };
 
 const getInitialView = (stabilityDeposit: StabilityDeposit): StabilityView => {
-  const hasDeposit = !stabilityDeposit.isEmpty;
-  const hasRewards = !stabilityDeposit.collateralGain.isZero || !stabilityDeposit.lqtyReward.isZero;
-  return hasDeposit || hasRewards ? "ACTIVE" : "NONE";
+  return stabilityDeposit.isEmpty ? "NONE" : "ACTIVE";
 };
 
 const select = ({ stabilityDeposit }: LiquityStoreState): StabilityDeposit => stabilityDeposit;
@@ -76,5 +73,6 @@ export const StabilityViewProvider: React.FC = props => {
     view,
     dispatchEvent
   };
+
   return <StabilityViewContext.Provider value={provider}>{children}</StabilityViewContext.Provider>;
 };

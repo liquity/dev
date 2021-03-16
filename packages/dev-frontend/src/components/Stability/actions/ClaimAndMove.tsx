@@ -25,7 +25,7 @@ export const ClaimAndMove: React.FC = ({ children }) => {
     <Transaction
       id={transactionId}
       send={claimRewardAndMoveGain}
-      failureDisplayType="asTooltip"
+      showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
       <Button variant="outline" sx={{ mt: 3, width: "100%" }}>

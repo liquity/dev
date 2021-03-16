@@ -45,7 +45,7 @@ export const StakingManagerAction: React.FC<StakingActionProps> = ({ change }) =
   return (
     <Transaction
       id="stake"
-      failureDisplayType="asTooltip"
+      showFailure="asTooltip"
       tooltipPlacement="bottom"
       {...{ send, requires }}
     >

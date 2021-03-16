@@ -25,7 +25,7 @@ export const ClaimRewards: React.FC = ({ children }) => {
     <Transaction
       id={transactionId}
       send={claimRewards}
-      failureDisplayType="asTooltip"
+      showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
       <Button variant="outline">{children}</Button>

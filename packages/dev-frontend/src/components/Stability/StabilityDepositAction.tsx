@@ -78,7 +78,7 @@ export const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
             [noOwnFrontend, "Address registered as frontend"],
             [lusdBalance.gte(depositLUSD), `You don't have enough ${COIN}`]
           ]}
-          failureDisplayType="asTooltip"
+          showFailure="asTooltip"
           tooltipPlacement="bottom"
         >
           <Button>Confirm</Button>
@@ -99,7 +99,7 @@ export const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
               "You can't withdraw when there are undercollateralized Troves"
             ]
           ]}
-          failureDisplayType="asTooltip"
+          showFailure="asTooltip"
           tooltipPlacement="bottom"
         >
           <Button>Confirm</Button>
