@@ -3,14 +3,13 @@ import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Decimal, Decimalish, Difference, StabilityDeposit } from "@liquity/lib-base";
 
-import { COIN, GT } from "../strings";
+import { COIN, GT } from "../../strings";
 
-import { Icon } from "./Icon";
-import { EditableRow, StaticRow } from "./Trove/Editor";
-import { LoadingOverlay } from "./LoadingOverlay";
+import { Icon } from "../Icon";
+import { EditableRow, StaticRow } from "../Trove/Editor";
+import { LoadingOverlay } from "../LoadingOverlay";
 
 type StabilityDepositEditorProps = {
-  title: string;
   originalDeposit: StabilityDeposit;
   editedLUSD: Decimal;
   changePending: boolean;
@@ -18,11 +17,11 @@ type StabilityDepositEditorProps = {
 };
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
-  title,
   originalDeposit,
   editedLUSD,
   changePending,
-  dispatch
+  dispatch,
+  children
 }) => {
   const editingState = useState<string>();
 
@@ -32,7 +31,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   return (
     <Card>
       <Heading>
-        {title}
+        Stability Pool
         {edited && !changePending && (
           <Button
             variant="titleIcon"
@@ -78,6 +77,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
             />
           </>
         )}
+        {children}
       </Box>
     </Card>
   );
