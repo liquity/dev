@@ -12,7 +12,7 @@ export const ConfirmButton: React.FC<ConfirmButtonProps> = ({ amount }) => {
     liquity: { send: liquity }
   } = useLiquity();
 
-  const transactionId = "mine-deposit";
+  const transactionId = "mine-adjust";
   const isDisabled = amount === "0";
 
   return (

@@ -10,7 +10,7 @@ import { useMineView } from "../../context/MineViewContext";
 import { Transaction, useMyTransactionState } from "../../../Transaction";
 import { ConfirmButton } from "./ConfirmButton";
 
-export const Deposit: React.FC = () => {
+export const Stake: React.FC = () => {
   const { dispatchEvent } = useMineView();
   const [amount, setAmount] = useState<string>("0");
   const isDirty = amount !== "0";
@@ -46,7 +46,7 @@ export const Deposit: React.FC = () => {
 
       <Box>
         <EditableRow
-          label="Deposit"
+          label="Stake"
           inputId="amount-lp"
           amount={amount || "0"}
           unit={LP}
