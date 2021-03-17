@@ -11,6 +11,8 @@ import { TroveViewProvider } from "../components/Trove/context/TroveViewProvider
 import { StabilityViewProvider } from "../components/Stability/context/StabilityViewProvider";
 import { StakingViewProvider } from "../components/Staking/context/StakingViewProvider";
 import { Staking } from "../components/Staking/Staking";
+import { MineViewProvider } from "../components/Mine/context/MineViewProvider";
+import { Mine } from "../components/Mine/Mine";
 
 export const Dashboard: React.FC = () => (
   <>
@@ -29,6 +31,10 @@ export const Dashboard: React.FC = () => (
         </StakingViewProvider>
 
         <RedemptionManager />
+
+        <MineViewProvider>
+          <Mine />
+        </MineViewProvider>
       </Container>
 
       <Container variant="right">
