@@ -335,7 +335,7 @@ class TestHelper {
 
   // Subtracts the borrowing fee
   static async getNetBorrowingAmount(contracts, debtWithFee) {
-    const borrowingRate = await contracts.troveManager.getBorrowingRate()
+    const borrowingRate = await contracts.troveManager.getBorrowingRateWithDecay()
     return this.toBN(debtWithFee).mul(MoneyValues._1e18BN).div(MoneyValues._1e18BN.add(borrowingRate))
   }
 
