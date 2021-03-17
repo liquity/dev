@@ -14,11 +14,11 @@ import {
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
-import { COIN } from "../strings";
+import { COIN } from "../../strings";
 
-import { Icon } from "./Icon";
+import { Icon } from "../Icon";
 import { EditableRow, StaticRow } from "./Editor";
-import { LoadingOverlay } from "./LoadingOverlay";
+import { LoadingOverlay } from "../LoadingOverlay";
 
 type TroveEditorProps = {
   original: Trove;
@@ -70,7 +70,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   return (
     <Card>
       <Heading>
-        {original.isEmpty ? "Open a Trove to borrow LUSD" : "My Trove"}
+        Trove
         {change && !changePending && (
           <Button
             variant="titleIcon"
@@ -83,8 +83,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
       </Heading>
 
       {changePending && <LoadingOverlay />}
-
-      {children}
 
       <Box>
         <EditableRow
@@ -153,6 +151,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           }
           pendingColor={collateralRatioChange.positive ? "success" : "danger"}
         />
+        {children}
       </Box>
     </Card>
   );

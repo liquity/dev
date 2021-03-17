@@ -14,10 +14,11 @@ import {
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
-import { useLiquity } from "../hooks/LiquityContext";
-import { COIN } from "../strings";
+import { useLiquity } from "../../hooks/LiquityContext";
+import { COIN } from "../../strings";
 
-import { Transaction, TransactionFunction, useMyTransactionState } from "./Transaction";
+import { Transaction, TransactionFunction, useMyTransactionState } from "../Transaction";
+import { useTroveView } from "./context/TroveViewContext";
 
 type TroveActionProps = {
   original: Trove;
@@ -81,23 +82,44 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
   const myTransactionId = "trove";
   const myTransactionState = useMyTransactionState(myTransactionId);
+  const { dispatchEvent } = useTroveView();
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
       dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
+    } else if (myTransactionState.type === "confirmedOneShot") {
+      dispatchEvent("TROVE_ADJUSTED");
     }
-  }, [myTransactionState.type, dispatch]);
+  }, [myTransactionState.type, dispatch, dispatchEvent]);
+
+  const hasActiveTrove = !original.isEmpty;
+
+  if (!change && hasActiveTrove) {
+    return (
+      <Flex>
+        <Button disabled sx={{ ml: 2 }}>
+          Confirm
+        </Button>
+      </Flex>
+    );
+  }
 
   if (!change) {
-    return null;
+    return (
+      <Flex>
+        <Button disabled sx={{ ml: 2 }}>
+          Borrow
+        </Button>
+      </Flex>
+    );
   }
 
   if (change.type === "invalidCreation") {
     // Yuck, Transaction needs refactoring
     return (
-      <Flex variant="layout.actions">
+      <Flex>
         <Transaction
           id={myTransactionId}
           requires={[[false, `Debt should be at least ${LUSD_MINIMUM_DEBT} ${COIN}`]]}
@@ -105,7 +127,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
             throw new Error("shouldn't be called");
           }}
         >
-          <Button sx={{ mx: 2 }} />
+          <Button sx={{ ml: 2 }} />
         </Transaction>
       </Flex>
     );
@@ -146,14 +168,14 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         ];
 
   return myTransactionState.type === "waitingForApproval" ? (
-    <Flex variant="layout.actions">
-      <Button disabled sx={{ mx: 2 }}>
+    <Flex>
+      <Button disabled sx={{ ml: 2 }}>
         <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
         Waiting for your approval
       </Button>
     </Flex>
   ) : changePending ? null : (
-    <Flex variant="layout.actions">
+    <Flex>
       <Transaction
         id={myTransactionId}
         requires={[
@@ -183,7 +205,7 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         ]}
         {...{ send }}
       >
-        <Button sx={{ mx: 2 }}>{actionName}</Button>
+        <Button sx={{ ml: 2 }}>{actionName}</Button>
       </Transaction>
     </Flex>
   );

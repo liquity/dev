@@ -3,27 +3,29 @@ import { Heading, Box, Card, Button } from "theme-ui";
 
 import { Decimal, Decimalish, Difference, LQTYStake } from "@liquity/lib-base";
 
-import { COIN, GT } from "../strings";
+import { COIN, GT } from "../../strings";
 
-import { Icon } from "./Icon";
-import { EditableRow, StaticRow } from "./Editor";
-import { LoadingOverlay } from "./LoadingOverlay";
+import { Icon } from "../Icon";
+import { EditableRow, StaticRow } from "../Trove/Editor";
+import { LoadingOverlay } from "../LoadingOverlay";
+
+import { useStakingView } from "./context/StakingViewContext";
 
 type StakingEditorProps = {
   title: string;
   originalStake: LQTYStake;
   editedLQTY: Decimal;
-  changePending: boolean;
   dispatch: (action: { type: "setStake"; newValue: Decimalish } | { type: "revert" }) => void;
 };
 
 export const StakingEditor: React.FC<StakingEditorProps> = ({
+  children,
   title,
   originalStake,
   editedLQTY,
-  changePending,
   dispatch
 }) => {
+  const { changePending } = useStakingView();
   const editingState = useState<string>();
 
   const pendingStakeChange = Difference.between(editedLQTY, originalStake.stakedLQTY.nonZero);
@@ -78,6 +80,8 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
             />
           </>
         )}
+
+        {children}
       </Box>
     </Card>
   );

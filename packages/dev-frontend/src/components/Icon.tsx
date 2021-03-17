@@ -68,10 +68,10 @@ const getIcon = (name: IconName): IconProp => {
   }
 };
 
-export type IconProps = Pick<FontAwesomeIconProps, "size" | "color" | "spin"> & {
+export type IconProps = Pick<FontAwesomeIconProps, "style" | "size" | "color" | "spin"> & {
   name: IconName;
 };
 
-export const Icon: React.FC<IconProps> = ({ name, ...rest }) => (
-  <FontAwesomeIcon icon={getIcon(name)} {...rest} />
+export const Icon: React.FC<IconProps> = ({ name, style, ...rest }) => (
+  <FontAwesomeIcon style={style} icon={getIcon(name)} {...rest} />
 );

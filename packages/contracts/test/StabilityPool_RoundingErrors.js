@@ -41,18 +41,18 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
     const defaulters = accounts.slice(101, 301)
 
     for (let account of depositors) {
-      await borrowerOperations.openTrove(th._100pct, dec(100, 18), account, account, { from: account, value: dec(4, 'ether') })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: account } })
       await stabilityPool.provideToSP(dec(100, 18), { from: account })
     }
 
     // Defaulter opens trove with 200% ICR
     for (let defaulter of defaulters) {
-      await borrowerOperations.openTrove(th._100pct, dec(39, 18),  defaulter, { from: defaulter, value: dec(49, 16) })
-    }
+      await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: defaulter } })
+      }
     const price = await priceFeed.getPrice()
 
     // price drops by 50%: defaulter ICR falls to 100%
-    await priceFeed.setPrice(dec(100, 18));
+    await priceFeed.setPrice(dec(105, 18));
 
     // Defaulters liquidated
     for (let defaulter of defaulters) {
@@ -65,8 +65,8 @@ contract('Pool Manager: Sum-Product rounding errors', async accounts => {
     const ETH_Gain = await stabilityPool.getCurrentETHGain(depositors[0])
 
     // Check depostiors receive their share without too much error
-    assert.isAtMost(th.getDifference(SP_TotalDeposits.div(th.toBN(depositors.length)), compoundedDeposit), 1000)
-    assert.isAtMost(th.getDifference(SP_ETH.div(th.toBN(depositors.length)), ETH_Gain), 1000)
+    assert.isAtMost(th.getDifference(SP_TotalDeposits.div(th.toBN(depositors.length)), compoundedDeposit), 100000)
+    assert.isAtMost(th.getDifference(SP_ETH.div(th.toBN(depositors.length)), ETH_Gain), 100000)
   })
 })
 

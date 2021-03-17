@@ -1,18 +1,19 @@
 import React, { useState } from "react";
-import { Text, Flex, Label, Input } from "theme-ui";
+import { Text, Flex, Label, Input, SxProp } from "theme-ui";
 
-import { Icon } from "./Icon";
+import { Icon } from "../Icon";
 
 type RowProps = {
   label: string;
+  labelId?: string;
   labelFor?: string;
   unit?: string;
 };
 
-const Row: React.FC<RowProps> = ({ label, labelFor, unit, children }) => {
+const Row: React.FC<RowProps> = ({ label, labelId, labelFor, unit, children }) => {
   return (
     <Flex sx={{ alignItems: "stretch" }}>
-      <Label htmlFor={labelFor} sx={{ width: unit ? "106px" : "170px" }}>
+      <Label id={labelId} htmlFor={labelFor} sx={{ width: unit ? "106px" : "170px" }}>
         {label}
       </Label>
       {unit && (
@@ -27,28 +28,35 @@ const Row: React.FC<RowProps> = ({ label, labelFor, unit, children }) => {
 
 type StaticAmountsProps = {
   inputId: string;
+  labelledBy?: string;
   amount: string;
   color?: string;
   pendingAmount?: string;
   pendingColor?: string;
   onClick?: () => void;
   invalid?: boolean;
+  variant?: string;
 };
 
-const StaticAmounts: React.FC<StaticAmountsProps> = ({
+const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
+  sx,
   inputId,
+  labelledBy,
   amount,
   color,
   pendingAmount,
   pendingColor,
   onClick,
-  invalid
+  invalid,
+  variant = "readonly"
 }) => {
   return (
     <Label
-      variant="input"
+      variant={variant}
       id={inputId}
+      aria-labelledby={labelledBy}
       sx={{
+        ...sx,
         ...(invalid ? { backgroundColor: "invalid" } : {}),
         ...(onClick ? { cursor: "text" } : {})
       }}
@@ -58,7 +66,6 @@ const StaticAmounts: React.FC<StaticAmountsProps> = ({
         <Text sx={{ fontSize: 3 }} {...{ color }}>
           {amount}
         </Text>
-
         {pendingAmount ? (
           <Text sx={{ fontSize: 2, color: pendingColor }}>
             {pendingAmount === "++" ? (
@@ -92,7 +99,7 @@ type StaticRowProps = RowProps & StaticAmountsProps;
 export const StaticRow: React.FC<StaticRowProps> = props => {
   return (
     <Row {...props}>
-      <StaticAmounts {...props} />
+      <StaticAmounts sx={{ flexGrow: 1 }} {...props} />
     </Row>
   );
 };
@@ -116,41 +123,49 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   pendingColor,
   editingState,
   editedAmount,
-  setEditedAmount
+  setEditedAmount,
+  variant = "input"
 }) => {
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
 
-  return (
+  return editing === inputId ? (
     <Row {...{ label, labelFor: inputId, unit }}>
-      {editing === inputId ? (
-        <Input
-          autoFocus
-          sx={invalid ? { backgroundColor: "invalid" } : {}}
-          id={inputId}
-          type="number"
-          step="any"
-          defaultValue={editedAmount}
-          {...{ invalid }}
-          onChange={e => {
-            try {
-              setEditedAmount(e.target.value);
-              setInvalid(false);
-            } catch {
-              setInvalid(true);
-            }
-          }}
-          onBlur={() => {
-            setEditing(undefined);
+      <Input
+        autoFocus
+        sx={invalid ? { backgroundColor: "invalid" } : {}}
+        id={inputId}
+        type="number"
+        step="any"
+        defaultValue={editedAmount}
+        {...{ invalid }}
+        onChange={e => {
+          try {
+            setEditedAmount(e.target.value);
             setInvalid(false);
-          }}
-        />
-      ) : (
-        <StaticAmounts
-          {...{ inputId, amount, color, pendingAmount, pendingColor, invalid }}
-          onClick={() => setEditing(inputId)}
-        />
-      )}
+          } catch {
+            setInvalid(true);
+          }
+        }}
+        onBlur={() => {
+          setEditing(undefined);
+          setInvalid(false);
+        }}
+      />
+    </Row>
+  ) : (
+    <Row labelId={`${inputId}-label`} {...{ label, unit }}>
+      <StaticAmounts
+        inputId={inputId}
+        labelledBy={`${inputId}-label`}
+        amount={amount}
+        color={color}
+        pendingAmount={pendingAmount}
+        pendingColor={pendingColor}
+        invalid={invalid}
+        variant={variant}
+        onClick={() => setEditing(inputId)}
+      />
     </Row>
   );
 };

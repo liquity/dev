@@ -27,14 +27,22 @@ type RiskiestTrovesProps = {
   pageSize: number;
 };
 
-const select = ({ numberOfTroves, price, blockTag }: BlockPolledLiquityStoreState) => ({
+const select = ({
   numberOfTroves,
   price,
+  total,
+  lusdInStabilityPool,
+  blockTag
+}: BlockPolledLiquityStoreState) => ({
+  numberOfTroves,
+  price,
+  total,
+  lusdInStabilityPool,
   blockTag
 });
 
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
-  const { blockTag, numberOfTroves, price } = useLiquitySelector(select);
+  const { blockTag, numberOfTroves, total, lusdInStabilityPool, price } = useLiquitySelector(select);
   const { liquity } = useLiquity();
 
   const [loading, setLoading] = useState(true);
@@ -287,7 +295,10 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                           tooltip="Liquidate"
                           requires={[
                             [
-                              trove.collateralRatioIsBelowMinimum(price),
+                              total.collateralRatioIsBelowCritical(price)
+                                ? trove._nominalCollateralRatio.lt(total._nominalCollateralRatio) &&
+                                  trove.debt.lt(lusdInStabilityPool)
+                                : trove.collateralRatioIsBelowMinimum(price),
                               "Collateral ratio not low enough"
                             ],
                             [numberOfTroves > 1, "Can't liquidate when only one Trove exists"]

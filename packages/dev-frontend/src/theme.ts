@@ -50,6 +50,18 @@ const button: ThemeUIStyleObject = {
   }
 };
 
+const buttonOutline = (color: string, hoverColor: string): ThemeUIStyleObject => ({
+  color,
+  background: "none",
+  border: 2,
+
+  ":enabled:hover": {
+    color: "background",
+    bg: hoverColor,
+    borderColor: hoverColor
+  }
+});
+
 const iconButton: ThemeUIStyleObject = {
   ...buttonBase,
 
@@ -161,7 +173,7 @@ const theme: Theme = {
 
   colors,
 
-  borders: [0, "1px solid"],
+  borders: [0, "1px solid", "2px solid"],
 
   shadows: ["0", "0px 4px 8px rgba(41, 49, 71, 0.1)", "0px 8px 16px rgba(41, 49, 71, 0.1)"],
 
@@ -176,6 +188,17 @@ const theme: Theme = {
     primary: {
       ...button,
       bg: "primary",
+      ":enabled:hover": { bg: "secondary" }
+    },
+
+    outline: {
+      ...button,
+      ...buttonOutline("primary", "secondary")
+    },
+
+    cancel: {
+      ...button,
+      bg: "accent",
       ":enabled:hover": { bg: "secondary" }
     },
 
@@ -281,6 +304,12 @@ const theme: Theme = {
       ...formCell,
 
       flex: 1
+    },
+
+    readonly: {
+      ...formBase,
+
+      m: "1px"
     }
   },
 
@@ -338,8 +367,12 @@ const theme: Theme = {
     },
 
     actions: {
-      mt: cardGapY,
-      justifyContent: "center"
+      justifyContent: "flex-end",
+      mt: 2,
+
+      button: {
+        ml: 2
+      }
     },
 
     disabledOverlay: {
@@ -369,6 +402,13 @@ const theme: Theme = {
       display: ["block", "none"],
 
       bg: "rgba(255, 255, 255, 0.8)"
+    },
+
+    infoMessage: {
+      display: "flex",
+      justifyContent: "center",
+      m: 3,
+      alignItems: "center"
     }
   },
 

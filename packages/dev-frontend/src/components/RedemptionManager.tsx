@@ -10,7 +10,7 @@ import { COIN } from "../strings";
 import { Icon } from "./Icon";
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { LoadingOverlay } from "./LoadingOverlay";
-import { EditableRow, StaticRow } from "./Editor";
+import { EditableRow, StaticRow } from "./Trove/Editor";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 
@@ -89,7 +89,11 @@ const RedemptionAction: React.FC<RedemptionActionProps> = ({
   );
 };
 
-const select = ({ price, fees, total }: LiquityStoreState) => ({ price, fees, total });
+const select = ({ price, fees, total }: LiquityStoreState) => ({
+  price,
+  fees,
+  total
+});
 
 export const RedemptionManager: React.FC = () => {
   const { price, fees, total } = useLiquitySelector(select);

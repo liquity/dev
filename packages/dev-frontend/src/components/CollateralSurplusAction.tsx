@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
 import { LiquityStoreState } from "@liquity/lib-base";
@@ -7,8 +7,11 @@ import { useLiquitySelector } from "@liquity/lib-react";
 import { useLiquity } from "../hooks/LiquityContext";
 
 import { Transaction, useMyTransactionState } from "./Transaction";
+import { useTroveView } from "./Trove/context/TroveViewContext";
 
-const select = ({ collateralSurplusBalance }: LiquityStoreState) => ({ collateralSurplusBalance });
+const select = ({ collateralSurplusBalance }: LiquityStoreState) => ({
+  collateralSurplusBalance
+});
 
 export const CollateralSurplusAction: React.FC = () => {
   const { collateralSurplusBalance } = useLiquitySelector(select);
@@ -18,6 +21,14 @@ export const CollateralSurplusAction: React.FC = () => {
 
   const myTransactionId = "claim-coll-surplus";
   const myTransactionState = useMyTransactionState(myTransactionId);
+
+  const { dispatchEvent } = useTroveView();
+
+  useEffect(() => {
+    if (myTransactionState.type === "confirmedOneShot") {
+      dispatchEvent("TROVE_SURPLUS_COLLATERAL_CLAIMED");
+    }
+  }, [myTransactionState.type, dispatchEvent]);
 
   return myTransactionState.type === "waitingForApproval" ? (
     <Flex variant="layout.actions">
