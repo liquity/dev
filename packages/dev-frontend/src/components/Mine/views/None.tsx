@@ -7,8 +7,8 @@ import { RemainingLQTY } from "./RemainingLQTY";
 export const None: React.FC = () => {
   const { dispatchEvent } = useMineView();
 
-  const handleDepositPressed = useCallback(() => {
-    dispatchEvent("DEPOSIT_PRESSED");
+  const handleStakePressed = useCallback(() => {
+    dispatchEvent("STAKE_PRESSED");
   }, [dispatchEvent]);
 
   return (
@@ -24,7 +24,7 @@ export const None: React.FC = () => {
           </Flex>
           <RemainingLQTY />
           <Flex sx={{ fontSize: 2, mt: 2 }}>
-            You can mine LQTY by depositing your Uniswap ETH/LUSD LP tokens
+            You can mine LQTY by staking your Uniswap ETH/LUSD LP tokens
           </Flex>
           <Flex sx={{ fontSize: 2, mt: 2 }}>
             You can obtain LP tokens by adding liquidity to the ETH/LUSD pool on Uniswap
@@ -32,7 +32,7 @@ export const None: React.FC = () => {
         </Box>
 
         <Flex variant="layout.actions">
-          <Button onClick={handleDepositPressed}>Deposit</Button>
+          <Button onClick={handleStakePressed}>Stake</Button>
         </Flex>
       </Box>
     </Card>
