@@ -200,7 +200,7 @@ contract('BorrowerOperations', async accounts => {
       // price drops to 1ETH:100LUSD, reducing Carol's ICR below MCR
       await priceFeed.setPrice('100000000000000000000');
 
-      // Liquidte Carol's Trove,
+      // Liquidate Carol's Trove,
       const tx = await troveManager.liquidate(carol, { from: owner });
    
       assert.isFalse(await sortedTroves.contains(carol))
