@@ -40,15 +40,16 @@ export const Active: React.FC = () => {
           <DisabledEditableRow
             label="Deposit"
             inputId="mine-deposit"
-            amount="0"
+            amount="10"
             // amount={lpStaked.currentLp.prettify(4)}
             unit={LP}
           />
           <StaticRow
             label="Reward"
             inputId="mine-reward"
-            amount="0"
+            amount="50"
             // amount={lpStaked.lqtyReward.prettify(4)}
+            color={"success"}
             // color={lpStaked.lqtyReward.nonZero && "success"}
             unit={GT}
           />
