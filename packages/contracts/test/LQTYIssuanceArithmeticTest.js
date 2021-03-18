@@ -67,7 +67,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   })
 
   // Accuracy tests
-  it.only("getCumulativeIssuanceFraction(): fraction doesn't increase if less than a minute has passed", async () => {
+  it("getCumulativeIssuanceFraction(): fraction doesn't increase if less than a minute has passed", async () => {
    // progress time 1 week 
     await th.fastForwardTime(timeValues.MINUTES_IN_ONE_WEEK, web3.currentProvider)
 

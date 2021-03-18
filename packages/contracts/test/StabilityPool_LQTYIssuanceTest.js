@@ -99,7 +99,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       issuance_M6 = toBN('41651488815552900').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
     })
 
-    it.only("liquidation < 1 minute after a deposit does not change totalLQTYIssued", async () => {
+    it("liquidation < 1 minute after a deposit does not change totalLQTYIssued", async () => {
       
       
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: {from: A } })
