@@ -1,6 +1,7 @@
 import React, { useCallback } from "react";
 import { Card, Heading, Box, Flex, Button } from "theme-ui";
 import { Icon } from "../../../Icon";
+import { InfoMessage } from "../../../InfoMessage";
 import { useMineView } from "../../context/MineViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
 
@@ -19,22 +20,13 @@ export const None: React.FC = () => {
           <RemainingLQTY />
         </Flex>
       </Heading>
-      <Box>
-        <Box sx={{ m: 2 }}>
-          <Flex sx={{ alignItems: "center", my: 2 }}>
-            <Icon name="info-circle" size="2x" />
-            <Heading as="h3" px={1}>
-              You aren't mining LQTY
-            </Heading>
-          </Flex>
-          <RemainingLQTY />
-          <Flex sx={{ fontSize: 2, mt: 2 }}>
-            You can mine LQTY by staking your Uniswap ETH/LUSD LP tokens
-          </Flex>
-          <Flex sx={{ fontSize: 2, mt: 2 }}>
+      <Box sx={{ p: [2, 3] }}>
+        <InfoMessage title="You aren't mining LQTY">
+          <Flex>You can mine LQTY by staking your Uniswap ETH/LUSD LP tokens</Flex>
+          <Flex sx={{ mt: 2 }}>
             You can obtain LP tokens by adding liquidity to the ETH/LUSD pool on Uniswap
           </Flex>
-        </Box>
+        </InfoMessage>
 
         <Flex variant="layout.actions">
           <Button onClick={handleStakePressed}>Stake</Button>

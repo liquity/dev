@@ -9,7 +9,7 @@ import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMineView } from "../../context/MineViewContext";
 import { Transaction, useMyTransactionState } from "../../../Transaction";
 import { ConfirmButton } from "./ConfirmButton";
-import { AdjustActionDescription } from "./ActionDescription";
+import { AdjustActionDescription } from "./AdjustActionDescription";
 
 export const Adjust: React.FC = () => {
   const { dispatchEvent } = useMineView();
@@ -34,10 +34,10 @@ export const Adjust: React.FC = () => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
 
-  const [shouldClaimRewards, setShouldClaimRewards] = useState(false);
-  const toggleClaimRewards = useCallback(() => {
-    setShouldClaimRewards(!shouldClaimRewards);
-  }, [shouldClaimRewards, setShouldClaimRewards]);
+  const [shouldClaimReward, setShouldClaimReward] = useState(false);
+  const toggleClaimReward = useCallback(() => {
+    setShouldClaimReward(!shouldClaimReward);
+  }, [shouldClaimReward, setShouldClaimReward]);
 
   useEffect(() => {
     if (transactionState.type === "confirmedOneShot") {
@@ -62,7 +62,7 @@ export const Adjust: React.FC = () => {
 
       {isTransactionPending && <LoadingOverlay />}
 
-      <Box>
+      <Box sx={{ p: [2, 3] }}>
         <EditableRow
           label="Deposit"
           inputId="mine-amount-lp"
@@ -81,12 +81,12 @@ export const Adjust: React.FC = () => {
           unit={GT}
         />
 
-        <Flex sx={{ m: 2, justifyContent: "flex-end", alignItems: "center" }}>
-          <input type="checkbox" id="claimRewards" onChange={toggleClaimRewards} />
-          <label htmlFor="claimRewards">Claim rewards</label>
-        </Flex>
+        <AdjustActionDescription amount={amount} shouldClaimReward={shouldClaimReward} />
 
-        <AdjustActionDescription amount={amount} shouldClaimRewards={shouldClaimRewards} />
+        <Flex sx={{ m: 2, justifyContent: "flex-end", alignItems: "center" }}>
+          <input type="checkbox" id="claimRewards" onChange={toggleClaimReward} />
+          <label htmlFor="claimRewards">Claim reward</label>
+        </Flex>
 
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>

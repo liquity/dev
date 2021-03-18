@@ -6,14 +6,15 @@ import { LP } from "../../../../strings";
 import { Transaction, useMyTransactionState } from "../../../Transaction";
 import { Icon } from "../../../Icon";
 import { useLiquitySelector } from "@liquity/lib-react";
+import { ActionDescription } from "../../../ActionDescription";
 
-type ActionDescriptionProps = {
+type StakeActionDescriptionProps = {
   amount: string;
 };
 
 const selector = ({ lpBalance }: LiquityStoreState) => ({ lpBalance });
 
-export const ActionDescription: React.FC<ActionDescriptionProps> = ({ amount }) => {
+export const StakeActionDescription: React.FC<StakeActionDescriptionProps> = ({ amount }) => {
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -30,12 +31,7 @@ export const ActionDescription: React.FC<ActionDescriptionProps> = ({ amount }) 
   if (!isDirty) return null;
 
   return (
-    <Flex variant="layout.infoMessage">
-      <Icon
-        style={{ marginRight: "2px", display: "flex", alignItems: "center" }}
-        name="info-circle"
-      />
-
+    <ActionDescription>
       {isWaitingForApproval && <Text>Waiting for your approval...</Text>}
 
       {!isWaitingForApproval && (
@@ -49,6 +45,6 @@ export const ActionDescription: React.FC<ActionDescriptionProps> = ({ amount }) 
           </Text>
         </Transaction>
       )}
-    </Flex>
+    </ActionDescription>
   );
 };
