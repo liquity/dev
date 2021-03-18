@@ -68,11 +68,11 @@ export const Active: React.FC = () => {
         </Box>
 
         <Flex variant="layout.actions">
-          <Button variant="outline">Claim reward</Button>
-          <Button variant="primary" onClick={handleAdjustPressed}>
+          <Button variant="outline" onClick={handleAdjustPressed}>
             <Icon name="pen" size="sm" />
             &nbsp;Adjust
           </Button>
+          <Button variant="primary">Claim reward</Button>
         </Flex>
         <Flex>
           <Button variant="outline" sx={{ mt: 3, ml: 2, width: "100%" }}>
