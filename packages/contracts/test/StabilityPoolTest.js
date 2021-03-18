@@ -2248,7 +2248,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(LUSDinSP_After, expectedLUSDinSP)
     })
 
-    it.only("withdrawFromSP(): caller can withdraw full deposit and ETH gain during Recovery Mode", async () => {
+    it("withdrawFromSP(): caller can withdraw full deposit and ETH gain during Recovery Mode", async () => {
       // --- SETUP ---
 
       // Price doubles

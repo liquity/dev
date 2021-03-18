@@ -16,7 +16,7 @@ export const LiquidationManager: React.FC = () => {
     <Card>
       <Heading>Liquidate</Heading>
 
-      <Box>
+      <Box sx={{ p: [2, 3] }}>
         <Flex sx={{ alignItems: "stretch" }}>
           <Label>Up to</Label>
 

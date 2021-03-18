@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Flex, Paragraph } from "theme-ui";
+import { Button, Flex } from "theme-ui";
 
 import {
   Decimal,
@@ -15,6 +15,7 @@ import { GT, COIN } from "../../strings";
 import { useStakingView } from "./context/StakingViewContext";
 import { StakingEditor } from "./StakingEditor";
 import { StakingManagerAction } from "./StakingManagerAction";
+import { ActionDescription } from "../ActionDescription";
 
 const init = ({ lqtyStake }: LiquityStoreState) => ({
   originalStake: lqtyStake,
@@ -81,7 +82,7 @@ export const StakingManager: React.FC = () => {
   return (
     <StakingEditor title={"Staking"} {...{ originalStake, editedLQTY, dispatch }}>
       {!originalStake.isEmpty && change && (
-        <Paragraph sx={{ m: 3, fontSize: 2 }}>{describeAction(originalStake, change)}</Paragraph>
+        <ActionDescription>{describeAction(originalStake, change)}</ActionDescription>
       )}
 
       <Flex variant="layout.actions">

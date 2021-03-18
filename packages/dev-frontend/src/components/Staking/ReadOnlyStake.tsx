@@ -5,8 +5,9 @@ import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../../strings";
 
-import { StaticRow } from "../Trove/Editor";
+import { DisabledEditableRow, Row, StaticAmounts } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
+import { Icon } from "../Icon";
 
 import { useStakingView } from "./context/StakingViewContext";
 import { StakingGainsAction } from "./StakingGainsAction";
@@ -21,40 +22,43 @@ export const ReadOnlyStake: React.FC = () => {
     <Card>
       <Heading>Staking</Heading>
 
-      {changePending && <LoadingOverlay />}
-
-      <Box>
-        <StaticRow
+      <Box sx={{ p: [2, 3] }}>
+        <DisabledEditableRow
           label="Stake"
           inputId="stake-lqty"
           amount={lqtyStake.stakedLQTY.prettify()}
           unit={GT}
         />
 
-        <StaticRow
-          label="Gain"
-          inputId="stake-gain-eth"
-          amount={lqtyStake.collateralGain.prettify(4)}
-          color={lqtyStake.collateralGain.nonZero && "success"}
-          unit="ETH"
-        />
+        <Row label="Gains" sx={{ flexDirection: "column", mt: [-2, -3], pb: [2, 3] }}>
+          <StaticAmounts
+            inputId="stake-gain-eth"
+            amount={lqtyStake.collateralGain.prettify(4)}
+            color={lqtyStake.collateralGain.nonZero && "success"}
+            unit="ETH"
+            sx={{ mb: 0 }}
+          />
 
-        <StaticRow
-          label="Gain"
-          inputId="stake-gain-lusd"
-          amount={lqtyStake.lusdGain.prettify()}
-          color={lqtyStake.lusdGain.nonZero && "success"}
-          unit={COIN}
-        />
+          <StaticAmounts
+            inputId="stake-gain-lusd"
+            amount={lqtyStake.lusdGain.prettify()}
+            color={lqtyStake.lusdGain.nonZero && "success"}
+            unit={COIN}
+            sx={{ pt: 0 }}
+          />
+        </Row>
 
         <Flex variant="layout.actions">
           <Button variant="outline" onClick={() => dispatch({ type: "startAdjusting" })}>
-            Adjust
+            <Icon name="pen" size="sm" />
+            &nbsp;Adjust
           </Button>
 
           <StakingGainsAction />
         </Flex>
       </Box>
+
+      {changePending && <LoadingOverlay />}
     </Card>
   );
 };
