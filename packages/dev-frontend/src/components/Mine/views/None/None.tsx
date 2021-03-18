@@ -1,8 +1,8 @@
 import React, { useCallback } from "react";
 import { Card, Heading, Box, Flex, Button } from "theme-ui";
-import { Icon } from "../../Icon";
-import { useMineView } from "../context/MineViewContext";
-import { RemainingLQTY } from "./RemainingLQTY";
+import { Icon } from "../../../Icon";
+import { useMineView } from "../../context/MineViewContext";
+import { RemainingLQTY } from "../RemainingLQTY";
 
 export const None: React.FC = () => {
   const { dispatchEvent } = useMineView();
@@ -13,10 +13,15 @@ export const None: React.FC = () => {
 
   return (
     <Card>
-      <Heading>Mine</Heading>
+      <Heading>
+        Liquidity mine
+        <Flex sx={{ justifyContent: "flex-end" }}>
+          <RemainingLQTY />
+        </Flex>
+      </Heading>
       <Box>
         <Box sx={{ m: 2 }}>
-          <Flex sx={{ alignItems: "center", m: 2 }}>
+          <Flex sx={{ alignItems: "center", my: 2 }}>
             <Icon name="info-circle" size="2x" />
             <Heading as="h3" px={1}>
               You aren't mining LQTY

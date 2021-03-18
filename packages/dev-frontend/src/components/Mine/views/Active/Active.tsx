@@ -1,25 +1,26 @@
 import React, { useCallback } from "react";
 import { Card, Heading, Box, Flex, Text, Button } from "theme-ui";
-import { LP, GT } from "../../../strings";
+import { LP, GT } from "../../../../strings";
 // import { LiquityStoreState } from "@liquity/lib-base";
 // import { useLiquitySelector } from "@liquity/lib-react";
-import { Icon } from "../../Icon";
-import { LoadingOverlay } from "../../LoadingOverlay";
-import { useMyTransactionState } from "../../Transaction";
-import { StaticRow } from "../../Trove/Editor";
-import { useMineView } from "../context/MineViewContext";
+import { Icon } from "../../../Icon";
+import { LoadingOverlay } from "../../../LoadingOverlay";
+import { useMyTransactionState } from "../../../Transaction";
+import { StaticRow } from "../../../Trove/Editor";
+import { useMineView } from "../../context/MineViewContext";
+import { RemainingLQTY } from "../RemainingLQTY";
 
-// const selector = ({ miningDeposit }: LiquityStoreState) => ({ miningDeposit });
+// const selector = ({ lpStaked }: LiquityStoreState) => ({ lpStaked });
 
 export const Active: React.FC = () => {
   const { dispatchEvent } = useMineView();
-  // const { miningDeposit } = useLiquitySelector(selector);
+  // const { lpStaked } = useLiquitySelector(selector);
 
   const handleAdjustPressed = useCallback(() => {
     dispatchEvent("ADJUST_PRESSED");
   }, [dispatchEvent]);
 
-  const transactionId = "uniswap-stake";
+  const transactionId = "mine-stake-or-claim";
   const transactionState = useMyTransactionState(transactionId);
   const isWaitingForTransaction =
     (transactionState.type === "waitingForApproval" ||
@@ -28,22 +29,27 @@ export const Active: React.FC = () => {
 
   return (
     <Card>
-      <Heading>Mine</Heading>
+      <Heading>
+        Liquidity mine
+        <Flex sx={{ justifyContent: "flex-end" }}>
+          <RemainingLQTY />
+        </Flex>
+      </Heading>
       <Box>
         <Box>
           <StaticRow
             label="Deposit"
             inputId="mine-deposit"
             amount="0"
-            // amount={miningDeposit.currentLUSD.prettify(4)}
+            // amount={lpStaked.currentLp.prettify(4)}
             unit={LP}
           />
           <StaticRow
             label="Reward"
             inputId="mine-reward"
             amount="0"
-            // amount={miningDeposit.lqtyReward.prettify(4)}
-            // color={miningDeposit.lqtyReward.nonZero && "success"}
+            // amount={lpStaked.lqtyReward.prettify(4)}
+            // color={lpStaked.lqtyReward.nonZero && "success"}
             unit={GT}
           />
           {isWaitingForTransaction && (
@@ -62,8 +68,15 @@ export const Active: React.FC = () => {
         </Box>
 
         <Flex variant="layout.actions">
+          <Button variant="outline">Unstake</Button>
+          <Button variant="outline">Claim rewards</Button>
           <Button variant="primary" onClick={handleAdjustPressed}>
             Adjust
+          </Button>
+        </Flex>
+        <Flex>
+          <Button variant="outline" sx={{ mt: 3, ml: 2, width: "100%" }}>
+            Unstake and claim rewards
           </Button>
         </Flex>
       </Box>
