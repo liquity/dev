@@ -88,7 +88,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     await assertRevert(lqtyStaking.stake(0, {from: A}), "LQTYStaking: Amount must be non-zero")
   })
 
-  it.only("ETH fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
+  it("ETH fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -130,7 +130,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isTrue(expected_F_ETH_After.eq(F_ETH_After))
   })
 
-  it.only("ETH fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
+  it("ETH fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -163,7 +163,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.equal(F_ETH_After, '0')
   })
 
-  it.only("LUSD fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
+  it("LUSD fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -211,7 +211,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isTrue(expected_F_LUSD_After.eq(F_LUSD_After))
   })
 
-  it.only("LUSD fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
+  it("LUSD fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -251,7 +251,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.equal(F_LUSD_After, '0')
   })
 
-  it.only("LQTY Staking: A single staker earns all ETH and LQTY fees that occur", async () => {
+  it("LQTY Staking: A single staker earns all ETH and LQTY fees that occur", async () => {
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -324,7 +324,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedTotalLUSDGain, A_LUSDGain), 1000)
   })
 
-  it.only("stake(): Top-up sends out all accumulated ETH and LUSD gains to the staker", async () => { 
+  it("stake(): Top-up sends out all accumulated ETH and LUSD gains to the staker", async () => { 
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -396,7 +396,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedTotalLUSDGain, A_LUSDGain), 1000)
   })
 
-  it.only("getPendingETHGain(): Returns the staker's correct pending ETH gain", async () => { 
+  it("getPendingETHGain(): Returns the staker's correct pending ETH gain", async () => { 
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -442,7 +442,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedTotalETHGain, A_ETHGain), 1000)
   })
 
-  it.only("getPendingLUSDGain(): Returns the staker's correct pending LUSD gain", async () => { 
+  it("getPendingLUSDGain(): Returns the staker's correct pending LUSD gain", async () => { 
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -502,7 +502,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
   })
 
   // - multi depositors, several rewards
-  it.only("LQTY Staking: Multiple stakers earn the correct share of all ETH and LQTY fees, based on their stake size", async () => {
+  it("LQTY Staking: Multiple stakers earn the correct share of all ETH and LQTY fees, based on their stake size", async () => {
     await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -669,7 +669,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedLUSDGain_D, D_LUSDGain), 1000)
   })
  
-  it.only("unStake(): reverts if caller has ETH gains and can't receive ETH",  async () => {
+  it("unstake(): reverts if caller has ETH gains and can't receive ETH",  async () => {
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: whale } })  
     await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
     await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -698,15 +698,15 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isTrue(proxy_ETHGain.gt(toBN('0')))
 
     // Expect this tx to revert: stake() tries to send nonPayable proxy's accumulated ETH gain (albeit 0),
-    //  A tells proxy to unStake
-    const proxyUnStakeTxData = await th.getTransactionData('unStake(uint256)', ['0x56bc75e2d63100000'])  // proxy stakes 100 LQTY
+    //  A tells proxy to unstake
+    const proxyUnStakeTxData = await th.getTransactionData('unstake(uint256)', ['0x56bc75e2d63100000'])  // proxy stakes 100 LQTY
     const proxyUnstakeTxPromise = nonPayable.forward(lqtyStaking.address, proxyUnStakeTxData, {from: A})
    
     // but nonPayable proxy can not accept ETH - therefore stake() reverts.
     await assertRevert(proxyUnstakeTxPromise)
   })
 
-  it.only("receive(): reverts when it receives ETH from an address that is not the Active Pool",  async () => { 
+  it("receive(): reverts when it receives ETH from an address that is not the Active Pool",  async () => { 
     const ethSendTxPromise1 = web3.eth.sendTransaction({to: lqtyStaking.address, from: A, value: dec(1, 'ether')})
     const ethSendTxPromise2 = web3.eth.sendTransaction({to: lqtyStaking.address, from: owner, value: dec(1, 'ether')})
 
@@ -714,7 +714,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     await assertRevert(ethSendTxPromise2)
   })
 
-  it.only("unstake(): reverts if user has no stake",  async () => {  
+  it("unstake(): reverts if user has no stake",  async () => {  
     const unstakeTxPromise1 = lqtyStaking.unstake(1, {from: A})
     const unstakeTxPromise2 = lqtyStaking.unstake(1, {from: owner})
 
@@ -722,7 +722,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     await assertRevert(unstakeTxPromise2)
   })
 
-  it.only('Test requireCallerIsTroveManager', async () => {
+  it('Test requireCallerIsTroveManager', async () => {
     const lqtyStakingTester = await LQTYStakingTester.new()
     await assertRevert(lqtyStakingTester.requireCallerIsTroveManager(), 'LQTYStaking: caller is not TroveM')
   })
