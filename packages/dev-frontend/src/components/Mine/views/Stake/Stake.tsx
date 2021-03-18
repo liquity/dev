@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Heading, Box, Flex, Card, Button } from "theme-ui";
 import { Decimal, Decimalish, Difference } from "@liquity/lib-base";
 // import { Decimal, Decimalish, Difference, MiningDeposit } from "@liquity/lib-base";
@@ -9,6 +9,7 @@ import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMineView } from "../../context/MineViewContext";
 import { Transaction, useMyTransactionState } from "../../../Transaction";
 import { ConfirmButton } from "./ConfirmButton";
+import { ActionDescription } from "./ActionDescription";
 
 export const Stake: React.FC = () => {
   const { dispatchEvent } = useMineView();
@@ -16,7 +17,7 @@ export const Stake: React.FC = () => {
   const isDirty = amount !== "0";
   const editingState = useState<string>();
 
-  const transactionId = "mine-deposit";
+  const transactionId = "mine-stake";
   const transactionState = useMyTransactionState(transactionId);
   const isTransactionPending =
     (transactionState.type === "waitingForApproval" ||
@@ -27,10 +28,16 @@ export const Stake: React.FC = () => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
 
+  useEffect(() => {
+    if (transactionState.type === "confirmedOneShot") {
+      dispatchEvent("STAKE_CONFIRMED");
+    }
+  }, [transactionState.type, dispatchEvent]);
+
   return (
     <Card>
       <Heading>
-        Mine
+        Liquidity mine
         {isDirty && (
           <Button
             variant="titleIcon"
@@ -55,12 +62,12 @@ export const Stake: React.FC = () => {
           setEditedAmount={amount => setAmount(amount)}
         ></EditableRow>
 
+        <ActionDescription amount={amount} />
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
           <ConfirmButton amount={amount || "0"} />
-          {/* <ConfirmButton onClick={() => dispatchEvent("DEPOSIT_CONFIRMED")} amount={amount || "0"} /> */}
         </Flex>
       </Box>
     </Card>

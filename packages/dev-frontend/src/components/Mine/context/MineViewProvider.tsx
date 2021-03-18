@@ -20,7 +20,7 @@ export const MineViewProvider: React.FC = props => {
   const { children } = props;
   // const uniswapStake = useLiquitySelector(select);
 
-  const [view, setView] = useState<MineView>("NONE");
+  const [view, setView] = useState<MineView>("ACTIVE");
   const viewRef = useRef<MineView>(view);
 
   const dispatchEvent = useCallback((event: MineEvent) => {
