@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Button, Flex, Spinner } from "theme-ui";
+import { Button } from "theme-ui";
 
 import {
   LUSD_MINIMUM_DEBT,
@@ -9,7 +9,6 @@ import {
   Percent,
   LiquityStoreState,
   Trove,
-  TroveAdjustmentParams,
   TroveChange
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -33,30 +32,6 @@ type TroveActionProps = {
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 const ccrPercent = new Percent(CRITICAL_COLLATERAL_RATIO).toString(0);
 
-const describeAdjustment = ({
-  depositCollateral,
-  withdrawCollateral,
-  borrowLUSD,
-  repayLUSD
-}: TroveAdjustmentParams<Decimal>) =>
-  depositCollateral && borrowLUSD
-    ? `Deposit ${depositCollateral.prettify()} ETH & borrow ${borrowLUSD.prettify()} ${COIN}`
-    : repayLUSD && withdrawCollateral
-    ? `Repay ${repayLUSD.prettify()} ${COIN} & withdraw ${withdrawCollateral.prettify()} ETH`
-    : depositCollateral && repayLUSD
-    ? `Deposit ${depositCollateral.prettify()} ETH & repay ${repayLUSD.prettify()} ${COIN}`
-    : borrowLUSD && withdrawCollateral
-    ? `Borrow ${borrowLUSD.prettify()} ${COIN} & withdraw ${withdrawCollateral.prettify()} ETH`
-    : depositCollateral
-    ? `Deposit ${depositCollateral.prettify()} ETH`
-    : withdrawCollateral
-    ? `Withdraw ${withdrawCollateral.prettify()} ETH`
-    : borrowLUSD
-    ? `Borrow ${borrowLUSD.prettify()} ${COIN}`
-    : repayLUSD
-    ? `Repay ${repayLUSD.prettify()} ${COIN}`
-    : "";
-
 const select = ({ price, total, lusdBalance, numberOfTroves }: LiquityStoreState) => ({
   price,
   total,
@@ -64,7 +39,7 @@ const select = ({ price, total, lusdBalance, numberOfTroves }: LiquityStoreState
   numberOfTroves
 });
 
-type Action = [name: string, send: TransactionFunction, requirements?: [boolean, string][]];
+type Action = [send: TransactionFunction, requirements?: [boolean, string][]];
 
 export const TroveAction: React.FC<TroveActionProps> = ({
   original,
@@ -94,49 +69,30 @@ export const TroveAction: React.FC<TroveActionProps> = ({
     }
   }, [myTransactionState.type, dispatch, dispatchEvent]);
 
-  const hasActiveTrove = !original.isEmpty;
-
-  if (!change && hasActiveTrove) {
-    return (
-      <Flex>
-        <Button disabled sx={{ ml: 2 }}>
-          Confirm
-        </Button>
-      </Flex>
-    );
-  }
-
   if (!change) {
-    return (
-      <Flex>
-        <Button disabled sx={{ ml: 2 }}>
-          Borrow
-        </Button>
-      </Flex>
-    );
+    return <Button disabled>Confirm</Button>;
   }
 
   if (change.type === "invalidCreation") {
     // Yuck, Transaction needs refactoring
     return (
-      <Flex>
-        <Transaction
-          id={myTransactionId}
-          requires={[[false, `Debt should be at least ${LUSD_MINIMUM_DEBT} ${COIN}`]]}
-          send={() => {
-            throw new Error("shouldn't be called");
-          }}
-        >
-          <Button sx={{ ml: 2 }} />
-        </Transaction>
-      </Flex>
+      <Transaction
+        id={myTransactionId}
+        showFailure="asTooltip"
+        tooltipPlacement="bottom"
+        requires={[[false, `Debt should be at least ${LUSD_MINIMUM_DEBT} ${COIN}`]]}
+        send={() => {
+          throw new Error("shouldn't be called");
+        }}
+      >
+        <Button>Confirm</Button>
+      </Transaction>
     );
   }
 
-  const [actionName, send, extraRequirements]: Action =
+  const [send, extraRequirements]: Action =
     change.type === "creation"
       ? [
-          describeAdjustment(change.params),
           liquity.openTrove.bind(liquity, change.params, maxBorrowingRate),
           [
             [
@@ -148,7 +104,6 @@ export const TroveAction: React.FC<TroveActionProps> = ({
         ]
       : change.type === "closure"
       ? [
-          "Close Trove",
           liquity.closeTrove.bind(liquity),
           [
             [!total.collateralRatioIsBelowCritical(price), "Can't close Trove during recovery mode"],
@@ -156,7 +111,6 @@ export const TroveAction: React.FC<TroveActionProps> = ({
           ]
         ]
       : [
-          describeAdjustment(change.params),
           liquity.adjustTrove.bind(liquity, change.params, maxBorrowingRate),
           [
             [
@@ -167,46 +121,41 @@ export const TroveAction: React.FC<TroveActionProps> = ({
           ]
         ];
 
-  return myTransactionState.type === "waitingForApproval" ? (
-    <Flex>
-      <Button disabled sx={{ ml: 2 }}>
-        <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
-        Waiting for your approval
-      </Button>
-    </Flex>
-  ) : changePending ? null : (
-    <Flex>
-      <Transaction
-        id={myTransactionId}
-        requires={[
-          [
-            edited.isEmpty || afterFee.debt.gte(LUSD_MINIMUM_DEBT),
-            `Debt should be at least ${LUSD_MINIMUM_DEBT} ${COIN}`
-          ],
-          [
-            !(
-              change.type === "creation" ||
-              (change.type === "adjustment" &&
-                (change.params.withdrawCollateral || change.params.borrowLUSD))
-            ) || !afterFee.collateralRatioIsBelowMinimum(price),
-            `Collateral ratio must be at least ${mcrPercent}`
-          ],
-          [
-            !(
-              change.type === "creation" ||
-              (change.type === "adjustment" && change.params.borrowLUSD)
-            ) ||
-              total.collateralRatioIsBelowCritical(price) ||
-              !total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price),
-            `Total collateral ratio would fall below ${ccrPercent}`
-          ],
-          [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`],
-          ...extraRequirements
-        ]}
-        {...{ send }}
-      >
-        <Button sx={{ ml: 2 }}>{actionName}</Button>
-      </Transaction>
-    </Flex>
+  return changePending ? (
+    <Button disabled>Confirm</Button>
+  ) : (
+    <Transaction
+      id={myTransactionId}
+      showFailure="asTooltip"
+      tooltipPlacement="bottom"
+      requires={[
+        [
+          edited.isEmpty || afterFee.debt.gte(LUSD_MINIMUM_DEBT),
+          `Debt should be at least ${LUSD_MINIMUM_DEBT} ${COIN}`
+        ],
+        [
+          !(
+            change.type === "creation" ||
+            (change.type === "adjustment" &&
+              (change.params.withdrawCollateral || change.params.borrowLUSD))
+          ) || !afterFee.collateralRatioIsBelowMinimum(price),
+          `Collateral ratio must be at least ${mcrPercent}`
+        ],
+        [
+          !(
+            change.type === "creation" ||
+            (change.type === "adjustment" && change.params.borrowLUSD)
+          ) ||
+            total.collateralRatioIsBelowCritical(price) ||
+            !total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price),
+          `Total collateral ratio would fall below ${ccrPercent}`
+        ],
+        [lusdBalance.gte(change.params.repayLUSD ?? 0), `You don't have enough ${COIN}`],
+        ...extraRequirements
+      ]}
+      {...{ send }}
+    >
+      <Button>Confirm</Button>
+    </Transaction>
   );
 };

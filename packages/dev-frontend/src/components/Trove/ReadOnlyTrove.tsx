@@ -1,16 +1,14 @@
 import React, { useCallback } from "react";
 import { Card, Heading, Box, Flex, Button } from "theme-ui";
 import { useLiquitySelector } from "@liquity/lib-react";
-import {
-  LiquityStoreState,
-  Percent,
-  CRITICAL_COLLATERAL_RATIO,
-  MINIMUM_COLLATERAL_RATIO
-} from "@liquity/lib-base";
-import { StaticRow } from "./Editor";
+import { LiquityStoreState } from "@liquity/lib-base";
+import { DisabledEditableRow } from "./Editor";
 import { useTroveView } from "./context/TroveViewContext";
+import { Icon } from "../Icon";
+import { COIN } from "../../strings";
+import { CollateralRatio } from "./CollateralRatio";
 
-const selectPrice = ({ price, trove }: LiquityStoreState) => ({ price, trove });
+const select = ({ trove, price }: LiquityStoreState) => ({ trove, price });
 
 export const ReadOnlyTrove: React.FC = () => {
   const { dispatchEvent } = useTroveView();
@@ -18,44 +16,36 @@ export const ReadOnlyTrove: React.FC = () => {
     dispatchEvent("ADJUST_TROVE_PRESSED");
   }, [dispatchEvent]);
 
-  const { price, trove } = useLiquitySelector(selectPrice);
+  const { trove, price } = useLiquitySelector(select);
 
   // console.log("READONLY TROVE", trove.collateral.prettify(4));
-  const collateralRatio = trove.collateralRatio(price);
-  const collateralRatioPct = new Percent(collateralRatio);
-  const prettyCollateralRatio = collateralRatio?.gt(10)
-    ? "× " + collateralRatio.shorten()
-    : collateralRatioPct.prettify();
   return (
     <Card>
       <Heading>Trove</Heading>
-      <Box>
+      <Box sx={{ p: [2, 3] }}>
         <Box>
-          <StaticRow
+          <DisabledEditableRow
             label="Collateral"
             inputId="trove-collateral"
             amount={trove.collateral.prettify(4)}
             unit="ETH"
           />
-          <StaticRow label="Debt" inputId="trove-debt" amount={trove.debt.prettify(2)} unit="LUSD" />
-          <StaticRow
-            label="Collateral ratio"
-            inputId="trove-collateral-ratio"
-            amount={prettyCollateralRatio}
-            color={
-              collateralRatio?.gt(CRITICAL_COLLATERAL_RATIO)
-                ? "success"
-                : collateralRatio?.gt(MINIMUM_COLLATERAL_RATIO)
-                ? "warning"
-                : collateralRatio?.lte(MINIMUM_COLLATERAL_RATIO)
-                ? "danger"
-                : "muted"
-            }
+
+          <DisabledEditableRow
+            label="Debt"
+            inputId="trove-debt"
+            amount={trove.debt.prettify()}
+            unit={COIN}
           />
+
+          <CollateralRatio value={trove.collateralRatio(price)} />
         </Box>
 
         <Flex variant="layout.actions">
-          <Button onClick={handleAdjustTrove}>Adjust</Button>
+          <Button onClick={handleAdjustTrove}>
+            <Icon name="pen" size="sm" />
+            &nbsp;Adjust
+          </Button>
         </Flex>
       </Box>
     </Card>

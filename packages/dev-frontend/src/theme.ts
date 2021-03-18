@@ -42,6 +42,7 @@ const button: ThemeUIStyleObject = {
   py: "12px",
 
   color: "white",
+  border: 1,
 
   fontWeight: "bold",
 
@@ -52,8 +53,8 @@ const button: ThemeUIStyleObject = {
 
 const buttonOutline = (color: string, hoverColor: string): ThemeUIStyleObject => ({
   color,
+  borderColor: color,
   background: "none",
-  border: 2,
 
   ":enabled:hover": {
     color: "background",
@@ -163,6 +164,9 @@ const theme: Theme = {
   fontWeights: {
     body: 400,
     heading: 600,
+
+    light: 200,
+    medium: 500,
     bold: 600
   },
 
@@ -187,8 +191,14 @@ const theme: Theme = {
   buttons: {
     primary: {
       ...button,
+
       bg: "primary",
-      ":enabled:hover": { bg: "secondary" }
+      borderColor: "primary",
+
+      ":enabled:hover": {
+        bg: "secondary",
+        borderColor: "secondary"
+      }
     },
 
     outline: {
@@ -198,14 +208,21 @@ const theme: Theme = {
 
     cancel: {
       ...button,
-      bg: "accent",
-      ":enabled:hover": { bg: "secondary" }
+      ...buttonOutline("text", "text"),
+
+      opacity: 0.8
     },
 
     danger: {
       ...button,
+
       bg: "danger",
-      ":enabled:hover": { bg: "dangerHover" }
+      borderColor: "danger",
+
+      ":enabled:hover": {
+        bg: "dangerHover",
+        borderColor: "dangerHover"
+      }
     },
 
     icon: {
@@ -250,10 +267,6 @@ const theme: Theme = {
         bg: "muted",
 
         fontSize: cardHeadingFontSize
-      },
-
-      "> :last-child": {
-        padding: 2
       }
     },
 
@@ -306,11 +319,7 @@ const theme: Theme = {
       flex: 1
     },
 
-    readonly: {
-      ...formBase,
-
-      m: "1px"
-    }
+    editor: {}
   },
 
   layout: {

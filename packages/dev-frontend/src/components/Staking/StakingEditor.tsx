@@ -6,7 +6,7 @@ import { Decimal, Decimalish, Difference, LQTYStake } from "@liquity/lib-base";
 import { COIN, GT } from "../../strings";
 
 import { Icon } from "../Icon";
-import { EditableRow, StaticRow } from "../Trove/Editor";
+import { EditableRow, Row, StaticAmounts } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 
 import { useStakingView } from "./context/StakingViewContext";
@@ -46,9 +46,7 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
         )}
       </Heading>
 
-      {changePending && <LoadingOverlay />}
-
-      <Box>
+      <Box sx={{ p: [2, 3] }}>
         <EditableRow
           label="Stake"
           inputId="stake-lqty"
@@ -59,30 +57,32 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
           {...{ editingState }}
           editedAmount={editedLQTY.toString(2)}
           setEditedAmount={newValue => dispatch({ type: "setStake", newValue })}
-        ></EditableRow>
+        />
 
         {!originalStake.isEmpty && (
-          <>
-            <StaticRow
-              label="Gain"
+          <Row label="Gains" sx={{ flexDirection: "column", mt: [-2, -3], pb: [2, 3] }}>
+            <StaticAmounts
               inputId="stake-gain-eth"
               amount={originalStake.collateralGain.prettify(4)}
               color={originalStake.collateralGain.nonZero && "success"}
               unit="ETH"
+              sx={{ mb: 0 }}
             />
 
-            <StaticRow
-              label="Gain"
+            <StaticAmounts
               inputId="stake-gain-lusd"
               amount={originalStake.lusdGain.prettify()}
               color={originalStake.lusdGain.nonZero && "success"}
               unit={COIN}
+              sx={{ pt: 0 }}
             />
-          </>
+          </Row>
         )}
 
         {children}
       </Box>
+
+      {changePending && <LoadingOverlay />}
     </Card>
   );
 };

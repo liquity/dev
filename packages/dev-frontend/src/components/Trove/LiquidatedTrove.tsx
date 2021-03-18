@@ -1,10 +1,10 @@
 import React, { useCallback } from "react";
-import { Card, Heading, Box, Button, Flex, Text } from "theme-ui";
-import { Icon } from "../Icon";
+import { Card, Heading, Box, Button, Flex } from "theme-ui";
 import { CollateralSurplusAction } from "../CollateralSurplusAction";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { useTroveView } from "./context/TroveViewContext";
+import { InfoMessage } from "../InfoMessage";
 
 const select = ({ collateralSurplusBalance }: LiquityStoreState) => ({
   hasSurplusCollateral: !collateralSurplusBalance.isZero
@@ -21,24 +21,12 @@ export const LiquidatedTrove: React.FC = () => {
   return (
     <Card>
       <Heading>Trove</Heading>
-      <Box>
-        <Box sx={{ m: 2 }}>
-          <Flex sx={{ alignItems: "center" }}>
-            <Icon name="info-circle" size="2x" />
-            <Heading as="h3" px={1}>
-              Your Trove has been liquidated
-            </Heading>
-          </Flex>
-
-          {hasSurplusCollateral && (
-            <Text sx={{ fontSize: 2 }}>
-              Please reclaim your remaining collateral before opening a new Trove
-            </Text>
-          )}
-          {!hasSurplusCollateral && (
-            <Text sx={{ fontSize: 2 }}>You can borrow LUSD by opening a Trove</Text>
-          )}
-        </Box>
+      <Box sx={{ p: [2, 3] }}>
+        <InfoMessage title="Your Trove has been liquidated.">
+          {hasSurplusCollateral
+            ? "Please reclaim your remaining collateral before opening a new Trove."
+            : "You can borrow LUSD by opening a Trove."}
+        </InfoMessage>
 
         <Flex variant="layout.actions">
           {hasSurplusCollateral && <CollateralSurplusAction />}

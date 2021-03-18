@@ -14,7 +14,7 @@ console.log(`${trove}`);
  * Just a quick and dirty testcase to prove that the approach can work in our CI pipeline.
  */
 test("there's no smoke", async () => {
-  const { getByText, getByLabelText, findByText, queryByText } = render(<App />);
+  const { getByText, getAllByText, getByLabelText, findByText } = render(<App />);
 
   expect(await findByText(/you can borrow lusd by opening a trove/i)).toBeInTheDocument();
   expect(await findByText(/there are no troves yet/i)).toBeInTheDocument();
@@ -25,13 +25,8 @@ test("there's no smoke", async () => {
   fireEvent.click(getByLabelText(/^debt$/i));
   fireEvent.change(getByLabelText(/^debt$/i), { target: { value: `${trove.debt}` } });
 
-  const depositButton = new RegExp(
-    `^deposit ${params.depositCollateral.prettify()} eth & ` +
-      `borrow ${params.borrowLUSD.prettify()} lusd$`,
-    "i"
-  );
-  fireEvent.click(getByText(depositButton));
+  const confirmButton = getAllByText(/confirm/i)[0];
+  fireEvent.click(confirmButton);
 
-  expect(queryByText(depositButton)).not.toBeInTheDocument();
   expect(await findByText(/1-1 of 1/i)).toBeInTheDocument();
 });

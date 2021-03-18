@@ -163,16 +163,14 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
         </Flex>
       </Heading>
 
-      {loading && <LoadingOverlay />}
-
       {!troves || troves.length === 0 ? (
-        <Box>
+        <Box sx={{ p: [2, 3] }}>
           <Box sx={{ p: 4, fontSize: 3, textAlign: "center" }}>
             {!troves ? "Loading..." : "There are no Troves yet"}
           </Box>
         </Box>
       ) : (
-        <Box>
+        <Box sx={{ p: [2, 3] }}>
           <Box
             as="table"
             sx={{
@@ -317,6 +315,8 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
           </Box>
         </Box>
       )}
+
+      {loading && <LoadingOverlay />}
     </Card>
   );
 };
