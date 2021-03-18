@@ -9,7 +9,7 @@ import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMineView } from "../../context/MineViewContext";
 import { Transaction, useMyTransactionState } from "../../../Transaction";
 import { ConfirmButton } from "./ConfirmButton";
-import { ActionDescription } from "./ActionDescription";
+import { StakeActionDescription } from "./StakeActionDescription";
 
 export const Stake: React.FC = () => {
   const { dispatchEvent } = useMineView();
@@ -51,7 +51,7 @@ export const Stake: React.FC = () => {
 
       {isTransactionPending && <LoadingOverlay />}
 
-      <Box>
+      <Box sx={{ p: [2, 3] }}>
         <EditableRow
           label="Stake"
           inputId="amount-lp"
@@ -62,7 +62,7 @@ export const Stake: React.FC = () => {
           setEditedAmount={amount => setAmount(amount)}
         ></EditableRow>
 
-        <ActionDescription amount={amount} />
+        <StakeActionDescription amount={amount} />
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel

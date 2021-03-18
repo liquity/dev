@@ -7,17 +7,18 @@ import { Transaction, useMyTransactionState } from "../../../Transaction";
 import { Icon } from "../../../Icon";
 import { Decimal, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
+import { ActionDescription } from "../../../ActionDescription";
 
 type AdjustActionDescriptionProps = {
   amount: string;
-  shouldClaimRewards: boolean;
+  shouldClaimReward: boolean;
 };
 
 const selector = ({ lpBalance, lpStaked }: LiquityStoreState) => ({ lpBalance, lpStaked });
 
 export const AdjustActionDescription: React.FC<AdjustActionDescriptionProps> = ({
   amount,
-  shouldClaimRewards
+  shouldClaimReward
 }) => {
   const {
     liquity: { send: liquity }
@@ -38,23 +39,19 @@ export const AdjustActionDescription: React.FC<AdjustActionDescriptionProps> = (
   const isWithdrawing = lpStaked.gt(amount);
   const hasReward = true;
   const amountChanged = isWithdrawing ? lpStaked.sub(amount) : Decimal.from(amount).sub(lpStaked);
-  const isClaimingRewards = hasReward && shouldClaimRewards;
+  const isClaimingRewards = hasReward && shouldClaimReward;
 
   if (!isDirty) return null;
 
   return (
-    <Flex variant="layout.infoMessage">
-      <Icon
-        style={{ marginRight: "2px", display: "flex", alignItems: "center" }}
-        name="info-circle"
-      />
+    <ActionDescription>
       {isWaitingForApproval && <Text>Waiting for your approval...</Text>}
       {!isWaitingForApproval && isWithdrawing && (
         <Transaction id={transactionId} send={/*TODO*/ liquity.stakeLQTY.bind(liquity, amount)}>
           <Text>
             {isClaimingRewards
-              ? `You are unstaking ${amountChanged.prettify()} ${LP} and claiming ${lpReward} ${GT}`
-              : `You are unstaking ${amountChanged.prettify()} ${LP}`}
+              ? `You are unstaking ${amountChanged.prettify(4)} ${LP} and claiming ${lpReward} ${GT}`
+              : `You are unstaking ${amountChanged.prettify(4)} ${LP}`}
           </Text>
         </Transaction>
       )}
@@ -66,11 +63,11 @@ export const AdjustActionDescription: React.FC<AdjustActionDescriptionProps> = (
         >
           <Text>
             {isClaimingRewards
-              ? `You are staking +${amountChanged.prettify()} ${LP} and claiming ${lpReward} ${GT}`
-              : `You are staking +${amountChanged.prettify()} ${LP}`}
+              ? `You are staking +${amountChanged.prettify(4)} ${LP} and claiming ${lpReward} ${GT}`
+              : `You are staking +${amountChanged.prettify(4)} ${LP}`}
           </Text>
         </Transaction>
       )}
-    </Flex>
+    </ActionDescription>
   );
 };

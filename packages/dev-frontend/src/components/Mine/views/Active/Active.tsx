@@ -6,7 +6,7 @@ import { LP, GT } from "../../../../strings";
 import { Icon } from "../../../Icon";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMyTransactionState } from "../../../Transaction";
-import { StaticRow } from "../../../Trove/Editor";
+import { DisabledEditableRow, StaticRow } from "../../../Trove/Editor";
 import { useMineView } from "../../context/MineViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
 
@@ -35,9 +35,9 @@ export const Active: React.FC = () => {
           <RemainingLQTY />
         </Flex>
       </Heading>
-      <Box>
+      <Box sx={{ p: [2, 3] }}>
         <Box>
-          <StaticRow
+          <DisabledEditableRow
             label="Deposit"
             inputId="mine-deposit"
             amount="0"
@@ -68,15 +68,20 @@ export const Active: React.FC = () => {
         </Box>
 
         <Flex variant="layout.actions">
-          <Button variant="outline">Unstake</Button>
-          <Button variant="outline">Claim rewards</Button>
+          <Button variant="outline">Claim reward</Button>
           <Button variant="primary" onClick={handleAdjustPressed}>
-            Adjust
+            <Icon name="pen" size="sm" />
+            &nbsp;Adjust
           </Button>
         </Flex>
         <Flex>
           <Button variant="outline" sx={{ mt: 3, ml: 2, width: "100%" }}>
-            Unstake and claim rewards
+            Unstake
+          </Button>
+        </Flex>
+        <Flex>
+          <Button variant="outline" sx={{ mt: 3, ml: 2, width: "100%" }}>
+            Unstake and claim reward
           </Button>
         </Flex>
       </Box>
