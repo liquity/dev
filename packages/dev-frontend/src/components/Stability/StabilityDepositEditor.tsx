@@ -43,9 +43,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         )}
       </Heading>
 
-      {changePending && <LoadingOverlay />}
-
-      <Box>
+      <Box sx={{ p: [2, 3] }}>
         <EditableRow
           label="Deposit"
           inputId="deposit-lqty"
@@ -56,7 +54,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           {...{ editingState }}
           editedAmount={editedLUSD.toString(2)}
           setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
-        ></EditableRow>
+        />
 
         {!originalDeposit.isEmpty && (
           <>
@@ -79,6 +77,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         )}
         {children}
       </Box>
+
+      {changePending && <LoadingOverlay />}
     </Card>
   );
 };

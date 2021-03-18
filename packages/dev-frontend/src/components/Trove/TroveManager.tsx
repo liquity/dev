@@ -1,11 +1,51 @@
 import React, { useCallback } from "react";
-
-import { LiquityStoreState, Decimal, Decimalish, LUSD_MINIMUM_DEBT, Trove } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 import { Flex, Button } from "theme-ui";
+
+import {
+  LiquityStoreState,
+  Decimal,
+  Decimalish,
+  LUSD_MINIMUM_DEBT,
+  Trove,
+  TroveAdjustmentParams
+} from "@liquity/lib-base";
+
+import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
+
+import { COIN } from "../../strings";
+
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
 import { useTroveView } from "./context/TroveViewContext";
+import { ActionDescription } from "../ActionDescription";
+
+const describeAdjustment = ({
+  depositCollateral,
+  withdrawCollateral,
+  borrowLUSD,
+  repayLUSD
+}: TroveAdjustmentParams<Decimal>) =>
+  depositCollateral && borrowLUSD
+    ? `You will deposit ${depositCollateral.prettify()} ETH ` +
+      `and receive ${borrowLUSD.prettify()} ${COIN}.`
+    : repayLUSD && withdrawCollateral
+    ? `You will pay ${repayLUSD.prettify()} ${COIN} and ` +
+      `receive ${withdrawCollateral.prettify()} ETH.`
+    : depositCollateral && repayLUSD
+    ? `You will deposit ${depositCollateral.prettify()} ETH and ` +
+      `pay ${repayLUSD.prettify()} ${COIN}.`
+    : borrowLUSD && withdrawCollateral
+    ? `You will receive ${withdrawCollateral.prettify()} ETH and ` +
+      `${borrowLUSD.prettify()} ${COIN}.`
+    : depositCollateral
+    ? `You will deposit ${depositCollateral.prettify()} ETH.`
+    : withdrawCollateral
+    ? `You will receive ${withdrawCollateral.prettify()} ETH.`
+    : borrowLUSD
+    ? `You will receive ${borrowLUSD.prettify()} ${COIN}.`
+    : repayLUSD
+    ? `You will pay ${repayLUSD.prettify()} ${COIN}.`
+    : "";
 
 const init = ({ trove }: LiquityStoreState) => ({
   original: trove,
@@ -153,6 +193,10 @@ export const TroveManager: React.FC = () => {
       changePending={changePending}
       dispatch={dispatch}
     >
+      {change && change.type !== "invalidCreation" && (
+        <ActionDescription>{describeAdjustment(change.params)}</ActionDescription>
+      )}
+
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleCancel}>
           Cancel

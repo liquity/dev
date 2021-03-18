@@ -1,117 +1,194 @@
 import React, { useState } from "react";
-import { Text, Flex, Label, Input, SxProp } from "theme-ui";
+import { Text, Flex, Label, Input, SxProp, Button, ThemeUICSSProperties } from "theme-ui";
 
 import { Icon } from "../Icon";
 
-type RowProps = {
+type RowProps = SxProp & {
   label: string;
   labelId?: string;
   labelFor?: string;
-  unit?: string;
 };
 
-const Row: React.FC<RowProps> = ({ label, labelId, labelFor, unit, children }) => {
+export const Row: React.FC<RowProps> = ({ sx, label, labelId, labelFor, children }) => {
   return (
-    <Flex sx={{ alignItems: "stretch" }}>
-      <Label id={labelId} htmlFor={labelFor} sx={{ width: unit ? "106px" : "170px" }}>
+    <Flex sx={{ alignItems: "stretch", ...sx }}>
+      <Label
+        id={labelId}
+        htmlFor={labelFor}
+        sx={{
+          p: 0,
+          pl: 3,
+          pt: "12px",
+          position: "absolute",
+
+          fontSize: 1,
+          border: 1,
+          borderColor: "transparent"
+        }}
+      >
         {label}
       </Label>
-      {unit && (
-        <Label variant="unit" sx={{ width: "64px", px: 0 }}>
-          {unit}
-        </Label>
-      )}
+
       {children}
     </Flex>
   );
 };
 
+type PendingAmountProps = {
+  value: string;
+};
+
+const PendingAmount: React.FC<PendingAmountProps & SxProp> = ({ sx, value }) => (
+  <Text {...{ sx }}>
+    (
+    {value === "++" ? (
+      <Icon name="angle-double-up" />
+    ) : value === "--" ? (
+      <Icon name="angle-double-down" />
+    ) : value?.startsWith("+") ? (
+      <>
+        <Icon name="angle-up" /> {value.substr(1)}
+      </>
+    ) : value?.startsWith("-") ? (
+      <>
+        <Icon name="angle-down" /> {value.substr(1)}
+      </>
+    ) : (
+      value
+    )}
+    )
+  </Text>
+);
+
 type StaticAmountsProps = {
   inputId: string;
   labelledBy?: string;
   amount: string;
+  unit?: string;
   color?: string;
   pendingAmount?: string;
   pendingColor?: string;
   onClick?: () => void;
-  invalid?: boolean;
-  variant?: string;
 };
 
-const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
+export const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
   sx,
   inputId,
   labelledBy,
   amount,
+  unit,
   color,
   pendingAmount,
   pendingColor,
-  onClick,
-  invalid,
-  variant = "readonly"
+  onClick
 }) => {
   return (
-    <Label
-      variant={variant}
+    <Flex
       id={inputId}
       aria-labelledby={labelledBy}
+      {...{ onClick }}
       sx={{
-        ...sx,
-        ...(invalid ? { backgroundColor: "invalid" } : {}),
-        ...(onClick ? { cursor: "text" } : {})
+        justifyContent: "space-between",
+        alignItems: "center",
+
+        ...(onClick ? { cursor: "text" } : {}),
+
+        ...staticStyle,
+        ...sx
       }}
-      {...{ onClick, invalid }}
     >
-      <Flex sx={{ justifyContent: "space-between", alignItems: "center" }}>
-        <Text sx={{ fontSize: 3 }} {...{ color }}>
-          {amount}
-        </Text>
-        {pendingAmount ? (
-          <Text sx={{ fontSize: 2, color: pendingColor }}>
-            {pendingAmount === "++" ? (
-              <Icon name="angle-double-up" />
-            ) : pendingAmount === "--" ? (
-              <Icon name="angle-double-down" />
-            ) : pendingAmount?.startsWith("+") ? (
-              <>
-                <Icon name="angle-up" /> {pendingAmount.substr(1)}
-              </>
-            ) : pendingAmount?.startsWith("-") ? (
-              <>
-                <Icon name="angle-down" /> {pendingAmount.substr(1)}
-              </>
-            ) : (
-              pendingAmount
-            )}
-          </Text>
-        ) : onClick ? (
-          <Text sx={{ display: "flex", alignItems: "center", ml: 1, fontSize: 1 }}>
-            <Icon name="pen" />
-          </Text>
-        ) : undefined}
+      <Flex sx={{ alignItems: "center" }}>
+        <Text sx={{ color, fontWeight: "medium" }}>{amount}</Text>
+
+        {unit && (
+          <>
+            &nbsp;
+            <Text sx={{ fontWeight: "light", opacity: 0.8 }}>{unit}</Text>
+          </>
+        )}
+
+        {pendingAmount && (
+          <>
+            &nbsp;
+            <PendingAmount
+              sx={{ color: pendingColor, opacity: 0.8, fontSize: "0.666em" }}
+              value={pendingAmount}
+            />
+          </>
+        )}
       </Flex>
-    </Label>
+
+      {onClick && <Button sx={{ fontSize: 1, p: 1, px: 3 }}>max</Button>}
+    </Flex>
   );
+};
+
+const staticStyle: ThemeUICSSProperties = {
+  flexGrow: 1,
+
+  mb: 0,
+  pl: 3,
+  pr: "11px",
+  pb: 0,
+  pt: "28px",
+
+  fontSize: 3,
+
+  border: 1,
+  borderColor: "transparent"
+};
+
+const editableStyle: ThemeUICSSProperties = {
+  flexGrow: 1,
+
+  mb: [2, 3],
+  pl: 3,
+  pr: "11px",
+  pb: 2,
+  pt: "28px",
+
+  fontSize: 4,
+
+  boxShadow: [1, 2],
+  border: 1,
+  borderColor: "muted"
 };
 
 type StaticRowProps = RowProps & StaticAmountsProps;
 
-export const StaticRow: React.FC<StaticRowProps> = props => {
-  return (
-    <Row {...props}>
-      <StaticAmounts sx={{ flexGrow: 1 }} {...props} />
-    </Row>
-  );
+export const StaticRow: React.FC<StaticRowProps> = ({ label, labelId, labelFor, ...props }) => (
+  <Row {...{ label, labelId, labelFor }} sx={{ mt: [-2, -3], pb: [2, 3] }}>
+    <StaticAmounts {...props} />
+  </Row>
+);
+
+type DisabledEditableRowProps = Omit<StaticAmountsProps, "labelledBy" | "onClick"> & {
+  label: string;
 };
 
-type EditableRowProps = Omit<
-  StaticRowProps & {
-    editingState: [string | undefined, (editing: string | undefined) => void];
-    editedAmount: string;
-    setEditedAmount: (editedAmount: string) => void;
-  },
-  "valid"
->;
+export const DisabledEditableRow: React.FC<DisabledEditableRowProps> = ({
+  inputId,
+  label,
+  unit,
+  amount,
+  color,
+  pendingAmount,
+  pendingColor
+}) => (
+  <Row labelId={`${inputId}-label`} {...{ label, unit }}>
+    <StaticAmounts
+      sx={{ ...editableStyle, boxShadow: 0 }}
+      labelledBy={`${inputId}-label`}
+      {...{ inputId, amount, unit, color, pendingAmount, pendingColor }}
+    />
+  </Row>
+);
+
+type EditableRowProps = DisabledEditableRowProps & {
+  editingState: [string | undefined, (editing: string | undefined) => void];
+  editedAmount: string;
+  setEditedAmount: (editedAmount: string) => void;
+};
 
 export const EditableRow: React.FC<EditableRowProps> = ({
   label,
@@ -123,8 +200,7 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   pendingColor,
   editingState,
   editedAmount,
-  setEditedAmount,
-  variant = "input"
+  setEditedAmount
 }) => {
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState<boolean>(false);
@@ -133,7 +209,6 @@ export const EditableRow: React.FC<EditableRowProps> = ({
     <Row {...{ label, labelFor: inputId, unit }}>
       <Input
         autoFocus
-        sx={invalid ? { backgroundColor: "invalid" } : {}}
         id={inputId}
         type="number"
         step="any"
@@ -151,20 +226,24 @@ export const EditableRow: React.FC<EditableRowProps> = ({
           setEditing(undefined);
           setInvalid(false);
         }}
+        variant="editor"
+        sx={{
+          ...editableStyle,
+          fontWeight: "medium",
+          bg: invalid ? "invalid" : "background"
+        }}
       />
     </Row>
   ) : (
     <Row labelId={`${inputId}-label`} {...{ label, unit }}>
       <StaticAmounts
-        inputId={inputId}
+        sx={{
+          ...editableStyle,
+          bg: invalid ? "invalid" : "background"
+        }}
         labelledBy={`${inputId}-label`}
-        amount={amount}
-        color={color}
-        pendingAmount={pendingAmount}
-        pendingColor={pendingColor}
-        invalid={invalid}
-        variant={variant}
         onClick={() => setEditing(inputId)}
+        {...{ inputId, amount, unit, color, pendingAmount, pendingColor, invalid }}
       />
     </Row>
   );

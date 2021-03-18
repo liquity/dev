@@ -45,7 +45,7 @@ export const FrontendRegistration: React.FC = () => {
       <Card>
         <Heading>Choose a kickback rate</Heading>
 
-        <Box>
+        <Box sx={{ p: [2, 3] }}>
           <Flex>
             <Label>Kickback rate</Label>
             <Label variant="unit">%</Label>

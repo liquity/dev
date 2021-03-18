@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
-import { Card, Heading, Box, Flex, Text, Button } from "theme-ui";
-import { Icon } from "../Icon";
+import { Card, Heading, Box, Flex, Button } from "theme-ui";
+import { InfoMessage } from "../InfoMessage";
 import { useStabilityView } from "./context/StabilityViewContext";
 
 export const NoDeposit: React.FC = props => {
@@ -13,17 +13,10 @@ export const NoDeposit: React.FC = props => {
   return (
     <Card>
       <Heading>Stability Pool</Heading>
-      <Box>
-        <Box sx={{ m: 2 }}>
-          <Flex sx={{ alignItems: "center" }}>
-            <Icon name="info-circle" size="2x" />
-            <Heading as="h3" px={1}>
-              You don't have any LUSD in the Stability Pool
-            </Heading>
-          </Flex>
-
-          <Text sx={{ fontSize: 2 }}>You can earn ETH and LQTY rewards by depositing LUSD</Text>
-        </Box>
+      <Box sx={{ p: [2, 3] }}>
+        <InfoMessage title="You don't have any LUSD in the Stability Pool.">
+          You can earn ETH and LQTY rewards by depositing LUSD.
+        </InfoMessage>
 
         <Flex variant="layout.actions">
           <Button onClick={handleOpenTrove}>Deposit</Button>

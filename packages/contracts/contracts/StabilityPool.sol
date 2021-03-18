@@ -102,7 +102,21 @@ import "./Dependencies/console.sol";
  * e_1 = d_t * (S - S_t) / P_t
  *
  * and also for scale after, taking care to divide the latter by a factor of 1e9:
- * e_2 = d_t * (S - S_t) / (P_t * 1e9)
+ * e_2 = d_t * S / (P_t * 1e9)
+ *
+ * The gain in the second scale will be full, as the starting point was in the previous scale, thus no need to subtract anything.
+ * The deposit therefore was present for reward events from the beginning of that second scale.
+ *
+ *        S_i-S_t + S_{i+1}
+ *      .<--------.------------>
+ *      .         .
+ *      . S_i     .   S_{i+1}
+ *   <--.-------->.<----------->
+ *   S_t.         .
+ *   <->.         .
+ *      t         .
+ *  |---+---------|-------------|-----...
+ *         i            i+1
  *
  * The sum of (e_1 + e_2) captures the depositor's total accumulated ETH gain, handling the case where their
  * deposit spanned one scale change. We only care about gains across one scale change, since the compounded

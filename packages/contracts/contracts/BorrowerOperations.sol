@@ -47,6 +47,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         uint coll;
         uint oldICR;
         uint newICR;
+        uint newTCR;
         uint LUSDFee;
         uint newDebt;
         uint newColl;
@@ -281,17 +282,11 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         // Get the trove's old ICR before the adjustment, and what its new ICR will be after the adjustment
         vars.oldICR = LiquityMath._computeCR(vars.coll, vars.debt, vars.price);
         vars.newICR = _getNewICRFromTroveChange(vars.coll, vars.debt, vars.collChange, vars.isCollIncrease, vars.netDebtChange, _isDebtIncrease, vars.price);
-        
-        /*
-        * When the adjustment withdraws collateral or increases debt, make sure it is a valid change for the trove's 
-        * ICR and for the system TCR, given the current system mode.
-        */
-        if (_collWithdrawal != 0 || _isDebtIncrease) { 
-            assert(_collWithdrawal <= vars.coll); 
-            uint newTCR = _getNewTCRFromTroveChange(vars.collChange, vars.isCollIncrease, vars.netDebtChange, _isDebtIncrease, vars.price);
-            _requireValidNewICRandValidNewTCR(isRecoveryMode, vars.oldICR, vars.newICR, newTCR);
-        }
+        assert(_collWithdrawal <= vars.coll); 
 
+        // Check the adjustment satisfies all conditions for the current system mode
+        _requireValidAdjustmentInCurrentMode(isRecoveryMode, _collWithdrawal, _isDebtIncrease, vars);
+            
         // When the adjustment is a debt repayment, check it's a valid amount and that the caller has enough LUSD
         if (!_isDebtIncrease && _LUSDChange > 0) {
             _requireAtLeastMinNetDebt(_getNetDebt(vars.debt).sub(vars.netDebtChange));
@@ -496,16 +491,44 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         require(!_checkRecoveryMode(_price), "BorrowerOps: Operation not permitted during Recovery Mode");
     }
 
-    function _requireValidNewICRandValidNewTCR(bool _isRecoveryMode, uint _oldICR, uint _newICR, uint _newTCR) internal pure {
-        _requireICRisAboveMCR(_newICR);
+    function _requireNoCollWithdrawal(uint _collWithdrawal) internal pure {
+        require(_collWithdrawal == 0, "BorrowerOps: Collateral withdrawal not permitted Recovery Mode");
+    }
 
-        if (!_isRecoveryMode) {
-            // When the system is in Normal Mode, check that this operation would not push the system into Recovery Mode
-            _requireNewTCRisAboveCCR(_newTCR);
-        } else {
-            // When the system is in Recovery Mode, check that this operation would not worsen the trove's ICR (and by extension, would not worsen the TCR)
-            _requireNewICRisAboveOldICR(_newICR, _oldICR);
-        }  
+    function _requireValidAdjustmentInCurrentMode 
+    (
+        bool _isRecoveryMode,
+        uint _collWithdrawal,
+        bool _isDebtIncrease, 
+        LocalVariables_adjustTrove memory _vars
+    ) 
+        internal 
+        view 
+    {
+        /* 
+        *In Recovery Mode, only allow:
+        *
+        * - Pure collateral top-up
+        * - Pure debt repayment
+        * - Collateral top-up with debt repayment
+        * - A debt increase combined with a collateral top-up which makes the ICR >= 150% and improves the ICR (and by extension improves the TCR).
+        *
+        * In Normal Mode, ensure:
+        *
+        * - The new ICR is above MCR
+        * - The adjustment won't pull the TCR below CCR
+        */
+        if (_isRecoveryMode) {
+            _requireNoCollWithdrawal(_collWithdrawal);
+            if (_isDebtIncrease) {
+                _requireICRisAboveCCR(_vars.newICR);
+                _requireNewICRisAboveOldICR(_vars.newICR, _vars.oldICR);
+            }       
+        } else { // if Normal Mode
+            _requireICRisAboveMCR(_vars.newICR);
+            _vars.newTCR = _getNewTCRFromTroveChange(_vars.collChange, _vars.isCollIncrease, _vars.netDebtChange, _isDebtIncrease, _vars.price);
+            _requireNewTCRisAboveCCR(_vars.newTCR);  
+        }
     }
 
     function _requireICRisAboveMCR(uint _newICR) internal pure {
@@ -513,7 +536,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     }
 
     function _requireICRisAboveCCR(uint _newICR) internal pure {
-        require(_newICR >= CCR, "BorrowerOps: In Recovery Mode new troves must have ICR >= CCR");
+        require(_newICR >= CCR, "BorrowerOps: Operation must leave trove with ICR >= CCR");
     }
 
     function _requireNewICRisAboveOldICR(uint _newICR, uint _oldICR) internal pure {
@@ -522,10 +545,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     function _requireNewTCRisAboveCCR(uint _newTCR) internal pure {
         require(_newTCR >= CCR, "BorrowerOps: An operation that would result in TCR < CCR is not permitted");
-    }
-
-    function _requireValidCollWithdrawal(uint _collWithdrawal, uint _troveColl) internal pure {
-        require(_collWithdrawal <= _troveColl, "BorrowerOps: Collateral withdrawal must not be larger than the trove's collateral");
     }
 
     function _requireAtLeastMinNetDebt(uint _netDebt) internal pure {

@@ -1,12 +1,12 @@
 import React from "react";
-import { Text, Flex } from "theme-ui";
+import { Text } from "theme-ui";
 import { Decimal, StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../../hooks/LiquityContext";
 import { COIN, GT } from "../../strings";
-import { Transaction, useMyTransactionState } from "../Transaction";
-import { Icon } from "../Icon";
+import { Transaction } from "../Transaction";
+import { ActionDescription } from "../ActionDescription";
 
 type StabilityActionDescriptionProps = {
   originalDeposit: StabilityDeposit;
@@ -47,7 +47,6 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
   const frontendTag = frontendRegistered ? config.frontendTag : undefined;
 
   const transactionId = "stability-deposit";
-  const transactionState = useMyTransactionState(transactionId);
 
   const { depositLUSD, withdrawLUSD } = originalDeposit.whatChanged(editedLUSD) ?? {};
 
@@ -58,19 +57,12 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
   const hasRewardOrGain = hasGain || hasReward;
   const gains = hasReward ? `${collateralGain} and ${lqtyReward}` : collateralGain;
   const isDepositDirty = !!(depositLUSD || withdrawLUSD);
-  const isWaitingForApproval =
-    transactionState.type === "waitingForApproval" && transactionState.id === transactionId;
 
   if (!isDepositDirty) return null;
 
   return (
-    <Flex variant="layout.infoMessage">
-      <Icon
-        style={{ marginRight: "2px", display: "flex", alignItems: "center" }}
-        name="info-circle"
-      />
-      {isWaitingForApproval && <Text>Waiting for your approval...</Text>}
-      {!isWaitingForApproval && depositLUSD && (
+    <ActionDescription>
+      {depositLUSD && (
         <Transaction
           id={transactionId}
           send={liquity.depositLUSDInStabilityPool.bind(liquity, depositLUSD, frontendTag)} // TODO we dont want these to be sendable
@@ -89,7 +81,7 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
           </Text>
         </Transaction>
       )}
-      {!isWaitingForApproval && withdrawLUSD && (
+      {withdrawLUSD && (
         <Transaction
           id={transactionId}
           send={liquity.withdrawLUSDFromStabilityPool.bind(liquity, withdrawLUSD)}
@@ -107,6 +99,6 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
           </Text>
         </Transaction>
       )}
-    </Flex>
+    </ActionDescription>
   );
 };

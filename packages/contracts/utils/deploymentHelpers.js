@@ -280,6 +280,15 @@ class DeploymentHelper {
     return contracts
   }
 
+  static async deployLUSDTokenTester(contracts) {
+    contracts.lusdToken = await LUSDTokenTester.new(
+      contracts.troveManager.address,
+      contracts.stabilityPool.address,
+      contracts.borrowerOperations.address
+    )
+    return contracts
+  }
+
   static async deployProxyScripts(contracts, LQTYContracts, owner, users) {
     const proxies = await buildUserProxies(users)
 

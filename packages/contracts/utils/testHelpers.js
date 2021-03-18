@@ -188,6 +188,9 @@ class TestHelper {
     return gas
   }
 
+  static applyLiquidationFee(ethAmount) {
+    return ethAmount.mul(this.toBN(this.dec(995, 15))).div(MoneyValues._1e18BN)
+  }
   // --- Logging functions ---
 
   static logGasMetrics(gasResults, message) {
@@ -302,6 +305,18 @@ class TestHelper {
     return compositeDebt
   }
 
+  static async getTroveEntireColl(contracts, trove) {
+    return this.toBN((await contracts.troveManager.getEntireDebtAndColl(trove))[1])
+  }
+
+  static async getTroveEntireDebt(contracts, trove) {
+    return this.toBN((await contracts.troveManager.getEntireDebtAndColl(trove))[0])
+  }
+
+  static async getTroveStake(contracts, trove) {
+    return (contracts.troveManager.getTroveStake(trove))
+  }
+
   /*
    * given the requested LUSD amomunt in openTrove, returns the total debt
    * So, it adds the gas compensation and the borrowing fee
@@ -323,8 +338,14 @@ class TestHelper {
 
   // Subtracts the borrowing fee
   static async getNetBorrowingAmount(contracts, debtWithFee) {
-    const borrowingRate = await contracts.troveManager.getBorrowingRate()
+    const borrowingRate = await contracts.troveManager.getBorrowingRateWithDecay()
     return this.toBN(debtWithFee).mul(MoneyValues._1e18BN).div(MoneyValues._1e18BN.add(borrowingRate))
+  }
+
+  // Adds the borrowing fee
+  static async getAmountWithBorrowingFee(contracts, lusdAmount) {
+    const fee = await contracts.troveManager.getBorrowingFee(lusdAmount)
+    return lusdAmount.add(fee)
   }
 
   // Adds the redemption fee
@@ -649,6 +670,7 @@ class TestHelper {
   }) {
     if (!maxFeePercentage) maxFeePercentage = this._100pct
     if (!extraLUSDAmount) extraLUSDAmount = this.toBN(0)
+    else if (typeof extraLUSDAmount == 'string') extraLUSDAmount = this.toBN(extraLUSDAmount)
     if (!upperHint) upperHint = this.ZERO_ADDRESS
     if (!lowerHint) lowerHint = this.ZERO_ADDRESS
 
@@ -658,6 +680,7 @@ class TestHelper {
     const lusdAmount = MIN_DEBT.add(extraLUSDAmount)
 
     if (!ICR && !extraParams.value) ICR = this.toBN(this.dec(15, 17)) // 150%
+    else if (typeof ICR == 'string') ICR = this.toBN(ICR)
 
     const totalDebt = await this.getOpenTroveTotalDebt(contracts, lusdAmount)
     const netDebt = await this.getActualDebtFromComposite(totalDebt, contracts)
@@ -667,14 +690,50 @@ class TestHelper {
       extraParams.value = ICR.mul(totalDebt).div(price)
     }
 
-    await contracts.borrowerOperations.openTrove(maxFeePercentage, lusdAmount, upperHint, lowerHint, extraParams)
+    const tx = await contracts.borrowerOperations.openTrove(maxFeePercentage, lusdAmount, upperHint, lowerHint, extraParams)
 
     return {
       lusdAmount,
       netDebt,
       totalDebt,
       ICR,
-      collateral: extraParams.value
+      collateral: extraParams.value,
+      tx
+    }
+  }
+
+  static async withdrawLUSD(contracts, {
+    maxFeePercentage,
+    lusdAmount,
+    ICR,
+    upperHint,
+    lowerHint,
+    extraParams
+  }) {
+    if (!maxFeePercentage) maxFeePercentage = this._100pct
+    if (!upperHint) upperHint = this.ZERO_ADDRESS
+    if (!lowerHint) lowerHint = this.ZERO_ADDRESS
+
+    assert(!(lusdAmount && ICR) && (lusdAmount || ICR), "Specify either lusd amount or target ICR, but not both")
+
+    let increasedTotalDebt
+    if (ICR) {
+      assert(extraParams.from, "A from account is needed")
+      const { debt, coll } = await contracts.troveManager.getEntireDebtAndColl(extraParams.from)
+      const price = await contracts.priceFeedTestnet.getPrice()
+      const targetDebt = coll.mul(price).div(ICR)
+      assert(targetDebt > debt, "ICR is already greater than or equal to target")
+      increasedTotalDebt = targetDebt.sub(debt)
+      lusdAmount = await this.getNetBorrowingAmount(contracts, increasedTotalDebt)
+    } else {
+      increasedTotalDebt = await this.getAmountWithBorrowingFee(contracts, lusdAmount)
+    }
+
+    await contracts.borrowerOperations.withdrawLUSD(maxFeePercentage, lusdAmount, upperHint, lowerHint, extraParams)
+
+    return {
+      lusdAmount,
+      increasedTotalDebt
     }
   }
 
@@ -1091,7 +1150,6 @@ class TestHelper {
       // if (message) {
       //   assert.include(err.message, message)
       // }
- 
     }
   }
 

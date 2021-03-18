@@ -6,7 +6,7 @@ import { COIN, GT } from "../../strings";
 import { Icon } from "../Icon";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { useMyTransactionState } from "../Transaction";
-import { StaticRow } from "../Trove/Editor";
+import { DisabledEditableRow, StaticRow } from "../Trove/Editor";
 import { ClaimAndMove } from "./actions/ClaimAndMove";
 import { ClaimRewards } from "./actions/ClaimRewards";
 import { useStabilityView } from "./context/StabilityViewContext";
@@ -37,28 +37,31 @@ export const ActiveDeposit: React.FC = props => {
   return (
     <Card>
       <Heading>Stability Pool</Heading>
-      <Box>
+      <Box sx={{ p: [2, 3] }}>
         <Box>
-          <StaticRow
+          <DisabledEditableRow
             label="Deposit"
             inputId="deposit-lusd"
-            amount={stabilityDeposit.currentLUSD.prettify(4)}
+            amount={stabilityDeposit.currentLUSD.prettify()}
             unit={COIN}
           />
+
           <StaticRow
             label="Gain"
             inputId="deposit-gain"
             amount={stabilityDeposit.collateralGain.prettify(4)}
             color={stabilityDeposit.collateralGain.nonZero && "success"}
-            unit={"ETH"}
+            unit="ETH"
           />
+
           <StaticRow
             label="Reward"
             inputId="deposit-reward"
-            amount={stabilityDeposit.lqtyReward.prettify(4)}
+            amount={stabilityDeposit.lqtyReward.prettify()}
             color={stabilityDeposit.lqtyReward.nonZero && "success"}
             unit={GT}
           />
+
           {isWaitingForTransaction && (
             <>
               <LoadingOverlay />
@@ -75,11 +78,12 @@ export const ActiveDeposit: React.FC = props => {
         </Box>
 
         <Flex variant="layout.actions">
+          <Button variant="outline" onClick={handleAdjustDeposit}>
+            <Icon name="pen" size="sm" />
+            &nbsp;Adjust
+          </Button>
           {hasRewardAndGain && <ClaimRewards>Claim rewards</ClaimRewards>}
           {hasGain && !hasReward && <ClaimRewards>Claim ETH</ClaimRewards>}
-          <Button variant="primary" onClick={handleAdjustDeposit}>
-            Adjust
-          </Button>
         </Flex>
         {hasTrove && hasRewardAndGain && (
           <Flex>
