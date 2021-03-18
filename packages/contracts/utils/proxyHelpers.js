@@ -142,6 +142,10 @@ class BorrowerOperationsProxy extends Proxy {
   async MIN_NET_DEBT(...params) {
     return this.proxyFunction('MIN_NET_DEBT', params)
   }
+
+  async BORROWING_FEE_FLOOR(...params) {
+    return this.proxyFunction('BORROWING_FEE_FLOOR', params)
+  }
 }
 
 class BorrowerWrappersProxy extends Proxy {
@@ -189,6 +193,14 @@ class TroveManagerProxy extends Proxy {
 
   async totalStakes() {
     return this.proxyFunction('totalStakes', [])
+  }
+
+  async getPendingETHReward(...params) {
+    return this.proxyFunction('getPendingETHReward', params)
+  }
+
+  async getPendingLUSDDebtReward(...params) {
+    return this.proxyFunction('getPendingLUSDDebtReward', params)
   }
 
   async liquidate(user) {
@@ -247,12 +259,20 @@ class TroveManagerProxy extends Proxy {
     return this.proxyFunction('getBorrowingRate', [])
   }
 
+  async getBorrowingRateWithDecay() {
+    return this.proxyFunction('getBorrowingRateWithDecay', [])
+  }
+
   async getBorrowingFee(...params) {
     return this.proxyFunction('getBorrowingFee', params)
   }
 
   async getBorrowingFeeWithDecay(...params) {
     return this.proxyFunction('getBorrowingFeeWithDecay', params)
+  }
+
+  async getEntireDebtAndColl(...params) {
+    return this.proxyFunction('getEntireDebtAndColl', params)
   }
 }
 
