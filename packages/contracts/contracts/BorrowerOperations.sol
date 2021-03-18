@@ -284,10 +284,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         vars.newICR = _getNewICRFromTroveChange(vars.coll, vars.debt, vars.collChange, vars.isCollIncrease, vars.netDebtChange, _isDebtIncrease, vars.price);
         assert(_collWithdrawal <= vars.coll); 
 
-        vars.newTCR = _getNewTCRFromTroveChange(vars.collChange, vars.isCollIncrease, vars.netDebtChange, _isDebtIncrease, vars.price);
-    
         // Check the adjustment satisfies all conditions for the current system mode
-        _requireValidAdustmentInCurrentMode(isRecoveryMode, _collWithdrawal, _isDebtIncrease, vars.oldICR, vars.newICR, vars.newTCR);
+        _requireValidAdjustmentInCurrentMode(isRecoveryMode, _collWithdrawal, _isDebtIncrease, vars);
             
         // When the adjustment is a debt repayment, check it's a valid amount and that the caller has enough LUSD
         if (!_isDebtIncrease && _LUSDChange > 0) {
@@ -494,17 +492,15 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         require(_collWithdrawal == 0, "BorrowerOps: Collateral withdrawal not permitted Recovery Mode");
     }
 
-    function _requireValidAdustmentInCurrentMode 
+    function _requireValidAdjustmentInCurrentMode 
     (
-        bool _isRecoveryMode, 
-        uint _collWithdrawal, 
+        bool _isRecoveryMode,
+        uint _collWithdrawal,
         bool _isDebtIncrease, 
-        uint _oldICR, 
-        uint _newICR, 
-        uint _newTCR 
+        LocalVariables_adjustTrove memory _vars
     ) 
         internal 
-        pure 
+        view 
     {
         /* 
         *In Recovery Mode, only allow:
@@ -512,7 +508,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         * - Pure collateral top-up
         * - Pure debt repayment
         * - Collateral top-up with debt repayment
-        * - A debt increase which makes the ICR >= 150% and improves the ICR (and by extension improves the TCR)
+        * - A debt increase which makes the ICR >= 150% and improves the ICR (and by extension improves the TCR).
         *
         * In Normal Mode, ensure:
         *
@@ -522,12 +518,13 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         if (_isRecoveryMode) {
             _requireNoCollWithdrawal(_collWithdrawal);
             if (_isDebtIncrease) {
-                _requireICRisAboveCCR(_newICR);
-                _requireNewICRisAboveOldICR(_newICR, _oldICR);
+                _requireICRisAboveCCR(_vars.newICR);
+                _requireNewICRisAboveOldICR(_vars.newICR, _vars.oldICR);
             }       
         } else { // if Normal Mode
-            _requireICRisAboveMCR(_newICR);
-            _requireNewTCRisAboveCCR(_newTCR);  
+            _requireICRisAboveMCR(_vars.newICR);
+            _vars.newTCR = _getNewTCRFromTroveChange(_vars.collChange, _vars.isCollIncrease, _vars.netDebtChange, _isDebtIncrease, _vars.price);
+            _requireNewTCRisAboveCCR(_vars.newTCR);  
         }
     }
 
