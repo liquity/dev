@@ -47,7 +47,6 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         uint coll;
         uint oldICR;
         uint newICR;
-        uint oldTCR;
         uint newTCR;
         uint LUSDFee;
         uint newDebt;
