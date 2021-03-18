@@ -1292,12 +1292,7 @@ contract('BorrowerOperations', async accounts => {
       await borrowerOperations.openTrove(th._100pct, await getNetBorrowingAmount(MIN_NET_DEBT.add(toBN('2'))), A, A, { from: A, value: dec(100, 30) })
 
       const repayTxAPromise = borrowerOperations.repayLUSD(2, A, A, { from: A })
-      await assertRevert(repayTxAPromise, "revert")
-
-      await borrowerOperations.openTrove(th._100pct, await getNetBorrowingAmount(dec(20, 21)), B, B, { from: B, value: dec(100, 30) })
-
-      const repayTxBPromise = borrowerOperations.repayLUSD(dec(20, 21), B, B, { from: B })
-      await assertRevert(repayTxBPromise, "revert")
+      await assertRevert(repayTxAPromise, "BorrowerOps: Trove's net debt must be greater than minimum")
     })
 
     it("repayLUSD(): reverts when calling address does not have active trove", async () => {
@@ -1409,18 +1404,18 @@ contract('BorrowerOperations', async accounts => {
       const bobBalBefore = await lusdToken.balanceOf(B)
       assert.isTrue(bobBalBefore.gt(toBN('0')))
 
-      // Bob transfers some LUSD to carol
-      await lusdToken.transfer(C, bobBalBefore.div(toBN(10)), { from: B })
+      // Bob transfers all but 5 of his LUSD to Carol
+      await lusdToken.transfer(C, bobBalBefore.sub((toBN(dec(5, 18)))), { from: B })
 
-      //Confirm B's LUSD balance has decreased
+      //Confirm B's LUSD balance has decreased to 5 LUSD
       const bobBalAfter = await lusdToken.balanceOf(B)
-      assert.isTrue(bobBalAfter.lt(bobBalBefore))
 
-      // Bob tries to repay more than he has
-      const repayLUSDPromise_B = borrowerOperations.repayLUSD(bobBalBefore, B, B, { from: B })
+      assert.isTrue(bobBalAfter.eq(toBN(dec(5, 18))))
+      
+      // Bob tries to repay 6 LUSD
+      const repayLUSDPromise_B = borrowerOperations.repayLUSD(toBN(dec(6, 18)), B, B, { from: B })
 
-      // B attempts to repay 50 LUSD
-      await assertRevert(repayLUSDPromise_B, "BorrowerOps: Trove's net debt must be greater than minimum")
+      await assertRevert(repayLUSDPromise_B, "Caller doesnt have enough LUSD to make repayment")
     })
 
     // --- adjustTrove() ---
