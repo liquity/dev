@@ -330,7 +330,7 @@ describe("EthersLiquity", () => {
 
       let funderTrove = Trove.create({ depositCollateral: 1, borrowLUSD: lusdShortage });
       funderTrove = funderTrove.setDebt(Decimal.max(funderTrove.debt, LUSD_MINIMUM_DEBT));
-      funderTrove = funderTrove.setCollateral(funderTrove.debt.mulDiv(1.11, price));
+      funderTrove = funderTrove.setCollateral(funderTrove.debt.mulDiv(1.51, price));
 
       const funderLiquity = await connectToDeployment(deployment, funder);
       await funderLiquity.openTrove(Trove.recreate(funderTrove));
