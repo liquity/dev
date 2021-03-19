@@ -11,15 +11,11 @@ import { ActionDescription } from "../../../ActionDescription";
 
 type AdjustActionDescriptionProps = {
   amount: string;
-  shouldClaimReward: boolean;
 };
 
 const selector = ({ lpBalance, lpStaked }: LiquityStoreState) => ({ lpBalance, lpStaked });
 
-export const AdjustActionDescription: React.FC<AdjustActionDescriptionProps> = ({
-  amount,
-  shouldClaimReward
-}) => {
+export const AdjustActionDescription: React.FC<AdjustActionDescriptionProps> = ({ amount }) => {
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -39,7 +35,7 @@ export const AdjustActionDescription: React.FC<AdjustActionDescriptionProps> = (
   const isWithdrawing = lpStaked.gt(amount);
   const hasReward = true;
   const amountChanged = isWithdrawing ? lpStaked.sub(amount) : Decimal.from(amount).sub(lpStaked);
-  const isClaimingRewards = hasReward && shouldClaimReward;
+  const isClaimingRewards = hasReward;
 
   if (!isDirty) return null;
 

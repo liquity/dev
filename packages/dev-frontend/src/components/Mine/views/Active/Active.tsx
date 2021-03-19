@@ -77,11 +77,6 @@ export const Active: React.FC = () => {
         </Flex>
         <Flex>
           <Button variant="outline" sx={{ mt: 3, ml: 2, width: "100%" }}>
-            Unstake
-          </Button>
-        </Flex>
-        <Flex>
-          <Button variant="outline" sx={{ mt: 3, ml: 2, width: "100%" }}>
             Unstake and claim reward
           </Button>
         </Flex>

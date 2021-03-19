@@ -34,11 +34,6 @@ export const Adjust: React.FC = () => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
 
-  const [shouldClaimReward, setShouldClaimReward] = useState(false);
-  const toggleClaimReward = useCallback(() => {
-    setShouldClaimReward(!shouldClaimReward);
-  }, [shouldClaimReward, setShouldClaimReward]);
-
   useEffect(() => {
     if (transactionState.type === "confirmedOneShot") {
       dispatchEvent("ADJUST_CONFIRMED");
@@ -81,12 +76,7 @@ export const Adjust: React.FC = () => {
           unit={GT}
         />
 
-        <AdjustActionDescription amount={amount} shouldClaimReward={shouldClaimReward} />
-
-        <Flex sx={{ m: 2, justifyContent: "flex-end", alignItems: "center" }}>
-          <input type="checkbox" id="claimRewards" onChange={toggleClaimReward} />
-          <label htmlFor="claimRewards">Claim reward</label>
-        </Flex>
+        <AdjustActionDescription amount={amount} />
 
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
