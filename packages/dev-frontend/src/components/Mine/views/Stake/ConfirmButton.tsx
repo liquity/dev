@@ -5,15 +5,16 @@ import { useLiquity } from "../../../../hooks/LiquityContext";
 
 type ConfirmButtonProps = {
   amount: string;
+  isDisabled: boolean;
 };
 
-export const ConfirmButton: React.FC<ConfirmButtonProps> = ({ amount }) => {
+export const ConfirmButton: React.FC<ConfirmButtonProps> = ({ amount, isDisabled }) => {
   const {
     liquity: { send: liquity }
   } = useLiquity();
 
   const transactionId = "mine-deposit";
-  const isDisabled = amount === "0";
+  const shouldDisable = amount === "0" || isDisabled;
 
   return (
     // <Transaction
@@ -22,7 +23,7 @@ export const ConfirmButton: React.FC<ConfirmButtonProps> = ({ amount }) => {
     //   showFailure="asTooltip"
     //   tooltipPlacement="bottom"
     // >
-    <Button disabled={isDisabled}>Confirm</Button>
+    <Button disabled={shouldDisable}>Confirm</Button>
     // </Transaction>
   );
 };
