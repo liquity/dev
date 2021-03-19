@@ -124,7 +124,7 @@ contract('BorrowerWrappers', async accounts => {
     const proxy = borrowerWrappers.getProxyFromUser(alice)
     const signature = 'transferETH(address,uint256)'
     const calldata = th.getTransactionData(signature, [alice, amount])
-    await assertRevert(proxy.executeTarget(borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
+    await assertRevert(proxy.methods["execute(address,bytes)"](borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
 
     assert.equal(await web3.eth.getBalance(proxyAddress), amount.toString())
 
@@ -181,7 +181,7 @@ contract('BorrowerWrappers', async accounts => {
     const price = await priceFeed.getPrice();
     const expectedSurplus = collateral.sub(redeemAmount.mul(mv._1e18BN).div(price))
     th.assertIsApproximatelyEqual(await collSurplusPool.getCollateral(proxyAddress), expectedSurplus)
-    assert.equal(await troveManager.getTroveStatus(proxyAddress), 4)  // status: closed by redemption
+    assert.equal(await troveManager.getTroveStatus(proxyAddress), 4) // closed by redemption
 
     // alice claims collateral and re-opens the trove
     await borrowerWrappers.claimCollateralAndOpenTrove(th._100pct, lusdAmount, alice, alice, { from: alice })
@@ -213,7 +213,7 @@ contract('BorrowerWrappers', async accounts => {
     const price = await priceFeed.getPrice();
     const expectedSurplus = collateral.sub(redeemAmount.mul(mv._1e18BN).div(price))
     th.assertIsApproximatelyEqual(await collSurplusPool.getCollateral(proxyAddress), expectedSurplus)
-    assert.equal(await troveManager.getTroveStatus(proxyAddress), 4) // status: closed by redemption
+    assert.equal(await troveManager.getTroveStatus(proxyAddress), 4) // closed by redemption
 
     // alice claims collateral and re-opens the trove
     await borrowerWrappers.claimCollateralAndOpenTrove(th._100pct, lusdAmount, alice, alice, { from: alice, value: collateral })
@@ -252,7 +252,7 @@ contract('BorrowerWrappers', async accounts => {
     const proxy = borrowerWrappers.getProxyFromUser(alice)
     const signature = 'claimSPRewardsAndRecycle(uint256,address,address)'
     const calldata = th.getTransactionData(signature, [th._100pct, alice, alice])
-    await assertRevert(proxy.executeTarget(borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
+    await assertRevert(proxy.methods["execute(address,bytes)"](borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
   })
 
   it('claimSPRewardsAndRecycle():', async () => {
@@ -377,7 +377,7 @@ contract('BorrowerWrappers', async accounts => {
     const proxy = borrowerWrappers.getProxyFromUser(alice)
     const signature = 'claimStakingGainsAndRecycle(uint256,address,address)'
     const calldata = th.getTransactionData(signature, [th._100pct, alice, alice])
-    await assertRevert(proxy.executeTarget(borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
+    await assertRevert(proxy.methods["execute(address,bytes)"](borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
   })
 
   it('claimStakingGainsAndRecycle(): reverts if user has no trove', async () => {

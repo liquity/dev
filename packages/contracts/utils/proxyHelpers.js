@@ -1,7 +1,7 @@
 const { TestHelper: th } = require("../utils/testHelpers.js")
 
-const DSProxyFactory = artifacts.require('DSProxyFactoryWrapper')
-const DSProxy = artifacts.require('DSProxyWrapper')
+const DSProxyFactory = artifacts.require('DSProxyFactory')
+const DSProxy = artifacts.require('DSProxy')
 
 const buildUserProxies = async (users) => {
   const proxies = {}
@@ -71,7 +71,7 @@ class Proxy {
     const calldata = th.getTransactionData(signature, this.getSlicedParams(params))
     // console.log('proxy: ', proxy.address)
     // console.log(this.scriptAddress, calldata, optionalParams)
-    return proxy.executeTarget(this.scriptAddress, calldata, optionalParams)
+    return proxy.methods["execute(address,bytes)"](this.scriptAddress, calldata, optionalParams)
   }
 
   async proxyFunctionWithUser(functionName, user) {

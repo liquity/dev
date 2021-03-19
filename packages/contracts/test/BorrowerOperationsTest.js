@@ -2500,6 +2500,19 @@ contract('BorrowerOperations', async accounts => {
 
     // --- closeTrove() ---
 
+    it("closeTrove(): reverts if lowers the TCR", async () => {
+      await openTrove({ ICR: toBN(dec(300, 18)), extraParams:{ from: alice } })
+      await openTrove({ ICR: toBN(dec(120, 18)), extraLUSDAmount: toBN(dec(300, 18)), extraParams:{ from: bob } })
+
+      // to compensate borrowing fees
+      await lusdToken.transfer(alice, dec(300, 18), { from: bob })
+
+      await assertRevert(
+        borrowerOperations.closeTrove({ from: alice }),
+        "BorrowerOps: An operation that would result in TCR < CCR is not permitted"
+      )
+    })
+
     it("closeTrove(): reverts when calling address does not have active trove", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: alice } })
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: bob } })

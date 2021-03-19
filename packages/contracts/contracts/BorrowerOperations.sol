@@ -333,6 +333,9 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         _requireSufficientLUSDBalance(lusdTokenCached, msg.sender, debt.sub(LUSD_GAS_COMPENSATION));
 
+        uint newTCR = _getNewTCRFromTroveChange(coll, false, debt, false, price);
+        _requireNewTCRisAboveCCR(newTCR);
+
         troveManagerCached.removeStake(msg.sender);
         troveManagerCached.closeTrove(msg.sender);
 
