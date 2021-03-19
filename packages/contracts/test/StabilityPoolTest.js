@@ -3031,6 +3031,37 @@ contract('StabilityPool', async accounts => {
       assert.equal(Trove_ETH_Increase, ETHGain_A)
     })
 
+    it("withdrawETHGainToTrove(): reverts if it would leave trove with ICR < MCR", async () => {
+      // --- SETUP ---
+      // Whale deposits 1850 LUSD in StabilityPool
+      await openTrove({ extraLUSDAmount: toBN(dec(1000000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+      await stabilityPool.provideToSP(dec(185000, 18), frontEnd_1, { from: whale })
+
+      // defaulter opened
+      await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_1 } })
+
+      // --- TEST ---
+
+      // Alice makes deposit #1: 15000 LUSD
+      await openTrove({ extraLUSDAmount: toBN(dec(15000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
+      await stabilityPool.provideToSP(dec(15000, 18), frontEnd_1, { from: alice })
+
+      // check alice's Trove recorded ETH Before:
+      const aliceTrove_Before = await troveManager.Troves(alice)
+      const aliceTrove_ETH_Before = aliceTrove_Before[1]
+      assert.isTrue(aliceTrove_ETH_Before.gt(toBN('0')))
+
+      // price drops: defaulter's Trove falls below MCR
+      await priceFeed.setPrice(dec(10, 18));
+
+      // defaulter's Trove is closed.
+      await troveManager.liquidate(defaulter_1, { from: owner })
+
+      // Alice attempts to  her ETH Gains to her Trove
+      await assertRevert(stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice }),
+      "BorrowerOps: An operation that would result in ICR < MCR is not permitted")
+    })
+
     it("withdrawETHGainToTrove(): Subsequent deposit and withdrawal attempt from same account, with no intermediate liquidations, withdraws zero ETH", async () => {
       // --- SETUP ---
       // Whale deposits 1850 LUSD in StabilityPool
@@ -3051,11 +3082,14 @@ contract('StabilityPool', async accounts => {
       const aliceTrove_ETH_Before = aliceTrove_Before[1]
       assert.isTrue(aliceTrove_ETH_Before.gt(toBN('0')))
 
-      // price drops: defaulter's Trove falls below MCR, alice and whale Trove remain active
+      // price drops: defaulter's Trove falls below MCR
       await priceFeed.setPrice(dec(105, 18));
 
       // defaulter's Trove is closed.
       await troveManager.liquidate(defaulter_1, { from: owner })
+
+      // price bounces back
+      await priceFeed.setPrice(dec(200, 18));
 
       // Alice sends her ETH Gains to her Trove
       await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
@@ -3097,7 +3131,7 @@ contract('StabilityPool', async accounts => {
       await openTrove({ extraLUSDAmount: toBN(dec(15000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
       await stabilityPool.provideToSP(dec(15000, 18), frontEnd_1, { from: alice })
 
-      // price drops: defaulter's Trove falls below MCR, alice and whale Trove remain active
+      // price drops: defaulter's Trove falls below MCR
       await priceFeed.setPrice(dec(100, 18));
 
       // defaulter's Trove is closed.
@@ -3108,6 +3142,9 @@ contract('StabilityPool', async accounts => {
       const aliceExpectedETHGain = liquidatedColl.mul(toBN(dec(15000, 18))).div(toBN(dec(200000, 18)))
       const aliceETHGain = await stabilityPool.getDepositorETHGain(alice)
       assert.isTrue(aliceExpectedETHGain.eq(aliceETHGain))
+
+      // price bounces back
+      await priceFeed.setPrice(dec(200, 18));
 
       //check activePool and StabilityPool Ether before retrieval:
       const active_ETH_Before = await activePool.getETH()
@@ -3143,6 +3180,9 @@ contract('StabilityPool', async accounts => {
 
       await priceFeed.setPrice(dec(105, 18))
       await troveManager.liquidate(defaulter_1)
+
+      // price bounces back
+      await priceFeed.setPrice(dec(200, 18));
 
       // All depositors attempt to withdraw
       const tx1 = await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })

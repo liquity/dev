@@ -104,6 +104,24 @@ contract('BorrowerOperations', async accounts => {
       BORROWING_FEE_FLOOR = await borrowerOperations.BORROWING_FEE_FLOOR()
     })
 
+    it("addColl(): reverts when top-up would leave trove with ICR < MCR", async () => {
+      // alice creates a Trove and adds first collateral
+      await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
+      await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: bob } })
+
+      // Price drops
+      await priceFeed.setPrice(dec(100, 18))
+      const price = await priceFeed.getPrice()
+
+      assert.isFalse(await troveManager.checkRecoveryMode(price))
+      assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(toBN(dec(110, 16))))
+
+      const collTopUp = 1  // 1 wei top up
+
+     await assertRevert(borrowerOperations.addColl(alice, alice, { from: alice, value: collTopUp }), 
+      "BorrowerOps: An operation that would result in ICR < MCR is not permitted")
+    })
+
     it("addColl(): Increases the activePool ETH and raw ether balance by correct amount", async () => {
       const { collateral: aliceColl } = await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
 
@@ -352,6 +370,24 @@ contract('BorrowerOperations', async accounts => {
     })
 
     // --- withdrawColl() ---
+
+    it("withdrawColl(): reverts when withdrawal would leave trove with ICR < MCR", async () => {
+      // alice creates a Trove and adds first collateral
+      await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
+      await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: bob } })
+
+      // Price drops
+      await priceFeed.setPrice(dec(100, 18))
+      const price = await priceFeed.getPrice()
+
+      assert.isFalse(await troveManager.checkRecoveryMode(price))
+      assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(toBN(dec(110, 16))))
+
+      const collWithdrawal = 1  // 1 wei withdrawal
+
+     await assertRevert(borrowerOperations.withdrawColl(1, alice, alice, { from: alice }), 
+      "BorrowerOps: An operation that would result in ICR < MCR is not permitted")
+    })
 
     // reverts when calling address does not have active trove  
     it("withdrawColl(): reverts when calling address does not have active trove", async () => {
@@ -645,6 +681,24 @@ contract('BorrowerOperations', async accounts => {
     })
 
     // --- withdrawLUSD() ---
+
+    it("withdrawLUSD(): reverts when withdrawal would leave trove with ICR < MCR", async () => {
+      // alice creates a Trove and adds first collateral
+      await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
+      await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: bob } })
+
+      // Price drops
+      await priceFeed.setPrice(dec(100, 18))
+      const price = await priceFeed.getPrice()
+
+      assert.isFalse(await troveManager.checkRecoveryMode(price))
+      assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(toBN(dec(110, 16))))
+
+      const LUSDwithdrawal = 1  // withdraw 1 wei LUSD
+
+     await assertRevert(borrowerOperations.withdrawLUSD(th._100pct, LUSDwithdrawal, alice, alice, { from: alice }), 
+      "BorrowerOps: An operation that would result in ICR < MCR is not permitted")
+    })
 
     it("withdrawLUSD(): decays a non-zero base rate", async () => {
       await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
@@ -1273,6 +1327,23 @@ contract('BorrowerOperations', async accounts => {
     })
 
     // --- repayLUSD() ---
+    it("repayLUSD(): reverts when repayment would leave trove with ICR < MCR", async () => {
+      // alice creates a Trove and adds first collateral
+      await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
+      await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: bob } })
+
+      // Price drops
+      await priceFeed.setPrice(dec(100, 18))
+      const price = await priceFeed.getPrice()
+
+      assert.isFalse(await troveManager.checkRecoveryMode(price))
+      assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(toBN(dec(110, 16))))
+
+      const LUSDRepayment = 1  // 1 wei repayment
+
+     await assertRevert(borrowerOperations.repayLUSD(LUSDRepayment, alice, alice, { from: alice }), 
+      "BorrowerOps: An operation that would result in ICR < MCR is not permitted")
+    })
 
     it("repayLUSD(): Succeeds when it would leave trove with net debt >= minimum net debt", async () => {
       // Make the LUSD request 2 wei above min net debt to correct for floor division, and make net debt = min net debt + 1 wei
@@ -1419,6 +1490,25 @@ contract('BorrowerOperations', async accounts => {
     })
 
     // --- adjustTrove() ---
+
+    it("adjustTrove(): reverts when adjustment would leave trove with ICR < MCR", async () => {
+      // alice creates a Trove and adds first collateral
+      await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
+      await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: bob } })
+
+      // Price drops
+      await priceFeed.setPrice(dec(100, 18))
+      const price = await priceFeed.getPrice()
+
+      assert.isFalse(await troveManager.checkRecoveryMode(price))
+      assert.isTrue((await troveManager.getCurrentICR(alice, price)).lt(toBN(dec(110, 16))))
+
+      const LUSDRepayment = 1  // 1 wei repayment
+      const collTopUp = 1
+
+     await assertRevert(borrowerOperations.adjustTrove(th._100pct, 0, LUSDRepayment, false, alice, alice, { from: alice, value: collTopUp }), 
+      "BorrowerOps: An operation that would result in ICR < MCR is not permitted")
+    })
 
     it("adjustTrove(): reverts if max fee < 0.5% in Normal mode", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
