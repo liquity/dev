@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import { Card, Heading, Box, Flex, Button } from "theme-ui";
-import { Icon } from "../../../Icon";
 import { InfoMessage } from "../../../InfoMessage";
 import { useMineView } from "../../context/MineViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";

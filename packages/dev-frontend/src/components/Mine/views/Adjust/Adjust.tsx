@@ -1,34 +1,42 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Heading, Box, Flex, Card, Button } from "theme-ui";
-import { Decimal, Decimalish, Difference } from "@liquity/lib-base";
-// import { Decimal, Decimalish, Difference, MiningDeposit } from "@liquity/lib-base";
+import { Decimal, LiquityStoreState } from "@liquity/lib-base";
+import { useLiquitySelector } from "@liquity/lib-react";
+
 import { LP, GT } from "../../../../strings";
 import { Icon } from "../../../Icon";
 import { EditableRow, StaticRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMineView } from "../../context/MineViewContext";
-import { Transaction, useMyTransactionState } from "../../../Transaction";
+import { useMyTransactionState } from "../../../Transaction";
 import { ConfirmButton } from "./ConfirmButton";
-import { AdjustActionDescription } from "./AdjustActionDescription";
+import { Description } from "./Description";
+
+const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
+  liquidityMiningStake,
+  liquidityMiningLQTYReward
+});
+
+const transactionId = "mine-adjust";
 
 export const Adjust: React.FC = () => {
   const { dispatchEvent } = useMineView();
-  // const { lpBalance, lpStaked } = useLiquitySelector(selector);
-
-  const lpBalance = Decimal.from(100);
-  const lpStaked = Decimal.from(10);
-  const lpReward = Decimal.from(50);
-  const [amount, setAmount] = useState<string>(lpStaked.prettify());
-
-  const isDirty = amount !== lpStaked.prettify();
+  const { liquidityMiningStake, liquidityMiningLQTYReward } = useLiquitySelector(selector);
+  const [amount, setAmount] = useState<Decimal>(liquidityMiningStake);
   const editingState = useState<string>();
 
-  const transactionId = "mine-adjust";
   const transactionState = useMyTransactionState(transactionId);
   const isTransactionPending =
     (transactionState.type === "waitingForApproval" ||
       transactionState.type === "waitingForConfirmation") &&
     transactionState.id === transactionId;
+
+  const isWithdrawing = amount.lt(liquidityMiningStake);
+  const amountChanged = isWithdrawing
+    ? liquidityMiningStake.sub(amount)
+    : Decimal.from(amount).sub(liquidityMiningStake);
+
+  const isDirty = !amount.eq(liquidityMiningStake);
 
   const handleCancelPressed = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
@@ -48,7 +56,7 @@ export const Adjust: React.FC = () => {
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setAmount(lpStaked.prettify())}
+            onClick={() => setAmount(liquidityMiningStake)}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -60,29 +68,29 @@ export const Adjust: React.FC = () => {
       <Box sx={{ p: [2, 3] }}>
         <EditableRow
           label="Deposit"
-          inputId="mine-amount-lp"
-          amount={lpStaked.prettify() || "0"}
+          inputId="mine-stake-amount"
+          amount={liquidityMiningStake.prettify(4)}
           unit={LP}
           editingState={editingState}
-          editedAmount={amount || "0"}
-          setEditedAmount={amount => setAmount(amount)}
+          editedAmount={amount.prettify(4)}
+          setEditedAmount={amount => setAmount(Decimal.from(amount))}
         ></EditableRow>
 
         <StaticRow
           label="Reward"
-          inputId="mine-lp-reward"
-          amount={lpReward.prettify(4)}
-          color={lpReward.nonZero && "success"}
+          inputId="mine-reward-amount"
+          amount={liquidityMiningLQTYReward.prettify(4)}
+          color={liquidityMiningLQTYReward.nonZero && "success"}
           unit={GT}
         />
 
-        <AdjustActionDescription amount={amount} />
+        {isDirty && <Description amountChanged={amountChanged} isWithdrawing={isWithdrawing} />}
 
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
-          <ConfirmButton amount={amount || "0"} />
+          <ConfirmButton amountChanged={amountChanged} isWithdrawing={isWithdrawing} />
         </Flex>
       </Box>
     </Card>

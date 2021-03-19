@@ -1,31 +1,37 @@
 import React, { useCallback } from "react";
 import { Card, Heading, Box, Flex, Text, Button } from "theme-ui";
 import { LP, GT } from "../../../../strings";
-// import { LiquityStoreState } from "@liquity/lib-base";
-// import { useLiquitySelector } from "@liquity/lib-react";
+import { LiquityStoreState } from "@liquity/lib-base";
+import { useLiquitySelector } from "@liquity/lib-react";
 import { Icon } from "../../../Icon";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMyTransactionState } from "../../../Transaction";
 import { DisabledEditableRow, StaticRow } from "../../../Trove/Editor";
 import { useMineView } from "../../context/MineViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
+import { ActionDescription } from "../../../ActionDescription";
+import { ClaimReward } from "./ClaimReward";
+import { UnstakeAndClaim } from "./UnstakeAndClaim";
 
-// const selector = ({ lpStaked }: LiquityStoreState) => ({ lpStaked });
+const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
+  liquidityMiningStake,
+  liquidityMiningLQTYReward
+});
+const transactionId = /mine-/i;
 
 export const Active: React.FC = () => {
   const { dispatchEvent } = useMineView();
-  // const { lpStaked } = useLiquitySelector(selector);
+  const { liquidityMiningStake, liquidityMiningLQTYReward } = useLiquitySelector(selector);
 
   const handleAdjustPressed = useCallback(() => {
     dispatchEvent("ADJUST_PRESSED");
   }, [dispatchEvent]);
 
-  const transactionId = "mine-stake-or-claim";
   const transactionState = useMyTransactionState(transactionId);
   const isWaitingForTransaction =
     (transactionState.type === "waitingForApproval" ||
       transactionState.type === "waitingForConfirmation") &&
-    transactionState.id === transactionId;
+    transactionId.test(transactionState.id);
 
   return (
     <Card>
@@ -40,30 +46,23 @@ export const Active: React.FC = () => {
           <DisabledEditableRow
             label="Deposit"
             inputId="mine-deposit"
-            amount="10"
-            // amount={lpStaked.currentLp.prettify(4)}
+            amount={liquidityMiningStake.prettify(4)}
             unit={LP}
           />
           <StaticRow
             label="Reward"
             inputId="mine-reward"
-            amount="50"
-            // amount={lpStaked.lqtyReward.prettify(4)}
-            color={"success"}
-            // color={lpStaked.lqtyReward.nonZero && "success"}
+            amount={liquidityMiningLQTYReward.prettify(4)}
+            color={liquidityMiningLQTYReward.nonZero && "success"}
             unit={GT}
           />
           {isWaitingForTransaction && (
             <>
               <LoadingOverlay />
 
-              <Flex variant="layout.infoMessage">
-                <Icon
-                  style={{ marginRight: "2px", display: "flex", alignItems: "center" }}
-                  name="info-circle"
-                />
+              <ActionDescription>
                 <Text>Waiting for approval...</Text>
-              </Flex>
+              </ActionDescription>
             </>
           )}
         </Box>
@@ -73,12 +72,10 @@ export const Active: React.FC = () => {
             <Icon name="pen" size="sm" />
             &nbsp;Adjust
           </Button>
-          <Button variant="primary">Claim reward</Button>
+          <ClaimReward />
         </Flex>
         <Flex>
-          <Button variant="outline" sx={{ mt: 3, ml: 2, width: "100%" }}>
-            Unstake and claim reward
-          </Button>
+          <UnstakeAndClaim />
         </Flex>
       </Box>
     </Card>
