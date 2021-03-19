@@ -4,6 +4,7 @@ const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
 
 const LQTYStakingTester = artifacts.require('LQTYStakingTester')
+const TroveManagerTester = artifacts.require("TroveManagerTester")
 const NonPayable = artifacts.require("./NonPayable.sol")
 
 const th = testHelpers.TestHelper
@@ -18,27 +19,42 @@ const ZERO = th.toBN('0')
  * gains are non-zero, occur when they should, and are in correct proportion to the user's stake. 
  *
  * Specific ETH/LUSD gain values will depend on the final fee schedule used, and the final choices for
- * parameters BETA and MINUTE_DECAY_FACTORin the TroveManager, which are still TBD based on economic
+ * parameters BETA and MINUTE_DECAY_FACTOR in the TroveManager, which are still TBD based on economic
  * modelling.
  * 
  */ 
 
-contract('Fee arithmetic tests', async accounts => {
-  let contracts
+contract('LQTYStaking revenue share tests', async accounts => {
 
   const bountyAddress = accounts[998]
   const lpRewardsAddress = accounts[999]
   
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 
+  let priceFeed
+  let lusdToken
+  let sortedTroves
+  let troveManager
+  let activePool
+  let stabilityPool
+  let defaultPool
   let borrowerOperations
-  let lqtyToken
   let lqtyStaking
-  let nonPayable
-  
+  let lqtyToken
+
+  let contracts
+
+  const openTrove = async (params) => th.openTrove(contracts, params)
+
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
+    contracts.troveManager = await TroveManagerTester.new()
+    contracts = await deploymentHelper.deployLUSDTokenTester(contracts)
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
+    
+    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
+    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
     nonPayable = await NonPayable.new() 
     priceFeed = contracts.priceFeedTestnet
@@ -53,10 +69,6 @@ contract('Fee arithmetic tests', async accounts => {
 
     lqtyToken = LQTYContracts.lqtyToken
     lqtyStaking = LQTYContracts.lqtyStaking
-    
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
-    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
   it('stake(): reverts if amount is zero', async () => {
@@ -74,11 +86,10 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("ETH fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -96,9 +107,12 @@ contract('Fee arithmetic tests', async accounts => {
     const F_ETH_Before = await lqtyStaking.F_ETH()
     assert.equal(F_ETH_Before, '0')
 
+    const B_BalBeforeREdemption = await lusdToken.balanceOf(B)
     // B redeems
     const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
+    
+    const B_BalAfterRedemption = await lusdToken.balanceOf(B)
+    assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
 
     // check ETH fee emitted in event is non-zero
     const emittedETHFee = toBN((await th.getEmittedRedemptionValues(redemptionTx))[3])
@@ -114,11 +128,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("ETH fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -130,9 +144,12 @@ contract('Fee arithmetic tests', async accounts => {
     const F_ETH_Before = await lqtyStaking.F_ETH()
     assert.equal(F_ETH_Before, '0')
 
+    const B_BalBeforeREdemption = await lusdToken.balanceOf(B)
     // B redeems
     const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
+    
+    const B_BalAfterRedemption = await lusdToken.balanceOf(B)
+    assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
 
     // check ETH fee emitted in event is non-zero
     const emittedETHFee = toBN((await th.getEmittedRedemptionValues(redemptionTx))[3])
@@ -144,11 +161,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("LUSD fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0", async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -164,9 +181,12 @@ contract('Fee arithmetic tests', async accounts => {
     const F_LUSD_Before = await lqtyStaking.F_ETH()
     assert.equal(F_LUSD_Before, '0')
 
+    const B_BalBeforeREdemption = await lusdToken.balanceOf(B)
     // B redeems
-    await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
+    
+    const B_BalAfterRedemption = await lusdToken.balanceOf(B)
+    assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
 
     // Check base rate is now non-zero
     const baseRate = await troveManager.baseRate()
@@ -189,11 +209,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("LUSD fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0", async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -205,9 +225,12 @@ contract('Fee arithmetic tests', async accounts => {
     const F_LUSD_Before = await lqtyStaking.F_ETH()
     assert.equal(F_LUSD_Before, '0')
 
+    const B_BalBeforeREdemption = await lusdToken.balanceOf(B)
     // B redeems
-    await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
+    
+    const B_BalAfterRedemption = await lusdToken.balanceOf(B)
+    assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
 
     // Check base rate is now non-zero
     const baseRate = await troveManager.baseRate()
@@ -225,13 +248,12 @@ contract('Fee arithmetic tests', async accounts => {
     assert.equal(F_LUSD_After, '0')
   })
 
-
   it("LQTY Staking: A single staker earns all ETH and LQTY fees that occur", async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -243,17 +265,23 @@ contract('Fee arithmetic tests', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(100, 18), {from: A})
 
+    const B_BalBeforeREdemption = await lusdToken.balanceOf(B)
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
+    
+    const B_BalAfterRedemption = await lusdToken.balanceOf(B)
+    assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
     assert.isTrue(emittedETHFee_1.gt(toBN('0')))
 
-     // C redeems
-     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
+    const C_BalBeforeREdemption = await lusdToken.balanceOf(C)
+    // C redeems
+    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
+    
+    const C_BalAfterRedemption = await lusdToken.balanceOf(C)
+    assert.isTrue(C_BalAfterRedemption.lt(C_BalBeforeREdemption))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -294,11 +322,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("stake(): Top-up sends out all accumulated ETH and LUSD gains to the staker", async () => { 
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -310,17 +338,23 @@ contract('Fee arithmetic tests', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
+    const B_BalBeforeREdemption = await lusdToken.balanceOf(B)
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
+    
+    const B_BalAfterRedemption = await lusdToken.balanceOf(B)
+    assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
     assert.isTrue(emittedETHFee_1.gt(toBN('0')))
 
-     // C redeems
-     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
+    const C_BalBeforeREdemption = await lusdToken.balanceOf(C)
+    // C redeems
+    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
+    
+    const C_BalAfterRedemption = await lusdToken.balanceOf(C)
+    assert.isTrue(C_BalAfterRedemption.lt(C_BalBeforeREdemption))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -360,11 +394,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("getPendingETHGain(): Returns the staker's correct pending ETH gain", async () => { 
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -376,17 +410,23 @@ contract('Fee arithmetic tests', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
+    const B_BalBeforeREdemption = await lusdToken.balanceOf(B)
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
+    
+    const B_BalAfterRedemption = await lusdToken.balanceOf(B)
+    assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
     assert.isTrue(emittedETHFee_1.gt(toBN('0')))
 
-     // C redeems
-     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
+    const C_BalBeforeREdemption = await lusdToken.balanceOf(C)
+    // C redeems
+    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
+    
+    const C_BalAfterRedemption = await lusdToken.balanceOf(C)
+    assert.isTrue(C_BalAfterRedemption.lt(C_BalBeforeREdemption))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -400,11 +440,11 @@ contract('Fee arithmetic tests', async accounts => {
   })
 
   it("getPendingLUSDGain(): Returns the staker's correct pending LUSD gain", async () => { 
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -416,17 +456,23 @@ contract('Fee arithmetic tests', async accounts => {
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
     await lqtyStaking.stake(dec(50, 18), {from: A})
 
+    const B_BalBeforeREdemption = await lusdToken.balanceOf(B)
     // B redeems
     const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
-    assert.equal(await lusdToken.balanceOf(B), dec(100, 18))
+    
+    const B_BalAfterRedemption = await lusdToken.balanceOf(B)
+    assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
 
     // check ETH fee 1 emitted in event is non-zero
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
     assert.isTrue(emittedETHFee_1.gt(toBN('0')))
 
-     // C redeems
-     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
-     assert.equal(await lusdToken.balanceOf(C), dec(200, 18))
+    const C_BalBeforeREdemption = await lusdToken.balanceOf(C)
+    // C redeems
+    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
+    
+    const C_BalAfterRedemption = await lusdToken.balanceOf(C)
+    assert.isTrue(C_BalAfterRedemption.lt(C_BalBeforeREdemption))
  
      // check ETH fee 2 emitted in event is non-zero
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
@@ -454,16 +500,15 @@ contract('Fee arithmetic tests', async accounts => {
 
   // - multi depositors, several rewards
   it("LQTY Staking: Multiple stakers earn the correct share of all ETH and LQTY fees, based on their stake size", async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), E, E, {from: E, value: dec(10, 'ether')})  
+    await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: E } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: F } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: G } })
 
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), F, F, {from: F, value: dec(10, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), G, G, {from: G, value: dec(10, 'ether')})  
-  
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
@@ -621,12 +666,12 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedLUSDGain_D, D_LUSDGain), 1000)
   })
  
-  it("unStake(): reverts if caller has ETH gains and can't receive ETH",  async () => {
-    await borrowerOperations.openTrove(th._100pct, dec(1000, 18), whale, whale, {from: whale, value: dec(100, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(100, 18), A, A, {from: A, value: dec(7, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(200, 18), B, B, {from: B, value: dec(9, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(300, 18), C, C, {from: C, value: dec(8, 'ether')})  
-    await borrowerOperations.openTrove(th._100pct, dec(400, 18), D, D, {from: D, value: dec(10, 'ether')})  
+  it("unstake(): reverts if caller has ETH gains and can't receive ETH",  async () => {
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: whale } })  
+    await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+    await openTrove({ extraLUSDAmount: toBN(dec(30000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+    await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
+    await openTrove({ extraLUSDAmount: toBN(dec(50000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
@@ -650,8 +695,8 @@ contract('Fee arithmetic tests', async accounts => {
     assert.isTrue(proxy_ETHGain.gt(toBN('0')))
 
     // Expect this tx to revert: stake() tries to send nonPayable proxy's accumulated ETH gain (albeit 0),
-    //  A tells proxy to unStake
-    const proxyUnStakeTxData = await th.getTransactionData('unStake(uint256)', ['0x56bc75e2d63100000'])  // proxy stakes 100 LQTY
+    //  A tells proxy to unstake
+    const proxyUnStakeTxData = await th.getTransactionData('unstake(uint256)', ['0x56bc75e2d63100000'])  // proxy stakes 100 LQTY
     const proxyUnstakeTxPromise = nonPayable.forward(lqtyStaking.address, proxyUnStakeTxData, {from: A})
    
     // but nonPayable proxy can not accept ETH - therefore stake() reverts.

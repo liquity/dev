@@ -581,7 +581,7 @@ contract('StabilityPool', async accounts => {
 
       // Check Bob's trove has been removed from the system
       assert.isFalse(await sortedTroves.contains(bob))
-      assert.equal((await troveManager.getTroveStatus(bob)).toString(), '2')  // check Bob's trove status is closed
+      assert.equal((await troveManager.getTroveStatus(bob)).toString(), '3')  // check Bob's trove status was closed by liquidation
     })
 
     it("provideToSP(): providing 0 LUSD reverts", async () => {
