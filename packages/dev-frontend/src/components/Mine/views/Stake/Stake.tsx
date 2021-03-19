@@ -24,6 +24,8 @@ export const Stake: React.FC = () => {
       transactionState.type === "waitingForConfirmation") &&
     transactionState.id === transactionId;
 
+  const hasApprovedUniLpSpend = false;
+
   const handleCancelPressed = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
@@ -67,7 +69,8 @@ export const Stake: React.FC = () => {
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
-          <ConfirmButton amount={amount || "0"} />
+          {!hasApprovedUniLpSpend && <Button sx={{ width: "60%" }}>Approve UNI LP</Button>}
+          <ConfirmButton isDisabled={!hasApprovedUniLpSpend} amount={amount || "0"} />
         </Flex>
       </Box>
     </Card>
