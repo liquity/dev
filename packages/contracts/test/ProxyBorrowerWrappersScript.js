@@ -181,7 +181,7 @@ contract('BorrowerWrappers', async accounts => {
     const price = await priceFeed.getPrice();
     const expectedSurplus = collateral.sub(redeemAmount.mul(mv._1e18BN).div(price))
     th.assertIsApproximatelyEqual(await collSurplusPool.getCollateral(proxyAddress), expectedSurplus)
-    assert.equal(await troveManager.getTroveStatus(proxyAddress), 2)
+    assert.equal(await troveManager.getTroveStatus(proxyAddress), 4)  // status: closed by redemption
 
     // alice claims collateral and re-opens the trove
     await borrowerWrappers.claimCollateralAndOpenTrove(th._100pct, lusdAmount, alice, alice, { from: alice })
@@ -213,7 +213,7 @@ contract('BorrowerWrappers', async accounts => {
     const price = await priceFeed.getPrice();
     const expectedSurplus = collateral.sub(redeemAmount.mul(mv._1e18BN).div(price))
     th.assertIsApproximatelyEqual(await collSurplusPool.getCollateral(proxyAddress), expectedSurplus)
-    assert.equal(await troveManager.getTroveStatus(proxyAddress), 2)
+    assert.equal(await troveManager.getTroveStatus(proxyAddress), 4) // status: closed by redemption
 
     // alice claims collateral and re-opens the trove
     await borrowerWrappers.claimCollateralAndOpenTrove(th._100pct, lusdAmount, alice, alice, { from: alice, value: collateral })

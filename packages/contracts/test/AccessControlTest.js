@@ -1,6 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
-const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
+const TroveManagerTester = artifacts.require("TroveManagerTester")
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
@@ -19,6 +19,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   const [owner, alice, bob, carol] = accounts;
   const bountyAddress = accounts[998]
   const lpRewardsAddress = accounts[999]
+
+  let coreContracts
+
   let priceFeed
   let lusdToken
   let sortedTroves
@@ -35,11 +38,12 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   let communityIssuance
   let lockupContractFactory
 
-  
   before(async () => {
-    const coreContracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
-
+    coreContracts = await deploymentHelper.deployLiquityCore()
+    coreContracts.troveManager = await TroveManagerTester.new()
+    coreContracts = await deploymentHelper.deployLUSDTokenTester(coreContracts)
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
+    
     priceFeed = coreContracts.priceFeed
     lusdToken = coreContracts.lusdToken
     sortedTroves = coreContracts.sortedTroves
@@ -60,9 +64,9 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
-   for (account of accounts.slice(0, 10)) {
-      await borrowerOperations.openTrove(th._100pct, dec(100,18), account, account, {value: dec(100,  'ether'), from: account})
-   }
+    for (account of accounts.slice(0, 10)) {
+      await th.openTrove(coreContracts, { extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: account } })
+    }
 
     const expectedCISupplyCap = '32000000000000000000000000' // 32mil
 

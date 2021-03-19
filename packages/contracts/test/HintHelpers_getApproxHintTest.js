@@ -2,7 +2,7 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 
 const th = testHelpers.TestHelper
-const dec = th.dec
+const { dec, toBN } = th
 const moneyVals = testHelpers.MoneyValues
 
 let latestRandomSeed = 31337
@@ -21,6 +21,7 @@ contract('HintHelpers', async accounts => {
   let troveManager
   let borrowerOperations
   let hintHelpers
+  let priceFeed
 
   let contracts
 
@@ -55,19 +56,18 @@ contract('HintHelpers', async accounts => {
  }
 
  // Sequentially add coll and withdraw LUSD, 1 account at a time
-   const makeTrovesInSequence = async (accounts, n) => {
+  const makeTrovesInSequence = async (accounts, n) => {
     activeAccounts = accounts.slice(0,n)
     // console.log(`number of accounts used is: ${activeAccounts.length}`)
 
-    let amountFinney = 2000
+    let ICR = 200
 
     // console.time('makeTrovesInSequence')
     for (const account of activeAccounts) {
-      const coll = web3.utils.toWei((amountFinney.toString()), 'finney')
-      await borrowerOperations.openTrove(th._100pct, 0, account, account, { from: account, value: coll })
-      await borrowerOperations.withdrawLUSD(th._100pct, await getNetBorrowingAmount('50000000000000000000'), account, account, { from: account })
-  
-      amountFinney += 10
+      const ICR_BN = toBN(ICR.toString().concat('0'.repeat(16)))
+      await th.openTrove(contracts, { extraLUSDAmount: toBN(dec(10000, 18)), ICR: ICR_BN, extraParams: { from: account } })
+
+      ICR += 1
     }
     // console.timeEnd('makeTrovesInSequence')
   }
@@ -86,6 +86,7 @@ contract('HintHelpers', async accounts => {
     troveManager = contracts.troveManager
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
+    priceFeed = contracts.priceFeedTestnet
   
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
@@ -93,6 +94,7 @@ contract('HintHelpers', async accounts => {
 
     numAccounts = 10
 
+    await priceFeed.setPrice(dec(100, 18))
     await makeTrovesInSequence(accounts, numAccounts) 
     // await makeTrovesInParallel(accounts, numAccounts)  
   })
@@ -110,16 +112,16 @@ contract('HintHelpers', async accounts => {
     const ICR_8 = await troveManager.getNominalICR(accounts[8])
     const ICR_9 = await troveManager.getNominalICR(accounts[9])
 
-    assert.isAtMost(th.getDifference(ICR_0, '2000000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_1, '2010000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_2, '2020000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_3, '2030000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_4, '2040000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_5, '2050000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_6, '2060000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_7, '2070000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_8, '2080000000000000000'), 100)
-    assert.isAtMost(th.getDifference(ICR_9, '2090000000000000000'), 100)
+    assert.isTrue(ICR_0.eq(toBN(dec(200, 16))))
+    assert.isTrue(ICR_1.eq(toBN(dec(201, 16))))
+    assert.isTrue(ICR_2.eq(toBN(dec(202, 16))))
+    assert.isTrue(ICR_3.eq(toBN(dec(203, 16))))
+    assert.isTrue(ICR_4.eq(toBN(dec(204, 16))))
+    assert.isTrue(ICR_5.eq(toBN(dec(205, 16))))
+    assert.isTrue(ICR_6.eq(toBN(dec(206, 16))))
+    assert.isTrue(ICR_7.eq(toBN(dec(207, 16))))
+    assert.isTrue(ICR_8.eq(toBN(dec(208, 16))))
+    assert.isTrue(ICR_9.eq(toBN(dec(209, 16))))
   })
 
   it("getApproxHint(): returns the address of a Trove within sqrt(length) positions of the correct insert position", async () => {
