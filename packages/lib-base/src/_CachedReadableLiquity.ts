@@ -122,6 +122,48 @@ export class _CachedReadableLiquity<T extends unknown[]>
     );
   }
 
+  async getUniTokenBalance(address?: string, ...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getUniTokenBalance(address, ...extraParams) ??
+      this._readable.getUniTokenBalance(address, ...extraParams)
+    );
+  }
+
+  async getUniTokenAllowance(address?: string, ...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getUniTokenAllowance(address, ...extraParams) ??
+      this._readable.getUniTokenAllowance(address, ...extraParams)
+    );
+  }
+
+  async getRemainingLiquidityMiningLQTYReward(...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getRemainingLiquidityMiningLQTYReward(...extraParams) ??
+      this._readable.getRemainingLiquidityMiningLQTYReward(...extraParams)
+    );
+  }
+
+  async getLiquidityMiningStake(address?: string, ...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getLiquidityMiningStake(address, ...extraParams) ??
+      this._readable.getLiquidityMiningStake(address, ...extraParams)
+    );
+  }
+
+  async getTotalStakedUniTokens(...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getTotalStakedUniTokens(...extraParams) ??
+      this._readable.getTotalStakedUniTokens(...extraParams)
+    );
+  }
+
+  async getLiquidityMiningLQTYReward(address?: string, ...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getLiquidityMiningLQTYReward(address, ...extraParams) ??
+      this._readable.getLiquidityMiningLQTYReward(address, ...extraParams)
+    );
+  }
+
   async getCollateralSurplusBalance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
       this._cache.getCollateralSurplusBalance(address, ...extraParams) ??

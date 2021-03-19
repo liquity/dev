@@ -121,6 +121,44 @@ export interface ReadableLiquity {
   getLQTYBalance(address?: string): Promise<Decimal>;
 
   /**
+   * Get the amount of Uniswap ETH/LUSD LP tokens held by an address.
+   *
+   * @param address - Address whose balance should be retrieved.
+   */
+  getUniTokenBalance(address?: string): Promise<Decimal>;
+
+  /**
+   * Get the liquidity mining contract's allowance of a holder's Uniswap ETH/LUSD LP tokens.
+   *
+   * @param address - Address holding the Uniswap ETH/LUSD LP tokens.
+   */
+  getUniTokenAllowance(address?: string): Promise<Decimal>;
+
+  /**
+   * Get the remaining LQTY that will be collectively rewarded to liquidity miners.
+   */
+  getRemainingLiquidityMiningLQTYReward(): Promise<Decimal>;
+
+  /**
+   * Get the amount of Uniswap ETH/LUSD LP tokens currently staked by an address in liquidity mining.
+   *
+   * @param address - Address whose LP stake should be retrieved.
+   */
+  getLiquidityMiningStake(address?: string): Promise<Decimal>;
+
+  /**
+   * Get the total amount of Uniswap ETH/LUSD LP tokens currently staked in liquidity mining.
+   */
+  getTotalStakedUniTokens(): Promise<Decimal>;
+
+  /**
+   * Get the amount of LQTY earned by an address through mining liquidity.
+   *
+   * @param address - Address whose LQTY reward should be retrieved.
+   */
+  getLiquidityMiningLQTYReward(address?: string): Promise<Decimal>;
+
+  /**
    * Get the amount of leftover collateral available for withdrawal by an address.
    *
    * @remarks
