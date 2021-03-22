@@ -1,25 +1,22 @@
 import React from "react";
 import { Text } from "theme-ui";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal } from "@liquity/lib-base";
 import { useLiquity } from "../../../../hooks/LiquityContext";
 import { LP } from "../../../../strings";
 import { Transaction } from "../../../Transaction";
-import { useLiquitySelector } from "@liquity/lib-react";
 import { ActionDescription } from "../../../ActionDescription";
 
 type DescriptionProps = {
   amount: Decimal;
+  uniTokenBalance: Decimal;
 };
 
 const transactionId = "mine-stake";
-const selector = ({ uniTokenBalance }: LiquityStoreState) => ({ uniTokenBalance });
 
-export const Description: React.FC<DescriptionProps> = ({ amount }) => {
+export const Description: React.FC<DescriptionProps> = ({ amount, uniTokenBalance }) => {
   const {
     liquity: { send: liquity }
   } = useLiquity();
-
-  const { uniTokenBalance } = useLiquitySelector(selector);
 
   return (
     <ActionDescription>

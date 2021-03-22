@@ -4,7 +4,7 @@ import { InfoMessage } from "../../../InfoMessage";
 import { useMineView } from "../../context/MineViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
 
-export const None: React.FC = () => {
+export const Inactive: React.FC = () => {
   const { dispatchEvent } = useMineView();
 
   const handleStakePressed = useCallback(() => {

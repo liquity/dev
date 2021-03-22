@@ -1,13 +1,14 @@
-type NoneView = "NONE";
-type Stake = "STAKE";
+type InactiveView = "INACTIVE";
+type StakingView = "STAKING";
 type ActiveView = "ACTIVE";
-type AdjustView = "ADJUST";
+type AdjustingView = "ADJUSTING";
 
-export type MineView = NoneView | Stake | ActiveView | AdjustView;
+export type MineView = InactiveView | StakingView | ActiveView | AdjustingView;
 
 type StakePressedEvent = "STAKE_PRESSED";
 type AdjustPressedEvent = "ADJUST_PRESSED";
 type CancelPressedEvent = "CANCEL_PRESSED";
+type StakeApprovedEvent = "STAKE_APPROVED";
 type StakeConfirmedEvent = "STAKE_CONFIRMED";
 type AdjustConfirmedEvent = "ADJUST_CONFIRMED";
 type ClaimRewardConfirmedEvent = "CLAIM_REWARD_CONFIRMED";
@@ -17,6 +18,7 @@ export type MineEvent =
   | StakePressedEvent
   | AdjustPressedEvent
   | CancelPressedEvent
+  | StakeApprovedEvent
   | StakeConfirmedEvent
   | AdjustConfirmedEvent
   | ClaimRewardConfirmedEvent
@@ -25,20 +27,22 @@ export type MineEvent =
 type MineEventTransitions = Record<MineView, Partial<Record<MineEvent, MineView>>>;
 
 export const transitions: MineEventTransitions = {
-  NONE: {
-    STAKE_PRESSED: "STAKE"
+  INACTIVE: {
+    STAKE_PRESSED: "STAKING"
   },
-  STAKE: {
-    CANCEL_PRESSED: "NONE",
-    STAKE_CONFIRMED: "ACTIVE"
+  STAKING: {
+    CANCEL_PRESSED: "INACTIVE",
+    STAKE_CONFIRMED: "ACTIVE",
+    STAKE_APPROVED: "STAKING"
   },
   ACTIVE: {
-    ADJUST_PRESSED: "ADJUST",
+    ADJUST_PRESSED: "ADJUSTING",
     CLAIM_REWARD_CONFIRMED: "ACTIVE",
-    UNSTAKE_AND_CLAIM_CONFIRMED: "NONE"
+    UNSTAKE_AND_CLAIM_CONFIRMED: "INACTIVE"
   },
-  ADJUST: {
+  ADJUSTING: {
     CANCEL_PRESSED: "ACTIVE",
-    ADJUST_CONFIRMED: "ACTIVE"
+    ADJUST_CONFIRMED: "ACTIVE",
+    STAKE_APPROVED: "ACTIVE"
   }
 };

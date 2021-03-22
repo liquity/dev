@@ -12,7 +12,7 @@ const transition = (view: MineView, event: MineEvent): MineView => {
 };
 
 const getInitialView = (liquidityMiningStake: Decimal): MineView => {
-  return liquidityMiningStake.isZero ? "NONE" : "ACTIVE";
+  return liquidityMiningStake.isZero ? "INACTIVE" : "ACTIVE";
 };
 
 const selector = ({ liquidityMiningStake }: LiquityStoreState) => ({ liquidityMiningStake });

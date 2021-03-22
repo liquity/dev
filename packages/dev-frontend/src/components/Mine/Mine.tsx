@@ -1,7 +1,7 @@
 import React from "react";
-import { None } from "./views/None/None";
-import { Stake } from "./views/Stake/Stake";
-import { Adjust } from "./views/Adjust/Adjust";
+import { Inactive } from "./views/Inactive/Inactive";
+import { Staking } from "./views/Staking/Staking";
+import { Adjusting } from "./views/Adjusting/Adjusting";
 import { Active } from "./views/Active/Active";
 import { useMineView } from "./context/MineViewContext";
 
@@ -9,14 +9,14 @@ export const Mine: React.FC = props => {
   const { view } = useMineView();
 
   switch (view) {
-    case "NONE": {
-      return <None {...props} />;
+    case "INACTIVE": {
+      return <Inactive {...props} />;
     }
-    case "STAKE": {
-      return <Stake {...props} />;
+    case "STAKING": {
+      return <Staking {...props} />;
     }
-    case "ADJUST": {
-      return <Adjust {...props} />;
+    case "ADJUSTING": {
+      return <Adjusting {...props} />;
     }
     case "ACTIVE": {
       return <Active {...props} />;
