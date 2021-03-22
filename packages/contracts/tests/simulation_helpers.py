@@ -521,6 +521,17 @@ def open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_t
         inactive_accounts.pop(0)
     except:
         print("\n ***Error opening trove!")
+        print(f"Coll: {quantity_ether}")
+        print(f"Debt: {supply_trove}")
+        print(f"Hint: {hints[0]}")
+        print(f"Hint: {hints[1]}")
+        print(f"From: {accounts[inactive_accounts[0]]}")
+        print(f"Index {inactive_accounts[0]}")
+        print(f"ICR:  {CR_ratio}")
+        print(f"inatt {rational_inattention}")
+        print(f"$/ETH {price_ether_current}")
+        print(f"H ICR {contracts.troveManager.getCurrentICR(hints[0], Wei(price_ether_current * 1e18))}")
+        print(f"H ICR {contracts.troveManager.getCurrentICR(hints[1], Wei(price_ether_current * 1e18))}")
 
 def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index):
     random.seed(2019*index)
