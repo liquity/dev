@@ -1,6 +1,7 @@
 import pytest
 
 from brownie import *
+from accounts import *
 from helpers import *
 from simulation_helpers import *
 
@@ -11,7 +12,8 @@ def setAddresses(contracts):
     contracts.sortedTroves.setParams(
         MAX_BYTES_32,
         contracts.troveManager.address,
-        contracts.borrowerOperations.address
+        contracts.borrowerOperations.address,
+        { 'from': accounts[0] }
     )
 
     contracts.troveManager.setAddresses(
@@ -25,7 +27,8 @@ def setAddresses(contracts):
         contracts.lusdToken.address,
         contracts.sortedTroves.address,
         contracts.lqtyToken.address,
-        contracts.lqtyStaking.address
+        contracts.lqtyStaking.address,
+        { 'from': accounts[0] }
     )
 
     contracts.borrowerOperations.setAddresses(
@@ -38,7 +41,8 @@ def setAddresses(contracts):
         contracts.priceFeedTestnet.address,
         contracts.sortedTroves.address,
         contracts.lusdToken.address,
-        contracts.lqtyStaking.address
+        contracts.lqtyStaking.address,
+        { 'from': accounts[0] }
     )
 
     contracts.stabilityPool.setAddresses(
@@ -48,77 +52,90 @@ def setAddresses(contracts):
         contracts.lusdToken.address,
         contracts.sortedTroves.address,
         contracts.priceFeedTestnet.address,
-        contracts.communityIssuance.address
+        contracts.communityIssuance.address,
+        { 'from': accounts[0] }
     )
 
     contracts.activePool.setAddresses(
         contracts.borrowerOperations.address,
         contracts.troveManager.address,
         contracts.stabilityPool.address,
-        contracts.defaultPool.address
+        contracts.defaultPool.address,
+        { 'from': accounts[0] }
     )
 
     contracts.defaultPool.setAddresses(
         contracts.troveManager.address,
         contracts.activePool.address,
+        { 'from': accounts[0] }
     )
 
     contracts.collSurplusPool.setAddresses(
         contracts.borrowerOperations.address,
         contracts.troveManager.address,
         contracts.activePool.address,
+        { 'from': accounts[0] }
     )
 
     contracts.hintHelpers.setAddresses(
         contracts.sortedTroves.address,
-        contracts.troveManager.address
+        contracts.troveManager.address,
+        { 'from': accounts[0] }
     )
 
     # LQTY
     contracts.lqtyStaking.setAddresses(
         contracts.lqtyToken.address,
         contracts.lusdToken.address,
-        contracts.troveManager.address, 
+        contracts.troveManager.address,
         contracts.borrowerOperations.address,
-        contracts.activePool.address
+        contracts.activePool.address,
+        { 'from': accounts[0] }
     )
 
     contracts.communityIssuance.setAddresses(
         contracts.lqtyToken.address,
-        contracts.stabilityPool.address
+        contracts.stabilityPool.address,
+        { 'from': accounts[0] }
     )
+
+@pytest.fixture
+def add_accounts():
+    if network.show_active() != 'development':
+        print("Importing accounts...")
+        import_accounts(accounts)
 
 @pytest.fixture
 def contracts():
     contracts = Contracts()
 
-    contracts.priceFeedTestnet = accounts[0].deploy(PriceFeedTestnet)
-    contracts.sortedTroves = accounts[0].deploy(SortedTroves)
-    contracts.troveManager = accounts[0].deploy(TroveManager)
-    contracts.activePool = accounts[0].deploy(ActivePool)
-    contracts.stabilityPool = accounts[0].deploy(StabilityPool)
-    contracts.gasPool = accounts[0].deploy(GasPool)
-    contracts.defaultPool = accounts[0].deploy(DefaultPool)
-    contracts.collSurplusPool = accounts[0].deploy(CollSurplusPool)
-    contracts.borrowerOperations = accounts[0].deploy(BorrowerOperations)
-    contracts.hintHelpers = accounts[0].deploy(HintHelpers)
-    contracts.lusdToken = accounts[0].deploy(
-        LUSDToken,
+    contracts.priceFeedTestnet = PriceFeedTestnet.deploy({ 'from': accounts[0] })
+    contracts.sortedTroves = SortedTroves.deploy({ 'from': accounts[0] })
+    contracts.troveManager = TroveManager.deploy({ 'from': accounts[0] })
+    contracts.activePool = ActivePool.deploy({ 'from': accounts[0] })
+    contracts.stabilityPool = StabilityPool.deploy({ 'from': accounts[0] })
+    contracts.gasPool = GasPool.deploy({ 'from': accounts[0] })
+    contracts.defaultPool = DefaultPool.deploy({ 'from': accounts[0] })
+    contracts.collSurplusPool = CollSurplusPool.deploy({ 'from': accounts[0] })
+    contracts.borrowerOperations = BorrowerOperations.deploy({ 'from': accounts[0] })
+    contracts.hintHelpers = HintHelpers.deploy({ 'from': accounts[0] })
+    contracts.lusdToken = LUSDToken.deploy(
         contracts.troveManager.address,
         contracts.stabilityPool.address,
-        contracts.borrowerOperations.address
+        contracts.borrowerOperations.address,
+        { 'from': accounts[0] }
     )
     # LQTY
-    contracts.lqtyStaking = accounts[0].deploy(LQTYStaking)
-    contracts.communityIssuance = accounts[0].deploy(CommunityIssuance)
-    contracts.lockupContractFactory = accounts[0].deploy(LockupContractFactory)
-    contracts.lqtyToken = accounts[0].deploy(
-        LQTYToken,
+    contracts.lqtyStaking = LQTYStaking.deploy({ 'from': accounts[0] })
+    contracts.communityIssuance = CommunityIssuance.deploy({ 'from': accounts[0] })
+    contracts.lockupContractFactory = LockupContractFactory.deploy({ 'from': accounts[0] })
+    contracts.lqtyToken = LQTYToken.deploy(
         contracts.communityIssuance.address,
         contracts.lqtyStaking.address,
         contracts.lockupContractFactory.address,
         accounts[0], # bountyAddress
-        accounts[0]  # lpRewardsAddress
+        accounts[0],  # lpRewardsAddress
+        { 'from': accounts[0] }
     )
 
     setAddresses(contracts)
@@ -137,6 +154,7 @@ def print_expectations():
     print("SD(CR^*(i)) = ", target_cr_b * (2*target_cr_chi_square_df)**(1/2) * 100, "%")
     print("E(tau)      = ", rational_inattention_gamma_k * rational_inattention_gamma_theta * 100, "%")
     print("SD(tau)     = ", rational_inattention_gamma_k**(0.5) * rational_inattention_gamma_theta * 100, "%")
+    print("\n")
 
 def _test_test(contracts):
     print(len(accounts))
@@ -166,10 +184,10 @@ def _test_test(contracts):
 * redemption & redemption fee
 * LQTY pool return determined
 """
-def test_run_simulation(contracts, print_expectations):
+def test_run_simulation(add_accounts, contracts, print_expectations):
     MIN_NET_DEBT = contracts.troveManager.MIN_NET_DEBT() / 1e18
 
-    price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]))
+    price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]), { 'from': accounts[0] })
     # whale
     contracts.borrowerOperations.openTrove(MAX_FEE, Wei(10e24), ZERO_ADDRESS, ZERO_ADDRESS,
                                            { 'from': accounts[0], 'value': Wei("30000 ether") })
@@ -185,14 +203,18 @@ def test_run_simulation(contracts, print_expectations):
     total_coll_added = 0
     total_coll_liquidated = 0
 
+    print(f"Accounts: {len(accounts)}")
+    print(f"Network: {network.show_active()}")
+
     logGlobalState(contracts)
+
     #Simulation Process
     for index in range(1, n_sim):
         print('\n  --> Iteration', index)
         print('  -------------------\n')
         #exogenous ether price input
         price_ether_current = price_ether[index]
-        price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current))
+        price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
         #price_LQTY_previous = data.loc[index-1,'price_LQTY']
 
         #trove liquidation & return of stability pool
