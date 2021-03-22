@@ -357,9 +357,15 @@ def close_troves(accounts, contracts, active_accounts, inactive_accounts, price_
         account = accounts[account_index]
         pending = get_lusd_to_repay(accounts, contracts, active_accounts, inactive_accounts, account, get_total_debt(contracts, account))
         if pending == 0:
-            contracts.borrowerOperations.closeTrove({ 'from': account })
-            inactive_accounts.append(account_index)
-            active_accounts.pop(drops[i])
+            # TODO: try to predict it!
+            try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
+                contracts.borrowerOperations.closeTrove({ 'from': account })
+                inactive_accounts.append(account_index)
+                active_accounts.pop(drops[i])
+            except:
+                print("\n ***Error closing Trove!")
+        if is_recovery_mode(contracts, price_ether_current):
+          break
 
     return [number_closetroves]
 
