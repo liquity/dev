@@ -1,13 +1,7 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import {
-  Decimal,
-  Decimalish,
-  Difference,
-  StabilityDeposit,
-  LiquityStoreState
-} from "@liquity/lib-base";
+import { Decimal, Decimalish, StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
 
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -36,7 +30,6 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   const lusdBalance = useLiquitySelector(selectLUSDBalance);
   const editingState = useState<string>();
 
-  const pendingDepositChange = Difference.between(editedLUSD, originalDeposit.currentLUSD.nonZero);
   const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
 
   const maxAmount = originalDeposit.currentLUSD.add(lusdBalance);
@@ -64,8 +57,6 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           amount={editedLUSD.prettify()}
           maxAmount={maxAmount.toString()}
           maxedOut={maxedOut}
-          pendingAmount={pendingDepositChange.nonZero?.prettify()}
-          pendingColor={pendingDepositChange.positive ? "success" : "danger"}
           unit={COIN}
           {...{ editingState }}
           editedAmount={editedLUSD.toString(2)}

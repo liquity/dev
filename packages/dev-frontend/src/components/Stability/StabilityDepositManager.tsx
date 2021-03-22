@@ -4,6 +4,8 @@ import { Button, Flex } from "theme-ui";
 import { Decimal, Decimalish, LiquityStoreState } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
+import { COIN } from "../../strings";
+
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { StabilityDepositAction } from "./StabilityDepositAction";
 import { useStabilityView } from "./context/StabilityViewContext";
@@ -11,6 +13,7 @@ import {
   selectForStabilityDepositChangeValidation,
   validateStabilityDepositChange
 } from "./validation/validateStabilityDepositChange";
+import { ActionDescription } from "../ActionDescription";
 
 const init = ({ stabilityDeposit }: LiquityStoreState) => ({
   originalDeposit: stabilityDeposit,
@@ -99,6 +102,8 @@ export const StabilityDepositManager: React.FC = () => {
     validationContext
   );
 
+  const makingNewDeposit = originalDeposit.isEmpty;
+
   return (
     <StabilityDepositEditor
       originalDeposit={originalDeposit}
@@ -106,7 +111,14 @@ export const StabilityDepositManager: React.FC = () => {
       changePending={changePending}
       dispatch={dispatch}
     >
-      {description}
+      {description ??
+        (makingNewDeposit ? (
+          <ActionDescription>Enter the amount of {COIN} you'd like to deposit.</ActionDescription>
+        ) : (
+          <ActionDescription>
+            Increase or decrease the {COIN} amount to deposit or withdraw.
+          </ActionDescription>
+        ))}
 
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleCancel}>
@@ -118,7 +130,7 @@ export const StabilityDepositManager: React.FC = () => {
             Confirm
           </StabilityDepositAction>
         ) : (
-          <Button>Confirm</Button>
+          <Button disabled>Confirm</Button>
         )}
       </Flex>
     </StabilityDepositEditor>

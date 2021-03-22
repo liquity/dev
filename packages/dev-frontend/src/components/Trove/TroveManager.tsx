@@ -1,20 +1,15 @@
 import React, { useCallback } from "react";
 import { Flex, Button } from "theme-ui";
 
-import {
-  LiquityStoreState,
-  Decimal,
-  TroveChange,
-  Trove,
-  Decimalish,
-  LUSD_MINIMUM_DEBT
-} from "@liquity/lib-base";
+import { LiquityStoreState, Decimal, Trove, Decimalish, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
 
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
+import { ActionDescription } from "../ActionDescription";
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
 import { useTroveView } from "./context/TroveViewContext";
+
 import {
   selectForTroveChangeValidation,
   validateTroveChange
@@ -135,10 +130,15 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
   }
 };
 
-const feeFrom = (
-  change: Exclude<TroveChange<Decimal>, { type: "invalidCreation" }> | undefined,
-  borrowingRate: Decimal
-): Decimal | undefined => change?.params.borrowLUSD?.mul(borrowingRate);
+const feeFrom = (original: Trove, edited: Trove, borrowingRate: Decimal): Decimal => {
+  const change = original.whatChanged(edited, borrowingRate);
+
+  if (change && change.type !== "invalidCreation" && change.params.borrowLUSD) {
+    return change.params.borrowLUSD.mul(borrowingRate);
+  } else {
+    return Decimal.ZERO;
+  }
+};
 
 const select = (state: LiquityStoreState) => ({
   fees: state.fees,
@@ -166,16 +166,27 @@ export const TroveManager: React.FC = () => {
     dispatchEvent("CANCEL_ADJUST_TROVE_PRESSED");
   }, [dispatchEvent]);
 
+  const openingNewTrove = original.isEmpty;
+
   return (
     <TroveEditor
       original={original}
       edited={edited}
-      fee={feeFrom(validChange, borrowingRate)}
+      fee={feeFrom(original, edited, borrowingRate)}
       borrowingRate={borrowingRate}
       changePending={changePending}
       dispatch={dispatch}
     >
-      {description}
+      {description ??
+        (openingNewTrove ? (
+          <ActionDescription>
+            Start by entering the amount of ETH you'd like to deposit as collateral.
+          </ActionDescription>
+        ) : (
+          <ActionDescription>
+            Adjust your Trove by modifying its collateral, debt, or both.
+          </ActionDescription>
+        ))}
 
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleCancel}>

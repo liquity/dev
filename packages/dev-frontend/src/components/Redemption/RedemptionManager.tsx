@@ -105,7 +105,9 @@ export const RedemptionManager: React.FC = () => {
             />
           )}
 
-          {(dirty || !canRedeem) && description}
+          {((dirty || !canRedeem) && description) || (
+            <ActionDescription>Enter the amount of {COIN} you'd like to redeem.</ActionDescription>
+          )}
 
           <Flex variant="layout.actions">
             <RedemptionAction

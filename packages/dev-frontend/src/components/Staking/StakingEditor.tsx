@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Decimalish, Difference, LiquityStoreState, LQTYStake } from "@liquity/lib-base";
+import { Decimal, Decimalish, LiquityStoreState, LQTYStake } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../../strings";
@@ -32,7 +32,6 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
   const { changePending } = useStakingView();
   const editingState = useState<string>();
 
-  const pendingStakeChange = Difference.between(editedLQTY, originalStake.stakedLQTY.nonZero);
   const edited = !editedLQTY.eq(originalStake.stakedLQTY);
 
   const maxAmount = originalStake.stakedLQTY.add(lqtyBalance);
@@ -60,8 +59,6 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
           amount={editedLQTY.prettify()}
           maxAmount={maxAmount.toString()}
           maxedOut={maxedOut}
-          pendingAmount={pendingStakeChange.nonZero?.prettify()}
-          pendingColor={pendingStakeChange.positive ? "success" : "danger"}
           unit={GT}
           {...{ editingState }}
           editedAmount={editedLQTY.toString(2)}

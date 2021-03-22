@@ -63,48 +63,50 @@ const reduce = (state: StakeManagerState, action: StakeManagerAction): StakeMana
 const selectLQTYBalance = ({ lqtyBalance }: LiquityStoreState) => lqtyBalance;
 
 type StakingManagerActionDescriptionProps = {
-  stake: LQTYStake;
+  originalStake: LQTYStake;
   change: LQTYStakeChange<Decimal>;
 };
 
 const StakingManagerActionDescription: React.FC<StakingManagerActionDescriptionProps> = ({
-  stake: { collateralGain, lusdGain },
+  originalStake,
   change
 }) => {
-  const gains = [
-    collateralGain.nonZero?.prettify(4).concat(" ETH"),
-    lusdGain.nonZero?.prettify().concat(" ", COIN)
-  ].filter(x => x);
+  const stakeLQTY = change.stakeLQTY?.prettify().concat(" ", GT);
+  const unstakeLQTY = change.unstakeLQTY?.prettify().concat(" ", GT);
+  const collateralGain = originalStake.collateralGain.nonZero?.prettify(4).concat(" ETH");
+  const lusdGain = originalStake.lusdGain.nonZero?.prettify().concat(" ", COIN);
+
+  if (originalStake.isEmpty && stakeLQTY) {
+    return (
+      <ActionDescription>
+        You are staking <Amount>{stakeLQTY}</Amount>.
+      </ActionDescription>
+    );
+  }
 
   return (
     <ActionDescription>
-      {change.stakeLQTY && (
+      {stakeLQTY && (
         <>
-          You are staking{" "}
-          <Amount>
-            {change.stakeLQTY.prettify()} {GT}
-          </Amount>
+          You are adding <Amount>{stakeLQTY}</Amount> to your stake
         </>
       )}
-      {change.unstakeLQTY && (
+      {unstakeLQTY && (
         <>
-          You are withdrawing{" "}
-          <Amount>
-            {change.unstakeLQTY.prettify()} {GT}
-          </Amount>
+          You are withdrawing <Amount>{unstakeLQTY}</Amount> to your wallet
         </>
       )}
-      {gains.length > 0 && (
+      {(collateralGain || lusdGain) && (
         <>
           {" "}
           and claiming{" "}
-          {gains.length === 2 ? (
+          {collateralGain && lusdGain ? (
             <>
-              <Amount>{gains[0]}</Amount> and <Amount>{gains[1]}</Amount>
+              <Amount>{collateralGain}</Amount> and <Amount>{lusdGain}</Amount>
             </>
           ) : (
             <>
-              <Amount>{gains[0]}</Amount>
+              <Amount>{collateralGain ?? lusdGain}</Amount>
             </>
           )}
         </>
@@ -120,7 +122,9 @@ export const StakingManager: React.FC = () => {
   const lqtyBalance = useLiquitySelector(selectLQTYBalance);
 
   const change = originalStake.whatChanged(editedLQTY);
-  const [validChange, description] = change?.stakeLQTY?.gt(lqtyBalance)
+  const [validChange, description] = !change
+    ? [undefined, undefined]
+    : change.stakeLQTY?.gt(lqtyBalance)
     ? [
         undefined,
         <ErrorDescription>
@@ -131,11 +135,20 @@ export const StakingManager: React.FC = () => {
           .
         </ErrorDescription>
       ]
-    : [change, change && <StakingManagerActionDescription stake={originalStake} change={change} />];
+    : [change, <StakingManagerActionDescription originalStake={originalStake} change={change} />];
+
+  const makingNewStake = originalStake.isEmpty;
 
   return (
     <StakingEditor title={"Staking"} {...{ originalStake, editedLQTY, dispatch }}>
-      {description}
+      {description ??
+        (makingNewStake ? (
+          <ActionDescription>Enter the amount of {GT} you'd like to stake.</ActionDescription>
+        ) : (
+          <ActionDescription>
+            Increase or decrease the {GT} amount to stake or withdraw.
+          </ActionDescription>
+        ))}
 
       <Flex variant="layout.actions">
         <Button

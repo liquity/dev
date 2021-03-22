@@ -27,5 +27,5 @@ export const ActionDescription: React.FC = ({ children }) => (
 );
 
 export const Amount: React.FC = ({ children }) => (
-  <Text sx={{ display: "inline-block", fontWeight: "bold" }}>{children}</Text>
+  <Text sx={{ fontWeight: "bold", whiteSpace: "nowrap" }}>{children}</Text>
 );

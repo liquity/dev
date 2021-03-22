@@ -24,7 +24,7 @@ const gasRoomETH = Decimal.from(0.1);
 type TroveEditorProps = {
   original: Trove;
   edited: Trove;
-  fee: Decimal | undefined;
+  fee: Decimal;
   borrowingRate: Decimal;
   changePending: boolean;
   dispatch: (
@@ -49,10 +49,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
   const feePct = new Percent(borrowingRate);
 
-  const pendingCollateral = Difference.between(edited.collateral, original.collateral.nonZero)
-    .nonZero;
-  const pendingDebt = Difference.between(edited.debt, original.debt.nonZero).nonZero;
-
   const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
   const collateralRatio = !edited.isEmpty ? edited.collateralRatio(price) : undefined;
   const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
@@ -61,11 +57,13 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   const maxCollateral = original.collateral.add(maxEth);
   const collateralMaxedOut = edited.collateral.eq(maxCollateral);
 
+  const dirty = !edited.equals(original);
+
   return (
     <Card>
       <Heading>
         Trove
-        {!edited.equals(original) && !changePending && (
+        {dirty && !changePending && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
@@ -83,8 +81,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           amount={edited.collateral.prettify(4)}
           maxAmount={maxCollateral.toString()}
           maxedOut={collateralMaxedOut}
-          pendingAmount={pendingCollateral?.prettify()}
-          pendingColor={pendingCollateral?.positive ? "success" : "danger"}
           unit="ETH"
           {...{ editingState }}
           editedAmount={edited.collateral.toString(4)}
@@ -97,8 +93,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           label="Debt"
           inputId="trove-debt"
           amount={edited.debt.prettify()}
-          pendingAmount={pendingDebt?.prettify()}
-          pendingColor={pendingDebt?.positive ? "danger" : "success"}
           unit={COIN}
           {...{ editingState }}
           editedAmount={edited.debt.toString(2)}
@@ -116,15 +110,13 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           />
         )}
 
-        {fee && (
-          <StaticRow
-            label="Fee"
-            inputId="trove-borrowing-fee"
-            amount={fee.toString(2)}
-            pendingAmount={feePct.toString(2)}
-            unit={COIN}
-          />
-        )}
+        <StaticRow
+          label="Fee"
+          inputId="trove-borrowing-fee"
+          amount={fee.toString(2)}
+          pendingAmount={feePct.toString(2)}
+          unit={COIN}
+        />
 
         <CollateralRatio value={collateralRatio} change={collateralRatioChange} />
 
