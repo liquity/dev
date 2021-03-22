@@ -618,7 +618,8 @@ brownie pm install OpenZeppelin/openzeppelin-contracts@3.3.0
 
 Run, from `packages/contracts/`:
 ```
-brownie test -s
+brownie test tests/simulation_test.py -s
+brownie test tests/migration_test.py -s
 ```
 
 ### OpenEthereum
@@ -644,7 +645,8 @@ yarn start-dev-chain:openethereum
 
 Then, again from `packages/contracts/`, run it with:
 ```
-brownie test -s --network openethereum
+brownie test tests/simulation_test.py -s --network openethereum
+brownie test tests/migration_test.py -s --network openethereum
 ```
 
 To stop the Openethereum node, you can do it with:

@@ -19,7 +19,6 @@ n_sim = year
 NUM_LIQUIDATIONS = 10
 
 MIN_NET_DEBT = 1950.0
-MAX_FEE = Wei(1e18)
 
 """# Ether price (exogenous)
 
