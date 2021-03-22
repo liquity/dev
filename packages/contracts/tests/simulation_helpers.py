@@ -15,6 +15,8 @@ period = year
 #n_sim = 8640
 n_sim = year
 
+# number of liquidations for each call to `liquidateTroves`
+NUM_LIQUIDATIONS = 10
 
 MIN_NET_DEBT = 1950.0
 MAX_FEE = Wei(1e18)
@@ -260,8 +262,12 @@ def pending_liquidations(contracts, price_ether_current):
         return False
 
     stability_pool_balance = contracts.stabilityPool.getTotalLUSDDeposits()
-    if stability_pool_balance > 0:
-        return True
+    trove = last_trove
+    for i in range(NUM_LIQUIDATIONS):
+        debt = contracts.troveManager.getEntireDebtAndColl(trove)[0]
+        if stability_pool_balance >= debt:
+            return True
+        trove = contracts.sortedTroves.getPrev(trove)
 
     return False
 
@@ -285,7 +291,7 @@ def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, pr
     stability_pool_eth_previous = contracts.stabilityPool.getETH() / 1e18
 
     while pending_liquidations(contracts, price_ether_current):
-        tx = contracts.troveManager.liquidateTroves(10)
+        tx = contracts.troveManager.liquidateTroves(NUM_LIQUIDATIONS, { 'from': accounts[0] })
         #print(tx.events['TroveLiquidated'])
         remove_accounts_from_events(accounts, active_accounts, inactive_accounts, tx.events['TroveLiquidated'], '_borrower')
 
