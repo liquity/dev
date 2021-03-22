@@ -281,9 +281,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                                 : "danger"
                             }
                           >
-                            {collateralRatio?.gt(10)
-                              ? "× " + collateralRatio.shorten()
-                              : new Percent(collateralRatio).prettify()}
+                            {new Percent(collateralRatio).prettify()}
                           </Text>
                         ))(trove.collateralRatio(price))}
                       </td>

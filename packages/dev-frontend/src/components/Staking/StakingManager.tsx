@@ -145,9 +145,7 @@ export const StakingManager: React.FC = () => {
         (makingNewStake ? (
           <ActionDescription>Enter the amount of {GT} you'd like to stake.</ActionDescription>
         ) : (
-          <ActionDescription>
-            Increase or decrease the {GT} amount to stake or withdraw.
-          </ActionDescription>
+          <ActionDescription>Adjust the {GT} amount to stake or withdraw.</ActionDescription>
         ))}
 
       <Flex variant="layout.actions">

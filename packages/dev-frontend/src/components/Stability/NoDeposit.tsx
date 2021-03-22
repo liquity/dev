@@ -14,7 +14,7 @@ export const NoDeposit: React.FC = props => {
     <Card>
       <Heading>Stability Pool</Heading>
       <Box sx={{ p: [2, 3] }}>
-        <InfoMessage title="You don't have any LUSD in the Stability Pool.">
+        <InfoMessage title="You have no LUSD in the Stability Pool.">
           You can earn ETH and LQTY rewards by depositing LUSD.
         </InfoMessage>
 

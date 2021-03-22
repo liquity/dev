@@ -19,10 +19,6 @@ type CollateralRatioProps = {
 
 export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value, change }) => {
   const collateralRatioPct = new Percent(value ?? { toString: () => "N/A" });
-  const prettyCollateralRatio = value?.gt(10)
-    ? "× " + value.shorten()
-    : collateralRatioPct.prettify();
-
   const changePct = change && new Percent(change);
 
   return (
@@ -34,7 +30,7 @@ export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value, change 
       <StaticRow
         label="Collateral ratio"
         inputId="trove-collateral-ratio"
-        amount={prettyCollateralRatio}
+        amount={collateralRatioPct.prettify()}
         color={
           value?.gt(CRITICAL_COLLATERAL_RATIO)
             ? "success"

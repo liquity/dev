@@ -71,7 +71,7 @@ export const validateStabilityDepositChange = (
       undefined,
       <ErrorDescription>
         You're not allowed to withdraw LUSD from your Stability Deposit when there are
-        undercollateralized Troves. Please try again later.
+        undercollateralized Troves. Please liquidate those Troves or try again later.
       </ErrorDescription>
     ];
   }

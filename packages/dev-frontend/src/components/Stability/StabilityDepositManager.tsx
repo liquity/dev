@@ -115,9 +115,7 @@ export const StabilityDepositManager: React.FC = () => {
         (makingNewDeposit ? (
           <ActionDescription>Enter the amount of {COIN} you'd like to deposit.</ActionDescription>
         ) : (
-          <ActionDescription>
-            Increase or decrease the {COIN} amount to deposit or withdraw.
-          </ActionDescription>
+          <ActionDescription>Adjust the {COIN} amount to deposit or withdraw.</ActionDescription>
         ))}
 
       <Flex variant="layout.actions">
