@@ -11,7 +11,7 @@ import { useMineView } from "../../context/MineViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
 import { ActionDescription } from "../../../ActionDescription";
 import { ClaimReward } from "./ClaimReward";
-import { UnstakeAndClaim } from "./UnstakeAndClaim";
+import { UnstakeAndClaim } from "../UnstakeAndClaim";
 
 const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
   liquidityMiningStake,

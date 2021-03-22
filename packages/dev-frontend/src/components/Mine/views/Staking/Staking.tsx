@@ -1,22 +1,18 @@
 import React, { useCallback, useState } from "react";
 import { Heading, Box, Flex, Card, Button } from "theme-ui";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal } from "@liquity/lib-base";
 import { LP } from "../../../../strings";
 import { Icon } from "../../../Icon";
 import { EditableRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMineView } from "../../context/MineViewContext";
 import { useMyTransactionState } from "../../../Transaction";
-import { Confirm } from "./Confirm";
-import { Description } from "./Description";
-import { Approve } from "./Approve";
+import { Confirm } from "../Confirm";
+import { Description } from "../Description";
+import { Approve } from "../Approve";
+import { Validation } from "../Validation";
 
 const transactionId = "mine-stake";
-const selector = ({ uniTokenAllowance, uniTokenBalance }: LiquityStoreState) => ({
-  uniTokenAllowance,
-  uniTokenBalance
-});
 
 export const Staking: React.FC = () => {
   const { dispatchEvent } = useMineView();
@@ -29,11 +25,6 @@ export const Staking: React.FC = () => {
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
 
-  const { uniTokenAllowance, uniTokenBalance } = useLiquitySelector(selector);
-  const hasEnoughUniTokens = uniTokenBalance.gte(amount);
-  const hasApprovedEnoughUniTokens = !uniTokenAllowance.isZero && uniTokenAllowance.gte(amount);
-  const canStake = hasEnoughUniTokens && hasApprovedEnoughUniTokens;
-  console.log({ uniTokenAllowance: uniTokenAllowance.prettify() });
   const handleCancelPressed = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
@@ -53,8 +44,6 @@ export const Staking: React.FC = () => {
         )}
       </Heading>
 
-      {isTransactionPending && <LoadingOverlay />}
-
       <Box sx={{ p: [2, 3] }}>
         <EditableRow
           label="Stake"
@@ -62,20 +51,25 @@ export const Staking: React.FC = () => {
           amount={amount.prettify(4)}
           unit={LP}
           editingState={editingState}
-          editedAmount={amount.prettify(4)}
-          setEditedAmount={amount => setAmount(Decimal.from(amount))}
+          editedAmount={amount.toString(4)}
+          setEditedAmount={amount => {
+            console.log("SEETING AMOUNT");
+            setAmount(Decimal.from(amount));
+          }}
         ></EditableRow>
 
-        {isDirty && <Description amount={amount} uniTokenBalance={uniTokenBalance} />}
+        {isDirty && <Validation amount={amount} />}
+        {isDirty && <Description amount={amount} />}
 
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
-          <Approve isDisabled={hasApprovedEnoughUniTokens} amount={amount} />
-          <Confirm isDisabled={!canStake} amount={amount} />
+          <Approve amount={amount} />
+          <Confirm amount={amount} />
         </Flex>
       </Box>
+      {isTransactionPending && <LoadingOverlay />}
     </Card>
   );
 };

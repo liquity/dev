@@ -9,8 +9,10 @@ import { EditableRow, StaticRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMineView } from "../../context/MineViewContext";
 import { useMyTransactionState } from "../../../Transaction";
-import { ConfirmButton } from "./ConfirmButton";
-import { Description } from "./Description";
+import { Confirm } from "../Confirm";
+import { Description } from "../Description";
+import { Approve } from "../Approve";
+import { Validation } from "../Validation";
 
 const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
   liquidityMiningStake,
@@ -42,12 +44,6 @@ export const Adjusting: React.FC = () => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
 
-  useEffect(() => {
-    if (transactionState.type === "confirmedOneShot") {
-      dispatchEvent("ADJUST_CONFIRMED");
-    }
-  }, [transactionState.type, dispatchEvent]);
-
   return (
     <Card>
       <Heading>
@@ -63,16 +59,14 @@ export const Adjusting: React.FC = () => {
         )}
       </Heading>
 
-      {isTransactionPending && <LoadingOverlay />}
-
       <Box sx={{ p: [2, 3] }}>
         <EditableRow
-          label="Deposit"
+          label="Stake"
           inputId="mine-stake-amount"
-          amount={liquidityMiningStake.prettify(4)}
+          amount={isDirty ? amount.prettify(4) : liquidityMiningStake.prettify(4)}
           unit={LP}
           editingState={editingState}
-          editedAmount={amount.prettify(4)}
+          editedAmount={amount.toString(4)}
           setEditedAmount={amount => setAmount(Decimal.from(amount))}
         ></EditableRow>
 
@@ -84,15 +78,18 @@ export const Adjusting: React.FC = () => {
           unit={GT}
         />
 
-        {isDirty && <Description amountChanged={amountChanged} isWithdrawing={isWithdrawing} />}
+        {isDirty && <Validation amount={amount} />}
+        {isDirty && <Description amount={amount} />}
 
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
-          <ConfirmButton amountChanged={amountChanged} isWithdrawing={isWithdrawing} />
+          <Approve amount={amountChanged} />
+          <Confirm amount={amount} />
         </Flex>
       </Box>
+      {isTransactionPending && <LoadingOverlay />}
     </Card>
   );
 };

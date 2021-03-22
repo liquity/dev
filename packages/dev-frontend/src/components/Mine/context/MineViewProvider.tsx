@@ -11,17 +11,27 @@ const transition = (view: MineView, event: MineEvent): MineView => {
   return nextView;
 };
 
-const getInitialView = (liquidityMiningStake: Decimal): MineView => {
-  return liquidityMiningStake.isZero ? "INACTIVE" : "ACTIVE";
+const getInitialView = (
+  liquidityMiningStake: Decimal,
+  remainingLiquidityMiningLQTYReward: Decimal
+): MineView => {
+  if (remainingLiquidityMiningLQTYReward.isZero) return "DISABLED";
+  if (liquidityMiningStake.isZero) return "INACTIVE";
+  return "ACTIVE";
 };
 
-const selector = ({ liquidityMiningStake }: LiquityStoreState) => ({ liquidityMiningStake });
+const selector = ({
+  liquidityMiningStake,
+  remainingLiquidityMiningLQTYReward
+}: LiquityStoreState) => ({ liquidityMiningStake, remainingLiquidityMiningLQTYReward });
 
 export const MineViewProvider: React.FC = props => {
   const { children } = props;
-  const { liquidityMiningStake } = useLiquitySelector(selector);
+  const { liquidityMiningStake, remainingLiquidityMiningLQTYReward } = useLiquitySelector(selector);
 
-  const [view, setView] = useState<MineView>(getInitialView(liquidityMiningStake));
+  const [view, setView] = useState<MineView>(
+    getInitialView(liquidityMiningStake, remainingLiquidityMiningLQTYReward)
+  );
   const viewRef = useRef<MineView>(view);
 
   const dispatchEvent = useCallback((event: MineEvent) => {
@@ -42,7 +52,6 @@ export const MineViewProvider: React.FC = props => {
 
   useEffect(() => {
     if (liquidityMiningStake.isZero) {
-      console.log("SHOULDNT SEE THIS");
       dispatchEvent("UNSTAKE_AND_CLAIM_CONFIRMED");
     }
   }, [liquidityMiningStake.isZero, dispatchEvent]);

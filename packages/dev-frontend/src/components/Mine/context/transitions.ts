@@ -2,15 +2,15 @@ type InactiveView = "INACTIVE";
 type StakingView = "STAKING";
 type ActiveView = "ACTIVE";
 type AdjustingView = "ADJUSTING";
+type DisabledView = "DISABLED";
 
-export type MineView = InactiveView | StakingView | ActiveView | AdjustingView;
+export type MineView = InactiveView | StakingView | ActiveView | AdjustingView | DisabledView;
 
 type StakePressedEvent = "STAKE_PRESSED";
 type AdjustPressedEvent = "ADJUST_PRESSED";
 type CancelPressedEvent = "CANCEL_PRESSED";
 type StakeApprovedEvent = "STAKE_APPROVED";
 type StakeConfirmedEvent = "STAKE_CONFIRMED";
-type AdjustConfirmedEvent = "ADJUST_CONFIRMED";
 type ClaimRewardConfirmedEvent = "CLAIM_REWARD_CONFIRMED";
 type UnstakeAndClaimConfirmedEvent = "UNSTAKE_AND_CLAIM_CONFIRMED";
 
@@ -20,7 +20,6 @@ export type MineEvent =
   | CancelPressedEvent
   | StakeApprovedEvent
   | StakeConfirmedEvent
-  | AdjustConfirmedEvent
   | ClaimRewardConfirmedEvent
   | UnstakeAndClaimConfirmedEvent;
 
@@ -42,7 +41,11 @@ export const transitions: MineEventTransitions = {
   },
   ADJUSTING: {
     CANCEL_PRESSED: "ACTIVE",
-    ADJUST_CONFIRMED: "ACTIVE",
-    STAKE_APPROVED: "ACTIVE"
+    STAKE_CONFIRMED: "ACTIVE",
+    STAKE_APPROVED: "ADJUSTING"
+  },
+  DISABLED: {
+    CLAIM_REWARD_CONFIRMED: "DISABLED",
+    UNSTAKE_AND_CLAIM_CONFIRMED: "DISABLED"
   }
 };
