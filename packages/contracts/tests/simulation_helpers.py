@@ -416,30 +416,35 @@ def get_lusd_to_repay(accounts, contracts, active_accounts, inactive_accounts, a
 
     return 0
 
-'''
 def get_hints(contracts, coll, debt):
     NICR = contracts.hintHelpers.computeNominalCR(floatToWei(coll), floatToWei(debt))
     approxHint = contracts.hintHelpers.getApproxHint(NICR, 100, 0)
     #print("approx hint", approxHint)
     return contracts.sortedTroves.findInsertPosition(NICR, approxHint[0], approxHint[0])
-'''
+
+def get_hints_from_amounts(accounts, contracts, active_accounts, coll, debt, price_ether_current):
+    ICR = coll * price_ether_current / debt
+    NICR = contracts.hintHelpers.computeNominalCR(floatToWei(coll), floatToWei(debt))
+    return get_hints_from_ICR(accounts, contracts, active_accounts, ICR, NICR)
 
 #def get_address_from_active_index(accounts, active_accounts, index):
 def index2address(accounts, active_accounts, index):
     return accounts[active_accounts[index]['index']]
 
-def get_hints_from_amounts(accounts, active_accounts, coll, debt, price_ether_current):
-    ICR = coll * price_ether_current / debt
-    return get_hints_from_ICR(accounts, active_accounts, ICR)
-
-def get_hints_from_ICR(accounts, active_accounts, ICR):
+def get_hints_from_ICR(accounts, contracts, active_accounts, ICR, NICR):
     l = len(active_accounts)
     if l == 0:
         return [ZERO_ADDRESS, ZERO_ADDRESS, 0]
     else:
         keys = [a['CR_initial'] for a in active_accounts]
         i = bisect_left(keys, ICR)
-        return [index2address(accounts, active_accounts, min(i, l-1)), index2address(accounts, active_accounts, max(i-1, 0)), i]
+        #return [index2address(accounts, active_accounts, min(i, l-1)), index2address(accounts, active_accounts, max(i-1, 0)), i]
+        hints = contracts.sortedTroves.findInsertPosition(
+            NICR,
+            index2address(accounts, active_accounts, min(i, l-1)),
+            index2address(accounts, active_accounts, max(i-1, 0))
+        )
+        return [hints[0], hints[1], i]
 
 
 def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, index):
@@ -463,7 +468,7 @@ def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price
         #A part of the troves are adjusted by adjusting debt
         if p >= ratio:
             debt_new = price_ether_current * coll / working_trove['CR_initial']
-            hints = get_hints_from_amounts(accounts, active_accounts, coll, debt_new, price_ether_current)
+            hints = get_hints_from_amounts(accounts, contracts, active_accounts, coll, debt_new, price_ether_current)
             if debt_new < MIN_NET_DEBT:
                 continue
             if check < -1:
@@ -482,7 +487,7 @@ def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price
         #Another part of the troves are adjusted by adjusting collaterals
         elif p < ratio:
             coll_new = working_trove['CR_initial'] * debt / price_ether_current
-            hints = get_hints_from_amounts(accounts, active_accounts, coll_new, debt, price_ether_current)
+            hints = get_hints_from_amounts(accounts, contracts, active_accounts, coll_new, debt, price_ether_current)
             if check < -1:
                 # add coll
                 coll_added_float = coll_new - coll
@@ -506,7 +511,8 @@ def open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_t
     if is_recovery_mode(contracts, price_ether_current) and CR_ratio < 1.5:
         return
 
-    hints = get_hints_from_ICR(accounts, active_accounts, CR_ratio)
+    #hints = get_hints_from_ICR(accounts, active_accounts, CR_ratio)
+    hints = get_hints_from_amounts(accounts, contracts, active_accounts, quantity_ether, supply_trove, price_ether_current)
     try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
         contracts.borrowerOperations.openTrove(MAX_FEE, floatToWei(supply_trove), hints[0], hints[1],
                                                { 'from': accounts[inactive_accounts[0]], 'value': floatToWei(quantity_ether) })
