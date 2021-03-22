@@ -138,7 +138,7 @@ export const validateTroveChange = (
   }
 
   if (
-    (change.type === "creation" || (change.type === "adjustment" && change.params.borrowLUSD)) &&
+    (change.type === "creation" || change.type === "adjustment") &&
     !total.collateralRatioIsBelowCritical(price) &&
     total.subtract(original).add(afterFee).collateralRatioIsBelowCritical(price)
   ) {
