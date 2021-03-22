@@ -145,17 +145,11 @@ type TransactionProps<C> = {
   children: C;
 };
 
-export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hoverable>>({
-  id,
-  tooltip,
-  tooltipPlacement,
-  showFailure,
-  requires,
-  send,
-  children
-}: TransactionProps<C>) {
+export const useTransactionFunction = (
+  id: string,
+  send: TransactionFunction
+): [sendTransaction: () => Promise<void>, transactionState: TransactionState] => {
   const [transactionState, setTransactionState] = useTransactionState();
-  const trigger = React.Children.only<C>(children);
 
   const sendTransaction = useCallback(async () => {
     setTransactionState({ type: "waitingForApproval", id });
@@ -182,6 +176,21 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
       }
     }
   }, [send, id, setTransactionState]);
+
+  return [sendTransaction, transactionState];
+};
+
+export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hoverable>>({
+  id,
+  tooltip,
+  tooltipPlacement,
+  showFailure,
+  requires,
+  send,
+  children
+}: TransactionProps<C>) {
+  const [sendTransaction, transactionState] = useTransactionFunction(id, send);
+  const trigger = React.Children.only<C>(children);
 
   const failureReasons = (requires || [])
     .filter(([requirement]) => !requirement)

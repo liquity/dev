@@ -8,14 +8,16 @@ import {
   LQTYStake,
   LQTYStakeChange
 } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer } from "@liquity/lib-react";
+
+import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { GT, COIN } from "../../strings";
 
 import { useStakingView } from "./context/StakingViewContext";
 import { StakingEditor } from "./StakingEditor";
 import { StakingManagerAction } from "./StakingManagerAction";
-import { ActionDescription } from "../ActionDescription";
+import { ActionDescription, Amount } from "../ActionDescription";
+import { ErrorDescription } from "../ErrorDescription";
 
 const init = ({ lqtyStake }: LiquityStoreState) => ({
   originalStake: lqtyStake,
@@ -58,32 +60,82 @@ const reduce = (state: StakeManagerState, action: StakeManagerAction): StakeMana
   return state;
 };
 
-const describeGains = ({ collateralGain, lusdGain }: LQTYStake) => {
+const selectLQTYBalance = ({ lqtyBalance }: LiquityStoreState) => lqtyBalance;
+
+type StakingManagerActionDescriptionProps = {
+  stake: LQTYStake;
+  change: LQTYStakeChange<Decimal>;
+};
+
+const StakingManagerActionDescription: React.FC<StakingManagerActionDescriptionProps> = ({
+  stake: { collateralGain, lusdGain },
+  change
+}) => {
   const gains = [
     collateralGain.nonZero?.prettify(4).concat(" ETH"),
     lusdGain.nonZero?.prettify().concat(" ", COIN)
   ].filter(x => x);
 
-  return gains.length > 0 ? " and claiming " + gains.join(" and ") : "";
+  return (
+    <ActionDescription>
+      {change.stakeLQTY && (
+        <>
+          You are staking{" "}
+          <Amount>
+            {change.stakeLQTY.prettify()} {GT}
+          </Amount>
+        </>
+      )}
+      {change.unstakeLQTY && (
+        <>
+          You are withdrawing{" "}
+          <Amount>
+            {change.unstakeLQTY.prettify()} {GT}
+          </Amount>
+        </>
+      )}
+      {gains.length > 0 && (
+        <>
+          {" "}
+          and claiming{" "}
+          {gains.length === 2 ? (
+            <>
+              <Amount>{gains[0]}</Amount> and <Amount>{gains[1]}</Amount>
+            </>
+          ) : (
+            <>
+              <Amount>{gains[0]}</Amount>
+            </>
+          )}
+        </>
+      )}
+      .
+    </ActionDescription>
+  );
 };
-
-const describeAction = (stake: LQTYStake, change: LQTYStakeChange<Decimal>) =>
-  (change.stakeLQTY
-    ? `You are staking ${change.stakeLQTY.prettify()} ${GT}`
-    : `You are withdrawing ${change.unstakeLQTY.prettify()} ${GT}`) +
-  describeGains(stake) +
-  ".";
 
 export const StakingManager: React.FC = () => {
   const { dispatch: dispatchStakingViewAction } = useStakingView();
   const [{ originalStake, editedLQTY }, dispatch] = useLiquityReducer(reduce, init);
+  const lqtyBalance = useLiquitySelector(selectLQTYBalance);
+
   const change = originalStake.whatChanged(editedLQTY);
+  const [validChange, description] = change?.stakeLQTY?.gt(lqtyBalance)
+    ? [
+        undefined,
+        <ErrorDescription>
+          The amount you're trying to stake exceeds your balance by{" "}
+          <Amount>
+            {change.stakeLQTY.sub(lqtyBalance).prettify()} {GT}
+          </Amount>
+          .
+        </ErrorDescription>
+      ]
+    : [change, change && <StakingManagerActionDescription stake={originalStake} change={change} />];
 
   return (
     <StakingEditor title={"Staking"} {...{ originalStake, editedLQTY, dispatch }}>
-      {!originalStake.isEmpty && change && (
-        <ActionDescription>{describeAction(originalStake, change)}</ActionDescription>
-      )}
+      {description}
 
       <Flex variant="layout.actions">
         <Button
@@ -93,7 +145,11 @@ export const StakingManager: React.FC = () => {
           Cancel
         </Button>
 
-        <StakingManagerAction {...{ change, dispatch }} />
+        {validChange ? (
+          <StakingManagerAction change={validChange}>Confirm</StakingManagerAction>
+        ) : (
+          <Button disabled>Confirm</Button>
+        )}
       </Flex>
     </StakingEditor>
   );

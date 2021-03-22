@@ -5,7 +5,7 @@ import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../../strings";
 
-import { DisabledEditableRow, Row, StaticAmounts } from "../Trove/Editor";
+import { DisabledEditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { Icon } from "../Icon";
 
@@ -30,23 +30,21 @@ export const ReadOnlyStake: React.FC = () => {
           unit={GT}
         />
 
-        <Row label="Gains" sx={{ flexDirection: "column", mt: [-2, -3], pb: [2, 3] }}>
-          <StaticAmounts
-            inputId="stake-gain-eth"
-            amount={lqtyStake.collateralGain.prettify(4)}
-            color={lqtyStake.collateralGain.nonZero && "success"}
-            unit="ETH"
-            sx={{ mb: 0 }}
-          />
+        <StaticRow
+          label="Redemption gain"
+          inputId="stake-gain-eth"
+          amount={lqtyStake.collateralGain.prettify(4)}
+          color={lqtyStake.collateralGain.nonZero && "success"}
+          unit="ETH"
+        />
 
-          <StaticAmounts
-            inputId="stake-gain-lusd"
-            amount={lqtyStake.lusdGain.prettify()}
-            color={lqtyStake.lusdGain.nonZero && "success"}
-            unit={COIN}
-            sx={{ pt: 0 }}
-          />
-        </Row>
+        <StaticRow
+          label="Issuance gain"
+          inputId="stake-gain-lusd"
+          amount={lqtyStake.lusdGain.prettify()}
+          color={lqtyStake.lusdGain.nonZero && "success"}
+          unit={COIN}
+        />
 
         <Flex variant="layout.actions">
           <Button variant="outline" onClick={() => dispatch({ type: "startAdjusting" })}>

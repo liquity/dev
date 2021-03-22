@@ -1,13 +1,23 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Decimalish, Difference, StabilityDeposit } from "@liquity/lib-base";
+import {
+  Decimal,
+  Decimalish,
+  Difference,
+  StabilityDeposit,
+  LiquityStoreState
+} from "@liquity/lib-base";
+
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../../strings";
 
 import { Icon } from "../Icon";
 import { EditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
+
+const selectLUSDBalance = ({ lusdBalance }: LiquityStoreState) => lusdBalance;
 
 type StabilityDepositEditorProps = {
   originalDeposit: StabilityDeposit;
@@ -23,10 +33,14 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   dispatch,
   children
 }) => {
+  const lusdBalance = useLiquitySelector(selectLUSDBalance);
   const editingState = useState<string>();
 
   const pendingDepositChange = Difference.between(editedLUSD, originalDeposit.currentLUSD.nonZero);
   const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
+
+  const maxAmount = originalDeposit.currentLUSD.add(lusdBalance);
+  const maxedOut = editedLUSD.eq(maxAmount);
 
   return (
     <Card>
@@ -48,6 +62,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           label="Deposit"
           inputId="deposit-lqty"
           amount={editedLUSD.prettify()}
+          maxAmount={maxAmount.toString()}
+          maxedOut={maxedOut}
           pendingAmount={pendingDepositChange.nonZero?.prettify()}
           pendingColor={pendingDepositChange.positive ? "success" : "danger"}
           unit={COIN}
@@ -59,7 +75,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         {!originalDeposit.isEmpty && (
           <>
             <StaticRow
-              label="Gain"
+              label="Liquidation gain"
               inputId="deposit-gain"
               amount={originalDeposit.collateralGain.prettify(4)}
               color={originalDeposit.collateralGain.nonZero && "success"}

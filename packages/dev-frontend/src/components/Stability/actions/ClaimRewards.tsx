@@ -1,34 +1,24 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Button } from "theme-ui";
+
 import { useLiquity } from "../../../hooks/LiquityContext";
-import { Transaction, useMyTransactionState } from "../../Transaction";
-import { useStabilityView } from "../context/StabilityViewContext";
+import { useTransactionFunction } from "../../Transaction";
 
-export const ClaimRewards: React.FC = ({ children }) => {
-  const {
-    liquity: { send: liquity }
-  } = useLiquity();
-  const transactionId = "stability-deposit";
-  const transaction = useMyTransactionState(transactionId);
-  const { dispatchEvent } = useStabilityView();
-  const currentTransactionId = transaction.type !== "idle" ? transaction.id : null;
+type ClaimRewardsProps = {
+  disabled?: boolean;
+};
 
-  useEffect(() => {
-    if (transaction.type === "confirmedOneShot" && currentTransactionId === transactionId) {
-      dispatchEvent("REWARDS_CLAIMED");
-    }
-  }, [transaction.type, currentTransactionId, dispatchEvent]);
+export const ClaimRewards: React.FC<ClaimRewardsProps> = ({ disabled, children }) => {
+  const { liquity } = useLiquity();
 
-  const claimRewards = liquity.withdrawGainsFromStabilityPool.bind(liquity);
+  const [sendTransaction] = useTransactionFunction(
+    "stability-deposit",
+    liquity.send.withdrawGainsFromStabilityPool.bind(liquity.send)
+  );
 
   return (
-    <Transaction
-      id={transactionId}
-      send={claimRewards}
-      showFailure="asTooltip"
-      tooltipPlacement="bottom"
-    >
-      <Button>{children}</Button>
-    </Transaction>
+    <Button onClick={sendTransaction} disabled={disabled}>
+      {children}
+    </Button>
   );
 };

@@ -4,48 +4,21 @@ import { Flex, Button } from "theme-ui";
 import {
   LiquityStoreState,
   Decimal,
-  Decimalish,
-  LUSD_MINIMUM_DEBT,
+  TroveChange,
   Trove,
-  TroveAdjustmentParams
+  Decimalish,
+  LUSD_MINIMUM_DEBT
 } from "@liquity/lib-base";
 
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
-import { COIN } from "../../strings";
-
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
 import { useTroveView } from "./context/TroveViewContext";
-import { ActionDescription } from "../ActionDescription";
-
-const describeAdjustment = ({
-  depositCollateral,
-  withdrawCollateral,
-  borrowLUSD,
-  repayLUSD
-}: TroveAdjustmentParams<Decimal>) =>
-  depositCollateral && borrowLUSD
-    ? `You will deposit ${depositCollateral.prettify()} ETH ` +
-      `and receive ${borrowLUSD.prettify()} ${COIN}.`
-    : repayLUSD && withdrawCollateral
-    ? `You will pay ${repayLUSD.prettify()} ${COIN} and ` +
-      `receive ${withdrawCollateral.prettify()} ETH.`
-    : depositCollateral && repayLUSD
-    ? `You will deposit ${depositCollateral.prettify()} ETH and ` +
-      `pay ${repayLUSD.prettify()} ${COIN}.`
-    : borrowLUSD && withdrawCollateral
-    ? `You will receive ${withdrawCollateral.prettify()} ETH and ` +
-      `${borrowLUSD.prettify()} ${COIN}.`
-    : depositCollateral
-    ? `You will deposit ${depositCollateral.prettify()} ETH.`
-    : withdrawCollateral
-    ? `You will receive ${withdrawCollateral.prettify()} ETH.`
-    : borrowLUSD
-    ? `You will receive ${borrowLUSD.prettify()} ${COIN}.`
-    : repayLUSD
-    ? `You will pay ${repayLUSD.prettify()} ${COIN}.`
-    : "";
+import {
+  selectForTroveChangeValidation,
+  validateTroveChange
+} from "./validation/validateTroveChange";
 
 const init = ({ trove }: LiquityStoreState) => ({
   original: trove,
@@ -162,20 +135,29 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
   }
 };
 
-const select = ({ fees }: LiquityStoreState) => ({
-  fees
+const feeFrom = (
+  change: Exclude<TroveChange<Decimal>, { type: "invalidCreation" }> | undefined,
+  borrowingRate: Decimal
+): Decimal | undefined => change?.params.borrowLUSD?.mul(borrowingRate);
+
+const select = (state: LiquityStoreState) => ({
+  fees: state.fees,
+  validationContext: selectForTroveChangeValidation(state)
 });
 
 export const TroveManager: React.FC = () => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
-  const { fees } = useLiquitySelector(select);
+  const { fees, validationContext } = useLiquitySelector(select);
 
   const borrowingRate = fees.borrowingRate();
-  const change = original.whatChanged(edited, borrowingRate);
-  // Reapply change to get the exact state the Trove will end up in (which could be slightly
-  // different from `edited` due to imprecision).
-  const afterFee = original.apply(change, borrowingRate);
   const maxBorrowingRate = borrowingRate.add(0.005); // TODO slippage tolerance
+
+  const [validChange, description] = validateTroveChange(
+    original,
+    edited,
+    borrowingRate,
+    validationContext
+  );
 
   // console.log("TroveManager render", { original, edited, change });
   const { dispatchEvent } = useTroveView();
@@ -188,29 +170,25 @@ export const TroveManager: React.FC = () => {
     <TroveEditor
       original={original}
       edited={edited}
+      fee={feeFrom(validChange, borrowingRate)}
       borrowingRate={borrowingRate}
-      change={change}
       changePending={changePending}
       dispatch={dispatch}
     >
-      {change && change.type !== "invalidCreation" && (
-        <ActionDescription>{describeAdjustment(change.params)}</ActionDescription>
-      )}
+      {description}
 
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleCancel}>
           Cancel
         </Button>
 
-        <TroveAction
-          original={original}
-          edited={edited}
-          maxBorrowingRate={maxBorrowingRate}
-          afterFee={afterFee}
-          change={change}
-          changePending={changePending}
-          dispatch={dispatch}
-        />
+        {validChange ? (
+          <TroveAction change={validChange} maxBorrowingRate={maxBorrowingRate} dispatch={dispatch}>
+            Confirm
+          </TroveAction>
+        ) : (
+          <Button disabled>Confirm</Button>
+        )}
       </Flex>
     </TroveEditor>
   );

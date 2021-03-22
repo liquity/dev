@@ -1,14 +1,16 @@
 import React, { useCallback } from "react";
+import { Button, Flex } from "theme-ui";
 
 import { Decimal, Decimalish, LiquityStoreState } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer } from "@liquity/lib-react";
+import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { StabilityDepositAction } from "./StabilityDepositAction";
-import { Flex } from "@theme-ui/components";
-import { Button } from "theme-ui";
 import { useStabilityView } from "./context/StabilityViewContext";
-import { StabilityActionDescription } from "./StabilityActionDescription";
+import {
+  selectForStabilityDepositChangeValidation,
+  validateStabilityDepositChange
+} from "./validation/validateStabilityDepositChange";
 
 const init = ({ stabilityDeposit }: LiquityStoreState) => ({
   originalDeposit: stabilityDeposit,
@@ -84,11 +86,18 @@ const reduce = (
 
 export const StabilityDepositManager: React.FC = () => {
   const [{ originalDeposit, editedLUSD, changePending }, dispatch] = useLiquityReducer(reduce, init);
+  const validationContext = useLiquitySelector(selectForStabilityDepositChangeValidation);
   const { dispatchEvent } = useStabilityView();
 
   const handleCancel = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
+
+  const [validChange, description] = validateStabilityDepositChange(
+    originalDeposit,
+    editedLUSD,
+    validationContext
+  );
 
   return (
     <StabilityDepositEditor
@@ -97,22 +106,20 @@ export const StabilityDepositManager: React.FC = () => {
       changePending={changePending}
       dispatch={dispatch}
     >
-      <StabilityActionDescription
-        originalDeposit={originalDeposit}
-        editedLUSD={editedLUSD}
-        changePending={changePending}
-      />
+      {description}
+
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleCancel}>
           Cancel
         </Button>
 
-        <StabilityDepositAction
-          originalDeposit={originalDeposit}
-          editedLUSD={editedLUSD}
-          changePending={changePending}
-          dispatch={dispatch}
-        />
+        {validChange ? (
+          <StabilityDepositAction change={validChange} dispatch={dispatch}>
+            Confirm
+          </StabilityDepositAction>
+        ) : (
+          <Button>Confirm</Button>
+        )}
       </Flex>
     </StabilityDepositEditor>
   );

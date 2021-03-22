@@ -25,3 +25,7 @@ export const ActionDescription: React.FC = ({ children }) => (
     </Flex>
   </Box>
 );
+
+export const Amount: React.FC = ({ children }) => (
+  <Text sx={{ display: "inline-block", fontWeight: "bold" }}>{children}</Text>
+);

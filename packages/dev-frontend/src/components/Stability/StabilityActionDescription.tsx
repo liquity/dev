@@ -1,104 +1,53 @@
 import React from "react";
-import { Text } from "theme-ui";
-import { Decimal, StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
 
-import { useLiquity } from "../../hooks/LiquityContext";
+import { Decimal, StabilityDeposit, StabilityDepositChange } from "@liquity/lib-base";
+
 import { COIN, GT } from "../../strings";
-import { Transaction } from "../Transaction";
-import { ActionDescription } from "../ActionDescription";
+import { ActionDescription, Amount } from "../ActionDescription";
 
 type StabilityActionDescriptionProps = {
   originalDeposit: StabilityDeposit;
-  editedLUSD: Decimal;
-  changePending: boolean;
+  change: StabilityDepositChange<Decimal>;
 };
-
-const select = ({
-  trove,
-  lusdBalance,
-  frontend,
-  ownFrontend,
-  haveUndercollateralizedTroves
-}: LiquityStoreState) => ({
-  trove,
-  lusdBalance,
-  frontendRegistered: frontend.status === "registered",
-  noOwnFrontend: ownFrontend.status === "unregistered",
-  haveUndercollateralizedTroves
-});
 
 export const StabilityActionDescription: React.FC<StabilityActionDescriptionProps> = ({
   originalDeposit,
-  editedLUSD
+  change
 }) => {
-  const {
-    lusdBalance,
-    frontendRegistered,
-    noOwnFrontend,
-    haveUndercollateralizedTroves
-  } = useLiquitySelector(select);
-
-  const {
-    config,
-    liquity: { send: liquity }
-  } = useLiquity();
-
-  const frontendTag = frontendRegistered ? config.frontendTag : undefined;
-
-  const transactionId = "stability-deposit";
-
-  const { depositLUSD, withdrawLUSD } = originalDeposit.whatChanged(editedLUSD) ?? {};
-
-  const collateralGain = `${originalDeposit.collateralGain.prettify(4)} ETH`;
-  const lqtyReward = `${originalDeposit.lqtyReward.prettify(4)} ${GT}`;
-  const hasReward = originalDeposit.lqtyReward.nonZero;
-  const hasGain = originalDeposit.collateralGain.nonZero;
-  const hasRewardOrGain = hasGain || hasReward;
-  const gains = hasReward ? `${collateralGain} and ${lqtyReward}` : collateralGain;
-  const isDepositDirty = !!(depositLUSD || withdrawLUSD);
-
-  if (!isDepositDirty) return null;
+  const collateralGain = originalDeposit.collateralGain.nonZero?.prettify(4).concat(" ETH");
+  const lqtyReward = originalDeposit.lqtyReward.nonZero?.prettify().concat(" " + GT);
 
   return (
     <ActionDescription>
-      {depositLUSD && (
-        <Transaction
-          id={transactionId}
-          send={liquity.depositLUSDInStabilityPool.bind(liquity, depositLUSD, frontendTag)} // TODO we dont want these to be sendable
-          requires={[
-            [
-              noOwnFrontend,
-              "Your can't deposit using the same wallet address that registered this frontend" // TODO review this message for correctness
-            ],
-            [lusdBalance.gte(depositLUSD), `You don't have enough ${COIN}`]
-          ]}
-        >
-          <Text>
-            {hasRewardOrGain
-              ? `You are depositing ${depositLUSD.prettify()} ${COIN} and claiming ${gains}`
-              : `You are depositing ${depositLUSD.prettify()} ${COIN}`}
-          </Text>
-        </Transaction>
+      {change.depositLUSD ? (
+        <>
+          You are depositing{" "}
+          <Amount>
+            {change.depositLUSD.prettify()} {COIN}
+          </Amount>
+        </>
+      ) : (
+        <>
+          You are withdrawing{" "}
+          <Amount>
+            {change.withdrawLUSD.prettify()} {COIN}
+          </Amount>
+        </>
       )}
-      {withdrawLUSD && (
-        <Transaction
-          id={transactionId}
-          send={liquity.withdrawLUSDFromStabilityPool.bind(liquity, withdrawLUSD)}
-          requires={[
-            [
-              !haveUndercollateralizedTroves,
-              "You can't withdraw when there are undercollateralized Troves"
-            ]
-          ]}
-        >
-          <Text>
-            {hasRewardOrGain
-              ? `You are withdrawing ${withdrawLUSD.prettify()} ${COIN} and claiming ${gains}`
-              : `You are withdrawing ${withdrawLUSD.prettify()} ${COIN}`}
-          </Text>
-        </Transaction>
+      {(collateralGain || lqtyReward) && (
+        <>
+          {" "}
+          and claiming{" "}
+          {collateralGain && lqtyReward ? (
+            <>
+              <Amount>{collateralGain}</Amount> and <Amount>{lqtyReward}</Amount>
+            </>
+          ) : (
+            <Amount>{collateralGain ?? lqtyReward}</Amount>
+          )}
+        </>
       )}
+      .
     </ActionDescription>
   );
 };

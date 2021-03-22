@@ -1,55 +1,23 @@
 import { Button } from "theme-ui";
 
-import { Decimal, LiquityStoreState, LQTYStakeChange } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, LQTYStakeChange } from "@liquity/lib-base";
 
 import { useLiquity } from "../../hooks/LiquityContext";
-import { GT } from "../../strings";
-
-import { Transaction, TransactionFunction } from "../Transaction";
-
-import { useStakingView } from "./context/StakingViewContext";
+import { useTransactionFunction } from "../Transaction";
 
 type StakingActionProps = {
-  change: LQTYStakeChange<Decimal> | undefined;
+  change: LQTYStakeChange<Decimal>;
 };
 
-const selectLQTYBalance = ({ lqtyBalance }: LiquityStoreState) => lqtyBalance;
+export const StakingManagerAction: React.FC<StakingActionProps> = ({ change, children }) => {
+  const { liquity } = useLiquity();
 
-type Action = [send: TransactionFunction, requirements?: [boolean, string][]];
-
-export const StakingManagerAction: React.FC<StakingActionProps> = ({ change }) => {
-  const { changePending } = useStakingView();
-  const lqtyBalance = useLiquitySelector(selectLQTYBalance);
-  const {
-    liquity: { send: liquity }
-  } = useLiquity();
-
-  const { stakeLQTY, unstakeLQTY } = change ?? {};
-
-  const action: Action | undefined = stakeLQTY
-    ? [
-        liquity.stakeLQTY.bind(liquity, stakeLQTY),
-        [[lqtyBalance.gte(stakeLQTY), `You don't have enough ${GT}`]]
-      ]
-    : unstakeLQTY
-    ? [liquity.unstakeLQTY.bind(liquity, unstakeLQTY)]
-    : undefined;
-
-  if (!action || changePending) {
-    return <Button disabled>Confirm</Button>;
-  }
-
-  const [send, requires] = action;
-
-  return (
-    <Transaction
-      id="stake"
-      showFailure="asTooltip"
-      tooltipPlacement="bottom"
-      {...{ send, requires }}
-    >
-      <Button>Confirm</Button>
-    </Transaction>
+  const [sendTransaction] = useTransactionFunction(
+    "stake",
+    change.stakeLQTY
+      ? liquity.send.stakeLQTY.bind(liquity.send, change.stakeLQTY)
+      : liquity.send.unstakeLQTY.bind(liquity.send, change.unstakeLQTY)
   );
+
+  return <Button onClick={sendTransaction}>{children}</Button>;
 };

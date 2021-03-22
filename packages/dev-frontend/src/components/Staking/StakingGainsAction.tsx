@@ -4,35 +4,22 @@ import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../../hooks/LiquityContext";
-
-import { Transaction } from "../Transaction";
-
-import { useStakingView } from "./context/StakingViewContext";
+import { useTransactionFunction } from "../Transaction";
 
 const selectLQTYStake = ({ lqtyStake }: LiquityStoreState) => lqtyStake;
 
 export const StakingGainsAction: React.FC = () => {
-  const { changePending } = useStakingView();
-  const lqtyStake = useLiquitySelector(selectLQTYStake);
-  const {
-    liquity: { send: liquity }
-  } = useLiquity();
+  const { liquity } = useLiquity();
+  const { collateralGain, lusdGain } = useLiquitySelector(selectLQTYStake);
 
-  const collateralGain = lqtyStake.collateralGain.nonZero;
-  const lusdGain = lqtyStake.lusdGain.nonZero;
-
-  if ((!collateralGain && !lusdGain) || changePending) {
-    return <Button disabled>Claim gains</Button>;
-  }
+  const [sendTransaction] = useTransactionFunction(
+    "stake",
+    liquity.send.withdrawGainsFromStaking.bind(liquity.send)
+  );
 
   return (
-    <Transaction
-      id="stake"
-      showFailure="asTooltip"
-      tooltipPlacement="bottom"
-      send={liquity.withdrawGainsFromStaking.bind(liquity)}
-    >
-      <Button>Claim gains</Button>
-    </Transaction>
+    <Button onClick={sendTransaction} disabled={collateralGain.isZero && lusdGain.isZero}>
+      Claim gains
+    </Button>
   );
 };

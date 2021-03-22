@@ -1,7 +1,9 @@
+import React, { useCallback, useEffect } from "react";
+import { Card, Heading, Box, Flex, Button } from "theme-ui";
+
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
-import React, { useCallback } from "react";
-import { Card, Heading, Box, Flex, Text, Button } from "theme-ui";
+
 import { COIN, GT } from "../../strings";
 import { Icon } from "../Icon";
 import { LoadingOverlay } from "../LoadingOverlay";
@@ -13,7 +15,7 @@ import { useStabilityView } from "./context/StabilityViewContext";
 
 const selector = ({ stabilityDeposit, trove }: LiquityStoreState) => ({ stabilityDeposit, trove });
 
-export const ActiveDeposit: React.FC = props => {
+export const ActiveDeposit: React.FC = () => {
   const { dispatchEvent } = useStabilityView();
   const { stabilityDeposit, trove } = useLiquitySelector(selector);
 
@@ -23,16 +25,19 @@ export const ActiveDeposit: React.FC = props => {
 
   const hasReward = !stabilityDeposit.lqtyReward.isZero;
   const hasGain = !stabilityDeposit.collateralGain.isZero;
-  const hasRewardAndGain = hasReward && hasGain;
-
   const hasTrove = !trove.isEmpty;
 
   const transactionId = "stability-deposit";
   const transactionState = useMyTransactionState(transactionId);
   const isWaitingForTransaction =
-    (transactionState.type === "waitingForApproval" ||
-      transactionState.type === "waitingForConfirmation") &&
-    transactionState.id === transactionId;
+    transactionState.type === "waitingForApproval" ||
+    transactionState.type === "waitingForConfirmation";
+
+  useEffect(() => {
+    if (transactionState.type === "confirmedOneShot") {
+      dispatchEvent("REWARDS_CLAIMED");
+    }
+  }, [transactionState.type, dispatchEvent]);
 
   return (
     <Card>
@@ -47,7 +52,7 @@ export const ActiveDeposit: React.FC = props => {
           />
 
           <StaticRow
-            label="Gain"
+            label="Liquidation gain"
             inputId="deposit-gain"
             amount={stabilityDeposit.collateralGain.prettify(4)}
             color={stabilityDeposit.collateralGain.nonZero && "success"}
@@ -61,20 +66,6 @@ export const ActiveDeposit: React.FC = props => {
             color={stabilityDeposit.lqtyReward.nonZero && "success"}
             unit={GT}
           />
-
-          {isWaitingForTransaction && (
-            <>
-              <LoadingOverlay />
-
-              <Flex variant="layout.infoMessage">
-                <Icon
-                  style={{ marginRight: "2px", display: "flex", alignItems: "center" }}
-                  name="info-circle"
-                />
-                <Text>Waiting for approval...</Text>
-              </Flex>
-            </>
-          )}
         </Box>
 
         <Flex variant="layout.actions">
@@ -82,20 +73,18 @@ export const ActiveDeposit: React.FC = props => {
             <Icon name="pen" size="sm" />
             &nbsp;Adjust
           </Button>
-          {hasRewardAndGain && <ClaimRewards>Claim rewards</ClaimRewards>}
-          {hasGain && !hasReward && <ClaimRewards>Claim ETH</ClaimRewards>}
+
+          <ClaimRewards disabled={!hasGain && !hasReward}>Claim ETH and LQTY</ClaimRewards>
         </Flex>
-        {hasTrove && hasRewardAndGain && (
-          <Flex>
-            <ClaimAndMove>Claim LQTY and move ETH to Trove</ClaimAndMove>
-          </Flex>
-        )}
-        {hasTrove && hasGain && !hasReward && (
-          <Flex>
-            <ClaimAndMove>Move ETH to Trove</ClaimAndMove>
-          </Flex>
+
+        {hasTrove && (
+          <ClaimAndMove disabled={!hasGain && !hasReward}>
+            Claim LQTY and move ETH to Trove
+          </ClaimAndMove>
         )}
       </Box>
+
+      {isWaitingForTransaction && <LoadingOverlay />}
     </Card>
   );
 };

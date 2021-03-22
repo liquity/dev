@@ -8,7 +8,6 @@ import {
   Decimal,
   Trove,
   LiquityStoreState,
-  TroveChange,
   LUSD_LIQUIDATION_RESERVE
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -20,41 +19,34 @@ import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { CollateralRatio } from "./CollateralRatio";
 
+const gasRoomETH = Decimal.from(0.1);
+
 type TroveEditorProps = {
   original: Trove;
   edited: Trove;
+  fee: Decimal | undefined;
   borrowingRate: Decimal;
-  change?: TroveChange<Decimal>;
   changePending: boolean;
   dispatch: (
     action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
   ) => void;
 };
 
-const selectPrice = ({ price }: LiquityStoreState) => price;
-
-const feeFrom = (
-  change: TroveChange<Decimal> | undefined,
-  borrowingRate: Decimal
-): Decimal | undefined =>
-  change && change.type !== "invalidCreation"
-    ? change.params.borrowLUSD?.mul(borrowingRate)
-    : undefined;
+const select = ({ price, accountBalance }: LiquityStoreState) => ({ price, accountBalance });
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
   children,
   original,
   edited,
+  fee,
   borrowingRate,
-  change,
   changePending,
   dispatch
 }) => {
-  const price = useLiquitySelector(selectPrice);
+  const { price, accountBalance } = useLiquitySelector(select);
 
   const editingState = useState<string>();
 
-  const fee = feeFrom(change, borrowingRate);
   const feePct = new Percent(borrowingRate);
 
   const pendingCollateral = Difference.between(edited.collateral, original.collateral.nonZero)
@@ -65,11 +57,15 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   const collateralRatio = !edited.isEmpty ? edited.collateralRatio(price) : undefined;
   const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
 
+  const maxEth = accountBalance.gt(gasRoomETH) ? accountBalance.sub(gasRoomETH) : Decimal.ZERO;
+  const maxCollateral = original.collateral.add(maxEth);
+  const collateralMaxedOut = edited.collateral.eq(maxCollateral);
+
   return (
     <Card>
       <Heading>
         Trove
-        {change && !changePending && (
+        {!edited.equals(original) && !changePending && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
@@ -85,6 +81,8 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           label="Collateral"
           inputId="trove-collateral"
           amount={edited.collateral.prettify(4)}
+          maxAmount={maxCollateral.toString()}
+          maxedOut={collateralMaxedOut}
           pendingAmount={pendingCollateral?.prettify()}
           pendingColor={pendingCollateral?.positive ? "success" : "danger"}
           unit="ETH"

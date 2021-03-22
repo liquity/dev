@@ -80,7 +80,8 @@ export const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
   color,
   pendingAmount,
   pendingColor,
-  onClick
+  onClick,
+  children
 }) => {
   return (
     <Flex
@@ -118,7 +119,7 @@ export const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
         )}
       </Flex>
 
-      {onClick && <Button sx={{ fontSize: 1, p: 1, px: 3 }}>max</Button>}
+      {children}
     </Flex>
   );
 };
@@ -188,6 +189,8 @@ type EditableRowProps = DisabledEditableRowProps & {
   editingState: [string | undefined, (editing: string | undefined) => void];
   editedAmount: string;
   setEditedAmount: (editedAmount: string) => void;
+  maxAmount?: string;
+  maxedOut?: boolean;
 };
 
 export const EditableRow: React.FC<EditableRowProps> = ({
@@ -200,10 +203,12 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   pendingColor,
   editingState,
   editedAmount,
-  setEditedAmount
+  setEditedAmount,
+  maxAmount,
+  maxedOut
 }) => {
   const [editing, setEditing] = editingState;
-  const [invalid, setInvalid] = useState<boolean>(false);
+  const [invalid, setInvalid] = useState(false);
 
   return editing === inputId ? (
     <Row {...{ label, labelFor: inputId, unit }}>
@@ -244,7 +249,20 @@ export const EditableRow: React.FC<EditableRowProps> = ({
         labelledBy={`${inputId}-label`}
         onClick={() => setEditing(inputId)}
         {...{ inputId, amount, unit, color, pendingAmount, pendingColor, invalid }}
-      />
+      >
+        {maxAmount && (
+          <Button
+            sx={{ fontSize: 1, p: 1, px: 3 }}
+            onClick={event => {
+              setEditedAmount(maxAmount);
+              event.stopPropagation();
+            }}
+            disabled={maxedOut}
+          >
+            max
+          </Button>
+        )}
+      </StaticAmounts>
     </Row>
   );
 };

@@ -1,58 +1,40 @@
 import React, { useEffect } from "react";
 import { Button } from "theme-ui";
-import { Decimal, StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal, LiquityStoreState, StabilityDepositChange } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../../hooks/LiquityContext";
-import { COIN } from "../../strings";
-import { Transaction, useMyTransactionState } from "../Transaction";
+import { useTransactionFunction, useMyTransactionState } from "../Transaction";
 import { useStabilityView } from "./context/StabilityViewContext";
 
 type StabilityDepositActionProps = {
-  originalDeposit: StabilityDeposit;
-  editedLUSD: Decimal;
-  changePending: boolean;
+  change: StabilityDepositChange<Decimal>;
   dispatch: (action: { type: "startChange" | "finishChange" }) => void;
 };
 
-const select = ({
-  trove,
-  lusdBalance,
-  frontend,
-  ownFrontend,
-  haveUndercollateralizedTroves
-}: LiquityStoreState) => ({
-  trove,
-  lusdBalance,
-  frontendRegistered: frontend.status === "registered",
-  noOwnFrontend: ownFrontend.status === "unregistered",
-  haveUndercollateralizedTroves
-});
+const selectFrontendRegistered = ({ frontend }: LiquityStoreState) =>
+  frontend.status === "registered";
 
 export const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
-  originalDeposit,
-  editedLUSD,
+  children,
+  change,
   dispatch
 }) => {
-  const {
-    lusdBalance,
-    frontendRegistered,
-    noOwnFrontend,
-    haveUndercollateralizedTroves
-  } = useLiquitySelector(select);
-
-  const {
-    config,
-    liquity: { send: liquity }
-  } = useLiquity();
-
   const { dispatchEvent } = useStabilityView();
+  const { config, liquity } = useLiquity();
+  const frontendRegistered = useLiquitySelector(selectFrontendRegistered);
+
   const frontendTag = frontendRegistered ? config.frontendTag : undefined;
 
   const myTransactionId = "stability-deposit";
   const myTransactionState = useMyTransactionState(myTransactionId);
 
-  const { depositLUSD, withdrawLUSD } = originalDeposit.whatChanged(editedLUSD) ?? {};
+  const [sendTransaction] = useTransactionFunction(
+    myTransactionId,
+    change.depositLUSD
+      ? liquity.send.depositLUSDInStabilityPool.bind(liquity.send, change.depositLUSD, frontendTag)
+      : liquity.send.withdrawLUSDFromStabilityPool.bind(liquity.send, change.withdrawLUSD)
+  );
 
   useEffect(() => {
     if (myTransactionState.type === "waitingForApproval") {
@@ -64,49 +46,5 @@ export const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
     }
   }, [myTransactionState.type, dispatch, dispatchEvent]);
 
-  if (!depositLUSD && !withdrawLUSD) {
-    return <Button disabled>Confirm</Button>;
-  }
-
-  if (depositLUSD) {
-    return (
-      <>
-        <Transaction
-          id={myTransactionId}
-          send={liquity.depositLUSDInStabilityPool.bind(liquity, depositLUSD, frontendTag)}
-          requires={[
-            [noOwnFrontend, "Address registered as frontend"],
-            [lusdBalance.gte(depositLUSD), `You don't have enough ${COIN}`]
-          ]}
-          showFailure="asTooltip"
-          tooltipPlacement="bottom"
-        >
-          <Button>Confirm</Button>
-        </Transaction>
-      </>
-    );
-  }
-
-  if (withdrawLUSD) {
-    return (
-      <>
-        <Transaction
-          id={myTransactionId}
-          send={liquity.withdrawLUSDFromStabilityPool.bind(liquity, withdrawLUSD)}
-          requires={[
-            [
-              !haveUndercollateralizedTroves,
-              "You can't withdraw when there are undercollateralized Troves"
-            ]
-          ]}
-          showFailure="asTooltip"
-          tooltipPlacement="bottom"
-        >
-          <Button>Confirm</Button>
-        </Transaction>
-      </>
-    );
-  }
-
-  return null;
+  return <Button onClick={sendTransaction}>{children}</Button>;
 };

@@ -1,15 +1,18 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Decimalish, Difference, LQTYStake } from "@liquity/lib-base";
+import { Decimal, Decimalish, Difference, LiquityStoreState, LQTYStake } from "@liquity/lib-base";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../../strings";
 
 import { Icon } from "../Icon";
-import { EditableRow, Row, StaticAmounts } from "../Trove/Editor";
+import { EditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 
 import { useStakingView } from "./context/StakingViewContext";
+
+const selectLQTYBalance = ({ lqtyBalance }: LiquityStoreState) => lqtyBalance;
 
 type StakingEditorProps = {
   title: string;
@@ -25,11 +28,15 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
   editedLQTY,
   dispatch
 }) => {
+  const lqtyBalance = useLiquitySelector(selectLQTYBalance);
   const { changePending } = useStakingView();
   const editingState = useState<string>();
 
   const pendingStakeChange = Difference.between(editedLQTY, originalStake.stakedLQTY.nonZero);
   const edited = !editedLQTY.eq(originalStake.stakedLQTY);
+
+  const maxAmount = originalStake.stakedLQTY.add(lqtyBalance);
+  const maxedOut = editedLQTY.eq(maxAmount);
 
   return (
     <Card>
@@ -51,6 +58,8 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
           label="Stake"
           inputId="stake-lqty"
           amount={editedLQTY.prettify()}
+          maxAmount={maxAmount.toString()}
+          maxedOut={maxedOut}
           pendingAmount={pendingStakeChange.nonZero?.prettify()}
           pendingColor={pendingStakeChange.positive ? "success" : "danger"}
           unit={GT}
@@ -60,23 +69,23 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
         />
 
         {!originalStake.isEmpty && (
-          <Row label="Gains" sx={{ flexDirection: "column", mt: [-2, -3], pb: [2, 3] }}>
-            <StaticAmounts
+          <>
+            <StaticRow
+              label="Redemption gain"
               inputId="stake-gain-eth"
               amount={originalStake.collateralGain.prettify(4)}
               color={originalStake.collateralGain.nonZero && "success"}
               unit="ETH"
-              sx={{ mb: 0 }}
             />
 
-            <StaticAmounts
+            <StaticRow
+              label="Issuance gain"
               inputId="stake-gain-lusd"
               amount={originalStake.lusdGain.prettify()}
               color={originalStake.lusdGain.nonZero && "success"}
               unit={COIN}
-              sx={{ pt: 0 }}
             />
-          </Row>
+          </>
         )}
 
         {children}
