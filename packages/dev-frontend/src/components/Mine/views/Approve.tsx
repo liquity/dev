@@ -1,19 +1,16 @@
 import React, { useEffect } from "react";
 import { Button } from "theme-ui";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal } from "@liquity/lib-base";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
 import { useMineView } from "../context/MineViewContext";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { useValidationState } from "../context/useValidationState";
 
 type ApproveProps = {
   amount: Decimal;
 };
 
 const transactionId = "mine-approve";
-const selector = ({ uniTokenAllowance }: LiquityStoreState) => ({
-  uniTokenAllowance
-});
 
 export const Approve: React.FC<ApproveProps> = ({ amount }) => {
   const { dispatchEvent } = useMineView();
@@ -21,11 +18,7 @@ export const Approve: React.FC<ApproveProps> = ({ amount }) => {
     liquity: { send: liquity }
   } = useLiquity();
 
-  const { uniTokenAllowance } = useLiquitySelector(selector);
-
-  const hasApprovedEnoughUniTokens = !uniTokenAllowance.isZero && uniTokenAllowance.gte(amount);
-
-  const shouldHide = amount.isZero || hasApprovedEnoughUniTokens;
+  const { hasApproved } = useValidationState(amount);
   const transactionState = useMyTransactionState(transactionId);
 
   useEffect(() => {
@@ -34,7 +27,7 @@ export const Approve: React.FC<ApproveProps> = ({ amount }) => {
     }
   }, [transactionState.type, dispatchEvent]);
 
-  if (shouldHide) {
+  if (hasApproved) {
     return null;
   }
 

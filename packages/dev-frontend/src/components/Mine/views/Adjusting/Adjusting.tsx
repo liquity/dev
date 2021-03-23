@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Heading, Box, Flex, Card, Button } from "theme-ui";
 import { Decimal, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -14,31 +14,34 @@ import { Description } from "../Description";
 import { Approve } from "../Approve";
 import { Validation } from "../Validation";
 
-const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
+const selector = ({
   liquidityMiningStake,
-  liquidityMiningLQTYReward
+  liquidityMiningLQTYReward,
+  uniTokenBalance
+}: LiquityStoreState) => ({
+  liquidityMiningStake,
+  liquidityMiningLQTYReward,
+  uniTokenBalance
 });
 
-const transactionId = "mine-adjust";
+const transactionId = "mine-stake";
 
 export const Adjusting: React.FC = () => {
   const { dispatchEvent } = useMineView();
-  const { liquidityMiningStake, liquidityMiningLQTYReward } = useLiquitySelector(selector);
+  const { liquidityMiningStake, liquidityMiningLQTYReward, uniTokenBalance } = useLiquitySelector(
+    selector
+  );
   const [amount, setAmount] = useState<Decimal>(liquidityMiningStake);
   const editingState = useState<string>();
 
   const transactionState = useMyTransactionState(transactionId);
   const isTransactionPending =
-    (transactionState.type === "waitingForApproval" ||
-      transactionState.type === "waitingForConfirmation") &&
-    transactionState.id === transactionId;
-
-  const isWithdrawing = amount.lt(liquidityMiningStake);
-  const amountChanged = isWithdrawing
-    ? liquidityMiningStake.sub(amount)
-    : Decimal.from(amount).sub(liquidityMiningStake);
+    transactionState.type === "waitingForApproval" ||
+    transactionState.type === "waitingForConfirmation";
 
   const isDirty = !amount.eq(liquidityMiningStake);
+  const maximumAmount = liquidityMiningStake.add(uniTokenBalance);
+  const hasSetMaximumAmount = amount.eq(maximumAmount);
 
   const handleCancelPressed = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
@@ -68,6 +71,8 @@ export const Adjusting: React.FC = () => {
           editingState={editingState}
           editedAmount={amount.toString(4)}
           setEditedAmount={amount => setAmount(Decimal.from(amount))}
+          maxAmount={maximumAmount.toString()}
+          maxedOut={hasSetMaximumAmount}
         ></EditableRow>
 
         <StaticRow
@@ -85,7 +90,7 @@ export const Adjusting: React.FC = () => {
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
-          <Approve amount={amountChanged} />
+          <Approve amount={amount} />
           <Confirm amount={amount} />
         </Flex>
       </Box>

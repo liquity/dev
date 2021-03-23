@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Card, Heading, Box, Flex, Text, Button } from "theme-ui";
+import { Card, Heading, Box, Flex, Button } from "theme-ui";
 import { LP, GT } from "../../../../strings";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -9,7 +9,6 @@ import { useMyTransactionState } from "../../../Transaction";
 import { DisabledEditableRow, StaticRow } from "../../../Trove/Editor";
 import { useMineView } from "../../context/MineViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
-import { ActionDescription } from "../../../ActionDescription";
 import { ClaimReward } from "./ClaimReward";
 import { UnstakeAndClaim } from "../UnstakeAndClaim";
 
@@ -28,24 +27,25 @@ export const Active: React.FC = () => {
   }, [dispatchEvent]);
 
   const transactionState = useMyTransactionState(transactionId);
-  const isWaitingForTransaction =
-    (transactionState.type === "waitingForApproval" ||
-      transactionState.type === "waitingForConfirmation") &&
-    transactionId.test(transactionState.id);
+  const isTransactionPending =
+    transactionState.type === "waitingForApproval" ||
+    transactionState.type === "waitingForConfirmation";
 
   return (
     <Card>
       <Heading>
         Liquidity mine
-        <Flex sx={{ justifyContent: "flex-end" }}>
-          <RemainingLQTY />
-        </Flex>
+        {!isTransactionPending && (
+          <Flex sx={{ justifyContent: "flex-end" }}>
+            <RemainingLQTY />
+          </Flex>
+        )}
       </Heading>
       <Box sx={{ p: [2, 3] }}>
         <Box>
           <DisabledEditableRow
-            label="Deposit"
-            inputId="mine-deposit"
+            label="Stake"
+            inputId="mine-stake"
             amount={liquidityMiningStake.prettify(4)}
             unit={LP}
           />
@@ -56,15 +56,6 @@ export const Active: React.FC = () => {
             color={liquidityMiningLQTYReward.nonZero && "success"}
             unit={GT}
           />
-          {isWaitingForTransaction && (
-            <>
-              <LoadingOverlay />
-
-              <ActionDescription>
-                <Text>Waiting for approval...</Text>
-              </ActionDescription>
-            </>
-          )}
         </Box>
 
         <Flex variant="layout.actions">
@@ -78,6 +69,7 @@ export const Active: React.FC = () => {
           <UnstakeAndClaim />
         </Flex>
       </Box>
+      {isTransactionPending && <LoadingOverlay />}
     </Card>
   );
 };

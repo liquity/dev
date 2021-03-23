@@ -1,6 +1,5 @@
 import React from "react";
-import { useLiquitySelector } from "@liquity/lib-react";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal } from "@liquity/lib-base";
 import { LP } from "../../../strings";
 import { ErrorDescription } from "../../ErrorDescription";
 import { useValidationState } from "../context/useValidationState";
@@ -9,14 +8,10 @@ type ValidationProps = {
   amount: Decimal;
 };
 
-const selector = ({ liquidityMiningStake }: LiquityStoreState) => ({ liquidityMiningStake });
-
 export const Validation: React.FC<ValidationProps> = ({ amount }) => {
-  const { liquidityMiningStake } = useLiquitySelector(selector);
-  const { hasApproved, hasEnoughUniToken } = useValidationState(amount);
-  const isWithdrawing = amount.lt(liquidityMiningStake);
+  const { isValid, hasApproved, hasEnoughUniToken } = useValidationState(amount);
 
-  if (isWithdrawing) {
+  if (isValid) {
     return null;
   }
 
