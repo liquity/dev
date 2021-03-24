@@ -18,6 +18,7 @@ import { Icon } from "../Icon";
 import { EditableRow, StaticRow } from "./Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { CollateralRatio } from "./CollateralRatio";
+import { InfoIcon } from "../InfoIcon";
 
 const gasRoomETH = Decimal.from(0.1);
 
@@ -107,6 +108,16 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
             inputId="trove-liquidation-reserve"
             amount={`${LUSD_LIQUIDATION_RESERVE}`}
             unit={COIN}
+            infoIcon={
+              <InfoIcon
+                tooltip={
+                  <Card variant="tooltip">
+                    This fee covers the cost a liquidator would pay to liquidate your Trove. You are
+                    refunded this fee when you repay your debt.
+                  </Card>
+                }
+              />
+            }
           />
         )}
 
