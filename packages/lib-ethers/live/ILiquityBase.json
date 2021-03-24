@@ -1,19 +1,19 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "IDSGuardFactory",
-  "sourceName": "contracts/Dependencies/DappSys/IDSGuard.sol",
+  "contractName": "ILiquityBase",
+  "sourceName": "contracts/Interfaces/ILiquityBase.sol",
   "abi": [
     {
       "inputs": [],
-      "name": "newGuard",
+      "name": "priceFeed",
       "outputs": [
         {
-          "internalType": "contract IDSGuard",
-          "name": "guard",
+          "internalType": "contract IPriceFeed",
+          "name": "",
           "type": "address"
         }
       ],
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
       "type": "function"
     }
   ],

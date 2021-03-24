@@ -968,6 +968,58 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "lqtyStaking",
+      "outputs": [
+        {
+          "internalType": "contract ILQTYStaking",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lqtyToken",
+      "outputs": [
+        {
+          "internalType": "contract ILQTYToken",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lusdToken",
+      "outputs": [
+        {
+          "internalType": "contract ILUSDToken",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "priceFeed",
+      "outputs": [
+        {
+          "internalType": "contract IPriceFeed",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -1102,6 +1154,19 @@
       "name": "setTroveStatus",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "stabilityPool",
+      "outputs": [
+        {
+          "internalType": "contract IStabilityPool",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
