@@ -546,14 +546,14 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * 4) Store these errors for use in the next correction when this function is called.
         * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
-        uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
         uint ETHNumerator = _collToAdd.mul(DECIMAL_PRECISION).add(lastETHError_Offset);
 
-        
-        if (_debtToOffset >= _totalLUSDDeposits) {
+        assert(_debtToOffset <= _totalLUSDDeposits);
+        if (_debtToOffset == _totalLUSDDeposits) {
             LUSDLossPerUnitStaked = DECIMAL_PRECISION;  // When the Pool depletes to 0, so does each deposit 
             lastLUSDLossError_Offset = 0;
         } else {
+            uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
             /*
             * Add 1 to make error in quotient positive. We want "slightly too much" LUSD loss,
             * which ensures the error in any given compoundedLUSDDeposit favors the Stability Pool.
