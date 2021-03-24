@@ -196,7 +196,6 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
       }
     });
   }
-
   getTotalRedistributed() {
     return totalRedistributed.get(this.client, undefined);
   }
@@ -341,6 +340,30 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getFrontendStatus(address?: string): Promise<FrontendStatus> {
+    throw new Error("Method not implemented.");
+  }
+
+  getUniTokenBalance(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getUniTokenAllowance(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getRemainingLiquidityMiningLQTYReward(): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getLiquidityMiningStake(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getLiquidityMiningLQTYReward(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getTotalStakedUniTokens(): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 }

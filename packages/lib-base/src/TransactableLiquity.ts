@@ -459,6 +459,58 @@ export interface TransactableLiquity {
   withdrawGainsFromStaking(): Promise<void>;
 
   /**
+   * Allow the liquidity mining contract to use Uniswap ETH/LUSD LP tokens for
+   * {@link @liquity/lib-base#TransactableLiquity.stakeUniTokens | staking}.
+   *
+   * @param allowance - Maximum amount of LP tokens that will be transferrable to liquidity mining
+   *                    (`2^256 - 1` by default).
+   *
+   * @remarks
+   * Must be performed before calling
+   * {@link @liquity/lib-base#TransactableLiquity.stakeUniTokens | stakeUniTokens()}.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  approveUniTokens(allowance?: Decimalish): Promise<void>;
+
+  /**
+   * Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn LQTY.
+   *
+   * @param amount - Amount of LP tokens to add to new or existing stake.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  stakeUniTokens(amount: Decimalish): Promise<void>;
+
+  /**
+   * Withdraw Uniswap ETH/LUSD LP tokens from liquidity mining.
+   *
+   * @param amount - Amount of LP tokens to withdraw.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  unstakeUniTokens(amount: Decimalish): Promise<void>;
+
+  /**
+   * Withdraw LQTY that has been earned by mining liquidity.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  withdrawLQTYRewardFromLiquidityMining(): Promise<void>;
+
+  /**
+   * Withdraw all staked LP tokens from liquidity mining and claim reward.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  exitLiquidityMining(): Promise<void>;
+
+  /**
    * Register current wallet address as a Liquity frontend.
    *
    * @param kickbackRate - The portion of LQTY rewards to pass onto users of the frontend

@@ -18,8 +18,11 @@
     "gasPool": "0x788F554479B6d03d83d32E6C22f8ADc834411517",
     "lusdToken": "0x73A102c1CA2502d8C6B4E69d3232eDffBeFaf0AC",
     "lqtyToken": "0xf587D04f828a4ca29B0b2fDAad012F7D815e634a",
-    "multiTroveGetter": "0xDBe667a305377f7DD3E77B6e8D67d501E9972415"
+    "multiTroveGetter": "0xDBe667a305377f7DD3E77B6e8D67d501E9972415",
+    "unipool": "",
+    "uniToken": ""
   },
   "_priceFeedIsTestnet": true,
+  "_uniTokenIsMock": true,
   "_isDev": false
 }

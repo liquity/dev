@@ -82,7 +82,18 @@ const deployContracts = async (
     }),
     gasPool: await deployContract(deployer, getContractFactory, "GasPool", {
       ...overrides
-    })
+    }),
+    unipool: await deployContract(deployer, getContractFactory, "Unipool", { ...overrides }),
+    uniToken: await deployContract(
+      deployer,
+      getContractFactory,
+      "ERC20Mock",
+      "Mock Uniswap V2",
+      "UNI-V2",
+      Wallet.createRandom().address, // initialAccount
+      0, // initialBalance
+      { ...overrides }
+    )
   };
 
   return {
@@ -104,9 +115,8 @@ const deployContracts = async (
       addresses.communityIssuance,
       addresses.lqtyStaking,
       addresses.lockupContractFactory,
-      // TODO: parameterize these
-      Wallet.createRandom().address, // _bountyAddress
-      Wallet.createRandom().address, // _lpRewardsAddress
+      Wallet.createRandom().address, // _bountyAddress (TODO: parameterize this)
+      addresses.unipool, // _lpRewardsAddress
       { ...overrides }
     ),
 
@@ -145,7 +155,9 @@ const connectContracts = async (
     priceFeed,
     sortedTroves,
     stabilityPool,
-    gasPool
+    gasPool,
+    unipool,
+    uniToken
   }: _LiquityContracts,
   deployer: Signer,
   overrides?: Overrides
@@ -255,6 +267,12 @@ const connectContracts = async (
       communityIssuance.setAddresses(lqtyToken.address, stabilityPool.address, {
         ...overrides,
         nonce
+      }),
+
+    nonce =>
+      unipool.setParams(lqtyToken.address, uniToken.address, 2 * 30 * 24 * 60 * 60, {
+        ...overrides,
+        nonce
       })
   ];
 
@@ -283,6 +301,7 @@ export const deployAndSetupContracts = async (
     deploymentDate: new Date().getTime(),
     addresses: await deployContracts(deployer, getContractFactory, _priceFeedIsTestnet, overrides),
     _priceFeedIsTestnet,
+    _uniTokenIsMock: true,
     _isDev
   };
 

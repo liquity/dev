@@ -64,7 +64,7 @@ export class Decimal {
 
   private static _fromString(representation: string): Decimal {
     if (!representation || !representation.match(stringRepresentationFormat)) {
-      throw new Error("bad decimal format");
+      throw new Error(`bad decimal format: "${representation}"`);
     }
 
     if (representation.includes("e")) {

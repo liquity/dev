@@ -237,6 +237,37 @@ export interface DefaultPool
   extractEvents(logs: Log[], name: "TroveManagerAddressChanged"): _TypedLogDescription<{ _newTroveManagerAddress: string }>[];
 }
 
+interface ERC20MockCalls {
+  allowance(owner: string, spender: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  decimals(_overrides?: CallOverrides): Promise<number>;
+  name(_overrides?: CallOverrides): Promise<string>;
+  symbol(_overrides?: CallOverrides): Promise<string>;
+  totalSupply(_overrides?: CallOverrides): Promise<BigNumber>;
+}
+
+interface ERC20MockTransactions {
+  approve(spender: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
+  approveInternal(owner: string, spender: string, value: BigNumberish, _overrides?: Overrides): Promise<void>;
+  burn(account: string, amount: BigNumberish, _overrides?: Overrides): Promise<void>;
+  decreaseAllowance(spender: string, subtractedValue: BigNumberish, _overrides?: Overrides): Promise<boolean>;
+  increaseAllowance(spender: string, addedValue: BigNumberish, _overrides?: Overrides): Promise<boolean>;
+  mint(account: string, amount: BigNumberish, _overrides?: Overrides): Promise<void>;
+  transfer(recipient: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
+  transferFrom(sender: string, recipient: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
+  transferInternal(from: string, to: string, value: BigNumberish, _overrides?: Overrides): Promise<void>;
+}
+
+export interface ERC20Mock
+  extends _TypedLiquityContract<ERC20MockCalls, ERC20MockTransactions> {
+  readonly filters: {
+    Approval(owner?: string | null, spender?: string | null, value?: null): EventFilter;
+    Transfer(from?: string | null, to?: string | null, value?: null): EventFilter;
+  };
+  extractEvents(logs: Log[], name: "Approval"): _TypedLogDescription<{ owner: string; spender: string; value: BigNumber }>[];
+  extractEvents(logs: Log[], name: "Transfer"): _TypedLogDescription<{ from: string; to: string; value: BigNumber }>[];
+}
+
 interface GasPoolCalls {
 }
 
@@ -287,6 +318,28 @@ export interface HintHelpers
   extractEvents(logs: Log[], name: "OwnershipTransferred"): _TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
   extractEvents(logs: Log[], name: "SortedTrovesAddressChanged"): _TypedLogDescription<{ _sortedTrovesAddress: string }>[];
   extractEvents(logs: Log[], name: "TroveManagerAddressChanged"): _TypedLogDescription<{ _troveManagerAddress: string }>[];
+}
+
+interface IERC20Calls {
+  allowance(owner: string, spender: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  totalSupply(_overrides?: CallOverrides): Promise<BigNumber>;
+}
+
+interface IERC20Transactions {
+  approve(spender: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
+  transfer(recipient: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
+  transferFrom(sender: string, recipient: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
+}
+
+export interface IERC20
+  extends _TypedLiquityContract<IERC20Calls, IERC20Transactions> {
+  readonly filters: {
+    Approval(owner?: string | null, spender?: string | null, value?: null): EventFilter;
+    Transfer(from?: string | null, to?: string | null, value?: null): EventFilter;
+  };
+  extractEvents(logs: Log[], name: "Approval"): _TypedLogDescription<{ owner: string; spender: string; value: BigNumber }>[];
+  extractEvents(logs: Log[], name: "Transfer"): _TypedLogDescription<{ from: string; to: string; value: BigNumber }>[];
 }
 
 interface LockupContractFactoryCalls {
@@ -819,4 +872,51 @@ export interface TroveManager
   extractEvents(logs: Log[], name: "TroveLiquidated"): _TypedLogDescription<{ _borrower: string; _debt: BigNumber; _coll: BigNumber; _operation: number }>[];
   extractEvents(logs: Log[], name: "TroveSnapshotsUpdated"): _TypedLogDescription<{ _L_ETH: BigNumber; _L_LUSDDebt: BigNumber }>[];
   extractEvents(logs: Log[], name: "TroveUpdated"): _TypedLogDescription<{ _borrower: string; _debt: BigNumber; _coll: BigNumber; _stake: BigNumber; _operation: number }>[];
+}
+
+interface UnipoolCalls {
+  balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  duration(_overrides?: CallOverrides): Promise<BigNumber>;
+  earned(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  isOwner(_overrides?: CallOverrides): Promise<boolean>;
+  lastTimeRewardApplicable(_overrides?: CallOverrides): Promise<BigNumber>;
+  lastUpdateTime(_overrides?: CallOverrides): Promise<BigNumber>;
+  lqtyToken(_overrides?: CallOverrides): Promise<string>;
+  owner(_overrides?: CallOverrides): Promise<string>;
+  periodFinish(_overrides?: CallOverrides): Promise<BigNumber>;
+  rewardPerToken(_overrides?: CallOverrides): Promise<BigNumber>;
+  rewardPerTokenStored(_overrides?: CallOverrides): Promise<BigNumber>;
+  rewardRate(_overrides?: CallOverrides): Promise<BigNumber>;
+  rewards(arg0: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  totalSupply(_overrides?: CallOverrides): Promise<BigNumber>;
+  uniToken(_overrides?: CallOverrides): Promise<string>;
+  userRewardPerTokenPaid(arg0: string, _overrides?: CallOverrides): Promise<BigNumber>;
+}
+
+interface UnipoolTransactions {
+  claimReward(_overrides?: Overrides): Promise<void>;
+  setParams(_lqtyTokenAddress: string, _uniTokenAddress: string, _duration: BigNumberish, _overrides?: Overrides): Promise<void>;
+  stake(amount: BigNumberish, _overrides?: Overrides): Promise<void>;
+  withdraw(amount: BigNumberish, _overrides?: Overrides): Promise<void>;
+  withdrawAndClaim(_overrides?: Overrides): Promise<void>;
+}
+
+export interface Unipool
+  extends _TypedLiquityContract<UnipoolCalls, UnipoolTransactions> {
+  readonly filters: {
+    LQTYTokenAddressChanged(_lqtyTokenAddress?: null): EventFilter;
+    OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
+    RewardAdded(reward?: null): EventFilter;
+    RewardPaid(user?: string | null, reward?: null): EventFilter;
+    Staked(user?: string | null, amount?: null): EventFilter;
+    UniTokenAddressChanged(_uniTokenAddress?: null): EventFilter;
+    Withdrawn(user?: string | null, amount?: null): EventFilter;
+  };
+  extractEvents(logs: Log[], name: "LQTYTokenAddressChanged"): _TypedLogDescription<{ _lqtyTokenAddress: string }>[];
+  extractEvents(logs: Log[], name: "OwnershipTransferred"): _TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
+  extractEvents(logs: Log[], name: "RewardAdded"): _TypedLogDescription<{ reward: BigNumber }>[];
+  extractEvents(logs: Log[], name: "RewardPaid"): _TypedLogDescription<{ user: string; reward: BigNumber }>[];
+  extractEvents(logs: Log[], name: "Staked"): _TypedLogDescription<{ user: string; amount: BigNumber }>[];
+  extractEvents(logs: Log[], name: "UniTokenAddressChanged"): _TypedLogDescription<{ _uniTokenAddress: string }>[];
+  extractEvents(logs: Log[], name: "Withdrawn"): _TypedLogDescription<{ user: string; amount: BigNumber }>[];
 }
