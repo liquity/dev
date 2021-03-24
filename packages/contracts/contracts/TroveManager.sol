@@ -1390,7 +1390,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         return _calcRedemptionFee(getRedemptionRateWithDecay(), _ETHDrawn);
     }
 
-    function _calcRedemptionFee(uint _redemptionRate, uint _ETHDrawn) internal view returns (uint) {
+    function _calcRedemptionFee(uint _redemptionRate, uint _ETHDrawn) internal pure returns (uint) {
         uint redemptionFee = _redemptionRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
         require(redemptionFee < _ETHDrawn, "TroveManager: Fee would eat up all returned collateral");
         return redemptionFee;
