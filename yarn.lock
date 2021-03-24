@@ -18451,13 +18451,14 @@ solc@0.7.3:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solc@^0.6.11:
-  version "0.6.12"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.12.tgz#48ac854e0c729361b22a7483645077f58cba080e"
-  integrity sha512-Lm0Ql2G9Qc7yPP2Ba+WNmzw2jwsrd3u4PobHYlSOxaut3TtUbj9+5ZrT6f4DUpNPEoBaFUOEg9Op9C0mk7ge9g==
+solc@^0.8.3:
+  version "0.8.3"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.8.3.tgz#896fdca2f0c4ccf18ff7a99f8183a5a1a8f6345c"
+  integrity sha512-VZvSHtwe2zAsoviClIpWjvrg22bIZ0pLtzFrYD9BtPfR7mhMZYwpptnzRizNaSvMngTR+gB9Ul8IyL5xaC7+jw==
   dependencies:
     command-exists "^1.2.8"
     commander "3.0.2"
+    follow-redirects "^1.12.1"
     fs-extra "^0.30.0"
     js-sha3 "0.8.0"
     memorystream "^0.3.1"

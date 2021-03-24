@@ -24,7 +24,7 @@
     "eth-mutants": "^0.1.1",
     "ethereumjs-util": "^7.0.9",
     "ethers": "^5.0.32",
-    "solc": "^0.6.11",
+    "solc": "^0.8.3",
     "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
