@@ -24,6 +24,7 @@ Exposed through [ReadableEthersLiquity.connection](./lib-ethers.readableethersli
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [addresses](./lib-ethers.ethersliquityconnection.addresses.md) | Record&lt;string, string&gt; | A mapping of Liquity contracts' names to their addresses. |
+|  [bootstrapPeriod](./lib-ethers.ethersliquityconnection.bootstrapperiod.md) | number | Time period (in seconds) after <code>deploymentDate</code> during which redemptions are disabled. |
 |  [chainId](./lib-ethers.ethersliquityconnection.chainid.md) | number | Chain ID of the connected network. |
 |  [deploymentDate](./lib-ethers.ethersliquityconnection.deploymentdate.md) | Date | Date when the Liquity contracts were deployed. |
 |  [provider](./lib-ethers.ethersliquityconnection.provider.md) | [EthersProvider](./lib-ethers.ethersprovider.md) | Ethers <code>Provider</code> used for connecting to the network. |

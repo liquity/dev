@@ -218,6 +218,7 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
     // @internal (undocumented)
     readonly [brand]: unique symbol;
     readonly addresses: Record<string, string>;
+    readonly bootstrapPeriod: number;
     readonly chainId: number;
     readonly deploymentDate: Date;
     // @internal (undocumented)

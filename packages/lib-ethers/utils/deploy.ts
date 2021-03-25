@@ -314,6 +314,7 @@ export const deployAndSetupContracts = async (
     chainId: await deployer.getChainId(),
     version: "unknown",
     deploymentDate: new Date().getTime(),
+    bootstrapPeriod: 0,
     _priceFeedIsTestnet,
     _uniTokenIsMock: !wethAddress,
     _isDev,
@@ -333,10 +334,16 @@ export const deployAndSetupContracts = async (
   };
 
   const contracts = _connectToContracts(deployer, deployment);
+  const lqtyTokenDeploymentTime = await contracts.lqtyToken.getDeploymentStartTime();
+  const bootstrapPeriod = await contracts.troveManager.BOOTSTRAP_PERIOD();
 
   log("Connecting contracts...");
 
   await connectContracts(contracts, deployer, overrides);
 
-  return deployment;
+  return {
+    ...deployment,
+    deploymentDate: lqtyTokenDeploymentTime.toNumber(),
+    bootstrapPeriod: bootstrapPeriod.toNumber()
+  };
 };
