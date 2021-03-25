@@ -31,3 +31,10 @@
 
 # echidna
 /crytic-export
+
+# brownie
+__pycache__
+.history
+.hypothesis/
+build/
+reports/
