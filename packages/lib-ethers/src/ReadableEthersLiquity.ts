@@ -27,7 +27,6 @@ import {
   EthersLiquityStoreOption,
   _connect,
   _getBlockTimestamp,
-  _getBlockTimestampAsNumber,
   _getContracts,
   _requireAddress,
   _requireFrontendAddress
@@ -68,6 +67,7 @@ const userTroveStatusFrom = (backendStatus: BackendTroveStatus): UserTroveStatus
 
 const decimalify = (bigNumber: BigNumber) => Decimal.fromBigNumberString(bigNumber.toHexString());
 const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
+const convertToDate = (timestamp: number) => new Date(timestamp * 1000);
 
 const validSortingOptions = ["ascendingCollateralRatio", "descendingCollateralRatio"];
 
@@ -320,27 +320,33 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return uniToken.allowance(address, unipool.address, { ...overrides }).then(decimalify);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingLiquidityMiningLQTYReward} */
-  async getRemainingLiquidityMiningLQTYReward(overrides?: EthersCallOverrides): Promise<Decimal> {
+  /** @internal */
+  async _getRemainingLiquidityMiningLQTYRewardCalculator(
+    overrides?: EthersCallOverrides
+  ): Promise<(blockTimestamp: number) => Decimal> {
     const { unipool } = _getContracts(this.connection);
 
-    const [
-      totalSupply,
-      rewardRate,
-      periodFinish,
-      lastUpdateTime,
-      blockTimeStamp
-    ] = await Promise.all([
+    const [totalSupply, rewardRate, periodFinish, lastUpdateTime] = await Promise.all([
       unipool.totalSupply({ ...overrides }),
       unipool.rewardRate({ ...overrides }).then(decimalify),
       unipool.periodFinish({ ...overrides }).then(numberify),
-      unipool.lastUpdateTime({ ...overrides }).then(numberify),
-      _getBlockTimestampAsNumber(this.connection, overrides?.blockTag)
+      unipool.lastUpdateTime({ ...overrides }).then(numberify)
     ]);
 
-    return rewardRate.mul(
-      Math.max(0, periodFinish - (totalSupply.isZero() ? lastUpdateTime : blockTimeStamp))
-    );
+    return (blockTimestamp: number) =>
+      rewardRate.mul(
+        Math.max(0, periodFinish - (totalSupply.isZero() ? lastUpdateTime : blockTimestamp))
+      );
+  }
+
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingLiquidityMiningLQTYReward} */
+  async getRemainingLiquidityMiningLQTYReward(overrides?: EthersCallOverrides): Promise<Decimal> {
+    const [calculateRemainingLQTY, blockTimestamp] = await Promise.all([
+      this._getRemainingLiquidityMiningLQTYRewardCalculator(overrides),
+      _getBlockTimestamp(this.connection, overrides?.blockTag)
+    ]);
+
+    return calculateRemainingLQTY(blockTimestamp);
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLiquidityMiningStake} */
@@ -419,36 +425,37 @@ export class ReadableEthersLiquity implements ReadableLiquity {
   }
 
   /** @internal */
-  async _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees> {
+  async _getFeesFactory(
+    overrides?: EthersCallOverrides
+  ): Promise<(blockTimestamp: number, recoveryMode: boolean) => Fees> {
     const { troveManager } = _getContracts(this.connection);
 
-    const [lastFeeOperationTime, baseRateWithoutDecay, blockTimestamp] = await Promise.all([
+    const [lastFeeOperationTime, baseRateWithoutDecay] = await Promise.all([
       troveManager.lastFeeOperationTime({ ...overrides }),
-      troveManager.baseRate({ ...overrides }).then(decimalify),
-      _getBlockTimestamp(this.connection, overrides?.blockTag)
+      troveManager.baseRate({ ...overrides }).then(decimalify)
     ]);
 
-    const lastFeeOperation = new Date(1000 * lastFeeOperationTime.toNumber());
-
-    return new Fees(
-      baseRateWithoutDecay,
-      MINUTE_DECAY_FACTOR,
-      BETA,
-      lastFeeOperation,
-      blockTimestamp,
-      false
-    );
+    return (blockTimestamp, recoveryMode) =>
+      new Fees(
+        baseRateWithoutDecay,
+        MINUTE_DECAY_FACTOR,
+        BETA,
+        convertToDate(lastFeeOperationTime.toNumber()),
+        convertToDate(blockTimestamp),
+        recoveryMode
+      );
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */
   async getFees(overrides?: EthersCallOverrides): Promise<Fees> {
-    const [feesInNormalMode, total, price] = await Promise.all([
-      this._getFeesInNormalMode(overrides),
+    const [createFees, total, price, blockTimestamp] = await Promise.all([
+      this._getFeesFactory(overrides),
       this.getTotal(overrides),
-      this.getPrice(overrides)
+      this.getPrice(overrides),
+      _getBlockTimestamp(this.connection, overrides?.blockTag)
     ]);
 
-    return feesInNormalMode._setRecoveryMode(total.collateralRatioIsBelowCritical(price));
+    return createFees(blockTimestamp, total.collateralRatioIsBelowCritical(price));
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLQTYStake} */
@@ -661,12 +668,6 @@ class BlockPolledLiquityStoreBasedCache
     }
   }
 
-  _getFeesInNormalMode(overrides?: EthersCallOverrides): Fees | undefined {
-    if (this._blockHit(overrides)) {
-      return this._store.state._feesInNormalMode;
-    }
-  }
-
   getFees(overrides?: EthersCallOverrides): Fees | undefined {
     if (this._blockHit(overrides)) {
       return this._store.state.fees;
@@ -723,6 +724,14 @@ class _BlockPolledReadableEthersLiquity
   }
 
   _getDefaultPool(): Promise<Trove> {
+    throw new Error("Method not implemented.");
+  }
+
+  _getFeesFactory(): Promise<(blockTimestamp: number, recoveryMode: boolean) => Fees> {
+    throw new Error("Method not implemented.");
+  }
+
+  _getRemainingLiquidityMiningLQTYRewardCalculator(): Promise<(blockTimestamp: number) => Decimal> {
     throw new Error("Method not implemented.");
   }
 }

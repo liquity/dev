@@ -121,24 +121,16 @@ const getMulticall = (connection: EthersLiquityConnection): _Multicall | undefin
 
 const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 
-const convertToDate = (timestamp: number) => new Date(timestamp * 1000);
-
 const getTimestampFromBlock = ({ timestamp }: Block) => timestamp;
 
 /** @internal */
-export const _getBlockTimestampAsNumber = (
+export const _getBlockTimestamp = (
   connection: EthersLiquityConnection,
   blockTag: BlockTag = "latest"
 ): Promise<number> =>
   // Get the timestamp via a contract call whenever possible, to make it batchable with other calls
   getMulticall(connection)?.getCurrentBlockTimestamp({ blockTag }).then(numberify) ??
   _getProvider(connection).getBlock(blockTag).then(getTimestampFromBlock);
-
-/** @internal */
-export const _getBlockTimestamp = (
-  connection: EthersLiquityConnection,
-  blockTag: BlockTag = "latest"
-): Promise<Date> => _getBlockTimestampAsNumber(connection, blockTag).then(convertToDate);
 
 const panic = <T>(e: unknown): T => {
   throw e;

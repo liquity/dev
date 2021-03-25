@@ -323,10 +323,6 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     }
   }
 
-  _getFeesInNormalMode(): Promise<Fees> {
-    throw new Error("Method not implemented.");
-  }
-
   getFees(): Promise<Fees> {
     throw new Error("Method not implemented.");
   }

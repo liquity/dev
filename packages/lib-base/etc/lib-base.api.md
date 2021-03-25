@@ -12,8 +12,6 @@ export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiq
     // (undocumented)
     getFees(...extraParams: T): Promise<Fees>;
     // (undocumented)
-    _getFeesInNormalMode(...extraParams: T): Promise<Fees>;
-    // (undocumented)
     getFrontendStatus(address?: string, ...extraParams: T): Promise<FrontendStatus>;
     // (undocumented)
     getLiquidityMiningLQTYReward(address?: string, ...extraParams: T): Promise<Decimal>;
@@ -491,8 +489,6 @@ export interface PopulatedRedemption<P = unknown, S = unknown, R = unknown> exte
 export interface ReadableLiquity {
     getCollateralSurplusBalance(address?: string): Promise<Decimal>;
     getFees(): Promise<Fees>;
-    // @internal (undocumented)
-    _getFeesInNormalMode(): Promise<Fees>;
     getFrontendStatus(address?: string): Promise<FrontendStatus>;
     getLiquidityMiningLQTYReward(address?: string): Promise<Decimal>;
     getLiquidityMiningStake(address?: string): Promise<Decimal>;
