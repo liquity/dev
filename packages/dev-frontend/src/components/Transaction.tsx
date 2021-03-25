@@ -311,6 +311,8 @@ export const TransactionMonitor: React.FC = () => {
           const { confirmations } = receipt.rawReceipt;
           const blockNumber = receipt.rawReceipt.blockNumber + confirmations - 1;
           console.log(`Block #${blockNumber} ${confirmations}-confirms tx ${txHash}`);
+          console.log(`Finish monitoring tx ${txHash}`);
+          finished = true;
 
           if (receipt.status === "succeeded") {
             console.log(`${receipt}`);
@@ -351,9 +353,6 @@ export const TransactionMonitor: React.FC = () => {
             error: new Error("Failed")
           });
         }
-
-        console.log(`Finish monitoring tx ${txHash}`);
-        finished = true;
       };
 
       console.log(`Start monitoring tx ${txHash}`);
