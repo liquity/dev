@@ -121,6 +121,9 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       totalStakedLQTY: this._readable.getTotalStakedLQTY({ blockTag }),
       _riskiestTroveBeforeRedistribution: this._getRiskiestTroveBeforeRedistribution({ blockTag }),
       totalStakedUniTokens: this._readable.getTotalStakedUniTokens({ blockTag }),
+      remainingStabilityPoolLQTYReward: this._readable.getRemainingStabilityPoolLQTYReward({
+        blockTag
+      }),
 
       frontend: frontendTag
         ? this._readable.getFrontendStatus(frontendTag, { blockTag })

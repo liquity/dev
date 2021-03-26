@@ -32,6 +32,7 @@ Implemented by [EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->.
 |  [getNumberOfTroves()](./lib-base.readableliquity.getnumberoftroves.md) | Get number of Troves that are currently open. |
 |  [getPrice()](./lib-base.readableliquity.getprice.md) | Get the current price of the native currency (e.g. Ether) in USD. |
 |  [getRemainingLiquidityMiningLQTYReward()](./lib-base.readableliquity.getremainingliquiditymininglqtyreward.md) | Get the remaining LQTY that will be collectively rewarded to liquidity miners. |
+|  [getRemainingStabilityPoolLQTYReward()](./lib-base.readableliquity.getremainingstabilitypoollqtyreward.md) | Get the remaining LQTY that will be collectively rewarded to stability depositors. |
 |  [getStabilityDeposit(address)](./lib-base.readableliquity.getstabilitydeposit.md) | Get the current state of a Stability Deposit. |
 |  [getTotal()](./lib-base.readableliquity.gettotal.md) | Get the total amount of collateral and debt in the Liquity system. |
 |  [getTotalRedistributed()](./lib-base.readableliquity.gettotalredistributed.md) | Get the total collateral and debt per stake that has been liquidated through redistribution. |

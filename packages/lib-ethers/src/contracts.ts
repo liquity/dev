@@ -225,6 +225,7 @@ export interface _LiquityDeploymentJSON {
   readonly version: string;
   readonly deploymentDate: number;
   readonly bootstrapPeriod: number;
+  readonly totalStabilityPoolLQTYReward: string;
   readonly _priceFeedIsTestnet: boolean;
   readonly _uniTokenIsMock: boolean;
   readonly _isDev: boolean;

@@ -29,6 +29,7 @@ export interface LiquityStoreBaseState
 |  [ownFrontend](./lib-base.liquitystorebasestate.ownfrontend.md) | [FrontendStatus](./lib-base.frontendstatus.md) | Status of user's own frontend. |
 |  [price](./lib-base.liquitystorebasestate.price.md) | [Decimal](./lib-base.decimal.md) | Current price of the native currency (e.g. Ether) in USD. |
 |  [remainingLiquidityMiningLQTYReward](./lib-base.liquitystorebasestate.remainingliquiditymininglqtyreward.md) | [Decimal](./lib-base.decimal.md) | Remaining LQTY that will be collectively rewarded to liquidity miners. |
+|  [remainingStabilityPoolLQTYReward](./lib-base.liquitystorebasestate.remainingstabilitypoollqtyreward.md) | [Decimal](./lib-base.decimal.md) | Remaining LQTY that will be collectively rewarded to stability depositors. |
 |  [stabilityDeposit](./lib-base.liquitystorebasestate.stabilitydeposit.md) | [StabilityDeposit](./lib-base.stabilitydeposit.md) | User's stability deposit. |
 |  [total](./lib-base.liquitystorebasestate.total.md) | [Trove](./lib-base.trove.md) | Total collateral and debt in the Liquity system. |
 |  [totalRedistributed](./lib-base.liquitystorebasestate.totalredistributed.md) | [Trove](./lib-base.trove.md) | Total collateral and debt per stake that has been liquidated through redistribution. |

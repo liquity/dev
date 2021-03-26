@@ -196,6 +196,7 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
       }
     });
   }
+
   getTotalRedistributed() {
     return totalRedistributed.get(this.client, undefined);
   }
@@ -360,6 +361,10 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
   }
 
   getTotalStakedUniTokens(): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getRemainingStabilityPoolLQTYReward(): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 }
