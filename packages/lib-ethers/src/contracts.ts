@@ -126,7 +126,7 @@ const buildEstimatedFunctions = <T>(
     ])
   );
 
-class LiquityContract extends Contract {
+export class _LiquityContract extends Contract {
   readonly estimateAndPopulate: Record<string, EstimatedContractFunction<PopulatedTransaction>>;
 
   constructor(
@@ -149,7 +149,7 @@ class LiquityContract extends Contract {
 }
 
 /** @internal */
-export type _TypedLiquityContract<T = unknown, U = unknown> = TypedContract<LiquityContract, T, U>;
+export type _TypedLiquityContract<T = unknown, U = unknown> = TypedContract<_LiquityContract, T, U>;
 
 /** @internal */
 export interface _LiquityContracts {
@@ -239,6 +239,6 @@ export const _connectToContracts = (
   return mapLiquityContracts(
     addresses,
     (address, key) =>
-      new LiquityContract(address, abi[key], signerOrProvider) as _TypedLiquityContract
+      new _LiquityContract(address, abi[key], signerOrProvider) as _TypedLiquityContract
   ) as _LiquityContracts;
 };
