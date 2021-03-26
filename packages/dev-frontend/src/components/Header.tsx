@@ -26,11 +26,9 @@ export const Header: React.FC = ({ children }) => (
         }}
       />
 
-      <Flex sx={{ alignItems: "center", fontWeight: "body", fontSize: [1, null, 1, null] }}>
-        <Abbreviation short={<SideNav />}>
-          <Nav />
-        </Abbreviation>
-      </Flex>
+      <Abbreviation short={<SideNav />}>
+        <Nav />
+      </Abbreviation>
     </Flex>
 
     {children}
