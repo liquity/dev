@@ -28,5 +28,5 @@ test("there's no smoke", async () => {
   const confirmButton = getAllByText(/confirm/i)[0];
   fireEvent.click(confirmButton);
 
-  expect(await findByText(/1-1 of 1/i)).toBeInTheDocument();
+  expect(await findByText(/adjust/i)).toBeInTheDocument();
 });
