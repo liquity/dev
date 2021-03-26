@@ -49,17 +49,19 @@ jobs:
         run: yarn release
 
       - uses: azure/docker-login@v1
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'push' }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
       - name: Build dev-frontend Docker image
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        if: ${{ github.event_name == 'push' }}
         run: |
           docker-compose build
           docker-compose push
         working-directory: ./packages/dev-frontend
+        env:
+          TAG: ${{ fromJSON('{ "refs/heads/master":"latest", "refs/heads/main":"next" }')[github.ref] }}
 
   coverage:
     runs-on: ubuntu-latest

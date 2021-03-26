@@ -228,6 +228,7 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 - `packages/contracts/` - The backend development folder, contains the Hardhat project, contracts and tests
 - `packages/contracts/contracts/` - The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
+- `packages/contracts/tests/` - Python test suite for the system. Tests run in Brownie
 - `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
 - `packages/contracts/fuzzTests/` - Echidna tests, and naive "random operation" tests 
 - `packages/contracts/migrations/` - contains Hardhat script for deploying the smart contracts to the blockchain
@@ -593,6 +594,63 @@ The project is deployed on the Ropsten testnet.
 Run all tests with `npx hardhat test`, or run a specific test with `npx hardhat test ./test/contractTest.js`
 
 Tests are run against the Hardhat EVM.
+
+### Brownie Tests
+There are some special tests that are using Brownie framework.
+
+To test, install brownie with:
+```
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+
+pipx install eth-brownie
+```
+
+and add numpy with:
+```
+pipx inject eth-brownie numpy
+```
+
+Add OpenZeppelin package:
+```
+brownie pm install OpenZeppelin/openzeppelin-contracts@3.3.0
+```
+
+Run, from `packages/contracts/`:
+```
+brownie test -s
+```
+
+### OpenEthereum
+
+Add the local node as a `live` network at `~/.brownie/network-config.yaml`:
+```
+(...)
+      - name: Local Openethereum
+        chainid: 17
+        id: openethereum
+        host: http://localhost:8545
+```
+
+Make sure state is cleaned up first:
+```
+rm -Rf build/deployments/*
+```
+
+Start Openthereum node from this repo’s root with:
+```
+yarn start-dev-chain:openethereum
+```
+
+Then, again from `packages/contracts/`, run it with:
+```
+brownie test -s --network openethereum
+```
+
+To stop the Openethereum node, you can do it with:
+```
+yarn stop-dev-chain
+```
 
 ## System Quantities - Units and Representation
 

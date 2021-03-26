@@ -1,44 +1,38 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "DSNote",
-  "sourceName": "contracts/TestContracts/DappSys/ds-note/note.sol",
+  "sourceName": "contracts/TestContracts/DappSys/proxy.sol",
   "abi": [
     {
       "anonymous": true,
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes4",
           "name": "sig",
           "type": "bytes4"
         },
         {
           "indexed": true,
-          "internalType": "address",
           "name": "guy",
           "type": "address"
         },
         {
           "indexed": true,
-          "internalType": "bytes32",
           "name": "foo",
           "type": "bytes32"
         },
         {
           "indexed": true,
-          "internalType": "bytes32",
           "name": "bar",
           "type": "bytes32"
         },
         {
           "indexed": false,
-          "internalType": "uint256",
           "name": "wad",
           "type": "uint256"
         },
         {
           "indexed": false,
-          "internalType": "bytes",
           "name": "fax",
           "type": "bytes"
         }
@@ -47,8 +41,8 @@
       "type": "event"
     }
   ],
-  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea264697066735822122057719af5d32a0af86d8b5cc51cc34ea7f25207978f900175967809f6ef3c0dfe64736f6c634300060b0033",
-  "deployedBytecode": "0x6080604052600080fdfea264697066735822122057719af5d32a0af86d8b5cc51cc34ea7f25207978f900175967809f6ef3c0dfe64736f6c634300060b0033",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a723058207fb38bf9ce3c33dbcea1cd38748dfdacd33f85c0c7a6db0998bc86c807759cbb0029",
+  "deployedBytecode": "0x6080604052600080fd00a165627a7a723058207fb38bf9ce3c33dbcea1cd38748dfdacd33f85c0c7a6db0998bc86c807759cbb0029",
   "linkReferences": {},
   "deployedLinkReferences": {}
 }

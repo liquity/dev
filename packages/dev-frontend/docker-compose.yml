@@ -3,7 +3,7 @@ version: "3"
 services:
   dev-frontend:
     build: .
-    image: liquity/dev-frontend
+    image: "liquity/dev-frontend:${TAG:-unknown}"
     ports:
       - 80:80
     environment:
