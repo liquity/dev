@@ -702,6 +702,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         for (vars.i = 0; vars.i < _troveArray.length; vars.i++) {
             vars.user = _troveArray[vars.i];
+            // Skip non-active troves
+            if (Troves[vars.user].status != Status.active) { continue; }
             vars.ICR = getCurrentICR(vars.user, _price);
 
             if (!vars.backToNormalMode) {
