@@ -24,6 +24,8 @@ import { Farm } from "./pages/Farm";
 import { Liquidation } from "./pages/Liquidation";
 import { Redemption } from "./pages/Redemption";
 
+const basename = window.location.pathname.substring(window.location.pathname.indexOf("/"));
+
 if (window.ethereum) {
   // Silence MetaMask warning in console
   Object.assign(window.ethereum, { autoRefreshOnNetworkChange: false });
@@ -73,7 +75,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   return (
     <LiquityStoreProvider {...{ loader }} store={liquity.store}>
-      <Router>
+      <Router basename={basename}>
         <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
           <Header>
             <UserAccount />
