@@ -11,7 +11,7 @@ type DescriptionProps = {
   amount: Decimal;
 };
 
-const transactionId = "mine-stake";
+const transactionId = "farm-stake";
 
 export const Description: React.FC<DescriptionProps> = ({ amount }) => {
   const {

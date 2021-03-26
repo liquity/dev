@@ -2,12 +2,12 @@ import React, { useEffect } from "react";
 import { Button } from "theme-ui";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
-import { useMineView } from "../context/MineViewContext";
+import { useFarmView } from "../context/FarmViewContext";
 
-const transactionId = "mine-unstake-and-claim";
+const transactionId = "farm-unstake-and-claim";
 
 export const UnstakeAndClaim: React.FC = () => {
-  const { dispatchEvent } = useMineView();
+  const { dispatchEvent } = useFarmView();
 
   const {
     liquity: { send: liquity }

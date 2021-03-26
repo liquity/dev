@@ -4,7 +4,7 @@ type ActiveView = "ACTIVE";
 type AdjustingView = "ADJUSTING";
 type DisabledView = "DISABLED";
 
-export type MineView = InactiveView | StakingView | ActiveView | AdjustingView | DisabledView;
+export type FarmView = InactiveView | StakingView | ActiveView | AdjustingView | DisabledView;
 
 type StakePressedEvent = "STAKE_PRESSED";
 type AdjustPressedEvent = "ADJUST_PRESSED";
@@ -14,7 +14,7 @@ type StakeConfirmedEvent = "STAKE_CONFIRMED";
 type ClaimRewardConfirmedEvent = "CLAIM_REWARD_CONFIRMED";
 type UnstakeAndClaimConfirmedEvent = "UNSTAKE_AND_CLAIM_CONFIRMED";
 
-export type MineEvent =
+export type FarmEvent =
   | StakePressedEvent
   | AdjustPressedEvent
   | CancelPressedEvent
@@ -23,9 +23,9 @@ export type MineEvent =
   | ClaimRewardConfirmedEvent
   | UnstakeAndClaimConfirmedEvent;
 
-type MineEventTransitions = Record<MineView, Partial<Record<MineEvent, MineView>>>;
+type FarmEventTransitions = Record<FarmView, Partial<Record<FarmEvent, FarmView>>>;
 
-export const transitions: MineEventTransitions = {
+export const transitions: FarmEventTransitions = {
   INACTIVE: {
     STAKE_PRESSED: "STAKING"
   },

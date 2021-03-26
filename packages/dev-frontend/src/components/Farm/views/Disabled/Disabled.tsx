@@ -20,27 +20,27 @@ export const Disabled: React.FC = () => {
   return (
     <Card>
       <Heading>
-        Liquidity mine
+        Liquidity farm
         <Flex sx={{ justifyContent: "flex-end" }}>
           <RemainingLQTY />
         </Flex>
       </Heading>
       <Box sx={{ p: [2, 3] }}>
-        <InfoMessage title="Liquidity mining period has finished">
-          <Flex>There are no more LQTY rewards left to mine</Flex>
+        <InfoMessage title="Liquidity farming period has finished">
+          <Flex>There are no more LQTY rewards left to farm</Flex>
         </InfoMessage>
         {hasStake && (
           <>
             <Box sx={{ border: 1, pt: 3, borderRadius: 3 }}>
               <StaticRow
                 label="Stake"
-                inputId="mine-deposit"
+                inputId="farm-deposit"
                 amount={liquidityMiningStake.prettify(4)}
                 unit={LP}
               />
               <StaticRow
                 label="Reward"
-                inputId="mine-reward"
+                inputId="farm-reward"
                 amount={liquidityMiningLQTYReward.prettify(4)}
                 color={liquidityMiningLQTYReward.nonZero && "success"}
                 unit={GT}

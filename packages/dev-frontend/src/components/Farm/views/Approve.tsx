@@ -3,17 +3,17 @@ import { Button } from "theme-ui";
 import { Decimal } from "@liquity/lib-base";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
-import { useMineView } from "../context/MineViewContext";
+import { useFarmView } from "../context/FarmViewContext";
 import { useValidationState } from "../context/useValidationState";
 
 type ApproveProps = {
   amount: Decimal;
 };
 
-const transactionId = "mine-approve";
+const transactionId = "farm-approve";
 
 export const Approve: React.FC<ApproveProps> = ({ amount }) => {
-  const { dispatchEvent } = useMineView();
+  const { dispatchEvent } = useFarmView();
   const {
     liquity: { send: liquity }
   } = useLiquity();
