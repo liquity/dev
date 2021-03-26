@@ -1,12 +1,11 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-// import { useLiquitySelector } from "@liquity/lib-react";
 import { LiquityStoreState, Decimal } from "@liquity/lib-base";
-import { MineViewContext } from "./FarmViewContext";
-import { transitions } from "./transitions";
-import type { MineView, MineEvent } from "./transitions";
 import { useLiquitySelector } from "@liquity/lib-react";
+import { FarmViewContext } from "./FarmViewContext";
+import { transitions } from "./transitions";
+import type { FarmView, FarmEvent } from "./transitions";
 
-const transition = (view: MineView, event: MineEvent): MineView => {
+const transition = (view: FarmView, event: FarmEvent): FarmView => {
   const nextView = transitions[view][event] ?? view;
   return nextView;
 };
@@ -14,7 +13,7 @@ const transition = (view: MineView, event: MineEvent): MineView => {
 const getInitialView = (
   liquidityMiningStake: Decimal,
   remainingLiquidityMiningLQTYReward: Decimal
-): MineView => {
+): FarmView => {
   if (remainingLiquidityMiningLQTYReward.isZero) return "DISABLED";
   if (liquidityMiningStake.isZero) return "INACTIVE";
   return "ACTIVE";
@@ -25,16 +24,16 @@ const selector = ({
   remainingLiquidityMiningLQTYReward
 }: LiquityStoreState) => ({ liquidityMiningStake, remainingLiquidityMiningLQTYReward });
 
-export const MineViewProvider: React.FC = props => {
+export const FarmViewProvider: React.FC = props => {
   const { children } = props;
   const { liquidityMiningStake, remainingLiquidityMiningLQTYReward } = useLiquitySelector(selector);
 
-  const [view, setView] = useState<MineView>(
+  const [view, setView] = useState<FarmView>(
     getInitialView(liquidityMiningStake, remainingLiquidityMiningLQTYReward)
   );
-  const viewRef = useRef<MineView>(view);
+  const viewRef = useRef<FarmView>(view);
 
-  const dispatchEvent = useCallback((event: MineEvent) => {
+  const dispatchEvent = useCallback((event: FarmEvent) => {
     const nextView = transition(viewRef.current, event);
 
     console.log(
@@ -61,5 +60,5 @@ export const MineViewProvider: React.FC = props => {
     dispatchEvent
   };
 
-  return <MineViewContext.Provider value={provider}>{children}</MineViewContext.Provider>;
+  return <FarmViewContext.Provider value={provider}>{children}</FarmViewContext.Provider>;
 };

@@ -3,13 +3,13 @@ import { Card, Heading, Box, Flex, Button, Link, Paragraph } from "theme-ui";
 import { useLiquity } from "../../../../hooks/LiquityContext";
 import { Icon } from "../../../Icon";
 import { InfoMessage } from "../../../InfoMessage";
-import { useMineView } from "../../context/MineViewContext";
+import { useFarmView } from "../../context/FarmViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
 
 const uniLink = (lusdAddress: string) => `https://app.uniswap.org/#/add/ETH/${lusdAddress}`;
 
 export const Inactive: React.FC = () => {
-  const { dispatchEvent } = useMineView();
+  const { dispatchEvent } = useFarmView();
 
   const {
     liquity: {
