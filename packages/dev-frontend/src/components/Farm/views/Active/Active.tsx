@@ -7,7 +7,7 @@ import { Icon } from "../../../Icon";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMyTransactionState } from "../../../Transaction";
 import { DisabledEditableRow, StaticRow } from "../../../Trove/Editor";
-import { useMineView } from "../../context/MineViewContext";
+import { useFarmView } from "../../context/FarmViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
 import { ClaimReward } from "./ClaimReward";
 import { UnstakeAndClaim } from "../UnstakeAndClaim";
@@ -16,10 +16,10 @@ const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquitySt
   liquidityMiningStake,
   liquidityMiningLQTYReward
 });
-const transactionId = /mine-/i;
+const transactionId = /farm-/i;
 
 export const Active: React.FC = () => {
-  const { dispatchEvent } = useMineView();
+  const { dispatchEvent } = useFarmView();
   const { liquidityMiningStake, liquidityMiningLQTYReward } = useLiquitySelector(selector);
 
   const handleAdjustPressed = useCallback(() => {
@@ -34,7 +34,7 @@ export const Active: React.FC = () => {
   return (
     <Card>
       <Heading>
-        Liquidity mine
+        Liquidity farm
         {!isTransactionPending && (
           <Flex sx={{ justifyContent: "flex-end" }}>
             <RemainingLQTY />
@@ -45,13 +45,13 @@ export const Active: React.FC = () => {
         <Box>
           <DisabledEditableRow
             label="Stake"
-            inputId="mine-stake"
+            inputId="farm-stake"
             amount={liquidityMiningStake.prettify(4)}
             unit={LP}
           />
           <StaticRow
             label="Reward"
-            inputId="mine-reward"
+            inputId="farm-reward"
             amount={liquidityMiningLQTYReward.prettify(4)}
             color={liquidityMiningLQTYReward.nonZero && "success"}
             unit={GT}

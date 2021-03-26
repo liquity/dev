@@ -14,14 +14,14 @@ export const Inactive: React.FC = () => {
   return (
     <Card>
       <Heading>
-        Liquidity mine
+        Liquidity farm
         <Flex sx={{ justifyContent: "flex-end" }}>
           <RemainingLQTY />
         </Flex>
       </Heading>
       <Box sx={{ p: [2, 3] }}>
-        <InfoMessage title="You aren't mining LQTY">
-          <Flex>You can mine LQTY by staking your Uniswap ETH/LUSD LP tokens</Flex>
+        <InfoMessage title="You aren't farming LQTY">
+          <Flex>You can farm LQTY by staking your Uniswap ETH/LUSD LP tokens</Flex>
           <Flex sx={{ mt: 2 }}>
             You can obtain LP tokens by adding liquidity to the ETH/LUSD pool on Uniswap
           </Flex>

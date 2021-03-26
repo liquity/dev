@@ -4,9 +4,9 @@ import { Staking } from "./views/Staking/Staking";
 import { Adjusting } from "./views/Adjusting/Adjusting";
 import { Active } from "./views/Active/Active";
 import { Disabled } from "./views/Disabled/Disabled";
-import { useMineView } from "./context/MineViewContext";
+import { useMineView } from "./context/FarmViewContext";
 
-export const Mine: React.FC = props => {
+export const Farm: React.FC = props => {
   const { view } = useMineView();
 
   switch (view) {

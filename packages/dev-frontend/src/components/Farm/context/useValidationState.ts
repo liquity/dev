@@ -11,7 +11,7 @@ const selector = ({
   liquidityMiningStake
 });
 
-type MineStakeValidation = {
+type FarmStakeValidation = {
   isValid: boolean;
   hasApproved: boolean;
   hasEnoughUniToken: boolean;
@@ -21,7 +21,7 @@ type MineStakeValidation = {
   hasSetMaximumStake: boolean;
 };
 
-export const useValidationState = (amount: Decimal): MineStakeValidation => {
+export const useValidationState = (amount: Decimal): FarmStakeValidation => {
   const { uniTokenBalance, uniTokenAllowance, liquidityMiningStake } = useLiquitySelector(selector);
   const isWithdrawing = liquidityMiningStake.gt(amount);
   const amountChanged = isWithdrawing

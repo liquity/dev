@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 // import { useLiquitySelector } from "@liquity/lib-react";
 import { LiquityStoreState, Decimal } from "@liquity/lib-base";
-import { MineViewContext } from "./MineViewContext";
+import { MineViewContext } from "./FarmViewContext";
 import { transitions } from "./transitions";
 import type { MineView, MineEvent } from "./transitions";
 import { useLiquitySelector } from "@liquity/lib-react";

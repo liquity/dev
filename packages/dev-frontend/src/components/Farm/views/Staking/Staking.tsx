@@ -1,47 +1,32 @@
 import React, { useCallback, useState } from "react";
 import { Heading, Box, Flex, Card, Button } from "theme-ui";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
-
-import { LP, GT } from "../../../../strings";
+import { Decimal } from "@liquity/lib-base";
+import { LP } from "../../../../strings";
 import { Icon } from "../../../Icon";
-import { EditableRow, StaticRow } from "../../../Trove/Editor";
+import { EditableRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
-import { useMineView } from "../../context/MineViewContext";
+import { useFarmView } from "../../context/FarmViewContext";
 import { useMyTransactionState } from "../../../Transaction";
 import { Confirm } from "../Confirm";
 import { Description } from "../Description";
 import { Approve } from "../Approve";
 import { Validation } from "../Validation";
+import { useValidationState } from "../../context/useValidationState";
 
-const selector = ({
-  liquidityMiningStake,
-  liquidityMiningLQTYReward,
-  uniTokenBalance
-}: LiquityStoreState) => ({
-  liquidityMiningStake,
-  liquidityMiningLQTYReward,
-  uniTokenBalance
-});
+const transactionId = "farm-stake";
 
-const transactionId = "mine-stake";
-
-export const Adjusting: React.FC = () => {
-  const { dispatchEvent } = useMineView();
-  const { liquidityMiningStake, liquidityMiningLQTYReward, uniTokenBalance } = useLiquitySelector(
-    selector
-  );
-  const [amount, setAmount] = useState<Decimal>(liquidityMiningStake);
+export const Staking: React.FC = () => {
+  const { dispatchEvent } = useFarmView();
+  const [amount, setAmount] = useState<Decimal>(Decimal.from(0));
   const editingState = useState<string>();
+  const isDirty = !amount.isZero;
+
+  const { maximumStake, hasSetMaximumStake } = useValidationState(amount);
 
   const transactionState = useMyTransactionState(transactionId);
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
-
-  const isDirty = !amount.eq(liquidityMiningStake);
-  const maximumAmount = liquidityMiningStake.add(uniTokenBalance);
-  const hasSetMaximumAmount = amount.eq(maximumAmount);
 
   const handleCancelPressed = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
@@ -50,12 +35,12 @@ export const Adjusting: React.FC = () => {
   return (
     <Card>
       <Heading>
-        Liquidity mine
+        Liquidity farm
         {isDirty && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setAmount(liquidityMiningStake)}
+            onClick={() => setAmount(Decimal.from(0))}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -65,26 +50,18 @@ export const Adjusting: React.FC = () => {
       <Box sx={{ p: [2, 3] }}>
         <EditableRow
           label="Stake"
-          inputId="mine-stake-amount"
-          amount={isDirty ? amount.prettify(4) : liquidityMiningStake.prettify(4)}
+          inputId="amount-lp"
+          amount={amount.prettify(4)}
           unit={LP}
           editingState={editingState}
           editedAmount={amount.toString(4)}
           setEditedAmount={amount => setAmount(Decimal.from(amount))}
-          maxAmount={maximumAmount.toString()}
-          maxedOut={hasSetMaximumAmount}
+          maxAmount={maximumStake.toString()}
+          maxedOut={hasSetMaximumStake}
         ></EditableRow>
 
-        <StaticRow
-          label="Reward"
-          inputId="mine-reward-amount"
-          amount={liquidityMiningLQTYReward.prettify(4)}
-          color={liquidityMiningLQTYReward.nonZero && "success"}
-          unit={GT}
-        />
-
         {isDirty && <Validation amount={amount} />}
-        {isDirty && <Description amount={amount} />}
+        <Description amount={amount} />
 
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
