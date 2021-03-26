@@ -815,7 +815,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     )
         internal returns (SingleRedemptionValues memory singleRedemption)
     {
-        // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the Trove minus the gas compensation
+        // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the Trove minus the liquidation reserve
         singleRedemption.LUSDLot = LiquityMath._min(_maxLUSDamount, Troves[_borrower].debt.sub(LUSD_GAS_COMPENSATION));
 
         // Get the ETHLot of equivalent value in USD
@@ -826,7 +826,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint newColl = (Troves[_borrower].coll).sub(singleRedemption.ETHLot);
 
         if (newDebt == LUSD_GAS_COMPENSATION) {
-            // No debt left in the Trove (except for the gas compensation), therefore the trove gets closed
+            // No debt left in the Trove (except for the liquidation reserve), therefore the trove gets closed
             _removeStake(_borrower);
             _closeTrove(_borrower, Status.closedByRedemption);
             _redeemCloseTrove(_contractsCache, _borrower, LUSD_GAS_COMPENSATION, newColl);
@@ -865,8 +865,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     /*
     * Called when a full redemption occurs, and closes the trove.
-    * The redeemer swaps (debt - gas compensation) LUSD for (debt - gas compensation) worth of ETH, so the LUSD gas compensation left corresponds to the remaining debt.
-    * In order to close the trove, the LUSD gas compensation is burned, and the corresponding debt is removed from the active pool.
+    * The redeemer swaps (debt - liquidation reserve) LUSD for (debt - liquidation reserve) worth of ETH, so the LUSD liquidation reserve left corresponds to the remaining debt.
+    * In order to close the trove, the LUSD liquidation reserve is burned, and the corresponding debt is removed from the active pool.
     * The debt recorded on the trove's struct is zero'd elswhere, in _closeTrove.
     * Any surplus ETH left in the trove, is sent to the Coll surplus pool, and can be later claimed by the borrower.
     */
@@ -1277,7 +1277,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     function _addTroveOwnerToArray(address _borrower) internal returns (uint128 index) {
         /* Max array size is 2**128 - 1, i.e. ~3e30 troves. No risk of overflow, since troves have minimum LUSD
-        debt of gas compensation plus MIN_NET_DEBT. 3e30 LUSD dwarfs the value of all wealth in the world ( which is < 1e15 USD). */
+        debt of liquidation reserve plus MIN_NET_DEBT. 3e30 LUSD dwarfs the value of all wealth in the world ( which is < 1e15 USD). */
 
         // Push the Troveowner to the array
         TroveOwners.push(_borrower);

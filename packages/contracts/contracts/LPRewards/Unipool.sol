@@ -55,11 +55,11 @@ contract LPTokenWrapper is ILPTokenWrapper {
 
  * Essentially the way it works is:
 
- * - Liquidity providers add funds to the Uniswap pool, and get UNIv2 tokens in exchange
- * - Liquidity providers stake those UNIv2 tokens into Unipool rewards contract
+ * - Liquidity providers add funds to the Uniswap pool, and get LP tokens in exchange
+ * - Liquidity providers stake those LP tokens into Unipool rewards contract
  * - Liquidity providers accrue rewards, proportional to the amount of staked tokens and staking time
  * - Liquidity providers can claim their rewards when they want
- * - Liquidity providers can unstake UNIv2 tokens to exit the program (i.e., stop earning rewards) when they want
+ * - Liquidity providers can unstake LP tokens to exit the program (i.e., stop earning rewards) when they want
 
  * Funds for rewards will only be added once, on deployment of LQTY token,
  * which will happen after this contract is deployed and before this `setParams` in this contract is called.
@@ -69,7 +69,7 @@ contract LPTokenWrapper is ILPTokenWrapper {
  * in order to avoid getting LQTY tokens locked.
  * That also means that the start time for the program will be the event that occurs first:
  * either LQTY token contract is deployed, and therefore LQTY tokens are minted to Unipool contract,
- * or first liquidity provider stakes UNIv2 tokens into it.
+ * or first liquidity provider stakes LP tokens into it.
  */
 contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     uint256 public duration;
