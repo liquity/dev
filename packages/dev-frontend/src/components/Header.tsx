@@ -1,8 +1,10 @@
 import React from "react";
-import { Container, Flex, Box, Heading, Link } from "theme-ui";
+import { Container, Flex, Box, Link } from "theme-ui";
 
 import { LiquityLogo, LiquityLogoSmall } from "./LiquityLogo";
 import { Abbreviation } from "./Abbreviation";
+import { Nav } from "./Nav";
+import { SideNav } from "./SideNav";
 
 const logoHeight = "32px";
 
@@ -24,12 +26,11 @@ export const Header: React.FC = ({ children }) => (
         }}
       />
 
-      <Heading sx={{ fontWeight: "body", fontSize: [3, null, 4, null] }}>
-        <Abbreviation short="Dev UI (Beta)">Developer UI (Beta)</Abbreviation>
-        <Link href="#footnote" style={{ textDecoration: "none" }}>
-          *
-        </Link>
-      </Heading>
+      <Flex sx={{ alignItems: "center", fontWeight: "body", fontSize: [1, null, 1, null] }}>
+        <Abbreviation short={<SideNav />}>
+          <Nav />
+        </Abbreviation>
+      </Flex>
     </Flex>
 
     {children}

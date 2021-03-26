@@ -1,6 +1,7 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
 import { Flex, Spinner, Heading, ThemeProvider, Container } from "theme-ui";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { Wallet } from "@ethersproject/wallet";
 
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
@@ -19,6 +20,9 @@ import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 import { PageSwitcher } from "./pages/PageSwitcher";
+import { Farm } from "./pages/Farm";
+import { Liquidation } from "./pages/Liquidation";
+import { Redemption } from "./pages/Redemption";
 
 if (window.ethereum) {
   // Silence MetaMask warning in console
@@ -69,28 +73,41 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   return (
     <LiquityStoreProvider {...{ loader }} store={liquity.store}>
-      <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
-        <Header>
-          <UserAccount />
-          <SystemStatsPopup />
-        </Header>
+      <Router>
+        <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
+          <Header>
+            <UserAccount />
+            <SystemStatsPopup />
+          </Header>
 
-        <Container
-          variant="main"
-          sx={{
-            display: "flex",
-            flexGrow: 1,
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-        >
-          <PageSwitcher />
-        </Container>
+          <Container
+            variant="main"
+            sx={{
+              display: "flex",
+              flexGrow: 1,
+              flexDirection: "column",
+              alignItems: "center"
+            }}
+          >
+            <Switch>
+              <Route path="/" exact>
+                <PageSwitcher />
+              </Route>
+              <Route path="/farm">
+                <Farm />
+              </Route>
+              <Route path="/liquidation">
+                <Liquidation />
+              </Route>
+              <Route path="/redemption">
+                <Redemption />
+              </Route>
+            </Switch>
+          </Container>
 
-        <Footer>* Please note that the final user-facing application will look different.</Footer>
-      </Flex>
-
+          <Footer>* Please note that the final user-facing application will look different.</Footer>
+        </Flex>
+      </Router>
       <TransactionMonitor />
     </LiquityStoreProvider>
   );
