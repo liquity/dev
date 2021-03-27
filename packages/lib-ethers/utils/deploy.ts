@@ -343,7 +343,7 @@ export const deployAndSetupContracts = async (
 
   return {
     ...deployment,
-    deploymentDate: lqtyTokenDeploymentTime.toNumber(),
+    deploymentDate: lqtyTokenDeploymentTime.toNumber() * 1000,
     bootstrapPeriod: bootstrapPeriod.toNumber()
   };
 };

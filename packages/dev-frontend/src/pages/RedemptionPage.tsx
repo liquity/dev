@@ -1,11 +1,11 @@
 import { Container } from "theme-ui";
 import { SystemStats } from "../components/SystemStats";
-import { RedemptionManager } from "../components/Redemption/RedemptionManager";
+import { Redemption } from "../components/Redemption/Redemption";
 
-export const Redemption: React.FC = () => (
+export const RedemptionPage: React.FC = () => (
   <Container variant="columns">
     <Container variant="left">
-      <RedemptionManager />
+      <Redemption />
     </Container>
 
     <Container variant="right">

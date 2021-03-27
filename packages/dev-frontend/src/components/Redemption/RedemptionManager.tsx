@@ -67,58 +67,56 @@ export const RedemptionManager: React.FC = () => {
       ];
 
   return (
-    <>
-      <Card>
-        <Heading>
-          Redemption
-          {dirty && !changePending && (
-            <Button
-              variant="titleIcon"
-              sx={{ ":enabled:hover": { color: "danger" } }}
-              onClick={() => setLUSDAmount(Decimal.ZERO)}
-            >
-              <Icon name="history" size="lg" />
-            </Button>
-          )}
-        </Heading>
+    <Card>
+      <Heading>
+        Redemption
+        {dirty && !changePending && (
+          <Button
+            variant="titleIcon"
+            sx={{ ":enabled:hover": { color: "danger" } }}
+            onClick={() => setLUSDAmount(Decimal.ZERO)}
+          >
+            <Icon name="history" size="lg" />
+          </Button>
+        )}
+      </Heading>
 
-        <Box sx={{ p: [2, 3] }}>
-          <EditableRow
-            label="Redeem"
-            inputId="redeem-lusd"
-            amount={lusdAmount.prettify()}
-            maxAmount={lusdBalance.toString()}
-            maxedOut={lusdAmount.eq(lusdBalance)}
-            unit={COIN}
-            {...{ editingState }}
-            editedAmount={lusdAmount.toString(2)}
-            setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
+      <Box sx={{ p: [2, 3] }}>
+        <EditableRow
+          label="Redeem"
+          inputId="redeem-lusd"
+          amount={lusdAmount.prettify()}
+          maxAmount={lusdBalance.toString()}
+          maxedOut={lusdAmount.eq(lusdBalance)}
+          unit={COIN}
+          {...{ editingState }}
+          editedAmount={lusdAmount.toString(2)}
+          setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
+        />
+
+        {dirty && (
+          <StaticRow
+            label="Fee"
+            inputId="redeem-fee"
+            amount={ethFee.toString(4)}
+            pendingAmount={feePct.toString(2)}
+            unit="ETH"
           />
+        )}
 
-          {dirty && (
-            <StaticRow
-              label="Fee"
-              inputId="redeem-fee"
-              amount={ethFee.toString(4)}
-              pendingAmount={feePct.toString(2)}
-              unit="ETH"
-            />
-          )}
+        {((dirty || !canRedeem) && description) || (
+          <ActionDescription>Enter the amount of {COIN} you'd like to redeem.</ActionDescription>
+        )}
 
-          {((dirty || !canRedeem) && description) || (
-            <ActionDescription>Enter the amount of {COIN} you'd like to redeem.</ActionDescription>
-          )}
+        <Flex variant="layout.actions">
+          <RedemptionAction
+            disabled={!dirty || !canRedeem}
+            {...{ lusdAmount, setLUSDAmount, changePending, setChangePending, maxRedemptionRate }}
+          />
+        </Flex>
+      </Box>
 
-          <Flex variant="layout.actions">
-            <RedemptionAction
-              disabled={!dirty || !canRedeem}
-              {...{ lusdAmount, setLUSDAmount, changePending, setChangePending, maxRedemptionRate }}
-            />
-          </Flex>
-        </Box>
-
-        {changePending && <LoadingOverlay />}
-      </Card>
-    </>
+      {changePending && <LoadingOverlay />}
+    </Card>
   );
 };
