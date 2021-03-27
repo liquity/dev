@@ -194,21 +194,8 @@ export class _CachedReadableLiquity<T extends unknown[]>
     }
   }
 
-  async _getFeesInNormalMode(...extraParams: T): Promise<Fees> {
-    return (
-      this._cache._getFeesInNormalMode(...extraParams) ??
-      this._readable._getFeesInNormalMode(...extraParams)
-    );
-  }
-
   async getFees(...extraParams: T): Promise<Fees> {
-    const [feesInNormalMode, total, price] = await Promise.all([
-      this._getFeesInNormalMode(...extraParams),
-      this.getTotal(...extraParams),
-      this.getPrice(...extraParams)
-    ]);
-
-    return feesInNormalMode._setRecoveryMode(total.collateralRatioIsBelowCritical(price));
+    return this._cache.getFees(...extraParams) ?? this._readable.getFees(...extraParams);
   }
 
   async getLQTYStake(address?: string, ...extraParams: T): Promise<LQTYStake> {

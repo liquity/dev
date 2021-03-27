@@ -224,6 +224,13 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getUniTokenAllowance(address, overrides);
   }
 
+  /** @internal */
+  _getRemainingLiquidityMiningLQTYRewardCalculator(
+    overrides?: EthersCallOverrides
+  ): Promise<(blockTimestamp: number) => Decimal> {
+    return this._readable._getRemainingLiquidityMiningLQTYRewardCalculator(overrides);
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingLiquidityMiningLQTYReward} */
   getRemainingLiquidityMiningLQTYReward(overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getRemainingLiquidityMiningLQTYReward(overrides);
@@ -263,8 +270,10 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
   }
 
   /** @internal */
-  _getFeesInNormalMode(overrides?: EthersCallOverrides): Promise<Fees> {
-    return this._readable._getFeesInNormalMode(overrides);
+  _getFeesFactory(
+    overrides?: EthersCallOverrides
+  ): Promise<(blockTimestamp: number, recoveryMode: boolean) => Fees> {
+    return this._readable._getFeesFactory(overrides);
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFees} */

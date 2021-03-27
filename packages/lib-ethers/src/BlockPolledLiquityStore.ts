@@ -12,7 +12,11 @@ import {
 } from "@liquity/lib-base";
 
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
-import { EthersLiquityConnection, _getProvider } from "./EthersLiquityConnection";
+import {
+  EthersLiquityConnection,
+  _getBlockTimestamp,
+  _getProvider
+} from "./EthersLiquityConnection";
 import { EthersCallOverrides, EthersProvider } from "./types";
 
 /**
@@ -29,6 +33,11 @@ export interface BlockPolledLiquityStoreExtraState {
    * May be undefined when the store state is fetched for the first time.
    */
   blockTag?: number;
+
+  /**
+   * Timestamp of latest block (number of seconds since epoch).
+   */
+  blockTimestamp: number;
 }
 
 /**
@@ -87,26 +96,35 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     return riskiestTroves[0];
   }
 
-  private _get(blockTag?: number): Promise<LiquityStoreBaseState> {
+  private async _get(
+    blockTag?: number
+  ): Promise<[baseState: LiquityStoreBaseState, extraState: BlockPolledLiquityStoreExtraState]> {
     const { userAddress, frontendTag } = this.connection;
 
-    return promiseAllValues({
+    const {
+      blockTimestamp,
+      createFees,
+      calculateRemainingLQTY,
+      ...baseState
+    } = await promiseAllValues({
+      blockTimestamp: _getBlockTimestamp(this.connection, blockTag),
+      createFees: this._readable._getFeesFactory({ blockTag }),
+      calculateRemainingLQTY: this._readable._getRemainingLiquidityMiningLQTYRewardCalculator({
+        blockTag
+      }),
+
       price: this._readable.getPrice({ blockTag }),
       numberOfTroves: this._readable.getNumberOfTroves({ blockTag }),
       totalRedistributed: this._readable.getTotalRedistributed({ blockTag }),
       total: this._readable.getTotal({ blockTag }),
       lusdInStabilityPool: this._readable.getLUSDInStabilityPool({ blockTag }),
-      _feesInNormalMode: this._readable._getFeesInNormalMode({ blockTag }),
       totalStakedLQTY: this._readable.getTotalStakedLQTY({ blockTag }),
       _riskiestTroveBeforeRedistribution: this._getRiskiestTroveBeforeRedistribution({ blockTag }),
-      remainingLiquidityMiningLQTYReward: this._readable.getRemainingLiquidityMiningLQTYReward({
-        blockTag
-      }),
       totalStakedUniTokens: this._readable.getTotalStakedUniTokens({ blockTag }),
 
       frontend: frontendTag
         ? this._readable.getFrontendStatus(frontendTag, { blockTag })
-        : { status: "unregistered" },
+        : { status: "unregistered" as const },
 
       ...(userAddress
         ? {
@@ -144,16 +162,28 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
             ),
             stabilityDeposit: new StabilityDeposit(),
             lqtyStake: new LQTYStake(),
-            ownFrontend: { status: "unregistered" }
+            ownFrontend: { status: "unregistered" as const }
           })
     });
+
+    return [
+      {
+        ...baseState,
+        _feesInNormalMode: createFees(blockTimestamp, false),
+        remainingLiquidityMiningLQTYReward: calculateRemainingLQTY(blockTimestamp)
+      },
+      {
+        blockTag,
+        blockTimestamp
+      }
+    ];
   }
 
   /** @internal @override */
   protected _doStart(): () => void {
     this._get().then(state => {
       if (!this._loaded) {
-        this._load(state, {});
+        this._load(...state);
       }
     });
 
@@ -161,9 +191,9 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       const state = await this._get(blockTag);
 
       if (this._loaded) {
-        this._update(state, { blockTag });
+        this._update(...state);
       } else {
-        this._load(state, { blockTag });
+        this._load(...state);
       }
     };
 
@@ -179,6 +209,9 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     oldState: BlockPolledLiquityStoreExtraState,
     stateUpdate: Partial<BlockPolledLiquityStoreExtraState>
   ): BlockPolledLiquityStoreExtraState {
-    return { blockTag: stateUpdate.blockTag ?? oldState.blockTag };
+    return {
+      blockTag: stateUpdate.blockTag ?? oldState.blockTag,
+      blockTimestamp: stateUpdate.blockTimestamp ?? oldState.blockTimestamp
+    };
   }
 }

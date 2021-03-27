@@ -1,7 +1,8 @@
 {
   "chainId": 42,
   "version": "6201cfd8c83fc3828483e17f5f05ca4168f56c0c",
-  "deploymentDate": 1616753475477,
+  "deploymentDate": 1616753759000,
+  "bootstrapPeriod": 1209600,
   "_priceFeedIsTestnet": false,
   "_uniTokenIsMock": false,
   "_isDev": false,

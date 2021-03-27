@@ -22,7 +22,7 @@ import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 import { PageSwitcher } from "./pages/PageSwitcher";
 import { Farm } from "./pages/Farm";
 import { Liquidation } from "./pages/Liquidation";
-import { Redemption } from "./pages/Redemption";
+import { RedemptionPage } from "./pages/RedemptionPage";
 
 const basename = window.location.pathname.substring(window.location.pathname.indexOf("/"));
 
@@ -102,7 +102,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
                 <Liquidation />
               </Route>
               <Route path="/redemption">
-                <Redemption />
+                <RedemptionPage />
               </Route>
             </Switch>
           </Container>
