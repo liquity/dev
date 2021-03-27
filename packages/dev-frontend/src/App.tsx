@@ -1,7 +1,7 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
 import { Flex, Spinner, Heading, ThemeProvider, Container } from "theme-ui";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { HashRouter as Router, Switch, Route } from "react-router-dom";
 import { Wallet } from "@ethersproject/wallet";
 
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
@@ -23,8 +23,6 @@ import { PageSwitcher } from "./pages/PageSwitcher";
 import { Farm } from "./pages/Farm";
 import { Liquidation } from "./pages/Liquidation";
 import { RedemptionPage } from "./pages/RedemptionPage";
-
-const basename = window.location.pathname.substring(window.location.pathname.indexOf("/"));
 
 if (window.ethereum) {
   // Silence MetaMask warning in console
@@ -75,7 +73,7 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   return (
     <LiquityStoreProvider {...{ loader }} store={liquity.store}>
-      <Router basename={basename}>
+      <Router>
         <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
           <Header>
             <UserAccount />
