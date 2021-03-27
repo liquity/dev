@@ -1,4 +1,4 @@
-name: CI
+name: Release SDK & UI
 
 env:
   CI: true
@@ -11,7 +11,7 @@ on:
     branches: [master, main]
 
 jobs:
-  test:
+  release:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,9 +33,9 @@ jobs:
 
       - run: yarn install --frozen-lockfile
       - run: yarn build
-      - run: yarn test
-        env:
-          NODE_OPTIONS: --max-old-space-size=4096
+
+      - name: Test SDK & UI
+        run: yarn test
 
       - name: Test SDK integration against live contracts
         if: ${{ github.ref == 'refs/heads/master' }}
@@ -48,13 +48,14 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: yarn release
 
-      - uses: azure/docker-login@v1
+      - name: Login to Docker Hub
+        uses: azure/docker-login@v1
         if: ${{ github.event_name == 'push' }}
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
 
-      - name: Build dev-frontend Docker image
+      - name: Release dev-frontend on Docker Hub
         if: ${{ github.event_name == 'push' }}
         run: |
           docker-compose build
@@ -62,36 +63,3 @@ jobs:
         working-directory: ./packages/dev-frontend
         env:
           TAG: ${{ fromJSON('{ "refs/heads/master":"latest", "refs/heads/main":"next" }')[github.ref] }}
-
-  coverage:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'coverage') }}
-    continue-on-error: true
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12.x
-
-      - id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v1
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - run: yarn install --frozen-lockfile
-      - run: yarn coverage
-        continue-on-error: true
-        env:
-          NODE_OPTIONS: --max-old-space-size=4096
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./packages/contracts/coverage/lcov.info
