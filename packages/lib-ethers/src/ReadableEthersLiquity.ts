@@ -281,6 +281,17 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return new StabilityDeposit(initialLUSD, currentLUSD, collateralGain, lqtyReward);
   }
 
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingStabilityPoolLQTYReward} */
+  async getRemainingStabilityPoolLQTYReward(overrides?: EthersCallOverrides): Promise<Decimal> {
+    const { communityIssuance } = _getContracts(this.connection);
+
+    const issuanceCap = this.connection.totalStabilityPoolLQTYReward;
+    const totalLQTYIssued = decimalify(await communityIssuance.totalLQTYIssued({ ...overrides }));
+
+    // totalLQTYIssued approaches but never reaches issuanceCap
+    return issuanceCap.sub(totalLQTYIssued);
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLUSDInStabilityPool} */
   getLUSDInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal> {
     const { stabilityPool } = _getContracts(this.connection);
@@ -599,6 +610,12 @@ class BlockPolledLiquityStoreBasedCache
   ): StabilityDeposit | undefined {
     if (this._userHit(address, overrides)) {
       return this._store.state.stabilityDeposit;
+    }
+  }
+
+  getRemainingStabilityPoolLQTYReward(overrides?: EthersCallOverrides): Decimal | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.remainingStabilityPoolLQTYReward;
     }
   }
 

@@ -2,6 +2,8 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Block, BlockTag } from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
 
+import { Decimal } from "@liquity/lib-base";
+
 import devOrNull from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
 import kovan from "../deployments/kovan.json";
@@ -65,6 +67,9 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
   /** Time period (in seconds) after `deploymentDate` during which redemptions are disabled. */
   readonly bootstrapPeriod: number;
 
+  /** Total amount of LQTY allocated for rewarding stability depositors. */
+  readonly totalStabilityPoolLQTYReward: Decimal;
+
   /** A mapping of Liquity contracts' names to their addresses. */
   readonly addresses: Record<string, string>;
 
@@ -90,7 +95,7 @@ const connectionFrom = (
   signer: EthersSigner | undefined,
   _contracts: _LiquityContracts,
   _multicall: _Multicall | undefined,
-  { deploymentDate, ...deployment }: _LiquityDeploymentJSON,
+  { deploymentDate, totalStabilityPoolLQTYReward, ...deployment }: _LiquityDeploymentJSON,
   optionalParams?: EthersLiquityConnectionOptionalParams
 ): _InternalEthersLiquityConnection => {
   if (
@@ -107,6 +112,7 @@ const connectionFrom = (
     _contracts,
     _multicall,
     deploymentDate: new Date(deploymentDate),
+    totalStabilityPoolLQTYReward: Decimal.from(totalStabilityPoolLQTYReward),
     ...deployment,
     ...optionalParams
   });

@@ -40,6 +40,7 @@ The constructor for this class is marked as internal. Third-party code should no
 |  [getNumberOfTroves(overrides)](./lib-ethers.readableethersliquity.getnumberoftroves.md) |  | Get number of Troves that are currently open. |
 |  [getPrice(overrides)](./lib-ethers.readableethersliquity.getprice.md) |  | Get the current price of the native currency (e.g. Ether) in USD. |
 |  [getRemainingLiquidityMiningLQTYReward(overrides)](./lib-ethers.readableethersliquity.getremainingliquiditymininglqtyreward.md) |  | Get the remaining LQTY that will be collectively rewarded to liquidity miners. |
+|  [getRemainingStabilityPoolLQTYReward(overrides)](./lib-ethers.readableethersliquity.getremainingstabilitypoollqtyreward.md) |  | Get the remaining LQTY that will be collectively rewarded to stability depositors. |
 |  [getStabilityDeposit(address, overrides)](./lib-ethers.readableethersliquity.getstabilitydeposit.md) |  | Get the current state of a Stability Deposit. |
 |  [getTotal(overrides)](./lib-ethers.readableethersliquity.gettotal.md) |  | Get the total amount of collateral and debt in the Liquity system. |
 |  [getTotalRedistributed(overrides)](./lib-ethers.readableethersliquity.gettotalredistributed.md) |  | Get the total collateral and debt per stake that has been liquidated through redistribution. |

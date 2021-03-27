@@ -87,6 +87,9 @@ export interface LiquityStoreBaseState {
   /** User's stability deposit. */
   stabilityDeposit: StabilityDeposit;
 
+  /** Remaining LQTY that will be collectively rewarded to stability depositors. */
+  remainingStabilityPoolLQTYReward: Decimal;
+
   /** @internal */
   _feesInNormalMode: Fees;
 
@@ -397,9 +400,8 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.totalStakedUniTokens
       ),
 
-      liquidityMiningLQTYReward: this._updateIfChanged(
+      liquidityMiningLQTYReward: this._silentlyUpdateIfChanged(
         eq,
-        "liquidityMiningLQTYReward",
         baseState.liquidityMiningLQTYReward,
         baseStateUpdate.liquidityMiningLQTYReward
       ),
@@ -441,6 +443,12 @@ export abstract class LiquityStore<T = unknown> {
         "stabilityDeposit",
         baseState.stabilityDeposit,
         baseStateUpdate.stabilityDeposit
+      ),
+
+      remainingStabilityPoolLQTYReward: this._silentlyUpdateIfChanged(
+        eq,
+        baseState.remainingStabilityPoolLQTYReward,
+        baseStateUpdate.remainingStabilityPoolLQTYReward
       ),
 
       _feesInNormalMode: this._silentlyUpdateIfChanged(

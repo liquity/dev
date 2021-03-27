@@ -102,6 +102,11 @@ export interface ReadableLiquity {
   getStabilityDeposit(address?: string): Promise<StabilityDeposit>;
 
   /**
+   * Get the remaining LQTY that will be collectively rewarded to stability depositors.
+   */
+  getRemainingStabilityPoolLQTYReward(): Promise<Decimal>;
+
+  /**
    * Get the total amount of LUSD currently deposited in the Stability Pool.
    */
   getLUSDInStabilityPool(): Promise<Decimal>;

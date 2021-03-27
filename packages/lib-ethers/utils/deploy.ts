@@ -2,6 +2,8 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction, ContractFactory, Overrides } from "@ethersproject/contracts";
 import { Wallet } from "@ethersproject/wallet";
 
+import { Decimal } from "@liquity/lib-base";
+
 import {
   _LiquityContractAddresses,
   _LiquityContracts,
@@ -315,6 +317,7 @@ export const deployAndSetupContracts = async (
     version: "unknown",
     deploymentDate: new Date().getTime(),
     bootstrapPeriod: 0,
+    totalStabilityPoolLQTYReward: "0",
     _priceFeedIsTestnet,
     _uniTokenIsMock: !wethAddress,
     _isDev,
@@ -336,6 +339,7 @@ export const deployAndSetupContracts = async (
   const contracts = _connectToContracts(deployer, deployment);
   const lqtyTokenDeploymentTime = await contracts.lqtyToken.getDeploymentStartTime();
   const bootstrapPeriod = await contracts.troveManager.BOOTSTRAP_PERIOD();
+  const totalStabilityPoolLQTYReward = await contracts.communityIssuance.LQTYSupplyCap();
 
   log("Connecting contracts...");
 
@@ -344,6 +348,9 @@ export const deployAndSetupContracts = async (
   return {
     ...deployment,
     deploymentDate: lqtyTokenDeploymentTime.toNumber() * 1000,
-    bootstrapPeriod: bootstrapPeriod.toNumber()
+    bootstrapPeriod: bootstrapPeriod.toNumber(),
+    totalStabilityPoolLQTYReward: `${Decimal.fromBigNumberString(
+      totalStabilityPoolLQTYReward.toHexString()
+    )}`
   };
 };

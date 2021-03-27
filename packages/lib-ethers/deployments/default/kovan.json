@@ -3,6 +3,7 @@
   "version": "6201cfd8c83fc3828483e17f5f05ca4168f56c0c",
   "deploymentDate": 1616753759000,
   "bootstrapPeriod": 1209600,
+  "totalStabilityPoolLQTYReward": "32000000",
   "_priceFeedIsTestnet": false,
   "_uniTokenIsMock": false,
   "_isDev": false,
