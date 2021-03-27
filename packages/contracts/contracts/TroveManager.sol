@@ -300,7 +300,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     // Single liquidation function. Closes the trove if its ICR is lower than the minimum collateral ratio.
     function liquidate(address _borrower) external override {
-        _requireTroveisActive(_borrower);
+        _requireTroveIsActive(_borrower);
 
         address[] memory borrowers = new address[](1);
         borrowers[0] = _borrower;
@@ -702,6 +702,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         for (vars.i = 0; vars.i < _troveArray.length; vars.i++) {
             vars.user = _troveArray[vars.i];
+            // Skip non-active troves
+            if (Troves[vars.user].status != Status.active) { continue; }
             vars.ICR = getCurrentICR(vars.user, _price);
 
             if (!vars.backToNormalMode) {
@@ -1049,7 +1051,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // Add the borrowers's coll and debt rewards earned from redistributions, to their Trove
     function _applyPendingRewards(IActivePool _activePool, IDefaultPool _defaultPool, address _borrower) internal {
         if (hasPendingRewards(_borrower)) {
-            _requireTroveisActive(_borrower);
+            _requireTroveIsActive(_borrower);
 
             // Compute pending rewards
             uint pendingETHReward = getPendingETHReward(_borrower);
@@ -1468,7 +1470,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         require(msg.sender == borrowerOperationsAddress, "TroveManager: Caller is not the BorrowerOperations contract");
     }
 
-    function _requireTroveisActive(address _borrower) internal view {
+    function _requireTroveIsActive(address _borrower) internal view {
         require(Troves[_borrower].status == Status.active, "TroveManager: Trove does not exist or is closed");
     }
 
