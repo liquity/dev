@@ -201,7 +201,7 @@ contract('StabilityPool', async accounts => {
       const alice_snapshot_After = await stabilityPool.depositSnapshots(alice)
       const alice_snapshot_S_After = alice_snapshot_After[0].toString()
       const alice_snapshot_P_After = alice_snapshot_After[1].toString()
-      const alice_snapshot_G_After = alice_snapshot_Before[2].toString()
+      const alice_snapshot_G_After = alice_snapshot_After[2].toString()
 
       assert.equal(alice_snapshot_S_After, S_Before)
       assert.equal(alice_snapshot_P_After, P_Before)

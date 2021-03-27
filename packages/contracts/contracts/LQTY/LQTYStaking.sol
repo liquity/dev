@@ -212,9 +212,9 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     }
 
     function _sendETHGainToUser(uint ETHGain) internal {
+        emit EtherSent(msg.sender, ETHGain);
         (bool success, ) = msg.sender.call{value: ETHGain}("");
         require(success, "LQTYStaking: Failed to send accumulated ETHGain");
-        emit EtherSent(msg.sender, ETHGain);
     }
 
     // --- 'require' functions ---
