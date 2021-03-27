@@ -2,10 +2,10 @@ require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-ethers");
 require("solidity-coverage");
 require("hardhat-gas-reporter");
-
 const accounts = require("./hardhatAccountsList2k.js");
-
 const accountsList = accounts.accountsList
+const secrets = require("./secrets.js");
+const alchemyAPIKey = secrets.alchemyAPIKey
 
 module.exports = {
     paths: {
@@ -47,8 +47,13 @@ module.exports = {
         hardhat: {
             accounts: accountsList,
             gas: 10000000,  // tx gas limit
-            blockGasLimit: 10000000, 
+            blockGasLimit: 12500000, 
             gasPrice: 20000000000
+            // forking: {
+            //     url: "https://eth-mainnet.alchemyapi.io/v2/lNpcXJOzjHCf0x4oUZVTw5t_GIdFIV9b",
+            //     // url: alchemyAPIKey,
+            //     blockNumber: 12097827
+            //   }
         }
     },
     mocha: { timeout: 12000000 },
