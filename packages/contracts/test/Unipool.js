@@ -42,6 +42,8 @@ require('chai').use(function (chai, utils) {
 });
 
 contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddress, owner]) {
+  let multisig = "0x5b5e5CC89636CA2685b4e4f50E66099EBCFAb638"  // Arbitrary address for the multisig, which is not tested in this file
+
   const deploy = async (that) => {
       that.uni = await Uni.new('Uniswap token', 'LPT', owner, 0);
       that.pool = await Unipool.new();
@@ -54,7 +56,8 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
         lqtyStaking.address,
         lockupContractFactory.address,
         bountyAddress,
-        that.pool.address
+        that.pool.address,
+        multisig
       );
       that.lpRewardsEntitlement = await that.lqty.getLpRewardsEntitlement();
       that.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks

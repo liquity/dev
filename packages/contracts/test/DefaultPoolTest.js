@@ -13,9 +13,6 @@ contract('DefaultPool', async accounts => {
 
   let [owner] = accounts
 
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
-
   beforeEach('Deploy contracts', async () => {
     defaultPool = await DefaultPool.new()
     nonPayable = await NonPayable.new()

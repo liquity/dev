@@ -42,8 +42,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   const [owner, alice, frontEnd_1] = accounts;
 
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   before(async () => {
 
@@ -51,7 +50,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
     contracts.stabilityPool = await StabilityPool.new()
     contracts = await deploymentHelper.deployLUSDToken(contracts)
 
