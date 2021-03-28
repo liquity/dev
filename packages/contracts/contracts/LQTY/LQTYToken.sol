@@ -146,12 +146,12 @@ contract LQTYToken is CheckContract, ILQTYToken {
         _mint(_lpRewardsAddress, _lpRewardsEntitlement);
         
         // Allocate the remainder to the LQTY Multisig: (100 - 2 - 32 - 1.33) million = 64.66 million
-        uint safeEntitlement = _1_MILLION.mul(100)
+        uint multisigEntitlement = _1_MILLION.mul(100)
             .sub(bountyEntitlement)
             .sub(depositorsAndFrontEndsEntitlement)
             .sub(_lpRewardsEntitlement);
 
-        _mint(_multisigAddress, safeEntitlement);
+        _mint(_multisigAddress, multisigEntitlement);
     }
 
     // --- External functions ---
