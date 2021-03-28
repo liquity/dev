@@ -1147,9 +1147,9 @@ class TestHelper {
       assert.include(err.message, "revert")
       // TODO !!!
       
-      // if (message) {
-      //   assert.include(err.message, message)
-      // }
+      if (message) {
+        assert.include(err.message, message)
+      }
     }
   }
 

@@ -222,7 +222,7 @@ contract LQTYToken is CheckContract, ILQTYToken {
 
     function sendToLQTYStaking(address _sender, uint256 _amount) external override {
         _requireCallerIsLQTYStaking();
-        if (_isFirstYear()) { _requireSenderIsNotMultisig(_sender); }
+        if (_isFirstYear()) { _requireSenderIsNotMultisig(_sender); }  // Prevent the multisig from staking LQTY
         _transfer(_sender, lqtyStakingAddress, _amount);
     }
 
