@@ -25,8 +25,7 @@ contract('During the initial lockup period', async accounts => {
     I
   ] = accounts;
 
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
   const SECONDS_IN_364_DAYS = timeValues.SECONDS_IN_ONE_DAY * 364
@@ -64,7 +63,7 @@ contract('During the initial lockup period', async accounts => {
   beforeEach(async () => {
     // Deploy all contracts from the first account
     coreContracts = await deploymentHelper.deployLiquityCore()
-    LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
+    LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
 
     lqtyStaking = LQTYContracts.lqtyStaking
     lqtyToken = LQTYContracts.lqtyToken
@@ -99,14 +98,14 @@ contract('During the initial lockup period', async accounts => {
     LC_I2 = await th.getLCFromDeploymentTx(deployedLCtx_I2)
     LC_I3 = await th.getLCFromDeploymentTx(deployedLCtx_I3)
 
-    // LiquityAG transfers initial LQTY entitlements to LCs
-    await lqtyToken.transfer(LC_T1.address, teamMemberInitialEntitlement_1, { from: liquityAG })
-    await lqtyToken.transfer(LC_T2.address, teamMemberInitialEntitlement_2, { from: liquityAG })
-    await lqtyToken.transfer(LC_T3.address, teamMemberInitialEntitlement_3, { from: liquityAG })
+    // Multisig transfers initial LQTY entitlements to LCs
+    await lqtyToken.transfer(LC_T1.address, teamMemberInitialEntitlement_1, { from: multisig })
+    await lqtyToken.transfer(LC_T2.address, teamMemberInitialEntitlement_2, { from: multisig })
+    await lqtyToken.transfer(LC_T3.address, teamMemberInitialEntitlement_3, { from: multisig })
 
-    await lqtyToken.transfer(LC_I1.address, investorInitialEntitlement_1, { from: liquityAG })
-    await lqtyToken.transfer(LC_I2.address, investorInitialEntitlement_2, { from: liquityAG })
-    await lqtyToken.transfer(LC_I3.address, investorInitialEntitlement_3, { from: liquityAG })
+    await lqtyToken.transfer(LC_I1.address, investorInitialEntitlement_1, { from: multisig })
+    await lqtyToken.transfer(LC_I2.address, investorInitialEntitlement_2, { from: multisig })
+    await lqtyToken.transfer(LC_I3.address, investorInitialEntitlement_3, { from: multisig })
 
     // Fast forward time 364 days, so that still less than 1 year since launch has passed
     await th.fastForwardTime(SECONDS_IN_364_DAYS, web3.currentProvider)
