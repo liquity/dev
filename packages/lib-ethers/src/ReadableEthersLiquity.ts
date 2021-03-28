@@ -269,16 +269,25 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     address ??= _requireAddress(this.connection);
     const { stabilityPool } = _getContracts(this.connection);
 
-    const [initialLUSD, currentLUSD, collateralGain, lqtyReward] = await Promise.all(
-      [
-        stabilityPool.deposits(address, { ...overrides }).then(d => d.initialValue),
-        stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
-        stabilityPool.getDepositorETHGain(address, { ...overrides }),
-        stabilityPool.getDepositorLQTYGain(address, { ...overrides })
-      ].map(getBigNumber => getBigNumber.then(decimalify))
-    );
+    const [
+      { frontEndTag, initialValue },
+      currentLUSD,
+      collateralGain,
+      lqtyReward
+    ] = await Promise.all([
+      stabilityPool.deposits(address, { ...overrides }),
+      stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
+      stabilityPool.getDepositorETHGain(address, { ...overrides }),
+      stabilityPool.getDepositorLQTYGain(address, { ...overrides })
+    ]);
 
-    return new StabilityDeposit(initialLUSD, currentLUSD, collateralGain, lqtyReward);
+    return new StabilityDeposit(
+      decimalify(initialValue),
+      decimalify(currentLUSD),
+      decimalify(collateralGain),
+      decimalify(lqtyReward),
+      frontEndTag
+    );
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingStabilityPoolLQTYReward} */

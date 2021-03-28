@@ -1,6 +1,7 @@
 import chai, { expect, assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiSpies from "chai-spies";
+import { AddressZero } from "@ethersproject/constants";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ethers, network, deployLiquity } from "hardhat";
@@ -40,10 +41,15 @@ const provider = ethers.provider;
 chai.use(chaiAsPromised);
 chai.use(chaiSpies);
 
-const connectToDeployment = async (deployment: _LiquityDeploymentJSON, signer: Signer) =>
+const connectToDeployment = async (
+  deployment: _LiquityDeploymentJSON,
+  signer: Signer,
+  frontendTag?: string
+) =>
   EthersLiquity._from(
     _connectToDeployment(deployment, signer, {
-      userAddress: await signer.getAddress()
+      userAddress: await signer.getAddress(),
+      frontendTag
     })
   );
 
@@ -379,6 +385,23 @@ describe("EthersLiquity", () => {
       assertStrictEqual(frontend.status, "registered" as const);
       expect(`${frontend.kickbackRate}`).to.equal("0.75");
     });
+
+    it("other user's deposit should be tagged with the frontend's address", async () => {
+      const frontendTag = await user.getAddress();
+
+      await funder.sendTransaction({
+        to: otherUsers[0].getAddress(),
+        value: Decimal.from(20.1).hex
+      });
+
+      const otherLiquity = await connectToDeployment(deployment, otherUsers[0], frontendTag);
+      await otherLiquity.openTrove({ depositCollateral: 20, borrowLUSD: LUSD_MINIMUM_DEBT });
+
+      await otherLiquity.depositLUSDInStabilityPool(LUSD_MINIMUM_DEBT);
+
+      const deposit = await otherLiquity.getStabilityDeposit();
+      expect(deposit.frontendTag).to.equal(frontendTag);
+    });
   });
 
   describe("StabilityPool", () => {
@@ -474,7 +497,9 @@ describe("EthersLiquity", () => {
           troveWithVeryLowICR.collateral
             .mul(0.995) // -0.5% gas compensation
             .mulDiv(smallStabilityDeposit, troveWithVeryLowICR.debt)
-            .sub("0.000000000000000007") // tiny imprecision
+            .sub("0.000000000000000007"), // tiny imprecision
+          Decimal.ZERO,
+          AddressZero
         )
       );
     });
