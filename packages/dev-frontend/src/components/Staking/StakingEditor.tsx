@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Decimalish, LiquityStoreState, LQTYStake } from "@liquity/lib-base";
+import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../../strings";
@@ -11,23 +11,20 @@ import { EditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 
 import { useStakingView } from "./context/StakingViewContext";
+import { useStakingManager } from "./context/StakingManagerContext";
 
 const selectLQTYBalance = ({ lqtyBalance }: LiquityStoreState) => lqtyBalance;
 
 type StakingEditorProps = {
   title: string;
-  originalStake: LQTYStake;
-  editedLQTY: Decimal;
-  dispatch: (action: { type: "setStake"; newValue: Decimalish } | { type: "revert" }) => void;
 };
 
-export const StakingEditor: React.FC<StakingEditorProps> = ({
-  children,
-  title,
-  originalStake,
-  editedLQTY,
-  dispatch
-}) => {
+export const StakingEditor: React.FC<StakingEditorProps> = ({ children, title }) => {
+  const {
+    state: { originalStake, editedLQTY },
+    dispatch
+  } = useStakingManager();
+
   const lqtyBalance = useLiquitySelector(selectLQTYBalance);
   const { changePending } = useStakingView();
   const editingState = useState<string>();

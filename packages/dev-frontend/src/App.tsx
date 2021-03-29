@@ -23,6 +23,8 @@ import { PageSwitcher } from "./pages/PageSwitcher";
 import { Farm } from "./pages/Farm";
 import { Liquidation } from "./pages/Liquidation";
 import { RedemptionPage } from "./pages/RedemptionPage";
+import { StakingManagerProvider } from "./components/Staking/context/StakingManagerProvider";
+import { StakingViewProvider } from "./components/Staking/context/StakingViewProvider";
 
 if (window.ethereum) {
   // Silence MetaMask warning in console
@@ -73,42 +75,48 @@ const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
 
   return (
     <LiquityStoreProvider {...{ loader }} store={liquity.store}>
-      <Router>
-        <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
-          <Header>
-            <UserAccount />
-            <SystemStatsPopup />
-          </Header>
+      <StakingViewProvider>
+        <StakingManagerProvider>
+          <Router>
+            <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
+              <Header>
+                <UserAccount />
+                <SystemStatsPopup />
+              </Header>
 
-          <Container
-            variant="main"
-            sx={{
-              display: "flex",
-              flexGrow: 1,
-              flexDirection: "column",
-              alignItems: "center"
-            }}
-          >
-            <Switch>
-              <Route path="/" exact>
-                <PageSwitcher />
-              </Route>
-              <Route path="/farm">
-                <Farm />
-              </Route>
-              <Route path="/liquidation">
-                <Liquidation />
-              </Route>
-              <Route path="/redemption">
-                <RedemptionPage />
-              </Route>
-            </Switch>
-          </Container>
+              <Container
+                variant="main"
+                sx={{
+                  display: "flex",
+                  flexGrow: 1,
+                  flexDirection: "column",
+                  alignItems: "center"
+                }}
+              >
+                <Switch>
+                  <Route path="/" exact>
+                    <PageSwitcher />
+                  </Route>
+                  <Route path="/farm">
+                    <Farm />
+                  </Route>
+                  <Route path="/liquidation">
+                    <Liquidation />
+                  </Route>
+                  <Route path="/redemption">
+                    <RedemptionPage />
+                  </Route>
+                </Switch>
+              </Container>
 
-          <Footer>* Please note that the final user-facing application will look different.</Footer>
-        </Flex>
-      </Router>
-      <TransactionMonitor />
+              <Footer>
+                * Please note that the final user-facing application will look different.
+              </Footer>
+            </Flex>
+          </Router>
+          <TransactionMonitor />
+        </StakingManagerProvider>
+      </StakingViewProvider>
     </LiquityStoreProvider>
   );
 };

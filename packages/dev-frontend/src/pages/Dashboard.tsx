@@ -6,7 +6,6 @@ import { SystemStats } from "../components/SystemStats";
 import { PriceManager } from "../components/PriceManager";
 import { TroveViewProvider } from "../components/Trove/context/TroveViewProvider";
 import { StabilityViewProvider } from "../components/Stability/context/StabilityViewProvider";
-import { StakingViewProvider } from "../components/Staking/context/StakingViewProvider";
 import { Staking } from "../components/Staking/Staking";
 
 export const Dashboard: React.FC = () => (
@@ -20,9 +19,7 @@ export const Dashboard: React.FC = () => (
         <Stability />
       </StabilityViewProvider>
 
-      <StakingViewProvider>
-        <Staking />
-      </StakingViewProvider>
+      <Staking />
     </Container>
 
     <Container variant="right">
