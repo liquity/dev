@@ -7,9 +7,10 @@ type RowProps = SxProp & {
   label: string;
   labelId?: string;
   labelFor?: string;
+  infoIcon?: React.ReactNode;
 };
 
-export const Row: React.FC<RowProps> = ({ sx, label, labelId, labelFor, children }) => {
+export const Row: React.FC<RowProps> = ({ sx, label, labelId, labelFor, children, infoIcon }) => {
   return (
     <Flex sx={{ alignItems: "stretch", ...sx }}>
       <Label
@@ -26,9 +27,11 @@ export const Row: React.FC<RowProps> = ({ sx, label, labelId, labelFor, children
           borderColor: "transparent"
         }}
       >
-        {label}
+        <Flex sx={{ alignItems: "center" }}>
+          {label}
+          {infoIcon && infoIcon}
+        </Flex>
       </Label>
-
       {children}
     </Flex>
   );
@@ -157,8 +160,14 @@ const editableStyle: ThemeUICSSProperties = {
 
 type StaticRowProps = RowProps & StaticAmountsProps;
 
-export const StaticRow: React.FC<StaticRowProps> = ({ label, labelId, labelFor, ...props }) => (
-  <Row {...{ label, labelId, labelFor }} sx={{ mt: [-2, -3], pb: [2, 3] }}>
+export const StaticRow: React.FC<StaticRowProps> = ({
+  label,
+  labelId,
+  labelFor,
+  infoIcon,
+  ...props
+}) => (
+  <Row {...{ label, labelId, labelFor, infoIcon }} sx={{ mt: [-2, -3], pb: [2, 3] }}>
     <StaticAmounts {...props} />
   </Row>
 );
