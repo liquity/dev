@@ -1,10 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Box, Button, Container, Flex } from "theme-ui";
 import { Icon } from "./Icon";
-import { LiquityLogoSmall } from "./LiquityLogo";
 import { Link } from "./Link";
-
-const logoHeight = "32px";
 
 export const SideNav: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -35,7 +32,6 @@ export const SideNav: React.FC = () => {
         >
           <Icon name="times" size="2x" />
         </Button>
-        <LiquityLogoSmall height={logoHeight} p={2} />
         <Box as="nav" sx={{ m: 3, mt: 3, p: 0 }} onClick={() => setIsVisible(false)}>
           <Link to="/">Dashboard</Link>
           <Link to="/farm">Farm</Link>
