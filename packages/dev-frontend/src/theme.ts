@@ -302,14 +302,6 @@ const theme: Theme = {
       fontSize: 1,
 
       zIndex: 1
-    },
-    sidenav: {
-      p: 0,
-      m: 0,
-      borderColor: "muted",
-      mr: "25vw",
-      height: "100vh",
-      ...headerGradient
     }
   },
 
@@ -431,6 +423,16 @@ const theme: Theme = {
       m: 3,
       alignItems: "center",
       minWidth: "128px"
+    },
+    sidenav: {
+      display: ["flex", "none"],
+      flexDirection: "column",
+      p: 0,
+      m: 0,
+      borderColor: "muted",
+      mr: "25vw",
+      height: "100%",
+      ...headerGradient
     }
   },
 
