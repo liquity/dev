@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Box, Button, Card, Container, Flex, Text } from "theme-ui";
+import { Box, Button, Container, Flex } from "theme-ui";
 import { Icon } from "./Icon";
 import { LiquityLogoSmall } from "./LiquityLogo";
 import { Link } from "./Link";
