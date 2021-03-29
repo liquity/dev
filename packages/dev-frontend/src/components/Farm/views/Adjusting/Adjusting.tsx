@@ -38,7 +38,6 @@ export const Adjusting: React.FC = () => {
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
-  console.log("isTransactionPending", isTransactionPending);
   const isDirty = !amount.eq(liquidityMiningStake);
   const maximumAmount = liquidityMiningStake.add(uniTokenBalance);
   const hasSetMaximumAmount = amount.eq(maximumAmount);
