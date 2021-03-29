@@ -27,17 +27,28 @@ export class StabilityDeposit {
   /** Amount of LQTY rewarded since the last modification of the Stability Deposit. */
   readonly lqtyReward: Decimal;
 
+  /**
+   * Address of frontend through which this Stability Deposit was made.
+   *
+   * @remarks
+   * If the Stability Deposit was made through a frontend that doesn't tag deposits, this will be
+   * the zero-address.
+   */
+  readonly frontendTag: string;
+
   /** @internal */
   constructor(
-    initialLUSD = Decimal.ZERO,
-    currentLUSD = initialLUSD,
-    collateralGain = Decimal.ZERO,
-    lqtyReward = Decimal.ZERO
+    initialLUSD: Decimal,
+    currentLUSD: Decimal,
+    collateralGain: Decimal,
+    lqtyReward: Decimal,
+    frontendTag: string
   ) {
     this.initialLUSD = initialLUSD;
     this.currentLUSD = currentLUSD;
     this.collateralGain = collateralGain;
     this.lqtyReward = lqtyReward;
+    this.frontendTag = frontendTag;
 
     if (this.currentLUSD.gt(this.initialLUSD)) {
       throw new Error("currentLUSD can't be greater than initialLUSD");
@@ -59,7 +70,8 @@ export class StabilityDeposit {
       `{ initialLUSD: ${this.initialLUSD}` +
       `, currentLUSD: ${this.currentLUSD}` +
       `, collateralGain: ${this.collateralGain}` +
-      `, lqtyReward: ${this.lqtyReward} }`
+      `, lqtyReward: ${this.lqtyReward}` +
+      `, frontendTag: "${this.frontendTag}" }`
     );
   }
 
@@ -71,7 +83,8 @@ export class StabilityDeposit {
       this.initialLUSD.eq(that.initialLUSD) &&
       this.currentLUSD.eq(that.currentLUSD) &&
       this.collateralGain.eq(that.collateralGain) &&
-      this.lqtyReward.eq(that.lqtyReward)
+      this.lqtyReward.eq(that.lqtyReward) &&
+      this.frontendTag === that.frontendTag
     );
   }
 

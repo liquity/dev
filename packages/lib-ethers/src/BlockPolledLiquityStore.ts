@@ -163,7 +163,13 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
               AddressZero,
               "nonExistent"
             ),
-            stabilityDeposit: new StabilityDeposit(),
+            stabilityDeposit: new StabilityDeposit(
+              Decimal.ZERO,
+              Decimal.ZERO,
+              Decimal.ZERO,
+              Decimal.ZERO,
+              AddressZero
+            ),
             lqtyStake: new LQTYStake(),
             ownFrontend: { status: "unregistered" as const }
           })
