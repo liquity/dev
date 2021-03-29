@@ -429,7 +429,8 @@ const theme: Theme = {
       display: "flex",
       justifyContent: "center",
       m: 3,
-      alignItems: "center"
+      alignItems: "center",
+      minWidth: "128px"
     }
   },
 
