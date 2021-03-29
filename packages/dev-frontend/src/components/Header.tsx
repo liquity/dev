@@ -10,7 +10,7 @@ const logoHeight = "32px";
 
 export const Header: React.FC = ({ children }) => (
   <Container variant="header">
-    <Flex sx={{ alignItems: "center" }}>
+    <Flex sx={{ alignItems: "center", flex: 1 }}>
       <Link sx={{ lineHeight: 0 }} href="https://www.liquity.org">
         <Abbreviation short={<LiquityLogoSmall height={logoHeight} />}>
           <LiquityLogo height={logoHeight} />
@@ -26,9 +26,8 @@ export const Header: React.FC = ({ children }) => (
         }}
       />
 
-      <Abbreviation short={<SideNav />}>
-        <Nav />
-      </Abbreviation>
+      <SideNav />
+      <Nav />
     </Flex>
 
     {children}

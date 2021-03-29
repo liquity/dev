@@ -1,8 +1,8 @@
 import React, { useState, useRef } from "react";
-import { Button, Card, Container, Flex } from "theme-ui";
+import { Box, Button, Card, Container, Flex, Text } from "theme-ui";
 import { Icon } from "./Icon";
 import { LiquityLogoSmall } from "./LiquityLogo";
-import { Nav } from "./Nav";
+import { Link } from "./Link";
 
 const logoHeight = "32px";
 
@@ -12,7 +12,7 @@ export const SideNav: React.FC = () => {
 
   if (!isVisible) {
     return (
-      <Button variant="icon" onClick={() => setIsVisible(true)}>
+      <Button sx={{ display: ["flex", "none"] }} variant="icon" onClick={() => setIsVisible(true)}>
         <Icon name="bars" size="lg" />
       </Button>
     );
@@ -27,19 +27,22 @@ export const SideNav: React.FC = () => {
         }
       }}
     >
-      <Card variant="sidenav">
+      <Flex variant="layout.sidenav">
         <Button
-          sx={{ position: "fixed", right: "25vw", m: 1 }}
+          sx={{ position: "fixed", right: "25vw", m: 2 }}
           variant="icon"
           onClick={() => setIsVisible(false)}
         >
           <Icon name="times" size="2x" />
         </Button>
         <LiquityLogoSmall height={logoHeight} p={2} />
-        <Flex sx={{ mr: "25vw", py: 1, ml: 2 }} onClick={() => setIsVisible(false)}>
-          <Nav />
-        </Flex>
-      </Card>
+        <Box as="nav" sx={{ m: 3, mt: 3, p: 0 }} onClick={() => setIsVisible(false)}>
+          <Link to="/">Dashboard</Link>
+          <Link to="/farm">Farm</Link>
+          <Link to="/liquidation">Liquidation</Link>
+          <Link to="/redemption">Redemption</Link>
+        </Box>
+      </Flex>
     </Container>
   );
 };
