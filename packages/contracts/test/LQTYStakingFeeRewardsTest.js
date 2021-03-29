@@ -550,7 +550,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isTrue(emittedLUSDFee_2.gt(toBN('0')))
 
     // D obtains LQTY from owner and makes a stake
-    await lqtyToken.transfer(D, dec(50, 18), {from: owner})
+    await lqtyToken.transfer(D, dec(50, 18), {from: multisig})
     await lqtyToken.approve(lqtyStaking.address, dec(50, 18), {from: D})
     await lqtyStaking.stake(dec(50, 18), {from: D})
 
