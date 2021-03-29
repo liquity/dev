@@ -24,7 +24,7 @@ const selector = ({
   uniTokenBalance
 });
 
-const transactionId = "farm-stake";
+const transactionId = /farm-/;
 
 export const Adjusting: React.FC = () => {
   const { dispatchEvent } = useFarmView();
@@ -38,7 +38,7 @@ export const Adjusting: React.FC = () => {
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
-
+  console.log("isTransactionPending", isTransactionPending);
   const isDirty = !amount.eq(liquidityMiningStake);
   const maximumAmount = liquidityMiningStake.add(uniTokenBalance);
   const hasSetMaximumAmount = amount.eq(maximumAmount);

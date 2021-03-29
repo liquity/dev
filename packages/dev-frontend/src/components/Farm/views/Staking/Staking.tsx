@@ -13,7 +13,7 @@ import { Approve } from "../Approve";
 import { Validation } from "../Validation";
 import { useValidationState } from "../../context/useValidationState";
 
-const transactionId = "farm-stake";
+const transactionId = /farm-/;
 
 export const Staking: React.FC = () => {
   const { dispatchEvent } = useFarmView();
