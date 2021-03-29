@@ -116,6 +116,7 @@ const deployContracts = async (
       addresses.lockupContractFactory,
       Wallet.createRandom().address, // _bountyAddress (TODO: parameterize this)
       addresses.unipool, // _lpRewardsAddress
+      Wallet.createRandom().address, // _multisigAddress (TODO: parameterize this)
       { ...overrides }
     ),
 
