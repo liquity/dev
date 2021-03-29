@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Flex, Button } from "theme-ui";
 
 import { LiquityStoreState, Decimal, Trove, Decimalish, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
@@ -6,6 +6,8 @@ import { LiquityStoreState, Decimal, Trove, Decimalish, LUSD_MINIMUM_DEBT } from
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { ActionDescription } from "../ActionDescription";
+import { useMyTransactionState } from "../Transaction";
+
 import { TroveEditor } from "./TroveEditor";
 import { TroveAction } from "./TroveAction";
 import { useTroveView } from "./context/TroveViewContext";
@@ -145,6 +147,8 @@ const select = (state: LiquityStoreState) => ({
   validationContext: selectForTroveChangeValidation(state)
 });
 
+const transactionId = "trove";
+
 export const TroveManager: React.FC = () => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees, validationContext } = useLiquitySelector(select);
@@ -167,6 +171,18 @@ export const TroveManager: React.FC = () => {
   }, [dispatchEvent]);
 
   const openingNewTrove = original.isEmpty;
+
+  const myTransactionState = useMyTransactionState(transactionId);
+
+  useEffect(() => {
+    if (myTransactionState.type === "waitingForApproval") {
+      dispatch({ type: "startChange" });
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
+      dispatch({ type: "finishChange" });
+    } else if (myTransactionState.type === "confirmedOneShot") {
+      dispatchEvent("TROVE_ADJUSTED");
+    }
+  }, [myTransactionState.type, dispatch, dispatchEvent]);
 
   return (
     <TroveEditor
@@ -194,7 +210,11 @@ export const TroveManager: React.FC = () => {
         </Button>
 
         {validChange ? (
-          <TroveAction change={validChange} maxBorrowingRate={maxBorrowingRate} dispatch={dispatch}>
+          <TroveAction
+            transactionId={transactionId}
+            change={validChange}
+            maxBorrowingRate={maxBorrowingRate}
+          >
             Confirm
           </TroveAction>
         ) : (

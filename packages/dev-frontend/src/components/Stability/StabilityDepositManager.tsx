@@ -1,10 +1,13 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Button, Flex } from "theme-ui";
 
 import { Decimal, Decimalish, LiquityStoreState } from "@liquity/lib-base";
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN } from "../../strings";
+
+import { ActionDescription } from "../ActionDescription";
+import { useMyTransactionState } from "../Transaction";
 
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
 import { StabilityDepositAction } from "./StabilityDepositAction";
@@ -13,7 +16,6 @@ import {
   selectForStabilityDepositChangeValidation,
   validateStabilityDepositChange
 } from "./validation/validateStabilityDepositChange";
-import { ActionDescription } from "../ActionDescription";
 
 const init = ({ stabilityDeposit }: LiquityStoreState) => ({
   originalDeposit: stabilityDeposit,
@@ -87,6 +89,8 @@ const reduce = (
   }
 };
 
+const transactionId = "stability-deposit";
+
 export const StabilityDepositManager: React.FC = () => {
   const [{ originalDeposit, editedLUSD, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const validationContext = useLiquitySelector(selectForStabilityDepositChangeValidation);
@@ -103,6 +107,18 @@ export const StabilityDepositManager: React.FC = () => {
   );
 
   const makingNewDeposit = originalDeposit.isEmpty;
+
+  const myTransactionState = useMyTransactionState(transactionId);
+
+  useEffect(() => {
+    if (myTransactionState.type === "waitingForApproval") {
+      dispatch({ type: "startChange" });
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
+      dispatch({ type: "finishChange" });
+    } else if (myTransactionState.type === "confirmedOneShot") {
+      dispatchEvent("DEPOSIT_CONFIRMED");
+    }
+  }, [myTransactionState.type, dispatch, dispatchEvent]);
 
   return (
     <StabilityDepositEditor
@@ -124,7 +140,7 @@ export const StabilityDepositManager: React.FC = () => {
         </Button>
 
         {validChange ? (
-          <StabilityDepositAction change={validChange} dispatch={dispatch}>
+          <StabilityDepositAction transactionId={transactionId} change={validChange}>
             Confirm
           </StabilityDepositAction>
         ) : (
