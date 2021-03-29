@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Heading, Link, Box, Paragraph } from "theme-ui";
+import { Card, Heading, Link, Box } from "theme-ui";
 
 import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
