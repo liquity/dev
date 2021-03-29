@@ -696,6 +696,49 @@ Redemption fee revenue amounts to
 sd_redemption = 0.001
 redemption_start = 0.8
 
+def redeem_trove(accounts, contracts, i):
+    lusd_balance = contracts.lusdToken.balanceOf(accounts[i])
+    [firstRedemptionHint, partialRedemptionHintNICR, truncatedLUSDamount] = contracts.hintHelpers.getRedemptionHints(lusd_balance, ETHER_PRICE, 70)
+    if truncatedLUSDamount == Wei(0):
+        return None
+    approxHint = contracts.hintHelpers.getApproxHint(partialRedemptionHintNICR, 2000, 0)
+    hints = contracts.sortedTroves.findInsertPosition(partialRedemptionHintNICR, approxHint[0], approxHint[0])
+    try:
+        tx = contracts.troveManager.redeemCollateral(
+            truncatedLUSDamount,
+            firstRedemptionHint,
+            hints[0],
+            hints[1],
+            partialRedemptionHintNICR,
+            70,
+            MAX_FEE,
+            { 'from': accounts[i], 'gas_limit': 8000000, 'allow_revert': True }
+        )
+        return tx
+    except:
+        print(f"\n   Redemption failed! ")
+        print(f"Trove Manager: {contracts.troveManager.address}")
+        print(f"LUSD Token:    {contracts.lusdToken.address}")
+        print(f"i: {i}")
+        print(f"account: {accounts[i]}")
+        print(f"LUSD bal: {lusd_balance / 1e18}")
+        print(f"truncated: {truncatedLUSDamount / 1e18}")
+        print(f"Redemption rate: {contracts.troveManager.getRedemptionRateWithDecay() * 100 / 1e18} %")
+        print(f"approx: {approxHint[0]}")
+        print(f"diff: {approxHint[1]}")
+        print(f"diff: {approxHint[1] / 1e18}")
+        print(f"seed: {approxHint[2]}")
+        print(f"amount: {truncatedLUSDamount}")
+        print(f"first: {firstRedemptionHint}")
+        print(f"hint: {hints[0]}")
+        print(f"hint: {hints[1]}")
+        print(f"nicr: {partialRedemptionHintNICR}")
+        print(f"nicr: {partialRedemptionHintNICR / 1e18}")
+        print(f"70")
+        print(f"{MAX_FEE}")
+        #return None
+        exit(1)
+
 def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
 
     stability_pool = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
@@ -757,14 +800,15 @@ def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
         if redemption_pool > whale_balance:
             print("Warning! Redemption amount supposed to be greater than whale balance", stability_pool, whale_balance)
         else:
-            tx = contracts.troveManager.redeemCollateral(floatToWei(redemption_pool), { 'from': accounts[0] })
-            remove_accounts_from_events(
-                accounts,
-                active_accounts,
-                inactive_accounts,
-                filter(lambda e: e['coll'] == 0, tx.events['TroveUpdated']),
-                '_borrower'
-            )
+            tx = redeem_trove(accounts, contracts, 0)
+            if tx:
+                remove_accounts_from_events(
+                    accounts,
+                    active_accounts,
+                    inactive_accounts,
+                    filter(lambda e: e['coll'] == 0, tx.events['TroveUpdated']),
+                    '_borrower'
+                )
 
 
     return [price_LUSD_current, redemption_pool]
