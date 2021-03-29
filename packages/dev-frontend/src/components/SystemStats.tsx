@@ -49,7 +49,8 @@ const select = ({
   lusdInStabilityPool,
   borrowingRate,
   redemptionRate,
-  totalStakedLQTY
+  totalStakedLQTY,
+  frontend
 }: LiquityStoreState) => ({
   numberOfTroves,
   price,
@@ -57,7 +58,8 @@ const select = ({
   lusdInStabilityPool,
   borrowingRate,
   redemptionRate,
-  totalStakedLQTY
+  totalStakedLQTY,
+  kickbackRate: frontend.status === "registered" ? frontend.kickbackRate : null
 });
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
@@ -74,7 +76,8 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     total,
     borrowingRate,
     redemptionRate,
-    totalStakedLQTY
+    totalStakedLQTY,
+    kickbackRate,
   } = useLiquitySelector(select);
 
   const lusdInStabilityPoolPct =
@@ -107,6 +110,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       )}
       <Box>Total staked LQTY: {totalStakedLQTY.shorten()}</Box>
       <Box>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Box>
+      {kickbackRate && <Box>Kickback rate: {kickbackRate.prettify()}%</Box>}
       {total.collateralRatioIsBelowCritical(price) && (
         <Box color="danger">The system is in recovery mode!</Box>
       )}
