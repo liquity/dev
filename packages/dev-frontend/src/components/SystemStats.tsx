@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Heading, Link, Box } from "theme-ui";
-
+import { AddressZero } from "@ethersproject/constants";
 import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -65,7 +65,7 @@ const select = ({
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
   const {
     liquity: {
-      connection: { version: contractsVersion, deploymentDate }
+      connection: { version: contractsVersion, deploymentDate, frontendTag }
     }
   } = useLiquity();
 
@@ -85,6 +85,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
   const borrowingFeePct = new Percent(borrowingRate);
   const redemptionFeePct = new Percent(redemptionRate);
+  const kickbackRatePct = frontendTag === AddressZero ? "100" : kickbackRate?.mul(100).prettify();
 
   return (
     <Card {...{ variant }}>
@@ -110,7 +111,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       )}
       <Box>Total staked LQTY: {totalStakedLQTY.shorten()}</Box>
       <Box>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Box>
-      {kickbackRate && <Box>Kickback rate: {kickbackRate.mul(100).prettify()}%</Box>}
+      {kickbackRatePct && <Box>Kickback rate: {kickbackRatePct}%</Box>}
       {total.collateralRatioIsBelowCritical(price) && (
         <Box color="danger">The system is in recovery mode!</Box>
       )}
