@@ -209,7 +209,7 @@ If the collateral ratio falls in the range
 > $CR_t(i) \in [CR^*(i)-\tau(i), CR^*(i)+2\tau(i)]$,
 
 no action taken. Otherwise, the trove owner readjusts the collateral ratio so that
->  $CR_t(i)=CR^*(i)$.
+> $CR_t(i)=CR^*(i)$.
 
 The distribution of $\tau(i)$ follows gamma distribution $\Gamma(k,\theta)$ with mean of $k\theta$ and standard error of $\sqrt{k\theta^2}$.
 """
@@ -285,17 +285,17 @@ Ether Price
 
 #ether price
 for i in range(1, period):
-  random.seed(2019375+10000*i)
-  shock_ether = random.normalvariate(0, sd_ether)
-  price_ether.append(price_ether[i-1] * (1 + shock_ether) * (1 + drift_ether))
+    random.seed(2019375+10000*i)
+    shock_ether = random.normalvariate(0, sd_ether)
+    price_ether.append(price_ether[i-1] * (1 + shock_ether) * (1 + drift_ether))
 
 """Natural Rate"""
 
 #natural rate
 for i in range(1, period):
-  random.seed(201597+10*i)
-  shock_natural = random.normalvariate(0,sd_natural_rate)
-  natural_rate.append(natural_rate[i-1]*(1+shock_natural))
+    random.seed(201597+10*i)
+    shock_natural = random.normalvariate(0,sd_natural_rate)
+    natural_rate.append(natural_rate[i-1]*(1+shock_natural))
 
 """LQTY Price - First Month"""
 
