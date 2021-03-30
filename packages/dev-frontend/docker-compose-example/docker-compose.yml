@@ -1,0 +1,40 @@
+version: "2.1"
+
+services:
+  swag:
+    image: linuxserver/swag
+    container_name: swag
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000 # see https://github.com/linuxserver/docker-swag#user--group-identifiers
+      - PGID=1011 # see https://github.com/linuxserver/docker-swag#user--group-identifiers
+      - TZ=Europe/Berlin # customize this
+      - URL=example.com # customize this
+      - SUBDOMAINS=liquity # customize this
+      - VALIDATION=http
+      - ONLY_SUBDOMAINS=true
+    volumes:
+      - ./config:/config
+    ports:
+      - 443:443
+      - 80:80
+    restart: unless-stopped
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 1000 --cleanup --label-enable
+    restart: unless-stopped
+
+  dev-frontend:
+    image: liquity/dev-frontend:latest
+    container_name: liquity-dev-frontend
+    environment:
+      - FRONTEND_TAG= # customize this
+      - INFURA_API_KEY= # (optional) customize this
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"

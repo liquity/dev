@@ -62,10 +62,6 @@ To stop the service:
 docker kill liquity
 ```
 
-### Running with `docker-compose`
-
-See [packages/dev-frontend/docker-compose.yml](packages/dev-frontend/docker-compose.yml) for a simple example of docker-compose configuration.
-
 ### Configuring a public Dev UI
 
 If you're planning to publicly host Dev UI, you might need to pass the Docker container some extra configuration in the form of environment variables.
@@ -93,9 +89,42 @@ docker run --name liquity -d --rm -p 3000:80 \
 
 Remember to replace the environment variables in the above example. After executing this command, open http://localhost:3000/ in a browser with MetaMask installed, then switch MetaMask to the account whose address you specified as FRONTEND_TAG to begin setting the kickback rate.
 
+### Next steps for hosting Dev UI
+
+Now that you've set a kickback rate, you'll need to decide how you want to host your frontend. There are way too many options to list here, so these are going to be just a few examples.
+
+#### Example 1: using static website hosting
+
+Dev UI doesn't require any database or server-side computation, so the easiest way to host it is to use a service that lets you upload a folder of static files (HTML, CSS, JS, etc).
+
+To obtain the files you need to upload, you need to extract them from a Dev UI Docker container. If you were following the guide for setting a kickback rate and haven't stopped the container yet, then you already have one! Otherwise, you can create it with a command like this (remember to use your own `FRONTEND_TAG` and `INFURA_API_KEY`):
+
+```
+docker run --name liquity -d --rm \
+  -e FRONTEND_TAG=0x2781fD154358b009abf6280db4Ec066FCC6cb435 \
+  -e INFURA_API_KEY=158b6511a5c74d1ac028a8a2afe8f626 \
+  liquity/dev-frontend
+```
+
+While the container is running, use `docker cp` to extract Dev UI's files to a folder of your choosing. For example to extract them to a new folder named "devui" inside the current folder, run:
+
+```
+docker cp liquity:/usr/share/nginx/html ./devui
+```
+
+Upload the contents of this folder to your chosen hosting service (or serve them using your own infrastructure), and you're set!
+
+#### Example 2: wrapping the Dev UI container in HTTPS
+
+If you have command line access to a server with Docker installed, hosting Dev UI from a Docker container is a viable option.
+
+The Dev UI Docker container simply serves files using plain HTTP, which is susceptible to man-in-the-middle attacks. Therefore it is highly recommended to wrap it in HTTPS using a reverse proxy. You can find an example docker-compose config [here](packages/dev-frontend/docker-compose-example/docker-compose.yml) that secures Dev UI using [SWAG (Secure Web Application Gateway)](https://github.com/linuxserver/docker-swag) and uses [watchtower](https://github.com/containrrr/watchtower) for automatically updating the Dev UI image to the latest version on Docker Hub.
+
+Remember to customize both [docker-compose.yml](packages/dev-frontend/docker-compose-example/docker-compose.yml) and the [site config](packages/dev-frontend/docker-compose-example/config/nginx/site-confs/liquity.example.com).
+
 ## Building Dev UI from source
 
-If you want to customize the functionality or look of Dev UI, or you don't want to use the Docker image, you'll need to build it yourself from source.
+If you want to customize the functionality or look of Dev UI, you'll need to build it yourself from source.
 
 ### Prerequisites
 
@@ -149,7 +178,7 @@ A hint is the address of a Trove with a position in the sorted list close to the
 
 All Trove operations take two ‘hint’ arguments: a `_lowerHint` referring to the `nextId` and an `_upperHint` referring to the `prevId` of the two adjacent nodes in the linked list that are (or would become) the neighbors of the given Trove. Taking both direct neighbors as hints has the advantage of being much more resilient to situations where a neighbor gets moved or removed before the caller's transaction is processed: the transaction would only fail if both neighboring Troves are affected during the pendency of the transaction.
 
-The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call. `SortedList::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)` that is called by the Trove operation firsts check if `prevId` is still existant and valid (larger NICR than the provided `_NICR`) and then descends the list starting from `prevId`. If the check fails, the function further checks if `nextId` is still existant and valid (smaller NICR than the provided `_NICR`) and then ascends list starting from `nextId`. 
+The better the ‘hint’ is, the shorter the list traversal, and the cheaper the gas cost of the function call. `SortedList::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)` that is called by the Trove operation firsts check if `prevId` is still existant and valid (larger NICR than the provided `_NICR`) and then descends the list starting from `prevId`. If the check fails, the function further checks if `nextId` is still existant and valid (smaller NICR than the provided `_NICR`) and then ascends list starting from `nextId`.
 
 The `HintHelpers::getApproxHint(...)` function can be used to generate a useful hint pointing to a Trove relatively close to the target position, which can then be passed as an argument to the desired Trove operation or to `SortedTroves::findInsertPosition(...)` to get its two direct neighbors as ‘exact‘ hints (based on the current state of the system).
 
@@ -167,7 +196,7 @@ Gas cost will be worst case `O(n)`, where n is the size of the `SortedTroves` li
 1. User performs Trove operation in their browser
 2. The front end computes a new collateralization ratio locally, based on the change in collateral and/or debt.
 3. Call `HintHelpers::getApproxHint(...)`, passing it the computed nominal collateralization ratio. Returns an address close to the correct insert position
-4. Call `SortedTroves::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)`, passing it the same approximate hint via both `_prevId` and `_nextId` and the new nominal collateralization ratio via `_NICR`. 
+4. Call `SortedTroves::findInsertPosition(uint256 _NICR, address _prevId, address _nextId)`, passing it the same approximate hint via both `_prevId` and `_nextId` and the new nominal collateralization ratio via `_NICR`.
 5. Pass the ‘exact‘ hint in the form of the two direct neighbors, i.e. `_nextId` as `_lowerHint` and `_prevId` as `_upperHint`, to the Trove operation function call. (Note that the hint may become slightly inexact due to pending transactions that are processed first, though this is gracefully handled by the system that can ascend or descend the list as needed to find the right position.)
 
 Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
@@ -177,10 +206,11 @@ Hints allow cheaper Trove operations for the user, at the expense of a slightly 
 ### Hints for `redeemCollateral`
 
 `TroveManager::redeemCollateral` as a special case requires additional hints:
+
 - `_firstRedemptionHint` hints at the position of the first Trove that will be redeemed from,
 - `_lowerPartialRedemptionHint` hints at the `nextId` neighbor of the last redeemed Trove upon reinsertion, if it's partially redeemed,
 - `_upperPartialRedemptionHint` hints at the `prevId` neighbor of the last redeemed Trove upon reinsertion, if it's partially redeemed,
-- `_partialRedemptionHintNICR` ensures that the transaction won't run out of gas if neither `_lowerPartialRedemptionHint` nor `_upperPartialRedemptionHint` are  valid anymore.
+- `_partialRedemptionHintNICR` ensures that the transaction won't run out of gas if neither `_lowerPartialRedemptionHint` nor `_upperPartialRedemptionHint` are valid anymore.
 
 `redeemCollateral` will only redeem from Troves that have an ICR >= MCR. In other words, if there are Troves at the bottom of the SortedTroves list that are below the minimum collateralization ratio (which can happen after an ETH:USD price drop), they will be skipped. To make this more gas-efficient, the position of the first redeemable Trove should be passed as `_firstRedemptionHint`.
 
@@ -188,7 +218,7 @@ Hints allow cheaper Trove operations for the user, at the expense of a slightly 
 
 The first redemption hint is the address of the trove from which to start the redemption sequence - i.e the address of the first trove in the system with ICR >= 110%.
 
-If when the transaction is confirmed the address is in fact not valid - the system will start from the lowest ICR trove in the system, and step upwards until it finds the first trove with ICR >= 110% to redeem from. In this case, since the number of troves below 110% will be limited due to ongoing liquidations, there's a good chance that the redemption transaction still succeed. 
+If when the transaction is confirmed the address is in fact not valid - the system will start from the lowest ICR trove in the system, and step upwards until it finds the first trove with ICR >= 110% to redeem from. In this case, since the number of troves below 110% will be limited due to ongoing liquidations, there's a good chance that the redemption transaction still succeed.
 
 #### Partial redemption hints
 
