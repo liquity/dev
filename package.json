@@ -64,7 +64,6 @@
     "save-live-version": "yarn workspace @liquity/lib-ethers save-live-version",
     "start-dev-chain": "run-s start-dev-chain:*",
     "start-dev-chain:openethereum": "node dev-chain/start.js",
-    "start-dev-chain:deploy-multicaller": "yarn workspace @liquity/providers deploy-to-dev-chain",
     "start-dev-chain:prepare-providers": "yarn prepare:providers",
     "start-dev-chain:deploy-contracts": "yarn deploy --network dev",
     "start-dev-chain:prepare-lib-ethers": "yarn prepare:lib-ethers",
