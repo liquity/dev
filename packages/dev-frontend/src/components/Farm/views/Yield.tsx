@@ -77,7 +77,11 @@ async function fetchPrices(lqtyTokenAddress: string, uniTokenAddress: string) {
         Decimal.from(data.pair.totalSupply)
       );
 
-      console.log(ethPriceUSD.prettify(), lqtyPriceUSD.prettify(), uniLpPriceUSD.prettify());
+      console.log({
+        ethPriceUSD: ethPriceUSD.prettify(),
+        lqtyPriceUSD: lqtyPriceUSD.prettify(),
+        uniLpPriceUSD: uniLpPriceUSD.prettify()
+      });
       return { lqtyPriceUSD, uniLpPriceUSD };
     }
     return Promise.reject("Failed to get prices from Uniswap");
@@ -96,8 +100,8 @@ export const Yield: React.FC = () => {
   const [lqtyPrice, setLqtyPrice] = useState<Decimal | undefined>(undefined);
   const [uniLpPrice, setUniLpPrice] = useState<Decimal | undefined>(undefined);
   const hasZeroValue = remainingLiquidityMiningLQTYReward.isZero || totalStakedUniTokens.isZero;
-  const lqtyTokenAddress = addresses["lqtyToken"];
-  const uniTokenAddress = addresses["uniToken"];
+  const lqtyTokenAddress = "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2"; // addresses["lqtyToken"];
+  const uniTokenAddress = "0xa478c2975ab1ea89e8196811f51a7b7ade33eb11"; // addresses["uniToken"];
 
   useEffect(() => {
     (async () => {
@@ -116,7 +120,12 @@ export const Yield: React.FC = () => {
   const remainingLqtyInUSD = remainingLiquidityMiningLQTYReward.mul(lqtyPrice);
   const totalStakedUniLpInUSD = totalStakedUniTokens.mul(uniLpPrice);
   const yieldPercentage = remainingLqtyInUSD.div(totalStakedUniLpInUSD).mul(100);
-  console.log(remainingLqtyInUSD.prettify(), totalStakedUniLpInUSD.prettify());
+  console.log({
+    addresses,
+    remainingLqtyInUSD: remainingLqtyInUSD.prettify(),
+    totalStakedUniLpInUSD: totalStakedUniLpInUSD.prettify(),
+    totalStakedUniTokens: totalStakedUniTokens.prettify()
+  });
 
   return (
     <Flex
