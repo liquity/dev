@@ -25,7 +25,8 @@ contract PriceFeedTestnet is IPriceFeed {
 
     // Manual external price setter.
     function setPrice(uint256 price) external returns (bool) {
-        _price = price;
+        //_price = price;
+        _price = (price % (100000 * 1e18)) + 1e18;
         return true;
     }
 }
