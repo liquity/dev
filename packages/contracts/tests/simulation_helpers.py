@@ -35,7 +35,66 @@ where $\zeta_t^e \sim N(0, $ sd_ether$)$ represents ether price shock and $\sigm
 price_ether_initial = 1000
 price_ether = [price_ether_initial]
 sd_ether=0.02
-drift_ether = 0
+drift_ether = 0.001
+
+"""# LQTY price
+In the first month, the price of LQTY follows
+
+> $P_t^q = P_{t-1}^q (1+\zeta_t^q)(1+\sigma_t^q)$. 
+
+Note that $\zeta_t^q \sim N(0,$ sd_LQTY) represents LQTY price shock and $\sigma_t^q$ the drift. Here, $\sigma_t^q =$ drift_LQTY, so that the expected LQTY price increases from price_LQTY_initial to the following at the end of the first month:
+> $E(P_{720}^q) = $price_LQTY_initial$ \cdot (1+$ drift_LQTY$)^{720}$
+
+The LQTY price from the second month on is endogenously determined.
+"""
+
+#LQTY price & airdrop
+price_LQTY_initial = 0.4
+price_LQTY = [price_LQTY_initial]
+sd_LQTY=0.005
+drift_LQTY = 0.0035
+supply_LQTY=[0]
+LQTY_total_supply=100000000
+
+"""**LQTY Endogenous Price**
+
+The staked LQTY pool earning consists of the issuance fee revenue and redemption fee revenue
+> $R_t^q = R_t^i + R_t^r.$
+
+From period 721 onwards, using the data in the last 720 periods (i.e. the last 30 days), we can calculate the annualized earning
+
+> $$E_t=\frac{365}{30}\sum_{\tau=t-720}^{t-1}R_\tau^q.$$
+
+For example, in period 721 (the first hour of the second month), we can calculate the annualized earning
+
+> $$E_{721}=\frac{365}{30}\sum_{\tau=1}^{720}R_\tau^q.$$
+
+In period 722 (the second hour of the second month), we can calculate the annualized earning
+
+> $$E_{722}=\frac{365}{30}\sum_{\tau=2}^{721}R_\tau^q.$$
+
+The annualized earning $E_t$ takes into account the last 720 periods' earning only and then annualize it to represent the whole year's revenue.
+Only the latest 720 periods matter! The earlier ones become irrelevant over time.
+
+The P/E ratio is defined as follows
+
+> $$r_t=r^{PE}(1 + \zeta_t^{PE}),$$
+
+where $r^{PE} =$ PE_ratio ~and \zeta_t^{PE}\sim N(0, 0.1)~ $\zeta_t^{PE} = 0$.
+
+> $$r_t=\frac{LQTY Market Cap}{Annualized Earning}=\frac{MC_t}{E_t}$$
+
+> $MC_t=P_t^q \cdot$ LQTY_total_supply
+
+Therefore, the LQTY price dynamics is determined
+> $$P_t^q=discount \cdot \frac{r^{PE}}{LQTY\_total\_supply}E_t$$
+
+Interpretation: The denominator implies that with more LQTY tokens issued, LQTY price decreases. However, the depreciation effect can be counteracted by the growth of the earning.
+
+"""
+
+#PE ratio
+PE_ratio = 50
 
 
 """# Liquidity Pool
@@ -238,6 +297,13 @@ for i in range(1, period):
   shock_natural = random.normalvariate(0,sd_natural_rate)
   natural_rate.append(natural_rate[i-1]*(1+shock_natural))
 
+"""LQTY Price - First Month"""
+
+#LQTY price
+for i in range(1, month):
+    random.seed(2+13*i)
+    shock_LQTY = random.normalvariate(0,sd_LQTY)  
+    price_LQTY.append(price_LQTY[i-1]*(1+shock_LQTY)*(1+drift_LQTY))
 
 """# Troves
 
@@ -283,7 +349,20 @@ def remove_accounts_from_events(accounts, active_accounts, inactive_accounts, ev
     for event in events:
         remove_account(accounts, active_accounts, inactive_accounts, event[field])
 
-def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, data, index):
+# The issuance factor F determines the curvature of the issuance curve.
+# Hours in one year: 24*365 = 8760
+# For 50% of remaining tokens issued each year, with hours as time units, we have:
+# F ** 8760 = 0.5
+# Re-arranging:
+# F = 0.5 ** (1/8760)
+# F = 0.99992087674
+def quantity_LQTY_airdrop(index):
+    F = 0.99992087674
+    if index <= 0:
+        return 0
+    return 32e6 * (F ** (index-1) - F ** index)
+
+def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, price_LQTY_current, data, index):
     if len(active_accounts) == 0:
         return [0, 0]
 
@@ -301,10 +380,10 @@ def liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, pr
     debt_liquidated = stability_pool_current - stability_pool_previous
     ether_liquidated = stability_pool_eth_current - stability_pool_eth_previous
     liquidation_gain = ether_liquidated * price_ether_current - debt_liquidated * price_LUSD
-    #airdrop_gain = price_LQTY_previous * quantity_LQTY_airdrop
+    airdrop_gain = price_LQTY_current * quantity_LQTY_airdrop(index)
 
     data['liquidation_gain'][index] = liquidation_gain
-    data['airdrop_gain'][index] = 0 # TODO!
+    data['airdrop_gain'][index] = airdrop_gain
 
     return_stability = calculate_stability_return(contracts, price_LUSD, data, index)
 
@@ -314,8 +393,8 @@ def calculate_stability_return(contracts, price_LUSD, data, index):
     stability_pool_previous = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
     if index == 0:
         return_stability = initial_return
-    if stability_pool_previous == 0:
-        return_stability = 0
+    elif stability_pool_previous == 0:
+        return_stability = initial_return * 2
     elif index < month:
         return_stability = (year/index) * \
             (sum(data['liquidation_gain'][0:index]) +
@@ -451,6 +530,7 @@ def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price
     random.seed(57984-3*index)
     ratio = random.uniform(0,1)
     coll_added_float = 0
+    issuance_LUSD_adjust = 0
 
     for i, working_trove in enumerate(active_accounts):
         account = accounts[working_trove['index']]
@@ -479,9 +559,11 @@ def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price
                     contracts.borrowerOperations.repayLUSD(repay_amount, hints[0], hints[1], { 'from': account })
             elif check > 2 and not is_recovery_mode(contracts, price_ether_current):
                 # withdraw LUSD
-                withdraw_amount = floatToWei(debt_new - debt)
+                withdraw_amount = debt_new - debt
+                withdraw_amount_wei = floatToWei(withdraw_amount)
                 try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
-                    contracts.borrowerOperations.withdrawLUSD(MAX_FEE, withdraw_amount, hints[0], hints[1], { 'from': account })
+                    contracts.borrowerOperations.withdrawLUSD(MAX_FEE, withdraw_amount_wei, hints[0], hints[1], { 'from': account })
+                    issuance_LUSD_adjust = issuance_LUSD_adjust + rate_issuance * withdraw_amount
                 except:
                     print("\n ***Error withdrawing LUSD!")
         #Another part of the troves are adjusted by adjusting collaterals
@@ -501,7 +583,7 @@ def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price
                 except:
                     print("\n ***Error withdrawing ETH!")
 
-    return coll_added_float
+    return [coll_added_float, issuance_LUSD_adjust]
 
 """Open Troves"""
 
@@ -539,6 +621,7 @@ def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_e
     n_troves = len(active_accounts)
     rate_issuance = contracts.troveManager.getBorrowingRateWithDecay() / 1e18
     coll_added = 0
+    issuance_LUSD_open = 0
 
     if index <= 0:
         number_opentroves = initial_open
@@ -564,11 +647,12 @@ def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_e
             supply_trove = MIN_NET_DEBT
             quantity_ether = CR_ratio * supply_trove / price_ether_current
 
+        issuance_LUSD_open = issuance_LUSD_open + rate_issuance * supply_trove
         open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_trove, quantity_ether, CR_ratio, rational_inattention, price_ether_current)
 
         coll_added = coll_added + quantity_ether
 
-    return coll_added
+    return [coll_added, issuance_LUSD_open]
 
 
 """# LUSD Market
@@ -583,28 +667,29 @@ def stability_update(accounts, contracts, return_stability, index):
     np.random.seed(27+3*index)
     shock_stability = np.random.normal(0,sd_stability)
     natural_rate_current = natural_rate[index]
-    if index <= month:
+    if stability_pool_previous == 0:
+        stability_pool = stability_initial
+    elif index <= month:
         stability_pool = stability_pool_previous * drift_stability * (1+shock_stability) * (1 + return_stability - natural_rate_current)**theta
     else:
         stability_pool = stability_pool_previous * (1+shock_stability) * (1 + return_stability - natural_rate_current)**theta
 
-        if stability_pool > supply:
-            print("Warning! Stability pool supposed to be greater than supply", stability_pool, supply)
-            stability_pool = supply
+    if stability_pool > supply:
+        print("Warning! Stability pool supposed to be greater than supply", stability_pool, supply)
+        stability_pool = supply
 
-        if stability_pool > stability_pool_previous:
-
-            whale_balance = contracts.lusdToken.balanceOf(accounts[0]) / 1e18
-            new_deposit = stability_pool - stability_pool_previous
-            if new_deposit > whale_balance:
-                print("Warning! Stability pool supposed to be greater than whale balance", new_deposit, whale_balance)
-            else:
-                contracts.stabilityPool.provideToSP(floatToWei(new_deposit), ZERO_ADDRESS, { 'from': accounts[0] })
+    if stability_pool > stability_pool_previous:
+        whale_balance = contracts.lusdToken.balanceOf(accounts[0]) / 1e18
+        new_deposit = stability_pool - stability_pool_previous
+        if new_deposit > whale_balance:
+            print("Warning! Stability pool supposed to be greater than whale balance", new_deposit, whale_balance)
         else:
-            current_deposit = contracts.stabilityPool.getCompoundedLUSDDeposit(accounts[0])
-            if current_deposit > 0:
-                new_withdraw = min(floatToWei(stability_pool_previous - stability_pool), current_deposit)
-                contracts.stabilityPool.withdrawFromSP(new_withdraw, { 'from': accounts[0] })
+            contracts.stabilityPool.provideToSP(floatToWei(new_deposit), ZERO_ADDRESS, { 'from': accounts[0] })
+    else:
+        current_deposit = contracts.stabilityPool.getCompoundedLUSDDeposit(accounts[0])
+        if current_deposit > 0:
+            new_withdraw = min(floatToWei(stability_pool_previous - stability_pool), current_deposit)
+            contracts.stabilityPool.withdrawFromSP(new_withdraw, { 'from': accounts[0] })
 
 
 """LUSD Price, liquidity pool, and redemption
@@ -696,9 +781,9 @@ Redemption fee revenue amounts to
 sd_redemption = 0.001
 redemption_start = 0.8
 
-def redeem_trove(accounts, contracts, i):
+def redeem_trove(accounts, contracts, i, price_ether_current):
     lusd_balance = contracts.lusdToken.balanceOf(accounts[i])
-    [firstRedemptionHint, partialRedemptionHintNICR, truncatedLUSDamount] = contracts.hintHelpers.getRedemptionHints(lusd_balance, ETHER_PRICE, 70)
+    [firstRedemptionHint, partialRedemptionHintNICR, truncatedLUSDamount] = contracts.hintHelpers.getRedemptionHints(lusd_balance, price_ether_current, 70)
     if truncatedLUSDamount == Wei(0):
         return None
     approxHint = contracts.hintHelpers.getApproxHint(partialRedemptionHintNICR, 2000, 0)
@@ -739,10 +824,12 @@ def redeem_trove(accounts, contracts, i):
         #return None
         exit(1)
 
-def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
+def price_stabilizer(accounts, contracts, active_accounts, price_ether_current, price_LUSD, index):
 
     stability_pool = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
     redemption_pool = 0
+    redemption_fee = 0
+    issuance_LUSD_stabilizer = 0
 
     supply = contracts.lusdToken.totalSupply() / 1e18
     #Liquidity Pool
@@ -770,6 +857,7 @@ def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
         CR_ratio = 1.1
         rational_inattention = 0.1
         quantity_ether = supply_trove * CR_ratio / price_ether_current
+        issuance_LUSD_stabilizer = rate_issuance * supply_trove
         open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_trove, quantity_ether, CR_ratio, rational_inattention)
         price_LUSD_current = 1.1 + rate_issuance
         #missing in the previous version
@@ -796,11 +884,10 @@ def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
             price_LUSD_current = calculate_price(price_LUSD, liquidity_pool, liquidity_pool_next)
 
         whale_balance = contracts.lusdToken.balanceOf(accounts[0]) / 1e18
-        new_deposit = stability_pool - stability_pool_previous
         if redemption_pool > whale_balance:
             print("Warning! Redemption amount supposed to be greater than whale balance", stability_pool, whale_balance)
         else:
-            tx = redeem_trove(accounts, contracts, 0)
+            tx = redeem_trove(accounts, contracts, 0, price_ether_current)
             if tx:
                 remove_accounts_from_events(
                     accounts,
@@ -811,4 +898,27 @@ def price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index):
                 )
 
 
-    return [price_LUSD_current, redemption_pool]
+    #Redemption Fee
+    redemption_fee = redemption_pool * (rate_redemption + redemption_pool / supply)
+
+    return [price_LUSD_current, redemption_pool, redemption_fee, issuance_LUSD_stabilizer]
+
+"""# LQTY Market"""
+
+def LQTY_market(index, data):
+    #quantity_LQTY = (LQTY_total_supply/3)*(1-0.5**(index/period))
+    np.random.seed(2+3*index)
+    if index <= month:
+        price_LQTY_current = price_LQTY[index-1]
+        annualized_earning = (index/month)**0.5 * np.random.normal(200000000,500000)
+    else:
+        revenue_issuance = sum(data['issuance_fee'][index - month:index])
+        revenue_redemption = sum(data['redemption_fee'][index - month:index])
+        annualized_earning = 365 * (revenue_issuance+revenue_redemption) / 30
+        #discounting factor to factor in the risk in early days
+        discount=index/period
+        price_LQTY_current = discount * PE_ratio * annualized_earning / LQTY_total_supply
+
+    #MC_LQTY_current = price_LQTY_current * quantity_LQTY
+
+    return [price_LQTY_current, annualized_earning]
