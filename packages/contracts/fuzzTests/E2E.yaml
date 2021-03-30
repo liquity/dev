@@ -1,0 +1,10 @@
+prefix: crytic_
+seqLen: 100
+testLimit: 1000000
+contractAddr: '0x222'
+sender: ['0x111', '0x222']
+initialize: 'fuzzTests/AccessControlTest.json'
+multi-abi: true
+corpusDir: "corpus"
+testMaxGas: 6250000
+checkAsserts: true

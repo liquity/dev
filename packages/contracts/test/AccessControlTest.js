@@ -17,8 +17,8 @@ test/launchSequenceTest/DuringLockupPeriodTest.js */
 contract('Access Control: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const bountyAddress = accounts[8]
+  const lpRewardsAddress = accounts[9]
 
   let coreContracts
 
@@ -44,7 +44,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     coreContracts = await deploymentHelper.deployLUSDTokenTester(coreContracts)
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
     
-    priceFeed = coreContracts.priceFeed
+    priceFeedTestnet = coreContracts.priceFeedTestnet
     lusdToken = coreContracts.lusdToken
     sortedTroves = coreContracts.sortedTroves
     troveManager = coreContracts.troveManager
@@ -64,6 +64,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
 
+    await priceFeedTestnet.setPrice(dec(1000, 18))
     for (account of accounts.slice(0, 10)) {
       await th.openTrove(coreContracts, { extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: account } })
     }
