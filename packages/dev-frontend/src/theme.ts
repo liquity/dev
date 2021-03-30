@@ -300,7 +300,8 @@ const theme: Theme = {
       boxShadow: 2,
 
       fontSize: 1,
-
+      color: "text",
+      fontWeight: "body",
       zIndex: 1
     }
   },
@@ -424,6 +425,7 @@ const theme: Theme = {
       alignItems: "center",
       minWidth: "128px"
     },
+
     sidenav: {
       display: ["flex", "none"],
       flexDirection: "column",

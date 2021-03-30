@@ -5,10 +5,11 @@ import { Icon } from "../../../Icon";
 import { InfoMessage } from "../../../InfoMessage";
 import { useFarmView } from "../../context/FarmViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
+import { Yield } from "../Yield";
 
 const uniLink = (lusdAddress: string) => `https://app.uniswap.org/#/add/ETH/${lusdAddress}`;
 
-export const Inactive: React.FC = () => {
+export const Inactive: React.FC = (): JSX.Element => {
   const { dispatchEvent } = useFarmView();
 
   const {
@@ -42,6 +43,9 @@ export const Inactive: React.FC = () => {
         </InfoMessage>
 
         <Flex variant="layout.actions">
+          <Flex sx={{ justifyContent: "flex-start", flex: 1, alignItems: "center" }}>
+            <Yield />
+          </Flex>
           <Button onClick={handleStakePressed}>Stake</Button>
         </Flex>
       </Box>
