@@ -77,7 +77,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     borrowingRate,
     redemptionRate,
     totalStakedLQTY,
-    kickbackRate,
+    kickbackRate
   } = useLiquitySelector(select);
 
   const lusdInStabilityPoolPct =
@@ -110,7 +110,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       )}
       <Box>Total staked LQTY: {totalStakedLQTY.shorten()}</Box>
       <Box>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Box>
-      {kickbackRate && <Box>Kickback rate: {kickbackRate.prettify()}%</Box>}
+      {kickbackRate && <Box>Kickback rate: {kickbackRate.mul(100).prettify()}%</Box>}
       {total.collateralRatioIsBelowCritical(price) && (
         <Box color="danger">The system is in recovery mode!</Box>
       )}
