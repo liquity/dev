@@ -165,7 +165,8 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
     if (debt !== undefined) {
       dispatch({ type: "setDebt", newValue: debt });
     }
-  }, []);
+  }, [collateral, debt, dispatch]);
+
   const borrowingRate = fees.borrowingRate();
   const maxBorrowingRate = borrowingRate.add(0.005); // TODO slippage tolerance
 
@@ -192,10 +193,8 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
       dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
-    } else if (myTransactionState.type === "confirmedOneShot") {
-      dispatchEvent("TROVE_ADJUSTED");
     }
-  }, [myTransactionState.type, dispatch, dispatchEvent]);
+  }, [myTransactionState.type, dispatch]);
 
   return (
     <TroveEditor

@@ -35,6 +35,7 @@ const transitions: TroveEventTransitions = {
   CLOSING: {
     CANCEL_ADJUST_TROVE_PRESSED: "ACTIVE",
     TROVE_CLOSED: "NONE",
+    TROVE_ADJUSTED: "ACTIVE",
     TROVE_LIQUIDATED: "LIQUIDATED",
     TROVE_REDEEMED: "REDEEMED"
   },
