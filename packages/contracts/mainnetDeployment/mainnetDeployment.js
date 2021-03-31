@@ -286,7 +286,6 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
             value: dec(1, 'ether'),
             gasLimit: 5000000 // For some reason, ethers can't estimate gas for this tx
         }
-<<<<<<< HEAD
       )
       
       // Check LUSD-ETH reserves after liquidity provision:
@@ -315,29 +314,6 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   
       const earnedLQTY = await unipool.earned(deployerWallet.address)
       console.log(`deployer's earned LQTY from Unipool after ~1minute: ${earnedLQTY}`)
-=======
-    )
-    
-    // Check LUSD-ETH reserves after liquidity provision:
-    reserves = await LUSDETHPair.getReserves()
-    console.log(`LUSD-ETH Pair's LUSD reserves after provision:${reserves[0]}`)
-    console.log(`LUSD-ETH Pair's ETH reserves after provision:${reserves[1]}`)
-    
-    // --- TODO: Check LP staking is working ---
-    
-    // Check deployer's LP tokens
-    const deployerLPTokenBal = await LUSDETHPair.balanceOf(deployerWallet.address)
-    console.log(`deployer's LP token balance: ${deployerLPTokenBal}`)
-    
-    // Stake most of deployer's LP tokens in Unipool
-    // *** This overflows?  Should be able to stake
-    await unipool.stake(1)
-    
-    await delay(60000) // wait 1 minute
-    
-    const earnedLQTY = await unipool.earned(deployerWallet.address)
-    console.log(`deployer's earned LQTY from Unipool after ~1minute: ${earnedLQTY}`)
->>>>>>> 836977cc4f8a340bddd1724e64c98c6257f5768d
 }
 
 module.exports = {
