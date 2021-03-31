@@ -315,7 +315,9 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   const stakeTx = await unipool.stake(1)
   await mainnetProvider.waitForTransaction(stakeTx.hash)
 
-  await delay(120000) // wait 2 minute
+  // Fast forward time 1000s (local mainnet fork only)
+  // ethers.provider.send("evm_increaseTime", [1000])
+  // ethers.provider.send("evm_mine") 
 
   const earnedLQTY = await unipool.earned(deployerWallet.address)
   console.log(`deployer's earned LQTY from Unipool after ~1minute: ${earnedLQTY}`)
