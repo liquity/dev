@@ -9,7 +9,7 @@ import { Yield } from "../Yield";
 
 const uniLink = (lusdAddress: string) => `https://app.uniswap.org/#/add/ETH/${lusdAddress}`;
 
-export const Inactive: React.FC = (): JSX.Element => {
+export const Inactive: React.FC = () => {
   const { dispatchEvent } = useFarmView();
 
   const {
