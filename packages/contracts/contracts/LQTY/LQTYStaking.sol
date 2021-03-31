@@ -16,6 +16,8 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     using SafeMath for uint;
 
     // --- Data ---
+    string constant public NAME = "LQTYStaking";
+
     mapping( address => uint) public stakes;
     uint public totalLQTYStaked;
 

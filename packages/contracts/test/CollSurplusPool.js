@@ -80,7 +80,6 @@ contract('CollSurplusPool', async accounts => {
     const price = toBN(dec(100, 18))
     await priceFeed.setPrice(price)
 
-    th.logBN('am', await getOpenTroveLUSDAmount(dec(100, 18)))
     // open trove from NonPayable proxy contract
     const B_coll = toBN(dec(60, 18))
     const B_lusdAmount = toBN(dec(3000, 18))

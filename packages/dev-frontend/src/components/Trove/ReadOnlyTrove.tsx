@@ -15,6 +15,9 @@ export const ReadOnlyTrove: React.FC = () => {
   const handleAdjustTrove = useCallback(() => {
     dispatchEvent("ADJUST_TROVE_PRESSED");
   }, [dispatchEvent]);
+  const handleCloseTrove = useCallback(() => {
+    dispatchEvent("CLOSE_TROVE_PRESSED");
+  }, [dispatchEvent]);
 
   const { trove, price } = useLiquitySelector(select);
 
@@ -42,6 +45,9 @@ export const ReadOnlyTrove: React.FC = () => {
         </Box>
 
         <Flex variant="layout.actions">
+          <Button variant="outline" onClick={handleCloseTrove}>
+            Close Trove
+          </Button>
           <Button onClick={handleAdjustTrove}>
             <Icon name="pen" size="sm" />
             &nbsp;Adjust

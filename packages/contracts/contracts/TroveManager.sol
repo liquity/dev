@@ -15,6 +15,7 @@ import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
+    string constant public NAME = "TroveManager";
 
     // --- Connected contract declarations ---
 
