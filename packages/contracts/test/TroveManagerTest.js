@@ -2525,9 +2525,9 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await sortedTroves.contains(B))
     assert.isFalse(await sortedTroves.contains(C))
 
-    // A's remaining debt = 29950 + 19950 + 9950 + 50 - 55000 = 4900
+    // A's remaining debt = 29800 + 19800 + 9800 + 200 - 55000 = 4600
     const A_debt = await troveManager.getTroveDebt(A)
-    await th.assertIsApproximatelyEqual(A_debt, dec(4900, 18), 1000) 
+    await th.assertIsApproximatelyEqual(A_debt, dec(4600, 18), 1000) 
   })
 
   it("redeemCollateral(): doesn't perform partial redemption if resultant debt would be < minimum net debt", async () => {
