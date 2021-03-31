@@ -49,7 +49,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
             externalAddrs.WETH_ERC20, 
             liquityCore.lusdToken.address
         )
-        await mainnetProvider.waitForTransaction(tx)
+        await mainnetProvider.waitForTransaction(tx.hash)
 
         // Check Uniswap Pair LUSD-WETH pair after pair creation (forwards and backwards should have same address)
         LUSDWETHPairAddr = await uniswapV2Factory.getPair(liquityCore.lusdToken.address, externalAddrs.WETH_ERC20)
@@ -112,7 +112,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
         }
     }
 
-    // --- TESTS AND CHECKS  ---
+    // // --- TESTS AND CHECKS  ---
 
     // Check chainlink proxy price ---
 
