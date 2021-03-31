@@ -1,24 +1,18 @@
-const { secrets } = require("../secrets.js");
 const { UniswapV2Factory } = require("./ABIs/UniswapFactoryABI.js")
 const { ERC20Abi } = require("./ABIs/ERC20.js")
 const mdh = require("../utils/mainnetDeploymentHelpers.js")
 const { TestHelper: th, TimeValues: timeVals } = require("../utils/testHelpers.js")
 const { externalAddrs, liquityAddrs, beneficiaries } = require("./mainnetAddresses.js")
 
-const readline = require("readline");
+async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
+    const deploymentState = mdh.loadPreviousDeployment()
 
-const output = {}
-
-async function main() {
-    const mainnetProvider = new ethers.providers.AlchemyProvider(null, secrets.alchemyAPIKey)
-
-    const deployerWallet = new ethers.Wallet(secrets.TEST_DEPLOYER_PRIVATEKEY, mainnetProvider)
     console.log(`deployer address: ${deployerWallet.address}`)
-    
+    assert.equal(deployerWallet.address, liquityAddrs.DEPLOYER)
     let deployerETHBalance = await mainnetProvider.getBalance(deployerWallet.address)
     console.log(`deployerETHBalance before: ${deployerETHBalance}`)
-    
-   // Get UniswaV2Factory instance at its deployed address
+
+    // Get UniswaV2Factory instance at its deployed address
     const uniswapV2Factory =  new ethers.Contract(
       externalAddrs.UNISWAP_V2_FACTORY, 
       UniswapV2Factory.abi, 
@@ -33,14 +27,14 @@ async function main() {
     console.log(`deployer's ETH balance before deployments: ${deployerETHBalance}`)
 
     // Deploy core logic contracts
-    const liquityCore = await mdh.deployLiquityCoreMainnet(deployerWallet, externalAddrs.TELLOR_MASTER)
+    const liquityCore = await mdh.deployLiquityCoreMainnet(deployerWallet, externalAddrs.TELLOR_MASTER, deploymentState)
     await mdh.logContractObjects(liquityCore)
 
     // Check Uniswap Pair LUSD-ETH pair before pair creation
     let LUSDWETHPairAddr = await uniswapV2Factory.getPair(liquityCore.lusdToken.address, externalAddrs.WETH_ERC20)
     let WETHLUSDPairAddr = await uniswapV2Factory.getPair(externalAddrs.WETH_ERC20, liquityCore.lusdToken.address)
-    console.log(`LUSD-WETH pair contract address before Uniswap pair creation: ${LUSDWETHPairAddr}`)
-    console.log(`WETH-LUSD pair contract address before Uniswap pair creation: ${WETHLUSDPairAddr}`)
+    assert.equal(LUSDWETHPairAddr, th.ZERO_ADDRESS)
+    assert.equal(WETHLUSDPairAddr, th.ZERO_ADDRESS)
 
     // Deploy Unipool for LUSD-WETH
     const tx = await uniswapV2Factory.createPair(
@@ -52,16 +46,16 @@ async function main() {
     LUSDWETHPairAddr = await uniswapV2Factory.getPair(liquityCore.lusdToken.address, externalAddrs.WETH_ERC20)
     WETHLUSDPairAddr = await uniswapV2Factory.getPair(externalAddrs.WETH_ERC20, liquityCore.lusdToken.address)
     console.log(`LUSD-WETH pair contract address after Uniswap pair creation: ${LUSDWETHPairAddr}`)
-    console.log(`WETH-LUSD pair contract address after Uniswap pair creation: ${WETHLUSDPairAddr}`)
+    assert.equal(WETHLUSDPairAddr, LUSDWETHPairAddr)
 
     // Deploy Unipool
-    const unipool = await mdh.deployUnipoolMainnet()
-    console.log(`unipool address: ${unipool.address}`)
-  
+    const unipool = await mdh.deployUnipoolMainnet(deployerWallet, deploymentState)
+
     const LQTYContracts = await mdh.deployLQTYContractsMainnet(
-      liquityAddrs.TEST_GENERAL_SAFE, 
+      liquityAddrs.GENERAL_SAFE,
       unipool.address,
-      deployerWallet
+      deployerWallet,
+      deploymentState
     )
     
     await mdh.connectCoreContractsMainnet(liquityCore, LQTYContracts, externalAddrs.CHAINLINK_ETHUSD_PROXY)
@@ -121,38 +115,42 @@ async function main() {
 
     // Unipool
     const unipoolLQTYBal = await LQTYContracts.lqtyToken.balanceOf(unipool.address)
-    console.log(`Unipool LQTY balance: ${unipoolLQTYBal}`)
+    assert.equal(unipoolLQTYBal.toString(), '1333333333333333333333333')
+    th.logBN('Unipool LQTY balance       ', unipoolLQTYBal)
 
-    // Deployer (TODO: replace with multisig)
-    const lqtyDeployerBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.TEST_DEPLOYER)
-    console.log(`LQTY Deployer balance: ${lqtyDeployerBal}`)
+    // Deployer
+    const lqtyDeployerBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.LQTY_SAFE)
+    assert.equal(lqtyDeployerBal.toString(), '65666666666666666666666667')
+    th.logBN('LQTY Deployer balance     ', lqtyDeployerBal)
 
     // Bounties/hackathons
-    const generalSafeBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.TEST_DEPLOYER)
-    console.log(`General Safe balance: ${generalSafeBal}`)
+    const generalSafeBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.GENERAL_SAFE)
+    assert.equal(generalSafeBal.toString(), '1000000000000000000000000')
+    th.logBN('General Safe balance       ', generalSafeBal)
 
     // CommunityIssuance contract
-    const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(liquityCore.communityIssuance.address)
-    console.log(`General Safe balance: ${communityIssuanceBal}`)
+    const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(LQTYContracts.communityIssuance.address)
+    assert.equal(communityIssuanceBal.toString(), '32000000000000000000000000')
+    th.logBN('Community Issuance balance', communityIssuanceBal)
 
     // --- PriceFeed ---
 
     // Check Pricefeed's status and last good price
     const lastGoodPrice = await liquityCore.priceFeed.lastGoodPrice()
     const priceFeedInitialStatus = await liquityCore.priceFeed.status()
-    console.log(`PriceFeed first stored price: ${lastGoodPrice}`)
+    th.logBN('PriceFeed first stored price', lastGoodPrice)
     console.log(`PriceFeed initial status: ${priceFeedInitialStatus}`)
 
     // Check PriceFeed's & TellorCaller's stored addresses
 
     const priceFeedCLAddress = await liquityCore.priceFeed.priceAggregator()
     const priceFeedTellorCallerAddress = await liquityCore.priceFeed.tellorCaller()
-    console.log(`PriceFeed's stored Chainlink address: ${priceFeedCLAddress}`)
-    console.log(`PriceFeed's stored TellorCaller address: ${priceFeedTellorCallerAddress}`)
-    
+    assert.equal(priceFeedCLAddress, externalAddrs.CHAINLINK_ETHUSD_PROXY)
+    assert.equal(priceFeedTellorCallerAddress, '0x7a3d735ee6873f17Dbdcab1d51B604928dc10d92')
+
     // TODO:  Make tellor public in TellorCaller
-    // console.log(`TellorCaller's TellorMaster address: ${tellorCallerTellorMasterAddress}`)
     // const tellorCallerTellorMasterAddress = await liquityCore.tellorCaller.tellor() 
+    // assert.equal(tellorCallerTellorMasterAddress, externalAddrs.TELLOR_MASTER)
 
     // --- Unipool ---
 
@@ -164,7 +162,7 @@ async function main() {
 
     // Check max size
     const sortedTrovesMaxSize = (await liquityCore.sortedTroves.data())[2]
-    console.log(`SortedTroves current max size:  ${sortedTrovesMaxSize}`)
+    assert.equal(sortedTrovesMaxSize, '115792089237316195423570985008687907853269984665640564039457584007913129639935')
 
     // TODO: Make first LUSD-ETH liquidity provision 
    
@@ -173,9 +171,6 @@ async function main() {
     // --- TODO: Check LP staking is working ---
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
+module.exports = {
+    mainnetDeploy
+}

@@ -50,9 +50,9 @@ module.exports = {
             blockGasLimit: 12500000, 
             gasPrice: 20000000000,
             forking: {
-                url: alchemyAPIKey,
-                blockNumber: 12143960
-              }
+                url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyAPIKey}`,
+                blockNumber: 12146458
+            }
         }
     },
     mocha: { timeout: 12000000 },
