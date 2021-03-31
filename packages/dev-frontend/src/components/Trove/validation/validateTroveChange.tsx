@@ -83,9 +83,10 @@ const TroveAdjustmentDescription: React.FC<TroveAdjustmentDescriptionParams> = (
 export const selectForTroveChangeValidation = ({
   price,
   total,
+  accountBalance,
   lusdBalance,
   numberOfTroves
-}: LiquityStoreState) => ({ price, total, lusdBalance, numberOfTroves });
+}: LiquityStoreState) => ({ price, total, accountBalance, lusdBalance, numberOfTroves });
 
 type TroveChangeValidationContext = ReturnType<typeof selectForTroveChangeValidation>;
 
@@ -93,7 +94,7 @@ export const validateTroveChange = (
   original: Trove,
   edited: Trove,
   borrowingRate: Decimal,
-  { price, total, lusdBalance, numberOfTroves }: TroveChangeValidationContext
+  { price, total, accountBalance, lusdBalance, numberOfTroves }: TroveChangeValidationContext
 ): [
   validChange: Exclude<TroveChange<Decimal>, { type: "invalidCreation" }> | undefined,
   description: JSX.Element | undefined
@@ -155,6 +156,16 @@ export const validateTroveChange = (
           <Amount>{ccrPercent}</Amount>. Please increase your collateral ratio.
         </ErrorDescription>
       )
+    ];
+  }
+
+  if (change.params.depositCollateral?.gt(accountBalance)) {
+    return [
+      undefined,
+      <ErrorDescription>
+        The amount you're trying to deposit exceeds your balance by{" "}
+        <Amount>{change.params.depositCollateral.sub(accountBalance).prettify()} ETH</Amount>.
+      </ErrorDescription>
     ];
   }
 
