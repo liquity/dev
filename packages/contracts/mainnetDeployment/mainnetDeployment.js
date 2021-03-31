@@ -1,24 +1,31 @@
-const { secrets } = require("../secrets.js");
+const fs = require('fs')
 const { UniswapV2Factory } = require("./ABIs/UniswapFactoryABI.js")
 const { ERC20Abi } = require("./ABIs/ERC20.js")
 const mdh = require("../utils/mainnetDeploymentHelpers.js")
 const { TestHelper: th, TimeValues: timeVals } = require("../utils/testHelpers.js")
 const { externalAddrs, liquityAddrs, beneficiaries } = require("./mainnetAddresses.js")
 
-const readline = require("readline");
+const OUTPUT_FILE = './output/mainnetDeploymentOutput'
 
-const output = {}
+const loadPreviousDeployment = () => {
+    let previousDeployment = {}
+    if (fs.existsSync(OUTPUT_FILE)) {
+        console.log(`Loading previous deployment...`)
+        previousDeployment = require(OUTPUT_FILE)
+    }
 
-async function main() {
-    const mainnetProvider = new ethers.providers.AlchemyProvider(null, secrets.alchemyAPIKey)
+    return previousDeployment
+}
 
-    const deployerWallet = new ethers.Wallet(secrets.TEST_DEPLOYER_PRIVATEKEY, mainnetProvider)
+async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
+    const deploymentState = loadPreviousDeployment()
+
     console.log(`deployer address: ${deployerWallet.address}`)
-    
+    console.log(`deployer address: ${liquityAddrs.DEPLOYER}`)
     let deployerETHBalance = await mainnetProvider.getBalance(deployerWallet.address)
     console.log(`deployerETHBalance before: ${deployerETHBalance}`)
-    
-   // Get UniswaV2Factory instance at its deployed address
+
+    // Get UniswaV2Factory instance at its deployed address
     const uniswapV2Factory =  new ethers.Contract(
       externalAddrs.UNISWAP_V2_FACTORY, 
       UniswapV2Factory.abi, 
@@ -59,7 +66,7 @@ async function main() {
     console.log(`unipool address: ${unipool.address}`)
   
     const LQTYContracts = await mdh.deployLQTYContractsMainnet(
-      liquityAddrs.TEST_GENERAL_SAFE, 
+      liquityAddrs.GENERAL_SAFE, 
       unipool.address,
       deployerWallet
     )
@@ -124,15 +131,15 @@ async function main() {
     console.log(`Unipool LQTY balance: ${unipoolLQTYBal}`)
 
     // Deployer (TODO: replace with multisig)
-    const lqtyDeployerBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.TEST_DEPLOYER)
+    const lqtyDeployerBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.LQTY_SAFE)
     console.log(`LQTY Deployer balance: ${lqtyDeployerBal}`)
 
     // Bounties/hackathons
-    const generalSafeBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.TEST_DEPLOYER)
+    const generalSafeBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.GENERAL_SAFE)
     console.log(`General Safe balance: ${generalSafeBal}`)
 
     // CommunityIssuance contract
-    const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(liquityCore.communityIssuance.address)
+    const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(LQTYContracts.communityIssuance.address)
     console.log(`General Safe balance: ${communityIssuanceBal}`)
 
     // --- PriceFeed ---
@@ -173,9 +180,6 @@ async function main() {
     // --- TODO: Check LP staking is working ---
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
+module.exports = {
+    mainnetDeploy
+}

@@ -7,15 +7,20 @@ const externalAddrs  = {
     UNISWAP_V2_FACTORY: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
     // https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
     WETH_ERC20: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-    ETH_WHALE: "0x53d284357ec70ce289d6d64134dfac8e511c8a3d",
-    DAI_ERC20: "0x6b175474e89094c44da98b954eedeac495271d0f"
 }
-   
+
+const liquityAddrsTest = {
+    //GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd",  // Hardhat dev address
+    GENERAL_SAFE:"0x66aB6D9362d4F35596279692F0251Db635165871",
+    //LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74",  //  Hardhat dev address
+    LQTY_SAFE:"0x66aB6D9362d4F35596279692F0251Db635165871",
+    DEPLOYER: "0x66aB6D9362d4F35596279692F0251Db635165871" // Mainnet test deployment address
+}
+
 const liquityAddrs = {
-    TEST_GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd",  // Hardhat dev address
-    TEST_LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74",  //  Hardhat dev address
-    REAL_DEPLOYER: "0xa850535D3628CD4dFEB528dC85cfA93051Ff2984",  // Actual deployment address for April 5
-    TEST_DEPLOYER: "0xF8e5C47a6866e97F5D561982Ff80D39c436E573E" // Mainnet test deployment address 
+    GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd", // TODO
+    LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74", // TODO
+    DEPLOYER: "0xa850535D3628CD4dFEB528dC85cfA93051Ff2984",  // Actual deployment address for April 5
 }
 
 const beneficiaries = {
@@ -29,5 +34,6 @@ const beneficiaries = {
 module.exports = {
     externalAddrs: externalAddrs,
     liquityAddrs:  liquityAddrs,
+    liquityAddrsTest:  liquityAddrsTest,
     beneficiaries: beneficiaries,
 };
