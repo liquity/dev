@@ -120,7 +120,7 @@ export const Yield: React.FC = () => {
         console.error(error);
       }
     })();
-  }, []);
+  }, [lqtyTokenAddress, uniTokenAddress]);
 
   // TODO: switch to this condition after team has reviewed on /next
   // if (!isMainnet || hasZeroValue || lqtyPrice === undefined || uniLpPrice === undefined) return null;
