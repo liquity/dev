@@ -40,20 +40,24 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     // Check Uniswap Pair LUSD-ETH pair before pair creation
     let LUSDWETHPairAddr = await uniswapV2Factory.getPair(liquityCore.lusdToken.address, externalAddrs.WETH_ERC20)
     let WETHLUSDPairAddr = await uniswapV2Factory.getPair(externalAddrs.WETH_ERC20, liquityCore.lusdToken.address)
-    assert.equal(LUSDWETHPairAddr, th.ZERO_ADDRESS)
-    assert.equal(WETHLUSDPairAddr, th.ZERO_ADDRESS)
+    assert.equal(LUSDWETHPairAddr, WETHLUSDPairAddr)
 
-    // Deploy Unipool for LUSD-WETH
-    const tx = await uniswapV2Factory.createPair(
-      externalAddrs.WETH_ERC20, 
-      liquityCore.lusdToken.address
-    )
 
-    // Check Uniswap Pair LUSD-WETH pair after pair creation (forwards and backwards should have same address)
-    LUSDWETHPairAddr = await uniswapV2Factory.getPair(liquityCore.lusdToken.address, externalAddrs.WETH_ERC20)
-    WETHLUSDPairAddr = await uniswapV2Factory.getPair(externalAddrs.WETH_ERC20, liquityCore.lusdToken.address)
-    console.log(`LUSD-WETH pair contract address after Uniswap pair creation: ${LUSDWETHPairAddr}`)
-    assert.equal(WETHLUSDPairAddr, LUSDWETHPairAddr)
+    if (LUSDWETHPairAddr == th.ZERO_ADDRESS) {
+        // Deploy Unipool for LUSD-WETH
+        const tx = await uniswapV2Factory.createPair(
+            externalAddrs.WETH_ERC20, 
+            liquityCore.lusdToken.address
+        )
+        await mainnetProvider.waitForTransaction(tx)
+
+        // Check Uniswap Pair LUSD-WETH pair after pair creation (forwards and backwards should have same address)
+        LUSDWETHPairAddr = await uniswapV2Factory.getPair(liquityCore.lusdToken.address, externalAddrs.WETH_ERC20)
+        assert.notEqual(LUSDWETHPairAddr, th.ZERO_ADDRESS)
+        WETHLUSDPairAddr = await uniswapV2Factory.getPair(externalAddrs.WETH_ERC20, liquityCore.lusdToken.address)
+        console.log(`LUSD-WETH pair contract address after Uniswap pair creation: ${LUSDWETHPairAddr}`)
+        assert.equal(WETHLUSDPairAddr, LUSDWETHPairAddr)
+    }
 
     // Deploy Unipool
     const unipool = await mdh.deployUnipoolMainnet(deployerWallet, deploymentState)
@@ -65,14 +69,14 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
       deployerWallet,
       deploymentState
     )
-    
-    await mdh.connectCoreContractsMainnet(liquityCore, LQTYContracts, externalAddrs.CHAINLINK_ETHUSD_PROXY)
-    await mdh.connectLQTYContractsMainnet(LQTYContracts)
-    await mdh.connectLQTYContractsToCoreMainnet(LQTYContracts, liquityCore)
+
+    await mdh.connectCoreContractsMainnet(liquityCore, LQTYContracts, externalAddrs.CHAINLINK_ETHUSD_PROXY, mainnetProvider)
+    await mdh.connectLQTYContractsMainnet(LQTYContracts, mainnetProvider)
+    await mdh.connectLQTYContractsToCoreMainnet(LQTYContracts, liquityCore, mainnetProvider)
 
     // Connect Unipool to LQTYToken and the LUSD-WETH pair address, with a 6 week duration
     const LPRewardsDuration = timeVals.SECONDS_IN_SIX_WEEKS
-    await mdh.connectUnipoolMainnet(unipool, LQTYContracts, LUSDWETHPairAddr, LPRewardsDuration)
+    await mdh.connectUnipoolMainnet(unipool, LQTYContracts, LUSDWETHPairAddr, LPRewardsDuration, mainnetProvider)
     
     // Log LQTY and Unipool addresses
     await mdh.logContractObjects(LQTYContracts)
@@ -89,9 +93,8 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     const lockupContracts = {}
 
     for (const [investor, investorAddr] of Object.entries(beneficiaries)) {
-      const txResponse = await LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow)
-      const txReceipt = await mainnetProvider.getTransactionReceipt(txResponse.hash)
-     
+      const txReceipt = await mdh.sendAndWaitForTransaction(mainnetProvider, LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow))
+
       const address = await txReceipt.logs[0].address // The deployment event emitted from the LC itself is is the first of two events, so this is its address 
       lockupContracts[investor] = await th.getLCFromAddress(address) 
     }

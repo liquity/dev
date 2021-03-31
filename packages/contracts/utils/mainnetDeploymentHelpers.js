@@ -29,6 +29,13 @@ class MainnetDeploymentHelper {
 	return factory
     }
 
+    static async sendAndWaitForTransaction(mainnetProvider, txPromise) {
+        const tx = await txPromise
+        const minedTx = await mainnetProvider.waitForTransaction(tx.hash)
+
+        return minedTx
+    }
+
     static async loadOrDeploy(factory, name, deployerWallet, deploymentState, params=[]) {
         if (deploymentState[name] && deploymentState[name].address) {
             console.log(`Using previously deployed ${name} contract at address ${deploymentState[name].address}`)
@@ -40,6 +47,7 @@ class MainnetDeploymentHelper {
         }
 
         const contract = await factory.deploy(...params)
+        await deployerWallet.provider.waitForTransaction(contract.deployTransaction.hash)
 
         deploymentState[name] = {
             address: contract.address,
@@ -117,17 +125,23 @@ class MainnetDeploymentHelper {
         const lqtyStaking = await this.loadOrDeploy(lqtyStakingFactory, 'lqtyStaking', deployerWallet, deploymentState)
         const lockupContractFactory = await this.loadOrDeploy(lockupContractFactory_Factory, 'lockupContractFactory', deployerWallet, deploymentState)
         const communityIssuance = await this.loadOrDeploy(communityIssuanceFactory, 'communityIssuance', deployerWallet, deploymentState)
-        
-        // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor 
-        const lqtyToken = await lqtyTokenFactory.deploy(
-            communityIssuance.address, 
-            lqtyStaking.address,
-            lockupContractFactory.address,
-            bountyAddress,
-            lpRewardsAddress,
-            multisigAddress
+
+        // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor
+        const lqtyToken = await this.loadOrDeploy(
+            lqtyTokenFactory,
+            'lqtyToken',
+            deployerWallet,
+            deploymentState,
+            [
+                communityIssuance.address,
+                lqtyStaking.address,
+                lockupContractFactory.address,
+                bountyAddress,
+                lpRewardsAddress,
+                multisigAddress
+            ]
         )
-        
+
         const LQTYContracts = {
             lqtyStaking,
             lockupContractFactory,
@@ -151,22 +165,22 @@ class MainnetDeploymentHelper {
         return owner == ZERO_ADDRESS
     }
     // Connect contracts to their dependencies
-    static async connectCoreContractsMainnet(contracts, LQTYContracts, chainlinkProxyAddress) {
+    static async connectCoreContractsMainnet(contracts, LQTYContracts, chainlinkProxyAddress, mainnetProvider) {
         // Set ChainlinkAggregatorProxy and TellorCaller in the PriceFeed
         await this.isOwnershipRenounced(contracts.priceFeed) ||
-            await contracts.priceFeed.setAddresses(chainlinkProxyAddress, contracts.tellorCaller.address)
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.priceFeed.setAddresses(chainlinkProxyAddress, contracts.tellorCaller.address))
 
         // set TroveManager addr in SortedTroves
         await this.isOwnershipRenounced(contracts.sortedTroves) ||
-            await contracts.sortedTroves.setParams(
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.sortedTroves.setParams(
                 maxBytes32,
                 contracts.troveManager.address,
                 contracts.borrowerOperations.address
-            )
+            ))
 
         // set contracts in the Trove Manager
         await this.isOwnershipRenounced(contracts.troveManager) ||
-            await contracts.troveManager.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.troveManager.setAddresses(
                 contracts.borrowerOperations.address,
                 contracts.activePool.address,
                 contracts.defaultPool.address,
@@ -178,11 +192,11 @@ class MainnetDeploymentHelper {
                 contracts.sortedTroves.address,
                 LQTYContracts.lqtyToken.address,
                 LQTYContracts.lqtyStaking.address
-            )
+            ))
 
         // set contracts in BorrowerOperations 
         await this.isOwnershipRenounced(contracts.borrowerOperations) ||
-            await contracts.borrowerOperations.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.borrowerOperations.setAddresses(
                 contracts.troveManager.address,
                 contracts.activePool.address,
                 contracts.defaultPool.address,
@@ -193,11 +207,11 @@ class MainnetDeploymentHelper {
                 contracts.sortedTroves.address,
                 contracts.lusdToken.address,
                 LQTYContracts.lqtyStaking.address
-            )
+            ))
 
         // set contracts in the Pools
         await this.isOwnershipRenounced(contracts.stabilityPool) ||
-            await contracts.stabilityPool.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.stabilityPool.setAddresses(
                 contracts.borrowerOperations.address,
                 contracts.troveManager.address,
                 contracts.activePool.address,
@@ -205,62 +219,66 @@ class MainnetDeploymentHelper {
                 contracts.sortedTroves.address,
                 contracts.priceFeed.address,
                 LQTYContracts.communityIssuance.address
-            )
+            ))
 
         await this.isOwnershipRenounced(contracts.activePool) ||
-            await contracts.activePool.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.activePool.setAddresses(
                 contracts.borrowerOperations.address,
                 contracts.troveManager.address,
                 contracts.stabilityPool.address,
                 contracts.defaultPool.address
-            )
+            ))
 
         await this.isOwnershipRenounced(contracts.defaultPool) ||
-            await contracts.defaultPool.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.defaultPool.setAddresses(
                 contracts.troveManager.address,
                 contracts.activePool.address,
-            )
+            ))
 
         await this.isOwnershipRenounced(contracts.collSurplusPool) ||
-            await contracts.collSurplusPool.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.collSurplusPool.setAddresses(
                 contracts.borrowerOperations.address,
                 contracts.troveManager.address,
                 contracts.activePool.address,
-            )
+            ))
 
         // set contracts in HintHelpers
         await this.isOwnershipRenounced(contracts.hintHelpers) ||
-            await contracts.hintHelpers.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, contracts.hintHelpers.setAddresses(
                 contracts.sortedTroves.address,
                 contracts.troveManager.address
-            )
+            ))
     }
 
-    static async connectLQTYContractsMainnet(LQTYContracts) {
+    static async connectLQTYContractsMainnet(LQTYContracts, mainnetProvider) {
+        let tx
         // Set LQTYToken address in LCF
-        await LQTYContracts.lockupContractFactory.setLQTYTokenAddress(LQTYContracts.lqtyToken.address)
+        await this.isOwnershipRenounced(LQTYContracts.lqtyStaking) ||
+            await this.sendAndWaitForTransaction(mainnetProvider, LQTYContracts.lockupContractFactory.setLQTYTokenAddress(LQTYContracts.lqtyToken.address))
     }
 
-    static async connectLQTYContractsToCoreMainnet(LQTYContracts, coreContracts) {
+    static async connectLQTYContractsToCoreMainnet(LQTYContracts, coreContracts, mainnetProvider) {
+        let tx
         await this.isOwnershipRenounced(LQTYContracts.lqtyStaking) ||
-            await LQTYContracts.lqtyStaking.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, LQTYContracts.lqtyStaking.setAddresses(
                 LQTYContracts.lqtyToken.address,
                 coreContracts.lusdToken.address,
                 coreContracts.troveManager.address, 
                 coreContracts.borrowerOperations.address,
                 coreContracts.activePool.address
-            )
+            ))
 
         await this.isOwnershipRenounced(LQTYContracts.communityIssuance) ||
-            await LQTYContracts.communityIssuance.setAddresses(
+            await this.sendAndWaitForTransaction(mainnetProvider, LQTYContracts.communityIssuance.setAddresses(
                 LQTYContracts.lqtyToken.address,
                 coreContracts.stabilityPool.address
-            )
+            ))
     }
 
-    static async connectUnipoolMainnet(uniPool, LQTYContracts, LUSDWETHPairAddr, duration) {
+    static async connectUnipoolMainnet(uniPool, LQTYContracts, LUSDWETHPairAddr, duration, mainnetProvider) {
+        let tx
         await this.isOwnershipRenounced(uniPool) ||
-            await uniPool.setParams(LQTYContracts.lqtyToken.address, LUSDWETHPairAddr, duration)
+            await this.sendAndWaitForTransaction(mainnetProvider, uniPool.setParams(LQTYContracts.lqtyToken.address, LUSDWETHPairAddr, duration))
     }
 
     // --- Helpers ---
