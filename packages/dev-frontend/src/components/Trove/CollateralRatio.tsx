@@ -53,7 +53,7 @@ export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value, change 
         infoIcon={
           <InfoIcon
             tooltip={
-              <Card variant="tooltip">
+              <Card variant="tooltip" sx={{ width: "220px" }}>
                 This is the ratio between the dollar value of the collateral and debt you are
                 depositing.
               </Card>

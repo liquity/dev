@@ -445,9 +445,7 @@ const theme: Theme = {
       backgroundColor: "muted",
       color: "slate",
       fontSize: 1,
-      fontWeight: "thin",
-      alignItems: "center",
-      justifyContent: "center"
+      fontWeight: "thin"
     }
   },
 
