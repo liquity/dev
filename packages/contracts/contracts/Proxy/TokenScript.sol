@@ -7,6 +7,8 @@ import "../Dependencies/IERC20.sol";
 
 
 contract TokenScript is CheckContract {
+    string constant public NAME = "TokenScriptScript";
+
     IERC20 immutable token;
 
     constructor(address _tokenAddress) public {

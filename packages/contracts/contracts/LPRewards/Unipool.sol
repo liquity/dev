@@ -72,6 +72,8 @@ contract LPTokenWrapper is ILPTokenWrapper {
  * or first liquidity provider stakes LP tokens into it.
  */
 contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
+    string constant public NAME = "Unipool";
+
     uint256 public duration;
     ILQTYToken public lqtyToken;
 

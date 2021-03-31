@@ -18,6 +18,8 @@ import "./Dependencies/console.sol";
 contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     using SafeMath for uint256;
 
+    string constant public NAME = "DefaultPool";
+
     address public troveManagerAddress;
     address public activePoolAddress;
     uint256 internal ETH;  // deposited ETH tracker

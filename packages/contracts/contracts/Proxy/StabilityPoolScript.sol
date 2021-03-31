@@ -7,6 +7,8 @@ import "../Interfaces/IStabilityPool.sol";
 
 
 contract StabilityPoolScript is CheckContract {
+    string constant public NAME = "StabilityPoolScript";
+
     IStabilityPool immutable stabilityPool;
 
     constructor(IStabilityPool _stabilityPool) public {
