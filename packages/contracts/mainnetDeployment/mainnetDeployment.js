@@ -4,10 +4,8 @@ const { UniswapV2Pair } = require("./ABIs/UniswapV2Pair.js")
 const { UniswapV2Router02 } = require("./ABIs/UniswapV2Router02.js")
 const { ChainlinkAggregatorV3Interface } = require("./ABIs/ChainlinkAggregatorV3Interface.js")
 const { TestHelper: th, TimeValues: timeVals } = require("../utils/testHelpers.js")
-const { externalAddrs, liquityAddrs, beneficiaries } = require("./mainnetAddresses.js")
+const { externalAddrs, beneficiaries } = require("./mainnetAddresses.js")
 const { dec } = th
-const { secrets } = require("../secrets.js");
-const { ERC20Abi } = require("./ABIs/ERC20.js")
 const mdh = require("../utils/mainnetDeploymentHelpers.js")
 
 const toBigNum = ethers.BigNumber.from
@@ -179,7 +177,16 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
       const sortedTrovesMaxSize = (await liquityCore.sortedTroves.data())[2]
       console.log(`SortedTroves current max size:  ${sortedTrovesMaxSize}`)
   
-      // TODO: Make first LUSD-ETH liquidity provision 
+      // --- TroveManager ---
+
+      const liqReserve = await liquityCore.troveManager.LUSD_GAS_COMPENSATION()
+      const minNetDebt = await liquityCore.troveManager.MIN_NET_DEBT()
+
+      console.log(`system liquidation reserve: ${liqReserve}`)
+      console.log(`system min net debt: ${minNetDebt}`)
+
+      // --- Make first LUSD-ETH liquidity provision ---
+
        // Open trove
        let _3kLUSDWithdrawal = th.dec(3000, 18) // 3000 LUSD
        let _3ETHcoll = th.dec(3, 'ether') // 3 ETH
@@ -194,7 +201,6 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
        console.log(`deployer stake: ${deployerTrove[2]}`)
        console.log(`deployer status: ${deployerTrove[3]}`)
        
-   
        // Check deployer has LUSD
        const deployerLUSDBal = await liquityCore.lusdToken.balanceOf(deployerWallet.address)
        console.log(`deployer's LUSD balance: ${deployerLUSDBal}`)
@@ -211,7 +217,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
       console.log(`LUSD-ETH Pair token 0: ${th.squeezeAddr(token0Addr)},
       LUSDToken contract addr: ${th.squeezeAddr(liquityCore.lusdToken.address)}`)
       console.log(`LUSD-ETH Pair token 1: ${th.squeezeAddr(token1Addr)},
-      LUSDToken contract addr: ${th.squeezeAddr(externalAddrs.WETH_ERC20)}`)
+      WETH ERC20 contract addr: ${th.squeezeAddr(externalAddrs.WETH_ERC20)}`)
       
       // Check initial LUSD-ETH pair reserves before provision
       let reserves = await LUSDETHPair.getReserves()
