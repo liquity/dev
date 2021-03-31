@@ -4,7 +4,12 @@
 // learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom/extend-expect";
 
+import { configure } from "@testing-library/dom";
+
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
+
+// Loading the Liquity store takes longer without Multicall
+configure({ asyncUtilTimeout: 2500 });
 
 const ethereum = new DisposableWalletProvider(
   "http://localhost:8545",
