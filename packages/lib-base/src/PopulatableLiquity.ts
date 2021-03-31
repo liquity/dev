@@ -273,6 +273,31 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
     PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>
   >;
 
+  /** {@inheritDoc TransactableLiquity.approveUniTokens} */
+  approveUniTokens(
+    allowance?: Decimalish
+  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
+
+  /** {@inheritDoc TransactableLiquity.stakeUniTokens} */
+  stakeUniTokens(
+    amount: Decimalish
+  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
+
+  /** {@inheritDoc TransactableLiquity.unstakeUniTokens} */
+  unstakeUniTokens(
+    amount: Decimalish
+  ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
+
+  /** {@inheritDoc TransactableLiquity.withdrawLQTYRewardFromLiquidityMining} */
+  withdrawLQTYRewardFromLiquidityMining(): Promise<
+    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>
+  >;
+
+  /** {@inheritDoc TransactableLiquity.exitLiquidityMining} */
+  exitLiquidityMining(): Promise<
+    PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>
+  >;
+
   /** {@inheritDoc TransactableLiquity.registerFrontend} */
   registerFrontend(
     kickbackRate: Decimalish

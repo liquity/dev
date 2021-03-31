@@ -31,6 +31,24 @@ export interface LiquityStoreBaseState {
   /** User's LQTY token balance. */
   lqtyBalance: Decimal;
 
+  /** User's Uniswap ETH/LUSD LP token balance. */
+  uniTokenBalance: Decimal;
+
+  /** The liquidity mining contract's allowance of user's Uniswap ETH/LUSD LP tokens. */
+  uniTokenAllowance: Decimal;
+
+  /** Remaining LQTY that will be collectively rewarded to liquidity miners. */
+  remainingLiquidityMiningLQTYReward: Decimal;
+
+  /** Amount of Uniswap ETH/LUSD LP tokens the user has staked in liquidity mining. */
+  liquidityMiningStake: Decimal;
+
+  /** Total amount of Uniswap ETH/LUSD LP tokens currently staked in liquidity mining. */
+  totalStakedUniTokens: Decimal;
+
+  /** Amount of LQTY the user has earned through mining liquidity. */
+  liquidityMiningLQTYReward: Decimal;
+
   /**
    * Amount of leftover collateral available for withdrawal to the user.
    *
@@ -68,6 +86,9 @@ export interface LiquityStoreBaseState {
 
   /** User's stability deposit. */
   stabilityDeposit: StabilityDeposit;
+
+  /** Remaining LQTY that will be collectively rewarded to stability depositors. */
+  remainingStabilityPoolLQTYReward: Decimal;
 
   /** @internal */
   _feesInNormalMode: Fees;
@@ -345,6 +366,46 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.lqtyBalance
       ),
 
+      uniTokenBalance: this._updateIfChanged(
+        eq,
+        "uniTokenBalance",
+        baseState.uniTokenBalance,
+        baseStateUpdate.uniTokenBalance
+      ),
+
+      uniTokenAllowance: this._updateIfChanged(
+        eq,
+        "uniTokenAllowance",
+        baseState.uniTokenAllowance,
+        baseStateUpdate.uniTokenAllowance
+      ),
+
+      remainingLiquidityMiningLQTYReward: this._silentlyUpdateIfChanged(
+        eq,
+        baseState.remainingLiquidityMiningLQTYReward,
+        baseStateUpdate.remainingLiquidityMiningLQTYReward
+      ),
+
+      liquidityMiningStake: this._updateIfChanged(
+        eq,
+        "liquidityMiningStake",
+        baseState.liquidityMiningStake,
+        baseStateUpdate.liquidityMiningStake
+      ),
+
+      totalStakedUniTokens: this._updateIfChanged(
+        eq,
+        "totalStakedUniTokens",
+        baseState.totalStakedUniTokens,
+        baseStateUpdate.totalStakedUniTokens
+      ),
+
+      liquidityMiningLQTYReward: this._silentlyUpdateIfChanged(
+        eq,
+        baseState.liquidityMiningLQTYReward,
+        baseStateUpdate.liquidityMiningLQTYReward
+      ),
+
       collateralSurplusBalance: this._updateIfChanged(
         eq,
         "collateralSurplusBalance",
@@ -382,6 +443,12 @@ export abstract class LiquityStore<T = unknown> {
         "stabilityDeposit",
         baseState.stabilityDeposit,
         baseStateUpdate.stabilityDeposit
+      ),
+
+      remainingStabilityPoolLQTYReward: this._silentlyUpdateIfChanged(
+        eq,
+        baseState.remainingStabilityPoolLQTYReward,
+        baseStateUpdate.remainingStabilityPoolLQTYReward
       ),
 
       _feesInNormalMode: this._silentlyUpdateIfChanged(

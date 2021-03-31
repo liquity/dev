@@ -17,8 +17,7 @@ test/launchSequenceTest/DuringLockupPeriodTest.js */
 contract('Access Control: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   let coreContracts
 
@@ -42,7 +41,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     coreContracts = await deploymentHelper.deployLiquityCore()
     coreContracts.troveManager = await TroveManagerTester.new()
     coreContracts = await deploymentHelper.deployLUSDTokenTester(coreContracts)
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
     
     priceFeed = coreContracts.priceFeed
     lusdToken = coreContracts.lusdToken
@@ -449,8 +448,8 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
       const LC = await th.getLCFromDeploymentTx(deployedLCtx)
 
-      // Deployer funds the LC
-      await lqtyToken.transfer(LC.address, dec(100, 18), { from: owner })
+      // LQTY Multisig funds the LC
+      await lqtyToken.transfer(LC.address, dec(100, 18), { from: multisig })
 
       // Fast-forward one year, so that beneficiary can withdraw
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -482,12 +481,12 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
   describe('LQTYToken', async accounts => {
     it("sendToLQTYStaking(): reverts when caller is not the LQTYSstaking", async () => {
-      // Check owner has some LQTY
-      assert.isTrue((await lqtyToken.balanceOf(owner)).gt(toBN('0')))
+      // Check multisig has some LQTY
+      assert.isTrue((await lqtyToken.balanceOf(multisig)).gt(toBN('0')))
 
-      // Owner tries to call it
+      // multisig tries to call it
       try {
-        const tx = await lqtyToken.sendToLQTYStaking(owner, 1, { from: owner })
+        const tx = await lqtyToken.sendToLQTYStaking(multisig, 1, { from: multisig })
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -496,7 +495,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // Owner transfers 1 LQTY to bob
-      await lqtyToken.transfer(bob, dec(1, 18), { from: owner })
+      await lqtyToken.transfer(bob, dec(1, 18), { from: multisig })
       assert.equal((await lqtyToken.balanceOf(bob)), dec(1, 18))
 
       // Bob tries to call it

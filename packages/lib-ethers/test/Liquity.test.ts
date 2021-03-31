@@ -1,6 +1,7 @@
 import chai, { expect, assert } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiSpies from "chai-spies";
+import { AddressZero } from "@ethersproject/constants";
 import { BigNumber } from "@ethersproject/bignumber";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ethers, network, deployLiquity } from "hardhat";
@@ -40,10 +41,15 @@ const provider = ethers.provider;
 chai.use(chaiAsPromised);
 chai.use(chaiSpies);
 
-const connectToDeployment = async (deployment: _LiquityDeploymentJSON, signer: Signer) =>
+const connectToDeployment = async (
+  deployment: _LiquityDeploymentJSON,
+  signer: Signer,
+  frontendTag?: string
+) =>
   EthersLiquity._from(
     _connectToDeployment(deployment, signer, {
-      userAddress: await signer.getAddress()
+      userAddress: await signer.getAddress(),
+      frontendTag
     })
   );
 
@@ -379,6 +385,23 @@ describe("EthersLiquity", () => {
       assertStrictEqual(frontend.status, "registered" as const);
       expect(`${frontend.kickbackRate}`).to.equal("0.75");
     });
+
+    it("other user's deposit should be tagged with the frontend's address", async () => {
+      const frontendTag = await user.getAddress();
+
+      await funder.sendTransaction({
+        to: otherUsers[0].getAddress(),
+        value: Decimal.from(20.1).hex
+      });
+
+      const otherLiquity = await connectToDeployment(deployment, otherUsers[0], frontendTag);
+      await otherLiquity.openTrove({ depositCollateral: 20, borrowLUSD: LUSD_MINIMUM_DEBT });
+
+      await otherLiquity.depositLUSDInStabilityPool(LUSD_MINIMUM_DEBT);
+
+      const deposit = await otherLiquity.getStabilityDeposit();
+      expect(deposit.frontendTag).to.equal(frontendTag);
+    });
   });
 
   describe("StabilityPool", () => {
@@ -474,7 +497,9 @@ describe("EthersLiquity", () => {
           troveWithVeryLowICR.collateral
             .mul(0.995) // -0.5% gas compensation
             .mulDiv(smallStabilityDeposit, troveWithVeryLowICR.debt)
-            .sub("0.000000000000000007") // tiny imprecision
+            .sub("0.000000000000000007"), // tiny imprecision
+          Decimal.ZERO,
+          AddressZero
         )
       );
     });
@@ -854,6 +879,105 @@ describe("EthersLiquity", () => {
       // gasUsed is ~half the real used amount because of how refunds work, see:
       // https://ethereum.stackexchange.com/a/859/9205
       expect(gasUsed).to.be.at.least(4900000, "should use close to 10M gas");
+    });
+  });
+
+  describe("Liquidity mining", () => {
+    before(async () => {
+      deployment = await deployLiquity(deployer);
+      [deployerLiquity, liquity] = await connectUsers([deployer, user]);
+    });
+
+    const someUniTokens = 1000;
+
+    it("should obtain some UNI LP tokens", async () => {
+      await liquity._mintUniToken(someUniTokens);
+
+      const uniTokenBalance = await liquity.getUniTokenBalance();
+      expect(`${uniTokenBalance}`).to.equal(`${someUniTokens}`);
+    });
+
+    it("should fail to stake UNI LP before approving the spend", async () => {
+      await expect(liquity.stakeUniTokens(someUniTokens)).to.eventually.be.rejected;
+    });
+
+    it("should stake UNI LP after approving the spend", async () => {
+      const initialAllowance = await liquity.getUniTokenAllowance();
+      expect(`${initialAllowance}`).to.equal("0");
+
+      await liquity.approveUniTokens();
+
+      const newAllowance = await liquity.getUniTokenAllowance();
+      expect(newAllowance.isZero).to.be.false;
+
+      await liquity.stakeUniTokens(someUniTokens);
+
+      const uniTokenBalance = await liquity.getUniTokenBalance();
+      expect(`${uniTokenBalance}`).to.equal("0");
+
+      const stake = await liquity.getLiquidityMiningStake();
+      expect(`${stake}`).to.equal(`${someUniTokens}`);
+    });
+
+    it("should have an LQTY reward after some time has passed", async function () {
+      this.timeout("20s");
+
+      // Liquidity mining rewards are seconds-based, so we don't need to wait long.
+      // By actually waiting in real time, we avoid using increaseTime(), which only works on
+      // Hardhat EVM.
+      await new Promise(resolve => setTimeout(resolve, 4000));
+
+      // Trigger a new block with a dummy TX.
+      await liquity._mintUniToken(0);
+
+      const lqtyReward = Number(await liquity.getLiquidityMiningLQTYReward());
+      expect(lqtyReward).to.be.at.least(1); // ~0.2572 per second [(4e6/3) / (60*24*60*60)]
+
+      await liquity.withdrawLQTYRewardFromLiquidityMining();
+      const lqtyBalance = Number(await liquity.getLQTYBalance());
+      expect(lqtyBalance).to.be.at.least(lqtyReward); // may have increased since checking
+    });
+
+    it("should partially unstake", async () => {
+      await liquity.unstakeUniTokens(someUniTokens / 2);
+
+      const uniTokenStake = await liquity.getLiquidityMiningStake();
+      expect(`${uniTokenStake}`).to.equal(`${someUniTokens / 2}`);
+
+      const uniTokenBalance = await liquity.getUniTokenBalance();
+      expect(`${uniTokenBalance}`).to.equal(`${someUniTokens / 2}`);
+    });
+
+    it("should unstake remaining tokens and withdraw remaining LQTY reward", async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await liquity._mintUniToken(0); // dummy block
+      await liquity.exitLiquidityMining();
+
+      const uniTokenStake = await liquity.getLiquidityMiningStake();
+      expect(`${uniTokenStake}`).to.equal("0");
+
+      const lqtyReward = await liquity.getLiquidityMiningLQTYReward();
+      expect(`${lqtyReward}`).to.equal("0");
+
+      const uniTokenBalance = await liquity.getUniTokenBalance();
+      expect(`${uniTokenBalance}`).to.equal(`${someUniTokens}`);
+    });
+
+    it("should have no more rewards after the mining period is over", async function () {
+      if (network.name !== "hardhat") {
+        // increaseTime() only works on Hardhat EVM
+        this.skip();
+      }
+
+      await liquity.stakeUniTokens(someUniTokens);
+      await increaseTime(2 * 30 * 24 * 60 * 60);
+      await liquity.exitLiquidityMining();
+
+      const remainingLQTYReward = await liquity.getRemainingLiquidityMiningLQTYReward();
+      expect(`${remainingLQTYReward}`).to.equal("0");
+
+      const lqtyBalance = Number(await liquity.getLQTYBalance());
+      expect(lqtyBalance).to.be.within(1333333, 1333334);
     });
   });
 

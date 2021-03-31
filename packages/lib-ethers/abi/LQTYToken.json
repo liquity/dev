@@ -25,6 +25,11 @@
         "internalType": "address",
         "name": "_lpRewardsAddress",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_multisigAddress",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -251,19 +256,6 @@
   },
   {
     "inputs": [],
-    "name": "deployer",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "domainSeparator",
     "outputs": [
       {
@@ -341,6 +333,19 @@
   {
     "inputs": [],
     "name": "lqtyStakingAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "multisigAddress",
     "outputs": [
       {
         "internalType": "address",

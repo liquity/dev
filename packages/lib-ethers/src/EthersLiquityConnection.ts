@@ -2,6 +2,8 @@ import { BigNumber } from "@ethersproject/bignumber";
 import { Block, BlockTag } from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
 
+import { Decimal } from "@liquity/lib-base";
+
 import devOrNull from "../deployments/dev.json";
 import goerli from "../deployments/goerli.json";
 import kovan from "../deployments/kovan.json";
@@ -62,6 +64,12 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
   /** Date when the Liquity contracts were deployed. */
   readonly deploymentDate: Date;
 
+  /** Time period (in seconds) after `deploymentDate` during which redemptions are disabled. */
+  readonly bootstrapPeriod: number;
+
+  /** Total amount of LQTY allocated for rewarding stability depositors. */
+  readonly totalStabilityPoolLQTYReward: Decimal;
+
   /** A mapping of Liquity contracts' names to their addresses. */
   readonly addresses: Record<string, string>;
 
@@ -87,7 +95,7 @@ const connectionFrom = (
   signer: EthersSigner | undefined,
   _contracts: _LiquityContracts,
   _multicall: _Multicall | undefined,
-  { deploymentDate, ...deployment }: _LiquityDeploymentJSON,
+  { deploymentDate, totalStabilityPoolLQTYReward, ...deployment }: _LiquityDeploymentJSON,
   optionalParams?: EthersLiquityConnectionOptionalParams
 ): _InternalEthersLiquityConnection => {
   if (
@@ -104,6 +112,7 @@ const connectionFrom = (
     _contracts,
     _multicall,
     deploymentDate: new Date(deploymentDate),
+    totalStabilityPoolLQTYReward: Decimal.from(totalStabilityPoolLQTYReward),
     ...deployment,
     ...optionalParams
   });
@@ -116,8 +125,7 @@ export const _getContracts = (connection: EthersLiquityConnection): _LiquityCont
 const getMulticall = (connection: EthersLiquityConnection): _Multicall | undefined =>
   (connection as _InternalEthersLiquityConnection)._multicall;
 
-const convertToDate = (timestamp: number | BigNumber) =>
-  new Date((typeof timestamp === "number" ? timestamp : timestamp.toNumber()) * 1000);
+const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 
 const getTimestampFromBlock = ({ timestamp }: Block) => timestamp;
 
@@ -125,12 +133,10 @@ const getTimestampFromBlock = ({ timestamp }: Block) => timestamp;
 export const _getBlockTimestamp = (
   connection: EthersLiquityConnection,
   blockTag: BlockTag = "latest"
-): Promise<Date> =>
+): Promise<number> =>
   // Get the timestamp via a contract call whenever possible, to make it batchable with other calls
-  (
-    getMulticall(connection)?.getCurrentBlockTimestamp({ blockTag }) ??
-    _getProvider(connection).getBlock(blockTag).then(getTimestampFromBlock)
-  ).then(convertToDate);
+  getMulticall(connection)?.getCurrentBlockTimestamp({ blockTag }).then(numberify) ??
+  _getProvider(connection).getBlock(blockTag).then(getTimestampFromBlock);
 
 const panic = <T>(e: unknown): T => {
   throw e;

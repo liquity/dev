@@ -48,7 +48,7 @@ import {
   _requireSigner
 } from "./EthersLiquityConnection";
 
-import { _priceFeedIsTestnet } from "./contracts";
+import { _priceFeedIsTestnet, _uniTokenIsMock } from "./contracts";
 import { logsToString } from "./parseLogs";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
@@ -74,6 +74,8 @@ const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add
 const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(25000);
 
 const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(50000);
+
+const addGasForUnipoolRewardUpdate = (gas: BigNumber) => gas.add(20000);
 
 // To get the best entropy available, we'd do something like:
 //
@@ -996,6 +998,103 @@ export class PopulatableEthersLiquity
         { ...overrides },
         id,
         Decimal.from(kickbackRate).hex
+      )
+    );
+  }
+
+  /** @internal */
+  async _mintUniToken(
+    amount: Decimalish,
+    address?: string,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
+    address ??= _requireAddress(this._readable.connection, overrides);
+    const { uniToken } = _getContracts(this._readable.connection);
+
+    if (!_uniTokenIsMock(uniToken)) {
+      throw new Error("_mintUniToken() unavailable on this deployment of Liquity");
+    }
+
+    return this._wrapSimpleTransaction(
+      await uniToken.estimateAndPopulate.mint(
+        { ...overrides },
+        id,
+        address,
+        Decimal.from(amount).hex
+      )
+    );
+  }
+
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.approveUniTokens} */
+  async approveUniTokens(
+    allowance?: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
+    const { uniToken, unipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await uniToken.estimateAndPopulate.approve(
+        { ...overrides },
+        id,
+        unipool.address,
+        Decimal.from(allowance ?? Decimal.INFINITY).hex
+      )
+    );
+  }
+
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.stakeUniTokens} */
+  async stakeUniTokens(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
+    const { unipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await unipool.estimateAndPopulate.stake(
+        { ...overrides },
+        addGasForUnipoolRewardUpdate,
+        Decimal.from(amount).hex
+      )
+    );
+  }
+
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.unstakeUniTokens} */
+  async unstakeUniTokens(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
+    const { unipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await unipool.estimateAndPopulate.withdraw(
+        { ...overrides },
+        addGasForUnipoolRewardUpdate,
+        Decimal.from(amount).hex
+      )
+    );
+  }
+
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawLQTYRewardFromLiquidityMining} */
+  async withdrawLQTYRewardFromLiquidityMining(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
+    const { unipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await unipool.estimateAndPopulate.claimReward({ ...overrides }, addGasForUnipoolRewardUpdate)
+    );
+  }
+
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.exitLiquidityMining} */
+  async exitLiquidityMining(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersLiquityTransaction<void>> {
+    const { unipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await unipool.estimateAndPopulate.withdrawAndClaim(
+        { ...overrides },
+        addGasForUnipoolRewardUpdate
       )
     );
   }

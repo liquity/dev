@@ -1,14 +1,13 @@
 {
   "_format": "hh-sol-artifact-1",
   "contractName": "DSAuthEvents",
-  "sourceName": "contracts/TestContracts/DappSys/ds-auth/auth.sol",
+  "sourceName": "contracts/TestContracts/DappSys/proxy.sol",
   "abi": [
     {
       "anonymous": false,
       "inputs": [
         {
           "indexed": true,
-          "internalType": "address",
           "name": "authority",
           "type": "address"
         }
@@ -21,7 +20,6 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "address",
           "name": "owner",
           "type": "address"
         }
@@ -30,8 +28,8 @@
       "type": "event"
     }
   ],
-  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea264697066735822122005c7c5f2d219a7eebb05ad2e3a386f7652d5a82f0780d6799b848a9011cef5b964736f6c634300060b0033",
-  "deployedBytecode": "0x6080604052600080fdfea264697066735822122005c7c5f2d219a7eebb05ad2e3a386f7652d5a82f0780d6799b848a9011cef5b964736f6c634300060b0033",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603580601d6000396000f3006080604052600080fd00a165627a7a7230582089d64a9e9aed7a2bb87a473b4831578b67172cab3769bad1264714a53eb3bcc70029",
+  "deployedBytecode": "0x6080604052600080fd00a165627a7a7230582089d64a9e9aed7a2bb87a473b4831578b67172cab3769bad1264714a53eb3bcc70029",
   "linkReferences": {},
   "deployedLinkReferences": {}
 }

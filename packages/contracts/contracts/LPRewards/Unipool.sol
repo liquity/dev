@@ -55,11 +55,11 @@ contract LPTokenWrapper is ILPTokenWrapper {
 
  * Essentially the way it works is:
 
- * - Liqudity providers add funds to the Uniswap pool, and get UNIv2 LP tokens in exchange
- * - Liqudity providers stake those UNIv2 LP tokens into Unipool rewards contract
- * - Liqudity providers accrue rewards, proportional to the amount of staked tokens and staking time
- * - Liqudity providers can claim their rewards when they want
- * - Liqudity providers can unstake UNIv2 LP tokens to exit the program (i.e., stop earning rewards) when they want
+ * - Liquidity providers add funds to the Uniswap pool, and get UNIv2 LP tokens in exchange
+ * - Liquidity providers stake those UNIv2 LP tokens into Unipool rewards contract
+ * - Liquidity providers accrue rewards, proportional to the amount of staked tokens and staking time
+ * - Liquidity providers can claim their rewards when they want
+ * - Liquidity providers can unstake UNIv2 LP tokens to exit the program (i.e., stop earning rewards) when they want
 
  * Funds for rewards will only be added once, on deployment of LQTY token,
  * which will happen after this contract is deployed and before this `setParams` in this contract is called.
@@ -146,7 +146,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     // stake visibility is public as overriding LPTokenWrapper's stake() function
     function stake(uint256 amount) public override {
         require(amount > 0, "Cannot stake 0");
-        require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
+        require(address(uniToken) != address(0), "Liquidity Pool Token has not been set yet");
 
         _updatePeriodFinish();
         _updateAccountReward(msg.sender);
@@ -158,7 +158,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
 
     function withdraw(uint256 amount) public override {
         require(amount > 0, "Cannot withdraw 0");
-        require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
+        require(address(uniToken) != address(0), "Liquidity Pool Token has not been set yet");
 
         _updateAccountReward(msg.sender);
 
@@ -174,7 +174,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     }
 
     function claimReward() public override {
-        require(address(uniToken) != address(0), "Liqudity Pool Token has not been set yet");
+        require(address(uniToken) != address(0), "Liquidity Pool Token has not been set yet");
 
         _updatePeriodFinish();
         _updateAccountReward(msg.sender);

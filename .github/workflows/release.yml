@@ -1,0 +1,65 @@
+name: Release SDK & UI
+
+env:
+  CI: true
+  FORCE_COLOR: true
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 12.x
+
+      - id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+
+      - name: Test SDK & UI
+        run: yarn test
+
+      - name: Test SDK integration against live contracts
+        if: ${{ github.ref == 'refs/heads/master' }}
+        run: yarn test-live
+
+      - name: Release SDK on NPM
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: yarn release
+
+      - name: Login to Docker Hub
+        uses: azure/docker-login@v1
+        if: ${{ github.event_name == 'push' }}
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+
+      - name: Release dev-frontend on Docker Hub
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          docker-compose build
+          docker-compose push
+        working-directory: ./packages/dev-frontend
+        env:
+          TAG: ${{ fromJSON('{ "refs/heads/master":"latest", "refs/heads/main":"next" }')[github.ref] }}

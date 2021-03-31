@@ -4,8 +4,18 @@ require("solidity-coverage");
 require("hardhat-gas-reporter");
 const accounts = require("./hardhatAccountsList2k.js");
 const accountsList = accounts.accountsList
-const { secrets } = require("./secrets.js");
-const alchemyAPIKey = secrets.alchemyAPIKey
+
+const fs = require('fs')
+const alchemyUrl = () => {
+    const SECRETS_FILE = "./secrets.js"
+    let alchemyAPIKey = ""
+    if (fs.existsSync(SECRETS_FILE)) {
+        const { secrets } = require(SECRETS_FILE);
+        alchemyAPIKey = secrets.alchemyAPIKey
+    }
+
+    return `https://eth-mainnet.alchemyapi.io/v2/${alchemyAPIKey}`
+}
 
 module.exports = {
     paths: {
@@ -49,10 +59,6 @@ module.exports = {
             gas: 10000000,  // tx gas limit
             blockGasLimit: 12500000, 
             gasPrice: 20000000000,
-            forking: {
-                url: alchemyAPIKey,
-                blockNumber: 12148782
-              }
         }
     },
     mocha: { timeout: 12000000 },

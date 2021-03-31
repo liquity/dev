@@ -11,8 +11,7 @@ const dec = th.dec
 
 contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', async accounts => {
   const [liquityAG, A, B] = accounts;
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   let LQTYContracts
 
@@ -23,7 +22,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
+    LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
 
     lqtyStaking = LQTYContracts.lqtyStaking
@@ -35,11 +34,6 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
     // connected to the rest of the system
   })
 
-  describe('LockupContractFactory deployment', async accounts => {
-  
-
-    
-  })
 
   describe('CommunityIssuance deployment', async accounts => {
     it("Stores the deployer's address", async () => {
@@ -58,10 +52,10 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
   })
 
   describe('LQTYToken deployment', async accounts => {
-    it("Stores the deployer's address", async () => {
-      const storedDeployerAddress = await lqtyToken.deployer()
+    it("Stores the multisig's address", async () => {
+      const storedMultisigAddress = await lqtyToken.multisigAddress()
 
-      assert.equal(liquityAG, storedDeployerAddress)
+      assert.equal(multisig, storedMultisigAddress)
     })
 
     it("Stores the CommunityIssuance address", async () => {
@@ -76,12 +70,12 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
       assert.equal(lockupContractFactory.address, storedLCFAddress)
     })
 
-    it("Mints the correct LQTY amount to the deployer's address: (65.66 million)", async () => {
-      const deployerLQTYEntitlement = await lqtyToken.balanceOf(liquityAG)
+    it("Mints the correct LQTY amount to the multisig's address: (64.66 million)", async () => {
+      const multisigLQTYEntitlement = await lqtyToken.balanceOf(multisig)
 
      const twentyThreeSixes = "6".repeat(23)
-      const expectedDeployerEntitlement = "65".concat(twentyThreeSixes).concat("7")
-      assert.equal(deployerLQTYEntitlement, expectedDeployerEntitlement)
+      const expectedMultisigEntitlement = "64".concat(twentyThreeSixes).concat("7")
+      assert.equal(multisigLQTYEntitlement, expectedMultisigEntitlement)
     })
 
     it("Mints the correct LQTY amount to the CommunityIssuance contract address: 32 million", async () => {
@@ -92,12 +86,12 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
       assert.equal(communityLQTYEntitlement, _32Million)
     })
 
-    it("Mints the correct LQTY amount to the bountyAddress EOA: 1 million", async () => {
+    it("Mints the correct LQTY amount to the bountyAddress EOA: 2 million", async () => {
       const bountyAddressBal = await lqtyToken.balanceOf(bountyAddress)
-      // 1 million as 18-digit decimal
-      const _1Million = dec(1, 24)
+      // 2 million as 18-digit decimal
+      const _2Million = dec(2, 24)
 
-      assert.equal(bountyAddressBal, _1Million)
+      assert.equal(bountyAddressBal, _2Million)
     })
 
     it("Mints the correct LQTY amount to the lpRewardsAddress EOA: 1.33 million", async () => {
@@ -148,7 +142,7 @@ contract('Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken ', a
       const coreContracts = await deploymentHelper.deployLiquityCore()
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.transfer(newCI.address, '31999999999999999999999999') // 1e-18 less than CI expects (32 million)
+      await lqtyToken.transfer(newCI.address, '31999999999999999999999999', {from: multisig}) // 1e-18 less than CI expects (32 million)
 
       try {
         const tx = await newCI.setAddresses(

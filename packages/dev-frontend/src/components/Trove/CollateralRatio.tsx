@@ -1,4 +1,5 @@
-import { Flex, Box } from "theme-ui";
+import React from "react";
+import { Flex, Box, Card } from "theme-ui";
 
 import {
   CRITICAL_COLLATERAL_RATIO,
@@ -11,6 +12,7 @@ import {
 import { Icon } from "../Icon";
 
 import { StaticRow } from "./Editor";
+import { InfoIcon } from "../InfoIcon";
 
 type CollateralRatioProps = {
   value?: Decimal;
@@ -48,6 +50,16 @@ export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value, change 
             : changePct?.nonZeroish(2)?.prettify()
         }
         pendingColor={change?.positive ? "success" : "danger"}
+        infoIcon={
+          <InfoIcon
+            tooltip={
+              <Card variant="tooltip" sx={{ width: "220px" }}>
+                This is the ratio between the dollar value of the collateral and debt you are
+                depositing.
+              </Card>
+            }
+          />
+        }
       />
     </Flex>
   );
