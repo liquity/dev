@@ -43,7 +43,7 @@ export const Inactive: React.FC = () => {
         </InfoMessage>
 
         <Flex variant="layout.actions">
-          <Flex sx={{ justifyContent: "flex-start", flex: 1, alignItems: "center" }}>
+          <Flex sx={{ justifyContent: "flex-start", alignItems: "center", flex: 1 }}>
             <Yield />
           </Flex>
           <Button onClick={handleStakePressed}>Stake</Button>
