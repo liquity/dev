@@ -435,6 +435,19 @@ const theme: Theme = {
       mr: "25vw",
       height: "100%",
       ...headerGradient
+    },
+
+    badge: {
+      border: 0,
+      borderRadius: 3,
+      p: 1,
+      px: 2,
+      backgroundColor: "muted",
+      color: "slate",
+      fontSize: 1,
+      fontWeight: "thin",
+      alignItems: "center",
+      justifyContent: "center"
     }
   },
 

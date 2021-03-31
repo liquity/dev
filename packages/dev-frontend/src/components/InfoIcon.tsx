@@ -8,7 +8,7 @@ export type InfoIconProps = Pick<TippyProps, "placement"> & {
 
 export const InfoIcon: React.FC<InfoIconProps> = ({ placement = "right", tooltip }) => {
   return (
-    <Tippy interactive={true} placement={placement} content={tooltip}>
+    <Tippy interactive={true} placement={placement} content={tooltip} maxWidth="268px">
       <span>
         &nbsp;
         <Icon name="info-circle" size="1x" />
