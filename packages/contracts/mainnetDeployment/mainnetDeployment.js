@@ -93,10 +93,23 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     const lockupContracts = {}
 
     for (const [investor, investorAddr] of Object.entries(beneficiaries)) {
-      const txReceipt = await mdh.sendAndWaitForTransaction(mainnetProvider, LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow))
+      if (deploymentState[investor] && deploymentState[investor].address) {
+        console.log(`Using previously deployed ${investor} lockup contract at address ${deploymentState[investor].address}`)
+        lockupContracts[investor] = await th.getLCFromAddress(deploymentState[investor].address)
+      } else {
+        const txReceipt = await mdh.sendAndWaitForTransaction(mainnetProvider, LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow))
 
-      const address = await txReceipt.logs[0].address // The deployment event emitted from the LC itself is is the first of two events, so this is its address 
-      lockupContracts[investor] = await th.getLCFromAddress(address) 
+        const address = await txReceipt.logs[0].address // The deployment event emitted from the LC itself is is the first of two events, so this is its address 
+        lockupContracts[investor] = await th.getLCFromAddress(address)
+
+        deploymentState[investor] = {
+          address: address,
+          txHash: txReceipt.transactionHash
+        }
+
+        mdh.saveDeployment(deploymentState)
+
+      }
     }
 
      // --- TESTS AND CHECKS  ---
