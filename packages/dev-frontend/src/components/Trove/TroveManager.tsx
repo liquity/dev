@@ -149,10 +149,23 @@ const select = (state: LiquityStoreState) => ({
 
 const transactionId = "trove";
 
-export const TroveManager: React.FC = () => {
+type TroveManagerProps = {
+  collateral?: Decimalish;
+  debt?: Decimalish;
+};
+
+export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees, validationContext } = useLiquitySelector(select);
 
+  useEffect(() => {
+    if (collateral !== undefined) {
+      dispatch({ type: "setCollateral", newValue: collateral });
+    }
+    if (debt !== undefined) {
+      dispatch({ type: "setDebt", newValue: debt });
+    }
+  }, []);
   const borrowingRate = fees.borrowingRate();
   const maxBorrowingRate = borrowingRate.add(0.005); // TODO slippage tolerance
 

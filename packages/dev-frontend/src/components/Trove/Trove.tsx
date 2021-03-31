@@ -5,6 +5,7 @@ import { NoTrove } from "./NoTrove";
 import { RedeemedTrove } from "./RedeemedTrove";
 import { useTroveView } from "./context/TroveViewContext";
 import { LiquidatedTrove } from "./LiquidatedTrove";
+import { Decimal } from "@liquity/lib-base";
 
 export const Trove: React.FC = props => {
   const { view } = useTroveView();
@@ -16,6 +17,9 @@ export const Trove: React.FC = props => {
     }
     case "ADJUSTING": {
       return <TroveManager {...props} />;
+    }
+    case "CLOSING": {
+      return <TroveManager {...props} collateral={Decimal.ZERO} debt={Decimal.ZERO} />;
     }
     case "OPENING": {
       return <TroveManager {...props} />;
