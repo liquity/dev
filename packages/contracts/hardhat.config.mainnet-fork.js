@@ -59,6 +59,10 @@ module.exports = {
             gas: 10000000,  // tx gas limit
             blockGasLimit: 12500000, 
             gasPrice: 20000000000,
+            forking: {
+                url: alchemyUrl(),
+                blockNumber: 12146458
+            }
         }
     },
     mocha: { timeout: 12000000 },
