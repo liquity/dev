@@ -10,8 +10,7 @@ const externalAddrs  = {
 }
 
 const liquityAddrsTest = {
-    //GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd",  // Hardhat dev address
-    GENERAL_SAFE:"0x66aB6D9362d4F35596279692F0251Db635165871",
+    GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd",  // Hardhat dev address
     //LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74",  //  Hardhat dev address
     LQTY_SAFE:"0x66aB6D9362d4F35596279692F0251Db635165871",
     DEPLOYER: "0x66aB6D9362d4F35596279692F0251Db635165871" // Mainnet test deployment address
