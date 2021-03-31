@@ -51,7 +51,7 @@ module.exports = {
             gasPrice: 20000000000,
             forking: {
                 url: alchemyAPIKey,
-                blockNumber: 12143960
+                blockNumber: 12148782
               }
         }
     },

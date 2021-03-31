@@ -1,5 +1,5 @@
 const { secrets } = require("../secrets.js");
-const { UniswapV2Factory } = require("./ABIs/UniswapFactoryABI.js")
+const { UniswapV2Factory } = require("./ABIs/UniswapV2Factory.js")
 const { ERC20Abi } = require("./ABIs/ERC20.js")
 const mdh = require("../utils/mainnetDeploymentHelpers.js")
 const { TestHelper: th, TimeValues: timeVals } = require("../utils/testHelpers.js")
@@ -166,8 +166,8 @@ async function main() {
     const sortedTrovesMaxSize = (await liquityCore.sortedTroves.data())[2]
     console.log(`SortedTroves current max size:  ${sortedTrovesMaxSize}`)
 
-    // TODO: Make first LUSD-ETH liquidity provision 
-   
+    // --- Make first LUSD-ETH liquidity provision ---
+
     // TODO: Check Uniswap pool has LUSD and ETH
 
     // --- TODO: Check LP staking is working ---

@@ -1,13 +1,16 @@
 const { secrets } = require("../secrets.js");
-const { UniswapV2Factory } = require("./ABIs/UniswapFactoryABI.js")
+const { UniswapV2Factory } = require("./ABIs/UniswapV2Factory.js")
+const { UniswapV2Pair } = require("./ABIs/UniswapV2Pair.js")
+const { UniswapV2Router02 } = require("./ABIs/UniswapV2Router02.js")
+const { ChainlinkAggregatorV3Interface } = require("./ABIs/ChainlinkAggregatorV3Interface.js")
 const { ERC20Abi } = require("./ABIs/ERC20.js")
 const mdh = require("../utils/mainnetDeploymentHelpers.js")
 const { TestHelper: th, TimeValues: timeVals } = require("../utils/testHelpers.js")
 const { externalAddrs, liquityAddrs, beneficiaries } = require("./mainnetAddresses.js")
+const { dec } = th
 
-const readline = require("readline");
-
-const output = {}
+const toBigNum = ethers.BigNumber.from
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 async function main() {
     const deployerWallet = new ethers.Wallet(secrets.TEST_DEPLOYER_PRIVATEKEY, ethers.provider)
@@ -105,8 +108,8 @@ async function main() {
     await mdh.logContractObjects(LQTYContracts)
     console.log(`Unipool address: ${unipool.address}`)
 
-    const latestBlock = await ethers.provider.getBlockNumber()
-    const now = (await ethers.provider.getBlock(latestBlock)).timestamp 
+    let latestBlock = await ethers.provider.getBlockNumber()
+    let now = (await ethers.provider.getBlock(latestBlock)).timestamp 
 
     console.log(`time now: ${now}`)
     const oneYearFromNow = (now + timeVals.SECONDS_IN_ONE_YEAR).toString()
@@ -126,6 +129,16 @@ async function main() {
     // --- TESTS AND CHECKS  (Extract to new file) ---
 
     // TODO: Check chainlink proxy price directly ---
+
+    const chainlinkProxy = new ethers.Contract(
+      externalAddrs.CHAINLINK_ETHUSD_PROXY, 
+      ChainlinkAggregatorV3Interface, 
+      deployerWallet
+    )
+
+    // Get latest price
+    const price = await chainlinkProxy.latestAnswer()
+    console.log(`current Chainlink price: ${price}`)
 
     // TODO: Check Tellor price directly
 
@@ -162,7 +175,7 @@ async function main() {
 
     // CommunityIssuance contract
     const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(LQTYContracts.communityIssuance.address)
-    console.log(`General Safe balance: ${communityIssuanceBal}`)
+    console.log(`CommunityIssuance balance: ${communityIssuanceBal}`)
 
     // --- PriceFeed ---
 
@@ -195,10 +208,106 @@ async function main() {
     console.log(`SortedTroves current max size:  ${sortedTrovesMaxSize}`)
 
     // TODO: Make first LUSD-ETH liquidity provision 
+     // Open trove
+     let _3kLUSDWithdrawal = th.dec(3000, 18) // 3000 LUSD
+     let _3ETHcoll = th.dec(3, 'ether') // 3 ETH
+     await liquityCore.borrowerOperations.openTrove(th._100pct, _3kLUSDWithdrawal, th.ZERO_ADDRESS, th.ZERO_ADDRESS, {value: _3ETHcoll } )
+    
+    // Check deployer now has an open trove
+     console.log(`deployer is in sorted list after making trove: ${await liquityCore.sortedTroves.contains(deployerWallet.address)}`)
+ 
+     const deployerTrove = await liquityCore.troveManager.Troves(deployerWallet.address)
+     console.log(`deployer debt: ${deployerTrove[0]}`)
+     console.log(`deployer coll: ${deployerTrove[1]}`)
+     console.log(`deployer stake: ${deployerTrove[2]}`)
+     console.log(`deployer status: ${deployerTrove[3]}`)
+     
+ 
+     // Check deployer has LUSD
+     const deployerLUSDBal = await liquityCore.lusdToken.balanceOf(deployerWallet.address)
+     console.log(`deployer's LUSD balance: ${deployerLUSDBal}`)
+ 
+    // TODO: Check Uniswap pool has 0 LUSD and ETH reserves
+    const LUSDETHPair = await new ethers.Contract(
+      LUSDWETHPairAddr,
+      UniswapV2Pair.abi, 
+      deployerWallet
+    )
+
+    const token0Addr = await LUSDETHPair.token0()
+    const token1Addr =  await LUSDETHPair.token1()
+    console.log(`LUSD-ETH Pair token 0: ${th.squeezeAddr(token0Addr)},
+    LUSDToken contract addr: ${th.squeezeAddr(liquityCore.lusdToken.address)}`)
+    console.log(`LUSD-ETH Pair token 1: ${th.squeezeAddr(token1Addr)},
+    LUSDToken contract addr: ${th.squeezeAddr(externalAddrs.WETH_ERC20)}`)
+    
+    // Check initial LUSD-ETH pair reserves before provision
+    let reserves = await LUSDETHPair.getReserves()
+    console.log(`LUSD-ETH Pair's LUSD reserves before provision:${reserves[0]}`)
+    console.log(`LUSD-ETH Pair's ETH reserves before provision:${reserves[1]}`)
+
+    // Provide Liquidity to the token pair
+    const uniswapV2Router02 = new ethers.Contract( 
+      externalAddrs.UNIWAP_V2_ROUTER02, 
+      UniswapV2Router02.abi, 
+      deployerWallet
+    )
+
+    // Give router an allowance for LUSD
+    await liquityCore.lusdToken.increaseAllowance(uniswapV2Router02.address, dec(10000, 18))
+
+    // Check Router's spending allowance
+    const routerLUSDAllowanceFromDeployer = await liquityCore.lusdToken.allowance(deployerWallet.address, uniswapV2Router02.address)
+    console.log(`router's spending allowance for deployer's LUSD: ${routerLUSDAllowanceFromDeployer}`)
+
+    // Initial liquidity provision: 1 ETH, and equal value of LUSD
+    const LP_ETH = dec(1, 'ether')
+
+    // Convert 8-digit CL price to 18 and multiply by ETH amount
+    const LUSDAmount = toBigNum(price)
+      .mul(toBigNum(dec(1, 10)))
+      .mul(toBigNum(LP_ETH))
+      .div(toBigNum(dec(1, 18))) 
+
+    const minLUSDAmount = LUSDAmount.sub(toBigNum(dec(100, 18))) 
    
-    // TODO: Check Uniswap pool has LUSD and ETH
+    latestBlock = await ethers.provider.getBlockNumber()
+    now = (await ethers.provider.getBlock(latestBlock)).timestamp 
+    let tenMinsFromNow = now + (60 * 60 * 10)
+
+    // Add liquidity to LUSD-ETH pair
+    await uniswapV2Router02.addLiquidityETH(
+      liquityCore.lusdToken.address, // address of LUSD token
+      LUSDAmount, // LUSD provision
+      minLUSDAmount, // minimum LUSD provision
+      LP_ETH, // minimum ETH provision
+      deployerWallet.address, // address to send LP tokens to
+      tenMinsFromNow, // deadline for this tx
+      {
+        value: dec(1, 'ether'),
+        gasLimit: 5000000 // For some reason, ethers can't estimate gas for this tx
+      }
+    )
+    
+    // Check LUSD-ETH reserves after liquidity provision:
+    reserves = await LUSDETHPair.getReserves()
+    console.log(`LUSD-ETH Pair's LUSD reserves after provision:${reserves[0]}`)
+    console.log(`LUSD-ETH Pair's ETH reserves after provision:${reserves[1]}`)
 
     // --- TODO: Check LP staking is working ---
+
+    // Check deployer's LP tokens
+    const deployerLPTokenBal = await LUSDETHPair.balanceOf(deployerWallet.address)
+    console.log(`deployer's LP token balance: ${deployerLPTokenBal}`)
+
+    // Stake most of deployer's LP tokens in Unipool
+    // *** This overflows?  Should be able to stake
+    await unipool.stake(1)
+
+    await delay(60000) // wait 1 minute
+
+    const earnedLQTY = await unipool.earned(deployerWallet.address)
+    console.log(`deployer's earned LQTY from Unipool after ~1minute: ${earnedLQTY}`)
 }
 
 main()

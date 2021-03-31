@@ -87,7 +87,7 @@ const logContractDeploymentCosts = async (contracts) => {
     totalGasCost = totalGasCost + Number(gasCost)
   }
   console.log(`Total deployment gas costs: ${totalGasCost}`)
-  getUSDCostFromGasCost(totalGasCost, 200, 1500)
+  getUSDCostFromGasCost(totalGasCost, 200, 1850)
 }
 
 const logContractObjects = async (contracts) => {
