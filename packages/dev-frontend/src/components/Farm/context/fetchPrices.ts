@@ -3,15 +3,15 @@ import { Decimal } from "@liquity/lib-base";
 type UniswapResponse = {
   data?: {
     bundle: {
-      ethPrice: string | null;
-    };
+      ethPrice: string;
+    } | null;
     token: {
-      derivedETH: string | null;
-    };
+      derivedETH: string;
+    } | null;
     pair: {
-      reserveUSD: string | null;
-      totalSupply: string | null;
-    };
+      reserveUSD: string;
+      totalSupply: string;
+    } | null;
   };
   errors?: Array<{ message: string }>;
 };
