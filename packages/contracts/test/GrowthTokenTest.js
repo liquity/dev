@@ -25,8 +25,7 @@ const assertRevert = th.assertRevert
 contract('LQTY Token', async accounts => {
   const [owner, A, B, C, D] = accounts
 
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   // Create the approval tx data, for use in permit()
   const approve = {
@@ -110,7 +109,7 @@ contract('LQTY Token', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
 
     lqtyStaking = LQTYContracts.lqtyStaking
     lqtyTokenTester = LQTYContracts.lqtyToken

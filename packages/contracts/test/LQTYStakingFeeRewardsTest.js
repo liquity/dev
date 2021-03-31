@@ -26,8 +26,7 @@ const ZERO = th.toBN('0')
 
 contract('LQTYStaking revenue share tests', async accounts => {
 
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
   
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 
@@ -50,7 +49,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts = await deploymentHelper.deployLUSDTokenTester(contracts)
-    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress)
+    const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
     
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -75,8 +74,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // console.log(`A lqty bal: ${await lqtyToken.balanceOf(A)}`)
 
@@ -94,8 +93,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // console.log(`A lqty bal: ${await lqtyToken.balanceOf(A)}`)
 
@@ -137,8 +136,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // Check ETH fee per unit staked is zero
     const F_ETH_Before = await lqtyStaking.F_ETH()
@@ -170,8 +169,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // A makes stake
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
@@ -218,8 +217,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // Check LUSD fee per unit staked is zero
     const F_LUSD_Before = await lqtyStaking.F_ETH()
@@ -258,8 +257,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // A makes stake
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
@@ -331,8 +330,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // A makes stake
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
@@ -403,8 +402,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // A makes stake
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
@@ -449,8 +448,8 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
 
     // A makes stake
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
@@ -512,10 +511,10 @@ contract('LQTYStaking revenue share tests', async accounts => {
     // FF time one year so owner can transfer LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A, B, C
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
-    await lqtyToken.transfer(B, dec(200, 18), {from: owner})
-    await lqtyToken.transfer(C, dec(300, 18), {from: owner})
+    // multisig transfers LQTY to staker A, B, C
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
+    await lqtyToken.transfer(B, dec(200, 18), {from: multisig})
+    await lqtyToken.transfer(C, dec(300, 18), {from: multisig})
 
     // A, B, C make stake
     await lqtyToken.approve(lqtyStaking.address, dec(100, 18), {from: A})
@@ -551,7 +550,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     assert.isTrue(emittedLUSDFee_2.gt(toBN('0')))
 
     // D obtains LQTY from owner and makes a stake
-    await lqtyToken.transfer(D, dec(50, 18), {from: owner})
+    await lqtyToken.transfer(D, dec(50, 18), {from: multisig})
     await lqtyToken.approve(lqtyStaking.address, dec(50, 18), {from: D})
     await lqtyStaking.stake(dec(50, 18), {from: D})
 
@@ -675,9 +674,9 @@ contract('LQTYStaking revenue share tests', async accounts => {
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
-    // Owner transfers LQTY to staker A and the non-payable proxy
-    await lqtyToken.transfer(A, dec(100, 18), {from: owner})
-    await lqtyToken.transfer(nonPayable.address, dec(100, 18), {from: owner})
+    // multisig transfers LQTY to staker A and the non-payable proxy
+    await lqtyToken.transfer(A, dec(100, 18), {from: multisig})
+    await lqtyToken.transfer(nonPayable.address, dec(100, 18), {from: multisig})
 
     //  A makes stake
     const A_stakeTx = await lqtyStaking.stake(dec(100, 18), {from: A})
