@@ -16,6 +16,8 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
 
     // --- Data ---
 
+    string constant public NAME = "CommunityIssuance";
+
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
 
    /* The issuance factor F determines the curvature of the issuance curve.

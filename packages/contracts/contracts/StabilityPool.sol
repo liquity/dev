@@ -148,6 +148,8 @@ import "./Dependencies/console.sol";
 contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     using LiquitySafeMath128 for uint128;
 
+    string constant public NAME = "StabilityPool";
+
     IBorrowerOperations public borrowerOperations;
 
     ITroveManager public troveManager;

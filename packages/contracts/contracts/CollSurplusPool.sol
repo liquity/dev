@@ -12,6 +12,8 @@ import "./Dependencies/console.sol";
 contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
     using SafeMath for uint256;
 
+    string constant public NAME = "CollSurplusPool";
+
     address public borrowerOperationsAddress;
     address public troveManagerAddress;
     address public activePoolAddress;

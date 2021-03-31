@@ -19,6 +19,8 @@ import "../Dependencies/console.sol";
 contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, LQTYStakingScript {
     using SafeMath for uint;
 
+    string constant public NAME = "BorrowerWrappersScript";
+
     ITroveManager immutable troveManager;
     IStabilityPool immutable stabilityPool;
     IPriceFeed immutable priceFeed;

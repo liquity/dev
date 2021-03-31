@@ -23,6 +23,8 @@ import "./Dependencies/console.sol";
 contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     using SafeMath for uint256;
 
+    string constant public NAME = "PriceFeed";
+
     AggregatorV3Interface public priceAggregator;  // Mainnet Chainlink aggregator
     ITellorCaller public tellorCaller;  // Wrapper contract that calls the Tellor system
 

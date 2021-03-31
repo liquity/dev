@@ -14,6 +14,7 @@ import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOperations {
+    string constant public NAME = "BorrowerOperations";
 
     // --- Connected contract declarations ---
 
