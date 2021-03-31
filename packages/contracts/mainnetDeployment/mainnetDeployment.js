@@ -54,6 +54,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     const LQTYContracts = await mdh.deployLQTYContractsMainnet(
       liquityAddrs.GENERAL_SAFE,
       unipool.address,
+      liquityAddrs.LQTY_SAFE,
       deployerWallet,
       deploymentState
     )
@@ -120,12 +121,12 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
 
     // Deployer
     const lqtyDeployerBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.LQTY_SAFE)
-    assert.equal(lqtyDeployerBal.toString(), '65666666666666666666666667')
+    assert.equal(lqtyDeployerBal.toString(), '64666666666666666666666667')
     th.logBN('LQTY Deployer balance     ', lqtyDeployerBal)
 
     // Bounties/hackathons
     const generalSafeBal = await LQTYContracts.lqtyToken.balanceOf(liquityAddrs.GENERAL_SAFE)
-    assert.equal(generalSafeBal.toString(), '1000000000000000000000000')
+    assert.equal(generalSafeBal.toString(), '2000000000000000000000000')
     th.logBN('General Safe balance       ', generalSafeBal)
 
     // CommunityIssuance contract

@@ -108,7 +108,7 @@ class MainnetDeploymentHelper {
 	return coreContracts
     }
 
-    static async deployLQTYContractsMainnet(bountyAddress, lpRewardsAddress, deployerWallet, deploymentState) {
+    static async deployLQTYContractsMainnet(bountyAddress, lpRewardsAddress, multisigAddress, deployerWallet, deploymentState) {
         const lqtyStakingFactory = await this.getFactory("LQTYStaking", deployerWallet)
         const lockupContractFactory_Factory = await this.getFactory("LockupContractFactory", deployerWallet)
         const communityIssuanceFactory = await this.getFactory("CommunityIssuance", deployerWallet)
@@ -124,7 +124,8 @@ class MainnetDeploymentHelper {
             lqtyStaking.address,
             lockupContractFactory.address,
             bountyAddress,
-            lpRewardsAddress
+            lpRewardsAddress,
+            multisigAddress
         )
         
         const LQTYContracts = {
