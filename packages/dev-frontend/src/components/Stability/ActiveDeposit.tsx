@@ -13,6 +13,7 @@ import { ClaimAndMove } from "./actions/ClaimAndMove";
 import { ClaimRewards } from "./actions/ClaimRewards";
 import { useStabilityView } from "./context/StabilityViewContext";
 import { RemainingLQTY } from "./RemainingLQTY";
+import { Yield } from "./Yield";
 
 const selector = ({ stabilityDeposit, trove }: LiquityStoreState) => ({ stabilityDeposit, trove });
 
@@ -67,13 +68,18 @@ export const ActiveDeposit: React.FC = () => {
             unit="ETH"
           />
 
-          <StaticRow
-            label="Reward"
-            inputId="deposit-reward"
-            amount={stabilityDeposit.lqtyReward.prettify()}
-            color={stabilityDeposit.lqtyReward.nonZero && "success"}
-            unit={GT}
-          />
+          <Flex sx={{ alignItems: "center" }}>
+            <StaticRow
+              label="Reward"
+              inputId="deposit-reward"
+              amount={stabilityDeposit.lqtyReward.prettify()}
+              color={stabilityDeposit.lqtyReward.nonZero && "success"}
+              unit={GT}
+            />
+            <Flex sx={{ justifyContent: "flex-end", flex: 1 }}>
+              <Yield />
+            </Flex>
+          </Flex>
         </Box>
 
         <Flex variant="layout.actions">
