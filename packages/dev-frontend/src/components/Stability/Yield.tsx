@@ -47,28 +47,29 @@ export const Yield: React.FC = () => {
   // TODO: switch to this condition after team has reviewed on /next
   // if (!isMainnet || hasZeroValue || lqtyPrice === undefined) return null;
   if (hasZeroValue || lqtyPrice === undefined) return null;
-
-  const remainingLqtyInUSD = remainingStabilityPoolLQTYReward.mul(lqtyPrice);
-  const yieldPercentage = remainingLqtyInUSD.div(lusdInStabilityPool).mul(100);
+  const yearlyHalvingSchedule = 0.5; // 50% see LQTY distribution schedule for more info
+  const remainingLqtyOneYear = remainingStabilityPoolLQTYReward.mul(yearlyHalvingSchedule);
+  const remainingLqtyInUSD = remainingLqtyOneYear.mul(lqtyPrice);
+  const apyPercentage = remainingLqtyInUSD.div(lusdInStabilityPool).mul(100);
 
   return (
     <Badge>
-      <Text>LQTY yield {yieldPercentage.prettify()}%</Text>
+      <Text>LQTY APY {apyPercentage.toString(2)}%</Text>
       <InfoIcon
         tooltip={
-          <Card variant="tooltip" sx={{ minWidth: "288px" }}>
+          <Card variant="tooltip" sx={{ width: ["220px", "506px"] }}>
             <Paragraph>
-              Yield is an <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return based
-              on the USD value of the remaining rewards and the total deposited LUSD. This doesn't
-              include the ETH gains.
+              LQTY APY is an <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on
+              deposited LUSD over the next year. This doesn't include the ETH gains.
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
-              (LQTY / STABILITY_LUSD) * 100 = <Text sx={{ fontWeight: "bold" }}> Yield</Text>
+              ($LQTY_REWARDS * YEARLY_DISTRIBUTION% / STABILITY_LUSD) * 100 ={" "}
+              <Text sx={{ fontWeight: "bold" }}> APY</Text>
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace" }}>
               ($
-              {remainingLqtyInUSD.shorten()} / ${lusdInStabilityPool.shorten()}) * 100 =
-              <Text sx={{ fontWeight: "bold" }}> {yieldPercentage.prettify()}%</Text>
+              {remainingLqtyInUSD.shorten()} * 50% / ${lusdInStabilityPool.shorten()}) * 100 =
+              <Text sx={{ fontWeight: "bold" }}> {apyPercentage.toString(2)}%</Text>
             </Paragraph>
           </Card>
         }

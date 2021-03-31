@@ -61,21 +61,22 @@ export const Yield: React.FC = () => {
 
   return (
     <Badge>
-      <Text>Yield {yieldPercentage.prettify()}%</Text>
+      <Text>Yield {yieldPercentage.toString(2)}%</Text>
       <InfoIcon
         tooltip={
-          <Card variant="tooltip">
+          <Card variant="tooltip" sx={{ minWidth: ["auto", "306px"] }}>
             <Paragraph>
-              Yield is an <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the return based on
-              the USD value of the remaining rewards and the currently staked UNI LP.
+              This is an <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on
+              staked UNI LP. The farm runs for 6-weeks, so the return is relative to the time
+              remaining.
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
-              (LQTY / UNI_LP) * 100 = <Text sx={{ fontWeight: "bold" }}> Yield</Text>
+              ($LQTY_REWARDS / $UNI_LP) * 100 = <Text sx={{ fontWeight: "bold" }}> Yield</Text>
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace" }}>
               ($
               {remainingLqtyInUSD.shorten()} / ${totalStakedUniLpInUSD.shorten()}) * 100 =
-              <Text sx={{ fontWeight: "bold" }}> {yieldPercentage.prettify()}%</Text>
+              <Text sx={{ fontWeight: "bold" }}> {yieldPercentage.toString(2)}%</Text>
             </Paragraph>
           </Card>
         }

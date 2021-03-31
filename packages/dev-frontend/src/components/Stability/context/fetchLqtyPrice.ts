@@ -4,16 +4,16 @@ type UniswapResponse = {
   data?: {
     bundle: {
       ethPrice: string;
-    };
+    } | null;
     token: {
       derivedETH: string;
-    };
+    } | null;
   };
   errors?: Array<{ message: string }>;
 };
 
 const uniswapQuery = (lqtyTokenAddress: string) => `{
-  token(id: "${lqtyTokenAddress}") {
+  token(id: "${lqtyTokenAddress.toLowerCase()}") {
     derivedETH
   },
   bundle(id: 1) {
@@ -22,41 +22,32 @@ const uniswapQuery = (lqtyTokenAddress: string) => `{
 }`;
 
 export async function fetchLqtyPrice(lqtyTokenAddress: string) {
-  try {
-    const response = await window.fetch(
-      "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2",
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/json"
-        },
-        body: JSON.stringify({
-          query: uniswapQuery(lqtyTokenAddress),
-          variables: null
-        })
-      }
-    );
-
-    const { data, errors }: UniswapResponse = await response.json();
-    const hasRequiredData = data?.token !== null && data?.bundle !== null;
-
-    if (!hasRequiredData) {
-      return Promise.reject("Uniswap doesn't have the required data to calculate yield");
-    }
-
-    if (errors) {
-      return Promise.reject(errors);
-    }
-
-    if (response.ok && hasRequiredData && data !== undefined) {
-      const ethPriceUSD = Decimal.from(data.bundle.ethPrice);
-      const lqtyPriceUSD = Decimal.from(data.token.derivedETH).mul(ethPriceUSD);
-
-      return { lqtyPriceUSD };
-    }
-
-    return Promise.reject("Failed to get prices from Uniswap");
-  } catch (error) {
-    return Promise.reject(error);
+  const response = await window.fetch("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      query: uniswapQuery(lqtyTokenAddress),
+      variables: null
+    })
+  });
+  if (!response.ok) {
+    return Promise.reject("Network error connecting to Uniswap subgraph");
   }
+
+  const { data, errors }: UniswapResponse = await response.json();
+
+  if (errors) {
+    return Promise.reject(errors);
+  }
+
+  if (typeof data?.token?.derivedETH === "string" && typeof data?.bundle?.ethPrice === "string") {
+    const ethPriceUSD = Decimal.from(data.bundle.ethPrice);
+    const lqtyPriceUSD = Decimal.from(data.token.derivedETH).mul(ethPriceUSD);
+
+    return { lqtyPriceUSD };
+  }
+
+  return Promise.reject("Uniswap doesn't have the required data to calculate yield");
 }
