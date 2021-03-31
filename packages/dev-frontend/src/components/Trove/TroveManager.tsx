@@ -149,9 +149,23 @@ const select = (state: LiquityStoreState) => ({
 
 const transactionId = "trove";
 
-export const TroveManager: React.FC = () => {
+type TroveManagerProps = {
+  collateral?: Decimalish;
+  debt?: Decimalish;
+};
+
+export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees, validationContext } = useLiquitySelector(select);
+
+  useEffect(() => {
+    if (collateral !== undefined) {
+      dispatch({ type: "setCollateral", newValue: collateral });
+    }
+    if (debt !== undefined) {
+      dispatch({ type: "setDebt", newValue: debt });
+    }
+  }, [collateral, debt, dispatch]);
 
   const borrowingRate = fees.borrowingRate();
   const maxBorrowingRate = borrowingRate.add(0.005); // TODO slippage tolerance
@@ -179,10 +193,8 @@ export const TroveManager: React.FC = () => {
       dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
-    } else if (myTransactionState.type === "confirmedOneShot") {
-      dispatchEvent("TROVE_ADJUSTED");
     }
-  }, [myTransactionState.type, dispatch, dispatchEvent]);
+  }, [myTransactionState.type, dispatch]);
 
   return (
     <TroveEditor
