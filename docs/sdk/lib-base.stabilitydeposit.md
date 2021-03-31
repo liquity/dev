@@ -22,6 +22,7 @@ The constructor for this class is marked as internal. Third-party code should no
 |  --- | --- | --- | --- |
 |  [collateralGain](./lib-base.stabilitydeposit.collateralgain.md) |  | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) received in exchange for the used-up LUSD. |
 |  [currentLUSD](./lib-base.stabilitydeposit.currentlusd.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD left in the Stability Deposit. |
+|  [frontendTag](./lib-base.stabilitydeposit.frontendtag.md) |  | string | Address of frontend through which this Stability Deposit was made. |
 |  [initialLUSD](./lib-base.stabilitydeposit.initiallusd.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD in the Stability Deposit at the time of the last direct modification. |
 |  [isEmpty](./lib-base.stabilitydeposit.isempty.md) |  | boolean |  |
 |  [lqtyReward](./lib-base.stabilitydeposit.lqtyreward.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LQTY rewarded since the last modification of the Stability Deposit. |

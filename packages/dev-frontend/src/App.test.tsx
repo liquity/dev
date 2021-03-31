@@ -17,7 +17,6 @@ test("there's no smoke", async () => {
   const { getByText, getAllByText, getByLabelText, findByText } = render(<App />);
 
   expect(await findByText(/you can borrow lusd by opening a trove/i)).toBeInTheDocument();
-  expect(await findByText(/there are no troves yet/i)).toBeInTheDocument();
 
   fireEvent.click(getByText(/open trove/i));
   fireEvent.click(getByLabelText(/collateral/i));
@@ -28,5 +27,5 @@ test("there's no smoke", async () => {
   const confirmButton = getAllByText(/confirm/i)[0];
   fireEvent.click(confirmButton);
 
-  expect(await findByText(/1-1 of 1/i)).toBeInTheDocument();
+  expect(await findByText(/adjust/i)).toBeInTheDocument();
 });

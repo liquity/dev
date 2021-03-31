@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Box, Flex, Card, Heading } from "theme-ui";
 
 import { Decimal, Percent, LiquityStoreState, MINIMUM_COLLATERAL_RATIO } from "@liquity/lib-base";
@@ -10,9 +10,10 @@ import { Icon } from "../Icon";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { EditableRow, StaticRow } from "../Trove/Editor";
 import { ActionDescription, Amount } from "../ActionDescription";
+import { ErrorDescription } from "../ErrorDescription";
+import { useMyTransactionState } from "../Transaction";
 
 import { RedemptionAction } from "./RedemptionAction";
-import { ErrorDescription } from "../ErrorDescription";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 
@@ -22,6 +23,8 @@ const select = ({ price, fees, total, lusdBalance }: LiquityStoreState) => ({
   total,
   lusdBalance
 });
+
+const transactionId = "redemption";
 
 export const RedemptionManager: React.FC = () => {
   const { price, fees, total, lusdBalance } = useLiquitySelector(select);
@@ -35,6 +38,19 @@ export const RedemptionManager: React.FC = () => {
   const feePct = new Percent(redemptionRate);
   const ethFee = ethAmount.mul(redemptionRate);
   const maxRedemptionRate = redemptionRate.add(0.001); // TODO slippage tolerance
+
+  const myTransactionState = useMyTransactionState(transactionId);
+
+  useEffect(() => {
+    if (myTransactionState.type === "waitingForApproval") {
+      setChangePending(true);
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
+      setChangePending(false);
+    } else if (myTransactionState.type === "confirmed") {
+      setLUSDAmount(Decimal.ZERO);
+      setChangePending(false);
+    }
+  }, [myTransactionState.type, setChangePending, setLUSDAmount]);
 
   const [canRedeem, description] = total.collateralRatioIsBelowMinimum(price)
     ? [
@@ -67,58 +83,58 @@ export const RedemptionManager: React.FC = () => {
       ];
 
   return (
-    <>
-      <Card>
-        <Heading>
-          Redemption
-          {dirty && !changePending && (
-            <Button
-              variant="titleIcon"
-              sx={{ ":enabled:hover": { color: "danger" } }}
-              onClick={() => setLUSDAmount(Decimal.ZERO)}
-            >
-              <Icon name="history" size="lg" />
-            </Button>
-          )}
-        </Heading>
+    <Card>
+      <Heading>
+        Redemption
+        {dirty && !changePending && (
+          <Button
+            variant="titleIcon"
+            sx={{ ":enabled:hover": { color: "danger" } }}
+            onClick={() => setLUSDAmount(Decimal.ZERO)}
+          >
+            <Icon name="history" size="lg" />
+          </Button>
+        )}
+      </Heading>
 
-        <Box sx={{ p: [2, 3] }}>
-          <EditableRow
-            label="Redeem"
-            inputId="redeem-lusd"
-            amount={lusdAmount.prettify()}
-            maxAmount={lusdBalance.toString()}
-            maxedOut={lusdAmount.eq(lusdBalance)}
-            unit={COIN}
-            {...{ editingState }}
-            editedAmount={lusdAmount.toString(2)}
-            setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
+      <Box sx={{ p: [2, 3] }}>
+        <EditableRow
+          label="Redeem"
+          inputId="redeem-lusd"
+          amount={lusdAmount.prettify()}
+          maxAmount={lusdBalance.toString()}
+          maxedOut={lusdAmount.eq(lusdBalance)}
+          unit={COIN}
+          {...{ editingState }}
+          editedAmount={lusdAmount.toString(2)}
+          setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
+        />
+
+        {dirty && (
+          <StaticRow
+            label="Fee"
+            inputId="redeem-fee"
+            amount={ethFee.toString(4)}
+            pendingAmount={feePct.toString(2)}
+            unit="ETH"
           />
+        )}
 
-          {dirty && (
-            <StaticRow
-              label="Fee"
-              inputId="redeem-fee"
-              amount={ethFee.toString(4)}
-              pendingAmount={feePct.toString(2)}
-              unit="ETH"
-            />
-          )}
+        {((dirty || !canRedeem) && description) || (
+          <ActionDescription>Enter the amount of {COIN} you'd like to redeem.</ActionDescription>
+        )}
 
-          {((dirty || !canRedeem) && description) || (
-            <ActionDescription>Enter the amount of {COIN} you'd like to redeem.</ActionDescription>
-          )}
+        <Flex variant="layout.actions">
+          <RedemptionAction
+            transactionId={transactionId}
+            disabled={!dirty || !canRedeem}
+            lusdAmount={lusdAmount}
+            maxRedemptionRate={maxRedemptionRate}
+          />
+        </Flex>
+      </Box>
 
-          <Flex variant="layout.actions">
-            <RedemptionAction
-              disabled={!dirty || !canRedeem}
-              {...{ lusdAmount, setLUSDAmount, changePending, setChangePending, maxRedemptionRate }}
-            />
-          </Flex>
-        </Box>
-
-        {changePending && <LoadingOverlay />}
-      </Card>
-    </>
+      {changePending && <LoadingOverlay />}
+    </Card>
   );
 };

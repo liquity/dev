@@ -1,24 +1,16 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { Flex, Spinner, Heading, ThemeProvider, Container } from "theme-ui";
-import { Wallet } from "@ethersproject/wallet";
+import { Flex, Spinner, Heading, ThemeProvider } from "theme-ui";
 
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
-import { Decimal, Difference, Trove } from "@liquity/lib-base";
-import { LiquityStoreProvider } from "@liquity/lib-react";
-
-import { LiquityProvider, useLiquity } from "./hooks/LiquityContext";
+import { LiquityProvider } from "./hooks/LiquityContext";
 import { WalletConnector } from "./components/WalletConnector";
-import { TransactionProvider, TransactionMonitor } from "./components/Transaction";
-import { UserAccount } from "./components/UserAccount";
-import { SystemStatsPopup } from "./components/SystemStatsPopup";
-import { Header } from "./components/Header";
-import { Footer } from "./components/Footer";
+import { TransactionProvider } from "./components/Transaction";
 import { getConfig } from "./config";
 import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
-import { PageSwitcher } from "./pages/PageSwitcher";
+import { LiquityFrontend } from "./LiquityFrontend";
 
 if (window.ethereum) {
   // Silence MetaMask warning in console
@@ -46,53 +38,6 @@ const EthersWeb3ReactProvider: React.FC = ({ children }) => {
     <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
       {children}
     </Web3ReactProvider>
-  );
-};
-
-type LiquityFrontendProps = {
-  loader?: React.ReactNode;
-};
-
-const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
-  const { account, provider, liquity } = useLiquity();
-
-  // For console tinkering ;-)
-  Object.assign(window, {
-    account,
-    provider,
-    liquity,
-    Trove,
-    Decimal,
-    Difference,
-    Wallet
-  });
-
-  return (
-    <LiquityStoreProvider {...{ loader }} store={liquity.store}>
-      <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
-        <Header>
-          <UserAccount />
-          <SystemStatsPopup />
-        </Header>
-
-        <Container
-          variant="main"
-          sx={{
-            display: "flex",
-            flexGrow: 1,
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-        >
-          <PageSwitcher />
-        </Container>
-
-        <Footer>* Please note that the final user-facing application will look different.</Footer>
-      </Flex>
-
-      <TransactionMonitor />
-    </LiquityStoreProvider>
   );
 };
 

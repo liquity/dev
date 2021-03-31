@@ -24,9 +24,11 @@ Exposed through [ReadableEthersLiquity.connection](./lib-ethers.readableethersli
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [addresses](./lib-ethers.ethersliquityconnection.addresses.md) | Record&lt;string, string&gt; | A mapping of Liquity contracts' names to their addresses. |
+|  [bootstrapPeriod](./lib-ethers.ethersliquityconnection.bootstrapperiod.md) | number | Time period (in seconds) after <code>deploymentDate</code> during which redemptions are disabled. |
 |  [chainId](./lib-ethers.ethersliquityconnection.chainid.md) | number | Chain ID of the connected network. |
 |  [deploymentDate](./lib-ethers.ethersliquityconnection.deploymentdate.md) | Date | Date when the Liquity contracts were deployed. |
 |  [provider](./lib-ethers.ethersliquityconnection.provider.md) | [EthersProvider](./lib-ethers.ethersprovider.md) | Ethers <code>Provider</code> used for connecting to the network. |
 |  [signer?](./lib-ethers.ethersliquityconnection.signer.md) | [EthersSigner](./lib-ethers.etherssigner.md) | <i>(Optional)</i> Ethers <code>Signer</code> used for sending transactions. |
+|  [totalStabilityPoolLQTYReward](./lib-ethers.ethersliquityconnection.totalstabilitypoollqtyreward.md) | [Decimal](./lib-base.decimal.md) | Total amount of LQTY allocated for rewarding stability depositors. |
 |  [version](./lib-ethers.ethersliquityconnection.version.md) | string | Version of the Liquity contracts (Git commit hash). |
 

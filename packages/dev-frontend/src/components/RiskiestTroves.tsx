@@ -6,7 +6,8 @@ import {
   Percent,
   MINIMUM_COLLATERAL_RATIO,
   CRITICAL_COLLATERAL_RATIO,
-  UserTrove
+  UserTrove,
+  Decimal
 } from "@liquity/lib-base";
 import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -23,6 +24,27 @@ import { Abbreviation } from "./Abbreviation";
 
 const rowHeight = "40px";
 
+const liquidatableInNormalMode = (trove: UserTrove, price: Decimal) =>
+  [trove.collateralRatioIsBelowMinimum(price), "Collateral ratio not low enough"] as const;
+
+const liquidatableInRecoveryMode = (
+  trove: UserTrove,
+  price: Decimal,
+  totalCollateralRatio: Decimal,
+  lusdInStabilityPool: Decimal
+) => {
+  const collateralRatio = trove.collateralRatio(price);
+
+  if (collateralRatio.gte(MINIMUM_COLLATERAL_RATIO) && collateralRatio.lt(totalCollateralRatio)) {
+    return [
+      trove.debt.lte(lusdInStabilityPool),
+      "There's not enough LUSD in the Stability pool to cover the debt"
+    ] as const;
+  } else {
+    return liquidatableInNormalMode(trove, price);
+  }
+};
+
 type RiskiestTrovesProps = {
   pageSize: number;
 };
@@ -36,13 +58,21 @@ const select = ({
 }: BlockPolledLiquityStoreState) => ({
   numberOfTroves,
   price,
-  total,
+  recoveryMode: total.collateralRatioIsBelowCritical(price),
+  totalCollateralRatio: total.collateralRatio(price),
   lusdInStabilityPool,
   blockTag
 });
 
 export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
-  const { blockTag, numberOfTroves, total, lusdInStabilityPool, price } = useLiquitySelector(select);
+  const {
+    blockTag,
+    numberOfTroves,
+    recoveryMode,
+    totalCollateralRatio,
+    lusdInStabilityPool,
+    price
+  } = useLiquitySelector(select);
   const { liquity } = useLiquity();
 
   const [loading, setLoading] = useState(true);
@@ -290,14 +320,14 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
                           id={`liquidate-${trove.ownerAddress}`}
                           tooltip="Liquidate"
                           requires={[
-                            [
-                              total.collateralRatioIsBelowCritical(price)
-                                ? trove._nominalCollateralRatio.lt(total._nominalCollateralRatio) &&
-                                  trove.debt.lt(lusdInStabilityPool)
-                                : trove.collateralRatioIsBelowMinimum(price),
-                              "Collateral ratio not low enough"
-                            ],
-                            [numberOfTroves > 1, "Can't liquidate when only one Trove exists"]
+                            recoveryMode
+                              ? liquidatableInRecoveryMode(
+                                  trove,
+                                  price,
+                                  totalCollateralRatio,
+                                  lusdInStabilityPool
+                                )
+                              : liquidatableInNormalMode(trove, price)
                           ]}
                           send={liquity.send.liquidate.bind(liquity.send, trove.ownerAddress)}
                         >

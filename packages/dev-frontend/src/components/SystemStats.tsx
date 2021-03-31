@@ -1,11 +1,12 @@
 import React from "react";
-import { Card, Heading, Link, Box } from "theme-ui";
-
+import { Card, Heading, Link, Box, Text } from "theme-ui";
+import { AddressZero } from "@ethersproject/constants";
 import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN, GT } from "../strings";
+import { Statistic } from "./Statistic";
 
 const selectBalances = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -49,7 +50,8 @@ const select = ({
   lusdInStabilityPool,
   borrowingRate,
   redemptionRate,
-  totalStakedLQTY
+  totalStakedLQTY,
+  frontend
 }: LiquityStoreState) => ({
   numberOfTroves,
   price,
@@ -57,13 +59,14 @@ const select = ({
   lusdInStabilityPool,
   borrowingRate,
   redemptionRate,
-  totalStakedLQTY
+  totalStakedLQTY,
+  kickbackRate: frontend.status === "registered" ? frontend.kickbackRate : null
 });
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
   const {
     liquity: {
-      connection: { version: contractsVersion, deploymentDate }
+      connection: { version: contractsVersion, deploymentDate, frontendTag }
     }
   } = useLiquity();
 
@@ -74,7 +77,8 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     total,
     borrowingRate,
     redemptionRate,
-    totalStakedLQTY
+    totalStakedLQTY,
+    kickbackRate
   } = useLiquitySelector(select);
 
   const lusdInStabilityPoolPct =
@@ -82,29 +86,60 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
   const borrowingFeePct = new Percent(borrowingRate);
   const redemptionFeePct = new Percent(redemptionRate);
+  const kickbackRatePct = frontendTag === AddressZero ? "100" : kickbackRate?.mul(100).prettify();
 
   return (
     <Card {...{ variant }}>
       {showBalances && <Balances />}
 
-      <Heading>Liquity System</Heading>
+      <Heading>Statistics</Heading>
 
-      <Box>Borrowing fee: {borrowingFeePct.toString(2)}</Box>
-      <Box>Redemption fee: {redemptionFeePct.toString(2)}</Box>
+      <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
+        Protocol
+      </Heading>
 
-      <Box sx={{ mt: 2 }}>Number of Liquity Troves: {Decimal.from(numberOfTroves).prettify(0)}</Box>
-      <Box>
-        Total {COIN} supply: {total.debt.shorten()}
-      </Box>
+      <Statistic name="Borrowing fee" tooltip="TBD">
+        {borrowingFeePct.toString(2)}
+      </Statistic>
+      <Statistic name="Redemption fee" tooltip="TBD">
+        {redemptionFeePct.toString(2)}
+      </Statistic>
+
+      <Statistic name="TVL" tooltip="TBD">
+        {Decimal.from(total.collateral).prettify(0)} ETH
+        <Text sx={{ fontSize: 1 }}>
+          &nbsp;(${Decimal.from(total.collateral.mul(price)).shorten()})
+        </Text>
+      </Statistic>
+      <Statistic name="Troves" tooltip="TBD">
+        {Decimal.from(numberOfTroves).prettify(0)}
+      </Statistic>
+      <Statistic name="LUSD" tooltip="TBD">
+        {total.debt.shorten()}
+      </Statistic>
       {lusdInStabilityPoolPct && (
-        <Box>
-          Fraction of {COIN} in Stability Pool: {lusdInStabilityPoolPct.toString(1)}
-        </Box>
+        <Statistic name="Stability Pool LUSD" tooltip="TBD">
+          {lusdInStabilityPool.shorten()}
+          <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct.toString(1)})</Text>
+        </Statistic>
       )}
-      <Box>Total staked LQTY: {totalStakedLQTY.shorten()}</Box>
-      <Box>Total collateral ratio: {totalCollateralRatioPct.prettify()}</Box>
+      <Statistic name="Staked LQTY" tooltip="TBD">
+        {totalStakedLQTY.shorten()}
+      </Statistic>
+      <Statistic name="Collateral ratio" tooltip="TBD">
+        {totalCollateralRatioPct.prettify()}
+      </Statistic>
       {total.collateralRatioIsBelowCritical(price) && (
         <Box color="danger">The system is in recovery mode!</Box>
+      )}
+
+      <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
+        Frontend
+      </Heading>
+      {kickbackRatePct && (
+        <Statistic name="Kickback rate" tooltip="TBD">
+          {kickbackRatePct}%
+        </Statistic>
       )}
 
       <Box sx={{ mt: 3, opacity: 0.66 }}>

@@ -30,7 +30,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
     ILUSDToken public lusdToken;
 
-    // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
+    // A doubly linked list of Troves, sorted by their collateral ratios
     ISortedTroves public sortedTroves;
 
     /* --- Variable container structs  ---

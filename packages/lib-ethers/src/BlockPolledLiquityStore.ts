@@ -12,7 +12,11 @@ import {
 } from "@liquity/lib-base";
 
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
-import { EthersLiquityConnection, _getProvider } from "./EthersLiquityConnection";
+import {
+  EthersLiquityConnection,
+  _getBlockTimestamp,
+  _getProvider
+} from "./EthersLiquityConnection";
 import { EthersCallOverrides, EthersProvider } from "./types";
 
 /**
@@ -29,6 +33,11 @@ export interface BlockPolledLiquityStoreExtraState {
    * May be undefined when the store state is fetched for the first time.
    */
   blockTag?: number;
+
+  /**
+   * Timestamp of latest block (number of seconds since epoch).
+   */
+  blockTimestamp: number;
 }
 
 /**
@@ -87,28 +96,50 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     return riskiestTroves[0];
   }
 
-  private _get(blockTag?: number): Promise<LiquityStoreBaseState> {
+  private async _get(
+    blockTag?: number
+  ): Promise<[baseState: LiquityStoreBaseState, extraState: BlockPolledLiquityStoreExtraState]> {
     const { userAddress, frontendTag } = this.connection;
 
-    return promiseAllValues({
+    const {
+      blockTimestamp,
+      createFees,
+      calculateRemainingLQTY,
+      ...baseState
+    } = await promiseAllValues({
+      blockTimestamp: _getBlockTimestamp(this.connection, blockTag),
+      createFees: this._readable._getFeesFactory({ blockTag }),
+      calculateRemainingLQTY: this._readable._getRemainingLiquidityMiningLQTYRewardCalculator({
+        blockTag
+      }),
+
       price: this._readable.getPrice({ blockTag }),
       numberOfTroves: this._readable.getNumberOfTroves({ blockTag }),
       totalRedistributed: this._readable.getTotalRedistributed({ blockTag }),
       total: this._readable.getTotal({ blockTag }),
       lusdInStabilityPool: this._readable.getLUSDInStabilityPool({ blockTag }),
-      _feesInNormalMode: this._readable._getFeesInNormalMode({ blockTag }),
       totalStakedLQTY: this._readable.getTotalStakedLQTY({ blockTag }),
       _riskiestTroveBeforeRedistribution: this._getRiskiestTroveBeforeRedistribution({ blockTag }),
+      totalStakedUniTokens: this._readable.getTotalStakedUniTokens({ blockTag }),
+      remainingStabilityPoolLQTYReward: this._readable.getRemainingStabilityPoolLQTYReward({
+        blockTag
+      }),
 
       frontend: frontendTag
         ? this._readable.getFrontendStatus(frontendTag, { blockTag })
-        : { status: "unregistered" },
+        : { status: "unregistered" as const },
 
       ...(userAddress
         ? {
             accountBalance: this._provider.getBalance(userAddress, blockTag).then(decimalify),
             lusdBalance: this._readable.getLUSDBalance(userAddress, { blockTag }),
             lqtyBalance: this._readable.getLQTYBalance(userAddress, { blockTag }),
+            uniTokenBalance: this._readable.getUniTokenBalance(userAddress, { blockTag }),
+            uniTokenAllowance: this._readable.getUniTokenAllowance(userAddress, { blockTag }),
+            liquidityMiningStake: this._readable.getLiquidityMiningStake(userAddress, { blockTag }),
+            liquidityMiningLQTYReward: this._readable.getLiquidityMiningLQTYReward(userAddress, {
+              blockTag
+            }),
             collateralSurplusBalance: this._readable.getCollateralSurplusBalance(userAddress, {
               blockTag
             }),
@@ -123,23 +154,45 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
             accountBalance: Decimal.ZERO,
             lusdBalance: Decimal.ZERO,
             lqtyBalance: Decimal.ZERO,
+            uniTokenBalance: Decimal.ZERO,
+            uniTokenAllowance: Decimal.ZERO,
+            liquidityMiningStake: Decimal.ZERO,
+            liquidityMiningLQTYReward: Decimal.ZERO,
             collateralSurplusBalance: Decimal.ZERO,
             troveBeforeRedistribution: new TroveWithPendingRedistribution(
               AddressZero,
               "nonExistent"
             ),
-            stabilityDeposit: new StabilityDeposit(),
+            stabilityDeposit: new StabilityDeposit(
+              Decimal.ZERO,
+              Decimal.ZERO,
+              Decimal.ZERO,
+              Decimal.ZERO,
+              AddressZero
+            ),
             lqtyStake: new LQTYStake(),
-            ownFrontend: { status: "unregistered" }
+            ownFrontend: { status: "unregistered" as const }
           })
     });
+
+    return [
+      {
+        ...baseState,
+        _feesInNormalMode: createFees(blockTimestamp, false),
+        remainingLiquidityMiningLQTYReward: calculateRemainingLQTY(blockTimestamp)
+      },
+      {
+        blockTag,
+        blockTimestamp
+      }
+    ];
   }
 
   /** @internal @override */
   protected _doStart(): () => void {
     this._get().then(state => {
       if (!this._loaded) {
-        this._load(state, {});
+        this._load(...state);
       }
     });
 
@@ -147,9 +200,9 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       const state = await this._get(blockTag);
 
       if (this._loaded) {
-        this._update(state, { blockTag });
+        this._update(...state);
       } else {
-        this._load(state, { blockTag });
+        this._load(...state);
       }
     };
 
@@ -165,6 +218,9 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     oldState: BlockPolledLiquityStoreExtraState,
     stateUpdate: Partial<BlockPolledLiquityStoreExtraState>
   ): BlockPolledLiquityStoreExtraState {
-    return { blockTag: stateUpdate.blockTag ?? oldState.blockTag };
+    return {
+      blockTag: stateUpdate.blockTag ?? oldState.blockTag,
+      blockTimestamp: stateUpdate.blockTimestamp ?? oldState.blockTimestamp
+    };
   }
 }

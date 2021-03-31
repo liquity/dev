@@ -28,8 +28,7 @@ contract('StabilityPool', async accounts => {
     frontEnd_1, frontEnd_2, frontEnd_3,
   ] = accounts;
 
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
   let contracts
@@ -64,7 +63,7 @@ contract('StabilityPool', async accounts => {
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address
       )
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
+      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
 
       priceFeed = contracts.priceFeedTestnet
       lusdToken = contracts.lusdToken
@@ -201,7 +200,7 @@ contract('StabilityPool', async accounts => {
       const alice_snapshot_After = await stabilityPool.depositSnapshots(alice)
       const alice_snapshot_S_After = alice_snapshot_After[0].toString()
       const alice_snapshot_P_After = alice_snapshot_After[1].toString()
-      const alice_snapshot_G_After = alice_snapshot_Before[2].toString()
+      const alice_snapshot_G_After = alice_snapshot_After[2].toString()
 
       assert.equal(alice_snapshot_S_After, S_Before)
       assert.equal(alice_snapshot_P_After, P_Before)

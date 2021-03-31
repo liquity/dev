@@ -11,7 +11,8 @@ contract LQTYTokenTester is LQTYToken {
         address _lqtyStakingAddress,
         address _lockupFactoryAddress,
         address _bountyAddress,
-        address _lpRewardsAddress
+        address _lpRewardsAddress,
+        address _multisigAddress
     ) 
         public 
         LQTYToken 
@@ -20,7 +21,8 @@ contract LQTYTokenTester is LQTYToken {
         _lqtyStakingAddress,
         _lockupFactoryAddress,
         _bountyAddress,
-        _lpRewardsAddress
+        _lpRewardsAddress,
+        _multisigAddress
     )
     {} 
 
@@ -33,7 +35,7 @@ contract LQTYTokenTester is LQTYToken {
     function unprotectedSendToLQTYStaking(address _sender, uint256 _amount) external {
         // No check for the caller here
         
-        if (_isFirstYear()) {_requireSenderIsNotDeployer(_sender);}
+        if (_isFirstYear()) {_requireSenderIsNotMultisig(_sender);}
         _transfer(_sender, lqtyStakingAddress, _amount);
     }
 

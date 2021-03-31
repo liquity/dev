@@ -68,11 +68,11 @@ const infuraNetwork = (name: string): { [name: string]: NetworkUserConfig } => (
 const oracleAddresses = {
   mainnet: {
     chainlink: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
-    tellor: "0x0Ba45A8b5d5575935B8158a88C631E9F9C95a2e5"
+    tellor: "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
   },
   rinkeby: {
     chainlink: "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
-    tellor: "0xFe41Cb708CD98C5B20423433309E55b53F79134a" // Core
+    tellor: "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0" // Core
   },
   kovan: {
     chainlink: "0x9326BFA02ADD2366b30bacB125260Af641031331",
@@ -82,6 +82,16 @@ const oracleAddresses = {
 
 const hasOracles = (network: string): network is keyof typeof oracleAddresses =>
   network in oracleAddresses;
+
+const wethAddresses = {
+  mainnet: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  ropsten: "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+  rinkeby: "0xc778417E063141139Fce010982780140Aa0cD5Ab",
+  goerli: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+  kovan: "0xd0A1E359811322d97991E03f863a0C30C2cF029C"
+};
+
+const hasWETH = (network: string): network is keyof typeof wethAddresses => network in wethAddresses;
 
 const config: HardhatUserConfig = {
   networks: {
@@ -120,6 +130,7 @@ declare module "hardhat/types/runtime" {
     deployLiquity: (
       deployer: Signer,
       useRealPriceFeed?: boolean,
+      wethAddress?: string,
       overrides?: Overrides
     ) => Promise<_LiquityDeploymentJSON>;
   }
@@ -138,12 +149,18 @@ const getContractFactory: (
   : env => env.ethers.getContractFactory;
 
 extendEnvironment(env => {
-  env.deployLiquity = async (deployer, useRealPriceFeed = false, overrides?: Overrides) => {
+  env.deployLiquity = async (
+    deployer,
+    useRealPriceFeed = false,
+    wethAddress = undefined,
+    overrides?: Overrides
+  ) => {
     const deployment = await deployAndSetupContracts(
       deployer,
       getContractFactory(env),
       !useRealPriceFeed,
       env.network.name === "dev",
+      wethAddress,
       overrides
     );
 
@@ -155,6 +172,7 @@ type DeployParams = {
   channel: string;
   gasPrice?: number;
   useRealPriceFeed?: boolean;
+  createUniswapPair?: boolean;
 };
 
 const defaultChannel = process.env.CHANNEL || "default";
@@ -168,55 +186,71 @@ task("deploy", "Deploys the contracts to the network")
     undefined,
     types.boolean
   )
-  .setAction(async ({ channel, gasPrice, useRealPriceFeed }: DeployParams, env) => {
-    const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).hex };
-    const [deployer] = await env.ethers.getSigners();
+  .addOptionalParam(
+    "createUniswapPair",
+    "Create a real Uniswap v2 WETH-LUSD pair instead of a mock ERC20 token",
+    undefined,
+    types.boolean
+  )
+  .setAction(
+    async ({ channel, gasPrice, useRealPriceFeed, createUniswapPair }: DeployParams, env) => {
+      const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).hex };
+      const [deployer] = await env.ethers.getSigners();
 
-    useRealPriceFeed ??= env.network.name === "mainnet";
+      useRealPriceFeed ??= env.network.name === "mainnet";
 
-    if (useRealPriceFeed && !hasOracles(env.network.name)) {
-      throw new Error(`PriceFeed not supported on ${env.network.name}`);
-    }
-
-    setSilent(false);
-
-    const deployment = await env.deployLiquity(deployer, useRealPriceFeed, overrides);
-
-    if (useRealPriceFeed) {
-      const contracts = _connectToContracts(deployer, deployment);
-
-      assert(!_priceFeedIsTestnet(contracts.priceFeed));
-
-      if (hasOracles(env.network.name)) {
-        const tellorCallerAddress = await deployTellorCaller(
-          deployer,
-          getContractFactory(env),
-          oracleAddresses[env.network.name].tellor,
-          overrides
-        );
-
-        console.log(`Hooking up PriceFeed with oracles ...`);
-
-        const tx = await contracts.priceFeed.setAddresses(
-          oracleAddresses[env.network.name].chainlink,
-          tellorCallerAddress,
-          overrides
-        );
-
-        await tx.wait();
+      if (useRealPriceFeed && !hasOracles(env.network.name)) {
+        throw new Error(`PriceFeed not supported on ${env.network.name}`);
       }
+
+      let wethAddress: string | undefined = undefined;
+      if (createUniswapPair) {
+        if (!hasWETH(env.network.name)) {
+          throw new Error(`WETH not deployed on ${env.network.name}`);
+        }
+        wethAddress = wethAddresses[env.network.name];
+      }
+
+      setSilent(false);
+
+      const deployment = await env.deployLiquity(deployer, useRealPriceFeed, wethAddress, overrides);
+
+      if (useRealPriceFeed) {
+        const contracts = _connectToContracts(deployer, deployment);
+
+        assert(!_priceFeedIsTestnet(contracts.priceFeed));
+
+        if (hasOracles(env.network.name)) {
+          const tellorCallerAddress = await deployTellorCaller(
+            deployer,
+            getContractFactory(env),
+            oracleAddresses[env.network.name].tellor,
+            overrides
+          );
+
+          console.log(`Hooking up PriceFeed with oracles ...`);
+
+          const tx = await contracts.priceFeed.setAddresses(
+            oracleAddresses[env.network.name].chainlink,
+            tellorCallerAddress,
+            overrides
+          );
+
+          await tx.wait();
+        }
+      }
+
+      fs.mkdirSync(path.join("deployments", channel), { recursive: true });
+
+      fs.writeFileSync(
+        path.join("deployments", channel, `${env.network.name}.json`),
+        JSON.stringify(deployment, undefined, 2)
+      );
+
+      console.log();
+      console.log(deployment);
+      console.log();
     }
-
-    fs.mkdirSync(path.join("deployments", channel), { recursive: true });
-
-    fs.writeFileSync(
-      path.join("deployments", channel, `${env.network.name}.json`),
-      JSON.stringify(deployment, undefined, 2)
-    );
-
-    console.log();
-    console.log(deployment);
-    console.log();
-  });
+  );
 
 export default config;

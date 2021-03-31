@@ -300,7 +300,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     // Single liquidation function. Closes the trove if its ICR is lower than the minimum collateral ratio.
     function liquidate(address _borrower) external override {
-        _requireTroveisActive(_borrower);
+        _requireTroveIsActive(_borrower);
 
         address[] memory borrowers = new address[](1);
         borrowers[0] = _borrower;
@@ -702,6 +702,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         for (vars.i = 0; vars.i < _troveArray.length; vars.i++) {
             vars.user = _troveArray[vars.i];
+            // Skip non-active troves
+            if (Troves[vars.user].status != Status.active) { continue; }
             vars.ICR = getCurrentICR(vars.user, _price);
 
             if (!vars.backToNormalMode) {
@@ -815,7 +817,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     )
         internal returns (SingleRedemptionValues memory singleRedemption)
     {
-        // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the Trove minus the gas compensation
+        // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the Trove minus the liquidation reserve
         singleRedemption.LUSDLot = LiquityMath._min(_maxLUSDamount, Troves[_borrower].debt.sub(LUSD_GAS_COMPENSATION));
 
         // Get the ETHLot of equivalent value in USD
@@ -826,7 +828,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint newColl = (Troves[_borrower].coll).sub(singleRedemption.ETHLot);
 
         if (newDebt == LUSD_GAS_COMPENSATION) {
-            // No debt left in the Trove (except for the gas compensation), therefore the trove gets closed
+            // No debt left in the Trove (except for the liquidation reserve), therefore the trove gets closed
             _removeStake(_borrower);
             _closeTrove(_borrower, Status.closedByRedemption);
             _redeemCloseTrove(_contractsCache, _borrower, LUSD_GAS_COMPENSATION, newColl);
@@ -865,8 +867,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     /*
     * Called when a full redemption occurs, and closes the trove.
-    * The redeemer swaps (debt - 10) LUSD for (debt - 10) worth of ETH, so the 10 LUSD gas compensation left corresponds to the remaining debt.
-    * In order to close the trove, the 10 LUSD gas compensation is burned, and 10 debt is removed from the active pool.
+    * The redeemer swaps (debt - liquidation reserve) LUSD for (debt - liquidation reserve) worth of ETH, so the LUSD liquidation reserve left corresponds to the remaining debt.
+    * In order to close the trove, the LUSD liquidation reserve is burned, and the corresponding debt is removed from the active pool.
     * The debt recorded on the trove's struct is zero'd elswhere, in _closeTrove.
     * Any surplus ETH left in the trove, is sent to the Coll surplus pool, and can be later claimed by the borrower.
     */
@@ -1049,7 +1051,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     // Add the borrowers's coll and debt rewards earned from redistributions, to their Trove
     function _applyPendingRewards(IActivePool _activePool, IDefaultPool _defaultPool, address _borrower) internal {
         if (hasPendingRewards(_borrower)) {
-            _requireTroveisActive(_borrower);
+            _requireTroveIsActive(_borrower);
 
             // Compute pending rewards
             uint pendingETHReward = getPendingETHReward(_borrower);
@@ -1276,8 +1278,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function _addTroveOwnerToArray(address _borrower) internal returns (uint128 index) {
-        /* Max array size is 2**128 - 1, i.e. ~3e30 troves. No risk of overflow, since troves have minimum 10 LUSD
-        debt. 3e31 LUSD dwarfs the value of all wealth in the world ( which is < 1e15 USD). */
+        /* Max array size is 2**128 - 1, i.e. ~3e30 troves. No risk of overflow, since troves have minimum LUSD
+        debt of liquidation reserve plus MIN_NET_DEBT. 3e30 LUSD dwarfs the value of all wealth in the world ( which is < 1e15 USD). */
 
         // Push the Troveowner to the array
         TroveOwners.push(_borrower);
@@ -1390,7 +1392,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         return _calcRedemptionFee(getRedemptionRateWithDecay(), _ETHDrawn);
     }
 
-    function _calcRedemptionFee(uint _redemptionRate, uint _ETHDrawn) internal view returns (uint) {
+    function _calcRedemptionFee(uint _redemptionRate, uint _ETHDrawn) internal pure returns (uint) {
         uint redemptionFee = _redemptionRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
         require(redemptionFee < _ETHDrawn, "TroveManager: Fee would eat up all returned collateral");
         return redemptionFee;
@@ -1468,7 +1470,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         require(msg.sender == borrowerOperationsAddress, "TroveManager: Caller is not the BorrowerOperations contract");
     }
 
-    function _requireTroveisActive(address _borrower) internal view {
+    function _requireTroveIsActive(address _borrower) internal view {
         require(Troves[_borrower].status == Status.active, "TroveManager: Trove does not exist or is closed");
     }
 

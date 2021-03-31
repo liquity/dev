@@ -140,6 +140,10 @@ const modalOverlay: ThemeUIStyleObject = {
   height: "100vh"
 };
 
+const headerGradient: ThemeUIStyleObject = {
+  background: `linear-gradient(90deg, ${colors.background}, ${colors.muted})`
+};
+
 const theme: Theme = {
   breakpoints: ["48em", "52em", "64em"],
 
@@ -296,7 +300,8 @@ const theme: Theme = {
       boxShadow: 2,
 
       fontSize: 1,
-
+      color: "text",
+      fontWeight: "body",
       zIndex: 1
     }
   },
@@ -336,7 +341,7 @@ const theme: Theme = {
       px: [2, "12px", "12px", 5],
       py: [2, "12px", "12px"],
 
-      background: `linear-gradient(90deg, ${colors.background}, ${colors.muted})`,
+      ...headerGradient,
       boxShadow: [1, "none"]
     },
 
@@ -417,7 +422,30 @@ const theme: Theme = {
       display: "flex",
       justifyContent: "center",
       m: 3,
-      alignItems: "center"
+      alignItems: "center",
+      minWidth: "128px"
+    },
+
+    sidenav: {
+      display: ["flex", "none"],
+      flexDirection: "column",
+      p: 0,
+      m: 0,
+      borderColor: "muted",
+      mr: "25vw",
+      height: "100%",
+      ...headerGradient
+    },
+
+    badge: {
+      border: 0,
+      borderRadius: 3,
+      p: 1,
+      px: 2,
+      backgroundColor: "muted",
+      color: "slate",
+      fontSize: 1,
+      fontWeight: "body"
     }
   },
 
@@ -439,6 +467,19 @@ const theme: Theme = {
       ":hover": { color: "accent" },
       textDecoration: "none",
       fontWeight: "bold"
+    }
+  },
+
+  links: {
+    nav: {
+      px: 2,
+      py: 1,
+      fontWeight: "medium",
+      fontSize: 2,
+      textTransform: "uppercase",
+      letterSpacing: "2px",
+      width: ["100%", "auto"],
+      mt: [3, "auto"]
     }
   }
 };
