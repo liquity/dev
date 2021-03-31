@@ -29,7 +29,7 @@ import {
   faHeartbeat,
   faBars
 } from "@fortawesome/free-solid-svg-icons";
-import { faClipboard } from "@fortawesome/free-regular-svg-icons";
+import { faClipboard, faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
 
 library.add(
@@ -60,13 +60,16 @@ library.add(
   faPen,
   faHandPaper,
   faHeartbeat,
-  faBars
+  faBars,
+  faQuestionCircle
 );
 
 const getIcon = (name: IconName): IconProp => {
   switch (name) {
     case "clipboard":
       return ["far", "clipboard"];
+    case "question-circle":
+      return ["far", "question-circle"];
     default:
       return name;
   }
