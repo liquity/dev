@@ -1,27 +1,33 @@
 const externalAddrs  = {
-    CHAINLINK_ETHUSD_PROXY: "0x0000000000000000000000000000000000000000",
-    TELLOR:"0x0000000000000000000000000000000000000000",
+    // https://data.chain.link/eth-usd
+    CHAINLINK_ETHUSD_PROXY: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419", 
+    // https://docs.tellor.io/tellor/integration/reference-page
+    TELLOR_MASTER:"0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0",
+    // https://uniswap.org/docs/v2/smart-contracts/factory/
     UNISWAP_V2_FACTORY: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    // https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
     WETH_ERC20: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-    ETH_WHALE: "0x73BCEb1Cd57C711feaC4224D062b0F6ff338501e"
+    ETH_WHALE: "0x53d284357ec70ce289d6d64134dfac8e511c8a3d",
+    DAI_ERC20: "0x6b175474e89094c44da98b954eedeac495271d0f"
 }
    
 const liquityAddrs = {
-    GENERAL_SAFE:"0x0000000000000000000000000000000000000000",
-    LQTY_SAFE:"0x0000000000000000000000000000000000000000",
-    REAL_DEPLOYER: "0xa850535D3628CD4dFEB528dC85cfA93051Ff2984",
-    TEST_DEPLOYER: "0xF8e5C47a6866e97F5D561982Ff80D39c436E573E"
-
+    TEST_GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd",  // Hardhat dev address
+    TEST_LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74",  //  Hardhat dev address
+    REAL_DEPLOYER: "0xa850535D3628CD4dFEB528dC85cfA93051Ff2984",  // Actual deployment address for April 5
+    TEST_DEPLOYER: "0xF8e5C47a6866e97F5D561982Ff80D39c436E573E" // Mainnet test deployment address 
 }
 
 const beneficiaries = {
-    alice: "0x0000000000000000000000000000000000000000",
-    bob:"0x0000000000000000000000000000000000000000",
-    carol:"0x0000000000000000000000000000000000000000"
+    TEST_INVESTOR_A: "0xdad05aa3bd5a4904eb2a9482757be5da8d554b3d",
+    TEST_INVESTOR_B: "0x625b473f33b37058bf8b9d4c3d3f9ab5b896996a",
+    TEST_INVESTOR_C: "0x9ea530178b9660d0fae34a41a02ec949e209142e",
+    TEST_INVESTOR_D: "0xffbb4f4b113b05597298b9d8a7d79e6629e726e8",
+    TEST_INVESTOR_E: "0x89ff871dbcd0a456fe92db98d190c38bc10d1cc1"
 }
 
 module.exports = {
     externalAddrs: externalAddrs,
+    liquityAddrs:  liquityAddrs,
     beneficiaries: beneficiaries,
-    liquityAddrs:  liquityAddrs
 };

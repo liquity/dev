@@ -10,19 +10,14 @@ const readline = require("readline");
 const output = {}
 
 async function main() {
-    const deployerWallet = new ethers.Wallet(secrets.TEST_DEPLOYER_PRIVATEKEY, ethers.provider)
+    const mainnetProvider = new ethers.providers.AlchemyProvider(null, secrets.alchemyAPIKey)
+
+    const deployerWallet = new ethers.Wallet(secrets.TEST_DEPLOYER_PRIVATEKEY, mainnetProvider)
     console.log(`deployer address: ${deployerWallet.address}`)
     
-    let deployerETHBalance = await ethers.provider.getBalance(deployerWallet.address)
+    let deployerETHBalance = await mainnetProvider.getBalance(deployerWallet.address)
     console.log(`deployerETHBalance before: ${deployerETHBalance}`)
     
-    // Get DAI ER20 instance at its deployed address
-    const DAI = new ethers.Contract(
-      externalAddrs.DAI_ERC20, 
-      ERC20Abi, 
-      deployerWallet
-    );
-
    // Get UniswaV2Factory instance at its deployed address
     const uniswapV2Factory =  new ethers.Contract(
       externalAddrs.UNISWAP_V2_FACTORY, 
@@ -34,36 +29,12 @@ async function main() {
     const uniAllPairsLength = await uniswapV2Factory.allPairsLength()
     console.log(`Uniswap Factory number of pairs: ${uniAllPairsLength}`)
 
-    // Impersonate the whale (artificially assume control of its pk)
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [externalAddrs.ETH_WHALE]}
-    )
-    console.log(`whale address from import: ${externalAddrs.ETH_WHALE}`)
-
-    // Get the ETH whale signer 
-    const whale = await ethers.provider.getSigner(externalAddrs.ETH_WHALE)
-    console.log(`whale addr : ${await whale.getAddress()}`)
-    console.log(`whale ETH balance: ${ await ethers.provider.getBalance(whale.getAddress())}`)
-
-    // Send ETH to the deployer's address
-    await whale.sendTransaction({
-      to:  deployerWallet.address,
-      value: ethers.utils.parseEther("20.0")
-    })
-
-    // Stop impersonating whale
-    await network.provider.request({
-      method: "hardhat_stopImpersonatingAccount",
-      params: [externalAddrs.ETH_WHALE]}
-    )
-
-    deployerETHBalance = await ethers.provider.getBalance(deployerWallet.address)
+    deployerETHBalance = await mainnetProvider.getBalance(deployerWallet.address)
     console.log(`deployer's ETH balance before deployments: ${deployerETHBalance}`)
 
     // Deploy core logic contracts
     const liquityCore = await mdh.deployLiquityCoreMainnet(deployerWallet, externalAddrs.TELLOR_MASTER)
-    // await mdh.logContractObjects(liquityCore)
+    await mdh.logContractObjects(liquityCore)
 
     // Check Uniswap Pair LUSD-ETH pair before pair creation
     let LUSDWETHPairAddr = await uniswapV2Factory.getPair(liquityCore.lusdToken.address, externalAddrs.WETH_ERC20)
@@ -105,19 +76,19 @@ async function main() {
     await mdh.logContractObjects(LQTYContracts)
     console.log(`Unipool address: ${unipool.address}`)
 
-    const latestBlock = await ethers.provider.getBlockNumber()
-    const now = (await ethers.provider.getBlock(latestBlock)).timestamp 
+    const latestBlock = await mainnetProvider.getBlockNumber()
+    const now = (await mainnetProvider.getBlock(latestBlock)).timestamp 
 
     console.log(`time now: ${now}`)
     const oneYearFromNow = (now + timeVals.SECONDS_IN_ONE_YEAR).toString()
     console.log(`time oneYearFromNow: ${oneYearFromNow}`)
 
-    // Deploy LockupContracts
+    // Deploy LockupContracts - one for each beneficiary
     const lockupContracts = {}
 
     for (const [investor, investorAddr] of Object.entries(beneficiaries)) {
       const txResponse = await LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow)
-      const txReceipt = await ethers.provider.getTransactionReceipt(txResponse.hash)
+      const txReceipt = await mainnetProvider.getTransactionReceipt(txResponse.hash)
      
       const address = await txReceipt.logs[0].address // The deployment event emitted from the LC itself is is the first of two events, so this is its address 
       lockupContracts[investor] = await th.getLCFromAddress(address) 
@@ -161,7 +132,7 @@ async function main() {
     console.log(`General Safe balance: ${generalSafeBal}`)
 
     // CommunityIssuance contract
-    const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(LQTYContracts.communityIssuance.address)
+    const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(liquityCore.communityIssuance.address)
     console.log(`General Safe balance: ${communityIssuanceBal}`)
 
     // --- PriceFeed ---
@@ -179,9 +150,10 @@ async function main() {
     console.log(`PriceFeed's stored Chainlink address: ${priceFeedCLAddress}`)
     console.log(`PriceFeed's stored TellorCaller address: ${priceFeedTellorCallerAddress}`)
     
+    // TODO:  Make tellor public in TellorCaller
     // console.log(`TellorCaller's TellorMaster address: ${tellorCallerTellorMasterAddress}`)
-    // const tellorCallerTellorMasterAddress = await liquityCore.tellorCaller.tellor() // TODO: Make tellor public in TellorCaller
-   
+    // const tellorCallerTellorMasterAddress = await liquityCore.tellorCaller.tellor() 
+
     // --- Unipool ---
 
     // Check Unipool's LUSD-ETH Uniswap Pair address
