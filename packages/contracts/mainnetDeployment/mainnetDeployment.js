@@ -280,6 +280,13 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   
       // Stake most of deployer's LP tokens in Unipool
       // *** This overflows?  Should be able to stake
+
+      console.log(`LUSDETHPair addr: ${LUSDETHPair.address}`)
+      console.log(`Pair addr stored in Unipool: ${await unipool.uniToken()}`)
+      
+      // Deployer approves Unipool
+      await LUSDETHPair.approve(unipool.address, deployerLPTokenBal)
+
       await unipool.stake(1)
   
       await delay(60000) // wait 1 minute
