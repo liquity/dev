@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Heading, Link, Box, Flex, Text } from "theme-ui";
+import { Card, Heading, Link, Box, Text } from "theme-ui";
 import { AddressZero } from "@ethersproject/constants";
 import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
