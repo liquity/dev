@@ -107,9 +107,9 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
 
       <Statistic name="TVL" tooltip="TBD">
         {Decimal.from(total.collateral).prettify(0)} ETH
-        <Flex sx={{ fontSize: 1 }}>
+        <Text sx={{ fontSize: 1 }}>
           &nbsp;(${Decimal.from(total.collateral.mul(price)).shorten()})
-        </Flex>
+        </Text>
       </Statistic>
       <Statistic name="Troves" tooltip="TBD">
         {Decimal.from(numberOfTroves).prettify(0)}
