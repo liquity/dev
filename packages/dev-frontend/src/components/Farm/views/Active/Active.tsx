@@ -11,6 +11,7 @@ import { useFarmView } from "../../context/FarmViewContext";
 import { RemainingLQTY } from "../RemainingLQTY";
 import { ClaimReward } from "./ClaimReward";
 import { UnstakeAndClaim } from "../UnstakeAndClaim";
+import { Yield } from "../Yield";
 
 const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
   liquidityMiningStake,
@@ -49,13 +50,18 @@ export const Active: React.FC = () => {
             amount={liquidityMiningStake.prettify(4)}
             unit={LP}
           />
-          <StaticRow
-            label="Reward"
-            inputId="farm-reward"
-            amount={liquidityMiningLQTYReward.prettify(4)}
-            color={liquidityMiningLQTYReward.nonZero && "success"}
-            unit={GT}
-          />
+          <Flex sx={{ alignItems: "center" }}>
+            <StaticRow
+              label="Reward"
+              inputId="farm-reward"
+              amount={liquidityMiningLQTYReward.prettify(4)}
+              color={liquidityMiningLQTYReward.nonZero && "success"}
+              unit={GT}
+            />
+            <Flex sx={{ justifyContent: "flex-end", flex: 1 }}>
+              <Yield />
+            </Flex>
+          </Flex>
         </Box>
 
         <Flex variant="layout.actions">

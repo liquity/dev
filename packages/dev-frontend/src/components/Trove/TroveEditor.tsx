@@ -111,7 +111,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
             infoIcon={
               <InfoIcon
                 tooltip={
-                  <Card variant="tooltip">
+                  <Card variant="tooltip" sx={{ width: "200px" }}>
                     This fee covers the gas cost a liquidator would pay to liquidate your Trove. You
                     are refunded this fee when you repay your debt.
                   </Card>
@@ -130,7 +130,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           infoIcon={
             <InfoIcon
               tooltip={
-                <Card variant="tooltip">
+                <Card variant="tooltip" sx={{ width: "240px" }}>
                   This is a one-time fee applied to your borrowed amount. It has 0% interest.
                 </Card>
               }
