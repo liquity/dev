@@ -1,24 +1,11 @@
-const fs = require('fs')
 const { UniswapV2Factory } = require("./ABIs/UniswapFactoryABI.js")
 const { ERC20Abi } = require("./ABIs/ERC20.js")
 const mdh = require("../utils/mainnetDeploymentHelpers.js")
 const { TestHelper: th, TimeValues: timeVals } = require("../utils/testHelpers.js")
 const { externalAddrs, liquityAddrs, beneficiaries } = require("./mainnetAddresses.js")
 
-const OUTPUT_FILE = './output/mainnetDeploymentOutput'
-
-const loadPreviousDeployment = () => {
-    let previousDeployment = {}
-    if (fs.existsSync(OUTPUT_FILE)) {
-        console.log(`Loading previous deployment...`)
-        previousDeployment = require(OUTPUT_FILE)
-    }
-
-    return previousDeployment
-}
-
 async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
-    const deploymentState = loadPreviousDeployment()
+    const deploymentState = mdh.loadPreviousDeployment()
 
     console.log(`deployer address: ${deployerWallet.address}`)
     assert.equal(deployerWallet.address, liquityAddrs.DEPLOYER)
@@ -40,7 +27,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     console.log(`deployer's ETH balance before deployments: ${deployerETHBalance}`)
 
     // Deploy core logic contracts
-    const liquityCore = await mdh.deployLiquityCoreMainnet(deployerWallet, externalAddrs.TELLOR_MASTER)
+    const liquityCore = await mdh.deployLiquityCoreMainnet(deployerWallet, externalAddrs.TELLOR_MASTER, deploymentState)
     await mdh.logContractObjects(liquityCore)
 
     // Check Uniswap Pair LUSD-ETH pair before pair creation
@@ -62,12 +49,13 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     assert.equal(WETHLUSDPairAddr, LUSDWETHPairAddr)
 
     // Deploy Unipool
-    const unipool = await mdh.deployUnipoolMainnet()
+    const unipool = await mdh.deployUnipoolMainnet(deployerWallet, deploymentState)
 
     const LQTYContracts = await mdh.deployLQTYContractsMainnet(
       liquityAddrs.GENERAL_SAFE,
       unipool.address,
-      deployerWallet
+      deployerWallet,
+      deploymentState
     )
     
     await mdh.connectCoreContractsMainnet(liquityCore, LQTYContracts, externalAddrs.CHAINLINK_ETHUSD_PROXY)
