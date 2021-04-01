@@ -12,6 +12,7 @@ import {
 import { _TypedLiquityContract, _TypedLogDescription } from "../src/contracts";
 
 interface ActivePoolCalls {
+  NAME(_overrides?: CallOverrides): Promise<string>;
   borrowerOperationsAddress(_overrides?: CallOverrides): Promise<string>;
   defaultPoolAddress(_overrides?: CallOverrides): Promise<string>;
   getETH(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -64,6 +65,7 @@ interface BorrowerOperationsCalls {
   LUSD_GAS_COMPENSATION(_overrides?: CallOverrides): Promise<BigNumber>;
   MCR(_overrides?: CallOverrides): Promise<BigNumber>;
   MIN_NET_DEBT(_overrides?: CallOverrides): Promise<BigNumber>;
+  NAME(_overrides?: CallOverrides): Promise<string>;
   PERCENT_DIVISOR(_overrides?: CallOverrides): Promise<BigNumber>;
   _100pct(_overrides?: CallOverrides): Promise<BigNumber>;
   activePool(_overrides?: CallOverrides): Promise<string>;
@@ -129,6 +131,7 @@ export interface BorrowerOperations
 }
 
 interface CollSurplusPoolCalls {
+  NAME(_overrides?: CallOverrides): Promise<string>;
   activePoolAddress(_overrides?: CallOverrides): Promise<string>;
   borrowerOperationsAddress(_overrides?: CallOverrides): Promise<string>;
   getCollateral(_account: string, _overrides?: CallOverrides): Promise<BigNumber>;
@@ -166,6 +169,7 @@ interface CommunityIssuanceCalls {
   DECIMAL_PRECISION(_overrides?: CallOverrides): Promise<BigNumber>;
   ISSUANCE_FACTOR(_overrides?: CallOverrides): Promise<BigNumber>;
   LQTYSupplyCap(_overrides?: CallOverrides): Promise<BigNumber>;
+  NAME(_overrides?: CallOverrides): Promise<string>;
   SECONDS_IN_ONE_MINUTE(_overrides?: CallOverrides): Promise<BigNumber>;
   deploymentTime(_overrides?: CallOverrides): Promise<BigNumber>;
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
@@ -196,6 +200,7 @@ export interface CommunityIssuance
 }
 
 interface DefaultPoolCalls {
+  NAME(_overrides?: CallOverrides): Promise<string>;
   activePoolAddress(_overrides?: CallOverrides): Promise<string>;
   getETH(_overrides?: CallOverrides): Promise<BigNumber>;
   getLUSDDebt(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -287,6 +292,7 @@ interface HintHelpersCalls {
   LUSD_GAS_COMPENSATION(_overrides?: CallOverrides): Promise<BigNumber>;
   MCR(_overrides?: CallOverrides): Promise<BigNumber>;
   MIN_NET_DEBT(_overrides?: CallOverrides): Promise<BigNumber>;
+  NAME(_overrides?: CallOverrides): Promise<string>;
   PERCENT_DIVISOR(_overrides?: CallOverrides): Promise<BigNumber>;
   _100pct(_overrides?: CallOverrides): Promise<BigNumber>;
   activePool(_overrides?: CallOverrides): Promise<string>;
@@ -343,6 +349,7 @@ export interface IERC20
 }
 
 interface LockupContractFactoryCalls {
+  NAME(_overrides?: CallOverrides): Promise<string>;
   SECONDS_IN_ONE_YEAR(_overrides?: CallOverrides): Promise<BigNumber>;
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
   isRegisteredLockup(_contractAddress: string, _overrides?: CallOverrides): Promise<boolean>;
@@ -419,6 +426,7 @@ interface LQTYStakingCalls {
   DECIMAL_PRECISION(_overrides?: CallOverrides): Promise<BigNumber>;
   F_ETH(_overrides?: CallOverrides): Promise<BigNumber>;
   F_LUSD(_overrides?: CallOverrides): Promise<BigNumber>;
+  NAME(_overrides?: CallOverrides): Promise<string>;
   activePoolAddress(_overrides?: CallOverrides): Promise<string>;
   borrowerOperationsAddress(_overrides?: CallOverrides): Promise<string>;
   getPendingETHGain(_user: string, _overrides?: CallOverrides): Promise<BigNumber>;
@@ -539,6 +547,7 @@ interface PriceFeedCalls {
   ETHUSD_TELLOR_REQ_ID(_overrides?: CallOverrides): Promise<BigNumber>;
   MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND(_overrides?: CallOverrides): Promise<BigNumber>;
   MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES(_overrides?: CallOverrides): Promise<BigNumber>;
+  NAME(_overrides?: CallOverrides): Promise<string>;
   TARGET_DIGITS(_overrides?: CallOverrides): Promise<BigNumber>;
   TELLOR_DIGITS(_overrides?: CallOverrides): Promise<BigNumber>;
   TIMEOUT(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -585,6 +594,7 @@ export interface PriceFeedTestnet
 }
 
 interface SortedTrovesCalls {
+  NAME(_overrides?: CallOverrides): Promise<string>;
   borrowerOperationsAddress(_overrides?: CallOverrides): Promise<string>;
   contains(_id: string, _overrides?: CallOverrides): Promise<boolean>;
   data(_overrides?: CallOverrides): Promise<{ head: string; tail: string; maxSize: BigNumber; size: BigNumber }>;
@@ -635,6 +645,7 @@ interface StabilityPoolCalls {
   LUSD_GAS_COMPENSATION(_overrides?: CallOverrides): Promise<BigNumber>;
   MCR(_overrides?: CallOverrides): Promise<BigNumber>;
   MIN_NET_DEBT(_overrides?: CallOverrides): Promise<BigNumber>;
+  NAME(_overrides?: CallOverrides): Promise<string>;
   P(_overrides?: CallOverrides): Promise<BigNumber>;
   PERCENT_DIVISOR(_overrides?: CallOverrides): Promise<BigNumber>;
   SCALE_FACTOR(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -752,6 +763,7 @@ interface TroveManagerCalls {
   MCR(_overrides?: CallOverrides): Promise<BigNumber>;
   MINUTE_DECAY_FACTOR(_overrides?: CallOverrides): Promise<BigNumber>;
   MIN_NET_DEBT(_overrides?: CallOverrides): Promise<BigNumber>;
+  NAME(_overrides?: CallOverrides): Promise<string>;
   PERCENT_DIVISOR(_overrides?: CallOverrides): Promise<BigNumber>;
   REDEMPTION_FEE_FLOOR(_overrides?: CallOverrides): Promise<BigNumber>;
   SECONDS_IN_ONE_MINUTE(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -875,6 +887,7 @@ export interface TroveManager
 }
 
 interface UnipoolCalls {
+  NAME(_overrides?: CallOverrides): Promise<string>;
   balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
   duration(_overrides?: CallOverrides): Promise<BigNumber>;
   earned(account: string, _overrides?: CallOverrides): Promise<BigNumber>;

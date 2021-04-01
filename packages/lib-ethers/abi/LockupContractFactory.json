@@ -64,6 +64,19 @@
   },
   {
     "inputs": [],
+    "name": "NAME",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "SECONDS_IN_ONE_YEAR",
     "outputs": [
       {
