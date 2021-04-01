@@ -202,9 +202,9 @@ describe("EthersLiquity", () => {
         }
       } as unknown) as ReadableEthersLiquity);
 
-      const nominalCollateralRatio = Decimal.ONE.div(1.0025);
+      const nominalCollateralRatio = Decimal.from(0.05);
 
-      const params = { depositCollateral: 1, borrowLUSD: 50 };
+      const params = Trove.recreate(new Trove(Decimal.from(1), LUSD_MINIMUM_DEBT));
       const trove = Trove.create(params);
       expect(`${trove._nominalCollateralRatio}`).to.equal(`${nominalCollateralRatio}`);
 
@@ -497,7 +497,7 @@ describe("EthersLiquity", () => {
           troveWithVeryLowICR.collateral
             .mul(0.995) // -0.5% gas compensation
             .mulDiv(smallStabilityDeposit, troveWithVeryLowICR.debt)
-            .sub("0.000000000000000007"), // tiny imprecision
+            .sub("0.000000000000000005"), // tiny imprecision
           Decimal.ZERO,
           AddressZero
         )
@@ -517,7 +517,7 @@ describe("EthersLiquity", () => {
             troveWithVeryLowICR.collateral
               .mul(0.995) // -0.5% gas compensation
               .mulDiv(troveWithVeryLowICR.debt.sub(smallStabilityDeposit), troveWithVeryLowICR.debt)
-              .sub("0.000000000000000007")
+              .add("0.000000000000000001") // tiny imprecision
           )
       });
     });
@@ -530,7 +530,7 @@ describe("EthersLiquity", () => {
 
       const total = await liquity.getTotal();
       expect(total).to.deep.equal(
-        trove.addCollateral("0.000000000000000009") // tiny imprecision
+        trove.addCollateral("0.000000000000000001") // tiny imprecision
       );
     });
 
@@ -545,14 +545,14 @@ describe("EthersLiquity", () => {
         collateralGain: troveWithVeryLowICR.collateral
           .mul(0.995) // -0.5% gas compensation
           .mulDiv(smallStabilityDeposit, troveWithVeryLowICR.debt)
-          .sub("0.000000000000000007"), // tiny imprecision
+          .sub("0.000000000000000005"), // tiny imprecision
 
         newTrove: initialTroveOfDepositor
           .addDebt(troveWithVeryLowICR.debt.sub(smallStabilityDeposit))
           .addCollateral(
             troveWithVeryLowICR.collateral
               .mul(0.995) // -0.5% gas compensation
-              .sub("0.000000000000000015") // tiny imprecision
+              .sub("0.000000000000000005") // tiny imprecision
           )
       });
 
@@ -572,7 +572,7 @@ describe("EthersLiquity", () => {
           ...otherUsersSubset
         ]);
 
-        await sendToEach(otherUsersSubset, 20.1);
+        await sendToEach(otherUsersSubset, 21.1);
 
         let price = Decimal.from(200);
         await deployerLiquity.setPrice(price);
@@ -586,8 +586,8 @@ describe("EthersLiquity", () => {
         await liquity.sendLUSD(await otherUsers[2].getAddress(), 1000);
 
         // otherLiquities[3-4] will be Trove owners whose Troves get liquidated
-        await otherLiquities[3].openTrove({ depositCollateral: 20, borrowLUSD: 2900 });
-        await otherLiquities[4].openTrove({ depositCollateral: 20, borrowLUSD: 2900 });
+        await otherLiquities[3].openTrove({ depositCollateral: 21, borrowLUSD: 2900 });
+        await otherLiquities[4].openTrove({ depositCollateral: 21, borrowLUSD: 2900 });
 
         await otherLiquities[0].depositLUSDInStabilityPool(3000);
         await otherLiquities[1].depositLUSDInStabilityPool(1000);
