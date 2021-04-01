@@ -6,9 +6,9 @@ const accounts = require("./hardhatAccountsList2k.js");
 const accountsList = accounts.accountsList
 
 const fs = require('fs')
-const getSecret = (secretKey) => {
+const getSecret = (secretKey, defaultValue='') => {
     const SECRETS_FILE = "./secrets.js"
-    let secret = ""
+    let secret = defaultValue
     if (fs.existsSync(SECRETS_FILE)) {
         const { secrets } = require(SECRETS_FILE);
         secret = secrets[secretKey]
@@ -70,12 +70,12 @@ module.exports = {
         mainnet: {
             url: alchemyUrl(),
             gasPrice: 220000000000,
-            accounts: [getSecret('DEPLOYER_PRIVATEKEY')]
+            accounts: [getSecret('DEPLOYER_PRIVATEKEY', '0x60ddfe7f579ab6867cbe7a2dc03853dc141d7a4ab6dbefc0dae2d2b1bd4e487f')]
         },
         rinkeby: {
             url: alchemyUrlRinkeby(),
             gas: 10000000,  // tx gas limit
-            accounts: [getSecret('RINKEBY_DEPLOYER_PRIVATEKEY')]
+            accounts: [getSecret('RINKEBY_DEPLOYER_PRIVATEKEY', '0x60ddfe7f579ab6867cbe7a2dc03853dc141d7a4ab6dbefc0dae2d2b1bd4e487f')]
         },
     },
     mocha: { timeout: 12000000 },
