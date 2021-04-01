@@ -193,8 +193,14 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
       dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
+    } else if (myTransactionState.type === "confirmedOneShot") {
+      if (validChange?.type === "closure") {
+        dispatchEvent("TROVE_CLOSED");
+      } else if (validChange?.type === "creation" || validChange?.type === "adjustment") {
+        dispatchEvent("TROVE_ADJUSTED");
+      }
     }
-  }, [myTransactionState.type, dispatch]);
+  }, [myTransactionState.type, dispatch, dispatchEvent, validChange?.type]);
 
   return (
     <TroveEditor
