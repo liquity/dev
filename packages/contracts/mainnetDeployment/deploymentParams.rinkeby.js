@@ -19,7 +19,7 @@ const liquityAddrsTest = {
 const liquityAddrs = {
   GENERAL_SAFE:"0x3c198B7f3bA594804aEeA8894d0a58BCc345b8ce", // TODO
   LQTY_SAFE:"0xbFdECf1Db5c22d4CD3B0Bb970cF867BEFd2caE27", // TODO
-  DEPLOYER: "0xD4D121b2ba5dC9eC6e028F9cdDCA1a33c73604D4",  // Actual deployment address for April 5
+  DEPLOYER: "0xD4D121b2ba5dC9eC6e028F9cdDCA1a33c73604D4",
 }
 
 const beneficiaries = {
