@@ -3,9 +3,7 @@ import { Button } from "theme-ui";
 import { Decimal, TroveChange } from "@liquity/lib-base";
 
 import { useLiquity } from "../../hooks/LiquityContext";
-import { useMyTransactionState, useTransactionFunction } from "../Transaction";
-import { useEffect } from "react";
-import { useTroveView } from "./context/TroveViewContext";
+import { useTransactionFunction } from "../Transaction";
 
 type TroveActionProps = {
   transactionId: string;
@@ -20,19 +18,6 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   maxBorrowingRate
 }) => {
   const { liquity } = useLiquity();
-  const { dispatchEvent } = useTroveView();
-
-  const transactionState = useMyTransactionState(transactionId);
-
-  useEffect(() => {
-    if (transactionState.type === "confirmedOneShot") {
-      if (change.type === "closure") {
-        dispatchEvent("TROVE_CLOSED");
-      } else if (change.type === "creation" || change.type === "adjustment") {
-        dispatchEvent("TROVE_ADJUSTED");
-      }
-    }
-  }, [transactionState.type, change.type, dispatchEvent]);
 
   const [sendTransaction] = useTransactionFunction(
     transactionId,
