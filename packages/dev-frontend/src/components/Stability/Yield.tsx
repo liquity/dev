@@ -59,11 +59,12 @@ export const Yield: React.FC = () => {
         tooltip={
           <Card variant="tooltip" sx={{ width: ["220px", "506px"] }}>
             <Paragraph>
-              LQTY APY is an <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on
-              deposited LUSD over the next year. This doesn't include the ETH gains.
+              An <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on the LUSD
+              deposited to the Stability Pool over the next year, not including your ETH gains from
+              liquidations.
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
-              ($LQTY_REWARDS * YEARLY_DISTRIBUTION% / STABILITY_LUSD) * 100 ={" "}
+              ($LQTY_REWARDS * YEARLY_DISTRIBUTION% / DEPOSITED_LUSD) * 100 ={" "}
               <Text sx={{ fontWeight: "bold" }}> APY</Text>
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace" }}>

@@ -359,7 +359,7 @@ const theme: Theme = {
 
     main: {
       width: "100%",
-      maxWidth: "894px",
+      maxWidth: "912px",
       mx: "auto",
       mt: ["40px", 0],
       px: cardGapX
@@ -373,11 +373,11 @@ const theme: Theme = {
 
     left: {
       pr: cardGapX,
-      width: ["100%", "60%"]
+      width: ["100%", "58%"]
     },
 
     right: {
-      width: ["100%", "40%"]
+      width: ["100%", "42%"]
     },
 
     actions: {

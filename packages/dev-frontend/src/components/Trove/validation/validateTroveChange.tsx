@@ -186,8 +186,8 @@ const validateTroveCreation = (
     if (!resultingTrove.isOpenableInRecoveryMode(price)) {
       return (
         <ErrorDescription>
-          You're not allowed to open a Trove with less than <Amount>{ccrPercent}</Amount> collateral
-          ratio during recovery mode. Please increase your collateral ratio.
+          You're not allowed to open a Trove with less than <Amount>{ccrPercent}</Amount> Collateral
+          Ratio during recovery mode. Please increase your Trove's Collateral Ratio.
         </ErrorDescription>
       );
     }
@@ -203,8 +203,8 @@ const validateTroveCreation = (
     if (wouldTriggerRecoveryMode) {
       return (
         <ErrorDescription>
-          You're not allowed to open a Trove that would cause the total collateral ratio to fall
-          below <Amount>{ccrPercent}</Amount>. Please increase your collateral ratio.
+          You're not allowed to open a Trove that would cause the Total Collateral Ratio to fall
+          below <Amount>{ccrPercent}</Amount>. Please increase your Trove's Collateral Ratio.
         </ErrorDescription>
       );
     }
@@ -273,8 +273,8 @@ const validateTroveAdjustment = (
     if (wouldTriggerRecoveryMode) {
       return (
         <ErrorDescription>
-          The adjustment you're trying to make would cause the total collateral ratio to fall below{" "}
-          <Amount>{ccrPercent}</Amount>. Please increase your collateral ratio.
+          The adjustment you're trying to make would cause the Total Collateral Ratio to fall below{" "}
+          <Amount>{ccrPercent}</Amount>. Please increase your Trove's Collateral Ratio.
         </ErrorDescription>
       );
     }
@@ -358,8 +358,9 @@ const validateTroveClosure = (
   if (wouldTriggerRecoveryMode) {
     return (
       <ErrorDescription>
-        Closing a Trove is not allowed if it would cause the total collateral ratio to fall below{" "}
-        <Amount>{ccrPercent}</Amount>. Please wait until the total collateral ratio increases.
+        You're not allowed to close a Trove if it would cause the Total Collateralization Ratio to
+        fall below <Amount>{ccrPercent}</Amount>. Please wait until the Total Collateral Ratio
+        increases.
       </ErrorDescription>
     );
   }

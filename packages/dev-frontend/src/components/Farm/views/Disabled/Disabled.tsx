@@ -20,7 +20,7 @@ export const Disabled: React.FC = () => {
   return (
     <Card>
       <Heading>
-        Liquidity farm
+        Uniswap Liquidity Farm
         <Flex sx={{ justifyContent: "flex-end" }}>
           <RemainingLQTY />
         </Flex>

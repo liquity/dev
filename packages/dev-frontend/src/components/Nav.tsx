@@ -9,8 +9,8 @@ export const Nav: React.FC = () => {
         <Link to="/farm">Farm</Link>
       </Flex>
       <Flex sx={{ justifyContent: "flex-end", mr: 3, flex: 1 }}>
-        <Link sx={{ fontSize: 1 }} to="/liquidation">
-          Liquidation
+        <Link sx={{ fontSize: 1 }} to="/risky-troves">
+          Risky Troves
         </Link>
         <Link sx={{ fontSize: 1 }} to="/redemption">
           Redemption

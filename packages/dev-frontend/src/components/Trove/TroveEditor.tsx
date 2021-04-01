@@ -104,7 +104,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 
         {original.isEmpty && (
           <StaticRow
-            label="Liquidation reserve"
+            label="Liquidation Reserve"
             inputId="trove-liquidation-reserve"
             amount={`${LUSD_LIQUIDATION_RESERVE}`}
             unit={COIN}
@@ -112,8 +112,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
               <InfoIcon
                 tooltip={
                   <Card variant="tooltip" sx={{ width: "200px" }}>
-                    This fee covers the gas cost a liquidator would pay to liquidate your Trove. You
-                    are refunded this fee when you repay your debt.
+                    An amount set aside to cover the liquidator’s gas costs if your Trove needs to be
+                    liquidated. The amount increases your debt and is refunded if you close your
+                    Trove by fully paying off its net debt.
                   </Card>
                 }
               />
@@ -122,7 +123,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
         )}
 
         <StaticRow
-          label="Fee"
+          label="Borrowing Fee"
           inputId="trove-borrowing-fee"
           amount={fee.toString(2)}
           pendingAmount={feePct.toString(2)}
@@ -131,7 +132,8 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
             <InfoIcon
               tooltip={
                 <Card variant="tooltip" sx={{ width: "240px" }}>
-                  This is a one-time fee applied to your borrowed amount. It has 0% interest.
+                  This amount is deducted from the borrowed amount as a one-time fee. There are no
+                  recurring fees for borrowing, which is thus interest-free.
                 </Card>
               }
             />
