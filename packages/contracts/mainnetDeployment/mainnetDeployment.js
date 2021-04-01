@@ -25,7 +25,7 @@ async function mainnetDeploy(configParams) {
     configParams.externalAddrs.UNISWAP_V2_FACTORY,
     UniswapV2Factory.abi,
     deployerWallet
-  );
+  )
 
   console.log(`Uniswp addr: ${uniswapV2Factory.address}`)
   const uniAllPairsLength = await uniswapV2Factory.allPairsLength()
@@ -98,14 +98,23 @@ async function mainnetDeploy(configParams) {
   const lockupContracts = {}
 
   for (const [investor, investorAddr] of Object.entries(configParams.beneficiaries)) {
+    const lockupContractFactory = await ethers.getContractFactory("LockupContract", deployerWallet)
     if (deploymentState[investor] && deploymentState[investor].address) {
       console.log(`Using previously deployed ${investor} lockup contract at address ${deploymentState[investor].address}`)
-      lockupContracts[investor] = await th.getLCFromAddress(deploymentState[investor].address)
+      lockupContracts[investor] = new ethers.Contract(
+        deploymentState[investor].address,
+        lockupContractFactory.interface,
+        deployerWallet
+      )
     } else {
       const txReceipt = await mdh.sendAndWaitForTransaction(LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow, {gasPrice}))
 
       const address = await txReceipt.logs[0].address // The deployment event emitted from the LC itself is is the first of two events, so this is its address 
-      lockupContracts[investor] = await th.getLCFromAddress(address)
+      lockupContracts[investor] = new ethers.Contract(
+        address,
+        lockupContractFactory.abi,
+        deployerWallet
+      )
 
       deploymentState[investor] = {
         address: address,
@@ -136,8 +145,6 @@ async function mainnetDeploy(configParams) {
   // --- Lockup Contracts ---
 
   // Check lockup contracts exist for each beneficiary with correct unlock time
-  // TODO:  Fix the lockupContract read calls - connect contract to the ethers deployerWallet
-
   for (investor of Object.keys(lockupContracts)) {
     const lockupContract = lockupContracts[investor]
     const onChainBeneficiary = await lockupContract.beneficiary()
