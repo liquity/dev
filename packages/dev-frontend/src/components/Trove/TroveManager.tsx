@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Flex, Button } from "theme-ui";
 
 import { LiquityStoreState, Decimal, Trove, Decimalish, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
@@ -153,6 +153,7 @@ type TroveManagerProps = {
   collateral?: Decimalish;
   debt?: Decimalish;
 };
+type Change = string | null;
 
 export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
@@ -177,7 +178,6 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
     validationContext
   );
 
-  // console.log("TroveManager render", { original, edited, change });
   const { dispatchEvent } = useTroveView();
 
   const handleCancel = useCallback(() => {
@@ -187,20 +187,30 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
   const openingNewTrove = original.isEmpty;
 
   const myTransactionState = useMyTransactionState(transactionId);
+  const currentAction = useRef<Change>(null);
 
   useEffect(() => {
-    if (myTransactionState.type === "waitingForApproval") {
+    if (validChange?.type !== undefined) {
+      currentAction.current = validChange.type;
+    }
+  }, [validChange?.type]);
+
+  useEffect(() => {
+    if (
+      myTransactionState.type === "waitingForApproval" ||
+      myTransactionState.type === "waitingForConfirmation"
+    ) {
       dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
     } else if (myTransactionState.type === "confirmedOneShot") {
-      if (validChange?.type === "closure") {
+      if (currentAction.current === "closure") {
         dispatchEvent("TROVE_CLOSED");
-      } else if (validChange?.type === "creation" || validChange?.type === "adjustment") {
+      } else if (currentAction.current === "creation" || currentAction.current === "adjustment") {
         dispatchEvent("TROVE_ADJUSTED");
       }
     }
-  }, [myTransactionState.type, dispatch, dispatchEvent, validChange?.type]);
+  }, [myTransactionState.type, dispatch, dispatchEvent]);
 
   return (
     <TroveEditor

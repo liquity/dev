@@ -111,7 +111,10 @@ export const StabilityDepositManager: React.FC = () => {
   const myTransactionState = useMyTransactionState(transactionId);
 
   useEffect(() => {
-    if (myTransactionState.type === "waitingForApproval") {
+    if (
+      myTransactionState.type === "waitingForApproval" ||
+      myTransactionState.type === "waitingForConfirmation"
+    ) {
       dispatch({ type: "startChange" });
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
