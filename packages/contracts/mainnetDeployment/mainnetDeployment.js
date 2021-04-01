@@ -207,8 +207,8 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   const liqReserve = await liquityCore.troveManager.LUSD_GAS_COMPENSATION()
   const minNetDebt = await liquityCore.troveManager.MIN_NET_DEBT()
 
-  console.log(`system liquidation reserve: ${liqReserve}`)
-  console.log(`system min net debt: ${minNetDebt}`)
+  th.logBN('system liquidation reserve', liqReserve)
+  th.logBN('system min net debt:', minNetDebt)
 
   // --- Make first LUSD-ETH liquidity provision ---
 
@@ -222,14 +222,14 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   console.log(`deployer is in sorted list after making trove: ${await liquityCore.sortedTroves.contains(deployerWallet.address)}`)
 
   const deployerTrove = await liquityCore.troveManager.Troves(deployerWallet.address)
-  console.log(`deployer debt: ${deployerTrove[0]}`)
-  console.log(`deployer coll: ${deployerTrove[1]}`)
-  console.log(`deployer stake: ${deployerTrove[2]}`)
-  console.log(`deployer status: ${deployerTrove[3]}`)
+  th.logBN('deployer debt', deployerTrove[0])
+  th.logBN('deployer coll', deployerTrove[1])
+  th.logBN('deployer stake', deployerTrove[2])
+  console.log(`deployer's trove status: ${deployerTrove[3]}`)
 
   // Check deployer has LUSD
   const deployerLUSDBal = await liquityCore.lusdToken.balanceOf(deployerWallet.address)
-  console.log(`deployer's LUSD balance: ${deployerLUSDBal}`)
+  th.logBN("deployer's LUSD balance", deployerLUSDBal)
 
   // TODO: Check Uniswap pool has 0 LUSD and ETH reserves
   const LUSDETHPair = await new ethers.Contract(
@@ -262,7 +262,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
 
   // Check Router's spending allowance
   const routerLUSDAllowanceFromDeployer = await liquityCore.lusdToken.allowance(deployerWallet.address, uniswapV2Router02.address)
-  console.log(`router's spending allowance for deployer's LUSD: ${routerLUSDAllowanceFromDeployer}`)
+  th.logBN("router's spending allowance for deployer's LUSD", routerLUSDAllowanceFromDeployer)
 
   // Get amounts for liquidity provision
   const LP_ETH = dec(1, 'ether')
@@ -297,14 +297,14 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
 
   // Check LUSD-ETH reserves after liquidity provision:
   reserves = await LUSDETHPair.getReserves()
-  console.log(`LUSD-ETH Pair's LUSD reserves after provision:${reserves[0]}`)
-  console.log(`LUSD-ETH Pair's ETH reserves after provision:${reserves[1]}`)
+  th.logBN("LUSD-ETH Pair's LUSD reserves after provision", reserves[0])
+  th.logBN("LUSD-ETH Pair's ETH reserves after provision", reserves[1])
 
   // ---  Check LP staking is working ---
 
   // Check deployer's LP tokens
   const deployerLPTokenBal = await LUSDETHPair.balanceOf(deployerWallet.address)
-  console.log(`deployer's LP token balance: ${deployerLPTokenBal}`)
+  th.logBN("deployer's LP token balance", deployerLPTokenBal)
 
   // Stake most of deployer's LP tokens in Unipool
   // *** This overflows?  Should be able to stake
@@ -323,8 +323,9 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   // ethers.provider.send("evm_increaseTime", [1000])
   // ethers.provider.send("evm_mine") 
 
+  await delay(90000) // wait 90s
   const earnedLQTY = await unipool.earned(deployerWallet.address)
-  console.log(`deployer's earned LQTY from Unipool after ~1minute: ${earnedLQTY}`)
+  th.logBN("deployer's earned LQTY from Unipool after ~1.5mins",  earnedLQTY)
 }
 
 module.exports = {
