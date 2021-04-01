@@ -10,7 +10,7 @@ const mdh = require("../utils/mainnetDeploymentHelpers.js")
 
 const toBigNum = ethers.BigNumber.from
 const delay = ms => new Promise(res => setTimeout(res, ms));
-const GAS_PRICE = 220000000000
+const GAS_PRICE = 200000000000
 
 async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   const deploymentState = mdh.loadPreviousDeployment()
@@ -74,9 +74,13 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     GAS_PRICE
   )
 
+  // Connect all core contracts up
   await mdh.connectCoreContractsMainnet(liquityCore, LQTYContracts, externalAddrs.CHAINLINK_ETHUSD_PROXY, mainnetProvider, GAS_PRICE)
   await mdh.connectLQTYContractsMainnet(LQTYContracts, mainnetProvider, GAS_PRICE)
   await mdh.connectLQTYContractsToCoreMainnet(LQTYContracts, liquityCore, mainnetProvider, GAS_PRICE)
+
+  // Deploy a read-only multi-trove getter
+  const multiTroveGetter = await mdh.deployMultiTroveGetterMainnet(liquityCore, deployerWallet, deploymentState, GAS_PRICE)
 
   // Connect Unipool to LQTYToken and the LUSD-WETH pair address, with a 6 week duration
   const LPRewardsDuration = timeVals.SECONDS_IN_SIX_WEEKS

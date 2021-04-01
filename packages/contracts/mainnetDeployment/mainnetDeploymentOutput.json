@@ -86,5 +86,9 @@
   "TEST_INVESTOR_E": {
     "address": "0x6E57f531239c0E892f79c349b830bC38c8120597",
     "txHash": "0x847f110a4b1608dc9371efc2a1d95ae75d665c57a860e2ba0aa8c1e3a2f564cf"
+  },
+  "multiTroveGetter": {
+    "address": "0x1AfE186670C7DAF5E085ae6269Da9762621F2b71",
+    "txHash": "0xd0e7ed37ea5d2f0ba2bd2f52f12e482448a13cb9e6de210fa7f10506d37e3424"
   }
 }

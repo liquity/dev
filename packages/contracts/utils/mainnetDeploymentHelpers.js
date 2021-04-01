@@ -160,6 +160,22 @@ class MainnetDeploymentHelper {
         return unipool
     }
 
+		static async deployMultiTroveGetterMainnet(liquityCore, deployerWallet, deploymentState, gasPrice) {
+			const multiTroveGetterFactory = await this.getFactory("MultiTroveGetter", deployerWallet)
+			const multiTroveGetter = await this.loadOrDeploy(
+				multiTroveGetterFactory, 
+				'multiTroveGetter',
+				deployerWallet,
+				deploymentState,
+				gasPrice, 
+				[
+					liquityCore.troveManager.address,
+					liquityCore.sortedTroves.address
+				]
+			)
+			return multiTroveGetter
+		}
+
     // --- Connector methods ---
 
     static async isOwnershipRenounced(contract) {
