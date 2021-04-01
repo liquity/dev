@@ -59,6 +59,10 @@ module.exports = {
             gas: 10000000,  // tx gas limit
             blockGasLimit: 12500000, 
             gasPrice: 20000000000,
+        },
+        mainnet: {
+            url: alchemyUrl(),
+            gasPrice: 220000000000 
         }
     },
     mocha: { timeout: 12000000 },

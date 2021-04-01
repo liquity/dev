@@ -10,6 +10,7 @@ const mdh = require("../utils/mainnetDeploymentHelpers.js")
 
 const toBigNum = ethers.BigNumber.from
 const delay = ms => new Promise(res => setTimeout(res, ms));
+const GAS_PRICE = 220000000000
 
 async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   const deploymentState = mdh.loadPreviousDeployment()
@@ -34,7 +35,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   console.log(`deployer's ETH balance before deployments: ${deployerETHBalance}`)
 
   // Deploy core logic contracts
-  const liquityCore = await mdh.deployLiquityCoreMainnet(deployerWallet, externalAddrs.TELLOR_MASTER, deploymentState)
+  const liquityCore = await mdh.deployLiquityCoreMainnet(deployerWallet, externalAddrs.TELLOR_MASTER, deploymentState, GAS_PRICE)
   await mdh.logContractObjects(liquityCore)
 
   // Check Uniswap Pair LUSD-ETH pair before pair creation
@@ -47,7 +48,8 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     // Deploy Unipool for LUSD-WETH
     const tx = await uniswapV2Factory.createPair(
       externalAddrs.WETH_ERC20,
-      liquityCore.lusdToken.address
+      liquityCore.lusdToken.address,
+      {gasPrice: GAS_PRICE}
     )
     await mainnetProvider.waitForTransaction(tx.hash)
 
@@ -60,7 +62,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   }
 
   // Deploy Unipool
-  const unipool = await mdh.deployUnipoolMainnet(deployerWallet, deploymentState)
+  const unipool = await mdh.deployUnipoolMainnet(deployerWallet, deploymentState, GAS_PRICE)
 
   // Deploy LQTY Contracts
   const LQTYContracts = await mdh.deployLQTYContractsMainnet(
@@ -68,16 +70,17 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     unipool.address,
     liquityAddrs.LQTY_SAFE,
     deployerWallet,
-    deploymentState
+    deploymentState,
+    GAS_PRICE
   )
 
-  await mdh.connectCoreContractsMainnet(liquityCore, LQTYContracts, externalAddrs.CHAINLINK_ETHUSD_PROXY, mainnetProvider)
-  await mdh.connectLQTYContractsMainnet(LQTYContracts, mainnetProvider)
-  await mdh.connectLQTYContractsToCoreMainnet(LQTYContracts, liquityCore, mainnetProvider)
+  await mdh.connectCoreContractsMainnet(liquityCore, LQTYContracts, externalAddrs.CHAINLINK_ETHUSD_PROXY, mainnetProvider, GAS_PRICE)
+  await mdh.connectLQTYContractsMainnet(LQTYContracts, mainnetProvider, GAS_PRICE)
+  await mdh.connectLQTYContractsToCoreMainnet(LQTYContracts, liquityCore, mainnetProvider, GAS_PRICE)
 
   // Connect Unipool to LQTYToken and the LUSD-WETH pair address, with a 6 week duration
   const LPRewardsDuration = timeVals.SECONDS_IN_SIX_WEEKS
-  await mdh.connectUnipoolMainnet(unipool, LQTYContracts, LUSDWETHPairAddr, LPRewardsDuration, mainnetProvider)
+  await mdh.connectUnipoolMainnet(unipool, LQTYContracts, LUSDWETHPairAddr, LPRewardsDuration, mainnetProvider, GAS_PRICE)
 
   // Log LQTY and Unipool addresses
   await mdh.logContractObjects(LQTYContracts)
@@ -98,7 +101,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
       console.log(`Using previously deployed ${investor} lockup contract at address ${deploymentState[investor].address}`)
       lockupContracts[investor] = await th.getLCFromAddress(deploymentState[investor].address)
     } else {
-      const txReceipt = await mdh.sendAndWaitForTransaction(mainnetProvider, LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow))
+      const txReceipt = await mdh.sendAndWaitForTransaction(mainnetProvider, LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow, {gasPrice: GAS_PRICE}))
 
       const address = await txReceipt.logs[0].address // The deployment event emitted from the LC itself is is the first of two events, so this is its address 
       lockupContracts[investor] = await th.getLCFromAddress(address)
@@ -212,7 +215,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   // Open trove
   let _3kLUSDWithdrawal = th.dec(3000, 18) // 3000 LUSD
   let _3ETHcoll = th.dec(3, 'ether') // 3 ETH
-  const openTroveTx = await liquityCore.borrowerOperations.openTrove(th._100pct, _3kLUSDWithdrawal, th.ZERO_ADDRESS, th.ZERO_ADDRESS, { value: _3ETHcoll })
+  const openTroveTx = await liquityCore.borrowerOperations.openTrove(th._100pct, _3kLUSDWithdrawal, th.ZERO_ADDRESS, th.ZERO_ADDRESS, { value: _3ETHcoll, gasPrice: GAS_PRICE })
   await mainnetProvider.waitForTransaction(openTroveTx.hash)
 
   // Check deployer now has an open trove
@@ -286,6 +289,7 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
     tenMinsFromNow, // deadline for this tx
     {
       value: dec(1, 'ether'),
+      gasPrice: GAS_PRICE,
       gasLimit: 5000000 // For some reason, ethers can't estimate gas for this tx
     }
   )
@@ -309,10 +313,10 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   console.log(`Pair addr stored in Unipool: ${await unipool.uniToken()}`)
 
   // Deployer approves Unipool
-  const approveUnipoolTx = await LUSDETHPair.approve(unipool.address, deployerLPTokenBal)
+  const approveUnipoolTx = await LUSDETHPair.approve(unipool.address, deployerLPTokenBal, {gasPrice: GAS_PRICE})
   await mainnetProvider.waitForTransaction(approveUnipoolTx.hash)
 
-  const stakeTx = await unipool.stake(1)
+  const stakeTx = await unipool.stake(1, {gasPrice: GAS_PRICE})
   await mainnetProvider.waitForTransaction(stakeTx.hash)
 
   // Fast forward time 1000s (local mainnet fork only)
