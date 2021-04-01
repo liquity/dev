@@ -14,28 +14,29 @@ import { Trove, _emptyTrove } from "../src/Trove";
 const liquidationReserve = Number(LUSD_LIQUIDATION_RESERVE);
 const maximumBorrowingRate = Number(MAXIMUM_BORROWING_RATE);
 
+const maxDebt = 10 * Number(LUSD_MINIMUM_DEBT);
+
 const trove = ({ collateral = 0, debt = 0 }) =>
   new Trove(Decimal.from(collateral), Decimal.from(debt));
 
 const onlyCollateral = () => fc.record({ collateral: fc.float({ min: 0.1 }) }).map(trove);
 
 const onlyDebt = () =>
-  fc.record({ debt: fc.float({ min: liquidationReserve, max: 100 }) }).map(trove);
+  fc.record({ debt: fc.float({ min: liquidationReserve, max: maxDebt }) }).map(trove);
 
 const bothCollateralAndDebt = () =>
   fc
     .record({
       collateral: fc.float({ min: 0.1 }),
-      debt: fc.float({ min: liquidationReserve, max: 100 })
+      debt: fc.float({ min: liquidationReserve, max: maxDebt })
     })
     .map(trove);
 
-const arbitraryTrove = () =>
-  fc.record({ collateral: fc.float(), debt: fc.float({ max: 100 }) }).map(trove);
+const arbitraryTrove = () => fc.record({ collateral: fc.float(), debt: fc.float() }).map(trove);
 
 const validTrove = () =>
   fc
-    .record({ collateral: fc.float(), debt: fc.float({ min: liquidationReserve, max: 100 }) })
+    .record({ collateral: fc.float(), debt: fc.float({ min: liquidationReserve, max: maxDebt }) })
     .map(trove);
 
 const validNonEmptyTrove = () => validTrove().filter(t => !t.isEmpty);
