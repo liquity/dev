@@ -40,6 +40,8 @@ const waitFunction = async () => {
 const GAS_PRICE = 1000000000 // 1 Gwei
 const TX_CONFIRMATIONS = 1
 
+const ETHERSCAN_BASE_URL = 'https://rinkeby.etherscan.io/address'
+
 module.exports = {
   externalAddrs,
   liquityAddrs,
@@ -48,4 +50,5 @@ module.exports = {
   waitFunction,
   GAS_PRICE,
   TX_CONFIRMATIONS,
+  ETHERSCAN_BASE_URL,
 };

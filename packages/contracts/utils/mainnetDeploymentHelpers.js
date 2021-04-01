@@ -7,6 +7,7 @@ class MainnetDeploymentHelper {
   constructor(configParams, deployerWallet) {
     this.configParams = configParams
     this.deployerWallet = deployerWallet
+    this.hre = require("hardhat")
   }
 
   loadPreviousDeployment() {
@@ -89,16 +90,34 @@ class MainnetDeploymentHelper {
     const hintHelpers = await this.loadOrDeploy(hintHelpersFactory, 'hintHelpers', deploymentState)
     const tellorCaller = await this.loadOrDeploy(tellorCallerFactory, 'tellorCaller', deploymentState, [tellorMasterAddr])
 
+    const lusdTokenParams = [
+      troveManager.address,
+      stabilityPool.address,
+      borrowerOperations.address
+    ]
     const lusdToken = await this.loadOrDeploy(
       lusdTokenFactory,
       'lusdToken',
       deploymentState,
-      [
-	troveManager.address,
-	stabilityPool.address,
-	borrowerOperations.address
-      ]
+      lusdTokenParams
     )
+
+    if (!this.configParams.ETHERSCAN_BASE_URL) {
+      console.log('No Etherscan Url defined, skipping verification')
+    } else {
+      await this.verifyContract('priceFeed', deploymentState)
+      await this.verifyContract('sortedTroves', deploymentState)
+      await this.verifyContract('troveManager', deploymentState)
+      await this.verifyContract('activePool', deploymentState)
+      //await this.verifyContract('stabilityPool', deploymentState)
+      await this.verifyContract('gasPool', deploymentState)
+      await this.verifyContract('defaultPool', deploymentState)
+      await this.verifyContract('collSurplusPool', deploymentState)
+      await this.verifyContract('borrowerOperations', deploymentState)
+      await this.verifyContract('hintHelpers', deploymentState)
+      await this.verifyContract('tellorCaller', deploymentState, [tellorMasterAddr])
+      await this.verifyContract('lusdToken', deploymentState, lusdTokenParams)
+    }
 
     const coreContracts = {
       priceFeed,
@@ -128,19 +147,29 @@ class MainnetDeploymentHelper {
     const communityIssuance = await this.loadOrDeploy(communityIssuanceFactory, 'communityIssuance', deploymentState)
 
     // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor
+    const lqtyTokenParams = [
+      communityIssuance.address,
+      lqtyStaking.address,
+      lockupContractFactory.address,
+      bountyAddress,
+      lpRewardsAddress,
+      multisigAddress
+    ]
     const lqtyToken = await this.loadOrDeploy(
       lqtyTokenFactory,
       'lqtyToken',
       deploymentState,
-      [
-        communityIssuance.address,
-        lqtyStaking.address,
-        lockupContractFactory.address,
-        bountyAddress,
-        lpRewardsAddress,
-        multisigAddress
-      ]
+      lqtyTokenParams
     )
+
+    if (!this.configParams.ETHERSCAN_BASE_URL) {
+      console.log('No Etherscan Url defined, skipping verification')
+    } else {
+      await this.verifyContract('lqtyStaking', deploymentState)
+      await this.verifyContract('lockupContractFactory', deploymentState)
+      await this.verifyContract('communityIssuance', deploymentState)
+      await this.verifyContract('lqtyToken', deploymentState, lqtyTokenParams)
+    }
 
     const LQTYContracts = {
       lqtyStaking,
@@ -155,20 +184,34 @@ class MainnetDeploymentHelper {
     const unipoolFactory = await this.getFactory("Unipool")
     const unipool = await this.loadOrDeploy(unipoolFactory, 'unipool', deploymentState)
 
+    if (!this.configParams.ETHERSCAN_BASE_URL) {
+      console.log('No Etherscan Url defined, skipping verification')
+    } else {
+      await this.verifyContract('unipool', deploymentState)
+    }
+
     return unipool
   }
 
   async deployMultiTroveGetterMainnet(liquityCore, deploymentState) {
     const multiTroveGetterFactory = await this.getFactory("MultiTroveGetter")
+    const multiTroveGetterParams = [
+      liquityCore.troveManager.address,
+      liquityCore.sortedTroves.address
+    ]
     const multiTroveGetter = await this.loadOrDeploy(
       multiTroveGetterFactory,
       'multiTroveGetter',
       deploymentState,
-      [
-	liquityCore.troveManager.address,
-	liquityCore.sortedTroves.address
-      ]
+      multiTroveGetterParams
     )
+
+    if (!this.configParams.ETHERSCAN_BASE_URL) {
+      console.log('No Etherscan Url defined, skipping verification')
+    } else {
+      await this.verifyContract('multiTroveGetter', deploymentState, multiTroveGetterParams)
+    }
+
     return multiTroveGetter
   }
   // --- Connector methods ---
@@ -303,6 +346,36 @@ class MainnetDeploymentHelper {
     const gasPrice = this.configParams.GAS_PRICE
     await this.isOwnershipRenounced(uniPool) ||
       await this.sendAndWaitForTransaction(uniPool.setParams(LQTYContracts.lqtyToken.address, LUSDWETHPairAddr, duration, {gasPrice}))
+  }
+
+  // --- Verify on Ethrescan ---
+  async verifyContract(name, deploymentState, constructorArguments=[]) {
+    if (!deploymentState[name] || !deploymentState[name].address) {
+      console.error(`  --> No deployment state for contract ${name}!!`)
+      return
+    }
+    if (deploymentState[name].verification) {
+      console.log(`Contract ${name} already verified`)
+      return
+    }
+
+    try {
+      await this.hre.run("verify:verify", {
+        address: deploymentState[name].address,
+        constructorArguments,
+      })
+    } catch (error) {
+      // if it was already verified, it’s like a success, so let’s move forward and save it
+      if (error.name != 'NomicLabsHardhatPluginError') {
+        console.error(`Error verifying: ${error.name}`)
+        console.error(error)
+        return
+      }
+    }
+
+    deploymentState[name].verification = `${this.configParams.ETHERSCAN_BASE_URL}/${deploymentState[name].address}#code`
+
+    this.saveDeployment(deploymentState)
   }
 
   // --- Helpers ---

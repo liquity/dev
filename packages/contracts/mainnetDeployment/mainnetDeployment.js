@@ -122,7 +122,11 @@ async function mainnetDeploy(configParams) {
       }
 
       mdh.saveDeployment(deploymentState)
+    }
 
+    // verify
+    if (configParams.ETHERSCAN_BASE_URL) {
+      await mdh.verifyContract(investor, deploymentState)
     }
   }
 
