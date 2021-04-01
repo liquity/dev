@@ -112,7 +112,7 @@ async function mainnetDeploy(configParams) {
       const address = await txReceipt.logs[0].address // The deployment event emitted from the LC itself is is the first of two events, so this is its address 
       lockupContracts[investor] = new ethers.Contract(
         address,
-        lockupContractFactory.abi,
+        lockupContractFactory.interface,
         deployerWallet
       )
 
