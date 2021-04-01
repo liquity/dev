@@ -10,7 +10,7 @@ const mdh = require("../utils/mainnetDeploymentHelpers.js")
 
 const toBigNum = ethers.BigNumber.from
 const delay = ms => new Promise(res => setTimeout(res, ms));
-const GAS_PRICE = 200000000000
+const GAS_PRICE = 220000000000
 
 async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   const deploymentState = mdh.loadPreviousDeployment()
@@ -139,6 +139,8 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   // --- Lockup Contracts ---
 
   // Check lockup contracts exist for each beneficiary with correct unlock time
+  // TODO:  Fix the lockupContract read calls - connect contract to the ethers deployerWallet
+
   for (investor of Object.keys(lockupContracts)) {
     const lockupContract = lockupContracts[investor]
     const onChainBeneficiary = await lockupContract.beneficiary()
@@ -184,13 +186,12 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   console.log(`PriceFeed initial status: ${priceFeedInitialStatus}`)
 
   // Check PriceFeed's & TellorCaller's stored addresses
-
   const priceFeedCLAddress = await liquityCore.priceFeed.priceAggregator()
   const priceFeedTellorCallerAddress = await liquityCore.priceFeed.tellorCaller()
   assert.equal(priceFeedCLAddress, externalAddrs.CHAINLINK_ETHUSD_PROXY)
-  assert.equal(priceFeedTellorCallerAddress, '0x7a3d735ee6873f17Dbdcab1d51B604928dc10d92')
+  assert.equal(priceFeedTellorCallerAddress, liquityCore.tellorCaller.address)
 
-  // TODO:  Make tellor public in TellorCaller
+  // Check Tellor address
   const tellorCallerTellorMasterAddress = await liquityCore.tellorCaller.tellor() 
   assert.equal(tellorCallerTellorMasterAddress, externalAddrs.TELLOR_MASTER)
 
