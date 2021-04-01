@@ -18,7 +18,7 @@ import "./SafeMath.sol";
 contract TellorCaller is ITellorCaller {
     using SafeMath for uint256;
 
-    ITellor tellor;
+    ITellor public tellor;
 
     constructor (address _tellorMasterAddress) public {
         tellor = ITellor(_tellorMasterAddress);
