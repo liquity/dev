@@ -1,7 +1,9 @@
 require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-ethers");
+require("@nomiclabs/hardhat-etherscan");
 require("solidity-coverage");
 require("hardhat-gas-reporter");
+
 const accounts = require("./hardhatAccountsList2k.js");
 const accountsList = accounts.accountsList
 
@@ -77,6 +79,9 @@ module.exports = {
             gas: 10000000,  // tx gas limit
             accounts: [getSecret('RINKEBY_DEPLOYER_PRIVATEKEY', '0x60ddfe7f579ab6867cbe7a2dc03853dc141d7a4ab6dbefc0dae2d2b1bd4e487f')]
         },
+    },
+    etherscan: {
+        apiKey: getSecret("ETHERSCAN_API_KEY")
     },
     mocha: { timeout: 12000000 },
     rpc: {
