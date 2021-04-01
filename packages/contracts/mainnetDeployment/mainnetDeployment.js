@@ -187,8 +187,8 @@ async function mainnetDeploy(mainnetProvider, deployerWallet, liquityAddrs) {
   assert.equal(priceFeedTellorCallerAddress, '0x7a3d735ee6873f17Dbdcab1d51B604928dc10d92')
 
   // TODO:  Make tellor public in TellorCaller
-  // const tellorCallerTellorMasterAddress = await liquityCore.tellorCaller.tellor() 
-  // assert.equal(tellorCallerTellorMasterAddress, externalAddrs.TELLOR_MASTER)
+  const tellorCallerTellorMasterAddress = await liquityCore.tellorCaller.tellor() 
+  assert.equal(tellorCallerTellorMasterAddress, externalAddrs.TELLOR_MASTER)
 
   // --- Unipool ---
 
