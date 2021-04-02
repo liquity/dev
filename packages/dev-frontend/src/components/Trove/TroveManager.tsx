@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { Flex, Button } from "theme-ui";
 
 import { LiquityStoreState, Decimal, Trove, Decimalish, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
@@ -147,13 +147,13 @@ const select = (state: LiquityStoreState) => ({
   validationContext: selectForTroveChangeValidation(state)
 });
 
-const transactionId = "trove";
+const transactionIdPrefix = "trove-";
+const transactionIdMatcher = new RegExp(`^${transactionIdPrefix}`);
 
 type TroveManagerProps = {
   collateral?: Decimalish;
   debt?: Decimalish;
 };
-type Change = string | null;
 
 export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
@@ -186,14 +186,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
 
   const openingNewTrove = original.isEmpty;
 
-  const myTransactionState = useMyTransactionState(transactionId);
-  const currentAction = useRef<Change>(null);
-
-  useEffect(() => {
-    if (validChange?.type !== undefined) {
-      currentAction.current = validChange.type;
-    }
-  }, [validChange?.type]);
+  const myTransactionState = useMyTransactionState(transactionIdMatcher);
 
   useEffect(() => {
     if (
@@ -204,13 +197,13 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       dispatch({ type: "finishChange" });
     } else if (myTransactionState.type === "confirmedOneShot") {
-      if (currentAction.current === "closure") {
+      if (myTransactionState.id === `${transactionIdPrefix}closure`) {
         dispatchEvent("TROVE_CLOSED");
-      } else if (currentAction.current === "creation" || currentAction.current === "adjustment") {
+      } else {
         dispatchEvent("TROVE_ADJUSTED");
       }
     }
-  }, [myTransactionState.type, dispatch, dispatchEvent]);
+  }, [myTransactionState, dispatch, dispatchEvent]);
 
   return (
     <TroveEditor
@@ -239,7 +232,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
 
         {validChange ? (
           <TroveAction
-            transactionId={transactionId}
+            transactionId={`${transactionIdPrefix}${validChange.type}`}
             change={validChange}
             maxBorrowingRate={maxBorrowingRate}
           >
