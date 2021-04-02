@@ -44,7 +44,7 @@ export const validateStabilityDepositChange = (
     return [
       undefined,
       <ErrorDescription>
-        You can't deposit using the same wallet address that registered this frontend.
+        You can’t deposit using a wallet address that is registered as a frontend.
       </ErrorDescription>
     ];
   }
