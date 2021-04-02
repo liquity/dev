@@ -18,7 +18,8 @@ n_sim = year
 # number of liquidations for each call to `liquidateTroves`
 NUM_LIQUIDATIONS = 10
 
-MIN_NET_DEBT = 1950.0
+LUSD_GAS_RESERVE = 200.0
+MIN_NET_DEBT = 1800.0
 MAX_FEE = Wei(1e18)
 
 """# Ether price (exogenous)
@@ -408,6 +409,10 @@ def calculate_stability_return(contracts, price_LUSD, data, index):
 
     return return_stability
 
+def isNewTCRAboveCCR(contracts, collChange, isCollIncrease, debtChange, isDebtIncrease, price):
+    newTCR = contracts.borrowerOperations.getNewTCRFromTroveChange(collChange, isCollIncrease, debtChange, isDebtIncrease, price)
+    return newTCR >= Wei(1.5 * 1e18)
+
 """Close Troves"""
 
 def close_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index):
@@ -436,15 +441,13 @@ def close_troves(accounts, contracts, active_accounts, inactive_accounts, price_
         account = accounts[account_index]
         pending = get_lusd_to_repay(accounts, contracts, active_accounts, inactive_accounts, account, get_total_debt(contracts, account))
         if pending == 0:
-            # TODO: try to predict it!
-            try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
+            [debtChange, collChange] = contracts.troveManager.getEntireDebtAndColl(account)
+            if isNewTCRAboveCCR(contracts, collChange, False, debtChange, False, price_ether_current):
                 contracts.borrowerOperations.closeTrove({ 'from': account })
                 inactive_accounts.append(account_index)
                 active_accounts.pop(drops[i])
-            except:
-                print("\n ***Error closing Trove!")
         if is_recovery_mode(contracts, price_ether_current):
-          break
+            break
 
     return [number_closetroves]
 
@@ -568,11 +571,9 @@ def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price
                 # withdraw LUSD
                 withdraw_amount = debt_new - debt
                 withdraw_amount_wei = floatToWei(withdraw_amount)
-                try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
+                if isNewTCRAboveCCR(contracts, 0, False, withdraw_amount_wei, True, price_ether_current):
                     contracts.borrowerOperations.withdrawLUSD(MAX_FEE, withdraw_amount_wei, hints[0], hints[1], { 'from': account })
                     issuance_LUSD_adjust = issuance_LUSD_adjust + rate_issuance * withdraw_amount
-                except:
-                    print("\n ***Error withdrawing LUSD!")
         #Another part of the troves are adjusted by adjusting collaterals
         elif p < ratio:
             coll_new = working_trove['CR_initial'] * debt / price_ether_current
@@ -585,10 +586,8 @@ def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price
             elif check > 2 and not is_recovery_mode(contracts, price_ether_current):
                 # withdraw ETH
                 coll_withdrawn = floatToWei(coll - coll_new)
-                try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
+                if isNewTCRAboveCCR(contracts, coll_withdrawn, False, 0, False, price_ether_current):
                     contracts.borrowerOperations.withdrawColl(coll_withdrawn, hints[0], hints[1], { 'from': account })
-                except:
-                    print("\n ***Error withdrawing ETH!")
 
     return [coll_added_float, issuance_LUSD_adjust]
 
@@ -602,25 +601,15 @@ def open_trove(accounts, contracts, active_accounts, inactive_accounts, supply_t
 
     #hints = get_hints_from_ICR(accounts, active_accounts, CR_ratio)
     hints = get_hints_from_amounts(accounts, contracts, active_accounts, quantity_ether, supply_trove, price_ether_current)
-    try: # to skip “BorrowerOps: An operation that would result in TCR < CCR is not permitted” errors
-        contracts.borrowerOperations.openTrove(MAX_FEE, floatToWei(supply_trove), hints[0], hints[1],
-                                               { 'from': accounts[inactive_accounts[0]], 'value': floatToWei(quantity_ether) })
+    coll = floatToWei(quantity_ether)
+    debtChange = floatToWei(supply_trove) + LUSD_GAS_RESERVE
+    lusd = get_lusd_amount_from_net_debt(contracts, floatToWei(supply_trove))
+    if isNewTCRAboveCCR(contracts, coll, True, debtChange, True, price_ether_current):
+        contracts.borrowerOperations.openTrove(MAX_FEE, lusd, hints[0], hints[1],
+                                               { 'from': accounts[inactive_accounts[0]], 'value': coll })
         new_account = {"index": inactive_accounts[0], "CR_initial": CR_ratio, "Rational_inattention": rational_inattention}
         active_accounts.insert(hints[2], new_account)
         inactive_accounts.pop(0)
-    except:
-        print("\n ***Error opening trove!")
-        print(f"Coll: {quantity_ether}")
-        print(f"Debt: {supply_trove}")
-        print(f"Hint: {hints[0]}")
-        print(f"Hint: {hints[1]}")
-        print(f"From: {accounts[inactive_accounts[0]]}")
-        print(f"Index {inactive_accounts[0]}")
-        print(f"ICR:  {CR_ratio}")
-        print(f"inatt {rational_inattention}")
-        print(f"$/ETH {price_ether_current}")
-        print(f"H ICR {contracts.troveManager.getCurrentICR(hints[0], Wei(price_ether_current * 1e18))}")
-        print(f"H ICR {contracts.troveManager.getCurrentICR(hints[1], Wei(price_ether_current * 1e18))}")
 
 def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index):
     random.seed(2019*index)
