@@ -332,7 +332,7 @@ export const deployAndSetupContracts = async (
       ...addresses,
 
       uniToken: await (wethAddress
-        ? createUniswapV2Pair(deployer, wethAddress, addresses.lusdToken)
+        ? createUniswapV2Pair(deployer, wethAddress, addresses.lusdToken, overrides)
         : deployMockUniToken(deployer, getContractFactory, overrides))
     }))
   };
