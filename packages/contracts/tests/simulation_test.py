@@ -188,13 +188,14 @@ def _test_test(contracts):
 * LQTY pool return determined
 """
 def test_run_simulation(add_accounts, contracts, print_expectations):
-    LUSD_GAS_RESERVE = contracts.troveManager.LUSD_GAS_RESERVE() / 1e18
+    LUSD_GAS_COMPENSATION = contracts.troveManager.LUSD_GAS_COMPENSATION() / 1e18
     MIN_NET_DEBT = contracts.troveManager.MIN_NET_DEBT() / 1e18
 
-    price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]), { 'from': accounts[0] })
+    contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]), { 'from': accounts[0] })
     # whale
+    whale_coll = 30000.0
     contracts.borrowerOperations.openTrove(MAX_FEE, Wei(10e24), ZERO_ADDRESS, ZERO_ADDRESS,
-                                           { 'from': accounts[0], 'value': Wei("30000 ether") })
+                                           { 'from': accounts[0], 'value': floatToWei(whale_coll) })
     contracts.stabilityPool.provideToSP(floatToWei(stability_initial), ZERO_ADDRESS, { 'from': accounts[0] })
 
     active_accounts = []
@@ -205,7 +206,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
 
     data = {"airdrop_gain": [0] * n_sim, "liquidation_gain": [0] * n_sim, "issuance_fee": [0] * n_sim, "redemption_fee": [0] * n_sim}
     total_lusd_redempted = 0
-    total_coll_added = 0
+    total_coll_added = whale_coll
     total_coll_liquidated = 0
 
     print(f"Accounts: {len(accounts)}")
@@ -223,7 +224,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             print('  -------------------\n')
             #exogenous ether price input
             price_ether_current = price_ether[index]
-            price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
+            contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
 
             #trove liquidation & return of stability pool
             result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, price_LQTY_current, data, index)
