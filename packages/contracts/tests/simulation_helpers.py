@@ -474,9 +474,16 @@ def get_lusd_to_repay(accounts, contracts, active_accounts, inactive_accounts, a
     lusdBalance = contracts.lusdToken.balanceOf(account)
     if debt > lusdBalance:
         pending = debt - lusdBalance
-        # first try with whale
+        # first try to withdraw from SP
+        initial_deposit = contracts.stabilityPool.deposits(account)[0]
+        if initial_deposit > 0:
+            contracts.stabilityPool.withdrawFromSP(pending, { 'from': account })
+            # it can only withdraw up to the deposit, so we check the balance again
+            lusdBalance = contracts.lusdToken.balanceOf(account)
+            pending = debt - lusdBalance
+        # try with whale
         pending = transfer_from_to(contracts, accounts[0], account, pending)
-        # first try with active accounts, which are more likely to hold LUSD
+        # try with active accounts, which are more likely to hold LUSD
         for a in active_accounts:
             if pending <= 0:
                 break
@@ -660,7 +667,7 @@ def open_troves(accounts, contracts, active_accounts, inactive_accounts, price_e
 Stability Pool
 """
 
-def stability_update(accounts, contracts, return_stability, index):
+def stability_update(accounts, contracts, active_accounts, return_stability, index):
     supply = contracts.lusdToken.totalSupply() / 1e18
     stability_pool_previous = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
 
@@ -679,12 +686,14 @@ def stability_update(accounts, contracts, return_stability, index):
         stability_pool = supply
 
     if stability_pool > stability_pool_previous:
-        whale_balance = contracts.lusdToken.balanceOf(accounts[0]) / 1e18
-        new_deposit = stability_pool - stability_pool_previous
-        if new_deposit > whale_balance:
-            print("Warning! Stability pool supposed to be greater than whale balance", new_deposit, whale_balance)
-        else:
-            contracts.stabilityPool.provideToSP(floatToWei(new_deposit), ZERO_ADDRESS, { 'from': accounts[0] })
+        remaining = stability_pool - stability_pool_previous
+        i = 0
+        while remaining > 0 and i < len(active_accounts):
+          balance = contracts.lusdToken.balanceOf(accounts[active_accounts[i]['index']]) / 1e18
+          deposit = min(balance, remaining)
+          contracts.stabilityPool.provideToSP(floatToWei(deposit), ZERO_ADDRESS, { 'from': accounts[0], 'gas_limit': 8000000, 'allow_revert': True })
+          remaining = remaining - balance
+          i = i + 1
     else:
         current_deposit = contracts.stabilityPool.getCompoundedLUSDDeposit(accounts[0])
         if current_deposit > 0:

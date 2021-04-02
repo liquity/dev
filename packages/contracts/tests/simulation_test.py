@@ -241,7 +241,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             #active_accounts.sort(key=lambda a : a.get('CR_initial'))
 
             #Stability Pool
-            stability_update(accounts, contracts, return_stability, index)
+            stability_update(accounts, contracts, active_accounts, return_stability, index)
 
             #Calculating Price, Liquidity Pool, and Redemption
             [price_LUSD, redemption_pool, redemption_fee, issuance_LUSD_stabilizer] = price_stabilizer(accounts, contracts, active_accounts, price_ether_current, price_LUSD, index)
