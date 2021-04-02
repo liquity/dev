@@ -5,7 +5,7 @@ import { LiquidationManager } from "../components/LiquidationManager";
 import { RiskyTroves } from "../components/RiskyTroves";
 import { InfoMessage } from "../components/InfoMessage";
 
-export const RiksyTrovesPage: React.FC = () => (
+export const RiskyTrovesPage: React.FC = () => (
   <Container variant="columns">
     <Container variant="left">
       <Card>

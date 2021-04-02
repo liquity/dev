@@ -157,9 +157,9 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
             tooltip={
               <Card variant="tooltip">
                 Recovery Mode is a special system mode triggered when the Total Collateral Ratio
-                (TCR) falls below 150%. It allows the liquidation of Troves with a Collateral Ratio
-                below the TCR (with the liquidation being capped at 10% of the Trove’s debt), and
-                restricts certain borrower operations that would further reduce the TCR.
+                (TCR) falls below 150%. It allows the liquidation loss of Troves with a Collateral
+                Ratio below the TCR (with the liquidation being capped at 10% of the Trove’s debt),
+                and restricts certain borrower operations that would further reduce the TCR.
               </Card>
             }
           />
