@@ -42,7 +42,10 @@ export const RedemptionManager: React.FC = () => {
   const myTransactionState = useMyTransactionState(transactionId);
 
   useEffect(() => {
-    if (myTransactionState.type === "waitingForApproval") {
+    if (
+      myTransactionState.type === "waitingForApproval" ||
+      myTransactionState.type === "waitingForConfirmation"
+    ) {
       setChangePending(true);
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       setChangePending(false);

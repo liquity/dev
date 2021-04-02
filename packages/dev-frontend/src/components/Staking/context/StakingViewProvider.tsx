@@ -74,7 +74,10 @@ export const StakingViewProvider: React.FC = ({ children }) => {
   const [{ adjusting, changePending, lqtyStake }, dispatch] = useLiquityReducer(reduce, init);
 
   useEffect(() => {
-    if (stakingTransactionState.type === "waitingForApproval") {
+    if (
+      stakingTransactionState.type === "waitingForApproval" ||
+      stakingTransactionState.type === "waitingForConfirmation"
+    ) {
       dispatch({ type: "startChange" });
     } else if (
       stakingTransactionState.type === "failed" ||
