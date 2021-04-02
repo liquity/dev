@@ -23,14 +23,15 @@ export const RedemptionPage: React.FC = () => {
           <Box sx={{ p: [2, 3] }}>
             <InfoMessage title="Bot functionality">
               <Paragraph>
-                This functionality is expected to be carried out by bots when arbitrage opportunities
+                Redemptions are expected to be carried out by bots when arbitrage opportunities
                 emerge.
               </Paragraph>
               <Paragraph>
-                You will probably be able to get a better rate for converting LUSD to ETH on{" "}
+                Most of the time you will get a better rate for converting LUSD to ETH on{" "}
                 <Link href={uniLink(addresses["lusdToken"])} target="_blank">
                   Uniswap <Icon name="external-link-alt" size="xs" />
-                </Link>
+                </Link>{" "}
+                or other exchanges.
               </Paragraph>
             </InfoMessage>
           </Box>

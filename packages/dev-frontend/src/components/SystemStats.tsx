@@ -7,6 +7,7 @@ import { useLiquitySelector } from "@liquity/lib-react";
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN, GT } from "../strings";
 import { Statistic } from "./Statistic";
+import { InfoIcon } from "./InfoIcon";
 
 const selectBalances = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -98,46 +99,81 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
         Protocol
       </Heading>
 
-      <Statistic name="Borrowing fee" tooltip="TBD">
+      <Statistic
+        name="Borrowing Fee"
+        tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
+      >
         {borrowingFeePct.toString(2)}
       </Statistic>
-      <Statistic name="Redemption fee" tooltip="TBD">
+      <Statistic
+        name="Redemption Fee"
+        tooltip="The Redemption Fee is charged as a percentage of the redeemed Ether. The Redemption Fee depends on LUSD redemption volumes and is 0.5% at minimum.        "
+      >
         {redemptionFeePct.toString(2)}
       </Statistic>
 
-      <Statistic name="TVL" tooltip="TBD">
+      <Statistic
+        name="TVL"
+        tooltip="The Total Value Locked (TVL) is the total value of Ether locked as collateral in the system, given in ETH and USD."
+      >
         {total.collateral.shorten()} <Text sx={{ fontSize: 1 }}>&nbsp;ETH</Text>
         <Text sx={{ fontSize: 1 }}>
           &nbsp;(${Decimal.from(total.collateral.mul(price)).shorten()})
         </Text>
       </Statistic>
-      <Statistic name="Troves" tooltip="TBD">
+      <Statistic name="Troves" tooltip="The total number of active Troves in the system.">
         {Decimal.from(numberOfTroves).prettify(0)}
       </Statistic>
-      <Statistic name="LUSD" tooltip="TBD">
+      <Statistic name="LUSD supply" tooltip="The total LUSD minted by the Liquity Protocol.">
         {total.debt.shorten()}
       </Statistic>
       {lusdInStabilityPoolPct && (
-        <Statistic name="Stability Pool LUSD" tooltip="TBD">
+        <Statistic
+          name="LUSD in Stability Pool"
+          tooltip="The total LUSD currently held in the Stability Pool, expressed as an amount and a fraction of the LUSD supply.
+        "
+        >
           {lusdInStabilityPool.shorten()}
           <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct.toString(1)})</Text>
         </Statistic>
       )}
-      <Statistic name="Staked LQTY" tooltip="TBD">
+      <Statistic
+        name="Staked LQTY"
+        tooltip="The total amount of LQTY that is staked for earning fee revenue."
+      >
         {totalStakedLQTY.shorten()}
       </Statistic>
-      <Statistic name="Collateral ratio" tooltip="TBD">
+      <Statistic
+        name="Total Collateral Ratio"
+        tooltip="The ratio of the Dollar value of the entire system collateral at the current ETH:USD price, to the entire system debt."
+      >
         {totalCollateralRatioPct.prettify()}
       </Statistic>
       {total.collateralRatioIsBelowCritical(price) && (
-        <Box color="danger">The system is in recovery mode!</Box>
+        <Box color="danger">
+          The system is in Recovery Mode
+          <InfoIcon
+            size="sm"
+            tooltip={
+              <Card variant="tooltip">
+                Recovery Mode is a special system mode triggered when the Total Collateral Ratio
+                (TCR) falls below 150%. It allows the liquidation of Troves with a Collateral Ratio
+                below the TCR (with the liquidation loss being capped at 10% of the Trove’s debt),
+                and restricts operations that would negatively impact the TCR.
+              </Card>
+            }
+          />
+        </Box>
       )}
 
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         Frontend
       </Heading>
       {kickbackRatePct && (
-        <Statistic name="Kickback rate" tooltip="TBD">
+        <Statistic
+          name="Kickback Rate"
+          tooltip="A rate between 0 and 100% set by the Frontend Operator that determines the fraction of LQTY that will be paid out as a kickback to the Stability Providers using the frontend."
+        >
           {kickbackRatePct}%
         </Statistic>
       )}

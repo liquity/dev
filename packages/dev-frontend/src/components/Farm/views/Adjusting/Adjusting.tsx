@@ -49,7 +49,7 @@ export const Adjusting: React.FC = () => {
   return (
     <Card>
       <Heading>
-        Liquidity farm
+        Uniswap Liquidity Farm
         {isDirty && (
           <Button
             variant="titleIcon"

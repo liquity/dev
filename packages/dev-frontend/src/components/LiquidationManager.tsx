@@ -10,11 +10,11 @@ export const LiquidationManager: React.FC = () => {
   const {
     liquity: { send: liquity }
   } = useLiquity();
-  const [numberOfTrovesToLiquidate, setNumberOfTrovesToLiquidate] = useState("40");
+  const [numberOfTrovesToLiquidate, setNumberOfTrovesToLiquidate] = useState("90");
 
   return (
     <Card>
-      <Heading>Liquidation</Heading>
+      <Heading>Liquidate</Heading>
 
       <Box sx={{ p: [2, 3] }}>
         <Flex sx={{ alignItems: "stretch" }}>

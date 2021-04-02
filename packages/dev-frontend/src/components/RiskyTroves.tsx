@@ -45,7 +45,7 @@ const liquidatableInRecoveryMode = (
   }
 };
 
-type RiskiestTrovesProps = {
+type RiskyTrovesProps = {
   pageSize: number;
 };
 
@@ -64,7 +64,7 @@ const select = ({
   blockTag
 });
 
-export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
+export const RiskyTroves: React.FC<RiskyTrovesProps> = ({ pageSize }) => {
   const {
     blockTag,
     numberOfTroves,
@@ -156,7 +156,7 @@ export const RiskiestTroves: React.FC<RiskiestTrovesProps> = ({ pageSize }) => {
   return (
     <Card sx={{ width: "100%" }}>
       <Heading>
-        <Abbreviation short="Troves">Riskiest Troves</Abbreviation>
+        <Abbreviation short="Troves">Risky Troves</Abbreviation>
 
         <Flex sx={{ alignItems: "center" }}>
           {numberOfTroves !== 0 && (
