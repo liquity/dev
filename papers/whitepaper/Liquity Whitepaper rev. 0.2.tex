@@ -11,6 +11,7 @@
 \usepackage{boldline}
 \usepackage{float}
 \usepackage{tabularx}
+\usepackage[table]{colortbl}
 
 \renewcommand\theadalign{bc}
 \renewcommand\theadfont{\bfseries}
@@ -224,15 +225,15 @@ The two charts show the Troves A, B, C and D with their debt and collateral amou
     \hline
     \thead{Trove} & \thead{Debt} & \thead{Coll. \\ ETH} & \thead{CR} & \thead{Debt \\ increase} & \thead{Coll. \\ increase} & \thead{New \\ debt} & \thead{New coll. \\ ETH} & \thead{New CR} & \thead{Net gain \\ USD} \\
      \hline
-      A & $1000$ & $10$ & $200\%$ & $400.00$ & $2.15$ & $1400.00$ & $12.15$ & $174\%$ & $30$ \\
+      A & $2000$ & $1.5$ & $150\%$ & $960.00$ & $0.52$ & $2960.00$ & $2.02$ & $136\%$ & $72$ \\
      \hline
-      B & $2000$ & $30$ & $300\%$ & $1200.00$ & $6.45$ & $3200.00$ & $36.45$ & $228\%$ & $90$ \\
+      B & $4000$ & $4$ & $200\%$ & $2560.00$ & $1.38$ & $6560.00$ & $5.38$ & $164\%$ & $192$ \\
      \hline
-      C & $3000$ & $60$ & $400\%$ & $2400.00$ & $12.90$ & $5400.00$ & $72.90$ & $270\%$ & $180$ \\
+      C & $6000$ & $7$ & $233\%$ & $4480.00$ & $2.41$ & $10480.00$ & $9.41$ & $180\%$ & $336$ \\
      \hline
-      D & $4000$ & $21.5$ & $108\%$ & $-4000.00$ & $-21.50$ & $0.00$ & $0.00$ & n/a & $-300$ \\
+      \textcolor{red}{D} & \textcolor{red}{$8000$} & \textcolor{red}{$4.3$} & \textcolor{red}{$108\%$} & \textcolor{red}{$-8000.00$} & \textcolor{red}{$-4.30$} & \textcolor{red}{$0.00$} & \textcolor{red}{$0.00$} & \textcolor{red}{n/a} & \textcolor{red}{$-600$} \\
      \hlineB{2.5}
-      Total & $10000$ & $121.5$ & $243\%$ & $0.00$ & $0.00$ & $10000.00$ & $121.50$ & $243\%$ & $0.00$ \\
+      Total & $20000$ & $16.8$ & $17\%$ & $0.00$ & $0.00$ & $20000.00$ & $16.80$ & $17\%$ & $0.00$ \\
       \hline
     \end{tabular}
   \end{center}
@@ -285,7 +286,6 @@ The existence of Recovery Mode alone helps to avert the system falling below the
     \item top up collateral and repay debt in the same transaction 
     \item top up collateral and increase debt in a way that pushes the Trove's collateral ratio above 150\%
 \end{itemize}
-\\
 
 Furthermore, new Troves can only be opened during Recovery Mode if their collateral ratio is at least 150\%. This prevents users from inadvertently creating Troves that may immediately fall victim to a liquidation.
 
