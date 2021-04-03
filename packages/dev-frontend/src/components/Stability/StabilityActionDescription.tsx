@@ -39,7 +39,7 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
       {(collateralGain || lqtyReward) && (
         <>
           {" "}
-          and claiming{" "}
+          and claiming at least{" "}
           {collateralGain && lqtyReward ? (
             <>
               <Amount>{collateralGain}</Amount> and <Amount>{lqtyReward}</Amount>

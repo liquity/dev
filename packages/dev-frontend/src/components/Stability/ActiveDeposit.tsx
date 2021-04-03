@@ -14,6 +14,7 @@ import { ClaimRewards } from "./actions/ClaimRewards";
 import { useStabilityView } from "./context/StabilityViewContext";
 import { RemainingLQTY } from "./RemainingLQTY";
 import { Yield } from "./Yield";
+import { InfoIcon } from "../InfoIcon";
 
 const selector = ({ stabilityDeposit, trove }: LiquityStoreState) => ({ stabilityDeposit, trove });
 
@@ -75,6 +76,17 @@ export const ActiveDeposit: React.FC = () => {
               amount={stabilityDeposit.lqtyReward.prettify()}
               color={stabilityDeposit.lqtyReward.nonZero && "success"}
               unit={GT}
+              infoIcon={
+                <InfoIcon
+                  tooltip={
+                    <Card variant="tooltip" sx={{ width: "240px" }}>
+                      Although the LQTY rewards accrue every minute, the value on the UI only updates
+                      when a user transacts with the Stability Pool. Therefore you may receive more
+                      rewards than is displayed when you claim or adjust your deposit.
+                    </Card>
+                  }
+                />
+              }
             />
             <Flex sx={{ justifyContent: "flex-end", flex: 1 }}>
               <Yield />
