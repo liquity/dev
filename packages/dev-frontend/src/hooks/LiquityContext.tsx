@@ -26,6 +26,7 @@ const LiquityContext = createContext<LiquityContextValue | undefined>(undefined)
 type LiquityProviderProps = {
   loader?: React.ReactNode;
   unsupportedNetworkFallback?: (chainId: number) => React.ReactNode;
+  unsupportedMainnetFallback?: React.ReactNode;
 };
 
 const wsParams = (network: string, infuraApiKey: string): [string, string] => [
@@ -38,7 +39,8 @@ const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"]
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
   loader,
-  unsupportedNetworkFallback
+  unsupportedNetworkFallback,
+  unsupportedMainnetFallback
 }) => {
   const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
@@ -85,6 +87,10 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
 
   if (!config || !provider || !account || !chainId) {
     return <>{loader}</>;
+  }
+
+  if (config.testnetOnly && chainId === 1) {
+    return <>{unsupportedMainnetFallback}</>;
   }
 
   if (!connection) {
