@@ -362,6 +362,7 @@ const theme: Theme = {
       maxWidth: "912px",
       mx: "auto",
       mt: ["40px", 0],
+      mb: ["40px", "40px"],
       px: cardGapX
     },
 

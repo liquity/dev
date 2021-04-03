@@ -10,6 +10,7 @@ import { COIN, GT } from "../../strings";
 import { Icon } from "../Icon";
 import { EditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
+import { InfoIcon } from "../InfoIcon";
 
 const selectLUSDBalance = ({ lusdBalance }: LiquityStoreState) => lusdBalance;
 
@@ -79,6 +80,17 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
               amount={originalDeposit.lqtyReward.prettify()}
               color={originalDeposit.lqtyReward.nonZero && "success"}
               unit={GT}
+              infoIcon={
+                <InfoIcon
+                  tooltip={
+                    <Card variant="tooltip" sx={{ width: "240px" }}>
+                      Although the LQTY rewards accrue every minute, the value on the UI only updates
+                      when a user transacts with the Stability Pool. Therefore you may receive more
+                      rewards than is displayed when you claim or adjust your deposit.
+                    </Card>
+                  }
+                />
+              }
             />
           </>
         )}
