@@ -2,8 +2,9 @@
 
 echo_config() {
   echo '{'
-  echo '  "frontendTag": "'"$FRONTEND_TAG"'",'
-  echo '  "infuraApiKey": "'"$INFURA_API_KEY"'"'
+  [ -n "$TESTNET_ONLY" ] && echo '  "testnetOnly": '$TESTNET_ONLY','
+  echo '  "frontendTag": "'$FRONTEND_TAG'",'
+  echo '  "infuraApiKey": "'$INFURA_API_KEY'"'
   echo '}'
 }
 
