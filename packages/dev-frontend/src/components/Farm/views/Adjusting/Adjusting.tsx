@@ -50,7 +50,7 @@ export const Adjusting: React.FC = () => {
     <Card>
       <Heading>
         Uniswap Liquidity Farm
-        {isDirty && (
+        {isDirty && !isTransactionPending && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
