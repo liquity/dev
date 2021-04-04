@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Card, Paragraph, Text } from "theme-ui";
-import { useWeb3React } from "@web3-react/core";
-import { Web3Provider } from "@ethersproject/providers";
 import { Decimal, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { InfoIcon } from "../InfoIcon";
@@ -21,17 +19,10 @@ export const Yield: React.FC = () => {
     }
   } = useLiquity();
   const { lusdInStabilityPool, remainingStabilityPoolLQTYReward } = useLiquitySelector(selector);
-  const { chainId } = useWeb3React<Web3Provider>();
-  const isMainnet = chainId === 1;
 
   const [lqtyPrice, setLqtyPrice] = useState<Decimal | undefined>(undefined);
   const hasZeroValue = remainingStabilityPoolLQTYReward.isZero || lusdInStabilityPool.isZero;
-  let lqtyTokenAddress = addresses["lqtyToken"];
-
-  // TODO: remove after Team has reviewed on /next
-  if (!isMainnet) {
-    lqtyTokenAddress = "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2";
-  }
+  const lqtyTokenAddress = addresses["lqtyToken"];
 
   useEffect(() => {
     (async () => {
@@ -44,8 +35,6 @@ export const Yield: React.FC = () => {
     })();
   }, [lqtyTokenAddress]);
 
-  // TODO: switch to this condition after team has reviewed on /next
-  // if (!isMainnet || hasZeroValue || lqtyPrice === undefined) return null;
   if (hasZeroValue || lqtyPrice === undefined) return null;
   const yearlyHalvingSchedule = 0.5; // 50% see LQTY distribution schedule for more info
   const remainingLqtyOneYear = remainingStabilityPoolLQTYReward.mul(yearlyHalvingSchedule);
