@@ -287,7 +287,9 @@ const theme: Theme = {
       top: 0,
       right: 3,
       left: 3,
-      mt: "72px"
+      mt: "72px",
+      height: "80%",
+      overflowY: "scroll"
     },
 
     tooltip: {
