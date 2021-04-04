@@ -21,7 +21,7 @@
 \begin{document}
 
 \title{\textbf{Liquity: Decentralized Borrowing Protocol}}
-\author{Robert Lauko, Richard Pardoe \\ rev.0.2\footnote{Note that this white paper is released prior to the full implementation and launch of the project. It is therefore subject to correction, completion and amendment without notice}\footnote{Note as well that whenever the term Liquity is used it refers to the protocol, not the company Liquity AG.}}
+\author{Robert Lauko, Richard Pardoe \\ rev.0.3\footnote{Note that whenever the term Liquity is used it refers to the protocol, not the company Liquity AG.}}
 \date{April 5, 2021}
 
 \maketitle
@@ -116,7 +116,7 @@ The protocol imposes a minimum debt of 2,000 LUSD.\footnote{This requirement pre
 
 \begin{tcolorbox}
 \textbf{Example}\\
-The base rate stands at 0\%. The borrower opens a new Trove by depositing 2 ETH and minting 4,000 LUSD. Being subject to a Liquidation Reserve of 200 LUSD and charged a 0.5\% fee on the remaining 3,800 LUSD, the borrower will obtain 3,781.09 LUSD, while incurring a debt of 4,000 LUSD (3,781.09 + 200 + 18.91). To close the Trove and fully retrieve the 2 ETH, the borrower needs to repay 3,800 LUSD as the Liquidation Reserve gets refunded.
+The base rate stands at 0.5\%. The borrower opens a new Trove by depositing 4 ETH and draws 4,000 LUSD. Being subject to a Liquidation Reserve of 200 LUSD and charged a 1\% fee on the 4,000 LUSD, the borrower will obtain 4,000 LUSD, while incurring a debt of 4,240 LUSD (4,000 + 200 + 40). To close the Trove and fully retrieve the 4 ETH, the borrower needs to repay 4,040 LUSD as the Liquidation Reserve gets refunded.
 \end{tcolorbox}
 
 \textit{Restrictions due to Recovery Mode}.   Borrower operations are restricted in several respects when the system is in Recovery Mode or at the verge of it (see 5 Recovery Mode). 
@@ -150,7 +150,7 @@ Troves that are fully redeemed from, i.e. whose debt is 0, are automatically clo
 
 Upon every redemption, the base rate is increased by the proportion of redeemed LUSD and then applied to the current redemption as follows:
 $$b(t):=b(t-1)+\alpha\times\frac{m}{n}$$
-where $b(t)$ is the base rate at time $t,m$ the amount of redeemed LUSD, $n$ the current supply of LUSD and $\alpha$ a constant parameter.\\
+where $b(t)$ is the base rate at time $t,m$ the amount of redeemed LUSD, $n$ the current supply of LUSD and $\alpha$ a constant parameter set to $0.5$.\\
 
 The base rate decays over time due to a decay factor that is applied with every redemption and issuance of LUSD prior to calculating the resulting fee. The decay is of the form:
 $$b(t):=b(t-1)\times\delta^{\triangle t}$$
@@ -175,7 +175,7 @@ To ensure that the entire stablecoin supply remains fully backed by collateral, 
 
 Liquidation can be triggered by anybody and allows liquidating multiple Troves in one batch, either by specifying a set of Troves or in ascending order starting from the Trove with the lowest collateral ratio. While the former approach allows to quickly liquidate large Troves, the latter is more resilient against the race conditions that may occur in case of multiple simultaneous liquidations.
 
-In most cases, Stability Providers and/or high-collateral Troves will have a financial incentive to trigger liquidations as fast as possible. To compensate for the gas costs of a liquidation even in times with high prices, Liquity pays the reserved 200 LUSD (see 3.1 Borrower operations) plus 0.5\% of the Trove’s collateral (ETH) to the liquidator.
+In most cases, Stability Providers and/or high-collateral Troves will have a financial incentive to trigger liquidations as fast as possible. To compensate for the gas costs of a liquidation even in times of high gas prices, Liquity pays the reserved 200 LUSD (see 3.1 Borrower operations) plus 0.5\% of the Trove’s collateral (ETH) to the liquidator.
 \\
 
 Liquity utilizes a two-step liquidation mechanism in the following order of priority:
@@ -249,7 +249,7 @@ Receiving collateral and debt shares should generally result in a \textbf{net ga
 \section{Recovery mode}
 System solvency depends on the amount of LUSD tokens in the Stability Pool and ultimately on the Total Collateral Ratio (TCR) across all Troves, given by the total collateral (in USD) divided by the total debt (in LUSD). 
 
-To keep the system sufficiently collateralized even in times of crisis, the protocol incorporates a Recovery Mode, which is triggered as an \textbf{ultima ratio} if the TCR falls below the critical collateral ratio (CCR) which is set to 150\%. In this special mode of operation, Troves with a collateral ratio between 110\% and the current TCR become subject to liquidation as well. Such extra liquidations are only possible against the Stability Pool (i.e. they are exempt from redistribution), and require that the entire debt can be liquidated at once. 
+To keep the system sufficiently collateralized even in times of crisis, the protocol incorporates a Recovery Mode, which is triggered as an \textbf{ultima ratio} if the TCR falls below the critical threshold of 150\%. In this special mode of operation, Troves with a collateral ratio between 110\% and the current TCR become subject to liquidation as well. Such extra liquidations are only possible against the Stability Pool (i.e. they are exempt from redistribution), and require that the entire debt can be liquidated at once. 
 
 To protect the borrower from an excessive loss, the collateral that is offset against the Stability Pool is capped at 110\% of the liquidated debt. The borrower can reclaim any collateral remainder above 110\% any time after the liquidation.
 
@@ -277,7 +277,7 @@ During Recovery Mode, the liquidation mechanism is thus described by the followi
 
 These changes incentivize Stability Providers to increase their deposits during Recovery Mode, which in turn improves the Total Collateral Ratio of the system. \\
 
-The existence of Recovery Mode alone helps to avert the system falling below the critical threshold: the threat of the extra liquidations incentivizes risky borrowers to improve their collateral ratios and Stability Providers to increase their deposits, long before the system actually reaches the critical collateral ratio of 150\%. On the other hand, risk-averse borrowers are recommended to maintain a collateral ratio above 150\% at all times.\\
+The existence of Recovery Mode alone helps to avert the system falling below the critical threshold: the threat of the extra liquidations incentivizes risky borrowers to improve their collateral ratios and Stability Providers to increase their deposits, long before the system actually reaches the threshold ratio of 150\%. On the other hand, risk-averse borrowers are recommended to maintain a collateral ratio above 150\% at all times.\\
 
 \textit{Restrictions on Trove operations}. All Trove operations that would deteriorate the TCR are temporarily disabled if the system is in Recovery Mode or if the operation would trigger Recovery Mode by pushing the TCR below 150\%. In Recovery Mode, it is only possible to:
 \begin{itemize}
