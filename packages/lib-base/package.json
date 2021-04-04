@@ -25,7 +25,6 @@
     "@ethersproject/bignumber": "5.0.15"
   },
   "devDependencies": {
-    "@ethersproject/bignumber": "^5.0.0",
     "@microsoft/api-extractor": "7.13.2",
     "@types/mocha": "8.2.1",
     "@typescript-eslint/eslint-plugin": "4.17.0",
