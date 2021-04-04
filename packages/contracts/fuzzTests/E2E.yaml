@@ -8,3 +8,4 @@ multi-abi: true
 corpusDir: "corpus"
 testMaxGas: 6250000
 checkAsserts: true
+cryticArgs: ["--compile-force-framework", "hardhat"]
