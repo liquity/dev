@@ -11,17 +11,14 @@ const externalAddrs  = {
 }
 
 const liquityAddrs = {
-  GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd", // TODO
-  LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74", // TODO
+  GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd", // TODO - 
+  LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74", // TODO - 
   DEPLOYER: "0xF8e5C47a6866e97F5D561982Ff80D39c436E573E" // Mainnet TEST deployment address
 }
 
 const beneficiaries = {
-  TEST_INVESTOR_A: "0xdad05aa3bd5a4904eb2a9482757be5da8d554b3d",
-  TEST_INVESTOR_B: "0x625b473f33b37058bf8b9d4c3d3f9ab5b896996a",
-  TEST_INVESTOR_C: "0x9ea530178b9660d0fae34a41a02ec949e209142e",
-  TEST_INVESTOR_D: "0xffbb4f4b113b05597298b9d8a7d79e6629e726e8",
-  TEST_INVESTOR_E: "0x89ff871dbcd0a456fe92db98d190c38bc10d1cc1"
+  ACCOUNT_2: "0x4BDe43C7F3CCdB060bc93f36bc5B0c44884fe46c",  
+  ACCOUNT_3: "0x7AdD52BEC7d7D7120F7E8a6DE19112d7fcC1FD6F",
 }
 
 const OUTPUT_FILE = './mainnetDeployment/mainnetDeploymentOutput.json'
@@ -31,7 +28,7 @@ const waitFunction = async () => {
   return delay(90000) // wait 90s
 }
 
-const GAS_PRICE = 220000000000
+const GAS_PRICE = 130000000000
 const TX_CONFIRMATIONS = 3 // for mainnet
 
 const ETHERSCAN_BASE_URL = 'https://etherscan.io/address'
