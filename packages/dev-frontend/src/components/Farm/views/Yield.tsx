@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Card, Paragraph, Text } from "theme-ui";
-import { useWeb3React } from "@web3-react/core";
-import { Web3Provider } from "@ethersproject/providers";
 import { Decimal, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { InfoIcon } from "../../InfoIcon";
@@ -23,21 +21,13 @@ export const Yield: React.FC = () => {
       connection: { addresses }
     }
   } = useLiquity();
-  const { chainId } = useWeb3React<Web3Provider>();
-  const isMainnet = chainId === 1;
 
   const { remainingLiquidityMiningLQTYReward, totalStakedUniTokens } = useLiquitySelector(selector);
   const [lqtyPrice, setLqtyPrice] = useState<Decimal | undefined>(undefined);
   const [uniLpPrice, setUniLpPrice] = useState<Decimal | undefined>(undefined);
   const hasZeroValue = remainingLiquidityMiningLQTYReward.isZero || totalStakedUniTokens.isZero;
-  let lqtyTokenAddress = addresses["lqtyToken"];
-  let uniTokenAddress = addresses["uniToken"];
-
-  // TODO: remove after Team has reviewed on /next
-  if (!isMainnet) {
-    lqtyTokenAddress = "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2";
-    uniTokenAddress = "0xa478c2975ab1ea89e8196811f51a7b7ade33eb11";
-  }
+  const lqtyTokenAddress = addresses["lqtyToken"];
+  const uniTokenAddress = addresses["uniToken"];
 
   useEffect(() => {
     (async () => {
@@ -51,8 +41,6 @@ export const Yield: React.FC = () => {
     })();
   }, [lqtyTokenAddress, uniTokenAddress]);
 
-  // TODO: switch to this condition after team has reviewed on /next
-  // if (!isMainnet || hasZeroValue || lqtyPrice === undefined || uniLpPrice === undefined) return null;
   if (hasZeroValue || lqtyPrice === undefined || uniLpPrice === undefined) return null;
 
   const remainingLqtyInUSD = remainingLiquidityMiningLQTYReward.mul(lqtyPrice);
