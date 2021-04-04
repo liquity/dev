@@ -19,6 +19,7 @@ async function mainnetDeploy(configParams) {
 
   console.log(`deployer address: ${deployerWallet.address}`)
   assert.equal(deployerWallet.address, configParams.liquityAddrs.DEPLOYER)
+  assert.equal(account2Wallet.address, configParams.beneficiaries.ACCOUNT_2)
   let deployerETHBalance = await ethers.provider.getBalance(deployerWallet.address)
   console.log(`deployerETHBalance before: ${deployerETHBalance}`)
 
