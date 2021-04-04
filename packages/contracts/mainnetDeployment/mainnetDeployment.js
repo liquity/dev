@@ -8,6 +8,8 @@ const MainnetDeploymentHelper = require("../utils/mainnetDeploymentHelpers.js")
 const toBigNum = ethers.BigNumber.from
 
 async function mainnetDeploy(configParams) {
+  const date = new Date()
+  console.log(date.toUTCString())
   const deployerWallet = (await ethers.getSigners())[0]
   const account2Wallet = (await ethers.getSigners())[1]
   const mdh = new MainnetDeploymentHelper(configParams, deployerWallet)
@@ -170,22 +172,22 @@ async function mainnetDeploy(configParams) {
   console.log("INITIAL LQTY BALANCES")
   // Unipool
   const unipoolLQTYBal = await LQTYContracts.lqtyToken.balanceOf(unipool.address)
-  // assert.equal(unipoolLQTYBal.toString(), '1333333333333333333333333')
+  // TODO: Uncomment for real launch assert.equal(unipoolLQTYBal.toString(), '1333333333333333333333333')
   th.logBN('Unipool LQTY balance       ', unipoolLQTYBal)
 
   // LQTY Safe
   const lqtySafeBal = await LQTYContracts.lqtyToken.balanceOf(configParams.liquityAddrs.LQTY_SAFE)
-  // assert.equal(lqtyDeployerBal.toString(), '64666666666666666666666667')
+   // TODO: Uncomment for real launch  assert.equal(lqtyDeployerBal.toString(), '64666666666666666666666667')
   th.logBN('LQTY Safe balance     ', lqtySafeBal)
 
   // Bounties/hackathons (General Safe)
   const generalSafeBal = await LQTYContracts.lqtyToken.balanceOf(configParams.liquityAddrs.GENERAL_SAFE)
-  // assert.equal(generalSafeBal.toString(), '2000000000000000000000000')
+   // TODO: Uncomment for real launch  assert.equal(generalSafeBal.toString(), '2000000000000000000000000')
   th.logBN('General Safe balance       ', generalSafeBal)
 
   // CommunityIssuance contract
   const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(LQTYContracts.communityIssuance.address)
-  // assert.equal(communityIssuanceBal.toString(), '32000000000000000000000000')
+  // TODO: Uncomment for real launch  assert.equal(communityIssuanceBal.toString(), '32000000000000000000000000')
   th.logBN('Community Issuance balance', communityIssuanceBal)
 
   // --- PriceFeed ---
@@ -409,7 +411,7 @@ async function mainnetDeploy(configParams) {
   console.log("CHECK BENEFICIARY ATTEMPTING WITHDRAWAL FROM LC")
 
   // connect Acct2 wallet to the LC they are beneficiary of
-  let account2LockupContract = lockupContracts["ACCOUNT_2"].connect(account2Wallet)
+  let account2LockupContract = await lockupContracts["ACCOUNT_2"].connect(account2Wallet)
 
   // Deployer funds LC with 10 LQTY
   await mdh.sendAndWaitForTransaction(LQTYContracts.lqtyToken.transfer(account2LockupContract.address, dec(10, 18), { gasPrice }))
@@ -458,7 +460,7 @@ async function mainnetDeploy(configParams) {
 
 
   // --- 2nd Account opens trove ---
-  const trove2Status = await liquityCore.troveManager.getTroveStatus(deployerWallet.address)
+  const trove2Status = await liquityCore.troveManager.getTroveStatus(account2Wallet.address)
   if (trove2Status.toString() != '1') {
     console.log("Acct 2 opens a trove ...")
     let _2kLUSDWithdrawal = th.dec(2000, 18) // 2000 LUSD
