@@ -90,5 +90,13 @@
   "multiTroveGetter": {
     "address": "0x1AfE186670C7DAF5E085ae6269Da9762621F2b71",
     "txHash": "0xd0e7ed37ea5d2f0ba2bd2f52f12e482448a13cb9e6de210fa7f10506d37e3424"
+  },
+  "ACCOUNT_2": {
+    "address": "0x66bDAE1c1b3a6d37816BC02BeF9aE9f5Acb8AD9a",
+    "txHash": "0xf0c47c8404580c5b5f9b19aaa7df3da1e6c5e14ccbd04c4513c7126cdf6e2756"
+  },
+  "ACCOUNT_3": {
+    "address": "0xC4aC0c3083B566CEe353A21ac4322a137224FfEC",
+    "txHash": "0xe6cb7b8d604a74742d20235fef5de60d6f60e43c90b3c071c3b2e3feece7372a"
   }
 }

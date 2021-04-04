@@ -1,9 +1,9 @@
 Loading previous deployment...
 deployer address: 0xF8e5C47a6866e97F5D561982Ff80D39c436E573E
-deployerETHBalance before: 18046115977000000000
+deployerETHBalance before: 7849835959391335371
 Uniswp addr: 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f
-Uniswap Factory number of pairs: 31975
-deployer's ETH balance before deployments: 18046115977000000000
+Uniswap Factory number of pairs: 32121
+deployer's ETH balance before deployments: 7849835959391335371
 Using previously deployed priceFeed contract at address 0x891d882fDACd2cB8DAeA5289f6019676E797EE5F
 Using previously deployed sortedTroves contract at address 0xb8493cD0E7135462502DF048deeFc9b650fa789F
 Using previously deployed troveManager contract at address 0x111Bf64dA957C55601C6D0f9DB2Eb1aef4dDEE23
@@ -16,6 +16,7 @@ Using previously deployed borrowerOperations contract at address 0x4E4E2eC25B1F5
 Using previously deployed hintHelpers contract at address 0xAB1b14AfAE47054ca29A23858A7850E859aE6E31
 Using previously deployed tellorCaller contract at address 0x093FA46A3FC715B65E9A6d37ACD92d99F48B81F6
 Using previously deployed lusdToken contract at address 0xaa052d8b915c9311e5EA234dd24105d6208087A5
+No Etherscan Url defined, skipping verification
 Contract objects addresses:
 priceFeed: 0x891d882fDACd2cB8DAeA5289f6019676E797EE5F
 lusdToken: 0xaa052d8b915c9311e5EA234dd24105d6208087A5
@@ -30,28 +31,32 @@ borrowerOperations: 0x4E4E2eC25B1F591bb591d42A944eCc1CB9C79d8A
 hintHelpers: 0xAB1b14AfAE47054ca29A23858A7850E859aE6E31
 tellorCaller: 0x093FA46A3FC715B65E9A6d37ACD92d99F48B81F6
 Using previously deployed unipool contract at address 0xBAeE57B5e130fC602F0859e6f85029Ec47340298
+No Etherscan Url defined, skipping verification
 Using previously deployed lqtyStaking contract at address 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
 Using previously deployed lockupContractFactory contract at address 0xe6dEcadA1d49466F09c5bfb69F6C14f376B2Eece
 Using previously deployed communityIssuance contract at address 0x89c5eaD36eCA8d7c0840ddD461d406Ad637CD35D
 Using previously deployed lqtyToken contract at address 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
+No Etherscan Url defined, skipping verification
 Using previously deployed multiTroveGetter contract at address 0x1AfE186670C7DAF5E085ae6269Da9762621F2b71
+No Etherscan Url defined, skipping verification
 Contract objects addresses:
 lqtyStaking: 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
 lockupContractFactory: 0xe6dEcadA1d49466F09c5bfb69F6C14f376B2Eece
 communityIssuance: 0x89c5eaD36eCA8d7c0840ddD461d406Ad637CD35D
 lqtyToken: 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
 Unipool address: 0xBAeE57B5e130fC602F0859e6f85029Ec47340298
-time now: 1617282097
-time oneYearFromNow: 1648818097
-Using previously deployed TEST_INVESTOR_A lockup contract at address 0xF41E0DD45d411102ed74c047BdA544396cB71E27
-Using previously deployed TEST_INVESTOR_B lockup contract at address 0x9694a04263593AC6b895Fc01Df5929E1FC7495fA
-Using previously deployed TEST_INVESTOR_C lockup contract at address 0x98f95E112da23c7b753D8AE39515A585be6Fb5Ef
-Using previously deployed TEST_INVESTOR_D lockup contract at address 0x45ad07343D58dEedacB1EbD935A1f220CA77aEC1
-Using previously deployed TEST_INVESTOR_E lockup contract at address 0x6E57f531239c0E892f79c349b830bC38c8120597
-current Chainlink price: 192253000000
-Unipool LQTY balance       : 1333333.333333333333333333
-LQTY Deployer balance     : 64666666.666666666666666667
-General Safe balance       : 2000000.000000000000000000
-Community Issuance balance: 32000000.000000000000000000
-PriceFeed first stored price: 1946.203658610000000000
-PriceFeed initial status: 0
+time now: 1617491889
+time oneYearFromNow: 1649027889
+current Chainlink price: 204350437044
+lockupContract addr: 0x22a7...e87F,
+          beneficiary: ACCOUNT_2,
+          beneficiary addr: 0xdad0...4b3d,
+          on-chain beneficiary addr: 0xdAD0...4b3D
+          unlockTime: 1649027889
+          
+lockupContract addr: 0x55CC...74ab,
+          beneficiary: ACCOUNT_3,
+          beneficiary addr: 0x625b...996a,
+          on-chain beneficiary addr: 0x625b...996a
+          unlockTime: 1649027889
+          
