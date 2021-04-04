@@ -169,6 +169,14 @@ async function mainnetDeploy(configParams) {
             `
     )
   }
+
+  // --- Check correct addresses set in LQTYToken
+  console.log("STORED ADDRESSES IN LQTY TOKEN")
+  const storedMultisigAddress = await LQTYContracts.lqtyToken.multisigAddress()
+  assert.equal(configParams.liquityAddrs.LQTY_SAFE.toLowerCase(), storedMultisigAddress.toLowerCase())
+  console.log(`multi-sig address stored in LQTYToken : ${th.squeezeAddr(storedMultisigAddress)}`)
+  console.log(`LQTY Safe address: ${th.squeezeAddr(configParams.liquityAddrs.LQTY_SAFE)}`)
+
   // --- LQTY allowances of different addresses ---
   console.log("INITIAL LQTY BALANCES")
   // Unipool
