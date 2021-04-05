@@ -313,7 +313,7 @@ async function mainnetDeploy(configParams) {
     const LP_ETH = dec(1, 'ether')
 
     // Convert 8-digit CL price to 18 and multiply by ETH amount
-    const LUSDAmount = toBigNum(price)
+    const LUSDAmount = toBigNum(chainlinkPrice)
       .mul(toBigNum(dec(1, 10)))
       .mul(toBigNum(LP_ETH))
       .div(toBigNum(dec(1, 18)))
