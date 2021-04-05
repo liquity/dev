@@ -11,11 +11,12 @@ const externalAddrs  = {
 }
 
 const liquityAddrs = {
-  GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd", // TODO - 
-  LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74", // TODO - 
-  DEPLOYER: "0xF8e5C47a6866e97F5D561982Ff80D39c436E573E" // Mainnet TEST deployment address
+  GENERAL_SAFE:"0xF06016D822943C42e3Cb7FC3a6A3B1889C1045f8", // to be passed to LQTYToken as the bounties/hackathons addres
+  LQTY_SAFE:"0xb8a9faDA75c6d891fB77a7988Ff9BaD9e485Ca1C", // to be passed to LQTYToken as the LQTY multisig address
+  DEPLOYER: "0xa850535D3628CD4dFEB528dC85cfA93051Ff2984" // Mainnet REAL deployment address
 }
 
+// Dummy beneficiaries for lockup contracts. Both accounts controlled by us.
 const beneficiaries = {
   ACCOUNT_2: "0x4BDe43C7F3CCdB060bc93f36bc5B0c44884fe46c",  
   ACCOUNT_3: "0x7AdD52BEC7d7D7120F7E8a6DE19112d7fcC1FD6F",
@@ -28,7 +29,7 @@ const waitFunction = async () => {
   return delay(90000) // wait 90s
 }
 
-const GAS_PRICE = 130000000000
+const GAS_PRICE = 150000000000
 const TX_CONFIRMATIONS = 3 // for mainnet
 
 const ETHERSCAN_BASE_URL = 'https://etherscan.io/address'
