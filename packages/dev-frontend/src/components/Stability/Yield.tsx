@@ -36,10 +36,13 @@ export const Yield: React.FC = () => {
   }, [lqtyTokenAddress]);
 
   if (hasZeroValue || lqtyPrice === undefined) return null;
+
   const yearlyHalvingSchedule = 0.5; // 50% see LQTY distribution schedule for more info
   const remainingLqtyOneYear = remainingStabilityPoolLQTYReward.mul(yearlyHalvingSchedule);
   const remainingLqtyInUSD = remainingLqtyOneYear.mul(lqtyPrice);
   const apyPercentage = remainingLqtyInUSD.div(lusdInStabilityPool).mul(100);
+
+  if (apyPercentage.isZero) return null;
 
   return (
     <Badge>
