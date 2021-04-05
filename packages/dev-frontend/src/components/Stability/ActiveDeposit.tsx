@@ -104,9 +104,7 @@ export const ActiveDeposit: React.FC = () => {
         </Flex>
 
         {hasTrove && (
-          <ClaimAndMove disabled={!hasGain && !hasReward}>
-            Claim LQTY and move ETH to Trove
-          </ClaimAndMove>
+          <ClaimAndMove disabled={!hasGain}>Claim LQTY and move ETH to Trove</ClaimAndMove>
         )}
       </Box>
 
