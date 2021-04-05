@@ -433,7 +433,7 @@ async function mainnetDeploy(configParams) {
   // let account2LockupContract = await lockupContracts["ACCOUNT_2"].connect(account2Wallet)
 
   // // Deployer funds LC with 10 LQTY
-  // await mdh.sendAndWaitForTransaction(LQTYContracts.lqtyToken.transfer(account2LockupContract.address, dec(10, 18), { gasPrice }))
+  // // await mdh.sendAndWaitForTransaction(LQTYContracts.lqtyToken.transfer(account2LockupContract.address, dec(10, 18), { gasPrice }))
 
   // // account2 LQTY bal
   // let account2bal = await LQTYContracts.lqtyToken.balanceOf(account2Wallet.address)

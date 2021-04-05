@@ -42,5 +42,5 @@ module.exports = {
   waitFunction,
   GAS_PRICE,
   TX_CONFIRMATIONS,
-  // ETHERSCAN_BASE_URL,
+  ETHERSCAN_BASE_URL,
 };

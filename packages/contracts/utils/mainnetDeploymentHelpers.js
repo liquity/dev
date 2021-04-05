@@ -109,7 +109,7 @@ class MainnetDeploymentHelper {
       await this.verifyContract('sortedTroves', deploymentState)
       await this.verifyContract('troveManager', deploymentState)
       await this.verifyContract('activePool', deploymentState)
-      //await this.verifyContract('stabilityPool', deploymentState)
+      await this.verifyContract('stabilityPool', deploymentState)
       await this.verifyContract('gasPool', deploymentState)
       await this.verifyContract('defaultPool', deploymentState)
       await this.verifyContract('collSurplusPool', deploymentState)
