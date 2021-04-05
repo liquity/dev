@@ -186,7 +186,7 @@ async function mainnetDeploy(configParams) {
 
   // LQTY Safe
   const lqtySafeBal = await LQTYContracts.lqtyToken.balanceOf(configParams.liquityAddrs.LQTY_SAFE)
-  assert.equal(lqtyDeployerBal.toString(), '64666666666666666666666667')
+  assert.equal(lqtySafeBal.toString(), '64666666666666666666666667')
   th.logBN('LQTY Safe balance     ', lqtySafeBal)
 
   // Bounties/hackathons (General Safe)
