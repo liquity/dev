@@ -47,6 +47,8 @@ export const Yield: React.FC = () => {
   const totalStakedUniLpInUSD = totalStakedUniTokens.mul(uniLpPrice);
   const yieldPercentage = remainingLqtyInUSD.div(totalStakedUniLpInUSD).mul(100);
 
+  if (yieldPercentage.isZero) return null;
+
   return (
     <Badge>
       <Text>Yield {yieldPercentage.toString(2)}%</Text>
