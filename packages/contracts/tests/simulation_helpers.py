@@ -474,7 +474,7 @@ def get_lusd_to_repay(accounts, contracts, active_accounts, inactive_accounts, a
         # first try to withdraw from SP
         initial_deposit = contracts.stabilityPool.deposits(account)[0]
         if initial_deposit > 0:
-            contracts.stabilityPool.withdrawFromSP(pending, { 'from': account })
+            contracts.stabilityPool.withdrawFromSP(pending, { 'from': account, 'gas_limit': 8000000, 'allow_revert': True })
             # it can only withdraw up to the deposit, so we check the balance again
             lusdBalance = contracts.lusdToken.balanceOf(account)
             pending = debt - lusdBalance
@@ -568,6 +568,7 @@ def adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price
                 withdraw_amount_wei = floatToWei(withdraw_amount)
                 if isNewTCRAboveCCR(contracts, 0, False, withdraw_amount_wei, True, floatToWei(price_ether_current)):
                     contracts.borrowerOperations.withdrawLUSD(MAX_FEE, withdraw_amount_wei, hints[0], hints[1], { 'from': account })
+                    rate_issuance = contracts.troveManager.getBorrowingRateWithDecay() / 1e18
                     issuance_LUSD_adjust = issuance_LUSD_adjust + rate_issuance * withdraw_amount
         #Another part of the troves are adjusted by adjusting collaterals
         elif p < ratio:
@@ -821,7 +822,7 @@ def redeem_trove(accounts, contracts, i, price_ether_current):
         #return None
         exit(1)
 
-def price_stabilizer(accounts, contracts, active_accounts, price_ether_current, price_LUSD, index):
+def price_stabilizer(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index):
 
     stability_pool = contracts.stabilityPool.getTotalLUSDDeposits() / 1e18
     redemption_pool = 0
@@ -879,19 +880,24 @@ def price_stabilizer(accounts, contracts, active_accounts, price_ether_current, 
             #liquidity_pool = (1-redemption_ratio)*liquidity_pool
             price_LUSD_current = calculate_price(price_LUSD, liquidity_pool, liquidity_pool_next)
 
-        whale_balance = contracts.lusdToken.balanceOf(accounts[0]) / 1e18
-        if redemption_pool > whale_balance:
-            print("Warning! Redemption amount supposed to be greater than whale balance", stability_pool, whale_balance)
-        else:
-            tx = redeem_trove(accounts, contracts, 0, price_ether_current)
-            if tx:
-                remove_accounts_from_events(
+        remaining = redemption_pool
+        i = 0
+        while remaining > 0 and i < len(active_accounts):
+          account = index2address(accounts, active_accounts, i)
+          balance = contracts.lusdToken.balanceOf(account) / 1e18
+          redemption = min(balance, remaining)
+          if redemption > 0:
+              tx = redeem_trove(accounts, contracts, 0, price_ether_current)
+              if tx:
+                  remove_accounts_from_events(
                     accounts,
                     active_accounts,
                     inactive_accounts,
                     filter(lambda e: e['coll'] == 0, tx.events['TroveUpdated']),
                     '_borrower'
-                )
+                  )
+                  remaining = remaining - redemption
+          i = i + 1
 
 
     #Redemption Fee
