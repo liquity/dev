@@ -147,7 +147,7 @@ async function mainnetDeploy(configParams) {
   let chainlinkPrice = await chainlinkProxy.latestAnswer()
   console.log(`current Chainlink price: ${chainlinkPrice}`)
 
-  // // TODO: Check Tellor price directly (through TellorCaller)
+  // Check Tellor price directly (through our TellorCaller)
   let tellorPriceResponse = await liquityCore.tellorCaller.getTellorCurrentValue(1) // id == 1: the ETH-USD request ID
   console.log(`current Tellor price: ${tellorPriceResponse[1]}`)
   console.log(`current Tellor timestamp: ${tellorPriceResponse[2]}`)
@@ -181,22 +181,22 @@ async function mainnetDeploy(configParams) {
   console.log("INITIAL LQTY BALANCES")
   // Unipool
   const unipoolLQTYBal = await LQTYContracts.lqtyToken.balanceOf(unipool.address)
-  // TODO: Uncomment for real launch assert.equal(unipoolLQTYBal.toString(), '1333333333333333333333333')
+  assert.equal(unipoolLQTYBal.toString(), '1333333333333333333333333')
   th.logBN('Unipool LQTY balance       ', unipoolLQTYBal)
 
   // LQTY Safe
   const lqtySafeBal = await LQTYContracts.lqtyToken.balanceOf(configParams.liquityAddrs.LQTY_SAFE)
-   // TODO: Uncomment for real launch  assert.equal(lqtyDeployerBal.toString(), '64666666666666666666666667')
+  assert.equal(lqtyDeployerBal.toString(), '64666666666666666666666667')
   th.logBN('LQTY Safe balance     ', lqtySafeBal)
 
   // Bounties/hackathons (General Safe)
   const generalSafeBal = await LQTYContracts.lqtyToken.balanceOf(configParams.liquityAddrs.GENERAL_SAFE)
-   // TODO: Uncomment for real launch  assert.equal(generalSafeBal.toString(), '2000000000000000000000000')
+  assert.equal(generalSafeBal.toString(), '2000000000000000000000000')
   th.logBN('General Safe balance       ', generalSafeBal)
 
   // CommunityIssuance contract
   const communityIssuanceBal = await LQTYContracts.lqtyToken.balanceOf(LQTYContracts.communityIssuance.address)
-  // TODO: Uncomment for real launch  assert.equal(communityIssuanceBal.toString(), '32000000000000000000000000')
+  assert.equal(communityIssuanceBal.toString(), '32000000000000000000000000')
   th.logBN('Community Issuance balance', communityIssuanceBal)
 
   // --- PriceFeed ---
