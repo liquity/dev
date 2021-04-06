@@ -40,13 +40,13 @@ export const Yield: React.FC = () => {
   const yearlyHalvingSchedule = 0.5; // 50% see LQTY distribution schedule for more info
   const remainingLqtyOneYear = remainingStabilityPoolLQTYReward.mul(yearlyHalvingSchedule);
   const remainingLqtyInUSD = remainingLqtyOneYear.mul(lqtyPrice);
-  const apyPercentage = remainingLqtyInUSD.div(lusdInStabilityPool).mul(100);
+  const aprPercentage = remainingLqtyInUSD.div(lusdInStabilityPool).mul(100);
 
-  if (apyPercentage.isZero) return null;
+  if (aprPercentage.isZero) return null;
 
   return (
     <Badge>
-      <Text>LQTY APY {apyPercentage.toString(2)}%</Text>
+      <Text>LQTY APR {aprPercentage.toString(2)}%</Text>
       <InfoIcon
         tooltip={
           <Card variant="tooltip" sx={{ width: ["220px", "506px"] }}>
@@ -56,13 +56,13 @@ export const Yield: React.FC = () => {
               liquidations.
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
-              ($LQTY_REWARDS * YEARLY_DISTRIBUTION% / DEPOSITED_LUSD) * 100 ={" "}
-              <Text sx={{ fontWeight: "bold" }}> APY</Text>
+              (($LQTY_REWARDS * YEARLY_DISTRIBUTION%) / DEPOSITED_LUSD) * 100 ={" "}
+              <Text sx={{ fontWeight: "bold" }}> APR</Text>
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace" }}>
               ($
               {remainingLqtyInUSD.shorten()} * 50% / ${lusdInStabilityPool.shorten()}) * 100 =
-              <Text sx={{ fontWeight: "bold" }}> {apyPercentage.toString(2)}%</Text>
+              <Text sx={{ fontWeight: "bold" }}> {aprPercentage.toString(2)}%</Text>
             </Paragraph>
           </Card>
         }
