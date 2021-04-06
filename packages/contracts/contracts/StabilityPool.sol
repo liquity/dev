@@ -394,7 +394,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         // First pay out any LQTY gains
         address frontEnd = deposits[msg.sender].frontEndTag;
         _payOutLQTYGains(communityIssuanceCached, msg.sender, frontEnd);
-
+        
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
         uint newFrontEndStake = compoundedFrontEndStake.sub(LUSDtoWithdraw);

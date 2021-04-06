@@ -928,7 +928,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       // Expected issuance for year 1 is 50% of total supply.
       const expectedIssuance_Y1 = communityLQTYSupply.div(toBN('2'))
-
+      
       // Get actual LQTY gains
       const A_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(A)
       const B_LQTYGain_Y1 = await stabilityPool.getDepositorLQTYGain(B)
