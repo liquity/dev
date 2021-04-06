@@ -303,7 +303,7 @@ class DeploymentHelper {
     )
     contracts.borrowerWrappers = new BorrowerWrappersProxy(owner, proxies, borrowerWrappersScript.address)
 
-    const borrowerOperationsScript = await BorrowerOperationsScript.new(contracts.borrowerOperations.address)
+    const borrowerOperationsScript = await BorrowerOperationsScript.new(contracts.borrowerOperations.address, contracts.lusdToken.address)
     contracts.borrowerOperations = new BorrowerOperationsProxy(owner, proxies, borrowerOperationsScript.address, contracts.borrowerOperations)
 
     const troveManagerScript = await TroveManagerScript.new(contracts.troveManager.address)
