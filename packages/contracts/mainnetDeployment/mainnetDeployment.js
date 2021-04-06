@@ -11,7 +11,7 @@ async function mainnetDeploy(configParams) {
   const date = new Date()
   console.log(date.toUTCString())
   const deployerWallet = (await ethers.getSigners())[0]
-  const account2Wallet = (await ethers.getSigners())[1]
+  // const account2Wallet = (await ethers.getSigners())[1]
   const mdh = new MainnetDeploymentHelper(configParams, deployerWallet)
   const gasPrice = configParams.GAS_PRICE
 
@@ -19,7 +19,7 @@ async function mainnetDeploy(configParams) {
 
   console.log(`deployer address: ${deployerWallet.address}`)
   assert.equal(deployerWallet.address, configParams.liquityAddrs.DEPLOYER)
-  assert.equal(account2Wallet.address, configParams.beneficiaries.ACCOUNT_2)
+  // assert.equal(account2Wallet.address, configParams.beneficiaries.ACCOUNT_2)
   let deployerETHBalance = await ethers.provider.getBalance(deployerWallet.address)
   console.log(`deployerETHBalance before: ${deployerETHBalance}`)
 
@@ -89,13 +89,13 @@ async function mainnetDeploy(configParams) {
   // Log LQTY and Unipool addresses
   await mdh.logContractObjects(LQTYContracts)
   console.log(`Unipool address: ${unipool.address}`)
+  
+  // let latestBlock = await ethers.provider.getBlockNumber()
+  let deploymentStartTime = await LQTYContracts.lqtyToken.getDeploymentStartTime()
 
-  let latestBlock = await ethers.provider.getBlockNumber()
-  let now = (await ethers.provider.getBlock(latestBlock)).timestamp
-
-  console.log(`time now: ${now}`)
-  const oneYearFromNow = (now + timeVals.SECONDS_IN_ONE_YEAR).toString()
-  console.log(`time oneYearFromNow: ${oneYearFromNow}`)
+  console.log(`deployment start time: ${deploymentStartTime}`)
+  const oneYearFromDeployment = (Number(deploymentStartTime) + timeVals.SECONDS_IN_ONE_YEAR).toString()
+  console.log(`time oneYearFromDeployment: ${oneYearFromDeployment}`)
 
   // Deploy LockupContracts - one for each beneficiary
   const lockupContracts = {}
@@ -110,7 +110,7 @@ async function mainnetDeploy(configParams) {
         deployerWallet
       )
     } else {
-      const txReceipt = await mdh.sendAndWaitForTransaction(LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromNow, { gasPrice }))
+      const txReceipt = await mdh.sendAndWaitForTransaction(LQTYContracts.lockupContractFactory.deployLockupContract(investorAddr, oneYearFromDeployment, { gasPrice }))
 
       const address = await txReceipt.logs[0].address // The deployment event emitted from the LC itself is is the first of two events, so this is its address 
       lockupContracts[investor] = new ethers.Contract(
@@ -163,22 +163,30 @@ async function mainnetDeploy(configParams) {
   console.log(`current Tellor timestamp: ${tellorPriceResponse[2]}`)
 
   // // --- Lockup Contracts ---
-  // console.log("LOCKUP CONTRACT CHECKS")
-  // // Check lockup contracts exist for each beneficiary with correct unlock time
-  // for (investor of Object.keys(lockupContracts)) {
-  //   const lockupContract = lockupContracts[investor]
-  //   const onChainBeneficiary = await lockupContract.beneficiary()
-  //   const unlockTime = await lockupContract.unlockTime()
+  console.log("LOCKUP CONTRACT CHECKS")
+  // Check lockup contracts exist for each beneficiary with correct unlock time
+  for (investor of Object.keys(lockupContracts)) {
+    const lockupContract = lockupContracts[investor]
+    // check LC references correct LQTYToken 
+    const storedLQTYTokenAddr = await lockupContract.lqtyToken()
+    assert.equal(LQTYContracts.lqtyToken.address, storedLQTYTokenAddr)
+    // Check contract has stored correct beneficary
+    const onChainBeneficiary = await lockupContract.beneficiary()
+    assert.equal(configParams.beneficiaries[investor].toLowerCase(), onChainBeneficiary.toLowerCase())
+    // Check correct unlock time (1 yr from deployment)
+    const unlockTime = await lockupContract.unlockTime()
+    assert.equal(oneYearFromDeployment, unlockTime)
 
-  //   console.log(
-  //     `lockupContract addr: ${th.squeezeAddr(lockupContract.address)},
-  //           beneficiary: ${investor},
-  //           beneficiary addr: ${th.squeezeAddr(configParams.beneficiaries[investor])},
-  //           on-chain beneficiary addr: ${th.squeezeAddr(onChainBeneficiary)}
-  //           unlockTime: ${unlockTime}
-  //           `
-  //   )
-  // }
+    console.log(
+      `lockupContract addr: ${lockupContract.address},
+            stored LQTYToken addr: ${storedLQTYTokenAddr}
+            beneficiary: ${investor},
+            beneficiary addr: ${configParams.beneficiaries[investor]},
+            on-chain beneficiary addr: ${onChainBeneficiary},
+            unlockTime: ${unlockTime}
+            `
+    )
+  }
 
   // // --- Check correct addresses set in LQTYToken
   // console.log("STORED ADDRESSES IN LQTY TOKEN")

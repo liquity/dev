@@ -9,13 +9,13 @@ const externalAddrs  = {
   // https://etherscan.io/token/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2
   WETH_ERC20: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
 }
-​
+
 const liquityAddrs = {
   GENERAL_SAFE:"0xF06016D822943C42e3Cb7FC3a6A3B1889C1045f8", // to be passed to LQTYToken as the bounties/hackathons address
   LQTY_SAFE:"0xb8a9faDA75c6d891fB77a7988Ff9BaD9e485Ca1C", // to be passed to LQTYToken as the LQTY multisig address
   DEPLOYER: "0xa850535D3628CD4dFEB528dC85cfA93051Ff2984" // Mainnet REAL deployment address
 }
-​
+
 // Beneficiaries for lockup contracts. 
 const beneficiaries = {
   ACCOUNT_1: "0xBBdc88676759D09617C288E29f2Eb7Ce94592f25",  
@@ -50,19 +50,19 @@ const beneficiaries = {
   ACCOUNT_30: "0x4CA75a1B3ABFb97Cee6C87BB15eF5b5609eCAad3",
   ACCOUNT_31: "0x994668f7B05B30996BB7F2B87140D0A761D9f292",
 }
-​
+
 const OUTPUT_FILE = './mainnetDeployment/mainnetDeploymentOutput.json'
-​
+
 const delay = ms => new Promise(res => setTimeout(res, ms));
 const waitFunction = async () => {
   return delay(90000) // wait 90s
 }
-​
-const GAS_PRICE = 150000000000
+
+const GAS_PRICE = 200000000000
 const TX_CONFIRMATIONS = 3 // for mainnet
-​
+
 const ETHERSCAN_BASE_URL = 'https://etherscan.io/address'
-​
+
 module.exports = {
   externalAddrs,
   liquityAddrs,
