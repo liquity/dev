@@ -1491,7 +1491,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         require(_getTCR(_price) >= MCR, "TroveManager: Cannot redeem when TCR < MCR");
     }
 
-    function _requireAfterBootstrapPeriod() internal view {
+    function _requireAfterBootstrapPeriod() internal view virtual {
         uint systemDeploymentTime = lqtyToken.getDeploymentStartTime();
         require(block.timestamp >= systemDeploymentTime.add(BOOTSTRAP_PERIOD), "TroveManager: Redemptions are not allowed during bootstrap phase");
     }
