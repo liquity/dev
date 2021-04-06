@@ -1,4 +1,3 @@
-
 const SortedTroves = artifacts.require("./SortedTroves.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
@@ -16,9 +15,11 @@ const LQTYStaking = artifacts.require("./LQTYStaking.sol")
 const LQTYToken = artifacts.require("./LQTYToken.sol")
 const LockupContractFactory = artifacts.require("./LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
+
+const Unipool =  artifacts.require("./Unipool.sol")
+
 const LQTYTokenTester = artifacts.require("./LQTYTokenTester.sol")
 const CommunityIssuanceTester = artifacts.require("./CommunityIssuanceTester.sol")
-
 const StabilityPoolTester = artifacts.require("./StabilityPoolTester.sol")
 const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
@@ -420,6 +421,10 @@ class DeploymentHelper {
       LQTYContracts.lqtyToken.address,
       coreContracts.stabilityPool.address
     )
+  }
+
+  static async connectUnipool(uniPool, LQTYContracts, uniswapPairAddr, duration) {
+    await uniPool.setParams(LQTYContracts.lqtyToken.address, uniswapPairAddr, duration)
   }
 }
 module.exports = DeploymentHelper

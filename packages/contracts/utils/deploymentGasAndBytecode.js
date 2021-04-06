@@ -87,7 +87,16 @@ const logContractDeploymentCosts = async (contracts) => {
     totalGasCost = totalGasCost + Number(gasCost)
   }
   console.log(`Total deployment gas costs: ${totalGasCost}`)
-  getUSDCostFromGasCost(totalGasCost, 200, 1500)
+  getUSDCostFromGasCost(totalGasCost, 200, 1850)
+}
+
+const logContractObjects = async (contracts) => {
+  console.log(`Contract objects addresses:`)
+  let totalGasCost = 0
+  for (contractName of Object.keys(contracts)) {
+    const gasCost = await getGasFromContractDeployment(contracts[contractName], contractName);
+    totalGasCost = totalGasCost + Number(gasCost)
+  }
 }
 
 const logContractBytecodeLengths = (contractABIs) => {

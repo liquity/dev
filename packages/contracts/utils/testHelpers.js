@@ -30,6 +30,7 @@ const TimeValues = {
   SECONDS_IN_ONE_HOUR:    60 * 60,
   SECONDS_IN_ONE_DAY:     60 * 60 * 24,
   SECONDS_IN_ONE_WEEK:    60 * 60 * 24 * 7,
+  SECONDS_IN_SIX_WEEKS:   60 * 60 * 24 * 7 * 6,
   SECONDS_IN_ONE_MONTH:   60 * 60 * 24 * 30,
   SECONDS_IN_ONE_YEAR:    60 * 60 * 24 * 365,
   MINUTES_IN_ONE_WEEK:    60 * 24 * 30,
@@ -1077,9 +1078,15 @@ class TestHelper {
 
   static async getLCFromDeploymentTx(deployedLCTx) {
     const deployedLCAddress = this.getLCAddressFromDeploymentTx(deployedLCTx)  // grab addr of deployed contract from event
-    const LC = await LockupContract.at(deployedLCAddress)
+    const LC = await this.getLCFromAddress(deployedLCAddress)
     return LC
   }
+
+  static async getLCFromAddress(LCAddress) {
+    const LC = await LockupContract.at(LCAddress)
+    return LC
+  }
+
 
   static async registerFrontEnds(frontEnds, stabilityPool) {
     for (const frontEnd of frontEnds) {
