@@ -31,9 +31,10 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
     constructor(
         address _borrowerOperationsAddress,
         address _troveManagerAddress,
-        address _lqtyStakingAddress
+        address _lqtyStakingAddress,
+        address _lusdTokenAddress
     )
-        BorrowerOperationsScript(IBorrowerOperations(_borrowerOperationsAddress))
+        BorrowerOperationsScript(IBorrowerOperations(_borrowerOperationsAddress), _lusdTokenAddress)
         LQTYStakingScript(_lqtyStakingAddress)
         public
     {
