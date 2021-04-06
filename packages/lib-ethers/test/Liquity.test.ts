@@ -979,6 +979,11 @@ describe("EthersLiquity", () => {
       const lqtyBalance = Number(await liquity.getLQTYBalance());
       expect(lqtyBalance).to.be.within(1333333, 1333334);
     });
+
+    it("should return the end date", async function () {
+      const liquityMiningEndDate = await liquity.getLiquidityMiningEndDate();
+      expect(liquityMiningEndDate).to.exist;
+    });
   });
 
   describe("Gas estimation", () => {

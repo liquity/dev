@@ -23,6 +23,7 @@ Implemented by [EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->.
 |  [getCollateralSurplusBalance(address)](./lib-base.readableliquity.getcollateralsurplusbalance.md) | Get the amount of leftover collateral available for withdrawal by an address. |
 |  [getFees()](./lib-base.readableliquity.getfees.md) | Get a calculator for current fees. |
 |  [getFrontendStatus(address)](./lib-base.readableliquity.getfrontendstatus.md) | Check whether an address is registered as a Liquity frontend, and what its kickback rate is. |
+|  [getLiquidityMiningEndDate()](./lib-base.readableliquity.getliquidityminingenddate.md) | Get the Unix timestamp end date of the Uniswap mining rewards. |
 |  [getLiquidityMiningLQTYReward(address)](./lib-base.readableliquity.getliquiditymininglqtyreward.md) | Get the amount of LQTY earned by an address through mining liquidity. |
 |  [getLiquidityMiningStake(address)](./lib-base.readableliquity.getliquidityminingstake.md) | Get the amount of Uniswap ETH/LUSD LP tokens currently staked by an address in liquidity mining. |
 |  [getLQTYBalance(address)](./lib-base.readableliquity.getlqtybalance.md) | Get the amount of LQTY held by an address. |

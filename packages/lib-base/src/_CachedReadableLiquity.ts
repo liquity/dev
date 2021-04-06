@@ -171,6 +171,13 @@ export class _CachedReadableLiquity<T extends unknown[]>
     );
   }
 
+  async getLiquidityMiningEndDate(...extraParams: T): Promise<number> {
+    return (
+      this._cache.getLiquidityMiningEndDate(...extraParams) ??
+      this._readable.getLiquidityMiningEndDate(...extraParams)
+    );
+  }
+
   async getCollateralSurplusBalance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
       this._cache.getCollateralSurplusBalance(address, ...extraParams) ??

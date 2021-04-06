@@ -9,10 +9,12 @@ import { fetchPrices } from "../context/fetchPrices";
 
 const selector = ({
   remainingLiquidityMiningLQTYReward,
-  totalStakedUniTokens
+  totalStakedUniTokens,
+  liquidityMiningEndDate
 }: LiquityStoreState) => ({
   remainingLiquidityMiningLQTYReward,
-  totalStakedUniTokens
+  totalStakedUniTokens,
+  liquidityMiningEndDate
 });
 
 export const Yield: React.FC = () => {
@@ -22,9 +24,16 @@ export const Yield: React.FC = () => {
     }
   } = useLiquity();
 
-  const { remainingLiquidityMiningLQTYReward, totalStakedUniTokens } = useLiquitySelector(selector);
+  const {
+    remainingLiquidityMiningLQTYReward,
+    totalStakedUniTokens,
+    liquidityMiningEndDate
+  } = useLiquitySelector(selector);
+
   const [lqtyPrice, setLqtyPrice] = useState<Decimal | undefined>(undefined);
   const [uniLpPrice, setUniLpPrice] = useState<Decimal | undefined>(undefined);
+  const [remainingDays, setRemainingDays] = useState<number>(0);
+
   const hasZeroValue = remainingLiquidityMiningLQTYReward.isZero || totalStakedUniTokens.isZero;
   const lqtyTokenAddress = addresses["lqtyToken"];
   const uniTokenAddress = addresses["uniToken"];
@@ -41,7 +50,16 @@ export const Yield: React.FC = () => {
     })();
   }, [lqtyTokenAddress, uniTokenAddress]);
 
-  if (hasZeroValue || lqtyPrice === undefined || uniLpPrice === undefined) return null;
+  useEffect(() => {
+    const startDate = Date.now(); // Unix timestamp of now, in milliseconds
+    const endDate = liquidityMiningEndDate * 1000; // Unix timestamp of end date, in milliseconds
+    const duration = endDate - startDate;
+    const remainingDays = Number.parseFloat((duration / (1000 * 60 * 60 * 24)).toPrecision(2));
+    setRemainingDays(remainingDays);
+  }, [liquidityMiningEndDate]);
+
+  if (hasZeroValue || lqtyPrice === undefined || uniLpPrice === undefined || remainingDays <= 0)
+    return null;
 
   const remainingLqtyInUSD = remainingLiquidityMiningLQTYReward.mul(lqtyPrice);
   const totalStakedUniLpInUSD = totalStakedUniTokens.mul(uniLpPrice);
@@ -51,7 +69,9 @@ export const Yield: React.FC = () => {
 
   return (
     <Badge>
-      <Text>6 week yield {yieldPercentage.toString(2)}%</Text>
+      <Text>
+        {remainingDays} day yield {yieldPercentage.toString(2)}%
+      </Text>
       <InfoIcon
         tooltip={
           <Card variant="tooltip" sx={{ minWidth: ["auto", "352px"] }}>

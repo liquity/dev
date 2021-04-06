@@ -360,6 +360,10 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     throw new Error("Method not implemented.");
   }
 
+  getLiquidityMiningEndDate(): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
+
   getTotalStakedUniTokens(): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }

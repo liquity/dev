@@ -14,6 +14,8 @@ export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiq
     // (undocumented)
     getFrontendStatus(address?: string, ...extraParams: T): Promise<FrontendStatus>;
     // (undocumented)
+    getLiquidityMiningEndDate(...extraParams: T): Promise<number>;
+    // (undocumented)
     getLiquidityMiningLQTYReward(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getLiquidityMiningStake(address?: string, ...extraParams: T): Promise<Decimal>;
@@ -263,6 +265,7 @@ export interface LiquityStoreBaseState {
     // @internal (undocumented)
     _feesInNormalMode: Fees;
     frontend: FrontendStatus;
+    liquidityMiningEndDate: number;
     liquidityMiningLQTYReward: Decimal;
     liquidityMiningStake: Decimal;
     lqtyBalance: Decimal;
@@ -493,6 +496,7 @@ export interface ReadableLiquity {
     getCollateralSurplusBalance(address?: string): Promise<Decimal>;
     getFees(): Promise<Fees>;
     getFrontendStatus(address?: string): Promise<FrontendStatus>;
+    getLiquidityMiningEndDate(): Promise<number>;
     getLiquidityMiningLQTYReward(address?: string): Promise<Decimal>;
     getLiquidityMiningStake(address?: string): Promise<Decimal>;
     getLQTYBalance(address?: string): Promise<Decimal>;

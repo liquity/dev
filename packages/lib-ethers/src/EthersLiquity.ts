@@ -256,6 +256,11 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getLiquidityMiningLQTYReward(address, overrides);
   }
 
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLiquidityMiningEndDate} */
+  getLiquidityMiningEndDate(overrides?: EthersCallOverrides): Promise<number> {
+    return this._readable.getLiquidityMiningEndDate(overrides);
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getCollateralSurplusBalance} */
   getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getCollateralSurplusBalance(address, overrides);

@@ -49,6 +49,9 @@ export interface LiquityStoreBaseState {
   /** Amount of LQTY the user has earned through mining liquidity. */
   liquidityMiningLQTYReward: Decimal;
 
+  /** Unix timestamp of when the mining rewards will stop (run out)  */
+  liquidityMiningEndDate: number;
+
   /**
    * Amount of leftover collateral available for withdrawal to the user.
    *
@@ -384,6 +387,13 @@ export abstract class LiquityStore<T = unknown> {
         eq,
         baseState.remainingLiquidityMiningLQTYReward,
         baseStateUpdate.remainingLiquidityMiningLQTYReward
+      ),
+
+      liquidityMiningEndDate: this._updateIfChanged(
+        strictEquals,
+        "liquidityMiningEndDate",
+        baseState.liquidityMiningEndDate,
+        baseStateUpdate.liquidityMiningEndDate
       ),
 
       liquidityMiningStake: this._updateIfChanged(

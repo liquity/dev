@@ -164,6 +164,11 @@ export interface ReadableLiquity {
   getLiquidityMiningLQTYReward(address?: string): Promise<Decimal>;
 
   /**
+   * Get the Unix timestamp end date of the Uniswap mining rewards.
+   */
+  getLiquidityMiningEndDate(): Promise<number>;
+
+  /**
    * Get the amount of leftover collateral available for withdrawal by an address.
    *
    * @remarks

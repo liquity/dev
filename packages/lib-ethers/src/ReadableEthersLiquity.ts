@@ -385,6 +385,13 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return unipool.earned(address, { ...overrides }).then(decimalify);
   }
 
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLiquidityMiningEndDate} */
+  getLiquidityMiningEndDate(overrides?: EthersCallOverrides): Promise<number> {
+    const { unipool } = _getContracts(this.connection);
+
+    return unipool.periodFinish({ ...overrides }).then(x => x.toNumber());
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getCollateralSurplusBalance} */
   getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     address ??= _requireAddress(this.connection);
@@ -675,6 +682,12 @@ class BlockPolledLiquityStoreBasedCache
   ): Decimal | undefined {
     if (this._userHit(address, overrides)) {
       return this._store.state.liquidityMiningLQTYReward;
+    }
+  }
+
+  getLiquidityMiningEndDate(overrides?: EthersCallOverrides): number | undefined {
+    if (this._blockHit(overrides)) {
+      return this._store.state.liquidityMiningEndDate;
     }
   }
 
