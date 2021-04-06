@@ -12,8 +12,8 @@ const getSecret = (secretKey, defaultValue='') => {
     const SECRETS_FILE = "./secrets.js"
     let secret = defaultValue
     if (fs.existsSync(SECRETS_FILE)) {
-        const { secrets } = require(SECRETS_FILE);
-        secret = secrets[secretKey]
+        const { secrets } = require(SECRETS_FILE)
+        if (secrets[secretKey]) { secret = secrets[secretKey] }
     }
 
     return secret
