@@ -49,7 +49,7 @@ export const Yield: React.FC = () => {
       <Text>LQTY APR {aprPercentage.toString(2)}%</Text>
       <InfoIcon
         tooltip={
-          <Card variant="tooltip" sx={{ width: ["220px", "506px"] }}>
+          <Card variant="tooltip" sx={{ width: ["220px", "520px"] }}>
             <Paragraph>
               An <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on the LUSD
               deposited to the Stability Pool over the next year, not including your ETH gains from
