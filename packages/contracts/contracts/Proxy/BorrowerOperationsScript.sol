@@ -13,7 +13,7 @@ contract BorrowerOperationsScript is CheckContract {
     
     function LUSD_Join(
         address _From,
-        address _Amount
+        uint _Amount
     ) private {
         // Gets LUSD from the user's wallet
         IERC20(LUSD).transferFrom(_From, address(this), _Amount);
