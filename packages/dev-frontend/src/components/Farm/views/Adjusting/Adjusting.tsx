@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { Heading, Box, Flex, Card, Button } from "theme-ui";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal, Difference, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { LP, GT } from "../../../../strings";
@@ -17,20 +17,25 @@ import { Validation } from "../Validation";
 const selector = ({
   liquidityMiningStake,
   liquidityMiningLQTYReward,
-  uniTokenBalance
+  uniTokenBalance,
+  totalStakedUniTokens
 }: LiquityStoreState) => ({
   liquidityMiningStake,
   liquidityMiningLQTYReward,
-  uniTokenBalance
+  uniTokenBalance,
+  totalStakedUniTokens
 });
 
 const transactionId = /farm-/;
 
 export const Adjusting: React.FC = () => {
   const { dispatchEvent } = useFarmView();
-  const { liquidityMiningStake, liquidityMiningLQTYReward, uniTokenBalance } = useLiquitySelector(
-    selector
-  );
+  const {
+    liquidityMiningStake,
+    liquidityMiningLQTYReward,
+    uniTokenBalance,
+    totalStakedUniTokens
+  } = useLiquitySelector(selector);
   const [amount, setAmount] = useState<Decimal>(liquidityMiningStake);
   const editingState = useState<string>();
 
@@ -45,6 +50,19 @@ export const Adjusting: React.FC = () => {
   const handleCancelPressed = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
+
+  const nextTotalStakedUniTokens = isDirty
+    ? totalStakedUniTokens.sub(liquidityMiningStake).add(amount)
+    : totalStakedUniTokens;
+
+  const originalPoolShare = liquidityMiningStake.div(nextTotalStakedUniTokens).mul(100);
+
+  const poolShare = nextTotalStakedUniTokens.gt(0)
+    ? Decimal.min(Decimal.max(amount.div(nextTotalStakedUniTokens).mul(100), 0), 100)
+    : Decimal.ZERO;
+
+  const poolShareChange =
+    originalPoolShare.nonZero && Difference.between(poolShare, originalPoolShare).nonZero;
 
   return (
     <Card>
@@ -73,6 +91,15 @@ export const Adjusting: React.FC = () => {
           maxAmount={maximumAmount.toString()}
           maxedOut={hasSetMaximumAmount}
         ></EditableRow>
+
+        <StaticRow
+          label="Pool share"
+          inputId="farm-share"
+          amount={poolShare.prettify(4)}
+          unit="%"
+          pendingAmount={poolShareChange?.prettify().concat("%")}
+          pendingColor={poolShareChange?.positive ? "success" : "danger"}
+        />
 
         <StaticRow
           label="Reward"
