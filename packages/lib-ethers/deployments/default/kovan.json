@@ -4,6 +4,7 @@
   "deploymentDate": 1617374516000,
   "bootstrapPeriod": 1209600,
   "totalStabilityPoolLQTYReward": "32000000",
+  "liquidityMiningLQTYRewardRate": "0.257201646090534979",
   "_priceFeedIsTestnet": false,
   "_uniTokenIsMock": false,
   "_isDev": false,
