@@ -28,13 +28,8 @@ export const Yield: React.FC = () => {
   const hasZeroValue = remainingLiquidityMiningLQTYReward.isZero || totalStakedUniTokens.isZero;
   const lqtyTokenAddress = addresses["lqtyToken"];
   const uniTokenAddress = addresses["uniToken"];
-  const [daysRemaining, setDaysRemaining] = useState<Decimal | null>(null);
-
-  useEffect(() => {
-    const secondsRemaining = remainingLiquidityMiningLQTYReward.div(liquidityMiningLQTYRewardRate);
-    const days = secondsRemaining.div(60 * 60 * 24);
-    setDaysRemaining(days);
-  }, [liquidityMiningLQTYRewardRate, remainingLiquidityMiningLQTYReward]);
+  const secondsRemaining = remainingLiquidityMiningLQTYReward.div(liquidityMiningLQTYRewardRate);
+  const daysRemaining = secondsRemaining.div(60 * 60 * 24);
 
   useEffect(() => {
     (async () => {
