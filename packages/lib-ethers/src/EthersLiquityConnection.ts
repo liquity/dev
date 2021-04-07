@@ -72,6 +72,9 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
   /** Total amount of LQTY allocated for rewarding stability depositors. */
   readonly totalStabilityPoolLQTYReward: Decimal;
 
+  /** Amount of LQTY collectively rewarded to stakers of the liquidity mining pool per second. */
+  readonly liquidityMiningLQTYRewardRate: Decimal;
+
   /** A mapping of Liquity contracts' names to their addresses. */
   readonly addresses: Record<string, string>;
 
@@ -97,7 +100,12 @@ const connectionFrom = (
   signer: EthersSigner | undefined,
   _contracts: _LiquityContracts,
   _multicall: _Multicall | undefined,
-  { deploymentDate, totalStabilityPoolLQTYReward, ...deployment }: _LiquityDeploymentJSON,
+  {
+    deploymentDate,
+    totalStabilityPoolLQTYReward,
+    liquidityMiningLQTYRewardRate,
+    ...deployment
+  }: _LiquityDeploymentJSON,
   optionalParams?: EthersLiquityConnectionOptionalParams
 ): _InternalEthersLiquityConnection => {
   if (
@@ -115,6 +123,7 @@ const connectionFrom = (
     _multicall,
     deploymentDate: new Date(deploymentDate),
     totalStabilityPoolLQTYReward: Decimal.from(totalStabilityPoolLQTYReward),
+    liquidityMiningLQTYRewardRate: Decimal.from(liquidityMiningLQTYRewardRate),
     ...deployment,
     ...optionalParams
   });

@@ -319,6 +319,7 @@ export const deployAndSetupContracts = async (
     deploymentDate: new Date().getTime(),
     bootstrapPeriod: 0,
     totalStabilityPoolLQTYReward: "0",
+    liquidityMiningLQTYRewardRate: "0",
     _priceFeedIsTestnet,
     _uniTokenIsMock: !wethAddress,
     _isDev,
@@ -338,13 +339,14 @@ export const deployAndSetupContracts = async (
   };
 
   const contracts = _connectToContracts(deployer, deployment);
+
+  log("Connecting contracts...");
+  await connectContracts(contracts, deployer, overrides);
+
   const lqtyTokenDeploymentTime = await contracts.lqtyToken.getDeploymentStartTime();
   const bootstrapPeriod = await contracts.troveManager.BOOTSTRAP_PERIOD();
   const totalStabilityPoolLQTYReward = await contracts.communityIssuance.LQTYSupplyCap();
-
-  log("Connecting contracts...");
-
-  await connectContracts(contracts, deployer, overrides);
+  const liquidityMiningLQTYRewardRate = await contracts.unipool.rewardRate();
 
   return {
     ...deployment,
@@ -352,6 +354,9 @@ export const deployAndSetupContracts = async (
     bootstrapPeriod: bootstrapPeriod.toNumber(),
     totalStabilityPoolLQTYReward: `${Decimal.fromBigNumberString(
       totalStabilityPoolLQTYReward.toHexString()
+    )}`,
+    liquidityMiningLQTYRewardRate: `${Decimal.fromBigNumberString(
+      liquidityMiningLQTYRewardRate.toHexString()
     )}`
   };
 };
