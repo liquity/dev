@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from "react";
 import { Heading, Box, Flex, Card, Button } from "theme-ui";
-import { Decimal } from "@liquity/lib-base";
+import { Decimal, LiquityStoreState } from "@liquity/lib-base";
 import { LP } from "../../../../strings";
 import { Icon } from "../../../Icon";
-import { EditableRow } from "../../../Trove/Editor";
+import { EditableRow, StaticRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useFarmView } from "../../context/FarmViewContext";
 import { useMyTransactionState } from "../../../Transaction";
@@ -12,11 +12,15 @@ import { Description } from "../Description";
 import { Approve } from "../Approve";
 import { Validation } from "../Validation";
 import { useValidationState } from "../../context/useValidationState";
+import { useLiquitySelector } from "@liquity/lib-react";
 
 const transactionId = /farm-/;
+const selector = ({ totalStakedUniTokens }: LiquityStoreState) => ({ totalStakedUniTokens });
 
 export const Staking: React.FC = () => {
   const { dispatchEvent } = useFarmView();
+  const { totalStakedUniTokens } = useLiquitySelector(selector);
+
   const [amount, setAmount] = useState<Decimal>(Decimal.from(0));
   const editingState = useState<string>();
   const isDirty = !amount.isZero;
@@ -31,6 +35,12 @@ export const Staking: React.FC = () => {
   const handleCancelPressed = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
+
+  const nextTotalStakedUniTokens = totalStakedUniTokens.add(amount);
+
+  const poolShare = nextTotalStakedUniTokens.gt(0)
+    ? Decimal.min(Decimal.max(amount.div(nextTotalStakedUniTokens).mul(100), 0), 100)
+    : Decimal.ZERO;
 
   return (
     <Card>
@@ -59,6 +69,8 @@ export const Staking: React.FC = () => {
           maxAmount={maximumStake.toString()}
           maxedOut={hasSetMaximumStake}
         ></EditableRow>
+
+        <StaticRow label="Pool share" inputId="farm-share" amount={poolShare.prettify(4)} unit="%" />
 
         {isDirty && <Validation amount={amount} />}
         <Description amount={amount} />
