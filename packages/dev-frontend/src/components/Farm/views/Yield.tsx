@@ -18,7 +18,7 @@ const selector = ({
 export const Yield: React.FC = () => {
   const {
     liquity: {
-      connection: { addresses }
+      connection: { addresses, liquidityMiningLQTYRewardRate }
     }
   } = useLiquity();
 
@@ -28,6 +28,13 @@ export const Yield: React.FC = () => {
   const hasZeroValue = remainingLiquidityMiningLQTYReward.isZero || totalStakedUniTokens.isZero;
   const lqtyTokenAddress = addresses["lqtyToken"];
   const uniTokenAddress = addresses["uniToken"];
+  const [daysRemaining, setDaysRemaining] = useState<Decimal | null>(null);
+
+  useEffect(() => {
+    const secondsRemaining = remainingLiquidityMiningLQTYReward.div(liquidityMiningLQTYRewardRate);
+    const days = secondsRemaining.div(60 * 60 * 24);
+    setDaysRemaining(days);
+  }, [liquidityMiningLQTYRewardRate, remainingLiquidityMiningLQTYReward]);
 
   useEffect(() => {
     (async () => {
@@ -51,7 +58,9 @@ export const Yield: React.FC = () => {
 
   return (
     <Badge>
-      <Text>Yield {yieldPercentage.toString(2)}%</Text>
+      <Text>
+        {daysRemaining?.prettify(0)} day yield {yieldPercentage.toString(2)}%
+      </Text>
       <InfoIcon
         tooltip={
           <Card variant="tooltip" sx={{ minWidth: ["auto", "352px"] }}>
