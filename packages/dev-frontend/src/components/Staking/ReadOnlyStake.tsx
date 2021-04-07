@@ -12,11 +12,16 @@ import { Icon } from "../Icon";
 import { useStakingView } from "./context/StakingViewContext";
 import { StakingGainsAction } from "./StakingGainsAction";
 
-const selectLQTYStake = ({ lqtyStake }: LiquityStoreState) => lqtyStake;
+const select = ({ lqtyStake, totalStakedLQTY }: LiquityStoreState) => ({
+  lqtyStake,
+  totalStakedLQTY
+});
 
 export const ReadOnlyStake: React.FC = () => {
   const { changePending, dispatch } = useStakingView();
-  const lqtyStake = useLiquitySelector(selectLQTYStake);
+  const { lqtyStake, totalStakedLQTY } = useLiquitySelector(select);
+
+  const poolShare = lqtyStake.stakedLQTY.mulDiv(100, totalStakedLQTY);
 
   return (
     <Card>
@@ -29,6 +34,8 @@ export const ReadOnlyStake: React.FC = () => {
           amount={lqtyStake.stakedLQTY.prettify()}
           unit={GT}
         />
+
+        <StaticRow label="Pool share" inputId="stake-share" amount={poolShare.prettify()} unit="%" />
 
         <StaticRow
           label="Redemption gain"

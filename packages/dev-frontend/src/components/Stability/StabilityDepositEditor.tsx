@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Decimalish, StabilityDeposit, LiquityStoreState } from "@liquity/lib-base";
+import {
+  Decimal,
+  Decimalish,
+  StabilityDeposit,
+  LiquityStoreState,
+  Difference
+} from "@liquity/lib-base";
 
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -12,7 +18,10 @@ import { EditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { InfoIcon } from "../InfoIcon";
 
-const selectLUSDBalance = ({ lusdBalance }: LiquityStoreState) => lusdBalance;
+const select = ({ lusdBalance, lusdInStabilityPool }: LiquityStoreState) => ({
+  lusdBalance,
+  lusdInStabilityPool
+});
 
 type StabilityDepositEditorProps = {
   originalDeposit: StabilityDeposit;
@@ -28,13 +37,22 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   dispatch,
   children
 }) => {
-  const lusdBalance = useLiquitySelector(selectLUSDBalance);
+  const { lusdBalance, lusdInStabilityPool } = useLiquitySelector(select);
   const editingState = useState<string>();
 
   const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
 
   const maxAmount = originalDeposit.currentLUSD.add(lusdBalance);
   const maxedOut = editedLUSD.eq(maxAmount);
+
+  const lusdInStabilityPoolAfterChange = lusdInStabilityPool
+    .sub(originalDeposit.currentLUSD)
+    .add(editedLUSD);
+
+  const originalPoolShare = originalDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
+  const newPoolShare = editedLUSD.mulDiv(100, lusdInStabilityPoolAfterChange);
+  const poolShareChange =
+    originalPoolShare.nonZero && Difference.between(newPoolShare, originalPoolShare).nonZero;
 
   return (
     <Card>
@@ -63,6 +81,19 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           editedAmount={editedLUSD.toString(2)}
           setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
         />
+
+        {newPoolShare.infinite ? (
+          <StaticRow label="Pool share" inputId="deposit-share" amount="N/A" />
+        ) : (
+          <StaticRow
+            label="Pool share"
+            inputId="deposit-share"
+            amount={newPoolShare.prettify()}
+            pendingAmount={poolShareChange?.prettify().concat("%")}
+            pendingColor={poolShareChange?.positive ? "success" : "danger"}
+            unit="%"
+          />
+        )}
 
         {!originalDeposit.isEmpty && (
           <>
