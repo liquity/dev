@@ -33,10 +33,23 @@ where $\zeta_t^e \sim N(0, $ sd_ether$)$ represents ether price shock and $\sigm
 """
 
 #ether price
-price_ether_initial = 1000
+price_ether_initial = 2000
 price_ether = [price_ether_initial]
 sd_ether=0.02
-drift_ether = 0.001
+#drift_ether = 0.001
+# 4 stages:
+# growth
+# crash
+# growth
+# decrease
+period1 = 2 * month
+drift_ether1 = 0.001
+period2 = period1 + 7 * day
+drift_ether2 = -0.02
+period3 = 6 * month
+drift_ether3 = 0.0013
+period4 = period
+drift_ether4 = -0.0002
 
 """# LQTY price
 In the first month, the price of LQTY follows
@@ -109,7 +122,8 @@ where $\zeta_t^l \sim N(0, sd\_liquidity)$ is the shock in the liquidity pool, $
 # liquidity pool
 liquidity_initial=0
 sd_liquidity=0.001
-drift_liquidity=1.0003
+#drift_liquidity=1.0003
+drift_liquidity=1
 delta = -20
 
 """# Stability Pool
@@ -285,10 +299,34 @@ Ether Price
 """
 
 #ether price
-for i in range(1, period):
+for i in range(1, period1):
     random.seed(2019375+10000*i)
     shock_ether = random.normalvariate(0, sd_ether)
-    price_ether.append(price_ether[i-1] * (1 + shock_ether) * (1 + drift_ether))
+    price_ether.append(price_ether[i-1] * (1 + shock_ether) * (1 + drift_ether1))
+print(" - ETH period 1 -")
+print(f"Min ETH price: {min(price_ether[1:period1])}")
+print(f"Max ETH price: {max(price_ether[1:period1])}")
+for i in range(period1, period2):
+    random.seed(2019375+10000*i)
+    shock_ether = random.normalvariate(0, sd_ether)
+    price_ether.append(price_ether[i-1] * (1 + shock_ether) * (1 + drift_ether2))
+print(" - ETH period 2 -")
+print(f"Min ETH price: {min(price_ether[period1:period2])}")
+print(f"Max ETH price: {max(price_ether[period1:period2])}")
+for i in range(period2, period3):
+    random.seed(2019375+10000*i)
+    shock_ether = random.normalvariate(0, sd_ether)
+    price_ether.append(price_ether[i-1] * (1 + shock_ether) * (1 + drift_ether3))
+print(" - ETH period 3 -")
+print(f"Min ETH price: {min(price_ether[period2:period3])}")
+print(f"Max ETH price: {max(price_ether[period2:period3])}")
+for i in range(period3, period4):
+    random.seed(2019375+10000*i)
+    shock_ether = random.normalvariate(0, sd_ether)
+    price_ether.append(price_ether[i-1] * (1 + shock_ether) * (1 + drift_ether4))
+print(" - ETH period 4 -")
+print(f"Min ETH price: {min(price_ether[period3:period4])}")
+print(f"Max ETH price: {max(price_ether[period3:period4])}")
 
 """Natural Rate"""
 

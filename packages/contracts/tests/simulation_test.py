@@ -146,8 +146,8 @@ def contracts():
 
 @pytest.fixture
 def print_expectations():
-    ether_price_one_year = price_ether_initial * (1 + drift_ether)**8760
-    print("Expected ether price at the end of the year: $", ether_price_one_year)
+    # ether_price_one_year = price_ether_initial * (1 + drift_ether)**8760
+    # print("Expected ether price at the end of the year: $", ether_price_one_year)
     print("Expected LQTY price at the end of first month: $", price_LQTY_initial * (1 + drift_LQTY)**720)
 
     print("\n Open troves")
