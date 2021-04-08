@@ -89,8 +89,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           <StaticRow
             label="Pool share"
             inputId="deposit-share"
-            amount={newPoolShare.prettify()}
-            pendingAmount={poolShareChange?.prettify().concat("%")}
+            amount={newPoolShare.prettify(4)}
+            pendingAmount={poolShareChange?.prettify(4).concat("%")}
             pendingColor={poolShareChange?.positive ? "success" : "danger"}
             unit="%"
           />

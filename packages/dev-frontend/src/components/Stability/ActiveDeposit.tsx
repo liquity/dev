@@ -70,7 +70,7 @@ export const ActiveDeposit: React.FC = () => {
           <StaticRow
             label="Pool share"
             inputId="deposit-share"
-            amount={poolShare.prettify()}
+            amount={poolShare.prettify(4)}
             unit="%"
           />
 
