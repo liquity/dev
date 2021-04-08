@@ -41,7 +41,7 @@ export const Active: React.FC = () => {
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
 
-  const poolShare = liquidityMiningStake.div(totalStakedUniTokens).mul(100);
+  const poolShare = liquidityMiningStake.mulDiv(100, totalStakedUniTokens);
 
   return (
     <Card>
@@ -61,12 +61,16 @@ export const Active: React.FC = () => {
             amount={liquidityMiningStake.prettify(4)}
             unit={LP}
           />
-          <StaticRow
-            label="Pool share"
-            inputId="farm-share"
-            amount={poolShare.prettify(4)}
-            unit={"%"}
-          />
+          {poolShare.infinite ? (
+            <StaticRow label="Pool share" inputId="farm-share" amount="N/A" />
+          ) : (
+            <StaticRow
+              label="Pool share"
+              inputId="farm-share"
+              amount={poolShare.prettify(4)}
+              unit={"%"}
+            />
+          )}
           <Flex sx={{ alignItems: "center" }}>
             <StaticRow
               label="Reward"

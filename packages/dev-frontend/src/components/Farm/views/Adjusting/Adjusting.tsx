@@ -55,14 +55,11 @@ export const Adjusting: React.FC = () => {
     ? totalStakedUniTokens.sub(liquidityMiningStake).add(amount)
     : totalStakedUniTokens;
 
-  const originalPoolShare = liquidityMiningStake.div(nextTotalStakedUniTokens).mul(100);
-
-  const poolShare = nextTotalStakedUniTokens.gt(0)
-    ? Decimal.min(Decimal.max(amount.div(nextTotalStakedUniTokens).mul(100), 0), 100)
-    : Decimal.ZERO;
+  const originalPoolShare = liquidityMiningStake.mulDiv(100, totalStakedUniTokens);
+  const poolShare = amount.mulDiv(100, nextTotalStakedUniTokens);
 
   const poolShareChange =
-    originalPoolShare.nonZero && Difference.between(poolShare, originalPoolShare).nonZero;
+    liquidityMiningStake.nonZero && Difference.between(poolShare, originalPoolShare).nonZero;
 
   return (
     <Card>
@@ -92,14 +89,18 @@ export const Adjusting: React.FC = () => {
           maxedOut={hasSetMaximumAmount}
         ></EditableRow>
 
-        <StaticRow
-          label="Pool share"
-          inputId="farm-share"
-          amount={poolShare.prettify(4)}
-          unit="%"
-          pendingAmount={poolShareChange?.prettify().concat("%")}
-          pendingColor={poolShareChange?.positive ? "success" : "danger"}
-        />
+        {poolShare.infinite ? (
+          <StaticRow label="Pool share" inputId="farm-share" amount="N/A" />
+        ) : (
+          <StaticRow
+            label="Pool share"
+            inputId="farm-share"
+            amount={poolShare.prettify(4)}
+            unit="%"
+            pendingAmount={poolShareChange?.prettify().concat("%")}
+            pendingColor={poolShareChange?.positive ? "success" : "danger"}
+          />
+        )}
 
         <StaticRow
           label="Reward"

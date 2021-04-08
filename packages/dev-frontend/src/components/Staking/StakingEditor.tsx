@@ -45,7 +45,7 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
   const originalPoolShare = originalStake.stakedLQTY.mulDiv(100, totalStakedLQTY);
   const newPoolShare = editedLQTY.mulDiv(100, totalStakedLQTYAfterChange);
   const poolShareChange =
-    originalPoolShare.nonZero && Difference.between(newPoolShare, originalPoolShare).nonZero;
+    originalStake.stakedLQTY.nonZero && Difference.between(newPoolShare, originalPoolShare).nonZero;
 
   return (
     <Card>

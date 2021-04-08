@@ -52,7 +52,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   const originalPoolShare = originalDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
   const newPoolShare = editedLUSD.mulDiv(100, lusdInStabilityPoolAfterChange);
   const poolShareChange =
-    originalPoolShare.nonZero && Difference.between(newPoolShare, originalPoolShare).nonZero;
+    originalDeposit.currentLUSD.nonZero &&
+    Difference.between(newPoolShare, originalPoolShare).nonZero;
 
   return (
     <Card>

@@ -38,9 +38,7 @@ export const Staking: React.FC = () => {
 
   const nextTotalStakedUniTokens = totalStakedUniTokens.add(amount);
 
-  const poolShare = nextTotalStakedUniTokens.gt(0)
-    ? Decimal.min(Decimal.max(amount.div(nextTotalStakedUniTokens).mul(100), 0), 100)
-    : Decimal.ZERO;
+  const poolShare = amount.mulDiv(100, nextTotalStakedUniTokens);
 
   return (
     <Card>
@@ -70,7 +68,16 @@ export const Staking: React.FC = () => {
           maxedOut={hasSetMaximumStake}
         ></EditableRow>
 
-        <StaticRow label="Pool share" inputId="farm-share" amount={poolShare.prettify(4)} unit="%" />
+        {poolShare.infinite ? (
+          <StaticRow label="Pool share" inputId="farm-share" amount="N/A" />
+        ) : (
+          <StaticRow
+            label="Pool share"
+            inputId="farm-share"
+            amount={poolShare.prettify(4)}
+            unit="%"
+          />
+        )}
 
         {isDirty && <Validation amount={amount} />}
         <Description amount={amount} />
