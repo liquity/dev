@@ -97,7 +97,7 @@ export const Adjusting: React.FC = () => {
             inputId="farm-share"
             amount={poolShare.prettify(4)}
             unit="%"
-            pendingAmount={poolShareChange?.prettify().concat("%")}
+            pendingAmount={poolShareChange?.prettify(4).concat("%")}
             pendingColor={poolShareChange?.positive ? "success" : "danger"}
           />
         )}

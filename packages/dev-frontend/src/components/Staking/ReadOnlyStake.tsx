@@ -35,7 +35,12 @@ export const ReadOnlyStake: React.FC = () => {
           unit={GT}
         />
 
-        <StaticRow label="Pool share" inputId="stake-share" amount={poolShare.prettify()} unit="%" />
+        <StaticRow
+          label="Pool share"
+          inputId="stake-share"
+          amount={poolShare.prettify(4)}
+          unit="%"
+        />
 
         <StaticRow
           label="Redemption gain"
