@@ -89,6 +89,13 @@ docker run --name liquity -d --rm -p 3000:80 \
 
 Remember to replace the environment variables in the above example. After executing this command, open http://localhost:3000/ in a browser with MetaMask installed, then switch MetaMask to the account whose address you specified as FRONTEND_TAG to begin setting the kickback rate.
 
+### Setting a kickback rate with Gnosis Safe
+
+If you are using Gnosis safe, you have to set the kickback rate mannually through contract interaction. On the dashboard of Gnosis safe, click on "New transaction" and pick "Contraction interaction." Then, follow the [instructions](https://help.gnosis-safe.io/en/articles/3738081-contract-interactions): 
+- First, set the contract address as ```0x66017D22b0f8556afDd19FC67041899Eb65a21bb ```; 
+- Second, for method, choose "registerFrontEnd" from the list; 
+- Finally, type in the unit256 _Kickbackrate_. The kickback rate should be an integer representing an 18-digit decimal. So for a kickback rate of 99% (0.99), the value is: ```990000000000000000```. The number is 18 digits long.
+
 ### Next steps for hosting Dev UI
 
 Now that you've set a kickback rate, you'll need to decide how you want to host your frontend. There are way too many options to list here, so these are going to be just a few examples.
