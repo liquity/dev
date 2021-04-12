@@ -2646,7 +2646,6 @@ contract('BorrowerOperations', async accounts => {
 
     it("closeTrove(): reverts when trove is the only one in the system", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(100000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
-      await openTrove({ extraLUSDAmount: toBN(dec(100000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: bob } })
 
       // Artificially mint to Alice so she has enough to close her trove
       await lusdToken.unprotectedMint(alice, dec(100000, 18))
@@ -2656,16 +2655,11 @@ contract('BorrowerOperations', async accounts => {
       const aliceDebt = await getTroveEntireDebt(alice)
       assert.isTrue(aliceBal.gt(aliceDebt))
 
-      // check Recovery Mode 
+      // check Recovery Mode
       assert.isFalse(await th.checkRecoveryMode(contracts))
 
-      await priceFeed.setPrice(dec(1, 18))
-
-      // Check Recovery Mode 
-      assert.isTrue(await th.checkRecoveryMode(contracts))
-
       // Alice attempts to close her trove
-      await assertRevert(borrowerOperations.closeTrove({ from: alice }), "BorrowerOps: Operation not permitted during Recovery Mode")
+      await assertRevert(borrowerOperations.closeTrove({ from: alice }), "TroveManager: Only one trove in the system")
     })
 
     it("closeTrove(): reduces a Trove's collateral to zero", async () => {
