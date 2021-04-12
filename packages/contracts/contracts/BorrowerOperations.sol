@@ -170,7 +170,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
             vars.LUSDFee = _triggerBorrowingFee(contractsCache.troveManager, contractsCache.lusdToken, _LUSDAmount, _maxFeePercentage);
             vars.netDebt = vars.netDebt.add(vars.LUSDFee);
         }
-        _requireAtLeastMinNetDebt(vars.netDebt);
+        _requireAtLeastMinNetDebt(vars.netDebt, 0);
 
         // ICR is based on the composite debt, i.e. the requested LUSD amount + LUSD borrowing fee + LUSD gas comp.
         vars.compositeDebt = _getCompositeDebt(vars.netDebt);
@@ -279,21 +279,20 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
 
         vars.debt = contractsCache.troveManager.getTroveDebt(_borrower);
         vars.coll = contractsCache.troveManager.getTroveColl(_borrower);
-        
+
+        // When the adjustment is a debt repayment, check it's a valid amount and that the caller has enough LUSD
+        if (!_isDebtIncrease && _LUSDChange > 0) {
+            _requireAtLeastMinNetDebt(_getNetDebt(vars.debt), vars.netDebtChange);
+            _requireSufficientLUSDBalance(contractsCache.lusdToken, _borrower, vars.netDebtChange);
+        }
+
         // Get the trove's old ICR before the adjustment, and what its new ICR will be after the adjustment
         vars.oldICR = LiquityMath._computeCR(vars.coll, vars.debt, vars.price);
         vars.newICR = _getNewICRFromTroveChange(vars.coll, vars.debt, vars.collChange, vars.isCollIncrease, vars.netDebtChange, _isDebtIncrease, vars.price);
-        assert(_collWithdrawal <= vars.coll); 
+        assert(_collWithdrawal <= vars.coll);
 
         // Check the adjustment satisfies all conditions for the current system mode
         _requireValidAdjustmentInCurrentMode(isRecoveryMode, _collWithdrawal, _isDebtIncrease, vars);
-            
-        // When the adjustment is a debt repayment, check it's a valid amount and that the caller has enough LUSD
-        if (!_isDebtIncrease && _LUSDChange > 0) {
-            _requireAtLeastMinNetDebt(_getNetDebt(vars.debt).sub(vars.netDebtChange));
-            _requireValidLUSDRepayment(vars.debt, vars.netDebtChange);
-            _requireSufficientLUSDBalance(contractsCache.lusdToken, _borrower, vars.netDebtChange);
-        }
 
         (vars.newColl, vars.newDebt) = _updateTroveFromAdjustment(contractsCache.troveManager, _borrower, vars.collChange, vars.isCollIncrease, vars.netDebtChange, _isDebtIncrease);
         vars.stake = contractsCache.troveManager.updateStakeAndTotalStakes(_borrower);
@@ -544,12 +543,8 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         require(_newTCR >= CCR, "BorrowerOps: An operation that would result in TCR < CCR is not permitted");
     }
 
-    function _requireAtLeastMinNetDebt(uint _netDebt) internal pure {
-        require (_netDebt >= MIN_NET_DEBT, "BorrowerOps: Trove's net debt must be greater than minimum");
-    }
-
-    function _requireValidLUSDRepayment(uint _currentDebt, uint _debtRepayment) internal pure {
-        require(_debtRepayment <= _currentDebt.sub(LUSD_GAS_COMPENSATION), "BorrowerOps: Amount repaid must not be larger than the Trove's debt");
+    function _requireAtLeastMinNetDebt(uint _currentNetDebt, uint _debtRepayment) internal pure {
+        require (_currentNetDebt >= MIN_NET_DEBT.add(_debtRepayment), "BorrowerOps: Trove's net debt must be greater than minimum");
     }
 
     function _requireCallerIsStabilityPool() internal view {

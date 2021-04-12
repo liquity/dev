@@ -1365,6 +1365,17 @@ contract('BorrowerOperations', async accounts => {
       await assertRevert(repayTxAPromise, "BorrowerOps: Trove's net debt must be greater than minimum")
     })
 
+    it("adjustTrove(): Reverts if repaid amount is greater than current debt", async () => {
+      const { totalDebt } = await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: alice } })
+      const repayAmount = totalDebt.add(toBN(1))
+      await openTrove({ extraLUSDAmount: repayAmount, ICR: toBN(dec(150, 16)), extraParams: { from: bob } })
+
+      await lusdToken.transfer(alice, repayAmount, { from: bob })
+
+      await assertRevert(borrowerOperations.adjustTrove(th._100pct, 0, repayAmount, false, alice, alice, { from: alice }),
+                         "BorrowerOps: Trove's net debt must be greater than minimum")
+    })
+
     it("repayLUSD(): reverts when calling address does not have active trove", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: bob } })
