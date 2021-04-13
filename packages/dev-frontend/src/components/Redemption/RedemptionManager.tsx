@@ -14,6 +14,7 @@ import { ErrorDescription } from "../ErrorDescription";
 import { useMyTransactionState } from "../Transaction";
 
 import { RedemptionAction } from "./RedemptionAction";
+import { InfoIcon } from "../InfoIcon";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 
@@ -119,6 +120,16 @@ export const RedemptionManager: React.FC = () => {
           amount={ethFee.toString(4)}
           pendingAmount={feePct.toString(2)}
           unit="ETH"
+          infoIcon={
+            <InfoIcon
+              tooltip={
+                <Card variant="tooltip" sx={{ minWidth: "240px" }}>
+                  The Redemption Fee is charged as a percentage of the redeemed Ether. The Redemption
+                  Fee depends on LUSD redemption volumes and is 0.5% at minimum.
+                </Card>
+              }
+            />
+          }
         />
 
         {((dirty || !canRedeem) && description) || (
