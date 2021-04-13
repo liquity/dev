@@ -26,12 +26,16 @@ export const RedemptionPage: React.FC = () => {
                 Redemptions are expected to be carried out by bots when arbitrage opportunities
                 emerge.
               </Paragraph>
-              <Paragraph>
+              <Paragraph sx={{ mt: 2 }}>
                 Most of the time you will get a better rate for converting LUSD to ETH on{" "}
                 <Link href={uniLink(addresses["lusdToken"])} target="_blank">
                   Uniswap <Icon name="external-link-alt" size="xs" />
                 </Link>{" "}
                 or other exchanges.
+              </Paragraph>
+              <Paragraph sx={{ mt: 2 }}>
+                <strong>Note</strong>: Redemption is not for repaying your loan. To repay your loan,
+                adjust your Trove on the <Link href="#/">Dashboard</Link>.
               </Paragraph>
             </InfoMessage>
           </Box>
