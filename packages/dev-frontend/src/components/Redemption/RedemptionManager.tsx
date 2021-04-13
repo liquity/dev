@@ -88,7 +88,7 @@ export const RedemptionManager: React.FC = () => {
   return (
     <Card>
       <Heading>
-        Redemption
+        Redeem
         {dirty && !changePending && (
           <Button
             variant="titleIcon"
@@ -113,15 +113,13 @@ export const RedemptionManager: React.FC = () => {
           setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
         />
 
-        {dirty && (
-          <StaticRow
-            label="Fee"
-            inputId="redeem-fee"
-            amount={ethFee.toString(4)}
-            pendingAmount={feePct.toString(2)}
-            unit="ETH"
-          />
-        )}
+        <StaticRow
+          label="Redemption Fee"
+          inputId="redeem-fee"
+          amount={ethFee.toString(4)}
+          pendingAmount={feePct.toString(2)}
+          unit="ETH"
+        />
 
         {((dirty || !canRedeem) && description) || (
           <ActionDescription>Enter the amount of {COIN} you'd like to redeem.</ActionDescription>

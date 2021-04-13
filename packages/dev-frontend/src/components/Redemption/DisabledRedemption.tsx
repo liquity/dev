@@ -13,7 +13,7 @@ export const DisabledRedemption: React.FC<DisabledRedemptionProps> = ({
   unlockDate
 }) => (
   <Card>
-    <Heading>Redemption</Heading>
+    <Heading>Redeem</Heading>
 
     <Box sx={{ p: [2, 3] }}>
       <InfoMessage

@@ -72,7 +72,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     lusdInStabilityPool,
     total,
     borrowingRate,
-    redemptionRate,
     totalStakedLQTY,
     kickbackRate
   } = useLiquitySelector(select);
@@ -81,7 +80,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
   const borrowingFeePct = new Percent(borrowingRate);
-  const redemptionFeePct = new Percent(redemptionRate);
   const kickbackRatePct = frontendTag === AddressZero ? "100" : kickbackRate?.mul(100).prettify();
 
   return (
@@ -99,12 +97,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
         tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
       >
         {borrowingFeePct.toString(2)}
-      </Statistic>
-      <Statistic
-        name="Redemption Fee"
-        tooltip="The Redemption Fee is charged as a percentage of the redeemed Ether. The Redemption Fee depends on LUSD redemption volumes and is 0.5% at minimum.        "
-      >
-        {redemptionFeePct.toString(2)}
       </Statistic>
 
       <Statistic
