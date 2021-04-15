@@ -1,3 +1,12 @@
+# DEPRECATION NOTICE
+This repositiory was the public preview of the internal Liquity codebase. Since Liquity launched, our private repo has been public, and is now the source of truth. This repo now serves as an archive. It doesn't have Liquity's latest code.
+
+Please use the [liquity/dev](https://github.com/liquity/dev) codebase instead.
+
+------
+
+The old README was as follows:
+
 # Liquity: Decentralized Borrowing Protocol
 
 [![Frontend status](https://img.shields.io/uptimerobot/status/m784948796-056b56fd51c67d682c11bb24?label=Testnet&logo=nginx&logoColor=white)](https://devui.liquity.org) ![uptime](https://img.shields.io/uptimerobot/ratio/7/m784948796-056b56fd51c67d682c11bb24) [![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend)
