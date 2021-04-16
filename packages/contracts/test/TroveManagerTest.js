@@ -2400,6 +2400,252 @@ contract('TroveManager', async accounts => {
     assert.equal(dennis_LUSDBalance_After, dennis_LUSDBalance_Before.sub(redemptionAmount))
   })
 
+  it('redeemCollateral(): with invalid first hint, zero address', async () => {
+    // --- SETUP ---
+    const { totalDebt: A_totalDebt } = await openTrove({ ICR: toBN(dec(310, 16)), extraLUSDAmount: dec(10, 18), extraParams: { from: alice } })
+    const { netDebt: B_netDebt } = await openTrove({ ICR: toBN(dec(290, 16)), extraLUSDAmount: dec(8, 18), extraParams: { from: bob } })
+    const { netDebt: C_netDebt } = await openTrove({ ICR: toBN(dec(250, 16)), extraLUSDAmount: dec(10, 18), extraParams: { from: carol } })
+    const partialRedemptionAmount = toBN(2)
+    const redemptionAmount = C_netDebt.add(B_netDebt).add(partialRedemptionAmount)
+    // start Dennis with a high ICR
+    await openTrove({ ICR: toBN(dec(100, 18)), extraLUSDAmount: redemptionAmount, extraParams: { from: dennis } })
+
+    const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
+
+    const dennis_LUSDBalance_Before = await lusdToken.balanceOf(dennis)
+
+    const price = await priceFeed.getPrice()
+    assert.equal(price, dec(200, 18))
+
+    // --- TEST ---
+
+    // Find hints for redeeming 20 LUSD
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintNICR
+    } = await hintHelpers.getRedemptionHints(redemptionAmount, price, 0)
+
+    // We don't need to use getApproxHint for this test, since it's not the subject of this
+    // test case, and the list is very small, so the correct position is quickly found
+    const { 0: upperPartialRedemptionHint, 1: lowerPartialRedemptionHint } = await sortedTroves.findInsertPosition(
+      partialRedemptionHintNICR,
+      dennis,
+      dennis
+    )
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // Dennis redeems 20 LUSD
+    // Don't pay for gas, as it makes it easier to calculate the received Ether
+    const redemptionTx = await troveManager.redeemCollateral(
+      redemptionAmount,
+      ZERO_ADDRESS, // invalid first hint
+      upperPartialRedemptionHint,
+      lowerPartialRedemptionHint,
+      partialRedemptionHintNICR,
+      0, th._100pct,
+      {
+        from: dennis,
+        gasPrice: 0
+      }
+    )
+
+    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
+
+    const alice_Trove_After = await troveManager.Troves(alice)
+    const bob_Trove_After = await troveManager.Troves(bob)
+    const carol_Trove_After = await troveManager.Troves(carol)
+
+    const alice_debt_After = alice_Trove_After[0].toString()
+    const bob_debt_After = bob_Trove_After[0].toString()
+    const carol_debt_After = carol_Trove_After[0].toString()
+
+    /* check that Dennis' redeemed 20 LUSD has been cancelled with debt from Bobs's Trove (8) and Carol's Trove (10).
+    The remaining lot (2) is sent to Alice's Trove, who had the best ICR.
+    It leaves her with (3) LUSD debt + 50 for gas compensation. */
+    th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
+    assert.equal(bob_debt_After, '0')
+    assert.equal(carol_debt_After, '0')
+
+    const dennis_ETHBalance_After = toBN(await web3.eth.getBalance(dennis))
+    const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
+
+    const expectedTotalETHDrawn = redemptionAmount.div(toBN(200)) // convert redemptionAmount LUSD to ETH, at ETH:USD price 200
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
+
+    th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
+
+    const dennis_LUSDBalance_After = (await lusdToken.balanceOf(dennis)).toString()
+    assert.equal(dennis_LUSDBalance_After, dennis_LUSDBalance_Before.sub(redemptionAmount))
+  })
+
+  it('redeemCollateral(): with invalid first hint, non-existent trove', async () => {
+    // --- SETUP ---
+    const { totalDebt: A_totalDebt } = await openTrove({ ICR: toBN(dec(310, 16)), extraLUSDAmount: dec(10, 18), extraParams: { from: alice } })
+    const { netDebt: B_netDebt } = await openTrove({ ICR: toBN(dec(290, 16)), extraLUSDAmount: dec(8, 18), extraParams: { from: bob } })
+    const { netDebt: C_netDebt } = await openTrove({ ICR: toBN(dec(250, 16)), extraLUSDAmount: dec(10, 18), extraParams: { from: carol } })
+    const partialRedemptionAmount = toBN(2)
+    const redemptionAmount = C_netDebt.add(B_netDebt).add(partialRedemptionAmount)
+    // start Dennis with a high ICR
+    await openTrove({ ICR: toBN(dec(100, 18)), extraLUSDAmount: redemptionAmount, extraParams: { from: dennis } })
+
+    const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
+
+    const dennis_LUSDBalance_Before = await lusdToken.balanceOf(dennis)
+
+    const price = await priceFeed.getPrice()
+    assert.equal(price, dec(200, 18))
+
+    // --- TEST ---
+
+    // Find hints for redeeming 20 LUSD
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintNICR
+    } = await hintHelpers.getRedemptionHints(redemptionAmount, price, 0)
+
+    // We don't need to use getApproxHint for this test, since it's not the subject of this
+    // test case, and the list is very small, so the correct position is quickly found
+    const { 0: upperPartialRedemptionHint, 1: lowerPartialRedemptionHint } = await sortedTroves.findInsertPosition(
+      partialRedemptionHintNICR,
+      dennis,
+      dennis
+    )
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // Dennis redeems 20 LUSD
+    // Don't pay for gas, as it makes it easier to calculate the received Ether
+    const redemptionTx = await troveManager.redeemCollateral(
+      redemptionAmount,
+      erin, // invalid first hint, it doesn’t have a trove
+      upperPartialRedemptionHint,
+      lowerPartialRedemptionHint,
+      partialRedemptionHintNICR,
+      0, th._100pct,
+      {
+        from: dennis,
+        gasPrice: 0
+      }
+    )
+
+    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
+
+    const alice_Trove_After = await troveManager.Troves(alice)
+    const bob_Trove_After = await troveManager.Troves(bob)
+    const carol_Trove_After = await troveManager.Troves(carol)
+
+    const alice_debt_After = alice_Trove_After[0].toString()
+    const bob_debt_After = bob_Trove_After[0].toString()
+    const carol_debt_After = carol_Trove_After[0].toString()
+
+    /* check that Dennis' redeemed 20 LUSD has been cancelled with debt from Bobs's Trove (8) and Carol's Trove (10).
+    The remaining lot (2) is sent to Alice's Trove, who had the best ICR.
+    It leaves her with (3) LUSD debt + 50 for gas compensation. */
+    th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
+    assert.equal(bob_debt_After, '0')
+    assert.equal(carol_debt_After, '0')
+
+    const dennis_ETHBalance_After = toBN(await web3.eth.getBalance(dennis))
+    const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
+
+    const expectedTotalETHDrawn = redemptionAmount.div(toBN(200)) // convert redemptionAmount LUSD to ETH, at ETH:USD price 200
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
+
+    th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
+
+    const dennis_LUSDBalance_After = (await lusdToken.balanceOf(dennis)).toString()
+    assert.equal(dennis_LUSDBalance_After, dennis_LUSDBalance_Before.sub(redemptionAmount))
+  })
+
+  it('redeemCollateral(): with invalid first hint, trove below MCR', async () => {
+    // --- SETUP ---
+    const { totalDebt: A_totalDebt } = await openTrove({ ICR: toBN(dec(310, 16)), extraLUSDAmount: dec(10, 18), extraParams: { from: alice } })
+    const { netDebt: B_netDebt } = await openTrove({ ICR: toBN(dec(290, 16)), extraLUSDAmount: dec(8, 18), extraParams: { from: bob } })
+    const { netDebt: C_netDebt } = await openTrove({ ICR: toBN(dec(250, 16)), extraLUSDAmount: dec(10, 18), extraParams: { from: carol } })
+    const partialRedemptionAmount = toBN(2)
+    const redemptionAmount = C_netDebt.add(B_netDebt).add(partialRedemptionAmount)
+    // start Dennis with a high ICR
+    await openTrove({ ICR: toBN(dec(100, 18)), extraLUSDAmount: redemptionAmount, extraParams: { from: dennis } })
+
+    const dennis_ETHBalance_Before = toBN(await web3.eth.getBalance(dennis))
+
+    const dennis_LUSDBalance_Before = await lusdToken.balanceOf(dennis)
+
+    const price = await priceFeed.getPrice()
+    assert.equal(price, dec(200, 18))
+
+    // Increase price to start Erin, and decrease it again so its ICR is under MCR
+    await priceFeed.setPrice(price.mul(toBN(2)))
+    await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: erin } })
+    await priceFeed.setPrice(price)
+
+
+    // --- TEST ---
+
+    // Find hints for redeeming 20 LUSD
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintNICR
+    } = await hintHelpers.getRedemptionHints(redemptionAmount, price, 0)
+
+    // We don't need to use getApproxHint for this test, since it's not the subject of this
+    // test case, and the list is very small, so the correct position is quickly found
+    const { 0: upperPartialRedemptionHint, 1: lowerPartialRedemptionHint } = await sortedTroves.findInsertPosition(
+      partialRedemptionHintNICR,
+      dennis,
+      dennis
+    )
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // Dennis redeems 20 LUSD
+    // Don't pay for gas, as it makes it easier to calculate the received Ether
+    const redemptionTx = await troveManager.redeemCollateral(
+      redemptionAmount,
+      erin, // invalid trove, below MCR
+      upperPartialRedemptionHint,
+      lowerPartialRedemptionHint,
+      partialRedemptionHintNICR,
+      0, th._100pct,
+      {
+        from: dennis,
+        gasPrice: 0
+      }
+    )
+
+    const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
+
+    const alice_Trove_After = await troveManager.Troves(alice)
+    const bob_Trove_After = await troveManager.Troves(bob)
+    const carol_Trove_After = await troveManager.Troves(carol)
+
+    const alice_debt_After = alice_Trove_After[0].toString()
+    const bob_debt_After = bob_Trove_After[0].toString()
+    const carol_debt_After = carol_Trove_After[0].toString()
+
+    /* check that Dennis' redeemed 20 LUSD has been cancelled with debt from Bobs's Trove (8) and Carol's Trove (10).
+    The remaining lot (2) is sent to Alice's Trove, who had the best ICR.
+    It leaves her with (3) LUSD debt + 50 for gas compensation. */
+    th.assertIsApproximatelyEqual(alice_debt_After, A_totalDebt.sub(partialRedemptionAmount))
+    assert.equal(bob_debt_After, '0')
+    assert.equal(carol_debt_After, '0')
+
+    const dennis_ETHBalance_After = toBN(await web3.eth.getBalance(dennis))
+    const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
+
+    const expectedTotalETHDrawn = redemptionAmount.div(toBN(200)) // convert redemptionAmount LUSD to ETH, at ETH:USD price 200
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
+
+    th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
+
+    const dennis_LUSDBalance_After = (await lusdToken.balanceOf(dennis)).toString()
+    assert.equal(dennis_LUSDBalance_After, dennis_LUSDBalance_Before.sub(redemptionAmount))
+  })
+
   it('redeemCollateral(): ends the redemption sequence when the token redemption request has been filled', async () => {
     // --- SETUP --- 
     await openTrove({ ICR: toBN(dec(100, 18)), extraParams: { from: whale } })
@@ -2813,6 +3059,9 @@ contract('TroveManager', async accounts => {
     const TCR = (await th.getTCR(contracts))
     assert.isTrue(TCR.lt(toBN('1100000000000000000')))
 
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
     await assertRevert(th.redeemCollateral(carol, contracts, dec(270, 18)), "TroveManager: Cannot redeem when TCR < MCR")
   });
 
@@ -2827,6 +3076,9 @@ contract('TroveManager', async accounts => {
     await openTrove({ ICR: toBN(dec(200, 16)), extraParams: { from: bob } })
     await openTrove({ ICR: toBN(dec(200, 16)), extraParams: { from: carol } })
     await openTrove({ ICR: toBN(dec(200, 16)), extraParams: { from: dennis } })
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
     // Erin attempts to redeem with _amount = 0
     const redemptionTxPromise = troveManager.redeemCollateral(0, erin, erin, erin, 0, 0, th._100pct, { from: erin })
@@ -4005,6 +4257,67 @@ contract('TroveManager', async accounts => {
     th.assertIsApproximatelyEqual(C_balanceAfter, C_balanceBefore.add(C_surplus))
   })
 
+  it('redeemCollateral(): reverts if fee eats up all returned collateral', async () => {
+    // --- SETUP ---
+    const { lusdAmount } = await openTrove({ ICR: toBN(dec(200, 16)), extraLUSDAmount: dec(1, 24), extraParams: { from: alice } })
+    await openTrove({ ICR: toBN(dec(150, 16)), extraParams: { from: bob } })
+
+    const price = await priceFeed.getPrice()
+    assert.equal(price, dec(200, 18))
+
+    // --- TEST ---
+
+    // skip bootstrapping phase
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
+
+    // keep redeeming until we get the base rate to the ceiling of 100%
+    for (let i = 0; i < 2; i++) {
+      // Find hints for redeeming
+      const {
+        firstRedemptionHint,
+        partialRedemptionHintNICR
+      } = await hintHelpers.getRedemptionHints(lusdAmount, price, 0)
+
+      // Don't pay for gas, as it makes it easier to calculate the received Ether
+      const redemptionTx = await troveManager.redeemCollateral(
+        lusdAmount,
+        firstRedemptionHint,
+        ZERO_ADDRESS,
+        alice,
+        partialRedemptionHintNICR,
+        0, th._100pct,
+        {
+          from: alice,
+          gasPrice: 0
+        }
+      )
+
+      await openTrove({ ICR: toBN(dec(150, 16)), extraParams: { from: bob } })
+      await borrowerOperations.adjustTrove(th._100pct, 0, lusdAmount, true, alice, alice, { from: alice, value: lusdAmount.mul(mv._1e18BN).div(price) })
+    }
+
+    const {
+      firstRedemptionHint,
+      partialRedemptionHintNICR
+    } = await hintHelpers.getRedemptionHints(lusdAmount, price, 0)
+
+    await assertRevert(
+      troveManager.redeemCollateral(
+        lusdAmount,
+        firstRedemptionHint,
+        ZERO_ADDRESS,
+        alice,
+        partialRedemptionHintNICR,
+        0, th._100pct,
+        {
+          from: alice,
+          gasPrice: 0
+        }
+      ),
+      'TroveManager: Fee would eat up all returned collateral'
+    )
+  })
+
   it("getPendingLUSDDebtReward(): Returns 0 if there is no pending LUSDDebt reward", async () => {
     // Make some troves
     const { totalDebt } = await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(100, 18), extraParams: { from: defaulter_1 } })
@@ -4238,6 +4551,10 @@ contract('TroveManager', async accounts => {
     assert.equal(A_Status, '1')  // active
     assert.equal(B_Status, '2')  // closed by user
     assert.equal(C_Status, '0')  // non-existent
+  })
+
+  it("hasPendingRewards(): Returns false it trove is not active", async () => {
+    assert.isFalse(await troveManager.hasPendingRewards(alice))
   })
 })
 
