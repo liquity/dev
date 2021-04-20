@@ -8,6 +8,9 @@ import { calculateCollateralRatio } from "../utils/collateralRatio";
 import { isLiquidation, isRedemption } from "../types/TroveOperation";
 
 import {
+  decreaseNumberOfLiquidatedTroves,
+  decreaseNumberOfRedeemedTroves,
+  decreaseNumberOfTrovesClosedByOwner,
   increaseNumberOfLiquidatedTroves,
   increaseNumberOfRedeemedTroves,
   increaseNumberOfOpenTroves,
@@ -19,34 +22,53 @@ import { getCurrentLiquidation } from "./Liquidation";
 import { getCurrentRedemption } from "./Redemption";
 import { getUser } from "./User";
 
-function getCurrentTroveOfOwner(_user: Address): Trove {
-  let owner = getUser(_user);
-  let currentTrove: Trove;
+function getTrove(_user: Address): Trove {
+  let id = _user.toHexString();
+  let troveOrNull = Trove.load(id);
 
-  if (owner.currentTrove == null) {
-    let troveSubId = owner.troveCount++;
+  if (troveOrNull != null) {
+    return troveOrNull as Trove;
+  } else {
+    let owner = getUser(_user);
+    let newTrove = new Trove(id);
 
-    currentTrove = new Trove(_user.toHexString() + "-" + troveSubId.toString());
-    currentTrove.owner = owner.id;
-    currentTrove.status = "open";
-    currentTrove.collateral = DECIMAL_ZERO;
-    currentTrove.debt = DECIMAL_ZERO;
-    owner.currentTrove = currentTrove.id;
+    newTrove.owner = owner.id;
+    newTrove.collateral = DECIMAL_ZERO;
+    newTrove.debt = DECIMAL_ZERO;
+
+    // Avoid using setTroveStatus, because newTrove's status is not yet initialized
+    newTrove.status = "open";
+    increaseNumberOfOpenTroves();
+
+    owner.trove = newTrove.id;
     owner.save();
 
-    increaseNumberOfOpenTroves();
-  } else {
-    currentTrove = Trove.load(owner.currentTrove) as Trove;
+    return newTrove;
   }
-
-  return currentTrove;
 }
 
-function closeCurrentTroveOfOwner(_user: Address): void {
-  let owner = getUser(_user);
+function setTroveStatus(trove: Trove, status: string): void {
+  let statusBefore = trove.status;
 
-  owner.currentTrove = null;
-  owner.save();
+  if (status != statusBefore) {
+    if (status == "open") {
+      if (statusBefore == "closedByOwner") {
+        decreaseNumberOfTrovesClosedByOwner();
+      } else if (statusBefore == "closedByLiquidation") {
+        decreaseNumberOfLiquidatedTroves();
+      } else if (statusBefore == "closedByRedemption") {
+        decreaseNumberOfRedeemedTroves();
+      }
+    } else if (status == "closedByOwner") {
+      increaseNumberOfTrovesClosedByOwner();
+    } else if (status == "closedByLiquidation") {
+      increaseNumberOfLiquidatedTroves();
+    } else if (status == "closedByRedemption") {
+      increaseNumberOfRedeemedTroves();
+    }
+
+    trove.status = status;
+  }
 }
 
 function createTroveChange(event: ethereum.Event): TroveChange {
@@ -72,7 +94,7 @@ export function updateTrove(
   snapshotETH: BigInt,
   snapshotLUSDDebt: BigInt
 ): void {
-  let trove = getCurrentTroveOfOwner(_borrower);
+  let trove = getTrove(_borrower);
   let newCollateral = decimalize(_coll);
   let newDebt = decimalize(_debt);
 
@@ -126,18 +148,15 @@ export function updateTrove(
   }
 
   if (_coll == BIGINT_ZERO) {
-    closeCurrentTroveOfOwner(_borrower);
-
     if (isLiquidation(operation)) {
-      trove.status = "closedByLiquidation";
-      increaseNumberOfLiquidatedTroves();
+      setTroveStatus(trove, "closedByLiquidation");
     } else if (isRedemption(operation)) {
-      trove.status = "closedByRedemption";
-      increaseNumberOfRedeemedTroves();
+      setTroveStatus(trove, "closedByRedemption");
     } else {
-      trove.status = "closedByOwner";
-      increaseNumberOfTrovesClosedByOwner();
+      setTroveStatus(trove, "closedByOwner");
     }
+  } else {
+    setTroveStatus(trove, "open");
   }
 
   trove.save();
