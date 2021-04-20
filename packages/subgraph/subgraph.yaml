@@ -6,7 +6,7 @@ schema:
 dataSources:
   - name: TroveManager
     kind: ethereum/contract
-    network: ropsten
+    network: mainnet
     source:
       #address: "0x56fcdA0436E5C7a33ee5bfe292f11AC66429Eb5c"
       address: "0x6645E03DA2a711f780af7cCE1019Cb9a9135C898"
@@ -52,7 +52,7 @@ dataSources:
 templates:
   - name: BorrowerOperations
     kind: ethereum/contract
-    network: ropsten
+    network: mainnet
     source:
       abi: BorrowerOperations
     mapping:
@@ -80,7 +80,7 @@ templates:
           handler: handleTroveUpdated
   - name: StabilityPool
     kind: ethereum/contract
-    network: ropsten
+    network: mainnet
     source:
       abi: StabilityPool
     mapping:
@@ -108,7 +108,7 @@ templates:
           handler: handleETHGainWithdrawn
   - name: CollSurplusPool
     kind: ethereum/contract
-    network: ropsten
+    network: mainnet
     source:
       abi: CollSurplusPool
     mapping:

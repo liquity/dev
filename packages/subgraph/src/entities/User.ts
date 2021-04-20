@@ -15,8 +15,6 @@ export function getUser(_user: Address): User {
   } else {
     let newUser = new User(id);
 
-    newUser.troveCount = 0;
-    newUser.stabilityDepositCount = 0;
     newUser.collSurplus = DECIMAL_ZERO;
     newUser.save();
 
@@ -40,7 +38,7 @@ function finishCollSurplusChange(stabilityDepositChange: CollSurplusChange): voi
 export function updateUserClaimColl(
   event: ethereum.Event,
   _borrower: Address,
-  _collSurplus: BigInt,
+  _collSurplus: BigInt
 ): void {
   let user = getUser(_borrower);
   let newCollSurplus = decimalize(_collSurplus);
@@ -54,7 +52,8 @@ export function updateUserClaimColl(
 
   collSurplusChange.collSurplusBefore = user.collSurplus;
   collSurplusChange.collSurplusAfter = newCollSurplus;
-  collSurplusChange.collSurplusChange = collSurplusChange.collSurplusAfter - collSurplusChange.collSurplusBefore;
+  collSurplusChange.collSurplusChange =
+    collSurplusChange.collSurplusAfter - collSurplusChange.collSurplusBefore;
 
   updateSystemStateByCollSurplusChange(collSurplusChange);
   finishCollSurplusChange(collSurplusChange);

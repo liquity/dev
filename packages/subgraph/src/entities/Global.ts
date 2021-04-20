@@ -96,6 +96,14 @@ export function increaseNumberOfLiquidatedTroves(): void {
   global.save();
 }
 
+export function decreaseNumberOfLiquidatedTroves(): void {
+  let global = getGlobal();
+
+  global.numberOfLiquidatedTroves--;
+  global.numberOfOpenTroves++;
+  global.save();
+}
+
 export function increaseNumberOfRedeemedTroves(): void {
   let global = getGlobal();
 
@@ -104,10 +112,26 @@ export function increaseNumberOfRedeemedTroves(): void {
   global.save();
 }
 
+export function decreaseNumberOfRedeemedTroves(): void {
+  let global = getGlobal();
+
+  global.numberOfRedeemedTroves--;
+  global.numberOfOpenTroves++;
+  global.save();
+}
+
 export function increaseNumberOfTrovesClosedByOwner(): void {
   let global = getGlobal();
 
   global.numberOfTrovesClosedByOwner++;
   global.numberOfOpenTroves--;
+  global.save();
+}
+
+export function decreaseNumberOfTrovesClosedByOwner(): void {
+  let global = getGlobal();
+
+  global.numberOfTrovesClosedByOwner--;
+  global.numberOfOpenTroves++;
   global.save();
 }
