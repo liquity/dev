@@ -854,6 +854,67 @@ Gas cost of steps 2-4 will be free, and step 5 will be `O(1)`.
 
 Hints allow cheaper Trove operations for the user, at the expense of a slightly longer time to completion, due to the need to await the result of the two read calls in steps 1 and 2 - which may be sent as JSON-RPC requests to Infura, unless the Frontend Operator is running a full Ethereum node.
 
+### Example Borrower Operations with Hints
+
+#### Opening a trove
+```
+  const toWei = web3.utils.toWei
+  const toBN = web3.utils.toBN
+
+  const LUSDAmount = toBN(toWei('2500')) // borrower wants to withdraw 2500 LUSD
+  const ETHColl = toBN(toWei('5')) // borrower wants to lock 5 ETH collateral
+
+  // Call deployed TroveManager contract to read the liquidation reserve and latest borrowing fee
+  const liquidationReserve = await troveManager.LUSD_GAS_COMPENSATION()
+  const expectedFee = await troveManager.getBorrowingFeeWithDecay(LUSDAmount)
+  
+  // Total debt of the new trove = LUSD amount drawn, plus fee, plus the liquidation reserve
+  const expectedDebt = LUSDAmount.add(expectedFee).add(liquidationReserve)
+
+  // Get the nominal NICR of the new trove
+  const _1e20 = toBN(toWei('100'))
+  let NICR = ETHColl.mul(_1e20).div(expectedDebt)
+
+  // Get an approximate address hint from the deployed HintHelper contract. Use (15 * number of troves) trials 
+  // to get an approx. hint that is close to the right position.
+  let numTroves = await sortedTroves.getSize()
+  let numTrials = numTroves.mul(toBN('15'))
+  let { 0: approxHint } = await hintHelpers.getApproxHint(NICR, numTrials, 42)  // random seed of 42
+
+  // Use the approximate hint to get the exact upper and lower hints from the deployed SortedTroves contract
+  let { 0: upperHint, 1: lowerHint } = await sortedTroves.findInsertPosition(NICR, approxHint, approxHint)
+
+  // Finally, call openTrove with the exact upperHint and lowerHint
+  const maxFee = '5'.concat('0'.repeat(16)) // Slippage protection: 5%
+  await borrowerOperations.openTrove(maxFee, LUSDAmount, upperHint, lowerHint, { value: ETHColl })
+```
+
+#### Adjusting a Trove
+```
+  const collIncrease = toBN(toWei('1'))  // borrower wants to add 1 ETH
+  const LUSDRepayment = toBN(toWei('230')) // borrower wants to repay 230 LUSD
+
+  // Get trove's current debt and coll
+  const {0: debt, 1: coll} = await troveManager.getEntireDebtAndColl(borrower)
+  
+  const newDebt = debt.sub(LUSDRepayment)
+  const newColl = coll.add(collIncrease)
+
+  NICR = newColl.mul(_1e20).div(newDebt)
+
+  // Get an approximate address hint from the deployed HintHelper contract. Use (15 * number of troves) trials 
+  // to get an approx. hint that is close to the right position.
+  numTroves = await sortedTroves.getSize()
+  numTrials = numTroves.mul(toBN('15'))
+  ({0: approxHint} = await hintHelpers.getApproxHint(NICR, numTrials, 42))
+
+  // Use the approximate hint to get the exact upper and lower hints from the deployed SortedTroves contract
+  ({ 0: upperHint, 1: lowerHint } = await sortedTroves.findInsertPosition(NICR, approxHint, approxHint))
+
+  // Call adjustTrove with the exact upperHint and lowerHint
+  await borrowerOperations.adjustTrove(maxFee, 0, LUSDRepayment, false, upperHint, lowerHint, {value: collIncrease})
+```
+
 ### Hints for `redeemCollateral`
 
 `TroveManager::redeemCollateral` as a special case requires additional hints:
@@ -881,6 +942,36 @@ However, if between the off-chain hint computation and on-chain execution a diff
 To mitigate this, another hint needs to be provided: `_partialRedemptionHintNICR`, the expected nominal ICR of the final partially-redeemed-from Trove. The on-chain redemption function checks whether, after redemption, the nominal ICR of this Trove would equal the nominal ICR hint.
 
 If not, the redemption sequence doesn’t perform the final partial redemption, and terminates early. This ensures that the transaction doesn’t revert, and most of the requested LUSD redemption can be fulfilled.
+
+#### Example Redemption with hints
+```
+ // Get the redemptions hints from the deployed HintHelpers contract
+  const redemptionhint = await hintHelpers.getRedemptionHints(LUSDAmount, price, 50)
+
+  const { 0: firstRedemptionHint, 1: partialRedemptionNewICR, 2: truncatedLUSDAmount } = redemptionhint
+
+  // Get the approximate partial redemption hint
+  const { hintAddress: approxPartialRedemptionHint } = await contracts.hintHelpers.getApproxHint(partialRedemptionNewICR, numTrials, 42)
+  
+  /* Use the approximate partial redemption hint to get the exact partial redemption hint from the 
+  * deployed SortedTroves contract
+  */
+  const exactPartialRedemptionHint = (await sortedTroves.findInsertPosition(partialRedemptionNewICR,
+    approxPartialRedemptionHint,
+    approxPartialRedemptionHint))
+
+  /* Finally, perform the on-chain redemption, passing the truncated LUSD amount, the correct hints, and the expected
+  * ICR of the final partially redeemed trove in the sequence. 
+  */
+  await troveManager.redeemCollateral(truncatedLUSDAmount,
+    firstRedemptionHint,
+    exactPartialRedemptionHint[0],
+    exactPartialRedemptionHint[1],
+    partialRedemptionNewICR,
+    0, maxFee,
+    { from: redeemer },
+  )
+```
 
 ## Gas compensation
 
