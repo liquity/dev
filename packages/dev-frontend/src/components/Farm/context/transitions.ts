@@ -12,6 +12,7 @@ type CancelPressedEvent = "CANCEL_PRESSED";
 type StakeApprovedEvent = "STAKE_APPROVED";
 type StakeConfirmedEvent = "STAKE_CONFIRMED";
 type ClaimRewardConfirmedEvent = "CLAIM_REWARD_CONFIRMED";
+type UnstakeConfirmedEvent = "UNSTAKE_CONFIRMED";
 type UnstakeAndClaimConfirmedEvent = "UNSTAKE_AND_CLAIM_CONFIRMED";
 
 export type FarmEvent =
@@ -21,6 +22,7 @@ export type FarmEvent =
   | StakeApprovedEvent
   | StakeConfirmedEvent
   | ClaimRewardConfirmedEvent
+  | UnstakeConfirmedEvent
   | UnstakeAndClaimConfirmedEvent;
 
 type FarmEventTransitions = Record<FarmView, Partial<Record<FarmEvent, FarmView>>>;
@@ -42,7 +44,8 @@ export const transitions: FarmEventTransitions = {
   ADJUSTING: {
     CANCEL_PRESSED: "ACTIVE",
     STAKE_CONFIRMED: "ACTIVE",
-    STAKE_APPROVED: "ADJUSTING"
+    STAKE_APPROVED: "ADJUSTING",
+    UNSTAKE_CONFIRMED: "ACTIVE"
   },
   DISABLED: {
     CLAIM_REWARD_CONFIRMED: "DISABLED",
