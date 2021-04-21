@@ -3219,6 +3219,111 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     assert.isFalse(await sortedTroves.contains(freddy))
   })
 
+  it("batchLiquidateTroves(): Liquidates all troves with ICR < 110%, transitioning Normal -> Recovery Mode", async () => {
+    // This is again the same test as the before the last one, but now Alice is skipped because she is not active
+    // It also skips bob, as he is added twice, for being already liquidated
+    // make 6 Troves accordingly
+    // --- SETUP ---
+    const { totalDebt: B_totalDebt } = await openTrove({ ICR: toBN(dec(240, 16)), extraParams: { from: bob } })
+    const { totalDebt: C_totalDebt } = await openTrove({ ICR: toBN(dec(240, 16)), extraParams: { from: carol } })
+    const { totalDebt: D_totalDebt } = await openTrove({ ICR: toBN(dec(230, 16)), extraParams: { from: dennis } })
+    const { totalDebt: E_totalDebt } = await openTrove({ ICR: toBN(dec(240, 16)), extraParams: { from: erin } })
+    const { totalDebt: F_totalDebt } = await openTrove({ ICR: toBN(dec(240, 16)), extraParams: { from: freddy } })
+
+    const spDeposit = B_totalDebt.add(C_totalDebt).add(D_totalDebt).add(E_totalDebt).add(F_totalDebt)
+    const { totalDebt: A_totalDebt } = await openTrove({ ICR: toBN(dec(426, 16)), extraLUSDAmount: spDeposit, extraParams: { from: alice } })
+    await openTrove({ ICR: toBN(dec(426, 16)), extraLUSDAmount: A_totalDebt, extraParams: { from: whale } })
+
+    // Alice deposits LUSD to Stability Pool
+    await stabilityPool.provideToSP(spDeposit, ZERO_ADDRESS, { from: alice })
+
+    // to compensate borrowing fee
+    await lusdToken.transfer(alice, A_totalDebt, { from: whale })
+    // Alice closes trove
+    await borrowerOperations.closeTrove({ from: alice })
+
+    // price drops to 1ETH:85LUSD, reducing TCR below 150%
+    await priceFeed.setPrice('85000000000000000000')
+    const price = await priceFeed.getPrice()
+
+    // check Recovery Mode kicks in
+
+    const recoveryMode_Before = await th.checkRecoveryMode(contracts)
+    assert.isTrue(recoveryMode_Before)
+
+    // check TCR < 150%
+    const _150percent = web3.utils.toBN('1500000000000000000')
+    const TCR_Before = await th.getTCR(contracts)
+    assert.isTrue(TCR_Before.lt(_150percent))
+
+    /*
+    After the price drop and prior to any liquidations, ICR should be:
+
+    Trove         ICR
+    Alice       182%
+    Bob         102%
+    Carol       102%
+    Dennis      102%
+    Elisa       102%
+    Freddy      102%
+    */
+    alice_ICR = await troveManager.getCurrentICR(alice, price)
+    bob_ICR = await troveManager.getCurrentICR(bob, price)
+    carol_ICR = await troveManager.getCurrentICR(carol, price)
+    dennis_ICR = await troveManager.getCurrentICR(dennis, price)
+    erin_ICR = await troveManager.getCurrentICR(erin, price)
+    freddy_ICR = await troveManager.getCurrentICR(freddy, price)
+
+    // Alice should have ICR > 150%
+    assert.isTrue(alice_ICR.gt(_150percent))
+    // All other Troves should have ICR < 150%
+    assert.isTrue(carol_ICR.lt(_150percent))
+    assert.isTrue(dennis_ICR.lt(_150percent))
+    assert.isTrue(erin_ICR.lt(_150percent))
+    assert.isTrue(freddy_ICR.lt(_150percent))
+
+    /* After liquidating Bob and Carol, the the TCR of the system rises above the CCR, to 154%.
+    (see calculations in Google Sheet)
+
+    Liquidations continue until all Troves with ICR < MCR have been closed.
+    Only Alice should remain active - all others should be closed. */
+
+    // call batchLiquidateTroves
+    await troveManager.batchLiquidateTroves([alice, bob, bob, carol, dennis, erin, freddy]);
+
+    // check system is no longer in Recovery Mode
+    const recoveryMode_After = await th.checkRecoveryMode(contracts)
+    assert.isFalse(recoveryMode_After)
+
+    // After liquidation, TCR should rise to above 150%.
+    const TCR_After = await th.getTCR(contracts)
+    assert.isTrue(TCR_After.gt(_150percent))
+
+    // get all Troves
+    const alice_Trove = await troveManager.Troves(alice)
+    const bob_Trove = await troveManager.Troves(bob)
+    const carol_Trove = await troveManager.Troves(carol)
+    const dennis_Trove = await troveManager.Troves(dennis)
+    const erin_Trove = await troveManager.Troves(erin)
+    const freddy_Trove = await troveManager.Troves(freddy)
+
+    // check that Alice's Trove is closed
+    assert.equal(alice_Trove[3], 2)
+
+    // check all other Troves are liquidated
+    assert.equal(bob_Trove[3], 3)
+    assert.equal(carol_Trove[3], 3)
+    assert.equal(dennis_Trove[3], 3)
+    assert.equal(erin_Trove[3], 3)
+    assert.equal(freddy_Trove[3], 3)
+
+    assert.isFalse(await sortedTroves.contains(bob))
+    assert.isFalse(await sortedTroves.contains(carol))
+    assert.isFalse(await sortedTroves.contains(dennis))
+    assert.isFalse(await sortedTroves.contains(erin))
+    assert.isFalse(await sortedTroves.contains(freddy))
+  })
+
   it("batchLiquidateTroves() with a non fullfilled liquidation: non liquidated trove remains active", async () => {
     const { totalDebt: A_totalDebt } = await openTrove({ ICR: toBN(dec(211, 16)), extraParams: { from: alice } })
     const { totalDebt: B_totalDebt } = await openTrove({ ICR: toBN(dec(212, 16)), extraParams: { from: bob } })

@@ -12,24 +12,38 @@ const transition = (view: FarmView, event: FarmEvent): FarmView => {
 
 const getInitialView = (
   liquidityMiningStake: Decimal,
-  remainingLiquidityMiningLQTYReward: Decimal
+  remainingLiquidityMiningLQTYReward: Decimal,
+  liquidityMiningLQTYReward: Decimal
 ): FarmView => {
   if (remainingLiquidityMiningLQTYReward.isZero) return "DISABLED";
-  if (liquidityMiningStake.isZero) return "INACTIVE";
+  if (liquidityMiningStake.isZero && liquidityMiningLQTYReward.isZero) return "INACTIVE";
   return "ACTIVE";
 };
 
 const selector = ({
   liquidityMiningStake,
-  remainingLiquidityMiningLQTYReward
-}: LiquityStoreState) => ({ liquidityMiningStake, remainingLiquidityMiningLQTYReward });
+  remainingLiquidityMiningLQTYReward,
+  liquidityMiningLQTYReward
+}: LiquityStoreState) => ({
+  liquidityMiningStake,
+  remainingLiquidityMiningLQTYReward,
+  liquidityMiningLQTYReward
+});
 
 export const FarmViewProvider: React.FC = props => {
   const { children } = props;
-  const { liquidityMiningStake, remainingLiquidityMiningLQTYReward } = useLiquitySelector(selector);
+  const {
+    liquidityMiningStake,
+    remainingLiquidityMiningLQTYReward,
+    liquidityMiningLQTYReward
+  } = useLiquitySelector(selector);
 
   const [view, setView] = useState<FarmView>(
-    getInitialView(liquidityMiningStake, remainingLiquidityMiningLQTYReward)
+    getInitialView(
+      liquidityMiningStake,
+      remainingLiquidityMiningLQTYReward,
+      liquidityMiningLQTYReward
+    )
   );
   const viewRef = useRef<FarmView>(view);
 
@@ -50,10 +64,12 @@ export const FarmViewProvider: React.FC = props => {
   }, [view]);
 
   useEffect(() => {
-    if (liquidityMiningStake.isZero) {
+    if (liquidityMiningStake.isZero && liquidityMiningLQTYReward.isZero) {
       dispatchEvent("UNSTAKE_AND_CLAIM_CONFIRMED");
+    } else if (liquidityMiningStake.isZero && !liquidityMiningLQTYReward.isZero) {
+      dispatchEvent("UNSTAKE_CONFIRMED");
     }
-  }, [liquidityMiningStake.isZero, dispatchEvent]);
+  }, [liquidityMiningStake.isZero, liquidityMiningLQTYReward.isZero, dispatchEvent]);
 
   const provider = {
     view,

@@ -54,17 +54,14 @@ type User @entity {
   "User's Ethereum address as a hex-string"
   id: ID!
 
-  currentTrove: Trove
-  troveCount: Int!
+  trove: Trove
+  stabilityDeposit: StabilityDeposit
 
-  currentStabilityDeposit: StabilityDeposit
-  stabilityDepositCount: Int!
-
-  troves: [Trove!]! @derivedFrom(field: "owner")
-  stabilityDeposits: [StabilityDeposit!]! @derivedFrom(field: "owner")
-  liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
   collSurplus: BigDecimal!
   collSurplusChanges: [CollSurplusChange!]! @derivedFrom(field: "user")
+
+  liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
+  redemptions: [Redemption!]! @derivedFrom(field: "redeemer")
 }
 
 enum TroveStatus {
