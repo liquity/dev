@@ -145,10 +145,8 @@ templates:
         - Global
         - User
         - Transaction
-        - PriceChange
         - LqtyStake
         - LqtyStakeChange
-        - SystemState
       abis:
         - name: LQTYStaking
           file: ../lib-ethers/abi/LQTYStaking.json

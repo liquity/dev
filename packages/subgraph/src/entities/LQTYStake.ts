@@ -82,8 +82,6 @@ export function updateStake(event: ethereum.Event, address: Address, newStake: B
   stakeChange.amountBefore = stake.amount;
   stakeChange.amountChange = stakeChange.amountAfter.minus(stakeChange.amountBefore);
   stakeChange.amountAfter = nextStakeAmount;
-  stakeChange.issuanceGain = BIGINT_ZERO;
-  stakeChange.redemptionGain = BIGINT_ZERO;
 
   stake.amount = nextStakeAmount;
 
