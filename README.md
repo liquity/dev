@@ -28,7 +28,7 @@ The `packages` directory holds components that comprise Liquity protocol.
 
 | Package               | Description                                                                                                                                 |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| @liquity/dev-frontend | [Dev UI](https://devui.liquity.org): a bare-bones but functional React app used for interfacing with the smart contracts during development |
+| @liquity/dev-frontend | [Frontend](https://devui.liquity.org): a bare-bones but functional React app used for interfacing with the smart contracts during development |
 | @liquity/lib-base     | Common interfaces and classes shared by the other `lib-` packages                                                                           |
 | @liquity/lib-ethers   | [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions                        |
 | @liquity/lib-react    | Components and hooks that React-based apps can use to view Liquity contract state                                                           |
@@ -137,18 +137,18 @@ The `packages` directory holds components that comprise Liquity protocol.
     - [Start dev-frontend in development mode](#start-dev-frontend-in-development-mode)
     - [Start dev-frontend in demo mode](#start-dev-frontend-in-demo-mode)
     - [Build dev-frontend for production](#build-dev-frontend-for-production)
-  - [Configuring your custom Dev UI](#configuring-your-custom-dev-ui)
-- [Running Dev UI with Docker](#running-dev-ui-with-docker)
+  - [Configuring your custom frontend](#configuring-your-custom-dev-ui)
+- [Running a frontend with Docker](#running-dev-ui-with-docker)
   - [Prerequisites](#prerequisites-1)
   - [Running with `docker`](#running-with-docker)
-  - [Configuring a public Dev UI](#configuring-a-public-dev-ui)
+  - [Configuring a public frontend](#configuring-a-public-dev-ui)
     - [FRONTEND_TAG](#frontend_tag)
     - [INFURA_API_KEY](#infura_api_key)
   - [Setting a kickback rate](#setting-a-kickback-rate)
   - [Setting a kickback rate with Gnosis Safe](#setting-a-kickback-rate-with-gnosis-safe)
-  - [Next steps for hosting Dev UI](#next-steps-for-hosting-dev-ui)
+  - [Next steps for hosting a frontend](#next-steps-for-hosting-dev-ui)
     - [Example 1: using static website hosting](#example-1-using-static-website-hosting)
-    - [Example 2: wrapping the Dev UI container in HTTPS](#example-2-wrapping-the-dev-ui-container-in-https)
+    - [Example 2: wrapping the frontend container in HTTPS](#example-2-wrapping-the-dev-ui-container-in-https)
 
 
 ## Liquity Overview
@@ -1458,9 +1458,9 @@ This combines the top-level `prepare` and `build` scripts.
 
 You'll find the output in `packages/dev-frontend/build`.
 
-### Configuring your custom Dev UI
+### Configuring your custom frontend
 
-Your custom built Dev UI can be configured by putting a file named `config.json` inside the same directory as `index.html` built in the previous step. The format of this file is:
+Your custom built frontend can be configured by putting a file named `config.json` inside the same directory as `index.html` built in the previous step. The format of this file is:
 
 ```
 {
@@ -1469,9 +1469,9 @@ Your custom built Dev UI can be configured by putting a file named `config.json`
 }
 ```
 
-## Running Dev UI with Docker
+## Running a frontend with Docker
 
-The quickest way to get Dev UI up and running is to use the [prebuilt image](https://hub.docker.com/r/liquity/dev-frontend) available on Docker Hub.
+The quickest way to get a frontend up and running is to use the [prebuilt image](https://hub.docker.com/r/liquity/dev-frontend) available on Docker Hub.
 
 ### Prerequisites
 
@@ -1484,7 +1484,7 @@ docker pull liquity/dev-frontend
 docker run --name liquity -d --rm -p 3000:80 liquity/dev-frontend
 ```
 
-This will start serving Dev UI using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
+This will start serving your frontend using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
 
 To stop the service:
 
@@ -1492,23 +1492,23 @@ To stop the service:
 docker kill liquity
 ```
 
-### Configuring a public Dev UI
+### Configuring a public frontend
 
-If you're planning to publicly host Dev UI, you might need to pass the Docker container some extra configuration in the form of environment variables.
+If you're planning to publicly host a frontend, you might need to pass the Docker container some extra configuration in the form of environment variables.
 
 #### FRONTEND_TAG
 
-If you want to receive a share of the LQTY rewards earned by users of your Dev UI, set this variable to the Ethereum address you want the LQTY to be sent to.
+If you want to receive a share of the LQTY rewards earned by users of your frontend, set this variable to the Ethereum address you want the LQTY to be sent to.
 
 #### INFURA_API_KEY
 
-This is an optional parameter. If you'd like your Dev UI to use Infura's [WebSocket endpoint](https://infura.io/docs/ethereum#section/Websockets) for receiving blockchain events, set this variable to an Infura Project ID.
+This is an optional parameter. If you'd like your frontend to use Infura's [WebSocket endpoint](https://infura.io/docs/ethereum#section/Websockets) for receiving blockchain events, set this variable to an Infura Project ID.
 
 ### Setting a kickback rate
 
-The kickback rate is the portion of LQTY you pass on to users of your Dev UI. For example with a kickback rate of 80%, you receive 20% while users get the other 80. Before you can start to receive a share of LQTY rewards, you'll need to set this parameter by making a transaction on-chain.
+The kickback rate is the portion of LQTY you pass on to users of your frontend. For example with a kickback rate of 80%, you receive 20% while users get the other 80. Before you can start to receive a share of LQTY rewards, you'll need to set this parameter by making a transaction on-chain.
 
-It is highly recommended that you do this while running Dev UI locally, before you start hosting it publicly:
+It is highly recommended that you do this while running a frontend locally, before you start hosting it publicly:
 
 ```
 docker run --name liquity -d --rm -p 3000:80 \
@@ -1526,15 +1526,15 @@ If you are using Gnosis safe, you have to set the kickback rate mannually throug
 - Second, for method, choose "registerFrontEnd" from the list; 
 - Finally, type in the unit256 _Kickbackrate_. The kickback rate should be an integer representing an 18-digit decimal. So for a kickback rate of 99% (0.99), the value is: ```990000000000000000```. The number is 18 digits long.
 
-### Next steps for hosting Dev UI
+### Next steps for hosting a frontend
 
 Now that you've set a kickback rate, you'll need to decide how you want to host your frontend. There are way too many options to list here, so these are going to be just a few examples.
 
 #### Example 1: using static website hosting
 
-Dev UI doesn't require any database or server-side computation, so the easiest way to host it is to use a service that lets you upload a folder of static files (HTML, CSS, JS, etc).
+A frontend doesn't require any database or server-side computation, so the easiest way to host it is to use a service that lets you upload a folder of static files (HTML, CSS, JS, etc).
 
-To obtain the files you need to upload, you need to extract them from a Dev UI Docker container. If you were following the guide for setting a kickback rate and haven't stopped the container yet, then you already have one! Otherwise, you can create it with a command like this (remember to use your own `FRONTEND_TAG` and `INFURA_API_KEY`):
+To obtain the files you need to upload, you need to extract them from a frontend Docker container. If you were following the guide for setting a kickback rate and haven't stopped the container yet, then you already have one! Otherwise, you can create it with a command like this (remember to use your own `FRONTEND_TAG` and `INFURA_API_KEY`):
 
 ```
 docker run --name liquity -d --rm \
@@ -1543,7 +1543,7 @@ docker run --name liquity -d --rm \
   liquity/dev-frontend
 ```
 
-While the container is running, use `docker cp` to extract Dev UI's files to a folder of your choosing. For example to extract them to a new folder named "devui" inside the current folder, run:
+While the container is running, use `docker cp` to extract the frontend's files to a folder of your choosing. For example to extract them to a new folder named "devui" inside the current folder, run:
 
 ```
 docker cp liquity:/usr/share/nginx/html ./devui
@@ -1551,11 +1551,11 @@ docker cp liquity:/usr/share/nginx/html ./devui
 
 Upload the contents of this folder to your chosen hosting service (or serve them using your own infrastructure), and you're set!
 
-#### Example 2: wrapping the Dev UI container in HTTPS
+#### Example 2: wrapping the frontend container in HTTPS
 
-If you have command line access to a server with Docker installed, hosting Dev UI from a Docker container is a viable option.
+If you have command line access to a server with Docker installed, hosting a frontend from a Docker container is a viable option.
 
-The Dev UI Docker container simply serves files using plain HTTP, which is susceptible to man-in-the-middle attacks. Therefore it is highly recommended to wrap it in HTTPS using a reverse proxy. You can find an example docker-compose config [here](packages/dev-frontend/docker-compose-example/docker-compose.yml) that secures Dev UI using [SWAG (Secure Web Application Gateway)](https://github.com/linuxserver/docker-swag) and uses [watchtower](https://github.com/containrrr/watchtower) for automatically updating the Dev UI image to the latest version on Docker Hub.
+The frontend Docker container simply serves files using plain HTTP, which is susceptible to man-in-the-middle attacks. Therefore it is highly recommended to wrap it in HTTPS using a reverse proxy. You can find an example docker-compose config [here](packages/dev-frontend/docker-compose-example/docker-compose.yml) that secures the frontend using [SWAG (Secure Web Application Gateway)](https://github.com/linuxserver/docker-swag) and uses [watchtower](https://github.com/containrrr/watchtower) for automatically updating the frontend image to the latest version on Docker Hub.
 
 Remember to customize both [docker-compose.yml](packages/dev-frontend/docker-compose-example/docker-compose.yml) and the [site config](packages/dev-frontend/docker-compose-example/config/nginx/site-confs/liquity.example.com).
 
