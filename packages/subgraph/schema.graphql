@@ -16,6 +16,9 @@ type Global @entity {
   numberOfTrovesClosedByOwner: Int!
   totalNumberOfTroves: Int!
 
+  totalNumberOfLqtyStakes: Int!
+  totalLqtyTokensStaked: BigDecimal!
+
   "Total redistributed per-stake collateral"
   rawTotalRedistributedCollateral: BigInt!
 
@@ -56,6 +59,7 @@ type User @entity {
 
   trove: Trove
   stabilityDeposit: StabilityDeposit
+  stake: LqtyStake
 
   collSurplus: BigDecimal!
   collSurplusChanges: [CollSurplusChange!]! @derivedFrom(field: "user")
@@ -245,4 +249,35 @@ type CollSurplusChange implements Change @entity {
   collSurplusBefore: BigDecimal!
   collSurplusChange: BigDecimal!
   collSurplusAfter: BigDecimal!
+}
+
+type LqtyStake @entity {
+  id: ID!
+  owner: User!
+  amount: BigDecimal!
+  changes: [LqtyStakeChange!]! @derivedFrom(field: "stake")
+}
+
+enum LqtyStakeOperation {
+  stakeIncreased
+  stakeDecreased
+  gainsWithdrawn
+}
+
+type LqtyStakeChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
+
+  stake: LqtyStake!
+  operation: LqtyStakeOperation!
+
+  amountBefore: BigDecimal!
+  amountChange: BigDecimal!
+  amountAfter: BigDecimal!
+
+  issuanceGain: BigInt
+  redemptionGain: BigInt
 }

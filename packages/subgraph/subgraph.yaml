@@ -131,3 +131,31 @@ templates:
       eventHandlers:
         - event: CollBalanceUpdated(indexed address,uint256)
           handler: handleCollSurplusBalanceUpdated
+  - name: LqtyStake
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: LQTYStaking
+    mapping:
+      file: ./src/mappings/LQTYStake.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - PriceChange
+        - LqtyStake
+        - LqtyStakeChange
+        - SystemState
+      abis:
+        - name: LQTYStaking
+          file: ../lib-ethers/abi/LQTYStaking.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
+      eventHandlers:
+        - event: StakeChanged(indexed address,uint256)
+          handler: handleStakeChanged
+        - event: StakingGainsWithdrawn(indexed address,uint256,uint256)
+          handler: handleStakeGainsWithdrawn
