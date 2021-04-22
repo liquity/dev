@@ -141,15 +141,17 @@ export function decreaseNumberOfTrovesClosedByOwner(): void {
 export function handleLQTYStakeChange(stakeChange: LqtyStakeChange): void {
   let global = getGlobal();
 
-  if (stakeChange.operation == "newStake") {
+  if (stakeChange.operation == "stakeCreated") {
     global.totalNumberOfLQTYStakes++;
-    global.totalLQTYTokensStaked += stakeChange.amountChange;
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
   } else if (stakeChange.operation == "stakeIncreased") {
-    global.totalLQTYTokensStaked += stakeChange.amountChange;
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
   } else if (stakeChange.operation == "stakeDecreased") {
-    global.totalLQTYTokensStaked -= stakeChange.amountChange;
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
   } else if (stakeChange.operation == "stakeRemoved") {
     global.totalNumberOfLQTYStakes--;
-    global.totalLQTYTokensStaked -= stakeChange.amountChange;
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
   }
+
+  global.save();
 }
