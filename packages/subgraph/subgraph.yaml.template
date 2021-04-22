@@ -1,0 +1,160 @@
+specVersion: 0.0.2
+description: Liquity Decentralized Borrowing Protocol
+repository: https://github.com/liquity/subgraph
+schema:
+  file: ./schema.graphql
+dataSources:
+  - name: TroveManager
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      address: "0xA39739EF8b0231DbFA0DcdA07d7e29faAbCf4bb2"
+      abi: TroveManager
+      startBlock: 12178551
+    mapping:
+      file: ./src/mappings/TroveManager.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - PriceChange
+        - Trove
+        - TroveChange
+        - Redemption
+        - Liquidation
+        - SystemState
+      abis:
+        - name: TroveManager
+          file: ../lib-ethers/abi/TroveManager.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
+      eventHandlers:
+        - event: BorrowerOperationsAddressChanged(address)
+          handler: handleBorrowerOperationsAddressChanged
+        - event: StabilityPoolAddressChanged(address)
+          handler: handleStabilityPoolAddressChanged
+        - event: CollSurplusPoolAddressChanged(address)
+          handler: handleCollSurplusPoolAddressChanged
+        - event: PriceFeedAddressChanged(address)
+          handler: handlePriceFeedAddressChanged
+        - event: LQTYStakingAddressChanged(address)
+          handler: handleLQTYStakingAddressChanged
+        - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
+          handler: handleTroveUpdated
+        - event: TroveLiquidated(indexed address,uint256,uint256,uint8)
+          handler: handleTroveLiquidated
+        - event: Liquidation(uint256,uint256,uint256,uint256)
+          handler: handleLiquidation
+        - event: Redemption(uint256,uint256,uint256,uint256)
+          handler: handleRedemption
+templates:
+  - name: BorrowerOperations
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: BorrowerOperations
+    mapping:
+      file: ./src/mappings/BorrowerOperations.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - PriceChange
+        - Trove
+        - TroveChange
+        - SystemState
+      abis:
+        - name: BorrowerOperations
+          file: ../lib-ethers/abi/BorrowerOperations.json
+        - name: TroveManager
+          file: ../lib-ethers/abi/TroveManager.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
+      eventHandlers:
+        - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
+          handler: handleTroveUpdated
+  - name: StabilityPool
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: StabilityPool
+    mapping:
+      file: ./src/mappings/StabilityPool.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - PriceChange
+        - StabilityDeposit
+        - StabilityDepositChange
+        - SystemState
+      abis:
+        - name: StabilityPool
+          file: ../lib-ethers/abi/StabilityPool.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
+      eventHandlers:
+        - event: UserDepositChanged(indexed address,uint256)
+          handler: handleUserDepositChanged
+        - event: ETHGainWithdrawn(indexed address,uint256,uint256)
+          handler: handleETHGainWithdrawn
+  - name: CollSurplusPool
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: CollSurplusPool
+    mapping:
+      file: ./src/mappings/CollSurplusPool.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - Trove
+        - CollSurplusChange
+        - SystemState
+      abis:
+        - name: CollSurplusPool
+          file: ../lib-ethers/abi/CollSurplusPool.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
+      eventHandlers:
+        - event: CollBalanceUpdated(indexed address,uint256)
+          handler: handleCollSurplusBalanceUpdated
+  - name: LqtyStake
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: LQTYStaking
+    mapping:
+      file: ./src/mappings/LqtyStake.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - LqtyStake
+        - LqtyStakeChange
+      abis:
+        - name: LQTYStaking
+          file: ../lib-ethers/abi/LQTYStaking.json
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
+      eventHandlers:
+        - event: StakeChanged(indexed address,uint256)
+          handler: handleStakeChanged
+        - event: StakingGainsWithdrawn(indexed address,uint256,uint256)
+          handler: handleStakeGainsWithdrawn
