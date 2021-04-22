@@ -6,16 +6,16 @@ import { decimalize, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
 
 import { beginChange, initChange, finishChange } from "./Change";
 import { getUser } from "./User";
-import { handleLqtyStakeChange } from "./Global";
+import { handleLQTYStakeChange } from "./Global";
 
-function beginLqtyStakeChange(event: ethereum.Event): LqtyStakeChange {
+function startLQTYStakeChange(event: ethereum.Event): LqtyStakeChange {
   let sequenceNumber = beginChange(event);
   let stakeChange = new LqtyStakeChange(sequenceNumber.toString());
   initChange(stakeChange, event, sequenceNumber);
   return stakeChange;
 }
 
-function finishLqtyStakeChange(stakeChange: LqtyStakeChange): void {
+function finishLQTYStakeChange(stakeChange: LqtyStakeChange): void {
   finishChange(stakeChange);
   stakeChange.save();
 }
@@ -48,7 +48,7 @@ function getOperationType(
   stake: LqtyStake | null,
   nextStakeAmount: BigDecimal
 ): string {
-  let isCreating = existingStake === null;
+  let isCreating = existingStake == null;
   if (isCreating) {
     return "stakeCreated";
   }
@@ -58,7 +58,7 @@ function getOperationType(
     return "stakeIncreased";
   }
 
-  let isRemoving = nextStakeAmount === DECIMAL_ZERO;
+  let isRemoving = nextStakeAmount == DECIMAL_ZERO;
   if (isRemoving) {
     return "stakeRemoved";
   }
@@ -70,24 +70,24 @@ export function updateStake(event: ethereum.Event, address: Address, newStake: B
   let existingStake = getUserStake(address);
   let stake = existingStake;
 
-  if (existingStake === null) {
+  if (existingStake == null) {
     stake = createStake(address);
   }
 
   let nextStakeAmount = decimalize(newStake);
 
-  let stakeChange = beginLqtyStakeChange(event);
+  let stakeChange = startLQTYStakeChange(event);
   stakeChange.stake = stake.id;
   stakeChange.operation = getOperationType(existingStake, stake, nextStakeAmount);
   stakeChange.amountBefore = stake.amount;
-  stakeChange.amountChange = stakeChange.amountAfter.minus(stakeChange.amountBefore);
+  stakeChange.amountChange = nextStakeAmount.minus(stake.amount);
   stakeChange.amountAfter = nextStakeAmount;
 
   stake.amount = nextStakeAmount;
 
-  handleLqtyStakeChange(stakeChange);
+  handleLQTYStakeChange(stakeChange);
 
-  finishLqtyStakeChange(stakeChange);
+  finishLQTYStakeChange(stakeChange);
 
   stake.save();
 }
@@ -103,12 +103,16 @@ export function withdrawStakeGains(
   }
 
   let stake = getUserStake(address) || createStake(address);
-  let stakeChange = beginLqtyStakeChange(event);
+  let stakeChange: LqtyStakeChange = startLQTYStakeChange(event);
+  stakeChange.stake = stake.id;
+  stakeChange.operation = "gainsWithdrawn";
+  stakeChange.issuanceGain = stakeChange.issuanceGain.minus(decimalize(LUSDGain));
+  stakeChange.redemptionGain = stakeChange.redemptionGain.minus(decimalize(ETHGain));
+  stakeChange.amountBefore = stake.amount;
+  stakeChange.amountChange = DECIMAL_ZERO;
+  stakeChange.amountAfter = stake.amount;
 
-  stakeChange.issuanceGain = stakeChange.issuanceGain.minus(LUSDGain);
-  stakeChange.redemptionGain = stakeChange.redemptionGain.minus(ETHGain);
-
-  finishLqtyStakeChange(stakeChange);
+  finishLQTYStakeChange(stakeChange);
 
   stake.save();
 }

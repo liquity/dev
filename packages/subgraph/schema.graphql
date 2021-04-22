@@ -16,8 +16,8 @@ type Global @entity {
   numberOfTrovesClosedByOwner: Int!
   totalNumberOfTroves: Int!
 
-  totalNumberOfLqtyStakes: Int!
-  totalLqtyTokensStaked: BigDecimal!
+  totalNumberOfLQTYStakes: Int!
+  totalLQTYTokensStaked: BigDecimal!
 
   "Total redistributed per-stake collateral"
   rawTotalRedistributedCollateral: BigInt!
@@ -258,9 +258,11 @@ type LqtyStake @entity {
   changes: [LqtyStakeChange!]! @derivedFrom(field: "stake")
 }
 
-enum LqtyStakeOperation {
+enum LQTYStakeOperation {
+  stakeCreated
   stakeIncreased
   stakeDecreased
+  stakeRemoved
   gainsWithdrawn
 }
 
@@ -272,12 +274,12 @@ type LqtyStakeChange implements Change @entity {
   systemStateAfter: SystemState!
 
   stake: LqtyStake!
-  operation: LqtyStakeOperation!
+  operation: LQTYStakeOperation!
 
   amountBefore: BigDecimal!
   amountChange: BigDecimal!
   amountAfter: BigDecimal!
 
-  issuanceGain: BigInt
-  redemptionGain: BigInt
+  issuanceGain: BigDecimal
+  redemptionGain: BigDecimal
 }
