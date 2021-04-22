@@ -106,8 +106,8 @@ export function withdrawStakeGains(
   let stakeChange: LqtyStakeChange = startLQTYStakeChange(event);
   stakeChange.stake = stake.id;
   stakeChange.operation = "gainsWithdrawn";
-  stakeChange.issuanceGain = stakeChange.issuanceGain.minus(decimalize(LUSDGain));
-  stakeChange.redemptionGain = stakeChange.redemptionGain.minus(decimalize(ETHGain));
+  stakeChange.issuanceGain = decimalize(LUSDGain);
+  stakeChange.redemptionGain = decimalize(ETHGain);
   stakeChange.amountBefore = stake.amount;
   stakeChange.amountChange = DECIMAL_ZERO;
   stakeChange.amountAfter = stake.amount;
