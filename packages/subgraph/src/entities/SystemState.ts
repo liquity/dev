@@ -162,9 +162,7 @@ export function updateSystemStateByStabilityDepositChange(
   bumpSystemState(systemState);
 }
 
-export function updateSystemStateByCollSurplusChange(
-  collSurplusChange: CollSurplusChange
-): void {
+export function updateSystemStateByCollSurplusChange(collSurplusChange: CollSurplusChange): void {
   let systemState = getCurrentSystemState();
 
   systemState.collSurplusPoolBalance += collSurplusChange.collSurplusChange;
