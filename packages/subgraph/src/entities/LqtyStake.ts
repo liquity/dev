@@ -11,6 +11,8 @@ import { handleLQTYStakeChange } from "./Global";
 function startLQTYStakeChange(event: ethereum.Event): LqtyStakeChange {
   let sequenceNumber = beginChange(event);
   let stakeChange = new LqtyStakeChange(sequenceNumber.toString());
+  stakeChange.issuanceGain = DECIMAL_ZERO;
+  stakeChange.redemptionGain = DECIMAL_ZERO;
   initChange(stakeChange, event, sequenceNumber);
   return stakeChange;
 }
@@ -24,7 +26,7 @@ function getUserStake(address: Address): LqtyStake | null {
   let user = getUser(address);
 
   if (user.stake == null) {
-    return createStake(address);
+    return null;
   }
 
   return LqtyStake.load(user.stake);
@@ -64,19 +66,24 @@ function getOperationType(stake: LqtyStake | null, nextStakeAmount: BigDecimal):
 
 export function updateStake(event: ethereum.Event, address: Address, newStake: BigInt): void {
   let stake = getUserStake(address);
+  let isUserFirstStake = stake == null;
+
+  if (stake == null) {
+    stake = createStake(address);
+  }
 
   let nextStakeAmount = decimalize(newStake);
 
   let stakeChange = startLQTYStakeChange(event);
   stakeChange.stake = stake.id;
-  stakeChange.operation = getOperationType(stake, nextStakeAmount);
+  stakeChange.stakeOperation = getOperationType(stake, nextStakeAmount);
   stakeChange.amountBefore = stake.amount;
   stakeChange.amountChange = nextStakeAmount.minus(stake.amount);
   stakeChange.amountAfter = nextStakeAmount;
 
   stake.amount = nextStakeAmount;
 
-  handleLQTYStakeChange(stakeChange);
+  handleLQTYStakeChange(stakeChange, isUserFirstStake);
 
   finishLQTYStakeChange(stakeChange);
 
@@ -93,10 +100,10 @@ export function withdrawStakeGains(
     return;
   }
 
-  let stake = getUserStake(address);
+  let stake = getUserStake(address) || createStake(address);
   let stakeChange: LqtyStakeChange = startLQTYStakeChange(event);
   stakeChange.stake = stake.id;
-  stakeChange.operation = "gainsWithdrawn";
+  stakeChange.stakeOperation = "gainsWithdrawn";
   stakeChange.issuanceGain = decimalize(LUSDGain);
   stakeChange.redemptionGain = decimalize(ETHGain);
   stakeChange.amountBefore = stake.amount;
