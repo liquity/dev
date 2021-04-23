@@ -14,7 +14,7 @@ import {
   BorrowerOperations,
   StabilityPool,
   CollSurplusPool,
-  LqtyStake
+  LQTYStaking
 } from "../../generated/templates";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
@@ -41,7 +41,7 @@ export function handleCollSurplusPoolAddressChanged(event: CollSurplusPoolAddres
 }
 
 export function handleLQTYStakingAddressChanged(event: LQTYStakingAddressChanged): void {
-  LqtyStake.create(event.params._lqtyStakingAddress);
+  LQTYStaking.create(event.params._lqtyStakingAddress);
 }
 
 export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {

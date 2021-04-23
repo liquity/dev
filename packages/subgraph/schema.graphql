@@ -17,6 +17,7 @@ type Global @entity {
   totalNumberOfTroves: Int!
 
   totalNumberOfLQTYStakes: Int!
+  numberOfActiveLQTYStakes: Int!
   totalLQTYTokensStaked: BigDecimal!
 
   "Total redistributed per-stake collateral"
@@ -274,7 +275,7 @@ type LqtyStakeChange implements Change @entity {
   systemStateAfter: SystemState!
 
   stake: LqtyStake!
-  operation: LQTYStakeOperation!
+  stakeOperation: LQTYStakeOperation!
 
   amountBefore: BigDecimal!
   amountChange: BigDecimal!

@@ -133,7 +133,7 @@ templates:
       eventHandlers:
         - event: CollBalanceUpdated(indexed address,uint256)
           handler: handleCollSurplusBalanceUpdated
-  - name: LqtyStake
+  - name: LQTYStaking
     kind: ethereum/contract
     network: mainnet
     source:

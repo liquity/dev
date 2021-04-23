@@ -27,6 +27,7 @@ export function getGlobal(): Global {
     newGlobal.rawTotalRedistributedCollateral = BIGINT_ZERO;
     newGlobal.rawTotalRedistributedDebt = BIGINT_ZERO;
     newGlobal.totalNumberOfLQTYStakes = 0;
+    newGlobal.numberOfActiveLQTYStakes = 0;
     newGlobal.totalLQTYTokensStaked = DECIMAL_ZERO;
 
     return newGlobal;
@@ -138,18 +139,24 @@ export function decreaseNumberOfTrovesClosedByOwner(): void {
   global.save();
 }
 
-export function handleLQTYStakeChange(stakeChange: LqtyStakeChange): void {
+export function handleLQTYStakeChange(
+  stakeChange: LqtyStakeChange,
+  isUserFirstStake: boolean
+): void {
   let global = getGlobal();
 
-  if (stakeChange.operation == "stakeCreated") {
-    global.totalNumberOfLQTYStakes++;
+  if (stakeChange.stakeOperation == "stakeCreated") {
+    if (isUserFirstStake) {
+      global.totalNumberOfLQTYStakes++;
+    }
+    global.numberOfActiveLQTYStakes++;
     global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
-  } else if (stakeChange.operation == "stakeIncreased") {
+  } else if (stakeChange.stakeOperation == "stakeIncreased") {
     global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
-  } else if (stakeChange.operation == "stakeDecreased") {
+  } else if (stakeChange.stakeOperation == "stakeDecreased") {
     global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
-  } else if (stakeChange.operation == "stakeRemoved") {
-    global.totalNumberOfLQTYStakes--;
+  } else if (stakeChange.stakeOperation == "stakeRemoved") {
+    global.numberOfActiveLQTYStakes--;
     global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
   }
 
