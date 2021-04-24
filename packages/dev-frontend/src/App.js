@@ -42,34 +42,6 @@ const EthersWeb3ReactProvider = ({ children }) => {
   );
 };
 
-const UnsupportedMainnetFallback = () => (
-  <Flex
-    sx={{
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      height: "100vh",
-      textAlign: "center"
-    }}
-  >
-    <Heading sx={{ mb: 3 }}>
-      <Icon name="exclamation-triangle" /> This app is for testing purposes only.
-    </Heading>
-
-    <Paragraph sx={{ mb: 3 }}>
-      Please change your network to Ropsten, Rinkeby, Kovan or Görli.
-    </Paragraph>
-
-    <Paragraph>
-      If you'd like to use the Liquity Protocol on mainnet, please pick a frontend{" "}
-      <Link href="https://www.liquity.org/frontend">
-        here <Icon name="external-link-alt" size="xs" />
-      </Link>
-      .
-    </Paragraph>
-  </Flex>
-);
-
 const App = () => {
   const loader = (
     <Flex sx={{ alignItems: "center", justifyContent: "center", height: "100vh" }}>
@@ -78,33 +50,11 @@ const App = () => {
     </Flex>
   );
 
-  const unsupportedNetworkFallback = chainId => (
-    <Flex
-      sx={{
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        textAlign: "center"
-      }}
-    >
-      <Heading sx={{ mb: 3 }}>
-        <Icon name="exclamation-triangle" /> Liquity is not yet deployed to{" "}
-        {chainId === 1 ? "mainnet" : "this network"}.
-      </Heading>
-      Please switch to Ropsten, Rinkeby, Kovan or Görli.
-    </Flex>
-  );
-
   return (
     <EthersWeb3ReactProvider>
       <ThemeProvider theme={theme}>
         <WalletConnector loader={loader}>
-          <LiquityProvider
-            loader={loader}
-            unsupportedNetworkFallback={unsupportedNetworkFallback}
-            unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
-          >
+          <LiquityProvider loader={loader}>
             <TransactionProvider>
               <LiquityFrontend loader={loader} />
             </TransactionProvider>

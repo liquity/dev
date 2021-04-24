@@ -16,12 +16,7 @@ const wsParams = (network, infuraApiKey) => [
 
 const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
-export const LiquityProvider = ({
-  children,
-  loader,
-  unsupportedNetworkFallback,
-  unsupportedMainnetFallback
-}) => {
+export const LiquityProvider = ({ children, loader }) => {
   const { library: provider, account, chainId } = useWeb3React();
   const [config, setConfig] = useState();
 
@@ -69,12 +64,8 @@ export const LiquityProvider = ({
     return <>{loader}</>;
   }
 
-  if (config.testnetOnly && chainId === 1) {
-    return <>{unsupportedMainnetFallback}</>;
-  }
-
   if (!connection) {
-    return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
+    return null;
   }
 
   const liquity = EthersLiquity._from(connection);
