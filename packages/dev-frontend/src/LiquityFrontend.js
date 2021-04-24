@@ -22,10 +22,7 @@ import { StabilityViewProvider } from "./components/Stability/context/StabilityV
 import { StakingViewProvider } from "./components/Staking/context/StakingViewProvider";
 import { FarmViewProvider } from "./components/Farm/context/FarmViewProvider";
 
-type LiquityFrontendProps = {
-  loader?: React.ReactNode;
-};
-export const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
+export const LiquityFrontend = ({ loader }) => {
   const { account, provider, liquity } = useLiquity();
 
   // For console tinkering ;-)
