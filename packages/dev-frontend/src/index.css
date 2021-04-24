@@ -4,12 +4,20 @@
   --dark-gray: hsl(211, 20%, 28%);
   --black: #000;
 
+  --box-shadow-lg: 0px 9px 12px 0 rgba(106, 86, 86, 0.07);
+  --box-shadow-sm: 0 1px 3px rgba(106, 86, 86, 0.15);
+
   --primary: #6cc5ff;
+  --primary-light: #dce1e9;
+
+  --primary-text: #252a34;
+  --secondary-text: #8a9395;
+  --tertiary-text: #363732;
 }
 
 html {
   height: 100%;
-  font-size: 62.5%;
+  font-size: 56.25%;
   -webkit-text-size-adjust: 100%;
 }
 
