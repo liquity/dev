@@ -1,6 +1,6 @@
-import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { Flex, Spinner, Heading, ThemeProvider } from "theme-ui";
+import { ThemeProvider } from "theme-ui";
+import { HashRouter as Router } from "react-router-dom";
 
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { LiquityProvider } from "./hooks/LiquityContext";
@@ -8,7 +8,6 @@ import { TransactionProvider } from "./components/Transaction";
 import { getConfig } from "./config";
 import theme from "./theme";
 import WalletConnector from "./pages/WalletConnector";
-import Loader from "./components/Loader";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 import { LiquityFrontend } from "./LiquityFrontend";
@@ -42,11 +41,9 @@ const EthersWeb3ReactProvider = ({ children }) => {
   );
 };
 
-const App = () => {
-  return <Loader />;
-
-  return (
-    <EthersWeb3ReactProvider>
+const App = () => (
+  <EthersWeb3ReactProvider>
+    <Router>
       <ThemeProvider theme={theme}>
         <WalletConnector>
           <LiquityProvider>
@@ -56,8 +53,8 @@ const App = () => {
           </LiquityProvider>
         </WalletConnector>
       </ThemeProvider>
-    </EthersWeb3ReactProvider>
-  );
-};
+    </Router>
+  </EthersWeb3ReactProvider>
+);
 
 export default App;
