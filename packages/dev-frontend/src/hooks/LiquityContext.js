@@ -1,49 +1,29 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Provider } from "@ethersproject/abstract-provider";
 import { getNetwork } from "@ethersproject/networks";
-import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
-import {
-  BlockPolledLiquityStore,
-  EthersLiquity,
-  EthersLiquityWithStore,
-  _connectByChainId
-} from "@liquity/lib-ethers";
+import { EthersLiquity, _connectByChainId } from "@liquity/lib-ethers";
 
-import { LiquityFrontendConfig, getConfig } from "../config";
+import { getConfig } from "../config";
 
-type LiquityContextValue = {
-  config: LiquityFrontendConfig;
-  account: string;
-  provider: Provider;
-  liquity: EthersLiquityWithStore<BlockPolledLiquityStore>;
-};
+const LiquityContext = createContext(undefined);
 
-const LiquityContext = createContext<LiquityContextValue | undefined>(undefined);
-
-type LiquityProviderProps = {
-  loader?: React.ReactNode;
-  unsupportedNetworkFallback?: (chainId: number) => React.ReactNode;
-  unsupportedMainnetFallback?: React.ReactNode;
-};
-
-const wsParams = (network: string, infuraApiKey: string): [string, string] => [
+const wsParams = (network, infuraApiKey) => [
   `wss://${network === "homestead" ? "mainnet" : network}.infura.io/ws/v3/${infuraApiKey}`,
   network
 ];
 
 const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
-export const LiquityProvider: React.FC<LiquityProviderProps> = ({
+export const LiquityProvider = ({
   children,
   loader,
   unsupportedNetworkFallback,
   unsupportedMainnetFallback
 }) => {
-  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
-  const [config, setConfig] = useState<LiquityFrontendConfig>();
+  const { library: provider, account, chainId } = useWeb3React();
+  const [config, setConfig] = useState();
 
   const connection = useMemo(() => {
     if (config && provider && account && chainId) {
