@@ -6,10 +6,9 @@ import {
   Percent,
   MINIMUM_COLLATERAL_RATIO,
   CRITICAL_COLLATERAL_RATIO,
-  UserTrove,
-  Decimal
+  UserTrove
 } from "@liquity/lib-base";
-import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
+
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { shortenAddress } from "../utils/shortenAddress";
@@ -24,38 +23,25 @@ import { Abbreviation } from "./Abbreviation";
 
 const rowHeight = "40px";
 
-const liquidatableInNormalMode = (trove: UserTrove, price: Decimal) =>
-  [trove.collateralRatioIsBelowMinimum(price), "Collateral ratio not low enough"] as const;
+const liquidatableInNormalMode = (trove, price) => [
+  trove.collateralRatioIsBelowMinimum(price),
+  "Collateral ratio not low enough"
+];
 
-const liquidatableInRecoveryMode = (
-  trove: UserTrove,
-  price: Decimal,
-  totalCollateralRatio: Decimal,
-  lusdInStabilityPool: Decimal
-) => {
+const liquidatableInRecoveryMode = (trove, price, totalCollateralRatio, lusdInStabilityPool) => {
   const collateralRatio = trove.collateralRatio(price);
 
   if (collateralRatio.gte(MINIMUM_COLLATERAL_RATIO) && collateralRatio.lt(totalCollateralRatio)) {
     return [
       trove.debt.lte(lusdInStabilityPool),
       "There's not enough LUSD in the Stability pool to cover the debt"
-    ] as const;
+    ];
   } else {
     return liquidatableInNormalMode(trove, price);
   }
 };
 
-type RiskyTrovesProps = {
-  pageSize: number;
-};
-
-const select = ({
-  numberOfTroves,
-  price,
-  total,
-  lusdInStabilityPool,
-  blockTag
-}: BlockPolledLiquityStoreState) => ({
+const select = ({ numberOfTroves, price, total, lusdInStabilityPool, blockTag }) => ({
   numberOfTroves,
   price,
   recoveryMode: total.collateralRatioIsBelowCritical(price),
@@ -64,7 +50,7 @@ const select = ({
   blockTag
 });
 
-export const RiskyTroves: React.FC<RiskyTrovesProps> = ({ pageSize }) => {
+export const RiskyTroves = ({ pageSize }) => {
   const {
     blockTag,
     numberOfTroves,
@@ -76,7 +62,7 @@ export const RiskyTroves: React.FC<RiskyTrovesProps> = ({ pageSize }) => {
   const { liquity } = useLiquity();
 
   const [loading, setLoading] = useState(true);
-  const [troves, setTroves] = useState<UserTrove[]>();
+  const [troves, setTroves] = useState();
 
   const [reload, setReload] = useState({});
   const forceReload = useCallback(() => setReload({}), []);
@@ -135,7 +121,7 @@ export const RiskyTroves: React.FC<RiskyTrovesProps> = ({ pageSize }) => {
     forceReload();
   }, [forceReload, numberOfTroves]);
 
-  const [copied, setCopied] = useState<string>();
+  const [copied, setCopied] = useState();
 
   useEffect(() => {
     if (copied !== undefined) {
