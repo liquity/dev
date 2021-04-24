@@ -21,8 +21,9 @@ import { TroveViewProvider } from "./components/Trove/context/TroveViewProvider"
 import { StabilityViewProvider } from "./components/Stability/context/StabilityViewProvider";
 import { StakingViewProvider } from "./components/Staking/context/StakingViewProvider";
 import { FarmViewProvider } from "./components/Farm/context/FarmViewProvider";
+import Loader from "./components/Loader";
 
-export const LiquityFrontend = ({ loader }) => {
+export const LiquityFrontend = () => {
   const { account, provider, liquity } = useLiquity();
 
   // For console tinkering ;-)
@@ -37,7 +38,7 @@ export const LiquityFrontend = ({ loader }) => {
   });
 
   return (
-    <LiquityStoreProvider {...{ loader }} store={liquity.store}>
+    <LiquityStoreProvider loader={Loader} store={liquity.store}>
       <Router>
         <TroveViewProvider>
           <StabilityViewProvider>

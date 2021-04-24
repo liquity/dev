@@ -1,6 +1,6 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { Flex, Spinner, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
+import { Flex, Spinner, Heading, ThemeProvider } from "theme-ui";
 
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { LiquityProvider } from "./hooks/LiquityContext";
@@ -8,6 +8,7 @@ import { TransactionProvider } from "./components/Transaction";
 import { getConfig } from "./config";
 import theme from "./theme";
 import WalletConnector from "./pages/WalletConnector";
+import Loader from "./components/Loader";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 import { LiquityFrontend } from "./LiquityFrontend";
@@ -42,20 +43,15 @@ const EthersWeb3ReactProvider = ({ children }) => {
 };
 
 const App = () => {
-  const loader = (
-    <Flex sx={{ alignItems: "center", justifyContent: "center", height: "100vh" }}>
-      <Spinner sx={{ m: 2, color: "text" }} size="32px" />
-      <Heading>Loading...</Heading>
-    </Flex>
-  );
+  return <Loader />;
 
   return (
     <EthersWeb3ReactProvider>
       <ThemeProvider theme={theme}>
-        <WalletConnector loader={loader}>
-          <LiquityProvider loader={loader}>
+        <WalletConnector>
+          <LiquityProvider>
             <TransactionProvider>
-              <LiquityFrontend loader={loader} />
+              <LiquityFrontend />
             </TransactionProvider>
           </LiquityProvider>
         </WalletConnector>

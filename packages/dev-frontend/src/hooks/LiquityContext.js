@@ -4,6 +4,7 @@ import { useWeb3React } from "@web3-react/core";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import { EthersLiquity, _connectByChainId } from "@liquity/lib-ethers";
+import Loader from "../components/Loader";
 
 import { getConfig } from "../config";
 
@@ -16,7 +17,7 @@ const wsParams = (network, infuraApiKey) => [
 
 const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
-export const LiquityProvider = ({ children, loader }) => {
+export const LiquityProvider = ({ children }) => {
   const { library: provider, account, chainId } = useWeb3React();
   const [config, setConfig] = useState();
 
@@ -61,7 +62,7 @@ export const LiquityProvider = ({ children, loader }) => {
   }, [config, connection]);
 
   if (!config || !provider || !account || !chainId) {
-    return <>{loader}</>;
+    return <Loader />;
   }
 
   if (!connection) {
