@@ -12,25 +12,7 @@ import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
 
-interface MaybeHasMetaMask {
-  ethereum?: {
-    isMetaMask?: boolean;
-  };
-}
-
-type ConnectionState =
-  | { type: "inactive" }
-  | {
-      type: "activating" | "active" | "rejectedByUser" | "alreadyPending" | "failed";
-      connector: AbstractConnector;
-    };
-
-type ConnectionAction =
-  | { type: "startActivating"; connector: AbstractConnector }
-  | { type: "fail"; error: Error }
-  | { type: "finishActivating" | "retry" | "cancel" | "deactivate" };
-
-const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (state, action) => {
+const connectionReducer = (state, action) => {
   switch (action.type) {
     case "startActivating":
       return {
@@ -70,24 +52,18 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
       return {
         type: "inactive"
       };
-  }
 
-  console.warn("Ignoring connectionReducer action:");
-  console.log(action);
-  console.log("  in state:");
-  console.log(state);
+    default:
+      return state;
+  }
 
   return state;
 };
 
-const detectMetaMask = () => (window as MaybeHasMetaMask).ethereum?.isMetaMask ?? false;
+const detectMetaMask = () => window.ethereum?.isMetaMask ?? false;
 
-type WalletConnectorProps = {
-  loader?: React.ReactNode;
-};
-
-export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, loader }) => {
-  const { activate, deactivate, active, error } = useWeb3React<unknown>();
+export const WalletConnector = ({ children, loader }) => {
+  const { activate, deactivate, active, error } = useWeb3React();
   const triedAuthorizedConnection = useAuthorizedConnection();
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
   const isMetaMask = detectMetaMask();

@@ -4,11 +4,10 @@ import { Flex, Spinner, Heading, ThemeProvider, Paragraph, Link } from "theme-ui
 
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { LiquityProvider } from "./hooks/LiquityContext";
-import { WalletConnector } from "./components/WalletConnector";
 import { TransactionProvider } from "./components/Transaction";
-import { Icon } from "./components/Icon";
 import { getConfig } from "./config";
 import theme from "./theme";
+import WalletConnector from "./pages/WalletConnector";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 import { LiquityFrontend } from "./LiquityFrontend";
