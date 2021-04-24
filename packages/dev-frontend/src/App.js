@@ -34,7 +34,7 @@ getConfig().then(config => {
   Object.assign(window, { config });
 });
 
-const EthersWeb3ReactProvider: React.FC = ({ children }) => {
+const EthersWeb3ReactProvider = ({ children }) => {
   return (
     <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
       {children}
@@ -42,7 +42,7 @@ const EthersWeb3ReactProvider: React.FC = ({ children }) => {
   );
 };
 
-const UnsupportedMainnetFallback: React.FC = () => (
+const UnsupportedMainnetFallback = () => (
   <Flex
     sx={{
       flexDirection: "column",
@@ -78,7 +78,7 @@ const App = () => {
     </Flex>
   );
 
-  const unsupportedNetworkFallback = (chainId: number) => (
+  const unsupportedNetworkFallback = chainId => (
     <Flex
       sx={{
         flexDirection: "column",
