@@ -1,0 +1,38 @@
+.overlay {
+  position: fixed;
+  z-index: 1050;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.overlay:hover {
+  cursor: pointer;
+}
+
+.wrapper {
+  background-color: var(--white);
+  padding: 3rem 6rem 4rem 6rem;
+
+  cursor: default;
+  border-radius: 4.5rem;
+  background-color: var(--white);
+  box-shadow: var(--box-shadow-secondary);
+}
+
+.title {
+  font-family: "Futura BT heavy";
+  font-size: 2.2rem;
+  font-weight: 500;
+  letter-spacing: -0.44px;
+  color: var(--primary-text);
+  text-align: center;
+  margin-bottom: 2rem;
+}
