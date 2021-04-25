@@ -4,7 +4,7 @@ import { shortenAddress } from "../utils/shortenAddress";
 import { Icon } from "../components/Icon";
 import { useLiquity } from "../hooks/LiquityContext";
 
-export const UnregisteredFrontend: React.FC = () => {
+export const UnregisteredFrontend = () => {
   const {
     config: { frontendTag }
   } = useLiquity();

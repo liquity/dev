@@ -1,5 +1,4 @@
 import { Container } from "theme-ui";
-import { SystemStats } from "../components/SystemStats";
 import { Farm as FarmPanel } from "../components/Farm/Farm";
 
 export const Farm: React.FC = () => (
@@ -8,8 +7,6 @@ export const Farm: React.FC = () => (
       <FarmPanel />
     </Container>
 
-    <Container variant="right">
-      <SystemStats />
-    </Container>
+    <Container variant="right"></Container>
   </Container>
 );

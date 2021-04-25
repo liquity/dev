@@ -1,0 +1,72 @@
+.wrapper {
+  position: fixed;
+  z-index: 1030;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+
+  background-color: var(--secondary);
+  padding: 6.8rem 3rem 6.8rem 0.8rem;
+  border-bottom-right-radius: 10rem;
+  border-top-right-radius: 10rem;
+}
+
+.item {
+  margin: 1.6rem 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  min-width: 9rem;
+}
+
+.row:not(:last-child) {
+  margin-bottom: 1.2rem;
+}
+
+.currency {
+  font-family: "Futura BT heavy";
+  font-size: 2.1rem;
+  letter-spacing: -0.42px;
+  color: var(--tertiary-text);
+}
+
+.icon {
+  max-width: 3rem;
+  max-height: 3rem;
+}
+
+.iconImage {
+  display: block;
+  max-width: 100%;
+}
+
+.amount,
+.percentage {
+  font-family: "Futura BT light";
+  font-size: 2.1rem;
+  letter-spacing: -0.42px;
+  color: var(--tertiary-text);
+}
+
+.amount {
+  flex: 1;
+}
+
+.percentage {
+  margin-left: 1.4rem;
+  margin-right: 0.5rem;
+}
+
+.change {
+  font-size: 1.2rem;
+  color: var(--green);
+}
+
+.decrease {
+  transform: rotateX(180deg);
+  color: var(--red-dark);
+}

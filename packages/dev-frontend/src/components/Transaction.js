@@ -9,7 +9,7 @@ import "react-circular-progressbar/dist/styles.css";
 import { useLiquity } from "../hooks/LiquityContext";
 
 import { Icon } from "./Icon";
-import { Tooltip } from "./Tooltip";
+import { Tooltip } from "./Tooltips";
 
 const strokeWidth = 10;
 

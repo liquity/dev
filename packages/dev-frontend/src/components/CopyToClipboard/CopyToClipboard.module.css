@@ -1,0 +1,7 @@
+.wrapper {
+  position: relative;
+}
+
+.wrapper:hover {
+  cursor: pointer;
+}

@@ -1,6 +1,5 @@
 import React from "react";
 import { Container, Card, Box, Paragraph } from "theme-ui";
-import { SystemStats } from "../components/SystemStats";
 import { LiquidationManager } from "../components/LiquidationManager";
 import { RiskyTroves } from "../components/RiskyTroves";
 import { InfoMessage } from "../components/InfoMessage";
@@ -22,9 +21,7 @@ export const RiskyTrovesPage: React.FC = () => (
       <LiquidationManager />
     </Container>
 
-    <Container variant="right">
-      <SystemStats />
-    </Container>
+    <Container variant="right"></Container>
     <RiskyTroves pageSize={10} />
   </Container>
 );

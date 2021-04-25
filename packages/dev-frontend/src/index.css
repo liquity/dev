@@ -18,6 +18,8 @@
 
   --secondary: #f3e9ec;
 
+  --tertiary: #d4afb9;
+
   --primary-text: #252a34;
   --secondary-text: #8a9395;
   --tertiary-text: #363732;
@@ -36,7 +38,6 @@ body {
   font-family: -apple-system, "Futura BT medium", sans-serif;
   font-size: var(--font-size);
   font-weight: 400;
-  line-height: 1.15;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -47,6 +48,7 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: inherit;
+  line-height: 1;
 }
 
 main {
@@ -225,4 +227,49 @@ template {
 
 [hidden] {
   display: none;
+}
+
+.scale-in-center {
+  animation: scale-in-center 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes scale-in-center {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slide-in-right {
+  0% {
+    transform: translate(1000px, -50%);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, -50%);
+    opacity: 1;
+  }
+}
+
+.slide-in-left {
+  animation: slide-in-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slide-in-left {
+  0% {
+    transform: translate(-1000px, -50%);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, -50%);
+    opacity: 1;
+  }
 }

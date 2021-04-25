@@ -2,13 +2,7 @@ import { Box, Flex, Heading, Paragraph, Button } from "theme-ui";
 
 import { Icon } from "../components/Icon";
 
-type FrontendRegistrationSuccessProps = {
-  onDismiss: () => void;
-};
-
-export const FrontendRegistrationSuccess: React.FC<FrontendRegistrationSuccessProps> = ({
-  onDismiss
-}) => (
+export const FrontendRegistrationSuccess = ({ onDismiss }) => (
   <>
     <Box
       sx={{

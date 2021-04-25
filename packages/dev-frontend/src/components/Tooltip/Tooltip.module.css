@@ -1,0 +1,21 @@
+.wrapper {
+  padding: 1.2rem;
+  border-radius: 0.4rem;
+  box-shadow: var(--box-shadow-sm);
+
+  background-color: var(--primary-light);
+
+  position: absolute;
+  top: calc(100% + 1rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1035;
+
+  width: max-content;
+
+  font-family: "Futura BT light";
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: -0.36px;
+  color: var(--tertiary-text);
+}

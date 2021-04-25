@@ -1,0 +1,78 @@
+.do {
+  display: flex;
+
+  margin-bottom: 4rem;
+}
+
+.doButton {
+  padding: 0.8rem 1.2rem;
+  border-radius: 1.2rem;
+  border: solid 1px var(--primary);
+  background-color: var(--white);
+  text-align: center;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-tertiary);
+}
+
+.doButton:not(:last-child) {
+  margin-right: 1.5rem;
+}
+
+.doButton span,
+.doButton ion-icon {
+  display: inline-flex;
+
+  font-family: "Futura BT medium";
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: -0.36px;
+}
+
+.doButton span {
+  margin-right: 0.5rem;
+}
+
+.connection {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-family: "Futura BT medium";
+  font-size: 2.2rem;
+  font-weight: 500;
+  letter-spacing: -0.44px;
+  color: var(--text-tertiary);
+
+  margin-bottom: 1.7rem;
+}
+
+.metaMaskIcon {
+  width: 3rem;
+  height: 3rem;
+  margin-left: 1.2rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}
+
+.fourthButton {
+  padding: 0.8rem 2.4rem;
+  border-radius: 1.2rem;
+  border: solid 1px var(--tertiary);
+  background-color: var(--white);
+
+  font-family: "Futura BT light";
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: -0.36px;
+  color: var(--tertiary);
+}
+
+.fourthButton:not(:last-child) {
+  margin-right: 1.5rem;
+}

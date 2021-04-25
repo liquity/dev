@@ -13,7 +13,7 @@ import { COIN } from "../strings";
 import { Icon } from "./Icon";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { Transaction } from "./Transaction";
-import { Tooltip } from "./Tooltip";
+import { Tooltip } from "./Tooltips";
 import { Abbreviation } from "./Abbreviation";
 
 const rowHeight = "40px";

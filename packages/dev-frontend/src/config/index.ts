@@ -71,7 +71,6 @@ const fetchConfig = async () => {
 
     return parseConfig(await response.json());
   } catch (err) {
-    console.error(err);
     return { ...defaultConfig };
   }
 };

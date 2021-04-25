@@ -1,0 +1,55 @@
+.wrapper {
+  position: fixed;
+  z-index: 1030;
+  top: 50%;
+  right: 0;
+
+  transform: translateY(-50%);
+
+  background-color: var(--white);
+  box-shadow: var(--box-shadow-lg);
+  padding: 9.6rem 4rem 9.6rem 5rem;
+  border-top-left-radius: 15rem;
+  border-bottom-left-radius: 15rem;
+
+  min-width: 30rem;
+}
+
+.heading {
+  text-align: right;
+
+  font-family: "Futura BT medium";
+  font-size: 2.2rem;
+  font-weight: 500;
+  letter-spacing: -0.44px;
+  color: var(--primary-text);
+  margin-bottom: 3.4rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat:not(:last-child) {
+  margin-bottom: 2.8rem;
+}
+
+.statName {
+  font-family: "Futura BT light";
+  font-size: 2.2rem;
+  font-weight: 300;
+  letter-spacing: -0.44px;
+  color: var(--black);
+}
+
+.statValue {
+  height: 14px;
+  font-family: "Futura BT light";
+  font-size: 1.9rem;
+  font-weight: 300;
+  letter-spacing: -0.38px;
+  color: var(--primary);
+  margin-left: 2rem;
+}
