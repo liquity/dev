@@ -9,7 +9,7 @@ export const ConnectWalletButton = ({ onClick }) => (
   <div className={classes.wrapper}>
     <Button secondary round uppercase className={classes.button} onClick={onClick}>
       <span className={classes.text}>Connect wallet</span>
-      <Icon name="wallet" size="md" />
+      <Icon name="wallet" size="sm" />
     </Button>
     <div className={classes.icons}>
       <div className={classes.icon}>
