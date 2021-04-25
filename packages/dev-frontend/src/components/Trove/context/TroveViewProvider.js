@@ -1,6 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { LiquityStoreState, UserTroveStatus } from "@liquity/lib-base";
 import { TroveViewContext } from "./TroveViewContext";
 
 const transitions = {
