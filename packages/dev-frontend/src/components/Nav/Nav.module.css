@@ -1,0 +1,102 @@
+.wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.brand {
+  padding-right: 2.2rem;
+  border-right: 1px solid var(--secondary);
+}
+
+.brandName {
+  display: block;
+  margin-bottom: 0.5rem;
+
+  font-family: "Futura BT light";
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.48px;
+  font-size: 2.4rem;
+  color: var(--primary-text);
+}
+
+.description {
+  display: block;
+
+  color: var(--primary);
+
+  font-family: "Futura BT light";
+  font-size: 1.4rem;
+  font-weight: 300;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: -0.28px;
+  color: var(--tertiary-text);
+}
+
+.items {
+  margin-left: auto;
+}
+
+.link {
+  background-color: transparent;
+  padding: 1rem 3.2rem;
+  border-radius: 1.2rem;
+
+  color: var(--black);
+  box-shadow: var(--box-shadow-sm);
+
+  font-family: "Futura BT light";
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: -0.36px;
+  color: var(--primary-text);
+}
+
+.link:not(:last-child) {
+  margin-right: 3rem;
+}
+
+.linkActive {
+  color: var(--white);
+  background-color: var(--primary-text);
+  box-shadow: none;
+}
+
+.config {
+  margin-left: 1.6rem;
+  display: flex;
+}
+
+.languageChange {
+  margin-right: 1rem;
+
+  display: flex;
+  align-items: center;
+}
+
+.lang {
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  font-weight: 300;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 2.1rem;
+  letter-spacing: -0.4px;
+  color: var(--black);
+  margin-right: 0.5rem;
+}
+
+.langIcon {
+  line-height: 2.1rem;
+  font-size: 2.1rem;
+}
+
+.darkMode {
+  font-size: 1.4rem;
+  color: var(--white);
+}

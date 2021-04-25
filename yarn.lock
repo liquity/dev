@@ -6512,6 +6512,11 @@ class-utils@^0.3.5:
     isobject "^3.0.0"
     static-extend "^0.1.1"
 
+classnames@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/classnames/-/classnames-2.3.1.tgz#dfcfa3891e306ec1dad105d0e88f4417b8535e8e"
+  integrity sha512-OlQdbZ7gLfGarSqxesMesDa5uz7KFbID8Kpq/SxIoNGDqY8lSYs0D+hhtBXhcdB3rcbXArFr7vlHheLk1voeNA==
+
 clean-css@^4.2.3:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/clean-css/-/clean-css-4.2.3.tgz#507b5de7d97b48ee53d84adb0160ff6216380f78"
@@ -20699,8 +20704,10 @@ watchpack@^1.7.4:
   resolved "https://registry.yarnpkg.com/watchpack/-/watchpack-1.7.5.tgz#1267e6c55e0b9b5be44c2023aed5437a2c26c453"
   integrity sha512-9P3MWk6SrKjHsGkLT2KHXdQ/9SNkyoJbabxnKOoJepsvJjJG8uYTR3yTPxPQvNDI3w4Nz1xnE0TLHK4RIVe/MQ==
   dependencies:
+    chokidar "^3.4.1"
     graceful-fs "^4.1.2"
     neo-async "^2.5.0"
+    watchpack-chokidar2 "^2.0.1"
   optionalDependencies:
     chokidar "^3.4.1"
     watchpack-chokidar2 "^2.0.1"

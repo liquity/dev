@@ -1,0 +1,14 @@
+.row {
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.labelContainer {
+  margin-left: 1.7rem;
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  color: var(--gray);
+  margin-bottom: 0.1rem;
+}

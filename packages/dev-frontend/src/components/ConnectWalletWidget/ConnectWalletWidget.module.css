@@ -1,0 +1,98 @@
+.wrapper {
+  position: absolute;
+  top: calc(100% + 1.8rem);
+  right: 1.8rem;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.button {
+  margin-bottom: 0.6rem;
+  padding: 1.6rem 1.3rem;
+  border-radius: 2rem;
+
+  font-family: "Futura BT medium";
+  font-size: 1rem;
+  font-weight: normal;
+  letter-spacing: -0.2px;
+}
+
+.text {
+  display: inline-block;
+  margin-right: 0.6rem;
+}
+
+.icons {
+  display: flex;
+}
+
+.icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 0.9rem;
+  background-color: rgba(54, 55, 50, 0.59);
+}
+
+.icon:not(:last-child) {
+  margin-right: 0.4rem;
+}
+
+.iconContent {
+  width: 2rem;
+  height: 2rem;
+}
+
+.backgroundWhite {
+  background-color: var(--white);
+  border-radius: 2rem;
+}
+
+.widget {
+}
+
+.item {
+  min-width: 36rem;
+  padding: 2.4rem 2.8rem;
+  border-radius: 2rem;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border: solid 1px var(--border-color);
+}
+
+.item:not(:last-child) {
+  margin-bottom: 3.2rem;
+}
+
+.item:hover {
+  cursor: pointer;
+  border: solid 2px #66c3ff;
+  padding: 2.3rem 2.7rem;
+}
+
+.itemConnected {
+  background-color: var(--primary-light);
+  border: solid 2px var(--primary-light) !important;
+  padding: 2.3rem 2.7rem;
+}
+
+.itemContent {
+  font-family: "Futura BT heavy";
+  font-size: 2.2rem;
+  font-weight: 500;
+  letter-spacing: -0.44px;
+  color: var(--primary-text);
+}
+
+.itemIcon {
+  width: 2.8rem;
+  height: 2.8rem;
+}

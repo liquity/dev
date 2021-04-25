@@ -1,0 +1,108 @@
+.overlay {
+  position: fixed;
+  z-index: 1080;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.overlay:hover {
+  cursor: pointer;
+}
+
+.wrapper {
+  position: relative;
+
+  background-color: var(--white);
+  padding: 3rem 6rem 4rem 6rem;
+  max-width: 48rem;
+
+  cursor: default;
+  border-radius: 4.5rem;
+  background-color: var(--white);
+  box-shadow: var(--box-shadow-sm);
+}
+
+.title {
+  font-family: "Futura BT heavy";
+  font-size: 2.2rem;
+  font-weight: 500;
+  letter-spacing: -0.44px;
+  color: var(--primary-text);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.content {
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  text-align: center;
+  color: var(--black);
+}
+
+.actions {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: space-around;
+}
+
+.children {
+  margin-top: 3rem;
+}
+
+.status {
+  width: 4rem;
+  height: 4rem;
+
+  z-index: 1085;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: 50%;
+
+  background-color: var(--white);
+}
+
+.statusIcon {
+  width: 2.8rem;
+  height: 2.8rem;
+
+  border-radius: 50%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.statusIcon ion-icon {
+  font-size: 2rem;
+  color: var(--white);
+  font-weight: 900;
+}
+
+.statusIcon.success {
+  background-color: var(--green-light);
+}
+
+.statusIcon.warning {
+  background-color: var(--orange);
+}
+
+.statusIcon.error {
+  background-color: var(--red);
+}

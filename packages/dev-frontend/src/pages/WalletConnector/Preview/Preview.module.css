@@ -1,0 +1,13 @@
+.wrapper {
+  width: 46rem;
+  padding-top: 2.4rem;
+}
+
+.action {
+  display: flex;
+  justify-content: center;
+}
+
+.tabs {
+  margin-bottom: 2.4rem;
+}
