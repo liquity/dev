@@ -1,7 +1,9 @@
 .wrapper {
-  padding: 0.8rem;
+  padding: 1.2rem;
   border-radius: 0.4rem;
   box-shadow: var(--box-shadow-sm);
+
+  background-color: var(--primary-light);
 
   position: absolute;
   top: calc(100% + 1rem);
@@ -12,8 +14,8 @@
   width: max-content;
 
   font-family: "Futura BT light";
-  font-size: 1.2rem;
+  font-size: 1.6rem;
   font-weight: 300;
   letter-spacing: -0.36px;
-  color: var(--black);
+  color: var(--tertiary-text);
 }
