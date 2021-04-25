@@ -17,7 +17,7 @@ const select = ({ accountBalance, lusdBalance, lqtyBalance }) => ({
   lqtyBalance
 });
 
-const UserAccount = () => {
+const UserAccount = ({ onWalletClick }) => {
   const { account } = useLiquity();
   const { accountBalance, lusdBalance, lqtyBalance } = useLiquitySelector(select);
 
@@ -48,7 +48,7 @@ const UserAccount = () => {
         ))}
       </div>
 
-      <Button className={classes.account} primary round>
+      <Button className={classes.account} primary round onClick={onWalletClick}>
         <span className={classes.accountNum}>{shortenAddress(account)}</span>
         <span className={classes.walletIcon}>
           <Icon name="wallet" size="lg" />

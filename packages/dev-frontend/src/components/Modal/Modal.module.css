@@ -22,7 +22,7 @@
 
   background-color: var(--white);
   padding: 3rem 6rem 4rem 6rem;
-  max-width: 48rem;
+  min-width: 48rem;
 
   cursor: default;
   border-radius: 4.5rem;
