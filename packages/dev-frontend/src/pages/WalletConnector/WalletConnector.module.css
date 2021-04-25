@@ -1,0 +1,17 @@
+.confirmDialog {
+  display: flex;
+  align-items: center;
+}
+
+.confirmSpinner {
+  width: 12rem;
+  padding-left: 4rem;
+}
+
+.confirmText {
+  font-family: "Futura BT light";
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: -0.36px;
+  color: var(--primary-text);
+}

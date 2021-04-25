@@ -1,16 +1,22 @@
-import React, { useEffect, useReducer } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
-import { AbstractConnector } from "@web3-react/abstract-connector";
-import { Button, Text, Flex, Link, Box } from "theme-ui";
+import { HashRouter as Switch, Route } from "react-router-dom";
 
-import { injectedConnector } from "../connectors/injectedConnector";
-import { useAuthorizedConnection } from "../hooks/useAuthorizedConnection";
+import { injectedConnector } from "../../connectors/injectedConnector";
+import { useAuthorizedConnection } from "../../hooks/useAuthorizedConnection";
 
-import { RetryDialog } from "./RetryDialog";
-import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
-import { MetaMaskIcon } from "./MetaMaskIcon";
-import { Icon } from "./Icon";
-import { Modal } from "./Modal";
+import { Icon } from "../../components/Icon";
+import Loader, { Spinner } from "../../components/Loader";
+import Header from "../../components/Header";
+import ConnectWalletWidget, { ConnectWalletButton } from "../../components/ConnectWalletWidget";
+import Modal from "../../components/Modal";
+import Link from "../../components/Link";
+import { UnregisteredKickbackRate } from "../../components/KickbackRate";
+import Footer from "../../components/Footer";
+import Body from "../../components/Body";
+import Preview from "./Preview";
+
+import classes from "./WalletConnector.module.css";
 
 const connectionReducer = (state, action) => {
   switch (action.type) {
@@ -62,7 +68,9 @@ const connectionReducer = (state, action) => {
 
 const detectMetaMask = () => window.ethereum?.isMetaMask ?? false;
 
-export const WalletConnector = ({ children, loader }) => {
+const WalletConnector = ({ children }) => {
+  const [walletModal, setWalletModal] = useState(null);
+
   const { activate, deactivate, active, error } = useWeb3React();
   const triedAuthorizedConnection = useAuthorizedConnection();
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
@@ -84,7 +92,7 @@ export const WalletConnector = ({ children, loader }) => {
   }, [active]);
 
   if (!triedAuthorizedConnection) {
-    return <>{loader}</>;
+    return <Loader />;
   }
 
   if (connectionState.type === "active") {
@@ -93,97 +101,107 @@ export const WalletConnector = ({ children, loader }) => {
 
   return (
     <>
-      <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center" }}>
-        <Button
-          onClick={() => {
-            dispatch({ type: "startActivating", connector: injectedConnector });
-            activate(injectedConnector);
-          }}
-        >
-          {isMetaMask ? (
-            <>
-              <MetaMaskIcon />
-              <Box sx={{ ml: 2 }}>Connect to MetaMask</Box>
-            </>
-          ) : (
-            <>
-              <Icon name="plug" size="lg" />
-              <Box sx={{ ml: 2 }}>Connect wallet</Box>
-            </>
-          )}
-        </Button>
-      </Flex>
+      <Header>
+        <ConnectWalletButton onClick={() => setWalletModal(true)} />
+      </Header>
 
-      {connectionState.type === "failed" && (
-        <Modal>
-          <RetryDialog
-            title={isMetaMask ? "Failed to connect to MetaMask" : "Failed to connect wallet"}
-            onCancel={() => dispatch({ type: "cancel" })}
-            onRetry={() => {
-              dispatch({ type: "retry" });
-              activate(connectionState.connector);
-            }}
-          >
-            <Box sx={{ textAlign: "center" }}>
-              You might need to install MetaMask or use a different browser.
-            </Box>
-            <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
-              Learn more <Icon size="xs" name="external-link-alt" />
-            </Link>
-          </RetryDialog>
+      <UnregisteredKickbackRate />
+      <Body>
+        <Switch>
+          <Route path="/" exact>
+            {/* TODO check what's this */}
+            <Preview showModal={() => setWalletModal(true)} />
+          </Route>
+        </Switch>
+
+        <Footer />
+      </Body>
+
+      {walletModal && (
+        <Modal title="Connect your wallet" onClose={() => setWalletModal(false)}>
+          <ConnectWalletWidget />
         </Modal>
       )}
 
-      {connectionState.type === "activating" && (
-        <Modal>
-          <ConnectionConfirmationDialog
-            title={
-              isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"
+      {connectionState.type === "failed" && (
+        <Modal
+          title={isMetaMask ? "Failed to connect to MetaMask" : "Failed to connect wallet"}
+          content={
+            <>
+              You might need to install MetaMask or use a different browser.{" "}
+              <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
+                Learn more <Icon size="xs" name="external-link-alt" />
+              </Link>
+            </>
+          }
+          confirm={{
+            text: "Retry",
+            action: () => {
+              dispatch({ type: "retry" });
+              activate(connectionState.connector);
             }
-            icon={isMetaMask ? <MetaMaskIcon /> : <Icon name="wallet" size="lg" />}
-            onCancel={() => dispatch({ type: "cancel" })}
-          >
-            <Text sx={{ textAlign: "center" }}>
-              Confirm the request that&apos;s just appeared.
-              {isMetaMask ? (
-                <> If you can&apos;t see a request, open your MetaMask extension via your browser.</>
-              ) : (
-                <> If you can&apos;t see a request, you might have to open your wallet.</>
-              )}
-            </Text>
-          </ConnectionConfirmationDialog>
+          }}
+          decline={{ text: "Cancel", action: () => dispatch({ type: "cancel" }) }}
+          status="error"
+        />
+      )}
+
+      {connectionState.type === "activating" && (
+        <Modal
+          title={isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"}
+          decline={{ action: () => dispatch({ type: "cancel" }), text: "Cancel" }}
+          content={
+            "Confirm the request that&apos;s just appeared." + isMetaMask
+              ? " If you can't see a request, open your MetaMask extension via your browser."
+              : " If you can't see a request, you might have to open your wallet."
+          }
+        >
+          <div className={classes.confirmDialog}>
+            <div className={classes.confirmSpinner}>
+              <Spinner size={4} />
+            </div>
+            <p className={classes.confirmText}>
+              Waiting for connection confirmation...
+              <br />
+              This won’t cost you any Ether
+            </p>
+          </div>
         </Modal>
       )}
 
       {connectionState.type === "rejectedByUser" && (
-        <Modal>
-          <RetryDialog
-            title="Cancel connection?"
-            onCancel={() => dispatch({ type: "cancel" })}
-            onRetry={() => {
+        <Modal
+          title="Are you sure you want to cancel connection?"
+          decline={{ text: "Cancel", action: () => dispatch({ type: "cancel" }) }}
+          confirm={{
+            text: "Retry",
+            action: () => {
               dispatch({ type: "retry" });
               activate(connectionState.connector);
-            }}
-          >
-            <Text>To use Liquity, you need to connect your Ethereum account.</Text>
-          </RetryDialog>
-        </Modal>
+            }
+          }}
+          content="To use Liquity, you need to connect your Ethereum account."
+          status="warning"
+        />
       )}
 
       {connectionState.type === "alreadyPending" && (
-        <Modal>
-          <RetryDialog
-            title="Connection already requested"
-            onCancel={() => dispatch({ type: "cancel" })}
-            onRetry={() => {
+        <Modal
+          title="Connection already requested"
+          decline={{ text: "Cancel", action: () => dispatch({ type: "cancel" }) }}
+          confirm={{
+            text: "Retry",
+            action: () => {
               dispatch({ type: "retry" });
               activate(connectionState.connector);
-            }}
-          >
-            <Text>Please check your wallet and accept the connection request before retrying.</Text>
-          </RetryDialog>
-        </Modal>
+            }
+          }}
+          content="Please check your wallet and accept the connection request before retrying."
+          status="warning"
+        ></Modal>
       )}
     </>
   );
 };
+
+export default WalletConnector;
