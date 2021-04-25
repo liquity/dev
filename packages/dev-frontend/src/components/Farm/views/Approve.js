@@ -1,36 +1,39 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "theme-ui";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
 import { useFarmView } from "../context/FarmViewContext";
+import { useValidationState } from "../context/useValidationState";
 
-const transactionId = "farm-unstake-and-claim";
+const transactionId = "farm-approve";
 
-export const UnstakeAndClaim: React.FC = () => {
+export const Approve = ({ amount }) => {
   const { dispatchEvent } = useFarmView();
-
   const {
     liquity: { send: liquity }
   } = useLiquity();
 
+  const { hasApproved } = useValidationState(amount);
   const transactionState = useMyTransactionState(transactionId);
 
   useEffect(() => {
     if (transactionState.type === "confirmedOneShot") {
-      dispatchEvent("UNSTAKE_AND_CLAIM_CONFIRMED");
+      dispatchEvent("STAKE_APPROVED");
     }
   }, [transactionState.type, dispatchEvent]);
+
+  if (hasApproved) {
+    return null;
+  }
 
   return (
     <Transaction
       id={transactionId}
-      send={liquity.exitLiquidityMining.bind(liquity)}
+      send={liquity.approveUniTokens.bind(liquity, undefined)}
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
-      <Button variant="outline" sx={{ mt: 3, width: "100%" }}>
-        Unstake and claim reward
-      </Button>
+      <Button sx={{ width: "60%" }}>Approve UNI LP</Button>
     </Transaction>
   );
 };

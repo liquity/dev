@@ -1,7 +1,6 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -9,11 +8,11 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "./Transaction";
 import { useTroveView } from "./Trove/context/TroveViewContext";
 
-const select = ({ collateralSurplusBalance }: LiquityStoreState) => ({
+const select = ({ collateralSurplusBalance }) => ({
   collateralSurplusBalance
 });
 
-export const CollateralSurplusAction: React.FC = () => {
+export const CollateralSurplusAction = () => {
   const { collateralSurplusBalance } = useLiquitySelector(select);
   const {
     liquity: { send: liquity }

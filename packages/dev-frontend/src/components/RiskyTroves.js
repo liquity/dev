@@ -1,13 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Card, Button, Text, Box, Heading, Flex } from "theme-ui";
 
-import {
-  Percent,
-  MINIMUM_COLLATERAL_RATIO,
-  CRITICAL_COLLATERAL_RATIO,
-  UserTrove
-} from "@liquity/lib-base";
+import { Percent, MINIMUM_COLLATERAL_RATIO, CRITICAL_COLLATERAL_RATIO } from "@liquity/lib-base";
 
 import { useLiquitySelector } from "@liquity/lib-react";
 

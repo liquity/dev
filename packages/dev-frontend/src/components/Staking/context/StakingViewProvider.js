@@ -1,36 +1,18 @@
 import { useEffect } from "react";
 
-import { LiquityStoreState, LQTYStake } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer } from "@liquity/lib-react";
+import { useLiquityReducer } from "@liquity/lib-react";
 
 import { useMyTransactionState } from "../../Transaction";
 
-import { StakingViewAction, StakingViewContext } from "./StakingViewContext";
+import { StakingViewContext } from "./StakingViewContext";
 
-type StakingViewProviderAction =
-  | LiquityStoreUpdate
-  | StakingViewAction
-  | { type: "startChange" | "abortChange" };
-
-type StakingViewProviderState = {
-  lqtyStake: LQTYStake;
-  changePending: boolean;
-  adjusting: boolean;
-};
-
-const init = ({ lqtyStake }: LiquityStoreState): StakingViewProviderState => ({
+const init = ({ lqtyStake }) => ({
   lqtyStake,
   changePending: false,
   adjusting: false
 });
 
-const reduce = (
-  state: StakingViewProviderState,
-  action: StakingViewProviderAction
-): StakingViewProviderState => {
-  // console.log(state);
-  // console.log(action);
-
+const reduce = (state, action) => {
   switch (action.type) {
     case "startAdjusting":
       return { ...state, adjusting: true };
@@ -63,13 +45,15 @@ const reduce = (
           changePending: changeCommitted ? false : state.changePending
         };
       }
-    }
-  }
 
-  return state;
+      return state;
+    }
+    default:
+      return state;
+  }
 };
 
-export const StakingViewProvider: React.FC = ({ children }) => {
+export const StakingViewProvider = ({ children }) => {
   const stakingTransactionState = useMyTransactionState("stake");
   const [{ adjusting, changePending, lqtyStake }, dispatch] = useLiquityReducer(reduce, init);
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "theme-ui";
 import { useLiquity } from "../../../../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../../../Transaction";
@@ -6,7 +6,7 @@ import { useFarmView } from "../../context/FarmViewContext";
 
 const transactionId = "farm-claim-reward";
 
-export const ClaimReward: React.FC = () => {
+export const ClaimReward = () => {
   const { dispatchEvent } = useFarmView();
 
   const {

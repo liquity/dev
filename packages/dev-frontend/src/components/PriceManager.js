@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -9,9 +9,9 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { Icon } from "./Icon";
 import { Transaction } from "./Transaction";
 
-const selectPrice = ({ price }: LiquityStoreState) => price;
+const selectPrice = ({ price }) => price;
 
-export const PriceManager: React.FC = () => {
+export const PriceManager = () => {
   const {
     liquity: {
       send: liquity,

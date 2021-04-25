@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -6,7 +6,7 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { Icon } from "./Icon";
 import { Transaction } from "./Transaction";
 
-export const LiquidationManager: React.FC = () => {
+export const LiquidationManager = () => {
   const {
     liquity: { send: liquity }
   } = useLiquity();

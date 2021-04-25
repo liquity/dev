@@ -1,20 +1,18 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { LiquityStoreState, Decimal } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { FarmViewContext } from "./FarmViewContext";
 import { transitions } from "./transitions";
-import type { FarmView, FarmEvent } from "./transitions";
 
-const transition = (view: FarmView, event: FarmEvent): FarmView => {
+const transition = (view, event) => {
   const nextView = transitions[view][event] ?? view;
   return nextView;
 };
 
 const getInitialView = (
-  liquidityMiningStake: Decimal,
-  remainingLiquidityMiningLQTYReward: Decimal,
-  liquidityMiningLQTYReward: Decimal
-): FarmView => {
+  liquidityMiningStake,
+  remainingLiquidityMiningLQTYReward,
+  liquidityMiningLQTYReward
+) => {
   if (remainingLiquidityMiningLQTYReward.isZero) return "DISABLED";
   if (liquidityMiningStake.isZero && liquidityMiningLQTYReward.isZero) return "INACTIVE";
   return "ACTIVE";
@@ -24,13 +22,13 @@ const selector = ({
   liquidityMiningStake,
   remainingLiquidityMiningLQTYReward,
   liquidityMiningLQTYReward
-}: LiquityStoreState) => ({
+}) => ({
   liquidityMiningStake,
   remainingLiquidityMiningLQTYReward,
   liquidityMiningLQTYReward
 });
 
-export const FarmViewProvider: React.FC = props => {
+export const FarmViewProvider = props => {
   const { children } = props;
   const {
     liquidityMiningStake,
@@ -38,16 +36,16 @@ export const FarmViewProvider: React.FC = props => {
     liquidityMiningLQTYReward
   } = useLiquitySelector(selector);
 
-  const [view, setView] = useState<FarmView>(
+  const [view, setView] = useState(
     getInitialView(
       liquidityMiningStake,
       remainingLiquidityMiningLQTYReward,
       liquidityMiningLQTYReward
     )
   );
-  const viewRef = useRef<FarmView>(view);
+  const viewRef = useRef(view);
 
-  const dispatchEvent = useCallback((event: FarmEvent) => {
+  const dispatchEvent = useCallback(event => {
     const nextView = transition(viewRef.current, event);
 
     console.log(

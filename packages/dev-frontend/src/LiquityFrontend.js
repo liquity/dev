@@ -9,7 +9,6 @@ import { LiquityStoreProvider } from "@liquity/lib-react";
 import { useLiquity } from "./hooks/LiquityContext";
 import { TransactionMonitor } from "./components/Transaction";
 import { UserAccount } from "./components/UserAccount";
-import { SystemStatsPopup } from "./components/SystemStatsPopup";
 
 import { PageSwitcher } from "./pages/PageSwitcher";
 import { Farm } from "./pages/Farm";
@@ -22,6 +21,7 @@ import { StakingViewProvider } from "./components/Staking/context/StakingViewPro
 import { FarmViewProvider } from "./components/Farm/context/FarmViewProvider";
 import Loader from "./components/Loader";
 import Header from "./components/Header";
+import Body from "./components/Body";
 
 export const LiquityFrontend = () => {
   const { account, provider, liquity } = useLiquity();
@@ -43,37 +43,26 @@ export const LiquityFrontend = () => {
         <StabilityViewProvider>
           <StakingViewProvider>
             <FarmViewProvider>
-              <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
-                <Header>
-                  <UserAccount />
-                  <SystemStatsPopup />
-                </Header>
+              <Header>
+                <UserAccount />
+              </Header>
 
-                <Container
-                  variant="main"
-                  sx={{
-                    display: "flex",
-                    flexGrow: 1,
-                    flexDirection: "column",
-                    alignItems: "center"
-                  }}
-                >
-                  <Switch>
-                    <Route path="/" exact>
-                      <PageSwitcher />
-                    </Route>
-                    <Route path="/farm">
-                      <Farm />
-                    </Route>
-                    <Route path="/risky-troves">
-                      <RiskyTrovesPage />
-                    </Route>
-                    <Route path="/redemption">
-                      <RedemptionPage />
-                    </Route>
-                  </Switch>
-                </Container>
-              </Flex>
+              <Body>
+                <Switch>
+                  <Route path="/" exact>
+                    <PageSwitcher />
+                  </Route>
+                  <Route path="/stability-pool">
+                    <div>Stability Pool</div>
+                  </Route>
+                  <Route path="/stake">
+                    <div>Stake</div>
+                  </Route>
+                  <Route path="/liquidation">
+                    <div>liquidation</div>
+                  </Route>
+                </Switch>
+              </Body>
             </FarmViewProvider>
           </StakingViewProvider>
         </StabilityViewProvider>

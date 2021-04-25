@@ -8,11 +8,7 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../components/Transaction";
 import { Icon } from "../components/Icon";
 
-type FrontendRegistrationActionProps = {
-  kickbackRate: Decimal;
-};
-
-const FrontendRegistrationAction: React.FC<FrontendRegistrationActionProps> = ({ kickbackRate }) => {
+const FrontendRegistrationAction = ({ kickbackRate }) => {
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -33,7 +29,7 @@ const FrontendRegistrationAction: React.FC<FrontendRegistrationActionProps> = ({
   ) : null;
 };
 
-export const FrontendRegistration: React.FC = () => {
+export const FrontendRegistration = () => {
   const { account } = useLiquity();
 
   const [kickbackRate, setKickbackRate] = useState(Decimal.from(0.8));

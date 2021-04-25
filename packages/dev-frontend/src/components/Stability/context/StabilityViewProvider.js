@@ -1,15 +1,8 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { LiquityStoreState, StabilityDeposit } from "@liquity/lib-base";
 import { StabilityViewContext } from "./StabilityViewContext";
-import type { StabilityView, StabilityEvent } from "./types";
 
-type StabilityEventTransitions = Record<
-  StabilityView,
-  Partial<Record<StabilityEvent, StabilityView>>
->;
-
-const transitions: StabilityEventTransitions = {
+const transitions = {
   NONE: {
     DEPOSIT_PRESSED: "DEPOSITING"
   },
@@ -29,25 +22,25 @@ const transitions: StabilityEventTransitions = {
   }
 };
 
-const transition = (view: StabilityView, event: StabilityEvent): StabilityView => {
+const transition = (view, event) => {
   const nextView = transitions[view][event] ?? view;
   return nextView;
 };
 
-const getInitialView = (stabilityDeposit: StabilityDeposit): StabilityView => {
+const getInitialView = stabilityDeposit => {
   return stabilityDeposit.isEmpty ? "NONE" : "ACTIVE";
 };
 
-const select = ({ stabilityDeposit }: LiquityStoreState): StabilityDeposit => stabilityDeposit;
+const select = ({ stabilityDeposit }) => stabilityDeposit;
 
-export const StabilityViewProvider: React.FC = props => {
+export const StabilityViewProvider = props => {
   const { children } = props;
   const stabilityDeposit = useLiquitySelector(select);
 
-  const [view, setView] = useState<StabilityView>(getInitialView(stabilityDeposit));
-  const viewRef = useRef<StabilityView>(view);
+  const [view, setView] = useState(getInitialView(stabilityDeposit));
+  const viewRef = useRef(view);
 
-  const dispatchEvent = useCallback((event: StabilityEvent) => {
+  const dispatchEvent = useCallback(event => {
     const nextView = transition(viewRef.current, event);
 
     console.log(

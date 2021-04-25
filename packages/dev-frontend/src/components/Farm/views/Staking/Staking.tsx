@@ -7,7 +7,7 @@ import { EditableRow, StaticRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useFarmView } from "../../context/FarmViewContext";
 import { useMyTransactionState } from "../../../Transaction";
-import { Confirm } from "../Confirm";
+import { Confirm } from "../Confirm.js";
 import { Description } from "../Description";
 import { Approve } from "../Approve";
 import { Validation } from "../Validation";
