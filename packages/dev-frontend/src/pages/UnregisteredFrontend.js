@@ -1,7 +1,4 @@
-import { Box, Flex, Heading, Paragraph } from "theme-ui";
-
 import { shortenAddress } from "../utils/shortenAddress";
-import { Icon } from "../components/Icon";
 import { useLiquity } from "../hooks/LiquityContext";
 
 import Modal from "../components/Modal";
