@@ -71,7 +71,7 @@ const getInitialView = troveStatus => {
 
 const select = ({ trove: { status } }) => status;
 
-export const TroveViewProvider = props => {
+const TroveViewProvider = props => {
   const { children } = props;
   const troveStatus = useLiquitySelector(select);
 
@@ -107,3 +107,5 @@ export const TroveViewProvider = props => {
   };
   return <TroveViewContext.Provider value={provider}>{children}</TroveViewContext.Provider>;
 };
+
+export default TroveViewProvider;

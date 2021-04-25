@@ -1,22 +1,9 @@
 import { Button } from "theme-ui";
 
-import { Decimal, TroveChange } from "@liquity/lib-base";
+import { useLiquity } from "../../../hooks/LiquityContext";
+import { useTransactionFunction } from "../../Transaction";
 
-import { useLiquity } from "../../hooks/LiquityContext";
-import { useTransactionFunction } from "../Transaction";
-
-type TroveActionProps = {
-  transactionId: string;
-  change: Exclude<TroveChange<Decimal>, { type: "invalidCreation" }>;
-  maxBorrowingRate: Decimal;
-};
-
-export const TroveAction: React.FC<TroveActionProps> = ({
-  children,
-  transactionId,
-  change,
-  maxBorrowingRate
-}) => {
+const TroveAction = ({ children, transactionId, change, maxBorrowingRate }) => {
   const { liquity } = useLiquity();
 
   const [sendTransaction] = useTransactionFunction(
@@ -30,3 +17,5 @@ export const TroveAction: React.FC<TroveActionProps> = ({
 
   return <Button onClick={sendTransaction}>{children}</Button>;
 };
+
+export default TroveAction;

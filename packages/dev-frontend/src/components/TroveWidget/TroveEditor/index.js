@@ -1,41 +1,21 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import {
-  Percent,
-  Difference,
-  Decimalish,
-  Decimal,
-  Trove,
-  LiquityStoreState,
-  LUSD_LIQUIDATION_RESERVE
-} from "@liquity/lib-base";
+import { Percent, Difference, Decimal, LUSD_LIQUIDATION_RESERVE } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
-import { COIN } from "../../strings";
+import { COIN } from "../../../strings";
 
-import { Icon } from "../Icon";
-import { EditableRow, StaticRow } from "./Editor";
-import { LoadingOverlay } from "../LoadingOverlay";
-import { CollateralRatio } from "./CollateralRatio";
-import { InfoIcon } from "../InfoIcon";
+import { Icon } from "../../Icon";
+import { EditableRow, StaticRow } from "../../Trove/Editor";
+import { LoadingOverlay } from "../../LoadingOverlay";
+import { InfoIcon } from "../../InfoIcon";
 
 const gasRoomETH = Decimal.from(0.1);
 
-type TroveEditorProps = {
-  original: Trove;
-  edited: Trove;
-  fee: Decimal;
-  borrowingRate: Decimal;
-  changePending: boolean;
-  dispatch: (
-    action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
-  ) => void;
-};
+const select = ({ price, accountBalance }) => ({ price, accountBalance });
 
-const select = ({ price, accountBalance }: LiquityStoreState) => ({ price, accountBalance });
-
-export const TroveEditor: React.FC<TroveEditorProps> = ({
+const TroveEditor = ({
   children,
   original,
   edited,
@@ -46,7 +26,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 }) => {
   const { price, accountBalance } = useLiquitySelector(select);
 
-  const editingState = useState<string>();
+  const editingState = useState();
 
   const feePct = new Percent(borrowingRate);
 
@@ -85,7 +65,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           unit="ETH"
           {...{ editingState }}
           editedAmount={edited.collateral.toString(4)}
-          setEditedAmount={(editedCollateral: string) =>
+          setEditedAmount={editedCollateral =>
             dispatch({ type: "setCollateral", newValue: editedCollateral })
           }
         />
@@ -97,9 +77,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           unit={COIN}
           {...{ editingState }}
           editedAmount={edited.debt.toString(2)}
-          setEditedAmount={(editedDebt: string) =>
-            dispatch({ type: "setDebt", newValue: editedDebt })
-          }
+          setEditedAmount={editedDebt => dispatch({ type: "setDebt", newValue: editedDebt })}
         />
 
         {original.isEmpty && (
@@ -140,8 +118,6 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           }
         />
 
-        <CollateralRatio value={collateralRatio} change={collateralRatioChange} />
-
         {children}
       </Box>
 
@@ -149,3 +125,5 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
     </Card>
   );
 };
+
+export default TroveEditor;

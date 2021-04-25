@@ -1,23 +1,22 @@
 import { useCallback, useEffect } from "react";
 import { Flex, Button } from "theme-ui";
 
-import { LiquityStoreState, Decimal, Trove, Decimalish, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
+import { Decimal, Trove, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
 
-import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
+import { useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
-import { ActionDescription } from "../ActionDescription";
-import { useMyTransactionState } from "../Transaction";
+import { useMyTransactionState } from "../../Transaction";
 
-import { TroveEditor } from "./TroveEditor";
-import { TroveAction } from "./TroveAction";
-import { useTroveView } from "./context/TroveViewContext";
+import TroveEditor from "../TroveEditor";
+import TroveAction from "../TroveAction";
+import useTroveView from "../context/TroveViewContext";
 
 import {
   selectForTroveChangeValidation,
   validateTroveChange
-} from "./validation/validateTroveChange";
+} from "../validation/validateTroveChange";
 
-const init = ({ trove }: LiquityStoreState) => ({
+const init = ({ trove }) => ({
   original: trove,
   edited: new Trove(trove.collateral, trove.debt),
   changePending: false,
@@ -25,29 +24,18 @@ const init = ({ trove }: LiquityStoreState) => ({
   addedMinimumDebt: false
 });
 
-type TroveManagerState = ReturnType<typeof init>;
-type TroveManagerAction =
-  | LiquityStoreUpdate
-  | { type: "startChange" | "finishChange" | "revert" | "addMinimumDebt" | "removeMinimumDebt" }
-  | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
-
-const reduceWith = (action: TroveManagerAction) => (state: TroveManagerState): TroveManagerState =>
-  reduce(state, action);
+const reduceWith = action => state => reduce(state, action);
 
 const addMinimumDebt = reduceWith({ type: "addMinimumDebt" });
 const removeMinimumDebt = reduceWith({ type: "removeMinimumDebt" });
 const finishChange = reduceWith({ type: "finishChange" });
 const revert = reduceWith({ type: "revert" });
 
-const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveManagerState => {
-  // console.log(state);
-  // console.log(action);
-
+const reduce = (state, action) => {
   const { original, edited, changePending, debtDirty, addedMinimumDebt } = state;
 
   switch (action.type) {
     case "startChange": {
-      console.log("starting change");
       return { ...state, changePending: true };
     }
 
@@ -129,10 +117,13 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
 
       return { ...newState, edited: trove.apply(change, 0) };
     }
+
+    default:
+      return state;
   }
 };
 
-const feeFrom = (original: Trove, edited: Trove, borrowingRate: Decimal): Decimal => {
+const feeFrom = (original, edited, borrowingRate) => {
   const change = original.whatChanged(edited, borrowingRate);
 
   if (change && change.type !== "invalidCreation" && change.params.borrowLUSD) {
@@ -142,7 +133,7 @@ const feeFrom = (original: Trove, edited: Trove, borrowingRate: Decimal): Decima
   }
 };
 
-const select = (state: LiquityStoreState) => ({
+const select = state => ({
   fees: state.fees,
   validationContext: selectForTroveChangeValidation(state)
 });
@@ -150,12 +141,7 @@ const select = (state: LiquityStoreState) => ({
 const transactionIdPrefix = "trove-";
 const transactionIdMatcher = new RegExp(`^${transactionIdPrefix}`);
 
-type TroveManagerProps = {
-  collateral?: Decimalish;
-  debt?: Decimalish;
-};
-
-export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) => {
+const TroveManager = ({ collateral, debt }) => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees, validationContext } = useLiquitySelector(select);
 
@@ -214,17 +200,6 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
       changePending={changePending}
       dispatch={dispatch}
     >
-      {description ??
-        (openingNewTrove ? (
-          <ActionDescription>
-            Start by entering the amount of ETH you'd like to deposit as collateral.
-          </ActionDescription>
-        ) : (
-          <ActionDescription>
-            Adjust your Trove by modifying its collateral, debt, or both.
-          </ActionDescription>
-        ))}
-
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleCancel}>
           Cancel
@@ -245,3 +220,5 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
     </TroveEditor>
   );
 };
+
+export default TroveManager;
