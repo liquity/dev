@@ -8,7 +8,7 @@
 
 .brand {
   padding-right: 2.2rem;
-  border-right: 1px solid var(--primary-light);
+  border-right: 1px solid var(--secondary);
 }
 
 .brandName {
