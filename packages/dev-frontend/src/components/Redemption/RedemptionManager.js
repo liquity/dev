@@ -27,36 +27,8 @@ const select = ({ price, fees, total, lusdBalance }) => ({
 
 const transactionId = "redemption";
 
-export const RedemptionManager = () => {
-  const { price, fees, total, lusdBalance } = useLiquitySelector(select);
-  const [lusdAmount, setLUSDAmount] = useState(Decimal.ZERO);
-  const [changePending, setChangePending] = useState(false);
-  const editingState = useState();
-
-  const dirty = !lusdAmount.isZero;
-  const ethAmount = lusdAmount.div(price);
-  const redemptionRate = fees.redemptionRate(lusdAmount.div(total.debt));
-  const feePct = new Percent(redemptionRate);
-  const ethFee = ethAmount.mul(redemptionRate);
-  const maxRedemptionRate = redemptionRate.add(0.001); // TODO slippage tolerance
-
-  const myTransactionState = useMyTransactionState(transactionId);
-
-  useEffect(() => {
-    if (
-      myTransactionState.type === "waitingForApproval" ||
-      myTransactionState.type === "waitingForConfirmation"
-    ) {
-      setChangePending(true);
-    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
-      setChangePending(false);
-    } else if (myTransactionState.type === "confirmed") {
-      setLUSDAmount(Decimal.ZERO);
-      setChangePending(false);
-    }
-  }, [myTransactionState.type, setChangePending, setLUSDAmount]);
-
-  const [canRedeem, description] = total.collateralRatioIsBelowMinimum(price)
+const validateRedemption = ({ total, price, lusdAmount, lusdBalance }) =>
+  total.collateralRatioIsBelowMinimum(price)
     ? [
         false,
         <ErrorDescription>
@@ -75,16 +47,38 @@ export const RedemptionManager = () => {
           .
         </ErrorDescription>
       ]
-    : [
-        true,
-        <ActionDescription>
-          You will receive <Amount>{ethAmount.sub(ethFee).prettify(4)} ETH</Amount> in exchange for{" "}
-          <Amount>
-            {lusdAmount.prettify()} {COIN}
-          </Amount>
-          .
-        </ActionDescription>
-      ];
+    : [true, undefined];
+
+export const RedemptionManager = () => {
+  const { price, fees, total, lusdBalance } = useLiquitySelector(select);
+  const [lusdAmount, setLUSDAmount] = useState(Decimal.ZERO);
+  const [changePending, setChangePending] = useState(false);
+  const editingState = useState();
+
+  const dirty = !lusdAmount.isZero;
+  const ethAmount = lusdAmount.div(price);
+  const redemptionRate = fees.redemptionRate(lusdAmount.div(total.debt));
+  const feePct = new Percent(redemptionRate);
+  const ethFee = ethAmount.mul(redemptionRate);
+  const maxRedemptionRate = redemptionRate.add(0.001);
+
+  const myTransactionState = useMyTransactionState(transactionId);
+
+  useEffect(() => {
+    if (
+      myTransactionState.type === "waitingForApproval" ||
+      myTransactionState.type === "waitingForConfirmation"
+    ) {
+      setChangePending(true);
+    } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
+      setChangePending(false);
+    } else if (myTransactionState.type === "confirmed") {
+      setLUSDAmount(Decimal.ZERO);
+      setChangePending(false);
+    }
+  }, [myTransactionState.type, setChangePending, setLUSDAmount]);
+
+  const [canRedeem, description] = validateRedemption({ total, price, lusdAmount, lusdBalance });
 
   return (
     <Card>
