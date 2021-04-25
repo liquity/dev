@@ -118,8 +118,13 @@ const WalletConnector = ({ children }) => {
       </Body>
 
       {walletModal && (
-        <Modal title="Connect your wallet" onClose={() => setWalletModal(false)}>
-          <ConnectWalletWidget />
+        <Modal title="Connect your wallet" onClose={() => setWalletModal(null)}>
+          <ConnectWalletWidget
+            activate={activate}
+            dispatch={dispatch}
+            injectedConnector={injectedConnector}
+            onItemClick={() => setWalletModal(null)}
+          />
         </Modal>
       )}
 
