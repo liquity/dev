@@ -7,7 +7,7 @@ import classes from "./ConnectWalletWidget.module.css";
 
 export const ConnectWalletButton = ({ onClick }) => (
   <div className={classes.wrapper}>
-    <Button secondary medium round uppercase className={classes.button} onClick={onClick}>
+    <Button secondary round uppercase className={classes.button} onClick={onClick}>
       <span className={classes.text}>Connect wallet</span>
       <Icon name="wallet" size="md" />
     </Button>
