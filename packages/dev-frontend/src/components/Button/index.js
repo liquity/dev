@@ -13,7 +13,8 @@ const Button = ({
   uppercase,
   disabled,
   elevated,
-  secondary
+  secondary,
+  tertiary
 }) => {
   return (
     <button
@@ -25,7 +26,8 @@ const Button = ({
         [classes.disabled]: disabled,
         [classes.medium]: medium,
         [classes.elevated]: elevated,
-        [classes.secondary]: secondary
+        [classes.secondary]: secondary,
+        [classes.tertiary]: tertiary
       })}
       onClick={onClick}
       disabled={disabled}
