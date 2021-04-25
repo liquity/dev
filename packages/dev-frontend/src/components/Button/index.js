@@ -7,6 +7,7 @@ const Button = ({
   className,
   onClick,
   small,
+  xs,
   large,
   medium,
   primary,
@@ -20,6 +21,7 @@ const Button = ({
     <button
       className={cn(classes.wrapper, className, {
         [classes.small]: small,
+        [classes.xs]: xs,
         [classes.large]: large,
         [classes.primary]: primary && !disabled,
         [classes.uppercase]: uppercase,
