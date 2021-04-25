@@ -1,6 +1,5 @@
 import React from "react";
 import { Box, Card, Container, Link, Paragraph } from "theme-ui";
-import { SystemStats } from "../components/SystemStats";
 import { Redemption } from "../components/Redemption/Redemption";
 import { InfoMessage } from "../components/InfoMessage";
 import { useLiquity } from "../hooks/LiquityContext";
@@ -43,9 +42,7 @@ export const RedemptionPage: React.FC = () => {
         <Redemption />
       </Container>
 
-      <Container variant="right">
-        <SystemStats />
-      </Container>
+      <Container variant="right"></Container>
     </Container>
   );
 };
