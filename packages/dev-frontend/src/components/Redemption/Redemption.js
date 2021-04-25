@@ -2,13 +2,13 @@ import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../../hooks/LiquityContext";
 import { DisabledRedemption } from "./DisabledRedemption";
-import { RedemptionManager } from "./RedemptionManager";
+import RedemptionManager from "./RedemptionManager";
 
 const SECONDS_IN_ONE_DAY = 24 * 60 * 60;
 
 const selectBlockTimestamp = ({ blockTimestamp }) => blockTimestamp;
 
-export const Redemption = () => {
+const Redemption = () => {
   const {
     liquity: {
       connection: { deploymentDate, bootstrapPeriod }
@@ -29,3 +29,5 @@ export const Redemption = () => {
 
   return <RedemptionManager />;
 };
+
+export default Redemption;

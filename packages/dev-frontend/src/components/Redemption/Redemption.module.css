@@ -1,11 +1,10 @@
 .wrapper {
   width: 46rem;
-  padding-top: 2.4rem;
 }
 
 .boldStaticRowInfo {
-  font-family: "Futura BT heavy";
-  font-weight: 500;
+  font-family: "Futura BT heavy" !important;
+  font-weight: 500 !important;
 }
 
 .info {

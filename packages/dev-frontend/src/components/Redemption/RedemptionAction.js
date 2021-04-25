@@ -1,9 +1,8 @@
-import { Button } from "theme-ui";
-
+import Button from "../Button";
 import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";
 
-export const RedemptionAction = ({ transactionId, disabled, lusdAmount, maxRedemptionRate }) => {
+const RedemptionAction = ({ transactionId, disabled, lusdAmount, maxRedemptionRate }) => {
   const {
     liquity: { send: liquity }
   } = useLiquity();
@@ -14,8 +13,10 @@ export const RedemptionAction = ({ transactionId, disabled, lusdAmount, maxRedem
   );
 
   return (
-    <Button disabled={disabled} onClick={sendTransaction}>
+    <Button primary uppercase large disabled={disabled} onClick={sendTransaction}>
       Confirm
     </Button>
   );
 };
+
+export default RedemptionAction;
