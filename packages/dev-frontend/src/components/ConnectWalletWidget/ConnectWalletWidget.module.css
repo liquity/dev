@@ -72,8 +72,8 @@
 }
 
 .itemConnected {
-  background-color: #b7e3ff;
-  border: solid 2px #b7e3ff !important;
+  background-color: var(--primary-light);
+  border: solid 2px var(--primary-light) !important;
   padding: 2.3rem 2.7rem;
 }
 
