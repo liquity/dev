@@ -1,23 +1,9 @@
 import { Button } from "theme-ui";
 
-import { Decimal } from "@liquity/lib-base";
-
 import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";
 
-type RedemptionActionProps = {
-  transactionId: string;
-  disabled?: boolean;
-  lusdAmount: Decimal;
-  maxRedemptionRate: Decimal;
-};
-
-export const RedemptionAction: React.FC<RedemptionActionProps> = ({
-  transactionId,
-  disabled,
-  lusdAmount,
-  maxRedemptionRate
-}) => {
+export const RedemptionAction = ({ transactionId, disabled, lusdAmount, maxRedemptionRate }) => {
   const {
     liquity: { send: liquity }
   } = useLiquity();

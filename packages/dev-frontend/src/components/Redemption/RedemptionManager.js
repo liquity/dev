@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Box, Flex, Card, Heading } from "theme-ui";
 
-import { Decimal, Percent, LiquityStoreState, MINIMUM_COLLATERAL_RATIO } from "@liquity/lib-base";
+import { Decimal, Percent, MINIMUM_COLLATERAL_RATIO } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN } from "../../strings";
@@ -18,7 +18,7 @@ import { InfoIcon } from "../InfoIcon";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 
-const select = ({ price, fees, total, lusdBalance }: LiquityStoreState) => ({
+const select = ({ price, fees, total, lusdBalance }) => ({
   price,
   fees,
   total,
@@ -27,11 +27,11 @@ const select = ({ price, fees, total, lusdBalance }: LiquityStoreState) => ({
 
 const transactionId = "redemption";
 
-export const RedemptionManager: React.FC = () => {
+export const RedemptionManager = () => {
   const { price, fees, total, lusdBalance } = useLiquitySelector(select);
   const [lusdAmount, setLUSDAmount] = useState(Decimal.ZERO);
   const [changePending, setChangePending] = useState(false);
-  const editingState = useState<string>();
+  const editingState = useState();
 
   const dirty = !lusdAmount.isZero;
   const ethAmount = lusdAmount.div(price);

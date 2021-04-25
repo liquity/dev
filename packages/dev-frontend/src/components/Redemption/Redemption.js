@@ -1,4 +1,3 @@
-import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../../hooks/LiquityContext";
@@ -7,9 +6,9 @@ import { RedemptionManager } from "./RedemptionManager";
 
 const SECONDS_IN_ONE_DAY = 24 * 60 * 60;
 
-const selectBlockTimestamp = ({ blockTimestamp }: BlockPolledLiquityStoreState) => blockTimestamp;
+const selectBlockTimestamp = ({ blockTimestamp }) => blockTimestamp;
 
-export const Redemption: React.FC = () => {
+export const Redemption = () => {
   const {
     liquity: {
       connection: { deploymentDate, bootstrapPeriod }

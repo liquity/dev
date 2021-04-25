@@ -3,15 +3,7 @@ import { Box, Card, Heading, Paragraph, Text } from "theme-ui";
 import { InfoMessage } from "../InfoMessage";
 import { Icon } from "../Icon";
 
-type DisabledRedemptionProps = {
-  disabledDays: number;
-  unlockDate: Date;
-};
-
-export const DisabledRedemption: React.FC<DisabledRedemptionProps> = ({
-  disabledDays,
-  unlockDate
-}) => (
+export const DisabledRedemption = ({ disabledDays, unlockDate }) => (
   <Card>
     <Heading>Redeem</Heading>
 
