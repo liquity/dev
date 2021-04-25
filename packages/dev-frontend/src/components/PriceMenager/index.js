@@ -63,7 +63,7 @@ const PriceManager = () => {
   if (!data) return null;
 
   return (
-    <div className={classes.wrapper}>
+    <div className={cn(classes.wrapper, "slide-in-left")}>
       {Object.keys(data)
         .sort((a, b) => DATA[a].order - DATA[b].order)
         .map(c => (

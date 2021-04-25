@@ -1,3 +1,5 @@
+import cn from "classnames";
+
 import { Decimal, Percent } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -40,7 +42,7 @@ const SystemStats = () => {
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
 
   return (
-    <div className={classes.wrapper}>
+    <div className={cn(classes.wrapper, "slide-in-right")}>
       <div className={classes.heading}>Protocol stats</div>
 
       <Stat

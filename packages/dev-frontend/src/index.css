@@ -226,3 +226,48 @@ template {
 [hidden] {
   display: none;
 }
+
+.scale-in-center {
+  animation: scale-in-center 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes scale-in-center {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slide-in-right {
+  0% {
+    transform: translate(1000px, -50%);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, -50%);
+    opacity: 1;
+  }
+}
+
+.slide-in-left {
+  animation: slide-in-left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slide-in-left {
+  0% {
+    transform: translate(-1000px, -50%);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(0, -50%);
+    opacity: 1;
+  }
+}

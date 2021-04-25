@@ -6,7 +6,7 @@ import classes from "./Modal.module.css";
 
 const Modal = ({ title, content, confirm, decline, children, onClose, status }) => (
   <div className={classes.overlay} onClick={onClose}>
-    <div className={classes.wrapper} onClick={e => e.stopPropagation()}>
+    <div className={cn(classes.wrapper, "scale-in-center")} onClick={e => e.stopPropagation()}>
       {status && (
         <div className={classes.status}>
           <div
