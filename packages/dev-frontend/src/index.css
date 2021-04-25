@@ -36,7 +36,6 @@ body {
   font-family: -apple-system, "Futura BT medium", sans-serif;
   font-size: var(--font-size);
   font-weight: 400;
-  line-height: 1.15;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -47,6 +46,7 @@ body {
   margin: 0;
   padding: 0;
   box-sizing: inherit;
+  line-height: 1;
 }
 
 main {
