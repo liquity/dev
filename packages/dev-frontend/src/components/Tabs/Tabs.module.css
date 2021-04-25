@@ -1,0 +1,33 @@
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  justify-content: center;
+  width: 42rem;
+  margin: 0 auto;
+}
+
+.tab {
+  padding: 1rem;
+  margin: 0 0.5rem;
+  justify-self: center;
+
+  font-family: "Futura BT light";
+  text-transform: uppercase;
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.4px;
+  color: var(--primary-text);
+}
+
+.tab:hover {
+  font-family: "Futura BT medium";
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tabActive,
+.tabActive:hover {
+  font-family: "Futura BT medium";
+  font-weight: 600;
+  border-bottom: 1px solid var(--primary-text);
+}
