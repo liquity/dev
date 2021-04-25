@@ -1,30 +1,17 @@
-import { Box, Card, Heading, Paragraph, Text } from "theme-ui";
+import ErrorDescription from "../ErrorDescription";
 
-import { InfoMessage } from "../InfoMessage";
-import { Icon } from "../Icon";
+import classes from "./Redemption.module.css";
 
 export const DisabledRedemption = ({ disabledDays, unlockDate }) => (
-  <Card>
-    <Heading>Redeem</Heading>
+  <div className={classes.wrapper}>
+    <ErrorDescription>Redemption is not enabled yet.</ErrorDescription>
 
-    <Box sx={{ p: [2, 3] }}>
-      <InfoMessage
-        title="Redemption is not enabled yet."
-        icon={
-          <Box sx={{ color: "warning" }}>
-            <Icon name="exclamation-triangle" />
-          </Box>
-        }
-      >
-        <Paragraph>
-          LUSD redemption is disabled for the first {disabledDays} days after launch.
-        </Paragraph>
+    <p className={classes.sentence}>
+      LUSD redemption is disabled for the first {disabledDays} days after launch.
+    </p>
 
-        <Paragraph sx={{ mt: 3 }}>
-          It will be unlocked at{" "}
-          <Text sx={{ fontWeight: "medium" }}>{unlockDate.toLocaleString()}</Text>.
-        </Paragraph>
-      </InfoMessage>
-    </Box>
-  </Card>
+    <p className={classes.sentence}>
+      It will be unlocked at <span className={classes.bold}>{unlockDate.toLocaleString()}</span>.
+    </p>
+  </div>
 );
