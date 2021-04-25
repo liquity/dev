@@ -1,0 +1,50 @@
+.wrapper {
+  margin-top: 5.5rem;
+}
+
+.links {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+}
+
+.link,
+.link:visited,
+.link:hover {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--black);
+}
+
+.link ion-icon {
+  font-size: 2.5rem;
+}
+
+.link p {
+  font-family: "Futura BT medium";
+  font-size: 1rem;
+  font-weight: 300;
+  letter-spacing: -0.2px;
+  color: var(--secondary-text);
+}
+
+.email {
+  font-family: "Futura BT light";
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: -0.3px;
+  color: var(--black);
+  text-align: center;
+  margin-bottom: 0.6rem;
+}
+
+.version {
+  font-family: "Futura BT light";
+  font-size: 1.2rem;
+  font-weight: 300;
+  letter-spacing: -0.24px;
+  text-align: center;
+  color: var(--tertiary-text);
+  margin-bottom: 1rem;
+}
