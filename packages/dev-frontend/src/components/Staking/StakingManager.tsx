@@ -17,7 +17,7 @@ import { useStakingView } from "./context/StakingViewContext";
 import { StakingEditor } from "./StakingEditor";
 import { StakingManagerAction } from "./StakingManagerAction";
 import { ActionDescription, Amount } from "../ActionDescription";
-import { ErrorDescription } from "../ErrorDescription";
+import ErrorDescription from "../ErrorDescription";
 
 const init = ({ lqtyStake }: LiquityStoreState) => ({
   originalStake: lqtyStake,

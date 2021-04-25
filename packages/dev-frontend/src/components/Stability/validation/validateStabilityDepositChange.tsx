@@ -7,7 +7,7 @@ import {
 
 import { COIN } from "../../../strings";
 import { Amount } from "../../ActionDescription";
-import { ErrorDescription } from "../../ErrorDescription";
+import ErrorDescription from "../../ErrorDescription";
 import { StabilityActionDescription } from "../StabilityActionDescription";
 
 export const selectForStabilityDepositChangeValidation = ({

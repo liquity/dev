@@ -10,7 +10,7 @@ import { Icon } from "../Icon";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { EditableRow, StaticRow } from "../Trove/Editor";
 import { ActionDescription, Amount } from "../ActionDescription";
-import { ErrorDescription } from "../ErrorDescription";
+import ErrorDescription from "../ErrorDescription";
 import { useMyTransactionState } from "../Transaction";
 
 import { RedemptionAction } from "./RedemptionAction";

@@ -15,7 +15,7 @@ import {
 import { COIN } from "../../../strings";
 
 import { ActionDescription, Amount } from "../../ActionDescription";
-import { ErrorDescription } from "../../ErrorDescription";
+import ErrorDescription from "../../ErrorDescription";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 const ccrPercent = new Percent(CRITICAL_COLLATERAL_RATIO).toString(0);
