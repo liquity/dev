@@ -6,7 +6,7 @@ import { useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
 import { useMyTransactionState } from "../../Transaction";
 
-import TroveEditor from "../TroveEditor";
+import { TroveDeposit, TroveWithdraw } from "../TroveEditor";
 import TroveAction from "../TroveAction";
 import useTroveView from "../context/TroveViewContext";
 import Button from "../../Button";
@@ -45,7 +45,9 @@ const reduce = (state, action) => {
       return { ...state, changePending: false };
 
     case "setCollateral": {
-      const newCollateral = Decimal.from(action.newValue);
+      const newCollateral = action.newValue
+        ? Decimal.from(action.newValue).add(state.original.collateral)
+        : original.collateral;
 
       const newState = {
         ...state,
@@ -64,12 +66,46 @@ const reduce = (state, action) => {
       return newState;
     }
 
-    case "setDebt":
+    case "substractCollateral": {
+      const newCollateral = action.newValue
+        ? original.collateral < Decimal.from(action.newValue)
+          ? Decimal.ZERO
+          : original.collateral.sub(Decimal.from(action.newValue))
+        : original.collateral;
+
+      const newState = {
+        ...state,
+        edited: edited.setCollateral(newCollateral)
+      };
+
+      return newState;
+    }
+
+    case "setDebt": {
+      const newDebt = action.newValue
+        ? Decimal.from(action.newValue).add(state.original.debt)
+        : original.debt;
+
       return {
         ...state,
-        edited: edited.setDebt(action.newValue),
+        edited: edited.setDebt(newDebt),
         debtDirty: true
       };
+    }
+
+    case "substractDebt": {
+      const newDebt = action.newValue
+        ? original.debt.gt(Decimal.from(action.newValue))
+          ? original.debt.sub(Decimal.from(action.newValue))
+          : Decimal.ZERO
+        : original.debt;
+
+      return {
+        ...state,
+        edited: edited.setDebt(newDebt),
+        debtDirty: true
+      };
+    }
 
     case "addMinimumDebt":
       return {
@@ -143,7 +179,7 @@ const select = state => ({
 const transactionIdPrefix = "trove-";
 const transactionIdMatcher = new RegExp(`^${transactionIdPrefix}`);
 
-const TroveManager = ({ collateral, debt }) => {
+const TroveManager = ({ collateral, debt, activeTab }) => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees, validationContext } = useLiquitySelector(select);
 
@@ -187,8 +223,10 @@ const TroveManager = ({ collateral, debt }) => {
     }
   }, [myTransactionState, dispatch, dispatchEvent]);
 
+  const TroveComponent = activeTab === "deposit" ? TroveDeposit : TroveWithdraw;
+
   return (
-    <TroveEditor
+    <TroveComponent
       original={original}
       edited={edited}
       fee={feeFrom(original, edited, borrowingRate)}
@@ -197,24 +235,26 @@ const TroveManager = ({ collateral, debt }) => {
       dispatch={dispatch}
     >
       <div className={classes.container}>
+        {description}
+
         {validChange ? (
           <TroveAction
             transactionId={`${transactionIdPrefix}${validChange.type}`}
             change={validChange}
             maxBorrowingRate={maxBorrowingRate}
-            className={classes.troveAction}
+            className={classes.action}
             large
             primary
           >
             Confirm
           </TroveAction>
         ) : (
-          <Button large primary disabled uppercase className={classes.troveAction}>
+          <Button large primary disabled uppercase className={classes.action}>
             Confirm
           </Button>
         )}
       </div>
-    </TroveEditor>
+    </TroveComponent>
   );
 };
 
