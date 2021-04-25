@@ -1,0 +1,83 @@
+.wrapper {
+  background-color: var(--secondary);
+
+  display: flex;
+  align-items: flex-start;
+  border-bottom-left-radius: 1.6rem;
+
+  position: absolute;
+  top: 100%;
+  right: 0;
+
+  z-index: 1;
+}
+
+.balances {
+  display: flex;
+  padding: 1.6rem 0 1.2rem 3rem;
+}
+
+.balance {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin-right: 3rem;
+}
+
+.currency {
+  display: block;
+
+  font-family: "Futura BT light";
+  font-size: 1.8rem;
+  font-weight: 300;
+  letter-spacing: -0.36px;
+  color: var(--black);
+
+  margin-bottom: 0.9rem;
+}
+
+.amount {
+  display: block;
+
+  font-family: "Futura BT light";
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: -0.28px;
+  color: var(--black);
+}
+
+.bold {
+  font-weight: 500;
+  font-family: "Futura BT medium";
+}
+
+.account {
+  margin-top: 0.8rem;
+  margin-right: 0.8rem;
+  padding: 0.5rem 1rem 0.5rem 1.6rem;
+  border-radius: 0.9rem;
+  box-shadow: var(--box-shadow-sm);
+
+  font-family: "Futura BT medium";
+  font-size: 1.6rem;
+  font-weight: 500;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: normal;
+  letter-spacing: -0.32px;
+  color: var(--white);
+}
+
+.account:hover {
+  cursor: pointer;
+}
+
+.accountNum {
+  margin-right: 0.8rem;
+  font-family: "Futura BT heavy";
+  font-size: 1.6rem;
+  font-weight: 500;
+  letter-spacing: -0.32px;
+  text-align: left;
+}
