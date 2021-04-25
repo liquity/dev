@@ -1,9 +1,8 @@
-import { Button } from "theme-ui";
-
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { useTransactionFunction } from "../../Transaction";
+import Button from "../../Button";
 
-const TroveAction = ({ children, transactionId, change, maxBorrowingRate }) => {
+const TroveAction = ({ children, transactionId, change, maxBorrowingRate, ...rest }) => {
   const { liquity } = useLiquity();
 
   const [sendTransaction] = useTransactionFunction(
@@ -15,7 +14,11 @@ const TroveAction = ({ children, transactionId, change, maxBorrowingRate }) => {
       : liquity.send.adjustTrove.bind(liquity.send, change.params, maxBorrowingRate)
   );
 
-  return <Button onClick={sendTransaction}>{children}</Button>;
+  return (
+    <Button onClick={sendTransaction} {...rest}>
+      {children}
+    </Button>
+  );
 };
 
 export default TroveAction;

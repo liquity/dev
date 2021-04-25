@@ -1,5 +1,4 @@
-import { useCallback, useEffect } from "react";
-import { Flex, Button } from "theme-ui";
+import { useEffect } from "react";
 
 import { Decimal, Trove, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
 
@@ -10,11 +9,14 @@ import { useMyTransactionState } from "../../Transaction";
 import TroveEditor from "../TroveEditor";
 import TroveAction from "../TroveAction";
 import useTroveView from "../context/TroveViewContext";
+import Button from "../../Button";
 
 import {
   selectForTroveChangeValidation,
   validateTroveChange
 } from "../validation/validateTroveChange";
+
+import classes from "./TroveManager.module.css";
 
 const init = ({ trove }) => ({
   original: trove,
@@ -166,12 +168,6 @@ const TroveManager = ({ collateral, debt }) => {
 
   const { dispatchEvent } = useTroveView();
 
-  const handleCancel = useCallback(() => {
-    dispatchEvent("CANCEL_ADJUST_TROVE_PRESSED");
-  }, [dispatchEvent]);
-
-  const openingNewTrove = original.isEmpty;
-
   const myTransactionState = useMyTransactionState(transactionIdMatcher);
 
   useEffect(() => {
@@ -200,23 +196,24 @@ const TroveManager = ({ collateral, debt }) => {
       changePending={changePending}
       dispatch={dispatch}
     >
-      <Flex variant="layout.actions">
-        <Button variant="cancel" onClick={handleCancel}>
-          Cancel
-        </Button>
-
+      <div className={classes.container}>
         {validChange ? (
           <TroveAction
             transactionId={`${transactionIdPrefix}${validChange.type}`}
             change={validChange}
             maxBorrowingRate={maxBorrowingRate}
+            className={classes.troveAction}
+            large
+            primary
           >
             Confirm
           </TroveAction>
         ) : (
-          <Button disabled>Confirm</Button>
+          <Button large primary disabled uppercase className={classes.troveAction}>
+            Confirm
+          </Button>
         )}
-      </Flex>
+      </div>
     </TroveEditor>
   );
 };

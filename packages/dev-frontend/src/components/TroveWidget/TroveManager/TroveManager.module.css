@@ -1,0 +1,8 @@
+.container {
+  display: flex;
+  justify-content: center;
+}
+
+.action {
+  margin-bottom: 3.5rem;
+}
