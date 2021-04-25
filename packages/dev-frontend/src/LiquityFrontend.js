@@ -1,5 +1,4 @@
 import React from "react";
-import { Flex, Container } from "theme-ui";
 import { Switch, Route } from "react-router-dom";
 import { Wallet } from "@ethersproject/wallet";
 
@@ -11,9 +10,6 @@ import { TransactionMonitor } from "./components/Transaction";
 import { UserAccount } from "./components/UserAccount";
 
 import { PageSwitcher } from "./pages/PageSwitcher";
-import { Farm } from "./pages/Farm";
-import { RiskyTrovesPage } from "./pages/RiskyTrovesPage";
-import { RedemptionPage } from "./pages/RedemptionPage";
 
 import { TroveViewProvider } from "./components/Trove/context/TroveViewProvider";
 import { StabilityViewProvider } from "./components/Stability/context/StabilityViewProvider";

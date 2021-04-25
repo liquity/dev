@@ -2,11 +2,8 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { LiquityStoreState, UserTroveStatus } from "@liquity/lib-base";
 import { TroveViewContext } from "./TroveViewContext";
-import type { TroveView, TroveEvent } from "./types";
 
-type TroveEventTransitions = Record<TroveView, Partial<Record<TroveEvent, TroveView>>>;
-
-const transitions: TroveEventTransitions = {
+const transitions = {
   NONE: {
     OPEN_TROVE_PRESSED: "OPENING",
     TROVE_OPENED: "ACTIVE"
@@ -48,21 +45,19 @@ const transitions: TroveEventTransitions = {
   }
 };
 
-type TroveStateEvents = Partial<Record<UserTroveStatus, TroveEvent>>;
-
-const troveStatusEvents: TroveStateEvents = {
+const troveStatusEvents = {
   open: "TROVE_OPENED",
   closedByOwner: "TROVE_CLOSED",
   closedByLiquidation: "TROVE_LIQUIDATED",
   closedByRedemption: "TROVE_REDEEMED"
 };
 
-const transition = (view: TroveView, event: TroveEvent): TroveView => {
+const transition = (view, event) => {
   const nextView = transitions[view][event] ?? view;
   return nextView;
 };
 
-const getInitialView = (troveStatus: UserTroveStatus): TroveView => {
+const getInitialView = troveStatus => {
   if (troveStatus === "closedByLiquidation") {
     return "LIQUIDATED";
   }
@@ -75,16 +70,16 @@ const getInitialView = (troveStatus: UserTroveStatus): TroveView => {
   return "NONE";
 };
 
-const select = ({ trove: { status } }: LiquityStoreState) => status;
+const select = ({ trove: { status } }) => status;
 
-export const TroveViewProvider: React.FC = props => {
+export const TroveViewProvider = props => {
   const { children } = props;
   const troveStatus = useLiquitySelector(select);
 
-  const [view, setView] = useState<TroveView>(getInitialView(troveStatus));
-  const viewRef = useRef<TroveView>(view);
+  const [view, setView] = useState(getInitialView(troveStatus));
+  const viewRef = useRef(view);
 
-  const dispatchEvent = useCallback((event: TroveEvent) => {
+  const dispatchEvent = useCallback(event => {
     const nextView = transition(viewRef.current, event);
 
     console.log(
