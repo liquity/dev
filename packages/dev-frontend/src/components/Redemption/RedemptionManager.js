@@ -13,6 +13,7 @@ import ErrorDescription from "../ErrorDescription";
 import { useMyTransactionState } from "../Transaction";
 import Input from "../Input";
 import RedemptionAction from "./RedemptionAction";
+
 import classes from "./Redemption.module.css";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);

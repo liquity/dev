@@ -3,7 +3,7 @@
   grid-template-columns: 1fr 1fr 1fr;
   justify-content: center;
   width: 42rem;
-  margin: 0 auto;
+  margin: 0 auto 2.4rem;
 }
 
 .tab {
