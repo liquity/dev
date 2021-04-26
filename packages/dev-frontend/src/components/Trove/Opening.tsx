@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Flex, Button, Box, Card, Heading } from "theme-ui";
-
 import {
   LiquityStoreState,
   Decimal,
@@ -9,15 +8,11 @@ import {
   LUSD_LIQUIDATION_RESERVE,
   Percent
 } from "@liquity/lib-base";
-
 import { useLiquitySelector } from "@liquity/lib-react";
-
 import { ActionDescription } from "../ActionDescription";
 import { useMyTransactionState } from "../Transaction";
-
 import { TroveAction } from "./TroveAction";
 import { useTroveView } from "./context/TroveViewContext";
-
 import { COIN } from "../../strings";
 import { Icon } from "../Icon";
 import { InfoIcon } from "../InfoIcon";
@@ -30,20 +25,23 @@ import {
 } from "./validation/validateTroveChange";
 
 const selector = (state: LiquityStoreState) => {
-  const { fees, price } = state;
+  const { fees, price, accountBalance } = state;
   return {
     fees,
     price,
+    accountBalance,
     validationContext: selectForTroveChangeValidation(state)
   };
 };
+
 const EMPTY_TROVE = new Trove(Decimal.ZERO, Decimal.ZERO);
 const TINY_EXTRA_LUSD_TO_ALLOW_MINIMUM = 0.0001;
 const TRANSACTION_ID = "trove-creation";
+const GAS_ROOM_ETH = Decimal.from(0.1);
 
 export const Opening: React.FC = () => {
   const { dispatchEvent } = useTroveView();
-  const { fees, price, validationContext } = useLiquitySelector(selector);
+  const { fees, price, accountBalance, validationContext } = useLiquitySelector(selector);
   const borrowingRate = fees.borrowingRate();
   const editingState = useState<string>();
 
@@ -60,6 +58,11 @@ export const Opening: React.FC = () => {
   const totalDebt = borrowAmount.add(LUSD_LIQUIDATION_RESERVE).add(fee);
   const isDirty = !collateral.isZero || !borrowAmount.isZero;
   const trove = isDirty ? new Trove(collateral, totalDebt) : EMPTY_TROVE;
+  const maxEth = accountBalance.gt(GAS_ROOM_ETH) ? accountBalance.sub(GAS_ROOM_ETH) : Decimal.ZERO;
+  const maxCollateral = collateral.add(maxEth);
+  const collateralMaxedOut = collateral.eq(maxCollateral);
+  const collateralRatio =
+    !collateral.isZero && !borrowAmount.isZero ? trove.collateralRatio(price) : undefined;
 
   const [troveChange, description] = validateTroveChange(
     EMPTY_TROVE,
@@ -68,14 +71,14 @@ export const Opening: React.FC = () => {
     validationContext
   );
 
-  const collateralRatio =
-    !collateral.isZero && !borrowAmount.isZero ? trove.collateralRatio(price) : undefined;
-
   const transactionState = useMyTransactionState(TRANSACTION_ID);
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
-  const handleCancelPressed = () => dispatchEvent("CANCEL_ADJUST_TROVE_PRESSED");
+
+  const handleCancelPressed = useCallback(() => {
+    dispatchEvent("CANCEL_ADJUST_TROVE_PRESSED");
+  }, [dispatchEvent]);
 
   const reset = useCallback(() => {
     setCollateral(Decimal.ZERO);
@@ -104,8 +107,8 @@ export const Opening: React.FC = () => {
           label="Collateral"
           inputId="trove-collateral"
           amount={collateral.prettify(4)}
-          // maxAmount={maxCollateral.toString()}
-          // maxedOut={collateralMaxedOut}
+          maxAmount={maxCollateral.toString()}
+          maxedOut={collateralMaxedOut}
           editingState={editingState}
           unit="ETH"
           editedAmount={collateral.toString(4)}
@@ -167,7 +170,14 @@ export const Opening: React.FC = () => {
             <InfoIcon
               tooltip={
                 <Card variant="tooltip" sx={{ width: "240px" }}>
-                  TODO
+                  The total amount of LUSD your Trove will hold.{" "}
+                  {isDirty && (
+                    <>
+                      You will need to repay {totalDebt.sub(LUSD_LIQUIDATION_RESERVE).prettify(2)}{" "}
+                      LUSD to reclaim your collateral ({LUSD_LIQUIDATION_RESERVE.toString()} LUSD
+                      Liquidation Reserve excluded).
+                    </>
+                  )}
                 </Card>
               }
             />
