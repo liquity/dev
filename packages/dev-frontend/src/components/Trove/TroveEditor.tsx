@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
 import {
   Percent,
-  Difference,
   Decimalish,
   Decimal,
   Trove,
@@ -29,7 +28,9 @@ type TroveEditorProps = {
   borrowingRate: Decimal;
   changePending: boolean;
   dispatch: (
-    action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
+    action:
+      | { type: "setCollateral" | "setDebt"; newValue: Decimalish }
+      | { type: "revert" | "roundCollateralRatio" }
   ) => void;
 };
 
@@ -46,19 +47,28 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
 }) => {
   const { price, accountBalance } = useLiquitySelector(select);
 
-  const editingState = useState<string>();
+  const [editingState, setEditingState] = useState<string>();
+  const previousEditingState = useRef(editingState);
 
   const feePct = new Percent(borrowingRate);
 
-  const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
   const collateralRatio = !edited.isEmpty ? edited.collateralRatio(price) : undefined;
-  const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
 
   const maxEth = accountBalance.gt(gasRoomETH) ? accountBalance.sub(gasRoomETH) : Decimal.ZERO;
   const maxCollateral = original.collateral.add(maxEth);
   const collateralMaxedOut = edited.collateral.eq(maxCollateral);
 
   const dirty = !edited.equals(original);
+
+  useEffect(() => {
+    if (editingState === previousEditingState.current) {
+      if (editingState === undefined) {
+        dispatch({ type: "roundCollateralRatio" });
+      }
+
+      previousEditingState.current = editingState;
+    }
+  }, [editingState, dispatch]);
 
   return (
     <Card>
@@ -83,7 +93,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           maxAmount={maxCollateral.toString()}
           maxedOut={collateralMaxedOut}
           unit="ETH"
-          {...{ editingState }}
+          editingState={[editingState, setEditingState]}
           editedAmount={edited.collateral.toString(4)}
           setEditedAmount={(editedCollateral: string) =>
             dispatch({ type: "setCollateral", newValue: editedCollateral })
@@ -95,11 +105,38 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           inputId="trove-debt"
           amount={edited.debt.prettify()}
           unit={COIN}
-          {...{ editingState }}
+          editingState={[editingState, setEditingState]}
           editedAmount={edited.debt.toString(2)}
           setEditedAmount={(editedDebt: string) =>
             dispatch({ type: "setDebt", newValue: editedDebt })
           }
+          onArrowUp={input => {
+            if (collateralRatio?.finite) {
+              const integerICR = Decimal.from(collateralRatio.toString(2));
+
+              if (integerICR.gt(0.01)) {
+                const nextICR = integerICR.sub(0.01);
+                const nextDebt = edited.collateral.mulDiv(price, nextICR);
+
+                input.value = nextDebt.toString(2);
+                dispatch({ type: "setDebt", newValue: nextDebt });
+              }
+            } else {
+              const nextDebt = edited.collateral.mulDiv(price, 2);
+              input.value = nextDebt.toString(2);
+              dispatch({ type: "setDebt", newValue: nextDebt });
+            }
+          }}
+          onArrowDown={input => {
+            if (collateralRatio?.finite) {
+              const integerICR = Decimal.from(collateralRatio.toString(2));
+              const nextICR = integerICR.add(0.01);
+              const nextDebt = edited.collateral.mulDiv(price, nextICR);
+
+              input.value = nextDebt.toString(2);
+              dispatch({ type: "setDebt", newValue: nextDebt });
+            }
+          }}
         />
 
         {original.isEmpty && (
@@ -140,7 +177,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
           }
         />
 
-        <CollateralRatio value={collateralRatio} change={collateralRatioChange} />
+        <CollateralRatio value={collateralRatio} />
 
         {children}
       </Box>

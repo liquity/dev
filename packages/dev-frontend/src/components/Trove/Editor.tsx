@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Text, Flex, Label, Input, SxProp, Button, ThemeUICSSProperties } from "theme-ui";
 
 import { Icon } from "../Icon";
@@ -200,6 +200,8 @@ type EditableRowProps = DisabledEditableRowProps & {
   setEditedAmount: (editedAmount: string) => void;
   maxAmount?: string;
   maxedOut?: boolean;
+  onArrowUp?: (input: HTMLInputElement) => void;
+  onArrowDown?: (input: HTMLInputElement) => void;
 };
 
 export const EditableRow: React.FC<EditableRowProps> = ({
@@ -214,14 +216,18 @@ export const EditableRow: React.FC<EditableRowProps> = ({
   editedAmount,
   setEditedAmount,
   maxAmount,
-  maxedOut
+  maxedOut,
+  onArrowUp,
+  onArrowDown
 }) => {
   const [editing, setEditing] = editingState;
   const [invalid, setInvalid] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   return editing === inputId ? (
     <Row {...{ label, labelFor: inputId, unit }}>
       <Input
+        ref={inputRef}
         autoFocus
         id={inputId}
         type="number"
@@ -239,6 +245,15 @@ export const EditableRow: React.FC<EditableRowProps> = ({
         onBlur={() => {
           setEditing(undefined);
           setInvalid(false);
+        }}
+        onKeyDown={e => {
+          if (inputRef.current && onArrowUp && e.code === "ArrowUp") {
+            e.preventDefault();
+            onArrowUp(inputRef.current);
+          } else if (inputRef.current && onArrowDown && e.code === "ArrowDown") {
+            e.preventDefault();
+            onArrowDown(inputRef.current);
+          }
         }}
         variant="editor"
         sx={{

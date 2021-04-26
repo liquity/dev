@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from "react";
 import { Flex, Button } from "theme-ui";
 
-import { LiquityStoreState, Decimal, Trove, Decimalish, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
+import { LiquityStoreState, Decimal, Trove, Decimalish } from "@liquity/lib-base";
 
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
@@ -17,9 +17,10 @@ import {
   validateTroveChange
 } from "./validation/validateTroveChange";
 
-const init = ({ trove }: LiquityStoreState) => ({
+const init = ({ trove, price }: LiquityStoreState) => ({
   original: trove,
   edited: new Trove(trove.collateral, trove.debt),
+  price,
   changePending: false,
   debtDirty: false,
   addedMinimumDebt: false
@@ -28,14 +29,22 @@ const init = ({ trove }: LiquityStoreState) => ({
 type TroveManagerState = ReturnType<typeof init>;
 type TroveManagerAction =
   | LiquityStoreUpdate
-  | { type: "startChange" | "finishChange" | "revert" | "addMinimumDebt" | "removeMinimumDebt" }
+  | {
+      type:
+        | "startChange"
+        | "finishChange"
+        | "revert"
+        | "addDefaultDebt"
+        | "removeDefaultDebt"
+        | "roundCollateralRatio";
+    }
   | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
 
 const reduceWith = (action: TroveManagerAction) => (state: TroveManagerState): TroveManagerState =>
   reduce(state, action);
 
-const addMinimumDebt = reduceWith({ type: "addMinimumDebt" });
-const removeMinimumDebt = reduceWith({ type: "removeMinimumDebt" });
+const addDefaultDebt = reduceWith({ type: "addDefaultDebt" });
+const removeDefaultDebt = reduceWith({ type: "removeDefaultDebt" });
 const finishChange = reduceWith({ type: "finishChange" });
 const revert = reduceWith({ type: "revert" });
 
@@ -43,7 +52,7 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
   // console.log(state);
   // console.log(action);
 
-  const { original, edited, changePending, debtDirty, addedMinimumDebt } = state;
+  const { original, edited, price, changePending, debtDirty, addedMinimumDebt } = state;
 
   switch (action.type) {
     case "startChange": {
@@ -56,18 +65,22 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
 
     case "setCollateral": {
       const newCollateral = Decimal.from(action.newValue);
+      const newDebt =
+        original.isEmpty && edited.collateral.nonZero
+          ? edited.debt.mulDiv(newCollateral, edited.collateral)
+          : edited.debt;
 
       const newState = {
         ...state,
-        edited: edited.setCollateral(newCollateral)
+        edited: new Trove(newCollateral, newDebt)
       };
 
       if (!debtDirty) {
         if (edited.isEmpty && newCollateral.nonZero) {
-          return addMinimumDebt(newState);
+          return addDefaultDebt(newState);
         }
         if (addedMinimumDebt && newCollateral.isZero) {
-          return removeMinimumDebt(newState);
+          return removeDefaultDebt(newState);
         }
       }
 
@@ -81,14 +94,31 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
         debtDirty: true
       };
 
-    case "addMinimumDebt":
+    case "roundCollateralRatio": {
+      const collateralRatio = edited.collateralRatio(price);
+
+      if (debtDirty && collateralRatio.finite) {
+        const integerICR = Decimal.from(collateralRatio.toString(2));
+
+        if (integerICR.nonZero) {
+          return {
+            ...state,
+            edited: edited.setDebt(edited.collateral.mulDiv(price, integerICR))
+          };
+        }
+      }
+
+      return state;
+    }
+
+    case "addDefaultDebt":
       return {
         ...state,
-        edited: edited.setDebt(LUSD_MINIMUM_DEBT),
+        edited: edited.setDebt(edited.collateral.mulDiv(price, 2)),
         addedMinimumDebt: true
       };
 
-    case "removeMinimumDebt":
+    case "removeDefaultDebt":
       return {
         ...state,
         edited: edited.setDebt(0),
@@ -105,13 +135,14 @@ const reduce = (state: TroveManagerState, action: TroveManagerAction): TroveMana
 
     case "updateStore": {
       const {
-        newState: { trove },
+        newState: { trove, price },
         stateChange: { troveBeforeRedistribution: changeCommitted }
       } = action;
 
       const newState = {
         ...state,
-        original: trove
+        original: trove,
+        price
       };
 
       if (changePending && changeCommitted) {

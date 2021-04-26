@@ -1,7 +1,7 @@
 import React from "react";
 import { Flex, Box, Card } from "theme-ui";
 
-import { CRITICAL_COLLATERAL_RATIO, Decimal, Difference, Percent } from "@liquity/lib-base";
+import { CRITICAL_COLLATERAL_RATIO, Decimal, Percent } from "@liquity/lib-base";
 
 import { Icon } from "../Icon";
 
@@ -11,12 +11,11 @@ import { ActionDescription } from "../ActionDescription";
 
 type CollateralRatioProps = {
   value?: Decimal;
-  change?: Difference;
 };
 
-export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value, change }) => {
+export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value }) => {
   const collateralRatioPct = new Percent(value ?? { toString: () => "N/A" });
-  const changePct = change && new Percent(change);
+
   return (
     <>
       <Flex>
@@ -27,7 +26,7 @@ export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value, change 
         <StaticRow
           label="Collateral ratio"
           inputId="trove-collateral-ratio"
-          amount={collateralRatioPct.prettify()}
+          amount={collateralRatioPct.toString(0)}
           color={
             value?.gt(CRITICAL_COLLATERAL_RATIO)
               ? "success"
@@ -37,14 +36,6 @@ export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value, change 
               ? "danger"
               : "muted"
           }
-          pendingAmount={
-            change?.positive?.absoluteValue?.gt(10)
-              ? "++"
-              : change?.negative?.absoluteValue?.gt(10)
-              ? "--"
-              : changePct?.nonZeroish(2)?.prettify()
-          }
-          pendingColor={change?.positive ? "success" : "danger"}
           infoIcon={
             <InfoIcon
               tooltip={
