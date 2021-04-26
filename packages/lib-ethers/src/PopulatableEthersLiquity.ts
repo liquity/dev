@@ -61,6 +61,9 @@ export const _redeemMaxIterations = 70;
 const defaultBorrowingRateSlippageTolerance = Decimal.from(0.005); // 0.5%
 const defaultRedemptionRateSlippageTolerance = Decimal.from(0.001); // 0.1%
 
+// 10^(-18)
+const tiniestAmount = Decimal.fromBigNumberString("1");
+
 const noDetails = () => undefined;
 
 const compose = <T, U, V>(f: (_: U) => V, g: (_: T) => U) => (_: T) => f(g(_));
@@ -541,7 +544,14 @@ export class PopulatableEthersLiquity
 
     const { hintAddress } = results.reduce((a, b) => (a.diff.lt(b.diff) ? a : b));
 
-    return sortedTroves.findInsertPosition(nominalCollateralRatio.hex, hintAddress, hintAddress);
+    return sortedTroves.findInsertPosition(
+      nominalCollateralRatio.add(tiniestAmount).hex,
+      ...(await sortedTroves.findInsertPosition(
+        nominalCollateralRatio.hex,
+        hintAddress,
+        hintAddress
+      ))
+    );
   }
 
   private async _findHints(trove: Trove): Promise<[string, string]> {

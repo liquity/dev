@@ -218,7 +218,7 @@ describe("EthersLiquity", () => {
       expect(hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(2222));
       expect(hintHelpers.getApproxHint).to.have.been.called.with(BigNumber.from(3333));
 
-      expect(sortedTroves.findInsertPosition).to.have.been.called.once;
+      expect(sortedTroves.findInsertPosition).to.have.been.called.twice;
       expect(sortedTroves.findInsertPosition).to.have.been.called.with(
         nominalCollateralRatio.hex,
         "carol"
