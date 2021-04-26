@@ -137,7 +137,7 @@ export const validateTroveChange = (
     return [
       undefined,
       <ErrorDescription>
-        Debt must be at least{" "}
+        Total debt must be at least{" "}
         <Amount>
           {LUSD_MINIMUM_DEBT.toString()} {COIN}
         </Amount>
@@ -173,7 +173,7 @@ const validateTroveCreation = (
   if (resultingTrove.debt.lt(LUSD_MINIMUM_DEBT)) {
     return (
       <ErrorDescription>
-        Debt must be at least{" "}
+        Total debt must be at least{" "}
         <Amount>
           {LUSD_MINIMUM_DEBT.toString()} {COIN}
         </Amount>
@@ -284,7 +284,7 @@ const validateTroveAdjustment = (
     if (resultingTrove.debt.lt(LUSD_MINIMUM_DEBT)) {
       return (
         <ErrorDescription>
-          Debt must be at least{" "}
+          Total debt must be at least{" "}
           <Amount>
             {LUSD_MINIMUM_DEBT.toString()} {COIN}
           </Amount>

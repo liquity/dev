@@ -21,8 +21,8 @@ test("there's no smoke", async () => {
   fireEvent.click(getByText(/open trove/i));
   fireEvent.click(getByLabelText(/collateral/i));
   fireEvent.change(getByLabelText(/^collateral$/i), { target: { value: `${trove.collateral}` } });
-  fireEvent.click(getByLabelText(/^debt$/i));
-  fireEvent.change(getByLabelText(/^debt$/i), { target: { value: `${trove.debt}` } });
+  fireEvent.click(getByLabelText(/^borrow$/i));
+  fireEvent.change(getByLabelText(/^borrow$/i), { target: { value: `${trove.debt}` } });
 
   const confirmButton = getAllByText(/confirm/i)[0];
   fireEvent.click(confirmButton);
