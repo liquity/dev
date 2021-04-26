@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
 import {
@@ -15,12 +15,10 @@ import { useLiquitySelector } from "@liquity/lib-react";
 import { COIN } from "../../strings";
 
 import { Icon } from "../Icon";
-import { EditableRow, StaticRow } from "./Editor";
+import { StaticRow } from "./Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { CollateralRatio } from "./CollateralRatio";
 import { InfoIcon } from "../InfoIcon";
-
-const gasRoomETH = Decimal.from(0.1);
 
 type TroveEditorProps = {
   original: Trove;
@@ -33,7 +31,7 @@ type TroveEditorProps = {
   ) => void;
 };
 
-const select = ({ price, accountBalance }: LiquityStoreState) => ({ price, accountBalance });
+const select = ({ price }: LiquityStoreState) => ({ price });
 
 export const TroveEditor: React.FC<TroveEditorProps> = ({
   children,
@@ -44,19 +42,13 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   changePending,
   dispatch
 }) => {
-  const { price, accountBalance } = useLiquitySelector(select);
-
-  const editingState = useState<string>();
+  const { price } = useLiquitySelector(select);
 
   const feePct = new Percent(borrowingRate);
 
   const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
   const collateralRatio = !edited.isEmpty ? edited.collateralRatio(price) : undefined;
   const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
-
-  const maxEth = accountBalance.gt(gasRoomETH) ? accountBalance.sub(gasRoomETH) : Decimal.ZERO;
-  const maxCollateral = original.collateral.add(maxEth);
-  const collateralMaxedOut = edited.collateral.eq(maxCollateral);
 
   const dirty = !edited.equals(original);
 
@@ -76,31 +68,14 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
       </Heading>
 
       <Box sx={{ p: [2, 3] }}>
-        <EditableRow
+        <StaticRow
           label="Collateral"
           inputId="trove-collateral"
           amount={edited.collateral.prettify(4)}
-          maxAmount={maxCollateral.toString()}
-          maxedOut={collateralMaxedOut}
           unit="ETH"
-          {...{ editingState }}
-          editedAmount={edited.collateral.toString(4)}
-          setEditedAmount={(editedCollateral: string) =>
-            dispatch({ type: "setCollateral", newValue: editedCollateral })
-          }
         />
 
-        <EditableRow
-          label="Debt"
-          inputId="trove-debt"
-          amount={edited.debt.prettify()}
-          unit={COIN}
-          {...{ editingState }}
-          editedAmount={edited.debt.toString(2)}
-          setEditedAmount={(editedDebt: string) =>
-            dispatch({ type: "setDebt", newValue: editedDebt })
-          }
-        />
+        <StaticRow label="Debt" inputId="trove-debt" amount={edited.debt.prettify()} unit={COIN} />
 
         {original.isEmpty && (
           <StaticRow
