@@ -1,8 +1,8 @@
 import { Value, BigInt, Address } from "@graphprotocol/graph-ts";
 
-import { Global } from "../../generated/schema";
+import { Global, LqtyStakeChange } from "../../generated/schema";
 
-import { BIGINT_ZERO } from "../utils/bignumbers";
+import { BIGINT_ZERO, DECIMAL_ZERO } from "../utils/bignumbers";
 
 const onlyGlobalId = "only";
 
@@ -26,6 +26,9 @@ export function getGlobal(): Global {
     newGlobal.totalNumberOfTroves = 0;
     newGlobal.rawTotalRedistributedCollateral = BIGINT_ZERO;
     newGlobal.rawTotalRedistributedDebt = BIGINT_ZERO;
+    newGlobal.totalNumberOfLQTYStakes = 0;
+    newGlobal.numberOfActiveLQTYStakes = 0;
+    newGlobal.totalLQTYTokensStaked = DECIMAL_ZERO;
 
     return newGlobal;
   }
@@ -133,5 +136,29 @@ export function decreaseNumberOfTrovesClosedByOwner(): void {
 
   global.numberOfTrovesClosedByOwner--;
   global.numberOfOpenTroves++;
+  global.save();
+}
+
+export function handleLQTYStakeChange(
+  stakeChange: LqtyStakeChange,
+  isUserFirstStake: boolean
+): void {
+  let global = getGlobal();
+
+  if (stakeChange.stakeOperation == "stakeCreated") {
+    if (isUserFirstStake) {
+      global.totalNumberOfLQTYStakes++;
+    }
+    global.numberOfActiveLQTYStakes++;
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
+  } else if (stakeChange.stakeOperation == "stakeIncreased") {
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
+  } else if (stakeChange.stakeOperation == "stakeDecreased") {
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
+  } else if (stakeChange.stakeOperation == "stakeRemoved") {
+    global.numberOfActiveLQTYStakes--;
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
+  }
+
   global.save();
 }

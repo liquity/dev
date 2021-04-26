@@ -7,9 +7,15 @@ import {
   BorrowerOperationsAddressChanged,
   StabilityPoolAddressChanged,
   CollSurplusPoolAddressChanged,
-  PriceFeedAddressChanged
+  PriceFeedAddressChanged,
+  LQTYStakingAddressChanged
 } from "../../generated/TroveManager/TroveManager";
-import { BorrowerOperations, StabilityPool, CollSurplusPool } from "../../generated/templates";
+import {
+  BorrowerOperations,
+  StabilityPool,
+  CollSurplusPool,
+  LQTYStaking
+} from "../../generated/templates";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
@@ -32,6 +38,10 @@ export function handleStabilityPoolAddressChanged(event: StabilityPoolAddressCha
 
 export function handleCollSurplusPoolAddressChanged(event: CollSurplusPoolAddressChanged): void {
   CollSurplusPool.create(event.params._collSurplusPoolAddress);
+}
+
+export function handleLQTYStakingAddressChanged(event: LQTYStakingAddressChanged): void {
+  LQTYStaking.create(event.params._lqtyStakingAddress);
 }
 
 export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {

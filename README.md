@@ -230,7 +230,7 @@ The partially redeemed Trove is re-inserted into the sorted list of Troves, and 
 
 ### Full redemption
 
-A Trove is defined as “fully redeemed from” when the redemption has caused (debt-50) of its debt to absorb (debt-50) LUSD. Then, its 50 LUSD Liquidation Reserve is cancelled with its remaining 50 debt: the Liquidation Reserve is burned from the gas address, and the 50 debt is zero’d.
+A Trove is defined as “fully redeemed from” when the redemption has caused (debt-200) of its debt to absorb (debt-200) LUSD. Then, its 200 LUSD Liquidation Reserve is cancelled with its remaining 200 debt: the Liquidation Reserve is burned from the gas address, and the 200 debt is zero’d.
 
 Before closing, we must handle the Trove’s **collateral surplus**: that is, the excess ETH collateral remaining after redemption, due to its initial over-collateralization.
 
