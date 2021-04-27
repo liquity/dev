@@ -143,15 +143,7 @@ export const TroveDeposit = ({
   );
 };
 
-export const TroveWithdraw = ({
-  children,
-  original,
-  edited,
-  fee,
-  borrowingRate,
-  changePending,
-  dispatch
-}) => {
+export const TroveWithdraw = ({ children, original, edited, changePending, dispatch }) => {
   const { price } = useLiquitySelector(select);
   const [withdraw, setWithdraw] = useState("");
   const [repay, setRepay] = useState("");
