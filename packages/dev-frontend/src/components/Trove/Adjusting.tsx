@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { Flex, Button, Box, Card, Heading } from "theme-ui";
 import {
   LiquityStoreState,
@@ -48,18 +48,75 @@ const feeFrom = (original: Trove, edited: Trove, borrowingRate: Decimal): Decima
   }
 };
 
+const applyUnsavedCollateralChanges = (unsavedChanges: Difference, trove: Trove) => {
+  if (unsavedChanges.absoluteValue) {
+    return unsavedChanges.positive
+      ? trove.collateral.add(unsavedChanges.absoluteValue)
+      : unsavedChanges.negative
+      ? trove.collateral.sub(unsavedChanges.absoluteValue)
+      : trove.collateral;
+  }
+  return trove.collateral;
+};
+
+const applyUnsavedNetDebtChanges = (unsavedChanges: Difference, trove: Trove) => {
+  if (unsavedChanges.absoluteValue) {
+    return unsavedChanges.positive
+      ? trove.netDebt.add(unsavedChanges.absoluteValue)
+      : unsavedChanges.negative
+      ? trove.netDebt.sub(unsavedChanges.absoluteValue)
+      : trove.netDebt;
+  }
+  return trove.netDebt;
+};
+
 export const Adjusting: React.FC = () => {
   const { dispatchEvent } = useTroveView();
   const { trove, fees, price, accountBalance, validationContext } = useLiquitySelector(selector);
-  const borrowingRate = fees.borrowingRate();
   const editingState = useState<string>();
-  const originalNetDebt = trove.debt.sub(LUSD_LIQUIDATION_RESERVE);
-
+  const previousTrove = useRef<Trove>(trove);
   const [collateral, setCollateral] = useState<Decimal>(trove.collateral);
-  const [netDebt, setNetDebt] = useState<Decimal>(originalNetDebt);
-  const isDirty = !collateral.eq(trove.collateral) || !netDebt.eq(originalNetDebt);
-  const isDebtIncrease = netDebt.gt(originalNetDebt);
-  const debtIncreaseAmount = isDebtIncrease ? netDebt.sub(originalNetDebt) : Decimal.ZERO;
+  const [netDebt, setNetDebt] = useState<Decimal>(trove.netDebt);
+
+  const transactionState = useMyTransactionState(TRANSACTION_ID);
+  const borrowingRate = fees.borrowingRate();
+
+  useEffect(() => {
+    if (transactionState.type === "confirmedOneShot") {
+      dispatchEvent("TROVE_ADJUSTED");
+    }
+  }, [transactionState.type, dispatchEvent]);
+
+  useEffect(() => {
+    if (!previousTrove.current.collateral.eq(trove.collateral)) {
+      const unsavedChanges = Difference.between(collateral, previousTrove.current.collateral);
+      const nextCollateral = applyUnsavedCollateralChanges(unsavedChanges, trove);
+      setCollateral(nextCollateral);
+    }
+    if (!previousTrove.current.netDebt.eq(trove.netDebt)) {
+      const unsavedChanges = Difference.between(netDebt, previousTrove.current.netDebt);
+      const nextNetDebt = applyUnsavedNetDebtChanges(unsavedChanges, trove);
+      setNetDebt(nextNetDebt);
+    }
+    previousTrove.current = trove;
+  }, [borrowingRate, trove, collateral, netDebt]);
+
+  const handleCancelPressed = useCallback(() => {
+    dispatchEvent("CANCEL_ADJUST_TROVE_PRESSED");
+  }, [dispatchEvent]);
+
+  const reset = useCallback(() => {
+    setCollateral(trove.collateral);
+    setNetDebt(trove.netDebt);
+  }, [trove.collateral, trove.netDebt]);
+
+  if (trove.status !== "open") {
+    return null;
+  }
+
+  const isDirty = !collateral.eq(trove.collateral) || !netDebt.eq(trove.netDebt);
+  const isDebtIncrease = netDebt.gt(trove.netDebt);
+  const debtIncreaseAmount = isDebtIncrease ? netDebt.sub(trove.netDebt) : Decimal.ZERO;
 
   const fee = isDebtIncrease
     ? feeFrom(trove, new Trove(trove.collateral, trove.debt.add(debtIncreaseAmount)), borrowingRate)
@@ -82,25 +139,9 @@ export const Adjusting: React.FC = () => {
     validationContext
   );
 
-  const transactionState = useMyTransactionState(TRANSACTION_ID);
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
-
-  const handleCancelPressed = useCallback(() => {
-    dispatchEvent("CANCEL_ADJUST_TROVE_PRESSED");
-  }, [dispatchEvent]);
-
-  const reset = useCallback(() => {
-    setCollateral(trove.collateral);
-    setNetDebt(originalNetDebt);
-  }, [trove.collateral, originalNetDebt]);
-
-  useEffect(() => {
-    if (transactionState.type === "confirmedOneShot") {
-      dispatchEvent("TROVE_ADJUSTED");
-    }
-  }, [transactionState.type, dispatchEvent]);
 
   return (
     <Card>

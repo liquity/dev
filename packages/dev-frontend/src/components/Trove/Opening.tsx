@@ -4,7 +4,6 @@ import {
   LiquityStoreState,
   Decimal,
   Trove,
-  LUSD_MINIMUM_DEBT,
   LUSD_LIQUIDATION_RESERVE,
   Percent
 } from "@liquity/lib-base";
@@ -35,9 +34,9 @@ const selector = (state: LiquityStoreState) => {
 };
 
 const EMPTY_TROVE = new Trove(Decimal.ZERO, Decimal.ZERO);
-const TINY_EXTRA_LUSD_TO_ALLOW_MINIMUM = 0.0001;
 const TRANSACTION_ID = "trove-creation";
 const GAS_ROOM_ETH = Decimal.from(0.1);
+const MIN_BORROW_AMOUNT = Decimal.from(1800);
 
 export const Opening: React.FC = () => {
   const { dispatchEvent } = useTroveView();
@@ -45,9 +44,6 @@ export const Opening: React.FC = () => {
   const borrowingRate = fees.borrowingRate();
   const editingState = useState<string>();
 
-  const minimumBorrowAmount = Decimal.from(LUSD_MINIMUM_DEBT.sub(LUSD_LIQUIDATION_RESERVE))
-    .div(Decimal.from(1).add(borrowingRate))
-    .add(TINY_EXTRA_LUSD_TO_ALLOW_MINIMUM);
   const [collateral, setCollateral] = useState<Decimal>(Decimal.ZERO);
   const [borrowAmount, setBorrowAmount] = useState<Decimal>(Decimal.ZERO);
 
@@ -87,9 +83,9 @@ export const Opening: React.FC = () => {
 
   useEffect(() => {
     if (!collateral.isZero && borrowAmount.isZero) {
-      setBorrowAmount(minimumBorrowAmount);
+      setBorrowAmount(MIN_BORROW_AMOUNT);
     }
-  }, [collateral, borrowAmount, minimumBorrowAmount]);
+  }, [collateral, borrowAmount]);
 
   return (
     <Card>
