@@ -105,3 +105,24 @@
   color: var(--red);
   background-color: rgba(217, 78, 78, 0.22);
 }
+
+.noTroveBody {
+  padding: 1.2rem 3rem;
+  border-radius: 1rem;
+  border: solid 2px var(--white);
+  background-color: #e6e6e5;
+}
+
+.activeTroveHeading {
+  font-family: "Futura BT heavy";
+  font-size: 1.8rem;
+  font-weight: 500;
+  letter-spacing: -0.36px;
+  text-align: center;
+  color: var(--primary);
+}
+
+.closeAmounts {
+  padding-top: 1rem;
+  width: 90%;
+}

@@ -7,69 +7,11 @@ import {
 
 import { COIN } from "../../../strings";
 
-import { ActionDescription, Amount } from "../../ActionDescription";
+import { Amount } from "../../ActionDescription";
 import ErrorDescription from "../../ErrorDescription";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 const ccrPercent = new Percent(CRITICAL_COLLATERAL_RATIO).toString(0);
-
-// const TroveChangeDescription = ({ params }) => (
-//   <ActionDescription>
-//     {params.depositCollateral && params.borrowLUSD ? (
-//       <>
-//         You will deposit <Amount>{params.depositCollateral.prettify()} ETH</Amount> and receive{" "}
-//         <Amount>
-//           {params.borrowLUSD.prettify()} {COIN}
-//         </Amount>
-//       </>
-//     ) : params.repayLUSD && params.withdrawCollateral ? (
-//       <>
-//         You will pay{" "}
-//         <Amount>
-//           {params.repayLUSD.prettify()} {COIN}
-//         </Amount>{" "}
-//         and receive <Amount>{params.withdrawCollateral.prettify()} ETH</Amount>
-//       </>
-//     ) : params.depositCollateral && params.repayLUSD ? (
-//       <>
-//         You will deposit <Amount>{params.depositCollateral.prettify()} ETH</Amount> and pay{" "}
-//         <Amount>
-//           {params.repayLUSD.prettify()} {COIN}
-//         </Amount>
-//       </>
-//     ) : params.borrowLUSD && params.withdrawCollateral ? (
-//       <>
-//         You will receive <Amount>{params.withdrawCollateral.prettify()} ETH</Amount> and{" "}
-//         <Amount>
-//           {params.borrowLUSD.prettify()} {COIN}
-//         </Amount>
-//       </>
-//     ) : params.depositCollateral ? (
-//       <>
-//         You will deposit <Amount>{params.depositCollateral.prettify()} ETH</Amount>
-//       </>
-//     ) : params.withdrawCollateral ? (
-//       <>
-//         You will receive <Amount>{params.withdrawCollateral.prettify()} ETH</Amount>
-//       </>
-//     ) : params.borrowLUSD ? (
-//       <>
-//         You will receive{" "}
-//         <Amount>
-//           {params.borrowLUSD.prettify()} {COIN}
-//         </Amount>
-//       </>
-//     ) : (
-//       <>
-//         You will pay{" "}
-//         <Amount>
-//           {params.repayLUSD.prettify()} {COIN}
-//         </Amount>
-//       </>
-//     )}
-//     .
-//   </ActionDescription>
-// );
 
 export const selectForTroveChangeValidation = ({
   price,

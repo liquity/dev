@@ -15,7 +15,7 @@ import classes from "./Preview.module.css";
 const TABS = [
   { tab: "deposit", content: "Deposit" },
   { tab: "withdraw", content: "Withdraw" },
-  { tab: "redemption", content: "Redemtion" }
+  { tab: "redemption", content: "Redemption" }
 ];
 
 export const WithdrawPreview = ({ onClick, children }) => (

@@ -4,18 +4,38 @@ import Button from "../Button";
 
 import classes from "./Modal.module.css";
 
-const Modal = ({ title, content, confirm, decline, children, onClose, status }) => (
+const Modal = ({ title, content, confirm, decline, children, onClose, status, bigStatus }) => (
   <div className={classes.overlay} onClick={onClose}>
     <div className={cn(classes.wrapper, "scale-in-center")} onClick={e => e.stopPropagation()}>
       {status && (
-        <div className={classes.status}>
+        <div className={classes.statusWrapper}>
           <div
-            className={cn(classes.statusIcon, {
+            className={cn(classes.status, {
               [classes.success]: status === "success",
               [classes.warning]: status === "warning",
               [classes.error]: status === "error"
             })}
           >
+            <div className={classes.statusIcon}>
+              {status === "success" ? (
+                <ion-icon name="checkmark-outline"></ion-icon>
+              ) : (
+                <ion-icon name="alert-outline"></ion-icon>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bigStatus && (
+        <div
+          className={cn(classes.bigStatus, {
+            [classes.success]: bigStatus === "success",
+            [classes.warning]: bigStatus === "warning",
+            [classes.error]: bigStatus === "error"
+          })}
+        >
+          <div className={classes.bigStatusIcon}>
             {status === "success" ? (
               <ion-icon name="checkmark-outline"></ion-icon>
             ) : (

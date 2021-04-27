@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import cn from "classnames";
 
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -6,6 +6,8 @@ import { CRITICAL_COLLATERAL_RATIO, Percent } from "@liquity/lib-base";
 import { useLiquity } from "../../../hooks/LiquityContext";
 
 import Button from "../../Button";
+import Modal from "../../Modal";
+import StaticRow from "../../StaticRow";
 
 import { COIN, ETH } from "../../../strings";
 
@@ -13,9 +15,13 @@ import classes from "./TroveHead.module.css";
 
 // LIQUIDATED
 
-const Heading = ({ children }) => <h3 className={classes.heading}>{children}</h3>;
+const Heading = ({ children, className }) => (
+  <h3 className={cn(classes.heading, className)}>{children}</h3>
+);
 
-const Body = ({ children }) => <div className={classes.body}>{children}</div>;
+const Body = ({ children, className }) => (
+  <div className={cn(classes.body, className)}>{children}</div>
+);
 
 const Actions = ({ children }) => <div className={classes.actions}>{children}</div>;
 
@@ -39,6 +45,7 @@ const selectActive = ({ trove, price }) => ({ trove, price });
 
 const ActiveTrove = ({ dispatchEvent }) => {
   const { liquity } = useLiquity();
+  const [cancelModal, setCancelModal] = useState(null);
 
   const handleCloseTrove = useCallback(() => {
     dispatchEvent("CLOSE_TROVE_PRESSED");
@@ -51,7 +58,28 @@ const ActiveTrove = ({ dispatchEvent }) => {
 
   return (
     <>
-      <Heading>Active trove</Heading>
+      {cancelModal && (
+        <Modal
+          onClose={() => setCancelModal(null)}
+          status="warning"
+          title="Are you sure you want to 
+close trove?"
+          decline={{ text: "Cancel", action: () => setCancelModal(null) }}
+          confirm={{
+            text: "Close trove",
+            action: () => {
+              setCancelModal(null);
+              handleCloseTrove();
+            }
+          }}
+        >
+          <div className={classes.closeAmounts}>
+            <StaticRow label="Repay" amount={trove.collateral.prettify(4)} unit={ETH} boldAmount />
+            <StaticRow label="Withdraw" amount={trove.debt.prettify(2)} unit={COIN} boldAmount />
+          </div>
+        </Modal>
+      )}
+      <Heading className={classes.activeTroveHeading}>your trove</Heading>
       <Body>
         <div className={classes.trove}>
           <TroveInfo label="Collateral" amount={trove.collateral.prettify(2)} unit={ETH} />
@@ -71,7 +99,7 @@ const ActiveTrove = ({ dispatchEvent }) => {
           <TroveInfo label="Debt" amount={trove.debt.prettify(0)} unit={COIN} />
         </div>
         <Actions>
-          <Button tertiary small onClick={handleCloseTrove}>
+          <Button tertiary small onClick={() => setCancelModal(true)}>
             close trove
           </Button>
         </Actions>
@@ -81,10 +109,7 @@ const ActiveTrove = ({ dispatchEvent }) => {
 };
 
 const NoTrove = () => (
-  <>
-    <Heading>You haven't borrowed any LUSD yet</Heading>
-    <Body>You can borrow LUSD by opening a Trove.</Body>
-  </>
+  <Body className={classes.noTroveBody}>You have no active troves. Deposit to open trove.</Body>
 );
 
 const selectSurplus = ({ collateralSurplusBalance }) => ({

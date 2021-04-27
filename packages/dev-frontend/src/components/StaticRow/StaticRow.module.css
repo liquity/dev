@@ -51,3 +51,8 @@
   text-align: left;
   color: var(--red);
 }
+
+.boldAmount {
+  font-family: "Futura BT heavy";
+  font-weight: 500;
+}

@@ -12,7 +12,7 @@ import { useLiquitySelector } from "@liquity/lib-react";
 const TABS = [
   { tab: "deposit", content: "Deposit" },
   { tab: "withdraw", content: "Withdraw" },
-  { tab: "redemption", content: "Redemtion" }
+  { tab: "redemption", content: "Redemption" }
 ];
 
 const select = ({ collateralSurplusBalance }) => ({
