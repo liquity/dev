@@ -33,6 +33,9 @@ type Global @entity {
 
   "Only used internally as temporary storage. Will always be null in queries"
   currentRedemption: Redemption
+
+  "Only used internally as temporary storage. Will always be null in queries"
+  tmpDepositUpdate: BigInt
 }
 
 type SystemState @entity {
