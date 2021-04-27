@@ -38,10 +38,6 @@ export const PageSwitcher = () => {
       return <UnregisteredFrontend />;
     }
   } else {
-<<<<<<< HEAD:packages/dev-frontend/src/pages/PageSwitcher.js
-    return <div>Trove</div>;
-=======
     return <Trove />;
->>>>>>> feat/trove-page:packages/dev-frontend/src/pages/PageSwitcher.tsx
   }
 };
