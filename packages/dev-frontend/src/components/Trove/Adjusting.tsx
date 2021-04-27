@@ -50,22 +50,30 @@ const feeFrom = (original: Trove, edited: Trove, borrowingRate: Decimal): Decima
 
 const applyUnsavedCollateralChanges = (unsavedChanges: Difference, trove: Trove) => {
   if (unsavedChanges.absoluteValue) {
-    return unsavedChanges.positive
-      ? trove.collateral.add(unsavedChanges.absoluteValue)
-      : unsavedChanges.negative
-      ? trove.collateral.sub(unsavedChanges.absoluteValue)
-      : trove.collateral;
+    if (unsavedChanges.positive) {
+      return trove.collateral.add(unsavedChanges.absoluteValue);
+    }
+    if (unsavedChanges.negative) {
+      if (unsavedChanges.absoluteValue.lt(trove.collateral)) {
+        return trove.collateral.sub(unsavedChanges.absoluteValue);
+      }
+    }
+    return trove.collateral;
   }
   return trove.collateral;
 };
 
 const applyUnsavedNetDebtChanges = (unsavedChanges: Difference, trove: Trove) => {
   if (unsavedChanges.absoluteValue) {
-    return unsavedChanges.positive
-      ? trove.netDebt.add(unsavedChanges.absoluteValue)
-      : unsavedChanges.negative
-      ? trove.netDebt.sub(unsavedChanges.absoluteValue)
-      : trove.netDebt;
+    if (unsavedChanges.positive) {
+      return trove.netDebt.add(unsavedChanges.absoluteValue);
+    }
+    if (unsavedChanges.negative) {
+      if (unsavedChanges.absoluteValue.lt(trove.netDebt)) {
+        return trove.netDebt.sub(unsavedChanges.absoluteValue);
+      }
+    }
+    return trove.netDebt;
   }
   return trove.netDebt;
 };

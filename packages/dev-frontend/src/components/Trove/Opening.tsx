@@ -5,6 +5,7 @@ import {
   Decimal,
   Trove,
   LUSD_LIQUIDATION_RESERVE,
+  LUSD_MINIMUM_NET_DEBT,
   Percent
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -36,7 +37,6 @@ const selector = (state: LiquityStoreState) => {
 const EMPTY_TROVE = new Trove(Decimal.ZERO, Decimal.ZERO);
 const TRANSACTION_ID = "trove-creation";
 const GAS_ROOM_ETH = Decimal.from(0.1);
-const MIN_BORROW_AMOUNT = Decimal.from(1800);
 
 export const Opening: React.FC = () => {
   const { dispatchEvent } = useTroveView();
@@ -83,7 +83,7 @@ export const Opening: React.FC = () => {
 
   useEffect(() => {
     if (!collateral.isZero && borrowAmount.isZero) {
-      setBorrowAmount(MIN_BORROW_AMOUNT);
+      setBorrowAmount(LUSD_MINIMUM_NET_DEBT);
     }
   }, [collateral, borrowAmount]);
 
