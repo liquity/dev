@@ -99,7 +99,7 @@ export const Adjusting: React.FC = () => {
       setNetDebt(nextNetDebt);
     }
     previousTrove.current = trove;
-  }, [borrowingRate, trove, collateral, netDebt]);
+  }, [trove, collateral, netDebt]);
 
   const handleCancelPressed = useCallback(() => {
     dispatchEvent("CANCEL_ADJUST_TROVE_PRESSED");
