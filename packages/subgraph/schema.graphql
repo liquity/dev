@@ -51,6 +51,8 @@ type SystemState @entity {
   tokensInStabilityPool: BigDecimal!
   collSurplusPoolBalance: BigDecimal!
 
+  LUSDTotalSupply: BigDecimal!
+
   cause: Change @derivedFrom(field: "systemStateAfter")
 }
 
@@ -67,6 +69,9 @@ type User @entity {
 
   liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
   redemptions: [Redemption!]! @derivedFrom(field: "redeemer")
+
+  balances: [TokenBalance!] @derivedFrom(field: "owner")
+  allowances: [TokenAllowance!] @derivedFrom(field: "owner")
 }
 
 enum TroveStatus {
@@ -283,4 +288,57 @@ type LqtyStakeChange implements Change @entity {
 
   issuanceGain: BigDecimal
   redemptionGain: BigDecimal
+}
+
+type Token @entity {
+  id: ID!
+  name: String!
+  symbol: String!
+  totalSupply: BigDecimal!
+  balances: [TokenBalance!] @derivedFrom(field: "token")
+  allowances: [TokenAllowance!] @derivedFrom(field: "token")
+  changes: [TokenChange!]! @derivedFrom(field: "token")
+}
+
+type TokenBalance @entity {
+  id: ID!
+  token: Token!
+  owner: User!
+  balance: BigDecimal!
+  changes: [TokenChange!]! @derivedFrom(field: "tokenBalance")
+}
+
+type TokenAllowance @entity {
+  id: ID!
+  token: Token!
+  owner: User!
+  spender: User!
+  value: BigDecimal!
+}
+
+enum TokenOperation {
+  tokenMinted
+  tokenBurned
+  tokenApproved
+  tokenTransferred
+}
+
+type TokenChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
+
+  token: Token!
+  tokenBalance: TokenBalance!
+  tokenOperation: TokenOperation!
+
+  totalSupplyBefore: BigDecimal!
+  totalSupplyChange: BigDecimal!
+  totalSupplyAfter: BigDecimal!
+
+  balanceBefore: BigDecimal!
+  balanceChange: BigDecimal!
+  balanceAfter: BigDecimal!
 }

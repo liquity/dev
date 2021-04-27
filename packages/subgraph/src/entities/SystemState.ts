@@ -37,6 +37,7 @@ export function getCurrentSystemState(): SystemState {
     newSystemState.totalDebt = DECIMAL_ZERO;
     newSystemState.tokensInStabilityPool = DECIMAL_ZERO;
     newSystemState.collSurplusPoolBalance = DECIMAL_ZERO;
+    newSystemState.LUSDTotalSupply = DECIMAL_ZERO;
     newSystemState.save();
 
     let global = getGlobal();
