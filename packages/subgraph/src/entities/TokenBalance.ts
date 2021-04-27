@@ -70,7 +70,3 @@ export function updateBalance(_event: ethereum.Event, _from: Address, _to: Addre
   finishLQTYTokenChange(tokenChange);
   */
 }
-
-export function updateAllowance(_event: ethereum.Event, _owner: Address, _spender: Address, _value: BigInt): void {
-  let tokenAddress = _event.address;
-}
