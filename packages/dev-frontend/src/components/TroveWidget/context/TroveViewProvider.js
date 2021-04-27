@@ -1,6 +1,5 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useLiquitySelector } from "@liquity/lib-react";
-import { LiquityStoreState, UserTroveStatus } from "@liquity/lib-base";
 import { TroveViewContext } from "./TroveViewContext";
 
 const transitions = {
@@ -72,7 +71,7 @@ const getInitialView = troveStatus => {
 
 const select = ({ trove: { status } }) => status;
 
-export const TroveViewProvider = props => {
+const TroveViewProvider = props => {
   const { children } = props;
   const troveStatus = useLiquitySelector(select);
 
@@ -108,3 +107,5 @@ export const TroveViewProvider = props => {
   };
   return <TroveViewContext.Provider value={provider}>{children}</TroveViewContext.Provider>;
 };
+
+export default TroveViewProvider;

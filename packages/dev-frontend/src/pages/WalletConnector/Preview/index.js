@@ -5,7 +5,7 @@ import Row from "../../../components/Row";
 import StaticAmounts from "../../../components/StaticAmounts";
 import Tabs from "../../../components/Tabs";
 import Button from "../../../components/Button";
-import { ErrorDescription } from "../../../components/ErrorDescription";
+import ErrorDescription from "../../../components/ErrorDescription";
 
 import { ETH, COIN } from "../../../strings";
 

@@ -113,8 +113,6 @@ const WalletConnector = ({ children }) => {
             <Preview showModal={() => setWalletModal(true)} />
           </Route>
         </Switch>
-
-        <Footer />
       </Body>
 
       {walletModal && (

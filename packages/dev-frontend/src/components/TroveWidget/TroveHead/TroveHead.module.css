@@ -1,0 +1,107 @@
+.wrapper {
+  border-radius: 0.9rem;
+  box-shadow: var(--box-shadow-lg);
+  background-color: var(--white);
+  margin-bottom: 4rem;
+}
+
+.heading {
+  width: 100%;
+  padding: 1.2rem;
+  box-shadow: var(--box-shadow-lg);
+  border-radius: 9px;
+  background-color: var(--white);
+
+  font-family: "Futura BT medium";
+  font-size: 1.8rem;
+  font-weight: 500;
+  letter-spacing: -0.36px;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.body {
+  padding: 3rem 1.6rem 1.6rem;
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  text-align: center;
+  color: var(--black);
+}
+
+.actions {
+  margin-top: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.actions > *:not(:last-child) {
+  margin-right: 1.4rem;
+}
+
+.trove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.troveInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.troveInfo:not(:last-child) {
+  margin-right: 3.6rem;
+}
+
+.troveLabel {
+  font-family: "Futura BT light";
+  font-size: 1.7rem;
+  font-weight: 300;
+  letter-spacing: -0.34px;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+}
+
+.troveAmount {
+  font-family: "Futura BT medium";
+  font-size: 1.7rem;
+  font-weight: 500;
+  letter-spacing: -0.34px;
+  color: var(--gray);
+  padding: 1.2rem 0.8rem;
+}
+
+.status {
+  border-radius: 0.9rem;
+}
+
+.success {
+  font-family: "Futura BT medium";
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.4px;
+  color: var(--green-light);
+  background-color: rgba(149, 198, 138, 0.22);
+}
+
+.warning {
+  font-family: "Futura BT medium";
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.4px;
+  color: var(--orange);
+  background-color: rgba(217, 140, 71, 0.22);
+}
+
+.danger {
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  letter-spacing: -0.4px;
+  text-align: left;
+  color: var(--red);
+  background-color: rgba(217, 78, 78, 0.22);
+}

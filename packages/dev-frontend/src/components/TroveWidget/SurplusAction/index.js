@@ -1,18 +1,21 @@
 import { useEffect } from "react";
-import { Button, Flex, Spinner } from "theme-ui";
 
 import { useLiquitySelector } from "@liquity/lib-react";
 
-import { useLiquity } from "../hooks/LiquityContext";
+import { useLiquity } from "../../../hooks/LiquityContext";
 
-import { Transaction, useMyTransactionState } from "./Transaction";
-import { useTroveView } from "./Trove/context/TroveViewContext";
+import { Transaction, useMyTransactionState } from "../../Transaction";
+import { useTroveView } from "../context/TroveViewContext";
+
+import Button from "../../Button";
+
+import classes from "./SurplusAction.module.css";
 
 const select = ({ collateralSurplusBalance }) => ({
   collateralSurplusBalance
 });
 
-export const CollateralSurplusAction = () => {
+const SurplusAction = () => {
   const { collateralSurplusBalance } = useLiquitySelector(select);
   const {
     liquity: { send: liquity }
@@ -30,21 +33,24 @@ export const CollateralSurplusAction = () => {
   }, [myTransactionState.type, dispatchEvent]);
 
   return myTransactionState.type === "waitingForApproval" ? (
-    <Flex variant="layout.actions">
-      <Button disabled sx={{ mx: 2 }}>
-        <Spinner sx={{ mr: 2, color: "white" }} size="20px" />
+    <div className={classes.center}>
+      <Button primary round large disabled>
         Waiting for your approval
       </Button>
-    </Flex>
+    </div>
   ) : myTransactionState.type !== "waitingForConfirmation" &&
     myTransactionState.type !== "confirmed" ? (
-    <Flex variant="layout.actions">
+    <div className={classes.center}>
       <Transaction
         id={myTransactionId}
         send={liquity.claimCollateralSurplus.bind(liquity, undefined)}
       >
-        <Button sx={{ mx: 2 }}>Claim {collateralSurplusBalance.prettify()} ETH</Button>
+        <Button primary round large sx={{ mx: 2 }}>
+          Claim {collateralSurplusBalance.prettify()} ETH
+        </Button>
       </Transaction>
-    </Flex>
+    </div>
   ) : null;
 };
+
+export default SurplusAction;

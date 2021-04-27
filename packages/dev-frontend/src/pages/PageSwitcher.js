@@ -8,6 +8,7 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { UnregisteredFrontend } from "./UnregisteredFrontend";
 import { FrontendRegistration } from "./FrontendRegistration";
 import { FrontendRegistrationSuccess } from "./FrontendRegistrationSuccess";
+import Trove from "./Trove";
 
 const selectFrontend = ({ frontend }) => frontend;
 
@@ -37,6 +38,10 @@ export const PageSwitcher = () => {
       return <UnregisteredFrontend />;
     }
   } else {
+<<<<<<< HEAD:packages/dev-frontend/src/pages/PageSwitcher.js
     return <div>Trove</div>;
+=======
+    return <Trove />;
+>>>>>>> feat/trove-page:packages/dev-frontend/src/pages/PageSwitcher.tsx
   }
 };

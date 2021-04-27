@@ -1,0 +1,98 @@
+.contentRight {
+  margin-left: 3rem;
+  align-self: stretch;
+  padding: 1.2rem 0;
+}
+
+.contentRightNoInfo {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.contentRightBottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.contentRightIcon {
+  max-width: 3.1rem;
+  max-height: 3.1rem;
+  margin-right: 0.1rem;
+}
+
+.contentRightButton {
+  margin-right: 0.5rem;
+}
+
+.contentRightAvailable {
+  font-family: "Futura BT light";
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: -0.32px;
+  color: var(--secondary-text);
+  margin-bottom: 0.8rem;
+}
+
+.contentRightValues {
+  display: flex;
+  align-items: flex-end;
+  min-width: 7rem;
+}
+
+.contentRightCurrency {
+  font-family: "Futura BT light";
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: -0.32px;
+  color: var(--secondary-text);
+}
+
+.wrapper {
+  width: 100%;
+  height: 8rem;
+  display: flex;
+
+  padding-right: 1rem;
+
+  border-radius: 2rem;
+  border: solid 0.2rem var(--border-color);
+
+  display: flex;
+  align-items: center;
+
+  cursor: pointer;
+
+  transition: all 0.15s;
+}
+
+.focused {
+  border: 0.2rem solid var(--input-focused);
+}
+
+.input,
+.input::placeholder {
+  margin-left: 4rem;
+  line-height: 2.4rem;
+  vertical-align: middle;
+  flex: 1;
+  width: 100%;
+
+  font-family: "Futura BT light";
+  letter-spacing: -0.48px;
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--gray);
+}
+
+.input:focus {
+  font-size: 2.4rem;
+  font-family: "Futura BT heavy";
+  font-weight: 500;
+  color: var(--black);
+}
+
+.input:not(:focus):hover {
+  cursor: pointer;
+}

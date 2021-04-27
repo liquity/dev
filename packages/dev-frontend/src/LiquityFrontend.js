@@ -11,7 +11,7 @@ import { shortenAddress } from "./utils/shortenAddress";
 
 import { PageSwitcher } from "./pages/PageSwitcher";
 
-import { TroveViewProvider } from "./components/Trove/context/TroveViewProvider";
+import TroveViewProvider from "./components/TroveWidget/context/TroveViewProvider";
 import { StabilityViewProvider } from "./components/Stability/context/StabilityViewProvider";
 import { StakingViewProvider } from "./components/Staking/context/StakingViewProvider";
 import { FarmViewProvider } from "./components/Farm/context/FarmViewProvider";
