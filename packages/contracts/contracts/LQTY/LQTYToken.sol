@@ -134,7 +134,8 @@ contract LQTYToken is CheckContract, ILQTYToken {
         _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_TYPE_HASH, hashedName, hashedVersion);
         
         // --- Initial LQTY allocations ---
-     
+
+        // TODO: This has to go to Merkle distributor as well
         uint bountyEntitlement = _1_MILLION.mul(2); // Allocate 2 million for bounties/hackathons
         _mint(_bountyAddress, bountyEntitlement);
 
