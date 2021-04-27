@@ -1,5 +1,5 @@
 import React from "react";
-import { Heading, Box, Card, Button } from "theme-ui";
+import { Heading, Box, Card } from "theme-ui";
 
 import {
   Percent,
@@ -14,7 +14,6 @@ import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN } from "../../strings";
 
-import { Icon } from "../Icon";
 import { StaticRow } from "./Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { CollateralRatio } from "./CollateralRatio";
@@ -39,8 +38,7 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   edited,
   fee,
   borrowingRate,
-  changePending,
-  dispatch
+  changePending
 }) => {
   const { price } = useLiquitySelector(select);
 
@@ -50,22 +48,9 @@ export const TroveEditor: React.FC<TroveEditorProps> = ({
   const collateralRatio = !edited.isEmpty ? edited.collateralRatio(price) : undefined;
   const collateralRatioChange = Difference.between(collateralRatio, originalCollateralRatio);
 
-  const dirty = !edited.equals(original);
-
   return (
     <Card>
-      <Heading>
-        Trove
-        {dirty && !changePending && (
-          <Button
-            variant="titleIcon"
-            sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => dispatch({ type: "revert" })}
-          >
-            <Icon name="history" size="lg" />
-          </Button>
-        )}
-      </Heading>
+      <Heading>Trove</Heading>
 
       <Box sx={{ p: [2, 3] }}>
         <StaticRow
