@@ -50,7 +50,6 @@ const Input = ({ label, unit, maxAmount, maxedOut, icon = "", available, onChang
         <input
           className={classes.input}
           ref={el}
-          autoFocus
           type="number"
           onClick={e => e.stopPropagation()}
           onChange={e => onChange(e.target.value)}

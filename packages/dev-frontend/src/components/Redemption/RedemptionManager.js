@@ -97,6 +97,7 @@ const RedemptionManager = () => {
         step={100}
         min={0}
         icon={process.env.PUBLIC_URL + "/icons/ethereum-eth.svg"}
+        autoFocus
       />
 
       {description}

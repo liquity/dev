@@ -12,6 +12,8 @@ import { useLiquitySelector } from "@liquity/lib-react";
 import { LoadingOverlay } from "../../LoadingOverlay";
 import Input from "../../Input";
 import StaticRow from "../../StaticRow";
+import { WithdrawPreview } from "../../../pages/WalletConnector/Preview";
+import ErrorDescription from "../../ErrorDescription";
 
 import { ETH, COIN } from "../../../strings";
 
@@ -43,6 +45,10 @@ export const TroveDeposit = ({
   const [deposit, setDeposit] = useState("");
   const [borrow, setBorrow] = useState("");
 
+  useEffect(() => {
+    dispatch({ type: "revert" });
+  }, [dispatch]);
+
   const feePct = new Percent(borrowingRate);
 
   const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
@@ -53,6 +59,14 @@ export const TroveDeposit = ({
   );
 
   const maxEth = accountBalance.gt(gasRoomETH) ? accountBalance.sub(gasRoomETH) : Decimal.ZERO;
+
+  const totalFee = original.isEmpty ? LUSD_LIQUIDATION_RESERVE.add(fee) : fee;
+
+  const recieve = borrow
+    ? Decimal.from(borrow).gt(totalFee)
+      ? Decimal.from(borrow).sub(totalFee)
+      : Decimal.ZERO
+    : Decimal.ZERO;
 
   return (
     <div className={classes.wrapper}>
@@ -71,6 +85,7 @@ export const TroveDeposit = ({
         maxedOut={maxEth.toString() === deposit.toString()}
         min={0}
         step={0.1}
+        autoFocus
       />
 
       <Input
@@ -96,7 +111,7 @@ export const TroveDeposit = ({
               className={classes.staticRowInfo}
               label="Deposit"
               inputId="trove-collateral-value"
-              amount={edited.collateral.prettify(4)}
+              amount={Decimal.from(deposit).prettify(4)}
               unit={ETH}
             />
           )}
@@ -114,8 +129,8 @@ export const TroveDeposit = ({
             className={classes.staticRowInfo}
             label="Borrowing Fee"
             amount={fee.toString(2)}
-            pendingAmount={feePct.toString(2)}
             unit={COIN}
+            brackets={feePct.prettify()}
           />
 
           {original.isEmpty && (
@@ -127,12 +142,12 @@ export const TroveDeposit = ({
             />
           )}
 
-          {borrow && (
+          {(borrow || recieve) && (
             <StaticRow
               className={classes.staticRowInfo}
               label="Recieve"
               inputId="trove-recieve-value"
-              amount={Decimal.from(borrow).prettify(2)}
+              amount={recieve.prettify(2)}
             />
           )}
         </div>
@@ -148,6 +163,11 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
   const [withdraw, setWithdraw] = useState("");
   const [repay, setRepay] = useState("");
   const [data, setData] = useState(null);
+  const [previewAlert, setPreviewAlert] = useState(false);
+
+  useEffect(() => {
+    dispatch({ type: "revert" });
+  }, [dispatch]);
 
   useEffect(() => {
     fetch(
@@ -160,6 +180,16 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
       .then(setData)
       .catch(console.warn);
   }, []);
+
+  if (original.isEmpty)
+    return (
+      <WithdrawPreview onClick={() => setPreviewAlert(true)}>
+        {previewAlert && (
+          <ErrorDescription>Please make a deposit before you withdraw.</ErrorDescription>
+        )}
+        {children}
+      </WithdrawPreview>
+    );
 
   const originalCollateralRatio = !original.isEmpty ? original.collateralRatio(price) : undefined;
   const collateralRatio = !edited.isEmpty ? edited.collateralRatio(price) : undefined;
@@ -201,6 +231,7 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
         maxedOut={maxWithdraw?.toString() === withdraw.toString()}
         min={0}
         step={0.1}
+        autoFocus
       />
 
       <Input
@@ -235,7 +266,7 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
 
           {repay > 0 && (
             <StaticRow
-              label="repay"
+              label="Repay"
               inputId="trove-repay-value"
               amount={Decimal.from(repay).prettify()}
               unit={COIN}

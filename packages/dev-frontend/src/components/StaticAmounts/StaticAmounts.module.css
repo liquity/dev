@@ -16,6 +16,7 @@
 .staticAmountsContent {
   font-family: "Futura BT light";
   letter-spacing: -0.48px;
+  flex: 1;
 
   font-size: 2rem;
   font-weight: 300;

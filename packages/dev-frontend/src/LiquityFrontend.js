@@ -21,7 +21,6 @@ import Body from "./components/Body";
 import KickbackRate from "./components/KickbackRate";
 import SystemStats from "./components/SystemStats";
 import PriceMenager from "./components/PriceMenager";
-import Footer from "./components/Footer";
 import UserAccount from "./components/UserAccount";
 import Modal from "./components/Modal";
 import Link from "./components/Link";

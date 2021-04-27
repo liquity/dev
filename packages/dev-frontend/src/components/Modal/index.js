@@ -39,6 +39,7 @@ const Modal = ({ title, content, confirm, decline, children, onClose, status }) 
               tertiary
               onClick={() => {
                 onClose && onClose();
+                decline.action && decline.action();
               }}
             >
               {decline.text}
@@ -51,6 +52,7 @@ const Modal = ({ title, content, confirm, decline, children, onClose, status }) 
               medium
               onClick={() => {
                 onClose && onClose();
+                confirm.action && confirm.action();
               }}
             >
               {confirm.text}

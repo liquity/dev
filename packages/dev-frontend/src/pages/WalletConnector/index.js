@@ -127,6 +127,7 @@ const WalletConnector = ({ children }) => {
 
       {connectionState.type === "failed" && (
         <Modal
+          onClose={() => setWalletModal(null)}
           title={isMetaMask ? "Failed to connect to MetaMask" : "Failed to connect wallet"}
           content={
             <>
@@ -150,6 +151,7 @@ const WalletConnector = ({ children }) => {
 
       {connectionState.type === "activating" && (
         <Modal
+          onClose={() => setWalletModal(null)}
           title={isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"}
           decline={{ action: () => dispatch({ type: "cancel" }), text: "Cancel" }}
           content={
@@ -173,6 +175,7 @@ const WalletConnector = ({ children }) => {
 
       {connectionState.type === "rejectedByUser" && (
         <Modal
+          onClose={() => setWalletModal(null)}
           title="Are you sure you want to cancel connection?"
           decline={{ text: "Cancel", action: () => dispatch({ type: "cancel" }) }}
           confirm={{
@@ -189,6 +192,7 @@ const WalletConnector = ({ children }) => {
 
       {connectionState.type === "alreadyPending" && (
         <Modal
+          onClose={() => setWalletModal(null)}
           title="Connection already requested"
           decline={{ text: "Cancel", action: () => dispatch({ type: "cancel" }) }}
           confirm={{

@@ -68,7 +68,7 @@ const reduce = (state, action) => {
 
     case "substractCollateral": {
       const newCollateral = action.newValue
-        ? original.collateral < Decimal.from(action.newValue)
+        ? original.collateral.lt(Decimal.from(action.newValue))
           ? Decimal.ZERO
           : original.collateral.sub(Decimal.from(action.newValue))
         : original.collateral;
@@ -95,9 +95,9 @@ const reduce = (state, action) => {
 
     case "substractDebt": {
       const newDebt = action.newValue
-        ? original.debt.gt(Decimal.from(action.newValue))
-          ? original.debt.sub(Decimal.from(action.newValue))
-          : Decimal.ZERO
+        ? original.debt.lt(Decimal.from(action.newValue))
+          ? Decimal.ZERO
+          : original.debt.sub(Decimal.from(action.newValue))
         : original.debt;
 
       return {

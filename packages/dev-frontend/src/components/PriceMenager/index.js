@@ -1,23 +1,20 @@
 import { useState, useEffect } from "react";
 import cn from "classnames";
 
+import { useLiquitySelector } from "@liquity/lib-react";
+
 import { COIN, GT, ETH } from "../../strings";
 
 import classes from "./PriceManager.module.css";
 
 const DATA = {
   liquity: {
-    order: 3,
+    order: 2,
     currency: GT,
     icon: `${process.env.PUBLIC_URL}/icons/LQTY icon.png`
   },
-  ethereum: {
-    order: 1,
-    currency: ETH,
-    icon: `${process.env.PUBLIC_URL}/icons/ethereum-eth.svg`
-  },
   "liquity-usd": {
-    order: 2,
+    order: 1,
     currency: COIN,
     icon: `${process.env.PUBLIC_URL}/icons/128-lusd-icon.svg`
   }
@@ -45,7 +42,10 @@ const DataRow = ({ currency, percentage, increase, amount, icon }) => (
   </div>
 );
 
+const select = ({ price }) => ({ price });
+
 const PriceManager = () => {
+  const { price } = useLiquitySelector(select);
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -64,7 +64,16 @@ const PriceManager = () => {
 
   return (
     <div className={cn(classes.wrapper, "slide-in-left")}>
+      <DataRow
+        key={ETH}
+        currency={ETH}
+        icon={`${process.env.PUBLIC_URL}/icons/LQTY icon.png`}
+        percentage={data.ethereum.usd_24h_change.toFixed(1).toString().replace("-", "")}
+        increase={data.ethereum.usd_24h_change > 0}
+        amount={price.prettify(2)}
+      />
       {Object.keys(data)
+        .filter(k => k !== "ethereum")
         .sort((a, b) => DATA[a].order - DATA[b].order)
         .map(c => (
           <DataRow

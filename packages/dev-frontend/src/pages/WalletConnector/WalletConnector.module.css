@@ -3,11 +3,6 @@
   align-items: center;
 }
 
-.confirmSpinner {
-  width: 12rem;
-  padding-left: 4rem;
-}
-
 .confirmText {
   font-family: "Futura BT light";
   font-size: 1.8rem;
