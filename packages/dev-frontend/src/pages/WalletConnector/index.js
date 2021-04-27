@@ -12,7 +12,6 @@ import ConnectWalletWidget, { ConnectWalletButton } from "../../components/Conne
 import Modal from "../../components/Modal";
 import Link from "../../components/Link";
 import { UnregisteredKickbackRate } from "../../components/KickbackRate";
-import Footer from "../../components/Footer";
 import Body from "../../components/Body";
 import Preview from "./Preview";
 

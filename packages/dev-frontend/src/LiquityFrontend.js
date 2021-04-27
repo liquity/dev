@@ -118,8 +118,6 @@ export const LiquityFrontend = () => {
                     <div>liquidation</div>
                   </Route>
                 </Switch>
-
-                <Footer />
               </Body>
             </FarmViewProvider>
           </StakingViewProvider>
