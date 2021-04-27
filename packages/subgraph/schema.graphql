@@ -51,8 +51,6 @@ type SystemState @entity {
   tokensInStabilityPool: BigDecimal!
   collSurplusPoolBalance: BigDecimal!
 
-  LUSDTotalSupply: BigDecimal!
-
   cause: Change @derivedFrom(field: "systemStateAfter")
 }
 
@@ -305,7 +303,6 @@ type TokenBalance @entity {
   token: Token!
   owner: User!
   balance: BigDecimal!
-  changes: [TokenChange!]! @derivedFrom(field: "tokenBalance")
 }
 
 type TokenAllowance @entity {
@@ -317,10 +314,8 @@ type TokenAllowance @entity {
 }
 
 enum TokenOperation {
-  tokenMinted
-  tokenBurned
-  tokenApproved
-  tokenTransferred
+  mintTokens
+  burnTokens
 }
 
 type TokenChange implements Change @entity {
@@ -331,14 +326,9 @@ type TokenChange implements Change @entity {
   systemStateAfter: SystemState!
 
   token: Token!
-  tokenBalance: TokenBalance!
   tokenOperation: TokenOperation!
 
   totalSupplyBefore: BigDecimal!
   totalSupplyChange: BigDecimal!
   totalSupplyAfter: BigDecimal!
-
-  balanceBefore: BigDecimal!
-  balanceChange: BigDecimal!
-  balanceAfter: BigDecimal!
 }

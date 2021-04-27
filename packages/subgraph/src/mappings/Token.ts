@@ -1,6 +1,7 @@
 import { Transfer, Approval } from '../../generated/templates/LQTYToken/LQTYToken';
 
-import { updateBalance, updateAllowance } from "../entities/TokenBalance";
+import { updateBalance } from "../entities/TokenBalance";
+import { updateAllowance } from "../entities/TokenAllowance";
 
 export function handleTokenTransfer(event: Transfer): void {
   updateBalance(event, event.params.from, event.params.to, event.params.value);

@@ -6,7 +6,7 @@ import { ZERO_ADDRESS } from "../utils/constants";
 import { TokenBalance } from "../../generated/schema";
 
 import { getUser } from "./User";
-import { getToken } from "./Token";
+import { getToken, changeToken } from "./Token";
 //import { beginChange, initChange, finishChange } from "./Change";
 
 export function getTokenBalance(_token: Address, _owner: Address): TokenBalance {
@@ -35,8 +35,8 @@ export function updateBalance(_event: ethereum.Event, _from: Address, _to: Addre
 
   if (_from.toHexString() == ZERO_ADDRESS) { // mint
     // increase total supply
-    token.totalSupply = token.totalSupply.plus(decimalValue);
-    token.save();
+    let newTotalSupply = token.totalSupply.plus(decimalValue);
+    changeToken(_event, token, newTotalSupply, "mintTokens");
   } else {
     // decrease from balance
     let tokenBalanceFrom = getTokenBalance(tokenAddress, _from);
@@ -45,28 +45,12 @@ export function updateBalance(_event: ethereum.Event, _from: Address, _to: Addre
   }
   if (_to.toHexString() == ZERO_ADDRESS) { // burn
     // decrease total supply
-    token.totalSupply = token.totalSupply.minus(decimalValue);
-    token.save();
+    let newTotalSupply = token.totalSupply.minus(decimalValue);
+    changeToken(_event, token, newTotalSupply, "burnTokens");
   } else {
     // increase to balance
     let tokenBalanceTo = getTokenBalance(tokenAddress, _to);
     tokenBalanceTo.balance = tokenBalanceTo.balance.plus(decimalValue);
     tokenBalanceTo.save();
   }
-
-  // TODO
-  /*
-  let tokenChange = startLQTYTokenChange(_event);
-  tokenChange.token = token.id;
-  tokenChange.operation = getOperationType(token, nextTokenAmount);
-  tokenChange.amountBefore = token.amount;
-  tokenChange.amountChange = nextTokenAmount.minus(token.amount);
-  tokenChange.amountAfter = nextTokenAmount;
-
-  token.amount = nextTokenAmount;
-
-  handleLQTYTokenChange(tokenChange);
-
-  finishLQTYTokenChange(tokenChange);
-  */
 }

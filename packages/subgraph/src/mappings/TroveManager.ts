@@ -15,7 +15,7 @@ import {
   BorrowerOperations,
   StabilityPool,
   CollSurplusPool,
-  LQTYStaking
+  LQTYStaking,
   Token,
 } from "../../generated/templates";
 
