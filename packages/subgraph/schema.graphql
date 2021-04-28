@@ -295,7 +295,6 @@ type Token @entity {
   totalSupply: BigDecimal!
   balances: [TokenBalance!] @derivedFrom(field: "token")
   allowances: [TokenAllowance!] @derivedFrom(field: "token")
-  changes: [TokenChange!]! @derivedFrom(field: "token")
 }
 
 type TokenBalance @entity {
@@ -311,24 +310,4 @@ type TokenAllowance @entity {
   owner: User!
   spender: User!
   value: BigDecimal!
-}
-
-enum TokenOperation {
-  mintTokens
-  burnTokens
-}
-
-type TokenChange implements Change @entity {
-  id: ID!
-  sequenceNumber: Int!
-  transaction: Transaction!
-  systemStateBefore: SystemState!
-  systemStateAfter: SystemState!
-
-  token: Token!
-  tokenOperation: TokenOperation!
-
-  totalSupplyBefore: BigDecimal!
-  totalSupplyChange: BigDecimal!
-  totalSupplyAfter: BigDecimal!
 }

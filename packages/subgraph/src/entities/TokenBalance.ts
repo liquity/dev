@@ -6,8 +6,7 @@ import { ZERO_ADDRESS } from "../utils/constants";
 import { TokenBalance } from "../../generated/schema";
 
 import { getUser } from "./User";
-import { getToken, changeToken } from "./Token";
-//import { beginChange, initChange, finishChange } from "./Change";
+import { getToken } from "./Token";
 
 export function getTokenBalance(_token: Address, _owner: Address): TokenBalance {
   let id = _token.toHexString() + _owner.toHexString();
@@ -35,8 +34,8 @@ export function updateBalance(_event: ethereum.Event, _from: Address, _to: Addre
 
   if (_from.toHexString() == ZERO_ADDRESS) { // mint
     // increase total supply
-    let newTotalSupply = token.totalSupply.plus(decimalValue);
-    changeToken(_event, token, newTotalSupply, "mintTokens");
+    token.totalSupply = token.totalSupply.plus(decimalValue);
+    token.save();
   } else {
     // decrease from balance
     let tokenBalanceFrom = getTokenBalance(tokenAddress, _from);
@@ -45,8 +44,8 @@ export function updateBalance(_event: ethereum.Event, _from: Address, _to: Addre
   }
   if (_to.toHexString() == ZERO_ADDRESS) { // burn
     // decrease total supply
-    let newTotalSupply = token.totalSupply.minus(decimalValue);
-    changeToken(_event, token, newTotalSupply, "burnTokens");
+    token.totalSupply = token.totalSupply.minus(decimalValue);
+    token.save();
   } else {
     // increase to balance
     let tokenBalanceTo = getTokenBalance(tokenAddress, _to);

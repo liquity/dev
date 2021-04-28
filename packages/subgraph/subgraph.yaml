@@ -72,7 +72,6 @@ dataSources:
         - User
         - Transaction
         - Token
-        - TokenChange
       abis:
         - name: LQTYToken
           file: ../lib-ethers/abi/LQTYToken.json
@@ -206,7 +205,6 @@ templates:
         - User
         - Transaction
         - Token
-        - TokenChange
       abis:
         - name: IERC20
           file: ../lib-ethers/abi/IERC20.json

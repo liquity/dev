@@ -1,6 +1,6 @@
 import { ethereum, Address, BigDecimal } from "@graphprotocol/graph-ts";
 
-import { Token, TokenChange } from "../../generated/schema";
+import { Token } from "../../generated/schema";
 import { ERC20 } from "../../generated/templates/Token/ERC20"
 import { DECIMAL_ZERO } from "../utils/bignumbers";
 
@@ -32,30 +32,4 @@ export function getToken(_token: Address): Token {
     let symbol = contract.symbol();
     return createToken(_token, name, symbol);
   }
-}
-
-function startTokenChange(event: ethereum.Event): TokenChange {
-  let sequenceNumber = beginChange(event);
-  let tokenChange = new TokenChange(sequenceNumber.toString());
-  initChange(tokenChange, event, sequenceNumber);
-  return tokenChange;
-}
-
-function finishTokenChange(tokenChange: TokenChange): void {
-  finishChange(tokenChange);
-  tokenChange.save();
-}
-
-export function changeToken(_event: ethereum.Event, _token: Token, _newTotalSupply: BigDecimal, _operation: string): void {
-  let tokenChange = startTokenChange(_event);
-  tokenChange.token = _token.id;
-  tokenChange.tokenOperation = _operation;
-  tokenChange.totalSupplyBefore = _token.totalSupply;
-  tokenChange.totalSupplyChange = _newTotalSupply.minus(_token.totalSupply);
-  tokenChange.totalSupplyAfter = _newTotalSupply;
-
-  _token.totalSupply = _newTotalSupply;
-  _token.save();
-
-  finishTokenChange(tokenChange);
 }
