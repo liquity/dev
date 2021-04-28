@@ -4,8 +4,6 @@ import { Token } from "../../generated/schema";
 import { ERC20 } from "../../generated/templates/Token/ERC20"
 import { DECIMAL_ZERO } from "../utils/bignumbers";
 
-import { beginChange, initChange, finishChange } from "./Change";
-
 export function createToken(address: Address, name: string, symbol: string): Token {
   let id = address.toHexString();
   let token = new Token(id);
