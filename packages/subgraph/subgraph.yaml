@@ -76,7 +76,7 @@ dataSources:
         - name: LQTYToken
           file: ../lib-ethers/abi/LQTYToken.json
         - name: ERC20
-          file: ../lib-ethers/abi/ERC20Mock.json
+          file: ./abi/ERC20.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTokenTransfer
@@ -209,7 +209,7 @@ templates:
         - name: IERC20
           file: ../lib-ethers/abi/IERC20.json
         - name: ERC20
-          file: ../lib-ethers/abi/ERC20Mock.json
+          file: ./abi/ERC20.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTokenTransfer
