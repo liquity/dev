@@ -1,4 +1,4 @@
-import { Transfer, Approval } from '../../generated/templates/LQTYToken/LQTYToken';
+import { Transfer, Approval } from '../../generated/templates/Token/IERC20';
 
 import { updateBalance } from "../entities/TokenBalance";
 import { updateAllowance } from "../entities/TokenAllowance";
