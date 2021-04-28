@@ -9,14 +9,14 @@ import {
   CollSurplusPoolAddressChanged,
   PriceFeedAddressChanged,
   LQTYStakingAddressChanged,
-  LUSDTokenAddressChanged,
+  LUSDTokenAddressChanged
 } from "../../generated/TroveManager/TroveManager";
 import {
   BorrowerOperations,
   StabilityPool,
   CollSurplusPool,
   LQTYStaking,
-  Token,
+  Token
 } from "../../generated/templates";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
