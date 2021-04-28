@@ -39,9 +39,9 @@ export const Yield: React.FC = () => {
 
   const yearlyHalvingSchedule = 0.5; // 50% see LQTY distribution schedule for more info
   const remainingLqtyOneYear = remainingStabilityPoolLQTYReward.mul(yearlyHalvingSchedule);
-  const remainingLqtyInUSD = remainingLqtyOneYear.mul(lqtyPrice);
-  const aprPercentage = remainingLqtyInUSD.div(lusdInStabilityPool).mul(100);
-  const remainingLqtyInUSDTooltip = remainingStabilityPoolLQTYReward.mul(lqtyPrice);
+  const remainingLqtyOneYearInUSD = remainingLqtyOneYear.mul(lqtyPrice);
+  const aprPercentage = remainingLqtyOneYearInUSD.div(lusdInStabilityPool).mul(100);
+  const remainingLqtyInUSD = remainingStabilityPoolLQTYReward.mul(lqtyPrice);
 
   if (aprPercentage.isZero) return null;
 
@@ -62,7 +62,7 @@ export const Yield: React.FC = () => {
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace" }}>
               ($
-              {remainingLqtyInUSDTooltip.shorten()} * 50% / ${lusdInStabilityPool.shorten()}) * 100 =
+              {remainingLqtyInUSD.shorten()} * 50% / ${lusdInStabilityPool.shorten()}) * 100 =
               <Text sx={{ fontWeight: "bold" }}> {aprPercentage.toString(2)}%</Text>
             </Paragraph>
           </Card>
