@@ -2,14 +2,14 @@ import { Address } from "@graphprotocol/graph-ts";
 
 import { Token } from "../../generated/schema";
 import { ERC20 } from "../../generated/templates/Token/ERC20"
-import { DECIMAL_ZERO } from "../utils/bignumbers";
+import { BIGINT_ZERO } from "../utils/bignumbers";
 
 export function createToken(address: Address, name: string, symbol: string): Token {
   let id = address.toHexString();
   let token = new Token(id);
   token.name = name;
   token.symbol = symbol;
-  token.totalSupply = DECIMAL_ZERO;
+  token.totalSupply = BIGINT_ZERO;
   token.save();
 
   return token;

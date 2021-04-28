@@ -1,6 +1,6 @@
 import { ethereum, Address, BigInt } from "@graphprotocol/graph-ts";
 
-import { DECIMAL_ZERO, decimalize } from "../utils/bignumbers";
+import { BIGINT_ZERO } from "../utils/bignumbers";
 
 import { TokenAllowance } from "../../generated/schema";
 
@@ -20,7 +20,7 @@ export function getTokenAllowance(_token: Address, _owner: Address, _spender: Ad
     newAllowance.token = _token.toHexString();
     newAllowance.owner = owner.id;
     newAllowance.spender = spender.id;
-    newAllowance.value = DECIMAL_ZERO;
+    newAllowance.value = BIGINT_ZERO;
     newAllowance.save();
 
     return newAllowance;
@@ -29,9 +29,8 @@ export function getTokenAllowance(_token: Address, _owner: Address, _spender: Ad
 
 export function updateAllowance(_event: ethereum.Event, _owner: Address, _spender: Address, _value: BigInt): void {
   let tokenAddress = _event.address;
-  let decimalValue = decimalize(_value);
 
   let tokenAllowance = getTokenAllowance(tokenAddress, _owner, _spender);
-  tokenAllowance.value = decimalValue;
+  tokenAllowance.value = _value;
   tokenAllowance.save();
 }

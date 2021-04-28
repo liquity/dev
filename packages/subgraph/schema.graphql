@@ -292,7 +292,7 @@ type Token @entity {
   id: ID!
   name: String!
   symbol: String!
-  totalSupply: BigDecimal!
+  totalSupply: BigInt!
   balances: [TokenBalance!] @derivedFrom(field: "token")
   allowances: [TokenAllowance!] @derivedFrom(field: "token")
 }
@@ -301,7 +301,7 @@ type TokenBalance @entity {
   id: ID!
   token: Token!
   owner: User!
-  balance: BigDecimal!
+  balance: BigInt!
 }
 
 type TokenAllowance @entity {
@@ -309,5 +309,5 @@ type TokenAllowance @entity {
   token: Token!
   owner: User!
   spender: User!
-  value: BigDecimal!
+  value: BigInt!
 }
