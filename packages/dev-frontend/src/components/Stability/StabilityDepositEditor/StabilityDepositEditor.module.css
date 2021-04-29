@@ -1,0 +1,28 @@
+.wrapper {
+}
+
+.staticInfo {
+  border-bottom: 1px solid var(--primary);
+  padding: 1.5rem 1rem 0;
+}
+
+.stakedWrapper {
+  padding: 1.5rem 1rem 0;
+  margin-bottom: 6rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.actions > *:not(:last-child) {
+  margin-bottom: 1.2rem;
+}
+
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

@@ -62,12 +62,12 @@
 .large {
   min-width: 35rem;
   min-height: 7.6rem;
-  padding: 3rem 13rem;
+  padding: 3rem 1.5rem;
   border-radius: 3.5rem;
 
   font-family: "Futura BT medium";
   font-size: 2rem;
-  font-weight: 900;
+  font-weight: 500;
 }
 
 .medium {

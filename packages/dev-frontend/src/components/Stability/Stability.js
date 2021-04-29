@@ -1,10 +1,9 @@
-import React from "react";
-import { StabilityDepositManager } from "./StabilityDepositManager";
+import StabilityDepositManager from "./StabilityDepositManager";
 import { ActiveDeposit } from "./ActiveDeposit";
 import { NoDeposit } from "./NoDeposit";
 import { useStabilityView } from "./context/StabilityViewContext";
 
-export const Stability: React.FC = props => {
+export const Stability = props => {
   const { view } = useStabilityView();
 
   switch (view) {
@@ -20,5 +19,7 @@ export const Stability: React.FC = props => {
     case "ACTIVE": {
       return <ActiveDeposit {...props} />;
     }
+    default:
+      return null;
   }
 };

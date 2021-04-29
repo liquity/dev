@@ -11,10 +11,19 @@ const StaticRow = ({
   oldAmount,
   oldColor,
   brackets,
-  boldAmount
+  boldAmount,
+  boldLabel,
+  labelColor
 }) => (
   <div className={cn(classes.staticRow, className)}>
-    <p className={classes.staticRowlabel}>{label}</p>
+    <p
+      className={cn(classes.staticRowlabel, {
+        [classes.boldAmount]: boldLabel,
+        [classes.labelPrimary]: labelColor === "primary"
+      })}
+    >
+      {label}
+    </p>
     <p className={cn(classes.staticRowAmount, classes[color])}>
       {oldAmount && <span className={classes[oldColor]}>{oldAmount}</span>}
       {oldAmount && <span> &#8594;</span>}{" "}

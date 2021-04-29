@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Card, Heading, Box, Flex, Button } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../../strings";
@@ -16,13 +15,13 @@ import { RemainingLQTY } from "./RemainingLQTY";
 import { Yield } from "./Yield";
 import { InfoIcon } from "../InfoIcon";
 
-const selector = ({ stabilityDeposit, trove, lusdInStabilityPool }: LiquityStoreState) => ({
+const selector = ({ stabilityDeposit, trove, lusdInStabilityPool }) => ({
   stabilityDeposit,
   trove,
   lusdInStabilityPool
 });
 
-export const ActiveDeposit: React.FC = () => {
+export const ActiveDeposit = () => {
   const { dispatchEvent } = useStabilityView();
   const { stabilityDeposit, trove, lusdInStabilityPool } = useLiquitySelector(selector);
 

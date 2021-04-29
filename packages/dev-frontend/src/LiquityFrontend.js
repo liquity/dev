@@ -10,6 +10,7 @@ import { TransactionMonitor } from "./components/Transaction";
 import { shortenAddress } from "./utils/shortenAddress";
 
 import { PageSwitcher } from "./pages/PageSwitcher";
+import StabilityPool from "./pages/StabilityPool";
 
 import TroveViewProvider from "./components/TroveWidget/context/TroveViewProvider";
 import { StabilityViewProvider } from "./components/Stability/context/StabilityViewProvider";
@@ -106,7 +107,7 @@ export const LiquityFrontend = () => {
                   </Route>
 
                   <Route path="/stability-pool">
-                    <div>Stability Pool</div>
+                    <StabilityPool />
                   </Route>
 
                   <Route path="/stake">

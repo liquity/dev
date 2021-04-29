@@ -1,48 +1,35 @@
-import React, { useCallback, useEffect } from "react";
-import { Button, Flex } from "theme-ui";
+import { useCallback, useEffect, useState } from "react";
 
-import { Decimal, Decimalish, LiquityStoreState } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
+import { Decimal } from "@liquity/lib-base";
+import { useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
-import { COIN } from "../../strings";
+import { COIN } from "../../../strings";
 
-import { ActionDescription } from "../ActionDescription";
-import { useMyTransactionState } from "../Transaction";
+import { useMyTransactionState } from "../../Transaction";
 
-import { StabilityDepositEditor } from "./StabilityDepositEditor";
-import { StabilityDepositAction } from "./StabilityDepositAction";
-import { useStabilityView } from "./context/StabilityViewContext";
+import { StabilityDepositEditor } from "../StabilityDepositEditor";
+import { StabilityDepositAction } from "../StabilityDepositAction";
+import { useStabilityView } from "../context/StabilityViewContext";
 import {
   selectForStabilityDepositChangeValidation,
   validateStabilityDepositChange
-} from "./validation/validateStabilityDepositChange";
+} from "../validation/validateStabilityDepositChange";
+import Button from "../../Button";
 
-const init = ({ stabilityDeposit }: LiquityStoreState) => ({
+import classes from "./StabilityDepositManager.module.css";
+
+const init = ({ stabilityDeposit }) => ({
   originalDeposit: stabilityDeposit,
   editedLUSD: stabilityDeposit.currentLUSD,
   changePending: false
 });
 
-type StabilityDepositManagerState = ReturnType<typeof init>;
-type StabilityDepositManagerAction =
-  | LiquityStoreUpdate
-  | { type: "startChange" | "finishChange" | "revert" }
-  | { type: "setDeposit"; newValue: Decimalish };
-
-const reduceWith = (action: StabilityDepositManagerAction) => (
-  state: StabilityDepositManagerState
-): StabilityDepositManagerState => reduce(state, action);
+const reduceWith = action => state => reduce(state, action);
 
 const finishChange = reduceWith({ type: "finishChange" });
 const revert = reduceWith({ type: "revert" });
 
-const reduce = (
-  state: StabilityDepositManagerState,
-  action: StabilityDepositManagerAction
-): StabilityDepositManagerState => {
-  // console.log(state);
-  // console.log(action);
-
+const reduce = (state, action) => {
   const { originalDeposit, editedLUSD, changePending } = state;
 
   switch (action.type) {
@@ -86,15 +73,30 @@ const reduce = (
         editedLUSD: updatedDeposit.apply(originalDeposit.whatChanged(editedLUSD))
       };
     }
+    default:
+      return state;
   }
 };
 
 const transactionId = "stability-deposit";
 
-export const StabilityDepositManager: React.FC = () => {
+const Head = ({ total, title }) => {
+  return (
+    <div className={classes.head}>
+      <div className={classes.total}>
+        <p className={classes.totalStaked}>total staked {total.div(1000).prettify(0)}k</p>
+        <p className={classes.totalAPR}>APR 25%</p>
+      </div>
+      <h3 className={classes.title}>{title}</h3>
+    </div>
+  );
+};
+
+const StabilityDepositManager = () => {
   const [{ originalDeposit, editedLUSD, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const validationContext = useLiquitySelector(selectForStabilityDepositChangeValidation);
-  const { dispatchEvent } = useStabilityView();
+  const { dispatchEvent, view } = useStabilityView();
+  const [modal, setModal] = useState(null);
 
   const handleCancel = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
@@ -124,32 +126,36 @@ export const StabilityDepositManager: React.FC = () => {
   }, [myTransactionState.type, dispatch, dispatchEvent]);
 
   return (
-    <StabilityDepositEditor
-      originalDeposit={originalDeposit}
-      editedLUSD={editedLUSD}
-      changePending={changePending}
-      dispatch={dispatch}
-    >
-      {description ??
-        (makingNewDeposit ? (
-          <ActionDescription>Enter the amount of {COIN} you'd like to deposit.</ActionDescription>
-        ) : (
-          <ActionDescription>Adjust the {COIN} amount to deposit or withdraw.</ActionDescription>
-        ))}
-
-      <Flex variant="layout.actions">
-        <Button variant="cancel" onClick={handleCancel}>
-          Cancel
-        </Button>
-
-        {validChange ? (
-          <StabilityDepositAction transactionId={transactionId} change={validChange}>
-            Confirm
-          </StabilityDepositAction>
-        ) : (
-          <Button disabled>Confirm</Button>
-        )}
-      </Flex>
-    </StabilityDepositEditor>
+    <>
+      <Head
+        total={validationContext.lusdInStabilityPool}
+        title={"Earn ETH and LQTY by depositing LUSD"}
+      />
+      <StabilityDepositEditor
+        modal={modal}
+        setModal={setModal}
+        originalDeposit={originalDeposit}
+        editedLUSD={editedLUSD}
+        changePending={changePending}
+        dispatch={dispatch}
+        validChange={validChange}
+        transactionId={transactionId}
+        view={view}
+      />
+    </>
   );
 };
+
+export default StabilityDepositManager;
+
+// <Button variant="cancel" onClick={handleCancel}>
+// Cancel
+// </Button>
+
+// {validChange ? (
+//   <StabilityDepositAction transactionId={transactionId} change={validChange}>
+//     Confirm
+//   </StabilityDepositAction>
+// ) : (
+//   <Button disabled>Confirm</Button>
+// )}

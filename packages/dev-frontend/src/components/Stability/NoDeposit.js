@@ -1,11 +1,11 @@
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { Card, Heading, Box, Flex, Button } from "theme-ui";
 import { InfoMessage } from "../InfoMessage";
 import { useStabilityView } from "./context/StabilityViewContext";
 import { RemainingLQTY } from "./RemainingLQTY";
 import { Yield } from "./Yield";
 
-export const NoDeposit: React.FC = props => {
+export const NoDeposit = props => {
   const { dispatchEvent } = useStabilityView();
 
   const handleOpenTrove = useCallback(() => {
