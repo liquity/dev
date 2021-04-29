@@ -2,7 +2,7 @@ import { TroveManager } from "../../generated/TroveManager/TroveManager";
 import {
   BorrowerOperations,
   TroveUpdated
-} from "../../generated/templates/BorrowerOperations/BorrowerOperations";
+} from "../../generated/BorrowerOperations/BorrowerOperations";
 
 import { getTroveOperationFromBorrowerOperation } from "../types/TroveOperation";
 

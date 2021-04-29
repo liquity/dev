@@ -1,10 +1,10 @@
 import { Address } from "@graphprotocol/graph-ts";
 
 import { Token } from "../../generated/schema";
-import { ERC20 } from "../../generated/templates/Token/ERC20"
+import { ERC20 } from "../../generated/LUSDToken/ERC20";
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
-export function createToken(address: Address, name: string, symbol: string): Token {
+function createToken(address: Address, name: string, symbol: string): Token {
   let id = address.toHexString();
   let token = new Token(id);
   token.name = name;

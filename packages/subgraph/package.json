@@ -5,7 +5,9 @@
   "scripts": {
     "create": "graph create liquity/liquity-protocol --node https://api.thegraph.com/deploy/",
     "create-local": "graph create liquity/liquity-protocol --node http://127.0.0.1:8020",
-    "prepare": "graph codegen",
+    "prepare": "run-s prepare:*",
+    "prepare:manifest": "node subgraph.yaml.js",
+    "prepare:codegen": "graph codegen",
     "build": "graph build",
     "deploy": "graph deploy liquity/liquity-protocol --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
     "deploy-local": "graph deploy liquity/liquity-protocol --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
@@ -13,6 +15,7 @@
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.20.0",
-    "@graphprotocol/graph-ts": "^0.20.0"
+    "@graphprotocol/graph-ts": "^0.20.0",
+    "npm-run-all": "^4.1.5"
   }
 }
