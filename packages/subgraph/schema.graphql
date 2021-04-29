@@ -16,6 +16,10 @@ type Global @entity {
   numberOfTrovesClosedByOwner: Int!
   totalNumberOfTroves: Int!
 
+  totalNumberOfLQTYStakes: Int!
+  numberOfActiveLQTYStakes: Int!
+  totalLQTYTokensStaked: BigDecimal!
+
   "Total redistributed per-stake collateral"
   rawTotalRedistributedCollateral: BigInt!
 
@@ -29,6 +33,9 @@ type Global @entity {
 
   "Only used internally as temporary storage. Will always be null in queries"
   currentRedemption: Redemption
+
+  "Only used internally as temporary storage. Will always be null in queries"
+  tmpDepositUpdate: BigInt
 }
 
 type SystemState @entity {
@@ -54,17 +61,15 @@ type User @entity {
   "User's Ethereum address as a hex-string"
   id: ID!
 
-  currentTrove: Trove
-  troveCount: Int!
+  trove: Trove
+  stabilityDeposit: StabilityDeposit
+  stake: LqtyStake
 
-  currentStabilityDeposit: StabilityDeposit
-  stabilityDepositCount: Int!
-
-  troves: [Trove!]! @derivedFrom(field: "owner")
-  stabilityDeposits: [StabilityDeposit!]! @derivedFrom(field: "owner")
-  liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
   collSurplus: BigDecimal!
   collSurplusChanges: [CollSurplusChange!]! @derivedFrom(field: "user")
+
+  liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
+  redemptions: [Redemption!]! @derivedFrom(field: "redeemer")
 }
 
 enum TroveStatus {
@@ -248,4 +253,37 @@ type CollSurplusChange implements Change @entity {
   collSurplusBefore: BigDecimal!
   collSurplusChange: BigDecimal!
   collSurplusAfter: BigDecimal!
+}
+
+type LqtyStake @entity {
+  id: ID!
+  owner: User!
+  amount: BigDecimal!
+  changes: [LqtyStakeChange!]! @derivedFrom(field: "stake")
+}
+
+enum LQTYStakeOperation {
+  stakeCreated
+  stakeIncreased
+  stakeDecreased
+  stakeRemoved
+  gainsWithdrawn
+}
+
+type LqtyStakeChange implements Change @entity {
+  id: ID!
+  sequenceNumber: Int!
+  transaction: Transaction!
+  systemStateBefore: SystemState!
+  systemStateAfter: SystemState!
+
+  stake: LqtyStake!
+  stakeOperation: LQTYStakeOperation!
+
+  amountBefore: BigDecimal!
+  amountChange: BigDecimal!
+  amountAfter: BigDecimal!
+
+  issuanceGain: BigDecimal
+  redemptionGain: BigDecimal
 }

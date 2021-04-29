@@ -8,37 +8,24 @@ import { beginChange, initChange, finishChange } from "./Change";
 import { getUser } from "./User";
 import { updateSystemStateByStabilityDepositChange } from "./SystemState";
 
-function getCurrentStabilityDepositOfOwner(_user: Address): StabilityDeposit | null {
-  let owner = getUser(_user);
+function getStabilityDeposit(_user: Address): StabilityDeposit {
+  let id = _user.toHexString();
+  let stabilityDepositOrNull = StabilityDeposit.load(id);
 
-  if (owner.currentStabilityDeposit == null) {
-    return null;
+  if (stabilityDepositOrNull != null) {
+    return stabilityDepositOrNull as StabilityDeposit;
+  } else {
+    let owner = getUser(_user);
+    let newStabilityDeposit = new StabilityDeposit(id);
+
+    newStabilityDeposit.owner = owner.id;
+    newStabilityDeposit.depositedAmount = DECIMAL_ZERO;
+
+    owner.stabilityDeposit = newStabilityDeposit.id;
+    owner.save();
+
+    return newStabilityDeposit;
   }
-
-  return StabilityDeposit.load(owner.currentStabilityDeposit);
-}
-
-function openNewStabilityDepositForOwner(_user: Address): StabilityDeposit {
-  let owner = getUser(_user);
-  let stabilityDepositSubId = owner.stabilityDepositCount++;
-
-  let newStabilityDeposit = new StabilityDeposit(
-    _user.toHexString() + "-" + stabilityDepositSubId.toString()
-  );
-  newStabilityDeposit.owner = owner.id;
-  newStabilityDeposit.depositedAmount = DECIMAL_ZERO;
-
-  owner.currentStabilityDeposit = newStabilityDeposit.id;
-  owner.save();
-
-  return newStabilityDeposit;
-}
-
-function closeCurrentStabilityDepositOfOwner(_user: Address): void {
-  let owner = getUser(_user);
-
-  owner.currentStabilityDeposit = null;
-  owner.save();
 }
 
 function createStabilityDepositChange(event: ethereum.Event): StabilityDepositChange {
@@ -87,22 +74,14 @@ export function updateStabilityDeposit(
   _user: Address,
   _amount: BigInt
 ): void {
-  let stabilityDepositOrNull = getCurrentStabilityDepositOfOwner(_user);
+  let stabilityDeposit = getStabilityDeposit(_user);
   let newDepositedAmount = decimalize(_amount);
 
-  if (
-    (stabilityDepositOrNull == null && newDepositedAmount == DECIMAL_ZERO) ||
-    (stabilityDepositOrNull != null && newDepositedAmount == stabilityDepositOrNull.depositedAmount)
-  ) {
+  if (newDepositedAmount == stabilityDeposit.depositedAmount) {
     // Don't create a StabilityDepositChange when there's no change... duh.
     // It means user only wanted to withdraw collateral gains.
     return;
   }
-
-  let stabilityDeposit =
-    stabilityDepositOrNull != null
-      ? (stabilityDepositOrNull as StabilityDeposit)
-      : openNewStabilityDepositForOwner(_user);
 
   updateStabilityDepositByOperation(
     event,
@@ -110,10 +89,6 @@ export function updateStabilityDeposit(
     newDepositedAmount > stabilityDeposit.depositedAmount ? "depositTokens" : "withdrawTokens",
     newDepositedAmount
   );
-
-  if (newDepositedAmount == DECIMAL_ZERO) {
-    closeCurrentStabilityDepositOfOwner(_user);
-  }
 
   stabilityDeposit.save();
 }
@@ -129,7 +104,7 @@ export function withdrawCollateralGainFromStabilityDeposit(
     return;
   }
 
-  let stabilityDeposit = getCurrentStabilityDepositOfOwner(_user) as StabilityDeposit;
+  let stabilityDeposit = getStabilityDeposit(_user) as StabilityDeposit;
   let depositLoss = decimalize(_LUSDLoss);
   let newDepositedAmount = stabilityDeposit.depositedAmount - depositLoss;
 
@@ -140,10 +115,6 @@ export function withdrawCollateralGainFromStabilityDeposit(
     newDepositedAmount,
     decimalize(_ETH)
   );
-
-  if (newDepositedAmount == DECIMAL_ZERO) {
-    closeCurrentStabilityDepositOfOwner(_user);
-  }
 
   stabilityDeposit.save();
 }

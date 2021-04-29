@@ -269,9 +269,10 @@ class TestHelper {
   static logBN(label, x) {
     x = x.toString().padStart(18, '0')
     // TODO: thousand separators
-    console.log(`${label}:`, x.slice(0, x.length-18) + '.' + x.slice(-18))
+    const integerPart = x.slice(0, x.length-18) ? x.slice(0, x.length-18) : '0'
+    console.log(`${label}:`, integerPart + '.' + x.slice(-18))
   }
-  
+
   // --- TCR and Recovery Mode functions ---
 
   // These functions use the PriceFeedTestNet view price function getPrice() which is sufficient for testing.

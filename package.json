@@ -59,6 +59,7 @@
     "prepare:docs": "run-s docs",
     "rebuild": "run-s prepare build",
     "release": "run-s release:*",
+    "release:delete-dev-deployments": "yarn workspace @liquity/lib-ethers delete-dev-deployments",
     "release:lib-base": "yarn workspace @liquity/lib-base semantic-release",
     "release:lib-ethers": "yarn workspace @liquity/lib-ethers semantic-release",
     "save-live-version": "yarn workspace @liquity/lib-ethers save-live-version",

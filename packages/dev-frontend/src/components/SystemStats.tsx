@@ -7,7 +7,6 @@ import { useLiquitySelector } from "@liquity/lib-react";
 import { useLiquity } from "../hooks/LiquityContext";
 import { COIN, GT } from "../strings";
 import { Statistic } from "./Statistic";
-import { InfoIcon } from "./InfoIcon";
 
 const selectBalances = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -73,7 +72,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     lusdInStabilityPool,
     total,
     borrowingRate,
-    redemptionRate,
     totalStakedLQTY,
     kickbackRate
   } = useLiquitySelector(select);
@@ -82,7 +80,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
   const borrowingFeePct = new Percent(borrowingRate);
-  const redemptionFeePct = new Percent(redemptionRate);
   const kickbackRatePct = frontendTag === AddressZero ? "100" : kickbackRate?.mul(100).prettify();
 
   return (
@@ -100,12 +97,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
         tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
       >
         {borrowingFeePct.toString(2)}
-      </Statistic>
-      <Statistic
-        name="Redemption Fee"
-        tooltip="The Redemption Fee is charged as a percentage of the redeemed Ether. The Redemption Fee depends on LUSD redemption volumes and is 0.5% at minimum.        "
-      >
-        {redemptionFeePct.toString(2)}
       </Statistic>
 
       <Statistic
@@ -145,22 +136,13 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       >
         {totalCollateralRatioPct.prettify()}
       </Statistic>
-      {total.collateralRatioIsBelowCritical(price) && (
-        <Box color="danger">
-          The system is in Recovery Mode
-          <InfoIcon
-            size="sm"
-            tooltip={
-              <Card variant="tooltip">
-                Recovery Mode is a special system mode triggered when the Total Collateral Ratio
-                (TCR) falls below 150%. It allows the liquidation of Troves with a Collateral Ratio
-                below the TCR (with the liquidation loss being capped at 10% of the Trove’s debt),
-                and restricts operations that would negatively impact the TCR.
-              </Card>
-            }
-          />
-        </Box>
-      )}
+      <Statistic
+        name="Recovery Mode"
+        tooltip="Recovery Mode is activated when the Total Collateral Ratio (TCR) falls below 150%. When active, your Trove can be liquidated if its collateral ratio is below the TCR. The maximum collateral you can lose from liquidation is capped at 110% of your Trove's debt. Operations are also restricted that would negatively impact the TCR."
+      >
+        {total.collateralRatioIsBelowCritical(price) ? <Box color="danger">Yes</Box> : "No"}
+      </Statistic>
+      {}
 
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         Frontend

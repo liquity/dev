@@ -1,5 +1,7 @@
 import pytest
 
+import csv
+
 from brownie import *
 from accounts import *
 from helpers import *
@@ -117,7 +119,7 @@ def contracts():
     contracts.gasPool = GasPool.deploy({ 'from': accounts[0] })
     contracts.defaultPool = DefaultPool.deploy({ 'from': accounts[0] })
     contracts.collSurplusPool = CollSurplusPool.deploy({ 'from': accounts[0] })
-    contracts.borrowerOperations = BorrowerOperations.deploy({ 'from': accounts[0] })
+    contracts.borrowerOperations = BorrowerOperationsTester.deploy({ 'from': accounts[0] })
     contracts.hintHelpers = HintHelpers.deploy({ 'from': accounts[0] })
     contracts.lusdToken = LUSDToken.deploy(
         contracts.troveManager.address,
@@ -144,8 +146,9 @@ def contracts():
 
 @pytest.fixture
 def print_expectations():
-    ether_price_one_year = price_ether_initial * (1 + drift_ether)**8760
-    print("Expected ether price at the end of the year: $", ether_price_one_year)
+    # ether_price_one_year = price_ether_initial * (1 + drift_ether)**8760
+    # print("Expected ether price at the end of the year: $", ether_price_one_year)
+    print("Expected LQTY price at the end of first month: $", price_LQTY_initial * (1 + drift_LQTY)**720)
 
     print("\n Open troves")
     print("E(Q_t^e)    = ", collateral_gamma_k * collateral_gamma_theta)
@@ -185,22 +188,25 @@ def _test_test(contracts):
 * LQTY pool return determined
 """
 def test_run_simulation(add_accounts, contracts, print_expectations):
+    LUSD_GAS_COMPENSATION = contracts.troveManager.LUSD_GAS_COMPENSATION() / 1e18
     MIN_NET_DEBT = contracts.troveManager.MIN_NET_DEBT() / 1e18
 
-    price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]), { 'from': accounts[0] })
+    contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]), { 'from': accounts[0] })
     # whale
+    whale_coll = 30000.0
     contracts.borrowerOperations.openTrove(MAX_FEE, Wei(10e24), ZERO_ADDRESS, ZERO_ADDRESS,
-                                           { 'from': accounts[0], 'value': Wei("30000 ether") })
+                                           { 'from': accounts[0], 'value': floatToWei(whale_coll) })
     contracts.stabilityPool.provideToSP(floatToWei(stability_initial), ZERO_ADDRESS, { 'from': accounts[0] })
 
     active_accounts = []
     inactive_accounts = [*range(1, len(accounts))]
 
     price_LUSD = 1
+    price_LQTY_current = price_LQTY_initial
 
-    data = {"airdrop_gain": [0] * n_sim, "liquidation_gain": [0] * n_sim}
+    data = {"airdrop_gain": [0] * n_sim, "liquidation_gain": [0] * n_sim, "issuance_fee": [0] * n_sim, "redemption_fee": [0] * n_sim}
     total_lusd_redempted = 0
-    total_coll_added = 0
+    total_coll_added = whale_coll
     total_coll_liquidated = 0
 
     print(f"Accounts: {len(accounts)}")
@@ -208,52 +214,60 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
 
     logGlobalState(contracts)
 
-    #Simulation Process
-    for index in range(1, n_sim):
-        print('\n  --> Iteration', index)
-        print('  -------------------\n')
-        #exogenous ether price input
-        price_ether_current = price_ether[index]
-        price = contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
-        #price_LQTY_previous = data.loc[index-1,'price_LQTY']
+    with open('tests/simulation.csv', 'w', newline='') as csvfile:
+        datawriter = csv.writer(csvfile, delimiter=',')
+        datawriter.writerow(['iteration', 'ETH_price', 'price_LUSD', 'price_LQTY', 'num_troves', 'total_coll', 'total_debt', 'TCR', 'recovery_mode', 'last_ICR', 'SP_LUSD', 'SP_ETH', 'total_coll_added', 'total_coll_liquidated', 'total_lusd_redempted'])
 
-        #trove liquidation & return of stability pool
-        result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, data, index)
-        total_coll_liquidated = total_coll_liquidated + result_liquidation[0]
-        return_stability = result_liquidation[1]
+        #Simulation Process
+        for index in range(1, n_sim):
+            print('\n  --> Iteration', index)
+            print('  -------------------\n')
+            #exogenous ether price input
+            price_ether_current = price_ether[index]
+            contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
 
-        #close troves
-        result_close = close_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
+            #trove liquidation & return of stability pool
+            result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, price_LQTY_current, data, index)
+            total_coll_liquidated = total_coll_liquidated + result_liquidation[0]
+            return_stability = result_liquidation[1]
 
-        #adjust troves
-        coll_added_adjust = adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, index)
+            #close troves
+            result_close = close_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
 
-        #open troves
-        coll_added_open = open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
-        total_coll_added = total_coll_added + coll_added_adjust + coll_added_open
-        #active_accounts.sort(key=lambda a : a.get('CR_initial'))
+            #adjust troves
+            [coll_added_adjust, issuance_LUSD_adjust] = adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, index)
 
-        #Stability Pool
-        stability_update(accounts, contracts, return_stability, index)
+            #open troves
+            [coll_added_open, issuance_LUSD_open] = open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
+            total_coll_added = total_coll_added + coll_added_adjust + coll_added_open
+            #active_accounts.sort(key=lambda a : a.get('CR_initial'))
 
-        #Calculating Price, Liquidity Pool, and Redemption
-        [price_LUSD, redemption_pool] = price_stabilizer(accounts, contracts, active_accounts, price_LUSD, index)
-        total_lusd_redempted = total_lusd_redempted + redemption_pool
-        print('LUSD price', price_LUSD)
+            #Stability Pool
+            stability_update(accounts, contracts, active_accounts, return_stability, index)
 
-        """
-        #LQTY Market
-        result_LQTY = LQTY_market(index, data)
-        price_LQTY_current = result_LQTY[0]
-        annualized_earning = result_LQTY[1]
-        MC_LQTY_current = result_LQTY[2]
-        """
+            #Calculating Price, Liquidity Pool, and Redemption
+            [price_LUSD, redemption_pool, redemption_fee, issuance_LUSD_stabilizer] = price_stabilizer(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
+            total_lusd_redempted = total_lusd_redempted + redemption_pool
+            print('LUSD price', price_LUSD)
+            print('LQTY price', price_LQTY_current)
 
-        logGlobalState(contracts)
-        print('Total redempted ', total_lusd_redempted)
-        print('Total ETH added ', total_coll_added)
-        print('Total ETH liquid', total_coll_liquidated)
-        print(f'Ratio ETH liquid {100 * total_coll_liquidated / total_coll_added}%')
-        print(' ----------------------\n')
+            issuance_fee = price_LUSD * (issuance_LUSD_adjust + issuance_LUSD_open + issuance_LUSD_stabilizer)
+            data['issuance_fee'][index] = issuance_fee
+            data['redemption_fee'][index] = redemption_fee
 
-        assert price_LUSD > 0
+            #LQTY Market
+            result_LQTY = LQTY_market(index, data)
+            price_LQTY_current = result_LQTY[0]
+            #annualized_earning = result_LQTY[1]
+            #MC_LQTY_current = result_LQTY[2]
+
+            [ETH_price, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_LUSD, SP_ETH] = logGlobalState(contracts)
+            print('Total redempted ', total_lusd_redempted)
+            print('Total ETH added ', total_coll_added)
+            print('Total ETH liquid', total_coll_liquidated)
+            print(f'Ratio ETH liquid {100 * total_coll_liquidated / total_coll_added}%')
+            print(' ----------------------\n')
+
+            datawriter.writerow([index, ETH_price, price_LUSD, price_LQTY_current, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_LUSD, SP_ETH, total_coll_added, total_coll_liquidated, total_lusd_redempted])
+
+            assert price_LUSD > 0

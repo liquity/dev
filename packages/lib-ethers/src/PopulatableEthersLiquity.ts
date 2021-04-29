@@ -70,8 +70,9 @@ const id = <T>(t: T) => t;
 // Takes ~6-7K to update lastFeeOperationTime. Let's be on the safe side.
 const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add(10000);
 
-// An extra traversal can take ~12K.
-const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(25000);
+// First traversal in ascending direction takes ~50K, then ~13.5K per extra step.
+// 80K should be enough for 3 steps, plus some extra to be safe.
+const addGasForPotentialListTraversal = (gas: BigNumber) => gas.add(80000);
 
 const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(50000);
 

@@ -13,15 +13,24 @@ import { ClaimReward } from "./ClaimReward";
 import { UnstakeAndClaim } from "../UnstakeAndClaim";
 import { Yield } from "../Yield";
 
-const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
+const selector = ({
   liquidityMiningStake,
-  liquidityMiningLQTYReward
+  liquidityMiningLQTYReward,
+  totalStakedUniTokens
+}: LiquityStoreState) => ({
+  liquidityMiningStake,
+  liquidityMiningLQTYReward,
+  totalStakedUniTokens
 });
 const transactionId = /farm-/i;
 
 export const Active: React.FC = () => {
   const { dispatchEvent } = useFarmView();
-  const { liquidityMiningStake, liquidityMiningLQTYReward } = useLiquitySelector(selector);
+  const {
+    liquidityMiningStake,
+    liquidityMiningLQTYReward,
+    totalStakedUniTokens
+  } = useLiquitySelector(selector);
 
   const handleAdjustPressed = useCallback(() => {
     dispatchEvent("ADJUST_PRESSED");
@@ -31,6 +40,9 @@ export const Active: React.FC = () => {
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
+
+  const poolShare = liquidityMiningStake.mulDiv(100, totalStakedUniTokens);
+  const hasStakeAndRewards = !liquidityMiningStake.isZero && !liquidityMiningLQTYReward.isZero;
 
   return (
     <Card>
@@ -50,6 +62,16 @@ export const Active: React.FC = () => {
             amount={liquidityMiningStake.prettify(4)}
             unit={LP}
           />
+          {poolShare.infinite ? (
+            <StaticRow label="Pool share" inputId="farm-share" amount="N/A" />
+          ) : (
+            <StaticRow
+              label="Pool share"
+              inputId="farm-share"
+              amount={poolShare.prettify(4)}
+              unit={"%"}
+            />
+          )}
           <Flex sx={{ alignItems: "center" }}>
             <StaticRow
               label="Reward"
@@ -65,15 +87,16 @@ export const Active: React.FC = () => {
         </Box>
 
         <Flex variant="layout.actions">
-          <Button variant="outline" onClick={handleAdjustPressed}>
+          <Button
+            variant={!liquidityMiningLQTYReward.isZero ? "outline" : "primary"}
+            onClick={handleAdjustPressed}
+          >
             <Icon name="pen" size="sm" />
             &nbsp;Adjust
           </Button>
-          <ClaimReward />
+          {!liquidityMiningLQTYReward.isZero && <ClaimReward />}
         </Flex>
-        <Flex>
-          <UnstakeAndClaim />
-        </Flex>
+        <Flex>{hasStakeAndRewards && <UnstakeAndClaim />}</Flex>
       </Box>
       {isTransactionPending && <LoadingOverlay />}
     </Card>

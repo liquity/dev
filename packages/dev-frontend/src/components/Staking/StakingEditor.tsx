@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Decimalish, LiquityStoreState, LQTYStake } from "@liquity/lib-base";
+import { Decimal, Decimalish, Difference, LiquityStoreState, LQTYStake } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../../strings";
@@ -12,7 +12,10 @@ import { LoadingOverlay } from "../LoadingOverlay";
 
 import { useStakingView } from "./context/StakingViewContext";
 
-const selectLQTYBalance = ({ lqtyBalance }: LiquityStoreState) => lqtyBalance;
+const select = ({ lqtyBalance, totalStakedLQTY }: LiquityStoreState) => ({
+  lqtyBalance,
+  totalStakedLQTY
+});
 
 type StakingEditorProps = {
   title: string;
@@ -28,7 +31,7 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
   editedLQTY,
   dispatch
 }) => {
-  const lqtyBalance = useLiquitySelector(selectLQTYBalance);
+  const { lqtyBalance, totalStakedLQTY } = useLiquitySelector(select);
   const { changePending } = useStakingView();
   const editingState = useState<string>();
 
@@ -36,6 +39,13 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
 
   const maxAmount = originalStake.stakedLQTY.add(lqtyBalance);
   const maxedOut = editedLQTY.eq(maxAmount);
+
+  const totalStakedLQTYAfterChange = totalStakedLQTY.sub(originalStake.stakedLQTY).add(editedLQTY);
+
+  const originalPoolShare = originalStake.stakedLQTY.mulDiv(100, totalStakedLQTY);
+  const newPoolShare = editedLQTY.mulDiv(100, totalStakedLQTYAfterChange);
+  const poolShareChange =
+    originalStake.stakedLQTY.nonZero && Difference.between(newPoolShare, originalPoolShare).nonZero;
 
   return (
     <Card>
@@ -64,6 +74,19 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
           editedAmount={editedLQTY.toString(2)}
           setEditedAmount={newValue => dispatch({ type: "setStake", newValue })}
         />
+
+        {newPoolShare.infinite ? (
+          <StaticRow label="Pool share" inputId="stake-share" amount="N/A" />
+        ) : (
+          <StaticRow
+            label="Pool share"
+            inputId="stake-share"
+            amount={newPoolShare.prettify(4)}
+            pendingAmount={poolShareChange?.prettify(4).concat("%")}
+            pendingColor={poolShareChange?.positive ? "success" : "danger"}
+            unit="%"
+          />
+        )}
 
         {!originalStake.isEmpty && (
           <>

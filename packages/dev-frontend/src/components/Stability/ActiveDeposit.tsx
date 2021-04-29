@@ -16,11 +16,17 @@ import { RemainingLQTY } from "./RemainingLQTY";
 import { Yield } from "./Yield";
 import { InfoIcon } from "../InfoIcon";
 
-const selector = ({ stabilityDeposit, trove }: LiquityStoreState) => ({ stabilityDeposit, trove });
+const selector = ({ stabilityDeposit, trove, lusdInStabilityPool }: LiquityStoreState) => ({
+  stabilityDeposit,
+  trove,
+  lusdInStabilityPool
+});
 
 export const ActiveDeposit: React.FC = () => {
   const { dispatchEvent } = useStabilityView();
-  const { stabilityDeposit, trove } = useLiquitySelector(selector);
+  const { stabilityDeposit, trove, lusdInStabilityPool } = useLiquitySelector(selector);
+
+  const poolShare = stabilityDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
 
   const handleAdjustDeposit = useCallback(() => {
     dispatchEvent("ADJUST_DEPOSIT_PRESSED");
@@ -59,6 +65,13 @@ export const ActiveDeposit: React.FC = () => {
             inputId="deposit-lusd"
             amount={stabilityDeposit.currentLUSD.prettify()}
             unit={COIN}
+          />
+
+          <StaticRow
+            label="Pool share"
+            inputId="deposit-share"
+            amount={poolShare.prettify(4)}
+            unit="%"
           />
 
           <StaticRow

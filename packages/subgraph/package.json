@@ -3,12 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "create": "graph create liquity/subgraph --node https://api.thegraph.com/deploy/",
-    "create-local": "graph create liquity/subgraph --node http://127.0.0.1:8020",
+    "create": "graph create liquity/liquity-protocol --node https://api.thegraph.com/deploy/",
+    "create-local": "graph create liquity/liquity-protocol --node http://127.0.0.1:8020",
     "prepare": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy liquity/subgraph --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
-    "deploy-local": "graph deploy liquity/subgraph --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "deploy": "graph deploy liquity/liquity-protocol --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/",
+    "deploy-local": "graph deploy liquity/liquity-protocol --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "graph": "graph"
   },
   "devDependencies": {

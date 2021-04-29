@@ -17,6 +17,7 @@
   "scripts": {
     "hardhat": "hardhat",
     "check-live-version": "ts-node scripts/check-live-version.ts",
+    "delete-dev-deployments": "ts-node scripts/delete-dev-deployments.ts",
     "prepare": "run-s prepare:*",
     "prepare:deployments": "ts-node scripts/copy-deployments.ts",
     "prepare:types": "ts-node scripts/generate-types.ts",
