@@ -70,6 +70,9 @@ type User @entity {
 
   liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
   redemptions: [Redemption!]! @derivedFrom(field: "redeemer")
+
+  balances: [TokenBalance!] @derivedFrom(field: "owner")
+  allowances: [TokenAllowance!] @derivedFrom(field: "owner")
 }
 
 enum TroveStatus {
@@ -286,4 +289,28 @@ type LqtyStakeChange implements Change @entity {
 
   issuanceGain: BigDecimal
   redemptionGain: BigDecimal
+}
+
+type Token @entity {
+  id: ID!
+  name: String!
+  symbol: String!
+  totalSupply: BigInt!
+  balances: [TokenBalance!] @derivedFrom(field: "token")
+  allowances: [TokenAllowance!] @derivedFrom(field: "token")
+}
+
+type TokenBalance @entity {
+  id: ID!
+  token: Token!
+  owner: User!
+  balance: BigInt!
+}
+
+type TokenAllowance @entity {
+  id: ID!
+  token: Token!
+  owner: User!
+  spender: User!
+  value: BigInt!
 }

@@ -8,13 +8,15 @@ import {
   StabilityPoolAddressChanged,
   CollSurplusPoolAddressChanged,
   PriceFeedAddressChanged,
-  LQTYStakingAddressChanged
+  LQTYStakingAddressChanged,
+  LUSDTokenAddressChanged
 } from "../../generated/TroveManager/TroveManager";
 import {
   BorrowerOperations,
   StabilityPool,
   CollSurplusPool,
-  LQTYStaking
+  LQTYStaking,
+  Token
 } from "../../generated/templates";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
@@ -25,6 +27,7 @@ import { finishCurrentLiquidation } from "../entities/Liquidation";
 import { finishCurrentRedemption } from "../entities/Redemption";
 import { updateTrove } from "../entities/Trove";
 import { updatePriceFeedAddress, updateTotalRedistributed } from "../entities/Global";
+import { createToken } from "../entities/Token";
 
 export function handleBorrowerOperationsAddressChanged(
   event: BorrowerOperationsAddressChanged
@@ -42,6 +45,12 @@ export function handleCollSurplusPoolAddressChanged(event: CollSurplusPoolAddres
 
 export function handleLQTYStakingAddressChanged(event: LQTYStakingAddressChanged): void {
   LQTYStaking.create(event.params._lqtyStakingAddress);
+}
+
+export function handleLUSDTokenAddressChanged(event: LUSDTokenAddressChanged): void {
+  let tokenAddress = event.params._newLUSDTokenAddress
+  Token.create(tokenAddress);
+  createToken(tokenAddress, "LUSD Stablecoin", "LUSD");
 }
 
 export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {

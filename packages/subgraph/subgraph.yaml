@@ -8,8 +8,9 @@ dataSources:
     kind: ethereum/contract
     network: mainnet
     source:
+      address: "0xA39739EF8b0231DbFA0DcdA07d7e29faAbCf4bb2"
       #address: "0x56fcdA0436E5C7a33ee5bfe292f11AC66429Eb5c"
-      address: "0x6645E03DA2a711f780af7cCE1019Cb9a9135C898"
+      #address: "0x6645E03DA2a711f780af7cCE1019Cb9a9135C898"
       abi: TroveManager
       # startBlock: 8110721
     mapping:
@@ -43,6 +44,8 @@ dataSources:
           handler: handlePriceFeedAddressChanged
         - event: LQTYStakingAddressChanged(address)
           handler: handleLQTYStakingAddressChanged
+        - event: LUSDTokenAddressChanged(address)
+          handler: handleLUSDTokenAddressChanged
         - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleTroveUpdated
         - event: TroveLiquidated(indexed address,uint256,uint256,uint8)
@@ -51,6 +54,34 @@ dataSources:
           handler: handleLiquidation
         - event: Redemption(uint256,uint256,uint256,uint256)
           handler: handleRedemption
+  - name: LQTYToken
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      address: "0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D"
+      #address: "0x3f74634451f613693f221b1fef42D442bAE7B470"
+      abi: LQTYToken
+      startBlock: 12178551
+    mapping:
+      file: ./src/mappings/Token.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - Token
+      abis:
+        - name: LQTYToken
+          file: ../lib-ethers/abi/LQTYToken.json
+        - name: ERC20
+          file: ./abi/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTokenTransfer
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleTokenApproval
 templates:
   - name: BorrowerOperations
     kind: ethereum/contract
@@ -159,3 +190,28 @@ templates:
           handler: handleStakeChanged
         - event: StakingGainsWithdrawn(indexed address,uint256,uint256)
           handler: handleStakeGainsWithdrawn
+  - name: Token
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: IERC20
+    mapping:
+      file: ./src/mappings/Token.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - User
+        - Transaction
+        - Token
+      abis:
+        - name: IERC20
+          file: ../lib-ethers/abi/IERC20.json
+        - name: ERC20
+          file: ./abi/ERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTokenTransfer
+        - event: Approval(indexed address,indexed address,uint256)
+          handler: handleTokenApproval
