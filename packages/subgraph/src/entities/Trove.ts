@@ -14,7 +14,8 @@ import {
   increaseNumberOfLiquidatedTroves,
   increaseNumberOfRedeemedTroves,
   increaseNumberOfOpenTroves,
-  increaseNumberOfTrovesClosedByOwner
+  increaseNumberOfTrovesClosedByOwner,
+  getLastChangeSequenceNumber
 } from "./Global";
 import { beginChange, initChange, finishChange } from "./Change";
 import { getCurrentPrice, updateSystemStateByTroveChange } from "./SystemState";
@@ -160,4 +161,12 @@ export function updateTrove(
   }
 
   trove.save();
+}
+
+export function setBorrowingFeeOfLastTroveChange(_LUSDFee: BigInt): void {
+  let lastChangeSequenceNumber = getLastChangeSequenceNumber();
+
+  let lastTroveChange = TroveChange.load(lastChangeSequenceNumber.toString());
+  lastTroveChange.borrowingFee = decimalize(_LUSDFee);
+  lastTroveChange.save();
 }

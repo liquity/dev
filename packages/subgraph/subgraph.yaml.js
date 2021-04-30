@@ -86,6 +86,8 @@ dataSources:
       eventHandlers:
         - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleTroveUpdated
+        - event: LUSDBorrowingFeePaid(indexed address,uint256)
+          handler: handleLUSDBorrowingFeePaid
   - name: StabilityPool
     kind: ethereum/contract
     network: mainnet
