@@ -14,7 +14,11 @@
     "prepare:set-version": "node scripts/set-version.js",
     "test": "hardhat test",
     "coverage": "hardhat coverage",
-    "coveralls": "cat coverage/lcov.info | coveralls"
+    "coveralls": "cat coverage/lcov.info | coveralls",
+    "migrate:prepare": "rm -f migration/output/*",
+    "migrate:query": "node migration/migration.js",
+    "merkle:build": "ts-node migration/uniswap-merkle/scripts/generate-merkle-root.ts --input migration/output/migrationBalances.json --output migration/output/merkleTree.json",
+    "merkle:test": "GAS_PRICE=0 BLOCK_NUMBER=12317707 hardhat test migration/test/ClaimTest.js --config hardhat.config.mainnet-fork.js"
   },
   "keywords": [],
   "author": "",
