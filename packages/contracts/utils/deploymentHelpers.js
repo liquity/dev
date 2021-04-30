@@ -15,6 +15,9 @@ const LQTYStaking = artifacts.require("./LQTYStaking.sol")
 const LQTYToken = artifacts.require("./LQTYToken.sol")
 const LockupContractFactory = artifacts.require("./LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
+const LQTYTokenV2 = artifacts.require("LQTYTokenV2.sol")
+const CommunityIssuanceV2 = artifacts.require("CommunityIssuanceV2.sol")
+const MerkleDistributor = artifacts.require("MerkleDistributor.sol")
 
 const Unipool =  artifacts.require("./Unipool.sol")
 
@@ -185,6 +188,31 @@ class DeploymentHelper {
       lqtyToken
     }
     return LQTYContracts
+  }
+
+  static async deployLQTYContractsHardhatV2(originalDeploymentTime, bountyAddress, multisigAddress, merkleTree) {
+    const lqtyStaking = await LQTYStaking.new()
+    const lockupContractFactory = await LockupContractFactory.new()
+    const communityIssuance = await CommunityIssuanceV2.new(originalDeploymentTime)
+
+    // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor
+    const lqtyToken = await LQTYTokenV2.new(
+      communityIssuance.address,
+      lqtyStaking.address,
+      lockupContractFactory.address,
+      bountyAddress,
+      multisigAddress
+    )
+
+    const merkleDistributor = await MerkleDistributor.new(lqtyToken.address, merkleTree.merkleRoot)
+
+    return {
+      lqtyStaking,
+      lockupContractFactory,
+      communityIssuance,
+      lqtyToken,
+      merkleDistributor
+    }
   }
 
   static async deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisigAddress) {
@@ -420,6 +448,23 @@ class DeploymentHelper {
     await LQTYContracts.communityIssuance.setAddresses(
       LQTYContracts.lqtyToken.address,
       coreContracts.stabilityPool.address
+    )
+  }
+
+  static async connectLQTYContractsToCoreV2(LQTYContracts, coreContracts, migrationTimestamp) {
+    await LQTYContracts.lqtyStaking.setAddresses(
+      LQTYContracts.lqtyToken.address,
+      coreContracts.lusdToken.address,
+      coreContracts.troveManager.address,
+      coreContracts.borrowerOperations.address,
+      coreContracts.activePool.address
+    )
+
+    await LQTYContracts.communityIssuance.setParams(
+      LQTYContracts.lqtyToken.address,
+      coreContracts.stabilityPool.address,
+      LQTYContracts.merkleDistributor.address,
+      migrationTimestamp
     )
   }
 
