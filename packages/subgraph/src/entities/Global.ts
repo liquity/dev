@@ -154,10 +154,12 @@ export function handleLQTYStakeChange(
   } else if (stakeChange.stakeOperation == "stakeIncreased") {
     global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
   } else if (stakeChange.stakeOperation == "stakeDecreased") {
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
+    // amountChange is a negative number
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
   } else if (stakeChange.stakeOperation == "stakeRemoved") {
     global.numberOfActiveLQTYStakes--;
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
+    // amountChange is a negative number
+    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
   }
 
   global.save();
