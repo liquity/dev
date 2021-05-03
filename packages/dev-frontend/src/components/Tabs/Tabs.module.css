@@ -1,9 +1,22 @@
 .tabs {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
   justify-content: center;
   width: 42rem;
   margin: 0 auto 2.4rem;
+}
+
+.oneTab {
+  display: flex;
+  justify-content: center;
+}
+.twoTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-content: center;
+}
+.threeTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  justify-content: center;
 }
 
 .tab {

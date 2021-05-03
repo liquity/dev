@@ -1,6 +1,7 @@
 .wrapper {
   padding: 1.6rem;
   margin-bottom: 1.6rem;
+  max-width: 40rem;
 
   font-family: "Futura BT light";
   font-size: 2rem;

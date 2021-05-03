@@ -7,6 +7,7 @@
 }
 
 .stakedWrapper {
+  padding: 1.5rem 1rem 0;
   margin-top: 2.8rem;
   margin-bottom: 6rem;
   display: flex;
@@ -28,6 +29,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.modalActions {
+  margin-bottom: 3.2rem;
 }
 
 .editLabel {
@@ -69,10 +74,6 @@
   font-weight: 300;
   letter-spacing: -0.48px;
   color: var(--white);
-}
-
-.modalActions {
-  margin-bottom: 3.2rem;
 }
 
 .disabled {

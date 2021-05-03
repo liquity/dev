@@ -1,7 +1,6 @@
 import { COIN } from "../../../strings";
 import { Amount } from "../../ActionDescription";
 import ErrorDescription from "../../ErrorDescription";
-import { StabilityActionDescription } from "../StabilityActionDescription";
 
 export const selectForStabilityDepositChangeValidation = ({
   trove,
@@ -60,5 +59,5 @@ export const validateStabilityDepositChange = (
     ];
   }
 
-  return [change, <StabilityActionDescription originalDeposit={originalDeposit} change={change} />];
+  return [change, undefined];
 };
