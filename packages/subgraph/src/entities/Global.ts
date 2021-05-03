@@ -150,17 +150,10 @@ export function handleLQTYStakeChange(
       global.totalNumberOfLQTYStakes++;
     }
     global.numberOfActiveLQTYStakes++;
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
-  } else if (stakeChange.stakeOperation == "stakeIncreased") {
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
-  } else if (stakeChange.stakeOperation == "stakeDecreased") {
-    // amountChange is a negative number
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
   } else if (stakeChange.stakeOperation == "stakeRemoved") {
     global.numberOfActiveLQTYStakes--;
-    // amountChange is a negative number
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
   }
 
+  global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
   global.save();
 }
