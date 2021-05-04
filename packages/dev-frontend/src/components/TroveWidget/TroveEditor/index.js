@@ -95,7 +95,7 @@ export const TroveDeposit = ({
         value={borrow}
         onChange={v => {
           setBorrow(v);
-          dispatch({ type: "setDebt", newValue: v });
+          dispatch({ type: "setDebt", newValue: v, fee: totalFee });
         }}
         icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
         min={0}
@@ -116,23 +116,6 @@ export const TroveDeposit = ({
             />
           )}
 
-          <StaticRow
-            className={classes.staticRowInfo}
-            label="Collateral ratio"
-            amount={collateralRatioPct.prettify()}
-            color={getColor(collateralRatio)}
-            oldAmount={originalCollateralRatio && originalCollateralRatioPct.prettify()}
-            oldColor={getColor(originalCollateralRatio)}
-          />
-
-          <StaticRow
-            className={classes.staticRowInfo}
-            label="Borrowing Fee"
-            amount={fee.toString(2)}
-            unit={COIN}
-            brackets={feePct.prettify()}
-          />
-
           {original.isEmpty && (
             <StaticRow
               className={classes.staticRowInfo}
@@ -142,14 +125,31 @@ export const TroveDeposit = ({
             />
           )}
 
-          {(borrow || recieve) && (
+          <StaticRow
+            className={classes.staticRowInfo}
+            label="Borrowing Fee"
+            amount={fee.toString(2)}
+            unit={COIN}
+            brackets={feePct.prettify()}
+          />
+
+          {borrow && (
             <StaticRow
               className={classes.staticRowInfo}
               label="Recieve"
               inputId="trove-recieve-value"
-              amount={recieve.prettify(2)}
+              amount={Decimal.from(borrow || 0).prettify(2)}
             />
           )}
+
+          <StaticRow
+            className={classes.staticRowInfo}
+            label="Collateral ratio"
+            amount={collateralRatioPct.prettify()}
+            color={getColor(collateralRatio)}
+            oldAmount={originalCollateralRatio && originalCollateralRatioPct.prettify()}
+            oldColor={getColor(originalCollateralRatio)}
+          />
         </div>
       )}
 
@@ -225,9 +225,9 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
           setWithdraw(v);
           dispatch({ type: "substractCollateral", newValue: v });
         }}
-        available={`Wallet ${maxWithdraw?.prettify(2)}`}
+        available={`Available: ${maxWithdraw?.prettify(2) || ""}`}
         icon={process.env.PUBLIC_URL + "/icons/ethereum-eth.svg"}
-        maxAmount={maxWithdraw?.toString()}
+        maxAmount={maxWithdraw?.toString() || ""}
         maxedOut={maxWithdraw?.toString() === withdraw.toString()}
         min={0}
         step={0.1}
@@ -243,7 +243,7 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
           setRepay(v);
           dispatch({ type: "substractDebt", newValue: v });
         }}
-        available={`Available ${maxRepay.prettify(2)}`}
+        available={`Available: ${maxRepay.prettify(2)}`}
         icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
         maxAmount={maxRepay.toString()}
         maxedOut={maxRepay.toString() === repay.toString()}

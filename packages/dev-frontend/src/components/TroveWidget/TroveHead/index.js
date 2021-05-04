@@ -8,6 +8,7 @@ import { useLiquity } from "../../../hooks/LiquityContext";
 import Button from "../../Button";
 import Modal from "../../Modal";
 import StaticRow from "../../StaticRow";
+import { useTransactionFunction } from "../../Transaction";
 
 import { COIN, ETH } from "../../../strings";
 
@@ -43,18 +44,18 @@ const TroveInfo = ({ label, amount, status = null, unit }) => (
 
 const selectActive = ({ trove, price }) => ({ trove, price });
 
-const ActiveTrove = ({ dispatchEvent }) => {
-  const { liquity } = useLiquity();
+const ActiveTrove = ({ dispatchEvent, view }) => {
   const [cancelModal, setCancelModal] = useState(null);
-
-  const handleCloseTrove = useCallback(() => {
-    dispatchEvent("CLOSE_TROVE_PRESSED");
-    liquity.send.closeTrove();
-  }, [dispatchEvent, liquity.send]);
+  const { liquity } = useLiquity();
 
   const { trove, price } = useLiquitySelector(selectActive);
 
   const collateralRatioPct = new Percent(trove.collateralRatio(price)).prettify();
+
+  const [sendTransaction] = useTransactionFunction(
+    "trove-closure",
+    liquity.send.closeTrove.bind(liquity.send)
+  );
 
   return (
     <>
@@ -69,13 +70,13 @@ close trove?"
             text: "Close trove",
             action: () => {
               setCancelModal(null);
-              handleCloseTrove();
+              sendTransaction();
             }
           }}
         >
           <div className={classes.closeAmounts}>
-            <StaticRow label="Repay" amount={trove.collateral.prettify(4)} unit={ETH} boldAmount />
-            <StaticRow label="Withdraw" amount={trove.debt.prettify(2)} unit={COIN} boldAmount />
+            <StaticRow label="Repay" amount={trove.collateral.prettify(4)} unit={COIN} boldAmount />
+            <StaticRow label="Withdraw" amount={trove.debt.prettify(2)} unit={ETH} boldAmount />
           </div>
         </Modal>
       )}
@@ -151,7 +152,7 @@ const render = (view, dispatchEvent) => {
     case "CLOSING":
     case "ACTIVE":
     case "ADJUSTING":
-      return <ActiveTrove dispatchEvent={dispatchEvent} />;
+      return <ActiveTrove dispatchEvent={dispatchEvent} view={view} />;
     case "REDEEMED":
       return <RedeemedTrove />;
     case "LIQUIDATED":

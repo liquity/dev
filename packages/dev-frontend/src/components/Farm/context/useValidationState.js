@@ -1,27 +1,13 @@
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
-const selector = ({
-  uniTokenBalance,
-  uniTokenAllowance,
-  liquidityMiningStake
-}: LiquityStoreState) => ({
+const selector = ({ uniTokenBalance, uniTokenAllowance, liquidityMiningStake }) => ({
   uniTokenBalance,
   uniTokenAllowance,
   liquidityMiningStake
 });
 
-type FarmStakeValidation = {
-  isValid: boolean;
-  hasApproved: boolean;
-  hasEnoughUniToken: boolean;
-  isWithdrawing: boolean;
-  amountChanged: Decimal;
-  maximumStake: Decimal;
-  hasSetMaximumStake: boolean;
-};
-
-export const useValidationState = (amount: Decimal): FarmStakeValidation => {
+export const useValidationState = amount => {
   const { uniTokenBalance, uniTokenAllowance, liquidityMiningStake } = useLiquitySelector(selector);
   const isWithdrawing = liquidityMiningStake.gt(amount);
   const amountChanged = isWithdrawing

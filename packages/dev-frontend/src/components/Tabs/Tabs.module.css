@@ -30,17 +30,45 @@
   font-weight: 500;
   letter-spacing: -0.4px;
   color: var(--primary-text);
+
+  cursor: pointer;
+  text-decoration: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  vertical-align: middle;
+  -webkit-transform: perspective(1px) translateZ(0);
+  transform: perspective(1px) translateZ(0);
+  box-shadow: 0 0 1px rgb(0 0 0 / 0%);
+  position: relative;
+  overflow: hidden;
 }
 
-.tab:hover {
-  font-family: "Futura BT medium";
-  font-weight: 500;
-  cursor: pointer;
+.tab::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 51%;
+  right: 51%;
+  bottom: 0;
+  background: var(--tertiary-text);
+  height: 1px;
+  -webkit-transition-property: left, right;
+  transition-property: left, right;
+  -webkit-transition-duration: 0.3s;
+  transition-duration: 0.3s;
+  -webkit-transition-timing-function: ease-out;
+  transition-timing-function: ease-out;
+}
+
+.tab:not(.tabActive):hover::before {
+  left: 0;
+  right: 0;
 }
 
 .tabActive,
 .tabActive:hover {
   font-family: "Futura BT medium";
-  font-weight: 600;
+  font-weight: 500;
   border-bottom: 1px solid var(--primary-text);
 }

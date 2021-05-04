@@ -1,12 +1,13 @@
 import { useEffect } from "react";
-import { Button } from "theme-ui";
+
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
 import { useFarmView } from "../context/FarmViewContext";
+import Button from "../../Button";
 
 const transactionId = "farm-unstake-and-claim";
 
-export const UnstakeAndClaim = () => {
+export const UnstakeAndClaim = ({ hasStakeAndRewards }) => {
   const { dispatchEvent } = useFarmView();
 
   const {
@@ -28,7 +29,7 @@ export const UnstakeAndClaim = () => {
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
-      <Button variant="outline" sx={{ mt: 3, width: "100%" }}>
+      <Button large primary disabled={!hasStakeAndRewards}>
         Unstake and claim reward
       </Button>
     </Transaction>

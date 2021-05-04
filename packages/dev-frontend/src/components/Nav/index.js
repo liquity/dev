@@ -8,7 +8,7 @@ const LINKS = [
   { to: "/stability-pool", content: "Stability Pool" },
   { to: "/stake", content: "Stake(LQTY)" },
   { to: "/liquidation", content: "Liquidation" },
-  { href: "https://duneanalytics.com/dani/Liquity", content: "Liquity analictics" }
+  { href: "https://duneanalytics.com/dani/Liquity", content: "Liquity analitics" }
 ];
 
 const Nav = () => {

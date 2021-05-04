@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, Heading, Box, Flex } from "theme-ui";
 import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -13,7 +12,7 @@ const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquitySt
   liquidityMiningLQTYReward
 });
 
-export const Disabled: React.FC = () => {
+export const Disabled = () => {
   const { liquidityMiningStake, liquidityMiningLQTYReward } = useLiquitySelector(selector);
   const hasStake = !liquidityMiningStake.isZero;
 

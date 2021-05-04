@@ -1,14 +1,12 @@
-import React from "react";
 import { Flex } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
-const selector = ({ remainingLiquidityMiningLQTYReward }: LiquityStoreState) => ({
+const selector = ({ remainingLiquidityMiningLQTYReward }) => ({
   remainingLiquidityMiningLQTYReward
 });
 
-export const RemainingLQTY: React.FC = () => {
+export const RemainingLQTY = () => {
   const { remainingLiquidityMiningLQTYReward } = useLiquitySelector(selector);
 
   return (

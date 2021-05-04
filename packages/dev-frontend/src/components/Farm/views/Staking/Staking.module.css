@@ -1,0 +1,25 @@
+.infos {
+  border-bottom: 1px solid var(--primary);
+  padding: 1.5rem 1rem 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.stakedWrapper {
+  padding: 1.5rem 1rem 0;
+  margin-top: 2.8rem;
+  margin-bottom: 6rem;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.modalAction {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3.2rem;
+}

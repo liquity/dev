@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Button } from "theme-ui";
+
+import Button from "../../Button";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
 import { useFarmView } from "../context/FarmViewContext";
@@ -33,7 +34,9 @@ export const Approve = ({ amount }) => {
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
-      <Button sx={{ width: "60%" }}>Approve UNI LP</Button>
+      <Button large primary>
+        Approve UNI LP
+      </Button>
     </Transaction>
   );
 };

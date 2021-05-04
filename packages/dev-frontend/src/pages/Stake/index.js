@@ -2,6 +2,7 @@ import { useState } from "react";
 
 import Tabs from "../../components/Tabs";
 import StakingManager from "../../components/Staking/StakingManager";
+import { Farm } from "../../components/Farm/Farm";
 import { useStakingView } from "../../components/Staking/context/StakingViewContext";
 
 const TABS = [
@@ -16,7 +17,8 @@ const Stake = () => {
   return (
     <>
       <Tabs activeTab={activeTab} tabs={TABS} setActiveTab={setActiveTab} />
-      <StakingManager view={view} />
+      {activeTab === "lqty" && <StakingManager view={view} />}
+      {activeTab === "unilp" && <Farm view={view} />}
     </>
   );
 };

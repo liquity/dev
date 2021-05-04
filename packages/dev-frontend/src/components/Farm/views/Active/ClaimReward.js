@@ -1,12 +1,13 @@
 import { useEffect } from "react";
-import { Button } from "theme-ui";
+
 import { useLiquity } from "../../../../hooks/LiquityContext";
 import { Transaction, useMyTransactionState } from "../../../Transaction";
 import { useFarmView } from "../../context/FarmViewContext";
+import Button from "../../../Button";
 
 const transactionId = "farm-claim-reward";
 
-export const ClaimReward = () => {
+export const ClaimReward = ({ liquidityMiningLQTYReward }) => {
   const { dispatchEvent } = useFarmView();
 
   const {
@@ -28,7 +29,9 @@ export const ClaimReward = () => {
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
-      <Button>Claim reward</Button>
+      <Button large primary disabled={liquidityMiningLQTYReward.isZero}>
+        Claim reward
+      </Button>
     </Transaction>
   );
 };

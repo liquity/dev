@@ -56,17 +56,15 @@ const reduce = (state, action) => {
   }
 };
 
-const selectLQTYBalance = ({ lqtyBalance, lusdInStabilityPool }) => ({
-  lqtyBalance,
-  lusdInStabilityPool
+const selectLQTYBalance = ({ totalStakedLQTY }) => ({
+  totalStakedLQTY
 });
 
 const Head = ({ total, title }) => {
   return (
     <div className={classes.head}>
       <div className={classes.total}>
-        <p className={classes.totalStaked}>total staked {total.div(1000).prettify(0)}k</p>
-        <p className={classes.totalAPR}>APR 25%</p>
+        <p className={classes.totalStaked}>total staked {total.shorten()}</p>
       </div>
       <h3 className={classes.title}>{title}</h3>
     </div>
@@ -75,14 +73,14 @@ const Head = ({ total, title }) => {
 
 const StakingManager = () => {
   const [{ originalStake, editedLQTY }, dispatch] = useLiquityReducer(reduce, init);
-  const { lusdInStabilityPool } = useLiquitySelector(selectLQTYBalance);
+  const { totalStakedLQTY } = useLiquitySelector(selectLQTYBalance);
   const [modal, setModal] = useState(null);
   const { view, dispatch: dispatchView } = useStakingView();
 
   return (
     <>
       <Head
-        total={lusdInStabilityPool}
+        total={totalStakedLQTY}
         title="Stake LQTY to earn a share of borrowing and redemption fees"
       />
       <StakingEditor

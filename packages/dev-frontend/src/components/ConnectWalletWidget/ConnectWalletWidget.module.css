@@ -10,11 +10,11 @@
 
 .button {
   margin-bottom: 0.6rem;
-  padding: 1.6rem 1.3rem;
+  padding: 2rem 3rem;
   border-radius: 2rem;
 
   font-family: "Futura BT medium";
-  font-size: 1rem;
+  font-size: 1.6rem;
   font-weight: normal;
   letter-spacing: -0.2px;
 }

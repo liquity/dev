@@ -26,16 +26,7 @@ const select = ({ lqtyBalance, totalStakedLQTY, lusdBalance }) => ({
   lusdBalance
 });
 
-const StakingEditor = ({
-  view,
-  modal,
-  setModal,
-  children,
-  originalStake,
-  editedLQTY,
-  dispatch,
-  dispatchView
-}) => {
+const StakingEditor = ({ view, children, originalStake, editedLQTY, dispatch, dispatchView }) => {
   const { lqtyBalance, totalStakedLQTY } = useLiquitySelector(select);
   const { changePending } = useStakingView();
   const [stake, setStake] = useState(null);
@@ -72,18 +63,18 @@ const StakingEditor = ({
 
   return (
     <div className={classes.wrapper}>
-      {modal && stake !== null && (
+      {stake !== null && (
         <Modal
           title="STAKE LQTY"
           onClose={() => {
-            setModal(null);
+            setStake(null);
             dispatchView({ type: "cancelAdjusting" });
             dispatch({ type: "revert" });
           }}
         >
           <div className={classes.modalContent}>
             <Input
-              label="Stake"
+              label="stake"
               unit={GT}
               icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
               value={stake}
@@ -92,6 +83,9 @@ const StakingEditor = ({
                 dispatch({ type: "setStake", newValue: v });
               }}
               placeholder={Decimal.from(stake || 0).prettify(2)}
+              available={`Available: ${lqtyBalance.prettify(2)}`}
+              maxAmount={lqtyBalance.toString()}
+              maxedOut={editedLQTY.eq(lqtyBalance)}
             />
 
             {error}
@@ -106,7 +100,7 @@ const StakingEditor = ({
               )}
             </div>
 
-            <StaticRow label="Staked" amount={editedLQTY.prettify(2)} unit={COIN} />
+            <StaticRow label="Staked" amount={editedLQTY.prettify(2)} unit={GT} />
           </div>
         </Modal>
       )}
@@ -131,6 +125,9 @@ const StakingEditor = ({
                 dispatch({ type: "increment", newValue: v });
               }}
               placeholder={Decimal.from(increment || 0).prettify(2)}
+              available={`Available: ${lqtyBalance.prettify(2)}`}
+              maxAmount={lqtyBalance.toString()}
+              maxedOut={Decimal.from(increment || 0).eq(lqtyBalance)}
             />
 
             {error}
@@ -170,6 +167,9 @@ const StakingEditor = ({
                 dispatch({ type: "decrement", newValue: v });
               }}
               placeholder={Decimal.from(decrement || 0).prettify(2)}
+              available={`Available: ${staked.prettify(2)}`}
+              maxAmount={staked.toString()}
+              maxedOut={Decimal.from(decrement || 0).eq(staked)}
             />
 
             {error}
@@ -185,7 +185,7 @@ const StakingEditor = ({
             )}
 
             <div className={classes.modalActions}>
-              {validChange && editedLQTY.nonZero ? (
+              {validChange && !Decimal.from(decrement || 0).gt(originalStake.stakedLQTY) ? (
                 <StakingManagerAction change={validChange} />
               ) : (
                 <Button large primary disabled>
@@ -259,7 +259,6 @@ const StakingEditor = ({
             onClick={() => {
               dispatchView({ type: "startAdjusting" });
               setStake("");
-              setModal(true);
             }}
           >
             Stake

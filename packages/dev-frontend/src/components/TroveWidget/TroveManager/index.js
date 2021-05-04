@@ -88,7 +88,7 @@ const reduce = (state, action) => {
 
       return {
         ...state,
-        edited: edited.setDebt(newDebt),
+        edited: edited.setDebt(newDebt.add(action.fee)),
         debtDirty: true
       };
     }

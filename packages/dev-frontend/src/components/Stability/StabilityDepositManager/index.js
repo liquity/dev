@@ -15,6 +15,7 @@ import {
   validateStabilityDepositChange
 } from "../validation/validateStabilityDepositChange";
 import Button from "../../Button";
+import { Yield } from "../Yield";
 
 import classes from "./StabilityDepositManager.module.css";
 
@@ -95,8 +96,8 @@ const Head = ({ total, title }) => {
   return (
     <div className={classes.head}>
       <div className={classes.total}>
-        <p className={classes.totalStaked}>total staked {total.div(1000).prettify(0)}k</p>
-        <p className={classes.totalAPR}>APR 25%</p>
+        <p className={classes.totalStaked}>total staked {total.shorten()}</p>
+        <Yield />
       </div>
       <h3 className={classes.title}>{title}</h3>
     </div>

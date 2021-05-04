@@ -1,22 +1,6 @@
 import { Decimal } from "@liquity/lib-base";
 
-type UniswapResponse = {
-  data?: {
-    bundle: {
-      ethPrice: string;
-    } | null;
-    token: {
-      derivedETH: string;
-    } | null;
-    pair: {
-      reserveUSD: string;
-      totalSupply: string;
-    } | null;
-  };
-  errors?: Array<{ message: string }>;
-};
-
-const uniswapQuery = (lqtyTokenAddress: string, uniTokenAddress: string) => `{
+const uniswapQuery = (lqtyTokenAddress, uniTokenAddress) => `{
   token(id: "${lqtyTokenAddress.toLowerCase()}") {
     derivedETH
   },
@@ -29,7 +13,7 @@ const uniswapQuery = (lqtyTokenAddress: string, uniTokenAddress: string) => `{
   }
 }`;
 
-export async function fetchPrices(lqtyTokenAddress: string, uniTokenAddress: string) {
+export async function fetchPrices(lqtyTokenAddress, uniTokenAddress) {
   const response = await window.fetch("https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2", {
     method: "POST",
     headers: {
@@ -45,7 +29,7 @@ export async function fetchPrices(lqtyTokenAddress: string, uniTokenAddress: str
     return Promise.reject("Network error connecting to Uniswap subgraph");
   }
 
-  const { data, errors }: UniswapResponse = await response.json();
+  const { data, errors } = await response.json();
 
   if (errors) {
     return Promise.reject(errors);

@@ -67,7 +67,7 @@ const PriceManager = () => {
       <DataRow
         key={ETH}
         currency={ETH}
-        icon={`${process.env.PUBLIC_URL}/icons/LQTY icon.png`}
+        icon={`${process.env.PUBLIC_URL}/icons/ethereum-eth.svg`}
         percentage={data.ethereum.usd_24h_change.toFixed(1).toString().replace("-", "")}
         increase={data.ethereum.usd_24h_change > 0}
         amount={price.prettify(2)}

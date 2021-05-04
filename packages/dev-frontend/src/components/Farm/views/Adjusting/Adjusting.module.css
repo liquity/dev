@@ -1,0 +1,84 @@
+.infos {
+  border-bottom: 1px solid var(--primary);
+  padding: 1.5rem 1rem 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
+.stakedWrapper {
+  padding: 1.5rem 1rem 0;
+  margin-top: 2.8rem;
+  margin-bottom: 6rem;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.modalAction {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3.2rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.actions > *:not(:last-child) {
+  margin-bottom: 1.2rem;
+}
+
+.editLabel {
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  color: var(--primary);
+}
+
+.editAmount {
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  color: var(--tertiary-text);
+}
+
+.editActions {
+  width: 8rem;
+  border-radius: 1.6rem;
+  overflow: hidden;
+
+  display: flex;
+}
+
+.editActions button {
+  width: 50%;
+  background-color: var(--primary);
+  height: 3rem;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-family: "Futura BT light";
+  font-size: 2.4rem;
+  line-height: 2.4rem;
+  font-weight: 300;
+  letter-spacing: -0.48px;
+  color: var(--white);
+}
+
+.disabled {
+  background-color: var(--primary-light) !important;
+}
+
+.editActions button:not(.disabled):hover {
+  cursor: pointer;
+}
