@@ -233,6 +233,7 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
     readonly _priceFeedIsTestnet: boolean;
     readonly provider: EthersProvider;
     readonly signer?: EthersSigner;
+    readonly startBlock: number;
     readonly totalStabilityPoolLQTYReward: Decimal;
     readonly version: string;
 }

@@ -1,9 +1,6 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 
-import {
-  UserDepositChanged,
-  ETHGainWithdrawn
-} from "../../generated/templates/StabilityPool/StabilityPool";
+import { UserDepositChanged, ETHGainWithdrawn } from "../../generated/StabilityPool/StabilityPool";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
