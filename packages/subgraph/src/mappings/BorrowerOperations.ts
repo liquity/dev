@@ -1,12 +1,14 @@
 import { TroveManager } from "../../generated/TroveManager/TroveManager";
 import {
   BorrowerOperations,
-  TroveUpdated
+  TroveUpdated,
+  LUSDBorrowingFeePaid
 } from "../../generated/BorrowerOperations/BorrowerOperations";
 
 import { getTroveOperationFromBorrowerOperation } from "../types/TroveOperation";
 
-import { updateTrove } from "../entities/Trove";
+import { setBorrowingFeeOfLastTroveChange, updateTrove } from "../entities/Trove";
+import { increaseTotalBorrowingFeesPaid } from "../entities/Global";
 
 export function handleTroveUpdated(event: TroveUpdated): void {
   let borrowerOperations = BorrowerOperations.bind(event.address);
@@ -24,4 +26,9 @@ export function handleTroveUpdated(event: TroveUpdated): void {
     snapshots.value0,
     snapshots.value1
   );
+}
+
+export function handleLUSDBorrowingFeePaid(event: LUSDBorrowingFeePaid): void {
+  setBorrowingFeeOfLastTroveChange(event.params._LUSDFee);
+  increaseTotalBorrowingFeesPaid(event.params._LUSDFee);
 }
