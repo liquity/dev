@@ -25,12 +25,12 @@ export const setSilent = (s: boolean): void => {
   silent = s;
 };
 
-const deployContract = async (
+const deployContractAndGetBlockNumber = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   contractName: string,
   ...args: unknown[]
-) => {
+): Promise<[address: string, blockNumber: number]> => {
   log(`Deploying ${contractName} ...`);
   const contract = await (await getContractFactory(contractName, deployer)).deploy(...args);
 
@@ -45,17 +45,28 @@ const deployContract = async (
 
   log();
 
-  return contract.address;
+  return [contract.address, receipt.blockNumber];
 };
+
+const deployContract: (
+  ...p: Parameters<typeof deployContractAndGetBlockNumber>
+) => Promise<string> = (...p) => deployContractAndGetBlockNumber(...p).then(([a]) => a);
 
 const deployContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   priceFeedIsTestnet = true,
   overrides?: Overrides
-): Promise<Omit<_LiquityContractAddresses, "uniToken">> => {
+): Promise<[addresses: Omit<_LiquityContractAddresses, "uniToken">, startBlock: number]> => {
+  const [activePoolAddress, startBlock] = await deployContractAndGetBlockNumber(
+    deployer,
+    getContractFactory,
+    "ActivePool",
+    { ...overrides }
+  );
+
   const addresses = {
-    activePool: await deployContract(deployer, getContractFactory, "ActivePool", { ...overrides }),
+    activePool: activePoolAddress,
     borrowerOperations: await deployContract(deployer, getContractFactory, "BorrowerOperations", {
       ...overrides
     }),
@@ -95,40 +106,44 @@ const deployContracts = async (
     unipool: await deployContract(deployer, getContractFactory, "Unipool", { ...overrides })
   };
 
-  return {
-    ...addresses,
-    lusdToken: await deployContract(
-      deployer,
-      getContractFactory,
-      "LUSDToken",
-      addresses.troveManager,
-      addresses.stabilityPool,
-      addresses.borrowerOperations,
-      { ...overrides }
-    ),
+  return [
+    {
+      ...addresses,
+      lusdToken: await deployContract(
+        deployer,
+        getContractFactory,
+        "LUSDToken",
+        addresses.troveManager,
+        addresses.stabilityPool,
+        addresses.borrowerOperations,
+        { ...overrides }
+      ),
 
-    lqtyToken: await deployContract(
-      deployer,
-      getContractFactory,
-      "LQTYToken",
-      addresses.communityIssuance,
-      addresses.lqtyStaking,
-      addresses.lockupContractFactory,
-      Wallet.createRandom().address, // _bountyAddress (TODO: parameterize this)
-      addresses.unipool, // _lpRewardsAddress
-      Wallet.createRandom().address, // _multisigAddress (TODO: parameterize this)
-      { ...overrides }
-    ),
+      lqtyToken: await deployContract(
+        deployer,
+        getContractFactory,
+        "LQTYToken",
+        addresses.communityIssuance,
+        addresses.lqtyStaking,
+        addresses.lockupContractFactory,
+        Wallet.createRandom().address, // _bountyAddress (TODO: parameterize this)
+        addresses.unipool, // _lpRewardsAddress
+        Wallet.createRandom().address, // _multisigAddress (TODO: parameterize this)
+        { ...overrides }
+      ),
 
-    multiTroveGetter: await deployContract(
-      deployer,
-      getContractFactory,
-      "MultiTroveGetter",
-      addresses.troveManager,
-      addresses.sortedTroves,
-      { ...overrides }
-    )
-  };
+      multiTroveGetter: await deployContract(
+        deployer,
+        getContractFactory,
+        "MultiTroveGetter",
+        addresses.troveManager,
+        addresses.sortedTroves,
+        { ...overrides }
+      )
+    },
+
+    startBlock
+  ];
 };
 
 export const deployTellorCaller = (
@@ -324,18 +339,19 @@ export const deployAndSetupContracts = async (
     _uniTokenIsMock: !wethAddress,
     _isDev,
 
-    addresses: await deployContracts(
-      deployer,
-      getContractFactory,
-      _priceFeedIsTestnet,
-      overrides
-    ).then(async addresses => ({
-      ...addresses,
+    ...(await deployContracts(deployer, getContractFactory, _priceFeedIsTestnet, overrides).then(
+      async ([addresses, startBlock]) => ({
+        startBlock,
 
-      uniToken: await (wethAddress
-        ? createUniswapV2Pair(deployer, wethAddress, addresses.lusdToken, overrides)
-        : deployMockUniToken(deployer, getContractFactory, overrides))
-    }))
+        addresses: {
+          ...addresses,
+
+          uniToken: await (wethAddress
+            ? createUniswapV2Pair(deployer, wethAddress, addresses.lusdToken, overrides)
+            : deployMockUniToken(deployer, getContractFactory, overrides))
+        }
+      })
+    ))
   };
 
   const contracts = _connectToContracts(deployer, deployment);
