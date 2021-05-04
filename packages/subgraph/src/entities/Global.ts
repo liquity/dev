@@ -1,8 +1,8 @@
-import { Value, BigInt, Address } from "@graphprotocol/graph-ts";
+import { Value, BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
 
 import { Global, LqtyStakeChange } from "../../generated/schema";
 
-import { BIGINT_ZERO, DECIMAL_ZERO } from "../utils/bignumbers";
+import { BIGINT_ZERO, DECIMAL_ZERO, decimalize } from "../utils/bignumbers";
 
 const onlyGlobalId = "only";
 
@@ -29,6 +29,7 @@ export function getGlobal(): Global {
     newGlobal.totalNumberOfLQTYStakes = 0;
     newGlobal.numberOfActiveLQTYStakes = 0;
     newGlobal.totalLQTYTokensStaked = DECIMAL_ZERO;
+    newGlobal.totalBorrowingFeesPaid = DECIMAL_ZERO;
 
     return newGlobal;
   }
@@ -54,6 +55,12 @@ export function getTransactionSequenceNumber(): i32 {
 
 export function getChangeSequenceNumber(): i32 {
   return increaseCounter("changeCount");
+}
+
+export function getLastChangeSequenceNumber(): i32 {
+  let global = getGlobal();
+
+  return global.changeCount - 1;
 }
 
 export function getLiquidationSequenceNumber(): i32 {
@@ -155,5 +162,11 @@ export function handleLQTYStakeChange(
   }
 
   global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
+  global.save();
+}
+
+export function increaseTotalBorrowingFeesPaid(_LUSDFee: BigInt): void {
+  let global = getGlobal();
+  global.totalBorrowingFeesPaid = global.totalBorrowingFeesPaid.plus(decimalize(_LUSDFee));
   global.save();
 }

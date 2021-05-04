@@ -20,6 +20,8 @@ type Global @entity {
   numberOfActiveLQTYStakes: Int!
   totalLQTYTokensStaked: BigDecimal!
 
+  totalBorrowingFeesPaid: BigDecimal!
+
   "Total redistributed per-stake collateral"
   rawTotalRedistributedCollateral: BigInt!
 
@@ -179,6 +181,8 @@ type TroveChange implements Change @entity {
   debtChange: BigDecimal!
   debtAfter: BigDecimal!
 
+  borrowingFee: BigDecimal
+
   collateralRatioBefore: BigDecimal
   collateralRatioAfter: BigDecimal
 
@@ -290,8 +294,8 @@ type LqtyStakeChange implements Change @entity {
   amountChange: BigDecimal!
   amountAfter: BigDecimal!
 
-  issuanceGain: BigDecimal
-  redemptionGain: BigDecimal
+  issuanceGain: BigDecimal!
+  redemptionGain: BigDecimal!
 }
 
 type Token @entity {

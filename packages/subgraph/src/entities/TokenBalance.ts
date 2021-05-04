@@ -9,7 +9,7 @@ import { getUser } from "./User";
 import { getToken } from "./Token";
 
 export function getTokenBalance(_token: Address, _owner: Address): TokenBalance {
-  let id = _token.toHexString() + _owner.toHexString();
+  let id = _token.toHexString() + "-" + _owner.toHexString();
   let user = getUser(_owner);
   let balanceOrNull = TokenBalance.load(id);
 
@@ -27,11 +27,17 @@ export function getTokenBalance(_token: Address, _owner: Address): TokenBalance 
   }
 }
 
-export function updateBalance(_event: ethereum.Event, _from: Address, _to: Address, _value: BigInt): void {
+export function updateBalance(
+  _event: ethereum.Event,
+  _from: Address,
+  _to: Address,
+  _value: BigInt
+): void {
   let tokenAddress = _event.address;
   let token = getToken(tokenAddress);
 
-  if (_from.toHexString() == ZERO_ADDRESS) { // mint
+  if (_from.toHexString() == ZERO_ADDRESS) {
+    // mint
     // increase total supply
     token.totalSupply = token.totalSupply.plus(_value);
     token.save();
@@ -41,7 +47,8 @@ export function updateBalance(_event: ethereum.Event, _from: Address, _to: Addre
     tokenBalanceFrom.balance = tokenBalanceFrom.balance.minus(_value);
     tokenBalanceFrom.save();
   }
-  if (_to.toHexString() == ZERO_ADDRESS) { // burn
+  if (_to.toHexString() == ZERO_ADDRESS) {
+    // burn
     // decrease total supply
     token.totalSupply = token.totalSupply.minus(_value);
     token.save();
