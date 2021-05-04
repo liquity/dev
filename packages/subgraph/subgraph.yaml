@@ -8,9 +8,9 @@ dataSources:
     kind: ethereum/contract
     network: mainnet
     source:
-      address: "0xA39739EF8b0231DbFA0DcdA07d7e29faAbCf4bb2"
+      # address: "0xA39739EF8b0231DbFA0DcdA07d7e29faAbCf4bb2"
       #address: "0x56fcdA0436E5C7a33ee5bfe292f11AC66429Eb5c"
-      #address: "0x6645E03DA2a711f780af7cCE1019Cb9a9135C898"
+      address: "0x2C0199127cb3737D20227566ae7D9bC1F45297e2"
       abi: TroveManager
       # startBlock: 8110721
     mapping:
@@ -58,7 +58,7 @@ dataSources:
     kind: ethereum/contract
     network: mainnet
     source:
-      address: "0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D"
+      # address: "0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D"
       #address: "0x3f74634451f613693f221b1fef42D442bAE7B470"
       abi: LQTYToken
       startBlock: 12178551
@@ -129,6 +129,7 @@ templates:
         - StabilityDeposit
         - StabilityDepositChange
         - SystemState
+        - Frontend
       abis:
         - name: StabilityPool
           file: ../lib-ethers/abi/StabilityPool.json
@@ -139,6 +140,10 @@ templates:
           handler: handleUserDepositChanged
         - event: ETHGainWithdrawn(indexed address,uint256,uint256)
           handler: handleETHGainWithdrawn
+        - event: FrontEndRegistered(indexed address,uint256)
+          handler: handleFrontendRegistered
+        - event: FrontEndTagSet(indexed address,indexed address)
+          handler: handleFrontendTagSet
   - name: CollSurplusPool
     kind: ethereum/contract
     network: mainnet

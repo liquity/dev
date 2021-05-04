@@ -20,7 +20,7 @@ function getStabilityDeposit(_user: Address): StabilityDeposit {
 
     newStabilityDeposit.owner = owner.id;
     newStabilityDeposit.depositedAmount = DECIMAL_ZERO;
-
+    newStabilityDeposit.frontend = owner.frontend;
     owner.stabilityDeposit = newStabilityDeposit.id;
     owner.save();
 
