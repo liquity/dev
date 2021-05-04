@@ -1,11 +1,9 @@
 const fs = require("fs");
 
-const { addresses } = require("@liquity/lib-ethers/deployments/mainnet.json");
-// const { addresses } = require("@liquity/lib-ethers/deployments/dev.json");
+const network = process.argv[2] || "mainnet";
+const { addresses, startBlock } = require(`@liquity/lib-ethers/deployments/${network}.json`);
 
-// https://etherscan.io/tx/0x0b612c6ffcef059a1cb9ceda83dee44a3d74e35d5018f1b8b486f3186cd7850e
-const startBlock = 12178551;
-// const startBlock = 0;
+console.log(`Preparing subgraph manifest for network "${network}"`);
 
 const yaml = (strings, ...keys) =>
   strings
