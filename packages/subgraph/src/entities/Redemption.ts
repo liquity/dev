@@ -23,6 +23,7 @@ export function getCurrentRedemption(event: ethereum.Event): Redemption {
     newRedemption.tokensActuallyRedeemed = DECIMAL_ZERO;
     newRedemption.collateralRedeemed = DECIMAL_ZERO;
     newRedemption.partial = false;
+    newRedemption.fee = DECIMAL_ZERO;
     newRedemption.save();
 
     let global = getGlobal();
@@ -39,16 +40,21 @@ export function finishCurrentRedemption(
   event: ethereum.Event,
   _attemptedLUSDAmount: BigInt,
   _actualLUSDAmount: BigInt,
-  _ETHSent: BigInt
+  _ETHSent: BigInt,
+  _ETHFee: BigInt
 ): void {
+  let fee = decimalize(_ETHFee);
+
   let currentRedemption = getCurrentRedemption(event);
   currentRedemption.tokensAttemptedToRedeem = decimalize(_attemptedLUSDAmount);
   currentRedemption.tokensActuallyRedeemed = decimalize(_actualLUSDAmount);
   currentRedemption.collateralRedeemed = decimalize(_ETHSent);
   currentRedemption.partial = _actualLUSDAmount < _attemptedLUSDAmount;
+  currentRedemption.fee = fee;
   currentRedemption.save();
 
   let global = getGlobal();
   global.currentRedemption = null;
+  global.totalRedemptionFeesPaid = global.totalRedemptionFeesPaid.plus(fee);
   global.save();
 }

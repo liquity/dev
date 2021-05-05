@@ -20,7 +20,10 @@ type Global @entity {
   numberOfActiveLQTYStakes: Int!
   totalLQTYTokensStaked: BigDecimal!
 
+  "Total amount of LUSD paid as borrowing fees"
   totalBorrowingFeesPaid: BigDecimal!
+  "Total amount of ETH paid as redemption fees"
+  totalRedemptionFeesPaid: BigDecimal!
 
   "Total redistributed per-stake collateral"
   rawTotalRedistributedCollateral: BigInt!
@@ -244,6 +247,8 @@ type Redemption @entity {
   tokensActuallyRedeemed: BigDecimal!
   collateralRedeemed: BigDecimal!
   partial: Boolean!
+
+  fee: BigDecimal!
 
   troveChanges: [TroveChange!]! @derivedFrom(field: "redemption")
 }
