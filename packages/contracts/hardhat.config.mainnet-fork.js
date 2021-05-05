@@ -2,8 +2,6 @@ require("@nomiclabs/hardhat-truffle5");
 require("@nomiclabs/hardhat-ethers");
 require("solidity-coverage");
 require("hardhat-gas-reporter");
-const accounts = require("./hardhatAccountsList2k.js");
-const accountsList = accounts.accountsList
 
 const fs = require('fs')
 const alchemyUrl = () => {
@@ -55,13 +53,12 @@ module.exports = {
     },
     networks: {
         hardhat: {
-            accounts: accountsList,
             gas: 10000000,  // tx gas limit
-            blockGasLimit: 12500000, 
-            gasPrice: 20000000000,
+            blockGasLimit: 12500000,
+            gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 20000000000,
             forking: {
                 url: alchemyUrl(),
-                blockNumber: 12152522
+                blockNumber: process.env.BLOCK_NUMBER ? parseInt(process.env.BLOCK_NUMBER) : 12152522
             }
         }
     },

@@ -28,11 +28,11 @@ import "../Dependencies/console.sol";
 *
 * 4) CommunityIssuance and LockupContractFactory addresses are set at deployment
 *
-* 5) The bug bounties / hackathons allocation of 2 million tokens is minted at deployment to an EOA
+* 5) The bug bounties / hackathons allocation of 2 million tokens is minted at deployment to the merkle distributor
 
 * 6) 32 million tokens are minted at deployment to the CommunityIssuance contract
 *
-* 7) The LP rewards allocation of (1 + 1/3) million tokens is minted at deployent to a Staking contract
+* 7) The LP rewards allocation of (1 + 1/3) million tokens is minted at deployent to the merkle distributor
 *
 * 8) (64 + 2/3) million tokens are minted at deployment to the Liquity multisig
 *
@@ -47,7 +47,7 @@ import "../Dependencies/console.sol";
 * and the multisig has the same rights as any other address.
 */
 
-contract LQTYToken is CheckContract, ILQTYToken {
+contract LQTYTokenV2 is CheckContract, ILQTYToken {
     using SafeMath for uint256;
 
     // --- ERC20 Data ---
@@ -91,8 +91,6 @@ contract LQTYToken is CheckContract, ILQTYToken {
     address public immutable communityIssuanceAddress;
     address public immutable lqtyStakingAddress;
 
-    uint internal immutable lpRewardsEntitlement;
-
     ILockupContractFactory public immutable lockupContractFactory;
 
     // --- Events ---
@@ -109,9 +107,8 @@ contract LQTYToken is CheckContract, ILQTYToken {
         address _lqtyStakingAddress,
         address _lockupFactoryAddress,
         address _bountyAddress,
-        address _lpRewardsAddress,
         address _multisigAddress
-    ) 
+    )
         public 
     {
         checkContract(_communityIssuanceAddress);
@@ -135,22 +132,18 @@ contract LQTYToken is CheckContract, ILQTYToken {
         
         // --- Initial LQTY allocations ---
 
-        // TODO: This has to go to Merkle distributor as well
-        uint bountyEntitlement = _1_MILLION.mul(2); // Allocate 2 million for bounties/hackathons
-        _mint(_bountyAddress, bountyEntitlement);
-
         uint depositorsAndFrontEndsEntitlement = _1_MILLION.mul(32); // Allocate 32 million to the algorithmic issuance schedule
         _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
 
-        uint _lpRewardsEntitlement = _1_MILLION.mul(4).div(3);  // Allocate 1.33 million for LP rewards
-        lpRewardsEntitlement = _lpRewardsEntitlement;
-        _mint(_lpRewardsAddress, _lpRewardsEntitlement);
+        uint bountyEntitlement = _1_MILLION.mul(2); // v1 allocated 2 million for bounties/hackathons
+        uint lpRewardsEntitlement = _1_MILLION.mul(4).div(3);  // v1 allocated 1.33 million for LP rewards
+        _mint(_bountyAddress, lpRewardsEntitlement.add(bountyEntitlement));
         
         // Allocate the remainder to the LQTY Multisig: (100 - 2 - 32 - 1.33) million = 64.66 million
         uint multisigEntitlement = _1_MILLION.mul(100)
             .sub(bountyEntitlement)
             .sub(depositorsAndFrontEndsEntitlement)
-            .sub(_lpRewardsEntitlement);
+            .sub(lpRewardsEntitlement);
 
         _mint(_multisigAddress, multisigEntitlement);
     }
@@ -170,7 +163,7 @@ contract LQTYToken is CheckContract, ILQTYToken {
     }
 
     function getLpRewardsEntitlement() external view override returns (uint256) {
-        return lpRewardsEntitlement;
+        return 0;
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
