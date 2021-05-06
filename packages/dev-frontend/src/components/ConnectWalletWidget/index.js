@@ -37,13 +37,7 @@ export const ConnectWalletButton = ({ onClick }) => (
   </div>
 );
 
-const ITEMS = [
-  { text: "MetaMask", img: `${process.env.PUBLIC_URL}/icons/metamask.png` }
-  // { text: "MetaMask", img: `${process.env.PUBLIC_URL}/icons/metamask.png` },
-  // { text: "MetaMask", img: `${process.env.PUBLIC_URL}/icons/metamask.png` }
-];
-
-const WidgetItem = ({ dispatch, activate, injectedConnector, onItemClick, connected, ...i }) => (
+const Metamask = ({ dispatch, activate, injectedConnector, onItemClick, connected }) => (
   <div
     className={cn(classes.item, {
       [classes.itemConnected]: connected
@@ -54,17 +48,69 @@ const WidgetItem = ({ dispatch, activate, injectedConnector, onItemClick, connec
       activate(injectedConnector);
     }}
   >
-    <p className={classes.itemContent}>{i.text}</p>
-    <img src={i.img} alt={i.text} className={classes.itemIcon} />
+    <p className={classes.itemContent}>Metamask</p>
+    <img
+      src={`${process.env.PUBLIC_URL}/icons/metamask.png`}
+      alt="Metamask Icon"
+      className={classes.itemIcon}
+    />
   </div>
 );
+
+// const WalletConnect = ({ walletConnectProvider, onItemClick, connected }) => (
+//   <div
+//     className={cn(classes.item, {
+//       [classes.itemConnected]: connected
+//     })}
+//     onClick={async () => {
+//       onItemClick();
+//       try {
+//         await walletConnectProvider.enable();
+//       } catch (err) {
+//         console.warn(err);
+//       }
+//     }}
+//   >
+//     <p className={classes.itemContent}>WalletConnect</p>
+//     <img
+//       src={`${process.env.PUBLIC_URL}/icons/connect wallet.png`}
+//       alt="Wallet Connect"
+//       className={classes.itemIcon}
+//     />
+//   </div>
+// );
+
+// const WalletLink = ({ walletLinkProvider, onItemClick, connected }) => (
+//   <div
+//     className={cn(classes.item, {
+//       [classes.itemConnected]: connected
+//     })}
+//     onClick={async () => {
+//       onItemClick();
+//       walletLinkProvider
+//         .enable()
+//         .then(accounts => {
+//           console.log(`User's address is ${accounts[0]}`);
+//           // web3.eth.defaultAccount = accounts[0];
+//         })
+//         .catch(console.warn);
+//     }}
+//   >
+//     <p className={classes.itemContent}>Coinbase</p>
+//     <img
+//       src={`${process.env.PUBLIC_URL}/icons/coinbase.png`}
+//       alt="CoinBase"
+//       className={classes.itemIcon}
+//     />
+//   </div>
+// );
 
 const ConnectWalletWidget = props => {
   return (
     <div className={classes.widget}>
-      {ITEMS.map((i, n) => (
-        <WidgetItem key={n} {...i} connected={props.connected} {...props} />
-      ))}
+      <Metamask connected={props.connected} {...props} />
+      {/* <WalletConnect connected={props.connected} {...props} /> */}
+      {/* <WalletLink connected={props.connected} {...props} /> */}
     </div>
   );
 };

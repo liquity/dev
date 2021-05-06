@@ -1,0 +1,55 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.header {
+  font-family: "Futura BT light";
+  font-size: 2.2rem;
+  font-weight: 300;
+  letter-spacing: -0.44px;
+  color: var(--black);
+  margin-right: 1.2rem;
+}
+
+.inputWrapper {
+  border-radius: 1rem;
+  background-color: var(--white);
+  border: 0;
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  margin-right: 1.6rem;
+}
+
+.input {
+  margin: 0;
+  line-height: 1;
+  font-size: 1.6rem;
+  width: 5rem;
+  min-width: 5rem;
+  max-width: 5rem;
+  margin-right: 0.2rem;
+
+  font-family: "Futura BT light";
+  letter-spacing: -0.48px;
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--primary-text);
+}
+
+.inputContent {
+  font-family: "Futura BT light";
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: -0.32px;
+  color: var(--secondary-text);
+}
+
+.button {
+  height: 3rem;
+  padding: 0 1rem;
+  border-radius: 1rem;
+  font-family: "Futura BT heavy";
+  font-weight: 500;
+}

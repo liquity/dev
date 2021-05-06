@@ -12,6 +12,7 @@ import { shortenAddress } from "./utils/shortenAddress";
 import { PageSwitcher } from "./pages/PageSwitcher";
 import StabilityPool from "./pages/StabilityPool";
 import Stake from "./pages/Stake";
+import Liquidation from "./pages/Liquidation";
 
 import TroveViewProvider from "./components/TroveWidget/context/TroveViewProvider";
 import { StabilityViewProvider } from "./components/Stability/context/StabilityViewProvider";
@@ -58,37 +59,39 @@ export const LiquityFrontend = () => {
             <FarmViewProvider>
               {walletModal && (
                 <Modal title={shortenAddress(account)} onClose={() => setWalletModal(null)}>
-                  <div className={classes.do}>
-                    <CopyToClipboard className={classes.doButton} text={account}>
-                      <span>copy address</span>
-                      <ion-icon name="copy-outline"></ion-icon>
-                    </CopyToClipboard>
-                    <Link
-                      className={classes.doButton}
-                      href={`https://kovan.etherscan.io/address/${account}`}
-                    >
-                      <span>view on Etherscan</span>
-                      <ion-icon name="open-outline"></ion-icon>
-                    </Link>
-                  </div>
-                  <p className={classes.connection}>
-                    {isMetaMask ? "Connected with MetaMask" : "Connected with wallet"}{" "}
-                    {isMetaMask && (
-                      <img
-                        className={classes.metaMaskIcon}
-                        src={`${process.env.PUBLIC_URL}/icons/metamask.png`}
-                        alt="MetaMask"
-                      />
-                    )}
-                  </p>
-                  <div className={classes.actions}>
-                    <Button className={classes.fourthButton}>change</Button>
-                    <Button
-                      className={classes.fourthButton}
-                      onClick={() => window.ethereum._handleDisconnect()}
-                    >
-                      disconnect
-                    </Button>
+                  <div>
+                    <div className={classes.do}>
+                      <CopyToClipboard className={classes.doButton} text={account}>
+                        <span>copy address</span>
+                        <ion-icon name="copy-outline"></ion-icon>
+                      </CopyToClipboard>
+                      <Link
+                        className={classes.doButton}
+                        href={`https://kovan.etherscan.io/address/${account}`}
+                      >
+                        <span>view on Etherscan</span>
+                        <ion-icon name="open-outline"></ion-icon>
+                      </Link>
+                    </div>
+                    <p className={classes.connection}>
+                      {isMetaMask ? "Connected with MetaMask" : "Connected with wallet"}{" "}
+                      {isMetaMask && (
+                        <img
+                          className={classes.metaMaskIcon}
+                          src={`${process.env.PUBLIC_URL}/icons/metamask.png`}
+                          alt="MetaMask"
+                        />
+                      )}
+                    </p>
+                    <div className={classes.actions}>
+                      <Button className={classes.fourthButton}>change</Button>
+                      <Button
+                        className={classes.fourthButton}
+                        onClick={() => window.ethereum._handleDisconnect()}
+                      >
+                        disconnect
+                      </Button>
+                    </div>
                   </div>
                 </Modal>
               )}
@@ -116,7 +119,7 @@ export const LiquityFrontend = () => {
                   </Route>
 
                   <Route path="/liquidation">
-                    <div>liquidation</div>
+                    <Liquidation />
                   </Route>
                 </Switch>
               </Body>

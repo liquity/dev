@@ -1,0 +1,157 @@
+.wrapper {
+  min-width: 80rem;
+}
+
+.header,
+.noTrovesText {
+  padding: 1rem;
+  font-family: "Futura BT medium";
+  font-size: 2.2rem;
+  font-weight: 500;
+  letter-spacing: -0.44px;
+  color: var(--primary-text);
+  text-align: center;
+}
+
+.heading {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  background-color: var(--white);
+  padding: 1rem;
+  box-shadow: var(--box-shadow-lg);
+  border-radius: 1rem;
+}
+
+.arrowButton,
+.reloadButton {
+  font-size: 2rem;
+  color: var(--primary-text);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pageNum {
+  margin-left: 2.4rem;
+
+  font-family: "Futura BT light";
+  letter-spacing: -0.48px;
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: var(--tertiary-text);
+
+  margin-right: 5rem;
+}
+
+.reloadButton {
+  margin-left: 2.4rem;
+  font-weight: 900;
+}
+
+.noTroves {
+  padding: 10rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tableHead {
+  background-color: #f7f7f7;
+  display: flex;
+  align-items: center;
+  padding: 2.4rem 0 1.2rem;
+  border-radius: 1rem;
+}
+
+.tableHead > *,
+.tableRow > * {
+  width: calc(100% / 6);
+  padding: 0.5rem;
+}
+
+.tableRow > * {
+  font-family: "Futura BT light";
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: -0.44px;
+  color: var(--primary-text);
+}
+
+.tableHeadText,
+.tableHeadUnit {
+  text-align: center;
+  line-height: 1.15;
+}
+
+.tableHeadText {
+  font-family: "Futura BT light";
+  font-size: 1.7rem;
+  font-weight: 300;
+  letter-spacing: -0.44px;
+  color: var(--primary-text);
+}
+
+.tableHeadUnit {
+  font-family: "Futura BT light";
+  font-size: 1.4rem;
+  font-weight: 300;
+  letter-spacing: -0.44px;
+  color: var(--gray);
+}
+
+.tableRow {
+  padding: 1.7rem 0;
+  background-color: var(--white);
+  display: flex;
+  align-items: center;
+}
+
+.tableRow:not(:last-child) {
+  border-bottom: 1px solid #f7f7f7;
+}
+
+.addressData {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.address {
+  font-weight: 600;
+}
+
+.tableData {
+  text-align: center;
+}
+
+.success {
+  font-family: "Futura BT medium";
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--green-light);
+}
+
+.warning {
+  font-family: "Futura BT medium";
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--orange);
+}
+
+.danger {
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  letter-spacing: -0.4px;
+  color: var(--red);
+}
+
+.liquidationButton {
+  padding: 0.8rem 1.4rem;
+  color: var(--white);
+  background-color: #cd9f9f;
+  border-radius: 2rem;
+}
