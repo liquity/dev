@@ -79,6 +79,7 @@ export function handleRedemption(event: Redemption): void {
     event,
     event.params._attemptedLUSDAmount,
     event.params._actualLUSDAmount,
-    event.params._ETHSent
+    event.params._ETHSent,
+    event.params._ETHFee
   );
 }

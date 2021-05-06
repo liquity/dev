@@ -30,6 +30,7 @@ export function getGlobal(): Global {
     newGlobal.numberOfActiveLQTYStakes = 0;
     newGlobal.totalLQTYTokensStaked = DECIMAL_ZERO;
     newGlobal.totalBorrowingFeesPaid = DECIMAL_ZERO;
+    newGlobal.totalRedemptionFeesPaid = DECIMAL_ZERO;
 
     return newGlobal;
   }
