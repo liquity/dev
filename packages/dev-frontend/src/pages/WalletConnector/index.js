@@ -14,6 +14,8 @@ import Link from "../../components/Link";
 import { UnregisteredKickbackRate } from "../../components/KickbackRate";
 import Body from "../../components/Body";
 import Preview from "./Preview";
+import { provider as walletConnectProvider } from "../../connectors/walletConnect";
+import { walletLinkProvider } from "../../connectors/coinbase";
 
 import classes from "./WalletConnector.module.css";
 
@@ -120,6 +122,8 @@ const WalletConnector = ({ children }) => {
             activate={activate}
             dispatch={dispatch}
             injectedConnector={injectedConnector}
+            walletConnectProvider={walletConnectProvider}
+            walletLinkProvider={walletLinkProvider}
             onItemClick={() => setWalletModal(null)}
           />
         </Modal>

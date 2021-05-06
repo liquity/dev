@@ -88,11 +88,11 @@
   box-shadow: 0.5px 0.8px 3px 0 rgba(106, 86, 86, 0.15);
 }
 
-.primary.disabled {
-  background-color: var(--primary-light);
-  color: var(--white);
-}
-
 .wrapper:not(.primary).disabled {
   opacity: 0.625;
+}
+
+.wrapper.primary.disabled {
+  background-color: var(--primary-light);
+  color: var(--white);
 }

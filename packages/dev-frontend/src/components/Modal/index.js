@@ -70,6 +70,7 @@ const Modal = ({ title, content, confirm, decline, children, onClose, status, bi
             <Button
               primary
               medium
+              disabled={confirm.disabled}
               onClick={() => {
                 onClose && onClose();
                 confirm.action && confirm.action();

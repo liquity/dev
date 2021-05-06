@@ -129,7 +129,6 @@
 .success {
   font-family: "Futura BT medium";
   font-size: 2rem;
-  font-weight: 700;
   letter-spacing: -0.4px;
   color: var(--green-light);
 }
@@ -137,13 +136,12 @@
 .warning {
   font-family: "Futura BT medium";
   font-size: 2rem;
-  font-weight: 700;
   letter-spacing: -0.4px;
   color: var(--orange);
 }
 
 .danger {
-  font-family: "Futura BT light";
+  font-family: "Futura BT medium";
   font-size: 2rem;
   letter-spacing: -0.4px;
   color: var(--red);

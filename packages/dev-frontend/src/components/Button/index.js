@@ -23,7 +23,7 @@ const Button = ({
         [classes.small]: small,
         [classes.xs]: xs,
         [classes.large]: large,
-        [classes.primary]: primary && !disabled,
+        [classes.primary]: primary,
         [classes.uppercase]: uppercase,
         [classes.disabled]: disabled,
         [classes.medium]: medium,

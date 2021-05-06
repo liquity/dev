@@ -34,7 +34,7 @@
   margin-top: 1.4rem;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .actions > *:not(:last-child) {
@@ -45,6 +45,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  transition: all 0.5s;
+}
+
+.activeTroveWrapper {
+  position: relative;
+}
+
+.troveBorder {
+  border-bottom: 1px solid #f7f7f7;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
 }
 
 .troveInfo {
@@ -125,4 +137,88 @@
 .closeAmounts {
   padding-top: 1rem;
   width: 90%;
+}
+
+.troveRisks {
+  display: flex;
+  transition: max-height 0.5s;
+  max-height: 0;
+  overflow: hidden;
+}
+
+.troveRisksExpanded {
+  max-height: 20rem;
+}
+
+.troveRisksLeft,
+.troveRisksRight {
+  width: 50%;
+}
+
+.troveRisksLeft {
+  border-right: 1px solid #f7f7f7;
+}
+
+.troveRisksType {
+  font-family: "Futura BT light";
+  font-size: 1.7rem;
+  font-weight: 300;
+  letter-spacing: -0.34px;
+  color: var(--text-tertiary);
+  margin-bottom: 1rem;
+}
+
+.troveRisksChance {
+  font-size: 1.7rem;
+  font-weight: 300;
+  letter-spacing: -0.34px;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+.troveRisksInfo {
+  font-family: "Futura BT light";
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: -0.34px;
+  color: var(--gray);
+  margin-bottom: 1rem;
+}
+
+.troveRisksAmount {
+  font-family: "Futura BT light";
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: -0.34px;
+  color: var(--text-primary);
+}
+
+.toggleExpandButton {
+  position: absolute;
+  bottom: 1.6rem;
+  right: 1.6rem;
+
+  transition: all 0.5s;
+}
+
+.toggleExpandButton.rotate {
+  transform: rotate(180deg);
+}
+
+.riskHigh {
+  font-family: "Futura BT medium";
+  font-weight: 500;
+  color: var(--red);
+}
+
+.riskMedium {
+  font-family: "Futura BT medium";
+  font-weight: 500;
+  color: var(--orange);
+}
+
+.riskLow {
+  font-family: "Futura BT light";
+  font-weight: 500;
+  color: var(--green-light);
 }
