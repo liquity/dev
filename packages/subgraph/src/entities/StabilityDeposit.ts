@@ -20,7 +20,6 @@ function getStabilityDeposit(_user: Address): StabilityDeposit {
 
     newStabilityDeposit.owner = owner.id;
     newStabilityDeposit.depositedAmount = DECIMAL_ZERO;
-    newStabilityDeposit.frontend = owner.frontend;
     owner.stabilityDeposit = newStabilityDeposit.id;
     owner.save();
 
@@ -76,11 +75,18 @@ export function updateStabilityDeposit(
 ): void {
   let stabilityDeposit = getStabilityDeposit(_user);
   let newDepositedAmount = decimalize(_amount);
+  let owner = getUser(_user);
 
   if (newDepositedAmount == stabilityDeposit.depositedAmount) {
     // Don't create a StabilityDepositChange when there's no change... duh.
     // It means user only wanted to withdraw collateral gains.
     return;
+  }
+
+  if (owner.frontend != stabilityDeposit.frontend) {
+    // FrontEndTagSet is emitted just before UserDepositChanged event
+    // FrontEndTagSet sets the owner.frontend, so we can use that
+    stabilityDeposit.frontend = owner.frontend;
   }
 
   updateStabilityDepositByOperation(

@@ -5,7 +5,7 @@ import {
   ETHGainWithdrawn,
   FrontEndRegistered,
   FrontEndTagSet
-} from "../../generated/templates/StabilityPool/StabilityPool";
+} from "../../generated/StabilityPool/StabilityPool";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
