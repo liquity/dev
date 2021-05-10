@@ -69,6 +69,7 @@ type User @entity {
   trove: Trove
   stabilityDeposit: StabilityDeposit
   stake: LqtyStake
+  frontend: Frontend
 
   collSurplus: BigDecimal!
   collSurplusChanges: [CollSurplusChange!]! @derivedFrom(field: "user")
@@ -120,6 +121,8 @@ type StabilityDeposit @entity {
   owner: User!
 
   depositedAmount: BigDecimal!
+
+  frontend: Frontend
 
   changes: [StabilityDepositChange!]! @derivedFrom(field: "stabilityDeposit")
 }
@@ -322,4 +325,11 @@ type TokenAllowance @entity {
   owner: User!
   spender: User!
   value: BigInt!
+}
+
+type Frontend @entity {
+  id: ID!
+  owner: User!
+  kickbackRate: BigDecimal!
+  deposits: [StabilityDeposit!]! @derivedFrom(field: "frontend")
 }

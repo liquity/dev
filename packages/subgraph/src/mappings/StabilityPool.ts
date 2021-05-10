@@ -1,6 +1,11 @@
 import { BigInt } from "@graphprotocol/graph-ts";
 
-import { UserDepositChanged, ETHGainWithdrawn } from "../../generated/StabilityPool/StabilityPool";
+import {
+  UserDepositChanged,
+  ETHGainWithdrawn,
+  FrontEndRegistered,
+  FrontEndTagSet
+} from "../../generated/StabilityPool/StabilityPool";
 
 import { BIGINT_ZERO } from "../utils/bignumbers";
 
@@ -10,6 +15,7 @@ import {
   updateStabilityDeposit,
   withdrawCollateralGainFromStabilityDeposit
 } from "../entities/StabilityDeposit";
+import { registerFrontend, assignFrontendToDepositor } from "../entities/Frontend";
 
 // Read the value of tmpDepositUpdate from the Global entity, and replace it with:
 //  - null, if it wasn't null
@@ -49,4 +55,12 @@ export function handleETHGainWithdrawn(event: ETHGainWithdrawn): void {
   if (depositUpdate != null) {
     updateStabilityDeposit(event, event.params._depositor, depositUpdate as BigInt);
   }
+}
+
+export function handleFrontendRegistered(event: FrontEndRegistered): void {
+  registerFrontend(event.params._frontEnd, event.params._kickbackRate);
+}
+
+export function handleFrontendTagSet(event: FrontEndTagSet): void {
+  assignFrontendToDepositor(event.params._depositor, event.params._frontEnd);
 }
