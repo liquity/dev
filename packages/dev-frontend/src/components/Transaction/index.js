@@ -3,8 +3,6 @@ import { hexDataSlice, hexDataLength } from "@ethersproject/bytes";
 import { defaultAbiCoder } from "@ethersproject/abi";
 import Tippy from "@tippyjs/react";
 
-import "react-circular-progressbar/dist/styles.css";
-
 import { useLiquity } from "../../hooks/LiquityContext";
 
 import Modal from "./../Modal";
