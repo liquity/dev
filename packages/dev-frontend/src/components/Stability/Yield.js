@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
+import { useEffect, useState } from "react";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { InfoIcon } from "../InfoIcon";
 import { useLiquity } from "../../hooks/LiquityContext";
-import { Badge } from "../Badge";
 import { fetchLqtyPrice } from "./context/fetchLqtyPrice";
 
 import classes from "./Yield.module.css";
@@ -56,10 +54,10 @@ export const Yield = () => {
               An <span>estimate</span> of the LQTY return on the LUSD deposited to the Stability Pool
               over the next year, not including your ETH gains from liquidations.
             </p>
-            <p sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
+            <p style={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
               (($LQTY_REWARDS * YEARLY_DISTRIBUTION%) / DEPOSITED_LUSD) * 100 = <span> APR</span>
             </p>
-            <p sx={{ fontSize: "12px", fontFamily: "monospace" }}>
+            <p style={{ fontSize: "12px", fontFamily: "monospace" }}>
               ($
               {remainingLqtyInUSD.shorten()} * 50% / ${lusdInStabilityPool.shorten()}) * 100 =
               <span> {aprPercentage.toString(2)}%</span>
