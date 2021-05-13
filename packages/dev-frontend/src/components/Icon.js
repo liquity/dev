@@ -1,5 +1,5 @@
 import React from "react";
-import { library, IconName, IconProp } from "@fortawesome/fontawesome-svg-core";
+import { library } from "@fortawesome/fontawesome-svg-core";
 import {
   faCircleNotch,
   faCheckCircle,
@@ -30,7 +30,7 @@ import {
   faBars
 } from "@fortawesome/free-solid-svg-icons";
 import { faClipboard, faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
-import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 library.add(
   faCircleNotch,
@@ -64,7 +64,7 @@ library.add(
   faQuestionCircle
 );
 
-const getIcon = (name: IconName): IconProp => {
+const getIcon = name => {
   switch (name) {
     case "clipboard":
       return ["far", "clipboard"];
@@ -75,10 +75,6 @@ const getIcon = (name: IconName): IconProp => {
   }
 };
 
-export type IconProps = Pick<FontAwesomeIconProps, "style" | "size" | "color" | "spin"> & {
-  name: IconName;
-};
-
-export const Icon: React.FC<IconProps> = ({ name, style, ...rest }) => (
+export const Icon = ({ name, style, ...rest }) => (
   <FontAwesomeIcon style={style} icon={getIcon(name)} {...rest} />
 );
