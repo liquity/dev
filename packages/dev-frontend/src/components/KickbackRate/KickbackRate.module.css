@@ -7,7 +7,7 @@
   background-color: var(--white);
   box-shadow: var(--box-shadow-lg);
 
-  padding: 6.4rem 6.4rem 6.4rem 3rem;
+  padding: 4rem 4rem 4rem 3rem;
   border-top-right-radius: 8rem;
   border-bottom-right-radius: 8rem;
 
@@ -16,19 +16,19 @@
 
 .value {
   font-family: "Futura BT light";
-  font-size: 4.1rem;
+  font-size: 3.4rem;
   font-weight: 300;
   font-stretch: normal;
   letter-spacing: -0.83px;
   color: var(--black);
   margin-right: 1.2rem;
-  margin-bottom: 1.8rem;
+  margin-bottom: 1rem;
   line-height: 1;
 }
 
 .text {
   font-family: "Futura BT heavy";
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 500;
   letter-spacing: -0.4px;
   color: var(--primary);

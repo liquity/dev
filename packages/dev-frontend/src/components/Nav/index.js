@@ -6,7 +6,7 @@ import classes from "./Nav.module.css";
 const LINKS = [
   { to: "/", content: "Trove" },
   { to: "/stability-pool", content: "Stability Pool" },
-  { to: "/stake", content: "Stake(LQTY)" },
+  { to: "/stake", content: "Stake" },
   { to: "/liquidation", content: "Liquidation" },
   { href: "https://duneanalytics.com/dani/Liquity", content: "Liquity analitics" }
 ];

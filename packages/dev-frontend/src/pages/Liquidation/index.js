@@ -186,7 +186,7 @@ const RiskyTroves = ({ pageSize = 10 }) => {
       ) : (
         <div className={classes.table}>
           <div className={classes.tableHead}>
-            <p className={classes.tableHeadText}>Owner</p>
+            <p className={cn(classes.tableHeadText, classes.firstChild)}>Owner</p>
             <div className={classes.tableHeadBox}>
               <p className={classes.tableHeadText}>Collateral</p>
               <p className={classes.tableHeadUnit}>{ETH}</p>
@@ -201,14 +201,26 @@ const RiskyTroves = ({ pageSize = 10 }) => {
               Ratio
             </p>
             <div className={classes.tableHeadBox}>
-              <p className={classes.tableHeadText}>Liquidation Price</p>
+              <p className={classes.tableHeadText}>
+                Liquidation
+                <br />
+                Price <span className={classes.tableHeadUnit}>$</span>
+              </p>
+            </div>
+            <div className={classes.tableHeadBox}>
+              <p className={classes.tableHeadText}>Potential Profit</p>
               <p className={classes.tableHeadUnit}>{COIN}</p>
             </div>
+            <Button disabled className={classes.hiddenButton}>
+              Liquidate
+            </Button>
           </div>
 
           <div className={classes.tableBody}>
-            {troves.map(
-              trove =>
+            {troves.map(trove => {
+              const liquidationPrice = trove.debt.mulDiv(1.1, trove.collateral).prettify();
+
+              return (
                 !trove.isEmpty && (
                   <div className={classes.tableRow} key={trove.ownerAddress}>
                     <div className={classes.addressData}>
@@ -231,10 +243,13 @@ const RiskyTroves = ({ pageSize = 10 }) => {
                       {new Percent(trove.collateralRatio(price)).prettify()}
                     </p>
 
-                    <p className={classes.tableData}>--</p>
+                    <p className={classes.tableData}>{liquidationPrice}</p>
+
+                    <p className={classes.tableData}>{trove.debt.mul(0.0945).prettify(0)}</p>
 
                     <Transaction
                       id={`liquidate-${trove.ownerAddress}`}
+                      showFailure="asTooltip"
                       requires={[
                         recoveryMode
                           ? liquidatableInRecoveryMode(
@@ -251,7 +266,8 @@ const RiskyTroves = ({ pageSize = 10 }) => {
                     </Transaction>
                   </div>
                 )
-            )}
+              );
+            })}
           </div>
         </div>
       )}

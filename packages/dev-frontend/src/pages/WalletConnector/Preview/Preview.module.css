@@ -15,3 +15,48 @@
 .staticAmount {
   padding-right: 1rem;
 }
+
+.head {
+  width: 42rem;
+}
+
+.total {
+  padding: 2.2rem 1.4rem 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-bottom: 1px solid var(--primary);
+}
+
+.totalStaked {
+  font-family: "Futura BT light";
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  color: #2b2b2b;
+}
+
+.title {
+  padding: 1.8rem;
+  font-family: "Futura BT medium";
+  font-size: 2rem;
+  font-weight: 300;
+  letter-spacing: -0.4px;
+  color: #000000;
+  text-align: center;
+  border-bottom: 1px solid var(--primary);
+}
+
+.staticInfo {
+  border-bottom: 1px solid var(--primary);
+  padding: 1.5rem 1rem 0;
+}
+
+.stakedWrapper {
+  margin-top: 2.8rem;
+  margin-bottom: 6rem;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}

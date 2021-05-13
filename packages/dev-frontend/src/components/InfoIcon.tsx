@@ -1,7 +1,8 @@
 import React from "react";
 import Tippy, { TippyProps } from "@tippyjs/react";
-import { Icon } from "./Icon";
+import { Ionicon } from "./IonIcon";
 import { FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
+import classes from "./InfoIcon.module.css";
 
 export type InfoIconProps = Pick<TippyProps, "placement"> &
   Pick<FontAwesomeIconProps, "size"> & {
@@ -10,10 +11,16 @@ export type InfoIconProps = Pick<TippyProps, "placement"> &
 
 export const InfoIcon: React.FC<InfoIconProps> = ({ placement = "right", tooltip, size = "1x" }) => {
   return (
-    <Tippy interactive={true} placement={placement} content={tooltip} maxWidth="268px">
-      <span>
+    <Tippy
+      className={classes.wrapper}
+      interactive={true}
+      placement={placement}
+      content={tooltip}
+      maxWidth="268px"
+    >
+      <span style={{ display: "inline-flex", color: "var(--gray)" }}>
         &nbsp;
-        <Icon name="question-circle" size={size} />
+        <Ionicon name="help-circle-outline" />
       </span>
     </Tippy>
   );

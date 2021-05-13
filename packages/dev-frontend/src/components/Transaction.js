@@ -107,8 +107,7 @@ export function Transaction({
       ? React.cloneElement(
           trigger,
           {
-            disabled: true,
-            variant: "danger"
+            disabled: true
           },
           failureReasons[0]
         )
@@ -120,15 +119,7 @@ export function Transaction({
     tooltip = failureReasons[0];
   }
 
-  return tooltip ? (
-    <>
-      <Tooltip message={tooltip} placement={tooltipPlacement || "right"}>
-        {clonedTrigger}
-      </Tooltip>
-    </>
-  ) : (
-    clonedTrigger
-  );
+  return clonedTrigger;
 }
 
 // Doesn't work on Kovan:
@@ -243,7 +234,7 @@ export const TransactionMonitor = () => {
         if (!cancelled) {
           setTransactionState({ type: "idle" });
         }
-      }, 5000);
+      }, 3000);
 
       return () => {
         cancelled = true;

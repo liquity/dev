@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useReducer, useEffect } from "react";
 import { Switch, Route } from "react-router-dom";
 import { Wallet } from "@ethersproject/wallet";
+import { useWeb3React } from "@web3-react/core";
 
 import { Decimal, Difference, Trove } from "@liquity/lib-base";
 import { LiquityStoreProvider } from "@liquity/lib-react";
@@ -29,8 +30,73 @@ import Modal from "./components/Modal";
 import Link from "./components/Link";
 import CopyToClipboard from "./components/CopyToClipboard";
 import Button from "./components/Button";
+import ConnectWalletWidget from "./components/ConnectWalletWidget";
+import { walletLinkConnector } from "./connectors/coinbase";
+import { injectedConnector } from "./connectors/injectedConnector";
+import { walletConnectConnector } from "./connectors/walletConnect";
 
 import classes from "./LiquityFrontend.module.css";
+
+const connectionReducer = (state, action) => {
+  switch (action.type) {
+    case "setConnector":
+      return {
+        ...state,
+        connector: action.connector
+      };
+
+    case "startActivating":
+      return {
+        ...state,
+        type: "activating"
+      };
+
+    case "finishActivating":
+      return {
+        ...state,
+        type: "active"
+      };
+
+    case "fail":
+      if (state.type !== "inactive") {
+        return {
+          type: action.error.message.match(/rejected/i)
+            ? "rejectedByUser"
+            : action.error.message.match(/pending/i)
+            ? "alreadyPending"
+            : "failed",
+          connector: state.connector
+        };
+      }
+      break;
+
+    case "retry":
+      if (state.type !== "inactive") {
+        return {
+          type: "activating",
+          connector: state.connector
+        };
+      }
+      break;
+
+    case "cancel":
+      return {
+        type: "inactive",
+        connector: state.connector
+      };
+
+    case "deactivate":
+      return {
+        type: "inactive",
+        connector: state.connector
+      };
+
+    default:
+      return state;
+  }
+
+  return state;
+};
 
 const loader = () => <Loader />;
 
@@ -38,8 +104,15 @@ const detectMetaMask = () => window.ethereum?.isMetaMask ?? false;
 
 export const LiquityFrontend = () => {
   const [walletModal, setWalletModal] = useState(null);
+  const [changeWalletModal, setChangeWalletModal] = useState(null);
+  const { activate, deactivate, active, error, connector } = useWeb3React();
   const { account, provider, liquity } = useLiquity();
+  const [connectionState, dispatch] = useReducer(connectionReducer, {
+    type: "inactive",
+    connector: connector
+  });
   const isMetaMask = detectMetaMask();
+  const isMetamaskConnection = isMetaMask && connector === injectedConnector;
 
   Object.assign(window, {
     account,
@@ -50,6 +123,25 @@ export const LiquityFrontend = () => {
     Difference,
     Wallet
   });
+
+  useEffect(() => {
+    if (connectionState.type === "rejectedByUser") {
+      deactivate();
+    }
+    if (error) {
+      dispatch({ type: "fail", error });
+      deactivate();
+    }
+  }, [error, deactivate, connectionState]);
+
+  useEffect(() => {
+    if (active) {
+      dispatch({ type: "finishActivating" });
+    } else {
+      dispatch({ type: "deactivate" });
+      deactivate();
+    }
+  }, [active, deactivate]);
 
   return (
     <LiquityStoreProvider lodaer={loader} store={liquity.store}>
@@ -74,8 +166,8 @@ export const LiquityFrontend = () => {
                       </Link>
                     </div>
                     <p className={classes.connection}>
-                      {isMetaMask ? "Connected with MetaMask" : "Connected with wallet"}{" "}
-                      {isMetaMask && (
+                      {isMetamaskConnection ? "Connected with MetaMask" : "Connected"}{" "}
+                      {isMetamaskConnection && (
                         <img
                           className={classes.metaMaskIcon}
                           src={`${process.env.PUBLIC_URL}/icons/metamask.png`}
@@ -84,7 +176,15 @@ export const LiquityFrontend = () => {
                       )}
                     </p>
                     <div className={classes.actions}>
-                      <Button className={classes.fourthButton}>change</Button>
+                      <Button
+                        onClick={() => {
+                          setWalletModal(false);
+                          setChangeWalletModal(true);
+                        }}
+                        className={classes.fourthButton}
+                      >
+                        change
+                      </Button>
                       <Button
                         className={classes.fourthButton}
                         onClick={() => window.ethereum._handleDisconnect()}
@@ -93,6 +193,20 @@ export const LiquityFrontend = () => {
                       </Button>
                     </div>
                   </div>
+                </Modal>
+              )}
+
+              {changeWalletModal && (
+                <Modal title="Change your wallet" onClose={() => setChangeWalletModal(null)}>
+                  <ConnectWalletWidget
+                    activate={activate}
+                    deactivate={deactivate}
+                    dispatch={dispatch}
+                    injectedConnector={injectedConnector}
+                    walletConnectConnector={walletConnectConnector}
+                    walletLinkConnector={walletLinkConnector}
+                    onItemClick={() => setChangeWalletModal(null)}
+                  />
                 </Modal>
               )}
 

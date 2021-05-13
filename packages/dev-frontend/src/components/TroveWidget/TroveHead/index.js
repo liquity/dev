@@ -1,22 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import cn from "classnames";
 
 import { useLiquitySelector } from "@liquity/lib-react";
-import { CRITICAL_COLLATERAL_RATIO, Percent } from "@liquity/lib-base";
+import { CRITICAL_COLLATERAL_RATIO, Decimal, Percent } from "@liquity/lib-base";
 import { useLiquity } from "../../../hooks/LiquityContext";
 
 import Button from "../../Button";
 import Modal from "../../Modal";
+import { Spinner } from "../../Loader";
 import StaticRow from "../../StaticRow";
 import { useTransactionFunction } from "../../Transaction";
 import ErrorDescription from "../../ErrorDescription";
 import { Amount } from "../../ActionDescription";
+import { useMyTransactionState } from "../../Transaction";
 
 import { COIN, ETH } from "../../../strings";
 
 import classes from "./TroveHead.module.css";
-
-// LIQUIDATED
 
 const Heading = ({ children, className }) => (
   <h3 className={cn(classes.heading, className)}>{children}</h3>
@@ -36,7 +36,7 @@ const TroveInfo = ({ label, amount, status = null, unit }) => (
         [classes.status]: status,
         [classes.success]: status === "success",
         [classes.warning]: status === "warning",
-        [classes.warning]: status === "danger"
+        [classes.danger]: status === "danger"
       })}
     >
       {amount} {unit}
@@ -44,21 +44,94 @@ const TroveInfo = ({ label, amount, status = null, unit }) => (
   </div>
 );
 
-const selectActive = ({ trove, price, lusdBalance }) => ({ trove, price, lusdBalance });
+const selectActive = ({ trove, price, lusdBalance, blockTag, total }) => ({
+  trove,
+  price,
+  lusdBalance,
+  blockTag,
+  total
+});
+
+const transactionIdPrefix = "trove-";
+const transactionIdMatcher = new RegExp(`^${transactionIdPrefix}`);
+
+let expandedTroveInfo = false;
 
 const ActiveTrove = () => {
   const [cancelModal, setCancelModal] = useState(null);
-  const { liquity } = useLiquity();
-  const [expanded, setExpanded] = useState(false);
+  const { liquity, account } = useLiquity();
+  const [expanded, setExpanded] = useState(expandedTroveInfo || false);
+  const [loading, setLoading] = useState(false);
+  const [troves, setTroves] = useState(null);
+  const myTransactionState = useMyTransactionState(transactionIdMatcher);
 
-  const { trove, price, lusdBalance } = useLiquitySelector(selectActive);
+  const { trove, price, lusdBalance, blockTag, total } = useLiquitySelector(selectActive);
 
-  const collateralRatioPct = new Percent(trove.collateralRatio(price)).prettify();
+  const collateralRatio = trove.collateralRatio(price);
+  const collateralRatioPct = new Percent(collateralRatio).prettify();
 
   const [sendTransaction] = useTransactionFunction(
     "trove-closure",
     liquity.send.closeTrove.bind(liquity.send)
   );
+
+  const fetchTroves = useCallback(() => {
+    setLoading(true);
+
+    liquity
+      .getTroves(
+        {
+          first: 5000,
+          sortedBy: "ascendingCollateralRatio",
+          startingAt: 0
+        },
+        { blockTag }
+      )
+      .then(troves => {
+        setTroves(troves);
+        setLoading(false);
+      });
+  }, [blockTag, liquity]);
+
+  useEffect(() => {
+    if (myTransactionState.type === "confirmedOneShot") {
+      fetchTroves();
+    }
+  }, [fetchTroves, myTransactionState]);
+
+  useEffect(() => {
+    fetchTroves();
+
+    const id = setInterval(() => {
+      fetchTroves();
+    }, 10 * 60 * 1000);
+
+    return () => {
+      clearInterval(id);
+    };
+  }, [fetchTroves]);
+
+  const liquidationRisk = collateralRatio.mul(100).lt(150)
+    ? "high"
+    : collateralRatio.mul(100).gte(150) && collateralRatio.mul(100).lte(190)
+    ? "medium"
+    : "low";
+
+  const userIndex = troves?.length && troves.findIndex(t => t.ownerAddress === account);
+  let debtInFrontOfMe = Decimal.from(0);
+  for (let i = 0; i < userIndex; i++) {
+    debtInFrontOfMe = debtInFrontOfMe.add(troves[i].debt);
+  }
+
+  const debtInFrontPct = total.debt.mulDiv(
+    100,
+    debtInFrontOfMe.gt(0) ? debtInFrontOfMe : Decimal.from(1)
+  );
+  const redemptionRisk = debtInFrontPct.lt(5)
+    ? "high"
+    : debtInFrontPct.gte(5) && debtInFrontPct.lte(15)
+    ? "medium"
+    : "low";
 
   return (
     <div className={classes.activeTroveWrapper}>
@@ -116,11 +189,11 @@ close trove?"
             label="Ratio"
             amount={collateralRatioPct}
             status={
-              trove.collateral?.gt(CRITICAL_COLLATERAL_RATIO)
+              collateralRatio.gt(CRITICAL_COLLATERAL_RATIO)
                 ? "success"
-                : trove.collateral?.gt(1.2)
+                : collateralRatio.gt(1.2)
                 ? "warning"
-                : trove.collateral?.lte(1.2)
+                : collateralRatio.lte(1.2)
                 ? "danger"
                 : "muted"
             }
@@ -133,42 +206,57 @@ close trove?"
             [classes.troveRisksExpanded]: expanded
           })}
         >
-          <div className={classes.troveRisksLeft}>
-            <p className={classes.troveRisksType}>Liquidation risk</p>
-            <p
-              className={cn(classes.troveRisksChance, {
-                [classes.riskHigh]: true,
-                [classes.riskMedium]: false,
-                [classes.riskLow]: false
-              })}
-            >
-              high
-            </p>
-            <p className={classes.troveRisksInfo}>liquidation price</p>
-            <p className={classes.troveRisksAmount}>1830 {COIN}</p>
-          </div>
-          <div className={classes.troveRisksRight}>
-            {" "}
-            <p className={classes.troveRisksType}>Redemtion risk</p>
-            <p
-              className={cn(classes.troveRisksChance, {
-                [classes.riskHigh]: false,
-                [classes.riskMedium]: true,
-                [classes.riskLow]: false
-              })}
-            >
-              medium
-            </p>
-            <p className={classes.troveRisksInfo}>debt in front of me</p>
-            <p className={classes.troveRisksAmount}>563k {COIN}</p>
-          </div>
+          {loading ? (
+            <div className={classes.spinner}>
+              <Spinner />
+            </div>
+          ) : (
+            <>
+              <div className={classes.troveRisksLeft}>
+                <p className={classes.troveRisksType}>Liquidation risk</p>
+                <p
+                  className={cn(classes.troveRisksChance, {
+                    [classes.riskHigh]: liquidationRisk === "high",
+                    [classes.riskMedium]: liquidationRisk === "medium",
+                    [classes.riskLow]: liquidationRisk === "low"
+                  })}
+                >
+                  {liquidationRisk}
+                </p>
+                <p className={classes.troveRisksInfo}>liquidation price</p>
+                <p className={classes.troveRisksAmount}>
+                  {trove.debt.mulDiv(1.1, trove.collateral).prettify()} $
+                </p>
+              </div>
+              <div className={classes.troveRisksRight}>
+                {" "}
+                <p className={classes.troveRisksType}>Redemption risk</p>
+                <p
+                  className={cn(classes.troveRisksChance, {
+                    [classes.riskHigh]: redemptionRisk === "high",
+                    [classes.riskMedium]: redemptionRisk === "medium",
+                    [classes.riskLow]: redemptionRisk === "low"
+                  })}
+                >
+                  {redemptionRisk}
+                </p>
+                <p className={classes.troveRisksInfo}>debt in front of me</p>
+                <p className={classes.troveRisksAmount}>
+                  {debtInFrontOfMe.shorten()} {COIN}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         <Button
           className={cn(classes.toggleExpandButton, {
             [classes.rotate]: expanded
           })}
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => {
+            setExpanded(!expanded);
+            expandedTroveInfo = !expandedTroveInfo;
+          }}
         >
           <ion-icon name="chevron-down-outline"></ion-icon>
         </Button>

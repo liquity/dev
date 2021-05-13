@@ -13,36 +13,46 @@ import Modal from "../../components/Modal";
 import Link from "../../components/Link";
 import { UnregisteredKickbackRate } from "../../components/KickbackRate";
 import Body from "../../components/Body";
-import Preview from "./Preview";
-import { provider as walletConnectProvider } from "../../connectors/walletConnect";
-import { walletLinkProvider } from "../../connectors/coinbase";
+import { TrovePreview, StabilityPrevies, StakingPreview, LiquidationPrevriew } from "./Preview";
+import { walletConnectConnector } from "../../connectors/walletConnect";
+import { walletLinkConnector } from "../../connectors/coinbase";
+
 
 import classes from "./WalletConnector.module.css";
 
 const connectionReducer = (state, action) => {
   switch (action.type) {
-    case "startActivating":
+    case "setConnector":
       return {
-        type: "activating",
+        ...state,
         connector: action.connector
       };
+
+    case "startActivating":
+      return {
+        ...state,
+        type: "activating"
+      };
+
     case "finishActivating":
       return {
-        type: "active",
-        connector: state.type === "inactive" ? injectedConnector : state.connector
+        ...state,
+        type: "active"
       };
+
     case "fail":
       if (state.type !== "inactive") {
         return {
-          type: action.error.message.match(/user rejected/i)
+          type: action.error.message.match(/rejected/i)
             ? "rejectedByUser"
-            : action.error.message.match(/already pending/i)
+            : action.error.message.match(/pending/i)
             ? "alreadyPending"
             : "failed",
           connector: state.connector
         };
       }
       break;
+
     case "retry":
       if (state.type !== "inactive") {
         return {
@@ -51,13 +61,17 @@ const connectionReducer = (state, action) => {
         };
       }
       break;
+
     case "cancel":
       return {
-        type: "inactive"
+        type: "inactive",
+        connector: state.connector
       };
+
     case "deactivate":
       return {
-        type: "inactive"
+        type: "inactive",
+        connector: state.connector
       };
 
     default:
@@ -74,23 +88,35 @@ const WalletConnector = ({ children }) => {
 
   const { activate, deactivate, active, error } = useWeb3React();
   const triedAuthorizedConnection = useAuthorizedConnection();
-  const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
+  const [connectionState, dispatch] = useReducer(connectionReducer, {
+    type: "inactive",
+    connector: injectedConnector
+  });
   const isMetaMask = detectMetaMask();
+  const isMetamaskConnection = isMetaMask && connectionState.connector === injectedConnector;
 
   useEffect(() => {
+    localStorage.clear();
+  }, []);
+
+  useEffect(() => {
+    if (connectionState.type === "rejectedByUser") {
+      deactivate();
+    }
     if (error) {
       dispatch({ type: "fail", error });
       deactivate();
     }
-  }, [error, deactivate]);
+  }, [error, deactivate, connectionState]);
 
   useEffect(() => {
     if (active) {
       dispatch({ type: "finishActivating" });
     } else {
       dispatch({ type: "deactivate" });
+      deactivate();
     }
-  }, [active]);
+  }, [active, deactivate]);
 
   if (!triedAuthorizedConnection) {
     return <Loader />;
@@ -110,8 +136,19 @@ const WalletConnector = ({ children }) => {
       <Body>
         <Switch>
           <Route path="/" exact>
-            {/* TODO check what's this */}
-            <Preview showModal={() => setWalletModal(true)} />
+            <TrovePreview showModal={() => setWalletModal(true)} />
+          </Route>
+
+          <Route path="/stability-pool">
+            <StabilityPrevies showModal={() => setWalletModal(true)} />
+          </Route>
+
+          <Route path="/stake">
+            <StakingPreview showModal={() => setWalletModal(true)} />
+          </Route>
+
+          <Route path="/liquidation">
+            <LiquidationPrevriew showModal={() => setWalletModal(true)} />
           </Route>
         </Switch>
       </Body>
@@ -120,10 +157,11 @@ const WalletConnector = ({ children }) => {
         <Modal title="Connect your wallet" onClose={() => setWalletModal(null)}>
           <ConnectWalletWidget
             activate={activate}
+            deactivate={deactivate}
             dispatch={dispatch}
             injectedConnector={injectedConnector}
-            walletConnectProvider={walletConnectProvider}
-            walletLinkProvider={walletLinkProvider}
+            walletConnectConnector={walletConnectConnector}
+            walletLinkConnector={walletLinkConnector}
             onItemClick={() => setWalletModal(null)}
           />
         </Modal>
@@ -132,7 +170,7 @@ const WalletConnector = ({ children }) => {
       {connectionState.type === "failed" && (
         <Modal
           onClose={() => setWalletModal(null)}
-          title={isMetaMask ? "Failed to connect to MetaMask" : "Failed to connect wallet"}
+          title={isMetamaskConnection ? "Failed to connect to MetaMask" : "Failed to connect wallet"}
           content={
             <>
               You might need to install MetaMask or use a different browser.{" "}
@@ -148,7 +186,13 @@ const WalletConnector = ({ children }) => {
               activate(connectionState.connector);
             }
           }}
-          decline={{ text: "Cancel", action: () => dispatch({ type: "cancel" }) }}
+          decline={{
+            text: "Cancel",
+            action: () => {
+              dispatch({ type: "cancel" });
+              deactivate();
+            }
+          }}
           status="error"
         />
       )}
@@ -156,10 +200,20 @@ const WalletConnector = ({ children }) => {
       {connectionState.type === "activating" && (
         <Modal
           onClose={() => setWalletModal(null)}
-          title={isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"}
-          decline={{ action: () => dispatch({ type: "cancel" }), text: "Cancel" }}
+          title={
+            isMetamaskConnection
+              ? "Confirm connection in MetaMask"
+              : "Confirm connection in your wallet"
+          }
+          decline={{
+            action: () => {
+              dispatch({ type: "cancel" });
+              deactivate();
+            },
+            text: "Cancel"
+          }}
           content={
-            "Confirm the request that&apos;s just appeared." + isMetaMask
+            "Confirm the request that&apos;s just appeared." + isMetamaskConnection
               ? " If you can't see a request, open your MetaMask extension via your browser."
               : " If you can't see a request, you might have to open your wallet."
           }
@@ -181,7 +235,13 @@ const WalletConnector = ({ children }) => {
         <Modal
           onClose={() => setWalletModal(null)}
           title="Are you sure you want to cancel connection?"
-          decline={{ text: "Cancel", action: () => dispatch({ type: "cancel" }) }}
+          decline={{
+            text: "Cancel",
+            action: () => {
+              dispatch({ type: "cancel" });
+              deactivate();
+            }
+          }}
           confirm={{
             text: "Retry",
             action: () => {

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { Decimal, Trove, LUSD_MINIMUM_DEBT } from "@liquity/lib-base";
+import { Decimal, LUSD_MINIMUM_DEBT, Trove } from "@liquity/lib-base";
 
 import { useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
@@ -28,13 +28,11 @@ const init = ({ trove }) => ({
 
 const reduceWith = action => state => reduce(state, action);
 
-const addMinimumDebt = reduceWith({ type: "addMinimumDebt" });
-const removeMinimumDebt = reduceWith({ type: "removeMinimumDebt" });
 const finishChange = reduceWith({ type: "finishChange" });
 const revert = reduceWith({ type: "revert" });
 
 const reduce = (state, action) => {
-  const { original, edited, changePending, debtDirty, addedMinimumDebt } = state;
+  const { original, edited, changePending } = state;
 
   switch (action.type) {
     case "startChange": {
@@ -49,21 +47,10 @@ const reduce = (state, action) => {
         ? Decimal.from(action.newValue).add(state.original.collateral)
         : original.collateral;
 
-      const newState = {
+      return {
         ...state,
         edited: edited.setCollateral(newCollateral)
       };
-
-      if (!debtDirty) {
-        if (edited.isEmpty && newCollateral.nonZero) {
-          return addMinimumDebt(newState);
-        }
-        if (addedMinimumDebt && newCollateral.isZero) {
-          return removeMinimumDebt(newState);
-        }
-      }
-
-      return newState;
     }
 
     case "substractCollateral": {
@@ -79,6 +66,13 @@ const reduce = (state, action) => {
       };
 
       return newState;
+    }
+
+    case "addMinimumDebt": {
+      return {
+        ...state,
+        edited: edited.setDebt(original.debt.add(LUSD_MINIMUM_DEBT))
+      };
     }
 
     case "setDebt": {
@@ -106,20 +100,6 @@ const reduce = (state, action) => {
         debtDirty: true
       };
     }
-
-    case "addMinimumDebt":
-      return {
-        ...state,
-        edited: edited.setDebt(LUSD_MINIMUM_DEBT),
-        addedMinimumDebt: true
-      };
-
-    case "removeMinimumDebt":
-      return {
-        ...state,
-        edited: edited.setDebt(0),
-        addedMinimumDebt: false
-      };
 
     case "revert":
       return {
@@ -233,6 +213,7 @@ const TroveManager = ({ collateral, debt, activeTab }) => {
       borrowingRate={borrowingRate}
       changePending={changePending}
       dispatch={dispatch}
+      transactionType={myTransactionState.type}
     >
       <div className={classes.container}>
         {description}

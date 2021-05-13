@@ -1,5 +1,5 @@
 .wrapper {
-  min-width: 80rem;
+  min-width: 78rem;
 }
 
 .header,
@@ -60,14 +60,18 @@
 .tableHead {
   background-color: #f7f7f7;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   padding: 2.4rem 0 1.2rem;
   border-radius: 1rem;
 }
 
-.tableHead > *,
-.tableRow > * {
-  width: calc(100% / 6);
+.tableHead > *:not(:first-child):not(:last-child),
+.tableRow > *:not(:first-child):not(:last-child) {
+  flex: 1;
+}
+
+.firstChild {
+  width: 20%;
   padding: 0.5rem;
 }
 
@@ -115,7 +119,8 @@
 .addressData {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  width: 20%;
 }
 
 .address {
@@ -148,8 +153,17 @@
 }
 
 .liquidationButton {
-  padding: 0.8rem 1.4rem;
+  padding: 0.5rem 1.4rem;
   color: var(--white);
   background-color: #cd9f9f;
   border-radius: 2rem;
+  flex: 0;
+}
+
+.hiddenButton {
+  visibility: hidden;
+  padding: 0.5rem 1.4rem;
+  flex: 0;
+  border-radius: 2rem;
+  font-size: 1.4rem;
 }

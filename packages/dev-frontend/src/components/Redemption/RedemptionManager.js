@@ -89,14 +89,14 @@ const RedemptionManager = () => {
         maxAmount={lusdBalance.toString()}
         maxedOut={lusdAmount.eq(lusdBalance)}
         unit={COIN}
-        available={`Wallet ${lusdBalance.prettify(2)}`}
+        available={`Wallet: ${lusdBalance.prettify(2)}`}
         onChange={v => {
           setValue(v);
           setLUSDAmount(Decimal.from(v || 0));
         }}
         step={100}
         min={0}
-        icon={process.env.PUBLIC_URL + "/icons/ethereum-eth.svg"}
+        icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
         autoFocus
       />
 
@@ -120,6 +120,8 @@ const RedemptionManager = () => {
             amount={ethFee.toString(4)}
             pendingAmount={feePct.toString(2)}
             unit="ETH"
+            tooltip="The Redemption Fee is charged as a percentage of the redeemed Ether. The Redemption
+            Fee depends on LUSD redemption volumes and is 0.5% at minimum."
           />
 
           <StaticRow

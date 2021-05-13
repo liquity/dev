@@ -38,7 +38,7 @@
 
 .statName {
   font-family: "Futura BT light";
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   font-weight: 300;
   letter-spacing: -0.44px;
   color: var(--black);
@@ -47,8 +47,8 @@
 .statValue {
   height: 14px;
   font-family: "Futura BT light";
-  font-size: 1.9rem;
-  font-weight: 300;
+  font-size: 1.7rem;
+  font-weight: 600;
   letter-spacing: -0.38px;
   color: var(--primary);
   margin-left: 2rem;

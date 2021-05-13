@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Tabs from "../../components/Tabs";
 import StakingManager from "../../components/Staking/StakingManager";
@@ -10,9 +10,15 @@ const TABS = [
   { tab: "unilp", content: "Stake UNI LP " }
 ];
 
+let presistActiveTab = null;
+
 const Stake = () => {
-  const [activeTab, setActiveTab] = useState("lqty");
+  const [activeTab, setActiveTab] = useState(presistActiveTab || "lqty");
   const { view } = useStakingView();
+
+  useEffect(() => {
+    presistActiveTab = activeTab;
+  }, [activeTab]);
 
   return (
     <>

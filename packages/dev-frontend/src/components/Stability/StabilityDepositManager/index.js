@@ -1,20 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Decimal } from "@liquity/lib-base";
 import { useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
-import { COIN } from "../../../strings";
-
 import { useMyTransactionState } from "../../Transaction";
 
 import { StabilityDepositEditor } from "../StabilityDepositEditor";
-import { StabilityDepositAction } from "../StabilityDepositAction";
 import { useStabilityView } from "../context/StabilityViewContext";
 import {
   selectForStabilityDepositChangeValidation,
   validateStabilityDepositChange
 } from "../validation/validateStabilityDepositChange";
-import Button from "../../Button";
 import { Yield } from "../Yield";
 
 import classes from "./StabilityDepositManager.module.css";
@@ -116,8 +112,6 @@ const StabilityDepositManager = () => {
     validationContext
   );
 
-  const makingNewDeposit = originalDeposit.isEmpty;
-
   const myTransactionState = useMyTransactionState(transactionId);
 
   useEffect(() => {
@@ -151,6 +145,7 @@ const StabilityDepositManager = () => {
         view={view}
         dispatchEvent={dispatchEvent}
         error={error}
+        transactionType={myTransactionState.type}
       />
     </>
   );

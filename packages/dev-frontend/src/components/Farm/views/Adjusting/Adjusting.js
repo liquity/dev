@@ -51,6 +51,13 @@ export const Adjusting = () => {
   const [increment, setIncrement] = useState(null);
   const [decrement, setDecrement] = useState(null);
 
+  useEffect(() => {
+    if (transactionState.type === "confirmedOneShot") {
+      setIncrement(null);
+      setDecrement(null);
+    }
+  }, [transactionState]);
+
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
@@ -81,12 +88,7 @@ export const Adjusting = () => {
           <StaticRow label="Pool share" amount={poolShare.prettify(4)} unit="%" />
         )}
 
-        <StaticRow
-          boldLabel
-          label="Reward"
-          amount={liquidityMiningLQTYReward.prettify(2)}
-          unit={GT}
-        />
+        <StaticRow label="Reward" amount={liquidityMiningLQTYReward.prettify(2)} unit={GT} />
       </div>
 
       {increment !== null && (
@@ -99,9 +101,9 @@ export const Adjusting = () => {
         >
           <div className={classes.modalContent}>
             <Input
-              label="Stake"
+              label="stake"
               unit={LP}
-              icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
+              icon={process.env.PUBLIC_URL + "/icons/uniswap-uni-logo.png"}
               value={increment}
               onChange={v => {
                 setIncrement(v);
@@ -114,7 +116,9 @@ export const Adjusting = () => {
 
             <Validation amount={liquidityMiningStake.add(Decimal.from(increment || 0))} />
 
-            <Confirm amount={liquidityMiningStake.add(Decimal.from(increment || 0))} />
+            <div className={classes.actions}>
+              <Confirm amount={liquidityMiningStake.add(Decimal.from(increment || 0))} />
+            </div>
 
             <StaticRow
               label="Staked"
@@ -127,7 +131,7 @@ export const Adjusting = () => {
 
       {decrement !== null && (
         <Modal
-          title="STAKE UNI LP"
+          title="UNSTAKE UNI LP"
           onClose={() => {
             setDecrement(null);
             dispatchEvent("CANCEL_PRESSED");
@@ -135,9 +139,9 @@ export const Adjusting = () => {
         >
           <div className={classes.modalContent}>
             <Input
-              label="Stake"
+              label="unstake"
               unit={LP}
-              icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
+              icon={process.env.PUBLIC_URL + "/icons/uniswap-uni-logo.png"}
               value={decrement}
               onChange={v => {
                 setDecrement(v);
@@ -168,14 +172,16 @@ export const Adjusting = () => {
               />
             )}
 
-            <Confirm
-              disabled={cannotDecrement}
-              amount={
-                cannotDecrement
-                  ? Decimal.ZERO
-                  : liquidityMiningStake.sub(Decimal.from(decrement || 0))
-              }
-            />
+            <div className={classes.actions}>
+              <Confirm
+                disabled={cannotDecrement}
+                amount={
+                  cannotDecrement
+                    ? Decimal.ZERO
+                    : liquidityMiningStake.sub(Decimal.from(decrement || 0))
+                }
+              />
+            </div>
 
             {/* 
 
@@ -186,7 +192,11 @@ export const Adjusting = () => {
 
             <StaticRow
               label="Staked"
-              amount={liquidityMiningStake.add(Decimal.from(increment || 0)).prettify(2)}
+              amount={
+                cannotDecrement
+                  ? Decimal.ZERO.prettify(2)
+                  : liquidityMiningStake.sub(Decimal.from(decrement || 0)).prettify(2)
+              }
               unit={LP}
             />
           </div>

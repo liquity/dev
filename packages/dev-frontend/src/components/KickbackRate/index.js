@@ -24,7 +24,7 @@ const KickbackRate = () => {
     }
   } = useLiquity();
 
-  const kickbackRatePct = frontendTag === AddressZero ? "100" : kickbackRate?.mul(100).prettify();
+  const kickbackRatePct = frontendTag === AddressZero ? "99" : kickbackRate?.mul(100).prettify();
 
   if (!kickbackRatePct) return null;
 

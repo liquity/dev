@@ -31,7 +31,7 @@ export const Staking = ({ hasApproved, dispatchEvent }) => {
     <>
       {stake !== null && (
         <Modal
-          title="STAKE LQTY"
+          title="STAKE UNI LP"
           onClose={() => {
             setStake(null);
             dispatchEvent("CANCEL_PRESSED");
@@ -41,7 +41,7 @@ export const Staking = ({ hasApproved, dispatchEvent }) => {
             <Input
               label="Stake"
               unit={LP}
-              icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
+              icon={process.env.PUBLIC_URL + "/icons/uniswap-uni-logo.png"}
               value={stake}
               onChange={v => {
                 setStake(v);
@@ -65,7 +65,7 @@ export const Staking = ({ hasApproved, dispatchEvent }) => {
       <div className={classes.infos}>
         <StaticRow label="Pool share" amount={Decimal.from(0).prettify(4)} unit="%" />
 
-        <StaticRow boldLabel label="Reward" amount={Decimal.from(0).prettify(2)} unit={GT} />
+        <StaticRow label="Reward" amount={Decimal.from(0).prettify(2)} unit={GT} />
       </div>
 
       {!hasApproved ? (

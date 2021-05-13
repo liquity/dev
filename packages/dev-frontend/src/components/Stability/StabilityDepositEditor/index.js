@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import cn from "classnames";
 
-import { Decimal, Difference } from "@liquity/lib-base";
+import { Decimal } from "@liquity/lib-base";
 
 import { useLiquitySelector } from "@liquity/lib-react";
 
@@ -36,14 +36,21 @@ export const StabilityDepositEditor = ({
   transactionId,
   view,
   dispatchEvent,
-  error
+  error,
+  transactionType
 }) => {
   const { lusdBalance, lusdInStabilityPool, stabilityDeposit } = useLiquitySelector(select);
   const [stake, setStake] = useState(null);
   const [increment, setIncrement] = useState(null);
   const [decrement, setDecrement] = useState(null);
 
-  const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
+  useEffect(() => {
+    if (transactionType === "confirmedOneShot") {
+      setStake(null);
+      setIncrement(null);
+      setDecrement(null);
+    }
+  }, [transactionType]);
 
   const maxAmount = originalDeposit.currentLUSD.add(lusdBalance);
   const maxedOut = editedLUSD.eq(maxAmount);
@@ -54,10 +61,6 @@ export const StabilityDepositEditor = ({
 
   const originalPoolShare = originalDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
   const newPoolShare = editedLUSD.mulDiv(100, lusdInStabilityPoolAfterChange);
-
-  const poolShareChange =
-    originalDeposit.currentLUSD.nonZero &&
-    Difference.between(newPoolShare, originalPoolShare).nonZero;
 
   const hasReward = !stabilityDeposit.lqtyReward.isZero;
   const hasGain = !stabilityDeposit.collateralGain.isZero;
@@ -122,7 +125,7 @@ export const StabilityDepositEditor = ({
           <div className={classes.modalContent}>
             <Input
               label="stake"
-              unit={GT}
+              unit={COIN}
               icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
               value={increment}
               onChange={v => {
@@ -164,7 +167,7 @@ export const StabilityDepositEditor = ({
           <div className={classes.modalContent}>
             <Input
               label="unstake"
-              unit={GT}
+              unit={COIN}
               icon={process.env.PUBLIC_URL + "/icons/128-lusd-icon.svg"}
               value={decrement}
               onChange={v => {
@@ -213,7 +216,14 @@ export const StabilityDepositEditor = ({
 
         <StaticRow label="Liquidation gain" amount={liquidationGain.prettify(4)} unit="ETH" />
 
-        <StaticRow label="Reward" amount={reward.prettify(2)} unit={GT} boldLabel />
+        <StaticRow
+          label="Reward"
+          amount={reward.prettify(2)}
+          unit={GT}
+          tooltip=" Although the LQTY rewards accrue every minute, the value on the UI only updates
+                      when a user transacts with the Stability Pool. Therefore you may receive more
+                      rewards than is displayed when you claim or adjust your deposit."
+        />
       </div>
 
       <div className={classes.stakedWrapper}>
@@ -283,9 +293,3 @@ export const StabilityDepositEditor = ({
     </div>
   );
 };
-
-//<Card variant="tooltip" sx={{ width: "240px" }}>
-//Although the LQTY rewards accrue every minute, the value on the UI only updates
-//when a user transacts with the Stability Pool. Therefore you may receive more
-//rewards than is displayed when you claim or adjust your deposit.
-//</Card>

@@ -19,7 +19,7 @@ import { ETH, COIN } from "../../../strings";
 
 import classes from "./TroveEditor.module.css";
 
-const gasRoomETH = Decimal.from(0.1);
+const gasRoomETH = Decimal.from(0.01);
 
 const getColor = ratio =>
   ratio?.gt(CRITICAL_COLLATERAL_RATIO)
@@ -30,7 +30,7 @@ const getColor = ratio =>
     ? "danger"
     : "muted";
 
-const select = ({ price, accountBalance }) => ({ price, accountBalance });
+const select = ({ price, accountBalance, lusdBalance }) => ({ price, accountBalance, lusdBalance });
 
 export const TroveDeposit = ({
   children,
@@ -39,11 +39,26 @@ export const TroveDeposit = ({
   fee,
   borrowingRate,
   changePending,
-  dispatch
+  dispatch,
+  transactionType
 }) => {
   const { price, accountBalance } = useLiquitySelector(select);
   const [deposit, setDeposit] = useState("");
   const [borrow, setBorrow] = useState("");
+
+  // useEffect(() => {
+  //   if (deposit && !borrow && !original.isEmpty) {
+  //     dispatch({ type: "addMinimumDebt" });
+  //     setBorrow(1800);
+  //   }
+  // }, [deposit, borrow, dispatch, original]);
+
+  useEffect(() => {
+    if (transactionType === "confirmedOneShot") {
+      setDeposit("");
+      setBorrow("");
+    }
+  }, [transactionType]);
 
   useEffect(() => {
     dispatch({ type: "revert" });
@@ -62,12 +77,6 @@ export const TroveDeposit = ({
 
   const totalFee = original.isEmpty ? LUSD_LIQUIDATION_RESERVE.add(fee) : fee;
 
-  const recieve = borrow
-    ? Decimal.from(borrow).gt(totalFee)
-      ? Decimal.from(borrow).sub(totalFee)
-      : Decimal.ZERO
-    : Decimal.ZERO;
-
   return (
     <div className={classes.wrapper}>
       <Input
@@ -79,7 +88,7 @@ export const TroveDeposit = ({
           setDeposit(v);
           dispatch({ type: "setCollateral", newValue: v });
         }}
-        available={`Wallet ${maxEth.prettify(2)}`}
+        available={`Wallet: ${maxEth.prettify(4)}`}
         icon={process.env.PUBLIC_URL + "/icons/ethereum-eth.svg"}
         maxAmount={maxEth.toString()}
         maxedOut={maxEth.toString() === deposit.toString()}
@@ -122,6 +131,9 @@ export const TroveDeposit = ({
               label="Liquidation Reserve"
               amount={`${LUSD_LIQUIDATION_RESERVE}`}
               unit={COIN}
+              tooltip="An amount set aside to cover the liquidator’s gas costs if your Trove needs to be
+              liquidated. The amount increases your debt and is refunded if you close your
+              Trove by fully paying off its net debt."
             />
           )}
 
@@ -131,6 +143,8 @@ export const TroveDeposit = ({
             amount={fee.toString(2)}
             unit={COIN}
             brackets={feePct.prettify()}
+            tooltip="This amount is deducted from the borrowed amount as a one-time fee. There are no
+            recurring fees for borrowing, which is thus interest-free."
           />
 
           {borrow && (
@@ -142,13 +156,37 @@ export const TroveDeposit = ({
             />
           )}
 
+          {borrow && (
+            <StaticRow
+              label="Total debt"
+              inputId="trove-total-debt"
+              amount={Decimal.from(borrow || 0)
+                .add(totalFee)
+                .prettify(2)}
+              unit={COIN}
+              tooltip="The total amount of LUSD your Trove will hold"
+            />
+          )}
+
           <StaticRow
+            scrollIntoView
             className={classes.staticRowInfo}
             label="Collateral ratio"
             amount={collateralRatioPct.prettify()}
             color={getColor(collateralRatio)}
-            oldAmount={originalCollateralRatio && originalCollateralRatioPct.prettify()}
+            oldAmount={
+              original.isEmpty && !borrow ? (
+                <span>&infin;</span>
+              ) : (
+                originalCollateralRatio && originalCollateralRatioPct.prettify()
+              )
+            }
             oldColor={getColor(originalCollateralRatio)}
+            tooltip="The ratio between the dollar value of the collateral and the debt (in LUSD) you are
+            depositing. While the Minimum Collateral Ratio is 110% during normal operation, it
+            is recommended to keep the Collateral Ratio always above 150% to avoid liquidation
+            under Recovery Mode. A Collateral Ratio above 200% or 250% is recommended for
+            additional safety."
           />
         </div>
       )}
@@ -158,8 +196,15 @@ export const TroveDeposit = ({
   );
 };
 
-export const TroveWithdraw = ({ children, original, edited, changePending, dispatch }) => {
-  const { price } = useLiquitySelector(select);
+export const TroveWithdraw = ({
+  children,
+  original,
+  edited,
+  changePending,
+  dispatch,
+  transactionType
+}) => {
+  const { price, lusdBalance } = useLiquitySelector(select);
   const [withdraw, setWithdraw] = useState("");
   const [repay, setRepay] = useState("");
   const [data, setData] = useState(null);
@@ -168,6 +213,13 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
   useEffect(() => {
     dispatch({ type: "revert" });
   }, [dispatch]);
+
+  useEffect(() => {
+    if (transactionType === "confirmedOneShot") {
+      setRepay("");
+      setWithdraw("");
+    }
+  }, [transactionType]);
 
   useEffect(() => {
     fetch(
@@ -199,7 +251,8 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
     originalCollateralRatio ?? { toString: () => "N/A" }
   );
 
-  const maxRepay = original.debt.sub(Decimal.from(LUSD_MINIMUM_DEBT));
+  let maxRepay = original.debt.sub(Decimal.from(LUSD_MINIMUM_DEBT));
+  maxRepay = maxRepay.gt(lusdBalance) ? lusdBalance : maxRepay;
 
   let maxWithdraw = null;
 
@@ -209,9 +262,11 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
 
     const ethereumInLusd = ETHEREUM_IN_USD / LUSD_IN_USD;
 
-    maxWithdraw = original.collateral.sub(
+    maxWithdraw = original.collateral.gt(
       edited.debt.mul(Decimal.from(1.1).div(Decimal.from(ethereumInLusd)))
-    );
+    )
+      ? original.collateral.sub(edited.debt.mul(Decimal.from(1.1).div(Decimal.from(ethereumInLusd))))
+      : Decimal.from(0);
   }
 
   return (
@@ -225,7 +280,7 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
           setWithdraw(v);
           dispatch({ type: "substractCollateral", newValue: v });
         }}
-        available={`Available: ${maxWithdraw?.prettify(2) || ""}`}
+        available={`Available: ${maxWithdraw?.prettify(4) || ""}`}
         icon={process.env.PUBLIC_URL + "/icons/ethereum-eth.svg"}
         maxAmount={maxWithdraw?.toString() || ""}
         maxedOut={maxWithdraw?.toString() === withdraw.toString()}
@@ -274,12 +329,18 @@ export const TroveWithdraw = ({ children, original, edited, changePending, dispa
           )}
 
           <StaticRow
+            scrollIntoView
             label="Collateral ratio"
             inputId="trove-collateral-ratio"
             amount={collateralRatioPct.prettify()}
             color={getColor(collateralRatio)}
             oldAmount={originalCollateralRatio && originalCollateralRatioPct.prettify()}
             oldColor={getColor(originalCollateralRatio)}
+            tooltip="The ratio between the dollar value of the collateral and the debt (in LUSD) you are
+            depositing. While the Minimum Collateral Ratiow is 110% during normal operation, it
+            is recommended to keep the Collateral Ratio always above 150% to avoid liquidation
+            under Recovery Mode. A Collateral Ratio above 200% or 250% is recommended for
+            additional safety."
           />
         </div>
       )}

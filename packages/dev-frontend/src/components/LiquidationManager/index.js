@@ -20,7 +20,6 @@ export const LiquidationManager = () => {
       <div className={classes.inputWrapper}>
         <input
           className={classes.input}
-          tiny
           type="number"
           min="1"
           step="1"

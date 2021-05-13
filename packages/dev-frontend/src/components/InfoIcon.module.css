@@ -1,0 +1,13 @@
+.wrapper {
+  padding: 1rem;
+  border-radius: 0.9rem;
+  background-color: #ebf7ff;
+
+  font-family: "Futura BT light";
+  line-height: 1.5;
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: -0.32px;
+  text-align: left;
+  color: #636363;
+}

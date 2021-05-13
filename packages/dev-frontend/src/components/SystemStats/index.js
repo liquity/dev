@@ -3,11 +3,18 @@ import cn from "classnames";
 import { Decimal, Percent } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
+import { InfoIcon } from "../InfoIcon";
+import { COIN } from "../../strings";
+
 import classes from "./SystemStats.module.css";
 
-const Stat = ({ children, name }) => (
+const Stat = ({ children, name, tooltip }) => (
   <div className={classes.stat}>
-    <div className={classes.statName}>{name}</div>
+    <div className={classes.statName}>
+      {name}
+      {tooltip && <InfoIcon size="xs" tooltip={tooltip} />}
+    </div>
+
     <div className={classes.statValue}>{children}</div>
   </div>
 );
@@ -41,6 +48,8 @@ const SystemStats = () => {
     total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
 
+  const recoveryMode = total.debt.mulDiv(1.5, total.collateral);
+
   return (
     <div className={cn(classes.wrapper, "slide-in-right")}>
       <div className={classes.heading}>Protocol stats</div>
@@ -49,11 +58,11 @@ const SystemStats = () => {
         name="TVL"
         tooltip="The Total Value Locked (TVL) is the total value of Ether locked as collateral in the system, given in ETH and USD."
       >
-        {total.collateral.shorten()} ETH($
+        {total.collateral.shorten()} ETH ($
         {Decimal.from(total.collateral.mul(price)).shorten()})
       </Stat>
 
-      <Stat name="Active trowes" tooltip="The total number of active Troves in the system.">
+      <Stat name="Active troves" tooltip="The total number of active Troves in the system.">
         {Decimal.from(numberOfTroves).prettify(0)}
       </Stat>
 
@@ -84,18 +93,15 @@ const SystemStats = () => {
       >
         {totalStakedLQTY.shorten()}
       </Stat>
+
+      <Stat
+        name="Recovery Mode ETH"
+        tooltip="The Dollar value of ETH below which the Total Collateral Ratio will drop below 150% and the system will enter Recovery Mode"
+      >
+        {total.debt.mulDiv(1.5, total.collateral).prettify(0)} $
+      </Stat>
     </div>
   );
 };
 
 export default SystemStats;
-
-/* 
-name="Borrowing Fee"
-tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
- */
-
-/* 
-        name="Recovery Mode"
-        tooltip="Recovery Mode is activated when the Total Collateral Ratio (TCR) falls below 150%. When active, your Trove can be liquidated if its collateral ratio is below the TCR. The maximum collateral you can lose from liquidation is capped at 110% of your Trove's debt. Operations are also restricted that would negatively impact the TCR."
- */

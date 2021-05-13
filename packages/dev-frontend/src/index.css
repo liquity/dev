@@ -32,8 +32,20 @@
 
 html {
   height: 100%;
-  font-size: 56.25%;
+  font-size: 43.75%;
   -webkit-text-size-adjust: 100%;
+}
+
+@media only screen and (min-width: 1200px) {
+  html {
+    font-size: 50%;
+  }
+}
+
+@media only screen and (min-width: 1340px) {
+  html {
+    font-size: 56.25%;
+  }
 }
 
 body {

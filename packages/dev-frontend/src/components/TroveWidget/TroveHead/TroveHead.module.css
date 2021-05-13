@@ -123,6 +123,7 @@
   border-radius: 1rem;
   border: solid 2px var(--white);
   background-color: #e6e6e5;
+  max-width: 42rem;
 }
 
 .activeTroveHeading {
@@ -222,3 +223,11 @@
   font-weight: 500;
   color: var(--green-light);
 }
+
+.spinner {
+  width: 100%;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+

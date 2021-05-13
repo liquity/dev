@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import useTroveView from "../../components/TroveWidget/context/TroveViewContext";
 import Tabs from "../../components/Tabs";
@@ -19,11 +19,17 @@ const select = ({ collateralSurplusBalance }) => ({
   hasSurplusCollateral: !collateralSurplusBalance.isZero
 });
 
+let presistActiveTab = null;
+
 const TroveScreen = () => {
-  const [activeTab, setActiveTab] = useState("deposit");
+  const [activeTab, setActiveTab] = useState(presistActiveTab || "deposit");
   const { dispatchEvent, view } = useTroveView();
 
   const { hasSurplusCollateral } = useLiquitySelector(select);
+
+  useEffect(() => {
+    presistActiveTab = activeTab;
+  }, [activeTab]);
 
   return (
     <>

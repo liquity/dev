@@ -46,29 +46,27 @@ export const Yield = () => {
 
   if (aprPercentage.isZero) return null;
 
-  return <p className={classes.wrapper}>APR {aprPercentage.toString(2)}%</p>;
+  return (
+    <p className={classes.wrapper}>
+      APR {aprPercentage.toString(2)}%
+      <InfoIcon
+        tooltip={
+          <>
+            <p>
+              An <span>estimate</span> of the LQTY return on the LUSD deposited to the Stability Pool
+              over the next year, not including your ETH gains from liquidations.
+            </p>
+            <p sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
+              (($LQTY_REWARDS * YEARLY_DISTRIBUTION%) / DEPOSITED_LUSD) * 100 = <span> APR</span>
+            </p>
+            <p sx={{ fontSize: "12px", fontFamily: "monospace" }}>
+              ($
+              {remainingLqtyInUSD.shorten()} * 50% / ${lusdInStabilityPool.shorten()}) * 100 =
+              <span> {aprPercentage.toString(2)}%</span>
+            </p>
+          </>
+        }
+      ></InfoIcon>
+    </p>
+  );
 };
-
-//<Badge>
-//<Text>LQTY APR {aprPercentage.toString(2)}%</Text>
-//<InfoIcon
-// tooltip={
-//  <Card variant="tooltip" sx={{ width: ["220px", "518px"] }}>
-//   <Paragraph>
-//    An <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on the LUSD
-//deposited to the Stability Pool over the next year, not including your ETH gains from
-// liquidations.
-// </Paragraph>
-// <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
-//   (($LQTY_REWARDS * YEARLY_DISTRIBUTION%) / DEPOSITED_LUSD) * 100 ={" "}
-//  <Text sx={{ fontWeight: "bold" }}> APR</Text>
-//</Paragraph>
-//<Paragraph sx={{ fontSize: "12px", fontFamily: "monospace" }}>
-// ($
-// {remainingLqtyInUSD.shorten()} * 50% / ${lusdInStabilityPool.shorten()}) * 100 =
-//  <Text sx={{ fontWeight: "bold" }}> {aprPercentage.toString(2)}%</Text>
-//</Paragraph>
-//</Card>
-// }
-//></InfoIcon>
-//</Badge>

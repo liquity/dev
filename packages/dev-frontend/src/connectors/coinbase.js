@@ -1,15 +1,9 @@
-import WalletLink from "walletlink";
+import { WalletLinkConnector } from "@web3-react/walletlink-connector";
 
 const APP_NAME = "Liquity Land";
-const APP_LOGO_URL = `${process.env.PUBLIC_URL}/icons/favicon.png`;
-const ETH_JSONRPC_URL = "https://mainnet.infura.io/v3/158b6511a5c74d1ac028a8a2afe8f626";
-const CHAIN_ID = 1;
+const ETH_JSONRPC_URL = "https://mainnet.infura.io/v3/864d7f4fb6b447eead8028f0134d1241";
 
-// Initialize WalletLink
-export const walletLink = new WalletLink({
+export const walletLinkConnector = new WalletLinkConnector({
   appName: APP_NAME,
-  appLogoUrl: APP_LOGO_URL
+  url: ETH_JSONRPC_URL
 });
-
-// Initialize a Web3 Provider object
-export const walletLinkProvider = walletLink.makeWeb3Provider(ETH_JSONRPC_URL, CHAIN_ID);

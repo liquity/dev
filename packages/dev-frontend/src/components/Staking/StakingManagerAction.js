@@ -2,7 +2,7 @@ import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";
 import Button from "../Button";
 
-export const StakingManagerAction = ({ change, children }) => {
+export const StakingManagerAction = ({ change, whenDone }) => {
   const { liquity } = useLiquity();
 
   const [sendTransaction] = useTransactionFunction(
@@ -13,7 +13,14 @@ export const StakingManagerAction = ({ change, children }) => {
   );
 
   return (
-    <Button primary large onClick={sendTransaction}>
+    <Button
+      primary
+      large
+      onClick={async () => {
+        await sendTransaction();
+        whenDone();
+      }}
+    >
       Confirm
     </Button>
   );
