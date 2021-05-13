@@ -61,25 +61,9 @@
 
   transform: perspective(1px) translateZ(0);
   position: relative;
-  transition-property: color;
+  transition-property: color, background-color;
   transition-duration: 0.5s;
   overflow: hidden;
-}
-
-.link:before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--primary-text);
-  border-radius: 1.2rem;
-  transform: scale(0);
-  transition-property: transform;
-  transition-duration: 0.5s;
-  transition-timing-function: ease-out;
 }
 
 .link:not(:last-child) {
@@ -88,20 +72,13 @@
 
 .link:hover {
   color: var(--white);
-}
-
-.link:hover:before {
-  transform: scale(2);
+  background: var(--primary-text);
 }
 
 .linkActive {
   color: var(--white);
   background-color: var(--primary-text);
   box-shadow: none;
-}
-
-.linkActive:before {
-  content: none;
 }
 
 .config {
