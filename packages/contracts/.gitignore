@@ -4,6 +4,8 @@
 # Truffle contract JSONs
 /build/contracts
 
+/bin
+
 # Buidler compilation cache
 /cache
 
@@ -17,6 +19,7 @@
 
 /.vscode
 
+yarn-error.log
 
 # solidity-coverage
 /.coverage_artifacts
@@ -34,6 +37,7 @@
 
 # brownie
 __pycache__
+.pytest_cache
 .history
 .hypothesis/
 build/
