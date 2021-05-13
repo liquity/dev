@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import cn from "classnames";
 
-import { Decimal, Difference, LiquityStoreState } from "@liquity/lib-base";
+import { Decimal } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { LP, GT } from "../../../../strings";
-import { Icon } from "../../../Icon";
-import { EditableRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useFarmView } from "../../context/FarmViewContext";
 import { useMyTransactionState } from "../../../Transaction";
 import { Confirm } from "../Confirm.js";
-import { Approve } from "../Approve";
 import { Validation } from "../Validation";
 import StaticRow from "../../../StaticRow";
 import Modal from "../../../Modal";
@@ -45,9 +42,8 @@ export const Adjusting = () => {
     uniTokenBalance,
     totalStakedUniTokens
   } = useLiquitySelector(selector);
-  const [amount, setAmount] = useState(liquidityMiningStake);
-  const editingState = useState();
   const transactionState = useMyTransactionState(transactionId);
+
   const [increment, setIncrement] = useState(null);
   const [decrement, setDecrement] = useState(null);
 
@@ -61,19 +57,14 @@ export const Adjusting = () => {
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
-  const isDirty = !amount.eq(liquidityMiningStake);
-  const maximumAmount = liquidityMiningStake.add(uniTokenBalance);
-  const hasSetMaximumAmount = amount.eq(maximumAmount);
+
+  const isDirty = !liquidityMiningStake.eq(liquidityMiningStake);
 
   const nextTotalStakedUniTokens = isDirty
-    ? totalStakedUniTokens.sub(liquidityMiningStake).add(amount)
+    ? totalStakedUniTokens.sub(liquidityMiningStake).add(liquidityMiningStake)
     : totalStakedUniTokens;
 
-  const originalPoolShare = liquidityMiningStake.mulDiv(100, totalStakedUniTokens);
-  const poolShare = amount.mulDiv(100, nextTotalStakedUniTokens);
-
-  const poolShareChange =
-    liquidityMiningStake.nonZero && Difference.between(poolShare, originalPoolShare).nonZero;
+  const poolShare = liquidityMiningStake.mulDiv(100, nextTotalStakedUniTokens);
 
   const hasStakeAndRewards = !liquidityMiningStake.isZero && !liquidityMiningLQTYReward.isZero;
 
@@ -183,13 +174,6 @@ export const Adjusting = () => {
               />
             </div>
 
-            {/* 
-
-
-        <div className={classes.modalAction}>
-          <Confirm isValid={isValid} amount={Decimal.from(stake || 0)} />
-        </div> */}
-
             <StaticRow
               label="Staked"
               amount={
@@ -202,18 +186,6 @@ export const Adjusting = () => {
           </div>
         </Modal>
       )}
-
-      {/* <EditableRow
-        label="Stake"
-        inputId="farm-stake-amount"
-        amount={isDirty ? amount.prettify(4) : liquidityMiningStake.prettify(4)}
-        unit={LP}
-        editingState={editingState}
-        editedAmount={amount.toString(4)}
-        setEditedAmount={amount => setAmount(Decimal.from(amount))}
-        maxAmount={maximumAmount.toString()}
-        maxedOut={hasSetMaximumAmount}
-      ></EditableRow> */}
 
       <div className={classes.stakedWrapper}>
         <p className={classes.editLabel}>Staked</p>
