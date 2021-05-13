@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import cn from "classnames";
 
 import { Decimal } from "@liquity/lib-base";
@@ -26,6 +26,22 @@ const select = ({ lqtyBalance, totalStakedLQTY, lusdBalance }) => ({
   lusdBalance
 });
 
+const validate = ({ change, lqtyBalance }) =>
+  !change
+    ? [undefined, undefined]
+    : change.stakeLQTY?.gt(lqtyBalance)
+    ? [
+        undefined,
+        <ErrorDescription>
+          The amount you're trying to stake exceeds your balance by{" "}
+          <Amount>
+            {change.stakeLQTY.sub(lqtyBalance).prettify()} {GT}
+          </Amount>
+          .
+        </ErrorDescription>
+      ]
+    : [change, undefined];
+
 const StakingEditor = ({ view, children, originalStake, editedLQTY, dispatch, dispatchView }) => {
   const { lqtyBalance, totalStakedLQTY } = useLiquitySelector(select);
   const { changePending } = useStakingView();
@@ -44,20 +60,7 @@ const StakingEditor = ({ view, children, originalStake, editedLQTY, dispatch, di
 
   const change = originalStake.whatChanged(editedLQTY);
 
-  const [validChange, error] = !change
-    ? [undefined, undefined]
-    : change.stakeLQTY?.gt(lqtyBalance)
-    ? [
-        undefined,
-        <ErrorDescription>
-          The amount you're trying to stake exceeds your balance by{" "}
-          <Amount>
-            {change.stakeLQTY.sub(lqtyBalance).prettify()} {GT}
-          </Amount>
-          .
-        </ErrorDescription>
-      ]
-    : [change, undefined];
+  const [validChange, error] = validate({ change, lqtyBalance });
 
   return (
     <div className={classes.wrapper}>
