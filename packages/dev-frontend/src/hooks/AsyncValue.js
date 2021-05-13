@@ -1,18 +1,12 @@
 import { useState, useEffect } from "react";
 
-export type AsyncValueState<T> = { loaded: false } | { loaded: true; value: T };
-
-export function useAsyncValue<T>(
-  getValue: () => Promise<T>,
-  watchValue?: (onValueChanged: (value: T) => void) => () => void,
-  reduceValues?: (previousValue: T, newValue: T) => T
-) {
-  const [callState, setCallState] = useState<AsyncValueState<T>>({ loaded: false });
+export function useAsyncValue(getValue, watchValue, reduceValues) {
+  const [callState, setCallState] = useState({ loaded: false });
 
   useEffect(() => {
-    let previousValue: T | undefined = undefined;
+    let previousValue = undefined;
     let mounted = true;
-    let unwatch: (() => void) | undefined;
+    let unwatch;
 
     const fetchValue = async () => {
       const value = await getValue();
@@ -23,7 +17,7 @@ export function useAsyncValue<T>(
       }
     };
 
-    const onValueChanged = (value: T) => {
+    const onValueChanged = value => {
       if (mounted) {
         if (previousValue !== undefined && reduceValues) {
           value = reduceValues(previousValue, value);
@@ -52,19 +46,7 @@ export function useAsyncValue<T>(
   return callState;
 }
 
-export type AsyncStore = {
-  [property: string]: AsyncValueState<unknown>;
-};
-
-export type Values<T> = {
-  [P in keyof T]: T[P] extends AsyncValueState<infer V> ? V : never;
-};
-
-type LoadedStore = {
-  [property: string]: { loaded: true; value: unknown };
-};
-
-const allLoaded = (store: AsyncStore): store is LoadedStore => {
+const allLoaded = store => {
   for (const { loaded } of Object.values(store)) {
     if (!loaded) {
       return false;
@@ -73,7 +55,7 @@ const allLoaded = (store: AsyncStore): store is LoadedStore => {
   return true;
 };
 
-export const useAsyncStore = <T extends AsyncStore>(store: T): AsyncValueState<Values<T>> => {
+export const useAsyncStore = store => {
   if (!allLoaded(store)) {
     return { loaded: false };
   }
@@ -82,6 +64,6 @@ export const useAsyncStore = <T extends AsyncStore>(store: T): AsyncValueState<V
     loaded: true,
     value: Object.fromEntries(
       Object.entries(store).map(([property, asyncValueState]) => [property, asyncValueState.value])
-    ) as Values<T>
+    )
   };
 };

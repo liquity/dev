@@ -14,8 +14,8 @@ import { injectedConnector } from "../connectors/injectedConnector";
  * @returns true when finished trying to activate the InjectedConnector, false otherwise
  */
 
-export function useAuthorizedConnection(): boolean {
-  const { activate, active } = useWeb3React<unknown>();
+export function useAuthorizedConnection() {
+  const { activate, active } = useWeb3React();
   const [tried, setTried] = useState(false);
 
   useEffect(() => {
