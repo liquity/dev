@@ -10,10 +10,10 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { TransactionMonitor } from "../components/Transaction";
 import { shortenAddress } from "../utils/shortenAddress";
 
-import { PageSwitcher } from "../pages/PageSwitcher";
 import StabilityPool from "../pages/StabilityPool";
 import Stake from "../pages/Stake";
 import Liquidation from "../pages/Liquidation";
+import TrovePage from "../pages/Trove";
 
 import TroveViewProvider from "../components/TroveWidget/context/TroveViewProvider";
 import { StabilityViewProvider } from "../components/Stability/context/StabilityViewProvider";
@@ -221,7 +221,7 @@ export const LiquityFrontend = () => {
               <Body>
                 <Switch>
                   <Route path="/" exact>
-                    <PageSwitcher />
+                    <TrovePage />
                   </Route>
 
                   <Route path="/stability-pool">
