@@ -1,5 +1,4 @@
 import { Card, Heading, Box, Flex } from "theme-ui";
-import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { InfoMessage } from "../../../InfoMessage";
 import { UnstakeAndClaim } from "../UnstakeAndClaim";
@@ -7,7 +6,7 @@ import { RemainingLQTY } from "../RemainingLQTY";
 import { StaticRow } from "../../../Trove/Editor";
 import { GT, LP } from "../../../../strings";
 
-const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
+const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }) => ({
   liquidityMiningStake,
   liquidityMiningLQTYReward
 });
