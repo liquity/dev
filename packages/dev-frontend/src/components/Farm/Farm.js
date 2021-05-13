@@ -19,7 +19,7 @@ const headSelector = ({ remainingLiquidityMiningLQTYReward, totalStakedUniTokens
   totalStakedUniTokens
 });
 
-const Head = () => {
+const Head = ({ view }) => {
   const { remainingLiquidityMiningLQTYReward } = useLiquitySelector(headSelector);
 
   return (
@@ -31,8 +31,18 @@ const Head = () => {
         <Yield />
       </div>
       <h3 className={classes.title}>
-        Earn LQTY by staking <br />
-        Uniswap ETH/LUSD LP tokens
+        {view === "DISABLED" ? (
+          <>
+            Liquidity farming period has finished
+            <br />
+            There are no more LQTY rewards left to farm
+          </>
+        ) : (
+          <>
+            Earn LQTY by staking <br />
+            Uniswap ETH/LUSD LP tokens
+          </>
+        )}
       </h3>
     </div>
   );
@@ -79,7 +89,7 @@ export const Farm = props => {
 
   return (
     <>
-      <Head />
+      <Head view={view} />
       {renderBody(view, props, hasApproved, dispatchEvent)}
       <Footer addresses={addresses} />
     </>
