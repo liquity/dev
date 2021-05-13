@@ -11,12 +11,11 @@ import Header from "../../components/Header";
 import ConnectWalletWidget, { ConnectWalletButton } from "../../components/ConnectWalletWidget";
 import Modal from "../../components/Modal";
 import Link from "../../components/Link";
-import { UnregisteredKickbackRate } from "../../components/KickbackRate";
+import KickbackRate from "../../components/KickbackRate";
 import Body from "../../components/Body";
 import { TrovePreview, StabilityPrevies, StakingPreview, LiquidationPrevriew } from "./Preview";
 import { walletConnectConnector } from "../../connectors/walletConnect";
 import { walletLinkConnector } from "../../connectors/coinbase";
-
 
 import classes from "./WalletConnector.module.css";
 
@@ -132,7 +131,7 @@ const WalletConnector = ({ children }) => {
         <ConnectWalletButton onClick={() => setWalletModal(true)} />
       </Header>
 
-      <UnregisteredKickbackRate />
+      <KickbackRate />
       <Body>
         <Switch>
           <Route path="/" exact>
