@@ -15,7 +15,7 @@ const selector = ({ remainingLiquidityMiningLQTYReward, totalStakedUniTokens }) 
 export const Yield = () => {
   const {
     liquity: {
-      connection: { addresses, liquidityMiningLQTYRewardRate }
+      connection: { addresses }
     }
   } = useLiquity();
 
@@ -25,8 +25,6 @@ export const Yield = () => {
   const hasZeroValue = remainingLiquidityMiningLQTYReward.isZero || totalStakedUniTokens.isZero;
   const lqtyTokenAddress = addresses["lqtyToken"];
   const uniTokenAddress = addresses["uniToken"];
-  const secondsRemaining = remainingLiquidityMiningLQTYReward.div(liquidityMiningLQTYRewardRate);
-  const daysRemaining = secondsRemaining.div(60 * 60 * 24);
 
   useEffect(() => {
     (async () => {
@@ -55,17 +53,18 @@ export const Yield = () => {
         tooltip={
           <>
             <p>
-              An <span sx={{ fontWeight: "bold" }}>estimate</span> of the LQTY return on staked UNI
-              LP tokens. The farm runs for 6-weeks, and the return is relative to the time remaining.
+              An <span style={{ fontWeight: "bold" }}>estimate</span> of the LQTY return on staked
+              UNI LP tokens. The farm runs for 6-weeks, and the return is relative to the time
+              remaining.
             </p>
-            <p sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
+            <p style={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
               ($LQTY_REWARDS / $STAKED_UNI_LP) * 100 ={" "}
-              <span sx={{ fontWeight: "bold" }}> Yield</span>
+              <span style={{ fontWeight: "bold" }}> Yield</span>
             </p>
-            <p sx={{ fontSize: "12px", fontFamily: "monospace" }}>
+            <p style={{ fontSize: "12px", fontFamily: "monospace" }}>
               ($
               {remainingLqtyInUSD.shorten()} / ${totalStakedUniLpInUSD.shorten()}) * 100 =
-              <span sx={{ fontWeight: "bold" }}> {yieldPercentage.toString(2)}%</span>
+              <span style={{ fontWeight: "bold" }}> {yieldPercentage.toString(2)}%</span>
             </p>
           </>
         }
