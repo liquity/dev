@@ -4,7 +4,6 @@ import { Decimal, Percent } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { InfoIcon } from "../InfoIcon";
-import { COIN } from "../../strings";
 
 import classes from "./SystemStats.module.css";
 
@@ -47,8 +46,6 @@ const SystemStats = () => {
   const lusdInStabilityPoolPct =
     total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
-
-  const recoveryMode = total.debt.mulDiv(1.5, total.collateral);
 
   return (
     <div className={cn(classes.wrapper, "slide-in-right")}>
