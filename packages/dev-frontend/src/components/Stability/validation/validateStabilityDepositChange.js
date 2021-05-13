@@ -1,5 +1,5 @@
 import { COIN } from "../../../strings";
-import { Amount } from "../../ActionDescription";
+import { Amount } from "../../Amount";
 import ErrorDescription from "../../ErrorDescription";
 
 export const selectForStabilityDepositChangeValidation = ({

@@ -8,7 +8,7 @@ import { COIN } from "../../strings";
 
 import { LoadingOverlay } from "../LoadingOverlay";
 import StaticRow from "../StaticRow";
-import { Amount } from "../ActionDescription";
+import { Amount } from "../Amount";
 import ErrorDescription from "../ErrorDescription";
 import { useMyTransactionState } from "../Transaction";
 import Input from "../Input";

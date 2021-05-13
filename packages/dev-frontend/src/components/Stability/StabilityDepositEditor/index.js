@@ -16,7 +16,7 @@ import Button from "../../Button";
 import ClaimAndMove from "../actions/ClaimAndMove";
 import ClaimRewards from "../actions/ClaimRewards";
 import ErrorDescription from "../../ErrorDescription";
-import { Amount } from "../../ActionDescription";
+import { Amount } from "../../Amount";
 
 import classes from "./StabilityDepositEditor.module.css";
 

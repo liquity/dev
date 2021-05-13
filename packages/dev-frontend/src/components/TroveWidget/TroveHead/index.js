@@ -11,7 +11,7 @@ import { Spinner } from "../../Loader";
 import StaticRow from "../../StaticRow";
 import { useTransactionFunction } from "../../Transaction";
 import ErrorDescription from "../../ErrorDescription";
-import { Amount } from "../../ActionDescription";
+import { Amount } from "../../Amount";
 import { useMyTransactionState } from "../../Transaction";
 
 import { COIN, ETH } from "../../../strings";

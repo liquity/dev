@@ -12,7 +12,7 @@ import Button from "../../Button";
 import Modal from "../../Modal";
 import Input from "../../Input";
 import ErrorDescription from "../../ErrorDescription";
-import { Amount } from "../../ActionDescription";
+import { Amount } from "../../Amount";
 
 import { useStakingView } from "./../context/StakingViewContext";
 import StakingManagerAction from "../StakingManagerAction";

@@ -7,7 +7,7 @@ import {
 
 import { COIN } from "../../../strings";
 
-import { Amount } from "../../ActionDescription";
+import { Amount } from "../../Amount";
 import ErrorDescription from "../../ErrorDescription";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
