@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import cn from "classnames";
 
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -44,21 +44,37 @@ const DataRow = ({ currency, percentage, increase, amount, icon }) => (
 
 const select = ({ price }) => ({ price });
 
+const MS_IN_5_MINUTES = 1000 * 60 * 5;
+
 const PriceManager = () => {
   const { price } = useLiquitySelector(select);
   const [data, setData] = useState(null);
 
+  const fetchData = useCallback(
+    () =>
+      fetch(
+        "https://api.coingecko.com/api/v3/simple/price?ids=liquity,ethereum,liquity-usd&vs_currencies=usd&include_24hr_change=true",
+        {
+          method: "GET"
+        }
+      )
+        .then(res => res.json())
+        .then(setData)
+        .catch(console.warn),
+    []
+  );
+
   useEffect(() => {
-    fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=liquity,ethereum,liquity-usd&vs_currencies=usd&include_24hr_change=true",
-      {
-        method: "GET"
-      }
-    )
-      .then(res => res.json())
-      .then(setData)
-      .catch(console.warn);
-  }, []);
+    fetchData();
+
+    const id = setInterval(() => {
+      fetchData();
+    }, MS_IN_5_MINUTES);
+
+    return () => {
+      clearInterval(id);
+    };
+  }, [fetchData]);
 
   if (!data) return null;
 
