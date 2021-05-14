@@ -109,7 +109,8 @@ const ActiveTrove = () => {
     return () => {
       clearInterval(id);
     };
-  }, [fetchTroves]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const liquidationRisk = collateralRatio.mul(100).lt(150)
     ? "high"
