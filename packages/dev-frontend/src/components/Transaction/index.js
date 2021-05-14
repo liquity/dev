@@ -119,7 +119,7 @@ export function Transaction({ id, tooltip, showFailure, requires, send, children
       content={tooltip}
       maxWidth="268px"
     >
-      <span style={{ display: "inline-flex", flex: 1 }}>{clonedTrigger}</span>
+      <span style={{ display: "inline-flex", flex: 0 }}>{clonedTrigger}</span>
     </Tippy>
   ) : (
     clonedTrigger
