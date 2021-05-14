@@ -15,6 +15,8 @@
   justify-content: center;
   align-items: center;
   color: var(--text-tertiary);
+
+  transition: 0.15s all;
 }
 
 .doButton:not(:last-child) {
@@ -33,6 +35,11 @@
 
 .doButton span {
   margin-right: 0.5rem;
+}
+
+.doButton:hover {
+  background-color: var(--primary);
+  color: var(--white);
 }
 
 .connection {
@@ -71,8 +78,15 @@
   font-weight: 300;
   letter-spacing: -0.36px;
   color: var(--tertiary);
+
+  transition: all 0.15s;
 }
 
 .fourthButton:not(:last-child) {
   margin-right: 1.5rem;
+}
+
+.fourthButton:hover {
+  background-color: var(--tertiary);
+  color: var(--white);
 }
