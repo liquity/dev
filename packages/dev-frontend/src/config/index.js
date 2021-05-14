@@ -1,21 +1,15 @@
 import { AddressZero } from "@ethersproject/constants";
 import { isAddress, getAddress } from "@ethersproject/address";
 
-export type LiquityFrontendConfig = {
-  frontendTag: string;
-  infuraApiKey?: string;
-  testnetOnly?: boolean;
-};
-
-const defaultConfig: LiquityFrontendConfig = {
+const defaultConfig = {
   frontendTag: AddressZero
 };
 
-function hasKey<K extends string>(o: object, k: K): o is Record<K, unknown> {
+function hasKey(o, k) {
   return k in o;
 }
 
-const parseConfig = (json: unknown): LiquityFrontendConfig => {
+const parseConfig = json => {
   const config = { ...defaultConfig };
 
   if (typeof json === "object" && json !== null) {
@@ -59,7 +53,7 @@ const parseConfig = (json: unknown): LiquityFrontendConfig => {
   return config;
 };
 
-let configPromise: Promise<LiquityFrontendConfig> | undefined = undefined;
+let configPromise = undefined;
 
 const fetchConfig = async () => {
   try {
@@ -75,7 +69,7 @@ const fetchConfig = async () => {
   }
 };
 
-export const getConfig = (): Promise<LiquityFrontendConfig> => {
+export const getConfig = () => {
   if (!configPromise) {
     configPromise = fetchConfig();
   }
