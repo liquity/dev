@@ -87,6 +87,14 @@ const RiskyTroves = ({ pageSize = 10 }) => {
     }
   };
 
+  const goToLastPage = () => {
+    setPage(numberOfPages - 1);
+  };
+
+  const goToFirstPage = () => {
+    setPage(0);
+  };
+
   useEffect(() => {
     if (page !== clampedPage) {
       setPage(clampedPage);
@@ -156,6 +164,12 @@ const RiskyTroves = ({ pageSize = 10 }) => {
               of {numberOfTroves}
             </p>
 
+            {page > 0 && (
+              <Button secondary uppercase className={classes.goToLast} onClick={goToFirstPage}>
+                first page
+              </Button>
+            )}
+
             <Button
               className={classes.arrowButton}
               onClick={previousPage}
@@ -172,9 +186,17 @@ const RiskyTroves = ({ pageSize = 10 }) => {
               <ion-icon name="chevron-forward-outline"></ion-icon>
             </Button>
 
+            {page !== numberOfPages - 1 && (
+              <Button secondary uppercase className={classes.goToLast} onClick={goToLastPage}>
+                last page
+              </Button>
+            )}
+
             <Button onClick={forceReload} className={classes.reloadButton}>
               <ion-icon name="refresh-outline"></ion-icon>
             </Button>
+
+            <button onClick={goToLastPage}>go to last</button>
           </>
         )}
       </div>

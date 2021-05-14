@@ -167,3 +167,11 @@
   border-radius: 2rem;
   font-size: 1.4rem;
 }
+
+.goToLast {
+  height: 3rem;
+  padding: 0 1rem;
+  border-radius: 1rem;
+  font-family: "Futura BT heavy";
+  font-weight: 500;
+}
