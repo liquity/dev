@@ -121,8 +121,6 @@ export const TrovePreview = ({ showModal }) => {
 };
 
 export const StabilityPrevies = ({ showModal }) => {
-  const [showAlert, setShowAlert] = useState(false);
-
   return (
     <div className={classes.wrapper}>
       <Tabs
@@ -155,11 +153,9 @@ export const StabilityPrevies = ({ showModal }) => {
         />
       </div>
 
-      {showAlert && (
-        <ErrorDescription>
-          Please connect your wallet first before using our services.
-        </ErrorDescription>
-      )}
+      <ErrorDescription>
+        Please connect your wallet first before using our services.
+      </ErrorDescription>
 
       <div className={classes.action}>
         <Button large primary round onClick={showModal}>
@@ -220,7 +216,6 @@ export const StakeUniLPPreview = () => (
 );
 
 export const StakingPreview = ({ showModal }) => {
-  const [showAlert, setShowAlert] = useState(false);
   const [activeTab, setActiveTab] = useState("lqty");
 
   return (
@@ -230,11 +225,9 @@ export const StakingPreview = ({ showModal }) => {
       {activeTab === "lqty" && <StakeLQTYPReview />}
       {activeTab === "unilp" && <StakeUniLPPreview />}
 
-      {showAlert && (
-        <ErrorDescription>
-          Please connect your wallet first before using our services.
-        </ErrorDescription>
-      )}
+      <ErrorDescription>
+        Please connect your wallet first before using our services.
+      </ErrorDescription>
 
       <div className={classes.action}>
         <Button large primary round onClick={showModal}>
