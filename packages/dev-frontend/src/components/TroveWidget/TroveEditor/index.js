@@ -46,12 +46,15 @@ export const TroveDeposit = ({
   const [deposit, setDeposit] = useState("");
   const [borrow, setBorrow] = useState("");
 
-  // useEffect(() => {
-  //   if (deposit && !borrow && !original.isEmpty) {
-  //     dispatch({ type: "addMinimumDebt" });
-  //     setBorrow(1800);
-  //   }
-  // }, [deposit, borrow, dispatch, original]);
+  useEffect(() => {
+    if (!deposit && !borrow) {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "smooth"
+      });
+    }
+  }, [deposit, borrow]);
 
   useEffect(() => {
     if (transactionType === "confirmedOneShot") {
@@ -213,6 +216,16 @@ export const TroveWithdraw = ({
   useEffect(() => {
     dispatch({ type: "revert" });
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!withdraw && !repay) {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "smooth"
+      });
+    }
+  }, [withdraw, repay]);
 
   useEffect(() => {
     if (transactionType === "confirmedOneShot") {
