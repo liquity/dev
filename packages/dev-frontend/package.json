@@ -1,6 +1,6 @@
 {
-  "name": "@liquity/dev-frontend",
-  "version": "0.1.0",
+  "name": "liquity-land",
+  "version": "1.0.1",
   "private": true,
   "homepage": ".",
   "dependencies": {
