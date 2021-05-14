@@ -80,8 +80,6 @@ export function Transaction({ id, tooltip, showFailure, requires, send, children
   const [sendTransaction, transactionState] = useTransactionFunction(id, send);
   const trigger = React.Children.only(children);
 
-  console.log(trigger);
-
   const failureReasons = (requires || [])
     .filter(([requirement]) => !requirement)
     .map(([, reason]) => reason);
@@ -112,10 +110,6 @@ export function Transaction({ id, tooltip, showFailure, requires, send, children
   if (showFailure === "asTooltip") {
     tooltip = failureReasons[0];
   }
-
-  console.log(tooltip);
-
-  console.log(showFailure);
 
   return tooltip ? (
     <Tippy
