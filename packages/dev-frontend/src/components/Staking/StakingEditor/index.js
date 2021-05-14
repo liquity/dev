@@ -12,6 +12,7 @@ import Button from "../../Button";
 import Modal from "../../Modal";
 import Input from "../../Input";
 import ErrorDescription from "../../ErrorDescription";
+import ActionDescription from "../../ActionDescription";
 import { Amount } from "../../Amount";
 
 import { useStakingView } from "./../context/StakingViewContext";
@@ -131,7 +132,11 @@ const StakingEditor = ({ view, children, originalStake, editedLQTY, dispatch, di
               maxedOut={Decimal.from(increment || 0).eq(lqtyBalance)}
             />
 
-            {error}
+            {error || (
+              <ActionDescription>
+                Adjusting the position automatically collects rewards.
+              </ActionDescription>
+            )}
 
             <div className={classes.modalActions}>
               {validChange ? (
@@ -173,17 +178,20 @@ const StakingEditor = ({ view, children, originalStake, editedLQTY, dispatch, di
               maxedOut={Decimal.from(decrement || 0).eq(staked)}
             />
 
-            {error}
-
-            {Decimal.from(decrement || 0).gt(originalStake.stakedLQTY) && (
-              <ErrorDescription>
-                The amount you're trying to unstake exceeds your stake by{" "}
-                <Amount>
-                  {Decimal.from(decrement).sub(originalStake.stakedLQTY).prettify()} {GT}
-                </Amount>
-                .
-              </ErrorDescription>
-            )}
+            {error ||
+              (Decimal.from(decrement || 0).gt(originalStake.stakedLQTY) ? (
+                <ErrorDescription>
+                  The amount you're trying to unstake exceeds your stake by{" "}
+                  <Amount>
+                    {Decimal.from(decrement).sub(originalStake.stakedLQTY).prettify()} {GT}
+                  </Amount>
+                  .
+                </ErrorDescription>
+              ) : (
+                <ActionDescription>
+                  Adjusting the position automatically collects rewards.
+                </ActionDescription>
+              ))}
 
             <div className={classes.modalActions}>
               {validChange && !Decimal.from(decrement || 0).gt(originalStake.stakedLQTY) ? (

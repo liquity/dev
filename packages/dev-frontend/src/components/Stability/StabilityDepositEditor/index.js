@@ -16,6 +16,7 @@ import Button from "../../Button";
 import ClaimAndMove from "../actions/ClaimAndMove";
 import ClaimRewards from "../actions/ClaimRewards";
 import ErrorDescription from "../../ErrorDescription";
+import ActionDescription from "../../ActionDescription";
 import { Amount } from "../../Amount";
 
 import classes from "./StabilityDepositEditor.module.css";
@@ -180,17 +181,21 @@ export const StabilityDepositEditor = ({
               available={`Available: ${originalDeposit.currentLUSD.prettify(2)}`}
             />
 
-            {error}
-
-            {Decimal.from(decrement || 0).gt(originalDeposit.currentLUSD) && (
-              <ErrorDescription>
-                The amount you're trying to unstake exceeds your stake by{" "}
-                <Amount>
-                  {Decimal.from(decrement).sub(originalDeposit.currentLUSD).prettify()} {GT}
-                </Amount>
-                .
-              </ErrorDescription>
-            )}
+            {error ||
+              (Decimal.from(decrement || 0).gt(originalDeposit.currentLUSD) ? (
+                <ErrorDescription>
+                  The amount you're trying to unstake exceeds your stake by{" "}
+                  <Amount>
+                    {Decimal.from(decrement).sub(originalDeposit.currentLUSD).prettify()} {GT}
+                  </Amount>
+                  .
+                </ErrorDescription>
+              ) : !error ? (
+                <ActionDescription>
+                  You are withdrawing <Amount>{Decimal.from(decrement || 0).prettify(2)}</Amount>{" "}
+                  LUSD to your wallet.
+                </ActionDescription>
+              ) : null)}
 
             <div className={classes.modalActions}>
               {validChange && !Decimal.from(decrement || 0).gt(originalDeposit.currentLUSD) ? (
