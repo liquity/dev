@@ -23,7 +23,9 @@ const StaticRow = ({
   const el = useRef(null);
 
   useEffect(() => {
-    if (scrollIntoView) el.current.scrollIntoView({});
+    setTimeout(() => {
+      if (scrollIntoView) el.current.scrollIntoView({ behavior: "smooth" });
+    }, 1);
   }, [scrollIntoView]);
 
   return (
