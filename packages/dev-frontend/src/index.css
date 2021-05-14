@@ -50,7 +50,8 @@ html {
 
 body {
   box-sizing: border-box;
-  font-family: -apple-system, "Futura BT medium", sans-serif;
+  font-family: "Futura BT light", -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu,
+    Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   font-size: var(--font-size);
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
