@@ -195,8 +195,6 @@ const RiskyTroves = ({ pageSize = 10 }) => {
             <Button onClick={forceReload} className={classes.reloadButton}>
               <ion-icon name="refresh-outline"></ion-icon>
             </Button>
-
-            <button onClick={goToLastPage}>go to last</button>
           </>
         )}
       </div>
