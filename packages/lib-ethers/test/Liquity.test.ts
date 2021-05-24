@@ -175,8 +175,11 @@ describe("EthersLiquity", () => {
       ];
 
       const borrowerOperations = {
-        estimateAndPopulate: {
-          openTrove: () => ({})
+        estimateGas: {
+          openTrove: () => Promise.resolve(BigNumber.from(1))
+        },
+        populateTransaction: {
+          openTrove: () => Promise.resolve({})
         }
       };
 
@@ -190,7 +193,11 @@ describe("EthersLiquity", () => {
 
       const fakeLiquity = new PopulatableEthersLiquity(({
         getNumberOfTroves: () => Promise.resolve(1000000),
-        getFees: () => Promise.resolve(new Fees(0, 0.99, 1, new Date(), new Date(), false)),
+        getTotal: () => Promise.resolve(new Trove(Decimal.from(10), Decimal.ONE)),
+        getPrice: () => Promise.resolve(Decimal.ONE),
+        _getBlockTimestamp: () => Promise.resolve(0),
+        _getFeesFactory: () =>
+          Promise.resolve(() => new Fees(0, 0.99, 1, new Date(), new Date(), false)),
 
         connection: {
           signerOrProvider: user,

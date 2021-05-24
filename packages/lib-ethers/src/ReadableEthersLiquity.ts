@@ -1,4 +1,4 @@
-import { BigNumber } from "@ethersproject/bignumber";
+import { BlockTag } from "@ethersproject/abstract-provider";
 
 import {
   Decimal,
@@ -17,6 +17,7 @@ import {
 
 import { MultiTroveGetter } from "../types";
 
+import { decimalify, numberify, panic } from "./_utils";
 import { EthersCallOverrides, EthersProvider, EthersSigner } from "./types";
 
 import {
@@ -46,10 +47,6 @@ enum BackendTroveStatus {
   closedByRedemption
 }
 
-const panic = <T>(error: Error): T => {
-  throw error;
-};
-
 const userTroveStatusFrom = (backendStatus: BackendTroveStatus): UserTroveStatus =>
   backendStatus === BackendTroveStatus.nonExistent
     ? "nonExistent"
@@ -63,8 +60,6 @@ const userTroveStatusFrom = (backendStatus: BackendTroveStatus): UserTroveStatus
     ? "closedByRedemption"
     : panic(new Error(`invalid backendStatus ${backendStatus}`));
 
-const decimalify = (bigNumber: BigNumber) => Decimal.fromBigNumberString(bigNumber.toHexString());
-const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
 const convertToDate = (timestamp: number) => new Date(timestamp * 1000);
 
 const validSortingOptions = ["ascendingCollateralRatio", "descendingCollateralRatio"];
@@ -354,7 +349,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
   async getRemainingLiquidityMiningLQTYReward(overrides?: EthersCallOverrides): Promise<Decimal> {
     const [calculateRemainingLQTY, blockTimestamp] = await Promise.all([
       this._getRemainingLiquidityMiningLQTYRewardCalculator(overrides),
-      _getBlockTimestamp(this.connection, overrides?.blockTag)
+      this._getBlockTimestamp(overrides?.blockTag)
     ]);
 
     return calculateRemainingLQTY(blockTimestamp);
@@ -436,6 +431,11 @@ export class ReadableEthersLiquity implements ReadableLiquity {
   }
 
   /** @internal */
+  _getBlockTimestamp(blockTag?: BlockTag): Promise<number> {
+    return _getBlockTimestamp(this.connection, blockTag);
+  }
+
+  /** @internal */
   async _getFeesFactory(
     overrides?: EthersCallOverrides
   ): Promise<(blockTimestamp: number, recoveryMode: boolean) => Fees> {
@@ -463,7 +463,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       this._getFeesFactory(overrides),
       this.getTotal(overrides),
       this.getPrice(overrides),
-      _getBlockTimestamp(this.connection, overrides?.blockTag)
+      this._getBlockTimestamp(overrides?.blockTag)
     ]);
 
     return createFees(blockTimestamp, total.collateralRatioIsBelowCritical(price));
@@ -695,6 +695,20 @@ class _BlockPolledReadableEthersLiquity
       : this._readable.getCollateralSurplusBalance(address, overrides);
   }
 
+  async _getBlockTimestamp(blockTag?: BlockTag): Promise<number> {
+    return this._blockHit({ blockTag })
+      ? this.store.state.blockTimestamp
+      : this._readable._getBlockTimestamp(blockTag);
+  }
+
+  async _getFeesFactory(
+    overrides?: EthersCallOverrides
+  ): Promise<(blockTimestamp: number, recoveryMode: boolean) => Fees> {
+    return this._blockHit(overrides)
+      ? this.store.state._feesFactory
+      : this._readable._getFeesFactory(overrides);
+  }
+
   async getFees(overrides?: EthersCallOverrides): Promise<Fees> {
     return this._blockHit(overrides) ? this.store.state.fees : this._readable.getFees(overrides);
   }
@@ -736,10 +750,6 @@ class _BlockPolledReadableEthersLiquity
   }
 
   _getDefaultPool(): Promise<Trove> {
-    throw new Error("Method not implemented.");
-  }
-
-  _getFeesFactory(): Promise<(blockTimestamp: number, recoveryMode: boolean) => Fees> {
     throw new Error("Method not implemented.");
   }
 

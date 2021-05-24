@@ -1,4 +1,3 @@
-import { BigNumber } from "@ethersproject/bignumber";
 import { AddressZero } from "@ethersproject/constants";
 
 import {
@@ -8,15 +7,13 @@ import {
   TroveWithPendingRedistribution,
   StabilityDeposit,
   LQTYStake,
-  LiquityStore
+  LiquityStore,
+  Fees
 } from "@liquity/lib-base";
 
+import { decimalify, promiseAllValues } from "./_utils";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
-import {
-  EthersLiquityConnection,
-  _getBlockTimestamp,
-  _getProvider
-} from "./EthersLiquityConnection";
+import { EthersLiquityConnection, _getProvider } from "./EthersLiquityConnection";
 import { EthersCallOverrides, EthersProvider } from "./types";
 
 /**
@@ -38,6 +35,9 @@ export interface BlockPolledLiquityStoreExtraState {
    * Timestamp of latest block (number of seconds since epoch).
    */
   blockTimestamp: number;
+
+  /** @internal */
+  _feesFactory: (blockTimestamp: number, recoveryMode: boolean) => Fees;
 }
 
 /**
@@ -47,19 +47,6 @@ export interface BlockPolledLiquityStoreExtraState {
  * @public
  */
 export type BlockPolledLiquityStoreState = LiquityStoreState<BlockPolledLiquityStoreExtraState>;
-
-type Resolved<T> = T extends Promise<infer U> ? U : T;
-type ResolvedValues<T> = { [P in keyof T]: Resolved<T[P]> };
-
-const promiseAllValues = <T>(object: T) => {
-  const keys = Object.keys(object);
-
-  return Promise.all(Object.values(object)).then(values =>
-    Object.fromEntries(values.map((value, i) => [keys[i], value]))
-  ) as Promise<ResolvedValues<T>>;
-};
-
-const decimalify = (bigNumber: BigNumber) => Decimal.fromBigNumberString(bigNumber.toHexString());
 
 /**
  * Ethers-based {@link @liquity/lib-base#LiquityStore} that updates state whenever there's a new
@@ -103,12 +90,12 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
 
     const {
       blockTimestamp,
-      createFees,
+      _feesFactory,
       calculateRemainingLQTY,
       ...baseState
     } = await promiseAllValues({
-      blockTimestamp: _getBlockTimestamp(this.connection, blockTag),
-      createFees: this._readable._getFeesFactory({ blockTag }),
+      blockTimestamp: this._readable._getBlockTimestamp(blockTag),
+      _feesFactory: this._readable._getFeesFactory({ blockTag }),
       calculateRemainingLQTY: this._readable._getRemainingLiquidityMiningLQTYRewardCalculator({
         blockTag
       }),
@@ -178,12 +165,13 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     return [
       {
         ...baseState,
-        _feesInNormalMode: createFees(blockTimestamp, false),
+        _feesInNormalMode: _feesFactory(blockTimestamp, false),
         remainingLiquidityMiningLQTYReward: calculateRemainingLQTY(blockTimestamp)
       },
       {
         blockTag,
-        blockTimestamp
+        blockTimestamp,
+        _feesFactory
       }
     ];
   }
@@ -220,7 +208,8 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
   ): BlockPolledLiquityStoreExtraState {
     return {
       blockTag: stateUpdate.blockTag ?? oldState.blockTag,
-      blockTimestamp: stateUpdate.blockTimestamp ?? oldState.blockTimestamp
+      blockTimestamp: stateUpdate.blockTimestamp ?? oldState.blockTimestamp,
+      _feesFactory: stateUpdate._feesFactory ?? oldState._feesFactory
     };
   }
 }
