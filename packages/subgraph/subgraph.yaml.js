@@ -56,6 +56,8 @@ dataSources:
           handler: handleLiquidation
         - event: Redemption(uint256,uint256,uint256,uint256)
           handler: handleRedemption
+        - event: LTermsUpdated(uint256,uint256)
+          handler: handleLTermsUpdated
   - name: BorrowerOperations
     kind: ethereum/contract
     network: mainnet
