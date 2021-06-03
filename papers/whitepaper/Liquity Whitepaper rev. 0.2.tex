@@ -113,7 +113,7 @@ The protocol imposes a minimum debt of 2,000 LUSD.\footnote{This requirement pre
 
 \textit{Liquidation Reserve}. When a borrower opens a new Trove, an amount of 200 LUSD is reserved and held back by the protocol as a compensation for the gas costs if the Trove needs to be liquidated at some point. The 200 LUSD is added to the Trove's debt, impacting its collateral ratio. When a borrower closes their Trove, the Liquidation Reserve is refunded, i.e. the corresponding 200 LUSD debt on the Trove is cancelled. The borrower thus needs to pay back 200 LUSD less to fully pay off their debt. \\
 
-\textit{Borrowing Fee}.   The protocol charges a one-time Borrowing Fee for the borrowed liquidity. The fee is added to the Trove's debt and is given by a \textbf{base rate} (see 3.3 Redemption mechanism “Redemption fee and base rate”) multiplied by the amount of liquidity drawn by the borrower. The minimum Borrowing Fee is 0.5\%, and the maximum is 5\%. \\
+\textit{Borrowing Fee}.   The protocol charges a one-time Borrowing Fee for the borrowed liquidity. The fee is added to the Trove's debt and is given by a \textbf{base rate} + 0.5\% (see 3.3 Redemption mechanism “Redemption fee and base rate”) multiplied by the amount of liquidity drawn by the borrower. The minimum Borrowing Fee is 0.5\%, and the maximum is 5\%. \\
 
 \begin{tcolorbox}
 \textbf{Example}\\
@@ -164,7 +164,7 @@ LUSD currently trades at \$0.95, and the current base rate is 1.4\%. An arbitrag
 
 The system first applies the decay rate to the current base rate:
 $$b(t):=b(t-1)\times\delta^{\triangle t}=0.014\times0.94^2=0.01237$$
-It then increases the base rate given the redeemed amount ($\alpha= 0.5$):
+It then increases the base rate in proportion to the fraction of total supply redeemed ($\alpha= 0.5$):
 $$b(t):=b(t-1)+0.5\times\frac{m}{n}=0.01237+0.5\times\frac{150000}{10000000}=0.01987$$
 \\
 
