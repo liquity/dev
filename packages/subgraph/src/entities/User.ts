@@ -23,7 +23,7 @@ export function getUser(_user: Address): User {
 }
 
 function createCollSurplusChange(event: ethereum.Event): CollSurplusChange {
-  let sequenceNumber = beginChange(event);
+  let sequenceNumber = beginChange();
   let collSurplusChange = new CollSurplusChange(sequenceNumber.toString());
   initChange(collSurplusChange, event, sequenceNumber);
 
@@ -52,8 +52,9 @@ export function updateUserClaimColl(
 
   collSurplusChange.collSurplusBefore = user.collSurplus;
   collSurplusChange.collSurplusAfter = newCollSurplus;
-  collSurplusChange.collSurplusChange =
-    collSurplusChange.collSurplusAfter - collSurplusChange.collSurplusBefore;
+  collSurplusChange.collSurplusChange = collSurplusChange.collSurplusAfter.minus(
+    collSurplusChange.collSurplusBefore
+  );
 
   updateSystemStateByCollSurplusChange(collSurplusChange);
   finishCollSurplusChange(collSurplusChange);

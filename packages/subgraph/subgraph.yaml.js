@@ -34,7 +34,6 @@ dataSources:
         - Global
         - User
         - Transaction
-        - PriceChange
         - Trove
         - TroveChange
         - Redemption
@@ -43,11 +42,7 @@ dataSources:
       abis:
         - name: TroveManager
           file: ../lib-ethers/abi/TroveManager.json
-        - name: PriceFeed
-          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
-        - event: PriceFeedAddressChanged(address)
-          handler: handlePriceFeedAddressChanged
         - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleTroveUpdated
         - event: TroveLiquidated(indexed address,uint256,uint256,uint8)
@@ -74,22 +69,40 @@ dataSources:
         - Global
         - User
         - Transaction
-        - PriceChange
         - Trove
         - TroveChange
         - SystemState
       abis:
         - name: BorrowerOperations
           file: ../lib-ethers/abi/BorrowerOperations.json
-        - name: TroveManager
-          file: ../lib-ethers/abi/TroveManager.json
-        - name: PriceFeed
-          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: TroveUpdated(indexed address,uint256,uint256,uint256,uint8)
           handler: handleTroveUpdated
         - event: LUSDBorrowingFeePaid(indexed address,uint256)
           handler: handleLUSDBorrowingFeePaid
+  - name: PriceFeed
+    kind: ethereum/contract
+    network: mainnet
+    source:
+      abi: PriceFeed
+      address: "${addresses.priceFeed}"
+      startBlock: ${startBlock}
+    mapping:
+      file: ./src/mappings/PriceFeed.ts
+      language: wasm/assemblyscript
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      entities:
+        - Global
+        - Transaction
+        - PriceChange
+        - SystemState
+      abis:
+        - name: PriceFeed
+          file: ../lib-ethers/abi/PriceFeed.json
+      eventHandlers:
+        - event: LastGoodPriceUpdated(uint256)
+          handler: handleLastGoodPriceUpdated
   - name: StabilityPool
     kind: ethereum/contract
     network: mainnet
@@ -106,7 +119,6 @@ dataSources:
         - Global
         - User
         - Transaction
-        - PriceChange
         - StabilityDeposit
         - StabilityDepositChange
         - SystemState
@@ -114,8 +126,6 @@ dataSources:
       abis:
         - name: StabilityPool
           file: ../lib-ethers/abi/StabilityPool.json
-        - name: PriceFeed
-          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: UserDepositChanged(indexed address,uint256)
           handler: handleUserDepositChanged
@@ -147,8 +157,6 @@ dataSources:
       abis:
         - name: CollSurplusPool
           file: ../lib-ethers/abi/CollSurplusPool.json
-        - name: PriceFeed
-          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: CollBalanceUpdated(indexed address,uint256)
           handler: handleCollSurplusBalanceUpdated
@@ -173,8 +181,6 @@ dataSources:
       abis:
         - name: LQTYStaking
           file: ../lib-ethers/abi/LQTYStaking.json
-        - name: PriceFeed
-          file: ../lib-ethers/abi/PriceFeed.json
       eventHandlers:
         - event: StakeChanged(indexed address,uint256)
           handler: handleStakeChanged

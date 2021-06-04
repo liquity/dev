@@ -9,7 +9,7 @@ import { getUser } from "./User";
 import { handleLQTYStakeChange } from "./Global";
 
 function startLQTYStakeChange(event: ethereum.Event): LqtyStakeChange {
-  let sequenceNumber = beginChange(event);
+  let sequenceNumber = beginChange();
   let stakeChange = new LqtyStakeChange(sequenceNumber.toString());
   stakeChange.issuanceGain = DECIMAL_ZERO;
   stakeChange.redemptionGain = DECIMAL_ZERO;

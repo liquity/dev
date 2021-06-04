@@ -28,7 +28,7 @@ function getStabilityDeposit(_user: Address): StabilityDeposit {
 }
 
 function createStabilityDepositChange(event: ethereum.Event): StabilityDepositChange {
-  let sequenceNumber = beginChange(event);
+  let sequenceNumber = beginChange();
   let stabilityDepositChange = new StabilityDepositChange(sequenceNumber.toString());
   initChange(stabilityDepositChange, event, sequenceNumber);
 
@@ -112,7 +112,7 @@ export function withdrawCollateralGainFromStabilityDeposit(
 
   let stabilityDeposit = getStabilityDeposit(_user) as StabilityDeposit;
   let depositLoss = decimalize(_LUSDLoss);
-  let newDepositedAmount = stabilityDeposit.depositedAmount - depositLoss;
+  let newDepositedAmount = stabilityDeposit.depositedAmount.minus(depositLoss);
 
   updateStabilityDepositByOperation(
     event,

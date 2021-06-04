@@ -2,8 +2,6 @@ type Global @entity {
   "There should be only one System entity with an ID of 'only'"
   id: ID!
 
-  priceFeedAddress: Bytes
-
   systemStateCount: Int!
   transactionCount: Int!
   changeCount: Int!
@@ -50,7 +48,7 @@ type SystemState @entity {
   "Can be used to chronologically sort SystemStates"
   sequenceNumber: Int!
 
-  price: BigDecimal!
+  price: BigDecimal
 
   totalCollateral: BigDecimal!
   totalDebt: BigDecimal!
