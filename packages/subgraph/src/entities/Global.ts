@@ -1,4 +1,4 @@
-import { Value, BigInt, BigDecimal, Address } from "@graphprotocol/graph-ts";
+import { Value, BigInt } from "@graphprotocol/graph-ts";
 
 import { Global, LqtyStakeChange } from "../../generated/schema";
 
@@ -70,17 +70,6 @@ export function getLiquidationSequenceNumber(): i32 {
 
 export function getRedemptionSequenceNumber(): i32 {
   return increaseCounter("redemptionCount");
-}
-
-export function updatePriceFeedAddress(priceFeedAddress: Address): void {
-  let global = getGlobal();
-
-  global.priceFeedAddress = priceFeedAddress;
-  global.save();
-}
-
-export function getPriceFeedAddress(): Address {
-  return getGlobal().priceFeedAddress as Address;
 }
 
 export function updateTotalRedistributed(L_ETH: BigInt, L_LUSDDebt: BigInt): void {

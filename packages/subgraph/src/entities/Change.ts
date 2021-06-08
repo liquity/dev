@@ -4,14 +4,7 @@ import { getChangeSequenceNumber } from "./Global";
 import { getTransaction } from "./Transaction";
 import { getCurrentSystemState } from "./SystemState";
 
-export function beginChange(event: ethereum.Event): i32 {
-  // Pre-create the Transaction entity that this change will eventually refer to (if it doesn't
-  // exist yet).
-
-  // This is needed because creating a new Transaction may have the side effect of increasing the
-  // change sequence number through creating a PriceChange.
-  getTransaction(event);
-
+export function beginChange(): i32 {
   return getChangeSequenceNumber();
 }
 

@@ -74,7 +74,7 @@ function setTroveStatus(trove: Trove, status: string): void {
 }
 
 function createTroveChange(event: ethereum.Event): TroveChange {
-  let sequenceNumber = beginChange(event);
+  let sequenceNumber = beginChange();
   let troveChange = new TroveChange(sequenceNumber.toString());
   initChange(troveChange, event, sequenceNumber);
 

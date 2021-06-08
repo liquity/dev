@@ -1,4 +1,4 @@
-import { ethereum, BigDecimal } from "@graphprotocol/graph-ts";
+import { ethereum, BigDecimal, BigInt } from "@graphprotocol/graph-ts";
 
 import {
   SystemState,
@@ -8,7 +8,7 @@ import {
   CollSurplusChange
 } from "../../generated/schema";
 
-import { decimalize, DECIMAL_INITIAL_PRICE, DECIMAL_ZERO, DECIMAL_ONE } from "../utils/bignumbers";
+import { decimalize, DECIMAL_ZERO, DECIMAL_ONE } from "../utils/bignumbers";
 import { calculateCollateralRatio } from "../utils/collateralRatio";
 
 import {
@@ -18,9 +18,7 @@ import {
   isRecoveryModeLiquidation
 } from "../types/TroveOperation";
 
-import { getPrice } from "../calls/PriceFeed";
-
-import { getGlobal, getSystemStateSequenceNumber, getPriceFeedAddress } from "./Global";
+import { getGlobal, getSystemStateSequenceNumber } from "./Global";
 import { beginChange, initChange, finishChange } from "./Change";
 
 export function getCurrentSystemState(): SystemState {
@@ -32,7 +30,6 @@ export function getCurrentSystemState(): SystemState {
     let newSystemState = new SystemState(sequenceNumber.toString());
 
     newSystemState.sequenceNumber = sequenceNumber;
-    newSystemState.price = DECIMAL_INITIAL_PRICE;
     newSystemState.totalCollateral = DECIMAL_ZERO;
     newSystemState.totalDebt = DECIMAL_ZERO;
     newSystemState.tokensInStabilityPool = DECIMAL_ZERO;
@@ -60,16 +57,17 @@ export function bumpSystemState(systemState: SystemState): void {
   global.save();
 }
 
-// To make sure this returns the latest price, a Transaction entity should be created for the
-// triggering event beforehand, either directly or indirectly through creating a Change entity
 export function getCurrentPrice(): BigDecimal {
   let currentSystemState = getCurrentSystemState();
 
-  return currentSystemState.price;
+  // The backend always starts with fetching the latest price, so LastGoodPriceUpdated will be
+  // the first event emitted. We can be sure that by the time we need the price, it will have been
+  // initialized.
+  return currentSystemState.price!;
 }
 
 function createPriceChange(event: ethereum.Event): PriceChange {
-  let sequenceNumber = beginChange(event);
+  let sequenceNumber = beginChange();
   let priceChange = new PriceChange(sequenceNumber.toString());
   initChange(priceChange, event, sequenceNumber);
 
@@ -82,13 +80,23 @@ function finishPriceChange(priceChange: PriceChange): void {
 }
 
 /*
- * Call the PriceFeed to get the latest price, and update the SystemState through a PriceChange
- * if it has changed.
+ * Update SystemState through a PriceChange if _lastGoodPrice is different from the last recorded
+ * price.
  */
-export function checkPrice(event: ethereum.Event): void {
+export function updatePrice(event: ethereum.Event, _lastGoodPrice: BigInt): void {
   let systemState = getCurrentSystemState();
-  let oldPrice = systemState.price;
-  let newPrice = decimalize(getPrice(getPriceFeedAddress()));
+  let oldPriceOrNull = systemState.price;
+  let newPrice = decimalize(_lastGoodPrice);
+
+  if (oldPriceOrNull == null) {
+    // On first price event, just initialize price in the current system state without creating
+    // a price change.
+    systemState.price = newPrice;
+    systemState.save();
+    return;
+  }
+
+  let oldPrice = oldPriceOrNull!;
 
   if (newPrice != oldPrice) {
     let priceChange = createPriceChange(event);
@@ -96,7 +104,7 @@ export function checkPrice(event: ethereum.Event): void {
     systemState.price = newPrice;
     bumpSystemState(systemState);
 
-    priceChange.priceChange = newPrice - oldPrice;
+    priceChange.priceChange = newPrice.minus(oldPrice);
     finishPriceChange(priceChange);
   }
 }
@@ -143,7 +151,7 @@ export function updateSystemStateByTroveChange(troveChange: TroveChange): void {
   systemState.totalCollateralRatio = calculateCollateralRatio(
     systemState.totalCollateral,
     systemState.totalDebt,
-    systemState.price
+    systemState.price! // A trove change is guaranteed to be preceeded by a price update
   );
 
   bumpSystemState(systemState);

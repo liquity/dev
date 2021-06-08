@@ -3,7 +3,6 @@ import {
   TroveLiquidated,
   Liquidation,
   Redemption,
-  PriceFeedAddressChanged,
   LTermsUpdated
 } from "../../generated/TroveManager/TroveManager";
 
@@ -12,11 +11,7 @@ import { getTroveOperationFromTroveManagerOperation } from "../types/TroveOperat
 import { finishCurrentLiquidation } from "../entities/Liquidation";
 import { finishCurrentRedemption } from "../entities/Redemption";
 import { applyRedistributionToTroveBeforeLiquidation, updateTrove } from "../entities/Trove";
-import { updatePriceFeedAddress, updateTotalRedistributed } from "../entities/Global";
-
-export function handlePriceFeedAddressChanged(event: PriceFeedAddressChanged): void {
-  updatePriceFeedAddress(event.params._newPriceFeedAddress);
-}
+import { updateTotalRedistributed } from "../entities/Global";
 
 export function handleTroveUpdated(event: TroveUpdated): void {
   updateTrove(
