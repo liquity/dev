@@ -7,7 +7,7 @@ networks:
         default_contract_owner: true
         cmd_settings:
             port: 8545
-            gas_limit: 6721975
+            gas_limit: 8000000
             accounts: 1000
             chain_id: 1337
             network_id: 1588949648
