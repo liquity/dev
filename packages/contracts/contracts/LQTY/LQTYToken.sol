@@ -52,8 +52,8 @@ contract LQTYToken is CheckContract, ILQTYToken {
 
     // --- ERC20 Data ---
 
-    string constant internal _NAME = "LQTY";
-    string constant internal _SYMBOL = "LQTY";
+    string constant internal _NAME = "xDollar";
+    string constant internal _SYMBOL = "XDO";
     string constant internal _VERSION = "1";
     uint8 constant internal  _DECIMALS = 18;
 
@@ -108,9 +108,13 @@ contract LQTYToken is CheckContract, ILQTYToken {
         address _communityIssuanceAddress, 
         address _lqtyStakingAddress,
         address _lockupFactoryAddress,
-        address _bountyAddress,
+        address _initialSetupAddress,
         address _lpRewardsAddress,
-        address _multisigAddress
+        address _multisigAddress,
+        address _ecosystemVestingAddress,
+        address _teamVestingAddress,
+        address _partnerVestingAddress,
+        address _treasuryAddress
     ) 
         public 
     {
@@ -134,23 +138,22 @@ contract LQTYToken is CheckContract, ILQTYToken {
         _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_TYPE_HASH, hashedName, hashedVersion);
         
         // --- Initial LQTY allocations ---
-     
-        uint bountyEntitlement = _1_MILLION.mul(2); // Allocate 2 million for bounties/hackathons
-        _mint(_bountyAddress, bountyEntitlement);
+        _mint(_initialSetupAddress, _1_MILLION.mul(1)); // Allocate 1 million for initial setup
 
-        uint depositorsAndFrontEndsEntitlement = _1_MILLION.mul(32); // Allocate 32 million to the algorithmic issuance schedule
-        _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
+        _mint(_communityIssuanceAddress, _1_MILLION.mul(10)); // Allocate 10 million to the algorithmic issuance schedule on Polygon
 
-        uint _lpRewardsEntitlement = _1_MILLION.mul(4).div(3);  // Allocate 1.33 million for LP rewards
+        uint _lpRewardsEntitlement = _1_MILLION.mul(5).div(100);  // Allocate 0.05 million for LP rewards
         lpRewardsEntitlement = _lpRewardsEntitlement;
         _mint(_lpRewardsAddress, _lpRewardsEntitlement);
-        
-        // Allocate the remainder to the LQTY Multisig: (100 - 2 - 32 - 1.33) million = 64.66 million
-        uint multisigEntitlement = _1_MILLION.mul(100)
-            .sub(bountyEntitlement)
-            .sub(depositorsAndFrontEndsEntitlement)
-            .sub(_lpRewardsEntitlement);
 
+        _mint(_ecosystemVestingAddress, _1_MILLION.mul(15)); // Allocate 15 million to ecosystem.
+        _mint(_teamVestingAddress, _1_MILLION.mul(15).div(2)); // Allocate 7.5 million to team vesting after 6 months.
+        _mint(_partnerVestingAddress, _1_MILLION.mul(4)); // Allocate 4 million to parter vesting after 6 months.
+        _mint(_treasuryAddress, _1_MILLION.mul(895).div(100)); // Allocate 8.95 million to Treasury.
+
+        // Allocate 36 million to other side chains.
+        // Allocate the remainder to the LQTY Multisig: (100 - 1 - 10 - 0.05 - 15 - 7.5 - 4 - 8.95 - 36) million = 17.5 million
+        uint multisigEntitlement = _1_MILLION.mul(35).div(2);
         _mint(_multisigAddress, multisigEntitlement);
     }
 

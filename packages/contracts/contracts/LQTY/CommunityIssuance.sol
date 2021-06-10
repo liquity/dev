@@ -42,7 +42,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     * 
     * Set to 32M (slightly less than 1/3) of total LQTY supply.
     */
-    uint constant public LQTYSupplyCap = 32e24; // 32 million
+    uint constant public LQTYSupplyCap = 10e24; // 10 million
 
     ILQTYToken public lqtyToken;
 

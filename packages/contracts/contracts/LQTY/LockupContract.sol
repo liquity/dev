@@ -22,7 +22,7 @@ contract LockupContract {
     // --- Data ---
     string constant public NAME = "LockupContract";
 
-    uint constant public SECONDS_IN_ONE_YEAR = 31536000; 
+    uint constant public SECONDS_IN_HALF_YEAR = 15768000; 
 
     address public immutable beneficiary;
 
@@ -81,6 +81,6 @@ contract LockupContract {
 
     function _requireUnlockTimeIsAtLeastOneYearAfterSystemDeployment(uint _unlockTime) internal view {
         uint systemDeploymentTime = lqtyToken.getDeploymentStartTime();
-        require(_unlockTime >= systemDeploymentTime.add(SECONDS_IN_ONE_YEAR), "LockupContract: unlock time must be at least one year after system deployment");
+        require(_unlockTime >= systemDeploymentTime.add(SECONDS_IN_HALF_YEAR), "LockupContract: unlock time must be at least half year after system deployment");
     }
 }
