@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Flex, Button, Box, Card, Heading } from "theme-ui";
+import { Flex, Button, Box, Card, Heading, Spinner } from "theme-ui";
 import {
   LiquityStoreState,
   Decimal,
@@ -9,6 +9,8 @@ import {
   Percent
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
+
+import { useStableTroveChange } from "../../hooks/useStableTroveChange";
 import { ActionDescription } from "../ActionDescription";
 import { useMyTransactionState } from "../Transaction";
 import { TroveAction } from "./TroveAction";
@@ -19,6 +21,7 @@ import { InfoIcon } from "../InfoIcon";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { CollateralRatio } from "./CollateralRatio";
 import { EditableRow, StaticRow } from "./Editor";
+import { ExpensiveTroveChangeWarning, GasEstimationState } from "./ExpensiveTroveChangeWarning";
 import {
   selectForTroveChangeValidation,
   validateTroveChange
@@ -66,6 +69,9 @@ export const Opening: React.FC = () => {
     borrowingRate,
     validationContext
   );
+
+  const stableTroveChange = useStableTroveChange(troveChange);
+  const [gasEstimationState, setGasEstimationState] = useState<GasEstimationState>({ type: "idle" });
 
   const transactionState = useMyTransactionState(TRANSACTION_ID);
   const isTransactionPending =
@@ -188,16 +194,29 @@ export const Opening: React.FC = () => {
           </ActionDescription>
         )}
 
+        <ExpensiveTroveChangeWarning
+          troveChange={stableTroveChange}
+          maxBorrowingRate={maxBorrowingRate}
+          borrowingFeeDecayToleranceMinutes={60}
+          gasEstimationState={gasEstimationState}
+          setGasEstimationState={setGasEstimationState}
+        />
+
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
 
-          {troveChange ? (
+          {gasEstimationState.type === "inProgress" ? (
+            <Button disabled>
+              <Spinner size="24px" sx={{ color: "background" }} />
+            </Button>
+          ) : stableTroveChange ? (
             <TroveAction
               transactionId={TRANSACTION_ID}
-              change={troveChange}
+              change={stableTroveChange}
               maxBorrowingRate={maxBorrowingRate}
+              borrowingFeeDecayToleranceMinutes={60}
             >
               Confirm
             </TroveAction>
