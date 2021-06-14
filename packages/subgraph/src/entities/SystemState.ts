@@ -8,7 +8,13 @@ import {
   CollSurplusChange
 } from "../../generated/schema";
 
-import { decimalize, DECIMAL_ZERO, DECIMAL_ONE } from "../utils/bignumbers";
+import {
+  decimalize,
+  DECIMAL_ZERO,
+  DECIMAL_ONE,
+  DECIMAL_COLLATERAL_GAS_COMPENSATION_DIVISOR,
+  DECIMAL_PRECISION
+} from "../utils/bignumbers";
 import { calculateCollateralRatio } from "../utils/collateralRatio";
 
 import {
@@ -116,14 +122,18 @@ function tryToOffsetWithTokensFromStabilityPool(
 ): void {
   if (debtToLiquidate <= systemState.tokensInStabilityPool) {
     // Completely offset
-    systemState.totalCollateral -= collateralToLiquidate;
-    systemState.totalDebt -= debtToLiquidate;
-    systemState.tokensInStabilityPool -= debtToLiquidate;
+    systemState.totalCollateral = systemState.totalCollateral.minus(collateralToLiquidate);
+    systemState.totalDebt = systemState.totalDebt.minus(debtToLiquidate);
+    systemState.tokensInStabilityPool = systemState.tokensInStabilityPool.minus(debtToLiquidate);
   } else if (systemState.tokensInStabilityPool > DECIMAL_ZERO) {
     // Partially offset, emptying the pool
-    systemState.totalCollateral -=
-      (collateralToLiquidate * systemState.tokensInStabilityPool) / debtToLiquidate;
-    systemState.totalDebt -= systemState.tokensInStabilityPool;
+    systemState.totalCollateral = systemState.totalCollateral.minus(
+      collateralToLiquidate
+        .times(systemState.tokensInStabilityPool)
+        .div(debtToLiquidate)
+        .truncate(DECIMAL_PRECISION)
+    );
+    systemState.totalDebt = systemState.totalDebt.minus(systemState.tokensInStabilityPool);
     systemState.tokensInStabilityPool = DECIMAL_ZERO;
   } else {
     // Empty pool
@@ -135,15 +145,22 @@ export function updateSystemStateByTroveChange(troveChange: TroveChange): void {
   let operation = troveChange.troveOperation;
 
   if (isBorrowerOperation(operation) || isRedemption(operation)) {
-    systemState.totalCollateral += troveChange.collateralChange;
-    systemState.totalDebt += troveChange.debtChange;
+    systemState.totalCollateral = systemState.totalCollateral.plus(troveChange.collateralChange);
+    systemState.totalDebt = systemState.totalDebt.plus(troveChange.debtChange);
   } else if (isLiquidation(operation)) {
-    // TODO gas compensation
+    let collateral = troveChange.collateralBefore;
+    let debt = troveChange.debtBefore;
+    let collateralGasCompensation = collateral
+      .div(DECIMAL_COLLATERAL_GAS_COMPENSATION_DIVISOR)
+      .truncate(DECIMAL_PRECISION);
+
+    systemState.totalCollateral = systemState.totalCollateral.minus(collateralGasCompensation);
+
     if (!isRecoveryModeLiquidation(operation) || troveChange.collateralRatioBefore > DECIMAL_ONE) {
       tryToOffsetWithTokensFromStabilityPool(
         systemState,
-        -troveChange.collateralChange,
-        -troveChange.debtChange
+        collateral.minus(collateralGasCompensation),
+        debt
       );
     }
   }
@@ -164,7 +181,9 @@ export function updateSystemStateByStabilityDepositChange(
   let operation = stabilityDepositChange.stabilityDepositOperation;
 
   if (operation == "depositTokens" || operation == "withdrawTokens") {
-    systemState.tokensInStabilityPool += stabilityDepositChange.depositedAmountChange;
+    systemState.tokensInStabilityPool = systemState.tokensInStabilityPool.plus(
+      stabilityDepositChange.depositedAmountChange
+    );
   }
 
   bumpSystemState(systemState);
@@ -173,7 +192,9 @@ export function updateSystemStateByStabilityDepositChange(
 export function updateSystemStateByCollSurplusChange(collSurplusChange: CollSurplusChange): void {
   let systemState = getCurrentSystemState();
 
-  systemState.collSurplusPoolBalance += collSurplusChange.collSurplusChange;
+  systemState.collSurplusPoolBalance = systemState.collSurplusPoolBalance.plus(
+    collSurplusChange.collSurplusChange
+  );
 
   bumpSystemState(systemState);
 }
