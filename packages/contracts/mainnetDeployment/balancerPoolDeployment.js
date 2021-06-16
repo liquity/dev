@@ -37,7 +37,7 @@ const INITIAL_FUNDING = toBigNum(dec(5, 22)); // $50k
 
 async function main() {
   // Uncomment for testing:
-
+  /*
   const impersonateAddress = "0x787EfF01c9FdC1918d1AA6eeFf089B191e2922E4"
   await hre.network.provider.request({
     method: "hardhat_impersonateAccount",
@@ -45,9 +45,10 @@ async function main() {
   })
   const deployerWallet = await ethers.provider.getSigner(impersonateAddress)
   const deployerWalletAddress = impersonateAddress
+  */
 
-  //const deployerWallet = (await ethers.getSigners())[0]
-  //const deployerWalletAddress = deployerWallet.address
+  const deployerWallet = (await ethers.getSigners())[0]
+  const deployerWalletAddress = deployerWallet.address
 
   const factory = new ethers.Contract(
     ORACLE_POOL_FACTORY,
@@ -69,8 +70,7 @@ async function main() {
   const tx1 = await factory.create(
     NAME, SYMBOL, tokens, weights,
     swapFeePercentage, oracleEnabled,
-    //DELEGATE_OWNER
-    impersonateAddress
+    DELEGATE_OWNER
   );
   const receipt1 = await tx1.wait();
 
