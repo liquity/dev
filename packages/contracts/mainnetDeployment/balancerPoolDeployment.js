@@ -135,7 +135,7 @@ async function main() {
     ERC20.abi,
     deployerWallet
   )
-  const txApproveLusd = await lusd.approve(VAULT, toBigNum(dec(1, 36)));
+  const txApproveLusd = await lusd.approve(VAULT, lusd_balance);
   await txApproveLusd.wait()
 
   // joins and exits are done on the Vault, not the pool
