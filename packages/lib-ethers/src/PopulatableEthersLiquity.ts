@@ -3,6 +3,8 @@ import assert from "assert";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { AddressZero } from "@ethersproject/constants";
 import { Log } from "@ethersproject/abstract-provider";
+import { ErrorCode } from "@ethersproject/logger";
+import { Transaction } from "@ethersproject/transactions";
 
 import {
   CollateralGainTransferDetails,
@@ -43,7 +45,6 @@ import {
 import {
   EthersLiquityConnection,
   _getContracts,
-  _getProvider,
   _requireAddress,
   _requireSigner
 } from "./EthersLiquityConnection";
@@ -112,6 +113,75 @@ function* generateTrials(totalNumberOfTrials: number) {
   }
 }
 
+/** @internal */
+export enum _RawErrorReason {
+  TRANSACTION_FAILED = "transaction failed",
+  TRANSACTION_CANCELLED = "cancelled",
+  TRANSACTION_REPLACED = "replaced",
+  TRANSACTION_REPRICED = "repriced"
+}
+
+const transactionReplacementReasons: unknown[] = [
+  _RawErrorReason.TRANSACTION_CANCELLED,
+  _RawErrorReason.TRANSACTION_REPLACED,
+  _RawErrorReason.TRANSACTION_REPRICED
+];
+
+interface RawTransactionFailedError extends Error {
+  code: ErrorCode.CALL_EXCEPTION;
+  reason: _RawErrorReason.TRANSACTION_FAILED;
+  transactionHash: string;
+  transaction: Transaction;
+  receipt: EthersTransactionReceipt;
+}
+
+/** @internal */
+export interface _RawTransactionReplacedError extends Error {
+  code: ErrorCode.TRANSACTION_REPLACED;
+  reason:
+    | _RawErrorReason.TRANSACTION_CANCELLED
+    | _RawErrorReason.TRANSACTION_REPLACED
+    | _RawErrorReason.TRANSACTION_REPRICED;
+  cancelled: boolean;
+  hash: string;
+  replacement: EthersTransactionResponse;
+  receipt: EthersTransactionReceipt;
+}
+
+const hasProp = <T, P extends string>(o: T, p: P): o is T & { [_ in P]: unknown } => p in o;
+
+const isTransactionFailedError = (error: Error): error is RawTransactionFailedError =>
+  hasProp(error, "code") &&
+  error.code === ErrorCode.CALL_EXCEPTION &&
+  hasProp(error, "reason") &&
+  error.reason === _RawErrorReason.TRANSACTION_FAILED;
+
+const isTransactionReplacedError = (error: Error): error is _RawTransactionReplacedError =>
+  hasProp(error, "code") &&
+  error.code === ErrorCode.TRANSACTION_REPLACED &&
+  hasProp(error, "reason") &&
+  transactionReplacementReasons.includes(error.reason);
+
+/**
+ * Thrown when a transaction is cancelled or replaced by a different transaction.
+ *
+ * @public
+ */
+export class EthersTransactionCancelledError extends Error {
+  readonly rawReplacementReceipt: EthersTransactionReceipt;
+  readonly rawError: Error;
+
+  /** @internal */
+  constructor(rawError: _RawTransactionReplacedError) {
+    assert(rawError.reason !== _RawErrorReason.TRANSACTION_REPRICED);
+
+    super(`Transaction ${rawError.reason}`);
+    this.name = "TransactionCancelledError";
+    this.rawReplacementReceipt = rawError.receipt;
+    this.rawError = rawError;
+  }
+}
+
 /**
  * A transaction that has already been sent.
  *
@@ -150,18 +220,41 @@ export class SentEthersLiquityTransaction<T = unknown>
       : _pendingReceipt;
   }
 
-  /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.getReceipt} */
-  async getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>> {
-    return this._receiptFrom(
-      await _getProvider(this._connection).getTransactionReceipt(this.rawSentTransaction.hash)
-    );
+  private async _waitForRawReceipt(confirmations?: number) {
+    try {
+      return await this.rawSentTransaction.wait(confirmations);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (isTransactionFailedError(error)) {
+          return error.receipt;
+        }
+
+        if (isTransactionReplacedError(error)) {
+          if (error.cancelled) {
+            throw new EthersTransactionCancelledError(error);
+          } else {
+            return error.receipt;
+          }
+        }
+      }
+
+      throw error;
+    }
   }
 
-  /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.waitForReceipt} */
+  /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.getReceipt} */
+  async getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>> {
+    return this._receiptFrom(await this._waitForRawReceipt(0));
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#SentLiquityTransaction.waitForReceipt}
+   *
+   * @throws
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
+   */
   async waitForReceipt(): Promise<MinedReceipt<EthersTransactionReceipt, T>> {
-    const receipt = this._receiptFrom(
-      await _getProvider(this._connection).waitForTransaction(this.rawSentTransaction.hash)
-    );
+    const receipt = this._receiptFrom(await this._waitForRawReceipt());
 
     assert(receipt.status !== "pending");
     return receipt;

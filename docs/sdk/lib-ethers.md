@@ -10,6 +10,7 @@
 |  --- | --- |
 |  [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md) | Ethers-based [LiquityStore](./lib-base.liquitystore.md) that updates state whenever there's a new block. |
 |  [EthersLiquity](./lib-ethers.ethersliquity.md) | Convenience class that combines multiple interfaces of the library in one object. |
+|  [EthersTransactionCancelledError](./lib-ethers.etherstransactioncancellederror.md) | Thrown when a transaction is cancelled or replaced by a different transaction. |
 |  [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) | Thrown by [EthersLiquity](./lib-ethers.ethersliquity.md) in case of transaction failure. |
 |  [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md) | Ethers-based implementation of [PopulatableLiquity](./lib-base.populatableliquity.md)<!-- -->. |
 |  [PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md) | A transaction that has been prepared for sending. |
