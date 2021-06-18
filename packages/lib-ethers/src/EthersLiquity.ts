@@ -306,6 +306,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   openTrove(
     params: TroveCreationParams<Decimalish>,
@@ -320,6 +321,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   closeTrove(overrides?: EthersTransactionOverrides): Promise<TroveClosureDetails> {
     return this.send.closeTrove(overrides).then(waitForSuccess);
@@ -330,6 +332,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   adjustTrove(
     params: TroveAdjustmentParams<Decimalish>,
@@ -344,6 +347,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   depositCollateral(
     amount: Decimalish,
@@ -357,6 +361,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   withdrawCollateral(
     amount: Decimalish,
@@ -370,6 +375,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   borrowLUSD(
     amount: Decimalish,
@@ -384,6 +390,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   repayLUSD(
     amount: Decimalish,
@@ -402,6 +409,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   liquidate(
     address: string | string[],
@@ -415,6 +423,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   liquidateUpTo(
     maximumNumberOfTrovesToLiquidate: number,
@@ -428,6 +437,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   depositLUSDInStabilityPool(
     amount: Decimalish,
@@ -442,6 +452,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   withdrawLUSDFromStabilityPool(
     amount: Decimalish,
@@ -455,6 +466,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   withdrawGainsFromStabilityPool(
     overrides?: EthersTransactionOverrides
@@ -467,6 +479,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   transferCollateralGainToTrove(
     overrides?: EthersTransactionOverrides
@@ -479,6 +492,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   sendLUSD(
     toAddress: string,
@@ -493,6 +507,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   sendLQTY(
     toAddress: string,
@@ -507,6 +522,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   redeemLUSD(
     amount: Decimalish,
@@ -521,6 +537,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.claimCollateralSurplus(overrides).then(waitForSuccess);
@@ -531,6 +548,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   stakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.stakeLQTY(amount, overrides).then(waitForSuccess);
@@ -541,6 +559,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   unstakeLQTY(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.unstakeLQTY(amount, overrides).then(waitForSuccess);
@@ -551,6 +570,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.withdrawGainsFromStaking(overrides).then(waitForSuccess);
@@ -561,6 +581,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   registerFrontend(kickbackRate: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.registerFrontend(kickbackRate, overrides).then(waitForSuccess);
@@ -580,6 +601,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.approveUniTokens(allowance, overrides).then(waitForSuccess);
@@ -590,6 +612,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   stakeUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.stakeUniTokens(amount, overrides).then(waitForSuccess);
@@ -600,6 +623,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   unstakeUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.unstakeUniTokens(amount, overrides).then(waitForSuccess);
@@ -610,6 +634,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   withdrawLQTYRewardFromLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.withdrawLQTYRewardFromLiquidityMining(overrides).then(waitForSuccess);
@@ -620,6 +645,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
   exitLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.exitLiquidityMining(overrides).then(waitForSuccess);

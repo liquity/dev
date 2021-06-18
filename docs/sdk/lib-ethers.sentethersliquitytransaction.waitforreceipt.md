@@ -17,3 +17,7 @@ Promise&lt;[MinedReceipt](./lib-base.minedreceipt.md)<!-- -->&lt;[EthersTransact
 
 Either a [FailedReceipt](./lib-base.failedreceipt.md) or a [SuccessfulReceipt](./lib-base.successfulreceipt.md)<!-- -->.
 
+## Exceptions
+
+Throws [EthersTransactionCancelledError](./lib-ethers.etherstransactioncancellederror.md) if the transaction is cancelled or replaced.
+

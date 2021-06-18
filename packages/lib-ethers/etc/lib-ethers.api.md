@@ -9,6 +9,7 @@ import { BlockTag } from '@ethersproject/abstract-provider';
 import { CollateralGainTransferDetails } from '@liquity/lib-base';
 import { Decimal } from '@liquity/lib-base';
 import { Decimalish } from '@liquity/lib-base';
+import { ErrorCode } from '@ethersproject/logger';
 import { FailedReceipt } from '@liquity/lib-base';
 import { Fees } from '@liquity/lib-base';
 import { FrontendStatus } from '@liquity/lib-base';
@@ -263,6 +264,16 @@ export type EthersProvider = Provider;
 export type EthersSigner = Signer;
 
 // @public
+export class EthersTransactionCancelledError extends Error {
+    // @internal
+    constructor(rawError: _RawTransactionReplacedError);
+    // (undocumented)
+    readonly rawError: Error;
+    // (undocumented)
+    readonly rawReplacementReceipt: EthersTransactionReceipt;
+}
+
+// @public
 export class EthersTransactionFailedError extends TransactionFailedError<FailedReceipt<EthersTransactionReceipt>> {
     constructor(message: string, failedReceipt: FailedReceipt<EthersTransactionReceipt>);
 }
@@ -388,6 +399,34 @@ export class PopulatedEthersRedemption extends PopulatedEthersLiquityTransaction
     readonly isTruncated: boolean;
     // (undocumented)
     readonly redeemableLUSDAmount: Decimal;
+}
+
+// @internal (undocumented)
+export enum _RawErrorReason {
+    // (undocumented)
+    TRANSACTION_CANCELLED = "cancelled",
+    // (undocumented)
+    TRANSACTION_FAILED = "transaction failed",
+    // (undocumented)
+    TRANSACTION_REPLACED = "replaced",
+    // (undocumented)
+    TRANSACTION_REPRICED = "repriced"
+}
+
+// @internal (undocumented)
+export interface _RawTransactionReplacedError extends Error {
+    // (undocumented)
+    cancelled: boolean;
+    // (undocumented)
+    code: ErrorCode.TRANSACTION_REPLACED;
+    // (undocumented)
+    hash: string;
+    // (undocumented)
+    reason: _RawErrorReason.TRANSACTION_CANCELLED | _RawErrorReason.TRANSACTION_REPLACED | _RawErrorReason.TRANSACTION_REPRICED;
+    // (undocumented)
+    receipt: EthersTransactionReceipt;
+    // (undocumented)
+    replacement: EthersTransactionResponse;
 }
 
 // @public
