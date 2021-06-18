@@ -7,7 +7,7 @@ import { defaultAbiCoder } from "@ethersproject/abi";
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-import { EthersTransactionOverrides } from "@liquity/lib-ethers";
+import { EthersTransactionOverrides, EthersTransactionCancelledError } from "@liquity/lib-ethers";
 import { SentLiquityTransaction, LiquityReceipt } from "@liquity/lib-base";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -343,14 +343,21 @@ export const TransactionMonitor: React.FC = () => {
             return;
           }
 
-          console.error(`Failed to get receipt for tx ${txHash}`);
-          console.error(rawError);
+          finished = true;
 
-          setTransactionState({
-            type: "failed",
-            id,
-            error: new Error("Failed")
-          });
+          if (rawError instanceof EthersTransactionCancelledError) {
+            console.log(`Cancelled tx ${txHash}`);
+            setTransactionState({ type: "cancelled", id });
+          } else {
+            console.error(`Failed to get receipt for tx ${txHash}`);
+            console.error(rawError);
+
+            setTransactionState({
+              type: "failed",
+              id,
+              error: new Error("Failed")
+            });
+          }
         }
       };
 
