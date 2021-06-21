@@ -731,7 +731,13 @@ export class PopulatableEthersLiquity
 
     const { hintAddress } = results.reduce((a, b) => (a.diff.lt(b.diff) ? a : b));
 
-    return sortedTroves.findInsertPosition(nominalCollateralRatio.hex, hintAddress, hintAddress);
+    const [prev, next] = await sortedTroves.findInsertPosition(
+      nominalCollateralRatio.hex,
+      hintAddress,
+      hintAddress
+    );
+
+    return prev === AddressZero ? [next, next] : next === AddressZero ? [prev, prev] : [prev, next];
   }
 
   private async _findHints(trove: Trove): Promise<[string, string]> {
