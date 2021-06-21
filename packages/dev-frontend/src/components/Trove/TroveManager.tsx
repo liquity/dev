@@ -235,6 +235,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
             transactionId={`${transactionIdPrefix}${validChange.type}`}
             change={validChange}
             maxBorrowingRate={maxBorrowingRate}
+            borrowingFeeDecayToleranceMinutes={60}
           >
             Confirm
           </TroveAction>

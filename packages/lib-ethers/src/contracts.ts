@@ -97,6 +97,18 @@ type TypedContract<T extends Contract, U, V> = _TypeSafeContract<T> &
         : never;
     };
 
+    readonly estimateGas: {
+      [P in keyof V]: V[P] extends (...args: infer A) => unknown
+        ? (...args: A) => Promise<BigNumber>
+        : never;
+    };
+
+    readonly populateTransaction: {
+      [P in keyof V]: V[P] extends (...args: infer A) => unknown
+        ? (...args: A) => Promise<PopulatedTransaction>
+        : never;
+    };
+
     readonly estimateAndPopulate: {
       [P in keyof V]: V[P] extends (...args: [...infer A, infer O | undefined]) => unknown
         ? EstimatedContractFunction<PopulatedTransaction, A, O>

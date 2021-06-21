@@ -1,3 +1,5 @@
+import { BlockTag } from "@ethersproject/abstract-provider";
+
 import {
   CollateralGainTransferDetails,
   Decimal,
@@ -41,7 +43,11 @@ import {
   EthersTransactionReceipt
 } from "./types";
 
-import { PopulatableEthersLiquity, SentEthersLiquityTransaction } from "./PopulatableEthersLiquity";
+import {
+  BorrowingOperationOptionalParams,
+  PopulatableEthersLiquity,
+  SentEthersLiquityTransaction
+} from "./PopulatableEthersLiquity";
 import { ReadableEthersLiquity, ReadableEthersLiquityWithStore } from "./ReadableEthersLiquity";
 import { SendableEthersLiquity } from "./SendableEthersLiquity";
 import { BlockPolledLiquityStore } from "./BlockPolledLiquityStore";
@@ -275,6 +281,11 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
   }
 
   /** @internal */
+  _getBlockTimestamp(blockTag?: BlockTag): Promise<number> {
+    return this._readable._getBlockTimestamp(blockTag);
+  }
+
+  /** @internal */
   _getFeesFactory(
     overrides?: EthersCallOverrides
   ): Promise<(blockTimestamp: number, recoveryMode: boolean) => Fees> {
@@ -310,10 +321,12 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    */
   openTrove(
     params: TroveCreationParams<Decimalish>,
-    maxBorrowingRate?: Decimalish,
+    maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams,
     overrides?: EthersTransactionOverrides
   ): Promise<TroveCreationDetails> {
-    return this.send.openTrove(params, maxBorrowingRate, overrides).then(waitForSuccess);
+    return this.send
+      .openTrove(params, maxBorrowingRateOrOptionalParams, overrides)
+      .then(waitForSuccess);
   }
 
   /**
@@ -336,10 +349,12 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
    */
   adjustTrove(
     params: TroveAdjustmentParams<Decimalish>,
-    maxBorrowingRate?: Decimalish,
+    maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams,
     overrides?: EthersTransactionOverrides
   ): Promise<TroveAdjustmentDetails> {
-    return this.send.adjustTrove(params, maxBorrowingRate, overrides).then(waitForSuccess);
+    return this.send
+      .adjustTrove(params, maxBorrowingRateOrOptionalParams, overrides)
+      .then(waitForSuccess);
   }
 
   /**

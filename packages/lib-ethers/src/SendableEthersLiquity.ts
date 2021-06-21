@@ -20,6 +20,7 @@ import {
 } from "./types";
 
 import {
+  BorrowingOperationOptionalParams,
   PopulatableEthersLiquity,
   PopulatedEthersLiquityTransaction,
   SentEthersLiquityTransaction
@@ -41,12 +42,14 @@ export class SendableEthersLiquity
   }
 
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.openTrove} */
-  openTrove(
+  async openTrove(
     params: TroveCreationParams<Decimalish>,
-    maxBorrowingRate?: Decimalish,
+    maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<TroveCreationDetails>> {
-    return this._populate.openTrove(params, maxBorrowingRate, overrides).then(sendTransaction);
+    return this._populate
+      .openTrove(params, maxBorrowingRateOrOptionalParams, overrides)
+      .then(sendTransaction);
   }
 
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.closeTrove} */
@@ -59,10 +62,12 @@ export class SendableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.adjustTrove} */
   adjustTrove(
     params: TroveAdjustmentParams<Decimalish>,
-    maxBorrowingRate?: Decimalish,
+    maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>> {
-    return this._populate.adjustTrove(params, maxBorrowingRate, overrides).then(sendTransaction);
+    return this._populate
+      .adjustTrove(params, maxBorrowingRateOrOptionalParams, overrides)
+      .then(sendTransaction);
   }
 
   /** {@inheritDoc @liquity/lib-base#SendableLiquity.depositCollateral} */
