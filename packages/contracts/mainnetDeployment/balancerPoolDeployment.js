@@ -6,6 +6,7 @@ const { WeightedPool2Tokens } = require("./ABIs/WeightedPool2Tokens.js")
 const { IVault } = require("./ABIs/IVault.js")
 const { ERC20 } = require("./ABIs/ERC20.js")
 const { WETH: WETH_ABI } = require("./ABIs/WETH.js")
+const { ChainlinkAggregatorV3Interface } = require("./ABIs/ChainlinkAggregatorV3Interface.js")
 const toBigNum = ethers.BigNumber.from
 const { TestHelper: th, TimeValues: timeVals } = require("../utils/testHelpers.js")
 const { dec } = th
@@ -22,7 +23,7 @@ const DELEGATE_OWNER = '0xBA1BA1ba1BA1bA1bA1Ba1BA1ba1BA1bA1ba1ba1B';
 
 const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 const LUSD = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
-const PRICE_FEED = '0x4c517D4e2C851CA76d7eC94B805269Df0f2201De';
+const CHAINLINK_ETHUSD_PROXY = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419';
 
 const tokens = [LUSD, WETH];
 const weights = [toBigNum(dec(4, 17)), toBigNum(dec(6, 17))];
@@ -61,7 +62,11 @@ async function main() {
     deployerWallet
   );
 
-  const priceFeed = await ethers.getContractAt('PriceFeed', PRICE_FEED)
+  const chainlinkProxy = new ethers.Contract(
+    CHAINLINK_ETHUSD_PROXY,
+    ChainlinkAggregatorV3Interface,
+    deployerWallet
+  )
 
   // ZERO_ADDRESS owner means fixed swap fees
   // DELEGATE_OWNER grants permission to governance for dynamic fee management
@@ -87,14 +92,18 @@ async function main() {
   );
   const poolId = await pool.getPoolId();
 
+  // Get latest price
+  const chainlinkPrice = await chainlinkProxy.latestAnswer();
+  // chainlink price has only 8 decimals
+  const eth_price = chainlinkPrice.mul(toBigNum(dec(1, 10)));
+  th.logBN('ETH price', eth_price)
   // Tokens must be in the same order
   // Values must be decimal-normalized!
-  const eth_price = await priceFeed.lastGoodPrice();
   const weth_balance = INITIAL_FUNDING.mul(weights[1]).div(eth_price);
   const lusd_balance = INITIAL_FUNDING.mul(weights[0]).div(toBigNum(dec(1, 18)));
   const initialBalances = [lusd_balance, weth_balance];
-  th.logBN('Initial LUSD', lusd_balance.toString())
-  th.logBN('Initial WETH', weth_balance.toString())
+  th.logBN('Initial LUSD', lusd_balance)
+  th.logBN('Initial WETH', weth_balance)
 
   const JOIN_KIND_INIT = 0;
 
