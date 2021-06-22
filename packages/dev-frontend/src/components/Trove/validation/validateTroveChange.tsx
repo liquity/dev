@@ -1,6 +1,7 @@
 import {
   Decimal,
   LUSD_MINIMUM_DEBT,
+  LUSD_MINIMUM_NET_DEBT,
   Trove,
   TroveAdjustmentParams,
   TroveChange,
@@ -161,7 +162,7 @@ export const validateTroveChange = (
 };
 
 const validateTroveCreation = (
-  { depositCollateral }: TroveCreationParams<Decimal>,
+  { depositCollateral, borrowLUSD }: TroveCreationParams<Decimal>,
   {
     resultingTrove,
     recoveryMode,
@@ -170,12 +171,12 @@ const validateTroveCreation = (
     price
   }: TroveChangeValidationContext
 ): JSX.Element | null => {
-  if (resultingTrove.debt.lt(LUSD_MINIMUM_DEBT)) {
+  if (borrowLUSD.lt(LUSD_MINIMUM_NET_DEBT)) {
     return (
       <ErrorDescription>
-        Total debt must be at least{" "}
+        You must borrow at least{" "}
         <Amount>
-          {LUSD_MINIMUM_DEBT.toString()} {COIN}
+          {LUSD_MINIMUM_NET_DEBT.toString()} {COIN}
         </Amount>
         .
       </ErrorDescription>
