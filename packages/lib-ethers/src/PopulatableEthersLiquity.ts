@@ -71,8 +71,10 @@ const compose = <T, U, V>(f: (_: U) => V, g: (_: T) => U) => (_: T) => f(g(_));
 
 const id = <T>(t: T) => t;
 
-// Takes ~6-7K to update lastFeeOperationTime. Let's be on the safe side.
-const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add(10000);
+// Takes ~6-7K (use 10K to be safe) to update lastFeeOperationTime, but the cost of calculating the
+// decayed baseRate increases logarithmically with time elapsed since the last update.
+const addGasForBaseRateUpdate = (maxMinutesSinceLastUpdate = 10) => (gas: BigNumber) =>
+  gas.add(10000 + 1414 * Math.ceil(Math.log2(maxMinutesSinceLastUpdate + 1)));
 
 // First traversal in ascending direction takes ~50K, then ~13.5K per extra step.
 // 80K should be enough for 3 steps, plus some extra to be safe.
@@ -848,7 +850,7 @@ export class PopulatableEthersLiquity
         borrowerOperations.estimateGas.openTrove(...txParams(borrowLUSDSimulatingDecay))
       ]);
 
-      const gasLimit = addGasForPotentialLastFeeOperationTimeUpdate(
+      const gasLimit = addGasForBaseRateUpdate(borrowingFeeDecayToleranceMinutes)(
         bigNumberMax(addGasForPotentialListTraversal(gasNow), gasLater)
       );
 
@@ -982,9 +984,11 @@ export class PopulatableEthersLiquity
           borrowerOperations.estimateGas.adjustTrove(...txParams(borrowLUSDSimulatingDecay))
       ]);
 
-      const gasLimit = (borrowLUSD ? addGasForPotentialLastFeeOperationTimeUpdate : id)(
-        bigNumberMax(addGasForPotentialListTraversal(gasNow), gasLater)
-      );
+      let gasLimit = bigNumberMax(addGasForPotentialListTraversal(gasNow), gasLater);
+
+      if (borrowLUSD) {
+        gasLimit = addGasForBaseRateUpdate(borrowingFeeDecayToleranceMinutes)(gasLimit);
+      }
 
       gasHeadroom = gasLimit.sub(gasNow).toNumber();
       overrides = { ...overrides, gasLimit };
@@ -1221,7 +1225,7 @@ export class PopulatableEthersLiquity
       return new PopulatedEthersRedemption(
         await troveManager.estimateAndPopulate.redeemCollateral(
           { ...overrides },
-          addGasForPotentialLastFeeOperationTimeUpdate,
+          addGasForBaseRateUpdate(),
           truncatedAmount.hex,
           firstRedemptionHint,
           ...partialHints,
