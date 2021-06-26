@@ -20,12 +20,14 @@ const getFrontEndTag = async (stabilityPool, depositor) => {
   return (await stabilityPool.deposits(depositor))[1]
 }
 
-contract('StabilityPool', async accounts => {
+contract('BAMM', async accounts => {
   const [owner,
     defaulter_1, defaulter_2, defaulter_3,
     whale,
     alice, bob, carol, dennis, erin, flyn,
     A, B, C, D, E, F,
+    u1, u2, u3, u4, u5,
+    v1, v2, v3, v4, v5,
     frontEnd_1, frontEnd_2, frontEnd_3,
   ] = accounts;
 
@@ -255,6 +257,86 @@ contract('StabilityPool', async accounts => {
       assert.equal(D_LQTYBalance_After.add(E_LQTYBalance_After).toString(), F_LQTYBalance_After.toString())
     })
 
+    it("test share + LQTY fuzzy", async () => {
+      const ammUsers = [u1, u2, u3, u4, u5]
+      const userBalance = [0, 0, 0, 0, 0]
+      const nonAmmUsers = [v1, v2, v3, v4, v5]
+
+      let totalDeposits = 0
+
+      // test almost equal
+      assert(almostTheSame(web3.utils.toWei("9999"), web3.utils.toWei("9999")))
+      assert(! almostTheSame(web3.utils.toWei("9989"), web3.utils.toWei("9999")))      
+
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+      for(let i = 0 ; i < ammUsers.length ; i++) {
+        await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: ammUsers[i] } })
+        await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: nonAmmUsers[i] } })
+
+        await lusdToken.approve(bamm.address, dec(1000000, 18), { from: ammUsers[i] })
+
+        const qty = toBN(20000)
+        totalDeposits += Number(qty.toString())
+        userBalance[i] += Number(qty.toString())
+        await bamm.deposit(qty, { from: ammUsers[i] })
+        await stabilityPool.provideToSP(qty, "0x0000000000000000000000000000000000000000", { from: nonAmmUsers[i] })
+      }
+
+      for(n = 0 ; n < 10 ; n++) {
+        for(let i = 0 ; i < ammUsers.length ; i++) {
+          await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR * (i + n + 1), web3.currentProvider)
+          assert(almostTheSame((await lqtyToken.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).toString()))
+          assert.equal((await lusdToken.balanceOf(ammUsers[i])).toString(), (await lusdToken.balanceOf(nonAmmUsers[i])).toString())
+
+          const qty = (i+1) * 1000 + (n+1)*1000 // small number as 0 decimals
+          if((n*7 + i*3) % 2 === 0) {
+            const share = (await bamm.total()).mul(toBN(qty)).div(toBN(totalDeposits))
+            console.log("withdraw", i, {qty}, {totalDeposits}, share.toString())
+            await bamm.withdraw(share.toString(), { from: ammUsers[i] })
+            await stabilityPool.withdrawFromSP(qty, { from: nonAmmUsers[i] })
+            
+            totalDeposits -= qty
+            userBalance[i] -= qty
+          }
+          else {
+            console.log("deposit", i)
+            await bamm.deposit(qty, { from: ammUsers[i]} )
+            await stabilityPool.provideToSP(qty, "0x0000000000000000000000000000000000000000", { from: nonAmmUsers[i] })
+
+            totalDeposits += qty
+            userBalance[i] += qty            
+          }
+
+          const totalSupply = await bamm.totalSupply()
+          const userSupply = await bamm.balanceOf(ammUsers[i])
+          // userSup / totalSupply = userBalance / totalDeposits
+          assert.equal(userSupply.mul(toBN(totalDeposits)).toString(), toBN(userBalance[i]).mul(totalSupply).toString())
+
+          await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR * (i + n + 1), web3.currentProvider)
+
+          await bamm.withdraw(0, { from: ammUsers[i] })
+          await stabilityPool.withdrawFromSP(0, { from: nonAmmUsers[i] })            
+
+          await bamm.withdraw(0, { from: ammUsers[0] })
+          await stabilityPool.withdrawFromSP(0, { from: nonAmmUsers[0] })                      
+
+          assert.equal((await lusdToken.balanceOf(ammUsers[i])).toString(), (await lusdToken.balanceOf(nonAmmUsers[i])).toString())
+          assert(almostTheSame((await lqtyToken.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).toString()))
+          assert(almostTheSame((await lqtyToken.balanceOf(ammUsers[0])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[0])).toString()))          
+        }
+      }
+
+      console.log("get all lqty")
+      for(let i = 0 ; i < ammUsers.length ; i++) {
+        await bamm.withdraw(0, { from: ammUsers[i] })
+        await stabilityPool.withdrawFromSP(0, { from: nonAmmUsers[i] })                    
+      }
+
+      for(let i = 0 ; i < ammUsers.length ; i++) {
+        assert(almostTheSame((await lqtyToken.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).toString()))
+      }      
+    })
+    
     it("test complex LQTY allocation", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
 
@@ -340,13 +422,26 @@ contract('StabilityPool', async accounts => {
     })
 
     // tests:
-    // 1. complex lqty staking
-    // 2. complex share
+    // 1. complex lqty staking + share V
+    // 2. share test with ether
     // 3. basic share with liquidation
     // 4. price that exceeds max discount
     // 5. price that exceeds balance
     // 6. set params
     // 7. test with front end
     // 8. formula
+    // 9. lp token
   })
 })
+
+
+function almostTheSame(n1, n2) {
+  n1 = Number(web3.utils.fromWei(n1))
+  n2 = Number(web3.utils.fromWei(n2))
+  //console.log(n1,n2)
+
+  if(n1 * 1000 > n2 * 1001) return false
+  if(n2 * 1000 > n1 * 1001) return false  
+  return true
+}
+
