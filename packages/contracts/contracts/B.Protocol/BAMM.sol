@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 import "./../StabilityPool.sol";
-import "./crop.sol";
+import "./LPToken.sol";
 import "./PriceFormula.sol";
 import "./../Interfaces/IPriceFeed.sol";
 import "./../Dependencies/IERC20.sol";
@@ -11,7 +11,7 @@ import "./../Dependencies/SafeMath.sol";
 import "./../Dependencies/Ownable.sol";
 import "./../Dependencies/AggregatorV3Interface.sol";
 
-contract BAMM is CropJoin, PriceFormula, Ownable {
+contract BAMM is LPToken, PriceFormula, Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public immutable priceAggregator;
@@ -32,7 +32,7 @@ contract BAMM is CropJoin, PriceFormula, Ownable {
     uint constant PRECISION = 1e18;
 
     constructor(address _priceAggregator, address payable _SP, address _LUSD, address _LQTY, uint _maxDiscount, address payable _feePool) public
-    CropJoin(address(new Dummy()), "B.AMM", address(new DummyGem()), _LQTY) {
+    LPToken(_LQTY) {
         priceAggregator = AggregatorV3Interface(_priceAggregator);
         SP = StabilityPool(_SP);
         LUSD = IERC20(_LUSD);
@@ -105,8 +105,8 @@ contract BAMM is CropJoin, PriceFormula, Ownable {
         require(LUSD.transferFrom(msg.sender, address(this), lusdAmount), "deposit: transferFrom failed");
         SP.provideToSP(lusdAmount, frontEndTag);
 
-        // update LQTY
-        join(msg.sender, newShare);
+        // update LP token
+        mint(msg.sender, newShare);
     }
 
     function withdraw(uint numShares) external {
@@ -119,8 +119,8 @@ contract BAMM is CropJoin, PriceFormula, Ownable {
         // this withdraws lusd, lqty, and eth
         SP.withdrawFromSP(lusdAmount);
 
-        // update LQTY
-        exit(msg.sender, numShares);
+        // update LP token
+        burn(msg.sender, numShares);
 
         // send lusd and eth
         if(lusdAmount > 0) LUSD.transfer(msg.sender, lusdAmount);
@@ -197,22 +197,4 @@ contract BAMM is CropJoin, PriceFormula, Ownable {
     }
 
     receive() external payable {}    
-}
-
-contract Dummy {
-    fallback() external payable {}
-}
-
-contract DummyGem is Dummy {
-    function transfer(address, uint) external pure returns(bool) {
-        return true;
-    }
-
-    function transferFrom(address, address, uint) external pure returns(bool) {
-        return true;
-    }
-
-    function decimals() external pure returns(uint) {
-        return 18;
-    } 
 }
