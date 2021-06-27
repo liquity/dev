@@ -421,15 +421,59 @@ contract('BAMM', async accounts => {
       assert.equal(F_LQTYBalance_After.toString(), B_LQTYBalance_After.toString()) 
     })
 
+    it.only('test share with ether', async () => {
+      // --- SETUP ---
+
+      // Whale opens Trove and deposits to SP
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: whale, value: dec(50, 'ether') } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
+      await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+      
+      const whaleLUSD = await lusdToken.balanceOf(whale)
+      await lusdToken.approve(bamm.address, whaleLUSD, { from: whale })
+      await lusdToken.approve(bamm.address, toBN(dec(10000, 18)), { from: A })
+      await bamm.deposit(toBN(dec(10000, 18)), { from: A } )
+
+      // 2 Troves opened, each withdraws minimum debt
+      await openTrove({ extraLUSDAmount: 0, ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_1, } })
+      await openTrove({ extraLUSDAmount: 0, ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_2, } })
+
+
+      // price drops: defaulter's Troves fall below MCR, whale doesn't
+      await priceFeed.setPrice(dec(105, 18));
+
+      // Troves are closed
+      await troveManager.liquidate(defaulter_1, { from: owner })
+      await troveManager.liquidate(defaulter_2, { from: owner })
+
+      // 4k liquidations
+      assert.equal(toBN(dec(6000, 18)).toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
+      const ethGains = web3.utils.toBN("39799999999999999975")
+      //console.log(ethGains.toString(), (await stabilityPool.getDepositorETHGain(bamm.address)).toString())
+
+      // send some ETH to simulate partial rebalance
+      await web3.eth.sendTransaction({from: whale, to: bamm.address, value: toBN(dec(1, 18))})
+      assert.equal(toBN(await web3.eth.getBalance(bamm.address)).toString(), toBN(dec(1, 18)).toString())
+
+      const totalEth = ethGains.add(toBN(dec(1, 18)))
+      const totalUsd = toBN(dec(6000, 18)).add(totalEth.mul(toBN(105)))
+
+      await lusdToken.approve(bamm.address, totalUsd, { from: B })            
+      await bamm.deposit(totalUsd, { from: B } )      
+
+      assert.equal((await bamm.balanceOf(A)).toString(), (await bamm.balanceOf(B)).toString())
+
+    })    
+
     // tests:
     // 1. complex lqty staking + share V
-    // 2. share test with ether
+    // 2. share test with ether V
     // 3. basic share with liquidation
     // 4. price that exceeds max discount
     // 5. price that exceeds balance
     // 6. set params
     // 7. test with front end
-    // 8. formula
+    // 8. formula V
     // 9. lp token
   })
 })
