@@ -477,7 +477,7 @@ contract('BAMM', async accounts => {
       assert(! in100WeiRadius("10283999999999999996375", "10283999999999999997322"))      
     })
 
-    it('price exceed max dicount', async () => {
+    it('price exceed max dicount and/or eth balance', async () => {
       // --- SETUP ---
 
       // Whale opens Trove and deposits to SP
@@ -515,13 +515,24 @@ contract('BAMM', async accounts => {
       await bamm.setParams(20, 100, {from: bammOwner})
       const priceWithFee = await bamm.getSwapEthAmount(dec(105, 18))
       assert.equal(priceWithFee.ethAmount.toString(), dec(10296, 18-4).toString())
-    })    
+
+      // without fee
+      await bamm.setParams(20, 0, {from: bammOwner})
+      const priceDepleted = await bamm.getSwapEthAmount(dec(1050000000000000, 18))
+      assert.equal(priceDepleted.ethAmount.toString(), ethGains.toString())      
+
+      // with fee
+      await bamm.setParams(20, 100, {from: bammOwner})
+      const priceDepletedWithFee = await bamm.getSwapEthAmount(dec(1050000000000000, 18))
+      assert.equal(priceDepletedWithFee.ethAmount.toString(), ethGains.mul(toBN(99)).div(toBN(100)))      
+    })
+    
     // tests:
     // 1. complex lqty staking + share V
     // 2. share test with ether V
     // 3. basic share with liquidation (withdraw after liquidation) V
     // 4. price that exceeds max discount V
-    // 5. price that exceeds balance
+    // 5. price that exceeds balance V
     // 5.5 test fees and return
     // 6. set params
     // 7. test with front end
