@@ -421,13 +421,13 @@ contract('BAMM', async accounts => {
       assert.equal(F_LQTYBalance_After.toString(), B_LQTYBalance_After.toString()) 
     })
 
-    it.only('test share with ether', async () => {
+    it('test share with ether', async () => {
       // --- SETUP ---
 
       // Whale opens Trove and deposits to SP
-      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: whale, value: dec(50, 'ether') } })
-      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
-      await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: whale, value: dec(50, 'ether') } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: A } })
+      await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: B } })
       
       const whaleLUSD = await lusdToken.balanceOf(whale)
       await lusdToken.approve(bamm.address, whaleLUSD, { from: whale })
@@ -463,12 +463,23 @@ contract('BAMM', async accounts => {
 
       assert.equal((await bamm.balanceOf(A)).toString(), (await bamm.balanceOf(B)).toString())
 
-    })    
+      const ethBalanceBefore = toBN(await web3.eth.getBalance(A))
+      const LUSDBefore = await lusdToken.balanceOf(A)
+      await bamm.withdraw(await bamm.balanceOf(A), {from: A, gasPrice: 0})
+      const ethBalanceAfter = toBN(await web3.eth.getBalance(A))
+      const LUSDAfter = await lusdToken.balanceOf(A)
+
+      const withdrawUsdValue = LUSDAfter.sub(LUSDBefore).add((ethBalanceAfter.sub(ethBalanceBefore)).mul(toBN(105)))
+      assert(in100WeiRadius(withdrawUsdValue.toString(), totalUsd.toString()))
+
+      assert(in100WeiRadius("10283999999999999997375", "10283999999999999997322"))
+      assert(! in100WeiRadius("10283999999999999996375", "10283999999999999997322"))      
+    })
 
     // tests:
     // 1. complex lqty staking + share V
     // 2. share test with ether V
-    // 3. basic share with liquidation
+    // 3. basic share with liquidation (withdraw after liquidation) V
     // 4. price that exceeds max discount
     // 5. price that exceeds balance
     // 6. set params
@@ -489,3 +500,12 @@ function almostTheSame(n1, n2) {
   return true
 }
 
+function in100WeiRadius(n1, n2) {
+  const x = toBN(n1)
+  const y = toBN(n2)
+
+  if(x.add(toBN(100)).lt(y)) return false
+  if(y.add(toBN(100)).lt(x)) return false  
+ 
+  return true
+}
