@@ -2,6 +2,7 @@ const Decimal = require("decimal.js");
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const LQTYStakingTester = artifacts.require('LQTYStakingTester')
 const TroveManagerTester = artifacts.require("TroveManagerTester")
@@ -45,7 +46,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
 
   const openTrove = async (params) => th.openTrove(contracts, params)
 
-  beforeEach(async () => {
+  before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts = await deploymentHelper.deployLUSDTokenTester(contracts)
@@ -69,6 +70,17 @@ contract('LQTYStaking revenue share tests', async accounts => {
     lqtyToken = LQTYContracts.lqtyToken
     lqtyStaking = LQTYContracts.lqtyStaking
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   it('stake(): reverts if amount is zero', async () => {
     // FF time one year so owner can transfer LQTY

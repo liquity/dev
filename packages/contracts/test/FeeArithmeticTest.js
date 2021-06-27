@@ -2,6 +2,7 @@ const Decimal = require("decimal.js");
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 
@@ -336,16 +337,24 @@ contract('Fee arithmetic tests', async accounts => {
 
     mathTester = await LiquityMathTester.new()
     LiquityMathTester.setAsDeployed(mathTester)
-  })
-
-  beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
-
+  
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
+
+  let snapshotId;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    snapshotId = snapshot['result'];
+  });
+
+  afterEach(async() => {
+      await timeMachine.revertToSnapshot(snapshotId);
+  });
 
   it("minutesPassedSinceLastFeeOp(): returns minutes passed for no time increase", async () => {
     await troveManagerTester.setLastFeeOpTimeToNow()

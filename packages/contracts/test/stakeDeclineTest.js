@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
@@ -48,7 +49,7 @@ contract('TroveManager', async accounts => {
     return ratio
   }
 
-  beforeEach(async () => {
+  before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.lusdToken = await LUSDTokenTester.new(
@@ -77,6 +78,17 @@ contract('TroveManager', async accounts => {
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+  })
+
+  let snapshotId;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    snapshotId = snapshot['result'];
+  });
+
+  afterEach(async() => {
+      await timeMachine.revertToSnapshot(snapshotId);
   })
 
   it("A given trove's stake decline is negligible with adjustments and tiny liquidations", async () => {

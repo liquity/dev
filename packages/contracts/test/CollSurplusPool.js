@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 const NonPayable = artifacts.require('NonPayable.sol')
 
 const th = testHelpers.TestHelper
@@ -27,7 +28,7 @@ contract('CollSurplusPool', async accounts => {
   const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
   const openTrove = async (params) => th.openTrove(contracts, params)
 
-  beforeEach(async () => {
+  before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.lusdToken = await LUSDToken.new(
@@ -45,6 +46,17 @@ contract('CollSurplusPool', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
+
+  let snapshotId;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    snapshotId = snapshot['result'];
+  });
+
+  afterEach(async() => {
+      await timeMachine.revertToSnapshot(snapshotId);
+  });
 
   it("CollSurplusPool::getETH(): Returns the ETH balance of the CollSurplusPool after redemption", async () => {
     const ETH_1 = await collSurplusPool.getETH()

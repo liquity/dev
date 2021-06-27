@@ -1,5 +1,7 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
+
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
@@ -51,7 +53,7 @@ contract('TroveManager', async accounts => {
   const openTrove = async (params) => th.openTrove(contracts, params)
   const withdrawLUSD = async (params) => th.withdrawLUSD(contracts, params)
 
-  beforeEach(async () => {
+  before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.lusdToken = await LUSDTokenTester.new(
@@ -80,6 +82,17 @@ contract('TroveManager', async accounts => {
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+  })
+
+  let snapshotId;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    snapshotId = snapshot['result'];
+  });
+
+  afterEach(async() => {
+      await timeMachine.revertToSnapshot(snapshotId);
   })
 
   it('liquidate(): closes a Trove that has ICR < MCR', async () => {

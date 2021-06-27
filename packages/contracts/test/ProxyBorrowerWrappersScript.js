@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const TroveManagerTester = artifacts.require("TroveManagerTester")
 const LQTYTokenTester = artifacts.require("LQTYTokenTester")
@@ -60,7 +61,7 @@ contract('BorrowerWrappers', async accounts => {
   const getNetBorrowingAmount = async (debtWithFee) => th.getNetBorrowingAmount(contracts, debtWithFee)
   const openTrove = async (params) => th.openTrove(contracts, params)
 
-  beforeEach(async () => {
+  before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts = await deploymentHelper.deployLUSDToken(contracts)
@@ -91,6 +92,17 @@ contract('BorrowerWrappers', async accounts => {
 
     LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   it('proxy owner can recover ETH', async () => {
     const amount = toBN(dec(1, 18))

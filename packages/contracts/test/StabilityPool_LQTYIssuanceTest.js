@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const th = testHelpers.TestHelper
 const timeValues = testHelpers.TimeValues
@@ -48,7 +49,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
   const openTrove = async (params) => th.openTrove(contracts, params)
   describe("LQTY Rewards", async () => {
 
-    beforeEach(async () => {
+    before(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
       contracts.troveManager = await TroveManagerTester.new()
       contracts.lusdToken = await LUSDToken.new(
@@ -96,6 +97,17 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       issuance_M4 = toBN('46678287282156100').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
       issuance_M5 = toBN('44093311972020200').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
       issuance_M6 = toBN('41651488815552900').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
+    })
+
+    let snapshotId;
+
+    beforeEach(async() => {
+      let snapshot = await timeMachine.takeSnapshot();
+      snapshotId = snapshot['result'];
+    });
+
+    afterEach(async() => {
+        await timeMachine.revertToSnapshot(snapshotId);
     })
 
     it("liquidation < 1 minute after a deposit does not change totalLQTYIssued", async () => {

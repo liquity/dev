@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 const th = testHelpers.TestHelper
 const dec = th.dec
 const toBN = th.toBN
@@ -53,9 +54,6 @@ contract('StabilityPool', async accounts => {
 
     before(async () => {
       gasPriceInWei = await web3.eth.getGasPrice()
-    })
-
-    beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
       contracts.troveManager = await TroveManagerTester.new()
       contracts.lusdToken = await LUSDToken.new(
@@ -84,6 +82,17 @@ contract('StabilityPool', async accounts => {
 
       // Register 3 front ends
       await th.registerFrontEnds(frontEnds, stabilityPool)
+    })
+
+    let snapshotId;
+
+    beforeEach(async() => {
+      let snapshot = await timeMachine.takeSnapshot();
+      snapshotId = snapshot['result'];
+    });
+
+    afterEach(async() => {
+        await timeMachine.revertToSnapshot(snapshotId);
     })
 
     // --- provideToSP() ---

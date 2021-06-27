@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const SortedTroves = artifacts.require("SortedTroves")
 const SortedTrovesTester = artifacts.require("SortedTrovesTester")
@@ -57,7 +58,7 @@ contract('SortedTroves', async accounts => {
   const openTrove = async (params) => th.openTrove(contracts, params)
 
   describe('SortedTroves', () => {
-    beforeEach(async () => {
+    before(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
       contracts.troveManager = await TroveManagerTester.new()
       contracts.lusdToken = await LUSDToken.new(
@@ -77,6 +78,17 @@ contract('SortedTroves', async accounts => {
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
     })
+
+    let revertToSnapshot;
+
+    beforeEach(async() => {
+      let snapshot = await timeMachine.takeSnapshot();
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+    });
+
+    afterEach(async() => {
+      await revertToSnapshot();
+    });
 
     it('contains(): returns true for addresses that have opened troves', async () => {
       await openTrove({ ICR: toBN(dec(150, 16)), extraParams: { from: alice } })
@@ -277,12 +289,23 @@ contract('SortedTroves', async accounts => {
   describe('SortedTroves with mock dependencies', () => {
     let sortedTrovesTester
 
-    beforeEach(async () => {
+    before(async () => {
       sortedTroves = await SortedTroves.new()
       sortedTrovesTester = await SortedTrovesTester.new()
 
       await sortedTrovesTester.setSortedTroves(sortedTroves.address)
     })
+
+    let revertToSnapshot;
+
+    beforeEach(async() => {
+      let snapshot = await timeMachine.takeSnapshot();
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+    });
+  
+    afterEach(async() => {
+      await revertToSnapshot();
+    });
 
     context('when params are wrongly set', () => {
       it('setParams(): reverts if size is zero', async () => {

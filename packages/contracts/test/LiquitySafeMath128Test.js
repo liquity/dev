@@ -6,7 +6,7 @@ const LiquitySafeMath128Tester = artifacts.require("LiquitySafeMath128Tester")
 contract('LiquitySafeMath128Tester', async accounts => {
   let mathTester
 
-  beforeEach(async () => {
+  before(async () => {
     mathTester = await LiquitySafeMath128Tester.new()
   })
 

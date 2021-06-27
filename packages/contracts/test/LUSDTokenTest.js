@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const { keccak256 } = require('@ethersproject/keccak256');
 const { defaultAbiCoder } = require('@ethersproject/abi');
@@ -64,7 +65,7 @@ contract('LUSDToken', async accounts => {
   let tokenVersion
 
   const testCorpus = ({ withProxy = false }) => {
-    beforeEach(async () => {
+    before(async () => {
 
       const contracts = await deploymentHelper.deployTesterContractsHardhat()
 
@@ -104,6 +105,17 @@ contract('LUSDToken', async accounts => {
         await lusdTokenOriginal.unprotectedMint(carol, 50)
       }
     })
+
+    let revertToSnapshot;
+
+    beforeEach(async() => {
+      let snapshot = await timeMachine.takeSnapshot();
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+    });
+
+    afterEach(async() => {
+      await revertToSnapshot();
+    });
 
     it('balanceOf(): gets the balance of the account', async () => {
       const aliceBalance = (await lusdTokenTester.balanceOf(alice)).toNumber()
