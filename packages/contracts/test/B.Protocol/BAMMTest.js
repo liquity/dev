@@ -55,7 +55,7 @@ contract('BAMM', async accounts => {
 
   const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
   const openTrove = async (params) => th.openTrove(contracts, params)
-  const assertRevert = th.assertRevert
+  //const assertRevert = th.assertRevert
 
   describe("BAMM", async () => {
 
@@ -626,7 +626,60 @@ contract('BAMM', async accounts => {
       // check fees
       assert(await web3.eth.getBalance(feePool), priceWithFee.feeEthAmount)
     })    
+
+    it('test set params happy path', async () => {
+      // --- SETUP ---
+
+      // Whale opens Trove and deposits to SP
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: whale, value: dec(50, 'ether') } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: A } })
+      await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: B } })
+      
+      const whaleLUSD = await lusdToken.balanceOf(whale)
+      await lusdToken.approve(bamm.address, whaleLUSD, { from: whale })
+      await lusdToken.approve(bamm.address, toBN(dec(10000, 18)), { from: A })
+      await bamm.deposit(toBN(dec(10000, 18)), { from: A } )
+
+      // 2 Troves opened, each withdraws minimum debt
+      await openTrove({ extraLUSDAmount: 0, ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_1, } })
+      await openTrove({ extraLUSDAmount: 0, ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_2, } })
+
+
+      // price drops: defaulter's Troves fall below MCR, whale doesn't
+      await priceFeed.setPrice(dec(105, 18));
+
+      // Troves are closed
+      await troveManager.liquidate(defaulter_1, { from: owner })
+      await troveManager.liquidate(defaulter_2, { from: owner })
+
+      // 4k liquidations
+      assert.equal(toBN(dec(6000, 18)).toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
+      const ethGains = web3.utils.toBN("39799999999999999975")
+
+      const lusdQty = dec(105, 18)
+      const expectedReturn200 = await bamm.getReturn(lusdQty, dec(6000, 18), toBN(dec(6000, 18)).add(ethGains.mul(toBN(2 * 105))), 200)
+      const expectedReturn190 = await bamm.getReturn(lusdQty, dec(6000, 18), toBN(dec(6000, 18)).add(ethGains.mul(toBN(2 * 105))), 190)      
+
+      assert(expectedReturn200.toString() !== expectedReturn190.toString())
+
+      // without fee
+      await bamm.setParams(200, 0, {from: bammOwner})
+      const priceWithoutFee = await bamm.getSwapEthAmount(lusdQty)
+      assert.equal(priceWithoutFee.ethAmount.toString(), expectedReturn200.mul(toBN(100)).div(toBN(100 * 105)).toString())
+
+      // with fee
+      await bamm.setParams(190, 100, {from: bammOwner})
+      const priceWithFee = await bamm.getSwapEthAmount(lusdQty)
+      assert.equal(priceWithFee.ethAmount.toString(), expectedReturn190.mul(toBN(99)).div(toBN(100 * 105)).toString())      
+    })    
     
+    it('test set params sad path', async () => {
+      await assertRevert(bamm.setParams(210, 100, {from: bammOwner}), 'setParams: A too big')
+      await assertRevert(bamm.setParams(10, 100, {from: bammOwner}), 'setParams: A too small')
+      await assertRevert(bamm.setParams(10, 101, {from: bammOwner}), 'setParams: fee is too big')             
+      await assertRevert(bamm.setParams(20, 100, {from: B}), 'Ownable: caller is not the owner')      
+    })
+
     // tests:
     // 1. complex lqty staking + share V
     // 2. share test with ether V
@@ -636,7 +689,7 @@ contract('BAMM', async accounts => {
     // 5.5 test fees and return V
     // 5.6 test swap  v
     // 6.1 test fetch price V
-    // 6. set params
+    // 6. set params V
     // 7. test with front end
     // 8. formula V
     // 9. lp token
@@ -662,4 +715,19 @@ function in100WeiRadius(n1, n2) {
   if(y.add(toBN(100)).lt(x)) return false  
  
   return true
+}
+
+async function assertRevert(txPromise, message = undefined) {
+  try {
+    const tx = await txPromise
+    // console.log("tx succeeded")
+    assert.isFalse(tx.receipt.status) // when this assert fails, the expected revert didn't occur, i.e. the tx succeeded
+  } catch (err) {
+    // console.log("tx failed")
+    assert.include(err.message, "revert")
+    
+    if (message) {
+       assert.include(err.message, message)
+    }
+  }
 }
