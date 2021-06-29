@@ -526,6 +526,106 @@ contract('BAMM', async accounts => {
       const priceDepletedWithFee = await bamm.getSwapEthAmount(dec(1050000000000000, 18))
       assert.equal(priceDepletedWithFee.ethAmount.toString(), ethGains.mul(toBN(99)).div(toBN(100)))      
     })
+
+    it('test getSwapEthAmount', async () => {
+      // --- SETUP ---
+
+      // Whale opens Trove and deposits to SP
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: whale, value: dec(50, 'ether') } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: A } })
+      await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: B } })
+      
+      const whaleLUSD = await lusdToken.balanceOf(whale)
+      await lusdToken.approve(bamm.address, whaleLUSD, { from: whale })
+      await lusdToken.approve(bamm.address, toBN(dec(10000, 18)), { from: A })
+      await bamm.deposit(toBN(dec(10000, 18)), { from: A } )
+
+      // 2 Troves opened, each withdraws minimum debt
+      await openTrove({ extraLUSDAmount: 0, ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_1, } })
+      await openTrove({ extraLUSDAmount: 0, ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_2, } })
+
+
+      // price drops: defaulter's Troves fall below MCR, whale doesn't
+      await priceFeed.setPrice(dec(105, 18));
+
+      // Troves are closed
+      await troveManager.liquidate(defaulter_1, { from: owner })
+      await troveManager.liquidate(defaulter_2, { from: owner })
+
+      // 4k liquidations
+      assert.equal(toBN(dec(6000, 18)).toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
+      const ethGains = web3.utils.toBN("39799999999999999975")
+
+      const lusdQty = dec(105, 18)
+      const expectedReturn = await bamm.getReturn(lusdQty, dec(6000, 18), toBN(dec(6000, 18)).add(ethGains.mul(toBN(2 * 105))), 200)
+
+      // without fee
+      await bamm.setParams(200, 0, {from: bammOwner})
+      const priceWithoutFee = await bamm.getSwapEthAmount(lusdQty)
+      assert.equal(priceWithoutFee.ethAmount.toString(), expectedReturn.mul(toBN(100)).div(toBN(100 * 105)).toString())
+
+      // with fee
+      await bamm.setParams(200, 100, {from: bammOwner})
+      const priceWithFee = await bamm.getSwapEthAmount(lusdQty)
+      assert.equal(priceWithFee.ethAmount.toString(), expectedReturn.mul(toBN(99)).div(toBN(100 * 105)).toString())      
+    })    
+
+    it('test fetch price', async () => {
+      await priceFeed.setPrice(dec(666, 18));
+      assert.equal(await bamm.fetchPrice(), dec(666, 18))
+
+      await chainlink.setTimestamp(888)
+      assert.equal((await bamm.fetchPrice()).toString(), "0")      
+    })
+
+    it('test swap', async () => {
+      // --- SETUP ---
+
+      // Whale opens Trove and deposits to SP
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: whale, value: dec(50, 'ether') } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: A } })
+      await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: B } })
+      
+      const whaleLUSD = await lusdToken.balanceOf(whale)
+      await lusdToken.approve(bamm.address, whaleLUSD, { from: whale })
+      await lusdToken.approve(bamm.address, toBN(dec(10000, 18)), { from: A })
+      await bamm.deposit(toBN(dec(10000, 18)), { from: A } )
+
+      // 2 Troves opened, each withdraws minimum debt
+      await openTrove({ extraLUSDAmount: 0, ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_1, } })
+      await openTrove({ extraLUSDAmount: 0, ICR: toBN(dec(2, 18)), extraParams: { from: defaulter_2, } })
+
+
+      // price drops: defaulter's Troves fall below MCR, whale doesn't
+      await priceFeed.setPrice(dec(105, 18));
+
+      // Troves are closed
+      await troveManager.liquidate(defaulter_1, { from: owner })
+      await troveManager.liquidate(defaulter_2, { from: owner })
+
+      // 4k liquidations
+      assert.equal(toBN(dec(6000, 18)).toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
+      const ethGains = web3.utils.toBN("39799999999999999975")
+
+      // with fee
+      await bamm.setParams(20, 100, {from: bammOwner})
+      const priceWithFee = await bamm.getSwapEthAmount(dec(105, 18))
+      assert.equal(priceWithFee.ethAmount.toString(), dec(10296, 18-4).toString())
+      assert.equal(priceWithFee.feeEthAmount.toString(), dec(10400 - 10296, 18-4).toString())      
+
+      await lusdToken.approve(bamm.address, dec(1,18), {from: whale})
+      const dest = "0xdEADBEEF00AA81bBCF694bC5c05A397F5E5658D5"
+      await bamm.swap(dec(1,18), dest, {from: whale})
+
+      // check lusd balance
+      assert.equal(toBN(dec(6001, 18)).toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
+
+      // check eth balance
+      assert(await web3.eth.getBalance(dest), priceWithFee.ethAmount)
+
+      // check fees
+      assert(await web3.eth.getBalance(feePool), priceWithFee.feeEthAmount)
+    })    
     
     // tests:
     // 1. complex lqty staking + share V
@@ -533,7 +633,9 @@ contract('BAMM', async accounts => {
     // 3. basic share with liquidation (withdraw after liquidation) V
     // 4. price that exceeds max discount V
     // 5. price that exceeds balance V
-    // 5.5 test fees and return
+    // 5.5 test fees and return V
+    // 5.6 test swap  v
+    // 6.1 test fetch price V
     // 6. set params
     // 7. test with front end
     // 8. formula V
