@@ -84,17 +84,17 @@ contract('StabilityPool', async accounts => {
       await th.registerFrontEnds(frontEnds, stabilityPool)
     })
 
-    let snapshotId;
+    let revertToSnapshot;
 
     beforeEach(async() => {
       let snapshot = await timeMachine.takeSnapshot();
-      snapshotId = snapshot['result'];
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
     });
 
     afterEach(async() => {
-        await timeMachine.revertToSnapshot(snapshotId);
-    })
-
+      await revertToSnapshot();
+    });
+    
     // --- provideToSP() ---
     // increases recorded LUSD at Stability Pool
     it("provideToSP(): increases the Stability Pool LUSD balance", async () => {

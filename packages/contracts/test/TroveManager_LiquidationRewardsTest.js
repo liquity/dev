@@ -64,16 +64,16 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
-  let snapshotId;
+  let revertToSnapshot;
 
   beforeEach(async() => {
     let snapshot = await timeMachine.takeSnapshot();
-    snapshotId = snapshot['result'];
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
   });
 
   afterEach(async() => {
-      await timeMachine.revertToSnapshot(snapshotId);
-  })
+    await revertToSnapshot();
+  });
 
   it("redistribution: A, B Open. B Liquidated. C, D Open. D Liquidated. Distributes correct rewards", async () => {
     // A, B open trove

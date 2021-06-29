@@ -80,16 +80,16 @@ contract('TroveManager', async accounts => {
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
-  let snapshotId;
+  let revertToSnapshot;
 
   beforeEach(async() => {
     let snapshot = await timeMachine.takeSnapshot();
-    snapshotId = snapshot['result'];
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
   });
 
   afterEach(async() => {
-      await timeMachine.revertToSnapshot(snapshotId);
-  })
+    await revertToSnapshot();
+  });
 
   it("A given trove's stake decline is negligible with adjustments and tiny liquidations", async () => {
     await priceFeed.setPrice(dec(100, 18))

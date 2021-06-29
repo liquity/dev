@@ -78,17 +78,17 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
     })
 
-    let snapshotId;
+    let revertToSnapshot;
 
     beforeEach(async() => {
       let snapshot = await timeMachine.takeSnapshot();
-      snapshotId = snapshot['result'];
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
     });
 
     afterEach(async() => {
-        await timeMachine.revertToSnapshot(snapshotId);
-    })
-
+      await revertToSnapshot();
+    });
+    
     // --- Compounding tests ---
 
     // --- withdrawETHGainToTrove() ---

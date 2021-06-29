@@ -99,16 +99,16 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       issuance_M6 = toBN('41651488815552900').mul(communityLQTYSupply).div(toBN(dec(1, 18)))
     })
 
-    let snapshotId;
+    let revertToSnapshot;
 
     beforeEach(async() => {
       let snapshot = await timeMachine.takeSnapshot();
-      snapshotId = snapshot['result'];
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
     });
 
     afterEach(async() => {
-        await timeMachine.revertToSnapshot(snapshotId);
-    })
+      await revertToSnapshot();
+    });
 
     it("liquidation < 1 minute after a deposit does not change totalLQTYIssued", async () => {
       

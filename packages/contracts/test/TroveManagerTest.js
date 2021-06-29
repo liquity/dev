@@ -84,16 +84,16 @@ contract('TroveManager', async accounts => {
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
 
-  let snapshotId;
+  let revertToSnapshot;
 
   beforeEach(async() => {
     let snapshot = await timeMachine.takeSnapshot();
-    snapshotId = snapshot['result'];
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
   });
 
   afterEach(async() => {
-      await timeMachine.revertToSnapshot(snapshotId);
-  })
+    await revertToSnapshot();
+  });
 
   it('liquidate(): closes a Trove that has ICR < MCR', async () => {
     await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })
