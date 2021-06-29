@@ -78,6 +78,7 @@ async function main() {
     DELEGATE_OWNER
   );
   const receipt1 = await tx1.wait();
+  console.log('Factory create gas: ', receipt1.gasUsed.toString())
 
   // We need to get the new pool address out of the PoolCreated event
   // (Or just grab it from Etherscan)
@@ -132,27 +133,36 @@ async function main() {
   )
   th.logBN('weth balance: ', await weth.balanceOf(deployerWalletAddress))
   const currentWethBalance = await weth.balanceOf(deployerWalletAddress)
+  let depositWethReceipt
   if (currentWethBalance.lt(weth_balance)) {
     const txDepositWeth = await weth.deposit({ value: weth_balance.sub(currentWethBalance) });
-    await txDepositWeth.wait()
+    depositWethReceipt = await txDepositWeth.wait()
+    console.log('WETH deposit gas: ', depositWethReceipt.gasUsed.toString())
   }
   th.logBN('weth balance: ', await weth.balanceOf(deployerWalletAddress))
   const txApproveWeth = await weth.approve(VAULT, weth_balance);
-  await txApproveWeth.wait()
+  const approveWethReceipt = await txApproveWeth.wait()
+  console.log('Approve WETH gas: ', approveWethReceipt.gasUsed.toString())
+
+  // Approve LUSD
   const lusd = new ethers.Contract(
     LUSD,
     ERC20.abi,
     deployerWallet
   )
   const txApproveLusd = await lusd.approve(VAULT, lusd_balance);
-  await txApproveLusd.wait()
+  const approveLusdReceipt = await txApproveLusd.wait()
+  console.log('Approve LUSD gas: ', approveLusdReceipt.gasUsed.toString())
 
   // joins and exits are done on the Vault, not the pool
   const tx2 = await vault.joinPool(poolId, deployerWalletAddress, deployerWalletAddress, joinPoolRequest);
   // You can wait for it like this, or just print the tx hash and monitor
   const receipt2 = await tx2.wait();
   console.log('Final tx status:', receipt2.status)
+  console.log('Join Pool gas: ', receipt2.gasUsed.toString())
   th.logBN('Pool BPT tokens', await pool.totalSupply())
+
+  console.log('Total gas: ', receipt1.gasUsed.add(depositWethReceipt.gasUsed).add(approveWethReceipt.gasUsed).add(approveLusdReceipt.gasUsed).add(receipt2.gasUsed).toString())
 }
 
 main()
