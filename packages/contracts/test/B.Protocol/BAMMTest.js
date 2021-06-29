@@ -91,11 +91,15 @@ contract('BAMM', async accounts => {
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
       // Register 3 front ends
-      await th.registerFrontEnds(frontEnds, stabilityPool)
+      //await th.registerFrontEnds(frontEnds, stabilityPool)
 
       // deploy BAMM
       chainlink = await ChainlinkTestnet.new(priceFeed.address)
-      bamm = await BAMM.new(chainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, {from: bammOwner})
+
+      const kickbackRate_F1 = toBN(dec(5, 17)) // F1 kicks 50% back to depositor
+      await stabilityPool.registerFrontEnd(kickbackRate_F1, { from: frontEnd_1 })
+
+      bamm = await BAMM.new(chainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, frontEnd_1, {from: bammOwner})
     })
 
     // --- provideToSP() ---
@@ -233,7 +237,7 @@ contract('BAMM', async accounts => {
       await lusdToken.approve(bamm.address, dec(2000, 18), { from: E })
       await bamm.deposit(dec(1000, 18), { from: D })
       await bamm.deposit(dec(2000, 18), { from: E })
-      await stabilityPool.provideToSP(dec(3000, 18), "0x0000000000000000000000000000000000000000", { from: F })
+      await stabilityPool.provideToSP(dec(3000, 18), frontEnd_1, { from: F })
 
       // Get F1, F2, F3 LQTY balances before, and confirm they're zero
       const D_LQTYBalance_Before = await lqtyToken.balanceOf(D)
@@ -254,6 +258,8 @@ contract('BAMM', async accounts => {
       const D_LQTYBalance_After = await lqtyToken.balanceOf(D)
       const E_LQTYBalance_After = await lqtyToken.balanceOf(E)
       const F_LQTYBalance_After = await lqtyToken.balanceOf(F)
+
+      assert((await lqtyToken.balanceOf(frontEnd_1)).gt(toBN(0)))
 
       assert.equal(D_LQTYBalance_After.add(E_LQTYBalance_After).toString(), F_LQTYBalance_After.toString())
     })
@@ -280,7 +286,7 @@ contract('BAMM', async accounts => {
         totalDeposits += Number(qty.toString())
         userBalance[i] += Number(qty.toString())
         await bamm.deposit(qty, { from: ammUsers[i] })
-        await stabilityPool.provideToSP(qty, "0x0000000000000000000000000000000000000000", { from: nonAmmUsers[i] })
+        await stabilityPool.provideToSP(qty, frontEnd_1, { from: nonAmmUsers[i] })
       }
 
       for(n = 0 ; n < 10 ; n++) {
@@ -302,7 +308,7 @@ contract('BAMM', async accounts => {
           else {
             console.log("deposit", i)
             await bamm.deposit(qty, { from: ammUsers[i]} )
-            await stabilityPool.provideToSP(qty, "0x0000000000000000000000000000000000000000", { from: nonAmmUsers[i] })
+            await stabilityPool.provideToSP(qty, frontEnd_1, { from: nonAmmUsers[i] })
 
             totalDeposits += qty
             userBalance[i] += qty            
@@ -375,12 +381,12 @@ contract('BAMM', async accounts => {
       console.log("stake D:", (await bamm.stake(D)).toString())
       console.log("stake E:", (await bamm.stake(E)).toString())
 
-      await stabilityPool.provideToSP(dec(1000, 18), "0x0000000000000000000000000000000000000000", { from: A })
+      await stabilityPool.provideToSP(dec(1000, 18), frontEnd_1, { from: A })
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       await bamm.deposit(dec(3000, 18), { from: F })
-      await stabilityPool.provideToSP(dec(3000, 18), "0x0000000000000000000000000000000000000000", { from: B })
+      await stabilityPool.provideToSP(dec(3000, 18), frontEnd_1, { from: B })
 
       await stabilityPool.withdrawFromSP(0, { from: A })
       console.log("lqty A", (await lqtyToken.balanceOf(A)).toString())        
@@ -690,7 +696,7 @@ contract('BAMM', async accounts => {
     // 5.6 test swap  v
     // 6.1 test fetch price V
     // 6. set params V
-    // 7. test with front end
+    // 7. test with front end v
     // 8. formula V
     // 9. lp token
   })

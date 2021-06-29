@@ -27,18 +27,28 @@ contract BAMM is LPToken, PriceFormula, Ownable {
 
     uint public immutable maxDiscount; // max discount in bips
 
-    address public constant frontEndTag = address(0);
+    address public immutable frontEndTag;
 
     uint constant PRECISION = 1e18;
 
-    constructor(address _priceAggregator, address payable _SP, address _LUSD, address _LQTY, uint _maxDiscount, address payable _feePool) public
-    LPToken(_LQTY) {
+    constructor(
+        address _priceAggregator,
+        address payable _SP,
+        address _LUSD,
+        address _LQTY,
+        uint _maxDiscount,
+        address payable _feePool,
+        address _fronEndTag)
+        public
+        LPToken(_LQTY)
+    {
         priceAggregator = AggregatorV3Interface(_priceAggregator);
         SP = StabilityPool(_SP);
         LUSD = IERC20(_LUSD);
 
         feePool = _feePool;
         maxDiscount = _maxDiscount;
+        frontEndTag = _fronEndTag;
     }
 
     function setParams(uint _A, uint _fee) external onlyOwner {
@@ -165,7 +175,7 @@ contract BAMM is LPToken, PriceFormula, Ownable {
     function swap(uint lusdAmount, address payable dest) public payable returns(uint) {
         (uint ethAmount, uint feeAmount) = getSwapEthAmount(lusdAmount);
         LUSD.transferFrom(msg.sender, address(this), lusdAmount);
-        SP.provideToSP(lusdAmount, frontEndTag); // TODO - real front end
+        SP.provideToSP(lusdAmount, frontEndTag);
 
         if(feeAmount > 0) feePool.transfer(feeAmount);
         (bool success, ) = dest.call{ value: ethAmount }(""); // re-entry is fine here
