@@ -10,6 +10,7 @@
 |  --- | --- |
 |  [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md) | Ethers-based [LiquityStore](./lib-base.liquitystore.md) that updates state whenever there's a new block. |
 |  [EthersLiquity](./lib-ethers.ethersliquity.md) | Convenience class that combines multiple interfaces of the library in one object. |
+|  [EthersTransactionCancelledError](./lib-ethers.etherstransactioncancellederror.md) | Thrown when a transaction is cancelled or replaced by a different transaction. |
 |  [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) | Thrown by [EthersLiquity](./lib-ethers.ethersliquity.md) in case of transaction failure. |
 |  [PopulatableEthersLiquity](./lib-ethers.populatableethersliquity.md) | Ethers-based implementation of [PopulatableLiquity](./lib-base.populatableliquity.md)<!-- -->. |
 |  [PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md) | A transaction that has been prepared for sending. |
@@ -24,6 +25,7 @@
 |  Interface | Description |
 |  --- | --- |
 |  [BlockPolledLiquityStoreExtraState](./lib-ethers.blockpolledliquitystoreextrastate.md) | Extra state added to [LiquityStoreState](./lib-base.liquitystorestate.md) by [BlockPolledLiquityStore](./lib-ethers.blockpolledliquitystore.md)<!-- -->. |
+|  [BorrowingOperationOptionalParams](./lib-ethers.borrowingoperationoptionalparams.md) | Optional parameters of a transaction that borrows LUSD. |
 |  [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) | Optional parameters taken by [ReadableEthersLiquity](./lib-ethers.readableethersliquity.md) functions. |
 |  [EthersLiquityConnection](./lib-ethers.ethersliquityconnection.md) | Information about a connection to the Liquity protocol. |
 |  [EthersLiquityConnectionOptionalParams](./lib-ethers.ethersliquityconnectionoptionalparams.md) | Optional parameters of [ReadableEthersLiquity.connect()](./lib-ethers.readableethersliquity.connect_1.md) and [EthersLiquity.connect()](./lib-ethers.ethersliquity.connect_1.md)<!-- -->. |

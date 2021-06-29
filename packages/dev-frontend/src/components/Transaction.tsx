@@ -7,7 +7,7 @@ import { defaultAbiCoder } from "@ethersproject/abi";
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-import { EthersTransactionOverrides } from "@liquity/lib-ethers";
+import { EthersTransactionOverrides, EthersTransactionCancelledError } from "@liquity/lib-ethers";
 import { SentLiquityTransaction, LiquityReceipt } from "@liquity/lib-base";
 
 import { useLiquity } from "../hooks/LiquityContext";
@@ -237,9 +237,8 @@ export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hover
 
 // Doesn't work on Kovan:
 // https://github.com/MetaMask/metamask-extension/issues/5579
-const tryToGetRevertReason = async (provider: Provider, hash: string) => {
+const tryToGetRevertReason = async (provider: Provider, tx: TransactionReceipt) => {
   try {
-    const tx = await provider.getTransaction(hash);
     const result = await provider.call(tx, tx.blockNumber);
 
     if (hexDataLength(result) % 32 === 4 && hexDataSlice(result, 0, 4) === "0x08c379a0") {
@@ -322,7 +321,7 @@ export const TransactionMonitor: React.FC = () => {
               id
             });
           } else {
-            const reason = await tryToGetRevertReason(provider, txHash);
+            const reason = await tryToGetRevertReason(provider, receipt.rawReceipt);
 
             if (cancelled) {
               return;
@@ -344,14 +343,21 @@ export const TransactionMonitor: React.FC = () => {
             return;
           }
 
-          console.error(`Failed to get receipt for tx ${txHash}`);
-          console.error(rawError);
+          finished = true;
 
-          setTransactionState({
-            type: "failed",
-            id,
-            error: new Error("Failed")
-          });
+          if (rawError instanceof EthersTransactionCancelledError) {
+            console.log(`Cancelled tx ${txHash}`);
+            setTransactionState({ type: "cancelled", id });
+          } else {
+            console.error(`Failed to get receipt for tx ${txHash}`);
+            console.error(rawError);
+
+            setTransactionState({
+              type: "failed",
+              id,
+              error: new Error("Failed")
+            });
+          }
         }
       };
 

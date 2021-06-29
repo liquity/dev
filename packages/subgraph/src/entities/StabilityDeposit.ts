@@ -20,7 +20,6 @@ function getStabilityDeposit(_user: Address): StabilityDeposit {
 
     newStabilityDeposit.owner = owner.id;
     newStabilityDeposit.depositedAmount = DECIMAL_ZERO;
-
     owner.stabilityDeposit = newStabilityDeposit.id;
     owner.save();
 
@@ -29,7 +28,7 @@ function getStabilityDeposit(_user: Address): StabilityDeposit {
 }
 
 function createStabilityDepositChange(event: ethereum.Event): StabilityDepositChange {
-  let sequenceNumber = beginChange(event);
+  let sequenceNumber = beginChange();
   let stabilityDepositChange = new StabilityDepositChange(sequenceNumber.toString());
   initChange(stabilityDepositChange, event, sequenceNumber);
 
@@ -76,11 +75,18 @@ export function updateStabilityDeposit(
 ): void {
   let stabilityDeposit = getStabilityDeposit(_user);
   let newDepositedAmount = decimalize(_amount);
+  let owner = getUser(_user);
 
   if (newDepositedAmount == stabilityDeposit.depositedAmount) {
     // Don't create a StabilityDepositChange when there's no change... duh.
     // It means user only wanted to withdraw collateral gains.
     return;
+  }
+
+  if (owner.frontend != stabilityDeposit.frontend) {
+    // FrontEndTagSet is emitted just before UserDepositChanged event
+    // FrontEndTagSet sets the owner.frontend, so we can use that
+    stabilityDeposit.frontend = owner.frontend;
   }
 
   updateStabilityDepositByOperation(
@@ -106,7 +112,7 @@ export function withdrawCollateralGainFromStabilityDeposit(
 
   let stabilityDeposit = getStabilityDeposit(_user) as StabilityDeposit;
   let depositLoss = decimalize(_LUSDLoss);
-  let newDepositedAmount = stabilityDeposit.depositedAmount - depositLoss;
+  let newDepositedAmount = stabilityDeposit.depositedAmount.minus(depositLoss);
 
   updateStabilityDepositByOperation(
     event,

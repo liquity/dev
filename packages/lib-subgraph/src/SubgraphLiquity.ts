@@ -136,7 +136,7 @@ const troveBeforeRedistribution = new Query<
     query TroveWithoutRewards($address: ID!) {
       user(id: $address) {
         id
-        currentTrove {
+        trove {
           id
           ...TroveRawFields
         }
@@ -145,8 +145,8 @@ const troveBeforeRedistribution = new Query<
     ${troveRawFields}
   `,
   ({ data: { user } }, { address }) => {
-    if (user?.currentTrove) {
-      return troveFromRawFields(user.currentTrove);
+    if (user?.trove) {
+      return troveFromRawFields(user.trove);
     } else {
       return new TroveWithPendingRedistribution(address, "nonExistent");
     }

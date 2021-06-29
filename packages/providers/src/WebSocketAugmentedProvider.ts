@@ -1,6 +1,7 @@
 import {
   TransactionRequest,
   TransactionReceipt,
+  TransactionResponse,
   BlockTag,
   EventType,
   Listener,
@@ -10,6 +11,7 @@ import {
 import { BaseProvider, Web3Provider } from "@ethersproject/providers";
 import { Networkish } from "@ethersproject/networks";
 import { Deferrable } from "@ethersproject/properties";
+import { hexDataLength } from "@ethersproject/bytes";
 
 import { WebSocketProvider } from "./WebSocketProvider";
 
@@ -30,10 +32,58 @@ export const isWebSocketAugmentedProvider = (
 const isHeaderNotFoundError = (error: any) =>
   typeof error === "object" &&
   typeof error.message === "string" &&
-  error.message.includes("header not found");
+  (error.message.includes(
+    // geth
+    "header not found"
+  ) ||
+    error.message.includes(
+      // openethereum
+      "request is not supported because your node is running with state pruning"
+    ));
+
+const isTransactionHash = (eventName: EventType): eventName is string =>
+  typeof eventName === "string" && hexDataLength(eventName) === 32;
 
 const loadBalancingGlitchRetryIntervalMs = 200;
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+type BlockListenerContext = {
+  isActive: () => boolean;
+  removeMe: () => void;
+};
+
+const waitFor = <T, U>(f: (t: T) => Promise<U | null>) => (g: (u: U) => void) => (
+  t: T,
+  { isActive }: BlockListenerContext
+) => {
+  f(t).then(u => {
+    if (u !== null && isActive()) {
+      g(u);
+    }
+  });
+};
+
+const pass = <T>(f: (t: T) => void) => (t: T, _: BlockListenerContext) => {
+  f(t);
+};
+
+const passOnce = <T>(f: (t: T) => void) => (t: T, { removeMe }: BlockListenerContext) => {
+  f(t);
+  removeMe();
+};
+
+const sequence = <T, U, V>(
+  f: (_: (_: U) => void) => (_: T, context: BlockListenerContext) => void,
+  g: (_: (_: V) => void) => (_: U, context: BlockListenerContext) => void
+) => (h: (_: V) => void) => (t: T, context: BlockListenerContext) => {
+  f(u => g(h)(u, context))(t, context);
+};
+
+const defer = <T>(f: (t: T) => void) => (t: T) => {
+  setTimeout(() => {
+    f(t);
+  }, 0);
+};
 
 export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvider>(Base: T) => {
   let webSocketAugmentedProvider = class extends Base implements WebSocketAugmentedProvider {
@@ -44,7 +94,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
     _seenBlock = 0;
     _blockListenerScheduled = false;
 
-    readonly _blockListeners = new Set<(blockNumber: number) => void>();
+    readonly _blockListeners = new Map<(_: never) => void, (blockNumber: number) => void>();
     readonly _blockListener = this._onBlock.bind(this);
 
     openWebSocket(url: string, network: Networkish) {
@@ -91,7 +141,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
 
         setTimeout(() => {
           this._blockListenerScheduled = false;
-          [...this._blockListeners].forEach(listener => listener(this._seenBlock));
+          [...this._blockListeners].forEach(([, listener]) => listener(this._seenBlock));
         }, 50);
       }
     }
@@ -165,17 +215,39 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
       }
     }
 
+    _wrap<T, U>(
+      f: (t: T) => void,
+      g: (f: (t: T) => void) => (u: U, { removeMe }: BlockListenerContext) => void
+    ): [(t: T) => void, (u: U) => void] {
+      return [
+        f,
+        (u: U) =>
+          g(defer(f))(u, {
+            isActive: () => this._blockListeners.has(f),
+            removeMe: () => this._blockListeners.delete(f)
+          })
+      ];
+    }
+
     on(eventName: EventType, listener: Listener) {
-      if (eventName === "block") {
-        return this._addBlockListener(listener);
+      if (isTransactionHash(eventName)) {
+        const fetchReceipt = this._getTransactionReceiptFromLatest.bind(this, eventName);
+        const [, passReceipt] = this._wrap(listener, waitFor(fetchReceipt));
+
+        passReceipt(undefined);
+
+        return this._addBlockListener(listener, passReceipt);
+      } else if (eventName === "block") {
+        return this._addBlockListener(...this._wrap(listener, pass));
       } else {
         return super.on(eventName, listener);
       }
     }
 
-    _addBlockListener(listener: (blockNumber: number) => void) {
-      if (!this._blockListeners.has(listener)) {
-        this._blockListeners.add(listener);
+    _addBlockListener(key: (_: never) => void, blockListener: (blockNumber: number) => void) {
+      if (!this._blockListeners.has(key)) {
+        this._blockListeners.set(key, blockListener);
+
         if (this._blockListeners.size === 1) {
           this._startBlockEvents();
         }
@@ -184,28 +256,31 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
     }
 
     once(eventName: EventType, listener: Listener) {
-      if (eventName === "block") {
-        const listenOnce = (blockNumber: number) => {
-          listener(blockNumber);
-          this._removeBlockListener(listenOnce);
-        };
-        return this._addBlockListener(listenOnce);
+      if (isTransactionHash(eventName)) {
+        const fetchReceipt = this._getTransactionReceiptFromLatest.bind(this, eventName);
+        const [, passReceiptOnce] = this._wrap(listener, sequence(waitFor(fetchReceipt), passOnce));
+
+        passReceiptOnce(undefined);
+
+        return this._addBlockListener(listener, passReceiptOnce);
+      } else if (eventName === "block") {
+        return this._addBlockListener(...this._wrap(listener, passOnce));
       } else {
         return super.once(eventName, listener);
       }
     }
 
     off(eventName: EventType, listener: Listener) {
-      if (eventName === "block") {
+      if (isTransactionHash(eventName) || eventName === "block") {
         return this._removeBlockListener(listener);
       } else {
         return super.off(eventName, listener);
       }
     }
 
-    _removeBlockListener(listener: (blockNumber: number) => void) {
-      if (this._blockListeners.has(listener)) {
-        this._blockListeners.delete(listener);
+    _removeBlockListener(key: (_: never) => void) {
+      if (this._blockListeners.has(key)) {
+        this._blockListeners.delete(key);
         if (this._blockListeners.size === 0) {
           this._stopBlockEvents();
         }
@@ -213,10 +288,43 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
       return this;
     }
 
+    async getTransaction(transactionHash: string | Promise<string>) {
+      const txPromises: Promise<TransactionResponse | null>[] = [
+        super.getTransaction(transactionHash),
+        ...(this._wsProvider?.isReady ? [this._wsProvider.getTransaction(transactionHash)] : [])
+      ];
+
+      const first = await Promise.race(txPromises);
+      const tx = first ?? (await Promise.all(txPromises)).find(tx => tx !== null) ?? null;
+
+      return tx as TransactionResponse;
+    }
+
     getTransactionReceipt(transactionHash: string | Promise<string>) {
-      return this._wsProvider?.ready
+      return this._wsProvider?.isReady
         ? this._wsProvider.getTransactionReceipt(transactionHash)
         : super.getTransactionReceipt(transactionHash);
+    }
+
+    getTransactionCount(
+      addressOrName: string | Promise<string>,
+      blockTag?: BlockTag | Promise<BlockTag>
+    ) {
+      return this._wsProvider?.isReady
+        ? this._wsProvider.getTransactionCount(addressOrName, blockTag)
+        : super.getTransactionCount(addressOrName, blockTag);
+    }
+
+    getBlock(blockHashOrBlockTag: BlockTag | string | Promise<BlockTag | string>) {
+      return this._wsProvider?.isReady
+        ? this._wsProvider.getBlock(blockHashOrBlockTag)
+        : super.getBlock(blockHashOrBlockTag);
+    }
+
+    getBlockWithTransactions(blockHashOrBlockTag: BlockTag | string | Promise<BlockTag | string>) {
+      return this._wsProvider?.isReady
+        ? this._wsProvider.getBlockWithTransactions(blockHashOrBlockTag)
+        : super.getBlockWithTransactions(blockHashOrBlockTag);
     }
 
     async _blockContainsTx(blockNumber: number, txHash: string) {

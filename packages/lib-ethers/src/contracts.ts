@@ -97,6 +97,18 @@ type TypedContract<T extends Contract, U, V> = _TypeSafeContract<T> &
         : never;
     };
 
+    readonly estimateGas: {
+      [P in keyof V]: V[P] extends (...args: infer A) => unknown
+        ? (...args: A) => Promise<BigNumber>
+        : never;
+    };
+
+    readonly populateTransaction: {
+      [P in keyof V]: V[P] extends (...args: infer A) => unknown
+        ? (...args: A) => Promise<PopulatedTransaction>
+        : never;
+    };
+
     readonly estimateAndPopulate: {
       [P in keyof V]: V[P] extends (...args: [...infer A, infer O | undefined]) => unknown
         ? EstimatedContractFunction<PopulatedTransaction, A, O>
@@ -224,6 +236,7 @@ export interface _LiquityDeploymentJSON {
   readonly addresses: _LiquityContractAddresses;
   readonly version: string;
   readonly deploymentDate: number;
+  readonly startBlock: number;
   readonly bootstrapPeriod: number;
   readonly totalStabilityPoolLQTYReward: string;
   readonly liquidityMiningLQTYRewardRate: string;

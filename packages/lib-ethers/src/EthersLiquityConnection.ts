@@ -1,4 +1,3 @@
-import { BigNumber } from "@ethersproject/bignumber";
 import { Block, BlockTag } from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
 
@@ -11,6 +10,7 @@ import rinkeby from "../deployments/rinkeby.json";
 import ropsten from "../deployments/ropsten.json";
 import mainnet from "../deployments/mainnet.json";
 
+import { numberify, panic } from "./_utils";
 import { EthersProvider, EthersSigner } from "./types";
 
 import {
@@ -65,6 +65,9 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
 
   /** Date when the Liquity contracts were deployed. */
   readonly deploymentDate: Date;
+
+  /** Number of block in which the first Liquity contract was deployed. */
+  readonly startBlock: number;
 
   /** Time period (in seconds) after `deploymentDate` during which redemptions are disabled. */
   readonly bootstrapPeriod: number;
@@ -136,8 +139,6 @@ export const _getContracts = (connection: EthersLiquityConnection): _LiquityCont
 const getMulticall = (connection: EthersLiquityConnection): _Multicall | undefined =>
   (connection as _InternalEthersLiquityConnection)._multicall;
 
-const numberify = (bigNumber: BigNumber) => bigNumber.toNumber();
-
 const getTimestampFromBlock = ({ timestamp }: Block) => timestamp;
 
 /** @internal */
@@ -148,10 +149,6 @@ export const _getBlockTimestamp = (
   // Get the timestamp via a contract call whenever possible, to make it batchable with other calls
   getMulticall(connection)?.getCurrentBlockTimestamp({ blockTag }).then(numberify) ??
   _getProvider(connection).getBlock(blockTag).then(getTimestampFromBlock);
-
-const panic = <T>(e: unknown): T => {
-  throw e;
-};
 
 /** @internal */
 export const _requireSigner = (connection: EthersLiquityConnection): EthersSigner =>

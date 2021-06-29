@@ -9,7 +9,7 @@ import { TroveStatus } from "./globalTypes";
 // GraphQL query operation: TroveWithoutRewards
 // ====================================================
 
-export interface TroveWithoutRewards_user_currentTrove_owner {
+export interface TroveWithoutRewards_user_trove_owner {
   __typename: "User";
   /**
    * User's Ethereum address as a hex-string
@@ -17,13 +17,13 @@ export interface TroveWithoutRewards_user_currentTrove_owner {
   id: string;
 }
 
-export interface TroveWithoutRewards_user_currentTrove {
+export interface TroveWithoutRewards_user_trove {
   __typename: "Trove";
   /**
    * Owner's ID + '-' + an incremented integer
    */
   id: string;
-  owner: TroveWithoutRewards_user_currentTrove_owner;
+  owner: TroveWithoutRewards_user_trove_owner;
   status: TroveStatus;
   rawCollateral: any;
   rawDebt: any;
@@ -44,7 +44,7 @@ export interface TroveWithoutRewards_user {
    * User's Ethereum address as a hex-string
    */
   id: string;
-  currentTrove: TroveWithoutRewards_user_currentTrove | null;
+  trove: TroveWithoutRewards_user_trove | null;
 }
 
 export interface TroveWithoutRewards {

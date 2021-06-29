@@ -3,6 +3,8 @@ import assert from "assert";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import { AddressZero } from "@ethersproject/constants";
 import { Log } from "@ethersproject/abstract-provider";
+import { ErrorCode } from "@ethersproject/logger";
+import { Transaction } from "@ethersproject/transactions";
 
 import {
   CollateralGainTransferDetails,
@@ -10,6 +12,7 @@ import {
   Decimalish,
   LiquidationDetails,
   LiquityReceipt,
+  LUSD_MINIMUM_DEBT,
   LUSD_MINIMUM_NET_DEBT,
   MinedReceipt,
   PopulatableLiquity,
@@ -43,16 +46,16 @@ import {
 import {
   EthersLiquityConnection,
   _getContracts,
-  _getProvider,
   _requireAddress,
   _requireSigner
 } from "./EthersLiquityConnection";
 
+import { decimalify, promiseAllValues } from "./_utils";
 import { _priceFeedIsTestnet, _uniTokenIsMock } from "./contracts";
 import { logsToString } from "./parseLogs";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
-const decimalify = (bigNumber: BigNumber) => Decimal.fromBigNumberString(bigNumber.toHexString());
+const bigNumberMax = (a: BigNumber, b?: BigNumber) => (b?.gt(a) ? b : a);
 
 // With 70 iterations redemption costs about ~10M gas, and each iteration accounts for ~138k more
 /** @internal */
@@ -60,6 +63,7 @@ export const _redeemMaxIterations = 70;
 
 const defaultBorrowingRateSlippageTolerance = Decimal.from(0.005); // 0.5%
 const defaultRedemptionRateSlippageTolerance = Decimal.from(0.001); // 0.1%
+const defaultBorrowingFeeDecayToleranceMinutes = 10;
 
 const noDetails = () => undefined;
 
@@ -67,8 +71,10 @@ const compose = <T, U, V>(f: (_: U) => V, g: (_: T) => U) => (_: T) => f(g(_));
 
 const id = <T>(t: T) => t;
 
-// Takes ~6-7K to update lastFeeOperationTime. Let's be on the safe side.
-const addGasForPotentialLastFeeOperationTimeUpdate = (gas: BigNumber) => gas.add(10000);
+// Takes ~6-7K (use 10K to be safe) to update lastFeeOperationTime, but the cost of calculating the
+// decayed baseRate increases logarithmically with time elapsed since the last update.
+const addGasForBaseRateUpdate = (maxMinutesSinceLastUpdate = 10) => (gas: BigNumber) =>
+  gas.add(10000 + 1414 * Math.ceil(Math.log2(maxMinutesSinceLastUpdate + 1)));
 
 // First traversal in ascending direction takes ~50K, then ~13.5K per extra step.
 // 80K should be enough for 3 steps, plus some extra to be safe.
@@ -112,6 +118,75 @@ function* generateTrials(totalNumberOfTrials: number) {
   }
 }
 
+/** @internal */
+export enum _RawErrorReason {
+  TRANSACTION_FAILED = "transaction failed",
+  TRANSACTION_CANCELLED = "cancelled",
+  TRANSACTION_REPLACED = "replaced",
+  TRANSACTION_REPRICED = "repriced"
+}
+
+const transactionReplacementReasons: unknown[] = [
+  _RawErrorReason.TRANSACTION_CANCELLED,
+  _RawErrorReason.TRANSACTION_REPLACED,
+  _RawErrorReason.TRANSACTION_REPRICED
+];
+
+interface RawTransactionFailedError extends Error {
+  code: ErrorCode.CALL_EXCEPTION;
+  reason: _RawErrorReason.TRANSACTION_FAILED;
+  transactionHash: string;
+  transaction: Transaction;
+  receipt: EthersTransactionReceipt;
+}
+
+/** @internal */
+export interface _RawTransactionReplacedError extends Error {
+  code: ErrorCode.TRANSACTION_REPLACED;
+  reason:
+    | _RawErrorReason.TRANSACTION_CANCELLED
+    | _RawErrorReason.TRANSACTION_REPLACED
+    | _RawErrorReason.TRANSACTION_REPRICED;
+  cancelled: boolean;
+  hash: string;
+  replacement: EthersTransactionResponse;
+  receipt: EthersTransactionReceipt;
+}
+
+const hasProp = <T, P extends string>(o: T, p: P): o is T & { [_ in P]: unknown } => p in o;
+
+const isTransactionFailedError = (error: Error): error is RawTransactionFailedError =>
+  hasProp(error, "code") &&
+  error.code === ErrorCode.CALL_EXCEPTION &&
+  hasProp(error, "reason") &&
+  error.reason === _RawErrorReason.TRANSACTION_FAILED;
+
+const isTransactionReplacedError = (error: Error): error is _RawTransactionReplacedError =>
+  hasProp(error, "code") &&
+  error.code === ErrorCode.TRANSACTION_REPLACED &&
+  hasProp(error, "reason") &&
+  transactionReplacementReasons.includes(error.reason);
+
+/**
+ * Thrown when a transaction is cancelled or replaced by a different transaction.
+ *
+ * @public
+ */
+export class EthersTransactionCancelledError extends Error {
+  readonly rawReplacementReceipt: EthersTransactionReceipt;
+  readonly rawError: Error;
+
+  /** @internal */
+  constructor(rawError: _RawTransactionReplacedError) {
+    assert(rawError.reason !== _RawErrorReason.TRANSACTION_REPRICED);
+
+    super(`Transaction ${rawError.reason}`);
+    this.name = "TransactionCancelledError";
+    this.rawReplacementReceipt = rawError.receipt;
+    this.rawError = rawError;
+  }
+}
+
 /**
  * A transaction that has already been sent.
  *
@@ -150,23 +225,115 @@ export class SentEthersLiquityTransaction<T = unknown>
       : _pendingReceipt;
   }
 
-  /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.getReceipt} */
-  async getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>> {
-    return this._receiptFrom(
-      await _getProvider(this._connection).getTransactionReceipt(this.rawSentTransaction.hash)
-    );
+  private async _waitForRawReceipt(confirmations?: number) {
+    try {
+      return await this.rawSentTransaction.wait(confirmations);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (isTransactionFailedError(error)) {
+          return error.receipt;
+        }
+
+        if (isTransactionReplacedError(error)) {
+          if (error.cancelled) {
+            throw new EthersTransactionCancelledError(error);
+          } else {
+            return error.receipt;
+          }
+        }
+      }
+
+      throw error;
+    }
   }
 
-  /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.waitForReceipt} */
+  /** {@inheritDoc @liquity/lib-base#SentLiquityTransaction.getReceipt} */
+  async getReceipt(): Promise<LiquityReceipt<EthersTransactionReceipt, T>> {
+    return this._receiptFrom(await this._waitForRawReceipt(0));
+  }
+
+  /**
+   * {@inheritDoc @liquity/lib-base#SentLiquityTransaction.waitForReceipt}
+   *
+   * @throws
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
+   */
   async waitForReceipt(): Promise<MinedReceipt<EthersTransactionReceipt, T>> {
-    const receipt = this._receiptFrom(
-      await _getProvider(this._connection).waitForTransaction(this.rawSentTransaction.hash)
-    );
+    const receipt = this._receiptFrom(await this._waitForRawReceipt());
 
     assert(receipt.status !== "pending");
     return receipt;
   }
 }
+
+/**
+ * Optional parameters of a transaction that borrows LUSD.
+ *
+ * @public
+ */
+export interface BorrowingOperationOptionalParams {
+  /**
+   * Maximum acceptable {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate}
+   * (default: current borrowing rate plus 0.5%).
+   */
+  maxBorrowingRate?: Decimalish;
+
+  /**
+   * Control the amount of extra gas included attached to the transaction.
+   *
+   * @remarks
+   * Transactions that borrow LUSD must pay a variable borrowing fee, which is added to the Trove's
+   * debt. This fee increases whenever a redemption occurs, and otherwise decays exponentially.
+   * Due to this decay, a Trove's collateral ratio can end up being higher than initially calculated
+   * if the transaction is pending for a long time. When this happens, the backend has to iterate
+   * over the sorted list of Troves to find a new position for the Trove, which costs extra gas.
+   *
+   * The SDK can estimate how much the gas costs of the transaction may increase due to this decay,
+   * and can include additional gas to ensure that it will still succeed, even if it ends up pending
+   * for a relatively long time. This parameter specifies the length of time that should be covered
+   * by the extra gas.
+   *
+   * Default: 60 minutes.
+   */
+  borrowingFeeDecayToleranceMinutes?: number;
+}
+
+const normalizeBorrowingOperationOptionalParams = (
+  maxBorrowingRateOrOptionalParams: Decimalish | BorrowingOperationOptionalParams | undefined,
+  currentBorrowingRate: Decimal | undefined
+): {
+  maxBorrowingRate: Decimal;
+  borrowingFeeDecayToleranceMinutes: number;
+} => {
+  if (maxBorrowingRateOrOptionalParams === undefined) {
+    return {
+      maxBorrowingRate:
+        currentBorrowingRate?.add(defaultBorrowingRateSlippageTolerance) ?? Decimal.ZERO,
+      borrowingFeeDecayToleranceMinutes: defaultBorrowingFeeDecayToleranceMinutes
+    };
+  } else if (
+    typeof maxBorrowingRateOrOptionalParams === "number" ||
+    typeof maxBorrowingRateOrOptionalParams === "string" ||
+    maxBorrowingRateOrOptionalParams instanceof Decimal
+  ) {
+    return {
+      maxBorrowingRate: Decimal.from(maxBorrowingRateOrOptionalParams),
+      borrowingFeeDecayToleranceMinutes: defaultBorrowingFeeDecayToleranceMinutes
+    };
+  } else {
+    const { maxBorrowingRate, borrowingFeeDecayToleranceMinutes } = maxBorrowingRateOrOptionalParams;
+
+    return {
+      maxBorrowingRate:
+        maxBorrowingRate !== undefined
+          ? Decimal.from(maxBorrowingRate)
+          : currentBorrowingRate?.add(defaultBorrowingRateSlippageTolerance) ?? Decimal.ZERO,
+
+      borrowingFeeDecayToleranceMinutes:
+        borrowingFeeDecayToleranceMinutes ?? defaultBorrowingFeeDecayToleranceMinutes
+    };
+  }
+};
 
 /**
  * A transaction that has been prepared for sending.
@@ -182,6 +349,22 @@ export class PopulatedEthersLiquityTransaction<T = unknown>
   /** Unsigned transaction object populated by Ethers. */
   readonly rawPopulatedTransaction: EthersPopulatedTransaction;
 
+  /**
+   * Extra gas added to the transaction's `gasLimit` on top of the estimated minimum requirement.
+   *
+   * @remarks
+   * Gas estimation is based on blockchain state at the latest block. However, most transactions
+   * stay in pending state for several blocks before being included in a block. This may increase
+   * the actual gas requirements of certain Liquity transactions by the time they are eventually
+   * mined, therefore the Liquity SDK increases these transactions' `gasLimit` by default (unless
+   * `gasLimit` is {@link EthersTransactionOverrides | overridden}).
+   *
+   * Note: even though the SDK includes gas headroom for many transaction types, currently this
+   * property is only implemented for {@link PopulatableEthersLiquity.openTrove | openTrove()},
+   * {@link PopulatableEthersLiquity.adjustTrove | adjustTrove()} and its aliases.
+   */
+  readonly gasHeadroom?: number;
+
   private readonly _connection: EthersLiquityConnection;
   private readonly _parse: (rawReceipt: EthersTransactionReceipt) => T;
 
@@ -189,11 +372,16 @@ export class PopulatedEthersLiquityTransaction<T = unknown>
   constructor(
     rawPopulatedTransaction: EthersPopulatedTransaction,
     connection: EthersLiquityConnection,
-    parse: (rawReceipt: EthersTransactionReceipt) => T
+    parse: (rawReceipt: EthersTransactionReceipt) => T,
+    gasHeadroom?: number
   ) {
     this.rawPopulatedTransaction = rawPopulatedTransaction;
     this._connection = connection;
     this._parse = parse;
+
+    if (gasHeadroom !== undefined) {
+      this.gasHeadroom = gasHeadroom;
+    }
   }
 
   /** {@inheritDoc @liquity/lib-base#PopulatedLiquityTransaction.send} */
@@ -317,7 +505,8 @@ export class PopulatableEthersLiquity
 
   private _wrapTroveChangeWithFees<T>(
     params: T,
-    rawPopulatedTransaction: EthersPopulatedTransaction
+    rawPopulatedTransaction: EthersPopulatedTransaction,
+    gasHeadroom?: number
   ): PopulatedEthersLiquityTransaction<_TroveChangeWithFees<T>> {
     const { borrowerOperations } = _getContracts(this._readable.connection);
 
@@ -339,7 +528,9 @@ export class PopulatableEthersLiquity
           newTrove,
           fee
         };
-      }
+      },
+
+      gasHeadroom
     );
   }
 
@@ -542,7 +733,13 @@ export class PopulatableEthersLiquity
 
     const { hintAddress } = results.reduce((a, b) => (a.diff.lt(b.diff) ? a : b));
 
-    return sortedTroves.findInsertPosition(nominalCollateralRatio.hex, hintAddress, hintAddress);
+    const [prev, next] = await sortedTroves.findInsertPosition(
+      nominalCollateralRatio.hex,
+      hintAddress,
+      hintAddress
+    );
+
+    return prev === AddressZero ? [next, next] : next === AddressZero ? [prev, prev] : [prev, next];
   }
 
   private async _findHints(trove: Trove): Promise<[string, string]> {
@@ -592,32 +789,79 @@ export class PopulatableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.openTrove} */
   async openTrove(
     params: TroveCreationParams<Decimalish>,
-    maxBorrowingRate?: Decimalish,
+    maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>> {
     const { borrowerOperations } = _getContracts(this._readable.connection);
 
-    const normalized = _normalizeTroveCreation(params);
-    const { depositCollateral, borrowLUSD } = normalized;
+    const normalizedParams = _normalizeTroveCreation(params);
+    const { depositCollateral, borrowLUSD } = normalizedParams;
 
-    const fees = await this._readable.getFees();
-    const borrowingRate = fees.borrowingRate();
-    const newTrove = Trove.create(normalized, borrowingRate);
+    const [fees, blockTimestamp, total, price] = await Promise.all([
+      this._readable._getFeesFactory(),
+      this._readable._getBlockTimestamp(),
+      this._readable.getTotal(),
+      this._readable.getPrice()
+    ]);
 
-    maxBorrowingRate =
-      maxBorrowingRate !== undefined
-        ? Decimal.from(maxBorrowingRate)
-        : borrowingRate.add(defaultBorrowingRateSlippageTolerance);
+    const recoveryMode = total.collateralRatioIsBelowCritical(price);
+
+    const decayBorrowingRate = (seconds: number) =>
+      fees(blockTimestamp + seconds, recoveryMode).borrowingRate();
+
+    const currentBorrowingRate = decayBorrowingRate(0);
+    const newTrove = Trove.create(normalizedParams, currentBorrowingRate);
+    const hints = await this._findHints(newTrove);
+
+    const {
+      maxBorrowingRate,
+      borrowingFeeDecayToleranceMinutes
+    } = normalizeBorrowingOperationOptionalParams(
+      maxBorrowingRateOrOptionalParams,
+      currentBorrowingRate
+    );
+
+    const txParams = (borrowLUSD: Decimal): Parameters<typeof borrowerOperations.openTrove> => [
+      maxBorrowingRate.hex,
+      borrowLUSD.hex,
+      ...hints,
+      { value: depositCollateral.hex, ...overrides }
+    ];
+
+    let gasHeadroom: number | undefined;
+
+    if (overrides?.gasLimit === undefined) {
+      const decayedBorrowingRate = decayBorrowingRate(60 * borrowingFeeDecayToleranceMinutes);
+      const decayedTrove = Trove.create(normalizedParams, decayedBorrowingRate);
+      const { borrowLUSD: borrowLUSDSimulatingDecay } = Trove.recreate(
+        decayedTrove,
+        currentBorrowingRate
+      );
+
+      if (decayedTrove.debt.lt(LUSD_MINIMUM_DEBT)) {
+        throw new Error(
+          `Trove's debt might fall below ${LUSD_MINIMUM_DEBT} ` +
+            `within ${borrowingFeeDecayToleranceMinutes} minutes`
+        );
+      }
+
+      const [gasNow, gasLater] = await Promise.all([
+        borrowerOperations.estimateGas.openTrove(...txParams(borrowLUSD)),
+        borrowerOperations.estimateGas.openTrove(...txParams(borrowLUSDSimulatingDecay))
+      ]);
+
+      const gasLimit = addGasForBaseRateUpdate(borrowingFeeDecayToleranceMinutes)(
+        bigNumberMax(addGasForPotentialListTraversal(gasNow), gasLater)
+      );
+
+      gasHeadroom = gasLimit.sub(gasNow).toNumber();
+      overrides = { ...overrides, gasLimit };
+    }
 
     return this._wrapTroveChangeWithFees(
-      normalized,
-      await borrowerOperations.estimateAndPopulate.openTrove(
-        { value: depositCollateral.hex, ...overrides },
-        compose(addGasForPotentialLastFeeOperationTimeUpdate, addGasForPotentialListTraversal),
-        maxBorrowingRate.hex,
-        borrowLUSD.hex,
-        ...(await this._findHints(newTrove))
-      )
+      normalizedParams,
+      await borrowerOperations.populateTransaction.openTrove(...txParams(borrowLUSD)),
+      gasHeadroom
     );
   }
 
@@ -668,42 +912,92 @@ export class PopulatableEthersLiquity
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.adjustTrove} */
   async adjustTrove(
     params: TroveAdjustmentParams<Decimalish>,
-    maxBorrowingRate?: Decimalish,
+    maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>> {
     const address = _requireAddress(this._readable.connection, overrides);
     const { borrowerOperations } = _getContracts(this._readable.connection);
 
-    const normalized = _normalizeTroveAdjustment(params);
-    const { depositCollateral, withdrawCollateral, borrowLUSD, repayLUSD } = normalized;
+    const normalizedParams = _normalizeTroveAdjustment(params);
+    const { depositCollateral, withdrawCollateral, borrowLUSD, repayLUSD } = normalizedParams;
 
-    const [trove, fees] = await Promise.all([
+    const [trove, feeVars] = await Promise.all([
       this._readable.getTrove(address),
-      borrowLUSD && this._readable.getFees()
+      borrowLUSD &&
+        promiseAllValues({
+          fees: this._readable._getFeesFactory(),
+          blockTimestamp: this._readable._getBlockTimestamp(),
+          total: this._readable.getTotal(),
+          price: this._readable.getPrice()
+        })
     ]);
 
-    const borrowingRate = fees?.borrowingRate();
-    const finalTrove = trove.adjust(normalized, borrowingRate);
+    const decayBorrowingRate = (seconds: number) =>
+      feeVars
+        ?.fees(
+          feeVars.blockTimestamp + seconds,
+          feeVars.total.collateralRatioIsBelowCritical(feeVars.price)
+        )
+        .borrowingRate();
 
-    maxBorrowingRate =
-      maxBorrowingRate !== undefined
-        ? Decimal.from(maxBorrowingRate)
-        : borrowingRate?.add(defaultBorrowingRateSlippageTolerance) ?? Decimal.ZERO;
+    const currentBorrowingRate = decayBorrowingRate(0);
+    const adjustedTrove = trove.adjust(normalizedParams, currentBorrowingRate);
+    const hints = await this._findHints(adjustedTrove);
+
+    const {
+      maxBorrowingRate,
+      borrowingFeeDecayToleranceMinutes
+    } = normalizeBorrowingOperationOptionalParams(
+      maxBorrowingRateOrOptionalParams,
+      currentBorrowingRate
+    );
+
+    const txParams = (borrowLUSD?: Decimal): Parameters<typeof borrowerOperations.adjustTrove> => [
+      maxBorrowingRate.hex,
+      (withdrawCollateral ?? Decimal.ZERO).hex,
+      (borrowLUSD ?? repayLUSD ?? Decimal.ZERO).hex,
+      !!borrowLUSD,
+      ...hints,
+      { value: depositCollateral?.hex, ...overrides }
+    ];
+
+    let gasHeadroom: number | undefined;
+
+    if (overrides?.gasLimit === undefined) {
+      const decayedBorrowingRate = decayBorrowingRate(60 * borrowingFeeDecayToleranceMinutes);
+      const decayedTrove = trove.adjust(normalizedParams, decayedBorrowingRate);
+      const { borrowLUSD: borrowLUSDSimulatingDecay } = trove.adjustTo(
+        decayedTrove,
+        currentBorrowingRate
+      );
+
+      if (decayedTrove.debt.lt(LUSD_MINIMUM_DEBT)) {
+        throw new Error(
+          `Trove's debt might fall below ${LUSD_MINIMUM_DEBT} ` +
+            `within ${borrowingFeeDecayToleranceMinutes} minutes`
+        );
+      }
+
+      const [gasNow, gasLater] = await Promise.all([
+        borrowerOperations.estimateGas.adjustTrove(...txParams(borrowLUSD)),
+        borrowLUSD &&
+          borrowerOperations.estimateGas.adjustTrove(...txParams(borrowLUSDSimulatingDecay))
+      ]);
+
+      let gasLimit = bigNumberMax(addGasForPotentialListTraversal(gasNow), gasLater);
+
+      if (borrowLUSD) {
+        gasLimit = addGasForBaseRateUpdate(borrowingFeeDecayToleranceMinutes)(gasLimit);
+      }
+
+      gasHeadroom = gasLimit.sub(gasNow).toNumber();
+      overrides = { ...overrides, gasLimit };
+    }
 
     return this._wrapTroveChangeWithFees(
-      normalized,
-      await borrowerOperations.estimateAndPopulate.adjustTrove(
-        { value: depositCollateral?.hex, ...overrides },
-        compose(
-          borrowLUSD ? addGasForPotentialLastFeeOperationTimeUpdate : id,
-          addGasForPotentialListTraversal
-        ),
-        maxBorrowingRate.hex,
-        (withdrawCollateral ?? Decimal.ZERO).hex,
-        (borrowLUSD ?? repayLUSD ?? Decimal.ZERO).hex,
-        !!borrowLUSD,
-        ...(await this._findHints(finalTrove))
-      )
+      normalizedParams,
+      await borrowerOperations.populateTransaction.adjustTrove(...txParams(borrowLUSD)),
+      gasHeadroom
     );
   }
 
@@ -931,7 +1225,7 @@ export class PopulatableEthersLiquity
       return new PopulatedEthersRedemption(
         await troveManager.estimateAndPopulate.redeemCollateral(
           { ...overrides },
-          addGasForPotentialLastFeeOperationTimeUpdate,
+          addGasForBaseRateUpdate(),
           truncatedAmount.hex,
           firstRedemptionHint,
           ...partialHints,
