@@ -686,6 +686,56 @@ contract('BAMM', async accounts => {
       await assertRevert(bamm.setParams(20, 100, {from: B}), 'Ownable: caller is not the owner')      
     })
 
+    it('transfer test', async () => {
+      // --- SETUP ---
+
+      // Whale opens Trove and deposits to SP
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: whale, value: dec(50, 'ether') } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: A } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: C } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(20, 18)), extraParams: { from: D } })            
+      
+      const whaleLUSD = await lusdToken.balanceOf(whale)
+      await lusdToken.approve(bamm.address, whaleLUSD, { from: whale })
+      await lusdToken.approve(bamm.address, toBN(dec(10000, 18)), { from: A })
+      await bamm.deposit(toBN(dec(10000, 18)), { from: A } )
+      await stabilityPool.provideToSP(toBN(dec(10000, 18)), frontEnd_1, {from: C})
+
+      assert.equal(await bamm.balanceOf(A), dec(1, 18))
+
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
+
+      await stabilityPool.provideToSP(toBN(dec(5000, 18)), frontEnd_1, {from: D})      
+
+      await bamm.transfer(B, dec(5, 17), {from: A})
+      assert.equal(await bamm.balanceOf(A), dec(5, 17))
+      assert.equal(await bamm.balanceOf(B), dec(5, 17))
+
+      await stabilityPool.withdrawFromSP(toBN(dec(5000, 18)), { from: C })
+      assert.equal(await lqtyToken.balanceOf(B), "0")
+      await bamm.withdraw(0, {from: A})
+      assert.equal((await lqtyToken.balanceOf(A)).toString(), (await lqtyToken.balanceOf(C)).toString())
+
+      // reset A's usd balance
+      await lusdToken.transfer(C, await lusdToken.balanceOf(A), {from: A})
+      assert.equal(await lusdToken.balanceOf(A), "0")
+
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)      
+
+      await bamm.withdraw(toBN(dec(5, 17)), {from: A}) // check balance
+      await bamm.withdraw(toBN(dec(5, 17)), {from: B}) // check balance
+      await stabilityPool.withdrawFromSP(toBN(dec(5000, 18)), { from: C })
+      await stabilityPool.withdrawFromSP(toBN(dec(5000, 18)), { from: D })      
+
+      assert.equal((await lqtyToken.balanceOf(B)).toString(), (await lqtyToken.balanceOf(D)).toString())      
+      assert.equal((await lqtyToken.balanceOf(A)).toString(), (await lqtyToken.balanceOf(C)).toString())      
+
+      assert.equal((await lusdToken.balanceOf(B)).toString(), dec(5000, 18))            
+      assert.equal((await lusdToken.balanceOf(A)).toString(), dec(5000, 18))
+
+      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)      
+    })    
+
     // tests:
     // 1. complex lqty staking + share V
     // 2. share test with ether V
@@ -699,6 +749,7 @@ contract('BAMM', async accounts => {
     // 7. test with front end v
     // 8. formula V
     // 9. lp token
+    // 10. cleanups
   })
 })
 

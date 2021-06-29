@@ -15,7 +15,6 @@ contract BAMM is LPToken, PriceFormula, Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public immutable priceAggregator;
-    StabilityPool public immutable SP;
     IERC20 public immutable LUSD;
 
     address payable public immutable feePool;
@@ -40,10 +39,9 @@ contract BAMM is LPToken, PriceFormula, Ownable {
         address payable _feePool,
         address _fronEndTag)
         public
-        LPToken(_LQTY)
+        LPToken(_LQTY, _SP)
     {
         priceAggregator = AggregatorV3Interface(_priceAggregator);
-        SP = StabilityPool(_SP);
         LUSD = IERC20(_LUSD);
 
         feePool = _feePool;
