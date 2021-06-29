@@ -293,7 +293,7 @@ export interface BorrowingOperationOptionalParams {
    * for a relatively long time. This parameter specifies the length of time that should be covered
    * by the extra gas.
    *
-   * Default: 60 minutes.
+   * Default: 10 minutes.
    */
   borrowingFeeDecayToleranceMinutes?: number;
 }
