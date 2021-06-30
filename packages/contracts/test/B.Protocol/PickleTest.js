@@ -695,7 +695,7 @@ contract('Pickle', async accounts => {
       await assertRevert(bamm.setParams(20, 100, {from: B}), 'Ownable: caller is not the owner')      
     })
 
-    it('transfer test', async () => {
+    it.skip('transfer happy test', async () => { // transfer is not supported anymore
       // --- SETUP ---
 
       // Whale opens Trove and deposits to SP

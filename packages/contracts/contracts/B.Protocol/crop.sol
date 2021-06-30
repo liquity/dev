@@ -104,7 +104,8 @@ contract CropJoin {
 
     // Net Asset Valuation [wad]
     function nav() public virtual returns (uint256) {
-        return total;
+        uint256 _nav = gem.balanceOf(address(this));
+        return mul(_nav, to18ConversionFactor);
     }
 
     // Net Assets per Share [wad]
@@ -162,20 +163,5 @@ contract CropJoin {
         }
         crops[msg.sender] = rmulup(stake[msg.sender], share);
         emit Exit(val);
-    }
-
-    function flee() internal virtual {
-        uint256 wad = vat.gem(ilk, msg.sender);
-        require(wad <= 2 ** 255);
-        uint256 val = wmul(wmul(wad, nps()), toGemConversionFactor);
-
-        require(gem.transfer(msg.sender, val));
-        vat.slip(ilk, msg.sender, -int256(wad));
-
-        total = sub(total, wad);
-        stake[msg.sender] = sub(stake[msg.sender], wad);
-        crops[msg.sender] = rmulup(stake[msg.sender], share);
-
-        emit Flee();
     }
 }

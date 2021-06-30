@@ -686,7 +686,7 @@ contract('BAMM', async accounts => {
       await assertRevert(bamm.setParams(20, 100, {from: B}), 'Ownable: caller is not the owner')      
     })
 
-    it('transfer test', async () => {
+    it.skip('transfer happy test', async () => { // transfer is not supported anymore
       // --- SETUP ---
 
       // Whale opens Trove and deposits to SP
@@ -732,9 +732,8 @@ contract('BAMM', async accounts => {
 
       assert.equal((await lusdToken.balanceOf(B)).toString(), dec(5000, 18))            
       assert.equal((await lusdToken.balanceOf(A)).toString(), dec(5000, 18))
+    })
 
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)      
-    })    
 
     // tests:
     // 1. complex lqty staking + share V
@@ -748,8 +747,8 @@ contract('BAMM', async accounts => {
     // 6. set params V
     // 7. test with front end v
     // 8. formula V
-    // 9. lp token
-    // 11. pickle
+    // 9. lp token - transfer sad test
+    // 11. pickle V
     // 10. cleanups - compilation warnings. cropjoin - revoke changes and maybe make internal.
   })
 })

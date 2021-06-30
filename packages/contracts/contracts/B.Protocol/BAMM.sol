@@ -3,7 +3,7 @@
 pragma solidity 0.6.11;
 
 import "./../StabilityPool.sol";
-import "./LPToken.sol";
+import "./CropJoinAdapter.sol";
 import "./PriceFormula.sol";
 import "./../Interfaces/IPriceFeed.sol";
 import "./../Dependencies/IERC20.sol";
@@ -11,11 +11,12 @@ import "./../Dependencies/SafeMath.sol";
 import "./../Dependencies/Ownable.sol";
 import "./../Dependencies/AggregatorV3Interface.sol";
 
-contract BAMM is LPToken, PriceFormula, Ownable {
+contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public immutable priceAggregator;
     IERC20 public immutable LUSD;
+    StabilityPool immutable public SP;    
 
     address payable public immutable feePool;
     uint public constant MAX_FEE = 100; // 1%
@@ -39,10 +40,11 @@ contract BAMM is LPToken, PriceFormula, Ownable {
         address payable _feePool,
         address _fronEndTag)
         public
-        LPToken(_LQTY, _SP)
+        CropJoinAdapter(_LQTY)
     {
         priceAggregator = AggregatorV3Interface(_priceAggregator);
         LUSD = IERC20(_LUSD);
+        SP = StabilityPool(_SP);
 
         feePool = _feePool;
         maxDiscount = _maxDiscount;
