@@ -31,6 +31,11 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
 
     uint constant PRECISION = 1e18;
 
+    event ParamsSet(uint A, uint fee);
+    event UserDeposit(address indexed user, uint lusdAmount, uint numShares);
+    event UserWithdraw(address indexed user, uint lusdAmount, uint ethAmount, uint numShares);
+    event RebalanceSwap(address indexed user, uint lusdAmount, uint ethAmount, uint timestamp);
+
     constructor(
         address _priceAggregator,
         address payable _SP,
@@ -57,7 +62,9 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
         require(_A <= MAX_A, "setParams: A too big");
 
         fee = _fee;
-        A = _A;        
+        A = _A;
+
+        emit ParamsSet(_A, _fee);
     }
 
     function fetchPrice() public view returns(uint) {
@@ -117,6 +124,8 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
 
         // update LP token
         mint(msg.sender, newShare);
+
+        emit UserDeposit(msg.sender, lusdAmount, newShare);        
     }
 
     function withdraw(uint numShares) external {
@@ -138,6 +147,8 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
             (bool success, ) = msg.sender.call{ value: ethAmount }(""); // re-entry is fine here
             require(success, "withdraw: sending ETH failed");
         }
+
+        emit UserWithdraw(msg.sender, lusdAmount, ethAmount, numShares);            
     }
 
     function addBps(uint n, int bps) internal pure returns(uint) {
@@ -180,6 +191,8 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
         if(feeAmount > 0) feePool.transfer(feeAmount);
         (bool success, ) = dest.call{ value: ethAmount }(""); // re-entry is fine here
         require(success, "swap: sending ETH failed");
+
+        emit RebalanceSwap(msg.sender, lusdAmount, ethAmount, now);
 
         return ethAmount;
     }
