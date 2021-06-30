@@ -18,12 +18,12 @@ contract LPToken is CropJoin {
         SP = StabilityPool(_SP);
     }
 
-    function mint(address to, uint value) internal {
+    function mint(address to, uint value) virtual internal {
         join(to, value);
         emit Transfer(address(0), to, value);
     }
 
-    function burn(address owner, uint value) internal {
+    function burn(address owner, uint value) virtual internal {
         exit(owner, value);
         emit Transfer(owner, address(0), value);        
     }

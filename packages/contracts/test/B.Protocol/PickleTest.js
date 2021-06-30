@@ -9,7 +9,9 @@ const timeValues = testHelpers.TimeValues
 const TroveManagerTester = artifacts.require("TroveManagerTester")
 const LUSDToken = artifacts.require("LUSDToken")
 const NonPayable = artifacts.require('NonPayable.sol')
-const BAMM = artifacts.require("BAMM.sol")
+const BAMM = artifacts.require("PBAMM.sol")
+const EIP20 = artifacts.require("EIP20.sol")
+const Pickle = artifacts.require("PickleJar.sol")
 const ChainlinkTestnet = artifacts.require("ChainlinkTestnet.sol")
 
 const ZERO = toBN('0')
@@ -20,7 +22,7 @@ const getFrontEndTag = async (stabilityPool, depositor) => {
   return (await stabilityPool.deposits(depositor))[1]
 }
 
-contract('BAMM', async accounts => {
+contract('Pickle', async accounts => {
   const [owner,
     defaulter_1, defaulter_2, defaulter_3,
     whale,
@@ -50,6 +52,8 @@ contract('BAMM', async accounts => {
   let communityIssuance
 
   let gasPriceInWei
+  let pLqty
+  let pJar
 
   const feePool = "0x1000000000000000000000000000000000000001"
 
@@ -57,7 +61,7 @@ contract('BAMM', async accounts => {
   const openTrove = async (params) => th.openTrove(contracts, params)
   //const assertRevert = th.assertRevert
 
-  describe("BAMM", async () => {
+  describe("PBAMM", async () => {
 
     before(async () => {
       gasPriceInWei = await web3.eth.getGasPrice()
@@ -99,7 +103,10 @@ contract('BAMM', async accounts => {
       const kickbackRate_F1 = toBN(dec(5, 17)) // F1 kicks 50% back to depositor
       await stabilityPool.registerFrontEnd(kickbackRate_F1, { from: frontEnd_1 })
 
-      bamm = await BAMM.new(chainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, frontEnd_1, {from: bammOwner})
+      pLqty = await EIP20.new(0, "pickle lqty", 18, "pLqty")
+      pJar = await Pickle.new(lqtyToken.address, pLqty.address)
+      bamm = await BAMM.new(chainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, frontEnd_1,
+                            pLqty.address, pJar.address, {from: bammOwner})
     })
 
     // --- provideToSP() ---
@@ -240,8 +247,8 @@ contract('BAMM', async accounts => {
       await stabilityPool.provideToSP(dec(3000, 18), frontEnd_1, { from: F })
 
       // Get F1, F2, F3 LQTY balances before, and confirm they're zero
-      const D_LQTYBalance_Before = await lqtyToken.balanceOf(D)
-      const E_LQTYBalance_Before = await lqtyToken.balanceOf(E)
+      const D_LQTYBalance_Before = await pLqty.balanceOf(D)
+      const E_LQTYBalance_Before = await pLqty.balanceOf(E)
       const F_LQTYBalance_Before = await lqtyToken.balanceOf(F)
 
       assert.equal(D_LQTYBalance_Before, '0')
@@ -255,13 +262,15 @@ contract('BAMM', async accounts => {
       await bamm.withdraw(0, { from: E })      
 
       // Get F1, F2, F3 LQTY balances after, and confirm they have increased
-      const D_LQTYBalance_After = await lqtyToken.balanceOf(D)
-      const E_LQTYBalance_After = await lqtyToken.balanceOf(E)
+      const D_LQTYBalance_After = await pLqty.balanceOf(D)
+      const E_LQTYBalance_After = await pLqty.balanceOf(E)
       const F_LQTYBalance_After = await lqtyToken.balanceOf(F)
 
       assert((await lqtyToken.balanceOf(frontEnd_1)).gt(toBN(0)))
+      assert((await pLqty.balanceOf(D)).gt(toBN(0)))
+      assert((await pLqty.balanceOf(E)).gt(toBN(0)))      
 
-      assert.equal(D_LQTYBalance_After.add(E_LQTYBalance_After).toString(), F_LQTYBalance_After.toString())
+      assert.equal(D_LQTYBalance_After.add(E_LQTYBalance_After).toString(), F_LQTYBalance_After.div(toBN(2)).toString())
     })
 
     it("test share + LQTY fuzzy", async () => {
@@ -292,7 +301,7 @@ contract('BAMM', async accounts => {
       for(n = 0 ; n < 10 ; n++) {
         for(let i = 0 ; i < ammUsers.length ; i++) {
           await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR * (i + n + 1), web3.currentProvider)
-          assert(almostTheSame((await lqtyToken.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).toString()))
+          assert(almostTheSame((await pLqty.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).div(toBN(2)).toString()))
           assert.equal((await lusdToken.balanceOf(ammUsers[i])).toString(), (await lusdToken.balanceOf(nonAmmUsers[i])).toString())
 
           const qty = (i+1) * 1000 + (n+1)*1000 // small number as 0 decimals
@@ -328,8 +337,8 @@ contract('BAMM', async accounts => {
           await stabilityPool.withdrawFromSP(0, { from: nonAmmUsers[0] })                      
 
           assert.equal((await lusdToken.balanceOf(ammUsers[i])).toString(), (await lusdToken.balanceOf(nonAmmUsers[i])).toString())
-          assert(almostTheSame((await lqtyToken.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).toString()))
-          assert(almostTheSame((await lqtyToken.balanceOf(ammUsers[0])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[0])).toString()))          
+          assert(almostTheSame((await pLqty.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).div(toBN(2)).toString()))
+          assert(almostTheSame((await pLqty.balanceOf(ammUsers[0])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[0])).div(toBN(2)).toString()))          
         }
       }
 
@@ -340,7 +349,7 @@ contract('BAMM', async accounts => {
       }
 
       for(let i = 0 ; i < ammUsers.length ; i++) {
-        assert(almostTheSame((await lqtyToken.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).toString()))
+        assert(almostTheSame((await pLqty.balanceOf(ammUsers[i])).toString(), (await lqtyToken.balanceOf(nonAmmUsers[i])).div(toBN(2)).toString()))
       }      
     })
     
@@ -357,8 +366,8 @@ contract('BAMM', async accounts => {
 
       const A_LQTYBalance_Before = await lqtyToken.balanceOf(A)      
       const D_LQTYBalance_Before = await lqtyToken.balanceOf(D)
-      const E_LQTYBalance_Before = await lqtyToken.balanceOf(E)
-      const F_LQTYBalance_Before = await lqtyToken.balanceOf(F)
+      const E_LQTYBalance_Before = await pLqty.balanceOf(E)
+      const F_LQTYBalance_Before = await pLqty.balanceOf(F)
 
       assert.equal(A_LQTYBalance_Before, '0')      
       assert.equal(D_LQTYBalance_Before, '0')
@@ -407,9 +416,9 @@ contract('BAMM', async accounts => {
       await bamm.withdraw(0, { from: E })
       await bamm.withdraw(0, { from: F })            
 
-      console.log("lqty D", (await lqtyToken.balanceOf(D)).toString())
-      console.log("lqty E", (await lqtyToken.balanceOf(E)).toString())
-      console.log("lqty F", (await lqtyToken.balanceOf(F)).toString())      
+      console.log("lqty D", (await pLqty.balanceOf(D)).toString())
+      console.log("lqty E", (await pLqty.balanceOf(E)).toString())
+      console.log("lqty F", (await pLqty.balanceOf(F)).toString())      
       
       console.log("share:", (await bamm.share()).toString())
       console.log("stake D:", (await bamm.stake(D)).toString())
@@ -419,13 +428,13 @@ contract('BAMM', async accounts => {
       // Get F1, F2, F3 LQTY balances after, and confirm they have increased
       const A_LQTYBalance_After = await lqtyToken.balanceOf(A)
       const B_LQTYBalance_After = await lqtyToken.balanceOf(B)      
-      const D_LQTYBalance_After = await lqtyToken.balanceOf(D)
-      const E_LQTYBalance_After = await lqtyToken.balanceOf(E)
-      const F_LQTYBalance_After = await lqtyToken.balanceOf(F)
+      const D_LQTYBalance_After = await pLqty.balanceOf(D)
+      const E_LQTYBalance_After = await pLqty.balanceOf(E)
+      const F_LQTYBalance_After = await pLqty.balanceOf(F)
 
-      assert.equal(D_LQTYBalance_After.toString(), A_LQTYBalance_After.toString())
-      assert.equal(E_LQTYBalance_After.toString(), A_LQTYBalance_After.mul(toBN(2)).toString())
-      assert.equal(F_LQTYBalance_After.toString(), B_LQTYBalance_After.toString()) 
+      assert.equal(D_LQTYBalance_After.toString(), A_LQTYBalance_After.div(toBN(2)).toString())
+      assert.equal(E_LQTYBalance_After.toString(), A_LQTYBalance_After.div(toBN(2)).mul(toBN(2)).toString())
+      assert.equal(F_LQTYBalance_After.toString(), B_LQTYBalance_After.div(toBN(2)).toString()) 
     })
 
     it('test share with ether', async () => {
@@ -712,9 +721,9 @@ contract('BAMM', async accounts => {
       assert.equal(await bamm.balanceOf(B), dec(5, 17))
 
       await stabilityPool.withdrawFromSP(toBN(dec(5000, 18)), { from: C })
-      assert.equal(await lqtyToken.balanceOf(B), "0")
+      assert.equal(await pLqty.balanceOf(B), "0")
       await bamm.withdraw(0, {from: A})
-      assert.equal((await lqtyToken.balanceOf(A)).toString(), (await lqtyToken.balanceOf(C)).toString())
+      assert.equal((await pLqty.balanceOf(A)).toString(), (await lqtyToken.balanceOf(C)).div(toBN(2)).toString())
 
       // reset A's usd balance
       await lusdToken.transfer(C, await lusdToken.balanceOf(A), {from: A})
@@ -727,13 +736,15 @@ contract('BAMM', async accounts => {
       await stabilityPool.withdrawFromSP(toBN(dec(5000, 18)), { from: C })
       await stabilityPool.withdrawFromSP(toBN(dec(5000, 18)), { from: D })      
 
-      assert.equal((await lqtyToken.balanceOf(B)).toString(), (await lqtyToken.balanceOf(D)).toString())      
-      assert.equal((await lqtyToken.balanceOf(A)).toString(), (await lqtyToken.balanceOf(C)).toString())      
+      assert.equal((await pLqty.balanceOf(B)).toString(), (await lqtyToken.balanceOf(D)).div(toBN(2)).toString())      
+      assert.equal((await pLqty.balanceOf(A)).toString(), (await lqtyToken.balanceOf(C)).div(toBN(2)).toString())      
 
       assert.equal((await lusdToken.balanceOf(B)).toString(), dec(5000, 18))            
       assert.equal((await lusdToken.balanceOf(A)).toString(), dec(5000, 18))
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)      
+
+      // TODO check lqty now
     })    
 
     // tests:
