@@ -29,6 +29,12 @@ contract PBAMM is BAMM {
         require(IERC20(_LQTY).approve(_pickleJar, type(uint).max), "constructor: approve failed");
     }
 
+    // callable by anyone
+    function depositLqty() external {
+        SP.withdrawFromSP(0);
+        pickleJar.depositAll();
+    }
+    
     function mint(address to, uint value) override internal {
         pickleJar.depositAll();
         super.mint(to, value);
@@ -37,11 +43,5 @@ contract PBAMM is BAMM {
     function burn(address owner, uint value) override internal {        
         pickleJar.depositAll();
         super.burn(owner, value);
-    }
-
-    // callable by anyone
-    function depositLqty() external {
-        SP.withdrawFromSP(0);
-        pickleJar.depositAll();
     }
 }

@@ -14,7 +14,21 @@ contract CropJoinAdapter is CropJoin {
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
     constructor(address _lqty) public 
-    CropJoin(address(new Dummy()), "B.AMM", address(new DummyGem()), _lqty) {
+        CropJoin(address(new Dummy()), "B.AMM", address(new DummyGem()), _lqty)
+    {
+    }
+
+    // adapter to cropjoin
+    function nav() public override returns (uint256) {
+        return total;
+    }
+    
+    function totalSupply() public view returns (uint256) {
+        return total;
+    }
+
+    function balanceOf(address owner) public view returns (uint256 balance) {
+        balance = stake[owner];
     }
 
     function mint(address to, uint value) virtual internal {
@@ -25,19 +39,6 @@ contract CropJoinAdapter is CropJoin {
     function burn(address owner, uint value) virtual internal {
         exit(owner, value);
         emit Transfer(owner, address(0), value);        
-    }
-
-    function totalSupply() public view returns (uint256) {
-        return total;
-    }
-
-    function balanceOf(address owner) public view returns (uint256 balance) {
-        balance = stake[owner];
-    }
-
-    // adapter to cropjoin
-    function nav() public override returns (uint256) {
-        return total;
     }
 }
 
