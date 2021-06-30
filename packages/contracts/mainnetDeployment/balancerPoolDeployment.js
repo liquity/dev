@@ -34,22 +34,23 @@ const swapFeePercentage = toBigNum(dec(5, 15)); // 0.5%
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-const INITIAL_FUNDING = toBigNum(dec(5, 22)); // $50k
+const INITIAL_FUNDING = toBigNum(dec(15, 21)); // $15k
 
 async function main() {
   // Uncomment for testing:
   /*
-  const impersonateAddress = "0x787EfF01c9FdC1918d1AA6eeFf089B191e2922E4"
+  const impersonateAddress = "0x787EfF01c9FdC1918d1AA6eeFf089B191e2922E4";
   await hre.network.provider.request({
     method: "hardhat_impersonateAccount",
     params: [ impersonateAddress ]
-  })
-  const deployerWallet = await ethers.provider.getSigner(impersonateAddress)
-  const deployerWalletAddress = impersonateAddress
+  });
+  const deployerWallet = await ethers.provider.getSigner(impersonateAddress);
+  const deployerWalletAddress = impersonateAddress;
   */
 
-  const deployerWallet = (await ethers.getSigners())[0]
-  const deployerWalletAddress = deployerWallet.address
+  const deployerWallet = (await ethers.getSigners())[0];
+  const deployerWalletAddress = deployerWallet.address;
+  console.log('Deployer: ', deployerWalletAddress);
 
   const factory = new ethers.Contract(
     ORACLE_POOL_FACTORY,
@@ -66,23 +67,32 @@ async function main() {
     CHAINLINK_ETHUSD_PROXY,
     ChainlinkAggregatorV3Interface,
     deployerWallet
-  )
-
-  // ZERO_ADDRESS owner means fixed swap fees
-  // DELEGATE_OWNER grants permission to governance for dynamic fee management
-  // Any other address lets that address directly set the fees
-  const oracleEnabled = true;
-  const tx1 = await factory.create(
-    NAME, SYMBOL, tokens, weights,
-    swapFeePercentage, oracleEnabled,
-    DELEGATE_OWNER
   );
-  const receipt1 = await tx1.wait();
 
-  // We need to get the new pool address out of the PoolCreated event
-  // (Or just grab it from Etherscan)
-  const events = receipt1.events.filter((e) => e.event === 'PoolCreated');
-  const poolAddress = events[0].args.pool;
+  let poolAddress;
+  let receipt1;
+  if (process.env.POOL_ADDRESS) {
+    poolAddress = process.env.POOL_ADDRESS;
+    receipt1 = { gasUsed: toBigNum(0) };
+  } else {
+    // ZERO_ADDRESS owner means fixed swap fees
+    // DELEGATE_OWNER grants permission to governance for dynamic fee management
+    // Any other address lets that address directly set the fees
+    const oracleEnabled = true;
+    const tx1 = await factory.create(
+      NAME, SYMBOL, tokens, weights,
+      swapFeePercentage, oracleEnabled,
+      DELEGATE_OWNER
+    );
+    receipt1 = await tx1.wait();
+    console.log('Create Pool gas: ', receipt1.gasUsed.toString());
+
+    // We need to get the new pool address out of the PoolCreated event
+    // (Or just grab it from Etherscan)
+    const events = receipt1.events.filter((e) => e.event === 'PoolCreated');
+    poolAddress = events[0].args.pool;
+  }
+  console.log('Pool Address: ', poolAddress);
 
   // We're going to need the PoolId later, so ask the contract for it
   const pool = new ethers.Contract(
@@ -96,14 +106,14 @@ async function main() {
   const chainlinkPrice = await chainlinkProxy.latestAnswer();
   // chainlink price has only 8 decimals
   const eth_price = chainlinkPrice.mul(toBigNum(dec(1, 10)));
-  th.logBN('ETH price', eth_price)
+  th.logBN('ETH price', eth_price);
   // Tokens must be in the same order
   // Values must be decimal-normalized!
   const weth_balance = INITIAL_FUNDING.mul(weights[1]).div(eth_price);
   const lusd_balance = INITIAL_FUNDING.mul(weights[0]).div(toBigNum(dec(1, 18)));
   const initialBalances = [lusd_balance, weth_balance];
-  th.logBN('Initial LUSD', lusd_balance)
-  th.logBN('Initial WETH', weth_balance)
+  th.logBN('Initial LUSD', lusd_balance);
+  th.logBN('Initial WETH', weth_balance);
 
   const JOIN_KIND_INIT = 0;
 
@@ -116,7 +126,7 @@ async function main() {
     maxAmountsIn: initialBalances,
     userData: initUserData,
     fromInternalBalance: false
-  }
+  };
 
   // Caller is "you". joinPool takes a sender (source of initialBalances)
   // And a receiver (where BPT are sent). Normally, both are the caller.
@@ -129,30 +139,39 @@ async function main() {
     WETH,
     WETH_ABI.abi,
     deployerWallet
-  )
-  th.logBN('weth balance: ', await weth.balanceOf(deployerWalletAddress))
-  const currentWethBalance = await weth.balanceOf(deployerWalletAddress)
+  );
+  th.logBN('weth balance: ', await weth.balanceOf(deployerWalletAddress));
+  const currentWethBalance = await weth.balanceOf(deployerWalletAddress);
+  let depositWethReceipt;
   if (currentWethBalance.lt(weth_balance)) {
     const txDepositWeth = await weth.deposit({ value: weth_balance.sub(currentWethBalance) });
-    await txDepositWeth.wait()
+    depositWethReceipt = await txDepositWeth.wait();
+    console.log('WETH deposit gas: ', depositWethReceipt.gasUsed.toString());
   }
-  th.logBN('weth balance: ', await weth.balanceOf(deployerWalletAddress))
+  th.logBN('weth balance: ', await weth.balanceOf(deployerWalletAddress));
   const txApproveWeth = await weth.approve(VAULT, weth_balance);
-  await txApproveWeth.wait()
+  const approveWethReceipt = await txApproveWeth.wait();
+  console.log('Approve WETH gas: ', approveWethReceipt.gasUsed.toString());
+
+  // Approve LUSD
   const lusd = new ethers.Contract(
     LUSD,
     ERC20.abi,
     deployerWallet
-  )
+  );
   const txApproveLusd = await lusd.approve(VAULT, lusd_balance);
-  await txApproveLusd.wait()
+  const approveLusdReceipt = await txApproveLusd.wait();
+  console.log('Approve LUSD gas: ', approveLusdReceipt.gasUsed.toString());
 
   // joins and exits are done on the Vault, not the pool
   const tx2 = await vault.joinPool(poolId, deployerWalletAddress, deployerWalletAddress, joinPoolRequest);
   // You can wait for it like this, or just print the tx hash and monitor
   const receipt2 = await tx2.wait();
-  console.log('Final tx status:', receipt2.status)
-  th.logBN('Pool BPT tokens', await pool.totalSupply())
+  console.log('Final tx status:', receipt2.status);
+  console.log('Join Pool gas: ', receipt2.gasUsed.toString());
+  th.logBN('Pool BPT tokens', await pool.totalSupply());
+
+  console.log('Total gas: ', receipt1.gasUsed.add(depositWethReceipt.gasUsed).add(approveWethReceipt.gasUsed).add(approveLusdReceipt.gasUsed).add(receipt2.gasUsed).toString());
 }
 
 main()
