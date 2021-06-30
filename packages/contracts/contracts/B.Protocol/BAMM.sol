@@ -186,21 +186,21 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
 
     // kyber network reserve compatible function
     function trade(
-        IERC20 srcToken,
+        IERC20 /* srcToken */,
         uint256 srcAmount,
-        IERC20 destToken,
+        IERC20 /* destToken */,
         address payable destAddress,
-        uint256 conversionRate,
-        bool validate
+        uint256 /* conversionRate */,
+        bool /* validate */
     ) external payable returns (bool) {
         return swap(srcAmount, destAddress) > 0;
     }
 
     function getConversionRate(
-        IERC20 src,
-        IERC20 dest,
+        IERC20 /* src */,
+        IERC20 /* dest */,
         uint256 srcQty,
-        uint256 blockNumber
+        uint256 /* blockNumber */
     ) external view returns (uint256) {
         (uint ethQty, ) = getSwapEthAmount(srcQty);
         return ethQty.mul(PRECISION) / srcQty;

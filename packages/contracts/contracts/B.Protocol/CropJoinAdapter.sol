@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.11;
 
 import "./crop.sol";
@@ -40,7 +42,7 @@ contract CropJoinAdapter is CropJoin {
 }
 
 contract Dummy {
-    fallback() external payable {}
+    fallback() external {}
 }
 
 contract DummyGem is Dummy {
