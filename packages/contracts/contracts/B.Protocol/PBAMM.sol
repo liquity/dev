@@ -9,7 +9,7 @@ interface PickleJarLike {
 }
 
 contract PBAMM is BAMM {
-    PickleJarLike immutable pickleJar;
+    PickleJarLike public immutable pickleJar;
 
     constructor(
         address _priceAggregator,

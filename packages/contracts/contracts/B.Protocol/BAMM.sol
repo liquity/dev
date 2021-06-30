@@ -11,12 +11,13 @@ import "./../Dependencies/SafeMath.sol";
 import "./../Dependencies/Ownable.sol";
 import "./../Dependencies/AggregatorV3Interface.sol";
 
+
 contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public immutable priceAggregator;
     IERC20 public immutable LUSD;
-    StabilityPool immutable public SP;    
+    StabilityPool immutable public SP;
 
     address payable public immutable feePool;
     uint public constant MAX_FEE = 100; // 1%
@@ -29,7 +30,7 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
 
     address public immutable frontEndTag;
 
-    uint constant PRECISION = 1e18;
+    uint constant public PRECISION = 1e18;
 
     event ParamsSet(uint A, uint fee);
     event UserDeposit(address indexed user, uint lusdAmount, uint numShares);
@@ -219,5 +220,5 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
         return ethQty.mul(PRECISION) / srcQty;
     }
 
-    receive() external payable {}    
+    receive() external payable {}
 }

@@ -749,7 +749,8 @@ contract('BAMM', async accounts => {
     // 8. formula V
     // 9. lp token - transfer sad test
     // 11. pickle V
-    // 10. cleanups - compilation warnings. cropjoin - revoke changes and maybe make internal.
+    // 10. cleanups - compilation warnings. cropjoin - revoke changes and maybe make internal. V
+    // 12 - linter. events
   })
 })
 
