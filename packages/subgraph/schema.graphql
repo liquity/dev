@@ -16,7 +16,6 @@ type Global @entity {
 
   totalNumberOfLQTYStakes: Int!
   numberOfActiveLQTYStakes: Int!
-  totalLQTYTokensStaked: BigDecimal!
 
   "Total amount of LUSD paid as borrowing fees"
   totalBorrowingFeesPaid: BigDecimal!
@@ -56,6 +55,7 @@ type SystemState @entity {
 
   tokensInStabilityPool: BigDecimal!
   collSurplusPoolBalance: BigDecimal!
+  totalLQTYTokensStaked: BigDecimal!
 
   cause: Change @derivedFrom(field: "systemStateAfter")
 }
@@ -293,9 +293,9 @@ type LqtyStakeChange implements Change @entity {
   stake: LqtyStake!
   stakeOperation: LQTYStakeOperation!
 
-  amountBefore: BigDecimal!
-  amountChange: BigDecimal!
-  amountAfter: BigDecimal!
+  stakedAmountBefore: BigDecimal!
+  stakedAmountChange: BigDecimal!
+  stakedAmountAfter: BigDecimal!
 
   issuanceGain: BigDecimal!
   redemptionGain: BigDecimal!
