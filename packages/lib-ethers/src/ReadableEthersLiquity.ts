@@ -2,6 +2,7 @@ import { BlockTag } from "@ethersproject/abstract-provider";
 
 import {
   Decimal,
+  Decimalish,
   Fees,
   FrontendStatus,
   LiquityStore,
@@ -247,34 +248,95 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return activePool.add(defaultPool);
   }
 
+  async getWitdrawsSpShare(
+    withdrawAmount: Decimalish, // todo should be Decimalish
+  ): Promise<string> {
+    const address = _requireAddress(this.connection);
+    const { stabilityPool, bamm } = _getContracts(this.connection);
+
+    console.log(withdrawAmount)
+
+    const [
+      currentBammLUSD,
+      total,
+      stake
+    ] = await Promise.all([
+      stabilityPool.getCompoundedLUSDDeposit(bamm.address),
+      bamm.total(),
+      bamm.stake(address)
+    ]);
+    console.log({stake})
+        //  totalShare times witdrawLusd divide by totalLusd
+    const spShare = decimalify(total).mul(Decimal.from(withdrawAmount)).div(decimalify(currentBammLUSD)).toString()
+
+    return spShare
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getStabilityDeposit} */
   async getStabilityDeposit(
     address?: string,
     overrides?: EthersCallOverrides
   ): Promise<StabilityDeposit> {
     address ??= _requireAddress(this.connection);
-    const { stabilityPool } = _getContracts(this.connection);
+    const { stabilityPool, bamm } = _getContracts(this.connection);
 
     const [
       { frontEndTag, initialValue },
-      currentLUSD,
+      currentBammLUSD,
       collateralGain,
-      lqtyReward
+      lqtyReward,
+      total,
+      stake
     ] = await Promise.all([
       stabilityPool.deposits(address, { ...overrides }),
-      stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
+    // todo bamm.add, bamm.total, bamm.stake
+      stabilityPool.getCompoundedLUSDDeposit(bamm.address, { ...overrides }),
       stabilityPool.getDepositorETHGain(address, { ...overrides }),
-      stabilityPool.getDepositorLQTYGain(address, { ...overrides })
+      stabilityPool.getDepositorLQTYGain(address, { ...overrides }),
+      bamm.total({ ...overrides }),
+      bamm.stake(address, { ...overrides})
     ]);
+
+    // stake times lusd dived by total
+    const currentLUSD = decimalify(stake).mul(decimalify(currentBammLUSD)).div(decimalify(total))
 
     return new StabilityDeposit(
       decimalify(initialValue),
-      decimalify(currentLUSD),
+      currentLUSD,
       decimalify(collateralGain),
       decimalify(lqtyReward),
       frontEndTag
     );
   }
+
+  // /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getStabilityDeposit} */
+  // async getStabilityDeposit(
+  //   address?: string,
+  //   overrides?: EthersCallOverrides
+  // ): Promise<StabilityDeposit> {
+  //   address ??= _requireAddress(this.connection);
+  //   const { stabilityPool } = _getContracts(this.connection);
+
+  //   const [
+  //     { frontEndTag, initialValue },
+  //     currentLUSD,
+  //     collateralGain,
+  //     lqtyReward
+  //   ] = await Promise.all([
+  //     stabilityPool.deposits(address, { ...overrides }),
+  //     stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
+  //     stabilityPool.getDepositorETHGain(address, { ...overrides }),
+  //     stabilityPool.getDepositorLQTYGain(address, { ...overrides })
+  //   ]);
+
+  //   return new StabilityDeposit(
+  //     decimalify(initialValue),
+  //     decimalify(currentLUSD),
+  //     decimalify(collateralGain),
+  //     decimalify(lqtyReward),
+  //     frontEndTag
+  //   );
+  // }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingStabilityPoolLQTYReward} */
   async getRemainingStabilityPoolLQTYReward(overrides?: EthersCallOverrides): Promise<Decimal> {
@@ -609,6 +671,10 @@ class _BlockPolledReadableEthersLiquity
 
   async getTotal(overrides?: EthersCallOverrides): Promise<Trove> {
     return this._blockHit(overrides) ? this.store.state.total : this._readable.getTotal(overrides);
+  }
+
+  async getWitdrawsSpShare(withdrawAmount: Decimalish): Promise<string> {
+    return this._readable.getWitdrawsSpShare(withdrawAmount)
   }
 
   async getStabilityDeposit(

@@ -170,6 +170,7 @@ const connectContracts = async (
     priceFeed,
     sortedTroves,
     stabilityPool,
+    bamm,
     gasPool,
     unipool,
     uniToken

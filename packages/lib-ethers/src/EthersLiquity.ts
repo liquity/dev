@@ -205,6 +205,11 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getStabilityDeposit(address, overrides);
   }
 
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getWitdrawsSpShare} */
+  getWitdrawsSpShare(withdrawAmount: Decimalish): Promise<string> {
+    return this._readable.getWitdrawsSpShare(withdrawAmount);
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingStabilityPoolLQTYReward} */
   getRemainingStabilityPoolLQTYReward(overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getRemainingStabilityPoolLQTYReward(overrides);

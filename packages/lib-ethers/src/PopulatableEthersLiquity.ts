@@ -1066,22 +1066,41 @@ export class PopulatableEthersLiquity
     );
   }
 
+  // /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.depositLUSDInStabilityPool} */
+  // async depositLUSDInStabilityPool(
+  //   amount: Decimalish,
+  //   frontendTag?: string,
+  //   overrides?: EthersTransactionOverrides
+  // ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
+  //   const { stabilityPool } = _getContracts(this._readable.connection);
+  //   const depositLUSD = Decimal.from(amount);
+
+  //   return this._wrapStabilityDepositTopup(
+  //     { depositLUSD },
+  //     await stabilityPool.estimateAndPopulate.provideToSP(
+  //       { ...overrides },
+  //       addGasForLQTYIssuance,
+  //       depositLUSD.hex,
+  //       frontendTag ?? this._readable.connection.frontendTag ?? AddressZero
+  //     )
+  //   );
+  // }
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.depositLUSDInStabilityPool} */
   async depositLUSDInStabilityPool(
     amount: Decimalish,
     frontendTag?: string,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
-    const { stabilityPool } = _getContracts(this._readable.connection);
+    const { bamm } = _getContracts(this._readable.connection);
     const depositLUSD = Decimal.from(amount);
-
+    
     return this._wrapStabilityDepositTopup(
       { depositLUSD },
-      await stabilityPool.estimateAndPopulate.provideToSP(
+      await bamm.estimateAndPopulate.deposit(
         { ...overrides },
         addGasForLQTYIssuance,
-        depositLUSD.hex,
-        frontendTag ?? this._readable.connection.frontendTag ?? AddressZero
+        depositLUSD.hex
+        // frontendTag ?? this._readable.connection.frontendTag ?? AddressZero
       )
     );
   }
@@ -1091,16 +1110,33 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
-    const { stabilityPool } = _getContracts(this._readable.connection);
-
+    const { bamm } = _getContracts(this._readable.connection);
+    //  totalShare times witdrawLusd divide by totalLusd
+    const spShareToWithdraw = await this._readable.getWitdrawsSpShare(amount)
     return this._wrapStabilityDepositWithdrawal(
-      await stabilityPool.estimateAndPopulate.withdrawFromSP(
+      await bamm.estimateAndPopulate.withdraw(
         { ...overrides },
         addGasForLQTYIssuance,
-        Decimal.from(amount).hex
+        Decimal.from(spShareToWithdraw).hex
       )
     );
   }
+
+  // /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawLUSDFromStabilityPool} */
+  // async withdrawLUSDFromStabilityPool(
+  //   amount: Decimalish,
+  //   overrides?: EthersTransactionOverrides
+  // ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
+  //   const { stabilityPool } = _getContracts(this._readable.connection);
+
+  //   return this._wrapStabilityDepositWithdrawal(
+  //     await stabilityPool.estimateAndPopulate.withdrawFromSP(
+  //       { ...overrides },
+  //       addGasForLQTYIssuance,
+  //       Decimal.from(amount).hex
+  //     )
+  //   );
+  // }
 
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawGainsFromStabilityPool} */
   async withdrawGainsFromStabilityPool(
