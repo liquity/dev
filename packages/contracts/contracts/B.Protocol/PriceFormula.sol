@@ -23,7 +23,7 @@ contract PriceFormula {
             uint d = (A.mul(2).sub(1).mul(sum));
             sum = n / d.add(dP.mul(3));
 
-            if(sum <= prevSum.add(1) && prevSum.add(1) <= sum) break;
+            if(sum <= prevSum.add(1) && prevSum <= sum.add(1)) break;
         }
 
         return sum;

@@ -116,8 +116,12 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
 
         uint totalValue = lusdValue.add(ethValue.mul(price) / PRECISION);
 
+        // this is in theory not reachable. if it is, better halt deposits
+        // the condition is equivalent to: (totalValue = 0) ==> (total = 0)
+        require(totalValue > 0 || total == 0, "deposit: system is rekt");
+
         uint newShare = PRECISION;
-        if(totalValue > 0) newShare = total.mul(lusdAmount) / totalValue;
+        if(total > 0) newShare = total.mul(lusdAmount) / totalValue;
 
         // deposit
         require(LUSD.transferFrom(msg.sender, address(this), lusdAmount), "deposit: transferFrom failed");
@@ -184,8 +188,11 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
     }
 
     // get ETH in return to LUSD
-    function swap(uint lusdAmount, address payable dest) public payable returns(uint) {
+    function swap(uint lusdAmount, uint minEthReturn, address payable dest) public payable returns(uint) {
         (uint ethAmount, uint feeAmount) = getSwapEthAmount(lusdAmount);
+
+        require(ethAmount >= minEthReturn, "swap: low return");
+
         LUSD.transferFrom(msg.sender, address(this), lusdAmount);
         SP.provideToSP(lusdAmount, frontEndTag);
 
@@ -207,7 +214,7 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
         uint256 /* conversionRate */,
         bool /* validate */
     ) external payable returns (bool) {
-        return swap(srcAmount, destAddress) > 0;
+        return swap(srcAmount, 0, destAddress) > 0;
     }
 
     function getConversionRate(
