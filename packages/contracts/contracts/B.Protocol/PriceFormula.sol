@@ -44,7 +44,7 @@ contract PriceFormula {
             uint d = y.mul(2).add(b).sub(sum); 
             y = n / d;
 
-            if(y <= yPrev.add(1) && yPrev.add(1) <= y) break;
+            if(y <= yPrev.add(1) && yPrev <= y.add(1)) break;
         }
 
         return yBalance.sub(y).sub(1);

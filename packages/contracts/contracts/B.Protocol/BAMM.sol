@@ -188,7 +188,7 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
     }
 
     // get ETH in return to LUSD
-    function swap(uint lusdAmount, uint minEthReturn, address payable dest) public payable returns(uint) {
+    function swap(uint lusdAmount, uint minEthReturn, address payable dest) public returns(uint) {
         (uint ethAmount, uint feeAmount) = getSwapEthAmount(lusdAmount);
 
         require(ethAmount >= minEthReturn, "swap: low return");
