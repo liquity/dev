@@ -62,6 +62,8 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
 export interface BlockPolledLiquityStoreExtraState {
     blockTag?: number;
     blockTimestamp: number;
+    // (undocumented)
+    example: Decimal;
     // @internal (undocumented)
     _feesFactory: (blockTimestamp: number, recoveryMode: boolean) => Fees;
 }
@@ -131,6 +133,8 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // @internal (undocumented)
     _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove>;
+    // (undocumented)
+    getExample(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
     // @internal (undocumented)
@@ -466,6 +470,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // @internal (undocumented)
     _getDefaultPool(overrides?: EthersCallOverrides): Promise<Trove>;
+    // (undocumented)
+    getExample(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getFees(overrides?: EthersCallOverrides): Promise<Fees>;
     // @internal (undocumented)
