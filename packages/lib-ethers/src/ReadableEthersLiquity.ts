@@ -761,7 +761,9 @@ class _BlockPolledReadableEthersLiquity
     throw new Error("Method not implemented.");
   }
 
-  getExample(overrides?: EthersCallOverrides): Promise<Decimal> {
-    return this._readable.getExample(overrides);
+  async getExample(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._blockHit(overrides)
+      ? this.store.state.example
+      : this._readable.getExample(overrides);
   }
 }

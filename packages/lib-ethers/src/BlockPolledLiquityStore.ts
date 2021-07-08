@@ -38,6 +38,8 @@ export interface BlockPolledLiquityStoreExtraState {
 
   /** @internal */
   _feesFactory: (blockTimestamp: number, recoveryMode: boolean) => Fees;
+
+  example: Decimal;
 }
 
 /**
@@ -92,6 +94,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       blockTimestamp,
       _feesFactory,
       calculateRemainingLQTY,
+      example,
       ...baseState
     } = await promiseAllValues({
       blockTimestamp: this._readable._getBlockTimestamp(blockTag),
@@ -111,6 +114,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       remainingStabilityPoolLQTYReward: this._readable.getRemainingStabilityPoolLQTYReward({
         blockTag
       }),
+      example: this._readable.getExample({ blockTag }),
 
       frontend: frontendTag
         ? this._readable.getFrontendStatus(frontendTag, { blockTag })
@@ -171,7 +175,8 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       {
         blockTag,
         blockTimestamp,
-        _feesFactory
+        _feesFactory,
+        example
       }
     ];
   }
@@ -209,7 +214,15 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     return {
       blockTag: stateUpdate.blockTag ?? oldState.blockTag,
       blockTimestamp: stateUpdate.blockTimestamp ?? oldState.blockTimestamp,
-      _feesFactory: stateUpdate._feesFactory ?? oldState._feesFactory
+      _feesFactory: stateUpdate._feesFactory ?? oldState._feesFactory,
+
+      // useLiquitySelector triggers a re-render whenever selected state doesn't shallow-equal the
+      // previously selected state. For objects, perform class-specific comparison and return the
+      // "old" instance if they are equal.
+      example:
+        stateUpdate.example && !stateUpdate.example.eq(oldState.example)
+          ? stateUpdate.example
+          : oldState.example
     };
   }
 }
