@@ -506,6 +506,10 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       ? { status: "registered", kickbackRate: decimalify(kickbackRate) }
       : { status: "unregistered" };
   }
+
+  async getExample(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return Decimal.from(42);
+  }
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
@@ -755,5 +759,9 @@ class _BlockPolledReadableEthersLiquity
 
   _getRemainingLiquidityMiningLQTYRewardCalculator(): Promise<(blockTimestamp: number) => Decimal> {
     throw new Error("Method not implemented.");
+  }
+
+  getExample(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getExample(overrides);
   }
 }

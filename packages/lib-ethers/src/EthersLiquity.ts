@@ -312,6 +312,10 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getFrontendStatus(address, overrides);
   }
 
+  getExample(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getExample(overrides);
+  }
+
   /**
    * {@inheritDoc @liquity/lib-base#TransactableLiquity.openTrove}
    *
