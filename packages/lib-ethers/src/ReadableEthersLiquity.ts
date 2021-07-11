@@ -277,41 +277,60 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     address?: string,
     overrides?: EthersCallOverrides
   ): Promise<StabilityDeposit> {
+    const RAY = Decimal.from(10).pow(27)
+    const _1e18 = Decimal.from(10).pow(18)
     address ??= _requireAddress(this.connection);
-    const { stabilityPool, bamm } = _getContracts(this.connection);
-
+    const { stabilityPool, bamm, lqtyToken } = _getContracts(this.connection);
+    const bammLqtyBalancePromise = lqtyToken.balanceOf(bamm.address, { ...overrides})
+    
     const [
       { frontEndTag, initialValue },
       currentBammLUSD,
       collateralGain,
-      lqtyReward,
+      bammPendingLqtyReward, 
       total,
       stake,
       totalLusdInSp,
+      crops,
+      share,
+      stock,
     ] = await Promise.all([
       stabilityPool.deposits(address, { ...overrides }),
-    // todo bamm.add, bamm.total, bamm.stake
-      stabilityPool.getCompoundedLUSDDeposit(bamm.address, { ...overrides }),
+      stabilityPool.getCompoundedLUSDDeposit(bamm.address, { ...overrides }).then(decimalify),
       stabilityPool.getDepositorETHGain(address, { ...overrides }),
-      stabilityPool.getDepositorLQTYGain(address, { ...overrides }),
-      bamm.total({ ...overrides }),
-      bamm.stake(address, { ...overrides}),
-      this.getLUSDInStabilityPool({...overrides})
+      stabilityPool.getDepositorLQTYGain(bamm.address, { ...overrides }).then(decimalify),
+      bamm.total({ ...overrides }).then(decimalify),
+      bamm.stake(address, { ...overrides}).then(decimalify),
+      stabilityPool.getTotalLUSDDeposits({ ...overrides }).then(decimalify),
+      bamm.crops(address, { ...overrides }).then(decimalify),
+      bamm.share({ ...overrides }).then(decimalify),
+      bamm.stock({ ...overrides}).then(decimalify),
     ]);
 
+    const bammLqtyBalance = await bammLqtyBalancePromise.then(decimalify)
     // stake times lusd divided by total
-    const currentLUSD = decimalify(stake).mul(decimalify(currentBammLUSD)).div(decimalify(total))
+    const currentLUSD = stake.mul(currentBammLUSD).div(total)
     // stabilityDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
-    const bammShare = decimalify(currentBammLUSD).mulDiv(100, totalLusdInSp)
+    const bammShare = currentBammLUSD.mul(100).div(totalLusdInSp)
     // bamm share in SP times stake div by total
-    const poolShare = bammShare.mul(decimalify(stake)).div(decimalify(total))
+    const poolShare = bammShare.mul(stake).div(total)
 
+    // balance + pending - stock
+    let lqtyReward = Decimal.from(0)
+    if(total.gt(Decimal.from(0))){
+      const crop = bammLqtyBalance.add(bammPendingLqtyReward).sub(stock);
+      const updatedShare = share.add(crop.mul(RAY).mul(_1e18).div(total))
+      const updatedCrops = stake.mul(updatedShare).mul(_1e18).div(RAY)
+      if(updatedCrops.gt(crops)){
+        lqtyReward = updatedCrops.sub(crops)
+      }
+    }
     return new StabilityDeposit(
       poolShare,
       decimalify(initialValue),
       currentLUSD,
       decimalify(collateralGain),
-      decimalify(lqtyReward),
+      lqtyReward,
       frontEndTag
     );
   }
