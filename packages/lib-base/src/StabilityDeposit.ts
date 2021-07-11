@@ -15,6 +15,9 @@ export type StabilityDepositChange<T> =
  * @public
  */
 export class StabilityDeposit {
+  /** pool share of user in the BAMM wich has a share in the stability pool */
+  readonly poolShare: Decimal;
+
   /** Amount of LUSD in the Stability Deposit at the time of the last direct modification. */
   readonly initialLUSD: Decimal;
 
@@ -38,21 +41,20 @@ export class StabilityDeposit {
 
   /** @internal */
   constructor(
+    poolShare: Decimal,
     initialLUSD: Decimal,
     currentLUSD: Decimal,
     collateralGain: Decimal,
     lqtyReward: Decimal,
     frontendTag: string
   ) {
+    this.poolShare = poolShare;
     this.initialLUSD = initialLUSD;
     this.currentLUSD = currentLUSD;
     this.collateralGain = collateralGain;
     this.lqtyReward = lqtyReward;
     this.frontendTag = frontendTag;
 
-    if (this.currentLUSD.gt(this.initialLUSD)) {
-      throw new Error("currentLUSD can't be greater than initialLUSD");
-    }
   }
 
   get isEmpty(): boolean {

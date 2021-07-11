@@ -26,7 +26,7 @@ export const ActiveDeposit: React.FC = () => {
   const { dispatchEvent } = useStabilityView();
   const { stabilityDeposit, trove, lusdInStabilityPool } = useLiquitySelector(selector);
 
-  const poolShare = stabilityDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
+  const poolShare = stabilityDeposit.poolShare
 
   const handleAdjustDeposit = useCallback(() => {
     dispatchEvent("ADJUST_DEPOSIT_PRESSED");

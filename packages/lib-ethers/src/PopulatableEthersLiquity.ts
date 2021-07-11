@@ -1142,10 +1142,10 @@ export class PopulatableEthersLiquity
   async withdrawGainsFromStabilityPool(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>> {
-    const { stabilityPool } = _getContracts(this._readable.connection);
+    const { bamm } = _getContracts(this._readable.connection);
 
     return this._wrapStabilityPoolGainsWithdrawal(
-      await stabilityPool.estimateAndPopulate.withdrawFromSP(
+      await bamm.estimateAndPopulate.withdraw(
         { ...overrides },
         addGasForLQTYIssuance,
         Decimal.ZERO.hex

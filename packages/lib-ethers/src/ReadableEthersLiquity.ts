@@ -257,9 +257,9 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     console.log(withdrawAmount)
 
     const [
-      currentBammLUSD,
-      total,
-      stake
+      currentBammLUSD, 
+      total, // total amount of shares in the bamm
+      stake // users share in the bamm
     ] = await Promise.all([
       stabilityPool.getCompoundedLUSDDeposit(bamm.address),
       bamm.total(),
@@ -271,6 +271,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
 
     return spShare
   }
+
+  // bamm share in SP times stake div by total
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getStabilityDeposit} */
   async getStabilityDeposit(
@@ -286,7 +288,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       collateralGain,
       lqtyReward,
       total,
-      stake
+      stake,
+      totalLusdInSp,
     ] = await Promise.all([
       stabilityPool.deposits(address, { ...overrides }),
     // todo bamm.add, bamm.total, bamm.stake
@@ -294,13 +297,20 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       stabilityPool.getDepositorETHGain(address, { ...overrides }),
       stabilityPool.getDepositorLQTYGain(address, { ...overrides }),
       bamm.total({ ...overrides }),
-      bamm.stake(address, { ...overrides})
+      bamm.stake(address, { ...overrides}),
+      this.getLUSDInStabilityPool({...overrides})
     ]);
 
-    // stake times lusd dived by total
+    // stake times lusd divided by total
     const currentLUSD = decimalify(stake).mul(decimalify(currentBammLUSD)).div(decimalify(total))
+    
+    // stabilityDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
+    const bammShare = decimalify(currentBammLUSD).mulDiv(100, totalLusdInSp)
+    // bamm share in SP times stake div by total
+    const poolShare = bammShare.mul(decimalify(stake)).div(decimalify(total))
 
     return new StabilityDeposit(
+      poolShare,
       decimalify(initialValue),
       currentLUSD,
       decimalify(collateralGain),
