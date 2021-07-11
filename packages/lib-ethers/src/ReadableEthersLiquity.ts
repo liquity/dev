@@ -272,8 +272,6 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return spShare
   }
 
-  // bamm share in SP times stake div by total
-
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getStabilityDeposit} */
   async getStabilityDeposit(
     address?: string,
@@ -303,7 +301,6 @@ export class ReadableEthersLiquity implements ReadableLiquity {
 
     // stake times lusd divided by total
     const currentLUSD = decimalify(stake).mul(decimalify(currentBammLUSD)).div(decimalify(total))
-    
     // stabilityDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
     const bammShare = decimalify(currentBammLUSD).mulDiv(100, totalLusdInSp)
     // bamm share in SP times stake div by total
