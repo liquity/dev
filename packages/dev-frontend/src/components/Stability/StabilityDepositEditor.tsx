@@ -83,29 +83,29 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
         />
 
-        {newPoolShare.infinite ? (
-          <StaticRow label="Pool share" inputId="deposit-share" amount="N/A" />
-        ) : (
-          <StaticRow
-            label="Pool share"
-            inputId="deposit-share"
-            amount={newPoolShare.prettify(4)}
-            pendingAmount={poolShareChange?.prettify(4).concat("%")}
-            pendingColor={poolShareChange?.positive ? "success" : "danger"}
-            unit="%"
-          />
-        )}
-
         {!originalDeposit.isEmpty && (
           <>
             <StaticRow
-              label="Liquidation gain"
+              label="my BAMM share"
               inputId="deposit-gain"
               amount={originalDeposit.collateralGain.prettify(4)}
               color={originalDeposit.collateralGain.nonZero && "success"}
               unit="ETH"
             />
 
+          {newPoolShare.infinite ? (
+            <StaticRow label="Pool share" inputId="deposit-share" amount="N/A" />
+          ) : (
+            <StaticRow
+              label="Pool share"
+              inputId="deposit-share"
+              amount={newPoolShare.prettify(4)}
+              pendingAmount={poolShareChange?.prettify(4).concat("%")}
+              pendingColor={poolShareChange?.positive ? "success" : "danger"}
+              unit="%"
+            />
+          )}
+          
             <StaticRow
               label="Reward"
               inputId="deposit-reward"

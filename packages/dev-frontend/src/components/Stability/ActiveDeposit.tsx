@@ -68,18 +68,18 @@ export const ActiveDeposit: React.FC = () => {
           />
 
           <StaticRow
-            label="Pool share"
-            inputId="deposit-share"
-            amount={poolShare.prettify(4)}
-            unit="%"
-          />
-
-          <StaticRow
             label="my BAMM share"
             inputId="deposit-gain"
             amount={stabilityDeposit.collateralGain.prettify(4)}
             color={stabilityDeposit.collateralGain.nonZero && "success"}
             unit="ETH"
+          />
+
+          <StaticRow
+            label="Pool share"
+            inputId="deposit-share"
+            amount={poolShare.prettify(4)}
+            unit="%"
           />
 
           <Flex sx={{ alignItems: "center" }}>
