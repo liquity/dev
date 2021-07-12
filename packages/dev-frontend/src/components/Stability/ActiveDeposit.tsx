@@ -75,7 +75,7 @@ export const ActiveDeposit: React.FC = () => {
           />
 
           <StaticRow
-            label="BAMM ETH"
+            label="my BAMM share"
             inputId="deposit-gain"
             amount={stabilityDeposit.collateralGain.prettify(4)}
             color={stabilityDeposit.collateralGain.nonZero && "success"}
