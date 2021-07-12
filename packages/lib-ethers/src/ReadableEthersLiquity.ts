@@ -282,11 +282,12 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     address ??= _requireAddress(this.connection);
     const { stabilityPool, bamm, lqtyToken } = _getContracts(this.connection);
     const bammLqtyBalancePromise = lqtyToken.balanceOf(bamm.address, { ...overrides})
-    
+    const bammEthBalancePromise = bamm.provider.getBalance(bamm.address)
+
     const [
       { frontEndTag, initialValue },
       currentBammLUSD,
-      collateralGain,
+      bammPendingEth,
       bammPendingLqtyReward, 
       total,
       stake,
@@ -297,7 +298,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     ] = await Promise.all([
       stabilityPool.deposits(address, { ...overrides }),
       stabilityPool.getCompoundedLUSDDeposit(bamm.address, { ...overrides }).then(decimalify),
-      stabilityPool.getDepositorETHGain(address, { ...overrides }),
+      stabilityPool.getDepositorETHGain(bamm.address, { ...overrides }).then(decimalify),
       stabilityPool.getDepositorLQTYGain(bamm.address, { ...overrides }).then(decimalify),
       bamm.total({ ...overrides }).then(decimalify),
       bamm.stake(address, { ...overrides}).then(decimalify),
@@ -315,12 +316,29 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     // bamm share in SP times stake div by total
     const poolShare = bammShare.mul(stake).div(total)
 
+    const bammEthBalance = await bammEthBalancePromise.then(decimalify)
+    const currentETH = stake.mul(bammEthBalance.add(bammPendingEth)).div(total)
+
     // balance + pending - stock
     let lqtyReward = Decimal.from(0)
     if(total.gt(Decimal.from(0))){
       const crop = bammLqtyBalance.add(bammPendingLqtyReward).sub(stock);
       const updatedShare = share.add(crop.mul(RAY).mul(_1e18).div(total))
       const updatedCrops = stake.mul(updatedShare).mul(_1e18).div(RAY)
+      console.log(
+        JSON.stringify({
+          bammLqtyBalance: bammLqtyBalance.toString(),
+          bammPendingLqtyReward: bammPendingLqtyReward.toString(),
+          stock: stock.toString(),
+          crop: crop.toString(),
+          share: share.toString(),
+          RAY: RAY.toString(),
+          total: total.toString(),
+          updatedShare: updatedShare.toString(),
+          stake: stake.toString(),
+          updatedCrops: updatedCrops.toString(),
+        }, null, 2)
+      )
       if(updatedCrops.gt(crops)){
         lqtyReward = updatedCrops.sub(crops)
       }
@@ -329,7 +347,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       poolShare,
       decimalify(initialValue),
       currentLUSD,
-      decimalify(collateralGain),
+      currentETH,
       lqtyReward,
       frontEndTag
     );
