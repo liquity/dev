@@ -116,9 +116,6 @@ export const ActiveDeposit: React.FC = () => {
           <ClaimRewards disabled={!hasGain && !hasReward}>Claim ETH and LQTY</ClaimRewards>
         </Flex>
 
-        {hasTrove && (
-          <ClaimAndMove disabled={!hasGain}>Claim LQTY and move ETH to Trove</ClaimAndMove>
-        )}
       </Box>
 
       {isWaitingForTransaction && <LoadingOverlay />}
