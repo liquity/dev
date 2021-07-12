@@ -4,6 +4,8 @@
 
 ```ts
 
+import { BigNumber } from '@ethersproject/bignumber';
+
 // @internal (undocumented)
 export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiquityWithExtraParams<T> {
     constructor(readable: _ReadableLiquityWithExtraParams<T>, cache: _LiquityReadCache<T>);
@@ -102,6 +104,8 @@ export class Decimal {
     // (undocumented)
     static from(decimalish: Decimalish): Decimal;
     // (undocumented)
+    static fromBigNumber(bigNumber: BigNumber): Decimal;
+    // (undocumented)
     static fromBigNumberString(bigNumberString: string): Decimal;
     // (undocumented)
     gt(that: Decimalish): boolean;
@@ -137,6 +141,8 @@ export class Decimal {
     pow(exponent: number): Decimal;
     // (undocumented)
     prettify(precision?: number): string;
+    // (undocumented)
+    rawDivision(divider: Decimalish): Decimal;
     // (undocumented)
     shorten(): string;
     // (undocumented)

@@ -1,4 +1,5 @@
 import { BlockTag } from "@ethersproject/abstract-provider";
+import { BigNumber } from "@ethersproject/bignumber";
 
 import {
   Decimal,
@@ -277,8 +278,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     address?: string,
     overrides?: EthersCallOverrides
   ): Promise<StabilityDeposit> {
-    const RAY = Decimal.from(10).pow(27)
-    const _1e18 = Decimal.from(10).pow(18)
+    const RAY = BigNumber.from(10).pow(27)
+    const _1e18 = BigNumber.from(10).pow(18)
     address ??= _requireAddress(this.connection);
     const { stabilityPool, bamm, lqtyToken } = _getContracts(this.connection);
     const bammLqtyBalancePromise = lqtyToken.balanceOf(bamm.address, { ...overrides})
@@ -297,34 +298,34 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       stock,
     ] = await Promise.all([
       stabilityPool.deposits(address, { ...overrides }),
-      stabilityPool.getCompoundedLUSDDeposit(bamm.address, { ...overrides }).then(decimalify),
-      stabilityPool.getDepositorETHGain(bamm.address, { ...overrides }).then(decimalify),
-      stabilityPool.getDepositorLQTYGain(bamm.address, { ...overrides }).then(decimalify),
-      bamm.total({ ...overrides }).then(decimalify),
-      bamm.stake(address, { ...overrides}).then(decimalify),
-      stabilityPool.getTotalLUSDDeposits({ ...overrides }).then(decimalify),
-      bamm.crops(address, { ...overrides }).then(decimalify),
-      bamm.share({ ...overrides }).then(decimalify),
-      bamm.stock({ ...overrides}).then(decimalify),
+      stabilityPool.getCompoundedLUSDDeposit(bamm.address, { ...overrides }),
+      stabilityPool.getDepositorETHGain(bamm.address, { ...overrides }),
+      stabilityPool.getDepositorLQTYGain(bamm.address, { ...overrides }),
+      bamm.total({ ...overrides }),
+      bamm.stake(address, { ...overrides}),
+      stabilityPool.getTotalLUSDDeposits({ ...overrides }),
+      bamm.crops(address, { ...overrides }),
+      bamm.share({ ...overrides }),
+      bamm.stock({ ...overrides}),
     ]);
 
-    const bammLqtyBalance = await bammLqtyBalancePromise.then(decimalify)
+    const bammLqtyBalance = await bammLqtyBalancePromise
     // stake times lusd divided by total
     const currentLUSD = stake.mul(currentBammLUSD).div(total)
     // stabilityDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
-    const bammShare = currentBammLUSD.mul(100).div(totalLusdInSp)
+    const bammShare = Decimal.fromBigNumber(currentBammLUSD).mul(100).div(Decimal.fromBigNumber(totalLusdInSp))
     // bamm share in SP times stake div by total
-    const poolShare = bammShare.mul(stake).div(total)
+    const poolShare = bammShare.mul(Decimal.fromBigNumber(stake)).div(Decimal.fromBigNumber(total))
 
-    const bammEthBalance = await bammEthBalancePromise.then(decimalify)
-    const currentETH = stake.mul(bammEthBalance.add(bammPendingEth)).div(total)
+    const bammEthBalance = await bammEthBalancePromise
+    const currentETH = (stake.mul(bammEthBalance.add(bammPendingEth))).div(total)
 
     // balance + pending - stock
-    let lqtyReward = Decimal.from(0)
-    if(total.gt(Decimal.from(0))){
+    let lqtyReward = BigNumber.from(0)
+    if(total.gt(BigNumber.from(0))){
       const crop = bammLqtyBalance.add(bammPendingLqtyReward).sub(stock);
-      const updatedShare = share.add(crop.mul(RAY).mul(_1e18).div(total))
-      const updatedCrops = stake.mul(updatedShare).mul(_1e18).div(RAY)
+      const updatedShare = share.add(crop.mul(RAY).div(total))
+      const updatedCrops = stake.mul(updatedShare).div(RAY)
       console.log(
         JSON.stringify({
           bammLqtyBalance: bammLqtyBalance.toString(),
@@ -346,9 +347,9 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return new StabilityDeposit(
       poolShare,
       decimalify(initialValue),
-      currentLUSD,
-      currentETH,
-      lqtyReward,
+      Decimal.fromBigNumber(currentLUSD),
+      Decimal.fromBigNumber(currentETH),
+      Decimal.fromBigNumber(lqtyReward),
       frontEndTag
     );
   }
