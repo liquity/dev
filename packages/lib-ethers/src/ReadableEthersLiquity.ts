@@ -280,10 +280,11 @@ export class ReadableEthersLiquity implements ReadableLiquity {
   ): Promise<StabilityDeposit> {
     const RAY = BigNumber.from(10).pow(27)
     const _1e18 = BigNumber.from(10).pow(18)
+    const reallyLargeAllowance = BigNumber.from("0x8888888888888888888888888888888888888888888888888888888888888888")
+
     address ??= _requireAddress(this.connection);
-    const { stabilityPool, bamm, lqtyToken } = _getContracts(this.connection);
+    const { stabilityPool, bamm, lqtyToken, lusdToken } = _getContracts(this.connection);
     const bammLqtyBalancePromise = lqtyToken.balanceOf(bamm.address, { ...overrides})
-    const bammEthBalancePromise = bamm.provider.getBalance(bamm.address)
 
     const [
       { frontEndTag, initialValue },
@@ -317,7 +318,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     // bamm share in SP times stake div by total
     const poolShare = bammShare.mul(Decimal.fromBigNumber(stake)).div(Decimal.fromBigNumber(total))
 
-    const bammEthBalance = await bammEthBalancePromise
+    const bammEthBalance = await bamm.provider.getBalance(bamm.address)
     const currentETH = (stake.mul(bammEthBalance.add(bammPendingEth))).div(total)
 
     // balance + pending - stock
@@ -344,13 +345,18 @@ export class ReadableEthersLiquity implements ReadableLiquity {
         lqtyReward = updatedCrops.sub(crops)
       }
     }
+
+    const allowance = await lusdToken.allowance(address, bamm.address)
+    console.log({allowance})
+    const bammAllowance = allowance.gt(reallyLargeAllowance)
     return new StabilityDeposit(
       poolShare,
       decimalify(initialValue),
       Decimal.fromBigNumber(currentLUSD),
       Decimal.fromBigNumber(currentETH),
       Decimal.fromBigNumber(lqtyReward),
-      frontEndTag
+      frontEndTag,
+      bammAllowance
     );
   }
 

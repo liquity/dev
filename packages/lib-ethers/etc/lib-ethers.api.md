@@ -337,6 +337,8 @@ export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransa
     // (undocumented)
     approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
+    bammUnlock(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction>;
+    // (undocumented)
     borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
@@ -541,6 +543,8 @@ export class SendableEthersLiquity implements SendableLiquity<EthersTransactionR
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    bammUnlock(overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction>;
     // (undocumented)
     borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)

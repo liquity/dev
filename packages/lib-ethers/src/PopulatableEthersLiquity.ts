@@ -82,6 +82,8 @@ const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(50000);
 
 const addGasForUnipoolRewardUpdate = (gas: BigNumber) => gas.add(20000);
 
+const simpleAddGas = (gas: BigNumber) => gas.add(1000);
+
 // To get the best entropy available, we'd do something like:
 //
 // const bigRandomNumber = () =>
@@ -1137,6 +1139,23 @@ export class PopulatableEthersLiquity
   //     )
   //   );
   // }
+
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.bammUnlock} */
+  async bammUnlock(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersLiquityTransaction> {
+    const { bamm, lusdToken } = _getContracts(this._readable.connection);
+    const maxAllowance = BigNumber.from("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+
+    return this._wrapSimpleTransaction(
+      await lusdToken.estimateAndPopulate.approve(
+        { ...overrides },
+        simpleAddGas,
+        bamm.address,
+        maxAllowance
+      )
+    );
+  }
 
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawGainsFromStabilityPool} */
   async withdrawGainsFromStabilityPool(

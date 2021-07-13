@@ -39,6 +39,8 @@ export class StabilityDeposit {
    */
   readonly frontendTag: string;
 
+  readonly bammAllowance: boolean;
+
   /** @internal */
   constructor(
     poolShare: Decimal,
@@ -46,7 +48,8 @@ export class StabilityDeposit {
     currentLUSD: Decimal,
     collateralGain: Decimal,
     lqtyReward: Decimal,
-    frontendTag: string
+    frontendTag: string, 
+    bammAllowance: boolean
   ) {
     this.poolShare = poolShare;
     this.initialLUSD = initialLUSD;
@@ -54,6 +57,7 @@ export class StabilityDeposit {
     this.collateralGain = collateralGain;
     this.lqtyReward = lqtyReward;
     this.frontendTag = frontendTag;
+    this.bammAllowance = bammAllowance;
 
   }
 
