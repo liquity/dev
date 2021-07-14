@@ -156,6 +156,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
               Decimal.ZERO,
               Decimal.ZERO,
               Decimal.ZERO,
+              Decimal.ZERO,
               AddressZero,
               false
             ),

@@ -26,7 +26,7 @@ export const ActiveDeposit: React.FC = () => {
   const { dispatchEvent } = useStabilityView();
   const { stabilityDeposit, trove, lusdInStabilityPool } = useLiquitySelector(selector);
 
-  const poolShare = stabilityDeposit.poolShare
+  const {poolShare, bammPoolShare} = stabilityDeposit
 
   const handleAdjustDeposit = useCallback(() => {
     dispatchEvent("ADJUST_DEPOSIT_PRESSED");
@@ -68,7 +68,7 @@ export const ActiveDeposit: React.FC = () => {
           />
 
           <StaticRow
-            label="my BAMM share"
+            label="my share in ETH"
             inputId="deposit-gain"
             amount={stabilityDeposit.collateralGain.prettify(4)}
             color={stabilityDeposit.collateralGain.nonZero && "success"}
@@ -79,6 +79,13 @@ export const ActiveDeposit: React.FC = () => {
             label="Pool share"
             inputId="deposit-share"
             amount={poolShare.prettify(4)}
+            unit="%"
+          />
+
+          <StaticRow
+            label="BAMM Pool share"
+            inputId="deposit-share"
+            amount={bammPoolShare.prettify(4)}
             unit="%"
           />
 

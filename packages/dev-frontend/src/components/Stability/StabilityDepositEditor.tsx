@@ -18,9 +18,10 @@ import { EditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { InfoIcon } from "../InfoIcon";
 
-const select = ({ lusdBalance, lusdInStabilityPool }: LiquityStoreState) => ({
+const select = ({ lusdBalance, lusdInStabilityPool, stabilityDeposit }: LiquityStoreState) => ({
   lusdBalance,
-  lusdInStabilityPool
+  lusdInStabilityPool,
+  stabilityDeposit
 });
 
 type StabilityDepositEditorProps = {
@@ -30,6 +31,8 @@ type StabilityDepositEditorProps = {
   dispatch: (action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }) => void;
 };
 
+const selectPrice = ({ price }: LiquityStoreState) => price;
+
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   originalDeposit,
   editedLUSD,
@@ -37,8 +40,9 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   dispatch,
   children
 }) => {
-  const { lusdBalance, lusdInStabilityPool } = useLiquitySelector(select);
+  const { lusdBalance, lusdInStabilityPool, stabilityDeposit } = useLiquitySelector(select);
   const editingState = useState<string>();
+  const price = useLiquitySelector(selectPrice);
 
   const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
 
@@ -55,6 +59,18 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
     originalDeposit.currentLUSD.nonZero &&
     Difference.between(newPoolShare, originalPoolShare).nonZero;
 
+  const {bammPoolShare, collateralGain} = stabilityDeposit;
+
+  const userTotalUsdInBamm = (originalDeposit.currentLUSD.add(collateralGain.mul(price)))
+  const totalLusdInBamm = userTotalUsdInBamm.mulDiv(100, bammPoolShare);
+  const editedUserLusd = userTotalUsdInBamm.sub(originalDeposit.currentLUSD).add(editedLUSD);
+  const editedTotalLusd = totalLusdInBamm.sub(originalDeposit.currentLUSD).add(editedLUSD);
+  const editedBammPoolShare = editedUserLusd.mulDiv(100, editedTotalLusd)
+
+  const bammPoolShareChange =
+    originalDeposit.currentLUSD.nonZero &&
+    Difference.between(editedBammPoolShare, bammPoolShare).nonZero;
+ 
   return (
     <Card>
       <Heading>
@@ -86,7 +102,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         {!originalDeposit.isEmpty && (
           <>
             <StaticRow
-              label="my BAMM share"
+              label="my share in ETH"
               inputId="deposit-gain"
               amount={originalDeposit.collateralGain.prettify(4)}
               color={originalDeposit.collateralGain.nonZero && "success"}
@@ -102,6 +118,19 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
               amount={newPoolShare.prettify(4)}
               pendingAmount={poolShareChange?.prettify(4).concat("%")}
               pendingColor={poolShareChange?.positive ? "success" : "danger"}
+              unit="%"
+            />
+          )}
+
+          {bammPoolShare.infinite ? (
+            <StaticRow label="Pool share" inputId="deposit-share" amount="N/A" />
+          ) : (
+            <StaticRow
+              label="BAMM Pool share"
+              inputId="deposit-share"
+              amount={editedBammPoolShare.prettify(4)}
+              pendingAmount={bammPoolShareChange?.prettify(4).concat("%")}
+              pendingColor={bammPoolShareChange?.positive ? "success" : "danger"}
               unit="%"
             />
           )}

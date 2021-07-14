@@ -16,6 +16,9 @@ export type StabilityDepositChange<T> =
  */
 export class StabilityDeposit {
   /** pool share of user in the BAMM wich has a share in the stability pool */
+  readonly bammPoolShare: Decimal;
+
+  /** pool share of user in the BAMM wich has a share in the stability pool */
   readonly poolShare: Decimal;
 
   /** Amount of LUSD in the Stability Deposit at the time of the last direct modification. */
@@ -43,6 +46,7 @@ export class StabilityDeposit {
 
   /** @internal */
   constructor(
+    bammPoolShare: Decimal,
     poolShare: Decimal,
     initialLUSD: Decimal,
     currentLUSD: Decimal,
@@ -51,6 +55,7 @@ export class StabilityDeposit {
     frontendTag: string, 
     bammAllowance: boolean
   ) {
+    this.bammPoolShare = bammPoolShare;
     this.poolShare = poolShare;
     this.initialLUSD = initialLUSD;
     this.currentLUSD = currentLUSD;

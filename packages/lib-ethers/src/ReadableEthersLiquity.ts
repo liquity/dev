@@ -321,6 +321,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     const bammEthBalance = await bamm.provider.getBalance(bamm.address)
     const currentETH = (stake.mul(bammEthBalance.add(bammPendingEth))).div(total)
 
+    const bammPoolShare = Decimal.fromBigNumber(stake).mulDiv(100, Decimal.fromBigNumber(total))
     // balance + pending - stock
     let lqtyReward = BigNumber.from(0)
     if(total.gt(BigNumber.from(0))){
@@ -350,6 +351,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     console.log({allowance})
     const bammAllowance = allowance.gt(reallyLargeAllowance)
     return new StabilityDeposit(
+      bammPoolShare,
       poolShare,
       decimalify(initialValue),
       Decimal.fromBigNumber(currentLUSD),
