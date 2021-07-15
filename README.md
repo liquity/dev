@@ -135,7 +135,8 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
   - [Next steps for hosting a frontend](#next-steps-for-hosting-dev-ui)
     - [Example 1: using static website hosting](#example-1-using-static-website-hosting)
     - [Example 2: wrapping the frontend container in HTTPS](#example-2-wrapping-the-dev-ui-container-in-https)
-
+- [Known Issues](#known-issues)
+- [Disclaimer](#disclaimer)
 
 ## Liquity Overview
 
