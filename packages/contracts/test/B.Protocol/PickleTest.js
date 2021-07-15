@@ -10,6 +10,7 @@ const TroveManagerTester = artifacts.require("TroveManagerTester")
 const LUSDToken = artifacts.require("LUSDToken")
 const NonPayable = artifacts.require('NonPayable.sol')
 const BAMM = artifacts.require("PBAMM.sol")
+const BLens = artifacts.require("BLens.sol")
 const EIP20 = artifacts.require("EIP20.sol")
 const Pickle = artifacts.require("PickleJar.sol")
 const ChainlinkTestnet = artifacts.require("ChainlinkTestnet.sol")
@@ -107,6 +108,7 @@ contract('Pickle', async accounts => {
       pJar = await Pickle.new(lqtyToken.address, pLqty.address)
       bamm = await BAMM.new(chainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, frontEnd_1,
                             pLqty.address, pJar.address, {from: bammOwner})
+      lens = await BLens.new()                            
     })
 
     // --- provideToSP() ---
@@ -257,6 +259,9 @@ contract('Pickle', async accounts => {
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
+      const expectdDLqtyDelta = await lens.getUnclaimedLqty.call(D, bamm.address, pLqty.address)
+      const expectdELqtyDelta = await lens.getUnclaimedLqty.call(E, bamm.address, pLqty.address)
+
       await stabilityPool.withdrawFromSP(0, { from: F })
       await bamm.withdraw(0, { from: D })
       await bamm.withdraw(0, { from: E })      
@@ -269,6 +274,9 @@ contract('Pickle', async accounts => {
       assert((await lqtyToken.balanceOf(frontEnd_1)).gt(toBN(0)))
       assert((await pLqty.balanceOf(D)).gt(toBN(0)))
       assert((await pLqty.balanceOf(E)).gt(toBN(0)))      
+
+      assert.equal(D_LQTYBalance_After.sub(D_LQTYBalance_Before).toString(), expectdDLqtyDelta.toString())
+      assert.equal(E_LQTYBalance_After.sub(E_LQTYBalance_Before).toString(), expectdELqtyDelta.toString())      
 
       assert.equal(D_LQTYBalance_After.add(E_LQTYBalance_After).toString(), F_LQTYBalance_After.div(toBN(2)).toString())
     })

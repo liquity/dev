@@ -10,6 +10,7 @@ const TroveManagerTester = artifacts.require("TroveManagerTester")
 const LUSDToken = artifacts.require("LUSDToken")
 const NonPayable = artifacts.require('NonPayable.sol')
 const BAMM = artifacts.require("BAMM.sol")
+const BLens = artifacts.require("BLens.sol")
 const ChainlinkTestnet = artifacts.require("ChainlinkTestnet.sol")
 
 const ZERO = toBN('0')
@@ -43,6 +44,7 @@ contract('BAMM', async accounts => {
   let activePool
   let stabilityPool
   let bamm
+  let lens
   let chainlink
   let defaultPool
   let borrowerOperations
@@ -100,6 +102,7 @@ contract('BAMM', async accounts => {
       await stabilityPool.registerFrontEnd(kickbackRate_F1, { from: frontEnd_1 })
 
       bamm = await BAMM.new(chainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, frontEnd_1, {from: bammOwner})
+      lens = await BLens.new()
     })
 
     // --- provideToSP() ---
@@ -250,6 +253,9 @@ contract('BAMM', async accounts => {
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
+      const expectdDLqtyDelta = await lens.getUnclaimedLqty.call(D, bamm.address, lqtyToken.address)
+      const expectdELqtyDelta = await lens.getUnclaimedLqty.call(E, bamm.address, lqtyToken.address)
+
       await stabilityPool.withdrawFromSP(0, { from: F })
       await bamm.withdraw(0, { from: D })
       await bamm.withdraw(0, { from: E })      
@@ -260,6 +266,8 @@ contract('BAMM', async accounts => {
       const F_LQTYBalance_After = await lqtyToken.balanceOf(F)
 
       assert((await lqtyToken.balanceOf(frontEnd_1)).gt(toBN(0)))
+      assert.equal(D_LQTYBalance_After.sub(D_LQTYBalance_Before).toString(), expectdDLqtyDelta.toString())
+      assert.equal(E_LQTYBalance_After.sub(E_LQTYBalance_Before).toString(), expectdELqtyDelta.toString())      
 
       assert.equal(D_LQTYBalance_After.add(E_LQTYBalance_After).toString(), F_LQTYBalance_After.toString())
     })
