@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from "react";
-import { Card, Heading, Box, Flex, Button } from "theme-ui";
+import { Card, Heading, Box, Flex, Button, Container, Close, Paragraph } from "theme-ui";
 import { InfoMessage } from "../InfoMessage";
 import { useStabilityView } from "./context/StabilityViewContext";
 import { RemainingLQTY } from "./RemainingLQTY";
@@ -19,11 +19,52 @@ const selector = ({ stabilityDeposit }: LiquityStoreState) => ({
   stabilityDeposit
 });
 
+interface BammAllowanceModalProps {
+  sendTransaction: any,
+  close: any,
+}
+
+const BammAllowanceModal: React.FC<BammAllowanceModalProps> = props => {
+  return (
+    <div style={{
+      position: "fixed",
+      width: "100%",
+      height: "100%",
+      top: 0,
+      left: 0,
+      backgroundColor: "rgba(0, 0, 0, 0.7)",
+      zIndex: 2,
+      overflow: "hidden",
+    }}>
+      <Flex sx={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center" }}>
+          <Card sx={{ width: "33%", height: "300px"}}>
+          <Heading>
+            Unlock BAMM
+          <Flex sx={{ justifyContent: "flex-end" }}>
+            <Close sx={{cursor: "pointer"}} onClick={props.close}/>
+          </Flex>
+          </Heading>
+          <Box sx={{ p: [2, 3]}}>
+            <Flex sx={{"flexDirection": "column", justifyContent: "space-around", height: "240px"}}>
+              <Paragraph>
+                in order to deposit LUSD and gain LQTY & BPRO
+                you will need to unlock the BAMM smart contract
+              </Paragraph>
+              <Button onClick={props.sendTransaction}>Unlock BAMM</Button>
+            </Flex>
+          </Box>
+          </Card>
+      </Flex>
+    </div>
+  )
+}
+
 export const NoDeposit: React.FC = props => {
   const { liquity } = useLiquity();
   const { stabilityDeposit } = useLiquitySelector(selector);
   const { dispatchEvent } = useStabilityView();
   const [allowanceSucceed, setAllowanceSucceed] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const handleOpenTrove = useCallback(() => {
     dispatchEvent("DEPOSIT_PRESSED");
@@ -35,12 +76,21 @@ export const NoDeposit: React.FC = props => {
   );
 
   useEffect(() => {
+    if (transactionState.type === "waitingForConfirmation") {
+      setShowModal(false);
+    }
+    
     if (transactionState.type === "confirmed") {
       setAllowanceSucceed(true);
     }
   }, [transactionState.type]);
 
   const hasAllowance = allowanceSucceed || stabilityDeposit.bammAllowance
+
+  const modalProps = {
+    close: ()=> setShowModal(false),
+    sendTransaction,
+  }
   return (
     <Card>
       <Heading>
@@ -58,11 +108,15 @@ export const NoDeposit: React.FC = props => {
           <Flex sx={{ justifyContent: "flex-start", flex: 1, alignItems: "center" }}>
             <Yield />
           </Flex>
+
           {hasAllowance  && 
             <Button onClick={handleOpenTrove}>Deposit</Button>
           }
           {!hasAllowance  && 
-            <Button onClick={sendTransaction}>Unlock BAMM</Button>
+            <Button onClick={()=>setShowModal(true)}>Deposit</Button>
+          }
+          {showModal &&
+            <BammAllowanceModal {...modalProps}/>
           }
         </Flex>
       </Box>
