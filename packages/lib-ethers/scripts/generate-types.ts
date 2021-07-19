@@ -22,6 +22,7 @@ import PriceFeedTestnet from "../../contracts/artifacts/contracts/TestContracts/
 import SortedTroves from "../../contracts/artifacts/contracts/SortedTroves.sol/SortedTroves.json";
 import StabilityPool from "../../contracts/artifacts/contracts/StabilityPool.sol/StabilityPool.json";
 import BAMM from "../../contracts/artifacts/contracts/B.Protocol/BAMM.sol/BAMM.json";
+import BLens from "../../contracts/artifacts/contracts/B.Protocol/BLens.sol/BLens.json";
 import TroveManager from "../../contracts/artifacts/contracts/TroveManager.sol/TroveManager.json";
 import Unipool from "../../contracts/artifacts/contracts/LPRewards/Unipool.sol/Unipool.json";
 
@@ -163,6 +164,7 @@ const contractArtifacts = [
   SortedTroves,
   StabilityPool,
   BAMM,
+  BLens,
   TroveManager,
   Unipool
 ];

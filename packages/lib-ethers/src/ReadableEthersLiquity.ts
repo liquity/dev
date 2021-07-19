@@ -278,12 +278,11 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     address?: string,
     overrides?: EthersCallOverrides
   ): Promise<StabilityDeposit> {
-    const RAY = BigNumber.from(10).pow(27)
     const _1e18 = BigNumber.from(10).pow(18)
     const reallyLargeAllowance = BigNumber.from("0x8888888888888888888888888888888888888888888888888888888888888888")
 
     address ??= _requireAddress(this.connection);
-    const { stabilityPool, bamm, lqtyToken, lusdToken, priceFeed } = _getContracts(this.connection);
+    const { stabilityPool, bamm, lqtyToken, lusdToken, priceFeed, bLens } = _getContracts(this.connection);
     const bammLqtyBalancePromise = lqtyToken.balanceOf(bamm.address, { ...overrides})
 
     const [
@@ -294,7 +293,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       total,
       stake,
       totalLusdInSp,
-      crops,
+      unclaimedLqty,
       share,
       stock,
     ] = await Promise.all([
@@ -305,9 +304,10 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       bamm.total({ ...overrides }),
       bamm.stake(address, { ...overrides}),
       stabilityPool.getTotalLUSDDeposits({ ...overrides }),
-      bamm.crops(address, { ...overrides }),
+      bLens.callStatic.getUnclaimedLqty(address, bamm.address, lqtyToken.address),
       bamm.share({ ...overrides }),
       bamm.stock({ ...overrides}),
+
     ]);
 
     const bammLqtyBalance = await bammLqtyBalancePromise
@@ -327,31 +327,20 @@ export class ReadableEthersLiquity implements ReadableLiquity {
 
     const bammPoolShare = Decimal.fromBigNumber(stake).mulDiv(100, Decimal.fromBigNumber(total))
     // balance + pending - stock
-    let lqtyReward = BigNumber.from(0)
     if(total.gt(BigNumber.from(0))){
-      const crop = bammLqtyBalance.add(bammPendingLqtyReward).sub(stock);
-      const updatedShare = share.add(crop.mul(RAY).div(total))
-      const updatedCrops = stake.mul(updatedShare).div(RAY)
       console.log(
         JSON.stringify({
           bammPendingEth: bammPendingEth.toString(),
           bammLqtyBalance: bammLqtyBalance.toString(),
           bammPendingLqtyReward: bammPendingLqtyReward.toString(),
           stock: stock.toString(),
-          crop: crop.toString(),
           share: share.toString(),
-          RAY: RAY.toString(),
           total: total.toString(),
-          updatedShare: updatedShare.toString(),
           stake: stake.toString(),
-          updatedCrops: updatedCrops.toString(),
         }, null, 2)
       )
-      if(updatedCrops.gt(crops)){
-        lqtyReward = updatedCrops.sub(crops)
-      }
     }
-
+    
     const allowance = await lusdToken.allowance(address, bamm.address)
     console.log({allowance})
     const bammAllowance = allowance.gt(reallyLargeAllowance)
@@ -362,11 +351,11 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       Decimal.fromBigNumber(currentUSD),
       Decimal.fromBigNumber(currentLUSD),
       Decimal.fromBigNumber(currentETH),
-      Decimal.fromBigNumber(lqtyReward),
+      Decimal.fromBigNumber(unclaimedLqty),
       frontEndTag,
       bammAllowance,
       Decimal.fromBigNumber(bammEthBalance),
-      Decimal.fromBigNumber(currentBammLUSD)
+      Decimal.fromBigNumber(unclaimedLqty)
     );
   }
 

@@ -933,6 +933,11 @@
         "type": "uint256"
       },
       {
+        "internalType": "uint256",
+        "name": "minEthReturn",
+        "type": "uint256"
+      },
+      {
         "internalType": "address payable",
         "name": "dest",
         "type": "address"
@@ -946,7 +951,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1030,6 +1035,19 @@
       }
     ],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
