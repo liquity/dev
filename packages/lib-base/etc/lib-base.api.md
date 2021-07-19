@@ -177,6 +177,8 @@ export class Difference {
     // (undocumented)
     get nonZero(): this | undefined;
     // (undocumented)
+    nonZeroish(precision: number): this | undefined;
+    // (undocumented)
     get positive(): this | undefined;
     // (undocumented)
     prettify(precision?: number): string;

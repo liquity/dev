@@ -413,6 +413,14 @@ export class Difference {
     return this._number?.absoluteValue.nonZero && this;
   }
 
+  nonZeroish(precision: number): this | undefined {
+    const zeroish = `0.${"0".repeat(precision)}5`;
+
+    if (this._number?.absoluteValue.gte(zeroish)) {
+      return this;
+    }
+  }
+
   get positive(): this | undefined {
     return this._number?.sign === "+" ? this : undefined;
   }
