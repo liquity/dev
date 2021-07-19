@@ -1449,14 +1449,13 @@ You can optionally specify an explicit gas price too:
 yarn deploy --network ropsten --gas-price 20
 ```
 
-After a successful deployment, the addresses of the newly deployed contracts will be written to a version-controlled JSON file under `packages/lib/deployments/default`.
+After a successful deployment, the addresses of the newly deployed contracts will be written to a version-controlled JSON file under `packages/lib-ethers/deployments/default`.
 
 To publish a new deployment, you must execute the above command for all of the following combinations:
 
 | Network | Channel  |
 | ------- | -------- |
 | ropsten | default  |
-| ropsten | internal |
 | kovan   | default  |
 | rinkeby | default  |
 | goerli  | default  |
