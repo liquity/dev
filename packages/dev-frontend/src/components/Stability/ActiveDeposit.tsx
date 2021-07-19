@@ -66,7 +66,7 @@ export const ActiveDeposit: React.FC = () => {
             amount={stabilityDeposit.currentUSD.prettify()}
             unit={COIN}
           />
-          <Flex sx={{ justifyContent: 'space-between' }}>
+          <Flex sx={{ justifyContent: 'space-between', flexWrap: "wrap" }}>
             <StaticRow
               label="LUSD balance"
               inputId="deposit-gain"

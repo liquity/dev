@@ -129,7 +129,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
         {!originalDeposit.isEmpty && (
           <>
-          <Flex sx={{ justifyContent: 'space-between' }}>
+          <Flex sx={{ justifyContent: 'space-between', flexWrap: "wrap" }}>
             <StaticRow
                 label="LUSD balance"
                 inputId="deposit-gain"
