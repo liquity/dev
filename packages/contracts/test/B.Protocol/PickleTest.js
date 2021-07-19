@@ -10,6 +10,7 @@ const TroveManagerTester = artifacts.require("TroveManagerTester")
 const LUSDToken = artifacts.require("LUSDToken")
 const NonPayable = artifacts.require('NonPayable.sol')
 const BAMM = artifacts.require("PBAMM.sol")
+const BLens = artifacts.require("BLens.sol")
 const EIP20 = artifacts.require("EIP20.sol")
 const Pickle = artifacts.require("PickleJar.sol")
 const ChainlinkTestnet = artifacts.require("ChainlinkTestnet.sol")
@@ -107,6 +108,7 @@ contract('Pickle', async accounts => {
       pJar = await Pickle.new(lqtyToken.address, pLqty.address)
       bamm = await BAMM.new(chainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, frontEnd_1,
                             pLqty.address, pJar.address, {from: bammOwner})
+      lens = await BLens.new()                            
     })
 
     // --- provideToSP() ---
@@ -257,6 +259,9 @@ contract('Pickle', async accounts => {
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
+      const expectdDLqtyDelta = await lens.getUnclaimedLqty.call(D, bamm.address, pLqty.address)
+      const expectdELqtyDelta = await lens.getUnclaimedLqty.call(E, bamm.address, pLqty.address)
+
       await stabilityPool.withdrawFromSP(0, { from: F })
       await bamm.withdraw(0, { from: D })
       await bamm.withdraw(0, { from: E })      
@@ -269,6 +274,9 @@ contract('Pickle', async accounts => {
       assert((await lqtyToken.balanceOf(frontEnd_1)).gt(toBN(0)))
       assert((await pLqty.balanceOf(D)).gt(toBN(0)))
       assert((await pLqty.balanceOf(E)).gt(toBN(0)))      
+
+      assert.equal(D_LQTYBalance_After.sub(D_LQTYBalance_Before).toString(), expectdDLqtyDelta.toString())
+      assert.equal(E_LQTYBalance_After.sub(E_LQTYBalance_Before).toString(), expectdELqtyDelta.toString())      
 
       assert.equal(D_LQTYBalance_After.add(E_LQTYBalance_After).toString(), F_LQTYBalance_After.div(toBN(2)).toString())
     })
@@ -628,18 +636,18 @@ contract('Pickle', async accounts => {
       assert.equal(priceWithFee.ethAmount.toString(), dec(10296, 18-4).toString())
       assert.equal(priceWithFee.feeEthAmount.toString(), dec(10400 - 10296, 18-4).toString())      
 
-      await lusdToken.approve(bamm.address, dec(1,18), {from: whale})
+      await lusdToken.approve(bamm.address, dec(105,18), {from: whale})
       const dest = "0xdEADBEEF00AA81bBCF694bC5c05A397F5E5658D5"
-      await bamm.swap(dec(1,18), dest, {from: whale})
+      await bamm.swap(dec(105,18), priceWithFee.ethAmount, dest, {from: whale})
 
       // check lusd balance
-      assert.equal(toBN(dec(6001, 18)).toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
+      assert.equal(toBN(dec(6105, 18)).toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
 
       // check eth balance
-      assert(await web3.eth.getBalance(dest), priceWithFee.ethAmount)
+      assert.equal(await web3.eth.getBalance(dest), priceWithFee.ethAmount)
 
       // check fees
-      assert(await web3.eth.getBalance(feePool), priceWithFee.feeEthAmount)
+      assert.equal(await web3.eth.getBalance(feePool), priceWithFee.feeEthAmount)
     })    
 
     it('test set params happy path', async () => {
