@@ -165,6 +165,8 @@ export class Difference {
     // (undocumented)
     static between(d1: Decimalish | undefined, d2: Decimalish | undefined): Difference;
     // (undocumented)
+    div(divider: Decimalish): Difference;
+    // (undocumented)
     get finite(): this | undefined;
     // (undocumented)
     get infinite(): this | undefined;
@@ -597,13 +599,14 @@ export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = 
 // @public
 export class StabilityDeposit {
     // @internal
-    constructor(bammPoolShare: Decimal, poolShare: Decimal, initialLUSD: Decimal, currentLUSD: Decimal, collateralGain: Decimal, lqtyReward: Decimal, frontendTag: string, bammAllowance: boolean);
+    constructor(bammPoolShare: Decimal, poolShare: Decimal, initialLUSD: Decimal, currentUSD: Decimal, currentLUSD: Decimal, collateralGain: Decimal, lqtyReward: Decimal, frontendTag: string, bammAllowance: boolean, totalEthInBamm: Decimal, totalLusdInBamm: Decimal);
     apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
     // (undocumented)
     readonly bammAllowance: boolean;
     readonly bammPoolShare: Decimal;
     readonly collateralGain: Decimal;
     readonly currentLUSD: Decimal;
+    readonly currentUSD: Decimal;
     equals(that: StabilityDeposit): boolean;
     readonly frontendTag: string;
     readonly initialLUSD: Decimal;
@@ -613,7 +616,11 @@ export class StabilityDeposit {
     readonly poolShare: Decimal;
     // @internal (undocumented)
     toString(): string;
-    whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined;
+    // (undocumented)
+    readonly totalEthInBamm: Decimal;
+    // (undocumented)
+    readonly totalLusdInBamm: Decimal;
+    whatChanged(thatUSD: Decimalish): StabilityDepositChange<Decimal> | undefined;
 }
 
 // @public

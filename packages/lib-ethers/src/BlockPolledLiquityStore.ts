@@ -157,8 +157,11 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
               Decimal.ZERO,
               Decimal.ZERO,
               Decimal.ZERO,
+              Decimal.ZERO,
               AddressZero,
-              false
+              false,
+              Decimal.ZERO,
+              Decimal.ZERO,
             ),
             lqtyStake: new LQTYStake(),
             ownFrontend: { status: "unregistered" as const }

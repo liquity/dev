@@ -283,7 +283,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     const reallyLargeAllowance = BigNumber.from("0x8888888888888888888888888888888888888888888888888888888888888888")
 
     address ??= _requireAddress(this.connection);
-    const { stabilityPool, bamm, lqtyToken, lusdToken } = _getContracts(this.connection);
+    const { stabilityPool, bamm, lqtyToken, lusdToken, priceFeed } = _getContracts(this.connection);
     const bammLqtyBalancePromise = lqtyToken.balanceOf(bamm.address, { ...overrides})
 
     const [
@@ -318,8 +318,12 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     // bamm share in SP times stake div by total
     const poolShare = bammShare.mul(Decimal.fromBigNumber(stake)).div(Decimal.fromBigNumber(total))
 
-    const bammEthBalance = await bamm.provider.getBalance(bamm.address)
-    const currentETH = (stake.mul(bammEthBalance.add(bammPendingEth))).div(total)
+    const bammEthBalance = (await bamm.provider.getBalance(bamm.address)).add(bammPendingEth)
+    const currentETH = stake.mul(bammEthBalance).div(total)
+    
+    const price = await priceFeed.callStatic.fetchPrice({ ...overrides })
+
+    const currentUSD = currentLUSD.add(currentETH.mul(price).div(_1e18))
 
     const bammPoolShare = Decimal.fromBigNumber(stake).mulDiv(100, Decimal.fromBigNumber(total))
     // balance + pending - stock
@@ -330,6 +334,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       const updatedCrops = stake.mul(updatedShare).div(RAY)
       console.log(
         JSON.stringify({
+          bammPendingEth: bammPendingEth.toString(),
           bammLqtyBalance: bammLqtyBalance.toString(),
           bammPendingLqtyReward: bammPendingLqtyReward.toString(),
           stock: stock.toString(),
@@ -354,11 +359,14 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       bammPoolShare,
       poolShare,
       decimalify(initialValue),
+      Decimal.fromBigNumber(currentUSD),
       Decimal.fromBigNumber(currentLUSD),
       Decimal.fromBigNumber(currentETH),
       Decimal.fromBigNumber(lqtyReward),
       frontEndTag,
-      bammAllowance
+      bammAllowance,
+      Decimal.fromBigNumber(bammEthBalance),
+      Decimal.fromBigNumber(currentBammLUSD)
     );
   }
 

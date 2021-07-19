@@ -27,6 +27,9 @@ export class StabilityDeposit {
   /** Amount of LUSD left in the Stability Deposit. */
   readonly currentLUSD: Decimal;
 
+  /** Amount of USD left in the Stability Deposit. */
+  readonly currentUSD: Decimal;
+
   /** Amount of native currency (e.g. Ether) received in exchange for the used-up LUSD. */
   readonly collateralGain: Decimal;
 
@@ -44,26 +47,35 @@ export class StabilityDeposit {
 
   readonly bammAllowance: boolean;
 
+  readonly totalEthInBamm: Decimal;
+  
+  readonly totalLusdInBamm: Decimal;
+
   /** @internal */
   constructor(
     bammPoolShare: Decimal,
     poolShare: Decimal,
     initialLUSD: Decimal,
+    currentUSD: Decimal,
     currentLUSD: Decimal,
     collateralGain: Decimal,
     lqtyReward: Decimal,
     frontendTag: string, 
-    bammAllowance: boolean
+    bammAllowance: boolean, 
+    totalEthInBamm: Decimal,
+    totalLusdInBamm: Decimal
   ) {
     this.bammPoolShare = bammPoolShare;
     this.poolShare = poolShare;
     this.initialLUSD = initialLUSD;
+    this.currentUSD = currentUSD;
     this.currentLUSD = currentLUSD;
     this.collateralGain = collateralGain;
     this.lqtyReward = lqtyReward;
     this.frontendTag = frontendTag;
     this.bammAllowance = bammAllowance;
-
+    this.totalEthInBamm = totalEthInBamm;
+    this.totalLusdInBamm = totalLusdInBamm;
   }
 
   get isEmpty(): boolean {
@@ -104,15 +116,15 @@ export class StabilityDeposit {
    *
    * @returns An object representing the change, or `undefined` if the deposited amounts are equal.
    */
-  whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined {
-    thatLUSD = Decimal.from(thatLUSD);
+  whatChanged(thatUSD: Decimalish): StabilityDepositChange<Decimal> | undefined {
+    thatUSD = Decimal.from(thatUSD);
 
-    if (thatLUSD.lt(this.currentLUSD)) {
-      return { withdrawLUSD: this.currentLUSD.sub(thatLUSD), withdrawAllLUSD: thatLUSD.isZero };
+    if (thatUSD.lt(this.currentUSD)) {
+      return { withdrawLUSD: this.currentUSD.sub(thatUSD), withdrawAllLUSD: thatUSD.isZero };
     }
 
-    if (thatLUSD.gt(this.currentLUSD)) {
-      return { depositLUSD: thatLUSD.sub(this.currentLUSD) };
+    if (thatUSD.gt(this.currentUSD)) {
+      return { depositLUSD: thatUSD.sub(this.currentUSD) };
     }
   }
 

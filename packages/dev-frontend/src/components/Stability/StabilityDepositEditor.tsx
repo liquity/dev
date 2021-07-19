@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Heading, Box, Card, Button } from "theme-ui";
+import { Heading, Box, Card, Button, Flex } from "theme-ui";
 
 import {
   Decimal,
@@ -26,7 +26,7 @@ const select = ({ lusdBalance, lusdInStabilityPool, stabilityDeposit }: LiquityS
 
 type StabilityDepositEditorProps = {
   originalDeposit: StabilityDeposit;
-  editedLUSD: Decimal;
+  editedUSD: Decimal;
   changePending: boolean;
   dispatch: (action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }) => void;
 };
@@ -35,7 +35,7 @@ const selectPrice = ({ price }: LiquityStoreState) => price;
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   originalDeposit,
-  editedLUSD,
+  editedUSD,
   changePending,
   dispatch,
   children
@@ -44,33 +44,61 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   const editingState = useState<string>();
   const price = useLiquitySelector(selectPrice);
 
-  const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
+  const edited = !editedUSD.eq(stabilityDeposit.currentUSD);
 
-  const maxAmount = originalDeposit.currentLUSD.add(lusdBalance);
-  const maxedOut = editedLUSD.eq(maxAmount);
+  const maxAmount = stabilityDeposit.currentUSD.add(lusdBalance);
+  const maxedOut = editedUSD.eq(maxAmount);
 
-  const lusdInStabilityPoolAfterChange = lusdInStabilityPool
-    .sub(originalDeposit.currentLUSD)
-    .add(editedLUSD);
-
+  const ethInUsd = originalDeposit.currentUSD.sub(stabilityDeposit.currentLUSD)
+  
   const originalPoolShare = originalDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
-  const newPoolShare = editedLUSD.mulDiv(100, lusdInStabilityPoolAfterChange);
-  const poolShareChange =
-    originalDeposit.currentLUSD.nonZero &&
-    Difference.between(newPoolShare, originalPoolShare).nonZero;
 
   const {bammPoolShare, collateralGain} = stabilityDeposit;
 
-  const userTotalUsdInBamm = (originalDeposit.currentLUSD.add(collateralGain.mul(price)))
-  const totalLusdInBamm = userTotalUsdInBamm.mulDiv(100, bammPoolShare);
-  const editedUserLusd = userTotalUsdInBamm.sub(originalDeposit.currentLUSD).add(editedLUSD);
-  const editedTotalLusd = totalLusdInBamm.sub(originalDeposit.currentLUSD).add(editedLUSD);
-  const editedBammPoolShare = editedUserLusd.mulDiv(100, editedTotalLusd)
+  const userTotalUsdInBamm = stabilityDeposit.currentUSD
+  const totalUsdInBamm = userTotalUsdInBamm.mulDiv(100, bammPoolShare);
+  const editedUserUsd = userTotalUsdInBamm.sub(stabilityDeposit.currentUSD).add(editedUSD);
+  const editedTotalUsdInBamm = totalUsdInBamm.sub(stabilityDeposit.currentUSD).add(editedUSD);
+  const editedBammPoolShare = editedUserUsd.mulDiv(100, editedTotalUsdInBamm)
+
+  /* USD balance
+  ====================================================================*/
+  const usdDiff = Difference.between(editedUSD, stabilityDeposit.currentUSD)
 
   const bammPoolShareChange =
-    originalDeposit.currentLUSD.nonZero &&
+    stabilityDeposit.currentUSD.nonZero &&
     Difference.between(editedBammPoolShare, bammPoolShare).nonZero;
- 
+
+  let newTotalLusd, newTotalEth;
+  if(bammPoolShareChange && !bammPoolShareChange?.nonZero || bammPoolShareChange?.positive){
+    newTotalLusd = stabilityDeposit.totalLusdInBamm.add(Decimal.from(usdDiff.absoluteValue||0));
+    newTotalEth = stabilityDeposit.totalEthInBamm;
+  } else {
+    newTotalLusd = stabilityDeposit.totalLusdInBamm.mul((editedTotalUsdInBamm.div(totalUsdInBamm)))
+    newTotalEth = stabilityDeposit.totalEthInBamm.mul((editedTotalUsdInBamm.div(totalUsdInBamm)))
+  }
+
+  /* ETH balance
+  ====================================================================*/
+  const newEthBalance = editedBammPoolShare.mul(newTotalEth).div(100)
+  let ethDiff = Difference.between(newEthBalance, stabilityDeposit.collateralGain).nonZero
+
+  /* LUSD balance
+  ====================================================================*/
+  const newLusdBalance = editedBammPoolShare.mul(newTotalLusd).div(100)
+  let lusdDiff = Difference.between(newLusdBalance, stabilityDeposit.currentLUSD).nonZero
+  
+
+  /* pool share
+  ====================================================================*/
+  const lusdInStabilityPoolAfterChange = lusdInStabilityPool
+    .add(newTotalLusd)
+    .sub(stabilityDeposit.totalLusdInBamm);
+
+  const newPoolShare = (newTotalLusd.mulDiv(editedBammPoolShare, 100)).mulDiv(100, lusdInStabilityPoolAfterChange);
+  const poolShareChange =
+    originalDeposit.currentLUSD.nonZero &&
+    Difference.between(newPoolShare, originalPoolShare).nonZero;
   return (
     <Card>
       <Heading>
@@ -90,25 +118,36 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         <EditableRow
           label="Deposit"
           inputId="deposit-lqty"
-          amount={editedLUSD.prettify()}
+          amount={editedUSD.prettify()}
           maxAmount={maxAmount.toString()}
           maxedOut={maxedOut}
           unit={COIN}
           {...{ editingState }}
-          editedAmount={editedLUSD.toString(2)}
+          editedAmount={editedUSD.toString(2)}
           setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
         />
 
         {!originalDeposit.isEmpty && (
           <>
+          <Flex sx={{ justifyContent: 'space-between' }}>
             <StaticRow
-              label="my share in ETH"
-              inputId="deposit-gain"
-              amount={originalDeposit.collateralGain.prettify(4)}
-              color={originalDeposit.collateralGain.nonZero && "success"}
-              unit="ETH"
+                label="LUSD balance"
+                inputId="deposit-gain"
+                amount={newLusdBalance.prettify(2)}
+                unit="LUSD"
+                pendingAmount={lusdDiff?.prettify(2).concat("LUSD")}
+                pendingColor={lusdDiff?.positive ? "success" : "danger"}
             />
 
+            <StaticRow
+              label="ETH balance"
+              inputId="deposit-gain"
+              amount={newEthBalance.prettify(4)}
+              unit="ETH"
+              pendingAmount={ethDiff?.prettify(4).concat("ETH")}
+              pendingColor={ethDiff?.positive ? "success" : "danger"}
+            />
+          </Flex>
           {newPoolShare.infinite ? (
             <StaticRow label="Pool share" inputId="deposit-share" amount="N/A" />
           ) : (

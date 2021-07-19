@@ -400,6 +400,15 @@ export class Difference {
     );
   }
 
+  div(divider: Decimalish): Difference {
+    return new Difference(
+      this._number && {
+        sign: this._number.sign,
+        absoluteValue: this._number.absoluteValue.div(divider)
+      }
+    );
+  }
+
   get nonZero(): this | undefined {
     return this._number?.absoluteValue.nonZero && this;
   }

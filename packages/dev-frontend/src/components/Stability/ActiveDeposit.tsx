@@ -63,17 +63,24 @@ export const ActiveDeposit: React.FC = () => {
           <DisabledEditableRow
             label="Deposit"
             inputId="deposit-lusd"
-            amount={stabilityDeposit.currentLUSD.prettify()}
+            amount={stabilityDeposit.currentUSD.prettify()}
             unit={COIN}
           />
+          <Flex sx={{ justifyContent: 'space-between' }}>
+            <StaticRow
+              label="LUSD balance"
+              inputId="deposit-gain"
+              amount={stabilityDeposit.currentLUSD.prettify(2)}
+              unit="LUSD"
+            />
 
-          <StaticRow
-            label="my share in ETH"
-            inputId="deposit-gain"
-            amount={stabilityDeposit.collateralGain.prettify(4)}
-            color={stabilityDeposit.collateralGain.nonZero && "success"}
-            unit="ETH"
-          />
+            <StaticRow
+              label="ETH balance"
+              inputId="deposit-gain"
+              amount={stabilityDeposit.collateralGain.prettify(4)}
+              unit="ETH"
+            />
+          </Flex>
 
           <StaticRow
             label="Pool share"
