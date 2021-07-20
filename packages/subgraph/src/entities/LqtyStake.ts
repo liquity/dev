@@ -4,12 +4,18 @@ import { LqtyStakeChange, LqtyStake } from "../../generated/schema";
 
 import { decimalize, DECIMAL_ZERO, BIGINT_ZERO } from "../utils/bignumbers";
 
-import { beginChange, initChange, finishChange } from "./Change";
+import {
+  decreaseNumberOfActiveLQTYStakes,
+  increaseNumberOfActiveLQTYStakes,
+  increaseTotalNumberOfLQTYStakes
+} from "./Global";
+
 import { getUser } from "./User";
-import { handleLQTYStakeChange } from "./Global";
+import { beginChange, initChange, finishChange } from "./Change";
+import { updateSystemStateByLqtyStakeChange } from "./SystemState";
 
 function startLQTYStakeChange(event: ethereum.Event): LqtyStakeChange {
-  let sequenceNumber = beginChange(event);
+  let sequenceNumber = beginChange();
   let stakeChange = new LqtyStakeChange(sequenceNumber.toString());
   stakeChange.issuanceGain = DECIMAL_ZERO;
   stakeChange.redemptionGain = DECIMAL_ZERO;
@@ -77,14 +83,23 @@ export function updateStake(event: ethereum.Event, address: Address, newStake: B
   let stakeChange = startLQTYStakeChange(event);
   stakeChange.stake = stake.id;
   stakeChange.stakeOperation = getOperationType(stake, nextStakeAmount);
-  stakeChange.amountBefore = stake.amount;
-  stakeChange.amountChange = nextStakeAmount.minus(stake.amount);
-  stakeChange.amountAfter = nextStakeAmount;
+  stakeChange.stakedAmountBefore = stake.amount;
+  stakeChange.stakedAmountChange = nextStakeAmount.minus(stake.amount);
+  stakeChange.stakedAmountAfter = nextStakeAmount;
 
   stake.amount = nextStakeAmount;
 
-  handleLQTYStakeChange(stakeChange, isUserFirstStake);
+  if (stakeChange.stakeOperation == "stakeCreated") {
+    if (isUserFirstStake) {
+      increaseTotalNumberOfLQTYStakes();
+    } else {
+      increaseNumberOfActiveLQTYStakes();
+    }
+  } else if (stakeChange.stakeOperation == "stakeRemoved") {
+    decreaseNumberOfActiveLQTYStakes();
+  }
 
+  updateSystemStateByLqtyStakeChange(stakeChange);
   finishLQTYStakeChange(stakeChange);
 
   stake.save();
@@ -106,10 +121,11 @@ export function withdrawStakeGains(
   stakeChange.stakeOperation = "gainsWithdrawn";
   stakeChange.issuanceGain = decimalize(LUSDGain);
   stakeChange.redemptionGain = decimalize(ETHGain);
-  stakeChange.amountBefore = stake.amount;
-  stakeChange.amountChange = DECIMAL_ZERO;
-  stakeChange.amountAfter = stake.amount;
+  stakeChange.stakedAmountBefore = stake.amount;
+  stakeChange.stakedAmountChange = DECIMAL_ZERO;
+  stakeChange.stakedAmountAfter = stake.amount;
 
+  updateSystemStateByLqtyStakeChange(stakeChange);
   finishLQTYStakeChange(stakeChange);
 
   stake.save();

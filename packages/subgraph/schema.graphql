@@ -2,8 +2,6 @@ type Global @entity {
   "There should be only one System entity with an ID of 'only'"
   id: ID!
 
-  priceFeedAddress: Bytes
-
   systemStateCount: Int!
   transactionCount: Int!
   changeCount: Int!
@@ -18,7 +16,11 @@ type Global @entity {
 
   totalNumberOfLQTYStakes: Int!
   numberOfActiveLQTYStakes: Int!
-  totalLQTYTokensStaked: BigDecimal!
+
+  "Total amount of LUSD paid as borrowing fees"
+  totalBorrowingFeesPaid: BigDecimal!
+  "Total amount of ETH paid as redemption fees"
+  totalRedemptionFeesPaid: BigDecimal!
 
   "Total redistributed per-stake collateral"
   rawTotalRedistributedCollateral: BigInt!
@@ -45,7 +47,7 @@ type SystemState @entity {
   "Can be used to chronologically sort SystemStates"
   sequenceNumber: Int!
 
-  price: BigDecimal!
+  price: BigDecimal
 
   totalCollateral: BigDecimal!
   totalDebt: BigDecimal!
@@ -53,6 +55,7 @@ type SystemState @entity {
 
   tokensInStabilityPool: BigDecimal!
   collSurplusPoolBalance: BigDecimal!
+  totalLQTYTokensStaked: BigDecimal!
 
   cause: Change @derivedFrom(field: "systemStateAfter")
 }
@@ -64,12 +67,16 @@ type User @entity {
   trove: Trove
   stabilityDeposit: StabilityDeposit
   stake: LqtyStake
+  frontend: Frontend
 
   collSurplus: BigDecimal!
   collSurplusChanges: [CollSurplusChange!]! @derivedFrom(field: "user")
 
   liquidations: [Liquidation!]! @derivedFrom(field: "liquidator")
   redemptions: [Redemption!]! @derivedFrom(field: "redeemer")
+
+  balances: [TokenBalance!] @derivedFrom(field: "owner")
+  allowances: [TokenAllowance!] @derivedFrom(field: "owner")
 }
 
 enum TroveStatus {
@@ -112,6 +119,8 @@ type StabilityDeposit @entity {
   owner: User!
 
   depositedAmount: BigDecimal!
+
+  frontend: Frontend
 
   changes: [StabilityDepositChange!]! @derivedFrom(field: "stabilityDeposit")
 }
@@ -172,6 +181,8 @@ type TroveChange implements Change @entity {
   debtBefore: BigDecimal!
   debtChange: BigDecimal!
   debtAfter: BigDecimal!
+
+  borrowingFee: BigDecimal
 
   collateralRatioBefore: BigDecimal
   collateralRatioAfter: BigDecimal
@@ -238,6 +249,8 @@ type Redemption @entity {
   collateralRedeemed: BigDecimal!
   partial: Boolean!
 
+  fee: BigDecimal!
+
   troveChanges: [TroveChange!]! @derivedFrom(field: "redemption")
 }
 
@@ -280,10 +293,41 @@ type LqtyStakeChange implements Change @entity {
   stake: LqtyStake!
   stakeOperation: LQTYStakeOperation!
 
-  amountBefore: BigDecimal!
-  amountChange: BigDecimal!
-  amountAfter: BigDecimal!
+  stakedAmountBefore: BigDecimal!
+  stakedAmountChange: BigDecimal!
+  stakedAmountAfter: BigDecimal!
 
-  issuanceGain: BigDecimal
-  redemptionGain: BigDecimal
+  issuanceGain: BigDecimal!
+  redemptionGain: BigDecimal!
+}
+
+type Token @entity {
+  id: ID!
+  name: String!
+  symbol: String!
+  totalSupply: BigInt!
+  balances: [TokenBalance!] @derivedFrom(field: "token")
+  allowances: [TokenAllowance!] @derivedFrom(field: "token")
+}
+
+type TokenBalance @entity {
+  id: ID!
+  token: Token!
+  owner: User!
+  balance: BigInt!
+}
+
+type TokenAllowance @entity {
+  id: ID!
+  token: Token!
+  owner: User!
+  spender: User!
+  value: BigInt!
+}
+
+type Frontend @entity {
+  id: ID!
+  owner: User!
+  kickbackRate: BigDecimal!
+  deposits: [StabilityDeposit!]! @derivedFrom(field: "frontend")
 }

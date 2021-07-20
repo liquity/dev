@@ -22,7 +22,7 @@
     "test": "mocha --require ts-node/register"
   },
   "dependencies": {
-    "@ethersproject/bignumber": "5.0.15"
+    "@ethersproject/bignumber": "5.3.0"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "7.13.2",

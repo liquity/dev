@@ -137,6 +137,7 @@ def contracts():
         contracts.lockupContractFactory.address,
         accounts[0], # bountyAddress
         accounts[0],  # lpRewardsAddress
+        accounts[0],  # multisigAddress
         { 'from': accounts[0] }
     )
 

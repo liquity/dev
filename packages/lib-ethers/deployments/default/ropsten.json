@@ -8,6 +8,7 @@
   "_priceFeedIsTestnet": true,
   "_uniTokenIsMock": false,
   "_isDev": false,
+  "startBlock": 9961294,
   "addresses": {
     "activePool": "0x8bE79B54Bff7754B57294077c2B5017AF9f57dC2",
     "borrowerOperations": "0xfe9049E677C5773dd72ac7E19c38c68aB0891744",

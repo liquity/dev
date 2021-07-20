@@ -9,6 +9,7 @@ import { BlockTag } from '@ethersproject/abstract-provider';
 import { CollateralGainTransferDetails } from '@liquity/lib-base';
 import { Decimal } from '@liquity/lib-base';
 import { Decimalish } from '@liquity/lib-base';
+import { ErrorCode } from '@ethersproject/logger';
 import { FailedReceipt } from '@liquity/lib-base';
 import { Fees } from '@liquity/lib-base';
 import { FrontendStatus } from '@liquity/lib-base';
@@ -61,10 +62,18 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
 export interface BlockPolledLiquityStoreExtraState {
     blockTag?: number;
     blockTimestamp: number;
+    // @internal (undocumented)
+    _feesFactory: (blockTimestamp: number, recoveryMode: boolean) => Fees;
 }
 
 // @public
 export type BlockPolledLiquityStoreState = LiquityStoreState<BlockPolledLiquityStoreExtraState>;
+
+// @public
+export interface BorrowingOperationOptionalParams {
+    borrowingFeeDecayToleranceMinutes?: number;
+    maxBorrowingRate?: Decimalish;
+}
 
 // @internal (undocumented)
 export function _connectByChainId<T>(provider: EthersProvider, signer: EthersSigner | undefined, chainId: number, optionalParams: EthersLiquityConnectionOptionalParams & {
@@ -87,7 +96,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     // @internal
     constructor(readable: ReadableEthersLiquity);
     // (undocumented)
-    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
     // (undocumented)
     approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
@@ -116,6 +125,8 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     static _from(connection: EthersLiquityConnection): EthersLiquity;
     // @internal (undocumented)
     _getActivePool(overrides?: EthersCallOverrides): Promise<Trove>;
+    // @internal (undocumented)
+    _getBlockTimestamp(blockTag?: BlockTag): Promise<number>;
     // (undocumented)
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // @internal (undocumented)
@@ -181,7 +192,7 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     // @internal (undocumented)
     _mintUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
-    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveCreationDetails>;
+    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<TroveCreationDetails>;
     readonly populate: PopulatableEthersLiquity;
     // (undocumented)
     redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<RedemptionDetails>;
@@ -233,6 +244,7 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
     readonly _priceFeedIsTestnet: boolean;
     readonly provider: EthersProvider;
     readonly signer?: EthersSigner;
+    readonly startBlock: number;
     readonly totalStabilityPoolLQTYReward: Decimal;
     readonly version: string;
 }
@@ -260,6 +272,16 @@ export type EthersProvider = Provider;
 
 // @public
 export type EthersSigner = Signer;
+
+// @public
+export class EthersTransactionCancelledError extends Error {
+    // @internal
+    constructor(rawError: _RawTransactionReplacedError);
+    // (undocumented)
+    readonly rawError: Error;
+    // (undocumented)
+    readonly rawReplacementReceipt: EthersTransactionReceipt;
+}
 
 // @public
 export class EthersTransactionFailedError extends TransactionFailedError<FailedReceipt<EthersTransactionReceipt>> {
@@ -309,7 +331,7 @@ export class ObservableEthersLiquity implements ObservableLiquity {
 export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransactionReceipt, EthersTransactionResponse, EthersPopulatedTransaction> {
     constructor(readable: ReadableEthersLiquity);
     // (undocumented)
-    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
@@ -331,7 +353,7 @@ export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransa
     // @internal (undocumented)
     _mintUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
-    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>>;
+    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>>;
     // (undocumented)
     redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersRedemption>;
     // (undocumented)
@@ -369,7 +391,8 @@ export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransa
 // @public
 export class PopulatedEthersLiquityTransaction<T = unknown> implements PopulatedLiquityTransaction<EthersPopulatedTransaction, SentEthersLiquityTransaction<T>> {
     // @internal
-    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, connection: EthersLiquityConnection, parse: (rawReceipt: EthersTransactionReceipt) => T);
+    constructor(rawPopulatedTransaction: EthersPopulatedTransaction, connection: EthersLiquityConnection, parse: (rawReceipt: EthersTransactionReceipt) => T, gasHeadroom?: number);
+    readonly gasHeadroom?: number;
     readonly rawPopulatedTransaction: EthersPopulatedTransaction;
     // (undocumented)
     send(): Promise<SentEthersLiquityTransaction<T>>;
@@ -387,6 +410,34 @@ export class PopulatedEthersRedemption extends PopulatedEthersLiquityTransaction
     readonly isTruncated: boolean;
     // (undocumented)
     readonly redeemableLUSDAmount: Decimal;
+}
+
+// @internal (undocumented)
+export enum _RawErrorReason {
+    // (undocumented)
+    TRANSACTION_CANCELLED = "cancelled",
+    // (undocumented)
+    TRANSACTION_FAILED = "transaction failed",
+    // (undocumented)
+    TRANSACTION_REPLACED = "replaced",
+    // (undocumented)
+    TRANSACTION_REPRICED = "repriced"
+}
+
+// @internal (undocumented)
+export interface _RawTransactionReplacedError extends Error {
+    // (undocumented)
+    cancelled: boolean;
+    // (undocumented)
+    code: ErrorCode.TRANSACTION_REPLACED;
+    // (undocumented)
+    hash: string;
+    // (undocumented)
+    reason: _RawErrorReason.TRANSACTION_CANCELLED | _RawErrorReason.TRANSACTION_REPLACED | _RawErrorReason.TRANSACTION_REPRICED;
+    // (undocumented)
+    receipt: EthersTransactionReceipt;
+    // (undocumented)
+    replacement: EthersTransactionResponse;
 }
 
 // @public
@@ -409,6 +460,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     static _from(connection: EthersLiquityConnection): ReadableEthersLiquity;
     // @internal (undocumented)
     _getActivePool(overrides?: EthersCallOverrides): Promise<Trove>;
+    // @internal (undocumented)
+    _getBlockTimestamp(blockTag?: BlockTag): Promise<number>;
     // (undocumented)
     getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // @internal (undocumented)
@@ -481,7 +534,7 @@ export const _redeemMaxIterations = 70;
 export class SendableEthersLiquity implements SendableLiquity<EthersTransactionReceipt, EthersTransactionResponse> {
     constructor(populatable: PopulatableEthersLiquity);
     // (undocumented)
-    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
+    adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
     // (undocumented)
@@ -503,7 +556,7 @@ export class SendableEthersLiquity implements SendableLiquity<EthersTransactionR
     // @internal (undocumented)
     _mintUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
     // (undocumented)
-    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveCreationDetails>>;
+    openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveCreationDetails>>;
     // (undocumented)
     redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<RedemptionDetails>>;
     // (undocumented)

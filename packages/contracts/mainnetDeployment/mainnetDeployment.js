@@ -23,7 +23,7 @@ async function mainnetDeploy(configParams) {
   let deployerETHBalance = await ethers.provider.getBalance(deployerWallet.address)
   console.log(`deployerETHBalance before: ${deployerETHBalance}`)
 
-  // Get UniswaV2Factory instance at its deployed address
+  // Get UniswapV2Factory instance at its deployed address
   const uniswapV2Factory = new ethers.Contract(
     configParams.externalAddrs.UNISWAP_V2_FACTORY,
     UniswapV2Factory.abi,
@@ -312,7 +312,7 @@ async function mainnetDeploy(configParams) {
 
   // // Get the UniswapV2Router contract
   // const uniswapV2Router02 = new ethers.Contract(
-  //   configParams.externalAddrs.UNIWAP_V2_ROUTER02,
+  //   configParams.externalAddrs.UNISWAP_V2_ROUTER02,
   //   UniswapV2Router02.abi,
   //   deployerWallet
   // )

@@ -1,6 +1,6 @@
 import { BigDecimal } from "@graphprotocol/graph-ts";
 
-import { DECIMAL_ZERO } from "./bignumbers";
+import { DECIMAL_PRECISION, DECIMAL_ZERO } from "./bignumbers";
 
 export function calculateCollateralRatio(
   collateral: BigDecimal,
@@ -11,5 +11,5 @@ export function calculateCollateralRatio(
     return null;
   }
 
-  return (collateral * price) / debt;
+  return collateral.times(price).div(debt).truncate(DECIMAL_PRECISION);
 }

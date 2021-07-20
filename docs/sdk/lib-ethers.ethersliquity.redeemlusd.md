@@ -26,7 +26,7 @@ Promise&lt;[RedemptionDetails](./lib-base.redemptiondetails.md)<!-- -->&gt;
 
 ## Exceptions
 
-Throws [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) in case of transaction failure.
+Throws [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) in case of transaction failure. Throws [EthersTransactionCancelledError](./lib-ethers.etherstransactioncancellederror.md) if the transaction is cancelled or replaced.
 
 ## Remarks
 

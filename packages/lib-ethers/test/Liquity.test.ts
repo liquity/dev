@@ -175,8 +175,11 @@ describe("EthersLiquity", () => {
       ];
 
       const borrowerOperations = {
-        estimateAndPopulate: {
-          openTrove: () => ({})
+        estimateGas: {
+          openTrove: () => Promise.resolve(BigNumber.from(1))
+        },
+        populateTransaction: {
+          openTrove: () => Promise.resolve({})
         }
       };
 
@@ -190,7 +193,11 @@ describe("EthersLiquity", () => {
 
       const fakeLiquity = new PopulatableEthersLiquity(({
         getNumberOfTroves: () => Promise.resolve(1000000),
-        getFees: () => Promise.resolve(new Fees(0, 0.99, 1, new Date(), new Date(), false)),
+        getTotal: () => Promise.resolve(new Trove(Decimal.from(10), Decimal.ONE)),
+        getPrice: () => Promise.resolve(Decimal.ONE),
+        _getBlockTimestamp: () => Promise.resolve(0),
+        _getFeesFactory: () =>
+          Promise.resolve(() => new Fees(0, 0.99, 1, new Date(), new Date(), false)),
 
         connection: {
           signerOrProvider: user,
@@ -662,7 +669,7 @@ describe("EthersLiquity", () => {
 
     it("should redeem some LUSD after the bootstrap phase", async () => {
       // Fast-forward 15 days
-      increaseTime(60 * 60 * 24 * 15);
+      await increaseTime(60 * 60 * 24 * 15);
 
       expect(`${await otherLiquities[0].getCollateralSurplusBalance()}`).to.equal("0");
       expect(`${await otherLiquities[1].getCollateralSurplusBalance()}`).to.equal("0");
@@ -777,7 +784,7 @@ describe("EthersLiquity", () => {
       await otherLiquities[1].openTrove(troveCreationParams);
       await otherLiquities[2].openTrove(troveCreationParams);
 
-      increaseTime(60 * 60 * 24 * 15);
+      await increaseTime(60 * 60 * 24 * 15);
     });
 
     it("should truncate the amount if it would put the last Trove below the min debt", async () => {
@@ -864,7 +871,7 @@ describe("EthersLiquity", () => {
         );
       }
 
-      increaseTime(60 * 60 * 24 * 15);
+      await increaseTime(60 * 60 * 24 * 15);
     });
 
     it("should redeem using the maximum iterations and almost all gas", async () => {
@@ -1012,7 +1019,7 @@ describe("EthersLiquity", () => {
         { depositCollateral: 20, borrowLUSD: 2080 }
       ]);
 
-      increaseTime(60 * 60 * 24 * 15);
+      await increaseTime(60 * 60 * 24 * 15);
     });
 
     it("should include enough gas for updating lastFeeOperationTime", async () => {
@@ -1163,6 +1170,104 @@ describe("EthersLiquity", () => {
       }
 
       await waitForSuccess(liquidateMultiple.send());
+    });
+  });
+
+  describe("Gas estimation (fee decay)", () => {
+    before(async function () {
+      if (network.name !== "hardhat") {
+        this.skip();
+      }
+
+      this.timeout("1m");
+
+      deployment = await deployLiquity(deployer);
+      const [redeemedUser, ...someMoreUsers] = otherUsers.slice(0, 21);
+      [liquity, ...otherLiquities] = await connectUsers([user, ...someMoreUsers]);
+
+      // Create a "slope" of Troves with similar, but slightly decreasing ICRs
+      await openTroves(
+        someMoreUsers,
+        someMoreUsers.map((_, i) => ({
+          depositCollateral: 20,
+          borrowLUSD: LUSD_MINIMUM_NET_DEBT.add(i / 10)
+        }))
+      );
+
+      // Sweep LUSD
+      await Promise.all(
+        otherLiquities.map(async otherLiquity =>
+          otherLiquity.sendLUSD(await user.getAddress(), await otherLiquity.getLUSDBalance(), {
+            gasPrice: 0
+          })
+        )
+      );
+
+      const price = await liquity.getPrice();
+
+      // Create a "designated victim" Trove that'll be redeemed
+      const redeemedTroveDebt = await liquity
+        .getLUSDBalance()
+        .then(x => x.div(10).add(LUSD_LIQUIDATION_RESERVE));
+      const redeemedTroveCollateral = redeemedTroveDebt.mulDiv(1.1, price);
+      const redeemedTrove = new Trove(redeemedTroveCollateral, redeemedTroveDebt);
+
+      await openTroves([redeemedUser], [Trove.recreate(redeemedTrove)]);
+
+      // Jump past bootstrap period
+      await increaseTime(60 * 60 * 24 * 15);
+
+      // Increase the borrowing rate by redeeming
+      const { actualLUSDAmount } = await liquity.redeemLUSD(redeemedTrove.netDebt, undefined, {
+        gasPrice: 0
+      });
+
+      expect(`${actualLUSDAmount}`).to.equal(`${redeemedTrove.netDebt}`);
+
+      const borrowingRate = await liquity.getFees().then(fees => Number(fees.borrowingRate()));
+      expect(borrowingRate).to.be.within(0.04, 0.049); // make sure it's high, but not clamped to 5%
+    });
+
+    it("should predict the gas increase due to fee decay", async function () {
+      this.timeout("1m");
+
+      const [bottomTrove] = await liquity.getTroves({
+        first: 1,
+        sortedBy: "ascendingCollateralRatio"
+      });
+
+      const borrowingRate = await liquity.getFees().then(fees => fees.borrowingRate());
+
+      for (const [borrowingFeeDecayToleranceMinutes, roughGasHeadroom] of [
+        [10, 102000],
+        [20, 184000],
+        [30, 241000]
+      ]) {
+        const tx = await liquity.populate.openTrove(Trove.recreate(bottomTrove, borrowingRate), {
+          borrowingFeeDecayToleranceMinutes
+        });
+
+        expect(tx.gasHeadroom).to.be.within(roughGasHeadroom - 1000, roughGasHeadroom + 1000);
+      }
+    });
+
+    it("should include enough gas for the TX to succeed after pending", async function () {
+      this.timeout("1m");
+
+      const [bottomTrove] = await liquity.getTroves({
+        first: 1,
+        sortedBy: "ascendingCollateralRatio"
+      });
+
+      const borrowingRate = await liquity.getFees().then(fees => fees.borrowingRate());
+
+      const tx = await liquity.populate.openTrove(
+        Trove.recreate(bottomTrove.multiply(2), borrowingRate),
+        { borrowingFeeDecayToleranceMinutes: 60 }
+      );
+
+      await increaseTime(60 * 60);
+      await waitForSuccess(tx.send());
     });
   });
 });

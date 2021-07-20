@@ -1,8 +1,8 @@
-import { Value, BigInt, Address } from "@graphprotocol/graph-ts";
+import { Value, BigInt } from "@graphprotocol/graph-ts";
 
-import { Global, LqtyStakeChange } from "../../generated/schema";
+import { Global } from "../../generated/schema";
 
-import { BIGINT_ZERO, DECIMAL_ZERO } from "../utils/bignumbers";
+import { BIGINT_ZERO, DECIMAL_ZERO, decimalize } from "../utils/bignumbers";
 
 const onlyGlobalId = "only";
 
@@ -28,7 +28,8 @@ export function getGlobal(): Global {
     newGlobal.rawTotalRedistributedDebt = BIGINT_ZERO;
     newGlobal.totalNumberOfLQTYStakes = 0;
     newGlobal.numberOfActiveLQTYStakes = 0;
-    newGlobal.totalLQTYTokensStaked = DECIMAL_ZERO;
+    newGlobal.totalBorrowingFeesPaid = DECIMAL_ZERO;
+    newGlobal.totalRedemptionFeesPaid = DECIMAL_ZERO;
 
     return newGlobal;
   }
@@ -56,23 +57,18 @@ export function getChangeSequenceNumber(): i32 {
   return increaseCounter("changeCount");
 }
 
+export function getLastChangeSequenceNumber(): i32 {
+  let global = getGlobal();
+
+  return global.changeCount - 1;
+}
+
 export function getLiquidationSequenceNumber(): i32 {
   return increaseCounter("liquidationCount");
 }
 
 export function getRedemptionSequenceNumber(): i32 {
   return increaseCounter("redemptionCount");
-}
-
-export function updatePriceFeedAddress(priceFeedAddress: Address): void {
-  let global = getGlobal();
-
-  global.priceFeedAddress = priceFeedAddress;
-  global.save();
-}
-
-export function getPriceFeedAddress(): Address {
-  return getGlobal().priceFeedAddress as Address;
 }
 
 export function updateTotalRedistributed(L_ETH: BigInt, L_LUSDDebt: BigInt): void {
@@ -139,26 +135,30 @@ export function decreaseNumberOfTrovesClosedByOwner(): void {
   global.save();
 }
 
-export function handleLQTYStakeChange(
-  stakeChange: LqtyStakeChange,
-  isUserFirstStake: boolean
-): void {
+export function increaseTotalNumberOfLQTYStakes(): void {
   let global = getGlobal();
 
-  if (stakeChange.stakeOperation == "stakeCreated") {
-    if (isUserFirstStake) {
-      global.totalNumberOfLQTYStakes++;
-    }
-    global.numberOfActiveLQTYStakes++;
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
-  } else if (stakeChange.stakeOperation == "stakeIncreased") {
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
-  } else if (stakeChange.stakeOperation == "stakeDecreased") {
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
-  } else if (stakeChange.stakeOperation == "stakeRemoved") {
-    global.numberOfActiveLQTYStakes--;
-    global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.minus(stakeChange.amountChange);
-  }
+  global.totalNumberOfLQTYStakes++;
+  global.numberOfActiveLQTYStakes++;
+  global.save();
+}
 
+export function increaseNumberOfActiveLQTYStakes(): void {
+  let global = getGlobal();
+
+  global.numberOfActiveLQTYStakes++;
+  global.save();
+}
+
+export function decreaseNumberOfActiveLQTYStakes(): void {
+  let global = getGlobal();
+
+  global.numberOfActiveLQTYStakes--;
+  global.save();
+}
+
+export function increaseTotalBorrowingFeesPaid(_LUSDFee: BigInt): void {
+  let global = getGlobal();
+  global.totalBorrowingFeesPaid = global.totalBorrowingFeesPaid.plus(decimalize(_LUSDFee));
   global.save();
 }

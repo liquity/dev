@@ -14,7 +14,9 @@ import {
   increaseNumberOfLiquidatedTroves,
   increaseNumberOfRedeemedTroves,
   increaseNumberOfOpenTroves,
-  increaseNumberOfTrovesClosedByOwner
+  increaseNumberOfTrovesClosedByOwner,
+  getLastChangeSequenceNumber,
+  getGlobal
 } from "./Global";
 import { beginChange, initChange, finishChange } from "./Change";
 import { getCurrentPrice, updateSystemStateByTroveChange } from "./SystemState";
@@ -72,7 +74,7 @@ function setTroveStatus(trove: Trove, status: string): void {
 }
 
 function createTroveChange(event: ethereum.Event): TroveChange {
-  let sequenceNumber = beginChange(event);
+  let sequenceNumber = beginChange();
   let troveChange = new TroveChange(sequenceNumber.toString());
   initChange(troveChange, event, sequenceNumber);
 
@@ -90,10 +92,9 @@ export function updateTrove(
   _borrower: Address,
   _coll: BigInt,
   _debt: BigInt,
-  stake: BigInt,
-  snapshotETH: BigInt,
-  snapshotLUSDDebt: BigInt
+  stake: BigInt
 ): void {
+  let global = getGlobal();
   let trove = getTrove(_borrower);
   let newCollateral = decimalize(_coll);
   let newDebt = decimalize(_debt);
@@ -119,8 +120,8 @@ export function updateTrove(
   troveChange.debtAfter = trove.debt;
   troveChange.collateralRatioAfter = calculateCollateralRatio(trove.collateral, trove.debt, price);
 
-  troveChange.collateralChange = troveChange.collateralAfter - troveChange.collateralBefore;
-  troveChange.debtChange = troveChange.debtAfter - troveChange.debtBefore;
+  troveChange.collateralChange = troveChange.collateralAfter.minus(troveChange.collateralBefore);
+  troveChange.debtChange = troveChange.debtAfter.minus(troveChange.debtBefore);
 
   if (isLiquidation(operation)) {
     let currentLiquidation = getCurrentLiquidation(event);
@@ -138,12 +139,18 @@ export function updateTrove(
   trove.rawCollateral = _coll;
   trove.rawDebt = _debt;
   trove.rawStake = stake;
-  trove.rawSnapshotOfTotalRedistributedCollateral = snapshotETH;
-  trove.rawSnapshotOfTotalRedistributedDebt = snapshotLUSDDebt;
 
   if (stake != BIGINT_ZERO) {
-    trove.collateralRatioSortKey = (_debt * BIGINT_SCALING_FACTOR) / stake - snapshotLUSDDebt;
+    trove.rawSnapshotOfTotalRedistributedCollateral = global.rawTotalRedistributedCollateral;
+    trove.rawSnapshotOfTotalRedistributedDebt = global.rawTotalRedistributedDebt;
+
+    trove.collateralRatioSortKey = _debt
+      .times(BIGINT_SCALING_FACTOR)
+      .div(stake)
+      .minus(global.rawTotalRedistributedDebt);
   } else {
+    trove.rawSnapshotOfTotalRedistributedCollateral = BIGINT_ZERO;
+    trove.rawSnapshotOfTotalRedistributedDebt = BIGINT_ZERO;
     trove.collateralRatioSortKey = null;
   }
 
@@ -160,4 +167,39 @@ export function updateTrove(
   }
 
   trove.save();
+}
+
+export function setBorrowingFeeOfLastTroveChange(_LUSDFee: BigInt): void {
+  let lastChangeSequenceNumber = getLastChangeSequenceNumber();
+
+  let lastTroveChange = TroveChange.load(lastChangeSequenceNumber.toString());
+  lastTroveChange.borrowingFee = decimalize(_LUSDFee);
+  lastTroveChange.save();
+}
+
+export function applyRedistributionToTroveBeforeLiquidation(
+  event: ethereum.Event,
+  _borrower: Address
+): void {
+  let global = getGlobal();
+  let trove = getTrove(_borrower);
+
+  let redistributedCollateral = global.rawTotalRedistributedCollateral
+    .minus(trove.rawSnapshotOfTotalRedistributedCollateral)
+    .times(trove.rawStake)
+    .div(BIGINT_SCALING_FACTOR);
+
+  let redistributedDebt = global.rawTotalRedistributedDebt
+    .minus(trove.rawSnapshotOfTotalRedistributedDebt)
+    .times(trove.rawStake)
+    .div(BIGINT_SCALING_FACTOR);
+
+  updateTrove(
+    event,
+    "accrueRewards",
+    _borrower,
+    trove.rawCollateral.plus(redistributedCollateral),
+    trove.rawDebt.plus(redistributedDebt),
+    BIGINT_ZERO // No need to calculate new stake, because we know the Trove is being liquidated
+  );
 }

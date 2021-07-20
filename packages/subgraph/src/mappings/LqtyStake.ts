@@ -1,7 +1,4 @@
-import {
-  StakeChanged,
-  StakingGainsWithdrawn
-} from "../../generated/templates/LQTYStaking/LQTYStaking";
+import { StakeChanged, StakingGainsWithdrawn } from "../../generated/LQTYStaking/LQTYStaking";
 
 import { updateStake, withdrawStakeGains } from "../entities/LqtyStake";
 

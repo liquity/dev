@@ -9,6 +9,8 @@ import {
   Difference
 } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
+
+import { useStableTroveChange } from "../../hooks/useStableTroveChange";
 import { ActionDescription } from "../ActionDescription";
 import { useMyTransactionState } from "../Transaction";
 import { TroveAction } from "./TroveAction";
@@ -19,6 +21,7 @@ import { InfoIcon } from "../InfoIcon";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { CollateralRatio } from "./CollateralRatio";
 import { EditableRow, StaticRow } from "./Editor";
+import { ExpensiveTroveChangeWarning, GasEstimationState } from "./ExpensiveTroveChangeWarning";
 import {
   selectForTroveChangeValidation,
   validateTroveChange
@@ -118,10 +121,6 @@ export const Adjusting: React.FC = () => {
     setNetDebt(trove.netDebt);
   }, [trove.collateral, trove.netDebt]);
 
-  if (trove.status !== "open") {
-    return null;
-  }
-
   const isDirty = !collateral.eq(trove.collateral) || !netDebt.eq(trove.netDebt);
   const isDebtIncrease = netDebt.gt(trove.netDebt);
   const debtIncreaseAmount = isDebtIncrease ? netDebt.sub(trove.netDebt) : Decimal.ZERO;
@@ -133,8 +132,10 @@ export const Adjusting: React.FC = () => {
   const maxBorrowingRate = borrowingRate.add(0.005);
   const updatedTrove = isDirty ? new Trove(collateral, totalDebt) : trove;
   const feePct = new Percent(borrowingRate);
-  const maxEth = accountBalance.gt(GAS_ROOM_ETH) ? accountBalance.sub(GAS_ROOM_ETH) : Decimal.ZERO;
-  const maxCollateral = collateral.add(maxEth);
+  const availableEth = accountBalance.gt(GAS_ROOM_ETH)
+    ? accountBalance.sub(GAS_ROOM_ETH)
+    : Decimal.ZERO;
+  const maxCollateral = trove.collateral.add(availableEth);
   const collateralMaxedOut = collateral.eq(maxCollateral);
   const collateralRatio =
     !collateral.isZero && !netDebt.isZero ? updatedTrove.collateralRatio(price) : undefined;
@@ -147,9 +148,16 @@ export const Adjusting: React.FC = () => {
     validationContext
   );
 
+  const stableTroveChange = useStableTroveChange(troveChange);
+  const [gasEstimationState, setGasEstimationState] = useState<GasEstimationState>({ type: "idle" });
+
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
+
+  if (trove.status !== "open") {
+    return null;
+  }
 
   return (
     <Card>
@@ -252,16 +260,25 @@ export const Adjusting: React.FC = () => {
           </ActionDescription>
         )}
 
+        <ExpensiveTroveChangeWarning
+          troveChange={stableTroveChange}
+          maxBorrowingRate={maxBorrowingRate}
+          borrowingFeeDecayToleranceMinutes={60}
+          gasEstimationState={gasEstimationState}
+          setGasEstimationState={setGasEstimationState}
+        />
+
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
 
-          {troveChange ? (
+          {stableTroveChange ? (
             <TroveAction
               transactionId={TRANSACTION_ID}
-              change={troveChange}
+              change={stableTroveChange}
               maxBorrowingRate={maxBorrowingRate}
+              borrowingFeeDecayToleranceMinutes={60}
             >
               Confirm
             </TroveAction>
