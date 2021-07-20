@@ -279,10 +279,9 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     overrides?: EthersCallOverrides
   ): Promise<StabilityDeposit> {
     const _1e18 = BigNumber.from(10).pow(18)
-    const reallyLargeAllowance = BigNumber.from("0x8888888888888888888888888888888888888888888888888888888888888888")
 
     address ??= _requireAddress(this.connection);
-    const { stabilityPool, bamm, lqtyToken, lusdToken, priceFeed, bLens } = _getContracts(this.connection);
+    const { stabilityPool, bamm, lqtyToken, priceFeed, bLens } = _getContracts(this.connection);
     const bammLqtyBalancePromise = lqtyToken.balanceOf(bamm.address, { ...overrides})
 
     const [
@@ -307,7 +306,6 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       bLens.callStatic.getUnclaimedLqty(address, bamm.address, lqtyToken.address),
       bamm.share({ ...overrides }),
       bamm.stock({ ...overrides}),
-
     ]);
 
     const bammLqtyBalance = await bammLqtyBalancePromise
@@ -341,9 +339,6 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       )
     }
     
-    const allowance = await lusdToken.allowance(address, bamm.address)
-    console.log({allowance})
-    const bammAllowance = allowance.gt(reallyLargeAllowance)
     return new StabilityDeposit(
       bammPoolShare,
       poolShare,
@@ -353,7 +348,6 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       Decimal.fromBigNumber(currentETH),
       Decimal.fromBigNumber(unclaimedLqty),
       frontEndTag,
-      bammAllowance,
       Decimal.fromBigNumber(bammEthBalance),
       Decimal.fromBigNumber(unclaimedLqty)
     );
@@ -618,6 +612,17 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       ? { status: "registered", kickbackRate: decimalify(kickbackRate) }
       : { status: "unregistered" };
   }
+
+  async getBammAllowance(overrides?: EthersCallOverrides): Promise<boolean> {
+    const { lusdToken, bamm } = _getContracts(this.connection);
+    const address = _requireAddress(this.connection);
+    const reallyLargeAllowance = BigNumber.from("0x8888888888888888888888888888888888888888888888888888888888888888")
+
+    const allowance = await lusdToken.allowance(address, bamm.address)
+    console.log({allowance})
+    const bammAllowance = allowance.gt(reallyLargeAllowance)
+    return bammAllowance;
+  }
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
@@ -871,5 +876,11 @@ class _BlockPolledReadableEthersLiquity
 
   _getRemainingLiquidityMiningLQTYRewardCalculator(): Promise<(blockTimestamp: number) => Decimal> {
     throw new Error("Method not implemented.");
+  }
+
+  async getBammAllowance(overrides?: EthersCallOverrides): Promise<boolean> {
+    return this._blockHit(overrides)
+      ? this.store.state.bammAllowance
+      : this._readable.getBammAllowance(overrides);
   }
 }

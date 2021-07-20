@@ -97,7 +97,6 @@ export const StabilityDepositManager: React.FC = () => {
   const handleCancel = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
-  debugger
   const [validChange, description] = validateStabilityDepositChange(
     originalDeposit,
     editedUSD,

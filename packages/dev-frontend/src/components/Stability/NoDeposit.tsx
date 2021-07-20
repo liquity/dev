@@ -15,8 +15,8 @@ function useForceUpdate(){
   return () => setValue(value => value + 1); // update the state to force render
 }
 
-const selector = ({ stabilityDeposit }: LiquityStoreState) => ({
-  stabilityDeposit
+const selector = ( {bammAllowance}: any) => ({
+  bammAllowance
 });
 
 interface BammAllowanceModalProps {
@@ -46,10 +46,9 @@ const BammAllowanceModal: React.FC<BammAllowanceModalProps> = props => {
           </Heading>
           <Box sx={{ p: [2, 3]}}>
             <Flex sx={{"flexDirection": "column", justifyContent: "space-around", height: "240px"}}>
-              <Paragraph>
-                in order to deposit LUSD and gain LQTY & BPRO
-                you will need to unlock the BAMM smart contract
-              </Paragraph>
+              <InfoMessage title="You have no allowance.">
+                In order to depsoit LUSD to try B.AMM you need to grant allowance
+              </InfoMessage>
               <Button onClick={props.sendTransaction}>Unlock BAMM</Button>
             </Flex>
           </Box>
@@ -61,7 +60,7 @@ const BammAllowanceModal: React.FC<BammAllowanceModalProps> = props => {
 
 export const NoDeposit: React.FC = props => {
   const { liquity } = useLiquity();
-  const { stabilityDeposit } = useLiquitySelector(selector);
+  const { bammAllowance } = useLiquitySelector(selector);
   const { dispatchEvent } = useStabilityView();
   const [allowanceSucceed, setAllowanceSucceed] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -81,11 +80,11 @@ export const NoDeposit: React.FC = props => {
     }
     
     if (transactionState.type === "confirmed") {
-      setAllowanceSucceed(true);
+      handleOpenTrove()
     }
   }, [transactionState.type]);
 
-  const hasAllowance = allowanceSucceed || stabilityDeposit.bammAllowance
+  const hasAllowance = bammAllowance
 
   const modalProps = {
     close: ()=> setShowModal(false),

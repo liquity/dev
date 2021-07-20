@@ -601,10 +601,8 @@ export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = 
 // @public
 export class StabilityDeposit {
     // @internal
-    constructor(bammPoolShare: Decimal, poolShare: Decimal, initialLUSD: Decimal, currentUSD: Decimal, currentLUSD: Decimal, collateralGain: Decimal, lqtyReward: Decimal, frontendTag: string, bammAllowance: boolean, totalEthInBamm: Decimal, totalLusdInBamm: Decimal);
+    constructor(bammPoolShare: Decimal, poolShare: Decimal, initialLUSD: Decimal, currentUSD: Decimal, currentLUSD: Decimal, collateralGain: Decimal, lqtyReward: Decimal, frontendTag: string, totalEthInBamm: Decimal, totalLusdInBamm: Decimal);
     apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
-    // (undocumented)
-    readonly bammAllowance: boolean;
     readonly bammPoolShare: Decimal;
     readonly collateralGain: Decimal;
     readonly currentLUSD: Decimal;

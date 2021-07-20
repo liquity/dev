@@ -45,8 +45,6 @@ export class StabilityDeposit {
    */
   readonly frontendTag: string;
 
-  readonly bammAllowance: boolean;
-
   readonly totalEthInBamm: Decimal;
   
   readonly totalLusdInBamm: Decimal;
@@ -61,7 +59,6 @@ export class StabilityDeposit {
     collateralGain: Decimal,
     lqtyReward: Decimal,
     frontendTag: string, 
-    bammAllowance: boolean, 
     totalEthInBamm: Decimal,
     totalLusdInBamm: Decimal
   ) {
@@ -73,7 +70,6 @@ export class StabilityDeposit {
     this.collateralGain = collateralGain;
     this.lqtyReward = lqtyReward;
     this.frontendTag = frontendTag;
-    this.bammAllowance = bammAllowance;
     this.totalEthInBamm = totalEthInBamm;
     this.totalLusdInBamm = totalLusdInBamm;
   }

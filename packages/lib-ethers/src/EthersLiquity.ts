@@ -312,6 +312,10 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getTotalStakedLQTY(overrides);
   }
 
+  getBammAllowance(overrides?: EthersCallOverrides): Promise<boolean> {
+    return this._readable.getBammAllowance(overrides);
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getFrontendStatus} */
   getFrontendStatus(address?: string, overrides?: EthersCallOverrides): Promise<FrontendStatus> {
     return this._readable.getFrontendStatus(address, overrides);
