@@ -349,7 +349,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       Decimal.fromBigNumber(unclaimedLqty),
       frontEndTag,
       Decimal.fromBigNumber(bammEthBalance),
-      Decimal.fromBigNumber(unclaimedLqty)
+      Decimal.fromBigNumber(currentBammLUSD)
     );
   }
 
