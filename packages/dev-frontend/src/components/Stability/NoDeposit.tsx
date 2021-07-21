@@ -37,7 +37,7 @@ const BammAllowanceModal: React.FC<BammAllowanceModalProps> = props => {
       overflow: "hidden",
     }}>
       <Flex sx={{ width: "100%", height: "100%", justifyContent: "center", alignItems: "center" }}>
-          <Card sx={{ width: "33%", height: "300px"}}>
+          <Card sx={{ width: "33%", minWidth: "300px", height: "300px"}}>
           <Heading>
             Unlock BAMM
           <Flex sx={{ justifyContent: "flex-end" }}>
@@ -45,7 +45,7 @@ const BammAllowanceModal: React.FC<BammAllowanceModalProps> = props => {
           </Flex>
           </Heading>
           <Box sx={{ p: [2, 3]}}>
-            <Flex sx={{"flexDirection": "column", justifyContent: "space-around", height: "240px"}}>
+            <Flex sx={{"flexDirection": "column", justifyContent: "space-between", height: "210px"}}>
               <InfoMessage title="You have no allowance.">
                 In order to depsoit LUSD to try B.AMM you need to grant allowance
               </InfoMessage>
@@ -77,10 +77,6 @@ export const NoDeposit: React.FC = props => {
   useEffect(() => {
     if (transactionState.type === "waitingForConfirmation") {
       setShowModal(false);
-    }
-    
-    if (transactionState.type === "confirmed") {
-      handleOpenTrove()
     }
   }, [transactionState.type]);
 
