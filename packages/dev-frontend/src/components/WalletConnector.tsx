@@ -117,7 +117,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
 
   return (
     <>
-      <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center" }}>
+      <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
         <Button
           onClick={() => {
             dispatch({ type: "startActivating", connector: injectedConnector });
@@ -136,6 +136,9 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             </>
           )}
         </Button>
+        <a href="https://app.bprotocol.org/terms" target="_top">
+          <Box sx={{ ml: 2, mt: 15 }}>By using bprotocol, you agree to the Terms and Conditions</Box>
+        </a>
       </Flex>
 
       {connectionState.type === "failed" && (
