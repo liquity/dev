@@ -2,3 +2,8 @@
 /build
 /.env
 /config.json
+
+# CF worker site
+#===========================
+wrangler.toml
+/workers-site
