@@ -25,8 +25,10 @@ export const Header: React.FC = ({ children }) => {
   return (
     <Container variant="header">
       <Flex sx={{ alignItems: "center", flex: 1 }}>
+      <div  className="hide" > 
         <LiquityLogo height={logoHeight} />
-
+      </div>
+      <div  className="hide" > 
         <Box
           sx={{
             mx: [2, 3],
@@ -35,9 +37,12 @@ export const Header: React.FC = ({ children }) => {
             borderLeft: ["none", "1px solid lightgrey"]
           }}
         />
+        </div>
         {isFrontendRegistered && (
           <>
-            <SideNav />
+            <div  className="hide" > 
+              <SideNav /> 
+            </div>
             <Nav />
           </>
         )}
