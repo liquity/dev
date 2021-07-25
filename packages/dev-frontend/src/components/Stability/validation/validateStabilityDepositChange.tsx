@@ -9,17 +9,20 @@ import { COIN } from "../../../strings";
 import { Amount } from "../../ActionDescription";
 import { ErrorDescription } from "../../ErrorDescription";
 import { StabilityActionDescription } from "../StabilityActionDescription";
+import { UnlockButton } from "../NoDeposit"
 
 export const selectForStabilityDepositChangeValidation = ({
   trove,
   lusdBalance,
   ownFrontend,
-  haveUndercollateralizedTroves
-}: LiquityStoreState) => ({
+  haveUndercollateralizedTroves,
+  bammAllowance
+}: any) => ({
   trove,
   lusdBalance,
   haveOwnFrontend: ownFrontend.status === "registered",
-  haveUndercollateralizedTroves
+  haveUndercollateralizedTroves,
+  bammAllowance
 });
 
 type StabilityDepositChangeValidationContext = ReturnType<
@@ -32,13 +35,26 @@ export const validateStabilityDepositChange = (
   {
     lusdBalance,
     haveOwnFrontend,
-    haveUndercollateralizedTroves
+    haveUndercollateralizedTroves,
+    bammAllowance
   }: StabilityDepositChangeValidationContext
 ): [
   validChange: StabilityDepositChange<Decimal> | undefined,
   description: JSX.Element | undefined
 ] => {
   const change = originalDeposit.whatChanged(editedLUSD);
+
+  if(change && !bammAllowance) {
+    return [
+      undefined,
+      <ErrorDescription>
+        You have no allowance. {" "}
+        <UnlockButton>
+          click here to unlock.
+        </UnlockButton>
+      </ErrorDescription>
+    ];
+  }
 
   if (haveOwnFrontend) {
     return [
