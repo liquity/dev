@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button, Flex } from "theme-ui";
 
+import { useMyTransactionState } from "../Transaction";
 import {
   Decimal,
   Decimalish,
@@ -60,7 +61,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   const editedUserUsd = userTotalUsdInBamm.sub(stabilityDeposit.currentUSD).add(editedUSD);
   const editedTotalUsdInBamm = totalUsdInBamm.sub(stabilityDeposit.currentUSD).add(editedUSD);
   const editedBammPoolShare = editedUserUsd.mulDiv(100, editedTotalUsdInBamm)
-
+  
   /* USD balance
   ====================================================================*/
   const usdDiff = Difference.between(editedUSD, stabilityDeposit.currentUSD)
@@ -77,6 +78,11 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
     newTotalLusd = stabilityDeposit.totalLusdInBamm.mul((editedTotalUsdInBamm.div(totalUsdInBamm)))
     newTotalEth = stabilityDeposit.totalEthInBamm.mul((editedTotalUsdInBamm.div(totalUsdInBamm)))
   }
+
+  const allowanceTxState = useMyTransactionState("bamm-unlock");
+  const waitingForTransaction =
+    allowanceTxState.type === "waitingForApproval" ||
+    allowanceTxState.type === "waitingForConfirmation";
 
   /* ETH balance
   ====================================================================*/
@@ -102,8 +108,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   return (
     <Card>
       <Heading>
-        Stability Pool
-        {edited && !changePending && (
+        Stability Pool 1234
+        {edited && (!changePending && !waitingForTransaction) && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
@@ -197,7 +203,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         {children}
       </Box>
 
-      {changePending && <LoadingOverlay />}
+      {changePending || waitingForTransaction && <LoadingOverlay />}
     </Card>
   );
 };
