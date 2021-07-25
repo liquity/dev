@@ -243,5 +243,20 @@
     "address": "0xe15f843480BAd6b9ce15338c7741ECD27335101F",
     "txHash": "0x392c7da1bb5345ceb883ebe81be8eda62f46271c14c6f1dff444b72ecdf366d7",
     "verification": "https://etherscan.io/address/0xe15f843480BAd6b9ce15338c7741ECD27335101F#code"
+  },
+  "ACCOUNT_32": {
+    "address": "0x0051099Cac8F0C27467425bE5Eedd96078e6f748",
+    "txHash": "0x4202819de8a52b5a4d006e3f80943668a318bcd9a25648385678c04f7d3284e5",
+    "verification": "https://etherscan.io/address/0x0051099Cac8F0C27467425bE5Eedd96078e6f748#code"
+  },
+  "ACCOUNT_33": {
+    "address": "0xBa4a395251dBEb49a17BA0d09eAB6cb3F55752F9",
+    "txHash": "0x8d8099b1c1eb79d12cf960b01d3a7a23f3aa0b750d965e33685dbfd7e4a35ba4",
+    "verification": "https://etherscan.io/address/0xBa4a395251dBEb49a17BA0d09eAB6cb3F55752F9#code"
+  },
+  "ACCOUNT_34": {
+    "address": "0x5eced47f98e1357E5184FC876335549794FDA513",
+    "txHash": "0x75e313276156ea0449b5daf2a1a23a7e46fe77e069ea5e2316b1894a6c517040",
+    "verification": "https://etherscan.io/address/0x5eced47f98e1357E5184FC876335549794FDA513#code"
   }
 }

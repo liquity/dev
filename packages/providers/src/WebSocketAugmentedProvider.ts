@@ -79,6 +79,12 @@ const sequence = <T, U, V>(
   f(u => g(h)(u, context))(t, context);
 };
 
+const defer = <T>(f: (t: T) => void) => (t: T) => {
+  setTimeout(() => {
+    f(t);
+  }, 0);
+};
+
 export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvider>(Base: T) => {
   let webSocketAugmentedProvider = class extends Base implements WebSocketAugmentedProvider {
     _wsProvider?: WebSocketProvider;
@@ -216,7 +222,7 @@ export const WebSocketAugmented = <T extends new (...args: any[]) => BaseProvide
       return [
         f,
         (u: U) =>
-          g(f)(u, {
+          g(defer(f))(u, {
             isActive: () => this._blockListeners.has(f),
             removeMe: () => this._blockListeners.delete(f)
           })
