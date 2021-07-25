@@ -5,7 +5,8 @@ import {
   PriceChange,
   TroveChange,
   StabilityDepositChange,
-  CollSurplusChange
+  CollSurplusChange,
+  LqtyStakeChange
 } from "../../generated/schema";
 
 import {
@@ -15,6 +16,7 @@ import {
   DECIMAL_COLLATERAL_GAS_COMPENSATION_DIVISOR,
   DECIMAL_PRECISION
 } from "../utils/bignumbers";
+
 import { calculateCollateralRatio } from "../utils/collateralRatio";
 
 import {
@@ -40,6 +42,7 @@ export function getCurrentSystemState(): SystemState {
     newSystemState.totalDebt = DECIMAL_ZERO;
     newSystemState.tokensInStabilityPool = DECIMAL_ZERO;
     newSystemState.collSurplusPoolBalance = DECIMAL_ZERO;
+    newSystemState.totalLQTYTokensStaked = DECIMAL_ZERO;
     newSystemState.save();
 
     let global = getGlobal();
@@ -52,7 +55,7 @@ export function getCurrentSystemState(): SystemState {
   return currentSystemStateOrNull as SystemState;
 }
 
-export function bumpSystemState(systemState: SystemState): void {
+function bumpSystemState(systemState: SystemState): void {
   let sequenceNumber = getSystemStateSequenceNumber();
   systemState.id = sequenceNumber.toString();
   systemState.sequenceNumber = sequenceNumber;
@@ -194,6 +197,16 @@ export function updateSystemStateByCollSurplusChange(collSurplusChange: CollSurp
 
   systemState.collSurplusPoolBalance = systemState.collSurplusPoolBalance.plus(
     collSurplusChange.collSurplusChange
+  );
+
+  bumpSystemState(systemState);
+}
+
+export function updateSystemStateByLqtyStakeChange(stakeChange: LqtyStakeChange): void {
+  let systemState = getCurrentSystemState();
+
+  systemState.totalLQTYTokensStaked = systemState.totalLQTYTokensStaked.plus(
+    stakeChange.stakedAmountChange
   );
 
   bumpSystemState(systemState);

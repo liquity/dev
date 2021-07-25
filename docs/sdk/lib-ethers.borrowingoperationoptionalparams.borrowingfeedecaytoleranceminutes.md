@@ -18,5 +18,5 @@ Transactions that borrow LUSD must pay a variable borrowing fee, which is added 
 
 The SDK can estimate how much the gas costs of the transaction may increase due to this decay, and can include additional gas to ensure that it will still succeed, even if it ends up pending for a relatively long time. This parameter specifies the length of time that should be covered by the extra gas.
 
-Default: 60 minutes.
+Default: 10 minutes.
 
