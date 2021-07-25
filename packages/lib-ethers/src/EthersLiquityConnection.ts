@@ -27,7 +27,7 @@ const dev = devOrNull as _LiquityDeploymentJSON | null;
 const deployments: {
   [chainId: number]: _LiquityDeploymentJSON | undefined;
 } = {
-  [mainnet.chainId]: mainnet,
+  // [mainnet.chainId]: mainnet,
   //[ropsten.chainId]: ropsten,
   //[rinkeby.chainId]: rinkeby,
   //[goerli.chainId]: goerli,
