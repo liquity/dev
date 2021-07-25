@@ -47,7 +47,8 @@ const select = ({
   borrowingRate,
   redemptionRate,
   totalStakedLQTY,
-  frontend
+  frontend,
+  stabilityDeposit
 }: LiquityStoreState) => ({
   numberOfTroves,
   price,
@@ -56,7 +57,8 @@ const select = ({
   borrowingRate,
   redemptionRate,
   totalStakedLQTY,
-  kickbackRate: frontend.status === "registered" ? frontend.kickbackRate : null
+  kickbackRate: frontend.status === "registered" ? frontend.kickbackRate : null,
+  stabilityDeposit
 });
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
@@ -73,11 +75,13 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     total,
     borrowingRate,
     totalStakedLQTY,
-    kickbackRate
+    kickbackRate,
+    stabilityDeposit
   } = useLiquitySelector(select);
 
   const lusdInStabilityPoolPct =
     total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
+  const lusdInBammPct = new Percent(stabilityDeposit.totalLusdInBamm.div(lusdInStabilityPool))
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
   const borrowingFeePct = new Percent(borrowingRate);
   const kickbackRatePct = frontendTag === AddressZero ? "100" : kickbackRate?.mul(100).prettify();
@@ -91,7 +95,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         Protocol
       </Heading>
-
+      <div  className="hide" > 
       <Statistic
         name="Borrowing Fee"
         tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
@@ -111,9 +115,11 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Statistic name="Troves" tooltip="The total number of active Troves in the system.">
         {Decimal.from(numberOfTroves).prettify(0)}
       </Statistic>
+
       <Statistic name="LUSD supply" tooltip="The total LUSD minted by the Liquity Protocol.">
         {total.debt.shorten()}
-      </Statistic>
+      </Statistic>      
+      </div>
       {lusdInStabilityPoolPct && (
         <Statistic
           name="LUSD in Stability Pool"
@@ -124,12 +130,23 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
           <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct.toString(1)})</Text>
         </Statistic>
       )}
+      {stabilityDeposit.totalLusdInBamm && (
+        <Statistic
+          name="LUSD in BAMM"
+          tooltip="The total LUSD currently held in the BAMM, expressed as an amount and a fraction of the LUSD in the Stability Pool.
+        "
+        >
+          {stabilityDeposit.totalLusdInBamm.shorten()}
+          <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInBammPct.toString(1)})</Text>
+        </Statistic>
+      )}
       <Statistic
         name="Staked LQTY"
         tooltip="The total amount of LQTY that is staked for earning fee revenue."
       >
         {totalStakedLQTY.shorten()}
       </Statistic>
+      <div  className="hide" > 
       <Statistic
         name="Total Collateral Ratio"
         tooltip="The ratio of the Dollar value of the entire system collateral at the current ETH:USD price, to the entire system debt."
@@ -142,7 +159,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       >
         {total.collateralRatioIsBelowCritical(price) ? <Box color="danger">Yes</Box> : "No"}
       </Statistic>
-      {}
+      </div>
 
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         Frontend
