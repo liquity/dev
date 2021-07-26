@@ -92,7 +92,7 @@ const App = () => {
         <Icon name="exclamation-triangle" /> B.Protocol AMM is not yet deployed to{" "}
         {chainId === 1 ? "mainnet" : "this network"}.
       </Heading>
-      Please switch to Mainnet or Kovan.
+      Please switch to Kovan.
     </Flex>
   );
 
