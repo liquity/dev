@@ -25,9 +25,7 @@ export const Header: React.FC = ({ children }) => {
   return (
     <Container variant="header">
       <Flex sx={{ alignItems: "center", flex: 1 }}>
-      <div  className="hide" > 
         <LiquityLogo height={logoHeight} />
-      </div>
       <div  className="hide" > 
         <Box
           sx={{
