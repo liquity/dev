@@ -49,6 +49,9 @@ const beneficiaries = {
   ACCOUNT_29: "0x1824ffB249cD510573840155b3DefBbdb4ABB916",
   ACCOUNT_30: "0x4CA75a1B3ABFb97Cee6C87BB15eF5b5609eCAad3",
   ACCOUNT_31: "0x994668f7B05B30996BB7F2B87140D0A761D9f292",
+  ACCOUNT_32: "0xd89852fA2F66B54F485bCa0CcE3Af4e67015597E",
+  ACCOUNT_33: "0xF6451cCdC8D47a26Ec6535cA8DEa90E6696A3aDC",
+  ACCOUNT_34: "0x895870D281E4761237f4465AFb51D16c3e124EFC"
 }
 
 const OUTPUT_FILE = './mainnetDeployment/mainnetDeploymentOutput.json'
@@ -58,7 +61,7 @@ const waitFunction = async () => {
   return delay(90000) // wait 90s
 }
 
-const GAS_PRICE = 200000000000
+const GAS_PRICE = 25000000000
 const TX_CONFIRMATIONS = 3 // for mainnet
 
 const ETHERSCAN_BASE_URL = 'https://etherscan.io/address'

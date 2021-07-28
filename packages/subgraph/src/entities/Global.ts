@@ -1,6 +1,6 @@
 import { Value, BigInt } from "@graphprotocol/graph-ts";
 
-import { Global, LqtyStakeChange } from "../../generated/schema";
+import { Global } from "../../generated/schema";
 
 import { BIGINT_ZERO, DECIMAL_ZERO, decimalize } from "../utils/bignumbers";
 
@@ -28,7 +28,6 @@ export function getGlobal(): Global {
     newGlobal.rawTotalRedistributedDebt = BIGINT_ZERO;
     newGlobal.totalNumberOfLQTYStakes = 0;
     newGlobal.numberOfActiveLQTYStakes = 0;
-    newGlobal.totalLQTYTokensStaked = DECIMAL_ZERO;
     newGlobal.totalBorrowingFeesPaid = DECIMAL_ZERO;
     newGlobal.totalRedemptionFeesPaid = DECIMAL_ZERO;
 
@@ -136,22 +135,25 @@ export function decreaseNumberOfTrovesClosedByOwner(): void {
   global.save();
 }
 
-export function handleLQTYStakeChange(
-  stakeChange: LqtyStakeChange,
-  isUserFirstStake: boolean
-): void {
+export function increaseTotalNumberOfLQTYStakes(): void {
   let global = getGlobal();
 
-  if (stakeChange.stakeOperation == "stakeCreated") {
-    if (isUserFirstStake) {
-      global.totalNumberOfLQTYStakes++;
-    }
-    global.numberOfActiveLQTYStakes++;
-  } else if (stakeChange.stakeOperation == "stakeRemoved") {
-    global.numberOfActiveLQTYStakes--;
-  }
+  global.totalNumberOfLQTYStakes++;
+  global.numberOfActiveLQTYStakes++;
+  global.save();
+}
 
-  global.totalLQTYTokensStaked = global.totalLQTYTokensStaked.plus(stakeChange.amountChange);
+export function increaseNumberOfActiveLQTYStakes(): void {
+  let global = getGlobal();
+
+  global.numberOfActiveLQTYStakes++;
+  global.save();
+}
+
+export function decreaseNumberOfActiveLQTYStakes(): void {
+  let global = getGlobal();
+
+  global.numberOfActiveLQTYStakes--;
   global.save();
 }
 
