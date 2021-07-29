@@ -108,7 +108,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   return (
     <Card>
       <Heading>
-        Stability Pool 1234
+        Stability Pool
         {edited && (!changePending && !waitingForTransaction) && (
           <Button
             variant="titleIcon"
