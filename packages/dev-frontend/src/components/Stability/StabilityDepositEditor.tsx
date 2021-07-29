@@ -166,20 +166,20 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
               unit="%"
             />
           )}
-
-          {bammPoolShare.infinite ? (
-            <StaticRow label="Pool share" inputId="deposit-share" amount="N/A" />
-          ) : (
-            <StaticRow
-              label="BAMM Pool share"
-              inputId="deposit-share"
-              amount={editedBammPoolShare.prettify(4)}
-              pendingAmount={bammPoolShareChange?.prettify(4).concat("%")}
-              pendingColor={bammPoolShareChange?.positive ? "success" : "danger"}
-              unit="%"
-            />
-          )}
-          
+          <div className="hide" >
+            {bammPoolShare.infinite ? (
+              <StaticRow label="BAMM Pool share" inputId="deposit-share" amount="N/A" />
+            ) : (
+              <StaticRow
+                label="BAMM Pool share"
+                inputId="deposit-share"
+                amount={editedBammPoolShare.prettify(4)}
+                pendingAmount={bammPoolShareChange?.prettify(4).concat("%")}
+                pendingColor={bammPoolShareChange?.positive ? "success" : "danger"}
+                unit="%"
+              />
+            )}
+          </div>
             <StaticRow
               label="Reward"
               inputId="deposit-reward"

@@ -88,14 +88,14 @@ export const ActiveDeposit: React.FC = () => {
             amount={poolShare.prettify(4)}
             unit="%"
           />
-
-          <StaticRow
-            label="BAMM Pool share"
-            inputId="deposit-share"
-            amount={bammPoolShare.prettify(4)}
-            unit="%"
-          />
-
+          <div className="hide" >
+            <StaticRow
+              label="BAMM Pool share"
+              inputId="deposit-share"
+              amount={bammPoolShare.prettify(4)}
+              unit="%"
+            />
+          </div>
           <Flex sx={{ alignItems: "center" }}>
             <StaticRow
               label="Reward"
