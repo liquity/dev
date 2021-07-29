@@ -152,6 +152,16 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
               unit="ETH"
               pendingAmount={ethDiff?.prettify(4).concat("ETH")}
               pendingColor={ethDiff?.positive ? "success" : "danger"}
+              infoIcon={
+                <InfoIcon
+                  tooltip={
+                    <Card variant="tooltip" sx={{ width: "240px" }}>
+                      TODO: yarons text here
+                      and here
+                    </Card>
+                  }
+                />
+              }
             />
           </Flex>
           {newPoolShare.infinite ? (

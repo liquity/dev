@@ -79,6 +79,16 @@ export const ActiveDeposit: React.FC = () => {
               inputId="deposit-gain"
               amount={stabilityDeposit.collateralGain.prettify(4)}
               unit="ETH"
+              infoIcon={
+                <InfoIcon
+                  tooltip={
+                    <Card variant="tooltip" sx={{ width: "240px" }}>
+                      TODO: yarons text here
+                      and here
+                    </Card>
+                  }
+                />
+              }
             />
           </Flex>
 
