@@ -105,6 +105,10 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   const poolShareChange =
     originalDeposit.currentLUSD.nonZero &&
     Difference.between(newPoolShare, originalPoolShare).nonZero;
+  
+
+  const ethDiffInUsd = stabilityDeposit.currentUSD.sub(stabilityDeposit.currentLUSD)
+  const ethIsImportant = (ethDiffInUsd.div(stabilityDeposit.currentUSD)).gt(1/1000)
   return (
     <Card>
       <Heading>
@@ -145,7 +149,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
                 pendingColor={lusdDiff?.positive ? "success" : "danger"}
             />
 
-            <StaticRow
+            {ethIsImportant && <StaticRow
               label="ETH balance"
               inputId="deposit-gain"
               amount={newEthBalance.prettify(4)}
@@ -163,6 +167,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
                 />
               }
             />
+          }
           </Flex>
           {newPoolShare.infinite ? (
             <StaticRow label="Pool share" inputId="deposit-share" amount="N/A" />

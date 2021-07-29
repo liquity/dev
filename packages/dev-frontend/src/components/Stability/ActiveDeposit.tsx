@@ -48,6 +48,9 @@ export const ActiveDeposit: React.FC = () => {
     }
   }, [transactionState.type, dispatchEvent]);
 
+  const ethDiffInUsd = stabilityDeposit.currentUSD.sub(stabilityDeposit.currentLUSD)
+  const ethIsImportant = (ethDiffInUsd.div(stabilityDeposit.currentUSD)).gt(1/1000)
+  debugger
   return (
     <Card>
       <Heading>
@@ -73,23 +76,24 @@ export const ActiveDeposit: React.FC = () => {
               amount={stabilityDeposit.currentLUSD.prettify(2)}
               unit="LUSD"
             />
-
-            <StaticRow
-              label="ETH balance"
-              inputId="deposit-gain"
-              amount={stabilityDeposit.collateralGain.prettify(4)}
-              unit="ETH"
-              infoIcon={
-                <InfoIcon
-                  tooltip={
-                    <Card variant="tooltip" sx={{ width: "240px" }}>
-                      TODO: yarons text here
-                      and here
-                    </Card>
-                  }
-                />
-              }
-            />
+            {ethIsImportant &&
+              <StaticRow
+                label="ETH balance"
+                inputId="deposit-gain"
+                amount={stabilityDeposit.collateralGain.prettify(4)}
+                unit="ETH"
+                infoIcon={
+                  <InfoIcon
+                    tooltip={
+                      <Card variant="tooltip" sx={{ width: "240px" }}>
+                        TODO: yarons text here
+                        and here
+                      </Card>
+                    }
+                  />
+                }
+              />
+            }
           </Flex>
 
           <StaticRow
