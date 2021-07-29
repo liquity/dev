@@ -267,7 +267,6 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       bamm.stake(address)
     ]);
     console.log({stake})
-        //  totalShare times witdrawLusd divide by totalLusd
     const spShare = decimalify(total).mul(Decimal.from(withdrawAmount)).div(decimalify(currentBammLUSD)).toString()
 
     return spShare

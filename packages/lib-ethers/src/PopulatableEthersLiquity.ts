@@ -1117,7 +1117,6 @@ export class PopulatableEthersLiquity
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
     const { bamm } = _getContracts(this._readable.connection);
-    //  totalShare times witdrawLusd divide by totalLusd
     const spShareToWithdraw = await this._readable.getWitdrawsSpShare(amount)
     return this._wrapStabilityDepositWithdrawal(
       await bamm.estimateAndPopulate.withdraw(
