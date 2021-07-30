@@ -45,19 +45,23 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
         minHeight: "400px",
         maxHeight: "500px",
         backgroundImage: `url(${GROUP})`,
+        backgroundPosition: "right",
         backgroundSize: "cover",
-        padding: "100px"
+        padding: "100px",
+        overflow: "hidden"
       }}>
         <Box sx={{
             fontFamily: `"Poppins", sans-serif`, 
             fontSize: "60px",
             fontWeight: "bold",
-            lineHeight: "1.33",
             letterSpacing: "1.09px",
             color: "#17111e",
-            maxWidth: "50%"
+            width: "50%",
+            maxWidth:"783px",
           }}>
-          Automated Rebalancing for Liquity Stability Pool 
+            <span className="title">
+              Automated Rebalancing for Liquity Stability Pool 
+            </span>
         </Box>
         <Box sx={{
             fontFamily: `"Poppins", sans-serif`,
@@ -66,7 +70,9 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
             letterSpacing: "0.73px",
             color: "#17111e"
           }}>
-          by B.Protocol v2
+          <span className="subtitle">
+            by B.Protocol v2
+          </span>
         </Box>
       </div>
       <div style={{
@@ -82,7 +88,7 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
           text="B.Protocol v2 and its noval Backstop AMM (B.AMM) automates the rebalancing of Liquity Stability Pool to maintain its strength.
           Read more on how the Liquity
           SP is working "
-          link=""
+          link="https://docs.liquity.org/faq/stability-pool-and-liquidations"
         />
         <Item
           icon={"./bprotocol/icon-a-2.svg"}
@@ -90,7 +96,7 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
           Yield on Your LUSD"
           text="By using B.Protocol to deposit your LUSD into Liquity Stability Pool, you can save the manual operation of selling your accumulated ETH back to LUSD every time a liquidation is taking place.
           Read more about how it’s done"
-          link=""
+          link="TODO:"
         />
         <Item
           icon={"./bprotocol/icon-a-3.svg"}
@@ -98,7 +104,7 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
           B.Protocl V2"
           text="The integration of Liqity with B.Protocol v2 is a step forward towards a more stabilized DeFi ecosystem. 
           Read mor about the novel B.AMM design that enables that"
-          link=""
+          link="https://medium.com/b-protocol/b-amm-efficient-automated-market-maker-for-defi-liquidations-fea7b0fdc0c5"
         />
       </Flex>
     </div>
