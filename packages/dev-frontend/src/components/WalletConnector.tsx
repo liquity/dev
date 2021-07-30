@@ -11,6 +11,7 @@ import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
 import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
+import { ConnectPage } from "./ConnectPage";
 
 interface MaybeHasMetaMask {
   ethereum?: {
@@ -116,9 +117,14 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
   }
 
   return (
-    <>
-      <Flex sx={{ height: "100vh", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
+    <ConnectPage>
+      <Flex sx={{ justifyContent: "center", alignItems: "flex-start", flexDirection: "column" }}>
         <Button
+          sx={{ 
+            width: "260px",
+            backgroundColor: "#12c164",
+            border: "none"
+          }}
           onClick={() => {
             dispatch({ type: "startActivating", connector: injectedConnector });
             activate(injectedConnector);
@@ -127,18 +133,23 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
           {isMetaMask ? (
             <>
               <MetaMaskIcon />
-              <Box sx={{ ml: 2 }}>Connect to MetaMask</Box>
+              <Box sx={{ ml: 2, whiteSpace: "nowrap" }}>CONNECT METAMASK</Box>
             </>
           ) : (
             <>
               <Icon name="plug" size="lg" />
-              <Box sx={{ ml: 2 }}>Connect wallet</Box>
+              <Box sx={{ ml: 2, whiteSpace: "nowrap" }}>CONNECT METAMASK</Box>
             </>
           )}
         </Button>
-        <a href="https://app.bprotocol.org/terms" target="_top">
-          <Box sx={{ ml: 2, mt: 15 }}>By using bprotocol, you agree to the Terms and Conditions</Box>
+        <Box sx={{ ml:2, mt: 15, width: "260px" }}>
+        <a style={{ 
+            color: "#647686",
+            textDecoration: "none"
+          }} href="https://app.bprotocol.org/terms" target="_top">
+            By using bprotocol, you agree to the Terms and Conditions
         </a>
+        </Box>
       </Flex>
 
       {connectionState.type === "failed" && (
@@ -211,6 +222,6 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
           </RetryDialog>
         </Modal>
       )}
-    </>
+    </ConnectPage>
   );
 };
