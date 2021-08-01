@@ -1,5 +1,11 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button, Flex } from "theme-ui";
+import { ActionDescription } from "../ActionDescription";
+
+import {
+  selectForStabilityDepositChangeValidation,
+  validateStabilityDepositChange
+} from "./validation/validateStabilityDepositChange";
 
 import { useMyTransactionState } from "../Transaction";
 import {
@@ -44,6 +50,8 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   const { lusdBalance, lusdInStabilityPool, stabilityDeposit } = useLiquitySelector(select);
   const editingState = useState<string>();
   const price = useLiquitySelector(selectPrice);
+  const validationContext = useLiquitySelector(selectForStabilityDepositChangeValidation);
+
 
   const edited = !editedUSD.eq(stabilityDeposit.currentUSD);
 
@@ -87,13 +95,21 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   /* ETH balance
   ====================================================================*/
   const newEthBalance = editedBammPoolShare.mul(newTotalEth).div(100)
-  let ethDiff = Difference.between(newEthBalance, stabilityDeposit.collateralGain).nonZero
+  const ethDiff = Difference.between(newEthBalance, stabilityDeposit.collateralGain).nonZero
 
   /* LUSD balance
   ====================================================================*/
   const newLusdBalance = editedBammPoolShare.mul(newTotalLusd).div(100)
-  let lusdDiff = Difference.between(newLusdBalance, stabilityDeposit.currentLUSD).nonZeroish(16)
+  const lusdDiff = Difference.between(newLusdBalance, stabilityDeposit.currentLUSD).nonZeroish(16)
   
+  const [, description] = validateStabilityDepositChange(
+    originalDeposit,
+    editedUSD,
+    validationContext,
+    lusdDiff,
+    ethDiff,
+  );
+  const makingNewDeposit = originalDeposit.isEmpty;
 
   /* pool share
   ====================================================================*/
@@ -214,6 +230,12 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
             />
           </>
         )}
+        {description ??
+          (makingNewDeposit ? (
+            <ActionDescription>Enter the amount of {COIN} you'd like to deposit.</ActionDescription>
+          ) : (
+            <ActionDescription>Adjust the {COIN} amount to deposit or withdraw.</ActionDescription>
+          ))}
         {children}
       </Box>
 

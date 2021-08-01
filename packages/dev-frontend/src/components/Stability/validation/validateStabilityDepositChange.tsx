@@ -5,6 +5,10 @@ import {
   StabilityDepositChange
 } from "@liquity/lib-base";
 
+import {
+  Difference
+} from "@liquity/lib-base";
+
 import { COIN } from "../../../strings";
 import { Amount } from "../../ActionDescription";
 import { ErrorDescription } from "../../ErrorDescription";
@@ -37,7 +41,9 @@ export const validateStabilityDepositChange = (
     haveOwnFrontend,
     haveUndercollateralizedTroves,
     bammAllowance
-  }: StabilityDepositChangeValidationContext
+  }: StabilityDepositChangeValidationContext,
+  lusdDiff: Difference| undefined,
+  ethDiff: Difference| undefined,
 ): [
   validChange: StabilityDepositChange<Decimal> | undefined,
   description: JSX.Element | undefined
@@ -92,5 +98,5 @@ export const validateStabilityDepositChange = (
     ];
   }
 
-  return [change, <StabilityActionDescription originalDeposit={originalDeposit} change={change} />];
+  return [change, <StabilityActionDescription lusdDiff={lusdDiff} ethDiff={ethDiff} originalDeposit={originalDeposit} change={change} />];
 };

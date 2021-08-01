@@ -97,10 +97,12 @@ export const StabilityDepositManager: React.FC = () => {
   const handleCancel = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
-  const [validChange, description] = validateStabilityDepositChange(
+  const [validChange] = validateStabilityDepositChange(
     originalDeposit,
     editedUSD,
-    validationContext
+    validationContext,
+    undefined,
+    undefined,
   );
 
   const makingNewDeposit = originalDeposit.isEmpty;
@@ -127,12 +129,7 @@ export const StabilityDepositManager: React.FC = () => {
       changePending={changePending}
       dispatch={dispatch}
     >
-      {description ??
-        (makingNewDeposit ? (
-          <ActionDescription>Enter the amount of {COIN} you'd like to deposit.</ActionDescription>
-        ) : (
-          <ActionDescription>Adjust the {COIN} amount to deposit or withdraw.</ActionDescription>
-        ))}
+
 
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleCancel}>
