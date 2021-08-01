@@ -25,7 +25,7 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
   if(eth && (eth.indexOf("-") > -1 || eth.indexOf("+") > -1)){
     eth = eth.substr(1)
   }
-  let lusd = lusdDiff?.prettify(4)
+  let lusd = lusdDiff?.prettify(2)
   if(lusd && (lusd.indexOf("-") > -1 || lusd.indexOf("+") > -1)){
     lusd = lusd.substr(1)
   }
@@ -48,6 +48,7 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
           {ethDiff?.absoluteValue?.gte(1/10000) &&
           <>
             And
+            {" "}
             <Amount>
             {eth} ETH
             </Amount>{" "}
@@ -56,17 +57,11 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
           to your wallet
         </>
       )}
-      {(collateralGain || lqtyReward) && (
+      {lqtyReward && (
         <>
           {" "}
           and claiming at least{" "}
-          {collateralGain && lqtyReward ? (
-            <>
-              <Amount>{collateralGain}</Amount> and <Amount>{lqtyReward}</Amount>
-            </>
-          ) : (
-            <Amount>{collateralGain ?? lqtyReward}</Amount>
-          )}
+            <Amount>{lqtyReward}</Amount>
         </>
       )}
       .
