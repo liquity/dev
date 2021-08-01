@@ -1,4 +1,4 @@
-/* Can't style the html tag with theme-ui, so put styles in here */
+/* Can't style the html tag with theme-ui; so put styles in here */
 
 html {
   height: 100%;
@@ -6,36 +6,4 @@ html {
 
 .hide {
   display: none!important;
-}
-
-/* ConnectPage
-============================= */
-.title {
-  font-size: 60px;
-  line-height: 1.33;
-}
-
-.subtitle {
-font-size: 40px;
-}
-@media (max-width: 1600px) {
-  .title {
-    font-size: 50px;
-    line-height: 1;
-  }
-
-  .subtitle {
-    font-size: 30px;
-  }
-}
-
-@media (max-width: 1410px) {
-  .title {
-      font-size: 40px;
-      line-height: 0.5;
-  }
-
-  .subtitle {
-    font-size: 20px;
-  }
 }

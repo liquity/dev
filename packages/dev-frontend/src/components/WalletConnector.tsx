@@ -11,7 +11,7 @@ import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
 import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
-import { ConnectPage } from "./ConnectPage";
+import { ConnectPage, device } from "./ConnectPage";
 
 interface MaybeHasMetaMask {
   ethereum?: {
@@ -121,31 +121,42 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
       <Flex sx={{ justifyContent: "center", alignItems: "flex-start", flexDirection: "column" }}>
         <Button
           sx={{ 
-            width: "260px",
+            fontFamily: `"NeueHaasGroteskDisp Pro Md", sans-serif`,
             backgroundColor: "#12c164",
-            border: "none"
+            border: "none",
+            letterSpacing: "0.75px",
+            whiteSpace: "nowrap",
+            [`@media screen and (min-width: ${device.mobile}px)`]: {
+              fontSize: "20px",
+              width: "319px",
+              height: "59px"
+            },
+            [`@media screen and (min-width: ${device.laptop}px)`]: {
+              fontSize: "14px",
+              width: "219px",
+              height: "49px"
+            },
+            [`@media screen and (min-width: ${device.desktop}px)`]: {
+              fontSize: "15px",
+              width: "242px",
+              height: "54px"
+            },
           }}
           onClick={() => {
             dispatch({ type: "startActivating", connector: injectedConnector });
             activate(injectedConnector);
           }}
         >
-          {isMetaMask ? (
-            <>
-              <MetaMaskIcon />
-              <Box sx={{ ml: 2, whiteSpace: "nowrap" }}>CONNECT METAMASK</Box>
-            </>
-          ) : (
-            <>
-              <Icon name="plug" size="lg" />
-              <Box sx={{ ml: 2, whiteSpace: "nowrap" }}>CONNECT METAMASK</Box>
-            </>
-          )}
+          <Box>CONNECT METAMASK</Box>
         </Button>
         <Box sx={{ ml:2, mt: 15, width: "260px" }}>
         <a style={{ 
             color: "#647686",
-            textDecoration: "none"
+            textDecoration: "none",
+            lineHeight: "normal",
+            letterSpacing: "0.6px",
+            fontFamily: `"NeueHaasGroteskDisp Pro Md", sans-serif`,
+            fontSize: "12px"
           }} href="https://app.bprotocol.org/terms" target="_top">
             By using bprotocol, you agree to the Terms and Conditions
         </a>
