@@ -132,8 +132,8 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       )}
       {stabilityDeposit.totalLusdInBamm && (
         <Statistic
-          name="LUSD in BAMM"
-          tooltip="The total LUSD currently held in the BAMM, expressed as an amount and a fraction of the LUSD in the Stability Pool.
+          name="LUSD in B.Protocol"
+          tooltip="The total LUSD currently held in the B.Protocol's B.AMM, expressed as an amount and a fraction of the LUSD in the Stability Pool.
         "
         >
           {stabilityDeposit.totalLusdInBamm.shorten()}

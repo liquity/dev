@@ -86,8 +86,7 @@ export const ActiveDeposit: React.FC = () => {
                   <InfoIcon
                     tooltip={
                       <Card variant="tooltip" sx={{ width: "240px" }}>
-                        TODO: yarons text here
-                        and here
+                        Temporary ETH balance until rebalance takes place
                       </Card>
                     }
                   />
