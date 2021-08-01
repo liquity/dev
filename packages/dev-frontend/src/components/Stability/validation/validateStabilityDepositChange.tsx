@@ -44,18 +44,6 @@ export const validateStabilityDepositChange = (
 ] => {
   const change = originalDeposit.whatChanged(editedLUSD);
 
-  if(change && !bammAllowance) {
-    return [
-      undefined,
-      <ErrorDescription>
-        You have no allowance. {" "}
-        <UnlockButton>
-          click here to unlock.
-        </UnlockButton>
-      </ErrorDescription>
-    ];
-  }
-
   if (haveOwnFrontend) {
     return [
       undefined,
@@ -78,6 +66,18 @@ export const validateStabilityDepositChange = (
           {change.depositLUSD.sub(lusdBalance).prettify()} {COIN}
         </Amount>
         .
+      </ErrorDescription>
+    ];
+  }
+
+  if(change && !bammAllowance) {
+    return [
+      undefined,
+      <ErrorDescription>
+        You have no allowance. {" "}
+        <UnlockButton>
+          click here to unlock.
+        </UnlockButton>
       </ErrorDescription>
     ];
   }
