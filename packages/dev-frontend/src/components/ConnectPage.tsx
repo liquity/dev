@@ -174,9 +174,8 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
             [`@media screen and (min-width: ${device.desktop}px)`]: {
               fontSize: "36px",
             },
-            
           }}>
-            by B.Protocol v2
+            Powered by B.Protocol v2
         </Box>
       </Box>
       <Box sx={{
@@ -221,7 +220,7 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
         <Item
           icon={"./bprotocol/icon-a-1.svg"}
           title={<span>Stabilize <br/>Liquity Protocol</span>}
-          text="B.Protocol v2 and its noval Backstop AMM (B.AMM) automates the rebalancing of Liquity Stability Pool to maintain its strength.
+          text="B.Protocol v2 and its novel Backstop AMM (B.AMM) automates the rebalancing of Liquity Stability Pool to maintain its strength.
           Read more on how the Liquity
           SP is working "
           link="https://docs.liquity.org/faq/stability-pool-and-liquidations"

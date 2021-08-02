@@ -118,7 +118,17 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
 
   return (
     <ConnectPage>
-      <Flex sx={{ justifyContent: "center", alignItems: "flex-start", flexDirection: "column" }}>
+      <Flex sx={{ justifyContent: "center", alignItems: "flex-start", flexDirection: "column",
+        [`@media screen and (min-width: ${device.mobile}px)`]: {
+          width: "319px",
+        },
+        [`@media screen and (min-width: ${device.laptop}px)`]: {
+          width: "219px",
+        },
+        [`@media screen and (min-width: ${device.desktop}px)`]: {
+          width: "242px",
+        },
+      }}>
         <Button
           sx={{ 
             fontFamily: `"NeueHaasGroteskDisp Pro Md", sans-serif`,
@@ -126,19 +136,17 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             border: "none",
             letterSpacing: "0.75px",
             whiteSpace: "nowrap",
+            width: "100%",
             [`@media screen and (min-width: ${device.mobile}px)`]: {
               fontSize: "20px",
-              width: "319px",
               height: "59px"
             },
             [`@media screen and (min-width: ${device.laptop}px)`]: {
               fontSize: "14px",
-              width: "219px",
               height: "49px"
             },
             [`@media screen and (min-width: ${device.desktop}px)`]: {
               fontSize: "15px",
-              width: "242px",
               height: "54px"
             },
           }}
@@ -149,7 +157,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
         >
           <Box>CONNECT METAMASK</Box>
         </Button>
-        <Box sx={{ ml:2, mt: 15, width: "260px" }}>
+        <Box sx={{ ml:2, mt: 15, width: "100%" }}>
         <a style={{ 
             color: "#647686",
             textDecoration: "none",
@@ -158,7 +166,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             fontFamily: `"NeueHaasGroteskDisp Pro Md", sans-serif`,
             fontSize: "12px"
           }} href="https://app.bprotocol.org/terms" target="_top">
-            By using bprotocol, you agree to the Terms and Conditions
+            By using B.Protocol, you agree to the <span style={{textDecoration: "underline"}}>Terms and Conditions</span>
         </a>
         </Box>
       </Flex>
