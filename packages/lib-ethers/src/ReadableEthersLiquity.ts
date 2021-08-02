@@ -258,16 +258,14 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     console.log(withdrawAmount)
 
     const [
-      currentBammLUSD, 
-      total, // total amount of shares in the bamm
-      stake // users share in the bamm
+      stake, // users share in the bamm
+      {currentUSD}
     ] = await Promise.all([
-      stabilityPool.getCompoundedLUSDDeposit(bamm.address),
-      bamm.total(),
-      bamm.stake(address)
+      bamm.stake(address),
+      this.getStabilityDeposit(address)
     ]);
-    console.log({stake})
-    const spShare = decimalify(total).mul(Decimal.from(withdrawAmount)).div(decimalify(currentBammLUSD)).toString()
+    // amount * stake / currentUSD
+    const spShare = decimalify(stake).mul(Decimal.from(withdrawAmount)).div(currentUSD).toString()
 
     return spShare
   }
