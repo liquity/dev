@@ -86,7 +86,7 @@ const Item: React.FC<ItemProps> = ({icon, title, text, link}) => {
       }}>
         {text}
         {" "}
-        <a style={{color: "#0f874a"}} href={link}>here </a>
+        <a style={{color: "#0f874a"}} href={link}>here. </a>
       </Box>
     </Flex>
   )
