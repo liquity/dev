@@ -50,7 +50,6 @@ export const ActiveDeposit: React.FC = () => {
 
   const ethDiffInUsd = stabilityDeposit.currentUSD.sub(stabilityDeposit.currentLUSD)
   const ethIsImportant = (ethDiffInUsd.div(stabilityDeposit.currentUSD)).gt(1/1000)
-  debugger
   return (
     <Card>
       <Heading>

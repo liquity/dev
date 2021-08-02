@@ -86,10 +86,15 @@ export class StabilityDeposit {
   /** @internal */
   toString(): string {
     return (
-      `{ initialLUSD: ${this.initialLUSD}` +
+      `{ bammPoolShare: ${this.bammPoolShare}` +
+      `, poolShare: ${this.poolShare}` +
+      `, initialLUSD: ${this.initialLUSD}` +
       `, currentLUSD: ${this.currentLUSD}` +
       `, collateralGain: ${this.collateralGain}` +
       `, lqtyReward: ${this.lqtyReward}` +
+      `, totalEthInBamm: ${this.totalEthInBamm}` +
+      `, lqtyReward: ${this.lqtyReward}` +
+      `, totalLusdInBamm: ${this.totalLusdInBamm}` +
       `, frontendTag: "${this.frontendTag}" }`
     );
   }
@@ -98,12 +103,18 @@ export class StabilityDeposit {
    * Compare to another instance of `StabilityDeposit`.
    */
   equals(that: StabilityDeposit): boolean {
+
     return (
+      this.bammPoolShare.eq(that.bammPoolShare) &&
+      this.poolShare.eq(that.poolShare) &&
+      this.currentUSD.eq(that.currentUSD) &&
       this.initialLUSD.eq(that.initialLUSD) &&
       this.currentLUSD.eq(that.currentLUSD) &&
       this.collateralGain.eq(that.collateralGain) &&
       this.lqtyReward.eq(that.lqtyReward) &&
-      this.frontendTag === that.frontendTag
+      this.frontendTag === that.frontendTag &&
+      this.totalEthInBamm === that.totalEthInBamm &&
+      this.totalLusdInBamm === that.totalLusdInBamm
     );
   }
 
@@ -131,15 +142,15 @@ export class StabilityDeposit {
    */
   apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal {
     if (!change) {
-      return this.currentLUSD;
+      return this.currentUSD;
     }
 
     if (change.withdrawLUSD !== undefined) {
-      return change.withdrawAllLUSD || this.currentLUSD.lte(change.withdrawLUSD)
+      return change.withdrawAllLUSD || this.currentUSD.lte(change.withdrawLUSD)
         ? Decimal.ZERO
-        : this.currentLUSD.sub(change.withdrawLUSD);
+        : this.currentUSD.sub(change.withdrawLUSD);
     } else {
-      return this.currentLUSD.add(change.depositLUSD);
+      return this.currentUSD.add(change.depositLUSD);
     }
   }
 }

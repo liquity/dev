@@ -70,10 +70,15 @@ const reduce = (
       const newState = { ...state, originalDeposit: updatedDeposit };
 
       const changeCommitted =
-        !updatedDeposit.initialLUSD.eq(originalDeposit.initialLUSD) ||
-        updatedDeposit.currentLUSD.gt(originalDeposit.currentLUSD) ||
+        !updatedDeposit.bammPoolShare.eq(originalDeposit.bammPoolShare) ||
+        updatedDeposit.poolShare.gt(originalDeposit.poolShare) ||
+        updatedDeposit.currentUSD.lt(originalDeposit.currentUSD) ||
+        updatedDeposit.initialLUSD.lt(originalDeposit.initialLUSD) ||
+        updatedDeposit.currentLUSD.lt(originalDeposit.currentLUSD) ||
         updatedDeposit.collateralGain.lt(originalDeposit.collateralGain) ||
-        updatedDeposit.lqtyReward.lt(originalDeposit.lqtyReward);
+        updatedDeposit.lqtyReward.lt(originalDeposit.lqtyReward) ||
+        updatedDeposit.totalEthInBamm.lt(originalDeposit.totalEthInBamm) ||
+        updatedDeposit.totalLusdInBamm.lt(originalDeposit.totalLusdInBamm);
 
       if (changePending && changeCommitted) {
         return finishChange(revert(newState));
