@@ -100,7 +100,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   /* LUSD balance
   ====================================================================*/
   const newLusdBalance = editedBammPoolShare.mul(newTotalLusd).div(100)
-  const lusdDiff = Difference.between(newLusdBalance, stabilityDeposit.currentLUSD).nonZeroish(16)
+  const lusdDiff = Difference.between(newLusdBalance, stabilityDeposit.currentLUSD).nonZeroish(15)
   
   const [, description] = validateStabilityDepositChange(
     originalDeposit,
