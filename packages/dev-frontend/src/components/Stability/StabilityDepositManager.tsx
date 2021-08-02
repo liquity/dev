@@ -19,7 +19,7 @@ import {
 
 const init = ({ stabilityDeposit }: LiquityStoreState) => ({
   originalDeposit: stabilityDeposit,
-  editedLUSD: stabilityDeposit.currentLUSD,
+  editedUSD: stabilityDeposit.currentUSD,
   changePending: false
 });
 
@@ -40,10 +40,8 @@ const reduce = (
   state: StabilityDepositManagerState,
   action: StabilityDepositManagerAction
 ): StabilityDepositManagerState => {
-  // console.log(state);
-  // console.log(action);
 
-  const { originalDeposit, editedLUSD, changePending } = state;
+  const { originalDeposit, editedUSD, changePending } = state;
 
   switch (action.type) {
     case "startChange": {
@@ -55,10 +53,10 @@ const reduce = (
       return { ...state, changePending: false };
 
     case "setDeposit":
-      return { ...state, editedLUSD: Decimal.from(action.newValue) };
+      return { ...state, editedUSD: Decimal.from(action.newValue) };
 
     case "revert":
-      return { ...state, editedLUSD: originalDeposit.currentLUSD };
+      return { ...state, editedUSD: originalDeposit.currentUSD };
 
     case "updateStore": {
       const {
@@ -72,10 +70,15 @@ const reduce = (
       const newState = { ...state, originalDeposit: updatedDeposit };
 
       const changeCommitted =
-        !updatedDeposit.initialLUSD.eq(originalDeposit.initialLUSD) ||
-        updatedDeposit.currentLUSD.gt(originalDeposit.currentLUSD) ||
+        !updatedDeposit.bammPoolShare.eq(originalDeposit.bammPoolShare) ||
+        updatedDeposit.poolShare.gt(originalDeposit.poolShare) ||
+        updatedDeposit.currentUSD.lt(originalDeposit.currentUSD) ||
+        updatedDeposit.initialLUSD.lt(originalDeposit.initialLUSD) ||
+        updatedDeposit.currentLUSD.lt(originalDeposit.currentLUSD) ||
         updatedDeposit.collateralGain.lt(originalDeposit.collateralGain) ||
-        updatedDeposit.lqtyReward.lt(originalDeposit.lqtyReward);
+        updatedDeposit.lqtyReward.lt(originalDeposit.lqtyReward) ||
+        updatedDeposit.totalEthInBamm.lt(originalDeposit.totalEthInBamm) ||
+        updatedDeposit.totalLusdInBamm.lt(originalDeposit.totalLusdInBamm);
 
       if (changePending && changeCommitted) {
         return finishChange(revert(newState));
@@ -83,7 +86,7 @@ const reduce = (
 
       return {
         ...newState,
-        editedLUSD: updatedDeposit.apply(originalDeposit.whatChanged(editedLUSD))
+        editedUSD: updatedDeposit.apply(originalDeposit.whatChanged(editedUSD))
       };
     }
   }
@@ -92,18 +95,19 @@ const reduce = (
 const transactionId = "stability-deposit";
 
 export const StabilityDepositManager: React.FC = () => {
-  const [{ originalDeposit, editedLUSD, changePending }, dispatch] = useLiquityReducer(reduce, init);
+  const [{ originalDeposit, editedUSD, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const validationContext = useLiquitySelector(selectForStabilityDepositChangeValidation);
   const { dispatchEvent } = useStabilityView();
 
   const handleCancel = useCallback(() => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
-
-  const [validChange, description] = validateStabilityDepositChange(
+  const [validChange] = validateStabilityDepositChange(
     originalDeposit,
-    editedLUSD,
-    validationContext
+    editedUSD,
+    validationContext,
+    undefined,
+    undefined,
   );
 
   const makingNewDeposit = originalDeposit.isEmpty;
@@ -126,16 +130,11 @@ export const StabilityDepositManager: React.FC = () => {
   return (
     <StabilityDepositEditor
       originalDeposit={originalDeposit}
-      editedLUSD={editedLUSD}
+      editedUSD={editedUSD}
       changePending={changePending}
       dispatch={dispatch}
     >
-      {description ??
-        (makingNewDeposit ? (
-          <ActionDescription>Enter the amount of {COIN} you'd like to deposit.</ActionDescription>
-        ) : (
-          <ActionDescription>Adjust the {COIN} amount to deposit or withdraw.</ActionDescription>
-        ))}
+
 
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleCancel}>

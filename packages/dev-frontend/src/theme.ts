@@ -462,6 +462,16 @@ const theme: Theme = {
 
       "#root": {
         height: "100%"
+      },
+      "html::-webkit-scrollbar": {
+        "display": "none"
+      },
+      "html": {
+        /* this will hide the scrollbar in mozilla based browsers */
+        "overflow": "-moz-scrollbars-none",
+        "scrollbar-width": "none",
+        /* this will hide the scrollbar in internet explorers */
+        "-ms-overflow-style": "none"
       }
     },
 

@@ -3,7 +3,7 @@
   "name": "Liquity Developer UI",
   "icons": [
     {
-      "src": "favicon.png",
+      "src": "favicon.svg",
       "sizes": "32x32",
       "type": "image/png"
     }

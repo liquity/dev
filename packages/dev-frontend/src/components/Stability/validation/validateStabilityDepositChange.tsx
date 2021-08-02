@@ -5,21 +5,28 @@ import {
   StabilityDepositChange
 } from "@liquity/lib-base";
 
+import {
+  Difference
+} from "@liquity/lib-base";
+
 import { COIN } from "../../../strings";
 import { Amount } from "../../ActionDescription";
 import { ErrorDescription } from "../../ErrorDescription";
 import { StabilityActionDescription } from "../StabilityActionDescription";
+import { UnlockButton } from "../NoDeposit"
 
 export const selectForStabilityDepositChangeValidation = ({
   trove,
   lusdBalance,
   ownFrontend,
-  haveUndercollateralizedTroves
-}: LiquityStoreState) => ({
+  haveUndercollateralizedTroves,
+  bammAllowance
+}: any) => ({
   trove,
   lusdBalance,
   haveOwnFrontend: ownFrontend.status === "registered",
-  haveUndercollateralizedTroves
+  haveUndercollateralizedTroves,
+  bammAllowance
 });
 
 type StabilityDepositChangeValidationContext = ReturnType<
@@ -32,8 +39,11 @@ export const validateStabilityDepositChange = (
   {
     lusdBalance,
     haveOwnFrontend,
-    haveUndercollateralizedTroves
-  }: StabilityDepositChangeValidationContext
+    haveUndercollateralizedTroves,
+    bammAllowance
+  }: StabilityDepositChangeValidationContext,
+  lusdDiff: Difference| undefined,
+  ethDiff: Difference| undefined,
 ): [
   validChange: StabilityDepositChange<Decimal> | undefined,
   description: JSX.Element | undefined
@@ -66,6 +76,18 @@ export const validateStabilityDepositChange = (
     ];
   }
 
+  if(change && !bammAllowance) {
+    return [
+      undefined,
+      <ErrorDescription>
+        You have no allowance. {" "}
+        <UnlockButton>
+          click here to unlock.
+        </UnlockButton>
+      </ErrorDescription>
+    ];
+  }
+
   if (change.withdrawLUSD && haveUndercollateralizedTroves) {
     return [
       undefined,
@@ -76,5 +98,5 @@ export const validateStabilityDepositChange = (
     ];
   }
 
-  return [change, <StabilityActionDescription originalDeposit={originalDeposit} change={change} />];
+  return [change, <StabilityActionDescription lusdDiff={lusdDiff} ethDiff={ethDiff} originalDeposit={originalDeposit} change={change} />];
 };

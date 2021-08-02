@@ -26,7 +26,7 @@ export const ActiveDeposit: React.FC = () => {
   const { dispatchEvent } = useStabilityView();
   const { stabilityDeposit, trove, lusdInStabilityPool } = useLiquitySelector(selector);
 
-  const poolShare = stabilityDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
+  const {poolShare, bammPoolShare} = stabilityDeposit
 
   const handleAdjustDeposit = useCallback(() => {
     dispatchEvent("ADJUST_DEPOSIT_PRESSED");
@@ -48,6 +48,8 @@ export const ActiveDeposit: React.FC = () => {
     }
   }, [transactionState.type, dispatchEvent]);
 
+  const ethDiffInUsd = stabilityDeposit.currentUSD.sub(stabilityDeposit.currentLUSD)
+  const ethIsImportant = (ethDiffInUsd.div(stabilityDeposit.currentUSD)).gt(1/1000)
   return (
     <Card>
       <Heading>
@@ -63,9 +65,34 @@ export const ActiveDeposit: React.FC = () => {
           <DisabledEditableRow
             label="Deposit"
             inputId="deposit-lusd"
-            amount={stabilityDeposit.currentLUSD.prettify()}
+            amount={stabilityDeposit.currentUSD.prettify()}
             unit={COIN}
           />
+          <Flex sx={{ justifyContent: 'space-between', flexWrap: "wrap" }}>
+            <StaticRow
+              label="LUSD balance"
+              inputId="deposit-gain"
+              amount={stabilityDeposit.currentLUSD.prettify(2)}
+              unit="LUSD"
+            />
+            {ethIsImportant &&
+              <StaticRow
+                label="ETH balance"
+                inputId="deposit-gain"
+                amount={stabilityDeposit.collateralGain.prettify(4)}
+                unit="ETH"
+                infoIcon={
+                  <InfoIcon
+                    tooltip={
+                      <Card variant="tooltip" sx={{ width: "240px" }}>
+                        Temporary ETH balance until rebalance takes place
+                      </Card>
+                    }
+                  />
+                }
+              />
+            }
+          </Flex>
 
           <StaticRow
             label="Pool share"
@@ -73,15 +100,14 @@ export const ActiveDeposit: React.FC = () => {
             amount={poolShare.prettify(4)}
             unit="%"
           />
-
-          <StaticRow
-            label="Liquidation gain"
-            inputId="deposit-gain"
-            amount={stabilityDeposit.collateralGain.prettify(4)}
-            color={stabilityDeposit.collateralGain.nonZero && "success"}
-            unit="ETH"
-          />
-
+          <div className="hide" >
+            <StaticRow
+              label="BAMM Pool share"
+              inputId="deposit-share"
+              amount={bammPoolShare.prettify(4)}
+              unit="%"
+            />
+          </div>
           <Flex sx={{ alignItems: "center" }}>
             <StaticRow
               label="Reward"
@@ -113,12 +139,9 @@ export const ActiveDeposit: React.FC = () => {
             &nbsp;Adjust
           </Button>
 
-          <ClaimRewards disabled={!hasGain && !hasReward}>Claim ETH and LQTY</ClaimRewards>
+          <ClaimRewards disabled={!hasGain && !hasReward}>Claim LQTY</ClaimRewards>
         </Flex>
 
-        {hasTrove && (
-          <ClaimAndMove disabled={!hasGain}>Claim LQTY and move ETH to Trove</ClaimAndMove>
-        )}
       </Box>
 
       {isWaitingForTransaction && <LoadingOverlay />}

@@ -62,6 +62,10 @@ export class Decimal {
     return new Decimal(BigNumber.from(bigNumberString));
   }
 
+  static fromBigNumber(bigNumber: BigNumber): Decimal {
+    return new Decimal(bigNumber);
+  }
+
   private static _fromString(representation: string): Decimal {
     if (!representation || !representation.match(stringRepresentationFormat)) {
       throw new Error(`bad decimal format: "${representation}"`);
@@ -208,6 +212,16 @@ export class Decimal {
     }
 
     return new Decimal(this._bigNumber.mul(DIGITS).div(divider._bigNumber));
+  }
+
+  rawDivision(divider: Decimalish): Decimal {
+    divider = Decimal.from(divider);
+
+    if (divider.isZero) {
+      return Decimal.INFINITY;
+    }
+
+    return new Decimal(this._bigNumber.div(divider._bigNumber));
   }
 
   /** @internal */
@@ -386,8 +400,25 @@ export class Difference {
     );
   }
 
+  div(divider: Decimalish): Difference {
+    return new Difference(
+      this._number && {
+        sign: this._number.sign,
+        absoluteValue: this._number.absoluteValue.div(divider)
+      }
+    );
+  }
+
   get nonZero(): this | undefined {
     return this._number?.absoluteValue.nonZero && this;
+  }
+
+  nonZeroish(precision: number): this | undefined {
+    const zeroish = `0.${"0".repeat(precision)}5`;
+
+    if (this._number?.absoluteValue.gte(zeroish)) {
+      return this;
+    }
   }
 
   get positive(): this | undefined {
