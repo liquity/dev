@@ -125,11 +125,14 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
 
   const ethDiffInUsd = stabilityDeposit.currentUSD.sub(stabilityDeposit.currentLUSD)
   const ethIsImportant = (ethDiffInUsd.div(stabilityDeposit.currentUSD)).gt(1/1000)
+
+  const showOverlay = changePending || waitingForTransaction
+  const showResetButton = edited && !showOverlay
   return (
     <Card>
       <Heading>
-        Stability Pool
-        {edited && (!changePending && !waitingForTransaction) && (
+        Stability Pool 1
+        {showResetButton && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
@@ -238,8 +241,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
           ))}
         {children}
       </Box>
-
-      {changePending || waitingForTransaction && <LoadingOverlay />}
+      {showOverlay && <LoadingOverlay />}
     </Card>
   );
 };
