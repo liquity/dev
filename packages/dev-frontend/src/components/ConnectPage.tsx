@@ -231,7 +231,7 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
           Yield on Your LUSD</span>}
           text="By using B.Protocol to deposit your LUSD into Liquity Stability Pool, you can save the manual operation of selling your accumulated ETH back to LUSD every time a liquidation is taking place.
           Read more about how it’s done"
-          link="TODO:"
+          link="https://medium.com/b-protocol/b-protocol-liquity-integration-is-live-1342605e7cfb"
         />
         <Item
           icon={"./bprotocol/icon-a-3.svg"}
