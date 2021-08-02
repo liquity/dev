@@ -131,7 +131,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   return (
     <Card>
       <Heading>
-        Stability Pool 1
+        Stability Pool
         {showResetButton && (
           <Button
             variant="titleIcon"
