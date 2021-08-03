@@ -741,6 +741,9 @@ export class PopulatableEthersLiquity
     );
 
     if (ownAddress) {
+      // In the case of reinsertion, the address of the Trove being reinserted is not a usable hint,
+      // because it is deleted from the list before the reinsertion.
+      // "Jump over" the Trove to get the proper hint.
       if (prev === ownAddress) {
         prev = await sortedTroves.getPrev(prev);
       } else if (next === ownAddress) {
@@ -748,6 +751,8 @@ export class PopulatableEthersLiquity
       }
     }
 
+    // Don't use `address(0)` as hint as it can result in huge gas cost.
+    // (See https://github.com/liquity/dev/issues/600).
     if (prev === AddressZero) {
       prev = next;
     } else if (next === AddressZero) {
