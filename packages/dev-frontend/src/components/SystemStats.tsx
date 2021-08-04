@@ -29,7 +29,7 @@ const Balances: React.FC = () => {
 
 const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
   children?.match(/[0-9a-f]{40}/) ? (
-    <Link href={`https://github.com/backstop-protoco/dev/commit/${children}`}>{children.substr(0, 7)}</Link>
+    <Link href={`https://github.com/backstop-protocol/dev/commit/${children}`}>{children.substr(0, 7)}</Link>
   ) : (
     <>unknown</>
   );
