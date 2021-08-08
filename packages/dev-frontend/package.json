@@ -49,6 +49,7 @@
     "build:set-version": "node scripts/set-version.js",
     "build:remove-iframe-deny": "node scripts/remove-iframe-deny.js",
     "build:react": "react-scripts build",
+    "build:static": "./scripts/generate-static.sh",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
