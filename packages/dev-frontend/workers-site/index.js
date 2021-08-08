@@ -10,10 +10,22 @@ import { getAssetFromKV, mapRequestToAsset } from '@cloudflare/kv-asset-handler'
 const DEBUG = false
 
 addEventListener('fetch', event => {
-  event.respondWith(handleEvent(event))
+  try {
+    event.respondWith(handleEvent(event))
+  } catch (e) {
+    if (DEBUG) {
+      return event.respondWith(
+        new Response(e.message || e.toString(), {
+          status: 500,
+        }),
+      )
+    }
+    event.respondWith(new Response('Internal Error', { status: 500 }))
+  }
 })
 
 async function handleEvent(event) {
+  const url = new URL(event.request.url)
   let options = {}
 
   /**
@@ -27,20 +39,19 @@ async function handleEvent(event) {
       // customize caching
       options.cacheControl = {
         bypassCache: true,
-      }
+      };
     }
-
-    const page = await getAssetFromKV(event, options)
+    const page = await getAssetFromKV(event, options);
 
     // allow headers to be altered
-    const response = new Response(page.body, page)
+    const response = new Response(page.body, page);
 
-    response.headers.set('X-XSS-Protection', '1; mode=block')
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('Referrer-Policy', 'unsafe-url')
-    response.headers.set('Feature-Policy', 'none')
+    response.headers.set("X-XSS-Protection", "1; mode=block");
+    response.headers.set("X-Content-Type-Options", "nosniff");
+    response.headers.set("Referrer-Policy", "unsafe-url");
+    response.headers.set("Feature-Policy", "none");
 
-    return response
+    return response;
 
   } catch (e) {
     // if an error is thrown try to serve the asset at 404.html
