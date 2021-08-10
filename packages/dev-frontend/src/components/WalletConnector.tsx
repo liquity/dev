@@ -214,7 +214,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             letterSpacing: "0.6px",
             fontFamily: `"NeueHaasGroteskDisp Pro Md", sans-serif`,
             fontSize: "12px"
-          }} href="https://app.bprotocol.org/terms" target="_top">
+          }} href="/liquity-app/" target="_top">
             By using B.Protocol, you agree to the <span style={{textDecoration: "underline"}}>Terms and Conditions</span>
         </a>
         </Box>
