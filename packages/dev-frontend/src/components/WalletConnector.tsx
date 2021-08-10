@@ -152,7 +152,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
         {mobileAppLInk &&
         <a 
           style={{textDecoration: "none"}}
-          href="https://liquity.bprotocol.org" target="_top">
+          href="/liquity-app/" target="_top">
           <Button
             sx={{ 
               fontFamily: `"NeueHaasGroteskDisp Pro Md", sans-serif`,
