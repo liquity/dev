@@ -2,6 +2,7 @@ const Decimal = require("decimal.js");
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const { BNConverter } = require("../utils/BNConverter.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 
 const th = testHelpers.TestHelper
@@ -45,10 +46,6 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   before(async () => {
-
-  })
-
-  beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
     contracts.stabilityPool = await StabilityPool.new()
@@ -64,6 +61,17 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   // Accuracy tests
   it("getCumulativeIssuanceFraction(): fraction doesn't increase if less than a minute has passed", async () => {

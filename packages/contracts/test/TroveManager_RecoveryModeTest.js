@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -51,7 +52,7 @@ contract('TroveManager - in Recovery Mode', async accounts => {
   const getNetBorrowingAmount = async (debtWithFee) => th.getNetBorrowingAmount(contracts, debtWithFee)
   const openTrove = async (params) => th.openTrove(contracts, params)
 
-  beforeEach(async () => {
+  before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.lusdToken = await LUSDToken.new(
@@ -76,6 +77,17 @@ contract('TroveManager - in Recovery Mode', async accounts => {
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   it("checkRecoveryMode(): Returns true if TCR falls below CCR", async () => {
     // --- SETUP ---

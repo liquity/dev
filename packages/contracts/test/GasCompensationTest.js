@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const LUSDToken = artifacts.require("LUSDToken")
@@ -46,9 +47,6 @@ contract('Gas compensation tests', async accounts => {
 
     TroveManagerTester.setAsDeployed(troveManagerTester)
     BorrowerOperationsTester.setAsDeployed(borrowerOperationsTester)
-  })
-
-  beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.lusdToken = await LUSDToken.new(
@@ -57,7 +55,7 @@ contract('Gas compensation tests', async accounts => {
       contracts.borrowerOperations.address
     )
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
-
+  
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
     sortedTroves = contracts.sortedTroves
@@ -66,11 +64,22 @@ contract('Gas compensation tests', async accounts => {
     stabilityPool = contracts.stabilityPool
     defaultPool = contracts.defaultPool
     borrowerOperations = contracts.borrowerOperations
-
+  
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts) 
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   // --- Raw gas compensation calculations ---
 

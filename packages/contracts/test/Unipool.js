@@ -3,6 +3,7 @@
 const { BN, time } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 const { TestHelper } = require('../utils/testHelpers.js');
+const timeMachine = require('ganache-time-traveler');
 
 const { assertRevert } = TestHelper;
 
@@ -75,9 +76,20 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
   };
 
   describe('Unipool', async function () {
-    beforeEach(async function () {
+    before(async function () {
       await deploy(this);
       await this.pool.setParams(this.lqty.address, this.uni.address, this.DURATION);
+    });
+
+    let revertToSnapshot;
+
+    beforeEach(async() => {
+      let snapshot = await timeMachine.takeSnapshot();
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+    });
+
+    afterEach(async() => {
+      await revertToSnapshot();
     });
 
     it('Two stakers with the same stakes wait DURATION', async function () {

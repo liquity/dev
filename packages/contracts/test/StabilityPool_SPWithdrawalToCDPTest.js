@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 
 const { dec, toBN } = testHelpers.TestHelper
@@ -57,7 +58,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       gasPriceInWei = await web3.eth.getGasPrice()
     })
 
-    beforeEach(async () => {
+    before(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
       const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
       contracts.troveManager = await TroveManagerTester.new()
@@ -77,6 +78,17 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
     })
 
+    let revertToSnapshot;
+
+    beforeEach(async() => {
+      let snapshot = await timeMachine.takeSnapshot();
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+    });
+
+    afterEach(async() => {
+      await revertToSnapshot();
+    });
+    
     // --- Compounding tests ---
 
     // --- withdrawETHGainToTrove() ---

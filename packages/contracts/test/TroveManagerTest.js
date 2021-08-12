@@ -1,5 +1,7 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
+
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
 const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
 
@@ -51,7 +53,7 @@ contract('TroveManager', async accounts => {
   const openTrove = async (params) => th.openTrove(contracts, params)
   const withdrawLUSD = async (params) => th.withdrawLUSD(contracts, params)
 
-  beforeEach(async () => {
+  before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.lusdToken = await LUSDTokenTester.new(
@@ -81,6 +83,17 @@ contract('TroveManager', async accounts => {
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   it('liquidate(): closes a Trove that has ICR < MCR', async () => {
     await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })

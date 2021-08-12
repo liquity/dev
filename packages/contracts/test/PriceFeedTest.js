@@ -6,6 +6,7 @@ const MockTellor = artifacts.require("./MockTellor.sol")
 const TellorCaller = artifacts.require("./TellorCaller.sol")
 
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 const th = testHelpers.TestHelper
 
 const { dec, assertRevert, toBN } = th
@@ -22,7 +23,7 @@ contract('PriceFeed', async accounts => {
     await priceFeed.setAddresses(mockChainlink.address, tellorCaller.address, { from: owner })
   }
 
-  beforeEach(async () => {
+  before(async () => {
     priceFeedTestnet = await PriceFeedTestnet.new()
     PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
 
@@ -55,6 +56,17 @@ contract('PriceFeed', async accounts => {
     await mockChainlink.setUpdateTime(now)
     await mockTellor.setUpdateTime(now)
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   describe('PriceFeed internal testing contract', async accounts => {
     it("fetchPrice before setPrice should return the default price", async () => {

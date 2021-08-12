@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const { keccak256 } = require('@ethersproject/keccak256');
 const { defaultAbiCoder } = require('@ethersproject/abi');
@@ -107,7 +108,7 @@ contract('LQTY Token', async accounts => {
     return { v, r, s, tx }
   }
 
-  beforeEach(async () => {
+  before(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
 
@@ -123,6 +124,17 @@ contract('LQTY Token', async accounts => {
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   it('balanceOf(): gets the balance of the account', async () => {
     await mintToABC()

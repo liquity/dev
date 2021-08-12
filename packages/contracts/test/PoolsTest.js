@@ -4,6 +4,7 @@ const DefaultPool = artifacts.require("./DefaultPool.sol")
 const NonPayable = artifacts.require("./NonPayable.sol")
 
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -18,12 +19,23 @@ contract('StabilityPool', async accounts => {
 
   const [owner, alice] = accounts;
 
-  beforeEach(async () => {
+  before(async () => {
     stabilityPool = await StabilityPool.new()
     const mockActivePoolAddress = (await NonPayable.new()).address
     const dumbContractAddress = (await NonPayable.new()).address
     await stabilityPool.setAddresses(dumbContractAddress, dumbContractAddress, mockActivePoolAddress, dumbContractAddress, dumbContractAddress, dumbContractAddress, dumbContractAddress)
   })
+
+  let revertToSnapshot;
+
+  beforeEach(async() => {
+    let snapshot = await timeMachine.takeSnapshot();
+    revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+  });
+
+  afterEach(async() => {
+    await revertToSnapshot();
+  });
 
   it('getETH(): gets the recorded ETH balance', async () => {
     const recordedETHBalance = await stabilityPool.getETH()

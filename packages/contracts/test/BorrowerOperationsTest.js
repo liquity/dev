@@ -1,5 +1,6 @@
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
+const timeMachine = require('ganache-time-traveler');
 
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const NonPayable = artifacts.require('NonPayable.sol')
@@ -67,7 +68,7 @@ contract('BorrowerOperations', async accounts => {
   })
 
   const testCorpus = ({ withProxy = false }) => {
-    beforeEach(async () => {
+    before(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
       contracts.borrowerOperations = await BorrowerOperationsTester.new()
       contracts.troveManager = await TroveManagerTester.new()
@@ -103,6 +104,17 @@ contract('BorrowerOperations', async accounts => {
       BORROWING_FEE_FLOOR = await borrowerOperations.BORROWING_FEE_FLOOR()
     })
 
+    let revertToSnapshot;
+
+    beforeEach(async() => {
+      let snapshot = await timeMachine.takeSnapshot();
+      revertToSnapshot = () => timeMachine.revertToSnapshot(snapshot['result'])
+    });
+
+    afterEach(async() => {
+      await revertToSnapshot();
+    }); 
+
     it("addColl(): reverts when top-up would leave trove with ICR < MCR", async () => {
       // alice creates a Trove and adds first collateral
       await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
@@ -117,7 +129,7 @@ contract('BorrowerOperations', async accounts => {
 
       const collTopUp = 1  // 1 wei top up
 
-     await assertRevert(borrowerOperations.addColl(alice, alice, { from: alice, value: collTopUp }), 
+      await assertRevert(borrowerOperations.addColl(alice, alice, { from: alice, value: collTopUp }), 
       "BorrowerOps: An operation that would result in ICR < MCR is not permitted")
     })
 
