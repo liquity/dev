@@ -20,6 +20,7 @@ contract('Gas cost tests', async accounts => {
   const [owner] = accounts;
   const bountyAddress = accounts[998]
   const lpRewardsAddress = accounts[999]
+  const multisig = accounts[1000]
 
   let priceFeed
   let lusdToken
@@ -36,7 +37,7 @@ contract('Gas cost tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
+    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
 
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
@@ -432,19 +433,19 @@ contract('Gas cost tests', async accounts => {
   // 45 troves
   it("", async () => {
     const message = 'liquidateTroves(). n = 45. Pure redistribution. Recovery Mode'
-    // 10 accts each open Trove with 10 ether, withdraw 900 LUSD
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
+    // 10 accts each open Trove 
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(1000, 'ether'), dec(90000, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
-    //45 accts open Trove with 1 ether and withdraw 100 LUSD
+    //45 accts open Trove
     const _45_Defaulters = accounts.slice(1, 46)
-    await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(1, 'ether'), dec(60, 18))
+    await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(100, 'ether'), dec(9500, 18))
 
     // Check all defaulters are active
     for (account of _45_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
-    // Account 500 opens with 1 ether and withdraws 100 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(60, 18), accounts[500], ZERO_ADDRESS,{ from: accounts[500], value: dec(1, 'ether') })
+    // Account 500 opens Trove
+    await borrowerOperations.openTrove(_100pct, dec(9500, 18), accounts[500], ZERO_ADDRESS,{ from: accounts[500], value: dec(100, 'ether') })
     assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Price drops, defaulters' troves fall below MCR
@@ -967,7 +968,7 @@ contract('Gas cost tests', async accounts => {
   it("", async () => {
     const message = 'liquidateTroves(). n = 45. All fully offset with Stability Pool. No pending distribution rewards. In Recovery Mode'
     // 10 accts each open Trove with 10 ether, withdraw 900 LUSD
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(1000, 'ether'), dec(90000, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Whale opens trove and fills SP with 1 billion LUSD
@@ -981,13 +982,13 @@ contract('Gas cost tests', async accounts => {
 
     //45 accts open Trove with 1 ether and withdraw 100 LUSD
     const _45_Defaulters = accounts.slice(1, 46)
-    await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(1, 'ether'), dec(60, 18))
+    await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(100, 'ether'), dec(9500, 18))
 
     // Check all defaulters are active
     for (account of _45_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
     // Price drops, defaulters falls below MCR
-    await priceFeed.setPrice(dec(120, 18))
+    await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
 
     // Check Recovery Mode is true
@@ -1613,19 +1614,19 @@ contract('Gas cost tests', async accounts => {
   // 45 troves
   it("", async () => {
     const message = 'liquidateTroves(). n = 45. All fully offset with Stability Pool. Has pending distribution rewards. In Recovery Mode'
-    // 10 accts each open Trove with 10 ether, withdraw 900 LUSD
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(900, 18))
+    // 10 accts each open Trove
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(1000, 'ether'), dec(90000, 18))
     for (account of accounts.slice(101, 111)) { assert.isTrue(await sortedTroves.contains(account)) }
 
-    //45 accts open Trove with 1 ether and withdraw 100 LUSD
+    //45 accts opens
     const _45_Defaulters = accounts.slice(1, 46)
-    await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(1, 'ether'), dec(60, 18))
+    await th.openTrove_allAccounts(_45_Defaulters, contracts, dec(100, 'ether'), dec(9500, 18))
 
     // Check all defaulters are active
     for (account of _45_Defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
 
-    // Account 500 opens with 1 ether and withdraws 110 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(110, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(1, 'ether') })
+    // Account 500 opens
+    await borrowerOperations.openTrove(_100pct, dec(11000, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(100, 'ether') })
     assert.isTrue(await sortedTroves.contains(accounts[500]))
 
     // Account 500 is liquidated, creates pending distribution rewards for all
@@ -1647,7 +1648,7 @@ contract('Gas cost tests', async accounts => {
     assert.equal(LUSDinSP, dec(9, 28))
 
     // Price drops, defaulters falls below MCR
-    await priceFeed.setPrice(dec(120, 18))
+    await priceFeed.setPrice(dec(100, 18))
     const price = await priceFeed.getPrice()
 
     // Check Recovery Mode is true
@@ -1690,16 +1691,16 @@ contract('Gas cost tests', async accounts => {
   // 10 troves
   it("", async () => {
     const message = 'batchLiquidateTroves(). n = 10. Pure redistribution. Has pending distribution rewards.'
-    // 10 accts each open Trove with 10 ether, withdraw 180 LUSD
+    // 10 accts each open Trove with 10 ether, withdraws LUSD
 
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(1000, 'ether'), dec(13000, 18))
 
-    // Account 500 opens with 1 ether and withdraws 180 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(130, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(1, 'ether') })
+    // Account 500 opens with 1 ether and withdraws LUSD
+    await borrowerOperations.openTrove(_100pct, dec(13000, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(100, 'ether') })
 
     const _10_defaulters = accounts.slice(1, 11)
     // --- Accounts to be liquidated in the test tx ---
-    await th.openTrove_allAccounts(_10_defaulters, contracts, dec(1, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(_10_defaulters, contracts, dec(100, 'ether'), dec(13000, 18))
 
     // Check all defaulters active
     for (account of _10_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
@@ -1728,15 +1729,15 @@ contract('Gas cost tests', async accounts => {
     const message = 'batchLiquidateTroves(). n = 40. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open Trove with 10 ether, withdraw 180 LUSD
 
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(100, 'ether'), dec(13000, 18))
 
     // Account 500 opens with 1 ether and withdraws 180 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(130, 18), accounts[500], ZERO_ADDRESS,{ from: accounts[500], value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(_100pct, dec(13000, 18), accounts[500], ZERO_ADDRESS,{ from: accounts[500], value: dec(100, 'ether') })
 
 
     // --- Accounts to be liquidated in the test tx ---
     const _40_defaulters = accounts.slice(1, 41)
-    await th.openTrove_allAccounts(_40_defaulters, contracts, dec(1, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(_40_defaulters, contracts, dec(100, 'ether'), dec(13000, 18))
 
     // Check all defaulters active
     for (account of _40_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
@@ -1765,14 +1766,14 @@ contract('Gas cost tests', async accounts => {
     const message = 'batchLiquidateTroves(). n = 45. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open Trove with 10 ether, withdraw 180 LUSD
 
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(1000, 'ether'), dec(13000, 18))
 
     // Account 500 opens with 1 ether and withdraws 180 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(130, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(_100pct, dec(13000, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(100, 'ether') })
 
     // --- Accounts to be liquidated in the test tx ---
     const _45_defaulters = accounts.slice(1, 46)
-    await th.openTrove_allAccounts(_45_defaulters, contracts, dec(1, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(_45_defaulters, contracts, dec(100, 'ether'), dec(13000, 18))
 
     // check all defaulters active
     for (account of _45_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
@@ -1802,14 +1803,14 @@ contract('Gas cost tests', async accounts => {
     const message = 'batchLiquidateTroves(). n = 50. Pure redistribution. Has pending distribution rewards.'
     // 10 accts each open Trove with 10 ether, withdraw 180 LUSD
 
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(100, 'ether'), dec(13000, 18))
 
     // Account 500 opens with 1 ether and withdraws 180 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(130, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(_100pct, dec(13000, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(100, 'ether') })
 
     // --- Accounts to be liquidated in the test tx ---
     const _50_defaulters = accounts.slice(1, 51)
-    await th.openTrove_allAccounts(_50_defaulters, contracts, dec(1, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(_50_defaulters, contracts, dec(100, 'ether'), dec(13000, 18))
 
     // check all defaulters active
     for (account of _50_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
@@ -1841,14 +1842,14 @@ contract('Gas cost tests', async accounts => {
     const message = 'batchLiquidateTroves(). n = 10. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open Trove with 10 ether, withdraw 180 LUSD
 
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(1000, 'ether'), dec(13000, 18))
 
     // Account 500 opens with 1 ether and withdraws 180 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(130, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(_100pct, dec(13000, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(100, 'ether') })
 
     const _10_defaulters = accounts.slice(1, 11)
     // --- Accounts to be liquidated in the test tx ---
-    await th.openTrove_allAccounts(_10_defaulters, contracts, dec(1, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(_10_defaulters, contracts, dec(100, 'ether'), dec(13000, 18))
 
     // Check all defaulters active
     for (account of _10_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
@@ -1884,15 +1885,15 @@ contract('Gas cost tests', async accounts => {
     const message = 'batchLiquidateTroves(). n = 40. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open Trove with 10 ether, withdraw 180 LUSD
 
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(10, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(100, 'ether'), dec(10000, 18))
 
     // Account 500 opens with 1 ether and withdraws 180 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(130, 18), accounts[500], ZERO_ADDRESS,{ from: accounts[500], value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(_100pct, dec(13000, 18), accounts[500], ZERO_ADDRESS,{ from: accounts[500], value: dec(100, 'ether') })
 
 
     // --- Accounts to be liquidated in the test tx ---
     const _40_defaulters = accounts.slice(1, 41)
-    await th.openTrove_allAccounts(_40_defaulters, contracts, dec(1, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(_40_defaulters, contracts, dec(100, 'ether'), dec(13000, 18))
 
     // Check all defaulters active
     for (account of _40_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
@@ -1928,14 +1929,14 @@ contract('Gas cost tests', async accounts => {
     const message = 'batchLiquidateTroves(). n = 45. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open Trove with 10 ether, withdraw 180 LUSD
 
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(100, 'ether'), dec(13000, 18))
 
     // Account 500 opens with 1 ether and withdraws 180 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(130, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(_100pct, dec(13000, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(100, 'ether') })
 
     // --- Accounts to be liquidated in the test tx ---
     const _45_defaulters = accounts.slice(1, 46)
-    await th.openTrove_allAccounts(_45_defaulters, contracts, dec(1, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(_45_defaulters, contracts, dec(100, 'ether'), dec(13000, 18))
 
     // check all defaulters active
     for (account of _45_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
@@ -1971,14 +1972,14 @@ contract('Gas cost tests', async accounts => {
     const message = 'batchLiquidateTroves(). n = 50. All troves fully offset. Have pending distribution rewards'
     // 10 accts each open Trove with 10 ether, withdraw 180 LUSD
 
-    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(10, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(accounts.slice(101, 111), contracts, dec(100, 'ether'), dec(13000, 18))
 
     // Account 500 opens with 1 ether and withdraws 180 LUSD
-    await borrowerOperations.openTrove(_100pct, dec(130, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(1, 'ether') })
+    await borrowerOperations.openTrove(_100pct, dec(13000, 18), accounts[500],ZERO_ADDRESS, { from: accounts[500], value: dec(100, 'ether') })
 
     // --- Accounts to be liquidated in the test tx ---
     const _50_defaulters = accounts.slice(1, 51)
-    await th.openTrove_allAccounts(_50_defaulters, contracts, dec(1, 'ether'), dec(130, 18))
+    await th.openTrove_allAccounts(_50_defaulters, contracts, dec(100, 'ether'), dec(13000, 18))
 
     // check all defaulters active
     for (account of _50_defaulters) { assert.isTrue(await sortedTroves.contains(account)) }
@@ -2008,8 +2009,6 @@ contract('Gas cost tests', async accounts => {
 
     th.appendData({ gas: gas }, message, data)
   })
-
-
 
   it("Export test data", async () => {
     fs.writeFile('gasTest/outputs/liquidateTrovesGasData.csv', data, (err) => {
