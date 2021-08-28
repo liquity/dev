@@ -4,7 +4,7 @@
   "private": true,
   "homepage": ".",
   "dependencies": {
-    "@ethersproject/abi": "5.3.1",
+    "@ethersproject/abi": "5.4.0",
     "@fortawesome/fontawesome-svg-core": "1.2.34",
     "@fortawesome/free-regular-svg-icons": "5.15.2",
     "@fortawesome/free-solid-svg-icons": "5.15.2",
@@ -27,7 +27,7 @@
     "@web3-react/injected-connector": "6.0.7",
     "@web3-react/types": "6.0.7",
     "cross-env": "7.0.3",
-    "ethers": "5.3.1",
+    "ethers": "5.4.3",
     "npm-run-all": "4.1.5",
     "react": "17.0.1",
     "react-circular-progressbar": "2.0.3",

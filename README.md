@@ -988,7 +988,7 @@ When a liquidation transaction liquidates multiple Troves, each Trove contribute
 
 Gas compensation per liquidated Trove is given by the formula:
 
-Gas compensation = `50 LUSD + 0.5% of trove’s collateral (ETH)`
+Gas compensation = `200 LUSD + 0.5% of trove’s collateral (ETH)`
 
 The intentions behind this formula are:
 - To ensure that smaller Troves are liquidated promptly in normal times, at least
@@ -996,21 +996,21 @@ The intentions behind this formula are:
 
 ### Gas compensation schedule
 
-When a borrower opens a Trove, an additional 50 LUSD debt is issued, and 50 LUSD is minted and sent to a dedicated contract (`GasPool`) for gas compensation - the "gas pool".
+When a borrower opens a Trove, an additional 200 LUSD debt is issued, and 200 LUSD is minted and sent to a dedicated contract (`GasPool`) for gas compensation - the "gas pool".
 
-When a borrower closes their active Trove, this gas compensation is refunded: 50 LUSD is burned from the gas pool's balance, and the corresponding 50 LUSD debt on the Trove is cancelled.
+When a borrower closes their active Trove, this gas compensation is refunded: 200 LUSD is burned from the gas pool's balance, and the corresponding 200 LUSD debt on the Trove is cancelled.
 
-The purpose of the 50 LUSD Liquidation Reserve is to provide a minimum level of gas compensation, regardless of the Trove's collateral size or the current ETH price.
+The purpose of the 200 LUSD Liquidation Reserve is to provide a minimum level of gas compensation, regardless of the Trove's collateral size or the current ETH price.
 
 ### Liquidation
 
-When a Trove is liquidated, 0.5% of its collateral is sent to the liquidator, along with the 50 LUSD Liquidation Reserve. Thus, a liquidator always receives `{50 LUSD + 0.5% collateral}` per Trove that they liquidate. The collateral remainder of the Trove is then either offset, redistributed or a combination of both, depending on the amount of LUSD in the Stability Pool.
+When a Trove is liquidated, 0.5% of its collateral is sent to the liquidator, along with the 200 LUSD Liquidation Reserve. Thus, a liquidator always receives `{200 LUSD + 0.5% collateral}` per Trove that they liquidate. The collateral remainder of the Trove is then either offset, redistributed or a combination of both, depending on the amount of LUSD in the Stability Pool.
 
 ### Gas compensation and redemptions
 
-When a Trove is redeemed from, the redemption is made only against (debt - 50), not the entire debt.
+When a Trove is redeemed from, the redemption is made only against (debt - 200), not the entire debt.
 
-But if the redemption causes an amount (debt - 50) to be cancelled, the Trove is then closed: the 50 LUSD Liquidation Reserve is cancelled with its remaining 50 debt. That is, the gas compensation is burned from the gas pool, and the 50 debt is zero’d. The ETH collateral surplus from the Trove remains in the system, to be later claimed by its owner.
+But if the redemption causes an amount (debt - 200) to be cancelled, the Trove is then closed: the 200 LUSD Liquidation Reserve is cancelled with its remaining 200 debt. That is, the gas compensation is burned from the gas pool, and the 200 debt is zero’d. The ETH collateral surplus from the Trove remains in the system, to be later claimed by its owner.
 
 ### Gas compensation helper functions
 

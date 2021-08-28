@@ -988,6 +988,92 @@ describe("EthersLiquity", () => {
     });
   });
 
+  // Test workarounds related to https://github.com/liquity/dev/issues/600
+  describe("Hints (adjustTrove)", () => {
+    let eightOtherUsers: Signer[];
+
+    before(async () => {
+      deployment = await deployLiquity(deployer);
+      eightOtherUsers = otherUsers.slice(0, 8);
+      liquity = await connectToDeployment(deployment, user);
+
+      await openTroves(eightOtherUsers, [
+        { depositCollateral: 30, borrowLUSD: 2000 }, // 0
+        { depositCollateral: 30, borrowLUSD: 2100 }, // 1
+        { depositCollateral: 30, borrowLUSD: 2200 }, // 2
+        { depositCollateral: 30, borrowLUSD: 2300 }, // 3
+        // Test 1:           30,             2400
+        { depositCollateral: 30, borrowLUSD: 2500 }, // 4
+        { depositCollateral: 30, borrowLUSD: 2600 }, // 5
+        { depositCollateral: 30, borrowLUSD: 2700 }, // 6
+        { depositCollateral: 30, borrowLUSD: 2800 } //  7
+        // Test 2:           30,             2900
+        // Test 2 (other):   30,             3000
+        // Test 3:           30,             3100 -> 3200
+      ]);
+    });
+
+    // Test 1
+    it("should not use extra gas when a Trove's position doesn't change", async () => {
+      const { newTrove: initialTrove } = await liquity.openTrove({
+        depositCollateral: 30,
+        borrowLUSD: 2400
+      });
+
+      // Maintain the same ICR / position in the list
+      const targetTrove = initialTrove.multiply(1.1);
+
+      const { rawReceipt } = await waitForSuccess(
+        liquity.send.adjustTrove(initialTrove.adjustTo(targetTrove))
+      );
+
+      const gasUsed = rawReceipt.gasUsed.toNumber();
+      expect(gasUsed).to.be.at.most(250000);
+    });
+
+    // Test 2
+    it("should not traverse the whole list when bottom Trove moves", async () => {
+      const bottomLiquity = await connectToDeployment(deployment, eightOtherUsers[7]);
+
+      const initialTrove = await liquity.getTrove();
+      const bottomTrove = await bottomLiquity.getTrove();
+
+      const targetTrove = Trove.create({ depositCollateral: 30, borrowLUSD: 2900 });
+      const interferingTrove = Trove.create({ depositCollateral: 30, borrowLUSD: 3000 });
+
+      const tx = await liquity.populate.adjustTrove(initialTrove.adjustTo(targetTrove));
+
+      // Suddenly: interference!
+      await bottomLiquity.adjustTrove(bottomTrove.adjustTo(interferingTrove), {}, { gasPrice: 0 });
+
+      const { rawReceipt } = await waitForSuccess(tx.send());
+
+      const gasUsed = rawReceipt.gasUsed.toNumber();
+      expect(gasUsed).to.be.at.most(310000);
+    });
+
+    // Test 3
+    it("should not traverse the whole list when lowering ICR of bottom Trove", async () => {
+      const initialTrove = await liquity.getTrove();
+
+      const targetTrove = [
+        Trove.create({ depositCollateral: 30, borrowLUSD: 3100 }),
+        Trove.create({ depositCollateral: 30, borrowLUSD: 3200 })
+      ];
+
+      await liquity.adjustTrove(initialTrove.adjustTo(targetTrove[0]));
+      // Now we are the bottom Trove
+
+      // Lower our ICR even more
+      const { rawReceipt } = await waitForSuccess(
+        liquity.send.adjustTrove(targetTrove[0].adjustTo(targetTrove[1]))
+      );
+
+      const gasUsed = rawReceipt.gasUsed.toNumber();
+      expect(gasUsed).to.be.at.most(240000);
+    });
+  });
+
   describe("Gas estimation", () => {
     const troveWithICRBetween = (a: Trove, b: Trove) => a.add(b).multiply(0.5);
 

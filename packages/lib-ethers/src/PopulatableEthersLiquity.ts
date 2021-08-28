@@ -693,7 +693,8 @@ export class PopulatableEthersLiquity
   }
 
   private async _findHintsForNominalCollateralRatio(
-    nominalCollateralRatio: Decimal
+    nominalCollateralRatio: Decimal,
+    ownAddress?: string
   ): Promise<[string, string]> {
     const { sortedTroves, hintHelpers } = _getContracts(this._readable.connection);
     const numberOfTroves = await this._readable.getNumberOfTroves();
@@ -733,21 +734,40 @@ export class PopulatableEthersLiquity
 
     const { hintAddress } = results.reduce((a, b) => (a.diff.lt(b.diff) ? a : b));
 
-    const [prev, next] = await sortedTroves.findInsertPosition(
+    let [prev, next] = await sortedTroves.findInsertPosition(
       nominalCollateralRatio.hex,
       hintAddress,
       hintAddress
     );
 
-    return prev === AddressZero ? [next, next] : next === AddressZero ? [prev, prev] : [prev, next];
+    if (ownAddress) {
+      // In the case of reinsertion, the address of the Trove being reinserted is not a usable hint,
+      // because it is deleted from the list before the reinsertion.
+      // "Jump over" the Trove to get the proper hint.
+      if (prev === ownAddress) {
+        prev = await sortedTroves.getPrev(prev);
+      } else if (next === ownAddress) {
+        next = await sortedTroves.getNext(next);
+      }
+    }
+
+    // Don't use `address(0)` as hint as it can result in huge gas cost.
+    // (See https://github.com/liquity/dev/issues/600).
+    if (prev === AddressZero) {
+      prev = next;
+    } else if (next === AddressZero) {
+      next = prev;
+    }
+
+    return [prev, next];
   }
 
-  private async _findHints(trove: Trove): Promise<[string, string]> {
+  private async _findHints(trove: Trove, ownAddress?: string): Promise<[string, string]> {
     if (trove instanceof TroveWithPendingRedistribution) {
       throw new Error("Rewards must be applied to this Trove");
     }
 
-    return this._findHintsForNominalCollateralRatio(trove._nominalCollateralRatio);
+    return this._findHintsForNominalCollateralRatio(trove._nominalCollateralRatio, ownAddress);
   }
 
   private async _findRedemptionHints(
@@ -775,7 +795,10 @@ export class PopulatableEthersLiquity
       partialRedemptionLowerHint
     ] = partialRedemptionHintNICR.isZero()
       ? [AddressZero, AddressZero]
-      : await this._findHintsForNominalCollateralRatio(decimalify(partialRedemptionHintNICR));
+      : await this._findHintsForNominalCollateralRatio(
+          decimalify(partialRedemptionHintNICR)
+          // XXX: if we knew the partially redeemed Trove's address, we'd pass it here
+        );
 
     return [
       decimalify(truncatedLUSDamount),
@@ -942,7 +965,7 @@ export class PopulatableEthersLiquity
 
     const currentBorrowingRate = decayBorrowingRate(0);
     const adjustedTrove = trove.adjust(normalizedParams, currentBorrowingRate);
-    const hints = await this._findHints(adjustedTrove);
+    const hints = await this._findHints(adjustedTrove, address);
 
     const {
       maxBorrowingRate,
@@ -1139,7 +1162,7 @@ export class PopulatableEthersLiquity
       await stabilityPool.estimateAndPopulate.withdrawETHGainToTrove(
         { ...overrides },
         compose(addGasForPotentialListTraversal, addGasForLQTYIssuance),
-        ...(await this._findHints(finalTrove))
+        ...(await this._findHints(finalTrove, address))
       )
     );
   }
