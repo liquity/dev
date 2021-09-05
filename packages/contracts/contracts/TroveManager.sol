@@ -476,14 +476,14 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     {
         singleLiquidation.entireTroveDebt = _entireTroveDebt;
         singleLiquidation.entireTroveColl = _entireTroveColl;
-        uint collToLiquidate = _entireTroveDebt.mul(MCR).div(_price);
+        uint cappedCollPortion = _entireTroveDebt.mul(MCR).div(_price);
 
-        singleLiquidation.collGasCompensation = _getCollGasCompensation(collToLiquidate);
+        singleLiquidation.collGasCompensation = _getCollGasCompensation(cappedCollPortion);
         singleLiquidation.LUSDGasCompensation = LUSD_GAS_COMPENSATION;
 
         singleLiquidation.debtToOffset = _entireTroveDebt;
-        singleLiquidation.collToSendToSP = collToLiquidate.sub(singleLiquidation.collGasCompensation);
-        singleLiquidation.collSurplus = _entireTroveColl.sub(collToLiquidate);
+        singleLiquidation.collToSendToSP = cappedCollPortion.sub(singleLiquidation.collGasCompensation);
+        singleLiquidation.collSurplus = _entireTroveColl.sub(cappedCollPortion);
         singleLiquidation.debtToRedistribute = 0;
         singleLiquidation.collToRedistribute = 0;
     }
