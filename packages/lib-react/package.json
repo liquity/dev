@@ -17,7 +17,7 @@
   "devDependencies": {
     "@ethersproject/bignumber": "5.4.1",
     "@types/react": "17.0.3",
-    "@typescript-eslint/eslint-plugin": "4.17.0",
+    "@typescript-eslint/eslint-plugin": "4.31.0",
     "@typescript-eslint/parser": "4.18.0",
     "eslint": "7.22.0",
     "eslint-plugin-react": "7.22.0",
