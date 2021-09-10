@@ -1374,9 +1374,9 @@ describe("EthersLiquity", () => {
       const borrowingRate = await liquity.getFees().then(fees => fees.borrowingRate());
 
       for (const [borrowingFeeDecayToleranceMinutes, roughGasHeadroom] of [
-        [10, 102000],
-        [20, 184000],
-        [30, 241000]
+        [10, 128000],
+        [20, 242000],
+        [30, 322000]
       ]) {
         const tx = await liquity.populate.openTrove(Trove.recreate(bottomTrove, borrowingRate), {
           borrowingFeeDecayToleranceMinutes
