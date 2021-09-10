@@ -39,7 +39,7 @@
     "react-scripts": "4.0.3",
     "source-map-explorer": "2.5.2",
     "theme-ui": "0.6.0-canary.1544.5359f8a1e408a4dfeb74a9ae39688270286e534a.0",
-    "typescript": "4.1.5"
+    "typescript": "4.4.2"
   },
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
