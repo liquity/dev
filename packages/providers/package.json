@@ -1,9 +1,19 @@
 {
   "name": "@liquity/providers",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.0.0-semantic-release",
+  "description": "Custom Ethers Providers used by Liquity Dev UI",
+  "keywords": [
+    "Liquity",
+    "protocol",
+    "DeFi",
+    "Ethereum"
+  ],
+  "homepage": "https://github.com/liquity/liquity#readme",
+  "license": "MIT",
+  "author": "Daniel Simon <dani@liquity.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": "https://github.com/liquity/dev",
   "scripts": {
     "prepare": "tsc --project tsconfig.dist.json"
   },
