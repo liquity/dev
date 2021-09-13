@@ -589,12 +589,12 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(defaulter_3)
     assert.isFalse((await sortedTroves.contains(defaulter_3)))
     const TCR_4 = await th.getTCR(contracts)
-    assert.isTrue(TCR_4.gte(TCR_4))
+    assert.isTrue(TCR_4.gte(TCR_3))
 
     await troveManager.liquidate(defaulter_4)
     assert.isFalse((await sortedTroves.contains(defaulter_4)))
     const TCR_5 = await th.getTCR(contracts)
-    assert.isTrue(TCR_5.gte(TCR_5))
+    assert.isTrue(TCR_5.gte(TCR_4))
   })
 
   it("liquidate(): a pure redistribution reduces the TCR only as a result of compensation", async () => {
