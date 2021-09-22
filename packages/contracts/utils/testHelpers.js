@@ -1114,6 +1114,19 @@ class TestHelper {
       (err) => { if (err) console.log(err) })
   }
 
+  static async fastForwardBlocks(blocks, currentWeb3Provider) {
+    for (let i = 0; i < blocks; i++) {
+      await currentWeb3Provider.send(
+        {
+          id: 0,
+          jsonrpc: '2.0',
+          method: 'evm_mine'
+        },
+        (err) => { if (err) console.log(err) }
+      )
+    }
+  }
+
   static async getLatestBlockTimestamp(web3Instance) {
     const blockNumber = await web3Instance.eth.getBlockNumber()
     const block = await web3Instance.eth.getBlock(blockNumber)
