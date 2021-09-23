@@ -114,6 +114,31 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
       await checkBalances(alice, ...blocksToRewards(blocks + 1))
     })
 
+    // This actually belongs to MasterChefV2, as the rewarder ignores the user, it only uses the recipient
+    it('Alice deposits, Bob can’t harvest for her', async () => {
+      const amount = toBN(dec(10, 18))
+      const blocks = 5
+
+      await checkRewards(0)
+
+      await deposit(alice, amount)
+
+      await checkRewards(0)
+
+      await th.fastForwardBlocks(blocks, web3.currentProvider)
+
+      await checkRewards(blocks)
+
+      // harvest
+      await checkBalances(alice, 0, 0)
+      await masterChef.harvest(0, alice, { from: bob })
+      await checkBalances(alice, 0, 0)
+      await checkBalances(bob, 0, 0)
+      await masterChef.harvest(0, bob, { from: bob })
+      await checkBalances(alice, 0, 0)
+      await checkBalances(bob, 0, 0)
+    })
+
     it('Alice deposits twice', async () => {
       const amount = toBN(dec(10, 18))
       const blocks = 5
