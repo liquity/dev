@@ -11,11 +11,21 @@ const ERC20 = require('../../artifacts/contracts/LPRewards/TestContracts/ERC20Mo
 
 const MASTERCHEF_V2_ADDRESS = '0xEF0881eC094552b2e128Cf945EF17a6752B4Ec5d';
 const MASTERCHEF_V2_OWNER = '0x19B3Eb3Af5D93b77a5619b047De0EED7115A19e7';
-const OHM_MULTIPLIER = toBN(dec(1, 16));
-const LQTY_MULTIPLIER = toBN(dec(1, 19));
-const ALLOC_POINT = 10;
-const ACC_SUSHI_PRECISION = toBN(dec(1, 12));
 const UNIT = toBN(dec(1, 18));
+const MASTERCHEF_SUSHI_PER_BLOCK = toBN('227821185682704153'); // ~0.23
+const MASTERCHEF_TOTAL_ALLOC_POINT = toBN(540);
+const ALLOC_POINT = toBN(10);
+// OHM has 9 decimals!
+// See: https://github.com/liquity/dev/pull/704#discussion_r715745203
+// 1 OHM = $625, $5,000 per day = 8 OHM per day, ~6,400 blocks per day => 0.00125 LQTY per block
+const OHM_MULTIPLIER = toBN(dec(125, 4))
+      .mul(UNIT).div(MASTERCHEF_SUSHI_PER_BLOCK)
+      .mul(MASTERCHEF_TOTAL_ALLOC_POINT.add(ALLOC_POINT)).div(ALLOC_POINT);
+// 960 LQTY per day, ~6,400 blocks per day => 0.15 LQTY per block
+const LQTY_MULTIPLIER = toBN(dec(15, 16))
+      .mul(UNIT).div(MASTERCHEF_SUSHI_PER_BLOCK)
+      .mul(MASTERCHEF_TOTAL_ALLOC_POINT.add(ALLOC_POINT)).div(ALLOC_POINT);
+const ACC_SUSHI_PRECISION = toBN(dec(1, 12));
 
 async function main() {
   // MasterChef owner
@@ -39,10 +49,19 @@ async function main() {
     MasterChefV2.abi,
     deployerWallet
   );
+  const totalAllocPoint = await masterChef.totalAllocPoint();
+  const sushiPerBlock = await masterChef.sushiPerBlock();
+  th.logBN('Total alloc point', totalAllocPoint);
+  th.logBN('Sushi per block  ', sushiPerBlock);
+  th.logBN('OHM multiplier   ', OHM_MULTIPLIER);
+  th.logBN('LQTY multiplier  ', LQTY_MULTIPLIER);
+  assert.equal(totalAllocPoint.toString(), MASTERCHEF_TOTAL_ALLOC_POINT.toString());
+  assert.equal(sushiPerBlock.toString(), MASTERCHEF_SUSHI_PER_BLOCK.toString());
 
   const tokenFactory = new ethers.ContractFactory(ERC20.abi, ERC20.bytecode, deployerWallet);
   const lpToken = await tokenFactory.deploy('LP Token', 'LPT', deployerWalletAddress, 0);
   const ohmToken = await tokenFactory.deploy('OHM Token', 'OHM', deployerWalletAddress, 0);
+  await ohmToken.setupDecimals(9);
   const lqtyToken = await tokenFactory.deploy('LQTY Token', 'LQTY', deployerWalletAddress, 0);
   console.log('LP token:  ', lpToken.address);
   console.log('OHM:       ', ohmToken.address);
@@ -121,7 +140,7 @@ async function main() {
   th.logBN('Accumulated sushi per share: ', poolInfo.accSushiPerShare);
   const ohmBalance = await ohmToken.balanceOf(userWalletAddress);
   const lqtyBalance = await lqtyToken.balanceOf(userWalletAddress);
-  th.logBN('User OHM balance ', ohmBalance);
+  th.logBN('User OHM balance ', ohmBalance, 9);
   th.logBN('User LQTY balance', lqtyBalance);
   const baseAmount = poolInfo.accSushiPerShare.mul(UNIT).div(ACC_SUSHI_PRECISION)
         .mul(depositAmount).div(UNIT);
@@ -136,6 +155,18 @@ async function main() {
     baseAmount.mul(LQTY_MULTIPLIER).div(UNIT).toString(),
     'LQTY rewards don’t match'
   );
+  th.assertIsApproximatelyEqual(
+    ohmBalance.toString(),
+    dec(75, 5), // 0.00125 OHM per block x 6 blocks (and / 1e9)
+    1
+  );
+  th.assertIsApproximatelyEqual(
+    lqtyBalance.toString(),
+    dec(90, 16), // 0.15 LQTY per block x 6 blocks
+    1e10
+  );
+
+  console.log('\n -- Mainnet deployment test finished successfully! -- \n');
 }
 
 main()

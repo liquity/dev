@@ -32,4 +32,8 @@ contract ERC20Mock is ERC20 {
     function approveInternal(address owner, address spender, uint256 value) public {
         _approve(owner, spender, value);
     }
+
+    function setupDecimals(uint8 decimals) external virtual {
+        _setupDecimals(decimals);
+    }
 }

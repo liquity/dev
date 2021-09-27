@@ -15,7 +15,7 @@ contract MasterChefV2Mock {
     using SignedSafeMath for int256;
     using BoringERC20 for IERC20;
 
-    uint256 private constant MASTERCHEF_SUSHI_PER_BLOCK = 1e20;
+    uint256 private constant MASTERCHEF_SUSHI_PER_BLOCK = 227821185682704153;
     uint256 private constant ACC_SUSHI_PRECISION = 1e12;
 
     /// @notice Info of each MCV2 user.

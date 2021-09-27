@@ -7,9 +7,14 @@ const ERC20 = artifacts.require('ERC20Mock')
 const th = testHelpers.TestHelper
 const { toBN, assertRevert, dec, ZERO_ADDRESS } = testHelpers.TestHelper
 
-const OHM_MULTIPLIER = toBN(dec(1, 16))
-const LQTY_MULTIPLIER = toBN(dec(1, 19))
-const MASTERCHEF_SUSHI_PER_BLOCK = toBN(dec(1, 20))
+const UNIT = toBN(dec(1, 18))
+const MASTERCHEF_SUSHI_PER_BLOCK = toBN('227821185682704153') // ~0.23
+// OHM has 9 decimals!
+// See: https://github.com/liquity/dev/pull/704#discussion_r715745203
+// 1 OHM = $625, $5,000 per day = 8 OHM per day, ~6,400 blocks per day => 0.00125 LQTY per block
+const OHM_MULTIPLIER = toBN(dec(125, 4)).mul(UNIT).div(MASTERCHEF_SUSHI_PER_BLOCK)
+// 960 LQTY per day, ~6,400 blocks per day => 0.15 LQTY per block
+const LQTY_MULTIPLIER = toBN(dec(15, 16)).mul(UNIT).div(MASTERCHEF_SUSHI_PER_BLOCK)
 
 contract('SushiSwapOhmLqtyRewarder', async accounts => {
   const [owner, alice, bob, carol, dennis] = accounts
@@ -22,6 +27,7 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
 
     lpToken = await ERC20.new('LP Token', 'LPT', owner, 0)
     ohmToken = await ERC20.new('OHM Token', 'OHM', owner, initialAmount)
+    await ohmToken.setupDecimals(9)
     lqtyToken = await ERC20.new('LQTY Token', 'LQTY', owner, initialAmount)
 
     masterChef = await MasterChefV2.new()
@@ -42,8 +48,8 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
   })
 
   const blocksToSushi = blocks => toBN(blocks).mul(MASTERCHEF_SUSHI_PER_BLOCK)
-  const sushiToOhm = sushiRewards => sushiRewards.mul(OHM_MULTIPLIER).div(toBN(dec(1, 18)))
-  const sushiToLqty = sushiRewards => sushiRewards.mul(LQTY_MULTIPLIER).div(toBN(dec(1, 18)))
+  const sushiToOhm = sushiRewards => sushiRewards.mul(OHM_MULTIPLIER).div(UNIT)
+  const sushiToLqty = sushiRewards => sushiRewards.mul(LQTY_MULTIPLIER).div(UNIT)
   const blocksToRewards = blocks => {
     const sushi = blocksToSushi(blocks)
     return [sushiToOhm(sushi), sushiToLqty(sushi)]
@@ -58,7 +64,7 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
   const checkRewards = async (blocks) => {
     const sushiRewards = await masterChef.pendingSushi(alice)
     const pendingRewards = await rewarder.pendingTokens(0, ZERO_ADDRESS, sushiRewards)
-    assert.equal(sushiRewards.toString(), blocksToSushi(blocks))
+    th.assertIsApproximatelyEqual(sushiRewards.toString(), blocksToSushi(blocks), 1e8)
     assert.equal(pendingRewards.rewardTokens[0], ohmToken.address)
     assert.equal(pendingRewards.rewardTokens[1], lqtyToken.address)
     assert.equal(pendingRewards.rewardAmounts[0].toString(), sushiToOhm(sushiRewards))
@@ -111,7 +117,7 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
       // harvest
       await checkBalances(alice, 0, 0)
       await masterChef.harvest(0, alice, { from: alice })
-      await checkBalances(alice, ...blocksToRewards(blocks + 1))
+      await checkBalances(alice, ...blocksToRewards(blocks + 1), 1e7)
     })
 
     // This actually belongs to MasterChefV2, as the rewarder ignores the user, it only uses the recipient
@@ -167,7 +173,7 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
       await checkBalances(alice, 0, 0)
       const blockBeforeHarvest = await web3.eth.getBlockNumber()
       await masterChef.harvest(0, alice, { from: alice })
-      await checkBalances(alice, ...blocksToRewards(blockBeforeHarvest - blockBeforeDeposit))
+      await checkBalances(alice, ...blocksToRewards(blockBeforeHarvest - blockBeforeDeposit), 1e9)
       // await logUserInfo(alice)
       // await logPoolInfo()
     })
@@ -200,7 +206,7 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
 
       // harvest
       await masterChef.harvest(0, alice, { from: alice })
-      await checkBalances(alice, ...blocksToRewards(blockBeforeWithdraw - blockBeforeDeposit))
+      await checkBalances(alice, ...blocksToRewards(blockBeforeWithdraw - blockBeforeDeposit), 1e8)
       // await logUserInfo(alice)
       // await logPoolInfo()
     })
@@ -227,7 +233,7 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
       await checkBalances(alice, 0, 0)
       const blockBeforeWithdraw = await web3.eth.getBlockNumber()
       await masterChef.withdrawAndHarvest(0, amount, alice, { from: alice })
-      await checkBalances(alice, ...blocksToRewards(blockBeforeWithdraw - blockBeforeDeposit))
+      await checkBalances(alice, ...blocksToRewards(blockBeforeWithdraw - blockBeforeDeposit), 1e8)
       // await logUserInfo(alice)
       // await logPoolInfo()
     })
@@ -256,7 +262,7 @@ contract('SushiSwapOhmLqtyRewarder', async accounts => {
       // harvest
       await masterChef.harvest(0, bob, { from: alice })
       await checkBalances(alice, 0, 0)
-      await checkBalances(bob, ...blocksToRewards(blockBeforeWithdraw - blockBeforeDeposit))
+      await checkBalances(bob, ...blocksToRewards(blockBeforeWithdraw - blockBeforeDeposit), 1e8)
     })
 
     /*
