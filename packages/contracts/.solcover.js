@@ -3,7 +3,7 @@ const { accountsList } = require("./hardhatAccountsList2k.js");
 // https://hardhat.org/plugins/solidity-coverage.html#configuration
 // Link in providerOptions:
 // https://github.com/trufflesuite/ganache-core#options
-const accounts = accountsList.map(a => ({ secretKey: a.privateKey, balance: '0xc097ce7bc90715b34b9f1000000000' }))
+const accounts = accountsList.map(a => ({ secretKey: a.privateKey, balance: '0xc097ce7bc90715b34b9f1000000000' }));
 
 module.exports = {
   providerOptions: {
