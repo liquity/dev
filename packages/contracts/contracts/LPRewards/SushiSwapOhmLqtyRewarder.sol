@@ -19,6 +19,8 @@ contract SushiSwapOhmLqtyRewarder is IRewarder {
     uint256 private constant REWARD_TOKEN_DIVISOR = 1e18;
     address private immutable MASTERCHEF_V2;
 
+    // Make sure to pass correct multipliers at deployment !!
+    // See mainnetDeployment/test/SushiSwapOhmLqtyRewarderTest_mainnet.js for a real example
     constructor (
         uint256 _ohmRewardMultiplier,
         IERC20 _ohmToken,
