@@ -68,6 +68,7 @@ module.exports = {
             gas: 10000000,  // tx gas limit
             blockGasLimit: 12500000, 
             gasPrice: 20000000000,
+            hardfork: "istanbul", // TODO: fix after unit tests are fixed!
         },
         mainnet: {
             url: alchemyUrl(),
