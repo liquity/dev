@@ -38,13 +38,17 @@ contract SushiSwapOhmLqtyRewarder is IRewarder {
         uint256 ohmPendingReward = sushiAmount.mul(ohmRewardMultiplier) / REWARD_TOKEN_DIVISOR;
         uint256 ohmBal = ohmToken.balanceOf(address(this));
         uint256 ohmReward = ohmPendingReward > ohmBal ? ohmBal : ohmPendingReward;
-        ohmToken.safeTransfer(to, ohmReward);
+        if (ohmReward > 0) {
+            ohmToken.safeTransfer(to, ohmReward);
+        }
 
         // LQTY rewards
         uint256 lqtyPendingReward = sushiAmount.mul(lqtyRewardMultiplier) / REWARD_TOKEN_DIVISOR;
         uint256 lqtyBal = lqtyToken.balanceOf(address(this));
         uint256 lqtyReward = lqtyPendingReward > lqtyBal ? lqtyBal : lqtyPendingReward;
-        lqtyToken.safeTransfer(to, lqtyReward);
+        if (lqtyReward > 0) {
+            lqtyToken.safeTransfer(to, lqtyReward);
+        }
     }
 
     function pendingTokens(uint256, address, uint256 sushiAmount) override external view returns (IERC20[] memory rewardTokens, uint256[] memory rewardAmounts) {
