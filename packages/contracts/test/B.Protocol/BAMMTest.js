@@ -256,6 +256,18 @@ contract('BAMM', async accounts => {
       const expectdDLqtyDelta = await lens.getUnclaimedLqty.call(D, bamm.address, lqtyToken.address)
       const expectdELqtyDelta = await lens.getUnclaimedLqty.call(E, bamm.address, lqtyToken.address)
 
+      // test get user info
+      // send eth to get non zero eth
+      await web3.eth.sendTransaction({from: whale, to: bamm.address, value: toBN(dec(3, 18))})
+      const userInfo = await lens.getUserInfo.call(D, bamm.address, lqtyToken.address)
+      //console.log({userInfo})
+      assert.equal(userInfo.unclaimedLqty.toString(), expectdDLqtyDelta.toString())
+      assert.equal(userInfo.bammUserBalance.toString(), (await bamm.balanceOf(D)).toString())
+      assert.equal(userInfo.lusdUserBalance.toString(), dec(1000, 18).toString())
+      assert.equal(userInfo.ethUserBalance.toString(), dec(1, 18).toString())
+      assert.equal(userInfo.lusdTotal.toString(), dec(3000, 18).toString())
+      assert.equal(userInfo.ethTotal.toString(), dec(3, 18).toString())      
+
       await stabilityPool.withdrawFromSP(0, { from: F })
       await bamm.withdraw(0, { from: D })
       await bamm.withdraw(0, { from: E })      
