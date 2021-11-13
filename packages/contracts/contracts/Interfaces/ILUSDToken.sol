@@ -13,7 +13,7 @@ interface ILUSDToken is IERC20, IERC2612 {
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 
-    event LUSDTokenBalanceUpdated(address _user, uint _amount);
+    event DebtTokenBalanceUpdated(address _user, uint _amount);
 
     // --- Functions ---
 

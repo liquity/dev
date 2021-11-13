@@ -29,6 +29,38 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_borrower",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_LUSDFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "DebtBorrowingFeePaid",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_DebtTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "DebtTokenAddressChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "address",
         "name": "_defaultPoolAddress",
@@ -81,19 +113,6 @@
       }
     ],
     "name": "LUSDBorrowingFeePaid",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_lusdTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "LUSDTokenAddressChanged",
     "type": "event"
   },
   {
@@ -677,7 +696,7 @@
       },
       {
         "internalType": "address",
-        "name": "_lusdTokenAddress",
+        "name": "_DebtTokenAddress",
         "type": "address"
       },
       {

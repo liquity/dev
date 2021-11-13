@@ -22,12 +22,12 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     address public troveManagerAddress;
     address public activePoolAddress;
-    uint256 internal ETH;  // deposited ETH tracker
-    uint256 internal LUSDDebt;  // debt
+    uint256 internal Collateral;  // deposited ETH tracker
+    uint256 internal Debt;  // debt
 
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event DefaultPoolLUSDDebtUpdated(uint _LUSDDebt);
-    event DefaultPoolETHBalanceUpdated(uint _ETH);
+    event DefaultPoolDebtUpdated(uint _Debt);
+    event DefaultPoolCollateralUpdated(uint _ETH);
 
     // --- Dependency setters ---
 
@@ -57,37 +57,37 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     *
     * Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts.
     */
-    function getETH() external view override returns (uint) {
-        return ETH;
+    function getCollateral() external view override returns (uint) {
+        return Collateral;
     }
 
-    function getLUSDDebt() external view override returns (uint) {
-        return LUSDDebt;
+    function getDebt() external view override returns (uint) {
+        return Debt;
     }
 
     // --- Pool functionality ---
 
-    function sendETHToActivePool(uint _amount) external override {
+    function sendCollateralToActivePool(uint _amount) external override {
         _requireCallerIsTroveManager();
         address activePool = activePoolAddress; // cache to save an SLOAD
-        ETH = ETH.sub(_amount);
-        emit DefaultPoolETHBalanceUpdated(ETH);
-        emit EtherSent(activePool, _amount);
+        Collateral = Collateral.sub(_amount);
+        emit DefaultPoolCollateralUpdated(Collateral);
+        emit CollateralSent(activePool, _amount);
 
         (bool success, ) = activePool.call{ value: _amount }("");
         require(success, "DefaultPool: sending ETH failed");
     }
 
-    function increaseLUSDDebt(uint _amount) external override {
+    function increaseDebt(uint _amount) external override {
         _requireCallerIsTroveManager();
-        LUSDDebt = LUSDDebt.add(_amount);
-        emit DefaultPoolLUSDDebtUpdated(LUSDDebt);
+        Debt = Debt.add(_amount);
+        emit DefaultPoolDebtUpdated(Debt);
     }
 
-    function decreaseLUSDDebt(uint _amount) external override {
+    function decreaseDebt(uint _amount) external override {
         _requireCallerIsTroveManager();
-        LUSDDebt = LUSDDebt.sub(_amount);
-        emit DefaultPoolLUSDDebtUpdated(LUSDDebt);
+        Debt = Debt.sub(_amount);
+        emit DefaultPoolDebtUpdated(Debt);
     }
 
     // --- 'require' functions ---
@@ -104,7 +104,7 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     receive() external payable {
         _requireCallerIsActivePool();
-        ETH = ETH.add(msg.value);
-        emit DefaultPoolETHBalanceUpdated(ETH);
+        Collateral = Collateral.add(msg.value);
+        emit DefaultPoolCollateralUpdated(Collateral);
     }
 }

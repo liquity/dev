@@ -18,11 +18,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_ETH",
+        "name": "_Collateral",
         "type": "uint256"
       }
     ],
-    "name": "ActivePoolETHBalanceUpdated",
+    "name": "ActivePoolCollateralUpdated",
     "type": "event"
   },
   {
@@ -31,11 +31,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_LUSDDebt",
+        "name": "_Debt",
         "type": "uint256"
       }
     ],
-    "name": "ActivePoolLUSDDebtUpdated",
+    "name": "ActivePoolDebtUpdated",
     "type": "event"
   },
   {
@@ -56,25 +56,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "_newDefaultPoolAddress",
-        "type": "address"
-      }
-    ],
-    "name": "DefaultPoolAddressChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "_newBalance",
         "type": "uint256"
       }
     ],
-    "name": "ETHBalanceUpdated",
+    "name": "CollateralBalanceUpdated",
     "type": "event"
   },
   {
@@ -93,7 +80,7 @@
         "type": "uint256"
       }
     ],
-    "name": "EtherSent",
+    "name": "CollateralSent",
     "type": "event"
   },
   {
@@ -106,7 +93,20 @@
         "type": "uint256"
       }
     ],
-    "name": "LUSDBalanceUpdated",
+    "name": "DebtBalanceUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_newDefaultPoolAddress",
+        "type": "address"
+      }
+    ],
+    "name": "DefaultPoolAddressChanged",
     "type": "event"
   },
   {
@@ -188,7 +188,7 @@
         "type": "uint256"
       }
     ],
-    "name": "decreaseLUSDDebt",
+    "name": "decreaseDebt",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -208,7 +208,7 @@
   },
   {
     "inputs": [],
-    "name": "getETH",
+    "name": "getCollateral",
     "outputs": [
       {
         "internalType": "uint256",
@@ -221,7 +221,7 @@
   },
   {
     "inputs": [],
-    "name": "getLUSDDebt",
+    "name": "getDebt",
     "outputs": [
       {
         "internalType": "uint256",
@@ -240,7 +240,7 @@
         "type": "uint256"
       }
     ],
-    "name": "increaseLUSDDebt",
+    "name": "increaseDebt",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -284,7 +284,7 @@
         "type": "uint256"
       }
     ],
-    "name": "sendETH",
+    "name": "sendCollateral",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

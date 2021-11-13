@@ -48,22 +48,22 @@ export class ObservableEthersLiquity implements ObservableLiquity {
     onTotalRedistributedChanged: (totalRedistributed: Trove) => void
   ): () => void {
     const { activePool, defaultPool } = _getContracts(this._readable.connection);
-    const etherSent = activePool.filters.EtherSent();
+    const DebtSent = activePool.filters.DebtSent();
 
     const redistributionListener = debounce((blockTag: number) => {
       this._readable.getTotalRedistributed({ blockTag }).then(onTotalRedistributedChanged);
     });
 
-    const etherSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
+    const DebtSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
       if (toAddress === defaultPool.address) {
         redistributionListener(event);
       }
     };
 
-    activePool.on(etherSent, etherSentListener);
+    activePool.on(DebtSent, DebtSentListener);
 
     return () => {
-      activePool.removeListener(etherSent, etherSentListener);
+      activePool.removeListener(DebtSent, DebtSentListener);
     };
   }
 
@@ -138,16 +138,16 @@ export class ObservableEthersLiquity implements ObservableLiquity {
 
     const { activePool, stabilityPool } = _getContracts(this._readable.connection);
     const { UserDepositChanged } = stabilityPool.filters;
-    const { EtherSent } = activePool.filters;
+    const { DebtSent } = activePool.filters;
 
     const userDepositChanged = UserDepositChanged(address);
-    const etherSent = EtherSent();
+    const DebtSent = DebtSent();
 
     const depositListener = debounce((blockTag: number) => {
       this._readable.getStabilityDeposit(address, { blockTag }).then(onStabilityDepositChanged);
     });
 
-    const etherSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
+    const DebtSentListener = (toAddress: string, _amount: BigNumber, event: Event) => {
       if (toAddress === stabilityPool.address) {
         // Liquidation while Stability Pool has some deposits
         // There may be new gains
@@ -156,11 +156,11 @@ export class ObservableEthersLiquity implements ObservableLiquity {
     };
 
     stabilityPool.on(userDepositChanged, depositListener);
-    activePool.on(etherSent, etherSentListener);
+    activePool.on(DebtSent, DebtSentListener);
 
     return () => {
       stabilityPool.removeListener(userDepositChanged, depositListener);
-      activePool.removeListener(etherSent, etherSentListener);
+      activePool.removeListener(DebtSent, DebtSentListener);
     };
   }
 

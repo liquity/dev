@@ -45,7 +45,7 @@
           "type": "uint256"
         }
       ],
-      "name": "EtherSent",
+      "name": "DebtSent",
       "type": "event"
     },
     {
@@ -93,11 +93,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_DebtTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressSet",
+      "name": "DebtTokenAddressSet",
       "type": "event"
     },
     {
@@ -417,7 +417,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_DebtTokenAddress",
           "type": "address"
         },
         {

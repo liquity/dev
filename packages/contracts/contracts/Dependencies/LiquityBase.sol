@@ -58,15 +58,15 @@ contract LiquityBase is BaseMath, ILiquityBase {
     }
 
     function getEntireSystemColl() public view returns (uint entireSystemColl) {
-        uint activeColl = activePool.getETH();
-        uint liquidatedColl = defaultPool.getETH();
+        uint activeColl = activePool.getCollateral();
+        uint liquidatedColl = defaultPool.getCollateral();
 
         return activeColl.add(liquidatedColl);
     }
 
     function getEntireSystemDebt() public view returns (uint entireSystemDebt) {
-        uint activeDebt = activePool.getLUSDDebt();
-        uint closedDebt = defaultPool.getLUSDDebt();
+        uint activeDebt = activePool.getDebt();
+        uint closedDebt = defaultPool.getDebt();
 
         return activeDebt.add(closedDebt);
     }

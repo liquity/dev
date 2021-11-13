@@ -64,7 +64,7 @@
           "type": "uint256"
         }
       ],
-      "name": "EtherSent",
+      "name": "DebtSent",
       "type": "event"
     },
     {

@@ -140,7 +140,7 @@
           "type": "uint256"
         }
       ],
-      "name": "EtherSent",
+      "name": "DebtSent",
       "type": "event"
     },
     {
@@ -300,11 +300,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newLUSDTokenAddress",
+          "name": "_newDebtTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressChanged",
+      "name": "DebtTokenAddressChanged",
       "type": "event"
     },
     {
@@ -413,7 +413,7 @@
           "type": "uint256"
         }
       ],
-      "name": "StabilityPoolETHBalanceUpdated",
+      "name": "StabilityPoolCollateralUpdated",
       "type": "event"
     },
     {
@@ -1181,7 +1181,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_DebtTokenAddress",
           "type": "address"
         },
         {

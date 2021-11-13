@@ -9,9 +9,9 @@ import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 /*
- * The Active Pool holds the ETH collateral and LUSD debt (but not LUSD tokens) for all active troves.
+ * The Active Pool holds the Collateral token and debt amount (but not debt tokens) for all active troves.
  *
- * When a trove is liquidated, it's ETH and LUSD debt are transferred from the Active Pool, to either the
+ * When a trove is liquidated, it's Collateral and debt are transferred from the Active Pool, to either the
  * Stability Pool, the Default Pool, or both, depending on the liquidation conditions.
  *
  */
@@ -24,15 +24,15 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
     address public troveManagerAddress;
     address public stabilityPoolAddress;
     address public defaultPoolAddress;
-    uint256 internal ETH;  // deposited ether tracker
-    uint256 internal LUSDDebt;
+    uint256 internal Collateral;  // deposited Collateral tracker
+    uint256 internal Debt;
 
     // --- Events ---
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event ActivePoolLUSDDebtUpdated(uint _LUSDDebt);
-    event ActivePoolETHBalanceUpdated(uint _ETH);
+    event ActivePoolDebtUpdated(uint _Debt);
+    event ActivePoolCollateralUpdated(uint _Collateral);
 
     // --- Contract setters ---
 
@@ -66,40 +66,39 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
     // --- Getters for public variables. Required by IPool interface ---
 
     /*
-    * Returns the ETH state variable.
+    * Returns the Collateral state variable.
     *
-    *Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts.
     */
-    function getETH() external view override returns (uint) {
-        return ETH;
+    function getCollateral() external view override returns (uint) {
+        return Collateral;
     }
 
-    function getLUSDDebt() external view override returns (uint) {
-        return LUSDDebt;
+    function getDebt() external view override returns (uint) {
+        return Debt;
     }
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) external override {
+    function sendCollateral(address _account, uint _amount) external override {
         _requireCallerIsBOorTroveMorSP();
-        ETH = ETH.sub(_amount);
-        emit ActivePoolETHBalanceUpdated(ETH);
-        emit EtherSent(_account, _amount);
+        Collateral = Collateral.sub(_amount);
+        emit ActivePoolCollateralUpdated(Collateral);
+        emit CollateralSent(_account, _amount);
 
-        (bool success, ) = _account.call{ value: _amount }("");
-        require(success, "ActivePool: sending ETH failed");
+        (bool success, ) = _account.call{ value: _amount }(""); //TODO this is an ERC20 transfer, not a call
+        require(success, "ActivePool: sending Collateral failed");
     }
 
-    function increaseLUSDDebt(uint _amount) external override {
+    function increaseDebt(uint _amount) external override {
         _requireCallerIsBOorTroveM();
-        LUSDDebt  = LUSDDebt.add(_amount);
-        ActivePoolLUSDDebtUpdated(LUSDDebt);
+        Debt  = Debt.add(_amount);
+        ActivePoolDebtUpdated(Debt);
     }
 
-    function decreaseLUSDDebt(uint _amount) external override {
+    function decreaseDebt(uint _amount) external override {
         _requireCallerIsBOorTroveMorSP();
-        LUSDDebt = LUSDDebt.sub(_amount);
-        ActivePoolLUSDDebtUpdated(LUSDDebt);
+        Debt = Debt.sub(_amount);
+        ActivePoolDebtUpdated(Debt);
     }
 
     // --- 'require' functions ---
@@ -130,7 +129,7 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
 
     receive() external payable {
         _requireCallerIsBorrowerOperationsOrDefaultPool();
-        ETH = ETH.add(msg.value);
-        emit ActivePoolETHBalanceUpdated(ETH);
+        Collateral = Collateral.add(msg.value);
+        emit ActivePoolCollateralUpdated(Collateral);
     }
 }

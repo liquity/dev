@@ -7,7 +7,7 @@ interface ILQTYStaking {
     // --- Events --
     
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
-    event LUSDTokenAddressSet(address _lusdTokenAddress);
+    event DebtTokenAddressSet(address _DebtTokenAddress);
     event TroveManagerAddressSet(address _troveManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
@@ -17,7 +17,7 @@ interface ILQTYStaking {
     event F_ETHUpdated(uint _F_ETH);
     event F_LUSDUpdated(uint _F_LUSD);
     event TotalLQTYStakedUpdated(uint _totalLQTYStaked);
-    event EtherSent(address _account, uint _amount);
+    event DebtSent(address _account, uint _amount);
     event StakerSnapshotsUpdated(address _staker, uint _F_ETH, uint _F_LUSD);
 
     // --- Functions ---
@@ -25,7 +25,7 @@ interface ILQTYStaking {
     function setAddresses
     (
         address _lqtyTokenAddress,
-        address _lusdTokenAddress,
+        address _DebtTokenAddress,
         address _troveManagerAddress, 
         address _borrowerOperationsAddress,
         address _activePoolAddress

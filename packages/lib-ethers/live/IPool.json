@@ -39,7 +39,7 @@
           "type": "uint256"
         }
       ],
-      "name": "ETHBalanceUpdated",
+      "name": "CollateralUpdated",
       "type": "event"
     },
     {
@@ -58,7 +58,7 @@
           "type": "uint256"
         }
       ],
-      "name": "EtherSent",
+      "name": "DebtSent",
       "type": "event"
     },
     {
@@ -95,7 +95,7 @@
           "type": "uint256"
         }
       ],
-      "name": "decreaseLUSDDebt",
+      "name": "decreaseDebt",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -134,7 +134,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseLUSDDebt",
+      "name": "increaseDebt",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

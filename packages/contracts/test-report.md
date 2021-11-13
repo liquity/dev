@@ -35,13 +35,13 @@ $ hardhat test
       ✓ increaseTroveDebt(): reverts when called by an account that is not BorrowerOperations
       ✓ decreaseTroveDebt(): reverts when called by an account that is not BorrowerOperations
     ActivePool
-      ✓ sendETH(): reverts when called by an account that is not BO nor TroveM nor SP
-      ✓ increaseLUSDDebt(): reverts when called by an account that is not BO nor TroveM
-      ✓ decreaseLUSDDebt(): reverts when called by an account that is not BO nor TroveM nor SP
+      ✓ sendCollateral(): reverts when called by an account that is not BO nor TroveM nor SP
+      ✓ increaseDebt(): reverts when called by an account that is not BO nor TroveM
+      ✓ decreaseDebt(): reverts when called by an account that is not BO nor TroveM nor SP
       ✓ fallback(): reverts when called by an account that is not Borrower Operations nor Default Pool
     DefaultPool
-      ✓ sendETHToActivePool(): reverts when called by an account that is not TroveManager
-      ✓ increaseLUSDDebt(): reverts when called by an account that is not TroveManager
+      ✓ sendCollateralToActivePool(): reverts when called by an account that is not TroveManager
+      ✓ increaseDebt(): reverts when called by an account that is not TroveManager
       ✓ decreaseLUSD(): reverts when called by an account that is not TroveManager
       ✓ fallback(): reverts when called by an account that is not the Active Pool
     StabilityPool
@@ -292,7 +292,7 @@ $ hardhat test
     ✓ Sets the correct StabilityPool address in CommunityIssuance
 
   Contract: DefaultPool
-    ✓ sendETHToActivePool(): fails if receiver cannot receive ETH
+    ✓ sendCollateralToActivePool(): fails if receiver cannot receive ETH
 
   Contract: Fee arithmetic tests
     ✓ minutesPassedSinceLastFeeOp(): returns minutes passed for no time increase (197ms)
@@ -635,14 +635,14 @@ issuance fraction after: 949066037374286
     ✓ getLUSDDebt(): gets the recorded LUSD balance
     ✓ increaseLUSD(): increases the recorded LUSD balance by the correct amount
     ✓ decreaseLUSD(): decreases the recorded LUSD balance by the correct amount
-    ✓ sendETH(): decreases the recorded ETH balance by the correct amount
+    ✓ sendCollateral(): decreases the recorded ETH balance by the correct amount
 
   Contract: DefaultPool
     ✓ getETH(): gets the recorded LUSD balance
     ✓ getLUSDDebt(): gets the recorded LUSD balance
     ✓ increaseLUSD(): increases the recorded LUSD balance by the correct amount
     ✓ decreaseLUSD(): decreases the recorded LUSD balance by the correct amount (57ms)
-    ✓ sendETHToActivePool(): decreases the recorded ETH balance by the correct amount (50ms)
+    ✓ sendCollateralToActivePool(): decreases the recorded ETH balance by the correct amount (50ms)
 
   Contract: PriceFeed
     ✓ C1 Chainlink working: fetchPrice should return the correct price, taking into account the number of decimal digits on the aggregator (286ms)

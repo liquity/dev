@@ -132,11 +132,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newLUSDTokenAddress",
+          "name": "_newDebtTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressChanged",
+      "name": "DebtTokenAddressChanged",
       "type": "event"
     },
     {
@@ -1579,7 +1579,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_DebtTokenAddress",
           "type": "address"
         },
         {

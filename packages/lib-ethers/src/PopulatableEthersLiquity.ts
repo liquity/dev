@@ -550,7 +550,7 @@ export class PopulatableEthersLiquity
           .map(({ args: { value } }) => decimalify(value));
 
         const [withdrawCollateral] = activePool
-          .extractEvents(logs, "EtherSent")
+          .extractEvents(logs, "DebtSent")
           .filter(({ args: { _to } }) => _to === userAddress)
           .map(({ args: { _amount } }) => decimalify(_amount));
 

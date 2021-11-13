@@ -1004,7 +1004,7 @@ contract('Gas compensation tests', async accounts => {
     await openTrove({ ICR: toBN(dec(488, 16)), extraLUSDAmount: dec(600, 18), extraParams: { from: carol } })
     await openTrove({ ICR: toBN(dec(545, 16)), extraLUSDAmount: dec(1, 23), extraParams: { from: dennis } })
 
-    const LUSDinDefaultPool_0 = await defaultPool.getLUSDDebt()
+    const LUSDinDefaultPool_0 = await defaultPool.getDebt()
 
     // price drops to 200 
     await priceFeed.setPrice(dec(200, 18))
@@ -1056,7 +1056,7 @@ contract('Gas compensation tests', async accounts => {
     const liquidatorBalance_after = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check LUSD in DefaultPool has decreased
-    const LUSDinDefaultPool_1 = await defaultPool.getLUSDDebt()
+    const LUSDinDefaultPool_1 = await defaultPool.getDebt()
     assert.isTrue(LUSDinDefaultPool_1.gt(LUSDinDefaultPool_0))
 
     // Check liquidator's balance has increased by the expected compensation amount
@@ -1065,7 +1065,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isAtMost(th.getDifference(expectedGasComp, compensationReceived), 1000)
 
     // Check ETH in defaultPool now equals the expected liquidated collateral
-    const ETHinDefaultPool = (await defaultPool.getETH()).toString()
+    const ETHinDefaultPool = (await defaultPool.getCollateral()).toString()
     assert.isAtMost(th.getDifference(expectedLiquidatedColl, ETHinDefaultPool), 1000)
   })
 
@@ -1165,7 +1165,7 @@ contract('Gas compensation tests', async accounts => {
     await openTrove({ ICR: toBN(dec(10, 18)), extraLUSDAmount: dec(1, 23), extraParams: { from: erin } })
     await openTrove({ ICR: toBN(dec(10, 18)), extraLUSDAmount: dec(1, 23), extraParams: { from: flyn } })
 
-    const LUSDinDefaultPool_0 = await defaultPool.getLUSDDebt()
+    const LUSDinDefaultPool_0 = await defaultPool.getDebt()
 
     // price drops to 200 
     await priceFeed.setPrice(dec(200, 18))

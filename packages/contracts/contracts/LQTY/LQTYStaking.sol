@@ -42,7 +42,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     // --- Events ---
 
     event LQTYTokenAddressSet(address _lqtyTokenAddress);
-    event LUSDTokenAddressSet(address _lusdTokenAddress);
+    event DebtTokenAddressSet(address _DebtTokenAddress);
     event TroveManagerAddressSet(address _troveManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
@@ -52,7 +52,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     event F_ETHUpdated(uint _F_ETH);
     event F_LUSDUpdated(uint _F_LUSD);
     event TotalLQTYStakedUpdated(uint _totalLQTYStaked);
-    event EtherSent(address _account, uint _amount);
+    event DebtSent(address _account, uint _amount);
     event StakerSnapshotsUpdated(address _staker, uint _F_ETH, uint _F_LUSD);
 
     // --- Functions ---
@@ -60,7 +60,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
     function setAddresses
     (
         address _lqtyTokenAddress,
-        address _lusdTokenAddress,
+        address _DebtTokenAddress,
         address _troveManagerAddress, 
         address _borrowerOperationsAddress,
         address _activePoolAddress
@@ -70,19 +70,19 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
         override 
     {
         checkContract(_lqtyTokenAddress);
-        checkContract(_lusdTokenAddress);
+        checkContract(_DebtTokenAddress);
         checkContract(_troveManagerAddress);
         checkContract(_borrowerOperationsAddress);
         checkContract(_activePoolAddress);
 
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
-        lusdToken = ILUSDToken(_lusdTokenAddress);
+        lusdToken = ILUSDToken(_DebtTokenAddress);
         troveManagerAddress = _troveManagerAddress;
         borrowerOperationsAddress = _borrowerOperationsAddress;
         activePoolAddress = _activePoolAddress;
 
         emit LQTYTokenAddressSet(_lqtyTokenAddress);
-        emit LQTYTokenAddressSet(_lusdTokenAddress);
+        emit LQTYTokenAddressSet(_DebtTokenAddress);
         emit TroveManagerAddressSet(_troveManagerAddress);
         emit BorrowerOperationsAddressSet(_borrowerOperationsAddress);
         emit ActivePoolAddressSet(_activePoolAddress);
@@ -122,7 +122,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
          // Send accumulated LUSD and ETH gains to the caller
         if (currentStake != 0) {
             lusdToken.transfer(msg.sender, LUSDGain);
-            _sendETHGainToUser(ETHGain);
+            _sendCollateralGainToUser(ETHGain);
         }
     }
 
@@ -158,7 +158,7 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
 
         // Send accumulated LUSD and ETH gains to the caller
         lusdToken.transfer(msg.sender, LUSDGain);
-        _sendETHGainToUser(ETHGain);
+        _sendCollateralGainToUser(ETHGain);
     }
 
     // --- Reward-per-unit-staked increase functions. Called by Liquity core contracts ---
@@ -213,8 +213,8 @@ contract LQTYStaking is ILQTYStaking, Ownable, CheckContract, BaseMath {
         emit StakerSnapshotsUpdated(_user, F_ETH, F_LUSD);
     }
 
-    function _sendETHGainToUser(uint ETHGain) internal {
-        emit EtherSent(msg.sender, ETHGain);
+    function _sendCollateralGainToUser(uint ETHGain) internal {
+        emit DebtSent(msg.sender, ETHGain);
         (bool success, ) = msg.sender.call{value: ETHGain}("");
         require(success, "LQTYStaking: Failed to send accumulated ETHGain");
     }

@@ -41,7 +41,20 @@
         "type": "uint256"
       }
     ],
-    "name": "EtherSent",
+    "name": "DebtSent",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_DebtTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "DebtTokenAddressSet",
     "type": "event"
   },
   {
@@ -81,19 +94,6 @@
       }
     ],
     "name": "LQTYTokenAddressSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_lusdTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "LUSDTokenAddressSet",
     "type": "event"
   },
   {
@@ -413,7 +413,7 @@
       },
       {
         "internalType": "address",
-        "name": "_lusdTokenAddress",
+        "name": "_DebtTokenAddress",
         "type": "address"
       },
       {

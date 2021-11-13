@@ -37,14 +37,14 @@ interface IStabilityPool {
 
     // --- Events ---
     
-    event StabilityPoolETHBalanceUpdated(uint _newBalance);
+    event StabilityPoolCollateralUpdated(uint _newBalance);
     event StabilityPoolLUSDBalanceUpdated(uint _newBalance);
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    event LUSDTokenAddressChanged(address _newLUSDTokenAddress);
+    event DebtTokenAddressChanged(address _newDebtTokenAddress);
     event SortedTrovesAddressChanged(address _newSortedTrovesAddress);
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
@@ -66,7 +66,7 @@ interface IStabilityPool {
     event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _LUSDLoss);
     event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
     event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
-    event EtherSent(address _to, uint _amount);
+    event DebtSent(address _to, uint _amount);
 
     // --- Functions ---
 
@@ -78,7 +78,7 @@ interface IStabilityPool {
         address _borrowerOperationsAddress,
         address _troveManagerAddress,
         address _activePoolAddress,
-        address _lusdTokenAddress,
+        address _DebtTokenAddress,
         address _sortedTrovesAddress,
         address _priceFeedAddress,
         address _communityIssuanceAddress

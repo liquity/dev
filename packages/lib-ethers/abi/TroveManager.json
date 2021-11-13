@@ -57,6 +57,19 @@
       {
         "indexed": false,
         "internalType": "address",
+        "name": "_newDebtTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "DebtTokenAddressChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
         "name": "_defaultPoolAddress",
         "type": "address"
       }
@@ -120,19 +133,6 @@
       }
     ],
     "name": "LTermsUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_newLUSDTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "LUSDTokenAddressChanged",
     "type": "event"
   },
   {
@@ -1575,7 +1575,7 @@
       },
       {
         "internalType": "address",
-        "name": "_lusdTokenAddress",
+        "name": "_DebtTokenAddress",
         "type": "address"
       },
       {

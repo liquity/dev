@@ -449,20 +449,20 @@ contract('StabilityPool', async accounts => {
       assert.isFalse(await sortedTroves.contains(defaulter_1))
       assert.isFalse(await sortedTroves.contains(defaulter_2))
 
-      const activeDebt_Before = (await activePool.getLUSDDebt()).toString()
-      const defaultedDebt_Before = (await defaultPool.getLUSDDebt()).toString()
-      const activeColl_Before = (await activePool.getETH()).toString()
-      const defaultedColl_Before = (await defaultPool.getETH()).toString()
+      const activeDebt_Before = (await activePool.getDebt()).toString()
+      const defaultedDebt_Before = (await defaultPool.getDebt()).toString()
+      const activeColl_Before = (await activePool.getCollateral()).toString()
+      const defaultedColl_Before = (await defaultPool.getCollateral()).toString()
       const TCR_Before = (await th.getTCR(contracts)).toString()
 
       // D makes an SP deposit
       await stabilityPool.provideToSP(dec(1000, 18), frontEnd_1, { from: dennis })
       assert.equal((await stabilityPool.getCompoundedLUSDDeposit(dennis)).toString(), dec(1000, 18))
 
-      const activeDebt_After = (await activePool.getLUSDDebt()).toString()
-      const defaultedDebt_After = (await defaultPool.getLUSDDebt()).toString()
-      const activeColl_After = (await activePool.getETH()).toString()
-      const defaultedColl_After = (await defaultPool.getETH()).toString()
+      const activeDebt_After = (await activePool.getDebt()).toString()
+      const defaultedDebt_After = (await defaultPool.getDebt()).toString()
+      const activeColl_After = (await activePool.getCollateral()).toString()
+      const defaultedColl_After = (await defaultPool.getCollateral()).toString()
       const TCR_After = (await th.getTCR(contracts)).toString()
 
       // Check total system debt, collateral and TCR have not changed after a Stability deposit is made
@@ -1720,7 +1720,7 @@ contract('StabilityPool', async accounts => {
       const [, liquidatedColl,] = th.getEmittedLiquidationValues(liquidationTx_1)
 
       //Get ActivePool and StabilityPool Ether before retrieval:
-      const active_ETH_Before = await activePool.getETH()
+      const active_ETH_Before = await activePool.getCollateral()
       const stability_ETH_Before = await stabilityPool.getETH()
 
       // Expect alice to be entitled to 15000/200000 of the liquidated coll
@@ -1731,7 +1731,7 @@ contract('StabilityPool', async accounts => {
       // Alice retrieves all of her deposit
       await stabilityPool.withdrawFromSP(dec(15000, 18), { from: alice })
 
-      const active_ETH_After = await activePool.getETH()
+      const active_ETH_After = await activePool.getCollateral()
       const stability_ETH_After = await stabilityPool.getETH()
 
       const active_ETH_Difference = (active_ETH_Before.sub(active_ETH_After))
@@ -1914,10 +1914,10 @@ contract('StabilityPool', async accounts => {
       // Price rises
       await priceFeed.setPrice(dec(200, 18))
 
-      const activeDebt_Before = (await activePool.getLUSDDebt()).toString()
-      const defaultedDebt_Before = (await defaultPool.getLUSDDebt()).toString()
-      const activeColl_Before = (await activePool.getETH()).toString()
-      const defaultedColl_Before = (await defaultPool.getETH()).toString()
+      const activeDebt_Before = (await activePool.getDebt()).toString()
+      const defaultedDebt_Before = (await defaultPool.getDebt()).toString()
+      const activeColl_Before = (await activePool.getCollateral()).toString()
+      const defaultedColl_Before = (await defaultPool.getCollateral()).toString()
       const TCR_Before = (await th.getTCR(contracts)).toString()
 
       // Carol withdraws her Stability deposit 
@@ -1925,10 +1925,10 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.withdrawFromSP(dec(30000, 18), { from: carol })
       assert.equal(((await stabilityPool.deposits(carol))[0]).toString(), '0')
 
-      const activeDebt_After = (await activePool.getLUSDDebt()).toString()
-      const defaultedDebt_After = (await defaultPool.getLUSDDebt()).toString()
-      const activeColl_After = (await activePool.getETH()).toString()
-      const defaultedColl_After = (await defaultPool.getETH()).toString()
+      const activeDebt_After = (await activePool.getDebt()).toString()
+      const defaultedDebt_After = (await defaultPool.getDebt()).toString()
+      const activeColl_After = (await activePool.getCollateral()).toString()
+      const defaultedColl_After = (await defaultPool.getCollateral()).toString()
       const TCR_After = (await th.getTCR(contracts)).toString()
 
       // Check total system debt, collateral and TCR have not changed after a Stability deposit is made
@@ -3146,13 +3146,13 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(200, 18));
 
       //check activePool and StabilityPool Ether before retrieval:
-      const active_ETH_Before = await activePool.getETH()
+      const active_ETH_Before = await activePool.getCollateral()
       const stability_ETH_Before = await stabilityPool.getETH()
 
       // Alice retrieves redirects ETH gain to her Trove
       await stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice })
 
-      const active_ETH_After = await activePool.getETH()
+      const active_ETH_After = await activePool.getCollateral()
       const stability_ETH_After = await stabilityPool.getETH()
 
       const active_ETH_Difference = (active_ETH_After.sub(active_ETH_Before)) // AP ETH should increase

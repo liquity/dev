@@ -70,8 +70,8 @@ contract('Echidna debugger', async accounts => {
 
     const totalSupply = await lusdToken.totalSupply();
     const gasPoolBalance = await lusdToken.balanceOf(GAS_POOL_ADDRESS);
-    const activePoolBalance = await activePool.getLUSDDebt();
-    const defaultPoolBalance = await defaultPool.getLUSDDebt();
+    const activePoolBalance = await activePool.getDebt();
+    const defaultPoolBalance = await defaultPool.getDebt();
     const stabilityPoolBalance = await stabilityPool.getTotalLUSDDeposits();
     const currentTrove = await echidnaTester.echidnaProxies(0);
     const troveBalance = lusdToken.balanceOf(currentTrove);

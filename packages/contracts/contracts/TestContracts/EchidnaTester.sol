@@ -361,11 +361,11 @@ contract EchidnaTester {
             return false;
         }
 
-        if (address(activePool).balance != activePool.getETH()) {
+        if (address(activePool).balance != activePool.getCollateral()) {
             return false;
         }
 
-        if (address(defaultPool).balance != defaultPool.getETH()) {
+        if (address(defaultPool).balance != defaultPool.getCollateral()) {
             return false;
         }
 
@@ -406,8 +406,8 @@ contract EchidnaTester {
         uint totalSupply = lusdToken.totalSupply();
         uint gasPoolBalance = lusdToken.balanceOf(address(gasPool));
 
-        uint activePoolBalance = activePool.getLUSDDebt();
-        uint defaultPoolBalance = defaultPool.getLUSDDebt();
+        uint activePoolBalance = activePool.getDebt();
+        uint defaultPoolBalance = defaultPool.getDebt();
         if (totalSupply != activePoolBalance + defaultPoolBalance) {
             return false;
         }

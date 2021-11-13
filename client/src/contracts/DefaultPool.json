@@ -56,7 +56,7 @@
           "type": "uint256"
         }
       ],
-      "name": "ETHBalanceUpdated",
+      "name": "CollateralUpdated",
       "type": "event"
     },
     {
@@ -75,7 +75,7 @@
           "type": "uint256"
         }
       ],
-      "name": "EtherSent",
+      "name": "CollateralSent",
       "type": "event"
     },
     {
@@ -316,7 +316,7 @@
           "type": "uint256"
         }
       ],
-      "name": "sendETH",
+      "name": "sendCollateral",
       "outputs": [
         {
           "internalType": "bool",
