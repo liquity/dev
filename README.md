@@ -272,7 +272,6 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 - `packages/contracts/fuzzTests/` - Echidna tests, and naive "random operation" tests 
 - `packages/contracts/migrations/` - contains Hardhat script for deploying the smart contracts to the blockchain
 - `packages/contracts/utils/` - external Hardhat and node scripts - deployment helpers, gas calculators, etc
-- `packages/contracts/mathProofs/` - c
 
 Backend development is done in the Hardhat framework, and allows Liquity to be deployed on the Hardhat EVM network for fast compilation and test execution.
 
