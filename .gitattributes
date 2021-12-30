@@ -1,2 +1,4 @@
 # Enable syntax highlighting for Solidity
 *.sol linguist-language=Solidity
+# Prevent Github highlighting comments in JSON files as errors
+*.json  linguist-language=JSON-with-Comments
