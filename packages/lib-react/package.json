@@ -1,9 +1,19 @@
 {
   "name": "@liquity/lib-react",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.0.0-semantic-release",
+  "description": "Components and hooks for React-based Liquity frontends",
+  "keywords": [
+    "Liquity",
+    "protocol",
+    "DeFi",
+    "Ethereum"
+  ],
+  "homepage": "https://github.com/liquity/liquity#readme",
+  "license": "MIT",
+  "author": "Daniel Simon <dani@liquity.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": "https://github.com/liquity/dev",
   "scripts": {
     "eslint": "eslint",
     "prepare": "run-s prepare:*",

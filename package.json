@@ -62,6 +62,7 @@
     "release:delete-dev-deployments": "yarn workspace @liquity/lib-ethers delete-dev-deployments",
     "release:lib-base": "yarn workspace @liquity/lib-base semantic-release",
     "release:lib-ethers": "yarn workspace @liquity/lib-ethers semantic-release",
+    "release:lib-react": "yarn workspace @liquity/lib-react semantic-release",
     "release:providers": "yarn workspace @liquity/providers semantic-release",
     "save-live-version": "yarn workspace @liquity/lib-ethers save-live-version",
     "start-dev-chain": "run-s start-dev-chain:*",
