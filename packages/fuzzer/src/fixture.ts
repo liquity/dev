@@ -4,6 +4,7 @@ import {
   Decimal,
   Decimalish,
   LQTYStake,
+  LUSD_MINIMUM_DEBT,
   StabilityDeposit,
   TransactableLiquity,
   Trove,
@@ -118,8 +119,13 @@ export class Fixture {
           ? 1.51
           : Decimal.max(trove.collateralRatio(this.price).add(0.00001), 1.11);
 
-      let newTrove = trove.isEmpty ? Trove.create({ depositCollateral: 1 }) : trove;
+      let newTrove = trove.isEmpty ? Trove.create({ depositCollateral: 1, borrowLUSD: 0 }) : trove;
       newTrove = newTrove.adjust({ borrowLUSD: amount.sub(lusdBalance).mul(2) });
+
+      if (newTrove.debt.lt(LUSD_MINIMUM_DEBT)) {
+        newTrove = newTrove.setDebt(LUSD_MINIMUM_DEBT);
+      }
+
       newTrove = newTrove.setCollateral(newTrove.debt.mulDiv(targetCollateralRatio, this.price));
 
       if (trove.isEmpty) {
@@ -165,8 +171,8 @@ export class Fixture {
       return;
     }
 
-    const troveOwnersBefore = trovesBefore.map(([owner]) => owner);
-    const [, lastTrove] = trovesBefore[trovesBefore.length - 1];
+    const troveOwnersBefore = trovesBefore.map(trove => trove.ownerAddress);
+    const lastTrove = trovesBefore[trovesBefore.length - 1];
 
     if (!lastTrove.collateralRatioIsBelowMinimum(price)) {
       console.log("// No Troves to liquidate");
@@ -199,10 +205,11 @@ export class Fixture {
     let newTrove: Trove;
 
     const cannotOpen = (newTrove: Trove) =>
-      total.collateralRatioIsBelowCritical(this.price)
-        ? newTrove.collateralRatioIsBelowCritical(this.price)
+      newTrove.debt.lt(LUSD_MINIMUM_DEBT) ||
+      (total.collateralRatioIsBelowCritical(this.price)
+        ? !newTrove.isOpenableInRecoveryMode(this.price)
         : newTrove.collateralRatioIsBelowMinimum(this.price) ||
-          total.add(newTrove).collateralRatioIsBelowCritical(this.price);
+          total.add(newTrove).collateralRatioIsBelowCritical(this.price));
 
     // do {
     newTrove = createRandomTrove(this.price);
@@ -221,13 +228,13 @@ export class Fixture {
       );
 
       await this.gasHistograms.openTrove.expectFailure(() =>
-        liquity.openTrove(params, { gasPrice: 0 })
+        liquity.openTrove(params, undefined, { gasPrice: 0 })
       );
     } else {
       console.log(`[${shortenAddress(userAddress)}] openTrove(${objToString(params)})`);
 
       await this.gasHistograms.openTrove.expectSuccess(() =>
-        liquity.send.openTrove(params, { gasPrice: 0 })
+        liquity.send.openTrove(params, undefined, { gasPrice: 0 })
       );
     }
   }
@@ -245,7 +252,10 @@ export class Fixture {
         : { ...randomCollateralChange(trove), ...randomDebtChange(trove) };
 
     const cannotAdjust = (trove: Trove, params: TroveAdjustmentParams<Decimal>) => {
-      if (params.withdrawCollateral?.gte(trove.collateral) || params.repayLUSD?.gt(trove.netDebt)) {
+      if (
+        params.withdrawCollateral?.gte(trove.collateral) ||
+        params.repayLUSD?.gt(trove.debt.sub(LUSD_MINIMUM_DEBT))
+      ) {
         return true;
       }
 
@@ -277,13 +287,13 @@ export class Fixture {
       );
 
       await this.gasHistograms.adjustTrove.expectFailure(() =>
-        liquity.adjustTrove(params, { gasPrice: 0 })
+        liquity.adjustTrove(params, undefined, { gasPrice: 0 })
       );
     } else {
       console.log(`[${shortenAddress(userAddress)}] adjustTrove(${objToString(params)})`);
 
       await this.gasHistograms.adjustTrove.expectSuccess(() =>
-        liquity.send.adjustTrove(params, { gasPrice: 0 })
+        liquity.send.adjustTrove(params, undefined, { gasPrice: 0 })
       );
     }
   }
@@ -319,9 +329,17 @@ export class Fixture {
 
     console.log(`[${shortenAddress(userAddress)}] redeemLUSD(${amount})`);
 
-    await this.gasHistograms.redeemLUSD.expectSuccess(() =>
-      liquity.send.redeemLUSD(amount, { gasPrice: 0 })
-    );
+    try {
+      await this.gasHistograms.redeemLUSD.expectSuccess(() =>
+        liquity.send.redeemLUSD(amount, undefined, { gasPrice: 0 })
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("amount too low to redeem")) {
+        console.log("// amount too low to redeem");
+      } else {
+        throw error;
+      }
+    }
   }
 
   async depositRandomAmountInStabilityPool(userAddress: string, liquity: Liquity) {
@@ -343,7 +361,7 @@ export class Fixture {
     liquity: Liquity,
     deposit: StabilityDeposit
   ) {
-    const [[, lastTrove]] = await liquity.getTroves({
+    const [lastTrove] = await liquity.getTroves({
       first: 1,
       sortedBy: "ascendingCollateralRatio"
     });
@@ -377,11 +395,19 @@ export class Fixture {
 
     await this.funderLiquity.sendLQTY(userAddress, amount);
 
-    console.log(`[${shortenAddress(userAddress)}] stakeLQTY(${amount})`);
+    if (amount.eq(0)) {
+      console.log(`// [${shortenAddress(userAddress)}] stakeLQTY(${amount}) expected to fail`);
 
-    await this.gasHistograms.stakeLQTY.expectSuccess(() =>
-      liquity.send.stakeLQTY(amount, { gasPrice: 0 })
-    );
+      await this.gasHistograms.stakeLQTY.expectFailure(() =>
+        liquity.stakeLQTY(amount, { gasPrice: 0 })
+      );
+    } else {
+      console.log(`[${shortenAddress(userAddress)}] stakeLQTY(${amount})`);
+
+      await this.gasHistograms.stakeLQTY.expectSuccess(() =>
+        liquity.send.stakeLQTY(amount, { gasPrice: 0 })
+      );
+    }
   }
 
   async unstakeRandomAmount(userAddress: string, liquity: Liquity, stake: LQTYStake) {

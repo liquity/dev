@@ -81,12 +81,14 @@ export const getListOfTrovesBeforeRedistribution = async (liquity: ReadableLiqui
   });
 
 export const getListOfTroveOwners = async (liquity: ReadableLiquity) =>
-  getListOfTrovesBeforeRedistribution(liquity).then(troves => troves.map(([owner]) => owner));
+  getListOfTrovesBeforeRedistribution(liquity).then(troves =>
+    troves.map(trove => trove.ownerAddress)
+  );
 
 const tinyDifference = Decimal.from("0.000000001");
 
 const sortedByICR = (
-  listOfTroves: [string, TroveWithPendingRedistribution][],
+  listOfTroves: TroveWithPendingRedistribution[],
   totalRedistributed: Trove,
   price: Decimalish
 ) => {
@@ -94,10 +96,10 @@ const sortedByICR = (
     return true;
   }
 
-  let currentTrove = listOfTroves[0][1].applyRedistribution(totalRedistributed);
+  let currentTrove = listOfTroves[0].applyRedistribution(totalRedistributed);
 
   for (let i = 1; i < listOfTroves.length; ++i) {
-    const nextTrove = listOfTroves[i][1].applyRedistribution(totalRedistributed);
+    const nextTrove = listOfTroves[i].applyRedistribution(totalRedistributed);
 
     if (
       nextTrove.collateralRatio(price).gt(currentTrove.collateralRatio(price).add(tinyDifference))
@@ -117,33 +119,33 @@ export const listDifference = (listA: string[], listB: string[]) => {
 };
 
 export const listOfTrovesShouldBeEqual = (
-  listA: [string, TroveWithPendingRedistribution][],
-  listB: [string, TroveWithPendingRedistribution][]
+  listA: TroveWithPendingRedistribution[],
+  listB: TroveWithPendingRedistribution[]
 ) => {
   if (listA.length !== listB.length) {
     throw new Error("length of trove lists is different");
   }
 
-  const mapB = new Map(listB);
+  const mapB = new Map(listB.map(trove => [trove.ownerAddress, trove]));
 
-  listA.forEach(([owner, troveA]) => {
-    const troveB = mapB.get(owner);
+  listA.forEach(troveA => {
+    const troveB = mapB.get(troveA.ownerAddress);
 
     if (!troveB) {
-      throw new Error(`${owner} has no trove in listB`);
+      throw new Error(`${troveA.ownerAddress} has no trove in listB`);
     }
 
     if (!troveA.equals(troveB)) {
-      throw new Error(`${owner} has different troves in listA & listB`);
+      throw new Error(`${troveA.ownerAddress} has different troves in listA & listB`);
     }
   });
 };
 
 export const checkTroveOrdering = (
-  listOfTroves: [string, TroveWithPendingRedistribution][],
+  listOfTroves: TroveWithPendingRedistribution[],
   totalRedistributed: Trove,
   price: Decimal,
-  previousListOfTroves?: [string, TroveWithPendingRedistribution][]
+  previousListOfTroves?: TroveWithPendingRedistribution[]
 ) => {
   if (!sortedByICR(listOfTroves, totalRedistributed, price)) {
     if (previousListOfTroves) {
@@ -162,14 +164,14 @@ export const checkTroveOrdering = (
 
 export const checkPoolBalances = async (
   liquity: ReadableEthersLiquity,
-  listOfTroves: [string, TroveWithPendingRedistribution][],
+  listOfTroves: TroveWithPendingRedistribution[],
   totalRedistributed: Trove
 ) => {
   const activePool = await liquity._getActivePool();
   const defaultPool = await liquity._getDefaultPool();
 
   const [activeTotal, defaultTotal] = listOfTroves.reduce(
-    ([activeTotal, defaultTotal], [, troveActive]) => {
+    ([activeTotal, defaultTotal], troveActive) => {
       const troveTotal = troveActive.applyRedistribution(totalRedistributed);
       const troveDefault = troveTotal.subtract(troveActive);
 
@@ -261,7 +263,6 @@ export const checkSubgraph = async (subgraph: SubgraphLiquity, l1Liquity: Readab
 export const shortenAddress = (address: string) => address.substr(0, 6) + "..." + address.substr(-4);
 
 const troveToString = (
-  address: string,
   troveWithPendingRewards: TroveWithPendingRedistribution,
   totalRedistributed: Trove,
   price: Decimalish
@@ -270,7 +271,7 @@ const troveToString = (
   const rewards = trove.subtract(troveWithPendingRewards);
 
   return (
-    `[${shortenAddress(address)}]: ` +
+    `[${shortenAddress(troveWithPendingRewards.ownerAddress)}]: ` +
     `ICR = ${new Percent(trove.collateralRatio(price)).toString(2)}, ` +
     `ICR w/o reward = ${new Percent(troveWithPendingRewards.collateralRatio(price)).toString(2)}, ` +
     `coll = ${trove.collateral.toString(2)}, ` +
@@ -281,7 +282,7 @@ const troveToString = (
 };
 
 export const dumpTroves = (
-  listOfTroves: [string, TroveWithPendingRedistribution][],
+  listOfTroves: TroveWithPendingRedistribution[],
   totalRedistributed: Trove,
   price: Decimalish
 ) => {
@@ -289,11 +290,11 @@ export const dumpTroves = (
     return;
   }
 
-  let [currentOwner, currentTrove] = listOfTroves[0];
-  console.log(`   ${troveToString(currentOwner, currentTrove, totalRedistributed, price)}`);
+  let currentTrove = listOfTroves[0];
+  console.log(`   ${troveToString(currentTrove, totalRedistributed, price)}`);
 
   for (let i = 1; i < listOfTroves.length; ++i) {
-    const [nextOwner, nextTrove] = listOfTroves[i];
+    const nextTrove = listOfTroves[i];
 
     if (
       nextTrove
@@ -302,12 +303,12 @@ export const dumpTroves = (
         .sub(tinyDifference)
         .gt(currentTrove.applyRedistribution(totalRedistributed).collateralRatio(price))
     ) {
-      console.log(`!! ${troveToString(nextOwner, nextTrove, totalRedistributed, price)}`.red);
+      console.log(`!! ${troveToString(nextTrove, totalRedistributed, price)}`.red);
     } else {
-      console.log(`   ${troveToString(nextOwner, nextTrove, totalRedistributed, price)}`);
+      console.log(`   ${troveToString(nextTrove, totalRedistributed, price)}`);
     }
 
-    [currentOwner, currentTrove] = [nextOwner, nextTrove];
+    currentTrove = nextTrove;
   }
 };
 

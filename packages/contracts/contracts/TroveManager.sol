@@ -48,7 +48,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     uint constant public MAX_BORROWING_FEE = DECIMAL_PRECISION / 100 * 5; // 5%
 
     // During bootsrap period redemptions are not allowed
-    uint constant public BOOTSTRAP_PERIOD = 14 days;
+    uint constant public BOOTSTRAP_PERIOD = 0;
 
     /*
     * BETA: 18 digit decimal. Parameter by which to divide the redeemed fraction, in order to calc the new base rate from a redemption.
