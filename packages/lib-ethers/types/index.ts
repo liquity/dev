@@ -772,6 +772,7 @@ interface BAMMCalls {
   add(x: BigNumberish, y: BigNumberish, _overrides?: CallOverrides): Promise<BigNumber>;
   balanceOf(owner: string, _overrides?: CallOverrides): Promise<BigNumber>;
   bonus(_overrides?: CallOverrides): Promise<string>;
+  compensateForLusdDeviation(ethAmount: BigNumberish, _overrides?: CallOverrides): Promise<BigNumber>;
   crops(arg0: string, _overrides?: CallOverrides): Promise<BigNumber>;
   dec(_overrides?: CallOverrides): Promise<BigNumber>;
   decimals(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -783,9 +784,10 @@ interface BAMMCalls {
   getConversionRate(arg0: string, arg1: string, srcQty: BigNumberish, arg3: BigNumberish, _overrides?: CallOverrides): Promise<BigNumber>;
   getReturn(xQty: BigNumberish, xBalance: BigNumberish, yBalance: BigNumberish, A: BigNumberish, _overrides?: CallOverrides): Promise<BigNumber>;
   getSumFixedPoint(x: BigNumberish, y: BigNumberish, A: BigNumberish, _overrides?: CallOverrides): Promise<BigNumber>;
-  getSwapEthAmount(lusdQty: BigNumberish, _overrides?: CallOverrides): Promise<{ ethAmount: BigNumber; feeEthAmount: BigNumber }>;
+  getSwapEthAmount(lusdQty: BigNumberish, _overrides?: CallOverrides): Promise<{ ethAmount: BigNumber; feeLusdAmount: BigNumber }>;
   ilk(_overrides?: CallOverrides): Promise<string>;
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
+  lusd2UsdPriceAggregator(_overrides?: CallOverrides): Promise<string>;
   maxDiscount(_overrides?: CallOverrides): Promise<BigNumber>;
   mul(x: BigNumberish, y: BigNumberish, _overrides?: CallOverrides): Promise<BigNumber>;
   name(_overrides?: CallOverrides): Promise<string>;
@@ -858,6 +860,7 @@ interface BLensCalls {
 
 interface BLensTransactions {
   getUnclaimedLqty(user: string, bamm: string, token: string, _overrides?: Overrides): Promise<BigNumber>;
+  getUserInfo(user: string, bamm: string, lqty: string, _overrides?: Overrides): Promise<{ unclaimedLqty: BigNumber; bammUserBalance: BigNumber; bammTotalSupply: BigNumber; lusdUserBalance: BigNumber; ethUserBalance: BigNumber; lusdTotal: BigNumber; ethTotal: BigNumber }>;
 }
 
 export interface BLens

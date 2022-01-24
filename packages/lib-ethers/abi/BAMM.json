@@ -7,6 +7,11 @@
         "type": "address"
       },
       {
+        "internalType": "address",
+        "name": "_lusd2UsdPriceAggregator",
+        "type": "address"
+      },
+      {
         "internalType": "address payable",
         "name": "_SP",
         "type": "address"
@@ -397,6 +402,25 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "ethAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "compensateForLusdDeviation",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "newEthAmount",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -631,7 +655,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "feeEthAmount",
+        "name": "feeLusdAmount",
         "type": "uint256"
       }
     ],
@@ -659,6 +683,19 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lusd2UsdPriceAggregator",
+    "outputs": [
+      {
+        "internalType": "contract AggregatorV3Interface",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
