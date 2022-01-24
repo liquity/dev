@@ -46,6 +46,7 @@ contract('BAMM', async accounts => {
   let bamm
   let lens
   let chainlink
+  let lusdChainlink
   let defaultPool
   let borrowerOperations
   let lqtyToken
@@ -97,12 +98,15 @@ contract('BAMM', async accounts => {
 
       // deploy BAMM
       chainlink = await ChainlinkTestnet.new(priceFeed.address)
+      lusdChainlink = await ChainlinkTestnet.new(ZERO_ADDRESS)
 
       const kickbackRate_F1 = toBN(dec(5, 17)) // F1 kicks 50% back to depositor
       await stabilityPool.registerFrontEnd(kickbackRate_F1, { from: frontEnd_1 })
 
-      bamm = await BAMM.new(chainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, frontEnd_1, {from: bammOwner})
+      bamm = await BAMM.new(chainlink.address, lusdChainlink.address, stabilityPool.address, lusdToken.address, lqtyToken.address, 400, feePool, frontEnd_1, {from: bammOwner})
       lens = await BLens.new()
+
+      await lusdChainlink.setPrice(dec(1,18)) // 1 LUSD = 1 USD
     })
 
     // --- provideToSP() ---
@@ -492,11 +496,12 @@ contract('BAMM', async accounts => {
 
       const ethBalanceBefore = toBN(await web3.eth.getBalance(A))
       const LUSDBefore = await lusdToken.balanceOf(A)
-      await bamm.withdraw(await bamm.balanceOf(A), {from: A, gasPrice: 0})
+      const tx = await bamm.withdraw(await bamm.balanceOf(A), {from: A})
+      const gasFee = toBN(tx.receipt.gasUsed).mul(toBN(tx.receipt.effectiveGasPrice))
       const ethBalanceAfter = toBN(await web3.eth.getBalance(A))
       const LUSDAfter = await lusdToken.balanceOf(A)
 
-      const withdrawUsdValue = LUSDAfter.sub(LUSDBefore).add((ethBalanceAfter.sub(ethBalanceBefore)).mul(toBN(105)))
+      const withdrawUsdValue = LUSDAfter.sub(LUSDBefore).add((ethBalanceAfter.add(gasFee).sub(ethBalanceBefore)).mul(toBN(105)))
       assert(in100WeiRadius(withdrawUsdValue.toString(), totalUsd.toString()))
 
       assert(in100WeiRadius("10283999999999999997375", "10283999999999999997322"))
@@ -536,24 +541,28 @@ contract('BAMM', async accounts => {
       await bamm.setParams(20, 0, {from: bammOwner})
       const price = await bamm.getSwapEthAmount(dec(105, 18))
       assert.equal(price.ethAmount.toString(), dec(104, 18-2).toString())
+      assert.equal(price.feeLusdAmount.toString(), "0")
 
       // with fee
       await bamm.setParams(20, 100, {from: bammOwner})
       const priceWithFee = await bamm.getSwapEthAmount(dec(105, 18))
-      assert.equal(priceWithFee.ethAmount.toString(), dec(10296, 18-4).toString())
+      assert.equal(priceWithFee.ethAmount.toString(),price.ethAmount.toString())
+      assert.equal(priceWithFee.feeLusdAmount.toString(), dec(105, 16))
 
       // without fee
       await bamm.setParams(20, 0, {from: bammOwner})
       const priceDepleted = await bamm.getSwapEthAmount(dec(1050000000000000, 18))
       assert.equal(priceDepleted.ethAmount.toString(), ethGains.toString())      
+      assert.equal(priceDepleted.feeLusdAmount.toString(), "0")
 
       // with fee
       await bamm.setParams(20, 100, {from: bammOwner})
       const priceDepletedWithFee = await bamm.getSwapEthAmount(dec(1050000000000000, 18))
-      assert.equal(priceDepletedWithFee.ethAmount.toString(), ethGains.mul(toBN(99)).div(toBN(100)))      
+      assert.equal(priceDepletedWithFee.ethAmount.toString(), priceDepleted.ethAmount.toString())
+      assert.equal(priceDepletedWithFee.feeLusdAmount.toString(), dec(1050000000000000, 16))      
     })
 
-    it('test getSwapEthAmount', async () => {
+    it.only('test getSwapEthAmount', async () => {
       // --- SETUP ---
 
       // Whale opens Trove and deposits to SP
@@ -589,11 +598,29 @@ contract('BAMM', async accounts => {
       await bamm.setParams(200, 0, {from: bammOwner})
       const priceWithoutFee = await bamm.getSwapEthAmount(lusdQty)
       assert.equal(priceWithoutFee.ethAmount.toString(), expectedReturn.mul(toBN(100)).div(toBN(100 * 105)).toString())
+      assert.equal(priceWithoutFee.feeLusdAmount.toString(), "0")
 
       // with fee
       await bamm.setParams(200, 100, {from: bammOwner})
       const priceWithFee = await bamm.getSwapEthAmount(lusdQty)
-      assert.equal(priceWithFee.ethAmount.toString(), expectedReturn.mul(toBN(99)).div(toBN(100 * 105)).toString())      
+      assert.equal(priceWithoutFee.ethAmount.toString(), priceWithFee.ethAmount.toString())      
+      assert.equal(priceWithFee.feeLusdAmount.toString(), toBN(lusdQty).div(toBN("100")).toString())
+      
+      // with lusd price > 1
+      await lusdChainlink.setPrice(dec(102,16)) // 1 lusd = 1.02 usd
+      const priceWithLusdOver1 = await bamm.getSwapEthAmount(lusdQty)
+      assert.equal(priceWithLusdOver1.ethAmount.toString(), toBN(priceWithoutFee.ethAmount).mul(toBN(102)).div(toBN(100)).toString())
+
+      // with lusd price < 1
+      await lusdChainlink.setPrice(dec(99,16)) // 1 lusd = 0.99 usd
+      const priceWithLusdUnder1 = await bamm.getSwapEthAmount(lusdQty)
+      assert.equal(priceWithLusdUnder1.ethAmount.toString(), priceWithoutFee.ethAmount.toString())
+
+      // with lusd price >> 1
+      await lusdChainlink.setPrice(dec(112,16)) // 1 lusd = 1.12 usd
+      const priceWithLusdTooHigh = await bamm.getSwapEthAmount(lusdQty)
+      assert.equal(priceWithLusdTooHigh.ethAmount.toString(), dec(104,16)) // get max discount, namely 1.04 ETH instead of 1 ETH
+
     })    
 
     it('test fetch price', async () => {
@@ -636,8 +663,8 @@ contract('BAMM', async accounts => {
       // with fee
       await bamm.setParams(20, 100, {from: bammOwner})
       const priceWithFee = await bamm.getSwapEthAmount(dec(105, 18))
-      assert.equal(priceWithFee.ethAmount.toString(), dec(10296, 18-4).toString())
-      assert.equal(priceWithFee.feeEthAmount.toString(), dec(10400 - 10296, 18-4).toString())      
+      assert.equal(priceWithFee.ethAmount.toString(), dec(104, 18-2).toString())
+      assert.equal(priceWithFee.feeLusdAmount.toString(), dec(105, 16).toString())      
 
       await lusdToken.approve(bamm.address, dec(105,18), {from: whale})
       const dest = "0xdEADBEEF00AA81bBCF694bC5c05A397F5E5658D5"
@@ -646,13 +673,14 @@ contract('BAMM', async accounts => {
       await bamm.swap(dec(105,18), priceWithFee.ethAmount, dest, {from: whale}) // TODO - check once with higher value so it will revert
 
       // check lusd balance
-      assert.equal(toBN(dec(6105, 18)).toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
+      const expectedPoolBalance = toBN(dec(6105, 18)).sub(priceWithFee.feeLusdAmount)
+      assert.equal(expectedPoolBalance.toString(), (await stabilityPool.getCompoundedLUSDDeposit(bamm.address)).toString())
 
       // check eth balance
       assert.equal(await web3.eth.getBalance(dest), priceWithFee.ethAmount)
 
       // check fees
-      assert.equal(await web3.eth.getBalance(feePool), priceWithFee.feeEthAmount)
+      assert.equal((await lusdToken.balanceOf(feePool)).toString(), priceWithFee.feeLusdAmount.toString())
     })    
 
     it('test set params happy path', async () => {
@@ -694,16 +722,18 @@ contract('BAMM', async accounts => {
       await bamm.setParams(200, 0, {from: bammOwner})
       const priceWithoutFee = await bamm.getSwapEthAmount(lusdQty)
       assert.equal(priceWithoutFee.ethAmount.toString(), expectedReturn200.mul(toBN(100)).div(toBN(100 * 105)).toString())
+      assert.equal(priceWithoutFee.feeLusdAmount.toString(), "0")
 
       // with fee
       await bamm.setParams(190, 100, {from: bammOwner})
       const priceWithFee = await bamm.getSwapEthAmount(lusdQty)
-      assert.equal(priceWithFee.ethAmount.toString(), expectedReturn190.mul(toBN(99)).div(toBN(100 * 105)).toString())      
+      assert.equal(priceWithFee.ethAmount.toString(), expectedReturn190.mul(toBN(100)).div(toBN(100 * 105)).toString())
+      assert.equal(priceWithFee.feeLusdAmount.toString(), toBN(lusdQty).div(toBN("100")).toString())            
     })    
     
     it('test set params sad path', async () => {
       await assertRevert(bamm.setParams(210, 100, {from: bammOwner}), 'setParams: A too big')
-      await assertRevert(bamm.setParams(10, 100, {from: bammOwner}), 'setParams: A too small')
+      await assertRevert(bamm.setParams(9, 100, {from: bammOwner}), 'setParams: A too small')
       await assertRevert(bamm.setParams(10, 101, {from: bammOwner}), 'setParams: fee is too big')             
       await assertRevert(bamm.setParams(20, 100, {from: B}), 'Ownable: caller is not the owner')      
     })

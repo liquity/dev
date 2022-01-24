@@ -11,6 +11,7 @@ import "./../TestContracts/PriceFeedTestnet.sol";
 contract ChainlinkTestnet {
     
     PriceFeedTestnet feed;
+    uint price = 0;
     uint time = 0;
 
     constructor(PriceFeedTestnet _feed) public {
@@ -25,6 +26,10 @@ contract ChainlinkTestnet {
         time = _time;
     }
 
+    function setPrice(uint _price) external {
+        price = _price;
+    }
+
     function latestRoundData() external view returns
      (
         uint80 /* roundId */,
@@ -34,7 +39,9 @@ contract ChainlinkTestnet {
         uint80 /* answeredInRound */
     )
     {
-        answer = int(feed.getPrice());
+        if(price > 0) answer = int(price);
+        else answer = int(feed.getPrice());
+        
         if(time == 0 ) timestamp = now;
         else timestamp = time;
     }
