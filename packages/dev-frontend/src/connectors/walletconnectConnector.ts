@@ -7,6 +7,7 @@ const POLLING_INTERVAL = 12000
 
 const RPC_URLS: { [chainId: number]: string } = {
   1: BP_API,
+  42: KOVAN_BP_API
 }
 
 export const getWcConnector = () => {

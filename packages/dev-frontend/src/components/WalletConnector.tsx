@@ -38,7 +38,6 @@ type ConnectionAction =
   | { type: "finishActivating" | "retry" | "cancel" | "deactivate" };
 
 const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (state, action) => {
-  debugger
   switch (action.type) {
     case "startActivating":
       return {
