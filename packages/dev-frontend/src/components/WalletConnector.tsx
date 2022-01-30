@@ -1,12 +1,14 @@
-import React, { useEffect, useReducer } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { AbstractConnector } from "@web3-react/abstract-connector";
 import { Button, Text, Flex, Link, Box } from "theme-ui";
 
 import { injectedConnector } from "../connectors/injectedConnector";
+import { getWcConnector } from "../connectors/walletconnectConnector";
 import { useAuthorizedConnection } from "../hooks/useAuthorizedConnection";
 
 import { RetryDialog } from "./RetryDialog";
+import { SelectWalletDialog } from "./SelectWalletDialog";
 import { ConnectionConfirmationDialog } from "./ConnectionConfirmationDialog";
 import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
@@ -18,6 +20,10 @@ interface MaybeHasMetaMask {
     isMetaMask?: boolean;
   };
 }
+
+type SelectedWallet = 
+ | null
+ | { name: string, connector: AbstractConnector;}
 
 type ConnectionState =
   | { type: "inactive" }
@@ -32,6 +38,7 @@ type ConnectionAction =
   | { type: "finishActivating" | "retry" | "cancel" | "deactivate" };
 
 const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (state, action) => {
+  debugger
   switch (action.type) {
     case "startActivating":
       return {
@@ -104,11 +111,20 @@ const mobileAndTabletCheck = ():boolean => {
 export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, loader }) => {
   const { activate, deactivate, active, error } = useWeb3React<unknown>();
   const triedAuthorizedConnection = useAuthorizedConnection();
+  const [selectedWallet, setSelectedWallet] = useState<SelectedWallet>(null);
+  const [showSelectWalletMDL, setShowSelectWalletMDL] = useState(false);
+
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
-  const isMetaMask = detectMetaMask();
+  const isMetaMask = selectedWallet && selectedWallet.name === "MetaMask";
 
   useEffect(() => {
     if (error) {
+      if(selectedWallet && selectedWallet.name == "WalletConnect"){
+        setSelectedWallet({ 
+          name: "WalletConnect",
+          connector: getWcConnector()
+        });
+      }
       dispatch({ type: "fail", error });
       deactivate();
     }
@@ -131,10 +147,6 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
   }
 
   const mobileAppLInk = inIframe() && mobileAndTabletCheck()
-  const onClick = ()=> {
-    dispatch({ type: "startActivating", connector: injectedConnector });
-    activate(injectedConnector);
-  }
 
   return (
     <ConnectPage>
@@ -175,7 +187,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
               },
             }}
           >
-            <Box>CONNECT METAMASK</Box>
+            <Box>CONNECT</Box>
           </Button>
         </a>}
         {!mobileAppLInk && <Button
@@ -199,12 +211,9 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
               height: "54px"
             },
           }}
-          onClick={()=> {
-            dispatch({ type: "startActivating", connector: injectedConnector });
-            activate(injectedConnector);
-          }}
+          onClick={()=>setShowSelectWalletMDL(true)}
         >
-          <Box>CONNECT METAMASK</Box>
+          <Box>CONNECT</Box>
         </Button>}
         <Box sx={{ ml:2, mt: 15, width: "100%" }}>
         <a style={{ 
@@ -219,6 +228,47 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
         </a>
         </Box>
       </Flex>
+
+      {showSelectWalletMDL && (
+        <Modal>
+          <SelectWalletDialog 
+            onCancel={() => setShowSelectWalletMDL(false)}>
+            <Flex sx={{ alignItems: "center", justifyContent: "space-between", width: "100%",
+                [`@media screen and (max-width: 450px)`]: {
+                  flexDirection: "column",
+                }
+              }}>
+              <Button 
+                onClick={() => {
+                  setSelectedWallet({ 
+                    name: "MetaMask",
+                    connector: injectedConnector
+                  });
+                  dispatch({ type: "startActivating", connector: injectedConnector });
+                  activate(injectedConnector);
+                  setShowSelectWalletMDL(false)
+                }}
+                sx={{width: "100%", margin: "5px"}}>
+                MetaMask
+              </Button>
+              <Button 
+                onClick={() => {
+                  const wc = getWcConnector()
+                  setSelectedWallet({ 
+                    name: "WalletConnect",
+                    connector: wc
+                  });
+                  dispatch({ type: "startActivating", connector: wc });
+                  activate(wc);
+                  setShowSelectWalletMDL(false)
+                }}
+                sx={{width: "100%", margin: "5px"}}>
+                WallectConnect
+              </Button>
+            </Flex>
+          </SelectWalletDialog>
+        </Modal>
+      )}
 
       {connectionState.type === "failed" && (
         <Modal>
