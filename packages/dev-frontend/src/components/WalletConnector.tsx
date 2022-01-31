@@ -292,7 +292,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             </Flex>
             <Box css={{marginTop: "38px"}}>
               <InfoMessage title="Old accounts are accessible via the legacy version. ">
-                To migrate your account, withdraw the LUSD from the legacy version and deposit it again here, <a  target='_blank' href="https://docs.bprotocol.org/">learn more.</a>
+                To migrate your account, withdraw the LUSD from the legacy version and deposit it again here. <a  target='_blank' href="https://docs.bprotocol.org/">learn more.</a>
               </InfoMessage>
             </Box>
           </SelectWalletDialog>
