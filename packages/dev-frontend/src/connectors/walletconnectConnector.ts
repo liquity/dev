@@ -18,3 +18,7 @@ export const getWcConnector = () => {
     pollingInterval: POLLING_INTERVAL
   })
 }
+
+export const resetWc = () => {
+  window.localStorage.removeItem("walletconnect")
+}

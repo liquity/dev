@@ -2,10 +2,11 @@ import React, { useEffect, useReducer, useState } from "react";
 import { useWeb3React } from "@web3-react/core";
 import { AbstractConnector } from "@web3-react/abstract-connector";
 import { Button, Text, Flex, Link, Box } from "theme-ui";
+import { InfoMessage } from "./InfoMessage";
 
 import { injectedConnector } from "../connectors/injectedConnector";
-import { getWcConnector } from "../connectors/walletconnectConnector";
-import { useAuthorizedConnection } from "../hooks/useAuthorizedConnection";
+import { getWcConnector, resetWc } from "../connectors/walletconnectConnector";
+import { useAutoConnection } from "../hooks/useAutoConnection";
 
 import { RetryDialog } from "./RetryDialog";
 import { SelectWalletDialog } from "./SelectWalletDialog";
@@ -21,7 +22,7 @@ interface MaybeHasMetaMask {
   };
 }
 
-type SelectedWallet = 
+export type SelectedWallet = 
  | null
  | { name: string, connector: AbstractConnector;}
 
@@ -109,7 +110,7 @@ const mobileAndTabletCheck = ():boolean => {
 
 export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, loader }) => {
   const { activate, deactivate, active, error } = useWeb3React<unknown>();
-  const triedAuthorizedConnection = useAuthorizedConnection();
+  const triedAutoConnection = useAutoConnection();
   const [selectedWallet, setSelectedWallet] = useState<SelectedWallet>(null);
   const [showSelectWalletMDL, setShowSelectWalletMDL] = useState(false);
 
@@ -119,6 +120,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
   useEffect(() => {
     if (error) {
       if(selectedWallet && selectedWallet.name == "WalletConnect"){
+        resetWc()
         setSelectedWallet({ 
           name: "WalletConnect",
           connector: getWcConnector()
@@ -137,7 +139,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
     }
   }, [active]);
 
-  if (!triedAuthorizedConnection) {
+  if (!triedAutoConnection) {
     return <>{loader}</>;
   }
 
@@ -272,6 +274,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
               </div>
               <div
                 onClick={() => {
+                  resetWc()
                   const wc = getWcConnector()
                   setSelectedWallet({ 
                     name: "WalletConnect",
@@ -287,6 +290,11 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
                 <span style={{width: "40px"}}></span>
               </div>
             </Flex>
+            <Box css={{marginTop: "38px"}}>
+              <InfoMessage title="Old accounts are accessible via the legacy version. ">
+                To migrate your account, withdraw the LUSD from the legacy version and deposit it again here, <a  target='_blank' href="https://docs.bprotocol.org/">learn more.</a>
+              </InfoMessage>
+            </Box>
           </SelectWalletDialog>
         </Modal>
       )}

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
 
 import { injectedConnector } from "../connectors/injectedConnector";
+import { getWcConnector } from "../connectors/walletconnectConnector";
 
 /**
  * React hook that tries to activate the InjectedConnector if the app's already authorized in the
@@ -14,7 +15,7 @@ import { injectedConnector } from "../connectors/injectedConnector";
  * @returns true when finished trying to activate the InjectedConnector, false otherwise
  */
 
-export function useAuthorizedConnection(): boolean {
+export function useAutoConnection(): boolean {
   const { activate, active } = useWeb3React<unknown>();
   const [tried, setTried] = useState(false);
 
@@ -23,7 +24,10 @@ export function useAuthorizedConnection(): boolean {
       try {
         if (await injectedConnector.isAuthorized()) {
           await activate(injectedConnector, undefined, true);
-        } else {
+        } else if (window.localStorage.getItem("walletconnect")) {
+          const wc = getWcConnector();
+          await activate(wc, undefined, true);
+        } {
           throw new Error("Unauthorized");
         }
       } catch {
