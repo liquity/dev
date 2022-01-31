@@ -133,6 +133,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
 
   useEffect(() => {
     if (active) {
+      window.localStorage.setItem("liquity-v2-connection", new Date().toString())
       dispatch({ type: "finishActivating" });
     } else {
       dispatch({ type: "deactivate" });

@@ -22,6 +22,9 @@ export function useAutoConnection(): boolean {
   useEffect(() => {
     const tryToActivateIfAuthorized = async () => {
       try {
+        if(!window.localStorage.getItem("liquity-v2-connection")){
+          throw new Error("user never connected to liquity-v2");
+        }
         if (await injectedConnector.isAuthorized()) {
           await activate(injectedConnector, undefined, true);
         } else if (window.localStorage.getItem("walletconnect")) {
