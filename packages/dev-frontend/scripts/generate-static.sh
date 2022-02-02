@@ -1,1 +1,1 @@
-rsync -avr --exclude='liquity-app' build/ build/liquity-app
+rsync -avr --exclude='liquity-app-v2' build/ build/liquity-app-v2
