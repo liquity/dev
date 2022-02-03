@@ -55,6 +55,72 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "contract BAMM",
+        "name": "bamm",
+        "type": "address"
+      },
+      {
+        "internalType": "contract ERC20",
+        "name": "lqty",
+        "type": "address"
+      }
+    ],
+    "name": "getUserInfo",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "unclaimedLqty",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bammUserBalance",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bammTotalSupply",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lusdUserBalance",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "ethUserBalance",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "lusdTotal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "ethTotal",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct BLens.UserInfo",
+        "name": "info",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "x",
         "type": "uint256"

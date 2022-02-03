@@ -16,6 +16,7 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
     using SafeMath for uint256;
 
     AggregatorV3Interface public immutable priceAggregator;
+    AggregatorV3Interface public immutable lusd2UsdPriceAggregator;    
     IERC20 public immutable LUSD;
     StabilityPool immutable public SP;
 
@@ -39,6 +40,7 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
 
     constructor(
         address _priceAggregator,
+        address _lusd2UsdPriceAggregator,
         address payable _SP,
         address _LUSD,
         address _LQTY,
@@ -49,6 +51,7 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
         CropJoinAdapter(_LQTY)
     {
         priceAggregator = AggregatorV3Interface(_priceAggregator);
+        lusd2UsdPriceAggregator = AggregatorV3Interface(_lusd2UsdPriceAggregator);
         LUSD = IERC20(_LUSD);
         SP = StabilityPool(_SP);
 
@@ -163,7 +166,25 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
         return n.mul(uint(10000 + bps)) / 10000;
     }
 
-    function getSwapEthAmount(uint lusdQty) public view returns(uint ethAmount, uint feeEthAmount) {
+    function compensateForLusdDeviation(uint ethAmount) public view returns(uint newEthAmount) {
+        uint chainlinkDecimals;
+        uint chainlinkLatestAnswer;
+
+        // get current decimal precision:
+        chainlinkDecimals = lusd2UsdPriceAggregator.decimals();
+
+        // Secondly, try to get latest price data:
+        (,int256 answer,,,) = lusd2UsdPriceAggregator.latestRoundData();
+        chainlinkLatestAnswer = uint(answer);
+
+        // adjust only if 1 LUSD > 1 USDC. If LUSD < USD, then we give a discount, and rebalance will happen anw
+        if(chainlinkLatestAnswer > 10 ** chainlinkDecimals ) {
+            newEthAmount = ethAmount.mul(chainlinkLatestAnswer) / (10 ** chainlinkDecimals);
+        }
+        else newEthAmount = ethAmount;
+    }
+
+    function getSwapEthAmount(uint lusdQty) public view returns(uint ethAmount, uint feeLusdAmount) {
         uint lusdBalance = SP.getCompoundedLUSDDeposit(address(this));
         uint ethBalance  = SP.getDepositorETHGain(address(this)).add(address(this).balance);
 
@@ -180,11 +201,13 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
         uint usdReturn = getReturn(xQty, xBalance, yBalance, A);
         uint basicEthReturn = usdReturn.mul(PRECISION) / eth2usdPrice;
 
+        basicEthReturn = compensateForLusdDeviation(basicEthReturn);
+
         if(ethBalance < basicEthReturn) basicEthReturn = ethBalance; // cannot give more than balance 
         if(maxReturn < basicEthReturn) basicEthReturn = maxReturn;
 
-        ethAmount = addBps(basicEthReturn, -int(fee));
-        feeEthAmount = basicEthReturn.sub(ethAmount);
+        ethAmount = basicEthReturn;
+        feeLusdAmount = addBps(lusdQty, int(fee)).sub(lusdQty);
     }
 
     // get ETH in return to LUSD
@@ -194,9 +217,9 @@ contract BAMM is CropJoinAdapter, PriceFormula, Ownable {
         require(ethAmount >= minEthReturn, "swap: low return");
 
         LUSD.transferFrom(msg.sender, address(this), lusdAmount);
-        SP.provideToSP(lusdAmount, frontEndTag);
+        SP.provideToSP(lusdAmount.sub(feeAmount), frontEndTag);
 
-        if(feeAmount > 0) feePool.transfer(feeAmount);
+        if(feeAmount > 0) LUSD.transfer(feePool, feeAmount);
         (bool success, ) = dest.call{ value: ethAmount }(""); // re-entry is fine here
         require(success, "swap: sending ETH failed");
 

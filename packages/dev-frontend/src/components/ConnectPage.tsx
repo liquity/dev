@@ -175,7 +175,7 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
               fontSize: "36px",
             },
           }}>
-            Powered by B.Protocol v2
+            Powered by B.Protocol
         </Box>
       </Box>
       <Box sx={{
@@ -220,7 +220,7 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
         <Item
           icon={"./bprotocol/icon-a-1.svg"}
           title={<span>Stabilize <br/>Liquity Protocol</span>}
-          text="B.Protocol v2 and its novel Backstop AMM (B.AMM) automates the rebalancing of Liquity Stability Pool to maintain its strength.
+          text="B.Protocol and its novel Backstop AMM (B.AMM) automates the rebalancing of Liquity Stability Pool to maintain its strength.
           Read more on how the Liquity
           SP is working "
           link="https://docs.liquity.org/faq/stability-pool-and-liquidations"
@@ -236,8 +236,8 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
         <Item
           icon={"./bprotocol/icon-a-3.svg"}
           title={<span>Using<br/>
-          B.Protocl V2</span>}
-          text="The integration of Liqity with B.Protocol v2 is a step forward towards a more stabilized DeFi ecosystem. 
+          B.Protocl</span>}
+          text="The integration of Liqity with B.Protocol is a step forward towards a more stabilized DeFi ecosystem. 
           Read more about the novel B.AMM design that enables that"
           link="https://medium.com/b-protocol/b-amm-efficient-automated-market-maker-for-defi-liquidations-fea7b0fdc0c5"
         />
