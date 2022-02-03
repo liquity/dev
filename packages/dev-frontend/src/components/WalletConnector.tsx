@@ -110,7 +110,7 @@ const mobileAndTabletCheck = ():boolean => {
 
 export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, loader }) => {
   const { activate, deactivate, active, error } = useWeb3React<unknown>();
-  const triedAutoConnection = useAutoConnection();
+  // const triedAutoConnection = useAutoConnection();
   const [selectedWallet, setSelectedWallet] = useState<SelectedWallet>(null);
   const [showSelectWalletMDL, setShowSelectWalletMDL] = useState(false);
 
@@ -140,9 +140,9 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
     }
   }, [active]);
 
-  if (!triedAutoConnection) {
-    return <>{loader}</>;
-  }
+  // if (!triedAutoConnection) {
+  //   return <>{loader}</>;
+  // }
 
   if (connectionState.type === "active") {
     return <>{children}</>;
