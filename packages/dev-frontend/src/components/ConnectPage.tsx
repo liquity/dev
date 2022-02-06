@@ -236,8 +236,8 @@ export const ConnectPage: React.FC<ConnectPageProps> = ({children}) => {
         <Item
           icon={"./bprotocol/icon-a-3.svg"}
           title={<span>Using<br/>
-          B.Protocl</span>}
-          text="The integration of Liqity with B.Protocol is a step forward towards a more stabilized DeFi ecosystem. 
+          B.Protocol</span>}
+          text="The integration of Liquity with B.Protocol is a step forward towards a more stabilized DeFi ecosystem. 
           Read more about the novel B.AMM design that enables that"
           link="https://medium.com/b-protocol/b-amm-efficient-automated-market-maker-for-defi-liquidations-fea7b0fdc0c5"
         />

@@ -130,7 +130,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
           <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct.toString(1)})</Text>
         </Statistic>
       )}
-      {stabilityDeposit.totalLusdInBamm && (
+      {/*{stabilityDeposit.totalLusdInBamm && (
         <Statistic
           name="LUSD in B.Protocol"
           tooltip="The total LUSD currently held in the B.Protocol's B.AMM, expressed as an amount and a fraction of the LUSD in the Stability Pool.
@@ -139,7 +139,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
           {stabilityDeposit.totalLusdInBamm.shorten()}
           <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInBammPct.toString(1)})</Text>
         </Statistic>
-      )}
+      )}*/}
       <Statistic
         name="Staked LQTY"
         tooltip="The total amount of LQTY that is staked for earning fee revenue."
