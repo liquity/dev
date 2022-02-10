@@ -84,6 +84,8 @@ const addGasForLQTYIssuance = (gas: BigNumber) => gas.add(50000);
 
 const addGasForUnipoolRewardUpdate = (gas: BigNumber) => gas.add(20000);
 
+const simpleAddGas = (gas: BigNumber) => gas.add(1000);
+
 // To get the best entropy available, we'd do something like:
 //
 // const bigRandomNumber = () =>
@@ -1093,22 +1095,41 @@ export class PopulatableEthersLiquity
     );
   }
 
+  // /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.depositLUSDInStabilityPool} */
+  // async depositLUSDInStabilityPool(
+  //   amount: Decimalish,
+  //   frontendTag?: string,
+  //   overrides?: EthersTransactionOverrides
+  // ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
+  //   const { stabilityPool } = _getContracts(this._readable.connection);
+  //   const depositLUSD = Decimal.from(amount);
+
+  //   return this._wrapStabilityDepositTopup(
+  //     { depositLUSD },
+  //     await stabilityPool.estimateAndPopulate.provideToSP(
+  //       { ...overrides },
+  //       addGasForLQTYIssuance,
+  //       depositLUSD.hex,
+  //       frontendTag ?? this._readable.connection.frontendTag ?? AddressZero
+  //     )
+  //   );
+  // }
   /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.depositLUSDInStabilityPool} */
   async depositLUSDInStabilityPool(
     amount: Decimalish,
     frontendTag?: string,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
-    const { stabilityPool } = _getContracts(this._readable.connection);
+    const { bamm } = _getContracts(this._readable.connection);
     const depositLUSD = Decimal.from(amount);
-
+    
     return this._wrapStabilityDepositTopup(
       { depositLUSD },
-      await stabilityPool.estimateAndPopulate.provideToSP(
+      await bamm.estimateAndPopulate.deposit(
         { ...overrides },
         addGasForLQTYIssuance,
-        depositLUSD.hex,
-        frontendTag ?? this._readable.connection.frontendTag ?? AddressZero
+        depositLUSD.hex
+        // frontendTag ?? this._readable.connection.frontendTag ?? AddressZero
       )
     );
   }
@@ -1118,13 +1139,46 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
-    const { stabilityPool } = _getContracts(this._readable.connection);
-
+    const { bamm } = _getContracts(this._readable.connection);
+    const spShareToWithdraw = await this._readable.getWitdrawsSpShare(amount)
     return this._wrapStabilityDepositWithdrawal(
-      await stabilityPool.estimateAndPopulate.withdrawFromSP(
+      await bamm.estimateAndPopulate.withdraw(
         { ...overrides },
         addGasForLQTYIssuance,
-        Decimal.from(amount).hex
+        Decimal.from(spShareToWithdraw).hex
+      )
+    );
+  }
+
+  // /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawLUSDFromStabilityPool} */
+  // async withdrawLUSDFromStabilityPool(
+  //   amount: Decimalish,
+  //   overrides?: EthersTransactionOverrides
+  // ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
+  //   const { stabilityPool } = _getContracts(this._readable.connection);
+
+  //   return this._wrapStabilityDepositWithdrawal(
+  //     await stabilityPool.estimateAndPopulate.withdrawFromSP(
+  //       { ...overrides },
+  //       addGasForLQTYIssuance,
+  //       Decimal.from(amount).hex
+  //     )
+  //   );
+  // }
+
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.bammUnlock} */
+  async bammUnlock(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersLiquityTransaction> {
+    const { bamm, lusdToken } = _getContracts(this._readable.connection);
+    const maxAllowance = BigNumber.from("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")
+
+    return this._wrapSimpleTransaction(
+      await lusdToken.estimateAndPopulate.approve(
+        { ...overrides },
+        simpleAddGas,
+        bamm.address,
+        maxAllowance
       )
     );
   }
@@ -1133,10 +1187,10 @@ export class PopulatableEthersLiquity
   async withdrawGainsFromStabilityPool(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>> {
-    const { stabilityPool } = _getContracts(this._readable.connection);
+    const { bamm } = _getContracts(this._readable.connection);
 
     return this._wrapStabilityPoolGainsWithdrawal(
-      await stabilityPool.estimateAndPopulate.withdrawFromSP(
+      await bamm.estimateAndPopulate.withdraw(
         { ...overrides },
         addGasForLQTYIssuance,
         Decimal.ZERO.hex

@@ -4,6 +4,8 @@
 
 ```ts
 
+import { BigNumber } from '@ethersproject/bignumber';
+
 // @internal (undocumented)
 export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiquityWithExtraParams<T> {
     constructor(readable: _ReadableLiquityWithExtraParams<T>, cache: _LiquityReadCache<T>);
@@ -102,6 +104,8 @@ export class Decimal {
     // (undocumented)
     static from(decimalish: Decimalish): Decimal;
     // (undocumented)
+    static fromBigNumber(bigNumber: BigNumber): Decimal;
+    // (undocumented)
     static fromBigNumberString(bigNumberString: string): Decimal;
     // (undocumented)
     gt(that: Decimalish): boolean;
@@ -138,6 +142,8 @@ export class Decimal {
     // (undocumented)
     prettify(precision?: number): string;
     // (undocumented)
+    rawDivision(divider: Decimalish): Decimal;
+    // (undocumented)
     shorten(): string;
     // (undocumented)
     sub(subtrahend: Decimalish): Decimal;
@@ -159,6 +165,8 @@ export class Difference {
     // (undocumented)
     static between(d1: Decimalish | undefined, d2: Decimalish | undefined): Difference;
     // (undocumented)
+    div(divider: Decimalish): Difference;
+    // (undocumented)
     get finite(): this | undefined;
     // (undocumented)
     get infinite(): this | undefined;
@@ -168,6 +176,8 @@ export class Difference {
     get negative(): this | undefined;
     // (undocumented)
     get nonZero(): this | undefined;
+    // (undocumented)
+    nonZeroish(precision: number): this | undefined;
     // (undocumented)
     get positive(): this | undefined;
     // (undocumented)
@@ -591,19 +601,26 @@ export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = 
 // @public
 export class StabilityDeposit {
     // @internal
-    constructor(initialLUSD: Decimal, currentLUSD: Decimal, collateralGain: Decimal, lqtyReward: Decimal, frontendTag: string);
+    constructor(bammPoolShare: Decimal, poolShare: Decimal, initialLUSD: Decimal, currentUSD: Decimal, currentLUSD: Decimal, collateralGain: Decimal, lqtyReward: Decimal, frontendTag: string, totalEthInBamm: Decimal, totalLusdInBamm: Decimal);
     apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
+    readonly bammPoolShare: Decimal;
     readonly collateralGain: Decimal;
     readonly currentLUSD: Decimal;
+    readonly currentUSD: Decimal;
     equals(that: StabilityDeposit): boolean;
     readonly frontendTag: string;
     readonly initialLUSD: Decimal;
     // (undocumented)
     get isEmpty(): boolean;
     readonly lqtyReward: Decimal;
+    readonly poolShare: Decimal;
     // @internal (undocumented)
     toString(): string;
-    whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined;
+    // (undocumented)
+    readonly totalEthInBamm: Decimal;
+    // (undocumented)
+    readonly totalLusdInBamm: Decimal;
+    whatChanged(thatUSD: Decimalish): StabilityDepositChange<Decimal> | undefined;
 }
 
 // @public

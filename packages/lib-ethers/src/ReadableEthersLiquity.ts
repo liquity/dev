@@ -1,7 +1,9 @@
 import { BlockTag } from "@ethersproject/abstract-provider";
+import { BigNumber } from "@ethersproject/bignumber";
 
 import {
   Decimal,
+  Decimalish,
   Fees,
   FrontendStatus,
   LiquityStore,
@@ -247,34 +249,135 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return activePool.add(defaultPool);
   }
 
+  async getWitdrawsSpShare(
+    withdrawAmount: Decimalish, // todo should be Decimalish
+  ): Promise<string> {
+    const address = _requireAddress(this.connection);
+    const { stabilityPool, bamm } = _getContracts(this.connection);
+
+    console.log(withdrawAmount)
+
+    const [
+      stake, // users share in the bamm
+      {currentUSD}
+    ] = await Promise.all([
+      bamm.stake(address),
+      this.getStabilityDeposit(address)
+    ]);
+    // amount * stake / currentUSD
+    const spShare = decimalify(stake).mul(Decimal.from(withdrawAmount)).div(currentUSD).toString()
+
+    return spShare
+  }
+
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getStabilityDeposit} */
   async getStabilityDeposit(
     address?: string,
     overrides?: EthersCallOverrides
   ): Promise<StabilityDeposit> {
+    const _1e18 = BigNumber.from(10).pow(18)
+
     address ??= _requireAddress(this.connection);
-    const { stabilityPool } = _getContracts(this.connection);
+    const { stabilityPool, bamm, lqtyToken, priceFeed, bLens } = _getContracts(this.connection);
+    const bammLqtyBalancePromise = lqtyToken.balanceOf(bamm.address, { ...overrides})
 
     const [
       { frontEndTag, initialValue },
-      currentLUSD,
-      collateralGain,
-      lqtyReward
+      currentBammLUSD,
+      bammPendingEth,
+      bammPendingLqtyReward, 
+      total,
+      stake,
+      totalLusdInSp,
+      unclaimedLqty,
+      share,
+      stock,
     ] = await Promise.all([
       stabilityPool.deposits(address, { ...overrides }),
-      stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
-      stabilityPool.getDepositorETHGain(address, { ...overrides }),
-      stabilityPool.getDepositorLQTYGain(address, { ...overrides })
+      stabilityPool.getCompoundedLUSDDeposit(bamm.address, { ...overrides }),
+      stabilityPool.getDepositorETHGain(bamm.address, { ...overrides }),
+      stabilityPool.getDepositorLQTYGain(bamm.address, { ...overrides }),
+      bamm.total({ ...overrides }),
+      bamm.stake(address, { ...overrides}),
+      stabilityPool.getTotalLUSDDeposits({ ...overrides }),
+      bLens.callStatic.getUnclaimedLqty(address, bamm.address, lqtyToken.address),
+      bamm.share({ ...overrides }),
+      bamm.stock({ ...overrides}),
     ]);
 
+    const bammLqtyBalance = await bammLqtyBalancePromise
+    // stake times lusd divided by total
+    const currentLUSD = stake.mul(currentBammLUSD).div(total)
+    // stabilityDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
+    const bammShare = Decimal.fromBigNumber(currentBammLUSD).mul(100).div(Decimal.fromBigNumber(totalLusdInSp))
+    // bamm share in SP times stake div by total
+    const poolShare = bammShare.mul(Decimal.fromBigNumber(stake)).div(Decimal.fromBigNumber(total))
+
+    const bammEthBalance = (await bamm.provider.getBalance(bamm.address)).add(bammPendingEth)
+    const currentETH = stake.mul(bammEthBalance).div(total)
+    
+    const price = await priceFeed.callStatic.fetchPrice({ ...overrides })
+
+    const currentUSD = currentLUSD.add(currentETH.mul(price).div(_1e18))
+
+    const bammPoolShare = Decimal.fromBigNumber(stake).mulDiv(100, Decimal.fromBigNumber(total))
+    // balance + pending - stock
+    if(total.gt(BigNumber.from(0))){
+      console.log(
+        JSON.stringify({
+          bammPendingEth: bammPendingEth.toString(),
+          bammLqtyBalance: bammLqtyBalance.toString(),
+          bammPendingLqtyReward: bammPendingLqtyReward.toString(),
+          stock: stock.toString(),
+          share: share.toString(),
+          total: total.toString(),
+          stake: stake.toString(),
+        }, null, 2)
+      )
+    }
+    
     return new StabilityDeposit(
+      bammPoolShare,
+      poolShare,
       decimalify(initialValue),
-      decimalify(currentLUSD),
-      decimalify(collateralGain),
-      decimalify(lqtyReward),
-      frontEndTag
+      Decimal.fromBigNumber(currentUSD),
+      Decimal.fromBigNumber(currentLUSD),
+      Decimal.fromBigNumber(currentETH),
+      Decimal.fromBigNumber(unclaimedLqty),
+      frontEndTag,
+      Decimal.fromBigNumber(bammEthBalance),
+      Decimal.fromBigNumber(currentBammLUSD)
     );
   }
+
+  // /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getStabilityDeposit} */
+  // async getStabilityDeposit(
+  //   address?: string,
+  //   overrides?: EthersCallOverrides
+  // ): Promise<StabilityDeposit> {
+  //   address ??= _requireAddress(this.connection);
+  //   const { stabilityPool } = _getContracts(this.connection);
+
+  //   const [
+  //     { frontEndTag, initialValue },
+  //     currentLUSD,
+  //     collateralGain,
+  //     lqtyReward
+  //   ] = await Promise.all([
+  //     stabilityPool.deposits(address, { ...overrides }),
+  //     stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
+  //     stabilityPool.getDepositorETHGain(address, { ...overrides }),
+  //     stabilityPool.getDepositorLQTYGain(address, { ...overrides })
+  //   ]);
+
+  //   return new StabilityDeposit(
+  //     decimalify(initialValue),
+  //     decimalify(currentLUSD),
+  //     decimalify(collateralGain),
+  //     decimalify(lqtyReward),
+  //     frontEndTag
+  //   );
+  // }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingStabilityPoolLQTYReward} */
   async getRemainingStabilityPoolLQTYReward(overrides?: EthersCallOverrides): Promise<Decimal> {
@@ -506,6 +609,17 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       ? { status: "registered", kickbackRate: decimalify(kickbackRate) }
       : { status: "unregistered" };
   }
+
+  async getBammAllowance(overrides?: EthersCallOverrides): Promise<boolean> {
+    const { lusdToken, bamm } = _getContracts(this.connection);
+    const address = _requireAddress(this.connection);
+    const reallyLargeAllowance = BigNumber.from("0x8888888888888888888888888888888888888888888888888888888888888888")
+
+    const allowance = await lusdToken.allowance(address, bamm.address)
+    console.log({allowance})
+    const bammAllowance = allowance.gt(reallyLargeAllowance)
+    return bammAllowance;
+  }
 }
 
 type Resolved<T> = T extends Promise<infer U> ? U : T;
@@ -609,6 +723,10 @@ class _BlockPolledReadableEthersLiquity
 
   async getTotal(overrides?: EthersCallOverrides): Promise<Trove> {
     return this._blockHit(overrides) ? this.store.state.total : this._readable.getTotal(overrides);
+  }
+
+  async getWitdrawsSpShare(withdrawAmount: Decimalish): Promise<string> {
+    return this._readable.getWitdrawsSpShare(withdrawAmount)
   }
 
   async getStabilityDeposit(
@@ -755,5 +873,11 @@ class _BlockPolledReadableEthersLiquity
 
   _getRemainingLiquidityMiningLQTYRewardCalculator(): Promise<(blockTimestamp: number) => Decimal> {
     throw new Error("Method not implemented.");
+  }
+
+  async getBammAllowance(overrides?: EthersCallOverrides): Promise<boolean> {
+    return this._blockHit(overrides)
+      ? this.store.state.bammAllowance
+      : this._readable.getBammAllowance(overrides);
   }
 }

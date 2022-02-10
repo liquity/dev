@@ -89,10 +89,10 @@ const App = () => {
       }}
     >
       <Heading sx={{ mb: 3 }}>
-        <Icon name="exclamation-triangle" /> Liquity is not yet deployed to{" "}
+        <Icon name="exclamation-triangle" /> B.Protocol AMM is not yet deployed to{" "}
         {chainId === 1 ? "mainnet" : "this network"}.
       </Heading>
-      Please switch to Ropsten, Rinkeby, Kovan or Görli.
+      Please switch to Kovan.
     </Flex>
   );
 

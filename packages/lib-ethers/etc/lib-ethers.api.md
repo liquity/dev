@@ -60,6 +60,8 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
 
 // @public
 export interface BlockPolledLiquityStoreExtraState {
+    // (undocumented)
+    bammAllowance: boolean;
     blockTag?: number;
     blockTimestamp: number;
     // @internal (undocumented)
@@ -125,6 +127,8 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     static _from(connection: EthersLiquityConnection): EthersLiquity;
     // @internal (undocumented)
     _getActivePool(overrides?: EthersCallOverrides): Promise<Trove>;
+    // (undocumented)
+    getBammAllowance(overrides?: EthersCallOverrides): Promise<boolean>;
     // @internal (undocumented)
     _getBlockTimestamp(blockTag?: BlockTag): Promise<number>;
     // (undocumented)
@@ -183,6 +187,8 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     getUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getWitdrawsSpShare(withdrawAmount: Decimalish): Promise<string>;
     hasStore(): this is EthersLiquityWithStore;
     hasStore(store: "blockPolled"): this is EthersLiquityWithStore<BlockPolledLiquityStore>;
     // (undocumented)
@@ -335,6 +341,8 @@ export class PopulatableEthersLiquity implements PopulatableLiquity<EthersTransa
     // (undocumented)
     approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
     // (undocumented)
+    bammUnlock(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction>;
+    // (undocumented)
     borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     claimCollateralSurplus(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersLiquityTransaction<void>>;
@@ -460,6 +468,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     static _from(connection: EthersLiquityConnection): ReadableEthersLiquity;
     // @internal (undocumented)
     _getActivePool(overrides?: EthersCallOverrides): Promise<Trove>;
+    // (undocumented)
+    getBammAllowance(overrides?: EthersCallOverrides): Promise<boolean>;
     // @internal (undocumented)
     _getBlockTimestamp(blockTag?: BlockTag): Promise<number>;
     // (undocumented)
@@ -518,6 +528,8 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     getUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getWitdrawsSpShare(withdrawAmount: Decimalish): Promise<string>;
     hasStore(): this is ReadableEthersLiquityWithStore;
     hasStore(store: "blockPolled"): this is ReadableEthersLiquityWithStore<BlockPolledLiquityStore>;
 }
@@ -537,6 +549,8 @@ export class SendableEthersLiquity implements SendableLiquity<EthersTransactionR
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
     approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<void>>;
+    // (undocumented)
+    bammUnlock(overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction>;
     // (undocumented)
     borrowLUSD(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersLiquityTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
