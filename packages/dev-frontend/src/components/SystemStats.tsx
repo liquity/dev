@@ -175,16 +175,13 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
 
       <Box sx={{ mt: 3, opacity: 0.66 }}>
         <Box sx={{ fontSize: 0 }}>
-          Contracts version: <GitHubCommit>{contractsVersion}</GitHubCommit>
-        </Box>
-        <Box sx={{ fontSize: 0 }}>Deployed: {deploymentDate.toLocaleString()}</Box>
-        <Box sx={{ fontSize: 0 }}>
           Frontend version:{" "}
           {process.env.NODE_ENV === "development" ? (
             "development"
           ) : (
             <GitHubCommit>{process.env.REACT_APP_VERSION}</GitHubCommit>
           )}
+          <Box sx={{ fontSize: 0 }}>the Frontend commit hash includes the smart contracts</Box>
         </Box>
       </Box>
     </Card>
