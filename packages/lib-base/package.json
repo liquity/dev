@@ -29,7 +29,7 @@
     "@types/mocha": "8.2.1",
     "@typescript-eslint/eslint-plugin": "4.17.0",
     "@typescript-eslint/parser": "4.18.0",
-    "eslint": "7.22.0",
+    "eslint": "8.9.0",
     "eslint-plugin-tsdoc": "0.2.11",
     "fast-check": "2.13.0",
     "mocha": "8.3.2",
