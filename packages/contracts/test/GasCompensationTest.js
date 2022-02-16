@@ -10,6 +10,9 @@ const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 
+const GAS_PRICE = 10000000
+
+
 contract('Gas compensation tests', async accounts => {
   const [
     owner, liquidator,
@@ -349,11 +352,11 @@ contract('Gas compensation tests', async accounts => {
     const { totalDebt: B_totalDebt } = await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(200, 18), extraParams: { from: bob } })
     const { totalDebt: C_totalDebt } = await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(300, 18), extraParams: { from: carol } })
     await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: A_totalDebt, extraParams: { from: dennis } })
-    await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: B_totalDebt.add(C_totalDebt), extraParams: { from: erin } })
+    await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: B_totalDebt.add(C_totalDebt), extraParams: { from: erin} })
 
     // D, E each provide LUSD to SP
-    await stabilityPool.provideToSP(A_totalDebt, ZERO_ADDRESS, { from: dennis })
-    await stabilityPool.provideToSP(B_totalDebt.add(C_totalDebt), ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(A_totalDebt, ZERO_ADDRESS, { from: dennis, gasPrice: GAS_PRICE })
+    await stabilityPool.provideToSP(B_totalDebt.add(C_totalDebt), ZERO_ADDRESS, { from: erin, gasPrice: GAS_PRICE })
 
     const LUSDinSP_0 = await stabilityPool.getTotalLUSDDeposits()
 
@@ -372,11 +375,11 @@ contract('Gas compensation tests', async accounts => {
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
+    const A_GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidate(alice, { from: liquidator, gasPrice: GAS_PRICE  }))
     const liquidatorBalance_after_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check liquidator's balance increases by 0.5% of A's coll (1 ETH)
-    const compensationReceived_A = (liquidatorBalance_after_A.sub(liquidatorBalance_before_A)).toString()
+    const compensationReceived_A = (liquidatorBalance_after_A.sub(liquidatorBalance_before_A).add(toBN(A_GAS_Used_Liquidator * GAS_PRICE))).toString()
     const _0pt5percent_aliceColl = aliceColl.div(web3.utils.toBN('200'))
     assert.equal(compensationReceived_A, _0pt5percent_aliceColl)
 
@@ -402,11 +405,11 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await th.checkRecoveryMode(contracts))
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
+    const B_GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidate(bob, { from: liquidator, gasPrice: GAS_PRICE  }))
     const liquidatorBalance_after_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check liquidator's balance increases by B's 0.5% of coll, 2 ETH
-    const compensationReceived_B = (liquidatorBalance_after_B.sub(liquidatorBalance_before_B)).toString()
+    const compensationReceived_B = (liquidatorBalance_after_B.sub(liquidatorBalance_before_B).add(toBN(B_GAS_Used_Liquidator * GAS_PRICE))).toString()
     const _0pt5percent_bobColl = bobColl.div(web3.utils.toBN('200'))
     assert.equal(compensationReceived_B, _0pt5percent_bobColl) // 0.5% of 2 ETH
 
@@ -434,11 +437,11 @@ contract('Gas compensation tests', async accounts => {
     assert.isFalse(await th.checkRecoveryMode(contracts))
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_C = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidate(carol, { from: liquidator, gasPrice: 0 })
+    const C_GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidate(carol, { from: liquidator, gasPrice: GAS_PRICE  }))
     const liquidatorBalance_after_C = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check liquidator's balance increases by C's 0.5% of coll, 3 ETH
-    const compensationReceived_C = (liquidatorBalance_after_C.sub(liquidatorBalance_before_C)).toString()
+    const compensationReceived_C = (liquidatorBalance_after_C.sub(liquidatorBalance_before_C).add(toBN(C_GAS_Used_Liquidator * GAS_PRICE))).toString()
     const _0pt5percent_carolColl = carolColl.div(web3.utils.toBN('200'))
     assert.equal(compensationReceived_C, _0pt5percent_carolColl)
 
@@ -456,15 +459,15 @@ contract('Gas compensation tests', async accounts => {
     await openTrove({ ICR: toBN(dec(2000, 18)), extraParams: { from: whale } })
 
     // A-E open troves
-    await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(200, 18), extraParams: { from: alice } })
+    await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(200, 18), extraParams: { from: alice} })
     await openTrove({ ICR: toBN(dec(120, 16)), extraLUSDAmount: dec(5000, 18), extraParams: { from: bob } })
     await openTrove({ ICR: toBN(dec(60, 18)), extraLUSDAmount: dec(600, 18), extraParams: { from: carol } })
     await openTrove({ ICR: toBN(dec(80, 18)), extraLUSDAmount: dec(1, 23), extraParams: { from: dennis } })
     await openTrove({ ICR: toBN(dec(80, 18)), extraLUSDAmount: dec(1, 23), extraParams: { from: erin } })
 
     // D, E each provide 10000 LUSD to SP
-    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
-    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis , gasPrice: GAS_PRICE})
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin , gasPrice: GAS_PRICE})
 
     const LUSDinSP_0 = await stabilityPool.getTotalLUSDDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
@@ -491,11 +494,11 @@ contract('Gas compensation tests', async accounts => {
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
+    const A_GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidate(alice, { from: liquidator, gasPrice: GAS_PRICE }))
     const liquidatorBalance_after_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check liquidator's balance increases by 0.5% of coll
-    const compensationReceived_A = (liquidatorBalance_after_A.sub(liquidatorBalance_before_A)).toString()
+    const compensationReceived_A = (liquidatorBalance_after_A.sub(liquidatorBalance_before_A).add(toBN(A_GAS_Used_Liquidator * GAS_PRICE))).toString()
     const _0pt5percent_aliceColl = aliceColl.div(web3.utils.toBN('200'))
     assert.equal(compensationReceived_A, _0pt5percent_aliceColl)
 
@@ -533,12 +536,12 @@ contract('Gas compensation tests', async accounts => {
 
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
+    const B_GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidate(bob, { from: liquidator, gasPrice: GAS_PRICE  }))
     const liquidatorBalance_after_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check liquidator's balance increases by $10 worth of coll
     const _0pt5percent_bobColl = bobColl.div(web3.utils.toBN('200'))
-    const compensationReceived_B = (liquidatorBalance_after_B.sub(liquidatorBalance_before_B)).toString()
+    const compensationReceived_B = (liquidatorBalance_after_B.sub(liquidatorBalance_before_B).add(toBN(B_GAS_Used_Liquidator * GAS_PRICE))).toString()
     assert.equal(compensationReceived_B, _0pt5percent_bobColl)
 
     // Check SP LUSD has decreased due to the liquidation of B
@@ -557,18 +560,18 @@ contract('Gas compensation tests', async accounts => {
   it('gas compensation from pool-offset liquidations: 0.5% collateral > $10 in value. Compensates 0.5% of  collateral, liquidates the remainder', async () => {
     // open troves
     await priceFeed.setPrice(dec(400, 18))
-    await openTrove({ ICR: toBN(dec(200, 18)), extraParams: { from: whale } })
+    await openTrove({ ICR: toBN(dec(200, 18)), extraParams: { from: whale} })
 
     // A-E open troves
-    await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(2000, 18), extraParams: { from: alice } })
-    await openTrove({ ICR: toBN(dec(1875, 15)), extraLUSDAmount: dec(8000, 18), extraParams: { from: bob } })
-    await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(600, 18), extraParams: { from: carol } })
-    await openTrove({ ICR: toBN(dec(4, 18)), extraLUSDAmount: dec(1, 23), extraParams: { from: dennis } })
-    await openTrove({ ICR: toBN(dec(4, 18)), extraLUSDAmount: dec(1, 23), extraParams: { from: erin } })
+    await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(2000, 18), extraParams: { from: alice,} })
+    await openTrove({ ICR: toBN(dec(1875, 15)), extraLUSDAmount: dec(8000, 18), extraParams: { from: bob,} })
+    await openTrove({ ICR: toBN(dec(2, 18)), extraLUSDAmount: dec(600, 18), extraParams: { from: carol} })
+    await openTrove({ ICR: toBN(dec(4, 18)), extraLUSDAmount: dec(1, 23), extraParams: { from: dennis} })
+    await openTrove({ ICR: toBN(dec(4, 18)), extraLUSDAmount: dec(1, 23), extraParams: { from: erin} })
 
     // D, E each provide 10000 LUSD to SP
-    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis })
-    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: dennis, gasPrice: GAS_PRICE })
+    await stabilityPool.provideToSP(dec(1, 23), ZERO_ADDRESS, { from: erin, gasPrice: GAS_PRICE })
 
     const LUSDinSP_0 = await stabilityPool.getTotalLUSDDeposits()
     const ETHinSP_0 = await stabilityPool.getETH()
@@ -595,11 +598,11 @@ contract('Gas compensation tests', async accounts => {
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
+    const A_GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidate(alice, { from: liquidator, gasPrice: GAS_PRICE  }))
     const liquidatorBalance_after_A = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check liquidator's balance increases by 0.5% of coll
-    const compensationReceived_A = (liquidatorBalance_after_A.sub(liquidatorBalance_before_A)).toString()
+    const compensationReceived_A = (liquidatorBalance_after_A.sub(liquidatorBalance_before_A).add(toBN(A_GAS_Used_Liquidator * GAS_PRICE))).toString()
     assert.equal(compensationReceived_A, _0pt5percent_aliceColl)
 
     // Check SP LUSD has decreased due to the liquidation of A 
@@ -634,11 +637,11 @@ contract('Gas compensation tests', async accounts => {
 
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
     const liquidatorBalance_before_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
+    const B_GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidate(bob, { from: liquidator, gasPrice: GAS_PRICE  }))
     const liquidatorBalance_after_B = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check liquidator's balance increases by 0.5% of coll
-    const compensationReceived_B = (liquidatorBalance_after_B.sub(liquidatorBalance_before_B)).toString()
+    const compensationReceived_B = (liquidatorBalance_after_B.sub(liquidatorBalance_before_B).add(toBN(B_GAS_Used_Liquidator * GAS_PRICE))).toString()
     assert.equal(compensationReceived_B, _0pt5percent_bobColl)
 
     // Check SP LUSD has decreased due to the liquidation of B
@@ -673,7 +676,7 @@ contract('Gas compensation tests', async accounts => {
 
     const LUSDinSP_0 = await stabilityPool.getTotalLUSDDeposits()
 
-    th.logBN('TCR', await troveManager.getTCR(await priceFeed.getPrice()))
+    // th.logBN('TCR', await troveManager.getTCR(await priceFeed.getPrice()))
     // --- Price drops to 9.99 ---
     await priceFeed.setPrice('9990000000000000000')
     const price_1 = await priceFeed.getPrice()
@@ -686,11 +689,11 @@ contract('Gas compensation tests', async accounts => {
     const aliceColl = (await troveManager.Troves(alice))[1]
     const aliceDebt = (await troveManager.Troves(alice))[0]
 
-    th.logBN('TCR', await troveManager.getTCR(await priceFeed.getPrice()))
+    // th.logBN('TCR', await troveManager.getTCR(await priceFeed.getPrice()))
     assert.isFalse(await th.checkRecoveryMode(contracts))
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
-    const liquidationTxA = await troveManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
+    const liquidationTxA = await troveManager.liquidate(alice, { from: liquidator, gasPrice: GAS_PRICE  })
 
     const expectedGasComp_A = aliceColl.mul(th.toBN(5)).div(th.toBN(1000))
     const expectedLiquidatedColl_A = aliceColl.sub(expectedGasComp_A)
@@ -716,7 +719,7 @@ contract('Gas compensation tests', async accounts => {
 
     assert.isFalse(await th.checkRecoveryMode(contracts))
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
-    const liquidationTxB = await troveManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
+    const liquidationTxB = await troveManager.liquidate(bob, { from: liquidator, gasPrice: GAS_PRICE  })
 
     const expectedGasComp_B = bobColl.mul(th.toBN(5)).div(th.toBN(1000))
     const expectedLiquidatedColl_B = bobColl.sub(expectedGasComp_B)
@@ -775,7 +778,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isTrue(aliceICR.lt(mv._MCR))
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
-    const liquidationTxA = await troveManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
+    const liquidationTxA = await troveManager.liquidate(alice, { from: liquidator, gasPrice: GAS_PRICE  })
 
     const expectedGasComp_A = _0pt5percent_aliceColl
     const expectedLiquidatedColl_A = aliceColl.sub(expectedGasComp_A)
@@ -810,7 +813,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isTrue(bobICR.lte(mv._MCR))
 
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives
-    const liquidationTxB = await troveManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
+    const liquidationTxB = await troveManager.liquidate(bob, { from: liquidator, gasPrice: GAS_PRICE  })
 
     const _0pt5percent_bobColl = bobColl.div(web3.utils.toBN('200'))
     const expectedGasComp_B = _0pt5percent_bobColl
@@ -858,7 +861,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isTrue(aliceICR.lt(mv._MCR))
 
     // Liquidate A (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
-    const liquidationTxA = await troveManager.liquidate(alice, { from: liquidator, gasPrice: 0 })
+    const liquidationTxA = await troveManager.liquidate(alice, { from: liquidator, gasPrice: GAS_PRICE  })
     
     const expectedGasComp_A = _0pt5percent_aliceColl
     const expectedLiquidatedColl_A = aliceColl.sub(_0pt5percent_aliceColl)
@@ -890,7 +893,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isTrue(bobICR.lt(mv._MCR))
 
     // Liquidate B (use 0 gas price to easily check the amount the compensation amount the liquidator receives)
-    const liquidationTxB = await troveManager.liquidate(bob, { from: liquidator, gasPrice: 0 })
+    const liquidationTxB = await troveManager.liquidate(bob, { from: liquidator, gasPrice: GAS_PRICE  })
     
     const expectedGasComp_B = _0pt5percent_bobColl
     const expectedLiquidatedColl_B = bobColl.sub(_0pt5percent_bobColl)
@@ -976,7 +979,7 @@ contract('Gas compensation tests', async accounts => {
     // Liquidate troves A-D
 
     const liquidatorBalance_before = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
+    const GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: GAS_PRICE  }))
     const liquidatorBalance_after = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check LUSD in SP has decreased
@@ -984,7 +987,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isTrue(LUSDinSP_1.lt(LUSDinSP_0))
 
     // Check liquidator's balance has increased by the expected compensation amount
-    const compensationReceived = (liquidatorBalance_after.sub(liquidatorBalance_before)).toString()
+    const compensationReceived = (liquidatorBalance_after.sub(liquidatorBalance_before).add(toBN(GAS_Used_Liquidator * GAS_PRICE))).toString()
     assert.equal(expectedGasComp, compensationReceived)
 
     // Check ETH in stability pool now equals the expected liquidated collateral
@@ -1052,7 +1055,7 @@ contract('Gas compensation tests', async accounts => {
 
     // Liquidate troves A-D
     const liquidatorBalance_before = web3.utils.toBN(await web3.eth.getBalance(liquidator))
-    await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
+    const GAS_Used_Liquidator = th.gasUsed(await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: GAS_PRICE  }))
     const liquidatorBalance_after = web3.utils.toBN(await web3.eth.getBalance(liquidator))
 
     // Check LUSD in DefaultPool has decreased
@@ -1060,7 +1063,7 @@ contract('Gas compensation tests', async accounts => {
     assert.isTrue(LUSDinDefaultPool_1.gt(LUSDinDefaultPool_0))
 
     // Check liquidator's balance has increased by the expected compensation amount
-    const compensationReceived = (liquidatorBalance_after.sub(liquidatorBalance_before)).toString()
+    const compensationReceived = (liquidatorBalance_after.sub(liquidatorBalance_before).add(toBN(GAS_Used_Liquidator * GAS_PRICE))).toString()
 
     assert.isAtMost(th.getDifference(expectedGasComp, compensationReceived), 1000)
 
@@ -1142,7 +1145,7 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedDebt = A_totalDebt.add(B_totalDebt).add(C_totalDebt).add(D_totalDebt)
 
     // Liquidate troves A-D
-    const liquidationTxData = await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
+    const liquidationTxData = await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: GAS_PRICE  })
 
     // Get data from the liquidation event logs
     const [loggedDebt, loggedColl, loggedGasComp, ] = th.getEmittedLiquidationValues(liquidationTxData)
@@ -1211,7 +1214,7 @@ contract('Gas compensation tests', async accounts => {
     const expectedLiquidatedDebt = A_totalDebt.add(B_totalDebt).add(C_totalDebt).add(D_totalDebt)
 
     // Liquidate troves A-D
-    const liquidationTxData = await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: 0 })
+    const liquidationTxData = await troveManager.liquidateTroves(4, { from: liquidator, gasPrice: GAS_PRICE  })
 
     // Get data from the liquidation event logs
     const [loggedDebt, loggedColl, loggedGasComp, ] = th.getEmittedLiquidationValues(liquidationTxData)
