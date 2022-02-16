@@ -565,6 +565,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
     }
 
     function _requireValidMaxFeePercentage(uint _maxFeePercentage, bool _isRecoveryMode) internal pure {
+        // In recovery mode we are not charging borrowing fee, so we can ignore this param
         if (_isRecoveryMode) {
             require(_maxFeePercentage <= DECIMAL_PRECISION,
                 "Max fee percentage must less than or equal to 100%");

@@ -14,6 +14,8 @@ const ZERO = toBN('0')
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const maxBytes32 = th.maxBytes32
 
+const GAS_PRICE = 10000000
+
 const getFrontEndTag = async (stabilityPool, depositor) => {
   return (await stabilityPool.deposits(depositor))[1]
 }
@@ -995,10 +997,18 @@ contract('StabilityPool', async accounts => {
       const D_ETHBalance_Before = await web3.eth.getBalance(D)
 
       // A, B, C, D provide to SP
-      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A, gasPrice: 0 })
-      await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B, gasPrice: 0 })
-      await stabilityPool.provideToSP(dec(300, 18), frontEnd_2, { from: C, gasPrice: 0 })
-      await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D, gasPrice: 0 })
+      const A_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A, gasPrice: GAS_PRICE }))
+      const B_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B, gasPrice: GAS_PRICE }))
+      const C_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(300, 18), frontEnd_2, { from: C, gasPrice: GAS_PRICE }))
+      const D_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D, gasPrice: GAS_PRICE }))
+
+
+      // ETH balances before minus gas used
+      const A_expectedBalance = A_ETHBalance_Before - A_GAS_Used;
+      const B_expectedBalance = B_ETHBalance_Before - B_GAS_Used;
+      const C_expectedBalance = C_ETHBalance_Before - C_GAS_Used;
+      const D_expectedBalance = D_ETHBalance_Before - D_GAS_Used;
+
 
       // Get  ETH balances after
       const A_ETHBalance_After = await web3.eth.getBalance(A)
@@ -1007,18 +1017,18 @@ contract('StabilityPool', async accounts => {
       const D_ETHBalance_After = await web3.eth.getBalance(D)
 
       // Check ETH balances have not changed
-      assert.equal(A_ETHBalance_After, A_ETHBalance_Before)
-      assert.equal(B_ETHBalance_After, B_ETHBalance_Before)
-      assert.equal(C_ETHBalance_After, C_ETHBalance_Before)
-      assert.equal(D_ETHBalance_After, D_ETHBalance_Before)
+      assert.equal(A_ETHBalance_After, A_expectedBalance)
+      assert.equal(B_ETHBalance_After, B_expectedBalance)
+      assert.equal(C_ETHBalance_After, C_expectedBalance)
+      assert.equal(D_ETHBalance_After, D_expectedBalance)
     })
 
     it("provideToSP(), new deposit after past full withdrawal: depositor does not receive ETH gains", async () => {
-      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
 
-      // Whale transfers LUSD to A, B
-      await lusdToken.transfer(A, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(B, dec(1000, 18), { from: whale })
+     // Whale transfers LUSD to A, B
+       await lusdToken.transfer(A, dec(1000, 18), { from: whale })
+       await lusdToken.transfer(B, dec(1000, 18), { from: whale })
 
       // C, D open troves
       await openTrove({ extraLUSDAmount: toBN(dec(4000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
@@ -1063,10 +1073,16 @@ contract('StabilityPool', async accounts => {
       const D_ETHBalance_Before = await web3.eth.getBalance(D)
 
       // A, B, C, D provide to SP
-      await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A, gasPrice: 0 })
-      await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B, gasPrice: 0 })
-      await stabilityPool.provideToSP(dec(300, 18), frontEnd_2, { from: C, gasPrice: 0 })
-      await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D, gasPrice: 0 })
+      const A_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: A, gasPrice: GAS_PRICE, gasPrice: GAS_PRICE }))
+      const B_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(200, 18), ZERO_ADDRESS, { from: B, gasPrice: GAS_PRICE, gasPrice: GAS_PRICE  }))
+      const C_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(300, 18), frontEnd_2, { from: C, gasPrice: GAS_PRICE, gasPrice: GAS_PRICE  }))
+      const D_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(400, 18), ZERO_ADDRESS, { from: D, gasPrice: GAS_PRICE, gasPrice: GAS_PRICE  }))
+
+      // ETH balances before minus gas used
+      const A_expectedBalance = A_ETHBalance_Before - A_GAS_Used;
+      const B_expectedBalance = B_ETHBalance_Before - B_GAS_Used;
+      const C_expectedBalance = C_ETHBalance_Before - C_GAS_Used;
+      const D_expectedBalance = D_ETHBalance_Before - D_GAS_Used;
 
       // Get  ETH balances after
       const A_ETHBalance_After = await web3.eth.getBalance(A)
@@ -1075,10 +1091,10 @@ contract('StabilityPool', async accounts => {
       const D_ETHBalance_After = await web3.eth.getBalance(D)
 
       // Check ETH balances have not changed
-      assert.equal(A_ETHBalance_After, A_ETHBalance_Before)
-      assert.equal(B_ETHBalance_After, B_ETHBalance_Before)
-      assert.equal(C_ETHBalance_After, C_ETHBalance_Before)
-      assert.equal(D_ETHBalance_After, D_ETHBalance_Before)
+      assert.equal(A_ETHBalance_After, A_expectedBalance)
+      assert.equal(B_ETHBalance_After, B_expectedBalance)
+      assert.equal(C_ETHBalance_After, C_expectedBalance)
+      assert.equal(D_ETHBalance_After, D_expectedBalance)
     })
 
     it("provideToSP(), topup: triggers LQTY reward event - increases the sum G", async () => {
@@ -2040,6 +2056,7 @@ contract('StabilityPool', async accounts => {
       assert.isTrue(await sortedTroves.contains(defaulter_2))
 
       const A_ETHBalBefore = toBN(await web3.eth.getBalance(A))
+      // const A_ETHBalBefore_BN = toBN(await web3.eth.getBalance(A))
       const A_LQTYBalBefore = await lqtyToken.balanceOf(A)
 
       // Check Alice has gains to withdraw
@@ -2049,16 +2066,18 @@ contract('StabilityPool', async accounts => {
       assert.isTrue(A_pendingLQTYGain.gt(toBN('0')))
 
       // Check withdrawal of 0 succeeds
-      const tx = await stabilityPool.withdrawFromSP(0, { from: A, gasPrice: 0 })
+      const tx = await stabilityPool.withdrawFromSP(0, { from: A, gasPrice: GAS_PRICE })
       assert.isTrue(tx.receipt.status)
 
+      const A_expectedBalance = A_ETHBalBefore.sub((toBN(th.gasUsed(tx) * GAS_PRICE)))
+  
       const A_ETHBalAfter = toBN(await web3.eth.getBalance(A))
 
       const A_LQTYBalAfter = await lqtyToken.balanceOf(A)
       const A_LQTYBalDiff = A_LQTYBalAfter.sub(A_LQTYBalBefore)
 
       // Check A's ETH and LQTY balances have increased correctly
-      assert.isTrue(A_ETHBalAfter.sub(A_ETHBalBefore).eq(A_pendingETHGain))
+      assert.isTrue(A_ETHBalAfter.sub(A_expectedBalance).eq(A_pendingETHGain))
       assert.isAtMost(th.getDifference(A_LQTYBalDiff, A_pendingLQTYGain), 1000)
     })
 
@@ -2126,7 +2145,7 @@ contract('StabilityPool', async accounts => {
       await priceFeed.setPrice(dec(200, 18))
 
       // Dennis withdraws his full deposit and ETHGain to his account
-      await stabilityPool.withdrawFromSP(dec(100, 18), { from: dennis, gasPrice: 0 })
+      await stabilityPool.withdrawFromSP(dec(100, 18), { from: dennis, gasPrice: GAS_PRICE  })
 
       // Check withdrawal does not alter Dennis' ETH balance or his trove's collateral
       const dennis_ETHBalance_After = (web3.eth.getBalance(dennis)).toString()
@@ -2264,9 +2283,9 @@ contract('StabilityPool', async accounts => {
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(10000, 18)), defaulter_1, defaulter_1, { from: defaulter_1, value: dec(100, 'ether') })
 
       // A, B, C provides 10000, 5000, 3000 LUSD to SP
-      await stabilityPool.provideToSP(dec(10000, 18), frontEnd_1, { from: alice })
-      await stabilityPool.provideToSP(dec(5000, 18), frontEnd_1, { from: bob })
-      await stabilityPool.provideToSP(dec(3000, 18), frontEnd_1, { from: carol })
+      const A_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(10000, 18), frontEnd_1, { from: alice, gasPrice: GAS_PRICE }))
+      const B_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(5000, 18), frontEnd_1, { from: bob, gasPrice: GAS_PRICE }))
+      const C_GAS_Used = th.gasUsed(await stabilityPool.provideToSP(dec(3000, 18), frontEnd_1, { from: carol, gasPrice: GAS_PRICE }))
 
       // Price drops
       await priceFeed.setPrice(dec(105, 18))
@@ -2283,6 +2302,7 @@ contract('StabilityPool', async accounts => {
       const carol_LUSD_Balance_Before = await lusdToken.balanceOf(carol)
 
       const alice_ETH_Balance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
+      
       const bob_ETH_Balance_Before = web3.utils.toBN(await web3.eth.getBalance(bob))
       const carol_ETH_Balance_Before = web3.utils.toBN(await web3.eth.getBalance(carol))
 
@@ -2302,13 +2322,13 @@ contract('StabilityPool', async accounts => {
       assert.isTrue(await th.checkRecoveryMode(contracts))
 
       // A, B, C withdraw their full deposits from the Stability Pool
-      await stabilityPool.withdrawFromSP(dec(10000, 18), { from: alice, gasPrice: 0 })
-      await stabilityPool.withdrawFromSP(dec(5000, 18), { from: bob, gasPrice: 0 })
-      await stabilityPool.withdrawFromSP(dec(3000, 18), { from: carol, gasPrice: 0 })
+      const A_GAS_Deposit = th.gasUsed(await stabilityPool.withdrawFromSP(dec(10000, 18), { from: alice, gasPrice: GAS_PRICE  }))
+      const B_GAS_Deposit = th.gasUsed(await stabilityPool.withdrawFromSP(dec(5000, 18), { from: bob, gasPrice: GAS_PRICE  }))
+      const C_GAS_Deposit = th.gasUsed(await stabilityPool.withdrawFromSP(dec(3000, 18), { from: carol, gasPrice: GAS_PRICE  }))
 
       // Check LUSD balances of A, B, C have risen by the value of their compounded deposits, respectively
       const alice_expectedLUSDBalance = (alice_LUSD_Balance_Before.add(alice_Deposit_Before)).toString()
-     
+
       const bob_expectedLUSDBalance = (bob_LUSD_Balance_Before.add(bob_Deposit_Before)).toString()
       const carol_expectedLUSDBalance = (carol_LUSD_Balance_Before.add(carol_Deposit_Before)).toString()
 
@@ -2316,6 +2336,8 @@ contract('StabilityPool', async accounts => {
  
       const bob_LUSD_Balance_After = (await lusdToken.balanceOf(bob)).toString()
       const carol_LUSD_Balance_After = (await lusdToken.balanceOf(carol)).toString()
+
+
 
       assert.equal(alice_LUSD_Balance_After, alice_expectedLUSDBalance)
       assert.equal(bob_LUSD_Balance_After, bob_expectedLUSDBalance)
@@ -2330,9 +2352,14 @@ contract('StabilityPool', async accounts => {
       const bob_ETHBalance_After = (await web3.eth.getBalance(bob)).toString()
       const carol_ETHBalance_After = (await web3.eth.getBalance(carol)).toString()
 
-      assert.equal(alice_expectedETHBalance, alice_ETHBalance_After)
-      assert.equal(bob_expectedETHBalance, bob_ETHBalance_After)
-      assert.equal(carol_expectedETHBalance, carol_ETHBalance_After)
+      // ETH balances before minus gas used
+      const alice_ETHBalance_After_Gas = alice_ETHBalance_After- A_GAS_Used;
+      const bob_ETHBalance_After_Gas = bob_ETHBalance_After- B_GAS_Used;
+      const carol_ETHBalance_After_Gas = carol_ETHBalance_After- C_GAS_Used;
+
+      assert.equal(alice_expectedETHBalance, alice_ETHBalance_After_Gas)
+      assert.equal(bob_expectedETHBalance, bob_ETHBalance_After_Gas)
+      assert.equal(carol_expectedETHBalance, carol_ETHBalance_After_Gas)
 
       // Check LUSD in Stability Pool has been reduced by A, B and C's compounded deposit
       const expectedLUSDinSP = (LUSDinSP_Before
@@ -2412,7 +2439,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(bob_ETHGain_1, bob_ETHGain_3)
     })
 
-    // --- LQTY functionality ---
+    //--- LQTY functionality ---
     it("withdrawFromSP(): triggers LQTY reward event - increases the sum G", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(1, 24)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
 

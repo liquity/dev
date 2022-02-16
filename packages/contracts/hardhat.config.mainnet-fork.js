@@ -58,10 +58,11 @@ module.exports = {
             accounts: accountsList,
             gas: 10000000,  // tx gas limit
             blockGasLimit: 12500000, 
-            gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 20000000000,
+            gasPrice: 200000000000,
+            allowUnlimitedContractSize :true,
             forking: {
                 url: alchemyUrl(),
-                blockNumber: process.env.BLOCK_NUMBER ? parseInt(process.env.BLOCK_NUMBER) : 12152522
+                blockNumber: 12152522
             }
         }
     },
