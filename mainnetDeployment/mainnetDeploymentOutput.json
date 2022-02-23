@@ -1,0 +1,110 @@
+{
+	"lockedVsta": {
+		"address": "0xb889151Da7c8aC6773DE803B0c38018680512cb0",
+		"txHash": "0x4248ceee49e680154a4f2c781a49c05d684aa7681c2e7393a9ae86fced8db5aa",
+		"verification": "https://arbiscan.io/address/0xb889151Da7c8aC6773DE803B0c38018680512cb0#code"
+	},
+	"VSTAToken": {
+		"address": "0xa684cd057951541187f288294a1e1C2646aA2d24",
+		"txHash": "0x64e188b4f61ca7d6784a682489980ab96c9bc3876bfe527db985b6e13b89c757",
+		"verification": "https://arbiscan.io/address/0xa684cd057951541187f288294a1e1C2646aA2d24#code"
+	},
+	"priceFeed": {
+		"address": "0xC93408bFBEa0Bf3E53bEdBce7D5C1e64db826702",
+		"txHash": "0x553dff77de5517dabf71f3678495afe9431ad3757f418dd13821a8472a296262",
+		"verification": "https://arbiscan.io/address/0xC93408bFBEa0Bf3E53bEdBce7D5C1e64db826702#code"
+	},
+	"sortedTroves": {
+		"address": "0x62842ceDFe0F7D203FC4cFD086a6649412d904B5",
+		"txHash": "0x365661f856ca093990292a141423f7614485519f03398461bfc775bae7a0cc88",
+		"verification": "https://arbiscan.io/address/0x62842ceDFe0F7D203FC4cFD086a6649412d904B5#code"
+	},
+	"troveManager": {
+		"address": "0x100EC08129e0FD59959df93a8b914944A3BbD5df",
+		"txHash": "0xd6d1e72d7d8698422cd992fa8ab8347143bd6632edc537301cffc4cff0f631e9",
+		"verification": "https://arbiscan.io/address/0x100EC08129e0FD59959df93a8b914944A3BbD5df#code"
+	},
+	"activePool": {
+		"address": "0xBE3dE7fB9Aa09B3Fa931868Fb49d5BA5fEe2eBb1",
+		"txHash": "0x7d94fcb4d575c48c89a7ed456c3f442eb3c5de45086e2e41042e88d7a650040e",
+		"verification": "https://arbiscan.io/address/0xBE3dE7fB9Aa09B3Fa931868Fb49d5BA5fEe2eBb1#code"
+	},
+	"stabilityPoolManager": {
+		"address": "0x8aA2e4b1E9a626954b183966EB6665543c03F386",
+		"txHash": "0xd195c2ef8af1243e766938a63479426362c4cba4f84c40a0bef8d6a57fb786d5",
+		"verification": "https://arbiscan.io/address/0x8aA2e4b1E9a626954b183966EB6665543c03F386#code"
+	},
+	"defaultPool": {
+		"address": "0x996b43aaDd750371fF81Cb1100f7dCB6D3321247",
+		"txHash": "0xbc0c723f8d310245718473402f177e81899444ec4bb7a326cee321dfd41c9fa8",
+		"verification": "https://arbiscan.io/address/0x996b43aaDd750371fF81Cb1100f7dCB6D3321247#code"
+	},
+	"collSurplusPool": {
+		"address": "0x057fdD5cD208dAA715393982aAf7508350104B04",
+		"txHash": "0x7e8d873f33b00e48c4e33c439a04c7d081de5456ebfd856382ad950eba40648a",
+		"verification": "https://arbiscan.io/address/0x057fdD5cD208dAA715393982aAf7508350104B04#code"
+	},
+	"borrowerOperations": {
+		"address": "0x3eEDF348919D130954929d4ff62D626f26ADBFa2",
+		"txHash": "0x9ac76e653c2dc2473a6a3efe3e575cef781b2fe33816a6fc44f4d2d88e1397fc",
+		"verification": "https://arbiscan.io/address/0x3eEDF348919D130954929d4ff62D626f26ADBFa2#code"
+	},
+	"hintHelpers": {
+		"address": "0xF9b46Bff75D185A8Ffbf74072dc9c698e1EC6851",
+		"txHash": "0x3bbf62900c00b06c09bcee7641fd3c007e17ff05d7ec22b2e92022c511533e4d",
+		"verification": "https://arbiscan.io/address/0xF9b46Bff75D185A8Ffbf74072dc9c698e1EC6851#code"
+	},
+	"vestaParameters": {
+		"address": "0x5F51B0A5E940A3a20502B5F59511B13788Ec6DDB",
+		"txHash": "0xd058a328513916fcc657f866b0cc394381906f2efb7eb56f68cf0c7b79c7ea75",
+		"verification": "https://arbiscan.io/address/0x5F51B0A5E940A3a20502B5F59511B13788Ec6DDB#code"
+	},
+	"stabilityPoolV1": {
+		"address": "0x8AA0f65aD3b6CA621B6FBE1c495A54dd3a80E015",
+		"txHash": "0x9e8221a5483a28f537b781ce680ade10540cc49e907cef30498db8abc71077c7",
+		"verification": "https://arbiscan.io/address/0x8AA0f65aD3b6CA621B6FBE1c495A54dd3a80E015#code"
+	},
+	"gasPool": {
+		"address": "0xE60c5f6c52172d138012c5ddEcAB4Afb5a3e2731",
+		"txHash": "0x0f3c6875c643991e50741753b185dbd6384f7b677b53f01b994a86afd0cc68b3",
+		"verification": "https://arbiscan.io/address/0xE60c5f6c52172d138012c5ddEcAB4Afb5a3e2731#code"
+	},
+	"adminContract": {
+		"address": "0x2Ba039C16B75C93E6ff33Db12acCD97d1F7FD0E0",
+		"txHash": "0xa23cf2b52b1099061bc485eb383a5787a48c0875f05b4bcfbefe5d6ff606b33d",
+		"verification": "https://arbiscan.io/address/0x2Ba039C16B75C93E6ff33Db12acCD97d1F7FD0E0#code"
+	},
+	"VSTToken": {
+		"address": "0x64343594Ab9b56e99087BfA6F2335Db24c2d1F17",
+		"txHash": "0xea8012c4f79a2ac2ec102bec729c74c6e20db45911481563b0c94515233d0287",
+		"verification": "https://arbiscan.io/address/0x64343594Ab9b56e99087BfA6F2335Db24c2d1F17#code"
+	},
+	"VSTAStaking": {
+		"address": "0xAC798A3694F49AB75A2D53322884Cc59D0b1266f",
+		"txHash": "0xbae0c2d4502f0a0188f8d2d08a529f191724ded09e5d133bb9a68e3803296328",
+		"verification": "https://arbiscan.io/address/0xAC798A3694F49AB75A2D53322884Cc59D0b1266f#code"
+	},
+	"communityIssuance": {
+		"address": "0x626420aE6986A4941DF830F57775aa7df4aAC9D3",
+		"txHash": "0x2d1bc847b4a77551a824999cab63d4b728690c9a1c5f395619a052c81807bfcb",
+		"verification": "https://arbiscan.io/address/0x626420aE6986A4941DF830F57775aa7df4aAC9D3#code"
+	},
+	"ProxyStabilityPoolOHM": {
+		"address": "0x6e53D20d674C27b858a005Cf4A72CFAaf4434ECB",
+		"txHash": "0x6d075259e0759d2b265867b6388e42c2b9bb18e7af49c3259f19813956b6c31b"
+	},
+	"multiTroveGetter": {
+		"address": "0x135043Dd73C851787eE6bb257C8e8DB471bef5f7",
+		"txHash": "0x5b9a478f2712c66e88f2423ffe0f4835d99081adfc3227a2a072a4b3ccd97557",
+		"verification": "https://arbiscan.io/address/0x135043Dd73C851787eE6bb257C8e8DB471bef5f7#code"
+	},
+	"ProxyStabilityPoolETH": {
+		"address": "0x64cA46508ad4559E1fD94B3cf48f3164B4a77E42"
+	},
+	"ProxyStabilityPoolRenBTC": {
+		"address": "0x3282dfAf0fBba4d3E771C4E5F669Cb4E14D8adb0"
+	},
+	"ProxyAdmin": {
+		"address": "0xedc3bE991a29D094CA802B1C92AE6b7f74B53a19"
+	}
+}

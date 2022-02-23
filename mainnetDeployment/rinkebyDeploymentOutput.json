@@ -1,0 +1,117 @@
+{
+  "priceFeed": {
+    "address": "0x6C6f44760A0A95bdf115C07859179a2c013571e0",
+    "txHash": "0x2c3fcd09a06f371d8e30fcac578d511e4c8253bc89cf290b1d2122c953fbc9f0",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x6C6f44760A0A95bdf115C07859179a2c013571e0#code"
+  },
+  "sortedTroves": {
+    "address": "0x5bB1c2c1c8CD8AD84B6157F263cca1bFDafF4AD2",
+    "txHash": "0x55eaac7857a546a641033f069614ac191dff6725b86e68308334b0315b8858f2",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x5bB1c2c1c8CD8AD84B6157F263cca1bFDafF4AD2#code"
+  },
+  "troveManager": {
+    "address": "0x08739bbD5ae4B014aed41019C95d800715F70550",
+    "txHash": "0x6a1e4aa8b627ee18cc92887b7029eb407fb84437d55f0b7b4e36c7d7232d52fe",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x08739bbD5ae4B014aed41019C95d800715F70550#code"
+  },
+  "activePool": {
+    "address": "0x2cAD1E1676f95cf326E8e99148F8156Bd24F0304",
+    "txHash": "0xb065500b6300473406dac79a1b771af5ce51f755c82de97e1222ce479684e615",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x2cAD1E1676f95cf326E8e99148F8156Bd24F0304#code"
+  },
+  "stabilityPoolManager": {
+    "address": "0xff29069bfb8cE1AA75Ff6F89e54027965c8F1232",
+    "txHash": "0xb9b50989877f79dfb44cce9bd2609e9fbc03e931186f6c1c544b84401fd7dbff",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0xff29069bfb8cE1AA75Ff6F89e54027965c8F1232#code"
+  },
+  "defaultPool": {
+    "address": "0x2e39345535D1fDDBfd0A77287Fdb76e86DF5799d",
+    "txHash": "0x0f9dba684838716d4a5092ba91f57a950b78bc1d8d873c7223562be3aa006afa",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x2e39345535D1fDDBfd0A77287Fdb76e86DF5799d#code"
+  },
+  "collSurplusPool": {
+    "address": "0xf5838b9fC7d2F0327Dc87a031824A7F70Ad5dF72",
+    "txHash": "0xc5492a732fa130f3ea7591459a07175bebb65ab08e6fd545fdc98930b5fe634f",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0xf5838b9fC7d2F0327Dc87a031824A7F70Ad5dF72#code"
+  },
+  "borrowerOperations": {
+    "address": "0xa33f11A1B6aA87Ae5979556C2e20948ed0dd8d99",
+    "txHash": "0xc01f9ffd276e0e3846576b8e0b9fb74d343931cad70599e94b513231581af836",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0xa33f11A1B6aA87Ae5979556C2e20948ed0dd8d99#code"
+  },
+  "hintHelpers": {
+    "address": "0x0d0E79088220dC2451a37ab729f9a96BA79B77B3",
+    "txHash": "0xa4e49ba6e6e1204debb9dd714423f6455da4dbacb0af504ad5705673971f8807",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x0d0E79088220dC2451a37ab729f9a96BA79B77B3#code"
+  },
+  "vestaParameters": {
+    "address": "0xb81bbE1a1b4E6258e54d9d3B3C0911FBb97bf4de",
+    "txHash": "0x8bff3a08a881a861c01a0eba98990ea64e16de6b6a24d8155818bcc1892281aa",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0xb81bbE1a1b4E6258e54d9d3B3C0911FBb97bf4de#code"
+  },
+  "stabilityPoolV1": {
+    "address": "0x9B3470284Df223b88797d40CeEE6C3A81883e17b",
+    "txHash": "0x929c2bfd66b987e9b5ef9dcb37bc2877cc6c346cdd6389a4ebb0791d1d66dba7",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x9B3470284Df223b88797d40CeEE6C3A81883e17b#code"
+  },
+  "gasPool": {
+    "address": "0x3126834B28e5D4138284FCEfdbbd403381397E39",
+    "txHash": "0x0ef0507fa53e734a29712b67f7875f5fe6e6a19620d3e25a636f81fd94568474",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x3126834B28e5D4138284FCEfdbbd403381397E39#code"
+  },
+  "lockedVsta": {
+    "address": "0x9794c63385885dD40702b1b2A705263aD450250A",
+    "txHash": "0x414130b6725ed95a6d456ba864a255fca1d9fca888f5684d79dd5a50c9b73cbb",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x9794c63385885dD40702b1b2A705263aD450250A#code"
+  },
+  "adminContract": {
+    "address": "0xa445EDB07a8DBBfA180414F1Fa7ec7B8e0A31150",
+    "txHash": "0x9371f86a217666635646f9651e0e25a973a949e9ad31a0d0712f788702bb7d38",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0xa445EDB07a8DBBfA180414F1Fa7ec7B8e0A31150#code"
+  },
+  "VSTToken": {
+    "address": "0x0b7b55d60F8f4d17912a5605B2E249B03EC5849c",
+    "txHash": "0x6e82bfd0c1b7433351f4aec8f1e5020a1ad61c0a91667d5ff588e54e5040b245",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x0b7b55d60F8f4d17912a5605B2E249B03EC5849c#code"
+  },
+  "VSTAStaking": {
+    "address": "0x9Ce4FE486c0D8cE1d786DAdaf22CCA38ABeadB1A",
+    "txHash": "0x2691753acd01f38e93eb08efe54db603664bf531be07809e4dcc891bce28e292",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x9Ce4FE486c0D8cE1d786DAdaf22CCA38ABeadB1A#code"
+  },
+  "communityIssuance": {
+    "address": "0x12BDB15D910D646c5D42f463C5ff65Ca82978D78",
+    "txHash": "0x881822d7f7448fc99f391c663b162f8f03bd009c2fad03d213f97f74a709d061",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x12BDB15D910D646c5D42f463C5ff65Ca82978D78#code"
+  },
+  "VSTAToken": {
+    "address": "0xA9a360B8a2068400B56C86B94D05Aa92CF72bd90",
+    "txHash": "0xb8b44e8b7a99159b22fd8a68f6eb3dfa5bc056c7b883fd91893980ed46ac566f",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0xA9a360B8a2068400B56C86B94D05Aa92CF72bd90#code"
+  },
+  "ProxyStabilityPoolETH": {
+    "address": "0x7D66133c04450969814B703334F4F29525377963",
+    "txHash": "0xa29233f2e3b8a493fc8d4cd9ec9ddcd7b88df922f91b5063f01cb0fe176d2f64"
+  },
+  "renBTC": {
+    "address": "0x2DEEaEFA1f182bD03763851cee7618242820322f",
+    "txHash": "0x2ae0b60c714a6fbfb9ea736f42cc0ab95c1adde83a1338c61c133da83f68cb80"
+  },
+  "ProxyStabilityPoolRenBTC": {
+    "address": "0x550bA846E37A74014F7461476c6Ed8B1192568D1",
+    "txHash": "0x3a76faca45cf9e5408ed49ef560bc619d63d5cc2e0bdd2b14af90b4def05a408"
+  },
+  "gOHM": {
+    "address": "0x64f402E37C5F105bfaa4F8629520c91507Cc84f8",
+    "txHash": "0x2b603e505ab3211b23dcbf18bfe01f9a1980720b3241731d515984de78016a95"
+  },
+  "ProxyStabilityPoolOHM": {
+    "address": "0x9E4eC6a5798AB2345BA75dAa86df153e3cd4572E",
+    "txHash": "0x4fe1b0a932c16a4b0a754b3668de0153d942c1f2e4e057f7a8d4335c7120bbe5"
+  },
+  "multiTroveGetter": {
+    "address": "0x71172e27152CE727E3585E2B61853DF8Eb72a670",
+    "txHash": "0xfa66ffe8bd34d80c1c12c6905b6df2390b7ebbc95c489e9837ca3d417e1b38a5",
+    "verification": "https://rinkeby-explorer.arbitrum.io/address/0x71172e27152CE727E3585E2B61853DF8Eb72a670#code"
+  }
+}

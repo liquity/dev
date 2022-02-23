@@ -1,0 +1,82 @@
+{
+  "priceFeed": {
+    "address": "0xAbF2684Bf741170B46e65549403D4A4633c6d50a",
+    "txHash": "0x02c62e4ee06f91d190244ea65a88933730588767a470a19cb5ae4f2ace1e0237"
+  },
+  "sortedTroves": {
+    "address": "0xf3b03d328af6f9B317c98ce71A932c5488E4b48A",
+    "txHash": "0xf8c4c16249bf807963d452b74ff271556156214da30a25f8682bbb1c3fb2fc96"
+  },
+  "troveManager": {
+    "address": "0x50AC45eD20c453E91571857399d058afC67521cF",
+    "txHash": "0x3a0823643b5be49badfed52c6775d0bd123cd5f24f9fc32970d3fe0cbed99487"
+  },
+  "activePool": {
+    "address": "0x82d53282e0dF6A5c171023711CA6DC0e1506bFE7",
+    "txHash": "0x12fc24eaefa528c81b124fc0c18f1d3351e09dc1b580b8a2281583ddc9ca9908"
+  },
+  "stabilityPoolV1": {
+    "address": "0x094B8eDc9dAC8b5deb973d96f4ceD84D13952b1B",
+    "txHash": "0x104d800b4a8ace17e8fc27fb9f6386af1d18d3d0271f40c0f97b2f7681b6d3ad"
+  },
+  "stabilityPoolManager": {
+    "address": "0xD704dDD9BB9258Db7892Ab010FAb60d2cD32d341",
+    "txHash": "0x74c9fd874d59522b41c991e86740aab5e335b247906d7b91eb43d12fedde8a28"
+  },
+  "gasPool": {
+    "address": "0xA025BbA170e22b796E373ecBC3A6D624B7363A8d",
+    "txHash": "0x6c0871533330b9c6b7913134d863acf9858921c3d3c077a0d30ebb563089fd64"
+  },
+  "defaultPool": {
+    "address": "0xd8c903bB7F876c2BA3eC025f87f989436c6e0d8c",
+    "txHash": "0x7b0c6e39f33f05283a03cc19c8c3eb5e567028a6c064bb493cfbd5af9e94ae2a"
+  },
+  "collSurplusPool": {
+    "address": "0xe701E648D16Aec29b63153e56d7b6E3c93D29789",
+    "txHash": "0x37510477cb7f2a68815cc6ecfe5ef8014820274f0dac2a860e078cb2b3e36507"
+  },
+  "borrowerOperations": {
+    "address": "0xBD9f040502cf715cCfE114eaF14639809C526A47",
+    "txHash": "0x1262d149c2123fd38b1a9cfb51557ffcbe42de4abbd316c4b35ba2486e05c37c"
+  },
+  "hintHelpers": {
+    "address": "0x44f6cfB51bb2667D72C535b0ea4F41e8438780d1",
+    "txHash": "0x0de0de80c22f2019db570c069217cf4992cea1ac23f81bcd19d53e7971b05b50"
+  },
+  "tellorCaller": {
+    "address": "0xF868fb4659D16C17cA954fb77C99F52e8C23810e",
+    "txHash": "0x671ca5bc37acbb76a3f16fd77c4cff27716192bb609dcc6bc328d991449c8854"
+  },
+  "vestaParameters": {
+    "address": "0x171Fc066e8efDd5Ef7a0803df0506F3602b9f1dd",
+    "txHash": "0xf0925506d64aed2ef2582d069a620828a827da880a904d8b5e99eb3703e25fbf"
+  },
+  "lockedVsta": {
+    "address": "0x85144804E18e69185E3F9d76aAa07C056aC726C2",
+    "txHash": "0x7aa1c24cb1b794a43745efc291f2a198c47c3ed82a8ccd818dd93418579cda8e"
+  },
+  "adminContract": {
+    "address": "0x3061d1DDCB75D2402a303e7AB0036Bc100ab716f",
+    "txHash": "0x26bdae5d778d77a01c7fff26141339483a89f684a1b92def8887079856a82ce0"
+  },
+  "VSTToken": {
+    "address": "0x0cA97EF73eE47192dEC3519620adB2881dA6b95E",
+    "txHash": "0x44d3cf4ffc176b9e1f40245ca9f9a124441fccd9757eb18d84ef33cd1083096b"
+  },
+  "VSTAStaking": {
+    "address": "0x30B6560e24cF8609AB11b4752a3583AeBeE7af5F",
+    "txHash": "0x25cbee28d3bb5cf1188b96778e60a1621912a7b22b3412f91838cad13a4c5cf8"
+  },
+  "communityIssuance": {
+    "address": "0x80716038961bf6076327eCAEA6DA56715B08131D",
+    "txHash": "0x850e9437ab755990a68d6b6434cefba1e9e0f95d32f5dc3482868228ffdec226"
+  },
+  "VSTAToken": {
+    "address": "0x08Fe8bb3Ef9923B926ac3F1Fc78C5677fAb3c284",
+    "txHash": "0xef587cd917a8871e69cf9a33c0c6ef776a8caf3cabb0a3ae38a22e42f8552032"
+  },
+  "erc20Mock": {
+    "address": "0x72d3254555a1Cc960B7F8287fea2FB62B08105fA",
+    "txHash": "0x51df4287d69c120de2aec4655824e63cb5b63b015b820aebfea995f38dcb5387"
+  }
+}
