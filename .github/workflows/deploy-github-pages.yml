@@ -7,6 +7,8 @@ env:
 on:
   push:
     branches: [master, main]
+    paths:
+      - 'packages/dev-frontend/**'
 
 jobs:
   release:
@@ -36,7 +38,7 @@ jobs:
      #   env:
      #     FRONTEND_TAG: ${{ secrets.FRONTEND_TAG }}
      #     INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
-     #   run: ./packages/dev-frontend/
+     #   run: ./packages/dev-frontend/docker-entrypoint.d/99-frontend-config.sh
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3.7.3
