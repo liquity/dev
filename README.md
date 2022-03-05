@@ -1,9 +1,9 @@
-# Liquity: Decentralized Borrowing Protocol
+# Fluidity: Decentralized Borrowing Protocol
 
-![Tests](https://github.com/liquity/dev/workflows/CI/badge.svg) [![Frontend status](https://img.shields.io/uptimerobot/status/m784948796-056b56fd51c67d682c11bb24?label=Testnet&logo=nginx&logoColor=white)](https://devui.liquity.org) ![uptime](https://img.shields.io/uptimerobot/ratio/7/m784948796-056b56fd51c67d682c11bb24) [![Discord](https://img.shields.io/discord/700620821198143498?label=join%20chat&logo=discord&logoColor=white)](https://discord.gg/2up5U32) [![Docker Pulls](https://img.shields.io/docker/pulls/liquity/dev-frontend?label=dev-frontend%20pulls&logo=docker&logoColor=white)](https://hub.docker.com/r/liquity/dev-frontend) [![codecov](https://codecov.io/gh/liquity/dev/branch/add_codecov/graph/badge.svg)](https://codecov.io/gh/liquity/dev)
+![Tests](https://github.com/goldmandao/fluidity/actions/workflows/run-tests.yml/badge.svg) [![Frontend](https://img.shields.io/website.svg?down_color=red&down_message=down&up_color=green&up_message=Yay&url=http%3A%2F%2Fgoldmandao.github.io%2Ffluidity)](https://goldmandao.github.io/fluidity) [![codecov](https://codecov.io/gh/golmandao/fluidity/branch/add_codecov/graph/badge.svg)](https://codecov.io/gh/golmandao/fluidity)
 
 
-Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against
+Fluidity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against
 their collateral without paying interest. After locking up ETH as collateral in a smart contract and
 creating an individual position called a "trove", the user can get instant liquidity by minting LUSD,
 a USD-pegged stablecoin. Each trove is required to be collateralized at a minimum of 110%. Any
@@ -22,10 +22,10 @@ multiple front ends, enhancing decentralization.
 
 Visit [liquity.org](https://www.liquity.org) to find out more and join the discussion.
 
-## Liquity System Summary
+## Fluidity System Summary
 
 - [Disclaimer](#disclaimer)
-- [Liquity Overview](#liquity-overview)
+- [Fluidity Overview](#fluidity-overview)
 - [Liquidation and the Stability Pool](#liquidation-and-the-stability-pool)
   - [Liquidation gas costs](#liquidation-gas-costs)
   - [Liquidation Logic](#liquidation-logic)
@@ -46,7 +46,7 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
   - [Launch sequence and vesting process](#launch-sequence-and-vesting-process)
     - [Deploy LQTY Contracts](#deploy-lqty-contracts)
     - [Deploy and fund Lockup Contracts](#deploy-and-fund-lockup-contracts)
-    - [Deploy Liquity Core](#deploy-liquity-core)
+    - [Deploy Fluidity Core](#deploy-fluidity-core)
     - [During one year lockup period](#during-one-year-lockup-period)
     - [Upon end of one year lockup period](#upon-end-of-one-year-lockup-period)
     - [Post-lockup period](#post-lockup-period)
@@ -59,9 +59,9 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
   - [Testnet PriceFeed and PriceFeed tests](#testnet-pricefeed-and-pricefeed-tests)
   - [PriceFeed limitations and known issues](#pricefeed-limitations-and-known-issues)
   - [Keeping a sorted list of Troves ordered by ICR](#keeping-a-sorted-list-of-troves-ordered-by-icr)
-  - [Flow of Ether in Liquity](#flow-of-ether-in-liquity)
-  - [Flow of LUSD tokens in Liquity](#flow-of-lusd-tokens-in-liquity)
-  - [Flow of LQTY Tokens in Liquity](#flow-of-lqty-tokens-in-liquity)
+  - [Flow of Ether in Fluidity](#flow-of-ether-in-fluidity)
+  - [Flow of LUSD tokens in Fluidity](#flow-of-lusd-tokens-in-fluidity)
+  - [Flow of LQTY Tokens in Fluidity](#flow-of-lqty-tokens-in-fluidity)
 - [Expected User Behaviors](#expected-user-behaviors)
 - [Contract Ownership and Function Permissions](#contract-ownership-and-function-permissions)
 - [Deployment to a Development Blockchain](#deployment-to-a-development-blockchain)
@@ -101,8 +101,8 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
   - [LQTY Issuance implementation](#lqty-issuance-implementation)
   - [Handling the front end LQTY gain](#handling-the-front-end-lqty-gain)
   - [LQTY reward events and payouts](#lqty-reward-events-and-payouts)
-- [LQTY issuance to liquity providers](#lqty-issuance-to-liquity-providers)
-- [Liquity System Fees](#liquity-system-fees)
+- [LQTY issuance to fluidity providers](#lqty-issuance-to-fluidity-providers)
+- [Fluidity System Fees](#fluidity-system-fees)
   - [Redemption Fee](#redemption-fee)
   - [Issuance fee](#issuance-fee)
   - [Fee Schedule](#fee-schedule)
@@ -139,9 +139,9 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
 - [Known Issues](#known-issues)
 - [Disclaimer](#disclaimer)
 
-## Liquity Overview
+## Fluidity Overview
 
-Liquity is a collateralized debt platform. Users can lock up Ether, and issue stablecoin tokens (LUSD) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address. The individual collateralized debt positions are called Troves.
+Fluidity is a collateralized debt platform. Users can lock up Ether, and issue stablecoin tokens (LUSD) to their own Ethereum address, and subsequently transfer those tokens to any other Ethereum address. The individual collateralized debt positions are called Troves.
 
 The stablecoin tokens are economically geared towards maintaining value of 1 LUSD = \$1 USD, due to the following properties:
 
@@ -155,17 +155,17 @@ After opening a Trove with some Ether, users may issue ("borrow") tokens such th
 
 The tokens are freely exchangeable - anyone with an Ethereum address can send or receive LUSD tokens, whether they have an open Trove or not. The tokens are burned upon repayment of a Trove's debt.
 
-The Liquity system regularly updates the ETH:USD price via a decentralized data feed. When a Trove falls below a minimum collateralization ratio (MCR) of 110%, it is considered under-collateralized, and is vulnerable to liquidation.
+The Fluidity system regularly updates the ETH:USD price via a decentralized data feed. When a Trove falls below a minimum collateralization ratio (MCR) of 110%, it is considered under-collateralized, and is vulnerable to liquidation.
 
 ## Liquidation and the Stability Pool
 
-Liquity utilizes a two-step liquidation mechanism in the following order of priority: 
+Fluidity utilizes a two-step liquidation mechanism in the following order of priority: 
 
 1. Offset under-collateralized Troves against the Stability Pool containing LUSD tokens
 
 2. Redistribute under-collateralized Troves to other borrowers if the Stability Pool is emptied
 
-Liquity primarily uses the LUSD tokens in its Stability Pool to absorb the under-collateralized debt, i.e. to repay the liquidated borrower's liability.
+Fluidity primarily uses the LUSD tokens in its Stability Pool to absorb the under-collateralized debt, i.e. to repay the liquidated borrower's liability.
 
 Any user may deposit LUSD tokens to the Stability Pool. This allows them to earn the collateral from the liquidated Trove. When a liquidation occurs, the liquidated debt is cancelled with the same amount of LUSD in the Pool (which is burned as a result), and the liquidated Ether is proportionally distributed to depositors.
 
@@ -222,7 +222,7 @@ A redemption sequence of `n` steps will **fully** redeem from up to `n-1` Troves
 
 Redemptions are blocked when TCR < 110% (there is no need to restrict ICR < TCR). At that TCR redemptions would likely be unprofitable, as LUSD is probably trading above $1 if the system has crashed that badly, but it could be a way for an attacker with a lot of LUSD to lower the TCR even further.
 
-Note that redemptions are disabled during the first 14 days of operation since deployment of the Liquity protocol to protect the monetary system in its infancy.
+Note that redemptions are disabled during the first 14 days of operation since deployment of the Fluidity protocol to protect the monetary system in its infancy.
 
 ### Partial redemption
 
@@ -255,25 +255,25 @@ Economically, Recovery Mode is designed to encourage collateral top-ups and debt
 ## Project Structure
 
 ### Directories
-- `papers` - Whitepaper and math papers: a proof of Liquity's trove order invariant, and a derivation of the scalable Stability Pool staking formula
-- `packages/dev-frontend/` - Liquity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
-- `packages/fuzzer/` - A very simple, purpose-built tool based on Liquity middleware for randomly interacting with the system
+- `papers` - Whitepaper and math papers: a proof of Fluidity's trove order invariant, and a derivation of the scalable Stability Pool staking formula
+- `packages/dev-frontend/` - Fluidity Developer UI: a fully functional React app used for interfacing with the smart contracts during development
+- `packages/fuzzer/` - A very simple, purpose-built tool based on Fluidity middleware for randomly interacting with the system
 - `packages/lib-base/` - Common interfaces and classes shared by the other `lib-` packages
-- `packages/lib-ethers/` - [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Liquity state and send transactions
-- `packages/lib-react/` - Components and hooks that React-based apps can use to view Liquity contract state
-- `packages/lib-subgraph/` - [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Liquity subgraph that can read Liquity state
+- `packages/lib-ethers/` - [Ethers](https://github.com/ethers-io/ethers.js/)-based middleware that can read Fluidity state and send transactions
+- `packages/lib-react/` - Components and hooks that React-based apps can use to view Fluidity contract state
+- `packages/lib-subgraph/` - [Apollo Client](https://github.com/apollographql/apollo-client)-based middleware backed by the Fluidity subgraph that can read Fluidity state
 - `packages/providers/` - Subclassed Ethers providers used by the frontend
-- `packages/subgraph/` - [Subgraph](https://thegraph.com) for querying Liquity state as well as historical data like transaction history
+- `packages/subgraph/` - [Subgraph](https://thegraph.com) for querying Fluidity state as well as historical data like transaction history
 - `packages/contracts/` - The backend development folder, contains the Hardhat project, contracts and tests
 - `packages/contracts/contracts/` - The core back end smart contracts written in Solidity
 - `packages/contracts/test/` - JS test suite for the system. Tests run in Mocha/Chai
 - `packages/contracts/tests/` - Python test suite for the system. Tests run in Brownie
-- `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Liquity operations under various scenarios
+- `packages/contracts/gasTest/` - Non-assertive tests that return gas costs for Fluidity operations under various scenarios
 - `packages/contracts/fuzzTests/` - Echidna tests, and naive "random operation" tests 
 - `packages/contracts/migrations/` - contains Hardhat script for deploying the smart contracts to the blockchain
 - `packages/contracts/utils/` - external Hardhat and node scripts - deployment helpers, gas calculators, etc
 
-Backend development is done in the Hardhat framework, and allows Liquity to be deployed on the Hardhat EVM network for fast compilation and test execution.
+Backend development is done in the Hardhat framework, and allows Fluidity to be deployed on the Hardhat EVM network for fast compilation and test execution.
 
 ### Branches
 
@@ -281,11 +281,11 @@ As of 18/01/2021, the current working branch is `main`. `master` is out of date.
 
 ## LQTY Token Architecture
 
-The Liquity system incorporates a secondary token, LQTY. This token entitles the holder to a share of the system revenue generated by redemption fees and  issuance fees.
+The Fluidity system incorporates a secondary token, LQTY. This token entitles the holder to a share of the system revenue generated by redemption fees and  issuance fees.
 
 To earn a share of system fees, the LQTY holder must stake their LQTY in a staking contract.
 
-Liquity also issues LQTY to Stability Providers, in a continous time-based manner.
+Fluidity also issues LQTY to Stability Providers, in a continous time-based manner.
 
 The LQTY contracts consist of:
 
@@ -293,7 +293,7 @@ The LQTY contracts consist of:
 
 `CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability Providers as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the `CommunityIssuance` automatically receives 32 million LQTY - the “community issuance” supply. The contract steadily issues these LQTY tokens to the Stability Providers over time.
 
-`LQTYToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
+`LQTYToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Fluidity admin address, a regular Ethereum address controlled by the project company Fluidity AG. **Note that the Fluidity admin address has no extra privileges and does not retain any control over the Fluidity protocol once deployed.**
 
 ### LQTY Lockup contracts and token vesting
 
@@ -303,50 +303,50 @@ In the first year after launch:
 
 - All team members and partners are unable to access their locked up LQTY tokens
 
-- The Liquity admin address may transfer tokens **only to verified lockup contracts with an unlock date at least one year after system deployment**
+- The Fluidity admin address may transfer tokens **only to verified lockup contracts with an unlock date at least one year after system deployment**
 
 Also, separate LQTY allocations are made at deployent to an EOA that will hold an amount of LQTY for bug bounties/hackathons and to a Uniswap LP reward contract. Aside from these allocations, the only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Providers via the `CommunityIssuance` contract.
 
 ### Lockup Implementation and admin transfer restriction
 
-A `LockupContractFactory` is used to deploy `LockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Liquity admin address is to a valid `LockupContract` that is registered in and was deployed through the `LockupContractFactory`.
+A `LockupContractFactory` is used to deploy `LockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Fluidity admin address is to a valid `LockupContract` that is registered in and was deployed through the `LockupContractFactory`.
 
 ### Launch sequence and vesting process
 
 #### Deploy LQTY Contracts
-1. Liquity admin deploys `LockupContractFactory`
-2. Liquity admin deploys `CommunityIssuance`
-3. Liquity admin deploys `LQTYStaking` 
-4. Liquity admin creates a Pool in Uniswap for LUSD/ETH and deploys `Unipool` (LP rewards contract), which knows the address of the Pool
-5. Liquity admin deploys `LQTYToken`, which upon deployment:
+1. Fluidity admin deploys `LockupContractFactory`
+2. Fluidity admin deploys `CommunityIssuance`
+3. Fluidity admin deploys `LQTYStaking` 
+4. Fluidity admin creates a Pool in Uniswap for LUSD/ETH and deploys `Unipool` (LP rewards contract), which knows the address of the Pool
+5. Fluidity admin deploys `LQTYToken`, which upon deployment:
 - Stores the `CommunityIssuance` and `LockupContractFactory` addresses
-- Mints LQTY tokens to `CommunityIssuance`, the Liquity admin address, the `Unipool` LP rewards address, and the bug bounty address
-6. Liquity admin sets `LQTYToken` address in `LockupContractFactory`, `CommunityIssuance`, `LQTYStaking`, and `Unipool`
+- Mints LQTY tokens to `CommunityIssuance`, the Fluidity admin address, the `Unipool` LP rewards address, and the bug bounty address
+6. Fluidity admin sets `LQTYToken` address in `LockupContractFactory`, `CommunityIssuance`, `LQTYStaking`, and `Unipool`
 
 #### Deploy and fund Lockup Contracts
-7. Liquity admin tells `LockupContractFactory` to deploy a `LockupContract` for each beneficiary, with an `unlockTime` set to exactly one year after system deployment
-8. Liquity admin transfers LQTY to each `LockupContract`, according to their entitlement
+7. Fluidity admin tells `LockupContractFactory` to deploy a `LockupContract` for each beneficiary, with an `unlockTime` set to exactly one year after system deployment
+8. Fluidity admin transfers LQTY to each `LockupContract`, according to their entitlement
 
-#### Deploy Liquity Core
-9. Liquity admin deploys the Liquity core system
-10. Liquity admin connects Liquity core system internally (with setters)
-11. Liquity admin connects `LQTYStaking` to Liquity core contracts and `LQTYToken`
-13. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `LQTYToken`
+#### Deploy Fluidity Core
+9. Fluidity admin deploys the Fluidity core system
+10. Fluidity admin connects Fluidity core system internally (with setters)
+11. Fluidity admin connects `LQTYStaking` to Fluidity core contracts and `LQTYToken`
+13. Fluidity admin connects `CommunityIssuance` to Fluidity core contracts and `LQTYToken`
 
 #### During one year lockup period
-- Liquity admin periodically transfers newly vested tokens to team & partners’ `LockupContracts`, as per their vesting schedules
-- Liquity admin may only transfer LQTY to `LockupContracts`
+- Fluidity admin periodically transfers newly vested tokens to team & partners’ `LockupContracts`, as per their vesting schedules
+- Fluidity admin may only transfer LQTY to `LockupContracts`
 - Anyone may deploy new `LockupContracts` via the Factory, setting any `unlockTime` that is >= 1 year from system deployment
 
 #### Upon end of one year lockup period
 - All beneficiaries may withdraw their entire entitlements
-- Liquity admin address restriction on LQTY transfers is automatically lifted, and Liquity admin may now transfer LQTY to any address
+- Fluidity admin address restriction on LQTY transfers is automatically lifted, and Fluidity admin may now transfer LQTY to any address
 - Anyone may deploy new `LockupContracts` via the Factory, setting any `unlockTime` in the future
 
 #### Post-lockup period
-- Liquity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
+- Fluidity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
 
-_NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `LQTYToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
+_NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Fluidity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `LQTYToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Fluidity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
 
 _The current code does not utilize a multi-sig. It implements the launch architecture outlined above._
 
@@ -354,9 +354,9 @@ _Additionally, a LP staking contract will receive the initial LP staking reward 
 
 ## Core System Architecture
 
-The core Liquity system consists of several smart contracts, which are deployable to the Ethereum blockchain.
+The core Fluidity system consists of several smart contracts, which are deployable to the Ethereum blockchain.
 
-All application logic and data is contained in these contracts - there is no need for a separate database or back end logic running on a web server. In effect, the Ethereum network is itself the Liquity back end. As such, all balances and contract data are public.
+All application logic and data is contained in these contracts - there is no need for a separate database or back end logic running on a web server. In effect, the Ethereum network is itself the Fluidity back end. As such, all balances and contract data are public.
 
 The system has no admin key or human governance. Once deployed, it is fully automated, decentralized and no user holds any special privileges in or control over the system.
 
@@ -398,7 +398,7 @@ Along with `StabilityPool.sol`, these contracts hold Ether and/or tokens for the
 
 ### PriceFeed and Oracle
 
-Liquity functions that require the most current ETH:USD price data fetch the price dynamically, as needed, via the core `PriceFeed.sol` contract using the Chainlink ETH:USD reference contract as its primary and Tellor's ETH:USD price feed as its secondary (fallback) data source. PriceFeed is stateful, i.e. it records the last good price that may come from either of the two sources based on the contract's current state.
+Fluidity functions that require the most current ETH:USD price data fetch the price dynamically, as needed, via the core `PriceFeed.sol` contract using the Chainlink ETH:USD reference contract as its primary and Tellor's ETH:USD price feed as its secondary (fallback) data source. PriceFeed is stateful, i.e. it records the last good price that may come from either of the two sources based on the contract's current state.
 
 The fallback logic distinguishes 3 different failure modes for Chainlink and 2 failure modes for Tellor:
 
@@ -408,7 +408,7 @@ The fallback logic distinguishes 3 different failure modes for Chainlink and 2 f
 
 There is also a return condition `bothOraclesLiveAndUnbrokenAndSimilarPrice` which is a function returning true if both oracles are live and not broken, and the percentual difference between the two reported prices is below 5%.
 
-The current `PriceFeed.sol` contract has an external `fetchPrice()` function that is called by core Liquity functions which require a current ETH:USD price.  `fetchPrice()` calls each oracle's proxy, asserts on the responses, and converts returned prices to 18 digits.
+The current `PriceFeed.sol` contract has an external `fetchPrice()` function that is called by core Fluidity functions which require a current ETH:USD price.  `fetchPrice()` calls each oracle's proxy, asserts on the responses, and converts returned prices to 18 digits.
 
 ### PriceFeed Logic
 
@@ -433,27 +433,27 @@ The PriceFeed logic consists of automatic on-chain decision-making for obtaining
 
 The PriceFeed logic is complex, and although we would prefer simplicity, it does allow the system a chance of switching to an accurate price source in case of a Chainlink failure or timeout, and also the possibility of returning to an honest Chainlink price after it has failed and recovered.
 
-We believe the benefit of the fallback logic is worth the complexity, given that our system is entirely immutable - if we had no fallback logic and Chainlink were to be hacked or permanently fail, Liquity would become permanently unusable anyway.
+We believe the benefit of the fallback logic is worth the complexity, given that our system is entirely immutable - if we had no fallback logic and Chainlink were to be hacked or permanently fail, Fluidity would become permanently unusable anyway.
 
 
 
-**Chainlink Decimals**: the `PriceFeed` checks for and uses the latest `decimals` value reported by the Chainlink aggregator in order to calculate the Chainlink price at 18-digit precision, as needed by Liquity.  `PriceFeed` does not assume a value for decimals and can handle the case where Chainlink change their decimal value. 
+**Chainlink Decimals**: the `PriceFeed` checks for and uses the latest `decimals` value reported by the Chainlink aggregator in order to calculate the Chainlink price at 18-digit precision, as needed by Fluidity.  `PriceFeed` does not assume a value for decimals and can handle the case where Chainlink change their decimal value. 
 
-However, the check `chainlinkIsBroken` uses both the current response from the latest round and the response previous round. Since `decimals` is not attached to round data, Liquity has no way of knowing whether decimals has changed between the current round and the previous round, so we assume it is the same. Liquity assumes the current return value of decimals() applies to both current round `i` and previous round `i-1`. 
+However, the check `chainlinkIsBroken` uses both the current response from the latest round and the response previous round. Since `decimals` is not attached to round data, Fluidity has no way of knowing whether decimals has changed between the current round and the previous round, so we assume it is the same. Fluidity assumes the current return value of decimals() applies to both current round `i` and previous round `i-1`. 
 
-This means that a decimal change that coincides with a Liquity price fetch could cause Liquity to assert that the Chainlink price has deviated too much, and fall back to Tellor. There is nothing we can do about this. We hope/expect Chainlink to never change their `decimals()` return value (currently 8), and if a hack/technical error causes Chainlink's decimals to change, Liquity may fall back to Tellor.
+This means that a decimal change that coincides with a Fluidity price fetch could cause Fluidity to assert that the Chainlink price has deviated too much, and fall back to Tellor. There is nothing we can do about this. We hope/expect Chainlink to never change their `decimals()` return value (currently 8), and if a hack/technical error causes Chainlink's decimals to change, Fluidity may fall back to Tellor.
 
 To summarize the Chainlink decimals issue: 
-- Liquity can handle the case where Chainlink decimals changes across _two consecutive rounds `i` and `i-1` which are not used in the same Liquity price fetch_
-- If Liquity fetches the price at round `i`, it will not know if Chainlink decimals changed across round `i-1` to round `i`, and the consequent price scaling distortion may cause Liquity to fall back to Tellor
-- Liquity will always calculate the correct current price at 18-digit precision assuming the current return value of `decimals()` is correct (i.e. is the value used by the nodes).
+- Fluidity can handle the case where Chainlink decimals changes across _two consecutive rounds `i` and `i-1` which are not used in the same Fluidity price fetch_
+- If Fluidity fetches the price at round `i`, it will not know if Chainlink decimals changed across round `i-1` to round `i`, and the consequent price scaling distortion may cause Fluidity to fall back to Tellor
+- Fluidity will always calculate the correct current price at 18-digit precision assuming the current return value of `decimals()` is correct (i.e. is the value used by the nodes).
 
-**Tellor Decimals**: Tellor uses 6 decimal precision for their ETHUSD price as determined by a social consensus of Tellor miners/data providers, and shown on Tellor's price feed page. Their decimals value is not offered in their on-chain contracts.  We rely on the continued social consensus around 6 decimals for their ETHUSD price feed. Tellor have informed us that if there was demand for an ETHUSD price at different precision, they would simply create a new `requestId`, and make no attempt to alter the social consensus around the precision of the current ETHUSD `requestId` (1) used by Liquity.
+**Tellor Decimals**: Tellor uses 6 decimal precision for their ETHUSD price as determined by a social consensus of Tellor miners/data providers, and shown on Tellor's price feed page. Their decimals value is not offered in their on-chain contracts.  We rely on the continued social consensus around 6 decimals for their ETHUSD price feed. Tellor have informed us that if there was demand for an ETHUSD price at different precision, they would simply create a new `requestId`, and make no attempt to alter the social consensus around the precision of the current ETHUSD `requestId` (1) used by Fluidity.
 
 
 ### Keeping a sorted list of Troves ordered by ICR
 
-Liquity relies on a particular data structure: a sorted doubly-linked list of Troves that remains ordered by individual collateralization ratio (ICR), i.e. the amount of collateral (in USD) divided by the amount of debt (in LUSD).
+Fluidity relies on a particular data structure: a sorted doubly-linked list of Troves that remains ordered by individual collateralization ratio (ICR), i.e. the amount of collateral (in USD) divided by the amount of debt (in LUSD).
 
 This ordered list is critical for gas-efficient redemption sequences and for the `liquidateTroves` sequence, both of which target Troves in ascending order of ICR.
 
@@ -468,7 +468,7 @@ ICRs are computed dynamically at runtime, and not stored on the node. This is be
 
 The list relies on the fact that a collateral and debt redistribution due to a liquidation preserves the ordering of all active Troves (though it does decrease the ICR of each active Trove above the MCR).
 
-The fact that ordering is maintained as redistributions occur, is not immediately obvious: please see the [mathematical proof](https://github.com/liquity/dev/blob/main/papers) which shows that this holds in Liquity.
+The fact that ordering is maintained as redistributions occur, is not immediately obvious: please see the [mathematical proof](https://github.com/goldmandao/fluidity/blob/main/papers) which shows that this holds in Fluidity.
 
 A node inserted based on current ICR will maintain the correct position, relative to its peers, as liquidation gains accumulate, as long as its raw collateral and debt have not changed.
 
@@ -476,7 +476,7 @@ Nodes also remain sorted as the ETH:USD price varies, since price fluctuations c
 
 Thus, nodes need only be re-inserted to the sorted list upon a Trove operation - when the owner adds or removes collateral or debt to their position.
 
-### Flow of Ether in Liquity
+### Flow of Ether in Fluidity
 
 ![Flow of Ether](images/ETH_flows.svg)
 
@@ -531,7 +531,7 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | stake       | staker's accumulated ETH gain from system fees | LQTYStaking ->msg.sender |
 | unstake     | staker's accumulated ETH gain from system fees | LQTYStaking ->msg.sender |
 
-### Flow of LUSD tokens in Liquity
+### Flow of LUSD tokens in Fluidity
 
 ![Flow of LUSD](images/LUSD_flows.svg)
 
@@ -541,7 +541,7 @@ Redemptions burn LUSD from the redeemer’s balance, and reduce the debt of the 
 
 Liquidations that involve a Stability Pool offset burn tokens from the Stability Pool’s balance, and reduce the LUSD debt of the liquidated Trove.
 
-The only time LUSD is transferred to/from a Liquity contract, is when a user deposits LUSD to, or withdraws LUSD from, the StabilityPool.
+The only time LUSD is transferred to/from a Fluidity contract, is when a user deposits LUSD to, or withdraws LUSD from, the StabilityPool.
 
 **Borrower Operations**
 
@@ -580,7 +580,7 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | stake    | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
 | unstake  | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
 
-### Flow of LQTY Tokens in Liquity
+### Flow of LQTY Tokens in Fluidity
 
 ![Flow of LQTY](images/LQTY_flows.svg)
 
@@ -617,7 +617,7 @@ LQTY token holders may stake their LQTY, to earn a share of the system fee reven
 
 ## Contract Ownership and Function Permissions
 
-All the core smart contracts inherit from the OpenZeppelin `Ownable.sol` contract template. As such all contracts have a single owning address, which is the deploying address. The contract's ownership is renounced either upon deployment, or immediately after its address setter has been called, connecting it to the rest of the core Liquity system. 
+All the core smart contracts inherit from the OpenZeppelin `Ownable.sol` contract template. As such all contracts have a single owning address, which is the deploying address. The contract's ownership is renounced either upon deployment, or immediately after its address setter has been called, connecting it to the rest of the core Fluidity system. 
 
 Several public and external functions have modifiers such as `requireCallerIsTroveManager`, `requireCallerIsActivePool`, etc - ensuring they can only be called by the respective permitted contract.
 
@@ -697,11 +697,11 @@ To check test coverage you can run:
 yarn coverage
 ```
 
-You can see the coverage status at mainnet deployment [here](https://codecov.io/gh/liquity/dev/tree/8f52f2906f99414c0b1c3a84c95c74c319b7a8c6).
+You can see the coverage status at mainnet deployment [here](https://codecov.io/gh/goldmandao/fluidity/tree/8f52f2906f99414c0b1c3a84c95c74c319b7a8c6).
 
 ![Impacted file tree graph](https://codecov.io/gh/liquity/dev/pull/707/graphs/tree.svg?width=650&height=150&src=pr&token=7AJPQ3TW0O&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=liquity)
 
-There’s also a [pull request](https://github.com/liquity/dev/pull/515) to increase the coverage, but it hasn’t been merged yet because it modifies some smart contracts (mostly removing unnecessary checks).
+There’s also a [pull request](https://github.com/goldmandao/fluidity/pull/515) to increase the coverage, but it hasn’t been merged yet because it modifies some smart contracts (mostly removing unnecessary checks).
 
 
 ## System Quantities - Units and Representation
@@ -836,7 +836,7 @@ https://eips.ethereum.org/EIPS/eip-2612
 
 ## Supplying Hints to Trove operations
 
-Troves in Liquity are recorded in a sorted doubly linked list, sorted by their NICR, from high to low. NICR stands for the nominal collateral ratio that is simply the amount of collateral (in ETH) multiplied by 100e18 and divided by the amount of debt (in LUSD), without taking the ETH:USD price into account. Given that all Troves are equally affected by Ether price changes, they do not need to be sorted by their real ICR.
+Troves in Fluidity are recorded in a sorted doubly linked list, sorted by their NICR, from high to low. NICR stands for the nominal collateral ratio that is simply the amount of collateral (in ETH) multiplied by 100e18 and divided by the amount of debt (in LUSD), without taking the ETH:USD price into account. Given that all Troves are equally affected by Ether price changes, they do not need to be sorted by their real ICR.
 
 All Trove operations that change the collateralization ratio need to either insert or reinsert the Trove to the `SortedTroves` list. To reduce the computational complexity (and gas cost) of the insertion to the linked list, two ‘hints’ may be provided.
 
@@ -990,7 +990,7 @@ If not, the redemption sequence doesn’t perform the final partial redemption, 
 
 ## Gas compensation
 
-In Liquity, we want to maximize liquidation throughput, and ensure that undercollateralized Troves are liquidated promptly by “liquidators” - agents who may also hold Stability Pool deposits, and who expect to profit from liquidations.
+In Fluidity, we want to maximize liquidation throughput, and ensure that undercollateralized Troves are liquidated promptly by “liquidators” - agents who may also hold Stability Pool deposits, and who expect to profit from liquidations.
 
 However, gas costs in Ethereum are substantial. If the gas costs of our public liquidation functions are too high, this may discourage liquidators from calling them, and leave the system holding too many undercollateralized Troves for too long.
 
@@ -1132,7 +1132,7 @@ A mathematical manipulation allows us to factor out the initial deposit, and acc
 
 The formula for a depositor’s accumulated ETH gain is derived here:
 
-[Scalable reward distribution for compounding, decreasing stake](https://github.com/liquity/dev/blob/main/papers/Scalable_Reward_Distribution_with_Compounding_Stakes.pdf)
+[Scalable reward distribution for compounding, decreasing stake](https://github.com/goldmandao/fluidity/blob/main/papers/Scalable_Reward_Distribution_with_Compounding_Stakes.pdf)
 
 Each liquidation updates `P` and `S`. After a series of liquidations, a compounded deposit and corresponding ETH gain can be calculated using the initial deposit, the depositor’s snapshots, and the current values of `P` and `S`.
 
@@ -1181,7 +1181,7 @@ In a LQTY reward event, the LQTY to be issued is calculated based on time passed
 
 The LQTY produced in this issuance event is shared between depositors, in proportion to their deposit sizes.
 
-To efficiently and accurately track LQTY gains for depositors and front ends as deposits decrease over time from liquidations, we re-use the [algorithm for rewards from a compounding, decreasing stake](https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf). It is the same algorithm used for the ETH gain from liquidations.
+To efficiently and accurately track LQTY gains for depositors and front ends as deposits decrease over time from liquidations, we re-use the [algorithm for rewards from a compounding, decreasing stake](https://github.com/goldmandao/fluidity/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf). It is the same algorithm used for the ETH gain from liquidations.
 
 The same product `P` is used, and a sum `G` is used to track LQTY rewards, and each deposit gets a new snapshot of `P` and `G` when it is updated.
 
@@ -1208,7 +1208,7 @@ When a deposit is changed (top-up, withdrawal):
 When a liquidation occurs:
 - A LQTY reward event occurs, and `G` is updated
 
-## LQTY issuance to liquity providers
+## LQTY issuance to fluidity providers
 
 On deployment a new Uniswap pool will be created for the pair LUSD/ETH and a Staking rewards contract will be deployed. The contract is based on [Unipool by Synthetix](https://github.com/Synthetixio/Unipool/blob/master/contracts/Unipool.sol). More information about their liquidity rewards program can be found in the [original SIP 31](https://sips.synthetix.io/sips/sip-31) and in [their blog](https://blog.synthetix.io/new-uniswap-seth-lp-reward-system/).
 
@@ -1223,13 +1223,13 @@ Our implementation is simpler because funds for rewards will only be added once,
 
 The amount of LQTY tokens that will be minted to rewards contract is 1.33M, and the duration of the program will be 30 days. If at some point the total amount of staked tokens is zero, the clock will be “stopped”, so the period will be extended by the time during which the staking pool is empty, in order to avoid getting LQTY tokens locked. That also means that the start time for the program will be the event that occurs first: either LQTY token contract is deployed, and therefore LQTY tokens are minted to Unipool contract, or first liquidity provider stakes UNIv2 tokens into it.
 
-## Liquity System Fees
+## Fluidity System Fees
 
-Liquity generates fee revenue from certain operations. Fees are captured by the LQTY token.
+Fluidity generates fee revenue from certain operations. Fees are captured by the LQTY token.
 
 A LQTY holder may stake their LQTY, and earn a share of all system fees, proportional to their share of the total LQTY staked.
 
-Liquity generates revenue in two ways: redemptions, and issuance of new LUSD tokens.
+Fluidity generates revenue in two ways: redemptions, and issuance of new LUSD tokens.
 
 Redemptions fees are paid in ETH. Issuance fees (when a user opens a Trove, or issues more LUSD from their existing Trove) are paid in LUSD.
 
@@ -1293,7 +1293,7 @@ When a liquidation occurs and the Stability Pool is empty or smaller than the li
 
 For two Troves A and B with collateral `A.coll > B.coll`, Trove A should earn a bigger share of the liquidated collateral and debt.
 
-In Liquity it is important that all active Troves remain ordered by their ICR. We have proven that redistribution of the liquidated debt and collateral proportional to active Troves’ collateral, preserves the ordering of active Troves by ICR, as liquidations occur over time.  Please see the [proofs section](https://github.com/liquity/dev/tree/main/papers).
+In Fluidity it is important that all active Troves remain ordered by their ICR. We have proven that redistribution of the liquidated debt and collateral proportional to active Troves’ collateral, preserves the ordering of active Troves by ICR, as liquidations occur over time.  Please see the [proofs section](https://github.com/goldmandao/fluidity/tree/main/papers).
 
 However, when it comes to implementation, Ethereum gas costs make it too expensive to loop over all Troves and write new data to storage for each one. When a Trove receives redistribution rewards, the system does not update the Trove's collateral and debt properties - instead, the Trove’s rewards remain "pending" until the borrower's next operation.
 
@@ -1307,7 +1307,7 @@ Consider the case where new Trove is created after all active Troves have receiv
 
 The fresh trove would earns rewards based on its **entire** collateral, whereas old Troves would earn rewards based only on **some portion** of their collateral - since a part of their collateral is pending, and not included in the Trove’s `coll` property.
 
-This can break the ordering of Troves by ICR - see the [proofs section](https://github.com/liquity/dev/tree/main/papers).
+This can break the ordering of Troves by ICR - see the [proofs section](https://github.com/goldmandao/fluidity/tree/main/papers).
 
 ### Corrected Stake Solution
 
@@ -1325,18 +1325,18 @@ It then earns redistribution rewards based on this corrected stake. A newly open
 
 Whenever a borrower adjusts their Trove’s collateral, their pending rewards are applied, and a fresh corrected stake is computed.
 
-To convince yourself this corrected stake preserves ordering of active Troves by ICR, please see the [proofs section](https://github.com/liquity/dev/blob/main/papers).
+To convince yourself this corrected stake preserves ordering of active Troves by ICR, please see the [proofs section](https://github.com/goldmandao/fluidity/blob/main/papers).
 
 ## Math Proofs
 
-The Liquity implementation relies on some important system properties and mathematical derivations.
+The Fluidity implementation relies on some important system properties and mathematical derivations.
 
 In particular, we have:
 
 - Proofs that Trove ordering is maintained throughout a series of liquidations and new Trove openings
 - A derivation of a formula and implementation for a highly scalable (O(1) complexity) reward distribution in the Stability Pool, involving compounding and decreasing stakes.
 
-PDFs of these can be found in https://github.com/liquity/dev/blob/main/papers
+PDFs of these can be found in https://github.com/goldmandao/fluidity/blob/main/papers
 
 ## Definitions
 
@@ -1406,7 +1406,7 @@ _**Gas compensation:**_ A refund, in LUSD and ETH, automatically paid to the cal
 
 ## Development
 
-The Liquity monorepo is based on Yarn's [workspaces](https://classic.yarnpkg.com/en/docs/workspaces/) feature. You might be able to install some of the packages individually with npm, but to make all interdependent packages see each other, you'll need to use Yarn.
+The Fluidity monorepo is based on Yarn's [workspaces](https://classic.yarnpkg.com/en/docs/workspaces/) feature. You might be able to install some of the packages individually with npm, but to make all interdependent packages see each other, you'll need to use Yarn.
 
 In addition, some package scripts require Docker to be installed (Docker Desktop on Windows and Mac, Docker Engine on Linux).
 
@@ -1421,15 +1421,15 @@ You'll need to install the following:
 
 #### Making node-gyp work
 
-Liquity indirectly depends on some packages with native addons. To make sure these can be built, you'll have to take some additional steps. Refer to the subsection of [Installation](https://github.com/nodejs/node-gyp#installation) in node-gyp's README that corresponds to your operating system.
+Fluidity indirectly depends on some packages with native addons. To make sure these can be built, you'll have to take some additional steps. Refer to the subsection of [Installation](https://github.com/nodejs/node-gyp#installation) in node-gyp's README that corresponds to your operating system.
 
-Note: you can skip the manual installation of node-gyp itself (`npm install -g node-gyp`), but you will need to install its prerequisites to make sure Liquity can be installed.
+Note: you can skip the manual installation of node-gyp itself (`npm install -g node-gyp`), but you will need to install its prerequisites to make sure Fluidity can be installed.
 
 ### Clone & Install
 
 ```
-git clone https://github.com/liquity/dev.git liquity
-cd liquity
+git clone https://github.com/goldmandao/fluidity.git fluidity
+cd fluidity
 yarn
 ```
 
@@ -1523,7 +1523,7 @@ This will automatically start the local blockchain, so you need to make sure tha
 yarn start-demo
 ```
 
-This spawns a modified version of dev-frontend that ignores MetaMask, and directly uses the local blockchain node. Every time the page is reloaded (at http://localhost:3000), a new random account is created with a balance of 100 ETH. Additionally, transactions are automatically signed, so you no longer need to accept wallet confirmations. This lets you play around with Liquity more freely.
+This spawns a modified version of dev-frontend that ignores MetaMask, and directly uses the local blockchain node. Every time the page is reloaded (at http://localhost:3000), a new random account is created with a balance of 100 ETH. Additionally, transactions are automatically signed, so you no longer need to accept wallet confirmations. This lets you play around with Fluidity more freely.
 
 When you no longer need the demo mode, press Ctrl+C in the terminal then run:
 
@@ -1562,7 +1562,7 @@ Your custom built frontend can be configured by putting a file named `config.jso
 
 ## Running a frontend with Docker
 
-The quickest way to get a frontend up and running is to use the [prebuilt image](https://hub.docker.com/r/liquity/dev-frontend) available on Docker Hub.
+The quickest way to get a frontend up and running is to use the [prebuilt image](https://hub.docker.com/r/fluidity/dev-frontend) available on Docker Hub.
 
 ### Prerequisites
 
@@ -1571,8 +1571,8 @@ You will need to have [Docker](https://docs.docker.com/get-docker/) installed.
 ### Running with `docker`
 
 ```
-docker pull liquity/dev-frontend
-docker run --name liquity -d --rm -p 3000:80 liquity/dev-frontend
+docker pull fluidity/dev-frontend
+docker run --name fluidity -d --rm -p 3000:80 fluidity/dev-frontend
 ```
 
 This will start serving your frontend using HTTP on port 3000. If everything went well, you should be able to open http://localhost:3000/ in your browser. To use a different port, just replace 3000 with your desired port number.
@@ -1580,7 +1580,7 @@ This will start serving your frontend using HTTP on port 3000. If everything wen
 To stop the service:
 
 ```
-docker kill liquity
+docker kill fluidity
 ```
 
 ### Configuring a public frontend
@@ -1602,10 +1602,10 @@ The kickback rate is the portion of LQTY you pass on to users of your frontend. 
 It is highly recommended that you do this while running a frontend locally, before you start hosting it publicly:
 
 ```
-docker run --name liquity -d --rm -p 3000:80 \
+docker run --name fluidity -d --rm -p 3000:80 \
   -e FRONTEND_TAG=0x2781fD154358b009abf6280db4Ec066FCC6cb435 \
   -e INFURA_API_KEY=158b6511a5c74d1ac028a8a2afe8f626 \
-  liquity/dev-frontend
+  fluidity/dev-frontend
 ```
 
 Remember to replace the environment variables in the above example. After executing this command, open http://localhost:3000/ in a browser with MetaMask installed, then switch MetaMask to the account whose address you specified as FRONTEND_TAG to begin setting the kickback rate.
@@ -1628,16 +1628,16 @@ A frontend doesn't require any database or server-side computation, so the easie
 To obtain the files you need to upload, you need to extract them from a frontend Docker container. If you were following the guide for setting a kickback rate and haven't stopped the container yet, then you already have one! Otherwise, you can create it with a command like this (remember to use your own `FRONTEND_TAG` and `INFURA_API_KEY`):
 
 ```
-docker run --name liquity -d --rm \
+docker run --name fluidity -d --rm \
   -e FRONTEND_TAG=0x2781fD154358b009abf6280db4Ec066FCC6cb435 \
   -e INFURA_API_KEY=158b6511a5c74d1ac028a8a2afe8f626 \
-  liquity/dev-frontend
+  fluidity/dev-frontend
 ```
 
 While the container is running, use `docker cp` to extract the frontend's files to a folder of your choosing. For example to extract them to a new folder named "devui" inside the current folder, run:
 
 ```
-docker cp liquity:/usr/share/nginx/html ./devui
+docker cp fluidity:/usr/share/nginx/html ./devui
 ```
 
 Upload the contents of this folder to your chosen hosting service (or serve them using your own infrastructure), and you're set!
@@ -1648,7 +1648,7 @@ If you have command line access to a server with Docker installed, hosting a fro
 
 The frontend Docker container simply serves files using plain HTTP, which is susceptible to man-in-the-middle attacks. Therefore it is highly recommended to wrap it in HTTPS using a reverse proxy. You can find an example docker-compose config [here](packages/dev-frontend/docker-compose-example/docker-compose.yml) that secures the frontend using [SWAG (Secure Web Application Gateway)](https://github.com/linuxserver/docker-swag) and uses [watchtower](https://github.com/containrrr/watchtower) for automatically updating the frontend image to the latest version on Docker Hub.
 
-Remember to customize both [docker-compose.yml](packages/dev-frontend/docker-compose-example/docker-compose.yml) and the [site config](packages/dev-frontend/docker-compose-example/config/nginx/site-confs/liquity.example.com).
+Remember to customize both [docker-compose.yml](packages/dev-frontend/docker-compose-example/docker-compose.yml) and the [site config](packages/dev-frontend/docker-compose-example/config/nginx/site-confs/fluidity.example.com).
 
 ## Known Issues
 
@@ -1656,7 +1656,7 @@ Remember to customize both [docker-compose.yml](packages/dev-frontend/docker-com
 
 When liquidating a trove with `ICR > 110%`, a collateral surplus remains claimable by the borrower. This collateral surplus should be excluded from subsequent TCR calculations, but within the liquidation sequence in `batchLiquidateTroves` in Recovery Mode, it is not. This results in a slight distortion to the TCR value used at each step of the liquidation sequence going forward. This distortion only persists for the duration the `batchLiquidateTroves` function call, and the TCR is again calculated correctly after the liquidation sequence ends. In most cases there is no impact at all, and when there is, the effect tends to be minor. The issue is not present at all in Normal Mode. 
 
-There is a theoretical and extremely rare case where it incorrectly causes a loss for Stability Depositors instead of a gain. It relies on the stars aligning: the system must be in Recovery Mode, the TCR must be very close to the 150% boundary, a large trove must be liquidated, and the ETH price must drop by >10% at exactly the right moment. No profitable exploit is possible. For more details, please see [this security advisory](https://github.com/liquity/dev/security/advisories/GHSA-xh2p-7p87-fhgh).
+There is a theoretical and extremely rare case where it incorrectly causes a loss for Stability Depositors instead of a gain. It relies on the stars aligning: the system must be in Recovery Mode, the TCR must be very close to the 150% boundary, a large trove must be liquidated, and the ETH price must drop by >10% at exactly the right moment. No profitable exploit is possible. For more details, please see [this security advisory](https://github.com/goldmandao/fluidity/security/advisories/GHSA-xh2p-7p87-fhgh).
 
 ### SortedTroves edge cases - top and bottom of the sorted list
 
@@ -1665,18 +1665,18 @@ When the trove is at one end of the `SortedTroves` list and adjusted such that i
 
 ## Disclaimer
 
-The content of this readme document (“Readme”) is of purely informational nature. In particular, none of the content of the Readme shall be understood as advice provided by Liquity AG, any Liquity Project Team member or other contributor to the Readme, nor does any of these persons warrant the actuality and accuracy of the Readme.
+The content of this readme document (“Readme”) is of purely informational nature. In particular, none of the content of the Readme shall be understood as advice provided by Fluidity AG, any Fluidity Project Team member or other contributor to the Readme, nor does any of these persons warrant the actuality and accuracy of the Readme.
 
-Please read this Disclaimer carefully before accessing, interacting with, or using the Liquity Protocol software, consisting of the Liquity Protocol technology stack (in particular its smart contracts) as well as any other Liquity technology such as e.g., the launch kit for frontend operators (together the “Liquity Protocol Software”). 
+Please read this Disclaimer carefully before accessing, interacting with, or using the Fluidity Protocol software, consisting of the Fluidity Protocol technology stack (in particular its smart contracts) as well as any other Fluidity technology such as e.g., the launch kit for frontend operators (together the “Fluidity Protocol Software”). 
 
-While Liquity AG developed the Liquity Protocol Software, the Liquity Protocol Software runs in a fully decentralized and autonomous manner on the Ethereum network. Liquity AG is not involved in the operation of the Liquity Protocol Software nor has it any control over transactions made using its smart contracts. Further, Liquity AG does neither enter into any relationship with users of the Liquity Protocol Software and/or frontend operators, nor does it operate an own frontend. Any and all functionalities of the Liquity Protocol Software, including the LUSD and the LQTY, are of purely technical nature and there is no claim towards any private individual or legal entity in this regard.
+While Fluidity AG developed the Fluidity Protocol Software, the Fluidity Protocol Software runs in a fully decentralized and autonomous manner on the Ethereum network. Fluidity AG is not involved in the operation of the Fluidity Protocol Software nor has it any control over transactions made using its smart contracts. Further, Fluidity AG does neither enter into any relationship with users of the Fluidity Protocol Software and/or frontend operators, nor does it operate an own frontend. Any and all functionalities of the Fluidity Protocol Software, including the LUSD and the LQTY, are of purely technical nature and there is no claim towards any private individual or legal entity in this regard.
 
-LIQUITY AG IS NOT LIABLE TO ANY USER FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE, IN CONNECTION WITH THE USE OR INABILITY TO USE THE LIQUITY PROTOCOL SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF ETH, LUSD OR LQTY, NON-ALLOCATION OF TECHNICAL FEES TO LQTY HOLDERS, LOSS OF DATA, BUSINESS INTERRUPTION, DATA BEING RENDERED INACCURATE OR OTHER LOSSES SUSTAINED BY A USER OR THIRD PARTIES AS A RESULT OF THE LIQUITY PROTOCOL SOFTWARE AND/OR ANY ACTIVITY OF A FRONTEND OPERATOR OR A FAILURE OF THE LIQUITY PROTOCOL SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE).
+FLUIDITY AG IS NOT LIABLE TO ANY USER FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE, IN CONNECTION WITH THE USE OR INABILITY TO USE THE FLUIDITY PROTOCOL SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF ETH, LUSD OR LQTY, NON-ALLOCATION OF TECHNICAL FEES TO LQTY HOLDERS, LOSS OF DATA, BUSINESS INTERRUPTION, DATA BEING RENDERED INACCURATE OR OTHER LOSSES SUSTAINED BY A USER OR THIRD PARTIES AS A RESULT OF THE FLUIDITY PROTOCOL SOFTWARE AND/OR ANY ACTIVITY OF A FRONTEND OPERATOR OR A FAILURE OF THE FLUIDITY PROTOCOL SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE).
 
-The Liquity Protocol Software has been developed and published under the GNU GPL v3 open-source license, which forms an integral part of this disclaimer. 
+The Fluidity Protocol Software has been developed and published under the GNU GPL v3 open-source license, which forms an integral part of this disclaimer. 
 
-THE LIQUITY PROTOCOL SOFTWARE HAS BEEN PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. THE LIQUITY PROTOCOL SOFTWARE IS HIGHLY EXPERIMENTAL AND ANY REAL ETH AND/OR LUSD AND/OR LQTY SENT, STAKED OR DEPOSITED TO THE LIQUITY PROTOCOL SOFTWARE ARE AT RISK OF BEING LOST INDEFINITELY, WITHOUT ANY KIND OF CONSIDERATION.
+THE FLUIDITY PROTOCOL SOFTWARE HAS BEEN PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. THE FLUIDITY PROTOCOL SOFTWARE IS HIGHLY EXPERIMENTAL AND ANY REAL ETH AND/OR LUSD AND/OR LQTY SENT, STAKED OR DEPOSITED TO THE FLUIDITY PROTOCOL SOFTWARE ARE AT RISK OF BEING LOST INDEFINITELY, WITHOUT ANY KIND OF CONSIDERATION.
 
 There are no official frontend operators, and the use of any frontend is made by users at their own risk. To assess the trustworthiness of a frontend operator lies in the sole responsibility of the users and must be made carefully.
 
-User is solely responsible for complying with applicable law when interacting (in particular, when using ETH, LUSD, LQTY or other Token) with the Liquity Protocol Software whatsoever. 
+User is solely responsible for complying with applicable law when interacting (in particular, when using ETH, LUSD, LQTY or other Token) with the Fluidity Protocol Software whatsoever. 
