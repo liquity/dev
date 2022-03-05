@@ -1,5 +1,5 @@
 import React from "react";
-import { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@fluidity/lib-base";
 import { LP } from "../../../strings";
 import { ErrorDescription } from "../../ErrorDescription";
 import { useValidationState } from "../context/useValidationState";

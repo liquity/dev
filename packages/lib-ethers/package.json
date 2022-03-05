@@ -1,9 +1,9 @@
 {
-  "name": "@liquity/lib-ethers",
+  "name": "@fluidity/lib-ethers",
   "version": "0.0.0-semantic-release",
-  "description": "Liquity SDK Ethers-based implementation",
+  "description": "Fluidity SDK Ethers-based implementation",
   "keywords": [
-    "Liquity",
+    "Fluidity",
     "protocol",
     "DeFi",
     "Ethereum"
@@ -35,7 +35,7 @@
     "test-live:run": "cross-env USE_LIVE_VERSION=true hardhat test"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^3.0.0",
+    "fluidity/lib-base": "^3.0.0",
     "ethers": "^5.3.0"
   },
   "devDependencies": {

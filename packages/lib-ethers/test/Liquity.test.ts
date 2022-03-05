@@ -21,7 +21,7 @@ import {
   MINIMUM_BORROWING_RATE,
   LUSD_MINIMUM_DEBT,
   LUSD_MINIMUM_NET_DEBT
-} from "@liquity/lib-base";
+} from "@fluidity/lib-base";
 
 import { HintHelpers } from "../types";
 

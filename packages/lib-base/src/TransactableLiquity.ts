@@ -161,7 +161,7 @@ export interface CollateralGainTransferDetails extends StabilityPoolGainsWithdra
  * The functions return the details of the transaction (if any), or throw an implementation-specific
  * subclass of {@link TransactionFailedError} in case of transaction failure.
  *
- * Implemented by {@link @liquity/lib-ethers#EthersLiquity}.
+ * Implemented by {@link @fluidity/lib-ethers#EthersLiquity}.
  *
  * @public
  */
@@ -171,7 +171,7 @@ export interface TransactableLiquity {
    *
    * @param params - How much to deposit and borrow.
    * @param maxBorrowingRate - Maximum acceptable
-   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate}.
+   *                           {@link @fluidity/lib-base#Fees.borrowingRate | borrowing rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -198,7 +198,7 @@ export interface TransactableLiquity {
    *
    * @param params - Parameters of the adjustment.
    * @param maxBorrowingRate - Maximum acceptable
-   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate} if
+   *                           {@link @fluidity/lib-base#Fees.borrowingRate | borrowing rate} if
    *                           `params` includes `borrowLUSD`.
    *
    * @throws
@@ -206,7 +206,7 @@ export interface TransactableLiquity {
    *
    * @remarks
    * The transaction will fail if the Trove's debt would fall below
-   * {@link @liquity/lib-base#LUSD_MINIMUM_DEBT}.
+   * {@link @fluidity/lib-base#LUSD_MINIMUM_DEBT}.
    *
    * If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum
    * acceptable rate.
@@ -255,7 +255,7 @@ export interface TransactableLiquity {
    *
    * @param amount - The amount of LUSD to borrow.
    * @param maxBorrowingRate - Maximum acceptable
-   *                           {@link @liquity/lib-base#Fees.borrowingRate | borrowing rate}.
+   *                           {@link @fluidity/lib-base#Fees.borrowingRate | borrowing rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -322,8 +322,8 @@ export interface TransactableLiquity {
    * The `frontendTag` parameter is only effective when making a new deposit.
    *
    * As a side-effect, the transaction will also pay out an existing Stability Deposit's
-   * {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @fluidity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
+   * {@link @fluidity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
    */
   depositLUSDInStabilityPool(
     amount: Decimalish,
@@ -340,14 +340,14 @@ export interface TransactableLiquity {
    *
    * @remarks
    * As a side-effect, the transaction will also pay out the Stability Deposit's
-   * {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @fluidity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
+   * {@link @fluidity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
    */
   withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
 
   /**
-   * Withdraw {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward} from Stability Deposit.
+   * Withdraw {@link @fluidity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
+   * {@link @fluidity/lib-base#StabilityDeposit.lqtyReward | LQTY reward} from Stability Deposit.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -355,7 +355,7 @@ export interface TransactableLiquity {
   withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
 
   /**
-   * Transfer {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} from
+   * Transfer {@link @fluidity/lib-base#StabilityDeposit.collateralGain | collateral gain} from
    * Stability Deposit to Trove.
    *
    * @throws
@@ -365,7 +365,7 @@ export interface TransactableLiquity {
    * The collateral gain is transfered to the Trove as additional collateral.
    *
    * As a side-effect, the transaction will also pay out the Stability Deposit's
-   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @fluidity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
    */
   transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
@@ -396,7 +396,7 @@ export interface TransactableLiquity {
    *
    * @param amount - Amount of LUSD to be redeemed.
    * @param maxRedemptionRate - Maximum acceptable
-   *                            {@link @liquity/lib-base#Fees.redemptionRate | redemption rate}.
+   *                            {@link @fluidity/lib-base#Fees.redemptionRate | redemption rate}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -411,7 +411,7 @@ export interface TransactableLiquity {
    * Claim leftover collateral after a liquidation or redemption.
    *
    * @remarks
-   * Use {@link @liquity/lib-base#ReadableLiquity.getCollateralSurplusBalance | getCollateralSurplusBalance()}
+   * Use {@link @fluidity/lib-base#ReadableLiquity.getCollateralSurplusBalance | getCollateralSurplusBalance()}
    * to check the amount of collateral available for withdrawal.
    *
    * @throws
@@ -429,8 +429,8 @@ export interface TransactableLiquity {
    *
    * @remarks
    * As a side-effect, the transaction will also pay out an existing LQTY stake's
-   * {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain}.
+   * {@link @fluidity/lib-base#LQTYStake.collateralGain | collateral gain} and
+   * {@link @fluidity/lib-base#LQTYStake.lusdGain | LUSD gain}.
    */
   stakeLQTY(amount: Decimalish): Promise<void>;
 
@@ -444,14 +444,14 @@ export interface TransactableLiquity {
    *
    * @remarks
    * As a side-effect, the transaction will also pay out the LQTY stake's
-   * {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain}.
+   * {@link @fluidity/lib-base#LQTYStake.collateralGain | collateral gain} and
+   * {@link @fluidity/lib-base#LQTYStake.lusdGain | LUSD gain}.
    */
   unstakeLQTY(amount: Decimalish): Promise<void>;
 
   /**
-   * Withdraw {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain} from LQTY stake.
+   * Withdraw {@link @fluidity/lib-base#LQTYStake.collateralGain | collateral gain} and
+   * {@link @fluidity/lib-base#LQTYStake.lusdGain | LUSD gain} from LQTY stake.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -460,14 +460,14 @@ export interface TransactableLiquity {
 
   /**
    * Allow the liquidity mining contract to use Uniswap ETH/LUSD LP tokens for
-   * {@link @liquity/lib-base#TransactableLiquity.stakeUniTokens | staking}.
+   * {@link @fluidity/lib-base#TransactableLiquity.stakeUniTokens | staking}.
    *
    * @param allowance - Maximum amount of LP tokens that will be transferrable to liquidity mining
    *                    (`2^256 - 1` by default).
    *
    * @remarks
    * Must be performed before calling
-   * {@link @liquity/lib-base#TransactableLiquity.stakeUniTokens | stakeUniTokens()}.
+   * {@link @fluidity/lib-base#TransactableLiquity.stakeUniTokens | stakeUniTokens()}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.

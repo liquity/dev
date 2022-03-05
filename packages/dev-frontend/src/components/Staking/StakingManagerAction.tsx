@@ -1,6 +1,6 @@
 import { Button } from "theme-ui";
 
-import { Decimal, LQTYStakeChange } from "@liquity/lib-base";
+import { Decimal, LQTYStakeChange } from "@fluidity/lib-base";
 
 import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";

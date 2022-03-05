@@ -15,7 +15,7 @@ import {
   TroveWithPendingRedistribution,
   UserTrove,
   _emptyTrove
-} from "@liquity/lib-base";
+} from "@fluidity/lib-base";
 
 import { OrderDirection } from "../types/globalTypes";
 import { Global } from "../types/Global";

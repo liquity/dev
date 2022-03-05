@@ -1,7 +1,7 @@
 {
-  "name": "@liquity/lib-react",
+  "name": "@fluidity/lib-react",
   "version": "0.0.0-semantic-release",
-  "description": "Components and hooks for React-based Liquity frontends",
+  "description": "Components and hooks for React-based Fluidity frontends",
   "keywords": [
     "Liquity",
     "protocol",
@@ -21,7 +21,7 @@
     "prepare:tsc": "tsc --project tsconfig.dist.json"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^3.0.0",
+    "@fluidity/lib-base": "^3.0.0",
     "react": "^16.13.1"
   },
   "devDependencies": {

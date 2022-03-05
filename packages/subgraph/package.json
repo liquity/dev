@@ -1,5 +1,5 @@
 {
-  "name": "@liquity/subgraph",
+  "name": "@fluidity/subgraph",
   "version": "0.1.0",
   "private": true,
   "scripts": {

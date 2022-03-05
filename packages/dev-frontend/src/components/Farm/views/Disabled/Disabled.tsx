@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Heading, Box, Flex } from "theme-ui";
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { LiquityStoreState } from "@fluidity/lib-base";
+import { useLiquitySelector } from "@fluidity/lib-react";
 import { InfoMessage } from "../../../InfoMessage";
 import { UnstakeAndClaim } from "../UnstakeAndClaim";
 import { RemainingLQTY } from "../RemainingLQTY";

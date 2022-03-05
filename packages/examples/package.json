@@ -1,5 +1,5 @@
 {
-  "name": "@liquity/examples",
+  "name": "@fluidity/examples",
   "version": "0.0.1",
   "private": true,
   "devDependencies": {

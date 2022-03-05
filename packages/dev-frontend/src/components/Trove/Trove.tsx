@@ -7,7 +7,7 @@ import { Adjusting } from "./Adjusting";
 import { RedeemedTrove } from "./RedeemedTrove";
 import { useTroveView } from "./context/TroveViewContext";
 import { LiquidatedTrove } from "./LiquidatedTrove";
-import { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@fluidity/lib-base";
 
 export const Trove: React.FC = props => {
   const { view } = useTroveView();

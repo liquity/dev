@@ -1,4 +1,4 @@
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { EthersLiquity } from "@fluidity/lib-ethers";
 
 import { deployer, subgraph } from "../globals";
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Paragraph, Text } from "theme-ui";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, LiquityStoreState } from "@fluidity/lib-base";
+import { useLiquitySelector } from "@fluidity/lib-react";
 import { InfoIcon } from "../InfoIcon";
 import { useLiquity } from "../../hooks/LiquityContext";
 import { Badge } from "../Badge";

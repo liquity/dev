@@ -1,9 +1,9 @@
 {
-  "name": "@liquity/providers",
+  "name": "@fluidity/providers",
   "version": "0.0.0-semantic-release",
-  "description": "Custom Ethers Providers used by Liquity Dev UI",
+  "description": "Custom Ethers Providers used by Fluidity Dev UI",
   "keywords": [
-    "Liquity",
+    "Fluidity",
     "protocol",
     "DeFi",
     "Ethereum"

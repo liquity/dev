@@ -1,9 +1,9 @@
 {
-  "name": "@liquity/lib-base",
+  "name": "@fluidity/lib-base",
   "version": "0.0.0-semantic-release",
-  "description": "Liquity SDK shared interfaces",
+  "description": "Fluidity SDK shared interfaces",
   "keywords": [
-    "Liquity",
+    "Fluidity",
     "protocol",
     "DeFi",
     "Ethereum"
