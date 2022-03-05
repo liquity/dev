@@ -1,4 +1,4 @@
-# @liquity/lib-ethers
+# @fluidity/lib-ethers
 
 [Ethers](https://www.npmjs.com/package/ethers)-based library for reading Liquity protocol state and sending transactions.
 
@@ -7,14 +7,14 @@
 Install in your project:
 
 ```
-npm install --save @liquity/lib-base @liquity/lib-ethers ethers@^5.0.0
+npm install --save @fluidity/lib-base @fluidity/lib-ethers ethers@^5.0.0
 ```
 
 Connecting to an Ethereum node and sending a transaction:
 
 ```javascript
 const { Wallet, providers } = require("ethers");
-const { EthersLiquity } = require("@liquity/lib-ethers");
+const { EthersLiquity } = require("@fluidity/lib-ethers");
 
 async function example() {
   const provider = new providers.JsonRpcProvider("http://localhost:8545");
@@ -34,7 +34,7 @@ async function example() {
 
 See [packages/examples](https://github.com/liquity/liquity/tree/master/packages/examples) in the repo.
 
-Liquity's [Dev UI](https://github.com/liquity/liquity/tree/master/packages/dev-frontend) itself contains many examples of `@liquity/lib-ethers` use.
+Liquity's [Dev UI](https://github.com/liquity/liquity/tree/master/packages/dev-frontend) itself contains many examples of `@fluidity/lib-ethers` use.
 
 ## API Reference
 
