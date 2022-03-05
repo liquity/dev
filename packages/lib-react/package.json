@@ -8,12 +8,12 @@
     "DeFi",
     "Ethereum"
   ],
-  "homepage": "https://github.com/liquity/liquity#readme",
+  "homepage": "https://github.com/goldmandao/fluidity#readme",
   "license": "MIT",
   "author": "Daniel Simon <dani@liquity.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/liquity/dev",
+  "repository": "https://github.com/goldmandao/fluidity",
   "scripts": {
     "eslint": "eslint",
     "prepare": "run-s prepare:*",
