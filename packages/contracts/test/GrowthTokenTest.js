@@ -10,7 +10,7 @@ const { ecsign } = require('ethereumjs-util');
 
 
 // the second account our hardhatenv creates (for EOA A)
-// from https://github.com/liquity/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
+// from https://github.com/goldmandao/fluidity/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
 
 
 const th = testHelpers.TestHelper

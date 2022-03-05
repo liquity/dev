@@ -752,7 +752,7 @@ export class PopulatableEthersLiquity
     }
 
     // Don't use `address(0)` as hint as it can result in huge gas cost.
-    // (See https://github.com/liquity/dev/issues/600).
+    // (See https://github.com/goldmandao/fluidity/issues/600).
     if (prev === AddressZero) {
       prev = next;
     } else if (next === AddressZero) {

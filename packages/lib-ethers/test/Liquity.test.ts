@@ -1041,7 +1041,7 @@ describe("EthersLiquity", () => {
     });
   });
 
-  // Test workarounds related to https://github.com/liquity/dev/issues/600
+  // Test workarounds related to https://github.com/goldmandao/fluidity/issues/600
   describe("Hints (adjustTrove)", () => {
     let eightOtherUsers: Signer[];
 

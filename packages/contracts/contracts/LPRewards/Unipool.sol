@@ -17,7 +17,7 @@ import "../Dependencies/console.sol";
 // Some more useful references:
 // Synthetix proposal: https://sips.synthetix.io/sips/sip-31
 // Original audit: https://github.com/sigp/public-audits/blob/master/synthetix/unipool/review.pdf
-// Incremental changes (commit by commit) from the original to this version: https://github.com/liquity/dev/pull/271
+// Incremental changes (commit by commit) from the original to this version: https://github.com/goldmandao/fluidity/pull/271
 
 // LPTokenWrapper contains the basic staking functionality
 contract LPTokenWrapper is ILPTokenWrapper {
