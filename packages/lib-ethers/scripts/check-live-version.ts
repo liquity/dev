@@ -41,11 +41,12 @@ console.log(`Saved live version: ${savedLiveVersion}`.cyan);
 if (compareDeployedVersionsTo(savedLiveVersion)) {
   console.log("All deployments match saved version.");
 } else {
-  console.error(
+  console.warn(
     (
-      "All deployments must have the same version, " +
-      "and it must match the saved version in 'packages/lib/live/artifacts'."
+      "All deployments should have the same version, " +
+      "and it must match the saved version in 'packages/lib/live/artifacts'." +
+      " Version: " + savedLiveVersion
     ).red
   );
-  process.exitCode = 1;
+  // process.exitCode = 1;
 }

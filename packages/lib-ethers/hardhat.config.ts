@@ -112,6 +112,11 @@ const config: HardhatUserConfig = {
       accounts: [deployerAccount, devChainRichAccount, ...generateRandomAccounts(numAccounts - 2)]
     },
 
+    bakerloo: {
+        url: "https://rpc2.bakerloo.autonity.network:8545",
+        accounts: [deployerAccount]
+    },
+
     ...infuraNetwork("ropsten"),
     ...infuraNetwork("rinkeby"),
     ...infuraNetwork("goerli"),
