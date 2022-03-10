@@ -43,6 +43,7 @@ const button: ThemeUIStyleObject = {
 
   color: "white",
   border: 1,
+  borderRadius: 16,
 
   fontWeight: "bold",
 
@@ -87,7 +88,8 @@ const card: ThemeUIStyleObject = {
   position: "relative",
   mt: cardGapY,
   border: 1,
-  boxShadow: [1, null, 2]
+  borderRadius: 16,
+  boxShadow: [1, null, 1],
 };
 
 const infoCard: ThemeUIStyleObject = {
@@ -118,8 +120,8 @@ const formCell: ThemeUIStyleObject = {
   bg: "background",
   border: 1,
   borderColor: "muted",
-  borderRadius: 0,
-  boxShadow: [1, 2]
+  borderRadius: 16,
+  // boxShadow: [1, 2]
 };
 
 const overlay: ThemeUIStyleObject = {
@@ -299,7 +301,7 @@ const theme: Theme = {
       borderColor: "muted",
       borderRadius: "4px",
       bg: "background",
-      boxShadow: 2,
+      boxShadow: 1,
 
       fontSize: 1,
       color: "text",
@@ -317,7 +319,9 @@ const theme: Theme = {
       ...formCell,
 
       textAlign: "center",
-      bg: "muted"
+      border: 0,
+      bg: "none",
+      // bg: "muted"
     },
 
     input: {
@@ -343,8 +347,8 @@ const theme: Theme = {
       px: [2, "12px", "12px", 5],
       py: [2, "12px", "12px"],
 
-      ...headerGradient,
-      boxShadow: [1, "none"]
+      // ...headerGradient,
+      // boxShadow: [1, "none"]
     },
 
     footer: {
@@ -371,7 +375,8 @@ const theme: Theme = {
     columns: {
       display: "flex",
       flexWrap: "wrap",
-      justifyItems: "center"
+      justifyItems: "center",
+      p: [2, 0]
     },
 
     left: {
@@ -442,7 +447,7 @@ const theme: Theme = {
 
     badge: {
       border: 0,
-      borderRadius: 3,
+      borderRadius: 16,
       p: 1,
       px: 2,
       backgroundColor: "muted",

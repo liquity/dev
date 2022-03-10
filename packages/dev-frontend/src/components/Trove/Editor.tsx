@@ -153,8 +153,9 @@ const editableStyle: ThemeUICSSProperties = {
 
   fontSize: 4,
 
-  boxShadow: [1, 2],
-  border: 1,
+  // boxShadow: [1, 2],
+  // border: 1,
+  borderRadius: 16,
   borderColor: "muted"
 };
 
