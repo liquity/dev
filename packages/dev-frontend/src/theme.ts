@@ -1,10 +1,10 @@
 import { Theme, ThemeUIStyleObject } from "theme-ui";
 
 const baseColors = {
-  blue: "#1542cd",
-  purple: "#745ddf",
-  cyan: "#2eb6ea",
-  green: "#28c081",
+  blue: "#4895F4",
+  purple: "#414c6b",
+  cyan: "#03D8C3",
+  green: "#5beab7",
   yellow: "#fd9d28",
   red: "#dc2c10",
   lightRed: "#ff755f"
@@ -23,7 +23,7 @@ const colors = {
   invalid: "pink",
 
   text: "#293147",
-  background: "white",
+  background: "#f9fbfe",
   muted: "#eaebed"
 };
 
@@ -97,8 +97,9 @@ const infoCard: ThemeUIStyleObject = {
 
   padding: 3,
 
-  borderColor: "rgba(122,199,240,0.4)",
-  background: "linear-gradient(200deg, #d4d9fc, #cae9f9)",
+  borderColor: "accent",
+  backgroundColor: "white",
+  // backgroundColor: "rgba(46, 182, 234, 0.05)",
 
   h2: {
     mb: 2,
@@ -140,10 +141,6 @@ const modalOverlay: ThemeUIStyleObject = {
   top: 0,
   width: "100vw",
   height: "100vh"
-};
-
-const headerGradient: ThemeUIStyleObject = {
-  background: `linear-gradient(90deg, ${colors.background}, ${colors.muted})`
 };
 
 const theme: Theme = {
@@ -257,7 +254,7 @@ const theme: Theme = {
       padding: 0,
 
       borderColor: "muted",
-      bg: "background",
+      bg: "white",
 
       "> h2": {
         display: "flex",
@@ -270,7 +267,7 @@ const theme: Theme = {
         py: 2,
         pr: 2,
 
-        bg: "muted",
+        // bg: "muted",
 
         fontSize: cardHeadingFontSize
       }
@@ -442,7 +439,7 @@ const theme: Theme = {
       borderColor: "muted",
       mr: "25vw",
       height: "100%",
-      ...headerGradient
+      // ...headerGradient
     },
 
     badge: {
