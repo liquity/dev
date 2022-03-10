@@ -3,11 +3,14 @@ import { Link } from "./Link";
 
 export const Nav: React.FC = () => {
   return (
-    <Box as="nav" sx={{ display: ["none", "flex"], alignItems: "center", flex: 1 }}>
-      <Flex>
+    <Box as="nav" sx={{ display: ["none", "flex"], alignItems: "center", justifyContent: "center", flex: 1 }}>
+      <Flex sx={{ justifyContent: "flex-center"}}>
         <Link to="/">Dashboard</Link>
         <Link to="/farm">Farm</Link>
+        <Link to="/risky-troves">Risky Troves</Link>
+        <Link to="/redemption">Redemption</Link>
       </Flex>
+      {/*
       <Flex sx={{ justifyContent: "flex-end", mr: 3, flex: 1 }}>
         <Link sx={{ fontSize: 1 }} to="/risky-troves">
           Risky Troves
@@ -16,6 +19,7 @@ export const Nav: React.FC = () => {
           Redemption
         </Link>
       </Flex>
+      */}
     </Box>
   );
 };
