@@ -5,6 +5,8 @@ import { LiquidationManager } from "../components/LiquidationManager";
 import { RiskyTroves } from "../components/RiskyTroves";
 import { InfoMessage } from "../components/InfoMessage";
 
+const statsToShow: string[] = ["tvl", "tcr", "lusd-supply", "lusd-sp", "recovery"];
+
 export const RiskyTrovesPage: React.FC = () => (
   <Container variant="columns">
     <Container variant="left">
@@ -23,7 +25,7 @@ export const RiskyTrovesPage: React.FC = () => (
     </Container>
 
     <Container variant="right">
-      <SystemStats />
+      <SystemStats filterStats={statsToShow} />
     </Container>
     <RiskyTroves pageSize={10} />
   </Container>

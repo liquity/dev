@@ -8,6 +8,7 @@ import { Icon } from "../components/Icon";
 
 const uniLink = (lusdAddress: string) =>
   `https://app.uniswap.org/#/swap?inputCurrency=${lusdAddress}&outputCurrency=ETH`;
+const statsToShow: string[] = ["redeem-fee", "tvl", "lusd-supply", "tcr"];
 
 export const RedemptionPage: React.FC = () => {
   const {
@@ -44,7 +45,7 @@ export const RedemptionPage: React.FC = () => {
       </Container>
 
       <Container variant="right">
-        <SystemStats />
+        <SystemStats filterStats={statsToShow}/>
       </Container>
     </Container>
   );

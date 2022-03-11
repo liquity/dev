@@ -15,7 +15,7 @@ export const Dashboard: React.FC = () => (
     </Container>
 
     <Container variant="right">
-      <SystemStats />
+      <SystemStats showBalances/>
       <PriceManager />
     </Container>
   </Container>
