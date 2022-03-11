@@ -254,6 +254,11 @@ const theme: Theme = {
             }
         },
 
+        token: {
+            ...button,
+            ...buttonOutline("accent", "accent")
+        },
+
         icon: {
             ...iconButton,
             color: "primary",
@@ -270,6 +275,20 @@ const theme: Theme = {
             ...iconButton,
             color: "text",
             ":enabled:hover": { color: "success" }
+        },
+
+        colors: {
+            ...button,
+
+            color: "white",
+            backgroundColor: "#414c6b",
+            background: "linear-gradient(90deg, #414c6b 0%, #4895F4 15%, #03D8C3 85%)",
+            transition: "border 200ms",
+
+            ":enabled:hover": {
+                border: 1,
+                borderColor: "accent"
+            },
         }
     },
 
@@ -330,6 +349,16 @@ const theme: Theme = {
             color: "text",
             fontWeight: "body",
             zIndex: 1
+        },
+
+        userAccountModal: {
+            ...card,
+
+            padding: 3,
+            maxWidth: ["100%", "40em"],
+            bg: "white",
+            border: 2,
+            borderColor: "muted",
         }
     },
 
