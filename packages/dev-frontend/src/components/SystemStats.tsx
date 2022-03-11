@@ -1,10 +1,10 @@
 import React from "react";
-import { Card, Heading, Link, Box, Text } from "theme-ui";
+import { Card, Heading, /*Link,*/ Box, Text } from "theme-ui";
 // import { AddressZero } from "@ethersproject/constants";
 import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
-import { useLiquity } from "../hooks/LiquityContext";
+// import { useLiquity } from "../hooks/LiquityContext";
 import { COIN, GT } from "../strings";
 import { Statistic } from "./Statistic";
 
@@ -63,11 +63,13 @@ const select = ({
 });
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances, filterStats }) => {
+    /*
     const {
         liquity: {
-            // connection: { version: contractsVersion, deploymentDate, frontendTag }
+            connection: { version: contractsVersion, deploymentDate, frontendTag }
         }
     } = useLiquity();
+    */
 
     const {
         numberOfTroves,
