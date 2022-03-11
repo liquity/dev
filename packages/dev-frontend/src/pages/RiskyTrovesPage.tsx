@@ -25,7 +25,7 @@ export const RiskyTrovesPage: React.FC = () => (
     </Container>
 
     <Container variant="right">
-      <SystemStats filterStats={statsToShow} />
+      <SystemStats showProtocol filterStats={statsToShow} />
     </Container>
     <RiskyTroves pageSize={10} />
   </Container>

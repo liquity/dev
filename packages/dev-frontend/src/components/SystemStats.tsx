@@ -183,7 +183,7 @@ type SystemStatsProps = {
 };
 
 export const SystemStats: React.FC<SystemStatsProps> = (
-{variant = "info", showBalances, showProtocol = true, showPriceFeed, filterStats}) => {
+{variant = "info", showBalances, showProtocol, showPriceFeed, filterStats}) => {
     /*
     const {
         liquity: {

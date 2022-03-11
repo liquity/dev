@@ -45,7 +45,7 @@ export const RedemptionPage: React.FC = () => {
       </Container>
 
       <Container variant="right">
-        <SystemStats filterStats={statsToShow}/>
+        <SystemStats showProtocol showPriceFeed filterStats={statsToShow}/>
       </Container>
     </Container>
   );
