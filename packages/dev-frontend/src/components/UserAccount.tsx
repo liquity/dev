@@ -16,25 +16,43 @@ const select = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState)
 type token = {
     symbol: string,
     balance: Decimal,
+    address?: string,
 }
 
+const addToken = async (token: token) => {
+    try {
+        (window as any).ethereum?.request({
+            method: "wallet_watchAsset",
+            params: {
+                type: "ERC20",
+                options: {
+                    address: token.address,
+                    symbol: token.symbol,
+                    decimals: 18,
+                },
+            },
+        })
+    } catch (e) {
+        console.log(e);
+    }
+}
 
 const UserModal: React.FC = () => {
-    const { account } = useLiquity();
+    const { account, liquity: { connection: { addresses } } } = useLiquity();
     const { accountBalance, lusdBalance, lqtyBalance } = useLiquitySelector(select);
 
     const tokens: token[] = [
         { symbol: "AUT", balance: accountBalance },
-        { symbol: "LUSD", balance: lusdBalance },
-        { symbol: "LQTY", balance: lqtyBalance },
+        { symbol: "LUSD", balance: lusdBalance, address: addresses["lusdToken"] },
+        { symbol: "LQTY", balance: lqtyBalance, address: addresses["lqtyToken"] },
     ];
 
     return (
         <>
-            <Card variant="userAccountModal" sx={{justifyContent: "center"}}>
-            <Heading sx={{fontSize: 2 }}>Account</Heading>
+            <Card variant="userAccountModal" sx={{ justifyContent: "center" }}>
+                <Heading sx={{ fontSize: 2 }}>Account</Heading>
                 <Flex sx={{ mx: 3, my: 3 }}>
-                    <Badge variant="muted" sx={{px: 3}}>
+                    <Badge variant="muted" sx={{ px: 3 }}>
                         <Text>
                             {account}
                         </Text>
@@ -53,7 +71,10 @@ const UserModal: React.FC = () => {
                     {
                         tokens.map((token, i) => (
                             <Flex key={i} sx={{ alignItems: "center", justifyContent: "space-between", my: 1 }}>
-                                <Button variant="token" sx={{ p: 0, px: 2, mx: 2, fontSize: 1 }}>{token.symbol}</Button>
+                                <Button
+                                    variant="token"
+                                    onClick={() => { if (token.address) { addToken(token) } }}
+                                    sx={{ p: 0, px: 2, mx: 2, fontSize: 1 }}>{token.symbol}</Button>
                                 <Text sx={{ fontSize: 2 }}>{token.balance.prettify()}</Text>
                             </Flex>
                         ))}
@@ -74,7 +95,7 @@ export const UserAccount: React.FC = () => {
                     <Button
                         onClick={() => setSystemStatsOpen(!userModalOpen)}
                         variant="colors"
-                        sx={{px: 3, py: 2}}>
+                        sx={{ px: 3, py: 2 }}>
                         <Flex sx={{ flexDirection: "column" }}>
                             <Text as="span" sx={{ fontSize: 1 }}>
                                 {shortenAddress(account)}

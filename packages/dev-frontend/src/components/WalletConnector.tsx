@@ -15,6 +15,7 @@ import { Modal } from "./Modal";
 interface MaybeHasMetaMask {
   ethereum?: {
     isMetaMask?: boolean;
+    request?: boolean;
   };
 }
 
