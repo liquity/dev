@@ -1699,7 +1699,7 @@ Such flash deposit-liquidations would actually be beneficial (in terms of TCR) t
 #### Front-running and changing the order of troves as a DoS attack
 
 *Example sequence:**
--Attacker sees incoming operation( openLoan(), redeemCollateral(), etc) that would insert a trove to the sorted list
+-Attacker sees incoming operation(`openLoan()`, `redeemCollateral()`, etc) that would insert a trove to the sorted list
 -Attacker front-runs with mass openLoan txs
 -Incoming operation becomes more costly - more traversals needed for insertion
 
