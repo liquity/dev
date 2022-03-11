@@ -27,6 +27,19 @@ const Balances: React.FC = () => {
     );
 };
 
+const selectPrice = ({ price }: LiquityStoreState) => price;
+
+const PriceFeed: React.FC = () => {
+  const price = useLiquitySelector(selectPrice);
+
+  return (
+    <Box>
+        <Heading>Price feed</Heading>
+        <Statistic name="ETH">${price.prettify()}</Statistic>
+    </Box>
+  );
+};
+
 //
 // const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
 //     children?.match(/[0-9a-f]{40}/) ? (
@@ -35,12 +48,10 @@ const Balances: React.FC = () => {
 //             <>unknown</>
 //         );
 //
-
-type SystemStatsProps = {
-    variant?: string;
-    showBalances?: boolean;
+//
+type ProtocolStatsProps = {
     filterStats?: string[];
-};
+}
 
 const select = ({
     numberOfTroves,
@@ -59,17 +70,9 @@ const select = ({
     borrowingRate,
     redemptionRate,
     totalStakedLQTY,
-    kickbackRate: frontend.status === "registered" ? frontend.kickbackRate : null
 });
 
-export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances, filterStats }) => {
-    /*
-    const {
-        liquity: {
-            connection: { version: contractsVersion, deploymentDate, frontendTag }
-        }
-    } = useLiquity();
-    */
+const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
 
     const {
         numberOfTroves,
@@ -79,7 +82,6 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
         borrowingRate,
         redemptionRate,
         totalStakedLQTY,
-        // kickbackRate
     } = useLiquitySelector(select);
 
     const lusdInStabilityPoolPct =
@@ -88,22 +90,13 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     const borrowingFeePct = new Percent(borrowingRate);
     const redemptionFeePct = new Percent(redemptionRate);
 
-    // const kickbackRatePct = frontendTag === AddressZero ? "100" : kickbackRate?.mul(100).prettify();
     const showStat = (statSection: string): boolean => {
         return filterStats ? filterStats.includes(statSection) : true;
     }
 
     return (
-        <Card {...{ variant }}>
-            {showBalances && <Balances />}
-
+        <Box sx={{ mb: 3 }}>
             <Heading>Liquity statistics</Heading>
-
-            {/*
-      <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
-        Protocol
-      </Heading>
-      */}
 
             {showStat("borrow-fee") &&
                 <Statistic
@@ -177,36 +170,34 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
             </Statistic>
             }
 
-            {/*
-      <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
-        Frontend
-      </Heading>
-      {kickbackRatePct && (
-        <Statistic
-          name="Kickback Rate"
-          tooltip="A rate between 0 and 100% set by the Frontend Operator that determines the fraction of LQTY that will be paid out as a kickback to the Stability Providers using the frontend."
-        >
-          {kickbackRatePct}%
-        </Statistic>
-      )}
-      */}
-
-            {/*
-      <Box sx={{ mt: 3, opacity: 0.66 }}>
-        <Box sx={{ fontSize: 0 }}>
-          Contracts version: <GitHubCommit>{contractsVersion}</GitHubCommit>
         </Box>
-        <Box sx={{ fontSize: 0 }}>Deployed: {deploymentDate.toLocaleString()}</Box>
-        <Box sx={{ fontSize: 0 }}>
-          Frontend version:{" "}
-          {process.env.NODE_ENV === "development" ? (
-            "development"
-          ) : (
-            <GitHubCommit>{process.env.REACT_APP_VERSION}</GitHubCommit>
-          )}
-        </Box>
-      </Box>
-      */}
-        </Card>
     );
 };
+
+type SystemStatsProps = {
+    variant?: string;
+    showBalances?: boolean;
+    showProtocol?: boolean;
+    showPriceFeed?: boolean;
+    filterStats?: string[];
+};
+
+export const SystemStats: React.FC<SystemStatsProps> = (
+{variant = "info", showBalances, showProtocol = true, showPriceFeed, filterStats}) => {
+    /*
+    const {
+        liquity: {
+            connection: { version: contractsVersion, deploymentDate, frontendTag }
+        }
+    } = useLiquity();
+    */
+
+    return (
+        <Card {...{ variant }}>
+            {showBalances && <Balances />}
+            {showProtocol && <ProtocolStats filterStats={filterStats}/>}
+            {showPriceFeed && <PriceFeed />}
+        </Card>
+    )
+}
+
