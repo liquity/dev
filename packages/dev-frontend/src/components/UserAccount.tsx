@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, Flex, Box } from "theme-ui";
+import { Text, Flex, Box, Badge } from "theme-ui";
 
 // import { LiquityStoreState } from "@liquity/lib-base";
 // import { useLiquitySelector } from "@liquity/lib-react";
@@ -7,7 +7,7 @@ import { Text, Flex, Box } from "theme-ui";
 // import { COIN, GT } from "../strings";
 import { useLiquity } from "../hooks/LiquityContext";
 import { shortenAddress } from "../utils/shortenAddress";
-import { Badge } from "../components/Badge";
+// import { Badge } from "../components/Badge";
 
 // import { Icon } from "./Icon";
 
@@ -25,7 +25,7 @@ export const UserAccount: React.FC = () => {
         <Box sx={{ display: ["none", "flex"] }}>
             <Flex sx={{ mx: 2, alignItems: "center" }}>
                 {/* <Icon name="user-circle" size="lg" /> */}
-                <Badge>
+                <Badge variant="colors">
                     <Flex sx={{ p: 1, flexDirection: "column" }}>
                         {/* <Heading sx={{ fontSize: 1 }}>Connected as</Heading> */}
                         <Text as="span" sx={{ fontSize: 1 }}>

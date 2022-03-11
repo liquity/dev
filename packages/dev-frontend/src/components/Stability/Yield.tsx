@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Card, Paragraph, Text } from "theme-ui";
+import { Card, Paragraph, Text, Badge } from "theme-ui";
 import { Decimal, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { InfoIcon } from "../InfoIcon";
 import { useLiquity } from "../../hooks/LiquityContext";
-import { Badge } from "../Badge";
+// import { Badge } from "../Badge";
 import { fetchLqtyPrice } from "./context/fetchLqtyPrice";
 
 const selector = ({ lusdInStabilityPool, remainingStabilityPoolLQTYReward }: LiquityStoreState) => ({
@@ -46,7 +46,7 @@ export const Yield: React.FC = () => {
   if (aprPercentage.isZero) return null;
 
   return (
-    <Badge>
+    <Badge variant="muted">
       <Text>LQTY APR {aprPercentage.toString(2)}%</Text>
       <InfoIcon
         tooltip={
