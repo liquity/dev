@@ -95,7 +95,7 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
               inputId="stake-gain-eth"
               amount={originalStake.collateralGain.prettify(4)}
               color={originalStake.collateralGain.nonZero && "success"}
-              unit="ETH"
+              unit="AUT"
             />
 
             <StaticRow

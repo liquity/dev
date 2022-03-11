@@ -103,7 +103,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
               inputId="deposit-gain"
               amount={originalDeposit.collateralGain.prettify(4)}
               color={originalDeposit.collateralGain.nonZero && "success"}
-              unit="ETH"
+              unit="AUT"
             />
 
             <StaticRow

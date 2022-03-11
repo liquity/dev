@@ -225,7 +225,7 @@ export const RiskyTroves: React.FC<RiskyTrovesProps> = ({ pageSize }) => {
                 <th>Owner</th>
                 <th>
                   <Abbreviation short="Coll.">Collateral</Abbreviation>
-                  <Box sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>ETH</Box>
+                  <Box sx={{ fontSize: [0, 1], fontWeight: "body", opacity: 0.5 }}>AUT</Box>
                 </th>
                 <th>
                   Debt
