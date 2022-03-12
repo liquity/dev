@@ -15,7 +15,7 @@ export const Farm: React.FC = () => (
     </Container>
 
     <Container variant="right">
-      <SystemStats showBalances showProtocol filterStats={statsToShow}/>
+      <SystemStats showProtocol filterStats={statsToShow}/>
     </Container>
   </Container>
 );
