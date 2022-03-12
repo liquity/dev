@@ -7,7 +7,7 @@ import { InfoMessage } from "../components/InfoMessage";
 
 const statsToShow: string[] = ["tvl", "tcr", "lusd-supply", "lusd-sp", "recovery"];
 
-export const RiskyTrovesPage: React.FC = () => (
+export const LiquidatePage: React.FC = () => (
   <Container variant="columns">
     <Container variant="left">
       <Card>
