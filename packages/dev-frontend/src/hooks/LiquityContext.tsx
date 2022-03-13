@@ -34,7 +34,8 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
   network
 ];
 
-const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
+const supportedETHNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"]; //TODO: Remove support for eth networks?
+const supportedAUTNetworks = [444900];
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
@@ -72,8 +73,10 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
       if (isWebSocketAugmentedProvider(provider)) {
         const network = getNetwork(chainId);
 
-        if (network.name && supportedNetworks.includes(network.name) && config.infuraApiKey) {
+        if (network.name && supportedETHNetworks.includes(network.name) && config.infuraApiKey) {
           provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
+        } else if (supportedAUTNetworks.includes(chainId)) {
+          provider.openWebSocket(`wss://rpc1.bakerloo.autonity.network:8546`, chainId);
         } else if (connection._isDev) {
           provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
         }

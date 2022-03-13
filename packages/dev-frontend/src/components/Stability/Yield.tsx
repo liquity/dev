@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Card, Paragraph, Text } from "theme-ui";
+import { Card, Paragraph, Text, Badge } from "theme-ui";
 import { Decimal, LiquityStoreState } from "@fluidity/lib-base";
 import { useLiquitySelector } from "@fluidity/lib-react";
 import { InfoIcon } from "../InfoIcon";
 import { useLiquity } from "../../hooks/LiquityContext";
-import { Badge } from "../Badge";
 import { fetchLqtyPrice } from "./context/fetchLqtyPrice";
 
 const selector = ({ lusdInStabilityPool, remainingStabilityPoolLQTYReward }: LiquityStoreState) => ({
@@ -46,14 +45,14 @@ export const Yield: React.FC = () => {
   if (aprPercentage.isZero) return null;
 
   return (
-    <Badge>
+    <Badge variant="muted">
       <Text>LQTY APR {aprPercentage.toString(2)}%</Text>
       <InfoIcon
         tooltip={
           <Card variant="tooltip" sx={{ width: ["220px", "518px"] }}>
             <Paragraph>
               An <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on the LUSD
-              deposited to the Stability Pool over the next year, not including your ETH gains from
+              deposited to the Stability Pool over the next year, not including your AUT gains from
               liquidations.
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>

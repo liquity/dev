@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Card, Paragraph, Text } from "theme-ui";
+import { Card, Paragraph, Text, Badge } from "theme-ui";
 import { Decimal, LiquityStoreState } from "@fluidity/lib-base";
 import { useLiquitySelector } from "@fluidity/lib-react";
 import { InfoIcon } from "../../InfoIcon";
 import { useLiquity } from "../../../hooks/LiquityContext";
-import { Badge } from "../../Badge";
 import { fetchPrices } from "../context/fetchPrices";
 
 const selector = ({
@@ -52,7 +51,7 @@ export const Yield: React.FC = () => {
   if (yieldPercentage.isZero) return null;
 
   return (
-    <Badge>
+    <Badge variant="muted">
       <Text>
         {daysRemaining?.prettify(0)} day yield {yieldPercentage.toString(2)}%
       </Text>

@@ -8,8 +8,11 @@ import { useLiquity } from "../hooks/LiquityContext";
 
 import { Icon } from "./Icon";
 import { Transaction } from "./Transaction";
+import { InfoIcon } from "./InfoIcon";
 
 const selectPrice = ({ price }: LiquityStoreState) => price;
+
+const info = "Only available when priceFeed is mocked for testing";
 
 export const PriceManager: React.FC = () => {
   const {
@@ -26,13 +29,18 @@ export const PriceManager: React.FC = () => {
     setEditedPrice(price.toString(2));
   }, [price]);
 
-  return (
+  return canSetPrice? (
     <Card>
-      <Heading>Price feed</Heading>
+      <Flex sx={{ mt: 3, mx: 3, alignItems: "center"}}>
+      <Heading sx={{ fontSize: 3 }}>Price Manager</Heading>
+      <InfoIcon size="sm" tooltip={<Card variant="tooltip">
+      {info}
+      </Card>} />
+      </Flex>
 
       <Box sx={{ p: [2, 3] }}>
         <Flex sx={{ alignItems: "stretch" }}>
-          <Label>ETH</Label>
+          <Label>AUT</Label>
 
           <Label variant="unit">$</Label>
 
@@ -44,7 +52,6 @@ export const PriceManager: React.FC = () => {
             disabled={!canSetPrice}
           />
 
-          {canSetPrice && (
             <Flex sx={{ ml: 2, alignItems: "center" }}>
               <Transaction
                 id="set-price"
@@ -62,9 +69,8 @@ export const PriceManager: React.FC = () => {
                 </Button>
               </Transaction>
             </Flex>
-          )}
         </Flex>
       </Box>
     </Card>
-  );
+  ) : (<></>);
 };

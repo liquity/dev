@@ -58,7 +58,7 @@ export const SystemStatsPopup: React.FC = () => {
             }
           }}
         >
-          <SystemStats variant="infoPopup" showBalances />
+          <SystemStats variant="infoPopup" showBalances showProtocol showPriceFeed />
         </Container>
       )}
     </>
