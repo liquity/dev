@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useLiquitySelector } from "@liquity/lib-react";
-import { LiquityStoreState, UserTroveStatus } from "@liquity/lib-base";
+import { useLiquitySelector } from "@fluidity/lib-react";
+import { LiquityStoreState, UserTroveStatus } from "@fluidity/lib-base";
 import { TroveViewContext } from "../../Trove/context/TroveViewContext";
 import type { TroveView, TroveEvent } from "../../Trove/context/types";
 
