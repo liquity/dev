@@ -1,48 +1,85 @@
 name: Release UI to GitHub Pages
 
-env:
-  CI: true
-  FORCE_COLOR: true
-
 on:
   push:
     branches: [master, main]
-    paths:
-      - 'packages/dev-frontend/**'
+  pull_request:
+    branches: [master, main]
+    types: [opened, reopened, synchronize]
 
 jobs:
-  release:
+  build-frontend:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: 12.x
-
-      - id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - uses: actions/cache@v1
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+          node-version: '16'
+          cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: yarn build:dev-frontend
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build-${{ github.sha }}
+          path: packages/dev-frontend/build
 
-     # - name: Setup config
-     #   env:
-     #     FRONTEND_TAG: ${{ secrets.FRONTEND_TAG }}
-     #     INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
-     #   run: ./packages/dev-frontend/docker-entrypoint.d/99-frontend-config.sh
+  deploy-master:
+    needs: build-frontend
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
 
-      - name: Deploy
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: frontend-build-${{ github.sha }}
+
+      - name: Deploy Master
         uses: peaceiris/actions-gh-pages@v3.7.3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./packages/dev-frontend/build
+          publish_dir: ./
+          destination_dir: ./main
+
+  deploy-pull-request:
+    needs: build-frontend
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: frontend-build-${{ github.sha }}
+
+      - name: Deploy Pull Request
+        uses: peaceiris/actions-gh-pages@v3.7.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          destination_dir: ${{ github.head_ref }}
+
+  post-pr-comment:
+    needs: deploy-pull-request
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: View context attributes
+        uses: actions/github-script@v6
+        with:
+          script: console.log(context)
         
+      - name: PR comment
+        uses: actions/github-script@v6
+        env:
+          HEAD_REF: '${{github.head_ref}}'
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `https://${context.actor}.github.io/${context.payload.repository.name}/${process.env.HEAD_REF}`
+            })
