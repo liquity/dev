@@ -1,19 +1,19 @@
 import { Container } from "theme-ui";
 
-import { Trove } from "../components/Trove/Trove";
+import { Stability } from "../components/Stability/Stability";
 import { SystemStats } from "../components/SystemStats";
 import { PriceManager } from "../components/PriceManager";
-import { Redemption } from "../components/Redemption/Redemption";
+import { Staking } from "../components/Staking/Staking";
 
-export const Dashboard: React.FC = () => (
+export const LUSDTrading: React.FC = () => (
   <Container variant="columns">
     <Container variant="left">
-      <Trove />
-      <Redemption />
+      <Staking />
+      <Stability />
     </Container>
 
     <Container variant="right">
-      <SystemStats showProtocol showPriceFeed/>
+      <SystemStats showBalances showProtocol showPriceFeed/>
       <PriceManager />
     </Container>
   </Container>

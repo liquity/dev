@@ -13,9 +13,9 @@ export const ErrorDescription: React.FC = ({ children }) => (
       p: 3,
 
       border: 1,
-      borderRadius: "8px",
+      borderRadius: 16,
       borderColor: "danger",
-      boxShadow: 2,
+      boxShadow: 1,
       bg: "rgba(220, 44, 16, 0.05)"
     }}
   >

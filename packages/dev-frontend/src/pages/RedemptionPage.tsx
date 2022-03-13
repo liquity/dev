@@ -8,6 +8,7 @@ import { Icon } from "../components/Icon";
 
 const uniLink = (lusdAddress: string) =>
   `https://app.uniswap.org/#/swap?inputCurrency=${lusdAddress}&outputCurrency=ETH`;
+const statsToShow: string[] = ["redeem-fee", "tvl", "lusd-supply", "tcr"];
 
 export const RedemptionPage: React.FC = () => {
   const {
@@ -27,7 +28,7 @@ export const RedemptionPage: React.FC = () => {
                 emerge.
               </Paragraph>
               <Paragraph sx={{ mt: 2 }}>
-                Most of the time you will get a better rate for converting LUSD to ETH on{" "}
+                Most of the time you will get a better rate for converting LUSD to AUT on{" "}
                 <Link href={uniLink(addresses["lusdToken"])} target="_blank">
                   Uniswap <Icon name="external-link-alt" size="xs" />
                 </Link>{" "}
@@ -44,7 +45,7 @@ export const RedemptionPage: React.FC = () => {
       </Container>
 
       <Container variant="right">
-        <SystemStats />
+        <SystemStats showProtocol showPriceFeed filterStats={statsToShow}/>
       </Container>
     </Container>
   );

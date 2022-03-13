@@ -31,7 +31,7 @@ export const ReadOnlyTrove: React.FC = () => {
             label="Collateral"
             inputId="trove-collateral"
             amount={trove.collateral.prettify(4)}
-            unit="ETH"
+            unit="AUT"
           />
 
           <DisabledEditableRow

@@ -13,9 +13,9 @@ export const Warning: React.FC = ({ children }) => (
       p: 3,
 
       border: 1,
-      borderRadius: "8px",
+      borderRadius: 16,
       borderColor: "warning",
-      boxShadow: 2
+      boxShadow: 1
       // bg: "rgba(46, 182, 234, 0.05)"
     }}
   >
