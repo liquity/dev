@@ -6,6 +6,7 @@ import { InfoMessage } from "./InfoMessage";
 
 import { injectedConnector } from "../connectors/injectedConnector";
 import { getWcConnector, resetWc } from "../connectors/walletconnectConnector";
+import { coinbaseWalletConnector } from "../connectors/coinbaseWalletConnector";
 import { useAutoConnection } from "../hooks/useAutoConnection";
 
 import { RetryDialog } from "./RetryDialog";
@@ -15,10 +16,12 @@ import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
 import { ConnectPage, device } from "./ConnectPage";
+import { CoinbaseWalletIcon } from "./CoinbaseWalletIcon";
 
-interface MaybeHasMetaMask {
+interface DetectWallet {
   ethereum?: {
     isMetaMask?: boolean;
+    isToshi?: boolean;
   };
 }
 
@@ -88,7 +91,8 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
   return state;
 };
 
-const detectMetaMask = () => (window as MaybeHasMetaMask).ethereum?.isMetaMask ?? false;
+const detectMetaMask = () => (window as DetectWallet).ethereum?.isMetaMask ?? false;
+const detectCoinbaseWallet = () => (window as DetectWallet).ethereum?.isToshi ?? false;
 
 type WalletConnectorProps = {
   loader?: React.ReactNode;
@@ -116,10 +120,11 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
 
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
   const isMetaMask = selectedWallet && selectedWallet.name === "MetaMask";
+  const isCoinbaseWallet = selectedWallet && selectedWallet.name === "Coinbase Wallet";
 
   useEffect(() => {
     if (error) {
-      if(selectedWallet && selectedWallet.name == "WalletConnect"){
+      if(selectedWallet && selectedWallet.name === "WalletConnect"){
         resetWc()
         setSelectedWallet({ 
           name: "WalletConnect",
@@ -253,10 +258,10 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
           `}} />
           <SelectWalletDialog 
             onCancel={() => setShowSelectWalletMDL(false)}>
-            <Flex sx={{ alignItems: "center", justifyContent: "space-between", width: "100%",
-                [`@media screen and (max-width: 600px)`]: {
-                  flexDirection: "column",
-                }
+            <Flex sx={{ 
+              flexDirection: "column",
+              alignItems: "center", 
+              width: "100%"
               }}>
               <div
                 onClick={() => {
@@ -271,6 +276,25 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
                 className="connector-btn">
                 <svg viewBox="0 0 24 24" style={{width: "40px"}} focusable="false" role="presentation" className="css-tic4zn"><g><g clipPath="url(#clip0_metamask)"><path d="M20.6116 2.44287L13.1526 8.03834L14.5233 4.73046L20.6116 2.44287Z" fill="#E2761B"></path><path d="M3.38794 2.44287L10.7832 8.09204L9.47626 4.73046L3.38794 2.44287Z" fill="#E4761B"></path><path d="M17.9235 15.4272L15.9365 18.4988L20.1867 19.6802L21.4086 15.4917L17.9235 15.4272Z" fill="#E4761B"></path><path d="M2.59106 15.4917L3.81298 19.6802L8.06312 18.4988L6.07618 15.4272L2.59106 15.4917Z" fill="#E4761B"></path><path d="M7.81882 10.2292L6.6394 12.0335L10.8577 12.2268L10.7089 7.64087L7.81882 10.2292Z" fill="#E4761B"></path><path d="M16.1702 10.2292L13.2482 7.58716L13.1526 12.2268L17.3602 12.0335L16.1702 10.2292Z" fill="#E4761B"></path><path d="M8.06323 18.4989L10.5921 17.253L8.40324 15.5239L8.06323 18.4989Z" fill="#E4761B"></path><path d="M13.397 17.253L15.9364 18.4989L15.5858 15.5239L13.397 17.253Z" fill="#E4761B"></path><path d="M15.9364 18.499L13.397 17.2532L13.5989 18.9286L13.5776 19.6374L15.9364 18.499Z" fill="#D7C1B3"></path><path d="M8.06323 18.499L10.4221 19.6374L10.4114 18.9286L10.5921 17.2532L8.06323 18.499Z" fill="#D7C1B3"></path><path d="M10.4645 14.4179L8.3501 13.7843L9.83765 13.0969L10.4645 14.4179Z" fill="#233447"></path><path d="M13.5247 14.4179L14.1516 13.0969L15.6497 13.7843L13.5247 14.4179Z" fill="#233447"></path><path d="M8.06311 18.4988L8.42437 15.4272L6.07617 15.4917L8.06311 18.4988Z" fill="#CD6116"></path><path d="M15.5752 15.4272L15.9365 18.4988L17.9234 15.4917L15.5752 15.4272Z" fill="#CD6116"></path><path d="M17.3602 12.0334L13.1526 12.2268L13.5351 14.4177L14.162 13.0967L15.6602 13.784L17.3602 12.0334Z" fill="#CD6116"></path><path d="M8.35008 13.784L9.84826 13.0967L10.4645 14.4177L10.8577 12.2268L6.6394 12.0334L8.35008 13.784Z" fill="#CD6116"></path><path d="M6.6394 12.0334L8.40321 15.5239L8.35009 13.784L6.6394 12.0334Z" fill="#E4751F" stroke="#E4751F" strokeWidth="0.07" strokeLinecap="round" strokeLinejoin="round"></path><path d="M15.6603 13.784L15.5859 15.5239L17.3604 12.0334L15.6603 13.784Z" fill="#E4751F" stroke="#E4751F" strokeWidth="0.07" strokeLinecap="round" strokeLinejoin="round"></path><path d="M10.8577 12.2268L10.4646 14.4177L10.9534 17.006L11.0702 13.6015L10.8577 12.2268Z" fill="#E4751F"></path><path d="M13.1528 12.2268L12.9509 13.5908L13.0359 17.006L13.5353 14.4177L13.1528 12.2268Z" fill="#E4751F"></path><path d="M13.5353 14.4178L13.0359 17.0061L13.3972 17.2532L15.586 15.524L15.6603 13.7842L13.5353 14.4178Z" fill="#F6851B"></path><path d="M8.3501 13.7842L8.40322 15.524L10.592 17.2532L10.9533 17.0061L10.4645 14.4178L8.3501 13.7842Z" fill="#F6851B"></path><path d="M13.5778 19.6374L13.599 18.9286L13.4078 18.7568H10.5814L10.4114 18.9286L10.4221 19.6374L8.06323 18.499L8.89201 19.1864L10.5602 20.357H13.429L15.1078 19.1864L15.9366 18.499L13.5778 19.6374Z" fill="#C0AD9E"></path><path d="M13.3971 17.2531L13.0358 17.0061H10.9533L10.592 17.2531L10.4114 18.9285L10.5814 18.7567H13.4077L13.599 18.9285L13.3971 17.2531Z" fill="#161616"></path><path d="M20.9197 8.40349L21.5679 5.31041L20.6116 2.44287L13.397 7.85576L16.1702 10.2293L20.0909 11.3892L20.9622 10.3581L20.5903 10.0896L21.1853 9.53118L20.7285 9.16602L21.3235 8.70421L20.9197 8.40349Z" fill="#763D16"></path><path d="M2.44238 5.31041L3.0799 8.40349L2.66552 8.70421L3.27116 9.16602L2.81427 9.53118L3.40929 10.0896L3.0374 10.3581L3.89806 11.3892L7.81881 10.2293L10.592 7.85576L3.38804 2.44287L2.44238 5.31041Z" fill="#763D16"></path><path d="M20.0911 11.3892L16.1703 10.2292L17.3604 12.0335L15.5859 15.524L17.9235 15.4918H21.4086L20.0911 11.3892Z" fill="#F6851B"></path><path d="M7.81873 10.2292L3.89798 11.3892L2.59106 15.4918H6.07618L8.40313 15.524L6.63932 12.0335L7.81873 10.2292Z" fill="#F6851B"></path><path d="M13.1527 12.2269L13.3971 7.85577L14.534 4.73047H9.47632L10.592 7.85577L10.8576 12.2269L10.9532 13.6016V17.0061H13.0358L13.0464 13.6016L13.1527 12.2269Z" fill="#F6851B"></path></g><defs><clipPath id="clip0_metamask"><rect x="2.3999" y="2.3999" width="19.2" height="18" fill="white"></rect></clipPath></defs></g></svg>
                 <span>MetaMask</span>
+                <span style={{width: "40px"}}></span>
+              </div>
+              <div
+                onClick={() => {
+                  setSelectedWallet({ 
+                    name: "Coinbase Wallet",
+                    connector: coinbaseWalletConnector,
+                  });
+                  dispatch({ type: "startActivating", connector: coinbaseWalletConnector });
+                  activate(coinbaseWalletConnector);
+                  setShowSelectWalletMDL(false)
+                }}
+                className="connector-btn">
+                <svg width="40" height="40" viewBox="0 0 74 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="37" cy="37" r="35" fill="#1B53E4" stroke="white" stroke-width="4"/>
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M37.2446 60.6123C24.473 60.6123 14.1196 50.2589 14.1196 37.4873C14.1196 24.7157 24.473 14.3623 37.2446 14.3623C50.0162 14.3623 60.3696 24.7157 60.3696 37.4873C60.3696 50.2589 50.0162 60.6123 37.2446 60.6123Z" fill="white"/>
+                <path d="M29.7939 33.021C29.7939 31.3703 31.132 30.0322 32.7827 30.0322H41.708C43.3586 30.0322 44.6967 31.3703 44.6967 33.021V41.9463C44.6967 43.5969 43.3586 44.935 41.708 44.935H32.7827C31.132 44.935 29.7939 43.5969 29.7939 41.9463V33.021Z" fill="#1B53E4"/>
+                </svg>
+                <span>Coinbase Wallet</span>
                 <span style={{width: "40px"}}></span>
               </div>
               <div
@@ -293,7 +317,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             </Flex>
             <Box css={{marginTop: "38px"}}>
               <InfoMessage title="Old accounts are accessible via the legacy version. ">
-                To migrate your account, withdraw the LUSD from the legacy version and deposit it again here. <a  target='_blank' href="https://medium.com/b-protocol/lusd-liquidations-during-21-24-1-lesson-learned-51a40d244bcb">Learn more.</a>
+                To migrate your account, withdraw the LUSD from the legacy version and deposit it again here. <a target='_blank' rel="noreferrer" href="https://medium.com/b-protocol/lusd-liquidations-during-21-24-1-lesson-learned-51a40d244bcb">Learn more.</a>
               </InfoMessage>
             </Box>
           </SelectWalletDialog>
@@ -311,7 +335,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             }}
           >
             <Box sx={{ textAlign: "center" }}>
-              You might need to install MetaMask or use a different browser.
+              You might need to install Coinbase Wallet, MetaMask or use a different browser.
             </Box>
             <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
               Learn more <Icon size="xs" name="external-link-alt" />
@@ -324,16 +348,22 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
         <Modal>
           <ConnectionConfirmationDialog
             title={
-              isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"
+              isMetaMask ? "Confirm connection in MetaMask" : 
+              isCoinbaseWallet? "Confirm Connect in Coinbase Wallet " :
+              "Confirm connection in your wallet"
             }
-            icon={isMetaMask ? <MetaMaskIcon /> : <Icon name="wallet" size="lg" />}
+            icon={isMetaMask ? <MetaMaskIcon /> : isCoinbaseWallet ? <CoinbaseWalletIcon /> :<Icon name="wallet" size="lg" />}
             onCancel={() => dispatch({ type: "cancel" })}
           >
             <Text sx={{ textAlign: "center" }}>
               Confirm the request that&apos;s just appeared.
-              {isMetaMask ? (
+              {isMetaMask && (
                 <> If you can&apos;t see a request, open your MetaMask extension via your browser.</>
-              ) : (
+              )}
+              {isCoinbaseWallet && (
+                <> If you can&apos;t see a request, open your Coinbase Wallet extension via your browser.</>
+              )}
+              {!isCoinbaseWallet && !isMetaMask && (
                 <> If you can&apos;t see a request, you might have to open your wallet.</>
               )}
             </Text>
