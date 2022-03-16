@@ -77,9 +77,10 @@ jobs:
           HEAD_REF: '${{github.head_ref}}'
         with:
           script: |
+            val fullName = context.payload.repository.full_name.split('/')
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `https://${context.actor}.github.io/${context.payload.repository.name}/${process.env.HEAD_REF}`
+              body: `Deployed to https://${fullName[0]}.github.io/${fullName[1]}/${process.env.HEAD_REF}`
             })
