@@ -77,7 +77,7 @@ jobs:
           HEAD_REF: '${{github.head_ref}}'
         with:
           script: |
-            val fullName = context.payload.repository.full_name.split('/')
+            const fullName = context.payload.repository.full_name.split('/')
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
