@@ -122,7 +122,7 @@ const emptyBatch = (): BatchedCalls => ({ calls: [], callbacks: [] });
 // Technically, requests that have a `from` address shouldn't be batched, because `msg.sender` will
 // be replaced with the Multicall contract's address when the batched calls are being executed.
 //
-// Currently, `@liquity/lib-ethers` makes many of its read calls through Signers, which populates
+// Currently, `@fluidity/lib-ethers` makes many of its read calls through Signers, which populates
 // `from`. Instead these calls should be made through a Provider, and `from` should be omitted
 // (since none of the read calls in Liquity care about `msg.sender`).
 //

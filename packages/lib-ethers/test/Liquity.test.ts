@@ -21,7 +21,7 @@ import {
   MINIMUM_BORROWING_RATE,
   LUSD_MINIMUM_DEBT,
   LUSD_MINIMUM_NET_DEBT
-} from "@liquity/lib-base";
+} from "@fluidity/lib-base";
 
 import { HintHelpers } from "../types";
 
@@ -1041,7 +1041,7 @@ describe("EthersLiquity", () => {
     });
   });
 
-  // Test workarounds related to https://github.com/liquity/dev/issues/600
+  // Test workarounds related to https://github.com/goldmandao/fluidity/issues/600
   describe("Hints (adjustTrove)", () => {
     let eightOtherUsers: Signer[];
 

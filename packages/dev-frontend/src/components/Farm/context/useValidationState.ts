@@ -1,5 +1,5 @@
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, LiquityStoreState } from "@fluidity/lib-base";
+import { useLiquitySelector } from "@fluidity/lib-react";
 
 const selector = ({
   uniTokenBalance,

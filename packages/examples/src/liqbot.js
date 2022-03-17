@@ -1,7 +1,7 @@
 const { red, blue, green, yellow, dim, bold } = require("chalk");
 const { Wallet, providers } = require("ethers");
-const { Decimal, UserTrove, LUSD_LIQUIDATION_RESERVE } = require("@liquity/lib-base");
-const { EthersLiquity, EthersLiquityWithStore } = require("@liquity/lib-ethers");
+const { Decimal, UserTrove, LUSD_LIQUIDATION_RESERVE } = require("@fluidity/lib-base");
+const { EthersLiquity, EthersLiquityWithStore } = require("@fluidity/lib-ethers");
 
 function log(message) {
   console.log(`${dim(`[${new Date().toLocaleTimeString()}]`)} ${message}`);

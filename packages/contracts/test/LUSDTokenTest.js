@@ -50,7 +50,7 @@ contract('LUSDToken', async accounts => {
   const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   // the second account our hardhatenv creates (for Alice)
-  // from https://github.com/liquity/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
+  // from https://github.com/goldmandao/fluidity/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
   const alicePrivateKey = '0xeaa445c85f7b438dEd6e831d06a4eD0CEBDc2f8527f84Fcda6EBB5fCfAd4C0e9'
 
   let chainId

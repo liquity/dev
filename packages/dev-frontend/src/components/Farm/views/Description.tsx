@@ -3,7 +3,7 @@ import { Text } from "theme-ui";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { LP } from "../../../strings";
 import { Transaction } from "../../Transaction";
-import { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@fluidity/lib-base";
 import { ActionDescription } from "../../ActionDescription";
 import { useValidationState } from "../context/useValidationState";
 

@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
 import { Button, Flex, Spinner } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { LiquityStoreState } from "@fluidity/lib-base";
+import { useLiquitySelector } from "@fluidity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 

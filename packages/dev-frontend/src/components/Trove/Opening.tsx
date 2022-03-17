@@ -7,8 +7,8 @@ import {
   LUSD_LIQUIDATION_RESERVE,
   LUSD_MINIMUM_NET_DEBT,
   Percent
-} from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+} from "@fluidity/lib-base";
+import { useLiquitySelector } from "@fluidity/lib-react";
 
 import { useStableTroveChange } from "../../hooks/useStableTroveChange";
 import { ActionDescription } from "../ActionDescription";

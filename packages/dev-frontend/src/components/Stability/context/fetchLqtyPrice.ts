@@ -1,4 +1,4 @@
-import { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@fluidity/lib-base";
 
 type UniswapResponse = {
   data?: {

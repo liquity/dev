@@ -1,8 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Container, Text, Flex, Heading, Card, Box, Button, Badge } from "theme-ui";
-
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, LiquityStoreState } from "@fluidity/lib-base";
+import { useLiquitySelector } from "@fluidity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 import { shortenAddress } from "../utils/shortenAddress";

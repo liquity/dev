@@ -1,19 +1,19 @@
 {
-  "name": "@liquity/lib-ethers",
+  "name": "@fluidity/lib-ethers",
   "version": "0.0.0-semantic-release",
-  "description": "Liquity SDK Ethers-based implementation",
+  "description": "Fluidity SDK Ethers-based implementation",
   "keywords": [
-    "Liquity",
+    "Fluidity",
     "protocol",
     "DeFi",
     "Ethereum"
   ],
-  "homepage": "https://github.com/liquity/liquity#readme",
+  "homepage": "https://github.com/goldmandao/fluidity#readme",
   "license": "MIT",
   "author": "Daniel Simon <dani@liquity.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/liquity/dev",
+  "repository": "https://github.com/goldmandao/fluidity",
   "scripts": {
     "hardhat": "hardhat",
     "check-live-version": "ts-node scripts/check-live-version.ts",
@@ -35,7 +35,7 @@
     "test-live:run": "cross-env USE_LIVE_VERSION=true hardhat test"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^3.0.0",
+    "fluidity/lib-base": "^3.0.0",
     "ethers": "^5.3.0"
   },
   "devDependencies": {

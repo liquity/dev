@@ -1,6 +1,6 @@
 import { Button } from "theme-ui";
 
-import { Decimal, TroveChange } from "@liquity/lib-base";
+import { Decimal, TroveChange } from "@fluidity/lib-base";
 
 import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";
