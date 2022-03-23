@@ -8,13 +8,10 @@ const statsToShow: string[] = ["tvl", "lusd-supply", "lusd-sp", "staked-lqty", "
 
 export const Farm: React.FC = () => (
   <Container variant="columns" sx={{ justifyContent: "flex-start" }}>
-    <Container variant="left">
+    <Container variant="single">
       <Staking />
       <Stability />
       <FarmPanel />
-    </Container>
-
-    <Container variant="right">
       <SystemStats showProtocol filterStats={statsToShow}/>
     </Container>
   </Container>
