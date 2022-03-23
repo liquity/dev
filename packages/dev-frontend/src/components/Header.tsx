@@ -29,7 +29,7 @@ export const Header: React.FC = ({ children }) => {
 
         <Box
           sx={{
-            mx: [2, 3],
+            // mx: [2, 3],
             width: "0px",
             height: "100%",
             // borderLeft: ["none", "1px solid lightgrey"]

@@ -5,6 +5,7 @@ import { useLiquitySelector } from "@fluidity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 import { shortenAddress } from "../utils/shortenAddress";
+import { PriceManager } from "../components/PriceManager";
 
 const select = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
     accountBalance,
@@ -94,6 +95,7 @@ const UserModal: React.FC = () => {
             maxWidth: ["100%", "36em"],
         }}>
             <AccountInfo />
+            <PriceManager />
         </Container>
     )
 }

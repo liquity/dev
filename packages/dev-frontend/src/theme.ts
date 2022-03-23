@@ -235,7 +235,11 @@ const theme: Theme = {
             ...buttonOutline("primary", "secondary")
         },
 
+        outlineAccent: {
+            ...button,
+            ...buttonOutline("accent", "secondary"),
         },
+
         cancel: {
             ...button,
             ...buttonOutline("text", "text"),
