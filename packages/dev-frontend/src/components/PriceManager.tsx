@@ -6,7 +6,6 @@ import { useLiquitySelector } from "@fluidity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
 
-import { Icon } from "./Icon";
 import { Transaction } from "./Transaction";
 import { InfoIcon } from "./InfoIcon";
 

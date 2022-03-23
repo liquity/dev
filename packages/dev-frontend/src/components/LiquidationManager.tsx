@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
+import { Card, Box, Flex, Button, Label, Input } from "theme-ui";
 
 import { useLiquity } from "../hooks/LiquityContext";
 
-import { Icon } from "./Icon";
 import { Transaction } from "./Transaction";
 
 export const LiquidationManager: React.FC = () => {
