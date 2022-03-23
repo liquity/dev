@@ -148,7 +148,7 @@ const modalOverlay: ThemeUIStyleObject = {
 
     left: 0,
     top: 0,
-    width: "100vw",
+    // width: "100vw",
     height: "100vh"
 };
 
@@ -235,6 +235,7 @@ const theme: Theme = {
             ...buttonOutline("primary", "secondary")
         },
 
+        },
         cancel: {
             ...button,
             ...buttonOutline("text", "text"),
@@ -354,8 +355,8 @@ const theme: Theme = {
         userAccountModal: {
             ...card,
 
+            mt: 0,
             padding: 3,
-            maxWidth: ["100%", "40em"],
             bg: "white",
             border: 2,
             borderColor: "muted",
@@ -392,7 +393,7 @@ const theme: Theme = {
             alignItems: "stretch",
 
             position: ["fixed", "relative"],
-            width: "100vw",
+            // width: "100vw",
             top: 0,
             zIndex: 1,
 
@@ -431,6 +432,10 @@ const theme: Theme = {
             p: [2, 0]
         },
 
+        single: {
+            width: ["100%", "56%"]
+        },
+
         left: {
             pr: cardGapX,
             width: ["100%", "58%"]
@@ -455,14 +460,26 @@ const theme: Theme = {
             bg: "rgba(255, 255, 255, 0.5)"
         },
 
-        modalOverlay: {
+        userOverlay: {
             ...modalOverlay,
 
-            bg: "rgba(0, 0, 0, 0.8)",
-
             display: "flex",
+            flexWrap: "wrap",
             justifyContent: "center",
-            alignItems: "center"
+            alignItems: "center",
+            p: [2, 0],
+        },
+
+        blurFilter: {
+            position: "fixed",
+            left: 0,
+            top: 0,
+            zIndex: 1,
+            width: "100%",
+            height: "100%",
+            background: "rgba(250, 250, 250, 0.6)",
+            backdropFilter: "blur(3px)",
+            pointerEvents: "none"
         },
 
         modal: {

@@ -36,7 +36,7 @@ const addToken = async (token: token) => {
     }
 }
 
-const UserModal: React.FC = () => {
+const AccountInfo: React.FC = () => {
     const { account, liquity: { connection: { addresses } } } = useLiquity();
     const { accountBalance, lusdBalance, lqtyBalance } = useLiquitySelector(select);
 
@@ -48,17 +48,21 @@ const UserModal: React.FC = () => {
 
     return (
         <>
-            <Card variant="userAccountModal" sx={{ justifyContent: "center" }}>
+            <Card variant="userAccountModal" sx={{ justifyContent: "center"}}>
                 <Heading sx={{ fontSize: 2 }}>Account</Heading>
-                <Flex sx={{ mx: 3, my: 3 }}>
-                    <Badge variant="muted" sx={{ px: 3 }}>
+                <Flex sx={{
+                    justifyContent: "center",
+                    mx: 3,
+                    my: 3,
+                }}>
+                    <Badge variant="muted" sx={{ px: 3, py: 2}}>
                         <Text>
                             {account}
                         </Text>
                     </Badge>
                 </Flex>
                 <Flex sx={{
-                    justifyContent: "flex-end",
+                    justifyContent: "center",
                     mt: 3,
                     mb: 1,
                     p: 2,
@@ -82,10 +86,23 @@ const UserModal: React.FC = () => {
         </>
     );
 };
+
+const UserModal: React.FC = () => {
+    return (
+        <Container variant="single" sx={{
+            zIndex: 99,
+            maxWidth: ["100%", "36em"],
+        }}>
+            <AccountInfo />
+        </Container>
+    )
+}
+
 export const UserAccount: React.FC = () => {
     const { account } = useLiquity();
     const userModalOverlayRef = useRef<HTMLDivElement>(null);
     const [userModalOpen, setSystemStatsOpen] = useState(false);
+
     return (
         <>
             <Box sx={{ display: ["none", "flex"] }}>
@@ -106,10 +123,9 @@ export const UserAccount: React.FC = () => {
 
             {userModalOpen && (
                 <Container
-                    variant="modalOverlay"
+                    variant="userOverlay"
                     sx={{
                         display: ["none", "flex"],
-                        bg: "rgba(0, 0, 0, 0.6)",
                     }}
                     ref={userModalOverlayRef}
                     onClick={e => {
@@ -119,6 +135,7 @@ export const UserAccount: React.FC = () => {
                     }}
                 >
                     <UserModal />
+                    <Container variant="blurFilter"/>
                 </Container>
             )}
         </>
