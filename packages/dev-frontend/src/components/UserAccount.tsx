@@ -49,41 +49,47 @@ const AccountInfo: React.FC = () => {
 
     return (
         <>
-            <Card variant="userAccountModal" sx={{ justifyContent: "center"}}>
+            <Card variant="userAccountModal" sx={{ justifyContent: "center" }}>
                 <Heading sx={{ fontSize: 2 }}>Account</Heading>
                 <Flex sx={{
                     justifyContent: "center",
                     mx: 3,
                     my: 3,
                 }}>
-                    <Badge variant="muted" sx={{ px: 3, py: 2}}>
-                        <Text>
-                            {account}
-                        </Text>
-                    </Badge>
-                </Flex>
-                <Flex sx={{
-                    justifyContent: "center",
-                    mt: 3,
-                    mb: 1,
-                    p: 2,
-                    borderRadius: 16,
-                    border: 1,
-                    borderColor: "muted",
-                    flexDirection: "column",
-                }}>
-                    {
-                        tokens.map((token, i) => (
-                            <Flex key={i} sx={{ alignItems: "center", justifyContent: "space-between", my: 1 }}>
-                                <Button
-                                    variant="token"
-                                    onClick={() => { if (token.address) { addToken(token) } }}
-                                    sx={{ p: 0, px: 2, mx: 2, fontSize: 1 }}>{token.symbol}</Button>
-                                <Text sx={{ fontSize: 2 }}>{token.balance.prettify()}</Text>
-                            </Flex>
-                        ))}
-                </Flex>
-            </Card>
+                    <Badge variant="muted" sx={{
+                        px: 3,
+                        py: 2,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        }}>
+                    <Text>
+                        {account}
+                    </Text>
+                </Badge>
+            </Flex>
+            <Flex sx={{
+                justifyContent: "center",
+                mt: 3,
+                mb: 1,
+                p: 2,
+                borderRadius: 16,
+                border: 1,
+                borderColor: "muted",
+                flexDirection: "column",
+            }}>
+                {
+                    tokens.map((token, i) => (
+                        <Flex key={i} sx={{ alignItems: "center", justifyContent: "space-between", my: 1 }}>
+                            <Button
+                                variant="token"
+                                onClick={() => { if (token.address) { addToken(token) } }}
+                                sx={{ p: 0, px: 2, mx: 2, fontSize: 1 }}>{token.symbol}</Button>
+                            <Text sx={{ fontSize: 2 }}>{token.balance.prettify()}</Text>
+                        </Flex>
+                    ))}
+            </Flex>
+        </Card>
         </>
     );
 };
@@ -107,7 +113,7 @@ export const UserAccount: React.FC = () => {
 
     return (
         <>
-            <Box sx={{ display: ["none", "flex"] }}>
+            <Box>
                 <Flex sx={{ mx: 2, alignItems: "center" }}>
                     {/* <Icon name="user-circle" size="lg" /> */}
                     <Button
@@ -127,7 +133,7 @@ export const UserAccount: React.FC = () => {
                 <Container
                     variant="userOverlay"
                     sx={{
-                        display: ["none", "flex"],
+                        // display: ["none", "flex"],
                     }}
                     ref={userModalOverlayRef}
                     onClick={e => {
@@ -137,7 +143,7 @@ export const UserAccount: React.FC = () => {
                     }}
                 >
                     <UserModal />
-                    <Container variant="blurFilter"/>
+                    <Container variant="blurFilter" />
                 </Container>
             )}
         </>

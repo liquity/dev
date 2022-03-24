@@ -1,49 +1,38 @@
 import React from "react";
-import { LiquityStoreState } from "@fluidity/lib-base";
-import { useLiquitySelector } from "@fluidity/lib-react";
-import { Container, Flex, Box } from "theme-ui";
-import { AddressZero } from "@ethersproject/constants";
-import { useLiquity } from "../hooks/LiquityContext";
+import { Container, Flex} from "theme-ui";
 
 import { LiquityLogo } from "./LiquityLogo";
 import { Nav } from "./Nav";
 import { SideNav } from "./SideNav";
+import { UserAccount } from "./UserAccount";
+// import { SystemStatsPopup } from "./SystemStatsPopup";
 
 const logoHeight = "32px";
 
-const select = ({ frontend }: LiquityStoreState) => ({
-  frontend
-});
+export const Header: React.FC = () => {
 
-export const Header: React.FC = ({ children }) => {
-  const {
-    config: { frontendTag }
-  } = useLiquity();
-  const { frontend } = useLiquitySelector(select);
-  const isFrontendRegistered = frontendTag === AddressZero || frontend.status === "registered";
-
-  return (
-    <Container variant="header">
-      <Flex sx={{ alignItems: "center", flex: 1 }}>
-        <LiquityLogo height={logoHeight} />
-
-        <Box
-          sx={{
-            // mx: [2, 3],
-            width: "0px",
-            height: "100%",
-            // borderLeft: ["none", "1px solid lightgrey"]
-          }}
-        />
-        {isFrontendRegistered && (
-          <>
-            <SideNav />
-            <Nav />
-          </>
-        )}
-      </Flex>
-
-      {children}
-    </Container>
-  );
+    return (
+        <Container variant="header">
+            <Flex sx={{
+                alignItems: "center",
+                justifyContent: "space-between",
+                flex: 1,
+            }}>
+                <Flex sx={{ flexBasis: "20%" }}>
+                    <LiquityLogo height={logoHeight} />
+                </Flex>
+                <Nav />
+                <Flex sx={{
+                    flexBasis: ["50%", "20%"],
+                    justifyContent: "flex-end"
+                }}>
+                    <UserAccount />
+                    <SideNav />
+                </Flex>
+            </Flex>
+            {/*
+            <SystemStatsPopup />
+            */}
+        </Container>
+    );
 };

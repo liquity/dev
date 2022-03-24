@@ -8,8 +8,6 @@ import { LiquityStoreProvider } from "@fluidity/lib-react";
 
 import { useLiquity } from "./hooks/LiquityContext";
 import { TransactionMonitor } from "./components/Transaction";
-import { UserAccount } from "./components/UserAccount";
-import { SystemStatsPopup } from "./components/SystemStatsPopup";
 import { Header } from "./components/Header";
 
 import { PageSwitcher } from "./pages/PageSwitcher";
@@ -46,10 +44,7 @@ export const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
             <StakingViewProvider>
               <FarmViewProvider>
                 <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
-                  <Header>
-                    <UserAccount />
-                    <SystemStatsPopup />
-                  </Header>
+                  <Header/>
 
                   <Container
                     variant="main"
