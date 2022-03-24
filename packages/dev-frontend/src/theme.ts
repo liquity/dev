@@ -91,11 +91,12 @@ const iconButton: ThemeUIStyleObject = {
 const cardHeadingFontSize = 18.7167;
 
 const cardGapX = [0, 3, 4];
-const cardGapY = [3, 3, 4];
+const cardGapY = 3;
 
 const card: ThemeUIStyleObject = {
     position: "relative",
     mt: cardGapY,
+    mb: cardGapY,
     border: 1,
     borderRadius: 16,
     boxShadow: [1, null, 1],
@@ -424,7 +425,7 @@ const theme: Theme = {
             width: "100%",
             maxWidth: "912px",
             mx: "auto",
-            mt: ["40px", 0],
+            mt: ["40px", "20px"],
             mb: ["40px", "40px"],
             px: cardGapX
         },

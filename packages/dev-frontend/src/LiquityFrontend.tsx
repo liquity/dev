@@ -52,7 +52,8 @@ export const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
                       display: "flex",
                       flexGrow: 1,
                       flexDirection: "column",
-                      alignItems: "center"
+                      alignItems: "center",
+                      justifyContent: "center"
                     }}
                   >
                     <Switch>

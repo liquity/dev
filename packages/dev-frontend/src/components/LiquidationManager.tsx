@@ -12,7 +12,7 @@ export const LiquidationManager: React.FC = () => {
     const [numberOfTrovesToLiquidate, setNumberOfTrovesToLiquidate] = useState("90");
 
     return (
-        <Card>
+        <Card sx={{mt: 0}}>
             <Box sx={{ p: [2, 3] }}>
                 <Flex sx={{ alignItems: "stretch" }}>
                     <Flex sx={{ ml: 2, alignItems: "center" }}>
@@ -32,7 +32,6 @@ export const LiquidationManager: React.FC = () => {
                             </Button>
                         </Transaction>
                         <Label>Up to</Label>
-
                         <Input
                             type="number"
                             min="1"
@@ -40,10 +39,7 @@ export const LiquidationManager: React.FC = () => {
                             value={numberOfTrovesToLiquidate}
                             onChange={e => setNumberOfTrovesToLiquidate(e.target.value)}
                         />
-
                         <Label>Troves</Label>
-
-
                     </Flex>
                 </Flex>
             </Box>

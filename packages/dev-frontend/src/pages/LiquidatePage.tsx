@@ -5,6 +5,7 @@ import { RiskyTroves } from "../components/RiskyTroves";
 
 export const LiquidatePage: React.FC = () => (
     <Container variant="columns">
+        <RiskyTroves pageSize={10} />
         <Container sx={{
             display: "flex", 
             flexDirection: "column",
@@ -14,6 +15,5 @@ export const LiquidatePage: React.FC = () => (
                 <LiquidationManager />
             </Flex>
         </Container>
-        <RiskyTroves pageSize={10} />
     </Container>
 );
