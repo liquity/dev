@@ -107,8 +107,8 @@ const infoCard: ThemeUIStyleObject = {
     padding: 3,
 
     borderColor: "accent",
-    backgroundColor: "white",
-    // backgroundColor: "rgba(46, 182, 234, 0.05)",
+    bg: "#f9fffe",
+    // backgroundColor: "rgba(3, 216, 195, 0.03)",
 
     h2: {
         mb: 2,
@@ -326,7 +326,7 @@ const theme: Theme = {
         info: {
             ...infoCard,
 
-            display: ["none", "block"]
+            // display: ["none", "block"]
         },
 
         infoPopup: {

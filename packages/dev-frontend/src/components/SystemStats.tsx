@@ -1,5 +1,5 @@
-import React from "react";
-import { Card, Heading, Box, Text } from "theme-ui";
+import React, { useState } from "react";
+import { Card, Heading, Box, Text} from "theme-ui";
 import { Decimal, Percent, LiquityStoreState } from "@fluidity/lib-base";
 import { useLiquitySelector } from "@fluidity/lib-react";
 import { COIN, GT } from "../strings";
@@ -27,14 +27,14 @@ const Balances: React.FC = () => {
 const selectPrice = ({ price }: LiquityStoreState) => price;
 
 const PriceFeed: React.FC = () => {
-  const price = useLiquitySelector(selectPrice);
+    const price = useLiquitySelector(selectPrice);
 
-  return (
-    <Box>
-        <Heading>Price feed</Heading>
-        <Statistic name="AUT">${price.prettify()}</Statistic>
-    </Box>
-  );
+    return (
+        <Box>
+            <Heading>Price feed</Heading>
+            <Statistic name="AUT">${price.prettify()}</Statistic>
+        </Box>
+    );
 };
 
 // const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
@@ -56,7 +56,6 @@ const select = ({
     borrowingRate,
     redemptionRate,
     totalStakedLQTY,
-    frontend
 }: LiquityStoreState) => ({
     numberOfTroves,
     price,
@@ -117,7 +116,7 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
                     {total.collateral.shorten()} <Text sx={{ fontSize: 1 }}>&nbsp;AUT</Text>
                     <Text sx={{ fontSize: 1 }}>
                         &nbsp;(${Decimal.from(total.collateral.mul(price)).shorten()})
-        </Text>
+                    </Text>
                 </Statistic>
             }
             {showStat("troves") &&
@@ -141,28 +140,28 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
                 </Statistic>
             )}
             {showStat("staked-lqty") &&
-            <Statistic
-                name="Staked LQTY"
-                tooltip="The total amount of LQTY that is staked for earning fee revenue."
-            >
-                {totalStakedLQTY.shorten()}
-            </Statistic>
+                <Statistic
+                    name="Staked LQTY"
+                    tooltip="The total amount of LQTY that is staked for earning fee revenue."
+                >
+                    {totalStakedLQTY.shorten()}
+                </Statistic>
             }
-            {showStat("tcr") && 
-            <Statistic
-                name="Total Collateral Ratio"
-                tooltip="The ratio of the Dollar value of the entire system collateral at the current AUT:USD price, to the entire system debt."
-            >
-                {totalCollateralRatioPct.prettify()}
-            </Statistic>
+            {showStat("tcr") &&
+                <Statistic
+                    name="Total Collateral Ratio"
+                    tooltip="The ratio of the Dollar value of the entire system collateral at the current AUT:USD price, to the entire system debt."
+                >
+                    {totalCollateralRatioPct.prettify()}
+                </Statistic>
             }
             {showStat("recovery") &&
-            <Statistic
-                name="Recovery Mode"
-                tooltip="Recovery Mode is activated when the Total Collateral Ratio (TCR) falls below 150%. When active, your Trove can be liquidated if its collateral ratio is below the TCR. The maximum collateral you can lose from liquidation is capped at 110% of your Trove's debt. Operations are also restricted that would negatively impact the TCR."
-            >
-                {total.collateralRatioIsBelowCritical(price) ? <Box color="danger">Yes</Box> : "No"}
-            </Statistic>
+                <Statistic
+                    name="Recovery Mode"
+                    tooltip="Recovery Mode is activated when the Total Collateral Ratio (TCR) falls below 150%. When active, your Trove can be liquidated if its collateral ratio is below the TCR. The maximum collateral you can lose from liquidation is capped at 110% of your Trove's debt. Operations are also restricted that would negatively impact the TCR."
+                >
+                    {total.collateralRatioIsBelowCritical(price) ? <Box color="danger">Yes</Box> : "No"}
+                </Statistic>
             }
 
         </Box>
@@ -178,7 +177,9 @@ type SystemStatsProps = {
 };
 
 export const SystemStats: React.FC<SystemStatsProps> = (
-{variant = "info", showBalances, showProtocol, showPriceFeed, filterStats}) => {
+    { variant = "info", showBalances, showProtocol, showPriceFeed, filterStats }) => {
+
+    const [showStats, setShow] = useState(false);
     /*
     const {
         liquity: {
@@ -187,11 +188,28 @@ export const SystemStats: React.FC<SystemStatsProps> = (
     } = useLiquity();
     */
 
+    const statSections = () => (
+        <>
+            {showBalances && <Balances />}
+            {showProtocol && <ProtocolStats filterStats={filterStats} />}
+            {showPriceFeed && <PriceFeed />}
+        </>
+    )
+
     return (
         <Card {...{ variant }}>
-            {showBalances && <Balances />}
-            {showProtocol && <ProtocolStats filterStats={filterStats}/>}
-            {showPriceFeed && <PriceFeed />}
+            <Box
+                onClick={() => {setShow(!showStats)}}
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    color: "accent",
+                    cursor: "pointer",
+                    }}
+            >
+                <Text>Toggle Stats</Text>
+            </Box>
+            {showStats && statSections()}
         </Card>
     )
 }
