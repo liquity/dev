@@ -1,4 +1,3 @@
-const { getAddress } = require("ethers/lib/utils")
 const deploymentHelper = require("../utils/deploymentHelpers.js")
 const testHelpers = require("../utils/testHelpers.js")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
@@ -592,12 +591,12 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(defaulter_3)
     assert.isFalse((await sortedTroves.contains(defaulter_3)))
     const TCR_4 = await th.getTCR(contracts)
-    assert.isTrue(TCR_4.gte(TCR_4))
+    assert.isTrue(TCR_4.gte(TCR_3))
 
     await troveManager.liquidate(defaulter_4)
     assert.isFalse((await sortedTroves.contains(defaulter_4)))
     const TCR_5 = await th.getTCR(contracts)
-    assert.isTrue(TCR_5.gte(TCR_5))
+    assert.isTrue(TCR_5.gte(TCR_4))
   })
 
   it("liquidate(): a pure redistribution reduces the TCR only as a result of compensation", async () => {
@@ -2374,7 +2373,6 @@ contract('TroveManager', async accounts => {
       }
     )
 
-    
     const ETHFee = th.getEmittedRedemptionValues(redemptionTx)[3]
 
     const alice_Trove_After = await troveManager.Troves(alice)
@@ -3992,6 +3990,58 @@ contract('TroveManager', async accounts => {
     assert.isTrue(F_ETH_After.gt(F_ETH_Before))
   })
 
+  it("redeemCollateral(): a redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => {
+    // time fast-forwards 1 year, and multisig stakes 1 LQTY
+    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
+    await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
+    await lqtyStaking.stake(dec(1, 18), { from: multisig })
+
+    const { totalDebt: W_totalDebt } = await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })
+
+    const { totalDebt: A_totalDebt } = await openTrove({ ICR: toBN(dec(200, 16)), extraLUSDAmount: dec(100, 18), extraParams: { from: A } })
+    const { totalDebt: B_totalDebt } = await openTrove({ ICR: toBN(dec(190, 16)), extraLUSDAmount: dec(100, 18), extraParams: { from: B } })
+    const { totalDebt: C_totalDebt } = await openTrove({ ICR: toBN(dec(180, 16)), extraLUSDAmount: dec(100, 18), extraParams: { from: C } })
+    const totalDebt = W_totalDebt.add(A_totalDebt).add(B_totalDebt).add(C_totalDebt)
+
+    const A_balanceBefore = toBN(await web3.eth.getBalance(A))
+
+    // Confirm baseRate before redemption is 0
+    const baseRate = await troveManager.baseRate()
+    assert.equal(baseRate, '0')
+
+    // Check total LUSD supply
+    const activeLUSD = await activePool.getLUSDDebt()
+    const defaultLUSD = await defaultPool.getLUSDDebt()
+
+    const totalLUSDSupply = activeLUSD.add(defaultLUSD)
+    th.assertIsApproximatelyEqual(totalLUSDSupply, totalDebt)
+
+    // A redeems 9 LUSD
+    const redemptionAmount = toBN(dec(9, 18))
+    await th.redeemCollateral(A, contracts, redemptionAmount)
+
+    /*
+    At ETH:USD price of 200:
+    ETHDrawn = (9 / 200) = 0.045 ETH
+    ETHfee = (0.005 + (1/2) *( 9/260)) * ETHDrawn = 0.00100384615385 ETH
+    ETHRemainder = 0.045 - 0.001003... = 0.0439961538462
+    */
+
+    const A_balanceAfter = toBN(await web3.eth.getBalance(A))
+
+    // check A's ETH balance has increased by 0.045 ETH 
+    const price = await priceFeed.getPrice()
+    const ETHDrawn = redemptionAmount.mul(mv._1e18BN).div(price)
+    th.assertIsApproximatelyEqual(
+      A_balanceAfter.sub(A_balanceBefore),
+      ETHDrawn.sub(
+        toBN(dec(5, 15)).add(redemptionAmount.mul(mv._1e18BN).div(totalDebt).div(toBN(2)))
+          .mul(ETHDrawn).div(mv._1e18BN)
+      ),
+      100000
+    )
+  })
+
   it("redeemCollateral(): a full redemption (leaving trove with 0 debt), closes the trove", async () => {
     // time fast-forwards 1 year, and multisig stakes 1 LQTY
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -4526,6 +4576,6 @@ contract('TroveManager', async accounts => {
   it("hasPendingRewards(): Returns false it trove is not active", async () => {
     assert.isFalse(await troveManager.hasPendingRewards(alice))
   })
-  })
+})
 
 contract('Reset chain state', async accounts => { })

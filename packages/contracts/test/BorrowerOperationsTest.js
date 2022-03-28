@@ -1367,13 +1367,14 @@ contract('BorrowerOperations', async accounts => {
 
     it("adjustTrove(): Reverts if repaid amount is greater than current debt", async () => {
       const { totalDebt } = await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: alice } })
-      const repayAmount = totalDebt.add(toBN(1))
+      LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
+      const repayAmount = totalDebt.sub(LUSD_GAS_COMPENSATION).add(toBN(1))
       await openTrove({ extraLUSDAmount: repayAmount, ICR: toBN(dec(150, 16)), extraParams: { from: bob } })
 
       await lusdToken.transfer(alice, repayAmount, { from: bob })
 
       await assertRevert(borrowerOperations.adjustTrove(th._100pct, 0, repayAmount, false, alice, alice, { from: alice }),
-                         "BorrowerOps: Trove's net debt must be greater than minimum")
+                         "SafeMath: subtraction overflow")
     })
 
     it("repayLUSD(): reverts when calling address does not have active trove", async () => {
@@ -4330,9 +4331,11 @@ contract('BorrowerOperations', async accounts => {
 contract('Reset chain state', async accounts => { })
 
 /* TODO:
+
  1) Test SortedList re-ordering by ICR. ICR ratio
  changes with addColl, withdrawColl, withdrawLUSD, repayLUSD, etc. Can split them up and put them with
  individual functions, or give ordering it's own 'describe' block.
+
  2)In security phase:
  -'Negative' tests for all the above functions.
  */

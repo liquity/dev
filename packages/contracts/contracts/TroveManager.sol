@@ -794,16 +794,10 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function _sendGasCompensation(IActivePool _activePool, address _liquidator, uint _LUSD, uint _ETH) internal {
-        // Before calling this function, we always check that something was liquidated, otherwise revert.
-        // LUSD gas compensation could then only be zero if we set to zero that constant, but it’s ok to have this here as a sanity check
         if (_LUSD > 0) {
             lusdToken.returnFromPool(gasPoolAddress, _liquidator, _LUSD);
         }
 
-        // ETH gas compensation could only be zero if all liquidated troves in the sequence had collateral lower than 200 Wei
-        // (see _getCollGasCompensation function in LiquityBase)
-        // With the current values of min debt this seems quite unlikely, unless ETH price was in the order of magnitude of $10^19 or more,
-        // but it’s ok to have this here as a sanity check
         if (_ETH > 0) {
             _activePool.sendETH(_liquidator, _ETH);
         }
