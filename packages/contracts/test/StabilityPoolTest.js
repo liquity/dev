@@ -1024,11 +1024,11 @@ contract('StabilityPool', async accounts => {
     })
 
     it("provideToSP(), new deposit after past full withdrawal: depositor does not receive ETH gains", async () => {
-       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+      await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
 
-     // Whale transfers LUSD to A, B
-       await lusdToken.transfer(A, dec(1000, 18), { from: whale })
-       await lusdToken.transfer(B, dec(1000, 18), { from: whale })
+      // Whale transfers LUSD to A, B
+      await lusdToken.transfer(A, dec(1000, 18), { from: whale })
+      await lusdToken.transfer(B, dec(1000, 18), { from: whale })
 
       // C, D open troves
       await openTrove({ extraLUSDAmount: toBN(dec(4000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
@@ -2056,7 +2056,6 @@ contract('StabilityPool', async accounts => {
       assert.isTrue(await sortedTroves.contains(defaulter_2))
 
       const A_ETHBalBefore = toBN(await web3.eth.getBalance(A))
-      // const A_ETHBalBefore_BN = toBN(await web3.eth.getBalance(A))
       const A_LQTYBalBefore = await lqtyToken.balanceOf(A)
 
       // Check Alice has gains to withdraw
@@ -2302,7 +2301,6 @@ contract('StabilityPool', async accounts => {
       const carol_LUSD_Balance_Before = await lusdToken.balanceOf(carol)
 
       const alice_ETH_Balance_Before = web3.utils.toBN(await web3.eth.getBalance(alice))
-      
       const bob_ETH_Balance_Before = web3.utils.toBN(await web3.eth.getBalance(bob))
       const carol_ETH_Balance_Before = web3.utils.toBN(await web3.eth.getBalance(carol))
 
@@ -2439,7 +2437,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(bob_ETHGain_1, bob_ETHGain_3)
     })
 
-    //--- LQTY functionality ---
+    // --- LQTY functionality ---
     it("withdrawFromSP(): triggers LQTY reward event - increases the sum G", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(1, 24)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
 

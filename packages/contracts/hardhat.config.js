@@ -38,7 +38,7 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 200
+                        runs: 100
                     }
                 }
             },
@@ -47,7 +47,7 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 200
+                        runs: 100
                     }
                 }
             },
@@ -56,32 +56,23 @@ module.exports = {
                 settings: {
                     optimizer: {
                         enabled: true,
-                        runs: 200
+                        runs: 100
                     }
                 }
             },
-            {
-                version: "0.7.5",
-                settings: {
-                optimizer: {
-                    enabled: true,
-                    runs: 200
-              }
-            }
-        }
         ]
     },
     networks: {
         hardhat: {
             accounts: accountsList,
-            gas: 100000000,  // tx gas limit
-            blockGasLimit: 150000000, 
-            gasPrice: 200000000000,
+            gas: 10000000,  // tx gas limit
+            blockGasLimit: 15000000,
+            gasPrice: 20000000000,
             initialBaseFeePerGas: 0,
         },
         mainnet: {
             url: alchemyUrl(),
-            gasPrice: 15000000000,
+            gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 20000000000,
             accounts: [
                 getSecret('DEPLOYER_PRIVATEKEY', '0x60ddfe7f579ab6867cbe7a2dc03853dc141d7a4ab6dbefc0dae2d2b1bd4e487f'),
                 getSecret('ACCOUNT2_PRIVATEKEY', '0x3ec7cedbafd0cb9ec05bf9f7ccfa1e8b42b3e3a02c75addfccbfeb328d1b383b')
