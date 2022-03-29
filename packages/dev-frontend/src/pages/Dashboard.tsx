@@ -8,7 +8,7 @@ import { Redemption } from "../components/Redemption/Redemption";
 export const Dashboard: React.FC = () => (
   <Container variant="columns">
     <Container variant="single">
-      <TopSystemStats showProtocol showBalances showPriceFeed filterStats={['aut']}/>
+      <TopSystemStats showProtocol showBalances showPriceFeed filterStats={['tcr', "troves", "tvl"]}/>
       <Trove />
       <Redemption />
       <SystemStats showProtocol showPriceFeed/>

@@ -1,20 +1,30 @@
 import React from "react";
-import { Flex, Card } from "theme-ui";
-import { InfoIcon } from "./InfoIcon";
+import { Flex, Card, Heading, Box, Text } from "theme-ui";
 
 type StatisticProps = {
   name: React.ReactNode;
   tooltip?: React.ReactNode;
+  variant?: string;
 };
 
-export const BigStatistic: React.FC<StatisticProps> = ({ name, tooltip, children }) => {
+export const BigStatistic: React.FC<StatisticProps> = ({ variant = "info", name, tooltip, children }) => {
   return (
-    <Flex sx={{ my: "10px" }}>
-      <Flex sx={{ alignItems: "center", justifyContent: "flex-start", flex: 1.2, fontWeight: 200 }}>
-        <Flex>{name}</Flex>
-        {tooltip && <InfoIcon size="xs" tooltip={<Card variant="tooltip">{tooltip}</Card>} />}
-      </Flex>
-      <Flex sx={{ justifyContent: "flex-end", flex: 0.8, alignItems: "center" }}>{children}</Flex>
-    </Flex>
+    <Card {...{ variant }}
+      sx={{
+        color: "accent",
+      }}>
+      <Text sx={{
+        display: "flex",
+        justifyContent: "center",
+        // flexWrap: "wrap",
+      }}>{name}</Text>
+      <Text sx={{
+        fontSize: "x-large",
+        fontWeight: "bold",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center"
+      }}>{children}</Text>
+    </Card>
   );
 };
