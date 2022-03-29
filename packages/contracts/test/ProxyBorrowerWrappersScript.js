@@ -14,6 +14,9 @@ const timeValues = testHelpers.TimeValues
 const ZERO_ADDRESS = th.ZERO_ADDRESS
 const assertRevert = th.assertRevert
 
+const GAS_PRICE = 10000000
+
+
 const {
   buildUserProxies,
   BorrowerOperationsProxy,
@@ -97,16 +100,17 @@ contract('BorrowerWrappers', async accounts => {
     const proxyAddress = borrowerWrappers.getProxyAddressFromUser(alice)
 
     // send some ETH to proxy
-    await web3.eth.sendTransaction({ from: owner, to: proxyAddress, value: amount })
+    await web3.eth.sendTransaction({ from: owner, to: proxyAddress, value: amount, gasPrice: GAS_PRICE })
     assert.equal(await web3.eth.getBalance(proxyAddress), amount.toString())
 
     const balanceBefore = toBN(await web3.eth.getBalance(alice))
 
     // recover ETH
-    await borrowerWrappers.transferETH(alice, amount, { from: alice, gasPrice: 0 })
+    const gas_Used = th.gasUsed(await borrowerWrappers.transferETH(alice, amount, { from: alice, gasPrice: GAS_PRICE }))
+    
     const balanceAfter = toBN(await web3.eth.getBalance(alice))
-
-    assert.equal(balanceAfter.sub(balanceBefore), amount.toString())
+    const expectedBalance = toBN(balanceBefore.sub(toBN(gas_Used * GAS_PRICE)))
+    assert.equal(balanceAfter.sub(expectedBalance), amount.toString())
   })
 
   it('non proxy owner cannot recover ETH', async () => {
@@ -173,7 +177,7 @@ contract('BorrowerWrappers', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
     // whale redeems 150 LUSD
-    await th.redeemCollateral(whale, contracts, redeemAmount)
+    await th.redeemCollateral(whale, contracts, redeemAmount, GAS_PRICE)
     assert.equal(await web3.eth.getBalance(proxyAddress), '0')
 
     // surplus: 5 - 150/200
@@ -205,7 +209,7 @@ contract('BorrowerWrappers', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
     // whale redeems 150 LUSD
-    await th.redeemCollateral(whale, contracts, redeemAmount)
+    await th.redeemCollateral(whale, contracts, redeemAmount, GAS_PRICE)
     assert.equal(await web3.eth.getBalance(proxyAddress), '0')
 
     // surplus: 5 - 150/200
@@ -370,7 +374,7 @@ contract('BorrowerWrappers', async accounts => {
 
     // whale redeems 100 LUSD
     const redeemedAmount = toBN(dec(100, 18))
-    await th.redeemCollateral(whale, contracts, redeemedAmount)
+    await th.redeemCollateral(whale, contracts, redeemedAmount, GAS_PRICE)
 
     // Bob tries to claims staking gains in behalf of Alice
     const proxy = borrowerWrappers.getProxyFromUser(alice)
@@ -411,7 +415,7 @@ contract('BorrowerWrappers', async accounts => {
 
     // whale redeems 100 LUSD
     const redeemedAmount = toBN(dec(100, 18))
-    await th.redeemCollateral(whale, contracts, redeemedAmount)
+    await th.redeemCollateral(whale, contracts, redeemedAmount, GAS_PRICE)
 
     const ethBalanceBefore = await web3.eth.getBalance(borrowerOperations.getProxyAddressFromUser(alice))
     const troveCollBefore = await troveManager.getTroveColl(alice)
@@ -481,7 +485,7 @@ contract('BorrowerWrappers', async accounts => {
 
     // whale redeems 100 LUSD
     const redeemedAmount = toBN(dec(100, 18))
-    await th.redeemCollateral(whale, contracts, redeemedAmount)
+    await th.redeemCollateral(whale, contracts, redeemedAmount, GAS_PRICE)
 
     // Alice ETH gain is ((150/2000) * (redemption fee over redeemedAmount) / price)
     const redemptionFee = await troveManager.getRedemptionFeeWithDecay(redeemedAmount)
@@ -642,7 +646,7 @@ contract('BorrowerWrappers', async accounts => {
 
     // whale redeems 100 LUSD
     const redeemedAmount = toBN(dec(100, 18))
-    await th.redeemCollateral(whale, contracts, redeemedAmount)
+    await th.redeemCollateral(whale, contracts, redeemedAmount, GAS_PRICE)
 
     // Alice ETH gain is ((150/2000) * (redemption fee over redeemedAmount) / price)
     const redemptionFee = await troveManager.getRedemptionFeeWithDecay(redeemedAmount)
