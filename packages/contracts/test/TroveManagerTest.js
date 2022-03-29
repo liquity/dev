@@ -4018,7 +4018,7 @@ contract('TroveManager', async accounts => {
 
     // A redeems 9 LUSD
     const redemptionAmount = toBN(dec(9, 18))
-    await th.redeemCollateral(A, contracts, redemptionAmount)
+    const gasUsed = await th.redeemCollateral(A, contracts, redemptionAmount, GAS_PRICE)
 
     /*
     At ETH:USD price of 200:
@@ -4037,7 +4037,7 @@ contract('TroveManager', async accounts => {
       ETHDrawn.sub(
         toBN(dec(5, 15)).add(redemptionAmount.mul(mv._1e18BN).div(totalDebt).div(toBN(2)))
           .mul(ETHDrawn).div(mv._1e18BN)
-      ),
+      ).sub(toBN(gasUsed * GAS_PRICE)), // substract gas used for troveManager.redeemCollateral from expected received ETH
       100000
     )
   })
