@@ -34,7 +34,7 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
   network
 ];
 
-const supportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
+const webSocketSupportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
@@ -72,7 +72,11 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
       if (isWebSocketAugmentedProvider(provider)) {
         const network = getNetwork(chainId);
 
-        if (network.name && supportedNetworks.includes(network.name) && config.infuraApiKey) {
+        if (
+          network.name &&
+          webSocketSupportedNetworks.includes(network.name) &&
+          config.infuraApiKey
+        ) {
           provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
         } else if (connection._isDev) {
           provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
