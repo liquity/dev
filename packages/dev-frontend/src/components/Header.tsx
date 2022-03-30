@@ -4,7 +4,7 @@ import { Container, Flex} from "theme-ui";
 import { LiquityLogo } from "./LiquityLogo";
 import { Nav } from "./Nav";
 import { SideNav } from "./SideNav";
-import { UserAccount } from "./UserAccount";
+import { UserAccount } from "./UserDashboard/UserAccount";
 // import { SystemStatsPopup } from "./SystemStatsPopup";
 
 const logoHeight = "32px";
