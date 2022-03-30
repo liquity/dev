@@ -97,19 +97,18 @@ const card: ThemeUIStyleObject = {
     position: "relative",
     mt: cardGapY,
     mb: cardGapY,
-    border: 1,
+    borderColor: "background",
     borderRadius: 16,
-    boxShadow: [1, null, 1],
+    boxShadow: "0px 4px 8px #4895f426"
 };
 
 const infoCard: ThemeUIStyleObject = {
     ...card,
 
     padding: 3,
-
-    borderColor: "accent",
-    bg: "#f9fffe",
+    boxShadow: "0px 4px 5px #03d8c31a",
     // backgroundColor: "rgba(3, 216, 195, 0.03)",
+    backgroundColor: "#f9fffe",
 
     h2: {
         mb: 2,
@@ -216,6 +215,15 @@ const theme: Theme = {
             backgroundColor: "#414c6b",
             background: "linear-gradient(90deg, #414c6b 0%, #4895F4 15%, #03D8C3 85%)",
         },
+
+        outline: {
+            ...badge,
+
+            border: 2,
+            color: "accent",
+            backgroundColor: "transparent",
+
+        }
     },
 
     buttons: {
@@ -327,6 +335,9 @@ const theme: Theme = {
         info: {
             ...infoCard,
 
+            border: 1,
+            color: "accent",
+
             // display: ["none", "block"]
         },
 
@@ -357,6 +368,16 @@ const theme: Theme = {
             zIndex: 1
         },
 
+        tooltipInfo: {
+            padding: 2,
+            borderRadius: "12px",
+            boxShadow: 1,
+            bg: "#f9fffe",
+            color: "accent",
+
+            zIndex: 1
+        },
+
         userAccountModal: {
             ...card,
 
@@ -364,7 +385,6 @@ const theme: Theme = {
             padding: 3,
             bg: "white",
             border: 2,
-            borderColor: "muted",
         }
     },
 

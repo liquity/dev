@@ -30,9 +30,11 @@ export const PriceManager: React.FC = () => {
 
     return canSetPrice ? (
         <Card sx={{
-        borderColor: "accent",
-        bg: "rgb(250 255 255)",
-         }}>
+            border: 1,
+            borderStyle: "dashed",
+            borderColor: "accent",
+            bg: "rgb(250 255 255)",
+        }}>
             <Flex sx={{ mt: 3, mx: 3, alignItems: "center" }}>
                 <Heading sx={{ fontSize: 2 }}>Price Manager</Heading>
                 <InfoIcon size="sm" tooltip={<Card variant="tooltip">
