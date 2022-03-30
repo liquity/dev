@@ -1,44 +1,9 @@
-import React, { useState } from "react";
-import { Card, Heading, Box, Text } from "theme-ui";
+import React, { ReactElement } from "react";
+import { Box, Text } from "theme-ui";
 import { Decimal, Percent, LiquityStoreState } from "@fluidity/lib-base";
 import { useLiquitySelector } from "@fluidity/lib-react";
 import { COIN, GT } from "../strings";
 import { BigStatistic } from "./BigStatistic";
-
-const selectBalances = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
-  accountBalance,
-  lusdBalance,
-  lqtyBalance
-});
-
-const Balances: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
-  const { accountBalance, lusdBalance, lqtyBalance } = useLiquitySelector(selectBalances);
-  const showStat = (statSection: string): boolean => {
-    return filterStats ? filterStats.includes(statSection) : true;
-  }
-
-  return (
-    <>
-      {showStat("aut") && <BigStatistic name="AUT"> {accountBalance.prettify(4)}</BigStatistic>}
-      {showStat("lusd") && <BigStatistic name={COIN}> {lusdBalance.prettify()}</BigStatistic>}
-      {showStat("lqty") && <BigStatistic name={GT}>{lqtyBalance.prettify()}</BigStatistic>}
-    </>
-  );
-};
-
-const selectPrice = ({ price }: LiquityStoreState) => price;
-
-const PriceFeed: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
-  const price = useLiquitySelector(selectPrice);
-  const showStat = (statSection: string): boolean => {
-    return filterStats ? filterStats.includes(statSection) : true;
-  }
-  return (
-    <>
-      {showStat("aut") && <BigStatistic name="AUT">${price.prettify()}</BigStatistic>}
-    </>
-  );
-};
 
 // const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
 //     children?.match(/[0-9a-f]{40}/) ? (
@@ -47,162 +12,200 @@ const PriceFeed: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
 //             <>unknown</>
 //         );
 
+type Stat = {
+    name: string,
+    tooltip?: string,
+    body: ReactElement | string
+}
+
 type ProtocolStatsProps = {
-  filterStats?: string[];
+    filterStats?: string[];
 }
 
 const select = ({
-  numberOfTroves,
-  price,
-  total,
-  lusdInStabilityPool,
-  borrowingRate,
-  redemptionRate,
-  totalStakedLQTY,
+    numberOfTroves,
+    price,
+    total,
+    lusdInStabilityPool,
+    borrowingRate,
+    redemptionRate,
+    totalStakedLQTY,
+    accountBalance,
+    lusdBalance,
+    lqtyBalance
 }: LiquityStoreState) => ({
-  numberOfTroves,
-  price,
-  total,
-  lusdInStabilityPool,
-  borrowingRate,
-  redemptionRate,
-  totalStakedLQTY,
+    numberOfTroves,
+    price,
+    total,
+    lusdInStabilityPool,
+    borrowingRate,
+    redemptionRate,
+    totalStakedLQTY,
+    accountBalance,
+    lusdBalance,
+    lqtyBalance
 });
 
 const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
 
-  const {
-    numberOfTroves,
-    price,
-    lusdInStabilityPool,
-    total,
-    borrowingRate,
-    redemptionRate,
-    totalStakedLQTY,
-  } = useLiquitySelector(select);
+    const {
+        numberOfTroves,
+        price,
+        lusdInStabilityPool,
+        total,
+        borrowingRate,
+        redemptionRate,
+        totalStakedLQTY,
+        accountBalance,
+        lusdBalance,
+        lqtyBalance,
+    } = useLiquitySelector(select);
 
-  const lusdInStabilityPoolPct =
-    total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
-  const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
-  const borrowingFeePct = new Percent(borrowingRate);
-  const redemptionFeePct = new Percent(redemptionRate);
+    const lusdInStabilityPoolPct =
+        total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
+    const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
+    const borrowingFeePct = new Percent(borrowingRate);
+    const redemptionFeePct = new Percent(redemptionRate);
 
-  const showStat = (statSection: string): boolean => {
-    return filterStats ? filterStats.includes(statSection) : true;
-  }
+    // const showStat = (statSection: string): boolean => {
+    //     return filterStats ? filterStats.includes(statSection) : true;
+    // }
 
-  return (
-    <>
-      {showStat("borrow-fee") &&
-        <BigStatistic
-          name="Borrowing Fee"
-          tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
-        >
-          {borrowingFeePct.toString(2)}
-        </BigStatistic>
-      }
-      {showStat("redeem-fee") &&
-        <BigStatistic
-          name="Redemption Fee"
-          tooltip="The Redemption Fee is a one-off fee charged as a percentage of the redeemed amount (in AUT). The fee varies from 0.5% depending on LUSD redemption volumes."
-        >
-          {redemptionFeePct.toString(2)}
-        </BigStatistic>
-      }
-      {showStat("tvl") &&
-        <BigStatistic
-          name="TVL"
-          tooltip="The Total Value Locked (TVL) is the total value of AUT locked as collateral in the system, given in AUT and USD."
-        >
-          {total.collateral.shorten()} <Text sx={{ fontSize: 2 }}>&nbsp;AUT</Text>
-        </BigStatistic>
-      }
-      {showStat("troves") &&
-        <BigStatistic name="Opened Troves" tooltip="The total number of active Troves in the system.">
-          {Decimal.from(numberOfTroves).prettify(0)}
-        </BigStatistic>
-      }
-      {showStat("lusd-supply") &&
-        <BigStatistic name="LUSD supply" tooltip="The total LUSD minted by the Liquity Protocol.">
-          {total.debt.shorten()}
-        </BigStatistic>
-      }
-      {showStat("lusd-sp") && lusdInStabilityPoolPct && (
-        <BigStatistic
-          name="LUSD in Stability Pool"
-          tooltip="The total LUSD currently held in the Stability Pool, expressed as an amount and a fraction of the LUSD supply." >
-          {lusdInStabilityPool.shorten()}
-          <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct.toString(1)})</Text>
-        </BigStatistic>
-      )}
-      {showStat("staked-lqty") &&
-        <BigStatistic
-          name="Staked LQTY"
-          tooltip="The total amount of LQTY that is staked for earning fee revenue."
-        >
-          {totalStakedLQTY.shorten()}
-        </BigStatistic>
-      }
-      {showStat("tcr") &&
-        <BigStatistic
-          name="TCR"
-          tooltip="The ratio of the Dollar value of the entire system collateral at the current AUT:USD price, to the entire system debt."
-        >
-          {totalCollateralRatioPct.prettify()}
-        </BigStatistic>
-      }
-      {showStat("recovery") &&
-        <BigStatistic
-          name="Recovery Mode"
-          tooltip="Recovery Mode is activated when the Total Collateral Ratio (TCR) falls below 150%. When active, your Trove can be liquidated if its collateral ratio is below the TCR. The maximum collateral you can lose from liquidation is capped at 110% of your Trove's debt. Operations are also restricted that would negatively impact the TCR."
-        >
-          {total.collateralRatioIsBelowCritical(price) ? <Box color="danger">Yes</Box> : "No"}
-        </BigStatistic>
-      }
+    const statSelector = (stat: string): Stat => {
+        switch (stat) {
+            case "borrow-fee":
+                return {
+                    "name": "Borrowing Fee", 
+                    "tooltip": "The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes.",
 
-    </>
-  );
+                    "body": borrowingFeePct.toString(2)
+                    }
+            case "redeem-fee":
+                return {
+                    "name": "Redemption fee",
+                    "tooltip": "The Redemption Fee is a one-off fee charged as a percentage of the redeemed amount (in AUT). The fee varies from 0.5% depending on LUSD redemption volumes.",
+                    "body": redemptionFeePct.toString(2)
+                }
+            case "tvl":
+                return {
+                    "name": "TVL",
+                    "tooltip": "The Total Value Locked (TVL) is the total value of AUT locked as collateral in the system, given in AUT and USD.",
+                    "body": <>{total.collateral.shorten()} <Text sx={{ fontSize: 2 }}>&nbsp;AUT</Text></>
+                }
+            case "troves":
+                return {
+                    "name": "Opened Troves",
+                    "tooltip": "The total number of active Troves in the system.",
+                    "body": Decimal.from(numberOfTroves).prettify(0)
+                }
+            case "lusd-supply":
+                return {
+                    "name": "LUSD supply",
+                    "tooltip": "The total LUSD minted by the Liquity Protocol.",
+                    "body": total.debt.shorten()
+                }
+            case "lusd-sp":
+                return {
+                    "name": "LUSD in Stability Pool",
+                    "tooltip": "The total LUSD currently held in the Stability Pool, expressed as an amount and a fraction of the LUSD supply.",
+                    "body": <>{lusdInStabilityPool.shorten()}<Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct?.toString(1)})</Text></>
+                }
+            case "staked-lqty":
+                return {
+                    "name": "Staked LQTY",
+                    "tooltip": "The total amount of LQTY that is staked for earning fee revenue.",
+                    "body": totalStakedLQTY.shorten()
+                }
+            case "tcr":
+                return {
+                    "name": "TCR",
+                    "tooltip": "The ratio of the Dollar value of the entire system collateral at the current AUT:USD price, to the entire system debt.",
+                    "body": totalCollateralRatioPct.prettify()
+                }
+            case "recovery":
+                return {
+                    "name": "Recovery Mode",
+                    "tooltip": "Recovery Mode is activated when the Total Collateral Ratio (TCR) falls below 150%. When active, your Trove can be liquidated if its collateral ratio is below the TCR. The maximum collateral you can lose from liquidation is capped at 110% of your Trove's debt. Operations are also restricted that would negatively impact the TCR.",
+                    "body": <>{total.collateralRatioIsBelowCritical(price) ? <Box color="danger">Yes</Box> : "No"}</>
+                }
+            case "aut-balance":
+                return {
+                    "name": "AUT",
+                    "body": accountBalance.prettify(4)
+                    }
+            case "lusd-balance":
+                return {
+                    "name": COIN,
+                    "body": lusdBalance.prettify()
+                }
+            case "lqty-balance":
+                return {
+                    "name": GT,
+                    "body": lqtyBalance.prettify()
+                }
+            case "aut-price":
+                return {
+                    "name": "AUT",
+                    "body": <>{price.prettify()}<Text sx={{ fontSize: 2 }}>&nbsp;USD</Text></>
+                    }
+            case "lqty-price":
+                return {
+                    "name": "LQTY",
+                    "body": <>80.0<Text sx={{ fontSize: 2 }}>&nbsp;USD</Text></>
+                }
+            default:
+                return { "name": "Stat", "body": <></> };
+        }
+    }
+
+    return (
+        <>
+            {
+                filterStats?.map((statFilter) => {
+                    const stat = statSelector(statFilter);
+                    return (<BigStatistic name={stat.name} tooltip={stat.tooltip}>{stat.body}</BigStatistic>);
+                })
+            }
+        </>
+    );
 };
 
 type SystemStatsProps = {
-  variant?: string;
-  showBalances?: boolean;
-  showProtocol?: boolean;
-  showPriceFeed?: boolean;
-  filterStats?: string[];
+    variant?: string;
+    showBalances?: boolean;
+    showProtocol?: boolean;
+    showPriceFeed?: boolean;
+    filterStats?: string[];
 };
 
 export const TopSystemStats: React.FC<SystemStatsProps> = (
-  { variant = "info", showBalances, showProtocol, showPriceFeed, filterStats }) => {
+    { filterStats }) => {
 
-  const [showStats, setShow] = useState(false);
-  /*
-  const {
-      liquity: {
-          connection: { version: contractsVersion, deploymentDate, frontendTag }
-      }
-  } = useLiquity();
-  */
+    /*
+    const {
+        liquity: {
+            connection: { version: contractsVersion, deploymentDate, frontendTag }
+        }
+    } = useLiquity();
+    */
 
-  const statSections = () => (
-    <Box sx={{
-      display: "flex",
-      flexDirection: "row",
-      justifyContent: "space-evenly",
-      flex: "grow",
-      paddingBottom: "20px",
-      marginTop: "-40px"
-    }}>
-      {showBalances && <Balances filterStats={filterStats} />}
-      {showProtocol && <ProtocolStats filterStats={filterStats} />}
-      {showPriceFeed && <PriceFeed filterStats={filterStats} />}
-    </Box>
-  )
+    const statSections = () => (
+        <Box sx={{
+            display: "flex",
+            flexFlow: "row wrap-reverse",
+            justifyContent: "space-between",
+            flexGrow: 1,
+            gap: 2,
+            py: 3,
+        }}>
+            <ProtocolStats filterStats={filterStats} />
+        </Box>
+    )
 
-  return (
-    <>
-      {statSections()}
-    </>
-  )
+    return (
+        <>
+            {statSections()}
+        </>
+    )
 }
 
