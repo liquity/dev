@@ -6,7 +6,7 @@ import { InfoMessage } from "./InfoMessage";
 
 import { injectedConnector } from "../connectors/injectedConnector";
 import { getWcConnector, resetWc } from "../connectors/walletconnectConnector";
-import { useAutoConnection } from "../hooks/useAutoConnection";
+import { coinbaseWalletConnector } from "../connectors/coinbaseWalletConnector";
 
 import { RetryDialog } from "./RetryDialog";
 import { SelectWalletDialog } from "./SelectWalletDialog";
@@ -15,12 +15,7 @@ import { MetaMaskIcon } from "./MetaMaskIcon";
 import { Icon } from "./Icon";
 import { Modal } from "./Modal";
 import { ConnectPage, device } from "./ConnectPage";
-
-interface MaybeHasMetaMask {
-  ethereum?: {
-    isMetaMask?: boolean;
-  };
-}
+import { CoinbaseWalletIcon } from "./CoinbaseWalletIcon";
 
 export type SelectedWallet = 
  | null
@@ -88,8 +83,6 @@ const connectionReducer: React.Reducer<ConnectionState, ConnectionAction> = (sta
   return state;
 };
 
-const detectMetaMask = () => (window as MaybeHasMetaMask).ethereum?.isMetaMask ?? false;
-
 type WalletConnectorProps = {
   loader?: React.ReactNode;
 };
@@ -116,10 +109,11 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
 
   const [connectionState, dispatch] = useReducer(connectionReducer, { type: "inactive" });
   const isMetaMask = selectedWallet && selectedWallet.name === "MetaMask";
+  const isCoinbaseWallet = selectedWallet && selectedWallet.name === "Coinbase Wallet";
 
   useEffect(() => {
     if (error) {
-      if(selectedWallet && selectedWallet.name == "WalletConnect"){
+      if(selectedWallet && selectedWallet.name === "WalletConnect"){
         resetWc()
         setSelectedWallet({ 
           name: "WalletConnect",
@@ -129,7 +123,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
       dispatch({ type: "fail", error });
       deactivate();
     }
-  }, [error, deactivate]);
+  }, [error, selectedWallet, deactivate]);
 
   useEffect(() => {
     if (active) {
@@ -253,11 +247,30 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
           `}} />
           <SelectWalletDialog 
             onCancel={() => setShowSelectWalletMDL(false)}>
-            <Flex sx={{ alignItems: "center", justifyContent: "space-between", width: "100%",
-                [`@media screen and (max-width: 600px)`]: {
-                  flexDirection: "column",
-                }
+            <Flex sx={{ 
+              flexDirection: "column",
+              alignItems: "center", 
+              width: "100%"
               }}>
+              <div
+                onClick={() => {
+                  setSelectedWallet({ 
+                    name: "Coinbase Wallet",
+                    connector: coinbaseWalletConnector,
+                  });
+                  dispatch({ type: "startActivating", connector: coinbaseWalletConnector });
+                  activate(coinbaseWalletConnector);
+                  setShowSelectWalletMDL(false)
+                }}
+                className="connector-btn">
+                  <svg width="40" height="40" viewBox="0 0 74 74" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="37" cy="37" r="35" fill="#1B53E4" stroke="white" stroke-width="4"/>
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M37.2446 60.6123C24.473 60.6123 14.1196 50.2589 14.1196 37.4873C14.1196 24.7157 24.473 14.3623 37.2446 14.3623C50.0162 14.3623 60.3696 24.7157 60.3696 37.4873C60.3696 50.2589 50.0162 60.6123 37.2446 60.6123Z" fill="white"/>
+                  <path d="M29.7939 33.021C29.7939 31.3703 31.132 30.0322 32.7827 30.0322H41.708C43.3586 30.0322 44.6967 31.3703 44.6967 33.021V41.9463C44.6967 43.5969 43.3586 44.935 41.708 44.935H32.7827C31.132 44.935 29.7939 43.5969 29.7939 41.9463V33.021Z" fill="#1B53E4"/>
+                  </svg>
+                <span>Coinbase Wallet</span>
+                <span style={{width: "40px"}}></span>
+              </div>
               <div
                 onClick={() => {
                   setSelectedWallet({ 
@@ -293,7 +306,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             </Flex>
             <Box css={{marginTop: "38px"}}>
               <InfoMessage title="Old accounts are accessible via the legacy version. ">
-                To migrate your account, withdraw the LUSD from the legacy version and deposit it again here. <a  target='_blank' href="https://medium.com/b-protocol/lusd-liquidations-during-21-24-1-lesson-learned-51a40d244bcb">Learn more.</a>
+                To migrate your account, withdraw the LUSD from the legacy version and deposit it again here. <a target='_blank' rel="noreferrer" href="https://medium.com/b-protocol/lusd-liquidations-during-21-24-1-lesson-learned-51a40d244bcb">Learn more.</a>
               </InfoMessage>
             </Box>
           </SelectWalletDialog>
@@ -311,7 +324,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             }}
           >
             <Box sx={{ textAlign: "center" }}>
-              You might need to install MetaMask or use a different browser.
+              You might need to install Coinbase Wallet, MetaMask or use a different browser.
             </Box>
             <Link sx={{ lineHeight: 3 }} href="https://metamask.io/download.html" target="_blank">
               Learn more <Icon size="xs" name="external-link-alt" />
@@ -324,16 +337,22 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
         <Modal>
           <ConnectionConfirmationDialog
             title={
-              isMetaMask ? "Confirm connection in MetaMask" : "Confirm connection in your wallet"
+              isMetaMask ? "Confirm connection in MetaMask" : 
+              isCoinbaseWallet? "Confirm Connect in Coinbase Wallet " :
+              "Confirm connection in your wallet"
             }
-            icon={isMetaMask ? <MetaMaskIcon /> : <Icon name="wallet" size="lg" />}
+            icon={isMetaMask ? <MetaMaskIcon /> : isCoinbaseWallet ? <CoinbaseWalletIcon /> :<Icon name="wallet" size="lg" />}
             onCancel={() => dispatch({ type: "cancel" })}
           >
             <Text sx={{ textAlign: "center" }}>
               Confirm the request that&apos;s just appeared.
-              {isMetaMask ? (
+              {isMetaMask && (
                 <> If you can&apos;t see a request, open your MetaMask extension via your browser.</>
-              ) : (
+              )}
+              {isCoinbaseWallet && (
+                <> If you can&apos;t see a request, open your Coinbase Wallet extension via your browser.</>
+              )}
+              {!isCoinbaseWallet && !isMetaMask && (
                 <> If you can&apos;t see a request, you might have to open your wallet.</>
               )}
             </Text>
