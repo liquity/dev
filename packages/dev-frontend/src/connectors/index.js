@@ -5,7 +5,7 @@ import { NetworkConnector } from './Network'
 const POLLING_INTERVAL = 10000
 
 export const injected = new InjectedConnector({
-  supportedChainIds: [17]
+  supportedChainIds: [17, 444900]
 })
 
 export const network = new NetworkConnector({
