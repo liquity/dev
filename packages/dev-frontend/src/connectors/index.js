@@ -9,13 +9,6 @@ export const injected = new InjectedConnector({
 })
 
 export const network = new NetworkConnector({
-  urls: { 17: "http://localhost:8545" },
+  urls: { 444900: "https://rpc1.bakerloo.autonity.network:8545"  }, //TODO: Use a env variable
   pollingInterval: POLLING_INTERVAL
 })
-
-/* 
-export const network = new NetworkConnector({
-  urls: { 444900: "https://rpc1.bakerloo.autonity.network:8545" },
-  pollingInterval: POLLING_INTERVAL
-})
-*/
