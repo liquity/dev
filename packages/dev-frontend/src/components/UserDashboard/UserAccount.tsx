@@ -6,6 +6,8 @@ import { useLiquity } from "../../hooks/LiquityContext";
 import { shortenAddress } from "../../utils/shortenAddress";
 import { PriceManager } from "../../components/PriceManager";
 import { TopSystemStats } from "../../components/TopSystemStats";
+import { useWeb3React } from "../../hooks"
+import { injected } from "../../connectors";
 
 const UserModal: React.FC = () => {
     return (
@@ -24,6 +26,8 @@ export const UserAccount: React.FC = () => {
     const { account } = useLiquity();
     const userModalOverlayRef = useRef<HTMLDivElement>(null);
     const [userModalOpen, setSystemStatsOpen] = useState(false);
+    const { activate } = useWeb3React();
+
 
     return (
         <>
@@ -36,7 +40,24 @@ export const UserAccount: React.FC = () => {
                         sx={{ px: 3, py: 2 }}>
                         <Flex sx={{ flexDirection: "column" }}>
                             <Text as="span" sx={{ fontSize: 1 }}>
-                                {shortenAddress(account)}
+                                {account && shortenAddress(account)}
+                            </Text>
+                        </Flex>
+                    </Button>
+                </Flex>
+            </Box>
+
+            <Box>
+                <Flex sx={{ mx: 2, alignItems: "center" }}>
+                    {/* <Icon name="user-circle" size="lg" /> */}
+                    <Button
+                        onClick={() => activate(injected)
+                        }
+                        variant="colors"
+                        sx={{ px: 30, py: 2 }}>
+                        <Flex sx={{ flexDirection: "column" }}>
+                            <Text as="span" sx={{ fontSize: 1 }}>
+                                {account && shortenAddress(account)}
                             </Text>
                         </Flex>
                     </Button>
