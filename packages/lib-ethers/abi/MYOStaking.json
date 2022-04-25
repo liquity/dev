@@ -1,0 +1,836 @@
+{
+  "address": "0x2E01f9711F495f22f9d9D6ed0628ea68F20028Ce",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_core",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_F_GEM",
+          "type": "uint256"
+        }
+      ],
+      "name": "F_GEMUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_F_PAI",
+          "type": "uint256"
+        }
+      ],
+      "name": "F_PAIUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "GEMSent",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_account",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "PAISent",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "staker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newStake",
+          "type": "uint256"
+        }
+      ],
+      "name": "StakeChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "_staker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_F_GEM",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_F_PAI",
+          "type": "uint256"
+        }
+      ],
+      "name": "StakerSnapshotsUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "staker",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "PAIGain",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "GEMGain",
+          "type": "uint256"
+        }
+      ],
+      "name": "StakingGainsWithdrawn",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_totalMYOStaked",
+          "type": "uint256"
+        }
+      ],
+      "name": "TotalMYOStakedUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "BOOTSTRAP_PERIOD",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "BORROWING_FEE_FLOOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "CCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "DAI_GAS_COMPENSATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "DECIMAL_PRECISION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "F_GEM",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "F_PAI",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "HALF_PERCENT_DIVISOR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MAX_UINT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MCR",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MIN_NET_DEBT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "NAME",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "SECONDS_IN_ONE_MINUTE",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "activePool",
+      "outputs": [
+        {
+          "internalType": "contract IActivePool",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "borrowerOperations",
+      "outputs": [
+        {
+          "internalType": "contract IBorrowerOperations",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "collSurplusPool",
+      "outputs": [
+        {
+          "internalType": "contract ICollSurplusPool",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "core",
+      "outputs": [
+        {
+          "internalType": "contract ICore",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "defaultPool",
+      "outputs": [
+        {
+          "internalType": "contract IDefaultPool",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "gemToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAccruedGEMFees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getAccruedPAIFees",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEntireSystemColl",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "entireSystemColl",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getEntireSystemDebt",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "entireSystemDebt",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getPendingGEMGain",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getPendingPAIGain",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_GEMFee",
+          "type": "uint256"
+        }
+      ],
+      "name": "increaseF_GEM",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_PAIFee",
+          "type": "uint256"
+        }
+      ],
+      "name": "increaseF_PAI",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "myoStaking",
+      "outputs": [
+        {
+          "internalType": "contract IMYOStaking",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "myoToken",
+      "outputs": [
+        {
+          "internalType": "contract IMYOToken",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "paiToken",
+      "outputs": [
+        {
+          "internalType": "contract IPAIToken",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "priceFeed",
+      "outputs": [
+        {
+          "internalType": "contract IPriceFeed",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "snapshots",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "F_GEM_Snapshot",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "F_PAI_Snapshot",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "sortedTroves",
+      "outputs": [
+        {
+          "internalType": "contract ISortedTroves",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_MYOamount",
+          "type": "uint256"
+        }
+      ],
+      "name": "stake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "stakes",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalMYOStaked",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_MYOamount",
+          "type": "uint256"
+        }
+      ],
+      "name": "unstake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "vault",
+      "outputs": [
+        {
+          "internalType": "contract IVault",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xd24ccb9d952d655d16cf913683a22731f1df4ef4417c2210de7fcffe95ba1d29",
+  "receipt": {
+    "to": null,
+    "from": "0xd28e3542856F157f979111435DaFCC37f419d0c2",
+    "contractAddress": "0x2E01f9711F495f22f9d9D6ed0628ea68F20028Ce",
+    "transactionIndex": 11,
+    "gasUsed": "1302832",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000800000000000000000000100000000004000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000800000080000000000000000000200000000000000001000000000000000000000000000000000000000000004000000000000000000001000000000000000000000000000000100040000000000000000000000000000010000000000000000000000000000000000000100000",
+    "blockHash": "0xa9746914e2f3240561ea8327b26db29af942d7c8ac44a1a6509b6029c5bf8ad8",
+    "transactionHash": "0xd24ccb9d952d655d16cf913683a22731f1df4ef4417c2210de7fcffe95ba1d29",
+    "logs": [
+      {
+        "transactionIndex": 11,
+        "blockNumber": 26047931,
+        "transactionHash": "0xd24ccb9d952d655d16cf913683a22731f1df4ef4417c2210de7fcffe95ba1d29",
+        "address": "0x0000000000000000000000000000000000001010",
+        "topics": [
+          "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63",
+          "0x0000000000000000000000000000000000000000000000000000000000001010",
+          "0x000000000000000000000000d28e3542856f157f979111435dafcc37f419d0c2",
+          "0x000000000000000000000000be188d6641e8b680743a4815dfa0f6208038960f"
+        ],
+        "data": "0x00000000000000000000000000000000000000000000000000250759b3f3d7b00000000000000000000000000000000000000000000000000977334664a5af6700000000000000000000000000000000000000000000126f9cedbe29b97d04c300000000000000000000000000000000000000000000000009522becb0b1d7b700000000000000000000000000000000000000000000126f9d12c5836d70dc73",
+        "logIndex": 31,
+        "blockHash": "0xa9746914e2f3240561ea8327b26db29af942d7c8ac44a1a6509b6029c5bf8ad8"
+      }
+    ],
+    "blockNumber": 26047931,
+    "cumulativeGasUsed": "4030281",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x37F6DFa518E3708727E7eD3CbF5cA3641412890e"
+  ],
+  "numDeployments": 2,
+  "solcInputHash": "8aa079dc372efa4fb72dddab2b66ad11",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.3+commit.8d00100c\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_core\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_F_GEM\",\"type\":\"uint256\"}],\"name\":\"F_GEMUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_F_PAI\",\"type\":\"uint256\"}],\"name\":\"F_PAIUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"GEMSent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_account\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_amount\",\"type\":\"uint256\"}],\"name\":\"PAISent\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"newStake\",\"type\":\"uint256\"}],\"name\":\"StakeChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"_staker\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_F_GEM\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_F_PAI\",\"type\":\"uint256\"}],\"name\":\"StakerSnapshotsUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"staker\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"PAIGain\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"GEMGain\",\"type\":\"uint256\"}],\"name\":\"StakingGainsWithdrawn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"_totalMYOStaked\",\"type\":\"uint256\"}],\"name\":\"TotalMYOStakedUpdated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"BOOTSTRAP_PERIOD\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"BORROWING_FEE_FLOOR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"CCR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"DAI_GAS_COMPENSATION\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"DECIMAL_PRECISION\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"F_GEM\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"F_PAI\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"HALF_PERCENT_DIVISOR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MAX_UINT\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MCR\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"MIN_NET_DEBT\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"NAME\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"SECONDS_IN_ONE_MINUTE\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"activePool\",\"outputs\":[{\"internalType\":\"contract IActivePool\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"borrowerOperations\",\"outputs\":[{\"internalType\":\"contract IBorrowerOperations\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"collSurplusPool\",\"outputs\":[{\"internalType\":\"contract ICollSurplusPool\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"core\",\"outputs\":[{\"internalType\":\"contract ICore\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"defaultPool\",\"outputs\":[{\"internalType\":\"contract IDefaultPool\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gemToken\",\"outputs\":[{\"internalType\":\"contract IERC20\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getAccruedGEMFees\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getAccruedPAIFees\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getEntireSystemColl\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"entireSystemColl\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getEntireSystemDebt\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"entireSystemDebt\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getPendingGEMGain\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getPendingPAIGain\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_GEMFee\",\"type\":\"uint256\"}],\"name\":\"increaseF_GEM\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_PAIFee\",\"type\":\"uint256\"}],\"name\":\"increaseF_PAI\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"myoStaking\",\"outputs\":[{\"internalType\":\"contract IMYOStaking\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"myoToken\",\"outputs\":[{\"internalType\":\"contract IMYOToken\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"paiToken\",\"outputs\":[{\"internalType\":\"contract IPAIToken\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"priceFeed\",\"outputs\":[{\"internalType\":\"contract IPriceFeed\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"snapshots\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"F_GEM_Snapshot\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"F_PAI_Snapshot\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"sortedTroves\",\"outputs\":[{\"internalType\":\"contract ISortedTroves\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_MYOamount\",\"type\":\"uint256\"}],\"name\":\"stake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"stakes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalMYOStaked\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_MYOamount\",\"type\":\"uint256\"}],\"name\":\"unstake\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"vault\",\"outputs\":[{\"internalType\":\"contract IVault\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/MYO/MYOStaking.sol\":\"MYOStaking\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":100},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/token/ERC20/IERC20.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (token/ERC20/IERC20.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 standard as defined in the EIP.\\n */\\ninterface IERC20 {\\n    /**\\n     * @dev Returns the amount of tokens in existence.\\n     */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the amount of tokens owned by `account`.\\n     */\\n    function balanceOf(address account) external view returns (uint256);\\n\\n    /**\\n     * @dev Moves `amount` tokens from the caller's account to `recipient`.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transfer(address recipient, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Returns the remaining number of tokens that `spender` will be\\n     * allowed to spend on behalf of `owner` through {transferFrom}. This is\\n     * zero by default.\\n     *\\n     * This value changes when {approve} or {transferFrom} are called.\\n     */\\n    function allowance(address owner, address spender) external view returns (uint256);\\n\\n    /**\\n     * @dev Sets `amount` as the allowance of `spender` over the caller's tokens.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * IMPORTANT: Beware that changing an allowance with this method brings the risk\\n     * that someone may use both the old and the new allowance by unfortunate\\n     * transaction ordering. One possible solution to mitigate this race\\n     * condition is to first reduce the spender's allowance to 0 and set the\\n     * desired value afterwards:\\n     * https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729\\n     *\\n     * Emits an {Approval} event.\\n     */\\n    function approve(address spender, uint256 amount) external returns (bool);\\n\\n    /**\\n     * @dev Moves `amount` tokens from `sender` to `recipient` using the\\n     * allowance mechanism. `amount` is then deducted from the caller's\\n     * allowance.\\n     *\\n     * Returns a boolean value indicating whether the operation succeeded.\\n     *\\n     * Emits a {Transfer} event.\\n     */\\n    function transferFrom(\\n        address sender,\\n        address recipient,\\n        uint256 amount\\n    ) external returns (bool);\\n\\n    /**\\n     * @dev Emitted when `value` tokens are moved from one account (`from`) to\\n     * another (`to`).\\n     *\\n     * Note that `value` may be zero.\\n     */\\n    event Transfer(address indexed from, address indexed to, uint256 value);\\n\\n    /**\\n     * @dev Emitted when the allowance of a `spender` for an `owner` is set by\\n     * a call to {approve}. `value` is the new allowance.\\n     */\\n    event Approval(address indexed owner, address indexed spender, uint256 value);\\n}\\n\",\"keccak256\":\"0x61437cb513a887a1bbad006e7b1c8b414478427d33de47c5600af3c748f108da\",\"license\":\"MIT\"},\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/IERC20Metadata.sol)\\n\\npragma solidity ^0.8.0;\\n\\nimport \\\"../IERC20.sol\\\";\\n\\n/**\\n * @dev Interface for the optional metadata functions from the ERC20 standard.\\n *\\n * _Available since v4.1._\\n */\\ninterface IERC20Metadata is IERC20 {\\n    /**\\n     * @dev Returns the name of the token.\\n     */\\n    function name() external view returns (string memory);\\n\\n    /**\\n     * @dev Returns the symbol of the token.\\n     */\\n    function symbol() external view returns (string memory);\\n\\n    /**\\n     * @dev Returns the decimals places of the token.\\n     */\\n    function decimals() external view returns (uint8);\\n}\\n\",\"keccak256\":\"0x8de418a5503946cabe331f35fe242d3201a73f67f77aaeb7110acb1f30423aca\",\"license\":\"MIT\"},\"@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (token/ERC20/extensions/draft-IERC20Permit.sol)\\n\\npragma solidity ^0.8.0;\\n\\n/**\\n * @dev Interface of the ERC20 Permit extension allowing approvals to be made via signatures, as defined in\\n * https://eips.ethereum.org/EIPS/eip-2612[EIP-2612].\\n *\\n * Adds the {permit} method, which can be used to change an account's ERC20 allowance (see {IERC20-allowance}) by\\n * presenting a message signed by the account. By not relying on {IERC20-approve}, the token holder account doesn't\\n * need to send a transaction, and thus is not required to hold Ether at all.\\n */\\ninterface IERC20Permit {\\n    /**\\n     * @dev Sets `value` as the allowance of `spender` over ``owner``'s tokens,\\n     * given ``owner``'s signed approval.\\n     *\\n     * IMPORTANT: The same issues {IERC20-approve} has related to transaction\\n     * ordering also apply here.\\n     *\\n     * Emits an {Approval} event.\\n     *\\n     * Requirements:\\n     *\\n     * - `spender` cannot be the zero address.\\n     * - `deadline` must be a timestamp in the future.\\n     * - `v`, `r` and `s` must be a valid `secp256k1` signature from `owner`\\n     * over the EIP712-formatted function arguments.\\n     * - the signature must use ``owner``'s current nonce (see {nonces}).\\n     *\\n     * For more information on the signature format, see the\\n     * https://eips.ethereum.org/EIPS/eip-2612#specification[relevant EIP\\n     * section].\\n     */\\n    function permit(\\n        address owner,\\n        address spender,\\n        uint256 value,\\n        uint256 deadline,\\n        uint8 v,\\n        bytes32 r,\\n        bytes32 s\\n    ) external;\\n\\n    /**\\n     * @dev Returns the current nonce for `owner`. This value must be\\n     * included whenever a signature is generated for {permit}.\\n     *\\n     * Every successful call to {permit} increases ``owner``'s nonce by one. This\\n     * prevents a signature from being used multiple times.\\n     */\\n    function nonces(address owner) external view returns (uint256);\\n\\n    /**\\n     * @dev Returns the domain separator used in the encoding of the signature for {permit}, as defined by {EIP712}.\\n     */\\n    // solhint-disable-next-line func-name-mixedcase\\n    function DOMAIN_SEPARATOR() external view returns (bytes32);\\n}\\n\",\"keccak256\":\"0xf41ca991f30855bf80ffd11e9347856a517b977f0a6c2d52e6421a99b7840329\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/math/SafeMath.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts v4.4.1 (utils/math/SafeMath.sol)\\n\\npragma solidity ^0.8.0;\\n\\n// CAUTION\\n// This version of SafeMath should only be used with Solidity 0.8 or later,\\n// because it relies on the compiler's built in overflow checks.\\n\\n/**\\n * @dev Wrappers over Solidity's arithmetic operations.\\n *\\n * NOTE: `SafeMath` is generally not needed starting with Solidity 0.8, since the compiler\\n * now has built in overflow checking.\\n */\\nlibrary SafeMath {\\n    /**\\n     * @dev Returns the addition of two unsigned integers, with an overflow flag.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function tryAdd(uint256 a, uint256 b) internal pure returns (bool, uint256) {\\n        unchecked {\\n            uint256 c = a + b;\\n            if (c < a) return (false, 0);\\n            return (true, c);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the substraction of two unsigned integers, with an overflow flag.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function trySub(uint256 a, uint256 b) internal pure returns (bool, uint256) {\\n        unchecked {\\n            if (b > a) return (false, 0);\\n            return (true, a - b);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the multiplication of two unsigned integers, with an overflow flag.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function tryMul(uint256 a, uint256 b) internal pure returns (bool, uint256) {\\n        unchecked {\\n            // Gas optimization: this is cheaper than requiring 'a' not being zero, but the\\n            // benefit is lost if 'b' is also tested.\\n            // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522\\n            if (a == 0) return (true, 0);\\n            uint256 c = a * b;\\n            if (c / a != b) return (false, 0);\\n            return (true, c);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the division of two unsigned integers, with a division by zero flag.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function tryDiv(uint256 a, uint256 b) internal pure returns (bool, uint256) {\\n        unchecked {\\n            if (b == 0) return (false, 0);\\n            return (true, a / b);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the remainder of dividing two unsigned integers, with a division by zero flag.\\n     *\\n     * _Available since v3.4._\\n     */\\n    function tryMod(uint256 a, uint256 b) internal pure returns (bool, uint256) {\\n        unchecked {\\n            if (b == 0) return (false, 0);\\n            return (true, a % b);\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the addition of two unsigned integers, reverting on\\n     * overflow.\\n     *\\n     * Counterpart to Solidity's `+` operator.\\n     *\\n     * Requirements:\\n     *\\n     * - Addition cannot overflow.\\n     */\\n    function add(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a + b;\\n    }\\n\\n    /**\\n     * @dev Returns the subtraction of two unsigned integers, reverting on\\n     * overflow (when the result is negative).\\n     *\\n     * Counterpart to Solidity's `-` operator.\\n     *\\n     * Requirements:\\n     *\\n     * - Subtraction cannot overflow.\\n     */\\n    function sub(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a - b;\\n    }\\n\\n    /**\\n     * @dev Returns the multiplication of two unsigned integers, reverting on\\n     * overflow.\\n     *\\n     * Counterpart to Solidity's `*` operator.\\n     *\\n     * Requirements:\\n     *\\n     * - Multiplication cannot overflow.\\n     */\\n    function mul(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a * b;\\n    }\\n\\n    /**\\n     * @dev Returns the integer division of two unsigned integers, reverting on\\n     * division by zero. The result is rounded towards zero.\\n     *\\n     * Counterpart to Solidity's `/` operator.\\n     *\\n     * Requirements:\\n     *\\n     * - The divisor cannot be zero.\\n     */\\n    function div(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a / b;\\n    }\\n\\n    /**\\n     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),\\n     * reverting when dividing by zero.\\n     *\\n     * Counterpart to Solidity's `%` operator. This function uses a `revert`\\n     * opcode (which leaves remaining gas untouched) while Solidity uses an\\n     * invalid opcode to revert (consuming all remaining gas).\\n     *\\n     * Requirements:\\n     *\\n     * - The divisor cannot be zero.\\n     */\\n    function mod(uint256 a, uint256 b) internal pure returns (uint256) {\\n        return a % b;\\n    }\\n\\n    /**\\n     * @dev Returns the subtraction of two unsigned integers, reverting with custom message on\\n     * overflow (when the result is negative).\\n     *\\n     * CAUTION: This function is deprecated because it requires allocating memory for the error\\n     * message unnecessarily. For custom revert reasons use {trySub}.\\n     *\\n     * Counterpart to Solidity's `-` operator.\\n     *\\n     * Requirements:\\n     *\\n     * - Subtraction cannot overflow.\\n     */\\n    function sub(\\n        uint256 a,\\n        uint256 b,\\n        string memory errorMessage\\n    ) internal pure returns (uint256) {\\n        unchecked {\\n            require(b <= a, errorMessage);\\n            return a - b;\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the integer division of two unsigned integers, reverting with custom message on\\n     * division by zero. The result is rounded towards zero.\\n     *\\n     * Counterpart to Solidity's `/` operator. Note: this function uses a\\n     * `revert` opcode (which leaves remaining gas untouched) while Solidity\\n     * uses an invalid opcode to revert (consuming all remaining gas).\\n     *\\n     * Requirements:\\n     *\\n     * - The divisor cannot be zero.\\n     */\\n    function div(\\n        uint256 a,\\n        uint256 b,\\n        string memory errorMessage\\n    ) internal pure returns (uint256) {\\n        unchecked {\\n            require(b > 0, errorMessage);\\n            return a / b;\\n        }\\n    }\\n\\n    /**\\n     * @dev Returns the remainder of dividing two unsigned integers. (unsigned integer modulo),\\n     * reverting with custom message when dividing by zero.\\n     *\\n     * CAUTION: This function is deprecated because it requires allocating memory for the error\\n     * message unnecessarily. For custom revert reasons use {tryMod}.\\n     *\\n     * Counterpart to Solidity's `%` operator. This function uses a `revert`\\n     * opcode (which leaves remaining gas untouched) while Solidity uses an\\n     * invalid opcode to revert (consuming all remaining gas).\\n     *\\n     * Requirements:\\n     *\\n     * - The divisor cannot be zero.\\n     */\\n    function mod(\\n        uint256 a,\\n        uint256 b,\\n        string memory errorMessage\\n    ) internal pure returns (uint256) {\\n        unchecked {\\n            require(b > 0, errorMessage);\\n            return a % b;\\n        }\\n    }\\n}\\n\",\"keccak256\":\"0xa2f576be637946f767aa56601c26d717f48a0aff44f82e46f13807eea1009a21\",\"license\":\"MIT\"},\"contracts/MYO/MYOStaking.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.3;\\n\\n// CAUTION\\n// This version of SafeMath should only be used with Solidity 0.8 or later,\\n// because it relies on the compiler's built in overflow checks.\\nimport \\\"@openzeppelin/contracts/utils/math/SafeMath.sol\\\";\\n\\nimport \\\"../core/CoreRef.sol\\\";\\n\\nimport \\\"../dependencies/BaseMath.sol\\\";\\nimport \\\"../dependencies/CheckContract.sol\\\";\\nimport \\\"../interfaces/IMYOStaking.sol\\\";\\n\\ncontract MYOStaking is CoreRef, IMYOStaking {\\n\\tusing SafeMath for uint256;\\n\\n\\t// --- Data ---\\n\\tstring public constant NAME = \\\"MYOStaking\\\";\\n\\n\\tmapping(address => uint256) public stakes;\\n\\tuint256 public totalMYOStaked;\\n\\n\\tuint256 public F_GEM; // Running sum of GEM fees per-MYO-staked\\n\\tuint256 public F_PAI; // Running sum of PAI fees per-MYO-staked\\n\\n\\t// User snapshots of F_GEM and F_PAI, taken at the point at which their latest deposit was made\\n\\tmapping(address => Snapshot) public snapshots;\\n\\n\\tstruct Snapshot {\\n\\t\\tuint256 F_GEM_Snapshot;\\n\\t\\tuint256 F_PAI_Snapshot;\\n\\t}\\n\\n\\t// ILQTYToken public lqtyToken;\\n\\t// ILUSDToken public lusdToken;\\n\\n\\t// --- Events ---\\n\\tevent StakeChanged(address indexed staker, uint256 newStake);\\n\\tevent StakingGainsWithdrawn(address indexed staker, uint256 PAIGain, uint256 GEMGain);\\n\\tevent F_GEMUpdated(uint256 _F_GEM);\\n\\tevent F_PAIUpdated(uint256 _F_PAI);\\n\\tevent TotalMYOStakedUpdated(uint256 _totalMYOStaked);\\n\\tevent PAISent(address _account, uint256 _amount);\\n\\tevent GEMSent(address _account, uint256 _amount);\\n\\tevent StakerSnapshotsUpdated(address _staker, uint256 _F_GEM, uint256 _F_PAI);\\n\\n\\tconstructor(address _core) CoreRef(_core) {}\\n\\n\\t// --- Functions ---\\n\\n\\t// If caller has a pre-existing stake, send any accumulated GEM and PAI gains to them.\\n\\tfunction stake(uint256 _MYOamount) external override {\\n\\t\\t_requireNonZeroAmount(_MYOamount);\\n\\n\\t\\tuint256 currentStake = stakes[msg.sender];\\n\\n\\t\\tuint256 GEMGain;\\n\\t\\tuint256 PAIGain;\\n\\t\\t// Grab any accumulated ETH and LUSD gains from the current stake\\n\\t\\tif (currentStake != 0) {\\n\\t\\t\\tGEMGain = _getPendingGEMGain(msg.sender);\\n\\t\\t\\tPAIGain = _getPendingPAIGain(msg.sender);\\n\\t\\t}\\n\\n\\t\\t_updateUserSnapshots(msg.sender);\\n\\n\\t\\tuint256 newStake = currentStake.add(_MYOamount);\\n\\n\\t\\t// Increase user\\u2019s stake and total MYO staked\\n\\t\\tstakes[msg.sender] = newStake;\\n\\t\\ttotalMYOStaked = totalMYOStaked.add(_MYOamount);\\n\\t\\temit TotalMYOStakedUpdated(totalMYOStaked);\\n\\n\\t\\t// Transfer MYO from caller to this contract\\n\\t\\tmyoToken().sendToMYOStaking(msg.sender, _MYOamount);\\n\\n\\t\\temit StakeChanged(msg.sender, newStake);\\n\\t\\temit StakingGainsWithdrawn(msg.sender, PAIGain, GEMGain);\\n\\n\\t\\t// Send accumulated LUSD and ETH gains to the caller\\n\\t\\tif (currentStake != 0) {\\n\\t\\t\\t_sendPAIGainToUser(PAIGain);\\n\\t\\t\\t_sendGEMGainToUser(GEMGain);\\n\\t\\t}\\n\\t}\\n\\n\\t// Unstake the MYO and send the it back to the caller, along with their accumulated PAI & GEM gains.\\n\\t// If requested amount > stake, send their entire stake.\\n\\tfunction unstake(uint256 _MYOamount) external override {\\n\\t\\tuint256 currentStake = stakes[msg.sender];\\n\\t\\t_requireUserHasStake(currentStake);\\n\\n\\t\\t// Grab any accumulated ETH and LUSD gains from the current stake\\n\\t\\tuint256 GEMGain = _getPendingGEMGain(msg.sender);\\n\\t\\tuint256 PAIGain = _getPendingPAIGain(msg.sender);\\n\\n\\t\\t_updateUserSnapshots(msg.sender);\\n\\n\\t\\tif (_MYOamount > 0) {\\n\\t\\t\\tuint256 MYOToWithdraw = BaseMath._min(_MYOamount, currentStake);\\n\\t\\t\\tuint256 newStake = currentStake.sub(MYOToWithdraw);\\n\\n\\t\\t\\t// Decrease user's stake and total LQTY staked\\n\\t\\t\\tstakes[msg.sender] = newStake;\\n\\t\\t\\ttotalMYOStaked = totalMYOStaked.sub(MYOToWithdraw);\\n\\t\\t\\temit TotalMYOStakedUpdated(totalMYOStaked);\\n\\n\\t\\t\\t// Transfer unstaked LQTY to user\\n\\t\\t\\tmyoToken().transfer(msg.sender, MYOToWithdraw);\\n\\n\\t\\t\\temit StakeChanged(msg.sender, newStake);\\n\\t\\t}\\n\\n\\t\\temit StakingGainsWithdrawn(msg.sender, PAIGain, GEMGain);\\n\\n\\t\\t// Send accumulated LUSD and ETH gains to the caller\\n\\t\\t_sendPAIGainToUser(PAIGain);\\n\\t\\t_sendGEMGainToUser(GEMGain);\\n\\t}\\n\\n\\t// --- Reward-per-unit-staked increase functions. Called by core contracts ---\\n\\n\\tfunction increaseF_GEM(uint256 _GEMFee) external override {\\n\\t\\t_requireCallerIsActivePool();\\n\\t\\tuint256 GEMFeePerMYOStaked;\\n\\n\\t\\tif (totalMYOStaked > 0) {\\n\\t\\t\\tGEMFeePerMYOStaked = _GEMFee.mul(DECIMAL_PRECISION).div(totalMYOStaked);\\n\\t\\t}\\n\\n\\t\\tF_GEM = F_GEM.add(GEMFeePerMYOStaked);\\n\\t\\temit F_GEMUpdated(F_GEM);\\n\\t}\\n\\n\\tfunction increaseF_PAI(uint256 _PAIFee) external override {\\n\\t\\t_requireCallerIsBorrowerOperations();\\n\\t\\tuint256 PAIFeePerMYOStaked;\\n\\n\\t\\tif (totalMYOStaked > 0) {\\n\\t\\t\\tPAIFeePerMYOStaked = _PAIFee.mul(DECIMAL_PRECISION).div(totalMYOStaked);\\n\\t\\t}\\n\\n\\t\\tF_PAI = F_PAI.add(PAIFeePerMYOStaked);\\n\\t\\temit F_PAIUpdated(F_PAI);\\n\\t}\\n\\n\\tfunction getAccruedGEMFees() external view override returns (uint256) {\\n\\t\\treturn F_GEM;\\n\\t}\\n\\n\\tfunction getAccruedPAIFees() external view override returns (uint256) {\\n\\t\\treturn F_PAI;\\n\\t}\\n\\n\\t// --- Pending reward functions ---\\n\\n\\tfunction getPendingGEMGain(address _user) external view override returns (uint256) {\\n\\t\\treturn _getPendingGEMGain(_user);\\n\\t}\\n\\n\\tfunction _getPendingGEMGain(address _user) internal view returns (uint256) {\\n\\t\\tuint256 F_GEM_Snapshot = snapshots[_user].F_GEM_Snapshot;\\n\\t\\tuint256 GEMGain = stakes[_user].mul(F_GEM.sub(F_GEM_Snapshot)).div(DECIMAL_PRECISION);\\n\\t\\treturn GEMGain;\\n\\t}\\n\\n\\tfunction getPendingPAIGain(address _user) external view override returns (uint256) {\\n\\t\\treturn _getPendingPAIGain(_user);\\n\\t}\\n\\n\\tfunction _getPendingPAIGain(address _user) internal view returns (uint256) {\\n\\t\\tuint256 F_PAI_Snapshot = snapshots[_user].F_PAI_Snapshot;\\n\\t\\tuint256 PAIGain = stakes[_user].mul(F_PAI.sub(F_PAI_Snapshot)).div(DECIMAL_PRECISION);\\n\\t\\treturn PAIGain;\\n\\t}\\n\\n\\t// --- Internal helper functions ---\\n\\n\\tfunction _updateUserSnapshots(address _user) internal {\\n\\t\\tsnapshots[_user].F_GEM_Snapshot = F_GEM;\\n\\t\\tsnapshots[_user].F_PAI_Snapshot = F_PAI;\\n\\t\\temit StakerSnapshotsUpdated(_user, F_GEM, F_PAI);\\n\\t}\\n\\n\\tfunction _sendGEMGainToUser(uint256 _GEMGain) internal {\\n\\t\\temit GEMSent(msg.sender, _GEMGain);\\n\\t\\tbool success = gemToken().transfer(msg.sender, _GEMGain);\\n\\t\\trequire(success, \\\"MYOStaking: Failed to send accumulated GEMGain\\\");\\n\\t}\\n\\n\\tfunction _sendPAIGainToUser(uint256 PAIGain) internal {\\n\\t\\temit PAISent(msg.sender, PAIGain);\\n\\t\\tbool success = paiToken().transfer(msg.sender, PAIGain);\\n\\t\\trequire(success, \\\"MYOStaking: Failed to send accumulated PAIGain\\\");\\n\\t}\\n\\n\\t// --- 'require' functions ---\\n\\n\\tfunction _requireCallerIsActivePool() internal view {\\n\\t\\trequire(msg.sender == address(activePool()), \\\"MYOStaking: caller is not ActivePool\\\");\\n\\t}\\n\\n\\tfunction _requireCallerIsVault() internal view {\\n\\t\\trequire(msg.sender == address(vault()), \\\"MYOStaking: caller is not Vault\\\");\\n\\t}\\n\\n\\tfunction _requireCallerIsBorrowerOperations() internal view {\\n\\t\\trequire(msg.sender == address(borrowerOperations()), \\\"MYOStaking: caller is not BorrowerOps\\\");\\n\\t}\\n\\n\\t// function _requireCallerIsActivePool() internal view {\\n\\t// \\trequire(msg.sender == activePoolAddress, \\\"LQTYStaking: caller is not ActivePool\\\");\\n\\t// }\\n\\n\\tfunction _requireUserHasStake(uint256 currentStake) internal pure {\\n\\t\\trequire(currentStake > 0, \\\"MYOStaking: User must have a non-zero stake\\\");\\n\\t}\\n\\n\\tfunction _requireNonZeroAmount(uint256 _amount) internal pure {\\n\\t\\trequire(_amount > 0, \\\"MYOStaking: Amount must be non-zero\\\");\\n\\t}\\n}\\n\",\"keccak256\":\"0x1c6ca6a06acb93eb536c7db78d91f0f2a3e9c0af6d48a6f6ce0d50e7b3cbb846\",\"license\":\"MIT\"},\"contracts/core/CoreRef.sol\":{\"content\":\"//SPDX-License-Identifier: MIT\\npragma solidity 0.8.3;\\n\\n// CAUTION\\n// This version of SafeMath should only be used with Solidity 0.8 or later,\\n// because it relies on the compiler's built in overflow checks.\\nimport \\\"@openzeppelin/contracts/utils/math/SafeMath.sol\\\";\\n\\nimport \\\"../dependencies/CheckContract.sol\\\";\\nimport \\\"../dependencies/Constants.sol\\\";\\nimport \\\"../dependencies/BaseMath.sol\\\";\\n\\nimport \\\"../interfaces/ICore.sol\\\";\\n\\nimport \\\"../interfaces/IMYOStaking.sol\\\";\\nimport \\\"../interfaces/IMYOToken.sol\\\";\\nimport \\\"../interfaces/IPAIToken.sol\\\";\\n\\nimport \\\"../interfaces/IPriceFeed.sol\\\";\\nimport \\\"../interfaces/IDefaultPool.sol\\\";\\nimport \\\"../interfaces/IActivePool.sol\\\";\\nimport \\\"../interfaces/IBorrowerOperations.sol\\\";\\n\\ncontract CoreRef is CheckContract, Constants, IBase {\\n\\tusing SafeMath for uint256;\\n\\n\\tICore public immutable core;\\n\\n\\tconstructor(address _core) {\\n\\t\\tcheckContract(_core);\\n\\t\\tcore = ICore(_core);\\n\\t}\\n\\n\\t// function setAddresses(\\n\\t//     address _core\\n\\t// )\\n\\t//     external\\n\\t//     onlyOwner\\n\\t// {\\n\\t//     checkContract(_core);\\n\\t//     core = ICore(_core);\\n\\t//     renounceOwnership();\\n\\t// }\\n\\n\\tmodifier onlyVault() {\\n\\t\\trequire(msg.sender == address(core.vault()), \\\"CoreRef: Caller must be Vault\\\");\\n\\t\\t_;\\n\\t}\\n\\n\\tmodifier onlyBO() {\\n\\t\\trequire(\\n\\t\\t\\tmsg.sender == address(core.borrowerOperations()),\\n\\t\\t\\t\\\"CoreRef: Caller must be BorrowerOperations\\\"\\n\\t\\t);\\n\\t\\t_;\\n\\t}\\n\\n\\tmodifier onlyActivePool() {\\n\\t\\trequire(msg.sender == address(core.activePool()), \\\"CoreRef: Caller must be ActivePool\\\");\\n\\t\\t_;\\n\\t}\\n\\n\\t// Getters\\n\\n\\tfunction gemToken() public view returns (IERC20) {\\n\\t\\treturn core.gemToken();\\n\\t}\\n\\n\\tfunction paiToken() public view returns (IPAIToken) {\\n\\t\\treturn core.paiToken();\\n\\t}\\n\\n\\tfunction myoToken() public view returns (IMYOToken) {\\n\\t\\treturn core.myoToken();\\n\\t}\\n\\n\\tfunction sortedTroves() public view returns (ISortedTroves) {\\n\\t\\treturn core.sortedTroves();\\n\\t}\\n\\n\\tfunction vault() public view returns (IVault) {\\n\\t\\treturn core.vault();\\n\\t}\\n\\n\\tfunction myoStaking() public view returns (IMYOStaking) {\\n\\t\\treturn core.myoStaking();\\n\\t}\\n\\n\\tfunction priceFeed() public view returns (IPriceFeed) {\\n\\t\\treturn core.priceFeed();\\n\\t}\\n\\n\\tfunction activePool() public view returns (IActivePool) {\\n\\t\\treturn core.activePool();\\n\\t}\\n\\n\\tfunction defaultPool() public view returns (IDefaultPool) {\\n\\t\\treturn core.defaultPool();\\n\\t}\\n\\n\\tfunction collSurplusPool() public view returns (ICollSurplusPool) {\\n\\t\\treturn core.collSurplusPool();\\n\\t}\\n\\n\\tfunction borrowerOperations() public view returns (IBorrowerOperations) {\\n\\t\\treturn core.borrowerOperations();\\n\\t}\\n\\n\\t// Helper Functions\\n\\n\\tfunction getEntireSystemColl() public view returns (uint256 entireSystemColl) {\\n\\t\\tuint256 activeColl = activePool().getColl();\\n\\t\\tuint256 liquidatedColl = defaultPool().getColl();\\n\\n\\t\\treturn activeColl.add(liquidatedColl);\\n\\t}\\n\\n\\tfunction getEntireSystemDebt() public view returns (uint256 entireSystemDebt) {\\n\\t\\tuint256 activeDebt = activePool().getDebt();\\n\\t\\tuint256 closedDebt = defaultPool().getDebt();\\n\\n\\t\\treturn activeDebt.add(closedDebt);\\n\\t}\\n\\n\\tfunction _getTCR(uint256 _price) internal view returns (uint256 TCR) {\\n\\t\\tuint256 entireSystemColl = getEntireSystemColl();\\n\\t\\tuint256 entireSystemDebt = getEntireSystemDebt();\\n\\n\\t\\tTCR = BaseMath._computeCR(entireSystemColl, entireSystemDebt, _price);\\n\\n\\t\\treturn TCR;\\n\\t}\\n\\n\\tfunction _checkRecoveryMode(uint256 _price) internal view returns (bool) {\\n\\t\\tuint256 TCR = _getTCR(_price);\\n\\n\\t\\treturn TCR < CCR;\\n\\t}\\n\\n\\tfunction _getNetCollateral(uint256 _collateral) internal pure returns (uint256) {\\n\\t\\treturn\\n\\t\\t\\t_collateral.sub(\\n\\t\\t\\t\\tDAI_GAS_COMPENSATION,\\n\\t\\t\\t\\t\\\"Core: Insuficient Net Collateral to cover GAS Comp\\\"\\n\\t\\t\\t);\\n\\t}\\n\\n\\tfunction _getGrossColl(uint256 _debt) internal pure returns (uint256) {\\n\\t\\treturn _debt.add(DAI_GAS_COMPENSATION);\\n\\t}\\n\\n\\tfunction _requireUserAcceptsFee(\\n\\t\\tuint256 _gemFee,\\n\\t\\tuint256 _gemAmount,\\n\\t\\tuint256 _maxFeePercentage\\n\\t) internal pure {\\n\\t\\tuint256 feePercentage = _gemFee.mul(DECIMAL_PRECISION).div(_gemAmount);\\n\\t\\trequire(feePercentage <= _maxFeePercentage, \\\"Fee exceeded provided maximum\\\");\\n\\t}\\n}\\n\",\"keccak256\":\"0xaa9810fc762e1323c91469ddb7f130b266b34929e298a53834fcc9a2977b473b\",\"license\":\"MIT\"},\"contracts/dependencies/BaseMath.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.3;\\n\\n// CAUTION\\n// This version of SafeMath should only be used with Solidity 0.8 or later,\\n// because it relies on the compiler's built in overflow checks.\\nimport \\\"@openzeppelin/contracts/utils/math/SafeMath.sol\\\";\\n\\nlibrary BaseMath {\\n\\tusing SafeMath for uint256;\\n\\n\\tuint256 internal constant DECIMAL_PRECISION = 1e18;\\n\\n\\t/* Precision for Nominal ICR (independent of price). Rationale for the value:\\n\\t *\\n\\t * - Making it \\u201ctoo high\\u201d could lead to overflows.\\n\\t * - Making it \\u201ctoo low\\u201d could lead to an ICR equal to zero, due to truncation from Solidity floor division.\\n\\t *\\n\\t * This value of 1e20 is chosen for safety: the NICR will only overflow for numerator > ~1e39 ETH,\\n\\t * and will only truncate to 0 if the denominator is at least 1e20 times greater than the numerator.\\n\\t *\\n\\t */\\n\\tuint256 internal constant NICR_PRECISION = 1e20;\\n\\n\\tfunction _min(uint256 _a, uint256 _b) internal pure returns (uint256) {\\n\\t\\treturn (_a < _b) ? _a : _b;\\n\\t}\\n\\n\\tfunction _max(uint256 _a, uint256 _b) internal pure returns (uint256) {\\n\\t\\treturn (_a >= _b) ? _a : _b;\\n\\t}\\n\\n\\t/*\\n\\t * Multiply two decimal numbers and use normal rounding rules:\\n\\t * -round product up if 19'th mantissa digit >= 5\\n\\t * -round product down if 19'th mantissa digit < 5\\n\\t *\\n\\t * Used only inside the exponentiation, _decPow().\\n\\t */\\n\\tfunction decMul(uint256 x, uint256 y) internal pure returns (uint256 decProd) {\\n\\t\\tuint256 prod_xy = x.mul(y);\\n\\n\\t\\tdecProd = prod_xy.add(DECIMAL_PRECISION / 2).div(DECIMAL_PRECISION);\\n\\t}\\n\\n\\t/*\\n\\t * _decPow: Exponentiation function for 18-digit decimal base, and integer exponent n.\\n\\t *\\n\\t * Uses the efficient \\\"exponentiation by squaring\\\" algorithm. O(log(n)) complexity.\\n\\t *\\n\\t * Called by two functions that represent time in units of minutes:\\n\\t * 1) TroveManager._calcDecayedBaseRate\\n\\t * 2) CommunityIssuance._getCumulativeIssuanceFraction\\n\\t *\\n\\t * The exponent is capped to avoid reverting due to overflow. The cap 525600000 equals\\n\\t * \\\"minutes in 1000 years\\\": 60 * 24 * 365 * 1000\\n\\t *\\n\\t * If a period of > 1000 years is ever used as an exponent in either of the above functions, the result will be\\n\\t * negligibly different from just passing the cap, since:\\n\\t *\\n\\t * In function 1), the decayed base rate will be 0 for 1000 years or > 1000 years\\n\\t * In function 2), the difference in tokens issued at 1000 years and any time > 1000 years, will be negligible\\n\\t */\\n\\tfunction _decPow(uint256 _base, uint256 _minutes) internal pure returns (uint256) {\\n\\t\\tif (_minutes > 525600000) {\\n\\t\\t\\t_minutes = 525600000;\\n\\t\\t} // cap to avoid overflow\\n\\n\\t\\tif (_minutes == 0) {\\n\\t\\t\\treturn DECIMAL_PRECISION;\\n\\t\\t}\\n\\n\\t\\tuint256 y = DECIMAL_PRECISION;\\n\\t\\tuint256 x = _base;\\n\\t\\tuint256 n = _minutes;\\n\\n\\t\\t// Exponentiation-by-squaring\\n\\t\\twhile (n > 1) {\\n\\t\\t\\tif (n % 2 == 0) {\\n\\t\\t\\t\\tx = decMul(x, x);\\n\\t\\t\\t\\tn = n.div(2);\\n\\t\\t\\t} else {\\n\\t\\t\\t\\t// if (n % 2 != 0)\\n\\t\\t\\t\\ty = decMul(x, y);\\n\\t\\t\\t\\tx = decMul(x, x);\\n\\t\\t\\t\\tn = (n.sub(1)).div(2);\\n\\t\\t\\t}\\n\\t\\t}\\n\\n\\t\\treturn decMul(x, y);\\n\\t}\\n\\n\\tfunction _getAbsoluteDifference(uint256 _a, uint256 _b) internal pure returns (uint256) {\\n\\t\\treturn (_a >= _b) ? _a.sub(_b) : _b.sub(_a);\\n\\t}\\n\\n\\tfunction _computeNominalCR(uint256 _coll, uint256 _debt) internal pure returns (uint256) {\\n\\t\\tif (_debt > 0) {\\n\\t\\t\\treturn _coll.mul(NICR_PRECISION).div(_debt);\\n\\t\\t}\\n\\t\\t// Return the maximal value for uint256 if the Trove has a debt of 0. Represents \\\"infinite\\\" CR.\\n\\t\\telse {\\n\\t\\t\\t// if (_debt == 0)\\n\\t\\t\\treturn 2**256 - 1;\\n\\t\\t}\\n\\t}\\n\\n\\tfunction _computeCR(\\n\\t\\tuint256 _coll,\\n\\t\\tuint256 _debt,\\n\\t\\tuint256 _price\\n\\t) internal pure returns (uint256) {\\n\\t\\tif (_debt > 0) {\\n\\t\\t\\tuint256 newCollRatio = _coll.mul(_price).div(_debt);\\n\\t\\t\\treturn newCollRatio;\\n\\t\\t}\\n\\t\\t// Return the maximal value for uint256 if the Trove has a debt of 0. Represents \\\"infinite\\\" CR.\\n\\t\\telse {\\n\\t\\t\\t// if (_debt == 0)\\n\\t\\t\\treturn 2**256 - 1;\\n\\t\\t}\\n\\t}\\n}\\n\",\"keccak256\":\"0x285eace200a08f5136b406fe3051fafc95e56550e7df16a346670c939b61122d\",\"license\":\"MIT\"},\"contracts/dependencies/CheckContract.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity ^0.8.3;\\n\\ncontract CheckContract {\\n\\t/**\\n\\t * Check that the account is an already deployed non-destroyed contract.\\n\\t * See: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol#L12\\n\\t */\\n\\tfunction checkContract(address _account) internal view {\\n\\t\\trequire(_account != address(0), \\\"Account cannot be zero address\\\");\\n\\n\\t\\tuint256 size;\\n\\t\\t// solhint-disable-next-line no-inline-assembly\\n\\t\\tassembly {\\n\\t\\t\\tsize := extcodesize(_account)\\n\\t\\t}\\n\\t\\trequire(size > 0, \\\"Account code size cannot be zero\\\");\\n\\t}\\n}\\n\",\"keccak256\":\"0xb5cb7705e2af49e9ad0be340e8fd106a5bf928fd834ae7e4d22d8c6db17e7844\",\"license\":\"MIT\"},\"contracts/dependencies/Constants.sol\":{\"content\":\"//SPDX-License-Identifier: MIT\\npragma solidity ^0.8.3;\\n\\nimport \\\"@openzeppelin/contracts/utils/math/SafeMath.sol\\\";\\n\\ncontract Constants {\\n\\tusing SafeMath for uint256;\\n\\n\\tuint256 public constant DECIMAL_PRECISION = 1e18;\\n\\n\\tuint256 public constant SECONDS_IN_ONE_MINUTE = 60;\\n\\n\\t// uint256 public constant _100pct = 1000000000000000000; // 1e18 == 100%\\n\\n\\t// Minimum collateral ratio for individual troves\\n\\tuint256 public constant MCR = 1100000000000000000; // 110%\\n\\n\\t// Critical system collateral ratio. If the system's total collateral ratio (TCR) falls below the CCR, Recovery Mode is triggered.\\n\\tuint256 public constant CCR = 1500000000000000000; // 150%\\n\\n\\t// Amount of DAI to be locked in gas pool on opening troves\\n\\tuint256 public constant DAI_GAS_COMPENSATION = 200e16; // 2.00\\n\\n\\t// Minimum amount of net PAI debt a trove must have\\n\\tuint256 public constant MIN_NET_DEBT = 1800e18;\\n\\n\\tuint256 public constant HALF_PERCENT_DIVISOR = 200; // dividing by 200 yields 0.5%\\n\\n\\tuint256 public constant BORROWING_FEE_FLOOR = (DECIMAL_PRECISION / 1000) * 5; // 0.005% (1e18 == 100%)\\n\\n\\t// During bootsrap period redemptions are not allowed\\n\\tuint256 public constant BOOTSTRAP_PERIOD = 14 days;\\n\\n\\t// MAX UINT256\\n\\tuint256 public MAX_UINT = 2**256 - 1;\\n}\\n\",\"keccak256\":\"0xdcdd9a915df81cc087e0f7e36af33bc16f927f9690ca6216ab0656ead92b823e\",\"license\":\"MIT\"},\"contracts/interfaces/IActivePool.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.3;\\n\\ninterface IActivePool {\\n\\t// --- Events ---\\n\\tevent ActivePoolDebtUpdated(uint256 _debt);\\n\\tevent ActivePoolCollUpdated(uint256 _coll);\\n\\tevent ActivePoolgasCompensationBalanceUpdated(uint256 gasBalance);\\n\\n\\t// --- Functions ---\\n\\n\\tfunction getColl() external view returns (uint256);\\n\\n\\tfunction getDebt() external view returns (uint256);\\n\\n\\tfunction getGasCompensationBalance() external view returns (uint256);\\n\\n\\tfunction receiveColl(address sender, uint256 _amount) external returns (bool);\\n\\n\\tfunction sendColl(address _account, uint256 _amount) external;\\n\\n\\tfunction increaseDebt(uint256 _amount) external;\\n\\n\\tfunction decreaseDebt(uint256 _amount) external;\\n\\n\\tfunction transferFeeToStacking(uint256 _amount) external;\\n\\n\\tfunction sendGasCompensation(address _account) external;\\n\\n\\tfunction increaseGasCompensationBalance() external;\\n\\n\\tfunction decreaseGasCompensationBalance() external;\\n}\\n\",\"keccak256\":\"0x076c1e5eab0ec84bf88ac69e44b4eb7efe0ec739b4bcd4c0e2179dde69384d74\",\"license\":\"MIT\"},\"contracts/interfaces/IBase.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.3;\\n\\ninterface IBase {\\n\\tenum TroveOperation {\\n\\t\\tapplyPendingRewards,\\n\\t\\tliquidateInNormalMode,\\n\\t\\tliquidateInRecoveryMode,\\n\\t\\tredeemCollateral\\n\\t}\\n\\n\\tenum TroveStatus {\\n\\t\\tnonExistent,\\n\\t\\tactive,\\n\\t\\tclosedByOwner,\\n\\t\\tclosedByLiquidation,\\n\\t\\tclosedByRedemption\\n\\t}\\n}\\n\",\"keccak256\":\"0xe5c93a5a6eb11be0dda687ba8d5a5399d1e395f8fd63a590cfd1f60d165de33b\",\"license\":\"MIT\"},\"contracts/interfaces/IBorrowerOperations.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.3;\\n\\n// Common interface for the Trove Manager.\\ninterface IBorrowerOperations {\\n\\t// --- Events ---\\n\\n\\tevent TroveCreated(address indexed _borrower, uint256 arrayIndex);\\n\\tevent TroveUpdated(\\n\\t\\taddress indexed _borrower,\\n\\t\\tuint256 _debt,\\n\\t\\tuint256 _coll,\\n\\t\\tuint256 stake,\\n\\t\\tuint256 _borrowingFee,\\n\\t\\tuint8 operation\\n\\t);\\n\\n\\tevent BorrowingFeePaid(address indexed _borrower, uint256 _Fee);\\n\\n\\t// --- Functions ---\\n\\n\\tfunction openTrove(\\n\\t\\tuint256 _maxFee,\\n\\t\\tuint256 _debt,\\n\\t\\tuint256 _coll,\\n\\t\\taddress _upperHint,\\n\\t\\taddress _lowerHint\\n\\t) external;\\n\\n\\tfunction addColl(\\n\\t\\tuint256 _coll,\\n\\t\\taddress _upperHint,\\n\\t\\taddress _lowerHint\\n\\t) external;\\n\\n\\tfunction withdrawColl(\\n\\t\\tuint256 _coll,\\n\\t\\taddress _upperHint,\\n\\t\\taddress _lowerHint\\n\\t) external;\\n\\n\\tfunction withdrawPAI(\\n\\t\\tuint256 _maxFee,\\n\\t\\tuint256 _amount,\\n\\t\\taddress _upperHint,\\n\\t\\taddress _lowerHint\\n\\t) external;\\n\\n\\tfunction repayPAI(\\n\\t\\tuint256 _amount,\\n\\t\\taddress _upperHint,\\n\\t\\taddress _lowerHint\\n\\t) external;\\n\\n\\tfunction closeTrove() external;\\n\\n\\tfunction adjustTrove(\\n\\t\\tuint256 _collChange,\\n\\t\\tbool _isCollIncrease,\\n\\t\\tuint256 _debtChange,\\n\\t\\tbool _isDebtIncrease,\\n\\t\\taddress _upperHint,\\n\\t\\taddress _lowerHint,\\n\\t\\tuint256 _maxFeePercentage\\n\\t) external;\\n\\n\\tfunction claimCollateral() external;\\n}\\n\",\"keccak256\":\"0x2adf8d06d3469b27c19f86dc54c89a9ffd542cf3f2ace19eab8925cdbfe9aee8\",\"license\":\"MIT\"},\"contracts/interfaces/ICollSurplusPool.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.3;\\n\\ninterface ICollSurplusPool {\\n\\t// --- Events ---\\n\\n\\tevent CollBalanceUpdated(address indexed _account, uint256 _newBalance);\\n\\tevent CollSent(address _to, uint256 _amount);\\n\\n\\tfunction getColl() external view returns (uint256);\\n\\n\\tfunction getCollateral(address _account) external view returns (uint256);\\n\\n\\tfunction accountSurplus(address _account, uint256 _amount) external;\\n\\n\\tfunction claimColl(address _account) external;\\n}\\n\",\"keccak256\":\"0x305dde14e343334510b9283c9c49d2c5aa1525ef4eae6ea3906797561a9bfbb9\",\"license\":\"MIT\"},\"contracts/interfaces/ICore.sol\":{\"content\":\"//SPDX-License-Identifier: Unlicense\\npragma solidity ^0.8.3;\\n\\nimport \\\"./IVault.sol\\\";\\nimport \\\"./IMYOStaking.sol\\\";\\nimport \\\"../interfaces/IMYOToken.sol\\\";\\nimport \\\"../interfaces/IPAIToken.sol\\\";\\nimport \\\"../interfaces/ISortedTroves.sol\\\";\\nimport \\\"../interfaces/IPriceFeed.sol\\\";\\nimport \\\"../interfaces/IActivePool.sol\\\";\\nimport \\\"../interfaces/IDefaultPool.sol\\\";\\nimport \\\"../interfaces/ICollSurplusPool.sol\\\";\\nimport \\\"../interfaces/IBorrowerOperations.sol\\\";\\n\\nimport \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\n\\ninterface ICore {\\n\\t// Tokens\\n\\tfunction gemToken() external view returns (IERC20);\\n\\n\\tfunction paiToken() external view returns (IPAIToken);\\n\\n\\tfunction myoToken() external view returns (IMYOToken);\\n\\n\\t// Core Contracts\\n\\n\\tfunction sortedTroves() external view returns (ISortedTroves);\\n\\n\\tfunction vault() external view returns (IVault);\\n\\n\\tfunction myoStaking() external view returns (IMYOStaking);\\n\\n\\tfunction priceFeed() external view returns (IPriceFeed);\\n\\n\\tfunction activePool() external view returns (IActivePool);\\n\\n\\tfunction collSurplusPool() external view returns (ICollSurplusPool);\\n\\n\\tfunction defaultPool() external view returns (IDefaultPool);\\n\\n\\tfunction borrowerOperations() external view returns (IBorrowerOperations);\\n\\n\\t// Setter\\n\\n\\tfunction setAddresses(\\n\\t\\taddress _gemTokenAddress,\\n\\t\\taddress _paiTokenAddress,\\n\\t\\taddress _myoTokenAddress,\\n\\t\\taddress _sortedTrovesAddress,\\n\\t\\taddress _vaultAddress,\\n\\t\\taddress _myoStakingAddress,\\n\\t\\taddress _priceFeedAddress,\\n\\t\\taddress _activePoolAddress,\\n\\t\\taddress _defaultPoolAddress,\\n\\t\\taddress _collSurplusPoolAddress,\\n\\t\\taddress _borrowerOperationsAddress\\n\\t) external;\\n}\\n\",\"keccak256\":\"0x0a7eacf11f0e0f41669dd4d87dad5718180f19e026881ba6e3e00a87b8df3dec\",\"license\":\"Unlicense\"},\"contracts/interfaces/IDefaultPool.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.3;\\n\\ninterface IDefaultPool {\\n\\t// --- Events ---\\n\\tevent GemSent(address _recipient, uint256 _amount);\\n\\tevent DefaultPoolCollBalanceUpdated(uint256 _amount);\\n\\tevent DefaultPoolDebtBalanceUpdated(uint256 _debt);\\n\\n\\t// --- Functions ---\\n\\n\\tfunction getColl() external view returns (uint256);\\n\\n\\tfunction getDebt() external view returns (uint256);\\n\\n\\tfunction increaseDebt(uint256 _amount) external;\\n\\n\\tfunction decreaseDebt(uint256 _amount) external;\\n\\n\\tfunction receiveColl(uint256 _amount) external returns (bool);\\n\\n\\tfunction sendCollToActivePool(uint256 _amount) external;\\n}\\n\",\"keccak256\":\"0x5e5936d6e59a5060f9f268b6088d557876eba26c8583191b45f7378d4a509110\",\"license\":\"MIT\"},\"contracts/interfaces/IMYOStaking.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.3;\\n\\ninterface IMYOStaking {\\n\\tfunction stake(uint256 _MYOamount) external;\\n\\n\\tfunction unstake(uint256 _MYOamount) external;\\n\\n\\tfunction increaseF_GEM(uint256 _GEMFee) external;\\n\\n\\tfunction increaseF_PAI(uint256 _PAIFee) external;\\n\\n\\tfunction getPendingGEMGain(address _user) external view returns (uint256);\\n\\n\\tfunction getPendingPAIGain(address _user) external view returns (uint256);\\n\\n\\tfunction getAccruedGEMFees() external view returns (uint256);\\n\\n\\tfunction getAccruedPAIFees() external view returns (uint256);\\n}\\n\",\"keccak256\":\"0xa79b5abd952be6a7688ddbf9f7ed8c08345c68deae82db27aecbc513a8c87024\",\"license\":\"MIT\"},\"contracts/interfaces/IMYOToken.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.3;\\n\\nimport \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\nimport \\\"@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol\\\";\\nimport \\\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\\\";\\n\\ninterface IMYOToken is IERC20, IERC20Permit, IERC20Metadata {\\n\\t// --- Events ---\\n\\n\\tevent CommunityIssuanceAddressSet(address _communityIssuanceAddress);\\n\\tevent MYOStakingAddressSet(address _myoStakingAddress);\\n\\tevent LockupContractFactoryAddressSet(address _lockupContractFactoryAddress);\\n\\n\\t// --- Functions ---\\n\\n\\tfunction sendToMYOStaking(address _sender, uint256 _amount) external;\\n\\n\\tfunction getDeploymentStartTime() external view returns (uint256);\\n\\n\\tfunction getLpRewardsEntitlement() external view returns (uint256);\\n\\n\\tfunction increaseAllowance(address spender, uint256 addedValue) external returns (bool);\\n\\n\\tfunction decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool);\\n\\n\\tfunction permitTypeHash() external view returns (bytes32);\\n\\n\\tfunction version() external view returns (string memory);\\n}\\n\",\"keccak256\":\"0x6f53194956e4c49c701a27fab9e30b67df4fb7ae10b8b1110ffc51f983cc0ac2\",\"license\":\"MIT\"},\"contracts/interfaces/IPAIToken.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.3;\\n\\nimport \\\"@openzeppelin/contracts/token/ERC20/IERC20.sol\\\";\\nimport \\\"@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol\\\";\\nimport \\\"@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol\\\";\\n\\ninterface IPAIToken is IERC20, IERC20Permit, IERC20Metadata {\\n\\t// --- Events ---\\n\\n\\tevent PAITokenBalanceUpdated(address _user, uint256 _amount);\\n\\n\\t// --- Functions ---\\n\\n\\tfunction mint(address _account, uint256 _amount) external;\\n\\n\\tfunction burn(address _account, uint256 _amount) external;\\n\\n\\t// function sendToPool(\\n\\t// \\taddress _sender,\\n\\t// \\taddress poolAddress,\\n\\t// \\tuint256 _amount\\n\\t// ) external;\\n\\n\\t// function returnFromPool(\\n\\t// \\taddress poolAddress,\\n\\t// \\taddress user,\\n\\t// \\tuint256 _amount\\n\\t// ) external;\\n\\n\\tfunction increaseAllowance(address spender, uint256 addedValue) external returns (bool);\\n\\n\\tfunction decreaseAllowance(address spender, uint256 subtractedValue) external returns (bool);\\n\\n\\tfunction permitTypeHash() external view returns (bytes32);\\n\\n\\tfunction version() external view returns (string memory);\\n}\\n\",\"keccak256\":\"0x3312daa10e22922f96ea5015f6a4efdf9fb00b4d9c1bfebf7bf7315a22699840\",\"license\":\"MIT\"},\"contracts/interfaces/IPriceFeed.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity 0.8.3;\\n\\ninterface IPriceFeed {\\n\\t// --- Events ---j\\n\\tevent LastGoodPriceUpdated(uint256 _lastGoodPrice);\\n\\n\\t// --- Function ---\\n\\tfunction fetchPrice() external returns (uint256);\\n}\\n\",\"keccak256\":\"0xfb8dd85ba5db55006bdc28c5102b88581a8ac106c06b01ef538d1204ac0736dd\",\"license\":\"MIT\"},\"contracts/interfaces/ISortedTroves.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n\\npragma solidity 0.8.3;\\n\\n// Common interface for the SortedTroves Doubly Linked List.\\ninterface ISortedTroves {\\n\\t// --- Events ---\\n\\n\\tevent BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);\\n\\tevent VaultAddressChanged(address _vaultAddress);\\n\\tevent NodeAdded(address _id, uint256 _NICR);\\n\\tevent NodeRemoved(address _id);\\n\\n\\t// --- Functions ---\\n\\n\\tfunction setParams(\\n\\t\\tuint256 _size,\\n\\t\\taddress _vaultAddress,\\n\\t\\taddress _borrowerOperationsAddress\\n\\t) external;\\n\\n\\tfunction insert(\\n\\t\\taddress _id,\\n\\t\\tuint256 _ICR,\\n\\t\\taddress _prevId,\\n\\t\\taddress _nextId\\n\\t) external;\\n\\n\\tfunction remove(address _id) external;\\n\\n\\tfunction reInsert(\\n\\t\\taddress _id,\\n\\t\\tuint256 _newICR,\\n\\t\\taddress _prevId,\\n\\t\\taddress _nextId\\n\\t) external;\\n\\n\\tfunction contains(address _id) external view returns (bool);\\n\\n\\tfunction isFull() external view returns (bool);\\n\\n\\tfunction isEmpty() external view returns (bool);\\n\\n\\tfunction getSize() external view returns (uint256);\\n\\n\\tfunction getMaxSize() external view returns (uint256);\\n\\n\\tfunction getFirst() external view returns (address);\\n\\n\\tfunction getLast() external view returns (address);\\n\\n\\tfunction getNext(address _id) external view returns (address);\\n\\n\\tfunction getPrev(address _id) external view returns (address);\\n\\n\\tfunction validInsertPosition(\\n\\t\\tuint256 _ICR,\\n\\t\\taddress _prevId,\\n\\t\\taddress _nextId\\n\\t) external view returns (bool);\\n\\n\\tfunction findInsertPosition(\\n\\t\\tuint256 _ICR,\\n\\t\\taddress _prevId,\\n\\t\\taddress _nextId\\n\\t) external view returns (address, address);\\n}\\n\",\"keccak256\":\"0xcbd1ed4f5291ae6801e526e3bd6eabf8776009e511aab81e5bf74a51a426ce6b\",\"license\":\"MIT\"},\"contracts/interfaces/IVault.sol\":{\"content\":\"//SPDX-License-Identifier: Unlicense\\npragma solidity ^0.8.3;\\n\\nimport \\\"./IBase.sol\\\";\\n\\ninterface IVault is IBase {\\n\\t// --- Events ---\\n\\n\\tevent TroveUpdated(\\n\\t\\taddress indexed _borrower,\\n\\t\\tuint256 _debt,\\n\\t\\tuint256 _coll,\\n\\t\\tuint256 _borrowingFee,\\n\\t\\tuint256 _stake,\\n\\t\\tTroveOperation _operation\\n\\t);\\n\\tevent TotalStakesUpdated(uint256 _newTotalStakes);\\n\\tevent TroveSnapshotsUpdated(uint256 _L_Coll, uint256 _L_Debt);\\n\\n\\tevent BaseRateUpdated(uint256 _baseRate);\\n\\tevent LastFeeOpTimeUpdated(uint256 _lastFeeOpTime);\\n\\n\\tevent Liquidation(uint256 _liquidatedDebt, uint256 _liquidatedColl, uint256 _gasCompensation);\\n\\tevent Redemption(\\n\\t\\tuint256 _attemptedPAIAmount,\\n\\t\\tuint256 _actualPAIAmount,\\n\\t\\tuint256 _collSent,\\n\\t\\tuint256 _collFee\\n\\t);\\n\\tevent TroveLiquidated(address indexed _borrower, uint256 _debt, uint256 _coll, uint8 operation);\\n\\tevent SystemSnapshotsUpdated(uint256 _totalStakesSnapshot, uint256 _totalCollateralSnapshot);\\n\\tevent LTermsUpdated(uint256 _L_Coll, uint256 _L_Debt);\\n\\tevent TroveIndexUpdated(address _borrower, uint256 _newIndex);\\n\\n\\tfunction baseRate() external view returns (uint256);\\n\\n\\t// Borrowing Fee Functions\\n\\n\\tfunction getTroveOwnersCount() external view returns (uint256);\\n\\n\\tfunction getTroveFromTroveOwnersArray(uint256 _index) external view returns (address);\\n\\n\\t// Collateralization Ratios\\n\\tfunction getNominalICR(address _borrower) external view returns (uint256);\\n\\n\\tfunction getCurrentICR(address _borrower, uint256 _price) external view returns (uint256);\\n\\n\\tfunction getTCR(uint256 _price) external view returns (uint256);\\n\\n\\t// Liquidations\\n\\tfunction liquidate(address _borrower) external;\\n\\n\\tfunction liquidateTroves(uint256 _n) external;\\n\\n\\tfunction batchLiquidateTroves(address[] calldata _troveArray) external;\\n\\n\\tfunction redeemCollateral(\\n\\t\\tuint256 _paiAmount,\\n\\t\\taddress _firstRedemptionHint,\\n\\t\\taddress _upperPartialRedemptionHint,\\n\\t\\taddress _lowerPartialRedemptionHint,\\n\\t\\tuint256 _partialRedemptionHintNICR,\\n\\t\\tuint256 _maxIterations,\\n\\t\\tuint256 _maxFee\\n\\t) external;\\n\\n\\tfunction updateStakeAndTotalStakes(address _borrower) external returns (uint256);\\n\\n\\tfunction updateTroveRewardSnapshots(address _borrower) external;\\n\\n\\tfunction addTroveOwnerToArray(address _borrower) external returns (uint256 index);\\n\\n\\tfunction applyPendingRewards(address _borrower) external;\\n\\n\\tfunction getPendingCollReward(address _borrower) external view returns (uint256);\\n\\n\\tfunction getPendingDebtReward(address _borrower) external view returns (uint256);\\n\\n\\tfunction hasPendingRewards(address _borrower) external view returns (bool);\\n\\n\\tfunction getEntireDebtAndColl(address _borrower)\\n\\t\\texternal\\n\\t\\tview\\n\\t\\treturns (\\n\\t\\t\\tuint256 debt,\\n\\t\\t\\tuint256 coll,\\n\\t\\t\\tuint256 pendingDebtReward,\\n\\t\\t\\tuint256 pendingCollReward\\n\\t\\t);\\n\\n\\tfunction closeTrove(address _borrower) external;\\n\\n\\tfunction removeStake(address _borrower) external;\\n\\n\\t// Borrowing and Redemption Fees\\n\\n\\tfunction getRedemptionRate() external view returns (uint256);\\n\\n\\tfunction getRedemptionRateWithDecay() external view returns (uint256);\\n\\n\\tfunction getRedemptionFeeWithDecay(uint256 _collDrawn) external view returns (uint256);\\n\\n\\tfunction getBorrowingRate() external view returns (uint256);\\n\\n\\tfunction getBorrowingRateWithDecay() external view returns (uint256);\\n\\n\\tfunction getBorrowingFee(uint256 _debt, uint256 _price) external view returns (uint256);\\n\\n\\tfunction getBorrowingFeeWithDecay(uint256 _debt, uint256 _price)\\n\\t\\texternal\\n\\t\\tview\\n\\t\\treturns (uint256);\\n\\n\\tfunction decayBaseRateFromBorrowing() external;\\n\\n\\t// Trove Management\\n\\tfunction increaseTroveColl(address _borrower, uint256 _collIncrease) external returns (uint256);\\n\\n\\tfunction decreaseTroveColl(address _borrower, uint256 _collDecrease) external returns (uint256);\\n\\n\\tfunction increaseTroveDebt(address _borrower, uint256 _debtIncrease) external returns (uint256);\\n\\n\\tfunction decreaseTroveDebt(address _borrower, uint256 _debtDecrease) external returns (uint256);\\n\\n\\tfunction setTroveStatus(address _borrower, uint256 _num) external;\\n\\n\\tfunction getTroveStatus(address _borrower) external view returns (TroveStatus);\\n\\n\\tfunction getTroveStake(address _borrower) external view returns (uint256);\\n\\n\\tfunction getTroveDebt(address _borrower) external view returns (uint256);\\n\\n\\tfunction getTroveColl(address _borrower) external view returns (uint256);\\n}\\n\",\"keccak256\":\"0x56b260112539fd68925ae0d21ee16698d05bea325f6316305cf650b48aad35a9\",\"license\":\"Unlicense\"}},\"version\":1}",
+  "bytecode": "0x60a06040526000196000553480156200001757600080fd5b50604051620017c7380380620017c78339810160408190526200003a916200010e565b8062000046816200005d565b60601b6001600160601b031916608052506200013e565b6001600160a01b038116620000b95760405162461bcd60e51b815260206004820152601e60248201527f4163636f756e742063616e6e6f74206265207a65726f2061646472657373000060448201526064015b60405180910390fd5b803b806200010a5760405162461bcd60e51b815260206004820181905260248201527f4163636f756e7420636f64652073697a652063616e6e6f74206265207a65726f6044820152606401620000b0565b5050565b60006020828403121562000120578081fd5b81516001600160a01b038116811462000137578182fd5b9392505050565b60805160601c61161d620001aa6000396000818161043701528181610657015281816106ef0152818161074a015281816108af01528181610a4801528181610cb101528181610d1701528181610d7201528181610def01528181610e4a0152610ea5015261161d6000f3fe608060405234801561001057600080fd5b50600436106102125760003560e01c8063a3f4df7e11610120578063d78f6a66116100b8578063f2f4eb261161007c578063f2f4eb2614610432578063f92d343314610459578063fbfa77cf14610461578063ff2fb57c14610469578063fff298df1461047157610212565b8063d78f6a6614610407578063e2d8ef8d1461040f578063e5b5019a14610417578063f05acd9e14610420578063f2a69a011461042957610212565b8063a3f4df7e14610367578063a66b72801461039d578063a694fc3a146103b0578063ae918754146103c3578063b563be91146103cb578063be8087a2146103de578063c35bc550146103e6578063cda775f9146103f0578063d3c2f3c1146103f857610212565b8063741bef1a116101ae578063887105d311610172578063887105d31461032d57806389a8872f146103355780639d205fc91461033d5780639e8ef39014610350578063a20baee61461035857610212565b8063741bef1a146102fe57806377553ad414610306578063794e57241461030e578063795d26c31461031d5780637f7dde4a1461032557610212565b80630b2092fa1461021757806316934fc41461023d5780631bf435551461025d5780632e17de781461026d57806334b3081f146102825780633cc74225146102be5780635733d58f146102de57806358f0c933146102ed57806361ec893d146102f6575b600080fd5b61022a61022536600461145a565b610479565b6040519081526020015b60405180910390f35b61022a61024b36600461145a565b60016020526000908152604090205481565b61022a686194049f30f720000081565b61028061027b3660046114b2565b61048a565b005b6102a961029036600461145a565b6005602052600090815260409020805460019091015482565b60408051928352602083019190915201610234565b6102c6610653565b6040516001600160a01b039091168152602001610234565b61022a6714d1120d7b16000081565b61022a60035481565b61022a603c81565b6102c66106eb565b6102c6610746565b61022a670f43fc2c04ee000081565b61022a6107a1565b6102c66108ab565b61022a610906565b61022a60c881565b61028061034b3660046114b2565b6109c5565b6102c6610a44565b61022a670de0b6b3a764000081565b6103906040518060400160405280600a8152602001694d594f5374616b696e6760b01b81525081565b60405161023491906114fb565b6102806103ab3660046114b2565b610a9f565b6102806103be3660046114b2565b610b10565b6102c6610cad565b61022a6103d936600461145a565b610d08565b60035461022a565b61022a6212750081565b6102c6610d13565b61022a671bc16d674ec8000081565b60045461022a565b6102c6610d6e565b61022a60005481565b61022a60045481565b61022a60025481565b6102c67f000000000000000000000000000000000000000000000000000000000000000081565b61022a610dc9565b6102c6610deb565b6102c6610e46565b6102c6610ea1565b600061048482610efc565b92915050565b336000908152600160205260409020546104a381610f5d565b60006104ae33610efc565b905060006104bb33610fc9565b90506104c633611006565b83156106005760006104d88585611076565b905060006104e6858361108e565b336000908152600160205260409020819055600254909150610508908361108e565b60028190556040519081527fcc90c7c7229235ea6efd2e1b424482f2381f7208dbdb390206e3f027d6e85e5d9060200160405180910390a1610548610ea1565b6001600160a01b031663a9059cbb33846040518363ffffffff1660e01b81526004016105759291906114e2565b602060405180830381600087803b15801561058f57600080fd5b505af11580156105a3573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906105c79190611476565b5060405181815233907f39df0e5286a3ef2f42a0bf52f32cfe2c58e5b0405f47fe512f2c2439e4cfe2049060200160405180910390a250505b604080518281526020810184905233917ff744d34ca1cb25acfa4180df5f09a67306107110a9f4b6ed99bb3be259738215910160405180910390a26106448161109a565b61064d826111c6565b50505050565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316633cc742256040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b505afa1580156106c2573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106e69190611496565b905090565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663741bef1a6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03166377553ad46040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b6000806107ac6108ab565b6001600160a01b03166314a6bf0f6040518163ffffffff1660e01b815260040160206040518083038186803b1580156107e457600080fd5b505afa1580156107f8573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061081c91906114ca565b90506000610828610653565b6001600160a01b03166314a6bf0f6040518163ffffffff1660e01b815260040160206040518083038186803b15801561086057600080fd5b505afa158015610874573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061089891906114ca565b90506108a482826112ee565b9250505090565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637f7dde4a6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b6000806109116108ab565b6001600160a01b03166388bf5a9b6040518163ffffffff1660e01b815260040160206040518083038186803b15801561094957600080fd5b505afa15801561095d573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061098191906114ca565b9050600061098d610653565b6001600160a01b03166388bf5a9b6040518163ffffffff1660e01b815260040160206040518083038186803b15801561086057600080fd5b6109cd6112fa565b600254600090156109fa576002546109f7906109f184670de0b6b3a7640000611372565b9061137e565b90505b600454610a0790826112ee565b60048190556040519081527f5c0e08ca3bb02ce6e95bb312534829d89bc5da761d4785eb4cd59c854227d112906020015b60405180910390a15050565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316639e8ef3906040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b610aa761138a565b60025460009015610ace57600254610acb906109f184670de0b6b3a7640000611372565b90505b600354610adb90826112ee565b60038190556040519081527f9dc92430d985ba3a7ed7db68e66d71a7770a7af1138afd16bfa3b8d32d249a2990602001610a38565b610b19816113fe565b3360009081526001602052604081205490808215610b4857610b3a33610efc565b9150610b4533610fc9565b90505b610b5133611006565b6000610b5d84866112ee565b336000908152600160205260409020819055600254909150610b7f90866112ee565b60028190556040519081527fcc90c7c7229235ea6efd2e1b424482f2381f7208dbdb390206e3f027d6e85e5d9060200160405180910390a1610bbf610ea1565b6001600160a01b031663dea9981033876040518363ffffffff1660e01b8152600401610bec9291906114e2565b600060405180830381600087803b158015610c0657600080fd5b505af1158015610c1a573d6000803e3d6000fd5b50506040518381523392507f39df0e5286a3ef2f42a0bf52f32cfe2c58e5b0405f47fe512f2c2439e4cfe204915060200160405180910390a2604080518381526020810185905233917ff744d34ca1cb25acfa4180df5f09a67306107110a9f4b6ed99bb3be259738215910160405180910390a28315610ca657610c9d8261109a565b610ca6836111c6565b5050505050565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663ae9187546040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b600061048482610fc9565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663cda775f96040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663e2d8ef8d6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b610ddd6103e8670de0b6b3a7640000611566565b610de8906005611586565b81565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663fbfa77cf6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663ff2fb57c6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663fff298df6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b6001600160a01b0381166000908152600560205260408120546003548290610f5590670de0b6b3a7640000906109f190610f36908661108e565b6001600160a01b03881660009081526001602052604090205490611372565b949350505050565b60008111610fc65760405162461bcd60e51b815260206004820152602b60248201527f4d594f5374616b696e673a2055736572206d75737420686176652061206e6f6e60448201526a2d7a65726f207374616b6560a81b60648201526084015b60405180910390fd5b50565b6001600160a01b0381166000908152600560205260408120600101546004548290610f5590670de0b6b3a7640000906109f190610f36908661108e565b600380546001600160a01b03831660008181526005602090815260409182902093845560045460019094018490559354815192835293820193909352918201527f6b5cf27595af4428271524e0a5abd2b63f6fee1a61e31970490f5a10e257a1cd9060600160405180910390a150565b60008183106110855781611087565b825b9392505050565b600061108782846115a5565b7fc81bfb631f2fb105e9adb381f67853e6dabd01ac63bd84fec24f384da434f2a233826040516110cb9291906114e2565b60405180910390a160006110dd610a44565b6001600160a01b031663a9059cbb33846040518363ffffffff1660e01b815260040161110a9291906114e2565b602060405180830381600087803b15801561112457600080fd5b505af1158015611138573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061115c9190611476565b9050806111c25760405162461bcd60e51b815260206004820152602e60248201527f4d594f5374616b696e673a204661696c656420746f2073656e6420616363756d60448201526d3ab630ba32b2102820a4a3b0b4b760911b6064820152608401610fbd565b5050565b7f7e8574df4304b4b3442eecd378d37c797c92760eb6ab4148c2feb7646f2580d833826040516111f79291906114e2565b60405180910390a16000611209610e46565b6001600160a01b031663a9059cbb33846040518363ffffffff1660e01b81526004016112369291906114e2565b602060405180830381600087803b15801561125057600080fd5b505af1158015611264573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906112889190611476565b9050806111c25760405162461bcd60e51b815260206004820152602e60248201527f4d594f5374616b696e673a204661696c656420746f2073656e6420616363756d60448201526d3ab630ba32b21023a2a6a3b0b4b760911b6064820152608401610fbd565b6000611087828461154e565b611302610746565b6001600160a01b0316336001600160a01b0316146113705760405162461bcd60e51b815260206004820152602560248201527f4d594f5374616b696e673a2063616c6c6572206973206e6f7420426f72726f7760448201526465724f707360d81b6064820152608401610fbd565b565b60006110878284611586565b60006110878284611566565b6113926108ab565b6001600160a01b0316336001600160a01b0316146113705760405162461bcd60e51b8152602060048201526024808201527f4d594f5374616b696e673a2063616c6c6572206973206e6f7420416374697665604482015263141bdbdb60e21b6064820152608401610fbd565b60008111610fc65760405162461bcd60e51b815260206004820152602360248201527f4d594f5374616b696e673a20416d6f756e74206d757374206265206e6f6e2d7a60448201526265726f60e81b6064820152608401610fbd565b60006020828403121561146b578081fd5b8135611087816115d2565b600060208284031215611487578081fd5b81518015158114611087578182fd5b6000602082840312156114a7578081fd5b8151611087816115d2565b6000602082840312156114c3578081fd5b5035919050565b6000602082840312156114db578081fd5b5051919050565b6001600160a01b03929092168252602082015260400190565b6000602080835283518082850152825b818110156115275785810183015185820160400152820161150b565b818111156115385783604083870101525b50601f01601f1916929092016040019392505050565b60008219821115611561576115616115bc565b500190565b60008261158157634e487b7160e01b81526012600452602481fd5b500490565b60008160001904831182151516156115a0576115a06115bc565b500290565b6000828210156115b7576115b76115bc565b500390565b634e487b7160e01b600052601160045260246000fd5b6001600160a01b0381168114610fc657600080fdfea26469706673582212207c44bd20b0146e1a807e1095703510e0825edf5756e7f1a94ca439d17671fb7064736f6c63430008030033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106102125760003560e01c8063a3f4df7e11610120578063d78f6a66116100b8578063f2f4eb261161007c578063f2f4eb2614610432578063f92d343314610459578063fbfa77cf14610461578063ff2fb57c14610469578063fff298df1461047157610212565b8063d78f6a6614610407578063e2d8ef8d1461040f578063e5b5019a14610417578063f05acd9e14610420578063f2a69a011461042957610212565b8063a3f4df7e14610367578063a66b72801461039d578063a694fc3a146103b0578063ae918754146103c3578063b563be91146103cb578063be8087a2146103de578063c35bc550146103e6578063cda775f9146103f0578063d3c2f3c1146103f857610212565b8063741bef1a116101ae578063887105d311610172578063887105d31461032d57806389a8872f146103355780639d205fc91461033d5780639e8ef39014610350578063a20baee61461035857610212565b8063741bef1a146102fe57806377553ad414610306578063794e57241461030e578063795d26c31461031d5780637f7dde4a1461032557610212565b80630b2092fa1461021757806316934fc41461023d5780631bf435551461025d5780632e17de781461026d57806334b3081f146102825780633cc74225146102be5780635733d58f146102de57806358f0c933146102ed57806361ec893d146102f6575b600080fd5b61022a61022536600461145a565b610479565b6040519081526020015b60405180910390f35b61022a61024b36600461145a565b60016020526000908152604090205481565b61022a686194049f30f720000081565b61028061027b3660046114b2565b61048a565b005b6102a961029036600461145a565b6005602052600090815260409020805460019091015482565b60408051928352602083019190915201610234565b6102c6610653565b6040516001600160a01b039091168152602001610234565b61022a6714d1120d7b16000081565b61022a60035481565b61022a603c81565b6102c66106eb565b6102c6610746565b61022a670f43fc2c04ee000081565b61022a6107a1565b6102c66108ab565b61022a610906565b61022a60c881565b61028061034b3660046114b2565b6109c5565b6102c6610a44565b61022a670de0b6b3a764000081565b6103906040518060400160405280600a8152602001694d594f5374616b696e6760b01b81525081565b60405161023491906114fb565b6102806103ab3660046114b2565b610a9f565b6102806103be3660046114b2565b610b10565b6102c6610cad565b61022a6103d936600461145a565b610d08565b60035461022a565b61022a6212750081565b6102c6610d13565b61022a671bc16d674ec8000081565b60045461022a565b6102c6610d6e565b61022a60005481565b61022a60045481565b61022a60025481565b6102c67f000000000000000000000000000000000000000000000000000000000000000081565b61022a610dc9565b6102c6610deb565b6102c6610e46565b6102c6610ea1565b600061048482610efc565b92915050565b336000908152600160205260409020546104a381610f5d565b60006104ae33610efc565b905060006104bb33610fc9565b90506104c633611006565b83156106005760006104d88585611076565b905060006104e6858361108e565b336000908152600160205260409020819055600254909150610508908361108e565b60028190556040519081527fcc90c7c7229235ea6efd2e1b424482f2381f7208dbdb390206e3f027d6e85e5d9060200160405180910390a1610548610ea1565b6001600160a01b031663a9059cbb33846040518363ffffffff1660e01b81526004016105759291906114e2565b602060405180830381600087803b15801561058f57600080fd5b505af11580156105a3573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906105c79190611476565b5060405181815233907f39df0e5286a3ef2f42a0bf52f32cfe2c58e5b0405f47fe512f2c2439e4cfe2049060200160405180910390a250505b604080518281526020810184905233917ff744d34ca1cb25acfa4180df5f09a67306107110a9f4b6ed99bb3be259738215910160405180910390a26106448161109a565b61064d826111c6565b50505050565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316633cc742256040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b505afa1580156106c2573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906106e69190611496565b905090565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663741bef1a6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03166377553ad46040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b6000806107ac6108ab565b6001600160a01b03166314a6bf0f6040518163ffffffff1660e01b815260040160206040518083038186803b1580156107e457600080fd5b505afa1580156107f8573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061081c91906114ca565b90506000610828610653565b6001600160a01b03166314a6bf0f6040518163ffffffff1660e01b815260040160206040518083038186803b15801561086057600080fd5b505afa158015610874573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061089891906114ca565b90506108a482826112ee565b9250505090565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316637f7dde4a6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b6000806109116108ab565b6001600160a01b03166388bf5a9b6040518163ffffffff1660e01b815260040160206040518083038186803b15801561094957600080fd5b505afa15801561095d573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061098191906114ca565b9050600061098d610653565b6001600160a01b03166388bf5a9b6040518163ffffffff1660e01b815260040160206040518083038186803b15801561086057600080fd5b6109cd6112fa565b600254600090156109fa576002546109f7906109f184670de0b6b3a7640000611372565b9061137e565b90505b600454610a0790826112ee565b60048190556040519081527f5c0e08ca3bb02ce6e95bb312534829d89bc5da761d4785eb4cd59c854227d112906020015b60405180910390a15050565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b0316639e8ef3906040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b610aa761138a565b60025460009015610ace57600254610acb906109f184670de0b6b3a7640000611372565b90505b600354610adb90826112ee565b60038190556040519081527f9dc92430d985ba3a7ed7db68e66d71a7770a7af1138afd16bfa3b8d32d249a2990602001610a38565b610b19816113fe565b3360009081526001602052604081205490808215610b4857610b3a33610efc565b9150610b4533610fc9565b90505b610b5133611006565b6000610b5d84866112ee565b336000908152600160205260409020819055600254909150610b7f90866112ee565b60028190556040519081527fcc90c7c7229235ea6efd2e1b424482f2381f7208dbdb390206e3f027d6e85e5d9060200160405180910390a1610bbf610ea1565b6001600160a01b031663dea9981033876040518363ffffffff1660e01b8152600401610bec9291906114e2565b600060405180830381600087803b158015610c0657600080fd5b505af1158015610c1a573d6000803e3d6000fd5b50506040518381523392507f39df0e5286a3ef2f42a0bf52f32cfe2c58e5b0405f47fe512f2c2439e4cfe204915060200160405180910390a2604080518381526020810185905233917ff744d34ca1cb25acfa4180df5f09a67306107110a9f4b6ed99bb3be259738215910160405180910390a28315610ca657610c9d8261109a565b610ca6836111c6565b5050505050565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663ae9187546040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b600061048482610fc9565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663cda775f96040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663e2d8ef8d6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b610ddd6103e8670de0b6b3a7640000611566565b610de8906005611586565b81565b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663fbfa77cf6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663ff2fb57c6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b60007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b031663fff298df6040518163ffffffff1660e01b815260040160206040518083038186803b1580156106ae57600080fd5b6001600160a01b0381166000908152600560205260408120546003548290610f5590670de0b6b3a7640000906109f190610f36908661108e565b6001600160a01b03881660009081526001602052604090205490611372565b949350505050565b60008111610fc65760405162461bcd60e51b815260206004820152602b60248201527f4d594f5374616b696e673a2055736572206d75737420686176652061206e6f6e60448201526a2d7a65726f207374616b6560a81b60648201526084015b60405180910390fd5b50565b6001600160a01b0381166000908152600560205260408120600101546004548290610f5590670de0b6b3a7640000906109f190610f36908661108e565b600380546001600160a01b03831660008181526005602090815260409182902093845560045460019094018490559354815192835293820193909352918201527f6b5cf27595af4428271524e0a5abd2b63f6fee1a61e31970490f5a10e257a1cd9060600160405180910390a150565b60008183106110855781611087565b825b9392505050565b600061108782846115a5565b7fc81bfb631f2fb105e9adb381f67853e6dabd01ac63bd84fec24f384da434f2a233826040516110cb9291906114e2565b60405180910390a160006110dd610a44565b6001600160a01b031663a9059cbb33846040518363ffffffff1660e01b815260040161110a9291906114e2565b602060405180830381600087803b15801561112457600080fd5b505af1158015611138573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061115c9190611476565b9050806111c25760405162461bcd60e51b815260206004820152602e60248201527f4d594f5374616b696e673a204661696c656420746f2073656e6420616363756d60448201526d3ab630ba32b2102820a4a3b0b4b760911b6064820152608401610fbd565b5050565b7f7e8574df4304b4b3442eecd378d37c797c92760eb6ab4148c2feb7646f2580d833826040516111f79291906114e2565b60405180910390a16000611209610e46565b6001600160a01b031663a9059cbb33846040518363ffffffff1660e01b81526004016112369291906114e2565b602060405180830381600087803b15801561125057600080fd5b505af1158015611264573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906112889190611476565b9050806111c25760405162461bcd60e51b815260206004820152602e60248201527f4d594f5374616b696e673a204661696c656420746f2073656e6420616363756d60448201526d3ab630ba32b21023a2a6a3b0b4b760911b6064820152608401610fbd565b6000611087828461154e565b611302610746565b6001600160a01b0316336001600160a01b0316146113705760405162461bcd60e51b815260206004820152602560248201527f4d594f5374616b696e673a2063616c6c6572206973206e6f7420426f72726f7760448201526465724f707360d81b6064820152608401610fbd565b565b60006110878284611586565b60006110878284611566565b6113926108ab565b6001600160a01b0316336001600160a01b0316146113705760405162461bcd60e51b8152602060048201526024808201527f4d594f5374616b696e673a2063616c6c6572206973206e6f7420416374697665604482015263141bdbdb60e21b6064820152608401610fbd565b60008111610fc65760405162461bcd60e51b815260206004820152602360248201527f4d594f5374616b696e673a20416d6f756e74206d757374206265206e6f6e2d7a60448201526265726f60e81b6064820152608401610fbd565b60006020828403121561146b578081fd5b8135611087816115d2565b600060208284031215611487578081fd5b81518015158114611087578182fd5b6000602082840312156114a7578081fd5b8151611087816115d2565b6000602082840312156114c3578081fd5b5035919050565b6000602082840312156114db578081fd5b5051919050565b6001600160a01b03929092168252602082015260400190565b6000602080835283518082850152825b818110156115275785810183015185820160400152820161150b565b818111156115385783604083870101525b50601f01601f1916929092016040019392505050565b60008219821115611561576115616115bc565b500190565b60008261158157634e487b7160e01b81526012600452602481fd5b500490565b60008160001904831182151516156115a0576115a06115bc565b500290565b6000828210156115b7576115b76115bc565b500390565b634e487b7160e01b600052601160045260246000fd5b6001600160a01b0381168114610fc657600080fdfea26469706673582212207c44bd20b0146e1a807e1095703510e0825edf5756e7f1a94ca439d17671fb7064736f6c63430008030033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 15613,
+        "contract": "contracts/MYO/MYOStaking.sol:MYOStaking",
+        "label": "MAX_UINT",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 2833,
+        "contract": "contracts/MYO/MYOStaking.sol:MYOStaking",
+        "label": "stakes",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_uint256)"
+      },
+      {
+        "astId": 2835,
+        "contract": "contracts/MYO/MYOStaking.sol:MYOStaking",
+        "label": "totalMYOStaked",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 2837,
+        "contract": "contracts/MYO/MYOStaking.sol:MYOStaking",
+        "label": "F_GEM",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 2839,
+        "contract": "contracts/MYO/MYOStaking.sol:MYOStaking",
+        "label": "F_PAI",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 2844,
+        "contract": "contracts/MYO/MYOStaking.sol:MYOStaking",
+        "label": "snapshots",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_mapping(t_address,t_struct(Snapshot)2849_storage)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_struct(Snapshot)2849_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => struct MYOStaking.Snapshot)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Snapshot)2849_storage"
+      },
+      "t_mapping(t_address,t_uint256)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => uint256)",
+        "numberOfBytes": "32",
+        "value": "t_uint256"
+      },
+      "t_struct(Snapshot)2849_storage": {
+        "encoding": "inplace",
+        "label": "struct MYOStaking.Snapshot",
+        "members": [
+          {
+            "astId": 2846,
+            "contract": "contracts/MYO/MYOStaking.sol:MYOStaking",
+            "label": "F_GEM_Snapshot",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 2848,
+            "contract": "contracts/MYO/MYOStaking.sol:MYOStaking",
+            "label": "F_PAI_Snapshot",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "64"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
