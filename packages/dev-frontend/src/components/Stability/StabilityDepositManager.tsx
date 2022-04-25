@@ -132,7 +132,7 @@ export const StabilityDepositManager: React.FC = () => {
     >
       {description ??
         (makingNewDeposit ? (
-          <ActionDescription>Enter the amount of {COIN} you'd like to deposit.</ActionDescription>
+          <ActionDescription>Entering the amount of {COIN} you'd like to deposit.</ActionDescription>
         ) : (
           <ActionDescription>Adjust the {COIN} amount to deposit or withdraw.</ActionDescription>
         ))}

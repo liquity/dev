@@ -10,7 +10,7 @@ export const Dashboard: React.FC = () => (
   <Container variant="columns">
     <Container variant="left">
       <Trove />
-      <Stability />
+    {/*   <Stability /> */}
       <Staking />
     </Container>
 
