@@ -1,6 +1,7 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
 import { Flex, Spinner, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
+import { Global, css } from "@emotion/react";
 
 import { BatchedWebSocketAugmentedWeb3Provider } from "@fluidity/providers";
 import { LiquityProvider } from "./hooks/LiquityContext";
@@ -99,6 +100,22 @@ const App = () => {
   return (
     <EthersWeb3ReactProvider>
       <ThemeProvider theme={theme}>
+        <Global
+          styles={css`
+          @font-face {
+            font-family: "Visby CF";
+            src: url("./fonts/VisbyCF-Regular.woff2") format("woff2");
+            font-style: normal;
+            font-weight: 400;
+          }
+          @font-face {
+            font-family: "Visby CF";
+            src: url("./fonts/VisbyCF-Heavy.woff2") format("woff2");
+            font-style: normal;
+            font-weight: 600;
+          }
+          `}
+        />
         <WalletConnector loader={loader}>
           <LiquityProvider
             loader={loader}
