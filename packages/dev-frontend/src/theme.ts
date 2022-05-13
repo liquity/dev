@@ -364,7 +364,7 @@ const theme: Theme = {
             padding: 2,
             borderRadius: "12px",
             boxShadow: 1,
-            bg: "#f9fffe",
+            bg: "#F2F4FF",
             color: "accent",
 
             zIndex: 1
