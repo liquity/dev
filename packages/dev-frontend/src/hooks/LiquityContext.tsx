@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
 import { getNetwork } from "@ethersproject/networks";
-import { BaseProvider, Web3Provider } from "@ethersproject/providers";
+import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
@@ -36,16 +36,6 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
 
 const webSocketSupportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
-const getClientVersion = async (provider: BaseProvider): Promise<string | undefined> => {
-  try {
-    const clientVersion = await provider.perform("web3_clientVersion", []);
-
-    if (typeof clientVersion === "string") {
-      return clientVersion;
-    }
-  } catch {}
-};
-
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
   loader,
@@ -72,14 +62,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   }, []);
 
   useEffect(() => {
-    if (!config || !connection) {
-      return;
-    }
-
-    let mounted = true;
-    let wsOpen = false;
-
-    const setupProvider = async () => {
+    if (config && connection) {
       const { provider, chainId } = connection;
 
       if (isBatchedProvider(provider) && provider.chainId !== chainId) {
@@ -88,41 +71,22 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
 
       if (isWebSocketAugmentedProvider(provider)) {
         const network = getNetwork(chainId);
-        const clientVersion = await getClientVersion(provider);
 
-        if (!mounted) {
-          return;
+        if (
+          network.name &&
+          webSocketSupportedNetworks.includes(network.name) &&
+          config.infuraApiKey
+        ) {
+          provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
+        } else if (connection._isDev) {
+          provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
         }
 
-        // If client is HardHat, assume that it's running in fork mode, therefore don't use an
-        // Infura WebSocket connection, as that would see a different (unforked) blockchain state.
-        if (!clientVersion || !clientVersion.match(/hardhat/i)) {
-          if (
-            network.name &&
-            webSocketSupportedNetworks.includes(network.name) &&
-            config.infuraApiKey
-          ) {
-            provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
-            wsOpen = true;
-          } else if (connection._isDev) {
-            provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
-            wsOpen = true;
-          }
-        }
+        return () => {
+          provider.closeWebSocket();
+        };
       }
-    };
-
-    setupProvider();
-
-    return () => {
-      const { provider } = connection;
-
-      if (isWebSocketAugmentedProvider(provider) && wsOpen) {
-        provider.closeWebSocket();
-      }
-
-      mounted = false;
-    };
+    }
   }, [config, connection]);
 
   if (!config || !provider || !account || !chainId) {
