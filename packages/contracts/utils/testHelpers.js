@@ -266,11 +266,11 @@ class TestHelper {
     }
   }
 
-  static logBN(label, x) {
-    x = x.toString().padStart(18, '0')
+  static logBN(label, x, decimals=18) {
+    x = x.toString().padStart(decimals, '0')
     // TODO: thousand separators
-    const integerPart = x.slice(0, x.length-18) ? x.slice(0, x.length-18) : '0'
-    console.log(`${label}:`, integerPart + '.' + x.slice(-18))
+    const integerPart = x.slice(0, x.length-decimals) ? x.slice(0, x.length-decimals) : '0'
+    console.log(`${label}:`, integerPart + '.' + x.slice(-decimals))
   }
 
   // --- TCR and Recovery Mode functions ---
@@ -1116,6 +1116,19 @@ class TestHelper {
       method: 'evm_mine'
     },
       (err) => { if (err) console.log(err) })
+  }
+
+  static async fastForwardBlocks(blocks, currentWeb3Provider) {
+    for (let i = 0; i < blocks; i++) {
+      await currentWeb3Provider.send(
+        {
+          id: 0,
+          jsonrpc: '2.0',
+          method: 'evm_mine'
+        },
+        (err) => { if (err) console.log(err) }
+      )
+    }
   }
 
   static async getLatestBlockTimestamp(web3Instance) {
