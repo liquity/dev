@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Container, Text, Flex, Box, Button } from "theme-ui";
-
+import { UnsupportedChainIdError } from '@web3-react/core'
 import { AccountInfo } from "./AccountInfo";
 import { useLiquity, isWalletConnected } from "../../hooks/LiquityContext";
 import { shortenAddress } from "../../utils/shortenAddress";
@@ -61,6 +61,17 @@ export const UserAccount: React.FC = () => {
     const [userModalOpen, setSystemStatsOpen] = useState(false);
     const { activate } = useWeb3React();
 
+    const tryActivation = async (connector: AbstractConnector | undefined) => {
+        connector &&
+          activate(connector, undefined, true).catch(error => {
+            if (error instanceof UnsupportedChainIdError) {
+              activate(connector) // a little janky...can't use setError because the connector isn't set
+            } else {
+              console.error(error)
+            }
+          })
+      }
+
     return (
         <>
             <Box>
@@ -70,7 +81,7 @@ export const UserAccount: React.FC = () => {
                         account = {account}
                         setSystemStatsOpen = {setSystemStatsOpen}
                         userModalOpen = {userModalOpen}
-                        activate={activate}
+                        activate={tryActivation}
                     ></AccountButton>
                 </Flex>
             </Box>
