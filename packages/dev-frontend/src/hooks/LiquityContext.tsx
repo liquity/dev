@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
+import { useWeb3React } from "./index";
 import { Network, Networkish, getNetwork as getEthersNetwork } from "@ethersproject/networks";
-import { Web3Provider } from "@ethersproject/providers";
-import { useWeb3React } from "@web3-react/core";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@fluidity/providers";
 import {
@@ -16,7 +15,7 @@ import { LiquityFrontendConfig, getConfig } from "../config";
 
 type LiquityContextValue = {
   config: LiquityFrontendConfig;
-  account: string;
+  account: string | null | undefined;
   provider: Provider;
   liquity: EthersLiquityWithStore<BlockPolledLiquityStore>;
 };
@@ -70,20 +69,25 @@ const getNetwork = (network: Networkish): Network => {
 const infuraSupportedNetworks = [""];
 const webSocketSupportedNetworks = ["bakerloo"];
 
+export const isWalletConnected = (account: string | null | undefined) => account && account !== "0x0000000000000000000000000000000000000000"
+
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
   loader,
   unsupportedNetworkFallback,
   unsupportedMainnetFallback
 }) => {
-  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
+  const { library: provider, account, chainId } = useWeb3React();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
 
+  console.log({provider, account, chainId});
+
   const connection = useMemo(() => {
-    if (config && provider && account && chainId) {
+    if (config && provider && chainId) {
+      let tempAccount = account || '0x0000000000000000000000000000000000000000'
       try {
-        return _connectByChainId(provider, provider.getSigner(account), chainId, {
-          userAddress: account,
+        return _connectByChainId(provider, provider.getSigner(tempAccount), chainId, {
+          userAddress: tempAccount,
           frontendTag: config.frontendTag,
           useStore: "blockPolled"
         });
@@ -125,7 +129,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     }
   }, [config, connection]);
 
-  if (!config || !provider || !account || !chainId) {
+  if (!config || !provider || !chainId) {
     return <>{loader}</>;
   }
 

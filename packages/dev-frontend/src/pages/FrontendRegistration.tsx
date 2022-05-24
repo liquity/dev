@@ -97,7 +97,7 @@ export const FrontendRegistration: React.FC = () => {
         </Flex>
 
         <Paragraph sx={{ fontSize: 1, mt: 3 }}>
-          You are about to register <b>{shortenAddress(account)}</b> to receive{" "}
+          You are about to register <b>{account && shortenAddress(account)}</b> to receive{" "}
           <b>{cut.mul(100).toString()}%</b> of the LQTY rewards earned through this frontend.
         </Paragraph>
 
