@@ -2,6 +2,7 @@ import React from "react";
 import { Web3ReactProvider, createWeb3ReactRoot } from "@web3-react/core";
 import { Flex, Spinner, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
 import Web3ReactManager from "./components/Web3ReactManager"
+import { Global, css } from "@emotion/react";
 import { LiquityProvider } from "./hooks/LiquityContext";
 import { TransactionProvider } from "./components/Transaction";
 import { Icon } from "./components/Icon";
@@ -86,6 +87,22 @@ const App = () => {
       <Web3ProviderNetwork getLibrary={getLibrary}>
         <Web3ReactManager>
           <ThemeProvider theme={theme}>
+          <Global
+          styles={css`
+          @font-face {
+            font-family: "Visby CF";
+            src: url("./fonts/VisbyCF-Regular.woff2") format("woff2");
+            font-style: normal;
+            font-weight: 400;
+          }
+          @font-face {
+            font-family: "Visby CF";
+            src: url("./fonts/VisbyCF-Heavy.woff2") format("woff2");
+            font-style: normal;
+            font-weight: 600;
+          }
+          `}
+        />
               <LiquityProvider
                 loader={loader}
                 unsupportedNetworkFallback={unsupportedNetworkFallback}

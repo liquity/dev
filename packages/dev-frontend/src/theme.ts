@@ -1,19 +1,19 @@
 import { Theme, ThemeUIStyleObject } from "theme-ui";
 
 const baseColors = {
-    blue: "#4895F4",
-    purple: "#414c6b",
-    cyan: "#03D8C3",
+    blue: "#6378EF",
+    purple: "#723FC6",
+    cyan: "#17BEBB",
     green: "#5beab7",
-    yellow: "#fd9d28",
-    red: "#dc2c10",
-    lightRed: "#ff755f"
+    yellow: "#FFC145",
+    red: "#FF6B6C",
+    lightRed: "#FF6B6C"
 };
 
 const colors = {
     primary: baseColors.blue,
     secondary: baseColors.purple,
-    accent: baseColors.cyan,
+    accent: baseColors.blue,
 
     success: baseColors.green,
     warning: baseColors.yellow,
@@ -23,7 +23,7 @@ const colors = {
     invalid: "pink",
 
     text: "#293147",
-    background: "#f9fbfe",
+    background: "#F8F8F8",
     muted: "#eaebed"
 };
 
@@ -99,16 +99,16 @@ const card: ThemeUIStyleObject = {
     mb: cardGapY,
     borderColor: "background",
     borderRadius: 16,
-    boxShadow: "0px 4px 8px #4895f426"
+    boxShadow: "0px 4px 8px #723fc61a"
 };
 
 const infoCard: ThemeUIStyleObject = {
     ...card,
 
     padding: 3,
-    boxShadow: "0px 4px 5px #03d8c31a",
+    boxShadow: "0px 4px 5px #F2F4FF",
     // backgroundColor: "rgba(3, 216, 195, 0.03)",
-    backgroundColor: "#f9fffe",
+    backgroundColor: "#F2F4FF",
 
     h2: {
         mb: 2,
@@ -158,15 +158,7 @@ const theme: Theme = {
     space: [0, 4, 8, 16, 32, 64, 128, 256, 512],
 
     fonts: {
-        body: [
-            "system-ui",
-            "-apple-system",
-            "BlinkMacSystemFont",
-            '"Segoe UI"',
-            "Roboto",
-            '"Helvetica Neue"',
-            "sans-serif"
-        ].join(", "),
+        body: "Visby CF",
         heading: "inherit",
         monospace: "Menlo, monospace"
     },
@@ -178,7 +170,7 @@ const theme: Theme = {
         heading: 600,
 
         light: 200,
-        medium: 500,
+        medium: 400,
         bold: 600
     },
 
@@ -213,7 +205,7 @@ const theme: Theme = {
 
             color: "white",
             backgroundColor: "#414c6b",
-            background: "linear-gradient(90deg, #414c6b 0%, #4895F4 15%, #03D8C3 85%)",
+            background: "linear-gradient(135deg, #6378EF 0%, #723FC6 85%)",
         },
 
         outline: {
@@ -296,7 +288,7 @@ const theme: Theme = {
 
             color: "white",
             backgroundColor: "#414c6b",
-            background: "linear-gradient(90deg, #414c6b 0%, #4895F4 15%, #03D8C3 85%)",
+            background: "linear-gradient(135deg, #6378EF 0%, #723FC6 85%)",
             transition: "border 200ms",
 
             ":enabled:hover": {
@@ -372,7 +364,7 @@ const theme: Theme = {
             padding: 2,
             borderRadius: "12px",
             boxShadow: 1,
-            bg: "#f9fffe",
+            bg: "#F2F4FF",
             color: "accent",
 
             zIndex: 1

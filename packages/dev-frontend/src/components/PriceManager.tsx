@@ -33,7 +33,7 @@ export const PriceManager: React.FC = () => {
             border: 1,
             borderStyle: "dashed",
             borderColor: "accent",
-            bg: "rgb(250 255 255)",
+            bg: "#F2F4FF",
         }}>
             <Flex sx={{ mt: 3, mx: 3, alignItems: "center" }}>
                 <Heading sx={{ fontSize: 2 }}>Price Manager</Heading>

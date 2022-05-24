@@ -7,7 +7,7 @@ import { SideNav } from "./SideNav";
 import { UserAccount } from "./UserDashboard/UserAccount";
 // import { SystemStatsPopup } from "./SystemStatsPopup";
 
-const logoHeight = "32px";
+const logoHeight = "40px";
 
 export const Header: React.FC = () => {
 
@@ -18,7 +18,7 @@ export const Header: React.FC = () => {
                 justifyContent: "space-between",
                 flex: 1,
             }}>
-                <Flex sx={{ flexBasis: "20%" }}>
+                <Flex sx={{ flexBasis: ["50%", "20%"] }}>
                     <LiquityLogo height={logoHeight} />
                 </Flex>
                 <Nav />
