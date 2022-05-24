@@ -2,12 +2,13 @@ import React, { useState, useRef } from "react";
 import { Container, Text, Flex, Box, Button } from "theme-ui";
 
 import { AccountInfo } from "./AccountInfo";
-import { useLiquity } from "../../hooks/LiquityContext";
+import { useLiquity, isWalletConnected } from "../../hooks/LiquityContext";
 import { shortenAddress } from "../../utils/shortenAddress";
 import { PriceManager } from "../../components/PriceManager";
 import { TopSystemStats } from "../../components/TopSystemStats";
 import { useWeb3React } from "../../hooks"
 import { injected } from "../../connectors";
+import { AbstractConnector } from '@web3-react/abstract-connector';
 
 const UserModal: React.FC = () => {
     return (
@@ -22,45 +23,55 @@ const UserModal: React.FC = () => {
     )
 }
 
+type AccountButtonProps = {
+    account: string | null | undefined;
+    userModalOpen: boolean;
+    setSystemStatsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    activate: (connector: AbstractConnector, onError?: ((error: Error) => void) | undefined, throwErrors?: boolean | undefined) => Promise<void>
+};
+
+const AccountButton: React.FC<AccountButtonProps> = props => {
+    if(!isWalletConnected(props.account)) {
+        return <Button
+            onClick={() => props.activate(injected)}
+            variant="colors"
+            sx={{ px: 3, py: 2 }}>
+            <Flex sx={{ flexDirection: "column" }}>
+                <Text as="span" sx={{ fontSize: 1 }}>
+                    🦊 Connect Wallet
+                </Text>
+            </Flex>
+        </Button>
+    } 
+    return <Button
+        onClick={() => props.setSystemStatsOpen(!props.userModalOpen) }
+        variant="colors"
+        sx={{ px: 3, py: 2 }}>
+        <Flex sx={{ flexDirection: "column" }}>
+            <Text as="span" sx={{ fontSize: 1 }}>
+                {props.account && shortenAddress(props.account)}
+            </Text>
+        </Flex>
+    </Button>
+}
+
 export const UserAccount: React.FC = () => {
     const { account } = useLiquity();
     const userModalOverlayRef = useRef<HTMLDivElement>(null);
     const [userModalOpen, setSystemStatsOpen] = useState(false);
     const { activate } = useWeb3React();
 
-
     return (
         <>
             <Box>
                 <Flex sx={{ mx: 2, alignItems: "center" }}>
                     {/* <Icon name="user-circle" size="lg" /> */}
-                    <Button
-                        onClick={() => setSystemStatsOpen(!userModalOpen)}
-                        variant="colors"
-                        sx={{ px: 3, py: 2 }}>
-                        <Flex sx={{ flexDirection: "column" }}>
-                            <Text as="span" sx={{ fontSize: 1 }}>
-                                {account && shortenAddress(account)}
-                            </Text>
-                        </Flex>
-                    </Button>
-                </Flex>
-            </Box>
-
-            <Box>
-                <Flex sx={{ mx: 2, alignItems: "center" }}>
-                    {/* <Icon name="user-circle" size="lg" /> */}
-                    <Button
-                        onClick={() => activate(injected)
-                        }
-                        variant="colors"
-                        sx={{ px: 30, py: 2 }}>
-                        <Flex sx={{ flexDirection: "column" }}>
-                            <Text as="span" sx={{ fontSize: 1 }}>
-                                {account && shortenAddress(account)}
-                            </Text>
-                        </Flex>
-                    </Button>
+                    <AccountButton 
+                        account = {account}
+                        setSystemStatsOpen = {setSystemStatsOpen}
+                        userModalOpen = {userModalOpen}
+                        activate={activate}
+                    ></AccountButton>
                 </Flex>
             </Box>
 

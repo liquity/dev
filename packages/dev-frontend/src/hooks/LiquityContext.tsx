@@ -36,6 +36,8 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
 const supportedETHNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"]; //TODO: Remove support for eth networks?
 const supportedAUTNetworks = [444900];
 
+export const isWalletConnected = (account: string | null | undefined) => account && account !== "0x0000000000000000000000000000000000000000"
+
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
   loader,
