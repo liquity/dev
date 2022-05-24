@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-//import { getNetwork } from "@ethersproject/networks";
 import { useWeb3React } from "./index";
 import { Network, Networkish, getNetwork as getEthersNetwork } from "@ethersproject/networks";
 
