@@ -1,7 +1,7 @@
 import React from "react";
 import { Container, Flex} from "theme-ui";
 
-import { LiquityLogo } from "./LiquityLogo";
+import { OpalLogo } from "./OpalLogo";
 import { Nav } from "./Nav";
 import { SideNav } from "./SideNav";
 import { UserAccount } from "./UserDashboard/UserAccount";
@@ -19,7 +19,7 @@ export const Header: React.FC = () => {
                 flex: 1,
             }}>
                 <Flex sx={{ flexBasis: ["50%", "20%"] }}>
-                    <LiquityLogo height={logoHeight} />
+                    <OpalLogo height={logoHeight} />
                 </Flex>
                 <Nav />
                 <Flex sx={{
