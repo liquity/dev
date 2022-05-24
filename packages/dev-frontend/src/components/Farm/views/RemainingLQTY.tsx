@@ -13,7 +13,7 @@ export const RemainingLQTY: React.FC = () => {
 
   return (
     <Flex sx={{ mr: 2, fontSize: 2, fontWeight: "medium" }}>
-      {remainingLiquidityMiningLQTYReward.prettify(0)} LQTY remaining
+      {remainingLiquidityMiningLQTYReward.prettify(0)} OPAL remaining
     </Flex>
   );
 };

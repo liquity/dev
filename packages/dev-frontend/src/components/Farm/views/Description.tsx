@@ -22,7 +22,7 @@ export const Description: React.FC<DescriptionProps> = ({ amount }) => {
   if (!hasApproved) {
     return (
       <ActionDescription>
-        <Text>To stake your {LP} tokens you need to allow Liquity to stake them for you</Text>
+        <Text>To stake your {LP} tokens you need to allow Opal to stake them for you</Text>
       </ActionDescription>
     );
   }

@@ -77,7 +77,7 @@ const getInitialView = (troveStatus: UserTroveStatus): TroveView => {
 
 const select = ({ trove: { status } }: LiquityStoreState) => status;
 
-export const LUSDTradingViewProvider: React.FC = props => {
+export const OUSDTradingViewProvider: React.FC = props => {
   const { children } = props;
   const troveStatus = useLiquitySelector(select);
 

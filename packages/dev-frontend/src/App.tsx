@@ -90,7 +90,7 @@ const App = () => {
       }}
     >
       <Heading sx={{ mb: 3 }}>
-        <Icon name="exclamation-triangle" /> Liquity is not yet deployed to{" "}
+        <Icon name="exclamation-triangle" /> Opal not yet deployed to{" "}
         {chainId === 1 ? "mainnet" : "this network"}.
       </Heading>
       Please switch to Ropsten, Rinkeby, Kovan, Görli or Kiln.

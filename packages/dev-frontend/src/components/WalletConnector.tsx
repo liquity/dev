@@ -190,7 +190,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
               activate(connectionState.connector);
             }}
           >
-            <Text>To use Liquity, you need to connect your Autonity account.</Text>
+            <Text>To use Opal, you need to connect your Autonity account.</Text>
           </RetryDialog>
         </Modal>
       )}

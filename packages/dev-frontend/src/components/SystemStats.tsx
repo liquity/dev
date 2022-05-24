@@ -90,12 +90,12 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
 
     return (
         <Box sx={{ mb: 3 }}>
-            <Heading>Liquity statistics</Heading>
+            <Heading>Opal statistics</Heading>
 
             {showStat("borrow-fee") &&
                 <Statistic
                     name="Borrowing Fee"
-                    tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
+                    tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in OUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on OUSD redemption volumes."
                 >
                     {borrowingFeePct.toString(2)}
                 </Statistic>
@@ -103,7 +103,7 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
             {showStat("redeem-fee") &&
                 <Statistic
                     name="Redemption Fee"
-                    tooltip="The Redemption Fee is a one-off fee charged as a percentage of the redeemed amount (in AUT). The fee varies from 0.5% depending on LUSD redemption volumes."
+                    tooltip="The Redemption Fee is a one-off fee charged as a percentage of the redeemed amount (in AUT). The fee varies from 0.5% depending on OUSD redemption volumes."
                 >
                     {redemptionFeePct.toString(2)}
                 </Statistic>
@@ -125,14 +125,14 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
                 </Statistic>
             }
             {showStat("lusd-supply") &&
-                <Statistic name="LUSD supply" tooltip="The total LUSD minted by the Liquity Protocol.">
+                <Statistic name="OUSD supply" tooltip="The total OUSD minted by the Opal Protocol.">
                     {total.debt.shorten()}
                 </Statistic>
             }
             {showStat("lusd-sp") && lusdInStabilityPoolPct && (
                 <Statistic
-                    name="LUSD in Stability Pool"
-                    tooltip="The total LUSD currently held in the Stability Pool, expressed as an amount and a fraction of the LUSD supply.
+                    name="OUSD in Stability Pool"
+                    tooltip="The total OUSD currently held in the Stability Pool, expressed as an amount and a fraction of the OUSD supply.
         "
                 >
                     {lusdInStabilityPool.shorten()}
@@ -141,8 +141,8 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
             )}
             {showStat("staked-lqty") &&
                 <Statistic
-                    name="Staked LQTY"
-                    tooltip="The total amount of LQTY that is staked for earning fee revenue."
+                    name="Staked OPAL"
+                    tooltip="The total amount of OPAL that is staked for earning fee revenue."
                 >
                     {totalStakedLQTY.shorten()}
                 </Statistic>
