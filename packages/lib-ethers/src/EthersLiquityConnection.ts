@@ -10,6 +10,7 @@ import rinkeby from "../deployments/rinkeby.json";
 import ropsten from "../deployments/ropsten.json";
 import mainnet from "../deployments/mainnet.json";
 import bakerloo from "../deployments/bakerloo.json";
+// import kiln from "../deployments/kiln.json";
 
 import { numberify, panic } from "./_utils";
 import { EthersProvider, EthersSigner } from "./types";
@@ -34,7 +35,7 @@ const deployments: {
   [goerli.chainId]: goerli,
   [kovan.chainId]: kovan,
   [bakerloo.chainId]: bakerloo,
-
+  // [kiln.chainId]: kiln,
   ...(dev !== null ? { [dev.chainId]: dev } : {})
 };
 
