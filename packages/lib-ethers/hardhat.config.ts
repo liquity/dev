@@ -121,7 +121,12 @@ const config: HardhatUserConfig = {
     ...infuraNetwork("rinkeby"),
     ...infuraNetwork("goerli"),
     ...infuraNetwork("kovan"),
-    ...infuraNetwork("mainnet")
+    ...infuraNetwork("mainnet"),
+
+    kiln: {
+      url: "https://rpc.kiln.themerge.dev",
+      accounts: [deployerAccount]
+    }
   },
 
   paths: {

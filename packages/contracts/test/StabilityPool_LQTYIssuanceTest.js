@@ -10,6 +10,8 @@ const getDifference = th.getDifference
 const TroveManagerTester = artifacts.require("TroveManagerTester")
 const LUSDToken = artifacts.require("LUSDToken")
 
+const GAS_PRICE = 10000000
+
 contract('StabilityPool - LQTY Rewards', async accounts => {
 
   const [
@@ -127,8 +129,8 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
 
       const totalLQTYIssued_2 = await communityIssuanceTester.totalLQTYIssued()
 
-      console.log(`totalLQTYIssued_1: ${totalLQTYIssued_1}`)
-      console.log(`totalLQTYIssued_2: ${totalLQTYIssued_2}`)
+      //console.log(`totalLQTYIssued_1: ${totalLQTYIssued_1}`)
+      //console.log(`totalLQTYIssued_2: ${totalLQTYIssued_2}`)
 
       // check blockTimestamp diff < 60s
       const timestampDiff = blockTimestamp_2.sub(blockTimestamp_1)
@@ -171,7 +173,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       const LQTYIssuedBefore = await communityIssuanceTester.totalLQTYIssued()
 
       //  A withdraws some deposit. Triggers issuance.
-      const tx = await stabilityPool.withdrawFromSP(1000, { from: A, gasPrice: 0 })
+      const tx = await stabilityPool.withdrawFromSP(1000, { from: A, gasPrice: GAS_PRICE })
       assert.isTrue(tx.receipt.status)
 
       // Check G and LQTYIssued do not increase, since <1 minute has passed between issuance triggers
