@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-import { Network, Networkish, networks, getNetwork as getEthersNetwork } from "@ethersproject/networks";
+import { Network, Networkish, getNetwork as getEthersNetwork } from "@ethersproject/networks";
 import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
@@ -40,7 +40,7 @@ const projectNetworks: { [name: string]: Network } = {
 
 const getNetwork = (network: Networkish): Network => {
     if (typeof(network) === "number") {
-        const standard = Object.values(projectNetworks).find((net: Network) => net.chainId == network);
+        const standard = Object.values(projectNetworks).find((net: Network) => net.chainId === network);
         if (standard) {
             return {
                 name: standard.name,
