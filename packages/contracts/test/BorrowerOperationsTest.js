@@ -1365,6 +1365,18 @@ contract('BorrowerOperations', async accounts => {
       await assertRevert(repayTxAPromise, "BorrowerOps: Trove's net debt must be greater than minimum")
     })
 
+    it("adjustTrove(): Reverts if repaid amount is greater than current debt", async () => {
+      const { totalDebt } = await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: alice } })
+      LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
+      const repayAmount = totalDebt.sub(LUSD_GAS_COMPENSATION).add(toBN(1))
+      await openTrove({ extraLUSDAmount: repayAmount, ICR: toBN(dec(150, 16)), extraParams: { from: bob } })
+
+      await lusdToken.transfer(alice, repayAmount, { from: bob })
+
+      await assertRevert(borrowerOperations.adjustTrove(th._100pct, 0, repayAmount, false, alice, alice, { from: alice }),
+                         "SafeMath: subtraction overflow")
+    })
+
     it("repayLUSD(): reverts when calling address does not have active trove", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: alice } })
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: bob } })
@@ -2389,7 +2401,7 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(totalStakesAfter.eq(totalStakesBefore.add(toBN(dec(1, 18)))))
     })
 
-    it("adjustTrove():  updates borrower's stake and totalStakes with a coll decrease", async () => {
+    it("adjustTrove(): updates borrower's stake and totalStakes with a coll decrease", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
 
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: alice } })

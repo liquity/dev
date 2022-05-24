@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-import { getNetwork } from "@ethersproject/networks";
+import { Network, Networkish, networks, getNetwork as getEthersNetwork } from "@ethersproject/networks";
 import { Web3Provider } from "@ethersproject/providers";
 import { useWeb3React } from "@web3-react/core";
 
@@ -34,8 +34,41 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
   network
 ];
 
-const supportedETHNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"]; //TODO: Remove support for eth networks?
-const supportedAUTNetworks = [444900];
+const projectNetworks: { [name: string]: Network } = {
+    bakerloo: { chainId: 444900, name: "bakerloo" }
+}
+
+const getNetwork = (network: Networkish): Network => {
+    if (typeof(network) === "number") {
+        const standard = Object.values(projectNetworks).find((net: Network) => net.chainId == network);
+        if (standard) {
+            return {
+                name: standard.name,
+                chainId: standard.chainId,
+                ensAddress: (standard.ensAddress || undefined),
+                _defaultProvider: (standard._defaultProvider || undefined)
+            }
+        }
+    }
+    if (typeof(network) === "string") {
+        const standard = projectNetworks[network];
+        if (standard) {
+            return {
+                name: standard.name,
+                chainId: standard.chainId,
+                ensAddress: (standard.ensAddress || undefined),
+                _defaultProvider: (standard._defaultProvider || undefined)
+            }
+        }
+    }
+
+    return getEthersNetwork(network);
+}
+
+// NOTE: Able / disable ETH networks
+// const infuraSupportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
+const infuraSupportedNetworks = [""];
+const webSocketSupportedNetworks = ["bakerloo"];
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
@@ -73,9 +106,13 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
       if (isWebSocketAugmentedProvider(provider)) {
         const network = getNetwork(chainId);
 
-        if (network.name && supportedETHNetworks.includes(network.name) && config.infuraApiKey) {
+        if (
+          network.name &&
+          infuraSupportedNetworks.includes(network.name) &&
+          config.infuraApiKey
+        ) {
           provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
-        } else if (supportedAUTNetworks.includes(chainId)) {
+        } else if (webSocketSupportedNetworks.includes(network.name)) {
           provider.openWebSocket(`wss://rpc1.bakerloo.autonity.network:8546`, chainId);
         } else if (connection._isDev) {
           provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);

@@ -66,9 +66,9 @@ module.exports = {
         hardhat: {
             accounts: accountsList,
             gas: 10000000,  // tx gas limit
-            blockGasLimit: 15000000, 
+            blockGasLimit: 15000000,
             gasPrice: 20000000000,
-            hardfork: "london"
+            initialBaseFeePerGas: 0,
         },
         mainnet: {
             url: alchemyUrl(),

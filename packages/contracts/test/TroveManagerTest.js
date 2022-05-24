@@ -10,6 +10,8 @@ const assertRevert = th.assertRevert
 const mv = testHelpers.MoneyValues
 const timeValues = testHelpers.TimeValues
 
+const GAS_PRICE = 10000000
+
 
 /* NOTE: Some tests involving ETH redemption fees do not test for specific fee values.
  * Some only test that the fees are non-zero when they should occur.
@@ -2367,7 +2369,7 @@ contract('TroveManager', async accounts => {
       0, th._100pct,
       {
         from: dennis,
-        gasPrice: 0
+        gasPrice: GAS_PRICE
       }
     )
 
@@ -2392,8 +2394,18 @@ contract('TroveManager', async accounts => {
     const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
 
     const expectedTotalETHDrawn = redemptionAmount.div(toBN(200)) // convert redemptionAmount LUSD to ETH, at ETH:USD price 200
-    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
-
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee)).sub(toBN(th.gasUsed(redemptionTx) * GAS_PRICE)) // substract gas used for troveManager.redeemCollateral from expected received ETH
+    
+    // console.log("*********************************************************************************")
+    // console.log("ETHFee: " + ETHFee)
+    // console.log("dennis_ETHBalance_Before: " + dennis_ETHBalance_Before)
+    // console.log("GAS_USED: " + th.gasUsed(redemptionTx))
+    // console.log("dennis_ETHBalance_After: " + dennis_ETHBalance_After)
+    // console.log("expectedTotalETHDrawn: " + expectedTotalETHDrawn)
+    // console.log("recived  : " + receivedETH)
+    // console.log("expected : " + expectedReceivedETH)
+    // console.log("wanted :   " + expectedReceivedETH.sub(toBN(GAS_PRICE)))
+    // console.log("*********************************************************************************")
     th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
 
     const dennis_LUSDBalance_After = (await lusdToken.balanceOf(dennis)).toString()
@@ -2447,7 +2459,7 @@ contract('TroveManager', async accounts => {
       0, th._100pct,
       {
         from: dennis,
-        gasPrice: 0
+        gasPrice: GAS_PRICE 
       }
     )
 
@@ -2472,7 +2484,7 @@ contract('TroveManager', async accounts => {
     const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
 
     const expectedTotalETHDrawn = redemptionAmount.div(toBN(200)) // convert redemptionAmount LUSD to ETH, at ETH:USD price 200
-    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee)).sub(toBN(th.gasUsed(redemptionTx) * GAS_PRICE)) // substract gas used for troveManager.redeemCollateral from expected received ETH
 
     th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
 
@@ -2527,7 +2539,7 @@ contract('TroveManager', async accounts => {
       0, th._100pct,
       {
         from: dennis,
-        gasPrice: 0
+        gasPrice: GAS_PRICE
       }
     )
 
@@ -2552,7 +2564,7 @@ contract('TroveManager', async accounts => {
     const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
 
     const expectedTotalETHDrawn = redemptionAmount.div(toBN(200)) // convert redemptionAmount LUSD to ETH, at ETH:USD price 200
-    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee)).sub(toBN(th.gasUsed(redemptionTx) * GAS_PRICE)) // substract gas used for troveManager.redeemCollateral from expected received ETH
 
     th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
 
@@ -2613,7 +2625,7 @@ contract('TroveManager', async accounts => {
       0, th._100pct,
       {
         from: dennis,
-        gasPrice: 0
+        gasPrice: GAS_PRICE
       }
     )
 
@@ -2638,7 +2650,7 @@ contract('TroveManager', async accounts => {
     const receivedETH = dennis_ETHBalance_After.sub(dennis_ETHBalance_Before)
 
     const expectedTotalETHDrawn = redemptionAmount.div(toBN(200)) // convert redemptionAmount LUSD to ETH, at ETH:USD price 200
-    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee))
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(toBN(ETHFee)).sub(toBN(th.gasUsed(redemptionTx) * GAS_PRICE)) // substract gas used for troveManager.redeemCollateral from expected received ETH
 
     th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
 
@@ -2876,7 +2888,7 @@ contract('TroveManager', async accounts => {
       0, th._100pct,
       {
         from: dennis,
-        gasPrice: 0
+        gasPrice: GAS_PRICE
       }
     )
 
@@ -2896,7 +2908,7 @@ contract('TroveManager', async accounts => {
 
     // Expect only 17 worth of ETH drawn
     const expectedTotalETHDrawn = fullfilledRedemptionAmount.sub(frontRunRedepmtion).div(toBN(200)) // redempted LUSD converted to ETH, at ETH:USD price 200
-    const expectedReceivedETH = expectedTotalETHDrawn.sub(ETHFee)
+    const expectedReceivedETH = expectedTotalETHDrawn.sub(ETHFee).sub(toBN(th.gasUsed(redemptionTx) * GAS_PRICE)) // substract gas used for troveManager.redeemCollateral from expected received ETH
 
     th.assertIsApproximatelyEqual(expectedReceivedETH, receivedETH)
 
@@ -2937,7 +2949,7 @@ contract('TroveManager', async accounts => {
       th._100pct,
       {
         from: carol,
-        gasPrice: 0
+        gasPrice: GAS_PRICE
       }
     )
 
@@ -3062,7 +3074,7 @@ contract('TroveManager', async accounts => {
     // skip bootstrapping phase
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-    await assertRevert(th.redeemCollateral(carol, contracts, dec(270, 18)), "TroveManager: Cannot redeem when TCR < MCR")
+    await assertRevert(th.redeemCollateral(carol, contracts, GAS_PRICE, dec(270, 18)), "TroveManager: Cannot redeem when TCR < MCR")
   });
 
   it("redeemCollateral(): reverts when argument _amount is 0", async () => {
@@ -3094,8 +3106,8 @@ contract('TroveManager', async accounts => {
     // skip bootstrapping phase
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), dec(2, 18)), "Max fee percentage must be between 0.5% and 100%")
-    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), '1000000000000000001'), "Max fee percentage must be between 0.5% and 100%")
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), GAS_PRICE ,dec(2, 18)), "Max fee percentage must be between 0.5% and 100%")
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), GAS_PRICE, '1000000000000000001'), "Max fee percentage must be between 0.5% and 100%")
   })
 
   it("redeemCollateral(): reverts if max fee < 0.5%", async () => { 
@@ -3107,9 +3119,9 @@ contract('TroveManager', async accounts => {
     // skip bootstrapping phase
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
-    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), 0), "Max fee percentage must be between 0.5% and 100%")
-    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), 1), "Max fee percentage must be between 0.5% and 100%")
-    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), '4999999999999999'), "Max fee percentage must be between 0.5% and 100%")
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, GAS_PRICE, dec(10, 18), 0), "Max fee percentage must be between 0.5% and 100%")
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, GAS_PRICE, dec(10, 18), 1), "Max fee percentage must be between 0.5% and 100%")
+    await assertRevert(th.redeemCollateralAndGetTxObject(A, contracts, GAS_PRICE, dec(10, 18), '4999999999999999'), "Max fee percentage must be between 0.5% and 100%")
   })
 
   it("redeemCollateral(): reverts if fee exceeds max fee percentage", async () => {
@@ -3714,7 +3726,7 @@ contract('TroveManager', async accounts => {
 
     const A_balanceBefore = await lusdToken.balanceOf(A)
 
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    await th.redeemCollateral(A, contracts, dec(10, 18), GAS_PRICE)
 
     // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), A_balanceBefore.sub(toBN(dec(10, 18))).toString())
@@ -3742,7 +3754,7 @@ contract('TroveManager', async accounts => {
     const B_balanceBefore = await lusdToken.balanceOf(B)
 
     // A redeems 10 LUSD
-    const redemptionTx_A = await th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18))
+    const redemptionTx_A = await th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), GAS_PRICE)
     const timeStamp_A = await th.getTimestampFromTx(redemptionTx_A, web3)
 
     // Check A's balance has decreased by 10 LUSD
@@ -3753,7 +3765,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // B redeems 10 LUSD
-    const redemptionTx_B = await th.redeemCollateralAndGetTxObject(B, contracts, dec(10, 18))
+    const redemptionTx_B = await th.redeemCollateralAndGetTxObject(B, contracts, dec(10, 18), GAS_PRICE)
     const timeStamp_B = await th.getTimestampFromTx(redemptionTx_B, web3)
 
     // Check B's balance has decreased by 10 LUSD
@@ -3781,7 +3793,7 @@ contract('TroveManager', async accounts => {
     const A_balanceBefore = await lusdToken.balanceOf(A)
 
     // A redeems 10 LUSD
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    await th.redeemCollateral(A, contracts, dec(10, 18), GAS_PRICE)
 
     // Check A's balance has decreased by 10 LUSD
     assert.equal(A_balanceBefore.sub(await lusdToken.balanceOf(A)), dec(10, 18))
@@ -3796,7 +3808,7 @@ contract('TroveManager', async accounts => {
     th.fastForwardTime(45, web3.currentProvider)
 
     // Borrower A triggers a fee
-    await th.redeemCollateral(A, contracts, dec(1, 18))
+    await th.redeemCollateral(A, contracts, dec(1, 18), GAS_PRICE)
 
     const lastFeeOpTime_2 = await troveManager.lastFeeOperationTime()
 
@@ -3812,7 +3824,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(toBN(timeNow).sub(lastFeeOpTime_1).gte(3600))
 
     // Borrower A triggers a fee
-    await th.redeemCollateral(A, contracts, dec(1, 18))
+    await th.redeemCollateral(A, contracts, dec(1, 18), GAS_PRICE)
 
     const lastFeeOpTime_3 = await troveManager.lastFeeOperationTime()
 
@@ -3843,7 +3855,7 @@ contract('TroveManager', async accounts => {
     const A_balanceBefore = await lusdToken.balanceOf(A)
 
     // A redeems 10 LUSD
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    await th.redeemCollateral(A, contracts, dec(10, 18), GAS_PRICE)
 
     // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), A_balanceBefore.sub(toBN(dec(10, 18))).toString())
@@ -3879,7 +3891,7 @@ contract('TroveManager', async accounts => {
     const A_balanceBefore = await lusdToken.balanceOf(A)
 
     // A redeems 10 LUSD
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    await th.redeemCollateral(A, contracts, dec(10, 18), GAS_PRICE)
 
     // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), A_balanceBefore.sub(toBN(dec(10, 18))).toString())
@@ -3912,7 +3924,7 @@ contract('TroveManager', async accounts => {
     const B_balanceBefore = await lusdToken.balanceOf(B)
 
     // A redeems 10 LUSD
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    await th.redeemCollateral(A, contracts, dec(10, 18), GAS_PRICE)
 
     // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), A_balanceBefore.sub(toBN(dec(10, 18))).toString())
@@ -3924,7 +3936,7 @@ contract('TroveManager', async accounts => {
     const lqtyStakingBalance_Before = toBN(await web3.eth.getBalance(lqtyStaking.address))
 
     // B redeems 10 LUSD
-    await th.redeemCollateral(B, contracts, dec(10, 18))
+    await th.redeemCollateral(B, contracts, dec(10, 18), GAS_PRICE)
 
     // Check B's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(B), B_balanceBefore.sub(toBN(dec(10, 18))).toString())
@@ -3954,7 +3966,7 @@ contract('TroveManager', async accounts => {
     const B_balanceBefore = await lusdToken.balanceOf(B)
 
     // A redeems 10 LUSD
-    await th.redeemCollateral(A, contracts, dec(10, 18))
+    await th.redeemCollateral(A, contracts, dec(10, 18), GAS_PRICE)
 
     // Check A's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(A), A_balanceBefore.sub(toBN(dec(10, 18))).toString())
@@ -3967,7 +3979,7 @@ contract('TroveManager', async accounts => {
     const F_ETH_Before = await lqtyStaking.F_ETH()
 
     // B redeems 10 LUSD
-    await th.redeemCollateral(B, contracts, dec(10, 18))
+    await th.redeemCollateral(B, contracts, dec(10, 18), GAS_PRICE)
 
     // Check B's balance has decreased by 10 LUSD
     assert.equal(await lusdToken.balanceOf(B), B_balanceBefore.sub(toBN(dec(10, 18))).toString())
@@ -4006,7 +4018,7 @@ contract('TroveManager', async accounts => {
 
     // A redeems 9 LUSD
     const redemptionAmount = toBN(dec(9, 18))
-    await th.redeemCollateral(A, contracts, redemptionAmount)
+    const gasUsed = await th.redeemCollateral(A, contracts, redemptionAmount, GAS_PRICE)
 
     /*
     At ETH:USD price of 200:
@@ -4025,7 +4037,7 @@ contract('TroveManager', async accounts => {
       ETHDrawn.sub(
         toBN(dec(5, 15)).add(redemptionAmount.mul(mv._1e18BN).div(totalDebt).div(toBN(2)))
           .mul(ETHDrawn).div(mv._1e18BN)
-      ),
+      ).sub(toBN(gasUsed * GAS_PRICE)), // substract gas used for troveManager.redeemCollateral from expected received ETH
       100000
     )
   })
@@ -4049,7 +4061,7 @@ contract('TroveManager', async accounts => {
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
     // whale redeems 360 LUSD.  Expect this to fully redeem A, B, C, and partially redeem D.
-    await th.redeemCollateral(whale, contracts, redemptionAmount)
+    await th.redeemCollateral(whale, contracts, redemptionAmount, GAS_PRICE)
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
@@ -4089,7 +4101,7 @@ contract('TroveManager', async accounts => {
     assert.equal(baseRate, '0')
 
     // whale redeems LUSD.  Expect this to fully redeem A, B, C, and partially redeem D.
-    await th.redeemCollateral(whale, contracts, redemptionAmount)
+    await th.redeemCollateral(whale, contracts, redemptionAmount, GAS_PRICE)
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
@@ -4154,7 +4166,7 @@ contract('TroveManager', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
     // whale redeems LUSD.  Expect this to fully redeem A, B, C, and partially redeem 15 LUSD from D.
-    const redemptionTx = await th.redeemCollateralAndGetTxObject(whale, contracts, redemptionAmount, th._100pct, { gasPrice: 0 })
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(whale, contracts, redemptionAmount, GAS_PRICE, th._100pct)
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
@@ -4201,19 +4213,23 @@ contract('TroveManager', async accounts => {
     // CollSurplusPool endpoint cannot be called directly
     await assertRevert(collSurplusPool.claimColl(A), 'CollSurplusPool: Caller is not Borrower Operations')
 
-    await borrowerOperations.claimCollateral({ from: A, gasPrice: 0 })
-    await borrowerOperations.claimCollateral({ from: B, gasPrice: 0 })
-    await borrowerOperations.claimCollateral({ from: C, gasPrice: 0 })
+    const A_GAS = th.gasUsed(await borrowerOperations.claimCollateral({ from: A, gasPrice: GAS_PRICE  }))
+    const B_GAS = th.gasUsed(await borrowerOperations.claimCollateral({ from: B, gasPrice: GAS_PRICE  }))
+    const C_GAS = th.gasUsed(await borrowerOperations.claimCollateral({ from: C, gasPrice: GAS_PRICE  }))
+
+    const A_expectedBalance = A_balanceBefore.sub(toBN(A_GAS * GAS_PRICE))
+    const B_expectedBalance = B_balanceBefore.sub(toBN(B_GAS * GAS_PRICE))
+    const C_expectedBalance = C_balanceBefore.sub(toBN(C_GAS * GAS_PRICE))
 
     const A_balanceAfter = toBN(await web3.eth.getBalance(A))
     const B_balanceAfter = toBN(await web3.eth.getBalance(B))
     const C_balanceAfter = toBN(await web3.eth.getBalance(C))
 
-    const price = await priceFeed.getPrice()
+    const price = toBN(await priceFeed.getPrice())
 
-    th.assertIsApproximatelyEqual(A_balanceAfter, A_balanceBefore.add(A_coll.sub(A_netDebt.mul(mv._1e18BN).div(price))))
-    th.assertIsApproximatelyEqual(B_balanceAfter, B_balanceBefore.add(B_coll.sub(B_netDebt.mul(mv._1e18BN).div(price))))
-    th.assertIsApproximatelyEqual(C_balanceAfter, C_balanceBefore.add(C_coll.sub(C_netDebt.mul(mv._1e18BN).div(price))))
+    th.assertIsApproximatelyEqual(A_balanceAfter, A_expectedBalance.add(A_coll.sub(A_netDebt.mul(mv._1e18BN).div(price))))
+    th.assertIsApproximatelyEqual(B_balanceAfter, B_expectedBalance.add(B_coll.sub(B_netDebt.mul(mv._1e18BN).div(price))))
+    th.assertIsApproximatelyEqual(C_balanceAfter, C_expectedBalance.add(C_coll.sub(C_netDebt.mul(mv._1e18BN).div(price))))
   })
 
   it("redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner after re-opening trove", async () => {
@@ -4244,17 +4260,21 @@ contract('TroveManager', async accounts => {
     const B_balanceBefore = toBN(await web3.eth.getBalance(B))
     const C_balanceBefore = toBN(await web3.eth.getBalance(C))
 
-    await borrowerOperations.claimCollateral({ from: A, gasPrice: 0 })
-    await borrowerOperations.claimCollateral({ from: B, gasPrice: 0 })
-    await borrowerOperations.claimCollateral({ from: C, gasPrice: 0 })
+    const A_GAS = th.gasUsed(await borrowerOperations.claimCollateral({ from: A, gasPrice: GAS_PRICE  }))
+    const B_GAS = th.gasUsed(await borrowerOperations.claimCollateral({ from: B, gasPrice: GAS_PRICE  }))
+    const C_GAS = th.gasUsed(await borrowerOperations.claimCollateral({ from: C, gasPrice: GAS_PRICE  }))
+
+    const A_expectedBalance = A_balanceBefore.sub(toBN(A_GAS * GAS_PRICE))
+    const B_expectedBalance = B_balanceBefore.sub(toBN(B_GAS * GAS_PRICE))
+    const C_expectedBalance = C_balanceBefore.sub(toBN(C_GAS * GAS_PRICE))
 
     const A_balanceAfter = toBN(await web3.eth.getBalance(A))
     const B_balanceAfter = toBN(await web3.eth.getBalance(B))
     const C_balanceAfter = toBN(await web3.eth.getBalance(C))
 
-    th.assertIsApproximatelyEqual(A_balanceAfter, A_balanceBefore.add(A_surplus))
-    th.assertIsApproximatelyEqual(B_balanceAfter, B_balanceBefore.add(B_surplus))
-    th.assertIsApproximatelyEqual(C_balanceAfter, C_balanceBefore.add(C_surplus))
+    th.assertIsApproximatelyEqual(A_balanceAfter, A_expectedBalance.add(A_surplus))
+    th.assertIsApproximatelyEqual(B_balanceAfter, B_expectedBalance.add(B_surplus))
+    th.assertIsApproximatelyEqual(C_balanceAfter, C_expectedBalance.add(C_surplus))
   })
 
   it('redeemCollateral(): reverts if fee eats up all returned collateral', async () => {
@@ -4288,7 +4308,7 @@ contract('TroveManager', async accounts => {
         0, th._100pct,
         {
           from: alice,
-          gasPrice: 0
+          gasPrice: GAS_PRICE
         }
       )
 
@@ -4311,7 +4331,7 @@ contract('TroveManager', async accounts => {
         0, th._100pct,
         {
           from: alice,
-          gasPrice: 0
+          gasPrice: GAS_PRICE
         }
       ),
       'TroveManager: Fee would eat up all returned collateral'
