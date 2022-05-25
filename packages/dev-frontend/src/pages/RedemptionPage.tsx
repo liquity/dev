@@ -28,7 +28,7 @@ export const RedemptionPage: React.FC = () => {
                 emerge.
               </Paragraph>
               <Paragraph sx={{ mt: 2 }}>
-                Most of the time you will get a better rate for converting LUSD to AUT on{" "}
+                Most of the time you will get a better rate for converting OUSD to AUT on{" "}
                 <Link href={uniLink(addresses["lusdToken"])} target="_blank">
                   Uniswap <Icon name="external-link-alt" size="xs" />
                 </Link>{" "}

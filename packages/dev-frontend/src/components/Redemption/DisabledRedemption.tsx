@@ -25,7 +25,7 @@ export const DisabledRedemption: React.FC<DisabledRedemptionProps> = ({
         }
       >
         <Paragraph>
-          LUSD redemption is disabled for the first {disabledDays} days after launch.
+          OUSD redemption is disabled for the first {disabledDays} days after launch.
         </Paragraph>
 
         <Paragraph sx={{ mt: 3 }}>

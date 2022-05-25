@@ -42,17 +42,17 @@ export const Yield: React.FC = () => {
 
   return (
     <Badge variant="muted">
-      <Text>LQTY APR {aprPercentage.toString(2)}%</Text>
+      <Text>OPAL APR {aprPercentage.toString(2)}%</Text>
       <InfoIcon
         tooltip={
           <Card variant="tooltip" sx={{ width: ["220px", "518px"] }}>
             <Paragraph>
-              An <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on the LUSD
+              An <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the OPAL return on the OUSD
               deposited to the Stability Pool over the next year, not including your AUT gains from
               liquidations.
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
-              ($LQTY_REWARDS * DAILY_ISSUANCE% / DEPOSITED_LUSD) * 365 * 100 ={" "}
+              ($OPAL_REWARDS * DAILY_ISSUANCE% / DEPOSITED_OUSD) * 365 * 100 ={" "}
               <Text sx={{ fontWeight: "bold" }}> APR</Text>
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace" }}>

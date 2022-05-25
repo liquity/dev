@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { Box, Button, Container, Flex } from "theme-ui";
 import { Icon } from "./Icon";
-import { LiquityLogo } from "./LiquityLogo";
+import { OpalLogo } from "./OpalLogo";
 import { Link } from "./Link";
 
 const logoHeight = "32px";
@@ -27,7 +27,7 @@ export const SideNav: React.FC = () => {
                 >
                     <Icon name="times" size="2x" />
                 </Button>
-                <LiquityLogo height={logoHeight} p={2} sx={{zIndex: 99}}/>
+                <OpalLogo height={logoHeight} p={2} sx={{zIndex: 99}}/>
                 <Box as="nav" sx={{ m: 3, mt: 1, p: 0, zIndex: 99}} onClick={() => setIsVisible(false)}>
                     <Link to="/">Dashboard</Link>
                     <Link to="/farm">Farm</Link>

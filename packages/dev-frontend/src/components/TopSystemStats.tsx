@@ -76,14 +76,14 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
             case "borrow-fee":
                 return {
                     "name": "Borrowing Fee", 
-                    "tooltip": "The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes.",
+                    "tooltip": "The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in OUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on OUSD redemption volumes.",
 
                     "body": borrowingFeePct.toString(2)
                     }
             case "redeem-fee":
                 return {
                     "name": "Redemption fee",
-                    "tooltip": "The Redemption Fee is a one-off fee charged as a percentage of the redeemed amount (in AUT). The fee varies from 0.5% depending on LUSD redemption volumes.",
+                    "tooltip": "The Redemption Fee is a one-off fee charged as a percentage of the redeemed amount (in AUT). The fee varies from 0.5% depending on OUSD redemption volumes.",
                     "body": redemptionFeePct.toString(2)
                 }
             case "tvl":
@@ -100,20 +100,20 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
                 }
             case "lusd-supply":
                 return {
-                    "name": "LUSD supply",
-                    "tooltip": "The total LUSD minted by the Liquity Protocol.",
+                    "name": "OUSD supply",
+                    "tooltip": "The total OUSD minted by the Opal Protocol.",
                     "body": total.debt.shorten()
                 }
             case "lusd-sp":
                 return {
-                    "name": "LUSD in Stability Pool",
-                    "tooltip": "The total LUSD currently held in the Stability Pool, expressed as an amount and a fraction of the LUSD supply.",
+                    "name": "OUSD in Stability Pool",
+                    "tooltip": "The total OUSD currently held in the Stability Pool, expressed as an amount and a fraction of the OUSD supply.",
                     "body": <>{lusdInStabilityPool.shorten()}<Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct?.toString(1)})</Text></>
                 }
             case "staked-lqty":
                 return {
-                    "name": "Staked LQTY",
-                    "tooltip": "The total amount of LQTY that is staked for earning fee revenue.",
+                    "name": "Staked OPAL",
+                    "tooltip": "The total amount of OPAL that is staked for earning fee revenue.",
                     "body": totalStakedLQTY.shorten()
                 }
             case "tcr":
@@ -150,7 +150,7 @@ const ProtocolStats: React.FC<ProtocolStatsProps> = ({ filterStats }) => {
                     }
             case "lqty-price":
                 return {
-                    "name": "LQTY",
+                    "name": "OPAL",
                     "body": <>80.0<Text sx={{ fontSize: 2 }}>&nbsp;USD</Text></>
                 }
             default:

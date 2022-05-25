@@ -59,11 +59,11 @@ export const Yield: React.FC = () => {
         tooltip={
           <Card variant="tooltip" sx={{ minWidth: ["auto", "352px"] }}>
             <Paragraph>
-              An <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the LQTY return on staked UNI
+              An <Text sx={{ fontWeight: "bold" }}>estimate</Text> of the OPAL return on staked UNI
               LP tokens. The farm runs for 6-weeks, and the return is relative to the time remaining.
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace", mt: 2 }}>
-              ($LQTY_REWARDS / $STAKED_UNI_LP) * 100 ={" "}
+              ($OPAL_REWARDS / $STAKED_UNI_LP) * 100 ={" "}
               <Text sx={{ fontWeight: "bold" }}> Yield</Text>
             </Paragraph>
             <Paragraph sx={{ fontSize: "12px", fontFamily: "monospace" }}>

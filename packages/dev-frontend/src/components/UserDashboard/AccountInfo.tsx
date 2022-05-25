@@ -30,8 +30,8 @@ const ProtocolTokens: React.FC = () => {
     const { liquity: { connection: { addresses } } } = useLiquity();
 
     const tokens: tokenAddress[] = [
-        { symbol: "LUSD", address: addresses["lusdToken"] },
-        { symbol: "LQTY", address: addresses["lqtyToken"] }
+        { symbol: "OUSD", address: addresses["lusdToken"] },
+        { symbol: "OPAL", address: addresses["lqtyToken"] }
     ]
 
     return (
@@ -68,8 +68,8 @@ const TokenBalances: React.FC = () => {
 
     const tokens: tokenBalance[] = [
         { symbol: "AUT", balance: accountBalance },
-        { symbol: "LUSD", balance: lusdBalance },
-        { symbol: "LQTY", balance: lqtyBalance },
+        { symbol: "OUSD", balance: lusdBalance },
+        { symbol: "OPAL", balance: lqtyBalance },
     ];
 
 
@@ -144,11 +144,11 @@ const AccountPositions: React.FC = () => {
         }}>
             <Text sx={{ fontSize: 2 }}>Staked</Text>
             <Flex sx={{ alignItems: "center", justifyContent: "space-between", my: 1 }}>
-                <Text sx={{ fontSize: 2, fontWeight: "bold" }}>LUSD</Text>
+                <Text sx={{ fontSize: 2, fontWeight: "bold" }}>OUSD</Text>
                 <Text>{stabilityDeposit.currentLUSD.prettify()}</Text>
             </Flex>
             <Flex sx={{ alignItems: "center", justifyContent: "space-between", my: 1 }}>
-                <Text sx={{ fontSize: 2, fontWeight: "bold" }}>LQTY</Text>
+                <Text sx={{ fontSize: 2, fontWeight: "bold" }}>OPAL</Text>
                 <Text>{lqtyStake.stakedLQTY.prettify()}</Text>
             </Flex>
         </Flex>

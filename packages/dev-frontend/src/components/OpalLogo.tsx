@@ -5,7 +5,7 @@ type LiquityLogoProps = React.ComponentProps<typeof Box> & {
     height?: number | string;
 };
 
-export const LiquityLogo: React.FC<LiquityLogoProps> = ({ height, ...boxProps }) => (
+export const OpalLogo: React.FC<LiquityLogoProps> = ({ height, ...boxProps }) => (
     <Box sx={{ lineHeight: 0 }} {...boxProps}>
         <Image src="./opal-logo-h.png" sx={{ height }} />
     </Box>
