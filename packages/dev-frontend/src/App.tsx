@@ -9,6 +9,7 @@ import { Icon } from "./components/Icon";
 import { getConfig } from "./config";
 import theme from "./theme";
 import { ethers } from 'ethers'
+import { Warning } from "./components/Warning";
 
 import { LiquityFrontend } from "./LiquityFrontend";
 
@@ -64,7 +65,7 @@ const App = () => {
     </Flex>
   );
 
-  const unsupportedNetworkFallback = (chainId: number) => (
+  const unsupportedNetworkFallback = () => (
     <Flex
       sx={{
         flexDirection: "column",
@@ -74,20 +75,15 @@ const App = () => {
         textAlign: "center"
       }}
     >
-      <Heading sx={{ mb: 3 }}>
-        <Icon name="exclamation-triangle" /> Opal not yet deployed to{" "}
-        {chainId === 1 ? "mainnet" : "this network"}.
-      </Heading>
-      Please switch to Ropsten, Rinkeby, Kovan, Görli or Kiln.
+      <Warning>
+        Opal is not yet deployed to this network. Please switch to Bakerloo.
+      </Warning>      
     </Flex>
   );
 
   return (
-    <Web3ReactProvider getLibrary={getLibrary}>
-      <Web3ProviderNetwork getLibrary={getLibrary}>
-        <Web3ReactManager>
-          <ThemeProvider theme={theme}>
-          <Global
+    <ThemeProvider theme={theme}>
+    <Global
           styles={css`
           @font-face {
             font-family: "Visby CF";
@@ -103,19 +99,22 @@ const App = () => {
           }
           `}
         />
-              <LiquityProvider
-                loader={loader}
-                unsupportedNetworkFallback={unsupportedNetworkFallback}
-                unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
-              >
-                <TransactionProvider>
-                  <LiquityFrontend loader={loader} />
-                </TransactionProvider>
-              </LiquityProvider>
-          </ThemeProvider>
-        </Web3ReactManager>
-      </Web3ProviderNetwork>
-    </Web3ReactProvider>
+      <Web3ReactProvider getLibrary={getLibrary}>
+        <Web3ProviderNetwork getLibrary={getLibrary}>
+          <Web3ReactManager fallback={unsupportedNetworkFallback}>
+            <LiquityProvider
+              loader={loader}
+              unsupportedNetworkFallback={unsupportedNetworkFallback}
+              unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
+            >
+              <TransactionProvider>
+                <LiquityFrontend loader={loader} />
+              </TransactionProvider>
+            </LiquityProvider>
+          </Web3ReactManager>
+        </Web3ProviderNetwork>
+      </Web3ReactProvider>
+    </ThemeProvider>
   );
 };
 

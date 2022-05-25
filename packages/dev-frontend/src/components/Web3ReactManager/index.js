@@ -4,7 +4,7 @@ import { useWeb3React } from '@web3-react/core'
 import { network } from '../../connectors'
 import { useEagerConnect, useInactiveListener } from '../../hooks'
 
-export default function Web3ReactManager({ children }) {
+export default function Web3ReactManager({ children, fallback }) {
   const { active } = useWeb3React()
   const { active: networkActive, error: networkError, activate: activateNetwork } = useWeb3React('NETWORK')
 
@@ -41,9 +41,7 @@ export default function Web3ReactManager({ children }) {
 
   // if the account context isn't active, and there's an error on the network context, it's an irrecoverable error
   if (!active && networkError) {
-    return (
-        <p>{'unknown-error: ' + networkError}</p>
-    )
+    return fallback()
   }
 
   // if neither context is active, spin
