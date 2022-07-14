@@ -993,6 +993,6 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     receive() external payable {
         _requireCallerIsActivePool();
         ETH = ETH.add(msg.value);
-        StabilityPoolETHBalanceUpdated(ETH);
+        emit StabilityPoolETHBalanceUpdated(ETH);
     }
 }
