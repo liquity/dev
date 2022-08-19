@@ -8,7 +8,7 @@ import { InfoIcon } from "../../../InfoIcon";
 import { useBondView } from "../../context/BondViewContext";
 import { HorizontalTimeline, Label, SubLabel } from "../../../HorizontalTimeline";
 import { ActionDescription } from "../../../ActionDescription";
-import { nfts, stub } from "../../context/BondViewProvider";
+import { nfts } from "../../context/BondViewProvider";
 import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
 import { Warning } from "../../../Warning";

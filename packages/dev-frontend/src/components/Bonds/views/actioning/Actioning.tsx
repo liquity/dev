@@ -6,7 +6,6 @@ import { useBondView } from "../../context/BondViewContext";
 import { HorizontalTimeline, Label, SubLabel } from "../../../HorizontalTimeline";
 import type { EventType } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
-import { stub } from "../../context/BondViewProvider";
 import { Cancel } from "./actions/cancel/Cancel";
 import { Claim } from "./actions/claim/Claim";
 import { Warning } from "../../../Warning";
