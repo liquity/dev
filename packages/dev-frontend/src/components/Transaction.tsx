@@ -1,10 +1,8 @@
 import React, { useState, useContext, useEffect, useCallback } from "react";
-import { Flex, Text, Box } from "theme-ui";
 import { Provider, TransactionResponse, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { hexDataSlice, hexDataLength } from "@ethersproject/bytes";
 import { defaultAbiCoder } from "@ethersproject/abi";
 
-import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
 import { EthersTransactionOverrides, EthersTransactionCancelledError } from "@liquity/lib-ethers";
@@ -12,32 +10,8 @@ import { SentLiquityTransaction, LiquityReceipt } from "@liquity/lib-base";
 
 import { useLiquity } from "../hooks/LiquityContext";
 
-import { Icon } from "./Icon";
 import { Tooltip, TooltipProps, Hoverable } from "./Tooltip";
-
-const strokeWidth = 10;
-
-const circularProgressbarStyle = {
-  strokeLinecap: "butt",
-  pathColor: "white",
-  trailColor: "rgba(255, 255, 255, 0.33)"
-};
-
-const slowProgress = {
-  strokeWidth,
-  styles: buildStyles({
-    ...circularProgressbarStyle,
-    pathTransitionDuration: 30
-  })
-};
-
-const fastProgress = {
-  strokeWidth,
-  styles: buildStyles({
-    ...circularProgressbarStyle,
-    pathTransitionDuration: 0.75
-  })
-};
+import { TransactionStatus } from "./TransactionStatus";
 
 type TransactionIdle = {
   type: "idle";
@@ -75,7 +49,7 @@ type TransactionConfirmedOneShot = {
   id: string;
 };
 
-type TransactionState =
+export type TransactionState =
   | TransactionIdle
   | TransactionFailed
   | TransactionWaitingForApproval
@@ -249,42 +223,6 @@ const tryToGetRevertReason = async (provider: Provider, tx: TransactionReceipt) 
   }
 };
 
-const Donut = React.memo(
-  CircularProgressbarWithChildren,
-  ({ value: prev }, { value: next }) => prev === next
-);
-
-type TransactionProgressDonutProps = {
-  state: TransactionState["type"];
-};
-
-const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({ state }) => {
-  const [value, setValue] = useState(0);
-  const maxValue = 1;
-
-  useEffect(() => {
-    if (state === "confirmed") {
-      setTimeout(() => setValue(maxValue), 40);
-    } else {
-      setTimeout(() => setValue(maxValue * 0.67), 20);
-    }
-  }, [state]);
-
-  return state === "confirmed" ? (
-    <Donut {...{ value, maxValue, ...fastProgress }}>
-      <Icon name="check" color="white" size="lg" />
-    </Donut>
-  ) : state === "failed" || state === "cancelled" ? (
-    <Donut value={0} {...{ maxValue, ...fastProgress }}>
-      <Icon name="times" color="white" size="lg" />
-    </Donut>
-  ) : (
-    <Donut {...{ value, maxValue, ...slowProgress }}>
-      <Icon name="cog" color="white" size="lg" spin />
-    </Donut>
-  );
-};
-
 export const TransactionMonitor: React.FC = () => {
   const { provider } = useLiquity();
   const [transactionState, setTransactionState] = useTransactionState();
@@ -402,38 +340,9 @@ export const TransactionMonitor: React.FC = () => {
   }
 
   return (
-    <Flex
-      sx={{
-        alignItems: "center",
-        bg:
-          transactionState.type === "confirmed"
-            ? "success"
-            : transactionState.type === "cancelled"
-            ? "warning"
-            : transactionState.type === "failed"
-            ? "danger"
-            : "primary",
-        p: 3,
-        pl: 4,
-        position: "fixed",
-        width: "100vw",
-        bottom: 0,
-        overflow: "hidden"
-      }}
-    >
-      <Box sx={{ mr: 3, width: "40px", height: "40px" }}>
-        <TransactionProgressDonut state={transactionState.type} />
-      </Box>
-
-      <Text sx={{ fontSize: 3, color: "white" }}>
-        {transactionState.type === "waitingForConfirmation"
-          ? "Waiting for confirmation"
-          : transactionState.type === "cancelled"
-          ? "Cancelled"
-          : transactionState.type === "failed"
-          ? transactionState.error.message
-          : "Confirmed"}
-      </Text>
-    </Flex>
+    <TransactionStatus
+      state={transactionState.type}
+      message={transactionState.type === "failed" ? transactionState.error.message : undefined}
+    />
   );
 };

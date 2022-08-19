@@ -1,0 +1,13 @@
+version: "2"
+region: "eu"
+web_addr: 127.0.0.1:41356
+tunnels:
+  web:
+    addr: 32318
+    proto: http
+    schemes: [http]
+    host_header: rewrite
+  rpc:
+    addr: 8545
+    proto: http
+    schemes: [http]

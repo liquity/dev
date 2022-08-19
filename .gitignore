@@ -18,3 +18,9 @@ node_modules
 
 # Don't track NPM lockfile (we use Yarn)
 package-lock.json
+
+# Don't track hardhat mainnet fork cache
+cache
+
+# ngrok config is individual to each dev
+ngrok.config.yml

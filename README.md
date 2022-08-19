@@ -125,6 +125,7 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
     - [Start a local blockchain and deploy the contracts](#start-a-local-blockchain-and-deploy-the-contracts)
     - [Start dev-frontend in development mode](#start-dev-frontend-in-development-mode)
     - [Start dev-frontend in demo mode](#start-dev-frontend-in-demo-mode)
+    - [Start dev-frontend against a mainnet fork RPC node](#start-dev-frontend-against-a-mainnet-fork-rpc-node)
     - [Build dev-frontend for production](#build-dev-frontend-for-production)
   - [Configuring your custom frontend](#configuring-your-custom-dev-ui)
 - [Running a frontend with Docker](#running-dev-ui-with-docker)
@@ -1533,6 +1534,24 @@ When you no longer need the demo mode, press Ctrl+C in the terminal then run:
 ```
 yarn stop-demo
 ```
+
+#### Start dev-frontend against a mainnet fork RPC node
+
+This will start a hardhat mainnet forked RPC node at the block number configured in `hardhat.config.mainnet-fork.ts`, so you need to make sure you're not running a hardhat node on port 8545 already.
+
+You'll need an Alchemy API key to create the fork.
+
+```
+ALCHEMY_API_KEY=enter_your_key_here yarn start-fork:rpc-node
+```
+
+```
+yarn start-demo:dev-frontend
+```
+
+This spawns a modified version of dev-frontend that ignores MetaMask, and directly uses the local blockchain node. Every time the page is reloaded (at http://localhost:3000). Additionally, transactions are automatically signed, so you no longer need to accept wallet confirmations. This lets you play around with Liquity more freely.
+
+When you no longer need the forked frontend mode, press Ctrl+C.
 
 #### Build dev-frontend for production
 

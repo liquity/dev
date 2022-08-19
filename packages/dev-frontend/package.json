@@ -9,6 +9,7 @@
     "@fortawesome/free-regular-svg-icons": "5.15.2",
     "@fortawesome/free-solid-svg-icons": "5.15.2",
     "@fortawesome/react-fontawesome": "0.1.14",
+    "@liquity/chicken-bonds": "file:.yalc/@liquity/chicken-bonds",
     "@popperjs/core": "2.9.1",
     "@testing-library/dom": "7.30.0",
     "@testing-library/jest-dom": "5.11.9",
@@ -19,6 +20,7 @@
     "@types/react": "17.0.3",
     "@types/react-copy-to-clipboard": "5.0.0",
     "@types/react-dom": "17.0.2",
+    "@types/react-modal": "^3.13.1",
     "@types/react-router-dom": "5.1.7",
     "@types/testing-library__jest-dom": "5.9.5",
     "@types/testing-library__react": "10.2.0",
@@ -34,12 +36,15 @@
     "react-copy-to-clipboard": "5.0.3",
     "react-dom": "17.0.1",
     "react-is": "17.0.1",
+    "react-modal": "^3.15.1",
     "react-popper": "2.2.4",
     "react-router-dom": "5.2.0",
     "react-scripts": "4.0.3",
+    "recharts": "2.1.10",
     "source-map-explorer": "2.5.2",
     "theme-ui": "0.6.0-canary.1544.5359f8a1e408a4dfeb74a9ae39688270286e534a.0",
-    "typescript": "4.1.5"
+    "typescript": "4.1.5",
+    "yalc": "1.0.0-pre.53"
   },
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",
@@ -48,6 +53,8 @@
     "build": "run-s build:*",
     "build:set-version": "node scripts/set-version.js",
     "build:react": "react-scripts build",
+    "link:chicken-bonds": "yalc link @liquity/chicken-bonds",
+    "unlink:chicken-bonds": "yalc remove @liquity/chicken-bonds",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

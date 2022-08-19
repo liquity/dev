@@ -25,6 +25,8 @@ export class DisposableWalletProvider {
       wallet => wallet.address.toLowerCase() === address.toLowerCase()
     );
 
+    // console.log(address, this.wallet, this.funderWallet);
+
     if (!wallet) {
       throw new Error(`Unknow account ${address}`);
     }
