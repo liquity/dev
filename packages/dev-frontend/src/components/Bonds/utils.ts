@@ -21,6 +21,14 @@ const getBondAgeInDays = (startTime: number): number =>
 
 const dateWithoutHours = (timestamp: number) => new Date(new Date(timestamp).toDateString());
 
+const getReturn = (accrued: Decimal, deposit: Decimal, marketPrice: Decimal): string => {
+  const accruedLusdValue = accrued.mul(marketPrice);
+  if (accruedLusdValue.lt(deposit)) {
+    return (parseFloat(accruedLusdValue.toString()) - parseFloat(deposit.toString())).toFixed(2);
+  }
+  return accruedLusdValue.sub(deposit).prettify(2);
+};
+
 export {
   milliseconds,
   toInteger,
@@ -29,5 +37,6 @@ export {
   decimalify,
   getBondAgeInDays,
   daysToMilliseconds,
-  dateWithoutHours
+  dateWithoutHours,
+  getReturn
 };
