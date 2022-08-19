@@ -13,7 +13,7 @@ import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
 import { Warning } from "../../../Warning";
 import type { CreateBondPayload } from "../../context/transitions";
-import { dateWithoutHours } from "../../utils";
+import { dateWithoutHours, getReturn } from "../../utils";
 
 type DetailsProps = { onBack?: () => void };
 
@@ -47,6 +47,13 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   };
 
   if (protocolInfo === undefined || lusdBalance === undefined) return null;
+
+  const rebondReturn = getReturn(
+    deposit.mul(protocolInfo.rebondAccrualFactor),
+    deposit,
+    protocolInfo.marketPrice
+  );
+  const rebondRoi = Decimal.from(rebondReturn).div(deposit);
 
   return (
     <>
@@ -143,21 +150,21 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       <Grid sx={{ my: 1, mb: 3, justifyItems: "center", pl: 2 }} gap="20px" columns={3}>
         <Record
           name={l.REBOND_RETURN.term}
-          value={stub.creating.rebondReturn.prettify(0)}
+          value={rebondReturn}
           type="LUSD"
           description={l.REBOND_RETURN.description}
         />
 
         <Record
           name={l.REBOND_TIME_ROI.term}
-          value={stub.roi}
+          value={rebondRoi.mul(100).prettify(2) + "%"}
           type=""
           description={l.REBOND_TIME_ROI.description}
         />
 
         <Record
           name={l.OPTIMUM_APY.term}
-          value={stub.apy}
+          value={rebondRoi.mul(100).mul(12).prettify(2) + "%"}
           type=""
           description={l.OPTIMUM_APY.description}
         />

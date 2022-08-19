@@ -13,7 +13,15 @@ import type {
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
-import { numberify, decimalify, getBondAgeInDays, toInteger, milliseconds, toFloat } from "../utils";
+import {
+  numberify,
+  decimalify,
+  getBondAgeInDays,
+  toInteger,
+  milliseconds,
+  toFloat,
+  getReturn
+} from "../utils";
 
 type Maybe<T> = T | undefined;
 
@@ -84,6 +92,9 @@ const getAccountBonds = async (
       const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays) - bondAgeInDays);
       const rebondTime = getFutureTimeByDays(toFloat(rebondDays) - bondAgeInDays);
       const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
+      const claimNowReturn = getReturn(accrued, deposit, marketPrice);
+      const rebondReturn = getReturn(rebondAccrual, deposit, marketPrice);
+      const rebondRoi = Decimal.from(rebondReturn).div(deposit);
 
       return [
         ...accumulator,
@@ -100,7 +111,9 @@ const getAccountBonds = async (
           breakEvenTime,
           rebondTime,
           marketValue,
-          rebondReturn: Decimal.from(120) //Decimal.from(400).mul(stub.price).sub(decimalify(deposit)),
+          rebondReturn,
+          claimNowReturn,
+          rebondRoi
         }
       ];
     }, [])
