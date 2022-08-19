@@ -1,0 +1,8 @@
+{
+  "version": "v1",
+  "packages": {
+    "@liquity/chicken-bonds": {
+      "signature": "4602b70f88f2b6e5957916b811126f45"
+    }
+  }
+}

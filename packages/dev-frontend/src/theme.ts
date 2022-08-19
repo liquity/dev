@@ -24,7 +24,8 @@ const colors = {
 
   text: "#293147",
   background: "white",
-  muted: "#eaebed"
+  muted: "#eaebed",
+  highlight: "#efeffe"
 };
 
 const buttonBase: ThemeUIStyleObject = {
@@ -245,6 +246,10 @@ const theme: Theme = {
       ...iconButton,
       color: "text",
       ":enabled:hover": { color: "success" }
+    },
+
+    close: {
+      cursor: "pointer"
     }
   },
 
@@ -336,7 +341,6 @@ const theme: Theme = {
       alignItems: "stretch",
 
       position: ["fixed", "relative"],
-      width: "100vw",
       top: 0,
       zIndex: 1,
 
@@ -361,7 +365,7 @@ const theme: Theme = {
 
     main: {
       width: "100%",
-      maxWidth: "912px",
+      maxWidth: "1280px",
       mx: "auto",
       mt: ["40px", 0],
       mb: ["40px", "40px"],
@@ -470,6 +474,10 @@ const theme: Theme = {
       ":hover": { color: "accent" },
       textDecoration: "none",
       fontWeight: "bold"
+    },
+
+    progress: {
+      color: colors.success
     }
   },
 

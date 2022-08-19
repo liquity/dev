@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, Flex, Box, Heading } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
+import { Decimal, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { COIN, GT } from "../strings";
@@ -9,6 +9,8 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { shortenAddress } from "../utils/shortenAddress";
 
 import { Icon } from "./Icon";
+import { useBondView } from "./Bonds/context/BondViewContext";
+import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 
 const select = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -18,7 +20,11 @@ const select = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState)
 
 export const UserAccount: React.FC = () => {
   const { account } = useLiquity();
-  const { accountBalance, lusdBalance, lqtyBalance } = useLiquitySelector(select);
+  const { accountBalance, lusdBalance: realLusdBalance, lqtyBalance } = useLiquitySelector(select);
+  const { bLusdBalance, lusdBalance: customLusdBalance } = useBondView();
+
+  /***** TODO: REMOVE */
+  const lusdBalance = LUSD_OVERRIDE_ADDRESS === null ? realLusdBalance : customLusdBalance;
 
   return (
     <Box sx={{ display: ["none", "flex"] }}>
@@ -37,8 +43,9 @@ export const UserAccount: React.FC = () => {
 
         {([
           ["ETH", accountBalance],
-          [COIN, lusdBalance],
-          [GT, lqtyBalance]
+          [COIN, Decimal.from(lusdBalance || 0)],
+          [GT, Decimal.from(lqtyBalance)],
+          ["bLUSD", Decimal.from(bLusdBalance || 0)]
         ] as const).map(([currency, balance], i) => (
           <Flex key={i} sx={{ ml: 3, flexDirection: "column" }}>
             <Heading sx={{ fontSize: 1 }}>{currency}</Heading>
