@@ -7,12 +7,11 @@ import type { Bond as BondType } from "../../context/transitions";
 import { Label, SubLabel } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
 import { statuses } from "../../context/BondViewContext";
-import { milliseconds } from "../../utils";
 
 const getBondEvents = (bond: BondType): EventType[] => {
   return [
     {
-      date: new Date(milliseconds(bond.startTime)),
+      date: new Date(bond.startTime),
       label: (
         <>
           <Label description="bLUSD accrual starts off at 0 and increases over time.">
@@ -23,9 +22,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
       )
     },
     {
-      date: new Date(
-        bond.status === "PENDING" ? Date.now() : "endTime" in bond ? milliseconds(bond.endTime) : 0
-      ),
+      date: new Date(bond.status === "PENDING" ? Date.now() : "endTime" in bond ? bond.endTime : 0),
       label: (
         <>
           <Label

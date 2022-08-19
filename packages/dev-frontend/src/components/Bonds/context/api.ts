@@ -13,7 +13,7 @@ import type {
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
-import { numberify, decimalify, getBondAgeInDays, toInteger } from "../utils";
+import { numberify, decimalify, getBondAgeInDays, toInteger, milliseconds, toFloat } from "../utils";
 
 type Maybe<T> = T | undefined;
 
@@ -62,8 +62,8 @@ const getAccountBonds = async (
       const id = numberify(bondIds[idx]).toString();
       const deposit = decimalify(bondDeposits[idx]);
       const accrued = decimalify(bondAccrueds[idx]);
-      const startTime = numberify(bondStartTimes[idx]);
-      const endTime = numberify(bondEndTimes[idx]);
+      const startTime = milliseconds(numberify(bondStartTimes[idx]));
+      const endTime = milliseconds(numberify(bondEndTimes[idx]));
       const status = BOND_STATUS[bondStatuses[idx]];
       const tokenUri = bondTokenUris[idx];
       const bondAgeInDays = getBondAgeInDays(startTime);
@@ -81,8 +81,8 @@ const getAccountBonds = async (
         alphaAccrualFactor
       ).mul(deposit);
 
-      const breakEvenTime = getFutureTimeByDays(toInteger(breakEvenDays) - bondAgeInDays);
-      const rebondTime = getFutureTimeByDays(toInteger(rebondDays) - bondAgeInDays);
+      const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays) - bondAgeInDays);
+      const rebondTime = getFutureTimeByDays(toFloat(rebondDays) - bondAgeInDays);
       const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
 
       return [
