@@ -51,19 +51,6 @@ const transition = (view: BondView, event: BondEvent): BondView => {
   return nextView;
 };
 
-export const stub = {
-  apy: "24%",
-  fairPrice: Decimal.from(3.88),
-  roi: "4%",
-  creating: {
-    breakEvenAccrual: Decimal.from(31.25),
-    rebondAccrual: Decimal.from(32.5),
-    breakEvenTime: Math.floor((Date.now() + 2028000000) / 1000),
-    rebondTime: Math.floor((Date.now() + 2628000000) / 1000),
-    rebondReturn: Decimal.from(32.5).mul(3.2).sub(100)
-  }
-};
-
 export const nfts: Record<BondStatus, string> = {
   PENDING: "./bonds/egg-nft.png",
   CANCELLED: "./bonds/bond-cancelled-dark.png",
