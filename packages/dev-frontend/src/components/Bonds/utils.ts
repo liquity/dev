@@ -12,7 +12,19 @@ const decimalify = (bigNumber: BigNumber): Decimal =>
 
 const secondsToDays = (seconds: number) => seconds / 60 / 60 / 24;
 
-const getBondAgeInDays = (startTimeInSeconds: number) =>
-  secondsToDays(Date.now()) - secondsToDays(startTimeInSeconds);
+const daysToMilliseconds = (days: number) => days * 60 * 60 * 24 * 1000;
 
-export { milliseconds, toInteger, numberify, decimalify, getBondAgeInDays };
+const getBondAgeInDays = (startTimeInSeconds: number): number =>
+  secondsToDays((Date.now() - milliseconds(startTimeInSeconds)) / 1000);
+
+const dateWithoutHours = (timestamp: number) => new Date(new Date(timestamp).toDateString());
+
+export {
+  milliseconds,
+  toInteger,
+  numberify,
+  decimalify,
+  getBondAgeInDays,
+  daysToMilliseconds,
+  dateWithoutHours
+};

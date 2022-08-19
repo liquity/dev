@@ -108,8 +108,8 @@ export type ProtocolInfo = {
   claimBondFee: Decimal;
   alphaAccrualFactor: Decimal;
   marketPricePremium: Decimal;
-  breakEvenTime: Decimal;
-  rebondTime: Decimal;
+  breakEvenTime: number;
+  rebondTime: number;
   hasMarketPremium: boolean;
   simulatedMarketPrice: Decimal;
   breakEvenAccrualFactor: Decimal;
