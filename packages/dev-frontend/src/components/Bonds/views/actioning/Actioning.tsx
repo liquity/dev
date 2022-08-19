@@ -1,6 +1,7 @@
 /** @jsxImportSource theme-ui */
 import React from "react";
 import { Flex, Heading, Grid, Close, Box } from "theme-ui";
+import { Decimal } from "@liquity/lib-base";
 import { Record } from "../../Record";
 import { useBondView } from "../../context/BondViewContext";
 import { HorizontalTimeline, Label, SubLabel } from "../../../HorizontalTimeline";
@@ -12,14 +13,26 @@ import { Claim } from "./actions/claim/Claim";
 import { Warning } from "../../../Warning";
 import { ReactModal } from "../../../ReactModal";
 
+const getCurrentReturn = (accrued: Decimal, deposit: Decimal, marketPrice: Decimal): string => {
+  const accruedLusdValue = accrued.mul(marketPrice);
+  if (accruedLusdValue.lt(deposit)) {
+    return (parseFloat(accruedLusdValue.toString()) - parseFloat(deposit.toString())).toFixed(2);
+  }
+  return accruedLusdValue.sub(deposit).prettify(2);
+};
+
 export const Actioning: React.FC = () => {
-  const { dispatchEvent, view, selectedBond: bond } = useBondView();
+  const { dispatchEvent, view, selectedBond: bond, protocolInfo } = useBondView();
 
   const handleDismiss = () => {
     dispatchEvent("ABORT_PRESSED");
   };
 
   if (bond === undefined) return null;
+
+  const bondStartTimeSeconds = bond.startTime * 1000;
+  const currentReturn =
+    protocolInfo && getCurrentReturn(bond.accrued, bond.deposit, protocolInfo.marketPrice);
 
   let Actions;
   switch (view) {
@@ -35,7 +48,7 @@ export const Actioning: React.FC = () => {
 
   const events: EventType[] = [
     {
-      date: new Date(bond.startTime),
+      date: new Date(bondStartTimeSeconds),
       label: (
         <>
           <Label>{l.BOND_CREATED.term}</Label>
@@ -44,20 +57,20 @@ export const Actioning: React.FC = () => {
       )
     },
     {
-      date: new Date(bond.breakEvenTime),
+      date: new Date(bond.breakEvenTime * 1000),
       label: (
         <>
           <Label>{l.BREAK_EVEN_TIME.term}</Label>
-          <SubLabel>{`${bond.breakEvenAccrual.prettify(2)} bLUSD`}</SubLabel>
+          <SubLabel>{`${bond.breakEvenAccrual.prettify()} bLUSD`}</SubLabel>
         </>
       )
     },
     {
-      date: new Date(bond.rebondTime),
+      date: new Date(bond.rebondTime * 1000),
       label: (
         <>
           <Label>{l.OPTIMUM_REBOND_TIME.term}</Label>
-          <SubLabel>{`${bond.rebondAccrual.prettify(2)} bLUSD`}</SubLabel>
+          <SubLabel>{`${bond.rebondAccrual.prettify()} bLUSD`}</SubLabel>
         </>
       )
     },
@@ -71,7 +84,7 @@ export const Actioning: React.FC = () => {
           >
             Accrued
           </Label>
-          <SubLabel>{`${bond.accrued.prettify(2)} bLUSD`}</SubLabel>
+          <SubLabel>{`${bond.accrued.prettify(4)} bLUSD`}</SubLabel>
         </>
       ),
       isSelected: bond.status === "PENDING"
@@ -113,7 +126,7 @@ export const Actioning: React.FC = () => {
 
         <Record
           name={l.BOND_RETURN.term}
-          value={bond.claimNowReturn}
+          value={currentReturn}
           type="LUSD"
           description={l.BOND_RETURN.description}
         />
@@ -123,28 +136,28 @@ export const Actioning: React.FC = () => {
         <Grid gap="20px" columns={3} sx={{ my: 2, justifyItems: "center" }}>
           <Record
             name={l.REBOND_RETURN.term}
-            value={bond.rebondReturn}
+            value={bond.rebondReturn.prettify(2)}
             type="LUSD"
             description={l.REBOND_RETURN.description}
           />
 
           <Record
             name={l.REBOND_TIME_ROI.term}
-            value={bond.rebondRoi.mul(100).prettify(2) + "%"}
+            value={stub.roi}
             type=""
             description={l.REBOND_TIME_ROI.description}
           />
 
           <Record
             name={l.OPTIMUM_APY.term}
-            value={bond.rebondRoi.mul(100).mul(12).prettify(2) + "%"}
+            value={stub.apy}
             type=""
             description={l.OPTIMUM_APY.description}
           />
         </Grid>
       </details>
       <Box mt={3} />
-      {view === "CLAIMING" && parseFloat(bond.claimNowReturn) < 0 && (
+      {view === "CLAIMING" && currentReturn && parseFloat(currentReturn) < 0 && (
         <Warning>You are claiming a bond which currently has a negative return</Warning>
       )}
       {view === "CLAIMING" && bond.accrued.gte(bond.rebondAccrual) && (

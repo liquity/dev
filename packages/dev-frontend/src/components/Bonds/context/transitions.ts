@@ -83,9 +83,7 @@ export type Bond = {
   breakEvenTime: number;
   rebondTime: number;
   marketValue: Decimal;
-  rebondReturn: string;
-  rebondRoi: Decimal;
-  claimNowReturn: string;
+  rebondReturn: Decimal;
 };
 
 export type Treasury = {

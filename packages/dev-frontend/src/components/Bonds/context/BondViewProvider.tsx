@@ -212,17 +212,15 @@ export const BondViewProvider: React.FC = props => {
         deposit: lusdAmount,
         startTime: Math.floor(Date.now() / 1000),
         status: "PENDING",
-        accrued: Decimal.ZERO,
+        accrued: Decimal.from(0),
         tokenUri: "TODO",
         breakEvenTime: Math.floor((Date.now() + 2000000000) / 1000),
         rebondTime: Math.floor((Date.now() + 2700000000) / 1000),
         endTime: 0,
-        breakEvenAccrual: Decimal.ZERO,
-        rebondAccrual: Decimal.ZERO,
-        marketValue: Decimal.ZERO,
-        rebondReturn: "0",
-        claimNowReturn: "0",
-        rebondRoi: Decimal.ZERO
+        breakEvenAccrual: Decimal.from(0),
+        rebondAccrual: Decimal.from(0),
+        marketValue: Decimal.from(0),
+        rebondReturn: Decimal.from(0)
       };
       setOptimisticBond(optimisticBond);
       setShouldRefresh(true);
