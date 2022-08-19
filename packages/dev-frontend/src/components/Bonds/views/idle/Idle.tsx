@@ -9,7 +9,7 @@ import { InfoIcon } from "../../../InfoIcon";
 export const Idle: React.FC = () => {
   const { dispatchEvent, bonds, isSynchronising } = useBondView();
   const hasBonds = bonds !== undefined && bonds.length > 0;
-  console.log("Idle", { isSynchronising });
+
   return (
     <>
       {(hasBonds || isSynchronising) && (

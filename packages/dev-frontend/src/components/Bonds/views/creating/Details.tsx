@@ -13,6 +13,7 @@ import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
 import { Warning } from "../../../Warning";
 import type { CreateBondPayload } from "../../context/transitions";
+import { dateWithoutHours } from "../../utils";
 
 type DetailsProps = { onBack?: () => void };
 
@@ -88,7 +89,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         <HorizontalTimeline
           events={[
             {
-              date: new Date(Date.now()),
+              date: new Date(dateWithoutHours(Date.now())),
               label: (
                 <>
                   <Label subLabel="0 bLUSD" description={l.BOND_CREATED.description}>

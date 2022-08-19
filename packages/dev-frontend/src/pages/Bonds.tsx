@@ -26,7 +26,7 @@ export const Bonds: React.FC = () => {
     status => statuses[status] !== "IDLE"
   );
   const status = transaction ? statusMap[statuses[transaction]] : null;
-  console.log("Bonds", { statuses });
+
   return (
     <>
       <Container variant="columns" sx={{ justifyContent: "flex-start" }}>

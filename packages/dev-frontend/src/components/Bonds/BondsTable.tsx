@@ -6,7 +6,6 @@ import * as lexicon from "./lexicon";
 import { Empty } from "./views/idle/Empty";
 import { Link } from "../Link";
 import { useBondView } from "./context/BondViewContext";
-import { Decimal } from "@liquity/lib-base";
 
 const {
   BONDS,
@@ -28,6 +27,15 @@ const LineSegment: React.FC = () => (
   />
 );
 
+const formatDays = (days: number) =>
+  days < 0
+    ? "Elapsed"
+    : days === 0
+    ? "Now"
+    : parseFloat(days.toFixed(1)) < 1
+    ? `${days.toFixed(1)} days`
+    : `${days.toFixed(0)} days`;
+
 const Line = (columns: number) =>
   Array.from(Array(columns)).map((_, idx) => <LineSegment key={idx} />);
 
@@ -38,7 +46,6 @@ export const BondsTable: React.FC = () => {
 
   const pendingBonds = bonds ? bonds.filter(bond => bond.status === "PENDING") : [];
   const hasBonds = pendingBonds.length > 0;
-
   return (
     <Card>
       <Heading>
@@ -98,21 +105,15 @@ export const BondsTable: React.FC = () => {
             {Line(5)}
 
             {pendingBonds.map((bond, idx) => {
+              const breakEvenDays = (bond.breakEvenTime - Date.now()) / 1000 / 60 / 60 / 24;
+              const rebondDays = (bond.rebondTime - Date.now()) / 1000 / 60 / 60 / 24;
               return (
                 <React.Fragment key={idx}>
                   <Text>{bond.deposit.shorten()} LUSD</Text>
                   <Text>{bond.accrued.shorten()} bLUSD</Text>
                   <Text>{bond.marketValue.shorten()} LUSD</Text>
-                  <Text>
-                    {Decimal.from((bond.breakEvenTime - Date.now()) / 1000 / 60 / 60 / 24).prettify(
-                      0
-                    )}{" "}
-                    days
-                  </Text>
-                  <Text>
-                    {Decimal.from((bond.rebondTime - Date.now()) / 1000 / 60 / 60 / 24).prettify(0)}{" "}
-                    days
-                  </Text>
+                  <Text>{formatDays(breakEvenDays)}</Text>
+                  <Text>{formatDays(rebondDays)}</Text>
 
                   {Line(5)}
                 </React.Fragment>

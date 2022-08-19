@@ -2,6 +2,7 @@ import React from "react";
 import { Flex, Box, Text, Card } from "theme-ui";
 import type { ThemeUIStyleObject } from "theme-ui";
 import { InfoIcon } from "./InfoIcon";
+import { dateWithoutHours } from "./Bonds/utils";
 
 const defaultCircleStyle = {
   height: 12,
@@ -104,11 +105,12 @@ export const Label: React.FC<LabelProps> = ({ children, description, style }) =>
   );
 };
 
-const dateWithoutHours = (timestamp: number) => new Date(new Date(timestamp).toDateString());
-
 const Event: React.FC<EventProps> = ({ isFirst, isLast, date, label, idx, selectedIdx }) => {
-  const isPast = new Date(date.toDateString()) <= dateWithoutHours(Date.now());
+  const isPast = new Date(date.toDateString()) < dateWithoutHours(Date.now());
+  const isToday = date.toLocaleDateString() === new Date(Date.now()).toLocaleDateString();
   const isSelected = idx === selectedIdx;
+  const isBeforeSelected = idx < selectedIdx;
+
   let circleStyle: ThemeUIStyleObject = { ...defaultCircleStyle };
   let leftLineStyle: ThemeUIStyleObject = { ...defaultLineStyle };
   let rightLineStyle: ThemeUIStyleObject = { ...defaultLineStyle };
@@ -129,13 +131,20 @@ const Event: React.FC<EventProps> = ({ isFirst, isLast, date, label, idx, select
     rightLineStyle = { ...defaultLineStyle };
   }
 
+  if (isToday && isBeforeSelected) {
+    leftLineStyle = { ...solidLineStyle };
+    circleStyle = { ...hollowCircleStyle };
+    rightLineStyle = { ...solidLineStyle };
+  }
+
   if (isLast) {
     rightLineStyle = { ...rightLineStyle, ...fadeLineStyle("to left") };
   }
 
-  const dateText = isSelected
-    ? "Now"
-    : date.toLocaleDateString("en-GB", { month: "short", day: "2-digit", year: "numeric" });
+  const dateText =
+    isToday && isSelected
+      ? "Now"
+      : date.toLocaleDateString("en-GB", { month: "short", day: "2-digit", year: "numeric" });
 
   return (
     <Flex sx={{ flexDirection: "column", flexGrow: 1 }}>
@@ -157,8 +166,12 @@ type HorizontalTimelineProps = {
 };
 
 export const HorizontalTimeline: React.FC<HorizontalTimelineProps> = ({ events, style }) => {
-  const orderedEvents = events.sort((a, b) => (a.date === b.date ? 0 : a.date > b.date ? 1 : -1));
-  const selectedIdx = events.findIndex(event => event.isSelected);
+  // Order by date, then by whether its selected or not (selected is newer)
+  const orderedEvents = [...events].sort((a, b) =>
+    a.date === b.date ? Number(a.isSelected) - Number(b.isSelected) : a.date > b.date ? 1 : -1
+  );
+  const selectedIdx = orderedEvents.findIndex(event => event.isSelected);
+
   return (
     <Flex sx={{ flexGrow: 1, ...style }}>
       {orderedEvents.map((event, idx) => (

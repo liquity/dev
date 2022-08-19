@@ -13,7 +13,7 @@ import type {
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
-import { numberify, decimalify } from "../utils";
+import { numberify, decimalify, getBondAgeInDays, toInteger, milliseconds, toFloat } from "../utils";
 
 type Maybe<T> = T | undefined;
 
@@ -62,12 +62,14 @@ const getAccountBonds = async (
       const id = numberify(bondIds[idx]).toString();
       const deposit = decimalify(bondDeposits[idx]);
       const accrued = decimalify(bondAccrueds[idx]);
-      const startTime = numberify(bondStartTimes[idx]);
-      const endTime = numberify(bondEndTimes[idx]);
+      const startTime = milliseconds(numberify(bondStartTimes[idx]));
+      const endTime = milliseconds(numberify(bondEndTimes[idx]));
       const status = BOND_STATUS[bondStatuses[idx]];
       const tokenUri = bondTokenUris[idx];
+      const bondAgeInDays = getBondAgeInDays(startTime);
       const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
       const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
+
       const rebondAccrual = getFutureBLusdAccrualFactor(
         floorPrice,
         rebondDays,
@@ -79,8 +81,8 @@ const getAccountBonds = async (
         alphaAccrualFactor
       ).mul(deposit);
 
-      const breakEvenTime = parseInt(getFutureTimeByDays(breakEvenDays).toString());
-      const rebondTime = parseInt(getFutureTimeByDays(rebondDays).toString());
+      const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays) - bondAgeInDays);
+      const rebondTime = getFutureTimeByDays(toFloat(rebondDays) - bondAgeInDays);
       const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
 
       return [
@@ -141,12 +143,12 @@ const getRebondDays = (
   return alphaAccrualFactor.mul(dividend.div(divisor));
 };
 
-const daysToMilliseconds = (days: Decimal): Decimal => {
-  return days.mul(24).mul(60).mul(60).mul(1000);
+const daysToMilliseconds = (days: number): number => {
+  return days * 24 * 60 * 60 * 1000;
 };
 
-const getFutureTimeByDays = (days: Decimal): Decimal => {
-  return Decimal.from(parseInt(daysToMilliseconds(days).add(Date.now()).toString()));
+const getFutureTimeByDays = (days: number): number => {
+  return parseInt((Date.now() + daysToMilliseconds(days)).toFixed(0));
 };
 
 const getProtocolInfo = async (
@@ -166,11 +168,6 @@ const getProtocolInfo = async (
   );
   const marketPricePremium = marketPrice.div(floorPrice);
   const hasMarketPremium = marketPrice.gt(floorPrice.add(claimBondFee));
-  console.log(
-    `sim=${marketPrice.add(
-      claimBondFee
-    )}, marketPrice=${marketPrice}, floorPrice=${floorPrice}, alphaAccrualFactor=${alphaAccrualFactor}, claimBondFee=${claimBondFee}, marketPricePremium=${marketPricePremium}`
-  );
 
   if (!hasMarketPremium) {
     const simulatedMarketPrice = marketPrice.add(claimBondFee);
@@ -180,9 +177,9 @@ const getProtocolInfo = async (
       simulatedMarketPricePremium,
       claimBondFee
     );
-    const breakEvenTime = getFutureTimeByDays(breakEvenDays);
+    const breakEvenTime = getFutureTimeByDays(toInteger(breakEvenDays));
     const rebondDays = getRebondDays(alphaAccrualFactor, simulatedMarketPricePremium, claimBondFee);
-    const rebondTime = getFutureTimeByDays(rebondDays);
+    const rebondTime = getFutureTimeByDays(toInteger(rebondDays));
     const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
       floorPrice,
       breakEvenDays,
@@ -212,9 +209,9 @@ const getProtocolInfo = async (
   }
 
   const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const breakEvenTime = getFutureTimeByDays(breakEvenDays);
+  const breakEvenTime = getFutureTimeByDays(toInteger(breakEvenDays));
   const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const rebondTime = getFutureTimeByDays(rebondDays);
+  const rebondTime = getFutureTimeByDays(toInteger(rebondDays));
   const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
     floorPrice,
     breakEvenDays,
@@ -225,7 +222,6 @@ const getProtocolInfo = async (
     rebondDays,
     alphaAccrualFactor
   );
-  console.log(`breakEvenDays=${breakEvenDays}, rebondDays=${rebondDays}`);
 
   return {
     bLusdSupply,
@@ -289,7 +285,6 @@ const getTokenBalance = async (account: string, token: BLUSDToken | LUSDToken): 
 
 const isInfiniteBondApproved = async (account: string, lusdToken: LUSDToken): Promise<boolean> => {
   const allowance = await lusdToken.allowance(account, CHICKEN_BOND_MANAGER_ADDRESS);
-  console.log({ allowance });
 
   // TODO: what is going on?.. weird quirk in forked mainnet version
   if (process.env.REACT_APP_DEMO_MODE === "true") {
