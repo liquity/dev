@@ -119,6 +119,17 @@ export const BondViewProvider: React.FC = props => {
   );
 
   /***** TODO: REMOVE */
+  const getLusdFromFaucet = useCallback(async () => {
+    if (
+      LUSD_OVERRIDE_ADDRESS !== null &&
+      (await lusdToken.balanceOf(account)).eq(0) &&
+      "tap" in lusdToken
+    ) {
+      await (await ((lusdToken as unknown) as ERC20Faucet).tap()).wait();
+      setShouldRefresh(true);
+    }
+  }, [lusdToken, account]);
+
   useEffect(() => {
     (async () => {
       if (account === undefined || liquity === undefined || lusdToken === undefined) return;
@@ -127,14 +138,6 @@ export const BondViewProvider: React.FC = props => {
         if ((await liquity.getTrove(account)).collateral.eq(0)) {
           await liquity.openTrove({ depositCollateral: "11", borrowLUSD: "1800" });
         }
-      }
-
-      if (
-        LUSD_OVERRIDE_ADDRESS !== null &&
-        (await lusdToken.balanceOf(account)).eq(0) &&
-        "tap" in lusdToken
-      ) {
-        await ((lusdToken as unknown) as ERC20Faucet).tap();
       }
     })();
   }, [account, liquity, lusdToken]);
@@ -325,7 +328,8 @@ export const BondViewProvider: React.FC = props => {
     bLusdBalance,
     lusdBalance,
     isInfiniteBondApproved,
-    isSynchronising
+    isSynchronising,
+    getLusdFromFaucet
   };
 
   // @ts-ignore // TODO REMOVE

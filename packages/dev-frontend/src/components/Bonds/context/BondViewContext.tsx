@@ -30,6 +30,7 @@ export type BondViewContextType = {
   statuses: BondTransactionStatuses;
   isInfiniteBondApproved: boolean;
   isSynchronising: boolean;
+  getLusdFromFaucet: () => Promise<void>;
 };
 
 export const BondViewContext = createContext<BondViewContextType | null>(null);
