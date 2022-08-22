@@ -179,7 +179,7 @@ export const HorizontalTimeline: React.FC<HorizontalTimelineProps> = ({ events, 
           key={idx}
           idx={idx}
           isFirst={idx === 0}
-          isLast={idx === events.length - 1}
+          isLast={idx === orderedEvents.length - 1}
           date={event.date}
           label={event.label}
           selectedIdx={selectedIdx}
