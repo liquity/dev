@@ -79,7 +79,7 @@ export const BOND_DEPOSIT = {
 
 export const ACCRUED_AMOUNT = {
   term: "Accruing",
-  description: "Currently accrued bLUSD amount which increases over time."
+  description: "The amount of bLUSD this bond has accrued so far."
 };
 
 export const MARKET_VALUE = {

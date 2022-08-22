@@ -121,14 +121,14 @@ const Event: React.FC<EventProps> = ({ isFirst, isLast, date, label, idx, select
     rightLineStyle = { ...solidLineStyle };
   }
 
-  if (isFirst) {
-    leftLineStyle = { ...leftLineStyle, ...fadeLineStyle("to right") };
-  }
-
   if (isSelected) {
     leftLineStyle = { ...solidLineStyle };
     circleStyle = { ...solidCircleStyle };
     rightLineStyle = { ...defaultLineStyle };
+  }
+
+  if (isFirst) {
+    leftLineStyle = { ...leftLineStyle, ...fadeLineStyle("to right") };
   }
 
   if (isToday && isBeforeSelected) {

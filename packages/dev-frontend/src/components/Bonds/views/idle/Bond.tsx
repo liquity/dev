@@ -25,10 +25,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.status === "PENDING" ? Date.now() : "endTime" in bond ? bond.endTime : 0),
       label: (
         <>
-          <Label
-            description="Number of bLUSD this bond has accrued so far."
-            style={{ fontWeight: 500 }}
-          >
+          <Label description={l.ACCRUED_AMOUNT.description} style={{ fontWeight: 500 }}>
             {bond.status === "PENDING" ? l.ACCRUED_AMOUNT.term : statuses[bond.status]}
           </Label>
           <SubLabel>{`${bond.accrued.prettify(2)} bLUSD`}</SubLabel>
@@ -71,11 +68,11 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
   const events = getBondEvents(bond);
 
   return (
-    <Card sx={{ m: 0, p: 0, ...style }}>
+    <Flex sx={{ justifyContent: "center", alignItems: "center", gap: "12px", mt: "32px" }}>
       <Flex>
         {bond.status === "PENDING" && (
           <Image
-            sx={{ width: "160px", cursor: "pointer" }}
+            sx={{ height: 200, cursor: "pointer", borderRadius: 12 }}
             src={nfts[bond.status]}
             alt="TODO"
             onClick={() => {
@@ -85,14 +82,14 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
         )}
         {bond.status === "CANCELLED" && (
           <>
-            <Image sx={{ width: "160px" }} src={nfts.PENDING} />
+            <Image sx={{ width: 148, cursor: "pointer", borderRadius: 12 }} src={nfts.PENDING} />
             <Image
               sx={{
-                width: "160px",
+                width: 148,
                 cursor: "pointer",
                 borderRadius: "50%",
                 backgroundColor: "transparent",
-                ml: "-160px",
+                ml: -148,
                 p: "28px"
               }}
               src={nfts[bond.status]}
@@ -105,14 +102,14 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
         )}
         {bond.status === "CLAIMED" && (
           <>
-            <Image sx={{ width: "160px" }} src={nfts.PENDING} />
+            <Image sx={{ width: 148, cursor: "pointer", borderRadius: 12 }} src={nfts.PENDING} />
             <Image
               sx={{
-                width: "160px",
+                width: 148,
                 cursor: "pointer",
                 borderRadius: "50%",
                 backgroundColor: "transparent",
-                ml: "-160px",
+                ml: -148,
                 p: "28px"
               }}
               src={nfts[bond.status]}
@@ -123,13 +120,15 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
             />
           </>
         )}
-        <Flex p={[2, 3]} sx={{ flexDirection: "column", flexGrow: 1 }}>
+      </Flex>
+      <Card mt={[0, 0, 0, 0]} sx={{ borderRadius: 12, flexGrow: 1 }}>
+        <Flex p={[2, 3]} sx={{ flexDirection: "column" }}>
           <HorizontalTimeline
             style={{ fontSize: "14.5px", justifyContent: "center", pt: 2, mx: 3 }}
             events={events}
           />
 
-          <Flex variant="layout.actions" sx={{ justifyContent: "flex-end" }}>
+          <Flex mt={4} variant="layout.actions" sx={{ justifyContent: "flex-end" }}>
             <Flex
               sx={{
                 justifyContent: "flex-start",
@@ -168,7 +167,7 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
             )}
           </Flex>
         </Flex>
-      </Flex>
-    </Card>
+      </Card>
+    </Flex>
   );
 };

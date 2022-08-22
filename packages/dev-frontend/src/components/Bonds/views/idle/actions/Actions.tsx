@@ -22,7 +22,14 @@ export const Actions: React.FC<ActionsProps> = ({ bondId }) => {
 
   return (
     <>
-      <Button variant="outline" sx={{ height: "44px" }} onClick={handleCancelBondPressed}>
+      <Button
+        variant="outline"
+        sx={{ height: "44px" }}
+        style={{
+          cursor: `url("data:image/svg+xml;utf8, <svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'  style='font-size: 24px'><text y='20'>🐔</text></svg>"), auto`
+        }}
+        onClick={handleCancelBondPressed}
+      >
         {CANCEL_BOND.term}
       </Button>
       <Button

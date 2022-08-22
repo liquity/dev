@@ -64,11 +64,8 @@ export const Actioning: React.FC = () => {
       date: new Date(Date.now()),
       label: (
         <>
-          <Label
-            description="Number of bLUSD this bond has accrued so far."
-            style={{ fontWeight: 500 }}
-          >
-            Accrued
+          <Label description={l.ACCRUED_AMOUNT.description} style={{ fontWeight: 500 }}>
+            {l.ACCRUED_AMOUNT.term}
           </Label>
           <SubLabel>{`${bond.accrued.prettify(2)} bLUSD`}</SubLabel>
         </>

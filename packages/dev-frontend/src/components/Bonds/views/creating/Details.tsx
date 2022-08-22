@@ -72,7 +72,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       <Flex sx={{ justifyContent: "center", alignItems: "center" }}>
         <Image
           sx={{
-            height: 240,
+            height: 180,
             border: "10px solid white",
             borderRadius: "14%",
             borderColor: "white"
@@ -86,10 +86,6 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
             </Card>
           }
         />
-      </Flex>
-
-      <Flex my={2} sx={{ justifyContent: "center" }}>
-        Slider...
       </Flex>
 
       <Flex my={4} sx={{ justifyContent: "center" }}>
