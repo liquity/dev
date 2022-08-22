@@ -1,4 +1,4 @@
-import { Card, Flex, Button, Link, Image, ThemeUIStyleObject } from "theme-ui";
+import { Card, Flex, Button, Link, Image } from "theme-ui";
 import { EventType, HorizontalTimeline } from "../../../HorizontalTimeline";
 import { nfts } from "../../context/BondViewProvider";
 import { Record } from "../../Record";
@@ -9,6 +9,7 @@ import * as l from "../../lexicon";
 import { statuses } from "../../context/BondViewContext";
 
 const getBondEvents = (bond: BondType): EventType[] => {
+  console.log("bond duff", bond.breakEvenTime.toString(), bond.rebondTime.toString());
   return [
     {
       date: new Date(bond.startTime),
@@ -62,9 +63,9 @@ const getBondEvents = (bond: BondType): EventType[] => {
   ];
 };
 
-type BondProps = { bond: BondType; style?: ThemeUIStyleObject };
+type BondProps = { bond: BondType };
 
-export const Bond: React.FC<BondProps> = ({ bond, style }) => {
+export const Bond: React.FC<BondProps> = ({ bond }) => {
   const events = getBondEvents(bond);
 
   return (

@@ -13,15 +13,7 @@ import type {
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
-import {
-  numberify,
-  decimalify,
-  getBondAgeInDays,
-  toInteger,
-  milliseconds,
-  toFloat,
-  getReturn
-} from "../utils";
+import { numberify, decimalify, getBondAgeInDays, milliseconds, toFloat, getReturn } from "../utils";
 
 type Maybe<T> = T | undefined;
 
@@ -161,7 +153,7 @@ const daysToMilliseconds = (days: number): number => {
 };
 
 const getFutureTimeByDays = (days: number): number => {
-  return parseInt((Date.now() + daysToMilliseconds(days)).toFixed(0));
+  return Math.round(Date.now() + daysToMilliseconds(days));
 };
 
 const getProtocolInfo = async (
@@ -190,9 +182,11 @@ const getProtocolInfo = async (
       simulatedMarketPricePremium,
       claimBondFee
     );
-    const breakEvenTime = getFutureTimeByDays(toInteger(breakEvenDays));
+
+    const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays));
     const rebondDays = getRebondDays(alphaAccrualFactor, simulatedMarketPricePremium, claimBondFee);
-    const rebondTime = getFutureTimeByDays(toInteger(rebondDays));
+
+    const rebondTime = getFutureTimeByDays(toFloat(rebondDays));
     const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
       floorPrice,
       breakEvenDays,
@@ -222,9 +216,9 @@ const getProtocolInfo = async (
   }
 
   const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const breakEvenTime = getFutureTimeByDays(toInteger(breakEvenDays));
+  const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays));
   const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const rebondTime = getFutureTimeByDays(toInteger(rebondDays));
+  const rebondTime = getFutureTimeByDays(toFloat(rebondDays));
   const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
     floorPrice,
     breakEvenDays,
