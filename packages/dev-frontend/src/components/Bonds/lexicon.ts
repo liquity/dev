@@ -62,7 +62,7 @@ export const REBOND_TIME_ROI = {
 };
 
 export const OPTIMUM_APY = {
-  term: "Max APY",
+  term: "Max APR",
   description: `Estimated APY of continuously bonding and claiming at the ${OPTIMUM_REBOND_TIME.term}, under current market prices. Rebonding at other times could lead to a lower APY.`
 };
 

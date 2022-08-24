@@ -156,64 +156,14 @@ const getFutureTimeByDays = (days: number): number => {
   return Math.round(Date.now() + daysToMilliseconds(days));
 };
 
-const getProtocolInfo = async (
-  bLusdToken: BLUSDToken,
-  bLusdAmm: CurveCryptoSwap2ETH,
-  chickenBondManager: ChickenBondManager,
-  reserveSize: Decimal
-): Promise<ProtocolInfo> => {
-  const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  const marketPrice = decimalify(await bLusdAmm.price_oracle()).add(0.05); /* TODO REMOVE */
-  const simulatedMarketPrice = marketPrice;
-  const fairPrice = marketPrice.mul(1.1);
-  const floorPrice = reserveSize.eq(0) ? Decimal.ONE : reserveSize.div(bLusdSupply);
-  const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
-  const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
-    24 * 60 * 60
-  );
+export const _getProtocolInfo = (
+  marketPrice: Decimal,
+  floorPrice: Decimal,
+  claimBondFee: Decimal,
+  alphaAccrualFactor: Decimal
+) => {
   const marketPricePremium = marketPrice.div(floorPrice);
   const hasMarketPremium = marketPrice.gt(floorPrice.add(claimBondFee));
-
-  if (!hasMarketPremium) {
-    const simulatedMarketPrice = marketPrice.add(claimBondFee);
-    const simulatedMarketPricePremium = simulatedMarketPrice.div(floorPrice);
-    const breakEvenDays = getBreakEvenDays(
-      alphaAccrualFactor,
-      simulatedMarketPricePremium,
-      claimBondFee
-    );
-
-    const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays));
-    const rebondDays = getRebondDays(alphaAccrualFactor, simulatedMarketPricePremium, claimBondFee);
-
-    const rebondTime = getFutureTimeByDays(toFloat(rebondDays));
-    const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
-      floorPrice,
-      breakEvenDays,
-      alphaAccrualFactor
-    );
-    const rebondAccrualFactor = getFutureBLusdAccrualFactor(
-      floorPrice,
-      rebondDays,
-      alphaAccrualFactor
-    );
-
-    return {
-      bLusdSupply,
-      marketPrice,
-      fairPrice,
-      floorPrice,
-      claimBondFee,
-      alphaAccrualFactor,
-      marketPricePremium,
-      breakEvenTime,
-      rebondTime,
-      hasMarketPremium,
-      simulatedMarketPrice,
-      breakEvenAccrualFactor,
-      rebondAccrualFactor
-    };
-  }
 
   const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
   const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays));
@@ -231,17 +181,57 @@ const getProtocolInfo = async (
   );
 
   return {
+    marketPricePremium,
+    breakEvenTime,
+    rebondTime,
+    hasMarketPremium,
+    breakEvenAccrualFactor,
+    rebondAccrualFactor,
+    breakEvenDays,
+    rebondDays,
+    simulatedMarketPrice: marketPrice
+  };
+};
+
+const getProtocolInfo = async (
+  bLusdToken: BLUSDToken,
+  bLusdAmm: CurveCryptoSwap2ETH,
+  chickenBondManager: ChickenBondManager,
+  reserveSize: Decimal
+): Promise<ProtocolInfo> => {
+  const bLusdSupply = decimalify(await bLusdToken.totalSupply());
+  const marketPrice = decimalify(await bLusdAmm.price_oracle()).add(0.05); /* TODO REMOVE */
+  const fairPrice = marketPrice.mul(1.1);
+  const floorPrice = reserveSize.eq(0) ? Decimal.ONE : reserveSize.div(bLusdSupply);
+  const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
+  const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
+    24 * 60 * 60
+  );
+
+  const {
+    marketPricePremium,
+    breakEvenTime,
+    rebondTime,
+    hasMarketPremium,
+    breakEvenAccrualFactor,
+    rebondAccrualFactor,
+    breakEvenDays,
+    rebondDays,
+    simulatedMarketPrice
+  } = _getProtocolInfo(marketPrice, floorPrice, claimBondFee, alphaAccrualFactor);
+
+  return {
     bLusdSupply,
     marketPrice,
     fairPrice,
     floorPrice,
     claimBondFee,
     alphaAccrualFactor,
+    simulatedMarketPrice,
     marketPricePremium,
     breakEvenTime,
     rebondTime,
     hasMarketPremium,
-    simulatedMarketPrice,
     breakEvenAccrualFactor,
     rebondAccrualFactor,
     breakEvenDays,

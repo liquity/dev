@@ -9,7 +9,6 @@ import * as l from "../../lexicon";
 import { statuses } from "../../context/BondViewContext";
 
 const getBondEvents = (bond: BondType): EventType[] => {
-  console.log("bond duff", bond.breakEvenTime.toString(), bond.rebondTime.toString());
   return [
     {
       date: new Date(bond.startTime),

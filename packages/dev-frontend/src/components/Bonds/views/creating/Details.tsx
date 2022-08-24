@@ -1,5 +1,5 @@
 /** @jsxImportSource theme-ui */
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Flex, Heading, Button, Card, Grid, Close, Text, Image, Spinner } from "theme-ui";
 import { Decimal } from "@liquity/lib-base";
 import { EditableRow } from "../../../Trove/Editor";
@@ -13,7 +13,8 @@ import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
 import { Warning } from "../../../Warning";
 import type { CreateBondPayload } from "../../context/transitions";
-import { dateWithoutHours, getReturn } from "../../utils";
+import { dateWithoutHours, getReturn, toFloat } from "../../utils";
+import { HorizontalSlider } from "../../../HorizontalSlider";
 
 type DetailsProps = { onBack?: () => void };
 
@@ -22,8 +23,11 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
     dispatchEvent,
     statuses,
     isInfiniteBondApproved,
-    protocolInfo,
-    lusdBalance
+    lusdBalance,
+    simulatedProtocolInfo,
+    setSimulatedMarketPrice,
+    resetSimulatedMarketPrice,
+    protocolInfo
   } = useBondView();
   const { back } = useWizard();
   const [deposit, setDeposit] = useState<Decimal>(lusdBalance ?? Decimal.ZERO);
@@ -46,14 +50,22 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
     dispatchEvent("CONFIRM_PRESSED", { deposit } as CreateBondPayload);
   };
 
-  if (protocolInfo === undefined || lusdBalance === undefined) return null;
+  useEffect(() => {
+    return () => resetSimulatedMarketPrice();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (protocolInfo === undefined || simulatedProtocolInfo === undefined || lusdBalance === undefined)
+    return null;
 
   const rebondReturn = getReturn(
-    deposit.mul(protocolInfo.rebondAccrualFactor),
+    deposit.mul(simulatedProtocolInfo.rebondAccrualFactor),
     deposit,
-    protocolInfo.marketPrice
+    simulatedProtocolInfo.simulatedMarketPrice
   );
   const rebondRoi = Decimal.from(rebondReturn).div(deposit);
+  const marketPriceMin = toFloat(protocolInfo.floorPrice.add(0.015)).toFixed(2); // Add 0.015 to prevent market_price=floor_price infinity issues
+  const marketPriceMax = toFloat(Decimal.from(protocolInfo.marketPrice).mul(1.2)).toFixed(2);
 
   return (
     <>
@@ -104,25 +116,25 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
               isSelected: true
             },
             {
-              date: new Date(parseInt(protocolInfo.breakEvenTime.toString())),
+              date: new Date(parseInt(simulatedProtocolInfo.breakEvenTime.toString())),
               label: (
                 <>
                   <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
                   <SubLabel>{`${deposit
-                    .mul(protocolInfo.breakEvenAccrualFactor)
+                    .mul(simulatedProtocolInfo.breakEvenAccrualFactor)
                     .prettify(2)} bLUSD`}</SubLabel>
                 </>
               )
             },
             {
-              date: new Date(parseInt(protocolInfo.rebondTime.toString())),
+              date: new Date(parseInt(simulatedProtocolInfo.rebondTime.toString())),
               label: (
                 <>
                   <Label description={l.OPTIMUM_REBOND_TIME.description}>
                     {l.OPTIMUM_REBOND_TIME.term}
                   </Label>
                   <SubLabel>{`${deposit
-                    .mul(protocolInfo.rebondAccrualFactor)
+                    .mul(simulatedProtocolInfo.rebondAccrualFactor)
                     .prettify(2)} bLUSD`}</SubLabel>
                 </>
               )
@@ -166,6 +178,19 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         />
       </Grid>
 
+      <HorizontalSlider
+        name={"Simulate market price"}
+        description={`
+                The market price of bLUSD impacts how long it will take to rebond and break even. The
+                market price has a minimum value ("floor price") which is determined by the
+                Treasury's Reserve bucket quantity relative to the bLUSD supply.`}
+        value={simulatedProtocolInfo.marketPrice}
+        min={marketPriceMin}
+        max={marketPriceMax}
+        type="LUSD"
+        onSliderChange={value => setSimulatedMarketPrice(value)}
+      />
+
       {!isInfiniteBondApproved && (
         <ActionDescription>
           <Text>You are approving LUSD for bonding</Text>
@@ -185,7 +210,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       )}
 
       <Flex pb={2} sx={{ fontSize: "15.5px", justifyContent: "center", fontStyle: "italic" }}>
-        * You can cancel your bond at any time to recover your deposited LUSD
+        You can cancel your bond at any time to recover your deposited LUSD
       </Flex>
 
       <Flex variant="layout.actions">

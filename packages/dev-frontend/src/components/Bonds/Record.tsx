@@ -12,7 +12,7 @@ type RecordType = {
 export const Record: React.FC<RecordType> = ({ name, description, value, type, style }) => {
   return (
     <Flex sx={{ flexDirection: "column", ...style }}>
-      <Flex as="h4" sx={{ fontWeight: "300", alignItems: "baseline" }}>
+      <Flex as="h4" sx={{ fontWeight: "300", alignItems: "baseline", justifyContent: "center" }}>
         {name} <InfoIcon size="xs" tooltip={<Card variant="tooltip">{description}</Card>} />
       </Flex>
       <Text as="h3" sx={{ display: "flex", justifyContent: "center" }}>

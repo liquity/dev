@@ -3,7 +3,8 @@ import { BigNumber } from "ethers";
 
 const milliseconds = (seconds: number) => seconds * 1000;
 
-const toFloat = (decimal: Decimal): number => parseFloat(decimal.toString());
+const toFloat = (decimal: Decimal, precision = null): number =>
+  parseFloat(decimal.prettify(precision ?? 2));
 
 const numberify = (bigNumber: BigNumber): number => bigNumber.toNumber();
 
