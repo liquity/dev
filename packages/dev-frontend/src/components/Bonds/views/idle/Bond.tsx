@@ -1,4 +1,4 @@
-import { Card, Flex, Button, Link, Image } from "theme-ui";
+import { Card, Flex, Button, Link, Image, ThemeUIStyleObject } from "theme-ui";
 import { EventType, HorizontalTimeline } from "../../../HorizontalTimeline";
 import { nfts } from "../../context/BondViewProvider";
 import { Record } from "../../Record";
@@ -60,13 +60,20 @@ const getBondEvents = (bond: BondType): EventType[] => {
   ];
 };
 
-type BondProps = { bond: BondType };
+type BondProps = { bond: BondType; style?: ThemeUIStyleObject };
 
-export const Bond: React.FC<BondProps> = ({ bond }) => {
+export const Bond: React.FC<BondProps> = ({ bond, style }) => {
   const events = getBondEvents(bond);
 
   return (
-    <Flex sx={{ justifyContent: "center", alignItems: "center", gap: "12px", mt: "32px" }}>
+    <Flex
+      sx={{
+        justifyContent: "center",
+        alignItems: "center",
+        gap: "12px",
+        ...style
+      }}
+    >
       <Flex>
         {bond.status === "PENDING" && (
           <Image
