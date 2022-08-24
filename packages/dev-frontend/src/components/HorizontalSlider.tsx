@@ -32,10 +32,24 @@ export const HorizontalSlider: React.FC<SliderProps> = ({
         as="h4"
         sx={{
           fontWeight: "300",
-          alignItems: "baseline",
+          alignItems: "center",
           justifyContent: "center"
         }}
       >
+        {onReset && (
+          <Button
+            variant="icon"
+            sx={{
+              position: "absolute",
+              left: "66%",
+              mt: "6px",
+              fontSize: 1
+            }}
+            onClick={onReset}
+          >
+            Reset
+          </Button>
+        )}
         {name}
         <InfoIcon size="xs" tooltip={<Card variant="tooltip">{description}</Card>} />
       </Flex>
@@ -59,19 +73,6 @@ export const HorizontalSlider: React.FC<SliderProps> = ({
         <Text>
           {value.prettify(2)} {type}
         </Text>
-        {onReset && (
-          <Button
-            variant="icon"
-            sx={{
-              position: "absolute",
-              left: "58%",
-              fontSize: 1
-            }}
-            onClick={onReset}
-          >
-            Reset
-          </Button>
-        )}
       </Flex>
     </Flex>
   );
