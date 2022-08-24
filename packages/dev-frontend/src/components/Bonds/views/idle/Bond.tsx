@@ -145,12 +145,14 @@ export const Bond: React.FC<BondProps> = ({ bond }) => {
                 type="LUSD"
                 description={l.BOND_DEPOSIT.description}
               />
-              <Record
-                name={l.MARKET_VALUE.term}
-                value={"marketValue" in bond ? bond.marketValue.prettify(2) : "0"}
-                type="LUSD"
-                description={l.MARKET_VALUE.description}
-              />
+              {bond.status === "PENDING" && (
+                <Record
+                  name={l.MARKET_VALUE.term}
+                  value={"marketValue" in bond ? bond.marketValue.prettify(2) : "0"}
+                  type="LUSD"
+                  description={l.MARKET_VALUE.description}
+                />
+              )}
             </Flex>
             {bond.status === "PENDING" && <Actions bondId={bond.id} />}
             {bond.status !== "PENDING" && bond.status === "CLAIMED" && (

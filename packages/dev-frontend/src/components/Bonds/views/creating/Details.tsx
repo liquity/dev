@@ -183,7 +183,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         description={`
                 The market price of bLUSD impacts how long it will take to rebond and break even. The
                 market price has a minimum value ("floor price") which is determined by the
-                Treasury's Reserve bucket quantity relative to the bLUSD supply.`}
+                Treasury's Reserve bucket relative to the bLUSD supply.`}
         value={simulatedProtocolInfo.marketPrice}
         min={marketPriceMin}
         max={marketPriceMax}
