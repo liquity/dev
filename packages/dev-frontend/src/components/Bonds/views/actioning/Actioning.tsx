@@ -64,13 +64,10 @@ export const Actioning: React.FC = () => {
       date: new Date(Date.now()),
       label: (
         <>
-          <Label
-            description="Number of bLUSD this bond has accrued so far."
-            style={{ fontWeight: 500 }}
-          >
-            Accrued
+          <Label description={l.ACCRUED_AMOUNT.description} style={{ fontWeight: 500 }}>
+            {l.ACCRUED_AMOUNT.term}
           </Label>
-          <SubLabel>{`${bond.accrued.prettify(2)} bLUSD`}</SubLabel>
+          <SubLabel style={{ fontWeight: 400 }}>{`${bond.accrued.prettify(2)} bLUSD`}</SubLabel>
         </>
       ),
       isSelected: bond.status === "PENDING"
@@ -110,12 +107,14 @@ export const Actioning: React.FC = () => {
           description={l.MARKET_VALUE.description}
         />
 
-        <Record
-          name={l.BOND_RETURN.term}
-          value={bond.claimNowReturn}
-          type="LUSD"
-          description={l.BOND_RETURN.description}
-        />
+        {view === "CLAIMING" && (
+          <Record
+            name={l.BOND_RETURN.term}
+            value={bond.claimNowReturn}
+            type="LUSD"
+            description={l.BOND_RETURN.description}
+          />
+        )}
       </Grid>
       <details>
         <summary sx={{ pl: 2, mt: 4, cursor: "pointer" }}>Rebond estimations</summary>
@@ -142,16 +141,19 @@ export const Actioning: React.FC = () => {
           />
         </Grid>
       </details>
-      <Box mt={3} />
-      {view === "CLAIMING" && parseFloat(bond.claimNowReturn) < 0 && (
-        <Warning>You are claiming a bond which currently has a negative return</Warning>
-      )}
-      {view === "CLAIMING" && bond.accrued.gte(bond.rebondAccrual) && (
-        <Warning>Your bond is ready to rebond - you've accrued more bLUSD than required</Warning>
-      )}
-      {view === "CANCELLING" && bond.accrued.gte(bond.breakEvenAccrual) && (
-        <Warning>Your are cancelling a bond which has accrued a positive return</Warning>
-      )}
+
+      <Box mt={3}>
+        {view === "CLAIMING" && parseFloat(bond.claimNowReturn) < 0 && (
+          <Warning>You are claiming a bond which currently has a negative return</Warning>
+        )}
+        {view === "CLAIMING" && bond.accrued.gte(bond.rebondAccrual) && (
+          <Warning>Your bond is ready to rebond - you've accrued more bLUSD than required</Warning>
+        )}
+        {view === "CANCELLING" && bond.accrued.gte(bond.breakEvenAccrual) && (
+          <Warning>Your are cancelling a bond which has accrued a positive return</Warning>
+        )}
+      </Box>
+
       {Actions}
     </ReactModal>
   );

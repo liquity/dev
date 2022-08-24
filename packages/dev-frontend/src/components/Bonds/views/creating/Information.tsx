@@ -40,7 +40,7 @@ export const Information: React.FC = () => {
 
   const handleUnderstandPressed = () => {
     if (hideMessageRef?.current?.checked) {
-      window.localStorage.setItem("LIQUITY_CREATE_BOND_MESSAGE_VISIBLE", "true");
+      window.localStorage.setItem("LIQUITY.BOND_FAQ.VISISBLE", "true");
     }
     go && go(Details);
   };

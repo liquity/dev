@@ -20,8 +20,9 @@ export const Claim: React.FC = () => {
   return (
     <>
       <ActionDescription>
-        You will receive <Text sx={{ fontWeight: "bold" }}>{bond.accrued.shorten()} bLUSD</Text> and
-        forgo your bonded <Text sx={{ fontWeight: "bold" }}>{bond.deposit.prettify(0)} LUSD</Text>
+        You will receive <Text sx={{ fontWeight: "bold" }}>{bond.accrued.prettify(2)} bLUSD</Text>{" "}
+        and forgo your bonded{" "}
+        <Text sx={{ fontWeight: "bold" }}>{bond.deposit.prettify(2)} LUSD</Text>
         {isProcessingTransaction && <Flex mt={1}>Transaction processing...</Flex>}
       </ActionDescription>
 

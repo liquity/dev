@@ -121,14 +121,14 @@ const Event: React.FC<EventProps> = ({ isFirst, isLast, date, label, idx, select
     rightLineStyle = { ...solidLineStyle };
   }
 
-  if (isFirst) {
-    leftLineStyle = { ...leftLineStyle, ...fadeLineStyle("to right") };
-  }
-
   if (isSelected) {
     leftLineStyle = { ...solidLineStyle };
     circleStyle = { ...solidCircleStyle };
     rightLineStyle = { ...defaultLineStyle };
+  }
+
+  if (isFirst) {
+    leftLineStyle = { ...leftLineStyle, ...fadeLineStyle("to right") };
   }
 
   if (isToday && isBeforeSelected) {
@@ -179,7 +179,7 @@ export const HorizontalTimeline: React.FC<HorizontalTimelineProps> = ({ events, 
           key={idx}
           idx={idx}
           isFirst={idx === 0}
-          isLast={idx === events.length - 1}
+          isLast={idx === orderedEvents.length - 1}
           date={event.date}
           label={event.label}
           selectedIdx={selectedIdx}

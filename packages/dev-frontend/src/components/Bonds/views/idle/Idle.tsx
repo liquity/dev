@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Box, Heading, Flex, Button, Spinner, Container } from "theme-ui";
 import { Empty } from "./Empty";
-import { Bonds } from "./Bonds";
+import { BondList } from "./BondList";
 import { useBondView } from "../../context/BondViewContext";
 import { BONDS } from "../../lexicon";
 import { InfoIcon } from "../../../InfoIcon";
@@ -40,7 +40,7 @@ export const Idle: React.FC = () => {
               {isSynchronising && <Spinner size="28px" sx={{ color: "white" }} />}
             </Button>
           </Flex>
-          <Bonds />
+          <BondList />
           {isSynchronising && <Container variant="disabledOverlay" />}
         </>
       )}

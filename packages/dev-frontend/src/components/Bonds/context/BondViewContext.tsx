@@ -31,6 +31,9 @@ export type BondViewContextType = {
   isInfiniteBondApproved: boolean;
   isSynchronising: boolean;
   getLusdFromFaucet: () => Promise<void>;
+  simulatedProtocolInfo?: ProtocolInfo;
+  setSimulatedMarketPrice: (marketPrice: Decimal) => void;
+  resetSimulatedMarketPrice: () => void;
 };
 
 export const BondViewContext = createContext<BondViewContextType | null>(null);

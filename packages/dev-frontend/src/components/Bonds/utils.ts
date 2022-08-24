@@ -3,9 +3,8 @@ import { BigNumber } from "ethers";
 
 const milliseconds = (seconds: number) => seconds * 1000;
 
-const toInteger = (decimal: Decimal): number => parseInt(decimal.toString());
-
-const toFloat = (decimal: Decimal): number => parseFloat(decimal.toString());
+const toFloat = (decimal: Decimal, precision = null): number =>
+  parseFloat(decimal.prettify(precision ?? 2));
 
 const numberify = (bigNumber: BigNumber): number => bigNumber.toNumber();
 
@@ -31,7 +30,6 @@ const getReturn = (accrued: Decimal, deposit: Decimal, marketPrice: Decimal): st
 
 export {
   milliseconds,
-  toInteger,
   toFloat,
   numberify,
   decimalify,

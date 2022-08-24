@@ -62,7 +62,7 @@ export const REBOND_TIME_ROI = {
 };
 
 export const OPTIMUM_APY = {
-  term: "Max APY",
+  term: "Max APR",
   description: `Estimated APY of continuously bonding and claiming at the ${OPTIMUM_REBOND_TIME.term}, under current market prices. Rebonding at other times could lead to a lower APY.`
 };
 
@@ -79,7 +79,7 @@ export const BOND_DEPOSIT = {
 
 export const ACCRUED_AMOUNT = {
   term: "Accruing",
-  description: "Currently accrued bLUSD amount which increases over time."
+  description: "The amount of bLUSD this bond has accrued so far."
 };
 
 export const MARKET_VALUE = {

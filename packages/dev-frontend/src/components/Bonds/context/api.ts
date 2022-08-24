@@ -13,15 +13,7 @@ import type {
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
-import {
-  numberify,
-  decimalify,
-  getBondAgeInDays,
-  toInteger,
-  milliseconds,
-  toFloat,
-  getReturn
-} from "../utils";
+import { numberify, decimalify, getBondAgeInDays, milliseconds, toFloat, getReturn } from "../utils";
 
 type Maybe<T> = T | undefined;
 
@@ -161,70 +153,22 @@ const daysToMilliseconds = (days: number): number => {
 };
 
 const getFutureTimeByDays = (days: number): number => {
-  return parseInt((Date.now() + daysToMilliseconds(days)).toFixed(0));
+  return Math.round(Date.now() + daysToMilliseconds(days));
 };
 
-const getProtocolInfo = async (
-  bLusdToken: BLUSDToken,
-  bLusdAmm: CurveCryptoSwap2ETH,
-  chickenBondManager: ChickenBondManager,
-  reserveSize: Decimal
-): Promise<ProtocolInfo> => {
-  const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  const marketPrice = decimalify(await bLusdAmm.price_oracle()).add(0.05); /* TODO REMOVE */
-  const simulatedMarketPrice = marketPrice;
-  const fairPrice = marketPrice.mul(1.1);
-  const floorPrice = reserveSize.eq(0) ? Decimal.ONE : reserveSize.div(bLusdSupply);
-  const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
-  const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
-    24 * 60 * 60
-  );
+export const _getProtocolInfo = (
+  marketPrice: Decimal,
+  floorPrice: Decimal,
+  claimBondFee: Decimal,
+  alphaAccrualFactor: Decimal
+) => {
   const marketPricePremium = marketPrice.div(floorPrice);
   const hasMarketPremium = marketPrice.gt(floorPrice.add(claimBondFee));
 
-  if (!hasMarketPremium) {
-    const simulatedMarketPrice = marketPrice.add(claimBondFee);
-    const simulatedMarketPricePremium = simulatedMarketPrice.div(floorPrice);
-    const breakEvenDays = getBreakEvenDays(
-      alphaAccrualFactor,
-      simulatedMarketPricePremium,
-      claimBondFee
-    );
-    const breakEvenTime = getFutureTimeByDays(toInteger(breakEvenDays));
-    const rebondDays = getRebondDays(alphaAccrualFactor, simulatedMarketPricePremium, claimBondFee);
-    const rebondTime = getFutureTimeByDays(toInteger(rebondDays));
-    const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
-      floorPrice,
-      breakEvenDays,
-      alphaAccrualFactor
-    );
-    const rebondAccrualFactor = getFutureBLusdAccrualFactor(
-      floorPrice,
-      rebondDays,
-      alphaAccrualFactor
-    );
-
-    return {
-      bLusdSupply,
-      marketPrice,
-      fairPrice,
-      floorPrice,
-      claimBondFee,
-      alphaAccrualFactor,
-      marketPricePremium,
-      breakEvenTime,
-      rebondTime,
-      hasMarketPremium,
-      simulatedMarketPrice,
-      breakEvenAccrualFactor,
-      rebondAccrualFactor
-    };
-  }
-
   const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const breakEvenTime = getFutureTimeByDays(toInteger(breakEvenDays));
+  const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays));
   const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const rebondTime = getFutureTimeByDays(toInteger(rebondDays));
+  const rebondTime = getFutureTimeByDays(toFloat(rebondDays));
   const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
     floorPrice,
     breakEvenDays,
@@ -237,17 +181,57 @@ const getProtocolInfo = async (
   );
 
   return {
+    marketPricePremium,
+    breakEvenTime,
+    rebondTime,
+    hasMarketPremium,
+    breakEvenAccrualFactor,
+    rebondAccrualFactor,
+    breakEvenDays,
+    rebondDays,
+    simulatedMarketPrice: marketPrice
+  };
+};
+
+const getProtocolInfo = async (
+  bLusdToken: BLUSDToken,
+  bLusdAmm: CurveCryptoSwap2ETH,
+  chickenBondManager: ChickenBondManager,
+  reserveSize: Decimal
+): Promise<ProtocolInfo> => {
+  const bLusdSupply = decimalify(await bLusdToken.totalSupply());
+  const marketPrice = decimalify(await bLusdAmm.price_oracle()).add(0.05); /* TODO REMOVE */
+  const fairPrice = marketPrice.mul(1.1);
+  const floorPrice = reserveSize.eq(0) ? Decimal.ONE : reserveSize.div(bLusdSupply);
+  const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
+  const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
+    24 * 60 * 60
+  );
+
+  const {
+    marketPricePremium,
+    breakEvenTime,
+    rebondTime,
+    hasMarketPremium,
+    breakEvenAccrualFactor,
+    rebondAccrualFactor,
+    breakEvenDays,
+    rebondDays,
+    simulatedMarketPrice
+  } = _getProtocolInfo(marketPrice, floorPrice, claimBondFee, alphaAccrualFactor);
+
+  return {
     bLusdSupply,
     marketPrice,
     fairPrice,
     floorPrice,
     claimBondFee,
     alphaAccrualFactor,
+    simulatedMarketPrice,
     marketPricePremium,
     breakEvenTime,
     rebondTime,
     hasMarketPremium,
-    simulatedMarketPrice,
     breakEvenAccrualFactor,
     rebondAccrualFactor,
     breakEvenDays,
@@ -310,7 +294,7 @@ const approveInfiniteBond = async (lusdToken: LUSDToken | undefined) => {
   if (lusdToken === undefined) throw new Error("approveInfiniteBond() failed: a dependency is null");
   console.log("approveInfiniteBond() started");
   try {
-    await lusdToken.approve(CHICKEN_BOND_MANAGER_ADDRESS, constants.MaxUint256._hex);
+    await (await lusdToken.approve(CHICKEN_BOND_MANAGER_ADDRESS, constants.MaxUint256._hex)).wait();
     console.log("approveInfiniteBond() succceeded");
   } catch (error: unknown) {
     throw new Error(`approveInfiniteBond() failed: ${error}`);

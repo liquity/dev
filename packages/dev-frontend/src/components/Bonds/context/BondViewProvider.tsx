@@ -38,7 +38,7 @@ import {
   LUSD_OVERRIDE_ADDRESS
 } from "@liquity/chicken-bonds/lusd/addresses";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
-import { api } from "./api";
+import { api, _getProtocolInfo } from "./api";
 import LUSDTokenAbi from "@liquity/lib-ethers/abi/LUSDToken.json";
 import { useTransaction } from "../../../hooks/useTransaction";
 
@@ -68,7 +68,8 @@ export const BondViewProvider: React.FC = props => {
   const [bonds, setBonds] = useState<Bond[]>();
   const [treasury, setTreasury] = useState<Treasury>();
   const [stats, setStats] = useState<Stats>();
-  const [protocolInfo, setBLusdInfo] = useState<ProtocolInfo>();
+  const [protocolInfo, setProtocolInfo] = useState<ProtocolInfo>();
+  const [simulatedProtocolInfo, setSimulatedProtocolInfo] = useState<ProtocolInfo>();
   const [isInfiniteBondApproved, setIsInfiniteBondApproved] = useState(false);
   const [isSynchronising, setIsSynchronising] = useState(true);
   const [statuses, setStatuses] = useState<BondTransactionStatuses>({
@@ -104,6 +105,25 @@ export const BondViewProvider: React.FC = props => {
     BLUSD_AMM_ADDRESS,
     CurveCryptoSwap2ETH__factory.abi
   );
+
+  const setSimulatedMarketPrice = useCallback(
+    (marketPrice: Decimal) => {
+      if (protocolInfo === undefined) return;
+      const simulatedProtocolInfo = _getProtocolInfo(
+        marketPrice,
+        protocolInfo.floorPrice,
+        protocolInfo.claimBondFee,
+        protocolInfo.alphaAccrualFactor
+      );
+      setSimulatedProtocolInfo({ ...protocolInfo, ...simulatedProtocolInfo, marketPrice });
+    },
+    [protocolInfo]
+  );
+
+  const resetSimulatedMarketPrice = useCallback(() => {
+    if (protocolInfo === undefined) return;
+    setSimulatedProtocolInfo({ ...protocolInfo });
+  }, [protocolInfo]);
 
   /***** TODO: REMOVE */
   const getLusdFromFaucet = useCallback(async () => {
@@ -175,7 +195,8 @@ export const BondViewProvider: React.FC = props => {
       const bLusdBalance = await api.getTokenBalance(account, bLusdToken);
       const lusdBalance = await api.getTokenBalance(account, lusdToken);
 
-      setBLusdInfo(protocolInfo);
+      setProtocolInfo(protocolInfo);
+      setSimulatedProtocolInfo({ ...protocolInfo });
       setBLusdBalance(bLusdBalance);
       setLusdBalance(lusdBalance);
       setStats(stats);
@@ -318,7 +339,10 @@ export const BondViewProvider: React.FC = props => {
     lusdBalance,
     isInfiniteBondApproved,
     isSynchronising,
-    getLusdFromFaucet
+    getLusdFromFaucet,
+    setSimulatedMarketPrice,
+    resetSimulatedMarketPrice,
+    simulatedProtocolInfo
   };
 
   // @ts-ignore // TODO REMOVE
