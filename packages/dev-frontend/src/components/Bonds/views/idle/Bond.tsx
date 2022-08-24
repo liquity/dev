@@ -22,13 +22,15 @@ const getBondEvents = (bond: BondType): EventType[] => {
       )
     },
     {
-      date: new Date(bond.status === "PENDING" ? Date.now() : "endTime" in bond ? bond.endTime : 0),
+      date: new Date(bond.status === "PENDING" ? Date.now() : bond?.endTime ?? 0),
       label: (
         <>
           <Label description={l.ACCRUED_AMOUNT.description} style={{ fontWeight: 500 }}>
             {bond.status === "PENDING" ? l.ACCRUED_AMOUNT.term : statuses[bond.status]}
           </Label>
-          <SubLabel>{`${bond.accrued.prettify(2)} bLUSD`}</SubLabel>
+          <SubLabel style={{ fontWeight: 400 }}>
+            {bond.status === "PENDING" ? `${bond.accrued.prettify(2)} bLUSD` : ""}
+          </SubLabel>
         </>
       ),
       isSelected: true
@@ -40,9 +42,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
           <Label description="How many bLUSD are required to break-even at the current market price.">
             {l.BREAK_EVEN_TIME.term}
           </Label>
-          <SubLabel>{`${
-            "breakEvenAccrual" in bond ? bond.breakEvenAccrual.prettify(2) : "?"
-          } bLUSD`}</SubLabel>
+          <SubLabel>{`${bond?.breakEvenAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
     },
@@ -53,9 +53,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
           <Label description="How many bLUSD are recommended before claiming the bond, selling the bLUSD for LUSD, and then opening another bond.">
             {l.OPTIMUM_REBOND_TIME.term}
           </Label>
-          <SubLabel>{`${
-            "rebondAccrual" in bond ? bond.rebondAccrual.prettify(2) : "?"
-          } bLUSD`}</SubLabel>
+          <SubLabel>{`${bond?.rebondAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
     }
@@ -148,7 +146,7 @@ export const Bond: React.FC<BondProps> = ({ bond }) => {
               {bond.status === "PENDING" && (
                 <Record
                   name={l.MARKET_VALUE.term}
-                  value={"marketValue" in bond ? bond.marketValue.prettify(2) : "0"}
+                  value={bond?.marketValue?.prettify(2) ?? "0"}
                   type="LUSD"
                   description={l.MARKET_VALUE.description}
                 />

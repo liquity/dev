@@ -189,6 +189,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         max={marketPriceMax}
         type="LUSD"
         onSliderChange={value => setSimulatedMarketPrice(value)}
+        onReset={() => setSimulatedMarketPrice(protocolInfo.marketPrice)}
       />
 
       {!isInfiniteBondApproved && (

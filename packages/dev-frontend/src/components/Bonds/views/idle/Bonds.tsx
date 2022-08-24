@@ -11,7 +11,7 @@ export const Bonds: React.FC = () => {
 
   return (
     <>
-      {optimisticBond && <Bond bond={optimisticBond} /*style={{ zIndex: 1 }}*/ />}
+      {optimisticBond && <Bond bond={optimisticBond} />}
       {bonds.map((bond: BondType, idx: number) => {
         return <Bond bond={bond} key={idx} />;
       })}

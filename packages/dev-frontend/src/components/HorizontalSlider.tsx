@@ -1,4 +1,4 @@
-import { Flex, Card, Text, Slider as ThemeUiSlider } from "theme-ui";
+import { Flex, Card, Text, Slider as ThemeUiSlider, Button } from "theme-ui";
 import { Decimal } from "@liquity/lib-base";
 import { toFloat } from "./Bonds/utils";
 import { InfoIcon } from "./InfoIcon";
@@ -12,6 +12,7 @@ type SliderProps = {
   max: string;
   step?: number;
   onSliderChange: (value: Decimal) => void;
+  onReset?: () => void;
 };
 
 export const HorizontalSlider: React.FC<SliderProps> = ({
@@ -22,7 +23,8 @@ export const HorizontalSlider: React.FC<SliderProps> = ({
   min,
   max,
   step = 0.01,
-  onSliderChange
+  onSliderChange,
+  onReset
 }) => {
   return (
     <Flex mb={2} sx={{ flexDirection: "column" }}>
@@ -43,7 +45,7 @@ export const HorizontalSlider: React.FC<SliderProps> = ({
           {min}
         </Text>
         <ThemeUiSlider
-          defaultValue={toFloat(value)}
+          value={toFloat(value)}
           min={min}
           max={max}
           step={step}
@@ -53,8 +55,23 @@ export const HorizontalSlider: React.FC<SliderProps> = ({
           {max}
         </Text>
       </Flex>
-      <Flex sx={{ fontWeight: "400", justifyContent: "center" }}>
-        {value.prettify(2)} {type}
+      <Flex sx={{ fontWeight: "400", justifyContent: "center", alignItems: "center" }}>
+        <Text>
+          {value.prettify(2)} {type}
+        </Text>
+        {onReset && (
+          <Button
+            variant="icon"
+            sx={{
+              position: "absolute",
+              left: "58%",
+              fontSize: 1
+            }}
+            onClick={onReset}
+          >
+            Reset
+          </Button>
+        )}
       </Flex>
     </Flex>
   );
