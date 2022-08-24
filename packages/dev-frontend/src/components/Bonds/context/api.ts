@@ -294,7 +294,7 @@ const approveInfiniteBond = async (lusdToken: LUSDToken | undefined) => {
   if (lusdToken === undefined) throw new Error("approveInfiniteBond() failed: a dependency is null");
   console.log("approveInfiniteBond() started");
   try {
-    await lusdToken.approve(CHICKEN_BOND_MANAGER_ADDRESS, constants.MaxUint256._hex);
+    await (await lusdToken.approve(CHICKEN_BOND_MANAGER_ADDRESS, constants.MaxUint256._hex)).wait();
     console.log("approveInfiniteBond() succceeded");
   } catch (error: unknown) {
     throw new Error(`approveInfiniteBond() failed: ${error}`);
