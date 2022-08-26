@@ -3,6 +3,7 @@ import { Flex, Box, Text, Card } from "theme-ui";
 import type { ThemeUIStyleObject } from "theme-ui";
 import { InfoIcon } from "./InfoIcon";
 import { dateWithoutHours } from "./Bonds/utils";
+import { Placeholder } from "./Placeholder";
 
 const defaultCircleStyle = {
   height: 12,
@@ -54,6 +55,9 @@ const Line: React.FC<LineProps> = ({ style }) => {
   return <Box sx={{ ...defaultLineStyle, ...style }} />;
 };
 
+// Use the maximum possible date to represent unknown
+export const UNKNOWN_DATE = new Date(8640000000000000);
+
 export type EventType = {
   date: Date;
   label: React.ReactNode;
@@ -75,7 +79,18 @@ type LabelProps = {
 
 type SubLabelProps = { style?: ThemeUIStyleObject };
 export const SubLabel: React.FC<SubLabelProps> = ({ style, children }) => (
-  <Flex sx={{ fontWeight: 200, fontSize: "0.98em", alignSelf: "center", ...style }}>{children}</Flex>
+  <Flex
+    sx={{
+      fontWeight: 200,
+      fontSize: "0.98em",
+      alignSelf: "center",
+      justifyContent: "center",
+      flexGrow: 1,
+      ...style
+    }}
+  >
+    {children}
+  </Flex>
 );
 
 export const Label: React.FC<LabelProps> = ({ children, description, style }) => {
@@ -146,9 +161,17 @@ const Event: React.FC<EventProps> = ({ isFirst, isLast, date, label, idx, select
       ? "Now"
       : date.toLocaleDateString("en-GB", { month: "short", day: "2-digit", year: "numeric" });
 
+  const isUnknownDate = date === UNKNOWN_DATE;
+
   return (
     <Flex sx={{ flexDirection: "column", flexGrow: 1 }}>
-      <Text sx={{ fontWeight: 400, alignSelf: "center" }}>{dateText}</Text>
+      <Flex sx={{ justifyContent: "center" }}>
+        {isUnknownDate ? (
+          <Placeholder />
+        ) : (
+          <Text sx={{ fontWeight: 400, alignSelf: "center" }}>{dateText}</Text>
+        )}
+      </Flex>
       <Flex sx={{ my: 1, alignItems: "center" }}>
         <Line style={leftLineStyle} />
         <Circle style={circleStyle} />

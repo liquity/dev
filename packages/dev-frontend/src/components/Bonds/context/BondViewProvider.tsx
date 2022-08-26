@@ -10,7 +10,8 @@ import type {
   Treasury,
   BondTransactionStatuses,
   CreateBondPayload,
-  ProtocolInfo
+  ProtocolInfo,
+  OptimisticBond
 } from "./transitions";
 import { transitions } from "./transitions";
 import { Decimal } from "@liquity/lib-base";
@@ -41,6 +42,10 @@ import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import { api, _getProtocolInfo } from "./api";
 import LUSDTokenAbi from "@liquity/lib-ethers/abi/LUSDToken.json";
 import { useTransaction } from "../../../hooks/useTransaction";
+import { AppLoader } from "../../AppLoader";
+
+// Refresh backend values every 15 seconds
+const SYNCHRONIZE_INTERVAL_MS = 15 * 1000;
 
 const isValidEvent = (view: BondView, event: BondEvent): boolean => {
   return transitions[view][event] !== undefined;
@@ -63,21 +68,22 @@ export const BondViewProvider: React.FC = props => {
   const [view, setView] = useState<BondView>("IDLE");
   const viewRef = useRef<BondView>(view);
   const [selectedBondId, setSelectedBondId] = useState<string>();
-  const [optimisticBond, setOptimisticBond] = useState<Bond>();
-  const [shouldRefresh, setShouldRefresh] = useState<boolean>(true);
+  const [optimisticBond, setOptimisticBond] = useState<OptimisticBond>();
+  const [shouldSynchronize, setShouldSynchronize] = useState<boolean>(true);
   const [bonds, setBonds] = useState<Bond[]>();
   const [treasury, setTreasury] = useState<Treasury>();
   const [stats, setStats] = useState<Stats>();
   const [protocolInfo, setProtocolInfo] = useState<ProtocolInfo>();
   const [simulatedProtocolInfo, setSimulatedProtocolInfo] = useState<ProtocolInfo>();
   const [isInfiniteBondApproved, setIsInfiniteBondApproved] = useState(false);
-  const [isSynchronising, setIsSynchronising] = useState(true);
+  const [isSynchronizing, setIsSynchronizing] = useState(true);
   const [statuses, setStatuses] = useState<BondTransactionStatuses>({
     APPROVE: "IDLE",
     CREATE: "IDLE",
     CANCEL: "IDLE",
     CLAIM: "IDLE"
   });
+
   const [bLusdBalance, setBLusdBalance] = useState<Decimal>();
   const [lusdBalance, setLusdBalance] = useState<Decimal>();
 
@@ -125,6 +131,30 @@ export const BondViewProvider: React.FC = props => {
     setSimulatedProtocolInfo({ ...protocolInfo });
   }, [protocolInfo]);
 
+  const removeBondFromList = useCallback(
+    (bondId: string) => {
+      if (bonds === undefined) return;
+      const idx = bonds.findIndex(bond => bond.id === bondId);
+      const nextBonds = bonds.slice(0, idx).concat(bonds.slice(idx + 1));
+      setBonds(nextBonds);
+    },
+    [bonds]
+  );
+
+  const changeBondStatusToClaimed = useCallback(
+    (bondId: string) => {
+      if (bonds === undefined) return;
+      const idx = bonds.findIndex(bond => bond.id === bondId);
+      const updatedBond: Bond = { ...bonds[idx], status: "CLAIMED" };
+      const nextBonds = bonds
+        .slice(0, idx)
+        .concat(updatedBond)
+        .concat(bonds.slice(idx + 1));
+      setBonds(nextBonds);
+    },
+    [bonds]
+  );
+
   /***** TODO: REMOVE */
   const getLusdFromFaucet = useCallback(async () => {
     if (
@@ -133,7 +163,7 @@ export const BondViewProvider: React.FC = props => {
       "tap" in lusdToken
     ) {
       await (await ((lusdToken as unknown) as ERC20Faucet).tap()).wait();
-      setShouldRefresh(true);
+      setShouldSynchronize(true);
     }
   }, [lusdToken, account]);
 
@@ -148,7 +178,6 @@ export const BondViewProvider: React.FC = props => {
       }
     })();
   }, [account, liquity, lusdToken]);
-  /***** /TODO */
 
   useEffect(() => {
     (async () => {
@@ -157,6 +186,16 @@ export const BondViewProvider: React.FC = props => {
       setIsInfiniteBondApproved(isApproved);
     })();
   }, [lusdToken, account, isInfiniteBondApproved]);
+  /***** /TODO */
+
+  useEffect(() => {
+    if (isSynchronizing) return;
+    const timer = setTimeout(() => setShouldSynchronize(true), SYNCHRONIZE_INTERVAL_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isSynchronizing]);
 
   useEffect(() => {
     (async () => {
@@ -166,13 +205,13 @@ export const BondViewProvider: React.FC = props => {
         chickenBondManager === undefined ||
         bLusdToken === undefined ||
         bLusdAmm === undefined ||
-        !shouldRefresh
+        !shouldSynchronize
       ) {
         return;
       }
 
-      setShouldRefresh(false);
-      setIsSynchronising(true);
+      setShouldSynchronize(false);
+      setIsSynchronizing(true);
 
       const treasury = await api.getTreasury(chickenBondManager);
       const protocolInfo = await api.getProtocolInfo(
@@ -202,10 +241,10 @@ export const BondViewProvider: React.FC = props => {
       setStats(stats);
       setTreasury(treasury);
       setBonds(bonds);
-      setIsSynchronising(false);
+      setIsSynchronizing(false);
       setOptimisticBond(undefined);
     })();
-  }, [shouldRefresh, chickenBondManager, bondNft, bLusdToken, lusdToken, account, bLusdAmm]);
+  }, [shouldSynchronize, chickenBondManager, bondNft, bLusdToken, lusdToken, account, bLusdAmm]);
 
   const [approveInfiniteBond, approveStatus] = useTransaction(async () => {
     await api.approveInfiniteBond(lusdToken);
@@ -215,25 +254,14 @@ export const BondViewProvider: React.FC = props => {
   const [createBond, createStatus] = useTransaction(
     async (lusdAmount: Decimal) => {
       await api.createBond(lusdAmount, chickenBondManager);
-      const optimisticBond: Bond = {
-        id: "optimistic",
+      const optimisticBond: OptimisticBond = {
+        id: "OPTIMISTIC_BOND",
         deposit: lusdAmount,
-        startTime: Math.floor(Date.now() / 1000),
-        status: "PENDING",
-        accrued: Decimal.ZERO,
-        tokenUri: "TODO",
-        breakEvenTime: Math.floor((Date.now() + 2000000000) / 1000),
-        rebondTime: Math.floor((Date.now() + 2700000000) / 1000),
-        endTime: 0,
-        breakEvenAccrual: Decimal.ZERO,
-        rebondAccrual: Decimal.ZERO,
-        marketValue: Decimal.ZERO,
-        rebondReturn: "0",
-        claimNowReturn: "0",
-        rebondRoi: Decimal.ZERO
+        startTime: Date.now(),
+        status: "PENDING"
       };
       setOptimisticBond(optimisticBond);
-      setShouldRefresh(true);
+      setShouldSynchronize(true);
     },
     [chickenBondManager, lusdToken]
   );
@@ -241,17 +269,19 @@ export const BondViewProvider: React.FC = props => {
   const [cancelBond, cancelStatus] = useTransaction(
     async (bondId: string, minimumLusd: Decimal) => {
       await api.cancelBond(bondId, minimumLusd, chickenBondManager);
-      setShouldRefresh(true);
+      removeBondFromList(bondId);
+      setShouldSynchronize(true);
     },
-    [chickenBondManager]
+    [chickenBondManager, removeBondFromList]
   );
 
   const [claimBond, claimStatus] = useTransaction(
     async (bondId: string) => {
       await api.claimBond(bondId, chickenBondManager);
-      setShouldRefresh(true);
+      changeBondStatusToClaimed(bondId);
+      setShouldSynchronize(true);
     },
-    [chickenBondManager]
+    [chickenBondManager, changeBondStatusToClaimed]
   );
 
   const selectedBond = useMemo(() => bonds?.find(bond => bond.id === selectedBondId), [
@@ -261,11 +291,9 @@ export const BondViewProvider: React.FC = props => {
 
   const dispatchEvent = useCallback(
     async (event: BondEvent, payload?: Payload) => {
-      console.log(viewRef.current, event);
       if (!isValidEvent(viewRef.current, event)) return;
 
       const nextView = transition(viewRef.current, event);
-      console.log({ nextView });
       setView(nextView);
 
       if (payload && "bondId" in payload && payload.bondId !== selectedBondId) {
@@ -338,7 +366,7 @@ export const BondViewProvider: React.FC = props => {
     bLusdBalance,
     lusdBalance,
     isInfiniteBondApproved,
-    isSynchronising,
+    isSynchronizing,
     getLusdFromFaucet,
     setSimulatedMarketPrice,
     resetSimulatedMarketPrice,
@@ -347,6 +375,8 @@ export const BondViewProvider: React.FC = props => {
 
   // @ts-ignore // TODO REMOVE
   window.bonds = provider;
+
+  if (bonds === undefined) return <AppLoader />;
 
   return <BondViewContext.Provider value={provider}>{children}</BondViewContext.Provider>;
 };

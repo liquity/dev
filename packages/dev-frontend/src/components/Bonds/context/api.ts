@@ -29,10 +29,7 @@ const getAccountBonds = async (
   claimBondFee: Decimal,
   floorPrice: Decimal
 ): Promise<Bond[]> => {
-  console.log("getAccountBonds() started");
   const totalBonds = (await bondNft.balanceOf(account)).toNumber();
-
-  console.log("getAccountBonds()", { totalBonds });
 
   const bondIdRequests = Array.from(Array(totalBonds)).map((_, index) =>
     bondNft.tokenOfOwnerByIndex(account, index)
@@ -54,8 +51,6 @@ const getAccountBonds = async (
   const bondEndTimes = await Promise.all(bondRequests.endTimes);
   const bondStatuses = await Promise.all(bondRequests.statuses);
   const bondTokenUris = await Promise.all(bondRequests.tokenUris);
-
-  console.log("getAccountBonds()", { bondIds });
 
   const bonds = bondIds
     .reduce<Bond[]>((accumulator, _, idx) => {
@@ -110,7 +105,6 @@ const getAccountBonds = async (
       ];
     }, [])
     .sort((a, b) => (a.startTime > b.startTime ? -1 : a.startTime < b.startTime ? 1 : 0));
-  console.log("getAccountBonds() finished");
 
   return bonds;
 };

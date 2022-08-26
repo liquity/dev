@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { Flex, Button, Text, Spinner } from "theme-ui";
 import { ActionDescription } from "../../../../../ActionDescription";
 import { useBondView } from "../../../../context/BondViewContext";
 
 export const Cancel: React.FC = () => {
-  const { dispatchEvent, selectedBond: bond } = useBondView();
-  const [isProcessingTransaction, setIsProcessingTransaction] = useState(false);
+  const { dispatchEvent, selectedBond: bond, statuses } = useBondView();
+
+  const isProcessingTransaction = statuses.CANCEL === "PENDING";
 
   const handleConfirmPressed = () => {
-    setIsProcessingTransaction(true);
     dispatchEvent("CONFIRM_PRESSED");
   };
 
@@ -24,7 +24,6 @@ export const Cancel: React.FC = () => {
         You will receive your bonded{" "}
         <Text sx={{ fontWeight: "bold" }}>{bond.deposit.prettify(2)} LUSD</Text> back and forgo{" "}
         <Text sx={{ fontWeight: "bold" }}>{bond.accrued.shorten()} bLUSD</Text>
-        {isProcessingTransaction && <Flex mt={1}>Transaction processing...</Flex>}
       </ActionDescription>
 
       <Flex variant="layout.actions">

@@ -7,7 +7,8 @@ import type {
   Bond,
   Stats,
   BondTransactionStatuses,
-  ProtocolInfo
+  ProtocolInfo,
+  OptimisticBond
 } from "./transitions";
 import { PENDING_STATUS, CANCELLED_STATUS, CLAIMED_STATUS } from "../lexicon";
 import { Decimal } from "@liquity/lib-base";
@@ -24,12 +25,12 @@ export type BondViewContextType = {
   cancelBond: (bondId: string, minimumLusd: Decimal) => Promise<void>;
   claimBond: (bondId: string) => Promise<void>;
   selectedBond?: Bond;
-  optimisticBond?: Bond;
+  optimisticBond?: OptimisticBond;
   bLusdBalance?: Decimal;
   lusdBalance?: Decimal;
   statuses: BondTransactionStatuses;
   isInfiniteBondApproved: boolean;
-  isSynchronising: boolean;
+  isSynchronizing: boolean;
   getLusdFromFaucet: () => Promise<void>;
   simulatedProtocolInfo?: ProtocolInfo;
   setSimulatedMarketPrice: (marketPrice: Decimal) => void;
