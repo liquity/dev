@@ -1,6 +1,6 @@
 import React from "react";
 import { Web3ReactProvider } from "@web3-react/core";
-import { Flex, Spinner, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
+import { Flex, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
 
 import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { LiquityProvider } from "./hooks/LiquityContext";
@@ -12,6 +12,7 @@ import theme from "./theme";
 
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 import { LiquityFrontend } from "./LiquityFrontend";
+import { AppLoader } from "./components/AppLoader";
 
 if (window.ethereum) {
   // Silence MetaMask warning in console
@@ -71,13 +72,6 @@ const UnsupportedMainnetFallback: React.FC = () => (
 );
 
 const App = () => {
-  const loader = (
-    <Flex sx={{ alignItems: "center", justifyContent: "center", height: "100vh" }}>
-      <Spinner sx={{ m: 2, color: "text" }} size="32px" />
-      <Heading>Loading...</Heading>
-    </Flex>
-  );
-
   const unsupportedNetworkFallback = (chainId: number) => (
     <Flex
       sx={{
@@ -99,14 +93,14 @@ const App = () => {
   return (
     <EthersWeb3ReactProvider>
       <ThemeProvider theme={theme}>
-        <WalletConnector loader={loader}>
+        <WalletConnector loader={<AppLoader />}>
           <LiquityProvider
-            loader={loader}
+            loader={<AppLoader />}
             unsupportedNetworkFallback={unsupportedNetworkFallback}
             unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
           >
             <TransactionProvider>
-              <LiquityFrontend loader={loader} />
+              <LiquityFrontend loader={<AppLoader />} />
             </TransactionProvider>
           </LiquityProvider>
         </WalletConnector>

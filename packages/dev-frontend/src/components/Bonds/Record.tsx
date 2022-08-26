@@ -1,5 +1,6 @@
 import { ThemeUIStyleObject, Flex, Card, Text } from "theme-ui";
 import { InfoIcon } from "../InfoIcon";
+import { Placeholder } from "../Placeholder";
 
 type RecordType = {
   name: string;
@@ -16,9 +17,9 @@ export const Record: React.FC<RecordType> = ({ name, description, value, type, s
         {name} <InfoIcon size="xs" tooltip={<Card variant="tooltip">{description}</Card>} />
       </Flex>
       <Text as="h3" sx={{ display: "flex", justifyContent: "center" }}>
-        <Text sx={{ fontWeight: "400" }}>{value || "..."}</Text>
+        {value ? <Text sx={{ fontWeight: "400" }}>{value}</Text> : <Placeholder />}
         &nbsp;
-        <Text sx={{ fontWeight: "light", opacity: 0.8 }}>{type}</Text>
+        {value && <Text sx={{ fontWeight: "light", opacity: 0.8 }}>{type}</Text>}
       </Text>
     </Flex>
   );

@@ -88,6 +88,8 @@ export type Bond = {
   claimNowReturn: string;
 };
 
+export type OptimisticBond = Pick<Bond, "id" | "deposit" | "startTime" | "status">;
+
 export type Treasury = {
   pending: Decimal;
   reserve: Decimal;

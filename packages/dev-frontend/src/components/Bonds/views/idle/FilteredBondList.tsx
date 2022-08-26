@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useBondView } from "../../context/BondViewContext";
 import type { BondStatus, Bond as BondType } from "../../context/transitions";
 import { Bond } from "./Bond";
+import { OptimisticBond } from "./OptimisticBond";
 
 type BondFilter = "pending" | "claimed" | "cancelled";
 
@@ -19,14 +20,22 @@ type FilteredBondsParams = { bondFilter: BondFilter | "all" };
 export const FilteredBondList = () => {
   const { bonds, optimisticBond } = useBondView();
   const { bondFilter } = useParams<FilteredBondsParams>();
+
   if (bonds === undefined) return null;
 
+  const isAllOrPending = bondFilter === "all" || bondFilter === "pending";
+  const showOptimisticBond = optimisticBond !== undefined && isAllOrPending;
+
   const filteredBonds = bondFilter === "all" ? bonds : getFilteredBonds(bonds, bondFilter);
+
   return (
     <>
-      {optimisticBond && <Bond bond={optimisticBond} style={{ mt: "16px" }} />}
+      {
+        // @ts-ignore (TS doesn't realise optimisticBond can't be undefined here)
+        showOptimisticBond && <OptimisticBond bond={optimisticBond} style={{ mt: "16px" }} />
+      }
       {filteredBonds.map((bond: BondType, idx: number) => {
-        const isFirst = idx === 0 && !optimisticBond;
+        const isFirst = idx === 0 && !showOptimisticBond;
         const style = { mt: isFirst ? "16px" : "32px" };
         return <Bond bond={bond} key={idx} style={style} />;
       })}

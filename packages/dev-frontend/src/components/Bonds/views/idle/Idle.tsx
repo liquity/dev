@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Box, Heading, Flex, Button, Spinner, Container } from "theme-ui";
+import { Card, Box, Heading, Flex, Button } from "theme-ui";
 import { Empty } from "./Empty";
 import { BondList } from "./BondList";
 import { useBondView } from "../../context/BondViewContext";
@@ -8,13 +8,11 @@ import { InfoIcon } from "../../../InfoIcon";
 import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 
 export const Idle: React.FC = () => {
-  const { dispatchEvent, bonds, isSynchronising, getLusdFromFaucet, lusdBalance } = useBondView();
-
-  if (lusdBalance === undefined) return null;
+  const { dispatchEvent, bonds, isSynchronizing, getLusdFromFaucet, lusdBalance } = useBondView();
 
   const hasBonds = bonds !== undefined && bonds.length > 0;
 
-  const showLusdFaucet = LUSD_OVERRIDE_ADDRESS !== null && lusdBalance.eq(0);
+  const showLusdFaucet = LUSD_OVERRIDE_ADDRESS !== null && lusdBalance?.eq(0);
 
   return (
     <>
@@ -25,26 +23,17 @@ export const Idle: React.FC = () => {
           </Button>
         </Flex>
       )}
-      {(hasBonds || isSynchronising) && (
+      {hasBonds && (
         <>
-          <Flex variant="layout.actions" mt={4}>
-            <Flex sx={{ alignItems: "center" }}>
-              {isSynchronising && <>Fetching latest bond data...</>}
-            </Flex>
-            <Button
-              variant="primary"
-              onClick={() => dispatchEvent("CREATE_BOND_PRESSED")}
-              disabled={isSynchronising}
-            >
-              {!isSynchronising && <>Create another bond</>}
-              {isSynchronising && <Spinner size="28px" sx={{ color: "white" }} />}
+          <Flex mt={4} variant="layout.actions">
+            <Button variant="primary" onClick={() => dispatchEvent("CREATE_BOND_PRESSED")}>
+              Create another bond
             </Button>
           </Flex>
           <BondList />
-          {isSynchronising && <Container variant="disabledOverlay" />}
         </>
       )}
-      {!hasBonds && !isSynchronising && (
+      {!hasBonds && !isSynchronizing && (
         <Card>
           <Heading>
             <Flex>
