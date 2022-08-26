@@ -3,9 +3,22 @@ import { useBondView } from "./context/BondViewContext";
 import { Idle } from "./views/idle/Idle";
 import { Actioning } from "./views/actioning/Actioning";
 import { Creating } from "./views/creating/Creating";
+import { InfoMessage } from "../InfoMessage";
+import { Container } from "theme-ui";
 
 export const Bonds: React.FC = () => {
-  const { view } = useBondView();
+  const { view, hasFoundContracts } = useBondView();
+
+  if (!hasFoundContracts) {
+    return (
+      <Container sx={{ position: "absolute", left: "30%", top: "40%" }}>
+        <InfoMessage title="Unsupported network">
+          LUSD Bonds haven't been deployed to this network. Please use Ethereum mainnet.
+        </InfoMessage>
+      </Container>
+    );
+  }
+
   let View = null;
   switch (view) {
     case "CANCELLING":

@@ -15,34 +15,13 @@ import type {
 } from "./transitions";
 import { transitions } from "./transitions";
 import { Decimal } from "@liquity/lib-base";
-import { useContract } from "../../../hooks/useContract";
 import { useLiquity } from "../../../hooks/LiquityContext";
-import type { CurveCryptoSwap2ETH } from "@liquity/chicken-bonds/lusd/types/external";
-import { CurveCryptoSwap2ETH__factory } from "@liquity/chicken-bonds/lusd/types/external";
-import {
-  BLUSDToken,
-  BondNFT,
-  ChickenBondManager,
-  ERC20Faucet,
-  ERC20Faucet__factory
-} from "@liquity/chicken-bonds/lusd/types";
-import {
-  BLUSDToken__factory,
-  BondNFT__factory,
-  ChickenBondManager__factory
-} from "@liquity/chicken-bonds/lusd/types";
-import {
-  BLUSD_AMM_ADDRESS,
-  BLUSD_TOKEN_ADDRESS,
-  BOND_NFT_ADDRESS,
-  CHICKEN_BOND_MANAGER_ADDRESS,
-  LUSD_OVERRIDE_ADDRESS
-} from "@liquity/chicken-bonds/lusd/addresses";
-import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import { api, _getProtocolInfo } from "./api";
-import LUSDTokenAbi from "@liquity/lib-ethers/abi/LUSDToken.json";
 import { useTransaction } from "../../../hooks/useTransaction";
 import { AppLoader } from "../../AppLoader";
+import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
+import type { ERC20Faucet } from "@liquity/chicken-bonds/lusd/types";
+import { useBondContracts } from "./useBondContracts";
 
 // Refresh backend values every 15 seconds
 const SYNCHRONIZE_INTERVAL_MS = 15 * 1000;
@@ -83,34 +62,17 @@ export const BondViewProvider: React.FC = props => {
     CANCEL: "IDLE",
     CLAIM: "IDLE"
   });
-
   const [bLusdBalance, setBLusdBalance] = useState<Decimal>();
   const [lusdBalance, setLusdBalance] = useState<Decimal>();
-
   const { account, liquity } = useLiquity();
-  const lusdTokenDefault = useContract<LUSDToken>(
-    liquity.connection.addresses.lusdToken,
-    LUSDTokenAbi
-  );
-  const lusdTokenOverride = useContract<ERC20Faucet>(
-    LUSD_OVERRIDE_ADDRESS,
-    ERC20Faucet__factory.abi
-  );
-
-  const lusdToken = (LUSD_OVERRIDE_ADDRESS === null
-    ? lusdTokenDefault
-    : lusdTokenOverride) as LUSDToken;
-
-  const bondNft = useContract<BondNFT>(BOND_NFT_ADDRESS, BondNFT__factory.abi);
-  const chickenBondManager = useContract<ChickenBondManager>(
-    CHICKEN_BOND_MANAGER_ADDRESS,
-    ChickenBondManager__factory.abi
-  );
-  const bLusdToken = useContract<BLUSDToken>(BLUSD_TOKEN_ADDRESS, BLUSDToken__factory.abi);
-  const bLusdAmm = useContract<CurveCryptoSwap2ETH>(
-    BLUSD_AMM_ADDRESS,
-    CurveCryptoSwap2ETH__factory.abi
-  );
+  const {
+    lusdToken,
+    bLusdToken,
+    bondNft,
+    chickenBondManager,
+    bLusdAmm,
+    hasFoundContracts
+  } = useBondContracts();
 
   const setSimulatedMarketPrice = useCallback(
     (marketPrice: Decimal) => {
@@ -157,6 +119,7 @@ export const BondViewProvider: React.FC = props => {
 
   /***** TODO: REMOVE */
   const getLusdFromFaucet = useCallback(async () => {
+    if (lusdToken === undefined) return;
     if (
       LUSD_OVERRIDE_ADDRESS !== null &&
       (await lusdToken.balanceOf(account)).eq(0) &&
@@ -370,13 +333,15 @@ export const BondViewProvider: React.FC = props => {
     getLusdFromFaucet,
     setSimulatedMarketPrice,
     resetSimulatedMarketPrice,
-    simulatedProtocolInfo
+    simulatedProtocolInfo,
+    hasFoundContracts
   };
 
   // @ts-ignore // TODO REMOVE
   window.bonds = provider;
 
-  if (bonds === undefined) return <AppLoader />;
+  // If contracts don't load it means they're not deployed, we shouldn't block the app from running in this case
+  if (bonds === undefined && hasFoundContracts) return <AppLoader />;
 
   return <BondViewContext.Provider value={provider}>{children}</BondViewContext.Provider>;
 };

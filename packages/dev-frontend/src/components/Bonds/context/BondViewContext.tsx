@@ -35,6 +35,7 @@ export type BondViewContextType = {
   simulatedProtocolInfo?: ProtocolInfo;
   setSimulatedMarketPrice: (marketPrice: Decimal) => void;
   resetSimulatedMarketPrice: () => void;
+  hasFoundContracts: boolean;
 };
 
 export const BondViewContext = createContext<BondViewContextType | null>(null);

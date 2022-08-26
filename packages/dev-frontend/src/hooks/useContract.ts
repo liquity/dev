@@ -2,12 +2,15 @@ import { useState, useEffect } from "react";
 import { ContractInterface, ethers } from "ethers";
 import { useLiquity } from "./LiquityContext";
 
+type ContractStatus = "UNKNOWN" | "LOADED" | "FAILED";
+type Contract<TContractType> = { instance: TContractType | undefined; status: ContractStatus };
+
 export function useContract<TContractType>(
   address: string | null,
   abi: ContractInterface
-): TContractType | undefined {
+): [TContractType | undefined, ContractStatus] {
   const { provider, liquity } = useLiquity();
-  const [contract, setContract] = useState<TContractType>();
+  const [contract, setContract] = useState<Contract<TContractType>>();
 
   useEffect(() => {
     (async () => {
@@ -24,8 +27,9 @@ export function useContract<TContractType>(
           liquity.connection.signer
         ) as unknown) as TContractType;
 
-        setContract(connectedContract);
+        setContract({ instance: connectedContract, status: "LOADED" });
       } catch (e) {
+        setContract({ instance: undefined, status: "FAILED" });
         console.error(e);
         console.error(
           `Contract ${address} doesn't appear to be deployed. Did you forget to re-run yarn deploy:chicken-bonds?`
@@ -34,5 +38,5 @@ export function useContract<TContractType>(
     })();
   }, [provider, liquity.connection.signer, address, abi, contract]);
 
-  return contract;
+  return [contract?.instance, contract?.status || "UNKNOWN"];
 }
