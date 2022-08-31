@@ -1,6 +1,8 @@
 import { Decimal } from "@liquity/lib-base";
 import React, { useEffect, useState } from "react";
 import { Flex, Button, Spinner, Heading, Close } from "theme-ui";
+import { Amount } from "../../../ActionDescription";
+import { ErrorDescription } from "../../../ErrorDescription";
 import { Icon } from "../../../Icon";
 import { DisabledEditableRow, EditableRow, StaticRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
@@ -27,9 +29,9 @@ export const SwapPane: React.FC = () => {
     getExpectedSwapOutput
   } = useBondView();
   const inputAmountEditingState = useState<string>();
-  const maxInputAmount =
+  const inputTokenBalance =
     (inputToken === BLusdAmmTokenIndex.BLUSD ? bLusdBalance : lusdBalance) ?? Decimal.ZERO;
-  const [inputAmount, setInputAmount] = useState<Decimal>(maxInputAmount);
+  const [inputAmount, setInputAmount] = useState<Decimal>(inputTokenBalance);
   const [outputAmount, setOutputAmount] = useState<Decimal>(Decimal.ZERO);
   const [exchangeRate, setExchangeRate] = useState<Decimal>(Decimal.ZERO);
 
@@ -40,6 +42,8 @@ export const SwapPane: React.FC = () => {
     }[inputToken] === "PENDING";
 
   const isSwapPending = statuses.SWAP === "PENDING";
+
+  const isBalanceInsufficient = inputAmount.gt(inputTokenBalance);
 
   const handleDismiss = () => {
     dispatchEvent("ABORT_PRESSED");
@@ -106,8 +110,8 @@ export const SwapPane: React.FC = () => {
         editingState={inputAmountEditingState}
         editedAmount={inputAmount.toString()}
         setEditedAmount={amount => setInputAmount(Decimal.from(amount))}
-        maxAmount={maxInputAmount.toString()}
-        maxedOut={inputAmount.eq(maxInputAmount)}
+        maxAmount={inputTokenBalance.toString()}
+        maxedOut={inputAmount.eq(inputTokenBalance)}
       />
 
       <Flex sx={{ justifyContent: "center", mb: 3 }}>
@@ -128,6 +132,15 @@ export const SwapPane: React.FC = () => {
         unit={`${tokenSymbol[inputToken]}:${tokenSymbol[outputToken[inputToken]]}`}
       />
 
+      {isBalanceInsufficient && (
+        <ErrorDescription>
+          Amount exceeds your balance by{" "}
+          <Amount>
+            {inputAmount.sub(inputTokenBalance).prettify(2)} {tokenSymbol[inputToken]}
+          </Amount>
+        </ErrorDescription>
+      )}
+
       <Flex variant="layout.actions">
         <Button
           variant="cancel"
@@ -138,14 +151,16 @@ export const SwapPane: React.FC = () => {
         </Button>
 
         {isInputTokenApprovedWithBLusdAmm ? (
-          <Button variant="primary" onClick={handleConfirmPressed} disabled={isSwapPending}>
-            {!isSwapPending && <>Confirm</>}
-            {isSwapPending && <Spinner size="28px" sx={{ color: "white" }} />}
+          <Button
+            variant="primary"
+            onClick={handleConfirmPressed}
+            disabled={isBalanceInsufficient || isSwapPending}
+          >
+            {isSwapPending ? <Spinner size="28px" sx={{ color: "white" }} /> : <>Confirm</>}
           </Button>
         ) : (
           <Button variant="primary" onClick={handleApprovePressed} disabled={isApprovePending}>
-            {!isApprovePending && <>Approve</>}
-            {isApprovePending && <Spinner size="28px" sx={{ color: "white" }} />}
+            {isApprovePending ? <Spinner size="28px" sx={{ color: "white" }} /> : <>Approve</>}
           </Button>
         )}
       </Flex>
