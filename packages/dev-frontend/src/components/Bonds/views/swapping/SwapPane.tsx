@@ -91,7 +91,9 @@ export const SwapPane: React.FC = () => {
   return (
     <>
       <Heading as="h2" sx={{ pt: 2, pb: 3, px: 2 }}>
-        <Flex sx={{ justifyContent: "center" }}>Sell bLUSD</Flex>
+        <Flex sx={{ justifyContent: "center" }}>
+          {inputToken === BLusdAmmTokenIndex.BLUSD ? <>Sell</> : <>Buy</>} bLUSD
+        </Flex>
         <Close
           onClick={handleDismiss}
           sx={{

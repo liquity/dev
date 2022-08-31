@@ -6,34 +6,46 @@ import { useBondView } from "../../context/BondViewContext";
 import { BONDS } from "../../lexicon";
 import { InfoIcon } from "../../../InfoIcon";
 import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
+import { BLusdAmmTokenIndex, SwapPressedPayload } from "../../context/transitions";
 
 export const Idle: React.FC = () => {
-  const { dispatchEvent, bonds, isSynchronizing, getLusdFromFaucet, lusdBalance } = useBondView();
+  const { dispatchEvent, bonds, getLusdFromFaucet, lusdBalance } = useBondView();
 
   const hasBonds = bonds !== undefined && bonds.length > 0;
 
   const showLusdFaucet = LUSD_OVERRIDE_ADDRESS !== null && lusdBalance?.eq(0);
 
+  const handleBuyBLusdPressed = () =>
+    dispatchEvent("SWAP_PRESSED", { inputToken: BLusdAmmTokenIndex.LUSD } as SwapPressedPayload);
+
+  const handleSellBLusdPressed = () =>
+    dispatchEvent("SWAP_PRESSED", { inputToken: BLusdAmmTokenIndex.BLUSD } as SwapPressedPayload);
+
   return (
     <>
-      {showLusdFaucet && (
-        <Flex variant="layout.actions" mt={4}>
+      <Flex variant="layout.actions" mt={4}>
+        <Button variant="outline" onClick={handleBuyBLusdPressed}>
+          Buy bLUSD
+        </Button>
+
+        <Button variant="outline" onClick={handleSellBLusdPressed}>
+          Sell bLUSD
+        </Button>
+
+        {showLusdFaucet && (
           <Button variant="outline" onClick={() => getLusdFromFaucet()}>
             Get 10k LUSD
           </Button>
-        </Flex>
-      )}
-      {hasBonds && (
-        <>
-          <Flex mt={4} variant="layout.actions">
-            <Button variant="primary" onClick={() => dispatchEvent("CREATE_BOND_PRESSED")}>
-              Create another bond
-            </Button>
-          </Flex>
-          <BondList />
-        </>
-      )}
-      {!hasBonds && !isSynchronizing && (
+        )}
+
+        {hasBonds && (
+          <Button variant="primary" onClick={() => dispatchEvent("CREATE_BOND_PRESSED")}>
+            Create another bond
+          </Button>
+        )}
+      </Flex>
+
+      {!hasBonds && (
         <Card>
           <Heading>
             <Flex>
@@ -56,6 +68,8 @@ export const Idle: React.FC = () => {
           </Box>
         </Card>
       )}
+
+      {hasBonds && <BondList />}
     </>
   );
 };
