@@ -1,11 +1,16 @@
-import { Card, Flex, Button, Link, Image, ThemeUIStyleObject } from "theme-ui";
+import { Card, Flex, Button, Image, ThemeUIStyleObject } from "theme-ui";
 import { EventType, HorizontalTimeline, UNKNOWN_DATE } from "../../../HorizontalTimeline";
 import { nfts } from "../../context/BondViewProvider";
 import { Record } from "../../Record";
 import { Actions } from "./actions/Actions";
-import type { OptimisticBond as OptimisticBondType } from "../../context/transitions";
+import {
+  BLusdAmmTokenIndex,
+  OptimisticBond as OptimisticBondType,
+  SwapPressedPayload
+} from "../../context/transitions";
 import { Label, SubLabel } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
+import { useBondView } from "../../context/BondViewContext";
 
 const getBondEvents = (bond: OptimisticBondType): EventType[] => {
   return [
@@ -61,6 +66,11 @@ type BondProps = { bond: OptimisticBondType; style?: ThemeUIStyleObject };
 
 export const OptimisticBond: React.FC<BondProps> = ({ bond, style }) => {
   const events = getBondEvents(bond);
+  const { dispatchEvent } = useBondView();
+
+  const handleSellBLusdPressed = () => {
+    dispatchEvent("SWAP_PRESSED", { inputToken: BLusdAmmTokenIndex.BLUSD } as SwapPressedPayload);
+  };
 
   return (
     <Flex
@@ -157,15 +167,8 @@ export const OptimisticBond: React.FC<BondProps> = ({ bond, style }) => {
             </Flex>
             {bond.status === "PENDING" && <Actions bondId={bond.id} disabled />}
             {bond.status !== "PENDING" && bond.status === "CLAIMED" && (
-              <Button variant="outline" sx={{ height: "44px" }}>
-                <Link
-                  variant="outline"
-                  href="https://curve.fi"
-                  sx={{ textDecoration: "none" }}
-                  target="external"
-                >
-                  Sell bLUSD
-                </Link>
+              <Button variant="outline" sx={{ height: "44px" }} onClick={handleSellBLusdPressed}>
+                Sell bLUSD
               </Button>
             )}
           </Flex>

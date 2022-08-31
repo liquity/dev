@@ -27,7 +27,8 @@ import {
   faPen,
   faHandPaper,
   faHeartbeat,
-  faBars
+  faBars,
+  faArrowDown
 } from "@fortawesome/free-solid-svg-icons";
 import { faClipboard, faQuestionCircle } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon, FontAwesomeIconProps } from "@fortawesome/react-fontawesome";
@@ -61,7 +62,8 @@ library.add(
   faHandPaper,
   faHeartbeat,
   faBars,
-  faQuestionCircle
+  faQuestionCircle,
+  faArrowDown
 );
 
 const getIcon = (name: IconName): IconProp => {

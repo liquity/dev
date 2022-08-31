@@ -4,8 +4,9 @@ type Idle = "IDLE";
 type Creating = "CREATING";
 type Cancelling = "CANCELLING";
 type Claiming = "CLAIMING";
+type Swapping = "SWAPPING";
 
-export type BondView = Idle | Creating | Cancelling | Claiming;
+export type BondView = Idle | Creating | Cancelling | Claiming | Swapping;
 
 /* UI events */
 type CreateBondPressed = "CREATE_BOND_PRESSED";
@@ -15,23 +16,27 @@ type ApprovePressed = "APPROVE_PRESSED";
 type ConfirmPressed = "CONFIRM_PRESSED";
 type CancelBondPressed = "CANCEL_BOND_PRESSED";
 type ClaimBondPressed = "CLAIM_BOND_PRESSED";
+type SwapPressed = "SWAP_PRESSED";
 
 /* On-chain events */
 type CreateBondConfirmed = "CREATE_BOND_CONFIRMED";
 type CancelBondConfirmed = "CANCEL_BOND_CONFIRMED";
 type ClaimBondConfirmed = "CLAIM_BOND_CONFIRMED";
+type SwapConfirmed = "SWAP_CONFIRMED";
 
 export type BondEvent =
   | CreateBondPressed
   | CancelBondPressed
   | ClaimBondPressed
+  | SwapPressed
   | ApprovePressed
   | ConfirmPressed
   | CancelPressed
   | BackPressed
   | CreateBondConfirmed
   | CancelBondConfirmed
-  | ClaimBondConfirmed;
+  | ClaimBondConfirmed
+  | SwapConfirmed;
 
 type BondEventTransitions = Record<BondView, Partial<Record<BondEvent, BondView>>>;
 
@@ -39,7 +44,8 @@ export const transitions: BondEventTransitions = {
   IDLE: {
     CREATE_BOND_PRESSED: "CREATING",
     CANCEL_BOND_PRESSED: "CANCELLING",
-    CLAIM_BOND_PRESSED: "CLAIMING"
+    CLAIM_BOND_PRESSED: "CLAIMING",
+    SWAP_PRESSED: "SWAPPING"
   },
   CREATING: {
     ABORT_PRESSED: "IDLE",
@@ -59,14 +65,34 @@ export const transitions: BondEventTransitions = {
     BACK_PRESSED: "IDLE",
     CONFIRM_PRESSED: "CANCELLING",
     CANCEL_BOND_CONFIRMED: "IDLE"
+  },
+  SWAPPING: {
+    ABORT_PRESSED: "IDLE",
+    BACK_PRESSED: "IDLE",
+    CONFIRM_PRESSED: "SWAPPING",
+    SWAP_CONFIRMED: "IDLE"
   }
 };
+
+export enum BLusdAmmTokenIndex {
+  BLUSD,
+  LUSD
+}
 
 export type CreateBondPayload = { deposit: Decimal };
 
 export type SelectBondPayload = { bondId: string };
 
-export type Payload = CreateBondPayload | SelectBondPayload;
+export type SwapPressedPayload = {
+  inputToken: BLusdAmmTokenIndex;
+};
+
+export type SwapPayload = {
+  inputAmount: Decimal;
+  minOutputAmount: Decimal;
+};
+
+export type Payload = CreateBondPayload | SelectBondPayload | SwapPressedPayload | SwapPayload;
 
 export type BondStatus = "NON_EXISTENT" | "PENDING" | "CANCELLED" | "CLAIMED";
 
@@ -123,6 +149,6 @@ export type ProtocolInfo = {
 };
 
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";
-export type BondTransaction = "APPROVE" | "CREATE" | "CANCEL" | "CLAIM";
+export type BondTransaction = "APPROVE" | "CREATE" | "CANCEL" | "CLAIM" | "SWAP";
 
 export type BondTransactionStatuses = Record<BondTransaction, TransactionStatus>;

@@ -13,7 +13,12 @@ import type {
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
+import { BLusdAmmTokenIndex } from "./transitions";
 import { numberify, decimalify, getBondAgeInDays, milliseconds, toFloat, getReturn } from "../utils";
+import {
+  TokenExchangeEvent,
+  TokenExchangeEventObject
+} from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
 
 type Maybe<T> = T | undefined;
 
@@ -357,6 +362,45 @@ const claimBond = async (
   }
 };
 
+const getOtherToken = (thisToken: BLusdAmmTokenIndex) =>
+  thisToken === BLusdAmmTokenIndex.BLUSD ? BLusdAmmTokenIndex.LUSD : BLusdAmmTokenIndex.BLUSD;
+
+const getExpectedSwapOutput = async (
+  inputToken: BLusdAmmTokenIndex,
+  inputAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH
+): Promise<Decimal> =>
+  decimalify(await bLusdAmm.get_dy(inputToken, getOtherToken(inputToken), inputAmount.hex));
+
+const swapTokens = async (
+  inputToken: BLusdAmmTokenIndex,
+  inputAmount: Decimal,
+  minOutputAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<TokenExchangeEventObject> => {
+  if (bLusdAmm === undefined) throw new Error("swapTokens() failed: a dependency is null");
+
+  const receipt = await (
+    await bLusdAmm["exchange(uint256,uint256,uint256,uint256)"](
+      inputToken,
+      getOtherToken(inputToken),
+      inputAmount.hex,
+      minOutputAmount.hex
+    )
+  ).wait();
+
+  const exchangeEvent = receipt?.events?.find(
+    e => e.event === "TokenExchange"
+  ) as Maybe<TokenExchangeEvent>;
+
+  if (exchangeEvent === undefined) {
+    throw new Error("swapTokens() failed: couldn't find TokenExchange event");
+  }
+
+  console.log("swapTokens() finished:", exchangeEvent.args);
+  return exchangeEvent.args;
+};
+
 export const api = {
   getAccountBonds,
   getStats,
@@ -368,5 +412,7 @@ export const api = {
   isInfiniteBondApproved,
   createBond,
   cancelBond,
-  claimBond
+  claimBond,
+  getExpectedSwapOutput,
+  swapTokens
 };

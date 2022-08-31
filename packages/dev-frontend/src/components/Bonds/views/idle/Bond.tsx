@@ -1,12 +1,12 @@
-import { Card, Flex, Button, Link, Image, ThemeUIStyleObject } from "theme-ui";
+import { Card, Flex, Button, Image, ThemeUIStyleObject } from "theme-ui";
 import { EventType, HorizontalTimeline } from "../../../HorizontalTimeline";
 import { nfts } from "../../context/BondViewProvider";
 import { Record } from "../../Record";
 import { Actions } from "./actions/Actions";
-import type { Bond as BondType } from "../../context/transitions";
+import { BLusdAmmTokenIndex, Bond as BondType, SwapPressedPayload } from "../../context/transitions";
 import { Label, SubLabel } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
-import { statuses } from "../../context/BondViewContext";
+import { statuses, useBondView } from "../../context/BondViewContext";
 
 const getBondEvents = (bond: BondType): EventType[] => {
   return [
@@ -64,6 +64,11 @@ type BondProps = { bond: BondType; style?: ThemeUIStyleObject };
 
 export const Bond: React.FC<BondProps> = ({ bond, style }) => {
   const events = getBondEvents(bond);
+  const { dispatchEvent } = useBondView();
+
+  const handleSellBLusdPressed = () => {
+    dispatchEvent("SWAP_PRESSED", { inputToken: BLusdAmmTokenIndex.BLUSD } as SwapPressedPayload);
+  };
 
   return (
     <Flex
@@ -161,15 +166,8 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
             </Flex>
             {bond.status === "PENDING" && <Actions bondId={bond.id} />}
             {bond.status !== "PENDING" && bond.status === "CLAIMED" && (
-              <Button variant="outline" sx={{ height: "44px" }}>
-                <Link
-                  variant="outline"
-                  href="https://curve.fi"
-                  sx={{ textDecoration: "none" }}
-                  target="external"
-                >
-                  Sell bLUSD
-                </Link>
+              <Button variant="outline" sx={{ height: "44px" }} onClick={handleSellBLusdPressed}>
+                Sell bLUSD
               </Button>
             )}
           </Flex>
