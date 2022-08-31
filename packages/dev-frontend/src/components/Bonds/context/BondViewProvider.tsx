@@ -57,6 +57,8 @@ export const BondViewProvider: React.FC = props => {
   const [protocolInfo, setProtocolInfo] = useState<ProtocolInfo>();
   const [simulatedProtocolInfo, setSimulatedProtocolInfo] = useState<ProtocolInfo>();
   const [isInfiniteBondApproved, setIsInfiniteBondApproved] = useState(false);
+  const [isLusdApprovedWithBlusdAmm, setIsLusdApprovedWithBlusdAmm] = useState(false);
+  const [isBLusdApprovedWithBlusdAmm, setIsBLusdApprovedWithBlusdAmm] = useState(false);
   const [isSynchronizing, setIsSynchronizing] = useState(true);
   const [inputToken, setInputToken] = useState<BLusdAmmTokenIndex>(BLusdAmmTokenIndex.BLUSD);
   const [statuses, setStatuses] = useState<BondTransactionStatuses>({
@@ -64,6 +66,8 @@ export const BondViewProvider: React.FC = props => {
     CREATE: "IDLE",
     CANCEL: "IDLE",
     CLAIM: "IDLE",
+    APPROVE_AMM_LUSD: "IDLE",
+    APPROVE_AMM_BLUSD: "IDLE",
     SWAP: "IDLE"
   });
   const [bLusdBalance, setBLusdBalance] = useState<Decimal>();
@@ -156,6 +160,24 @@ export const BondViewProvider: React.FC = props => {
   /***** /TODO */
 
   useEffect(() => {
+    (async () => {
+      if (lusdToken === undefined || account === undefined || isLusdApprovedWithBlusdAmm) return;
+      const isApproved = await api.isTokenApprovedWithBLusdAmm(account, lusdToken);
+      setIsLusdApprovedWithBlusdAmm(isApproved);
+    })();
+  }, [lusdToken, account, isLusdApprovedWithBlusdAmm]);
+  /***** /TODO */
+
+  useEffect(() => {
+    (async () => {
+      if (bLusdToken === undefined || account === undefined || isBLusdApprovedWithBlusdAmm) return;
+      const isApproved = await api.isTokenApprovedWithBLusdAmm(account, bLusdToken);
+      setIsBLusdApprovedWithBlusdAmm(isApproved);
+    })();
+  }, [bLusdToken, account, isBLusdApprovedWithBlusdAmm]);
+  /***** /TODO */
+
+  useEffect(() => {
     if (isSynchronizing) return;
     const timer = setTimeout(() => setShouldSynchronize(true), SYNCHRONIZE_INTERVAL_MS);
 
@@ -217,6 +239,16 @@ export const BondViewProvider: React.FC = props => {
     await api.approveInfiniteBond(lusdToken);
     setIsInfiniteBondApproved(true);
   }, [lusdToken]);
+
+  const [approveLusdWithBLusdAmm, approveLusdWithBLusdAmmStatus] = useTransaction(async () => {
+    await api.approveTokenWithBLusdAmm(lusdToken);
+    setIsLusdApprovedWithBlusdAmm(true);
+  }, [lusdToken]);
+
+  const [approveBLusdWithBLusdAmm, approveBLusdWithBLusdAmmStatus] = useTransaction(async () => {
+    await api.approveTokenWithBLusdAmm(bLusdToken);
+    setIsBLusdApprovedWithBlusdAmm(true);
+  }, [bLusdToken]);
 
   const [createBond, createStatus] = useTransaction(
     async (lusdAmount: Decimal) => {
@@ -306,6 +338,12 @@ export const BondViewProvider: React.FC = props => {
           }
           await cancelBond(selectedBond.id, selectedBond.deposit);
           await dispatchEvent("CANCEL_BOND_CONFIRMED");
+        } else if (isCurrentViewEvent("SWAPPING", "APPROVE_PRESSED")) {
+          if (inputToken === BLusdAmmTokenIndex.BLUSD) {
+            await approveBLusdWithBLusdAmm();
+          } else {
+            await approveLusdWithBLusdAmm();
+          }
         } else if (isCurrentViewEvent("SWAPPING", "CONFIRM_PRESSED")) {
           const { inputAmount, minOutputAmount } = payload as SwapPayload;
           await swapTokens(inputToken, inputAmount, minOutputAmount);
@@ -331,6 +369,8 @@ export const BondViewProvider: React.FC = props => {
       cancelBond,
       claimBond,
       selectedBond,
+      approveBLusdWithBLusdAmm,
+      approveLusdWithBLusdAmm,
       swapTokens,
       inputToken
     ]
@@ -343,9 +383,19 @@ export const BondViewProvider: React.FC = props => {
       CREATE: createStatus,
       CANCEL: cancelStatus,
       CLAIM: claimStatus,
+      APPROVE_AMM_BLUSD: approveBLusdWithBLusdAmmStatus,
+      APPROVE_AMM_LUSD: approveLusdWithBLusdAmmStatus,
       SWAP: swapStatus
     }));
-  }, [approveStatus, createStatus, cancelStatus, claimStatus, swapStatus]);
+  }, [
+    approveStatus,
+    createStatus,
+    cancelStatus,
+    claimStatus,
+    approveBLusdWithBLusdAmmStatus,
+    approveLusdWithBLusdAmmStatus,
+    swapStatus
+  ]);
 
   useEffect(() => {
     viewRef.current = view;
@@ -375,6 +425,10 @@ export const BondViewProvider: React.FC = props => {
     simulatedProtocolInfo,
     hasFoundContracts,
     inputToken,
+    isInputTokenApprovedWithBLusdAmm:
+      inputToken === BLusdAmmTokenIndex.LUSD
+        ? isLusdApprovedWithBlusdAmm
+        : isBLusdApprovedWithBlusdAmm,
     getExpectedSwapOutput,
     swapTokens
   };

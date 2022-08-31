@@ -69,6 +69,7 @@ export const transitions: BondEventTransitions = {
   SWAPPING: {
     ABORT_PRESSED: "IDLE",
     BACK_PRESSED: "IDLE",
+    APPROVE_PRESSED: "SWAPPING",
     CONFIRM_PRESSED: "SWAPPING",
     SWAP_CONFIRMED: "IDLE"
   }
@@ -149,6 +150,14 @@ export type ProtocolInfo = {
 };
 
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";
-export type BondTransaction = "APPROVE" | "CREATE" | "CANCEL" | "CLAIM" | "SWAP";
+
+export type BondTransaction =
+  | "APPROVE"
+  | "CREATE"
+  | "CANCEL"
+  | "CLAIM"
+  | "APPROVE_AMM_LUSD"
+  | "APPROVE_AMM_BLUSD"
+  | "SWAP";
 
 export type BondTransactionStatuses = Record<BondTransaction, TransactionStatus>;

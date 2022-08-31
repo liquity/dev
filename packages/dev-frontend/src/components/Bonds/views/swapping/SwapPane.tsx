@@ -23,6 +23,7 @@ export const SwapPane: React.FC = () => {
     inputToken,
     lusdBalance,
     bLusdBalance,
+    isInputTokenApprovedWithBLusdAmm,
     getExpectedSwapOutput
   } = useBondView();
   const inputAmountEditingState = useState<string>();
@@ -32,10 +33,20 @@ export const SwapPane: React.FC = () => {
   const [outputAmount, setOutputAmount] = useState<Decimal>(Decimal.ZERO);
   const [exchangeRate, setExchangeRate] = useState<Decimal>(Decimal.ZERO);
 
-  const isProcessingTransaction = statuses.SWAP === "PENDING";
+  const isApprovePending =
+    {
+      [BLusdAmmTokenIndex.BLUSD]: statuses.APPROVE_AMM_BLUSD,
+      [BLusdAmmTokenIndex.LUSD]: statuses.APPROVE_AMM_LUSD
+    }[inputToken] === "PENDING";
+
+  const isSwapPending = statuses.SWAP === "PENDING";
 
   const handleDismiss = () => {
     dispatchEvent("ABORT_PRESSED");
+  };
+
+  const handleApprovePressed = () => {
+    dispatchEvent("APPROVE_PRESSED");
   };
 
   const handleConfirmPressed = () => {
@@ -47,13 +58,24 @@ export const SwapPane: React.FC = () => {
   };
 
   useEffect(() => {
+    if (inputAmount.isZero) {
+      setOutputAmount(Decimal.ZERO);
+      setExchangeRate(Decimal.ZERO);
+      return;
+    }
+
     let cancelled = false;
 
     const timeoutId = setTimeout(async () => {
-      const expectedOutputAmount = await getExpectedSwapOutput(inputToken, inputAmount);
-      if (cancelled) return;
-      setOutputAmount(expectedOutputAmount);
-      setExchangeRate(expectedOutputAmount.div(inputAmount));
+      try {
+        const expectedOutputAmount = await getExpectedSwapOutput(inputToken, inputAmount);
+        if (cancelled) return;
+        setOutputAmount(expectedOutputAmount);
+        setExchangeRate(expectedOutputAmount.div(inputAmount));
+      } catch (error) {
+        console.error("getExpectedSwapOutput() failed");
+        console.log(error);
+      }
     }, 200);
 
     return () => {
@@ -83,7 +105,7 @@ export const SwapPane: React.FC = () => {
         unit={tokenSymbol[inputToken]}
         editingState={inputAmountEditingState}
         editedAmount={inputAmount.toString()}
-        setEditedAmount={amount => setInputAmount(Decimal.min(maxInputAmount, Decimal.from(amount)))}
+        setEditedAmount={amount => setInputAmount(Decimal.from(amount))}
         maxAmount={maxInputAmount.toString()}
         maxedOut={inputAmount.eq(maxInputAmount)}
       />
@@ -107,14 +129,25 @@ export const SwapPane: React.FC = () => {
       />
 
       <Flex variant="layout.actions">
-        <Button variant="cancel" onClick={handleBackPressed} disabled={isProcessingTransaction}>
+        <Button
+          variant="cancel"
+          onClick={handleBackPressed}
+          disabled={isApprovePending || isSwapPending}
+        >
           Back
         </Button>
 
-        <Button variant="primary" onClick={handleConfirmPressed} disabled={isProcessingTransaction}>
-          {!isProcessingTransaction && <>Confirm</>}
-          {isProcessingTransaction && <Spinner size="28px" sx={{ color: "white" }} />}
-        </Button>
+        {isInputTokenApprovedWithBLusdAmm ? (
+          <Button variant="primary" onClick={handleConfirmPressed} disabled={isSwapPending}>
+            {!isSwapPending && <>Confirm</>}
+            {isSwapPending && <Spinner size="28px" sx={{ color: "white" }} />}
+          </Button>
+        ) : (
+          <Button variant="primary" onClick={handleApprovePressed} disabled={isApprovePending}>
+            {!isApprovePending && <>Approve</>}
+            {isApprovePending && <Spinner size="28px" sx={{ color: "white" }} />}
+          </Button>
+        )}
       </Flex>
     </>
   );

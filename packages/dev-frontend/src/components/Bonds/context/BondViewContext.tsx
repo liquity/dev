@@ -38,6 +38,7 @@ export type BondViewContextType = {
   resetSimulatedMarketPrice: () => void;
   hasFoundContracts: boolean;
   inputToken: BLusdAmmTokenIndex;
+  isInputTokenApprovedWithBLusdAmm: boolean;
   getExpectedSwapOutput: (inputToken: BLusdAmmTokenIndex, inputAmount: Decimal) => Promise<Decimal>;
   swapTokens: (
     inputToken: BLusdAmmTokenIndex,

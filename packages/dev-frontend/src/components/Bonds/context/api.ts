@@ -1,5 +1,8 @@
 import { constants } from "ethers";
-import { CHICKEN_BOND_MANAGER_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
+import {
+  CHICKEN_BOND_MANAGER_ADDRESS,
+  BLUSD_AMM_ADDRESS
+} from "@liquity/chicken-bonds/lusd/addresses";
 import type { BLUSDToken, BondNFT, ChickenBondManager } from "@liquity/chicken-bonds/lusd/types";
 import type { CurveCryptoSwap2ETH } from "@liquity/chicken-bonds/lusd/types/external";
 import type {
@@ -282,11 +285,10 @@ const getTokenBalance = async (account: string, token: BLUSDToken | LUSDToken): 
 const isInfiniteBondApproved = async (account: string, lusdToken: LUSDToken): Promise<boolean> => {
   const allowance = await lusdToken.allowance(account, CHICKEN_BOND_MANAGER_ADDRESS);
 
-  // TODO: what is going on?.. weird quirk in forked mainnet version
-  if (process.env.REACT_APP_DEMO_MODE === "true") {
-    return allowance._hex === "0xfffffffffffffffffffffffffffffffffffffffffffffffa9438a1d29cefffff";
-  }
-  return allowance.eq(constants.MaxUint256);
+  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
+  // start to decrease from 2**64.
+  // However, it is practically impossible that it would decrease below 2**63.
+  return allowance.gt(constants.MaxInt256);
 };
 
 const approveInfiniteBond = async (lusdToken: LUSDToken | undefined) => {
@@ -362,6 +364,26 @@ const claimBond = async (
   }
 };
 
+const isTokenApprovedWithBLusdAmm = async (
+  account: string,
+  token: LUSDToken | BLUSDToken
+): Promise<boolean> => {
+  const allowance = await token.allowance(account, BLUSD_AMM_ADDRESS);
+
+  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
+  // start to decrease from 2**64.
+  // However, it is practically impossible that it would decrease below 2**63.
+  return allowance.gt(constants.MaxInt256);
+};
+
+const approveTokenWithBLusdAmm = async (token: LUSDToken | BLUSDToken | undefined) => {
+  if (token === undefined) {
+    throw new Error("approveTokenWithBLusdAmm() failed: a dependency is null");
+  }
+
+  return (await token.approve(BLUSD_AMM_ADDRESS, constants.MaxUint256)).wait();
+};
+
 const getOtherToken = (thisToken: BLusdAmmTokenIndex) =>
   thisToken === BLusdAmmTokenIndex.BLUSD ? BLusdAmmTokenIndex.LUSD : BLusdAmmTokenIndex.BLUSD;
 
@@ -413,6 +435,8 @@ export const api = {
   createBond,
   cancelBond,
   claimBond,
+  isTokenApprovedWithBLusdAmm,
+  approveTokenWithBLusdAmm,
   getExpectedSwapOutput,
   swapTokens
 };
