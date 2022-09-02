@@ -1,4 +1,4 @@
-import { Card, Flex, Button, Link, Image, ThemeUIStyleObject } from "theme-ui";
+import { Card, Flex, Image, ThemeUIStyleObject } from "theme-ui";
 import { EventType, HorizontalTimeline, UNKNOWN_DATE } from "../../../HorizontalTimeline";
 import { EXAMPLE_NFT } from "../../context/BondViewProvider";
 import { Record } from "../../Record";
@@ -105,27 +105,14 @@ export const OptimisticBond: React.FC<BondProps> = ({ bond, style }) => {
                 type="LUSD"
                 description={l.BOND_DEPOSIT.description}
               />
-              {bond.status === "PENDING" && (
-                <Record
-                  name={l.MARKET_VALUE.term}
-                  type="LUSD"
-                  description={l.MARKET_VALUE.description}
-                />
-              )}
+
+              <Record
+                name={l.MARKET_VALUE.term}
+                type="LUSD"
+                description={l.MARKET_VALUE.description}
+              />
             </Flex>
-            {bond.status === "PENDING" && <Actions bondId={bond.id} disabled />}
-            {bond.status !== "PENDING" && bond.status === "CLAIMED" && (
-              <Button variant="outline" sx={{ height: "44px" }}>
-                <Link
-                  variant="outline"
-                  href="https://curve.fi"
-                  sx={{ textDecoration: "none" }}
-                  target="external"
-                >
-                  Sell bLUSD
-                </Link>
-              </Button>
-            )}
+            <Actions bondId={bond.id} disabled />
           </Flex>
         </Flex>
       </Card>
