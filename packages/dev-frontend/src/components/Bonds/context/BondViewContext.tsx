@@ -8,7 +8,8 @@ import type {
   Stats,
   BondTransactionStatuses,
   ProtocolInfo,
-  OptimisticBond
+  OptimisticBond,
+  BLusdAmmTokenIndex
 } from "./transitions";
 import { PENDING_STATUS, CANCELLED_STATUS, CLAIMED_STATUS } from "../lexicon";
 import { Decimal } from "@liquity/lib-base";
@@ -36,6 +37,14 @@ export type BondViewContextType = {
   setSimulatedMarketPrice: (marketPrice: Decimal) => void;
   resetSimulatedMarketPrice: () => void;
   hasFoundContracts: boolean;
+  inputToken: BLusdAmmTokenIndex;
+  isInputTokenApprovedWithBLusdAmm: boolean;
+  getExpectedSwapOutput: (inputToken: BLusdAmmTokenIndex, inputAmount: Decimal) => Promise<Decimal>;
+  swapTokens: (
+    inputToken: BLusdAmmTokenIndex,
+    inputAmount: Decimal,
+    minOutputAmount: Decimal
+  ) => Promise<void>;
 };
 
 export const BondViewContext = createContext<BondViewContextType | null>(null);

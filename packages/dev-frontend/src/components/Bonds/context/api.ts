@@ -1,5 +1,8 @@
 import { constants } from "ethers";
-import { CHICKEN_BOND_MANAGER_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
+import {
+  CHICKEN_BOND_MANAGER_ADDRESS,
+  BLUSD_AMM_ADDRESS
+} from "@liquity/chicken-bonds/lusd/addresses";
 import type { BLUSDToken, BondNFT, ChickenBondManager } from "@liquity/chicken-bonds/lusd/types";
 import type { CurveCryptoSwap2ETH } from "@liquity/chicken-bonds/lusd/types/external";
 import type {
@@ -13,7 +16,12 @@ import type {
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
+import { BLusdAmmTokenIndex } from "./transitions";
 import { numberify, decimalify, getBondAgeInDays, milliseconds, toFloat, getReturn } from "../utils";
+import {
+  TokenExchangeEvent,
+  TokenExchangeEventObject
+} from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
 
 type Maybe<T> = T | undefined;
 
@@ -277,11 +285,10 @@ const getTokenBalance = async (account: string, token: BLUSDToken | LUSDToken): 
 const isInfiniteBondApproved = async (account: string, lusdToken: LUSDToken): Promise<boolean> => {
   const allowance = await lusdToken.allowance(account, CHICKEN_BOND_MANAGER_ADDRESS);
 
-  // TODO: what is going on?.. weird quirk in forked mainnet version
-  if (process.env.REACT_APP_DEMO_MODE === "true") {
-    return allowance._hex === "0xfffffffffffffffffffffffffffffffffffffffffffffffa9438a1d29cefffff";
-  }
-  return allowance.eq(constants.MaxUint256);
+  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
+  // start to decrease from 2**64.
+  // However, it is practically impossible that it would decrease below 2**63.
+  return allowance.gt(constants.MaxInt256);
 };
 
 const approveInfiniteBond = async (lusdToken: LUSDToken | undefined) => {
@@ -357,6 +364,65 @@ const claimBond = async (
   }
 };
 
+const isTokenApprovedWithBLusdAmm = async (
+  account: string,
+  token: LUSDToken | BLUSDToken
+): Promise<boolean> => {
+  const allowance = await token.allowance(account, BLUSD_AMM_ADDRESS);
+
+  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
+  // start to decrease from 2**64.
+  // However, it is practically impossible that it would decrease below 2**63.
+  return allowance.gt(constants.MaxInt256);
+};
+
+const approveTokenWithBLusdAmm = async (token: LUSDToken | BLUSDToken | undefined) => {
+  if (token === undefined) {
+    throw new Error("approveTokenWithBLusdAmm() failed: a dependency is null");
+  }
+
+  return (await token.approve(BLUSD_AMM_ADDRESS, constants.MaxUint256)).wait();
+};
+
+const getOtherToken = (thisToken: BLusdAmmTokenIndex) =>
+  thisToken === BLusdAmmTokenIndex.BLUSD ? BLusdAmmTokenIndex.LUSD : BLusdAmmTokenIndex.BLUSD;
+
+const getExpectedSwapOutput = async (
+  inputToken: BLusdAmmTokenIndex,
+  inputAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH
+): Promise<Decimal> =>
+  decimalify(await bLusdAmm.get_dy(inputToken, getOtherToken(inputToken), inputAmount.hex));
+
+const swapTokens = async (
+  inputToken: BLusdAmmTokenIndex,
+  inputAmount: Decimal,
+  minOutputAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<TokenExchangeEventObject> => {
+  if (bLusdAmm === undefined) throw new Error("swapTokens() failed: a dependency is null");
+
+  const receipt = await (
+    await bLusdAmm["exchange(uint256,uint256,uint256,uint256)"](
+      inputToken,
+      getOtherToken(inputToken),
+      inputAmount.hex,
+      minOutputAmount.hex
+    )
+  ).wait();
+
+  const exchangeEvent = receipt?.events?.find(
+    e => e.event === "TokenExchange"
+  ) as Maybe<TokenExchangeEvent>;
+
+  if (exchangeEvent === undefined) {
+    throw new Error("swapTokens() failed: couldn't find TokenExchange event");
+  }
+
+  console.log("swapTokens() finished:", exchangeEvent.args);
+  return exchangeEvent.args;
+};
+
 export const api = {
   getAccountBonds,
   getStats,
@@ -368,5 +434,9 @@ export const api = {
   isInfiniteBondApproved,
   createBond,
   cancelBond,
-  claimBond
+  claimBond,
+  isTokenApprovedWithBLusdAmm,
+  approveTokenWithBLusdAmm,
+  getExpectedSwapOutput,
+  swapTokens
 };
