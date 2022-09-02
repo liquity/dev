@@ -1,4 +1,4 @@
-import { constants } from "ethers";
+import { BigNumber, CallOverrides, constants } from "ethers";
 import {
   CHICKEN_BOND_MANAGER_ADDRESS,
   BLUSD_AMM_ADDRESS
@@ -19,6 +19,8 @@ import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transiti
 import { BLusdAmmTokenIndex } from "./transitions";
 import { numberify, decimalify, getBondAgeInDays, milliseconds, toFloat, getReturn } from "../utils";
 import {
+  AddLiquidityEvent,
+  AddLiquidityEventObject,
   TokenExchangeEvent,
   TokenExchangeEventObject
 } from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
@@ -278,7 +280,11 @@ const getTreasury = async (chickenBondManager: ChickenBondManager): Promise<Trea
   };
 };
 
-const getTokenBalance = async (account: string, token: BLUSDToken | LUSDToken): Promise<Decimal> => {
+interface ERC20Balance {
+  balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
+}
+
+const getTokenBalance = async (account: string, token: ERC20Balance): Promise<Decimal> => {
   return decimalify(await token.balanceOf(account));
 };
 
@@ -423,6 +429,55 @@ const swapTokens = async (
   return exchangeEvent.args;
 };
 
+const amountsFrom = (bLusdAmount: Decimal, lusdAmount: Decimal) =>
+  Array.from({
+    length: 2,
+    [BLusdAmmTokenIndex.BLUSD]: bLusdAmount.hex,
+    [BLusdAmmTokenIndex.LUSD]: lusdAmount.hex
+  }) as [string, string];
+
+const getExpectedLpTokens = async (
+  bLusdAmount: Decimal,
+  lusdAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH
+): Promise<Decimal> =>
+  decimalify(await bLusdAmm.calc_token_amount(amountsFrom(bLusdAmount, lusdAmount)));
+
+const addLiquidity = async (
+  bLusdAmount: Decimal,
+  lusdAmount: Decimal,
+  minLpTokens: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<AddLiquidityEventObject> => {
+  if (bLusdAmm === undefined) throw new Error("addLiquidity() failed: a dependency is null");
+
+  const amounts = amountsFrom(bLusdAmount, lusdAmount);
+
+  const gasEstimate = await bLusdAmm.estimateGas["add_liquidity(uint256[2],uint256)"](
+    amounts,
+    minLpTokens.hex
+  );
+
+  const receipt = await (
+    await bLusdAmm["add_liquidity(uint256[2],uint256)"](
+      amountsFrom(bLusdAmount, lusdAmount),
+      minLpTokens.hex,
+      { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
+    )
+  ).wait();
+
+  const addLiquidityEvent = receipt?.events?.find(
+    e => e.event === "AddLiquidity"
+  ) as Maybe<AddLiquidityEvent>;
+
+  if (addLiquidityEvent === undefined) {
+    throw new Error("addLiquidity() failed: couldn't find TokenExchange event");
+  }
+
+  console.log("addLiquidity() finished:", addLiquidityEvent.args);
+  return addLiquidityEvent.args;
+};
+
 export const api = {
   getAccountBonds,
   getStats,
@@ -438,5 +493,7 @@ export const api = {
   isTokenApprovedWithBLusdAmm,
   approveTokenWithBLusdAmm,
   getExpectedSwapOutput,
-  swapTokens
+  swapTokens,
+  getExpectedLpTokens,
+  addLiquidity
 };

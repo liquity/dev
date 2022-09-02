@@ -12,7 +12,9 @@ import type {
   CreateBondPayload,
   ProtocolInfo,
   OptimisticBond,
-  SwapPayload
+  SwapPayload,
+  ApprovePressedPayload,
+  ManageLiquidityPayload
 } from "./transitions";
 import { BLusdAmmTokenIndex } from "./transitions";
 import { transitions } from "./transitions";
@@ -66,9 +68,9 @@ export const BondViewProvider: React.FC = props => {
     CREATE: "IDLE",
     CANCEL: "IDLE",
     CLAIM: "IDLE",
-    APPROVE_AMM_LUSD: "IDLE",
-    APPROVE_AMM_BLUSD: "IDLE",
-    SWAP: "IDLE"
+    APPROVE_AMM: "IDLE",
+    SWAP: "IDLE",
+    MANAGE_LIQUIDITY: "IDLE"
   });
   const [bLusdBalance, setBLusdBalance] = useState<Decimal>();
   const [lusdBalance, setLusdBalance] = useState<Decimal>();
@@ -240,15 +242,20 @@ export const BondViewProvider: React.FC = props => {
     setIsInfiniteBondApproved(true);
   }, [lusdToken]);
 
-  const [approveLusdWithBLusdAmm, approveLusdWithBLusdAmmStatus] = useTransaction(async () => {
-    await api.approveTokenWithBLusdAmm(lusdToken);
-    setIsLusdApprovedWithBlusdAmm(true);
-  }, [lusdToken]);
-
-  const [approveBLusdWithBLusdAmm, approveBLusdWithBLusdAmmStatus] = useTransaction(async () => {
-    await api.approveTokenWithBLusdAmm(bLusdToken);
-    setIsBLusdApprovedWithBlusdAmm(true);
-  }, [bLusdToken]);
+  const [approveAmm, approveAmmStatus] = useTransaction(
+    async (tokensNeedingApproval: BLusdAmmTokenIndex[]) => {
+      for (const token of tokensNeedingApproval) {
+        if (token === BLusdAmmTokenIndex.BLUSD) {
+          await api.approveTokenWithBLusdAmm(bLusdToken);
+          setIsBLusdApprovedWithBlusdAmm(true);
+        } else {
+          await api.approveTokenWithBLusdAmm(lusdToken);
+          setIsLusdApprovedWithBlusdAmm(true);
+        }
+      }
+    },
+    [lusdToken]
+  );
 
   const [createBond, createStatus] = useTransaction(
     async (lusdAmount: Decimal) => {
@@ -297,6 +304,22 @@ export const BondViewProvider: React.FC = props => {
     [bLusdAmm]
   );
 
+  const getExpectedLpTokens = useCallback(
+    async (bLusdAmount: Decimal, lusdAmount: Decimal) =>
+      bLusdAmm ? api.getExpectedLpTokens(bLusdAmount, lusdAmount, bLusdAmm) : Decimal.ZERO,
+    [bLusdAmm]
+  );
+
+  const [manageLiquidity, manageLiquidityStatus] = useTransaction(
+    async (params: ManageLiquidityPayload) => {
+      if (params.action === "addLiquidity") {
+        await api.addLiquidity(params.bLusdAmount, params.lusdAmount, params.minLpTokens, bLusdAmm);
+      }
+      setShouldSynchronize(true);
+    },
+    [bLusdAmm]
+  );
+
   const selectedBond = useMemo(() => bonds?.find(bond => bond.id === selectedBondId), [
     bonds,
     selectedBondId
@@ -338,16 +361,6 @@ export const BondViewProvider: React.FC = props => {
           }
           await cancelBond(selectedBond.id, selectedBond.deposit);
           await dispatchEvent("CANCEL_BOND_CONFIRMED");
-        } else if (isCurrentViewEvent("SWAPPING", "APPROVE_PRESSED")) {
-          if (inputToken === BLusdAmmTokenIndex.BLUSD) {
-            await approveBLusdWithBLusdAmm();
-          } else {
-            await approveLusdWithBLusdAmm();
-          }
-        } else if (isCurrentViewEvent("SWAPPING", "CONFIRM_PRESSED")) {
-          const { inputAmount, minOutputAmount } = payload as SwapPayload;
-          await swapTokens(inputToken, inputAmount, minOutputAmount);
-          await dispatchEvent("SWAP_CONFIRMED");
         } else if (isCurrentViewEvent("CLAIMING", "CONFIRM_PRESSED")) {
           if (selectedBond === undefined) {
             console.error(
@@ -357,6 +370,18 @@ export const BondViewProvider: React.FC = props => {
           }
           await claimBond(selectedBond.id);
           await dispatchEvent("CLAIM_BOND_CONFIRMED");
+        } else if (isCurrentViewEvent("SWAPPING", "APPROVE_PRESSED")) {
+          await approveAmm([inputToken]);
+        } else if (isCurrentViewEvent("SWAPPING", "CONFIRM_PRESSED")) {
+          const { inputAmount, minOutputAmount } = payload as SwapPayload;
+          await swapTokens(inputToken, inputAmount, minOutputAmount);
+          await dispatchEvent("SWAP_CONFIRMED");
+        } else if (isCurrentViewEvent("MANAGING_LIQUIDITY", "APPROVE_PRESSED")) {
+          const { tokensNeedingApproval } = payload as ApprovePressedPayload;
+          await approveAmm(tokensNeedingApproval);
+        } else if (isCurrentViewEvent("MANAGING_LIQUIDITY", "CONFIRM_PRESSED")) {
+          await manageLiquidity(payload as ManageLiquidityPayload);
+          await dispatchEvent("MANAGE_LIQUIDITY_CONFIRMED");
         }
       } catch (error: unknown) {
         console.error("dispatchEvent(), event handler failed\n\n", error);
@@ -369,10 +394,10 @@ export const BondViewProvider: React.FC = props => {
       cancelBond,
       claimBond,
       selectedBond,
-      approveBLusdWithBLusdAmm,
-      approveLusdWithBLusdAmm,
+      approveAmm,
       swapTokens,
-      inputToken
+      inputToken,
+      manageLiquidity
     ]
   );
 
@@ -383,18 +408,18 @@ export const BondViewProvider: React.FC = props => {
       CREATE: createStatus,
       CANCEL: cancelStatus,
       CLAIM: claimStatus,
-      APPROVE_AMM_BLUSD: approveBLusdWithBLusdAmmStatus,
-      APPROVE_AMM_LUSD: approveLusdWithBLusdAmmStatus,
-      SWAP: swapStatus
+      APPROVE_AMM: approveAmmStatus,
+      SWAP: swapStatus,
+      MANAGE_LIQUIDITY: manageLiquidityStatus
     }));
   }, [
     approveStatus,
     createStatus,
     cancelStatus,
     claimStatus,
-    approveBLusdWithBLusdAmmStatus,
-    approveLusdWithBLusdAmmStatus,
-    swapStatus
+    approveAmmStatus,
+    swapStatus,
+    manageLiquidityStatus
   ]);
 
   useEffect(() => {
@@ -424,13 +449,15 @@ export const BondViewProvider: React.FC = props => {
     resetSimulatedMarketPrice,
     simulatedProtocolInfo,
     hasFoundContracts,
+    isBLusdApprovedWithBlusdAmm,
+    isLusdApprovedWithBlusdAmm,
     inputToken,
     isInputTokenApprovedWithBLusdAmm:
-      inputToken === BLusdAmmTokenIndex.LUSD
-        ? isLusdApprovedWithBlusdAmm
-        : isBLusdApprovedWithBlusdAmm,
+      inputToken === BLusdAmmTokenIndex.BLUSD
+        ? isBLusdApprovedWithBlusdAmm
+        : isLusdApprovedWithBlusdAmm,
     getExpectedSwapOutput,
-    swapTokens
+    getExpectedLpTokens
   };
 
   // @ts-ignore // TODO REMOVE

@@ -6,6 +6,7 @@ import { Creating } from "./views/creating/Creating";
 import { InfoMessage } from "../InfoMessage";
 import { Container } from "theme-ui";
 import { Swapping } from "./views/swapping/Swapping";
+import { ManagingLiquidity } from "./views/managing/ManagingLiquidity";
 
 export const Bonds: React.FC = () => {
   const { view, hasFoundContracts } = useBondView();
@@ -33,6 +34,11 @@ export const Bonds: React.FC = () => {
     }
     case "SWAPPING": {
       View = <Swapping />;
+      break;
+    }
+    case "MANAGING_LIQUIDITY": {
+      View = <ManagingLiquidity />;
+      break;
     }
   }
 

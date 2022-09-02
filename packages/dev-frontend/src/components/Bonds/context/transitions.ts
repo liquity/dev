@@ -5,8 +5,9 @@ type Creating = "CREATING";
 type Cancelling = "CANCELLING";
 type Claiming = "CLAIMING";
 type Swapping = "SWAPPING";
+type ManagingLiquidity = "MANAGING_LIQUIDITY";
 
-export type BondView = Idle | Creating | Cancelling | Claiming | Swapping;
+export type BondView = Idle | Creating | Cancelling | Claiming | Swapping | ManagingLiquidity;
 
 /* UI events */
 type CreateBondPressed = "CREATE_BOND_PRESSED";
@@ -17,18 +18,21 @@ type ConfirmPressed = "CONFIRM_PRESSED";
 type CancelBondPressed = "CANCEL_BOND_PRESSED";
 type ClaimBondPressed = "CLAIM_BOND_PRESSED";
 type SwapPressed = "SWAP_PRESSED";
+type ManageLiquidityPressed = "MANAGE_LIQUIDITY_PRESSED";
 
 /* On-chain events */
 type CreateBondConfirmed = "CREATE_BOND_CONFIRMED";
 type CancelBondConfirmed = "CANCEL_BOND_CONFIRMED";
 type ClaimBondConfirmed = "CLAIM_BOND_CONFIRMED";
 type SwapConfirmed = "SWAP_CONFIRMED";
+type ManageLiquidityConfirmed = "MANAGE_LIQUIDITY_CONFIRMED";
 
 export type BondEvent =
   | CreateBondPressed
   | CancelBondPressed
   | ClaimBondPressed
   | SwapPressed
+  | ManageLiquidityPressed
   | ApprovePressed
   | ConfirmPressed
   | CancelPressed
@@ -36,7 +40,8 @@ export type BondEvent =
   | CreateBondConfirmed
   | CancelBondConfirmed
   | ClaimBondConfirmed
-  | SwapConfirmed;
+  | SwapConfirmed
+  | ManageLiquidityConfirmed;
 
 type BondEventTransitions = Record<BondView, Partial<Record<BondEvent, BondView>>>;
 
@@ -45,7 +50,8 @@ export const transitions: BondEventTransitions = {
     CREATE_BOND_PRESSED: "CREATING",
     CANCEL_BOND_PRESSED: "CANCELLING",
     CLAIM_BOND_PRESSED: "CLAIMING",
-    SWAP_PRESSED: "SWAPPING"
+    SWAP_PRESSED: "SWAPPING",
+    MANAGE_LIQUIDITY_PRESSED: "MANAGING_LIQUIDITY"
   },
   CREATING: {
     ABORT_PRESSED: "IDLE",
@@ -72,6 +78,13 @@ export const transitions: BondEventTransitions = {
     APPROVE_PRESSED: "SWAPPING",
     CONFIRM_PRESSED: "SWAPPING",
     SWAP_CONFIRMED: "IDLE"
+  },
+  MANAGING_LIQUIDITY: {
+    ABORT_PRESSED: "IDLE",
+    BACK_PRESSED: "IDLE",
+    APPROVE_PRESSED: "MANAGING_LIQUIDITY",
+    CONFIRM_PRESSED: "MANAGING_LIQUIDITY",
+    MANAGE_LIQUIDITY_CONFIRMED: "IDLE"
   }
 };
 
@@ -93,7 +106,40 @@ export type SwapPayload = {
   minOutputAmount: Decimal;
 };
 
-export type Payload = CreateBondPayload | SelectBondPayload | SwapPressedPayload | SwapPayload;
+// This payload is only dispatched by "Manage liquidity"
+export type ApprovePressedPayload = {
+  tokensNeedingApproval: BLusdAmmTokenIndex[];
+};
+
+export type AddLiquidityPayload = {
+  action: "addLiquidity";
+  bLusdAmount: Decimal;
+  lusdAmount: Decimal;
+  minLpTokens: Decimal;
+};
+
+export type RemoveLiquidityPayload = {
+  action: "removeLiquidity";
+  // TODO
+};
+
+export type RemoveLiquidityOneCoinPayload = {
+  action: "removeLiquidityOneCoin";
+  // TODO
+};
+
+export type ManageLiquidityPayload =
+  | AddLiquidityPayload
+  | RemoveLiquidityPayload
+  | RemoveLiquidityOneCoinPayload;
+
+export type Payload =
+  | CreateBondPayload
+  | SelectBondPayload
+  | SwapPressedPayload
+  | SwapPayload
+  | ApprovePressedPayload
+  | ManageLiquidityPayload;
 
 export type BondStatus = "NON_EXISTENT" | "PENDING" | "CANCELLED" | "CLAIMED";
 
@@ -156,8 +202,8 @@ export type BondTransaction =
   | "CREATE"
   | "CANCEL"
   | "CLAIM"
-  | "APPROVE_AMM_LUSD"
-  | "APPROVE_AMM_BLUSD"
-  | "SWAP";
+  | "APPROVE_AMM"
+  | "SWAP"
+  | "MANAGE_LIQUIDITY";
 
 export type BondTransactionStatuses = Record<BondTransaction, TransactionStatus>;

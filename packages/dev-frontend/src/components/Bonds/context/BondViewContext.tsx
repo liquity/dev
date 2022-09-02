@@ -37,14 +37,12 @@ export type BondViewContextType = {
   setSimulatedMarketPrice: (marketPrice: Decimal) => void;
   resetSimulatedMarketPrice: () => void;
   hasFoundContracts: boolean;
+  isBLusdApprovedWithBlusdAmm: boolean;
+  isLusdApprovedWithBlusdAmm: boolean;
   inputToken: BLusdAmmTokenIndex;
   isInputTokenApprovedWithBLusdAmm: boolean;
   getExpectedSwapOutput: (inputToken: BLusdAmmTokenIndex, inputAmount: Decimal) => Promise<Decimal>;
-  swapTokens: (
-    inputToken: BLusdAmmTokenIndex,
-    inputAmount: Decimal,
-    minOutputAmount: Decimal
-  ) => Promise<void>;
+  getExpectedLpTokens: (bLusdAmount: Decimal, lusdAmount: Decimal) => Promise<Decimal>;
 };
 
 export const BondViewContext = createContext<BondViewContextType | null>(null);

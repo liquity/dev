@@ -15,6 +15,8 @@ export const Idle: React.FC = () => {
 
   const showLusdFaucet = LUSD_OVERRIDE_ADDRESS !== null && lusdBalance?.eq(0);
 
+  const handleManageLiquidityPressed = () => dispatchEvent("MANAGE_LIQUIDITY_PRESSED");
+
   const handleBuyBLusdPressed = () =>
     dispatchEvent("SWAP_PRESSED", { inputToken: BLusdAmmTokenIndex.LUSD } as SwapPressedPayload);
 
@@ -23,7 +25,11 @@ export const Idle: React.FC = () => {
 
   return (
     <>
-      <Flex variant="layout.actions" mt={4}>
+      <Flex variant="layout.actions" sx={{ mt: 4, mb: 3 }}>
+        <Button variant="outline" onClick={handleManageLiquidityPressed}>
+          Manage liquidity
+        </Button>
+
         <Button variant="outline" onClick={handleBuyBLusdPressed}>
           Buy bLUSD
         </Button>
@@ -33,7 +39,7 @@ export const Idle: React.FC = () => {
         </Button>
 
         {showLusdFaucet && (
-          <Button variant="outline" onClick={() => getLusdFromFaucet()}>
+          <Button variant={hasBonds ? "outline" : "primary"} onClick={() => getLusdFromFaucet()}>
             Get 10k LUSD
           </Button>
         )}
