@@ -9,12 +9,13 @@ import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 import { BLusdAmmTokenIndex, SwapPressedPayload } from "../../context/transitions";
 
 export const Idle: React.FC = () => {
-  const { dispatchEvent, bonds, getLusdFromFaucet, lusdBalance } = useBondView();
+  const { dispatchEvent, bonds, getLusdFromFaucet, lusdBalance, lpTokenBalance } = useBondView();
 
   const hasBonds = bonds !== undefined && bonds.length > 0;
 
   const showLusdFaucet = LUSD_OVERRIDE_ADDRESS !== null && lusdBalance?.eq(0);
 
+  const handleAddLiquidityPressed = () => dispatchEvent("ADD_LIQUIDITY_PRESSED");
   const handleManageLiquidityPressed = () => dispatchEvent("MANAGE_LIQUIDITY_PRESSED");
 
   const handleBuyBLusdPressed = () =>
@@ -26,9 +27,15 @@ export const Idle: React.FC = () => {
   return (
     <>
       <Flex variant="layout.actions" sx={{ mt: 4, mb: 3 }}>
-        <Button variant="outline" onClick={handleManageLiquidityPressed}>
-          Manage liquidity
-        </Button>
+        {lpTokenBalance?.nonZero ? (
+          <Button variant="outline" onClick={handleManageLiquidityPressed}>
+            Manage liquidity
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={handleAddLiquidityPressed}>
+            Add liquidity
+          </Button>
+        )}
 
         <Button variant="outline" onClick={handleBuyBLusdPressed}>
           Buy bLUSD

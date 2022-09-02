@@ -1,4 +1,4 @@
-import { BigNumber, CallOverrides, constants } from "ethers";
+import { BigNumber, CallOverrides, constants, Contract, providers, Signer } from "ethers";
 import {
   CHICKEN_BOND_MANAGER_ADDRESS,
   BLUSD_AMM_ADDRESS
@@ -280,11 +280,22 @@ const getTreasury = async (chickenBondManager: ChickenBondManager): Promise<Trea
   };
 };
 
-interface ERC20Balance {
+// Very minimal type that only contains what we need
+interface ERC20 {
   balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
 }
 
-const getTokenBalance = async (account: string, token: ERC20Balance): Promise<Decimal> => {
+const erc20From = (tokenAddress: string, signerOrProvider: Signer | providers.Provider) =>
+  (new Contract(
+    tokenAddress,
+    ["function balanceOf(address) view returns (uint256)"],
+    signerOrProvider
+  ) as unknown) as ERC20;
+
+const getLpToken = async (pool: CurveCryptoSwap2ETH) =>
+  erc20From(await pool.token(), pool.signer ?? pool.provider);
+
+const getTokenBalance = async (account: string, token: ERC20): Promise<Decimal> => {
   return decimalify(await token.balanceOf(account));
 };
 
@@ -482,6 +493,7 @@ export const api = {
   getAccountBonds,
   getStats,
   getTreasury,
+  getLpToken,
   getTokenBalance,
   getProtocolInfo,
   getFutureBLusdAccrualFactor,

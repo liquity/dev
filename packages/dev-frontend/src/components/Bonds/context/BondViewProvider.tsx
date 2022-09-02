@@ -74,6 +74,7 @@ export const BondViewProvider: React.FC = props => {
   });
   const [bLusdBalance, setBLusdBalance] = useState<Decimal>();
   const [lusdBalance, setLusdBalance] = useState<Decimal>();
+  const [lpTokenBalance, setLpTokenBalance] = useState<Decimal>();
   const { account, liquity } = useLiquity();
   const {
     lusdToken,
@@ -224,11 +225,14 @@ export const BondViewProvider: React.FC = props => {
       const stats = await api.getStats(bondNft);
       const bLusdBalance = await api.getTokenBalance(account, bLusdToken);
       const lusdBalance = await api.getTokenBalance(account, lusdToken);
+      // TODO cache LP token?
+      const lpTokenBalance = await api.getTokenBalance(account, await api.getLpToken(bLusdAmm));
 
       setProtocolInfo(protocolInfo);
       setSimulatedProtocolInfo({ ...protocolInfo });
       setBLusdBalance(bLusdBalance);
       setLusdBalance(lusdBalance);
+      setLpTokenBalance(lpTokenBalance);
       setStats(stats);
       setTreasury(treasury);
       setBonds(bonds);
@@ -376,10 +380,16 @@ export const BondViewProvider: React.FC = props => {
           const { inputAmount, minOutputAmount } = payload as SwapPayload;
           await swapTokens(inputToken, inputAmount, minOutputAmount);
           await dispatchEvent("SWAP_CONFIRMED");
-        } else if (isCurrentViewEvent("MANAGING_LIQUIDITY", "APPROVE_PRESSED")) {
+        } else if (
+          isCurrentViewEvent("ADDING_LIQUIDITY", "APPROVE_PRESSED") ||
+          isCurrentViewEvent("MANAGING_LIQUIDITY", "APPROVE_PRESSED")
+        ) {
           const { tokensNeedingApproval } = payload as ApprovePressedPayload;
           await approveAmm(tokensNeedingApproval);
-        } else if (isCurrentViewEvent("MANAGING_LIQUIDITY", "CONFIRM_PRESSED")) {
+        } else if (
+          isCurrentViewEvent("ADDING_LIQUIDITY", "CONFIRM_PRESSED") ||
+          isCurrentViewEvent("MANAGING_LIQUIDITY", "CONFIRM_PRESSED")
+        ) {
           await manageLiquidity(payload as ManageLiquidityPayload);
           await dispatchEvent("MANAGE_LIQUIDITY_CONFIRMED");
         }
@@ -442,6 +452,7 @@ export const BondViewProvider: React.FC = props => {
     selectedBond,
     bLusdBalance,
     lusdBalance,
+    lpTokenBalance,
     isInfiniteBondApproved,
     isSynchronizing,
     getLusdFromFaucet,

@@ -29,6 +29,7 @@ export type BondViewContextType = {
   optimisticBond?: OptimisticBond;
   bLusdBalance?: Decimal;
   lusdBalance?: Decimal;
+  lpTokenBalance?: Decimal;
   statuses: BondTransactionStatuses;
   isInfiniteBondApproved: boolean;
   isSynchronizing: boolean;
