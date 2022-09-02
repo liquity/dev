@@ -6,7 +6,7 @@ import { ErrorDescription } from "../../../ErrorDescription";
 import { Icon } from "../../../Icon";
 import { DisabledEditableRow, EditableRow, StaticRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
-import { BLusdAmmTokenIndex, SwapPayload } from "../../context/transitions";
+import { BLusdAmmTokenIndex } from "../../context/transitions";
 
 const tokenSymbol: Record<BLusdAmmTokenIndex, string> = {
   [BLusdAmmTokenIndex.BLUSD]: "bLUSD",
@@ -55,7 +55,7 @@ export const SwapPane: React.FC = () => {
     dispatchEvent("CONFIRM_PRESSED", {
       inputAmount,
       minOutputAmount: outputAmount.mul(0.995) // 0.5% slippage tolerance
-    } as SwapPayload);
+    });
   };
 
   const handleBackPressed = () => {

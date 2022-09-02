@@ -170,7 +170,7 @@ export const WithdrawPane: React.FC = () => {
         <Button
           variant="primary"
           onClick={handleConfirmPressed}
-          disabled={isBalanceInsufficient || isManageLiquidityPending}
+          disabled={burnLpTokens.isZero || isBalanceInsufficient || isManageLiquidityPending}
         >
           {isManageLiquidityPending ? <Spinner size="28px" sx={{ color: "white" }} /> : <>Confirm</>}
         </Button>
