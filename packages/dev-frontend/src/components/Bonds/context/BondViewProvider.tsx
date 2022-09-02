@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { BondViewContext, BondViewContextType } from "./BondViewContext";
 import type {
-  BondStatus,
   Stats,
   BondView,
   BondEvent,
@@ -35,12 +34,7 @@ const transition = (view: BondView, event: BondEvent): BondView => {
   return nextView;
 };
 
-export const nfts: Record<BondStatus, string> = {
-  PENDING: "./bonds/egg-nft.png",
-  CANCELLED: "./bonds/bond-cancelled-dark.png",
-  CLAIMED: "./bonds/example-nft-light.gif",
-  NON_EXISTENT: ""
-};
+export const EXAMPLE_NFT = "./bonds/egg-nft.png";
 
 export const BondViewProvider: React.FC = props => {
   const { children } = props;
@@ -341,7 +335,7 @@ export const BondViewProvider: React.FC = props => {
   window.bonds = provider;
 
   // If contracts don't load it means they're not deployed, we shouldn't block the app from running in this case
-  if (bonds === undefined && hasFoundContracts) return <AppLoader />;
+  if (protocolInfo === undefined && hasFoundContracts) return <AppLoader />;
 
   return <BondViewContext.Provider value={provider}>{children}</BondViewContext.Provider>;
 };

@@ -1,6 +1,5 @@
 import { Card, Flex, Button, Link, Image, ThemeUIStyleObject } from "theme-ui";
 import { EventType, HorizontalTimeline } from "../../../HorizontalTimeline";
-import { nfts } from "../../context/BondViewProvider";
 import { Record } from "../../Record";
 import { Actions } from "./actions/Actions";
 import type { Bond as BondType } from "../../context/transitions";
@@ -64,7 +63,6 @@ type BondProps = { bond: BondType; style?: ThemeUIStyleObject };
 
 export const Bond: React.FC<BondProps> = ({ bond, style }) => {
   const events = getBondEvents(bond);
-
   return (
     <Flex
       sx={{
@@ -75,56 +73,14 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
       }}
     >
       <Flex>
-        {bond.status === "PENDING" && (
-          <Image
-            sx={{ height: 200, cursor: "pointer", borderRadius: 12 }}
-            src={nfts[bond.status]}
-            alt="TODO"
-            onClick={() => {
-              window.open("https://opensea.io", "_blank");
-            }}
-          />
-        )}
-        {bond.status === "CANCELLED" && (
-          <>
-            <Image sx={{ width: 148, cursor: "pointer", borderRadius: 12 }} src={nfts.PENDING} />
-            <Image
-              sx={{
-                width: 148,
-                cursor: "pointer",
-                borderRadius: "50%",
-                backgroundColor: "transparent",
-                ml: -148,
-                p: "28px"
-              }}
-              src={nfts[bond.status]}
-              alt="TODO"
-              onClick={() => {
-                window.open("https://opensea.io", "_blank");
-              }}
-            />
-          </>
-        )}
-        {bond.status === "CLAIMED" && (
-          <>
-            <Image sx={{ width: 148, cursor: "pointer", borderRadius: 12 }} src={nfts.PENDING} />
-            <Image
-              sx={{
-                width: 148,
-                cursor: "pointer",
-                borderRadius: "50%",
-                backgroundColor: "transparent",
-                ml: -148,
-                p: "28px"
-              }}
-              src={nfts[bond.status]}
-              alt="TODO"
-              onClick={() => {
-                window.open("https://opensea.io", "_blank");
-              }}
-            />
-          </>
-        )}
+        <Image
+          sx={{ width: 150, cursor: "pointer", borderRadius: 12 }}
+          src={bond.tokenUri}
+          alt="TODO"
+          onClick={() => {
+            window.open("https://opensea.io", "_blank");
+          }}
+        />
       </Flex>
       <Card mt={[0, 0, 0, 0]} sx={{ borderRadius: 12, flexGrow: 1 }}>
         <Flex p={[2, 3]} sx={{ flexDirection: "column" }}>

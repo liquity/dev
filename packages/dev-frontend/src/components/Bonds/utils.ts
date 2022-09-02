@@ -3,8 +3,7 @@ import { BigNumber } from "ethers";
 
 const milliseconds = (seconds: number) => seconds * 1000;
 
-const toFloat = (decimal: Decimal, precision = null): number =>
-  parseFloat(decimal.prettify(precision ?? 2));
+const toFloat = (decimal: Decimal): number => parseFloat(decimal.toString());
 
 const numberify = (bigNumber: BigNumber): number => bigNumber.toNumber();
 
@@ -25,7 +24,21 @@ const getReturn = (accrued: Decimal, deposit: Decimal, marketPrice: Decimal): st
   if (accruedLusdValue.lt(deposit)) {
     return (parseFloat(accruedLusdValue.toString()) - parseFloat(deposit.toString())).toFixed(2);
   }
-  return accruedLusdValue.sub(deposit).prettify(2);
+  return parseFloat(accruedLusdValue.sub(deposit).toString()).toFixed(2);
+};
+
+const getTokenUri = (encodedTokenUri: string): string => {
+  // HACK/TODO: new goerli deployment has fixed data format issue, switch to it
+  const dataStartIndex = encodedTokenUri.indexOf("base64,") + "base64,".length;
+  if (dataStartIndex === -1) return "TODO:"; // TODO: should we render an error image?
+
+  const hack = atob(encodedTokenUri.slice(dataStartIndex)).replace(
+    `"background_color":`,
+    `,"background_color":`
+  );
+
+  const tokenUri = JSON.parse(hack)?.image;
+  return tokenUri;
 };
 
 export {
@@ -36,5 +49,6 @@ export {
   getBondAgeInDays,
   daysToMilliseconds,
   dateWithoutHours,
-  getReturn
+  getReturn,
+  getTokenUri
 };

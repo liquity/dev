@@ -13,7 +13,15 @@ import type {
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
-import { numberify, decimalify, getBondAgeInDays, milliseconds, toFloat, getReturn } from "../utils";
+import {
+  numberify,
+  decimalify,
+  getBondAgeInDays,
+  milliseconds,
+  toFloat,
+  getReturn,
+  getTokenUri
+} from "../utils";
 
 type Maybe<T> = T | undefined;
 
@@ -60,7 +68,7 @@ const getAccountBonds = async (
       const startTime = milliseconds(numberify(bondStartTimes[idx]));
       const endTime = milliseconds(numberify(bondEndTimes[idx]));
       const status = BOND_STATUS[bondStatuses[idx]];
-      const tokenUri = bondTokenUris[idx];
+      const tokenUri = getTokenUri(bondTokenUris[idx]);
       const bondAgeInDays = getBondAgeInDays(startTime);
       const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
       const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
@@ -79,9 +87,11 @@ const getAccountBonds = async (
       const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays) - bondAgeInDays);
       const rebondTime = getFutureTimeByDays(toFloat(rebondDays) - bondAgeInDays);
       const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
-      const claimNowReturn = getReturn(accrued, deposit, marketPrice);
-      const rebondReturn = getReturn(rebondAccrual, deposit, marketPrice);
-      const rebondRoi = Decimal.from(rebondReturn).div(deposit);
+
+      // Accrued bLUSD is 0 for cancelled/claimed bonds
+      const claimNowReturn = accrued.isZero ? "0" : getReturn(accrued, deposit, marketPrice);
+      const rebondReturn = accrued.isZero ? "0" : getReturn(rebondAccrual, deposit, marketPrice);
+      const rebondRoi = accrued.isZero ? Decimal.ZERO : Decimal.from(rebondReturn).div(deposit);
 
       return [
         ...accumulator,
@@ -194,8 +204,10 @@ const getProtocolInfo = async (
   reserveSize: Decimal
 ): Promise<ProtocolInfo> => {
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  const marketPrice = decimalify(await bLusdAmm.price_oracle()).add(0.05); /* TODO REMOVE */
-  const fairPrice = marketPrice.mul(1.1);
+  const marketPrice = Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle())).add(
+    0.05
+  ); /* TODO REMOVE 0.05 */
+  const fairPrice = marketPrice.mul(1.1); /* TODO: use real formula */
   const floorPrice = reserveSize.eq(0) ? Decimal.ONE : reserveSize.div(bLusdSupply);
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
   const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(

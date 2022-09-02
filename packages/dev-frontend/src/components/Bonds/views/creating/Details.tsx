@@ -8,7 +8,7 @@ import { InfoIcon } from "../../../InfoIcon";
 import { useBondView } from "../../context/BondViewContext";
 import { HorizontalTimeline, Label, SubLabel } from "../../../HorizontalTimeline";
 import { ActionDescription } from "../../../ActionDescription";
-import { nfts } from "../../context/BondViewProvider";
+import { EXAMPLE_NFT } from "../../context/BondViewProvider";
 import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
 import { Warning } from "../../../Warning";
@@ -89,7 +89,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
             borderRadius: "14%",
             borderColor: "white"
           }}
-          src={nfts.PENDING}
+          src={EXAMPLE_NFT}
         />
         <InfoIcon
           tooltip={
