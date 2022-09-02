@@ -139,12 +139,16 @@ export type AddLiquidityPayload = {
 
 export type RemoveLiquidityPayload = {
   action: "removeLiquidity";
-  // TODO
+  burnLpTokens: Decimal;
+  minBLusdAmount: Decimal;
+  minLusdAmount: Decimal;
 };
 
 export type RemoveLiquidityOneCoinPayload = {
   action: "removeLiquidityOneCoin";
-  // TODO
+  burnLpTokens: Decimal;
+  output: BLusdAmmTokenIndex;
+  minAmount: Decimal;
 };
 
 export type ManageLiquidityPayload =

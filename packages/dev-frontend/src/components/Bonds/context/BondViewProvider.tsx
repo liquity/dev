@@ -223,10 +223,15 @@ export const BondViewProvider: React.FC = props => {
         protocolInfo.floorPrice
       );
       const stats = await api.getStats(bondNft);
-      const bLusdBalance = await api.getTokenBalance(account, bLusdToken);
-      const lusdBalance = await api.getTokenBalance(account, lusdToken);
+
       // TODO cache LP token?
-      const lpTokenBalance = await api.getTokenBalance(account, await api.getLpToken(bLusdAmm));
+      const lpToken = await api.getLpToken(bLusdAmm);
+
+      const [bLusdBalance, lusdBalance, lpTokenBalance] = await Promise.all([
+        api.getTokenBalance(account, bLusdToken),
+        api.getTokenBalance(account, lusdToken),
+        api.getTokenBalance(account, lpToken)
+      ]);
 
       setProtocolInfo(protocolInfo);
       setSimulatedProtocolInfo({ ...protocolInfo });
@@ -318,9 +323,32 @@ export const BondViewProvider: React.FC = props => {
     async (params: ManageLiquidityPayload) => {
       if (params.action === "addLiquidity") {
         await api.addLiquidity(params.bLusdAmount, params.lusdAmount, params.minLpTokens, bLusdAmm);
+      } else if (params.action === "removeLiquidity") {
+        await api.removeLiquidity(
+          params.burnLpTokens,
+          params.minBLusdAmount,
+          params.minLusdAmount,
+          bLusdAmm
+        );
+      } else {
+        await api.removeLiquidityOneCoin(
+          params.burnLpTokens,
+          params.output,
+          params.minAmount,
+          bLusdAmm
+        );
       }
       setShouldSynchronize(true);
     },
+    [bLusdAmm]
+  );
+
+  const getExpectedWithdrawal = useCallback(
+    async (
+      burnLp: Decimal,
+      output: BLusdAmmTokenIndex | "both"
+    ): Promise<Map<BLusdAmmTokenIndex, Decimal>> =>
+      bLusdAmm ? api.getExpectedWithdrawal(burnLp, output, bLusdAmm) : new Map(),
     [bLusdAmm]
   );
 
@@ -468,7 +496,8 @@ export const BondViewProvider: React.FC = props => {
         ? isBLusdApprovedWithBlusdAmm
         : isLusdApprovedWithBlusdAmm,
     getExpectedSwapOutput,
-    getExpectedLpTokens
+    getExpectedLpTokens,
+    getExpectedWithdrawal
   };
 
   // @ts-ignore // TODO REMOVE

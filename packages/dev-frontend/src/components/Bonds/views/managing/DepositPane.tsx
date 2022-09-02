@@ -19,7 +19,7 @@ export const DepositPane: React.FC = () => {
     getExpectedLpTokens
   } = useBondView();
 
-  const inputAmountEditingState = useState<string>();
+  const editingState = useState<string>();
   const [bLusdAmount, setBLusdAmount] = useState<Decimal>(Decimal.ZERO);
   const [lusdAmount, setLusdAmount] = useState<Decimal>(Decimal.ZERO);
   const [lpTokens, setLpTokens] = useState<Decimal>(Decimal.ZERO);
@@ -89,7 +89,7 @@ export const DepositPane: React.FC = () => {
         inputId="deposit-blusd"
         amount={bLusdAmount.prettify(2)}
         unit="bLUSD"
-        editingState={inputAmountEditingState}
+        editingState={editingState}
         editedAmount={bLusdAmount.toString()}
         setEditedAmount={amount => setBLusdAmount(Decimal.from(amount))}
         maxAmount={coalescedBLusdBalance.toString()}
@@ -101,7 +101,7 @@ export const DepositPane: React.FC = () => {
         inputId="deposit-lusd"
         amount={lusdAmount.prettify(2)}
         unit="LUSD"
-        editingState={inputAmountEditingState}
+        editingState={editingState}
         editedAmount={lusdAmount.toString()}
         setEditedAmount={amount => setLusdAmount(Decimal.from(amount))}
         maxAmount={coalescedLusdBalance.toString()}

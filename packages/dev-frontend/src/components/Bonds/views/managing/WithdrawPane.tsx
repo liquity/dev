@@ -8,10 +8,10 @@ import { DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 import { BLusdAmmTokenIndex } from "../../context/transitions";
 
-const tokenSymbol: Record<BLusdAmmTokenIndex, string> = {
-  [BLusdAmmTokenIndex.BLUSD]: "bLUSD",
-  [BLusdAmmTokenIndex.LUSD]: "LUSD"
-};
+const tokenSymbol = new Map([
+  [BLusdAmmTokenIndex.BLUSD, "bLUSD"],
+  [BLusdAmmTokenIndex.LUSD, "LUSD"]
+]);
 
 const WithdrawnAmount: React.FC<{ symbol: string }> = ({ symbol, children }) => (
   <>
@@ -21,29 +21,55 @@ const WithdrawnAmount: React.FC<{ symbol: string }> = ({ symbol, children }) => 
   </>
 );
 
+const checkOutput = (value: string): BLusdAmmTokenIndex | "both" => {
+  if (value === "both") {
+    return "both";
+  }
+
+  const i = parseInt(value);
+  if (i === BLusdAmmTokenIndex.BLUSD || i === BLusdAmmTokenIndex.LUSD) {
+    return i;
+  }
+
+  throw new Error(`invalid output choice "${value}"`);
+};
+
+const zeros = new Map<BLusdAmmTokenIndex, Decimal>([
+  [BLusdAmmTokenIndex.BLUSD, Decimal.ZERO],
+  [BLusdAmmTokenIndex.LUSD, Decimal.ZERO]
+]);
+
 export const WithdrawPane: React.FC = () => {
-  const {
-    dispatchEvent,
-    statuses,
-    inputToken,
-    lusdBalance,
-    bLusdBalance,
-    getExpectedSwapOutput
-  } = useBondView();
+  const { dispatchEvent, statuses, lpTokenBalance, getExpectedWithdrawal } = useBondView();
 
-  const inputAmountEditingState = useState<string>();
-  const inputTokenBalance =
-    (inputToken === BLusdAmmTokenIndex.BLUSD ? bLusdBalance : lusdBalance) ?? Decimal.ZERO;
-  const [burnLP, setInputAmount] = useState<Decimal>(inputTokenBalance);
-  const [outputAmount, setOutputAmount] = useState<Decimal>(Decimal.ZERO);
-  const [exchangeRate, setExchangeRate] = useState<Decimal>(Decimal.ZERO);
+  const editingState = useState<string>();
+  const [burnLpTokens, setBurnLp] = useState<Decimal>(Decimal.ZERO);
+  const [output, setOutput] = useState<BLusdAmmTokenIndex | "both">("both");
+  const [withdrawal, setWithdrawal] = useState<Map<BLusdAmmTokenIndex, Decimal>>(zeros);
 
-  const isApprovePending = statuses.APPROVE_AMM === "PENDING";
+  const coalescedLpTokenBalance = lpTokenBalance ?? Decimal.ZERO;
   const isManageLiquidityPending = statuses.MANAGE_LIQUIDITY === "PENDING";
-  const isBalanceInsufficient = burnLP.gt(inputTokenBalance);
+  const isBalanceInsufficient = burnLpTokens.gt(coalescedLpTokenBalance);
+
+  const handleOutputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setOutput(checkOutput(e.target.value));
 
   const handleConfirmPressed = () => {
-    dispatchEvent("CONFIRM_PRESSED", { inputAmount: burnLP, minOutputAmount: Decimal.ZERO });
+    if (output === "both") {
+      dispatchEvent("CONFIRM_PRESSED", {
+        action: "removeLiquidity",
+        burnLpTokens,
+        minBLusdAmount: Decimal.ZERO, // TODO
+        minLusdAmount: Decimal.ZERO // TODO
+      });
+    } else {
+      dispatchEvent("CONFIRM_PRESSED", {
+        action: "removeLiquidityOneCoin",
+        burnLpTokens,
+        output,
+        minAmount: Decimal.ZERO // TODO
+      });
+    }
   };
 
   const handleBackPressed = () => {
@@ -51,9 +77,8 @@ export const WithdrawPane: React.FC = () => {
   };
 
   useEffect(() => {
-    if (burnLP.isZero) {
-      setOutputAmount(Decimal.ZERO);
-      setExchangeRate(Decimal.ZERO);
+    if (burnLpTokens.isZero) {
+      setWithdrawal(output === "both" ? zeros : new Map([[output, Decimal.ZERO]]));
       return;
     }
 
@@ -61,12 +86,11 @@ export const WithdrawPane: React.FC = () => {
 
     const timeoutId = setTimeout(async () => {
       try {
-        const expectedOutputAmount = await getExpectedSwapOutput(inputToken, burnLP);
+        const expectedWithdrawal = await getExpectedWithdrawal(burnLpTokens, output);
         if (cancelled) return;
-        setOutputAmount(expectedOutputAmount);
-        setExchangeRate(expectedOutputAmount.div(burnLP));
+        setWithdrawal(expectedWithdrawal);
       } catch (error) {
-        console.error("getExpectedSwapOutput() failed");
+        console.error("getExpectedWithdrawal() failed");
         console.log(error);
       }
     }, 200);
@@ -75,19 +99,19 @@ export const WithdrawPane: React.FC = () => {
       clearTimeout(timeoutId);
       cancelled = true;
     };
-  }, [inputToken, burnLP, getExpectedSwapOutput]);
+  }, [burnLpTokens, getExpectedWithdrawal, output]);
 
   return (
     <>
       <EditableRow
         label="Burn LP Tokens"
         inputId="withdraw-burn-lp"
-        amount={burnLP.prettify(2)}
-        editingState={inputAmountEditingState}
-        editedAmount={burnLP.toString()}
-        setEditedAmount={amount => setInputAmount(Decimal.from(amount))}
-        maxAmount={inputTokenBalance.toString()}
-        maxedOut={burnLP.eq(inputTokenBalance)}
+        amount={burnLpTokens.prettify(2)}
+        editingState={editingState}
+        editedAmount={burnLpTokens.toString()}
+        setEditedAmount={amount => setBurnLp(Decimal.from(amount))}
+        maxAmount={coalescedLpTokenBalance.toString()}
+        maxedOut={burnLpTokens.eq(coalescedLpTokenBalance)}
       />
 
       <Flex sx={{ justifyContent: "center", mb: 3 }}>
@@ -95,25 +119,37 @@ export const WithdrawPane: React.FC = () => {
       </Flex>
 
       <Flex sx={{ justifyContent: "center", mb: 3 }}>
-        {Object.entries(tokenSymbol).map(([key, symbol]) => (
+        {Array.from(tokenSymbol.entries()).map(([key, symbol]) => (
           <Label key={key} variant="radioLabel">
-            <Radio name="withdraw-output-choice" value={key} />
+            <Radio
+              name="withdraw-output-choice"
+              value={key}
+              checked={output === key}
+              onChange={handleOutputChange}
+            />
             {symbol}
           </Label>
         ))}
 
         <Label key="both" variant="radioLabel">
-          <Radio name="withdraw-output-choice" value="both" />
+          <Radio
+            name="withdraw-output-choice"
+            value="both"
+            checked={output === "both"}
+            onChange={handleOutputChange}
+          />
           Both
         </Label>
       </Flex>
 
       <DisabledEditableRow label="Withdraw" inputId="withdraw-output-amount">
         <Flex sx={{ alignItems: "center" }}>
-          {[Decimal.from(36.52), Decimal.from(51.23)].map((amount, i: BLusdAmmTokenIndex) => (
+          {Array.from(withdrawal.entries()).map(([token, amount], i) => (
             <>
-              {i > 0 && <Text sx={{ fontWeight: "light", mx: 3 }}>+</Text>}
-              <WithdrawnAmount symbol={tokenSymbol[i]}>{amount.prettify(2)}</WithdrawnAmount>
+              {i > 0 && <Text sx={{ fontWeight: "light", mx: "12px" }}>+</Text>}
+              <WithdrawnAmount symbol={tokenSymbol.get(token) ?? ""}>
+                {amount.prettify(2)}
+              </WithdrawnAmount>
             </>
           ))}
         </Flex>
@@ -121,19 +157,13 @@ export const WithdrawPane: React.FC = () => {
 
       {isBalanceInsufficient && (
         <ErrorDescription>
-          Amount exceeds your balance by{" "}
-          <Amount>
-            {burnLP.sub(inputTokenBalance).prettify(2)} {tokenSymbol[inputToken]}
-          </Amount>
+          LP Token amount exceeds your balance by{" "}
+          <Amount>{burnLpTokens.sub(coalescedLpTokenBalance).prettify(2)}</Amount>
         </ErrorDescription>
       )}
 
       <Flex variant="layout.actions">
-        <Button
-          variant="cancel"
-          onClick={handleBackPressed}
-          disabled={isApprovePending || isManageLiquidityPending}
-        >
+        <Button variant="cancel" onClick={handleBackPressed} disabled={isManageLiquidityPending}>
           Back
         </Button>
 

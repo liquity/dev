@@ -30,7 +30,7 @@ export const SwapPane: React.FC = () => {
     isInputTokenApprovedWithBLusdAmm,
     getExpectedSwapOutput
   } = useBondView();
-  const inputAmountEditingState = useState<string>();
+  const editingState = useState<string>();
   const inputTokenBalance =
     (inputToken === BLusdAmmTokenIndex.BLUSD ? bLusdBalance : lusdBalance) ?? Decimal.ZERO;
   const [inputAmount, setInputAmount] = useState<Decimal>(Decimal.ZERO);
@@ -116,7 +116,7 @@ export const SwapPane: React.FC = () => {
         inputId="swap-input-amount"
         amount={inputAmount.prettify(2)}
         unit={tokenSymbol[inputToken]}
-        editingState={inputAmountEditingState}
+        editingState={editingState}
         editedAmount={inputAmount.toString()}
         setEditedAmount={amount => setInputAmount(Decimal.from(amount))}
         maxAmount={inputTokenBalance.toString()}
