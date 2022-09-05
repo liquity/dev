@@ -216,7 +216,11 @@ export const BondViewProvider: React.FC = props => {
             protocolInfo.claimBondFee,
             protocolInfo.alphaAccrualFactor
           );
-          setSimulatedProtocolInfo({ ...protocolInfo, ...simulatedProtocolInfo });
+          setSimulatedProtocolInfo({
+            ...protocolInfo,
+            ...simulatedProtocolInfo,
+            simulatedMarketPrice: protocolInfo.simulatedMarketPrice
+          });
         }
 
         setBLusdBalance(bLusdBalance);

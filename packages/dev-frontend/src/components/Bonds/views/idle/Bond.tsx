@@ -78,7 +78,17 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
         ...style
       }}
     >
-      <Flex sx={{ width: 150, height: 210 }}>
+      <Flex
+        sx={{
+          width: 150,
+          height: 210,
+          boxShadow: 2,
+          borderRadius: 10,
+          border: 1,
+          borderColor: "muted",
+          bg: "background"
+        }}
+      >
         <Image
           sx={{ cursor: "pointer", width: "100%", height: "100%" }}
           src={bond.tokenUri}
