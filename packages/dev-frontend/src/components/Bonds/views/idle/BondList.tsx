@@ -12,7 +12,7 @@ export const BondList: React.FC = () => {
   return (
     <>
       {bonds && (
-        <Flex as="nav">
+        <Flex as="nav" mt={2}>
           <Link to={`${url}/all`} p={2}>
             All
           </Link>

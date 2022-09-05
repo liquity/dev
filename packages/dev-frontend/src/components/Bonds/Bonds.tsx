@@ -5,6 +5,7 @@ import { Actioning } from "./views/actioning/Actioning";
 import { Creating } from "./views/creating/Creating";
 import { InfoMessage } from "../InfoMessage";
 import { Container } from "theme-ui";
+import { Swapping } from "./views/swapping/Swapping";
 
 export const Bonds: React.FC = () => {
   const { view, hasFoundContracts } = useBondView();
@@ -29,6 +30,9 @@ export const Bonds: React.FC = () => {
     case "CREATING": {
       View = <Creating />;
       break;
+    }
+    case "SWAPPING": {
+      View = <Swapping />;
     }
   }
 
