@@ -20,8 +20,13 @@ import {
   milliseconds,
   toFloat,
   getReturn,
-  getTokenUri
+  getTokenUri,
+  getBreakEvenDays,
+  getFutureBLusdAccrualFactor,
+  getFutureDateByDays,
+  getRebondDays
 } from "../utils";
+import { UNKNOWN_DATE } from "../../HorizontalTimeline";
 
 type Maybe<T> = T | undefined;
 
@@ -72,26 +77,29 @@ const getAccountBonds = async (
       const bondAgeInDays = getBondAgeInDays(startTime);
       const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
       const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
+      const rebondAccrual =
+        rebondDays === Decimal.INFINITY
+          ? Decimal.INFINITY
+          : getFutureBLusdAccrualFactor(floorPrice, rebondDays, alphaAccrualFactor).mul(deposit);
+      const breakEvenAccrual =
+        breakEvenDays === Decimal.INFINITY
+          ? Decimal.INFINITY
+          : getFutureBLusdAccrualFactor(floorPrice, breakEvenDays, alphaAccrualFactor).mul(deposit);
 
-      const rebondAccrual = getFutureBLusdAccrualFactor(
-        floorPrice,
-        rebondDays,
-        alphaAccrualFactor
-      ).mul(deposit);
-      const breakEvenAccrual = getFutureBLusdAccrualFactor(
-        floorPrice,
-        breakEvenDays,
-        alphaAccrualFactor
-      ).mul(deposit);
-
-      const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays) - bondAgeInDays);
-      const rebondTime = getFutureTimeByDays(toFloat(rebondDays) - bondAgeInDays);
+      const breakEvenTime =
+        breakEvenDays === Decimal.INFINITY
+          ? UNKNOWN_DATE
+          : getFutureDateByDays(toFloat(breakEvenDays) - bondAgeInDays);
+      const rebondTime =
+        breakEvenDays === Decimal.INFINITY
+          ? UNKNOWN_DATE
+          : getFutureDateByDays(toFloat(rebondDays) - bondAgeInDays);
       const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
 
       // Accrued bLUSD is 0 for cancelled/claimed bonds
-      const claimNowReturn = accrued.isZero ? "0" : getReturn(accrued, deposit, marketPrice);
-      const rebondReturn = accrued.isZero ? "0" : getReturn(rebondAccrual, deposit, marketPrice);
-      const rebondRoi = accrued.isZero ? Decimal.ZERO : Decimal.from(rebondReturn).div(deposit);
+      const claimNowReturn = accrued.isZero ? 0 : getReturn(accrued, deposit, marketPrice);
+      const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
+      const rebondRoi = rebondReturn / toFloat(deposit);
 
       return [
         ...accumulator,
@@ -119,47 +127,6 @@ const getAccountBonds = async (
   return bonds;
 };
 
-const getBreakEvenDays = (
-  alphaAccrualFactor: Decimal,
-  marketPricePremium: Decimal,
-  claimBondFee: Decimal
-): Decimal => {
-  return alphaAccrualFactor.div(marketPricePremium.mul(Decimal.ONE.sub(claimBondFee)).sub(1));
-};
-
-const getFutureBLusdAccrualFactor = (
-  floorPrice: Decimal,
-  daysInFuture: Decimal,
-  alphaAccrualFactor: Decimal,
-  bondAgeInDays = Decimal.ZERO
-): Decimal => {
-  const duration = daysInFuture.sub(bondAgeInDays);
-  return Decimal.ONE.div(floorPrice).mul(duration.div(duration.add(alphaAccrualFactor)));
-};
-
-const getRebondDays = (
-  alphaAccrualFactor: Decimal,
-  marketPricePremium: Decimal,
-  claimBondFee: Decimal
-): Decimal => {
-  const sqrt = Decimal.from(
-    Math.sqrt(parseFloat(Decimal.ONE.sub(claimBondFee).mul(marketPricePremium).toString()))
-  );
-  const dividend = Decimal.ONE.add(sqrt);
-  const divisor = Decimal.ONE.sub(claimBondFee).mul(marketPricePremium).gt(1)
-    ? Decimal.ONE.sub(claimBondFee).mul(marketPricePremium).sub(1)
-    : Decimal.ONE;
-  return alphaAccrualFactor.mul(dividend.div(divisor));
-};
-
-const daysToMilliseconds = (days: number): number => {
-  return days * 24 * 60 * 60 * 1000;
-};
-
-const getFutureTimeByDays = (days: number): number => {
-  return Math.round(Date.now() + daysToMilliseconds(days));
-};
-
 export const _getProtocolInfo = (
   marketPrice: Decimal,
   floorPrice: Decimal,
@@ -170,9 +137,9 @@ export const _getProtocolInfo = (
   const hasMarketPremium = marketPrice.gt(floorPrice.add(claimBondFee));
 
   const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const breakEvenTime = getFutureTimeByDays(toFloat(breakEvenDays));
+  const breakEvenTime = getFutureDateByDays(toFloat(breakEvenDays));
   const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const rebondTime = getFutureTimeByDays(toFloat(rebondDays));
+  const rebondTime = getFutureDateByDays(toFloat(rebondDays));
   const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
     floorPrice,
     breakEvenDays,
@@ -192,8 +159,7 @@ export const _getProtocolInfo = (
     breakEvenAccrualFactor,
     rebondAccrualFactor,
     breakEvenDays,
-    rebondDays,
-    simulatedMarketPrice: marketPrice
+    rebondDays
   };
 };
 
@@ -204,17 +170,33 @@ const getProtocolInfo = async (
   reserveSize: Decimal
 ): Promise<ProtocolInfo> => {
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  const marketPrice = Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle())).add(
-    0.05
-  ); /* TODO REMOVE 0.05 */
+  const marketPrice = Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle()));
   const fairPrice = marketPrice.mul(1.1); /* TODO: use real formula */
   const floorPrice = reserveSize.eq(0) ? Decimal.ONE : reserveSize.div(bLusdSupply);
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
   const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
     24 * 60 * 60
   );
-
   const {
+    marketPricePremium,
+    breakEvenTime,
+    rebondTime,
+    hasMarketPremium,
+    breakEvenAccrualFactor,
+    rebondAccrualFactor,
+    breakEvenDays,
+    rebondDays
+  } = _getProtocolInfo(marketPrice, floorPrice, claimBondFee, alphaAccrualFactor);
+
+  const simulatedMarketPrice = hasMarketPremium ? marketPrice : floorPrice.mul(1.1);
+
+  return {
+    bLusdSupply,
+    marketPrice,
+    fairPrice,
+    floorPrice,
+    claimBondFee,
+    alphaAccrualFactor,
     marketPricePremium,
     breakEvenTime,
     rebondTime,
@@ -224,24 +206,6 @@ const getProtocolInfo = async (
     breakEvenDays,
     rebondDays,
     simulatedMarketPrice
-  } = _getProtocolInfo(marketPrice, floorPrice, claimBondFee, alphaAccrualFactor);
-
-  return {
-    bLusdSupply,
-    marketPrice,
-    fairPrice,
-    floorPrice,
-    claimBondFee,
-    alphaAccrualFactor,
-    simulatedMarketPrice,
-    marketPricePremium,
-    breakEvenTime,
-    rebondTime,
-    hasMarketPremium,
-    breakEvenAccrualFactor,
-    rebondAccrualFactor,
-    breakEvenDays,
-    rebondDays
   };
 };
 
@@ -296,7 +260,7 @@ const isInfiniteBondApproved = async (account: string, lusdToken: LUSDToken): Pr
   return allowance.eq(constants.MaxUint256);
 };
 
-const approveInfiniteBond = async (lusdToken: LUSDToken | undefined) => {
+const approveInfiniteBond = async (lusdToken: LUSDToken | undefined): Promise<void> => {
   if (lusdToken === undefined) throw new Error("approveInfiniteBond() failed: a dependency is null");
   console.log("approveInfiniteBond() started");
   try {
@@ -369,13 +333,49 @@ const claimBond = async (
   }
 };
 
-export const api = {
+export type BondsApi = {
+  getAccountBonds: (
+    account: string,
+    bondNft: BondNFT,
+    chickenBondManager: ChickenBondManager,
+    marketPrice: Decimal,
+    alphaAccrualFactor: Decimal,
+    marketPricePremium: Decimal,
+    claimBondFee: Decimal,
+    floorPrice: Decimal
+  ) => Promise<Bond[]>;
+  getStats: (bondNft: BondNFT) => Promise<Stats>;
+  getTreasury: (chickenBondManager: ChickenBondManager) => Promise<Treasury>;
+  getTokenBalance: (account: string, token: BLUSDToken | LUSDToken) => Promise<Decimal>;
+  getProtocolInfo: (
+    bLusdToken: BLUSDToken,
+    bLusdAmm: CurveCryptoSwap2ETH,
+    chickenBondManager: ChickenBondManager,
+    reserveSize: Decimal
+  ) => Promise<ProtocolInfo>;
+  approveInfiniteBond: (lusdToken: LUSDToken | undefined) => Promise<void>;
+  isInfiniteBondApproved: (account: string, lusdToken: LUSDToken) => Promise<boolean>;
+  createBond: (
+    lusdAmount: Decimal,
+    chickenBondManager: ChickenBondManager | undefined
+  ) => Promise<BondCreatedEventObject>;
+  cancelBond: (
+    bondId: string,
+    minimumLusd: Decimal,
+    chickenBondManager: ChickenBondManager | undefined
+  ) => Promise<BondCancelledEventObject>;
+  claimBond: (
+    bondId: string,
+    chickenBondManager: ChickenBondManager | undefined
+  ) => Promise<BondClaimedEventObject>;
+};
+
+export const api: BondsApi = {
   getAccountBonds,
   getStats,
   getTreasury,
   getTokenBalance,
   getProtocolInfo,
-  getFutureBLusdAccrualFactor,
   approveInfiniteBond,
   isInfiniteBondApproved,
   createBond,

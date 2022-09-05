@@ -13,7 +13,7 @@ import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
 import { Warning } from "../../../Warning";
 import type { CreateBondPayload } from "../../context/transitions";
-import { dateWithoutHours, getReturn, toFloat } from "../../utils";
+import { dateWithoutHours, getRebondDays, getReturn, percentify, toFloat } from "../../utils";
 import { HorizontalSlider } from "../../../HorizontalSlider";
 
 type DetailsProps = { onBack?: () => void };
@@ -63,9 +63,17 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
     deposit,
     simulatedProtocolInfo.simulatedMarketPrice
   );
-  const rebondRoi = Decimal.from(rebondReturn).div(deposit);
-  const marketPriceMin = toFloat(protocolInfo.floorPrice.add(0.015)).toFixed(2); // Add 0.015 to prevent market_price=floor_price infinity issues
-  const marketPriceMax = toFloat(Decimal.from(protocolInfo.marketPrice).mul(1.2)).toFixed(2);
+  const rebondRoi = rebondReturn / toFloat(deposit) || 0;
+  const marketPriceMin = protocolInfo.floorPrice.add(0.015).prettify(2); // Add 0.015 to prevent market_price=floor_price infinity issues
+  const marketPriceMax = Decimal.max(
+    protocolInfo.marketPrice.mul(1.1),
+    protocolInfo.floorPrice.mul(1.5)
+  ).prettify(2);
+  const rebondDays = getRebondDays(
+    simulatedProtocolInfo.alphaAccrualFactor,
+    simulatedProtocolInfo.marketPricePremium,
+    protocolInfo.claimBondFee
+  );
 
   return (
     <>
@@ -116,7 +124,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
               isSelected: true
             },
             {
-              date: new Date(parseInt(simulatedProtocolInfo.breakEvenTime.toString())),
+              date: simulatedProtocolInfo.breakEvenTime,
               label: (
                 <>
                   <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
@@ -127,7 +135,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
               )
             },
             {
-              date: new Date(parseInt(simulatedProtocolInfo.rebondTime.toString())),
+              date: simulatedProtocolInfo.rebondTime,
               label: (
                 <>
                   <Label description={l.OPTIMUM_REBOND_TIME.description}>
@@ -158,21 +166,21 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       <Grid sx={{ my: 1, mb: 3, justifyItems: "center", pl: 2 }} gap="20px" columns={3}>
         <Record
           name={l.REBOND_RETURN.term}
-          value={rebondReturn}
+          value={rebondReturn.toFixed(2)}
           type="LUSD"
           description={l.REBOND_RETURN.description}
         />
 
         <Record
           name={l.REBOND_TIME_ROI.term}
-          value={rebondRoi.mul(100).prettify(2) + "%"}
+          value={percentify(rebondRoi).toFixed(2) + "%"}
           type=""
           description={l.REBOND_TIME_ROI.description}
         />
 
         <Record
           name={l.OPTIMUM_APY.term}
-          value={rebondRoi.mul(100).mul(12).prettify(2) + "%"}
+          value={percentify(rebondRoi * (365 / toFloat(rebondDays))).toFixed(2) + "%"}
           type=""
           description={l.OPTIMUM_APY.description}
         />
@@ -184,7 +192,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
                 The market price of bLUSD impacts how long it will take to rebond and break even. The
                 market price has a minimum value ("floor price") which is determined by the
                 Treasury's Reserve bucket relative to the bLUSD supply.`}
-        value={simulatedProtocolInfo.marketPrice}
+        value={simulatedProtocolInfo.simulatedMarketPrice}
         min={marketPriceMin}
         max={marketPriceMax}
         type="LUSD"

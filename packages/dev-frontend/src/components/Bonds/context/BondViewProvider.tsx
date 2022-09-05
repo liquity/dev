@@ -59,14 +59,7 @@ export const BondViewProvider: React.FC = props => {
   const [bLusdBalance, setBLusdBalance] = useState<Decimal>();
   const [lusdBalance, setLusdBalance] = useState<Decimal>();
   const { account, liquity } = useLiquity();
-  const {
-    lusdToken,
-    bLusdToken,
-    bondNft,
-    chickenBondManager,
-    bLusdAmm,
-    hasFoundContracts
-  } = useBondContracts();
+  const contracts = useBondContracts();
 
   const setSimulatedMarketPrice = useCallback(
     (marketPrice: Decimal) => {
@@ -77,13 +70,19 @@ export const BondViewProvider: React.FC = props => {
         protocolInfo.claimBondFee,
         protocolInfo.alphaAccrualFactor
       );
-      setSimulatedProtocolInfo({ ...protocolInfo, ...simulatedProtocolInfo, marketPrice });
+
+      setSimulatedProtocolInfo({
+        ...protocolInfo,
+        ...simulatedProtocolInfo,
+        simulatedMarketPrice: marketPrice
+      });
     },
     [protocolInfo]
   );
 
   const resetSimulatedMarketPrice = useCallback(() => {
     if (protocolInfo === undefined) return;
+
     setSimulatedProtocolInfo({ ...protocolInfo });
   }, [protocolInfo]);
 
@@ -113,20 +112,21 @@ export const BondViewProvider: React.FC = props => {
 
   /***** TODO: REMOVE */
   const getLusdFromFaucet = useCallback(async () => {
-    if (lusdToken === undefined) return;
+    if (contracts.lusdToken === undefined) return;
     if (
       LUSD_OVERRIDE_ADDRESS !== null &&
-      (await lusdToken.balanceOf(account)).eq(0) &&
-      "tap" in lusdToken
+      (await contracts.lusdToken.balanceOf(account)).eq(0) &&
+      "tap" in contracts.lusdToken
     ) {
-      await (await ((lusdToken as unknown) as ERC20Faucet).tap()).wait();
+      await (await ((contracts.lusdToken as unknown) as ERC20Faucet).tap()).wait();
       setShouldSynchronize(true);
     }
-  }, [lusdToken, account]);
+  }, [contracts.lusdToken, account]);
 
   useEffect(() => {
     (async () => {
-      if (account === undefined || liquity === undefined || lusdToken === undefined) return;
+      if (account === undefined || liquity === undefined || contracts.lusdToken === undefined)
+        return;
 
       if (process.env.REACT_APP_DEMO_MODE === "true") {
         if ((await liquity.getTrove(account)).collateral.eq(0)) {
@@ -134,15 +134,16 @@ export const BondViewProvider: React.FC = props => {
         }
       }
     })();
-  }, [account, liquity, lusdToken]);
+  }, [account, liquity, contracts.lusdToken]);
 
   useEffect(() => {
     (async () => {
-      if (lusdToken === undefined || account === undefined || isInfiniteBondApproved) return;
-      const isApproved = await api.isInfiniteBondApproved(account, lusdToken);
+      if (contracts.lusdToken === undefined || account === undefined || isInfiniteBondApproved)
+        return;
+      const isApproved = await api.isInfiniteBondApproved(account, contracts.lusdToken);
       setIsInfiniteBondApproved(isApproved);
     })();
-  }, [lusdToken, account, isInfiniteBondApproved]);
+  }, [contracts.lusdToken, account, isInfiniteBondApproved]);
   /***** /TODO */
 
   useEffect(() => {
@@ -156,61 +157,63 @@ export const BondViewProvider: React.FC = props => {
 
   useEffect(() => {
     (async () => {
-      if (
-        lusdToken === undefined ||
-        bondNft === undefined ||
-        chickenBondManager === undefined ||
-        bLusdToken === undefined ||
-        bLusdAmm === undefined ||
-        !shouldSynchronize
-      ) {
-        return;
+      try {
+        if (
+          contracts.lusdToken === undefined ||
+          contracts.bondNft === undefined ||
+          contracts.chickenBondManager === undefined ||
+          contracts.bLusdToken === undefined ||
+          contracts.bLusdAmm === undefined ||
+          !shouldSynchronize
+        ) {
+          return;
+        }
+
+        setShouldSynchronize(false);
+        setIsSynchronizing(true);
+
+        const latest = await contracts.getLatestData(account, api);
+        if (latest === undefined) {
+          setIsSynchronizing(false);
+          return;
+        }
+
+        const { treasury, protocolInfo, bonds, stats, bLusdBalance, lusdBalance } = latest;
+
+        setProtocolInfo(protocolInfo);
+
+        // Don't change the simualted price if we already have one since only the user should change it
+        if (simulatedProtocolInfo === undefined) {
+          const simulatedProtocolInfo = _getProtocolInfo(
+            protocolInfo.simulatedMarketPrice,
+            protocolInfo.floorPrice,
+            protocolInfo.claimBondFee,
+            protocolInfo.alphaAccrualFactor
+          );
+          setSimulatedProtocolInfo({ ...protocolInfo, ...simulatedProtocolInfo });
+        }
+
+        setBLusdBalance(bLusdBalance);
+        setLusdBalance(lusdBalance);
+        setStats(stats);
+        setTreasury(treasury);
+        setBonds(bonds);
+        setIsSynchronizing(false);
+        setOptimisticBond(undefined);
+      } catch (error: unknown) {
+        console.error("Caught exception", error);
       }
-
-      setShouldSynchronize(false);
-      setIsSynchronizing(true);
-
-      const treasury = await api.getTreasury(chickenBondManager);
-      const protocolInfo = await api.getProtocolInfo(
-        bLusdToken,
-        bLusdAmm,
-        chickenBondManager,
-        treasury.reserve
-      );
-      const bonds = await api.getAccountBonds(
-        account,
-        bondNft,
-        chickenBondManager,
-        protocolInfo.marketPrice,
-        protocolInfo.alphaAccrualFactor,
-        protocolInfo.marketPricePremium,
-        protocolInfo.claimBondFee,
-        protocolInfo.floorPrice
-      );
-      const stats = await api.getStats(bondNft);
-      const bLusdBalance = await api.getTokenBalance(account, bLusdToken);
-      const lusdBalance = await api.getTokenBalance(account, lusdToken);
-
-      setProtocolInfo(protocolInfo);
-      setSimulatedProtocolInfo({ ...protocolInfo });
-      setBLusdBalance(bLusdBalance);
-      setLusdBalance(lusdBalance);
-      setStats(stats);
-      setTreasury(treasury);
-      setBonds(bonds);
-      setIsSynchronizing(false);
-      setOptimisticBond(undefined);
     })();
-  }, [shouldSynchronize, chickenBondManager, bondNft, bLusdToken, lusdToken, account, bLusdAmm]);
+  }, [shouldSynchronize, account, contracts, simulatedProtocolInfo]);
 
   const [approveInfiniteBond, approveStatus] = useTransaction(async () => {
-    await api.approveInfiniteBond(lusdToken);
+    await api.approveInfiniteBond(contracts.lusdToken);
     setIsInfiniteBondApproved(true);
-  }, [lusdToken]);
+  }, [contracts.lusdToken]);
 
   const [createBond, createStatus] = useTransaction(
     async (lusdAmount: Decimal) => {
-      await api.createBond(lusdAmount, chickenBondManager);
+      await api.createBond(lusdAmount, contracts.chickenBondManager);
       const optimisticBond: OptimisticBond = {
         id: "OPTIMISTIC_BOND",
         deposit: lusdAmount,
@@ -220,25 +223,25 @@ export const BondViewProvider: React.FC = props => {
       setOptimisticBond(optimisticBond);
       setShouldSynchronize(true);
     },
-    [chickenBondManager, lusdToken]
+    [contracts.chickenBondManager, contracts.lusdToken]
   );
 
   const [cancelBond, cancelStatus] = useTransaction(
     async (bondId: string, minimumLusd: Decimal) => {
-      await api.cancelBond(bondId, minimumLusd, chickenBondManager);
+      await api.cancelBond(bondId, minimumLusd, contracts.chickenBondManager);
       removeBondFromList(bondId);
       setShouldSynchronize(true);
     },
-    [chickenBondManager, removeBondFromList]
+    [contracts.chickenBondManager, removeBondFromList]
   );
 
   const [claimBond, claimStatus] = useTransaction(
     async (bondId: string) => {
-      await api.claimBond(bondId, chickenBondManager);
+      await api.claimBond(bondId, contracts.chickenBondManager);
       changeBondStatusToClaimed(bondId);
       setShouldSynchronize(true);
     },
-    [chickenBondManager, changeBondStatusToClaimed]
+    [contracts.chickenBondManager, changeBondStatusToClaimed]
   );
 
   const selectedBond = useMemo(() => bonds?.find(bond => bond.id === selectedBondId), [
@@ -328,14 +331,14 @@ export const BondViewProvider: React.FC = props => {
     setSimulatedMarketPrice,
     resetSimulatedMarketPrice,
     simulatedProtocolInfo,
-    hasFoundContracts
+    hasFoundContracts: contracts.hasFoundContracts
   };
 
   // @ts-ignore // TODO REMOVE
   window.bonds = provider;
 
   // If contracts don't load it means they're not deployed, we shouldn't block the app from running in this case
-  if (protocolInfo === undefined && hasFoundContracts) return <AppLoader />;
+  if (protocolInfo === undefined && contracts.hasFoundContracts) return <AppLoader />;
 
   return <BondViewContext.Provider value={provider}>{children}</BondViewContext.Provider>;
 };

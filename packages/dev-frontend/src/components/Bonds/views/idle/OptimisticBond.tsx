@@ -1,11 +1,11 @@
-import { Card, Flex, Image, ThemeUIStyleObject } from "theme-ui";
+import { Card, Flex, ThemeUIStyleObject } from "theme-ui";
 import { EventType, HorizontalTimeline, UNKNOWN_DATE } from "../../../HorizontalTimeline";
-import { EXAMPLE_NFT } from "../../context/BondViewProvider";
 import { Record } from "../../Record";
 import { Actions } from "./actions/Actions";
 import type { OptimisticBond as OptimisticBondType } from "../../context/transitions";
 import { Label, SubLabel } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
+import { Placeholder } from "../../../Placeholder";
 
 const getBondEvents = (bond: OptimisticBondType): EventType[] => {
   return [
@@ -41,7 +41,8 @@ const getBondEvents = (bond: OptimisticBondType): EventType[] => {
           </Label>
           <SubLabel style={{ fontWeight: 400 }}></SubLabel>
         </>
-      )
+      ),
+      isLoading: true
     },
     {
       date: UNKNOWN_DATE,
@@ -52,7 +53,8 @@ const getBondEvents = (bond: OptimisticBondType): EventType[] => {
           </Label>
           <SubLabel style={{ fontWeight: 400 }}></SubLabel>
         </>
-      )
+      ),
+      isLoading: true
     }
   ];
 };
@@ -71,15 +73,8 @@ export const OptimisticBond: React.FC<BondProps> = ({ bond, style }) => {
         ...style
       }}
     >
-      <Flex>
-        <Image
-          sx={{ height: 200, cursor: "pointer", borderRadius: 12 }}
-          src={EXAMPLE_NFT}
-          alt="TODO"
-          onClick={() => {
-            window.open("https://opensea.io", "_blank");
-          }}
-        />
+      <Flex sx={{ width: 150, height: 210 }}>
+        <Placeholder />
       </Flex>
       <Card mt={[0, 0, 0, 0]} sx={{ borderRadius: 12, flexGrow: 1 }}>
         <Flex p={[2, 3]} sx={{ flexDirection: "column" }}>

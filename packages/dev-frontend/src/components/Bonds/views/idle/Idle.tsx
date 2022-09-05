@@ -8,7 +8,7 @@ import { InfoIcon } from "../../../InfoIcon";
 import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 
 export const Idle: React.FC = () => {
-  const { dispatchEvent, bonds, isSynchronizing, getLusdFromFaucet, lusdBalance } = useBondView();
+  const { dispatchEvent, bonds, getLusdFromFaucet, lusdBalance } = useBondView();
 
   const hasBonds = bonds !== undefined && bonds.length > 0;
 
@@ -33,7 +33,7 @@ export const Idle: React.FC = () => {
           <BondList />
         </>
       )}
-      {!hasBonds && !isSynchronizing && (
+      {!hasBonds && (
         <Card>
           <Heading>
             <Flex>
@@ -46,7 +46,7 @@ export const Idle: React.FC = () => {
             </Flex>
           </Heading>
           <Box sx={{ p: [2, 3] }}>
-            {!hasBonds && <Empty />}
+            <Empty />
 
             <Flex variant="layout.actions" mt={4}>
               <Button variant="primary" onClick={() => dispatchEvent("CREATE_BOND_PRESSED")}>

@@ -72,9 +72,9 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
         ...style
       }}
     >
-      <Flex>
+      <Flex sx={{ width: 150, height: 210 }}>
         <Image
-          sx={{ width: 150, cursor: "pointer", borderRadius: 12 }}
+          sx={{ cursor: "pointer", width: "100%", height: "100%" }}
           src={bond.tokenUri}
           alt="TODO"
           onClick={() => {

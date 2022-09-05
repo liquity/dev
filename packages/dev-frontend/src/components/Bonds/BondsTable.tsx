@@ -105,8 +105,8 @@ export const BondsTable: React.FC = () => {
             {Line(5)}
 
             {pendingBonds.map((bond, idx) => {
-              const breakEvenDays = (bond.breakEvenTime - Date.now()) / 1000 / 60 / 60 / 24;
-              const rebondDays = (bond.rebondTime - Date.now()) / 1000 / 60 / 60 / 24;
+              const breakEvenDays = (bond.breakEvenTime.getTime() - Date.now()) / 1000 / 60 / 60 / 24;
+              const rebondDays = (bond.rebondTime.getTime() - Date.now()) / 1000 / 60 / 60 / 24;
               return (
                 <React.Fragment key={idx}>
                   <Text>{bond.deposit.shorten()} LUSD</Text>
