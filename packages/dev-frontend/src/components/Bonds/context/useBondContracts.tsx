@@ -1,3 +1,4 @@
+import type { Decimal } from "@liquity/lib-base";
 import {
   BLUSDToken,
   BondNFT,
@@ -23,6 +24,18 @@ import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import LUSDTokenAbi from "@liquity/lib-ethers/abi/LUSDToken.json";
 import { useContract } from "../../../hooks/useContract";
 import { useLiquity } from "../../../hooks/LiquityContext";
+import { useCallback } from "react";
+import type { BondsApi } from "./api";
+import type { Bond, ProtocolInfo, Stats, Treasury } from "./transitions";
+
+type BondsInformation = {
+  treasury: Treasury;
+  protocolInfo: ProtocolInfo;
+  bonds: Bond[];
+  stats: Stats;
+  bLusdBalance: Decimal;
+  lusdBalance: Decimal;
+};
 
 type BondContracts = {
   lusdToken: LUSDToken | undefined;
@@ -31,6 +44,7 @@ type BondContracts = {
   chickenBondManager: ChickenBondManager | undefined;
   bLusdAmm: CurveCryptoSwap2ETH | undefined;
   hasFoundContracts: boolean;
+  getLatestData: (account: string, api: BondsApi) => Promise<BondsInformation | undefined>;
 };
 
 export const useBondContracts = (): BondContracts => {
@@ -75,12 +89,58 @@ export const useBondContracts = (): BondContracts => {
       bLusdAmmStatus
     ].find(status => status === "FAILED") === undefined;
 
+  const getLatestData = useCallback(
+    async (account: string, api: BondsApi) => {
+      if (
+        lusdToken === undefined ||
+        bondNft === undefined ||
+        chickenBondManager === undefined ||
+        bLusdToken === undefined ||
+        bLusdAmm === undefined
+      ) {
+        return;
+      }
+
+      const treasury = await api.getTreasury(chickenBondManager);
+      const protocolInfo = await api.getProtocolInfo(
+        bLusdToken,
+        bLusdAmm,
+        chickenBondManager,
+        treasury.reserve
+      );
+      const bonds = await api.getAccountBonds(
+        account,
+        bondNft,
+        chickenBondManager,
+        protocolInfo.marketPrice,
+        protocolInfo.alphaAccrualFactor,
+        protocolInfo.marketPricePremium,
+        protocolInfo.claimBondFee,
+        protocolInfo.floorPrice
+      );
+      const stats = await api.getStats(bondNft);
+      const bLusdBalance = await api.getTokenBalance(account, bLusdToken);
+      const lusdBalance = await api.getTokenBalance(account, lusdToken);
+
+      return {
+        treasury,
+        protocolInfo,
+        bonds,
+        stats,
+        bLusdBalance,
+        lusdBalance
+      };
+    },
+    [chickenBondManager, bondNft, bLusdToken, lusdToken, bLusdAmm]
+  );
+
   return {
     lusdToken,
     bLusdToken,
     bondNft,
     chickenBondManager,
     bLusdAmm,
+    getLatestData,
     hasFoundContracts
   };
 };

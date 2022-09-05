@@ -17,7 +17,11 @@ export const Record: React.FC<RecordType> = ({ name, description, value, type, s
         {name} <InfoIcon size="xs" tooltip={<Card variant="tooltip">{description}</Card>} />
       </Flex>
       <Text as="h3" sx={{ display: "flex", justifyContent: "center" }}>
-        {value ? <Text sx={{ fontWeight: "400" }}>{value}</Text> : <Placeholder />}
+        {value ? (
+          <Text sx={{ fontWeight: "400" }}>{value}</Text>
+        ) : (
+          <Placeholder style={{ mx: "20%" }} />
+        )}
         &nbsp;
         {value && <Text sx={{ fontWeight: "light", opacity: 0.8 }}>{type}</Text>}
       </Text>

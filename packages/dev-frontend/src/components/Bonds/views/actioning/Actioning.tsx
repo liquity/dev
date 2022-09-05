@@ -10,6 +10,7 @@ import { Cancel } from "./actions/cancel/Cancel";
 import { Claim } from "./actions/claim/Claim";
 import { Warning } from "../../../Warning";
 import { ReactModal } from "../../../ReactModal";
+import { percentify } from "../../utils";
 
 export const Actioning: React.FC = () => {
   const { dispatchEvent, view, selectedBond: bond } = useBondView();
@@ -110,7 +111,7 @@ export const Actioning: React.FC = () => {
         {view === "CLAIMING" && (
           <Record
             name={l.BOND_RETURN.term}
-            value={bond.claimNowReturn}
+            value={bond.claimNowReturn.toFixed(2)}
             type="LUSD"
             description={l.BOND_RETURN.description}
           />
@@ -121,21 +122,21 @@ export const Actioning: React.FC = () => {
         <Grid gap="20px" columns={3} sx={{ my: 2, justifyItems: "center" }}>
           <Record
             name={l.REBOND_RETURN.term}
-            value={bond.rebondReturn}
+            value={bond.rebondReturn.toFixed(2)}
             type="LUSD"
             description={l.REBOND_RETURN.description}
           />
 
           <Record
             name={l.REBOND_TIME_ROI.term}
-            value={bond.rebondRoi.mul(100).prettify(2) + "%"}
+            value={percentify(bond.rebondRoi) + "%"}
             type=""
             description={l.REBOND_TIME_ROI.description}
           />
 
           <Record
             name={l.OPTIMUM_APY.term}
-            value={bond.rebondRoi.mul(100).mul(12).prettify(2) + "%"}
+            value={percentify(bond.rebondRoi) + "%"}
             type=""
             description={l.OPTIMUM_APY.description}
           />
@@ -143,7 +144,7 @@ export const Actioning: React.FC = () => {
       </details>
 
       <Box mt={3}>
-        {view === "CLAIMING" && parseFloat(bond.claimNowReturn) < 0 && (
+        {view === "CLAIMING" && bond.claimNowReturn < 0 && (
           <Warning>You are claiming a bond which currently has a negative return</Warning>
         )}
         {view === "CLAIMING" && bond.accrued.gte(bond.rebondAccrual) && (

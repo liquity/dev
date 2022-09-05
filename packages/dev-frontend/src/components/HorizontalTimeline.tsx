@@ -62,6 +62,7 @@ export type EventType = {
   date: Date;
   label: React.ReactNode;
   isSelected?: boolean;
+  isLoading?: boolean;
 };
 
 type EventProps = EventType & {
@@ -69,6 +70,7 @@ type EventProps = EventType & {
   isLast: boolean;
   selectedIdx: number;
   idx: number;
+  isLoading?: boolean;
 };
 
 type LabelProps = {
@@ -120,11 +122,37 @@ export const Label: React.FC<LabelProps> = ({ children, description, style }) =>
   );
 };
 
-const Event: React.FC<EventProps> = ({ isFirst, isLast, date, label, idx, selectedIdx }) => {
+const LoadingEvent: React.FC<{ label: React.ReactNode }> = ({ label }) => {
+  return (
+    <Flex sx={{ flexDirection: "column", flexGrow: 1 }}>
+      <Flex sx={{ justifyContent: "center" }}>
+        <Placeholder style={{ mx: "20%" }} />
+      </Flex>
+      <Flex sx={{ my: 1, alignItems: "center" }}>
+        <Line style={defaultLineStyle} />
+        <Circle style={defaultCircleStyle} />
+        <Line style={defaultLineStyle} />
+      </Flex>
+
+      <Flex sx={{ flexDirection: "column" }}>{label}</Flex>
+    </Flex>
+  );
+};
+const Event: React.FC<EventProps> = ({
+  isFirst,
+  isLast,
+  date,
+  label,
+  idx,
+  selectedIdx,
+  isLoading = false
+}) => {
+  if (isLoading) return <LoadingEvent label={label} />;
   const isPast = new Date(date.toDateString()) < dateWithoutHours(Date.now());
   const isToday = date.toLocaleDateString() === new Date(Date.now()).toLocaleDateString();
   const isSelected = idx === selectedIdx;
   const isBeforeSelected = idx < selectedIdx;
+  const isUnknownDate = date.toDateString() === UNKNOWN_DATE.toDateString();
 
   let circleStyle: ThemeUIStyleObject = { ...defaultCircleStyle };
   let leftLineStyle: ThemeUIStyleObject = { ...defaultLineStyle };
@@ -159,18 +187,14 @@ const Event: React.FC<EventProps> = ({ isFirst, isLast, date, label, idx, select
   const dateText =
     isToday && isSelected
       ? "Now"
+      : isUnknownDate
+      ? "Unknown"
       : date.toLocaleDateString("en-GB", { month: "short", day: "2-digit", year: "numeric" });
-
-  const isUnknownDate = date === UNKNOWN_DATE;
 
   return (
     <Flex sx={{ flexDirection: "column", flexGrow: 1 }}>
       <Flex sx={{ justifyContent: "center" }}>
-        {isUnknownDate ? (
-          <Placeholder />
-        ) : (
-          <Text sx={{ fontWeight: 400, alignSelf: "center" }}>{dateText}</Text>
-        )}
+        <Text sx={{ fontWeight: 400, alignSelf: "center" }}>{dateText}</Text>
       </Flex>
       <Flex sx={{ my: 1, alignItems: "center" }}>
         <Line style={leftLineStyle} />
@@ -191,7 +215,11 @@ type HorizontalTimelineProps = {
 export const HorizontalTimeline: React.FC<HorizontalTimelineProps> = ({ events, style }) => {
   // Order by date, then by whether its selected or not (selected is newer)
   const orderedEvents = [...events].sort((a, b) =>
-    a.date === b.date ? Number(a.isSelected) - Number(b.isSelected) : a.date > b.date ? 1 : -1
+    a.date.getTime() === b.date.getTime()
+      ? Number(a.isSelected) - Number(b.isSelected)
+      : a.date.getTime() > b.date.getTime()
+      ? 1
+      : -1
   );
   const selectedIdx = orderedEvents.findIndex(event => event.isSelected);
 
@@ -206,6 +234,7 @@ export const HorizontalTimeline: React.FC<HorizontalTimelineProps> = ({ events, 
           date={event.date}
           label={event.label}
           selectedIdx={selectedIdx}
+          isLoading={event.isLoading}
         />
       ))}
     </Flex>

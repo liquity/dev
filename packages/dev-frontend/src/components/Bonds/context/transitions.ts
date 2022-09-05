@@ -107,12 +107,12 @@ export type Bond = {
   accrued: Decimal;
   breakEvenAccrual: Decimal;
   rebondAccrual: Decimal;
-  breakEvenTime: number;
-  rebondTime: number;
+  breakEvenTime: Date;
+  rebondTime: Date;
   marketValue: Decimal;
-  rebondReturn: string;
-  rebondRoi: Decimal;
-  claimNowReturn: string;
+  rebondReturn: number;
+  rebondRoi: number;
+  claimNowReturn: number;
 };
 
 export type OptimisticBond = Pick<Bond, "id" | "deposit" | "startTime" | "status">;
@@ -139,8 +139,8 @@ export type ProtocolInfo = {
   claimBondFee: Decimal;
   alphaAccrualFactor: Decimal;
   marketPricePremium: Decimal;
-  breakEvenTime: number;
-  rebondTime: number;
+  breakEvenTime: Date;
+  rebondTime: Date;
   hasMarketPremium: boolean;
   simulatedMarketPrice: Decimal;
   breakEvenAccrualFactor: Decimal;

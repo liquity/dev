@@ -1,4 +1,5 @@
 import { Flex } from "theme-ui";
+import type { ThemeUIStyleObject } from "theme-ui";
 import { keyframes } from "@emotion/react";
 
 const loading = keyframes`
@@ -10,7 +11,9 @@ const loading = keyframes`
   }
 `;
 
-export const Placeholder = () => {
+type PlaceholderProps = { style?: ThemeUIStyleObject };
+
+export const Placeholder: React.FC<PlaceholderProps> = ({ style }) => {
   return (
     <Flex
       sx={{
@@ -19,7 +22,8 @@ export const Placeholder = () => {
         overflow: "hidden",
         borderRadius: "5px",
         height: "100%",
-        width: "56%"
+        width: "100%",
+        ...style
       }}
     >
       <Flex
