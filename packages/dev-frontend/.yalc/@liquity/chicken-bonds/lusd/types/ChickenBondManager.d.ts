@@ -133,6 +133,8 @@ export interface ChickenBondManagerInterface extends utils.Interface {
         "calcUpdatedAccrualParameter()": FunctionFragment;
         "chickenIn(uint256)": FunctionFragment;
         "chickenOut(uint256,uint256)": FunctionFragment;
+        "countChickenIn()": FunctionFragment;
+        "countChickenOut()": FunctionFragment;
         "createBond(uint256)": FunctionFragment;
         "curveBasePool()": FunctionFragment;
         "curveDepositLUSD3CRVExchangeRateThreshold()": FunctionFragment;
@@ -147,6 +149,7 @@ export interface ChickenBondManagerInterface extends utils.Interface {
         "getBondData(uint256)": FunctionFragment;
         "getLUSDInBAMMSPVault()": FunctionFragment;
         "getLUSDToAcquire(uint256)": FunctionFragment;
+        "getOpenBondCount()": FunctionFragment;
         "getOwnedLUSDInCurve()": FunctionFragment;
         "getOwnedLUSDInSP()": FunctionFragment;
         "getPendingLUSD()": FunctionFragment;
@@ -171,7 +174,7 @@ export interface ChickenBondManagerInterface extends utils.Interface {
         "yearnGovernanceAddress()": FunctionFragment;
         "yearnRegistry()": FunctionFragment;
     };
-    getFunction(nameOrSignatureOrTopic: "BETA" | "BOOTSTRAP_PERIOD_CHICKEN_IN" | "BOOTSTRAP_PERIOD_REDEEM" | "BOOTSTRAP_PERIOD_SHIFT" | "CHICKEN_IN_AMM_FEE" | "DECIMAL_PRECISION" | "INDEX_OF_LUSD_TOKEN_IN_CURVE_POOL" | "MINUTE_DECAY_FACTOR" | "MIN_BLUSD_SUPPLY" | "MIN_BOND_AMOUNT" | "NFT_RANDOMNESS_DIVISOR" | "SECONDS_IN_ONE_MINUTE" | "SHIFTER_DELAY" | "SHIFTER_WINDOW" | "_calcSystemBackingRatioFromBAMMValue" | "accrualAdjustmentMultiplier" | "accrualAdjustmentPeriodCount" | "accrualAdjustmentPeriodSeconds" | "accrualParameter" | "activateMigration" | "bLUSDToken" | "bammSPVault" | "baseRedemptionRate" | "bondNFT" | "calcAccruedBLUSD" | "calcBondBLUSDCap" | "calcRedemptionFeePercentage" | "calcSystemBackingRatio" | "calcTotalLUSDValue" | "calcTotalYearnCurveVaultShareValue" | "calcUpdatedAccrualParameter" | "chickenIn" | "chickenOut" | "createBond" | "curveBasePool" | "curveDepositLUSD3CRVExchangeRateThreshold" | "curveLiquidityGauge" | "curvePool" | "curveWithdrawal3CRVLUSDExchangeRateThreshold" | "deploymentTimestamp" | "firstChickenInTime" | "getAcquiredLUSDInCurve" | "getAcquiredLUSDInSP" | "getBAMMLUSDDebt" | "getBondData" | "getLUSDInBAMMSPVault" | "getLUSDToAcquire" | "getOwnedLUSDInCurve" | "getOwnedLUSDInSP" | "getPendingLUSD" | "getPermanentLUSD" | "getTotalAcquiredLUSD" | "getTotalLUSDInCurve" | "getTreasury" | "lastRedemptionTime" | "lastShifterCountdownStartTime" | "lusdToken" | "migration" | "minimumAccrualParameter" | "redeem" | "sendFeeShare" | "shiftLUSDFromCurveToSP" | "shiftLUSDFromSPToCurve" | "startShifterCountdown" | "targetAverageAgeSeconds" | "totalWeightedStartTimes" | "yTokensHeldByCBM" | "yearnCurveVault" | "yearnGovernanceAddress" | "yearnRegistry"): FunctionFragment;
+    getFunction(nameOrSignatureOrTopic: "BETA" | "BOOTSTRAP_PERIOD_CHICKEN_IN" | "BOOTSTRAP_PERIOD_REDEEM" | "BOOTSTRAP_PERIOD_SHIFT" | "CHICKEN_IN_AMM_FEE" | "DECIMAL_PRECISION" | "INDEX_OF_LUSD_TOKEN_IN_CURVE_POOL" | "MINUTE_DECAY_FACTOR" | "MIN_BLUSD_SUPPLY" | "MIN_BOND_AMOUNT" | "NFT_RANDOMNESS_DIVISOR" | "SECONDS_IN_ONE_MINUTE" | "SHIFTER_DELAY" | "SHIFTER_WINDOW" | "_calcSystemBackingRatioFromBAMMValue" | "accrualAdjustmentMultiplier" | "accrualAdjustmentPeriodCount" | "accrualAdjustmentPeriodSeconds" | "accrualParameter" | "activateMigration" | "bLUSDToken" | "bammSPVault" | "baseRedemptionRate" | "bondNFT" | "calcAccruedBLUSD" | "calcBondBLUSDCap" | "calcRedemptionFeePercentage" | "calcSystemBackingRatio" | "calcTotalLUSDValue" | "calcTotalYearnCurveVaultShareValue" | "calcUpdatedAccrualParameter" | "chickenIn" | "chickenOut" | "countChickenIn" | "countChickenOut" | "createBond" | "curveBasePool" | "curveDepositLUSD3CRVExchangeRateThreshold" | "curveLiquidityGauge" | "curvePool" | "curveWithdrawal3CRVLUSDExchangeRateThreshold" | "deploymentTimestamp" | "firstChickenInTime" | "getAcquiredLUSDInCurve" | "getAcquiredLUSDInSP" | "getBAMMLUSDDebt" | "getBondData" | "getLUSDInBAMMSPVault" | "getLUSDToAcquire" | "getOpenBondCount" | "getOwnedLUSDInCurve" | "getOwnedLUSDInSP" | "getPendingLUSD" | "getPermanentLUSD" | "getTotalAcquiredLUSD" | "getTotalLUSDInCurve" | "getTreasury" | "lastRedemptionTime" | "lastShifterCountdownStartTime" | "lusdToken" | "migration" | "minimumAccrualParameter" | "redeem" | "sendFeeShare" | "shiftLUSDFromCurveToSP" | "shiftLUSDFromSPToCurve" | "startShifterCountdown" | "targetAverageAgeSeconds" | "totalWeightedStartTimes" | "yTokensHeldByCBM" | "yearnCurveVault" | "yearnGovernanceAddress" | "yearnRegistry"): FunctionFragment;
     encodeFunctionData(functionFragment: "BETA", values?: undefined): string;
     encodeFunctionData(functionFragment: "BOOTSTRAP_PERIOD_CHICKEN_IN", values?: undefined): string;
     encodeFunctionData(functionFragment: "BOOTSTRAP_PERIOD_REDEEM", values?: undefined): string;
@@ -205,6 +208,8 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     encodeFunctionData(functionFragment: "calcUpdatedAccrualParameter", values?: undefined): string;
     encodeFunctionData(functionFragment: "chickenIn", values: [BigNumberish]): string;
     encodeFunctionData(functionFragment: "chickenOut", values: [BigNumberish, BigNumberish]): string;
+    encodeFunctionData(functionFragment: "countChickenIn", values?: undefined): string;
+    encodeFunctionData(functionFragment: "countChickenOut", values?: undefined): string;
     encodeFunctionData(functionFragment: "createBond", values: [BigNumberish]): string;
     encodeFunctionData(functionFragment: "curveBasePool", values?: undefined): string;
     encodeFunctionData(functionFragment: "curveDepositLUSD3CRVExchangeRateThreshold", values?: undefined): string;
@@ -219,6 +224,7 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     encodeFunctionData(functionFragment: "getBondData", values: [BigNumberish]): string;
     encodeFunctionData(functionFragment: "getLUSDInBAMMSPVault", values?: undefined): string;
     encodeFunctionData(functionFragment: "getLUSDToAcquire", values: [BigNumberish]): string;
+    encodeFunctionData(functionFragment: "getOpenBondCount", values?: undefined): string;
     encodeFunctionData(functionFragment: "getOwnedLUSDInCurve", values?: undefined): string;
     encodeFunctionData(functionFragment: "getOwnedLUSDInSP", values?: undefined): string;
     encodeFunctionData(functionFragment: "getPendingLUSD", values?: undefined): string;
@@ -275,6 +281,8 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     decodeFunctionResult(functionFragment: "calcUpdatedAccrualParameter", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "chickenIn", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "chickenOut", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "countChickenIn", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "countChickenOut", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "createBond", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "curveBasePool", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "curveDepositLUSD3CRVExchangeRateThreshold", data: BytesLike): Result;
@@ -289,6 +297,7 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     decodeFunctionResult(functionFragment: "getBondData", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getLUSDInBAMMSPVault", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getLUSDToAcquire", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "getOpenBondCount", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getOwnedLUSDInCurve", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getOwnedLUSDInSP", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getPendingLUSD", data: BytesLike): Result;
@@ -457,6 +466,8 @@ export interface ChickenBondManager extends BaseContract {
         chickenOut(_bondID: BigNumberish, _minLUSD: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
+        countChickenIn(overrides?: CallOverrides): Promise<[BigNumber]>;
+        countChickenOut(overrides?: CallOverrides): Promise<[BigNumber]>;
         createBond(_lusdAmount: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
@@ -487,6 +498,9 @@ export interface ChickenBondManager extends BaseContract {
         }>;
         getLUSDInBAMMSPVault(overrides?: CallOverrides): Promise<[BigNumber]>;
         getLUSDToAcquire(_bondID: BigNumberish, overrides?: CallOverrides): Promise<[BigNumber]>;
+        getOpenBondCount(overrides?: CallOverrides): Promise<[BigNumber] & {
+            openBondCount: BigNumber;
+        }>;
         getOwnedLUSDInCurve(overrides?: CallOverrides): Promise<[BigNumber]>;
         getOwnedLUSDInSP(overrides?: CallOverrides): Promise<[BigNumber]>;
         getPendingLUSD(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -568,6 +582,8 @@ export interface ChickenBondManager extends BaseContract {
     chickenOut(_bondID: BigNumberish, _minLUSD: BigNumberish, overrides?: Overrides & {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
+    countChickenIn(overrides?: CallOverrides): Promise<BigNumber>;
+    countChickenOut(overrides?: CallOverrides): Promise<BigNumber>;
     createBond(_lusdAmount: BigNumberish, overrides?: Overrides & {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
@@ -598,6 +614,7 @@ export interface ChickenBondManager extends BaseContract {
     }>;
     getLUSDInBAMMSPVault(overrides?: CallOverrides): Promise<BigNumber>;
     getLUSDToAcquire(_bondID: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+    getOpenBondCount(overrides?: CallOverrides): Promise<BigNumber>;
     getOwnedLUSDInCurve(overrides?: CallOverrides): Promise<BigNumber>;
     getOwnedLUSDInSP(overrides?: CallOverrides): Promise<BigNumber>;
     getPendingLUSD(overrides?: CallOverrides): Promise<BigNumber>;
@@ -673,6 +690,8 @@ export interface ChickenBondManager extends BaseContract {
         calcUpdatedAccrualParameter(overrides?: CallOverrides): Promise<BigNumber>;
         chickenIn(_bondID: BigNumberish, overrides?: CallOverrides): Promise<void>;
         chickenOut(_bondID: BigNumberish, _minLUSD: BigNumberish, overrides?: CallOverrides): Promise<void>;
+        countChickenIn(overrides?: CallOverrides): Promise<BigNumber>;
+        countChickenOut(overrides?: CallOverrides): Promise<BigNumber>;
         createBond(_lusdAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
         curveBasePool(overrides?: CallOverrides): Promise<string>;
         curveDepositLUSD3CRVExchangeRateThreshold(overrides?: CallOverrides): Promise<BigNumber>;
@@ -701,6 +720,7 @@ export interface ChickenBondManager extends BaseContract {
         }>;
         getLUSDInBAMMSPVault(overrides?: CallOverrides): Promise<BigNumber>;
         getLUSDToAcquire(_bondID: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+        getOpenBondCount(overrides?: CallOverrides): Promise<BigNumber>;
         getOwnedLUSDInCurve(overrides?: CallOverrides): Promise<BigNumber>;
         getOwnedLUSDInSP(overrides?: CallOverrides): Promise<BigNumber>;
         getPendingLUSD(overrides?: CallOverrides): Promise<BigNumber>;
@@ -787,6 +807,8 @@ export interface ChickenBondManager extends BaseContract {
         chickenOut(_bondID: BigNumberish, _minLUSD: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<BigNumber>;
+        countChickenIn(overrides?: CallOverrides): Promise<BigNumber>;
+        countChickenOut(overrides?: CallOverrides): Promise<BigNumber>;
         createBond(_lusdAmount: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<BigNumber>;
@@ -803,6 +825,7 @@ export interface ChickenBondManager extends BaseContract {
         getBondData(_bondID: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
         getLUSDInBAMMSPVault(overrides?: CallOverrides): Promise<BigNumber>;
         getLUSDToAcquire(_bondID: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+        getOpenBondCount(overrides?: CallOverrides): Promise<BigNumber>;
         getOwnedLUSDInCurve(overrides?: CallOverrides): Promise<BigNumber>;
         getOwnedLUSDInSP(overrides?: CallOverrides): Promise<BigNumber>;
         getPendingLUSD(overrides?: CallOverrides): Promise<BigNumber>;
@@ -877,6 +900,8 @@ export interface ChickenBondManager extends BaseContract {
         chickenOut(_bondID: BigNumberish, _minLUSD: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<PopulatedTransaction>;
+        countChickenIn(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+        countChickenOut(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         createBond(_lusdAmount: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<PopulatedTransaction>;
@@ -893,6 +918,7 @@ export interface ChickenBondManager extends BaseContract {
         getBondData(_bondID: BigNumberish, overrides?: CallOverrides): Promise<PopulatedTransaction>;
         getLUSDInBAMMSPVault(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         getLUSDToAcquire(_bondID: BigNumberish, overrides?: CallOverrides): Promise<PopulatedTransaction>;
+        getOpenBondCount(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         getOwnedLUSDInCurve(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         getOwnedLUSDInSP(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         getPendingLUSD(overrides?: CallOverrides): Promise<PopulatedTransaction>;

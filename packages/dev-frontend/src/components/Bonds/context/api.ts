@@ -223,29 +223,23 @@ const getProtocolInfo = async (
   };
 };
 
-const getStats = async (bondNft: BondNFT): Promise<Stats> => {
-  const totalBonds = decimalify(await bondNft.totalSupply()).mul(1e18);
-  const totalBondsNumber = parseInt(totalBonds.toString());
-  const bondIdRequests = Array.from(Array(totalBondsNumber)).map((_, index) =>
-    bondNft.tokenByIndex(index)
-  );
-  const bondIds = await Promise.all(bondIdRequests);
-  const bondStatuses = await Promise.all(bondIds.map(bondId => bondNft.getBondStatus(bondId)));
-  const pendingBonds = Decimal.from(
-    bondStatuses.filter(status => BOND_STATUS[status] === "PENDING").length
-  );
-  const cancelledBonds = Decimal.from(
-    bondStatuses.filter(status => BOND_STATUS[status] === "CANCELLED").length
-  );
-  const claimedBonds = Decimal.from(
-    bondStatuses.filter(status => BOND_STATUS[status] === "CLAIMED").length
-  );
+const getStats = async (
+  chickenBondManager: ChickenBondManager,
+  bondNft: BondNFT
+): Promise<Stats> => {
+  const [totalBonds, cancelledBonds, claimedBonds] = await Promise.all([
+    bondNft.totalSupply(),
+    chickenBondManager.countChickenOut(),
+    chickenBondManager.countChickenIn()
+  ]);
+
+  const pendingBonds = totalBonds.sub(cancelledBonds).sub(claimedBonds);
 
   return {
-    pendingBonds,
-    cancelledBonds,
-    claimedBonds,
-    totalBonds
+    pendingBonds: Decimal.from(pendingBonds.toString()),
+    cancelledBonds: Decimal.from(cancelledBonds.toString()),
+    claimedBonds: Decimal.from(claimedBonds.toString()),
+    totalBonds: Decimal.from(totalBonds.toString())
   };
 };
 
@@ -585,7 +579,7 @@ export type BondsApi = {
     claimBondFee: Decimal,
     floorPrice: Decimal
   ) => Promise<Bond[]>;
-  getStats: (bondNft: BondNFT) => Promise<Stats>;
+  getStats: (chickenBondManager: ChickenBondManager, bondNft: BondNFT) => Promise<Stats>;
   getTreasury: (chickenBondManager: ChickenBondManager) => Promise<Treasury>;
   getLpToken: (pool: CurveCryptoSwap2ETH) => Promise<ERC20>;
   getTokenBalance: (account: string, token: ERC20) => Promise<Decimal>;
