@@ -223,17 +223,14 @@ const getProtocolInfo = async (
   };
 };
 
-const getStats = async (
-  chickenBondManager: ChickenBondManager,
-  bondNft: BondNFT
-): Promise<Stats> => {
-  const [totalBonds, cancelledBonds, claimedBonds] = await Promise.all([
-    bondNft.totalSupply(),
+const getStats = async (chickenBondManager: ChickenBondManager): Promise<Stats> => {
+  const [pendingBonds, cancelledBonds, claimedBonds] = await Promise.all([
+    chickenBondManager.getOpenBondCount(),
     chickenBondManager.countChickenOut(),
     chickenBondManager.countChickenIn()
   ]);
 
-  const pendingBonds = totalBonds.sub(cancelledBonds).sub(claimedBonds);
+  const totalBonds = pendingBonds.add(cancelledBonds).add(claimedBonds);
 
   return {
     pendingBonds: Decimal.from(pendingBonds.toString()),
@@ -579,7 +576,7 @@ export type BondsApi = {
     claimBondFee: Decimal,
     floorPrice: Decimal
   ) => Promise<Bond[]>;
-  getStats: (chickenBondManager: ChickenBondManager, bondNft: BondNFT) => Promise<Stats>;
+  getStats: (chickenBondManager: ChickenBondManager) => Promise<Stats>;
   getTreasury: (chickenBondManager: ChickenBondManager) => Promise<Treasury>;
   getLpToken: (pool: CurveCryptoSwap2ETH) => Promise<ERC20>;
   getTokenBalance: (account: string, token: ERC20) => Promise<Decimal>;
