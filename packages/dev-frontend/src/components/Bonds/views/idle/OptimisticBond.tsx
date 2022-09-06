@@ -1,16 +1,11 @@
-import { Card, Flex, Button, Image, ThemeUIStyleObject } from "theme-ui";
+import { Card, Flex, ThemeUIStyleObject } from "theme-ui";
 import { EventType, HorizontalTimeline, UNKNOWN_DATE } from "../../../HorizontalTimeline";
-import { nfts } from "../../context/BondViewProvider";
 import { Record } from "../../Record";
 import { Actions } from "./actions/Actions";
-import {
-  BLusdAmmTokenIndex,
-  OptimisticBond as OptimisticBondType,
-  SwapPressedPayload
-} from "../../context/transitions";
+import type { OptimisticBond as OptimisticBondType } from "../../context/transitions";
 import { Label, SubLabel } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
-import { useBondView } from "../../context/BondViewContext";
+import { Placeholder } from "../../../Placeholder";
 
 const getBondEvents = (bond: OptimisticBondType): EventType[] => {
   return [
@@ -46,7 +41,8 @@ const getBondEvents = (bond: OptimisticBondType): EventType[] => {
           </Label>
           <SubLabel style={{ fontWeight: 400 }}></SubLabel>
         </>
-      )
+      ),
+      isLoading: true
     },
     {
       date: UNKNOWN_DATE,
@@ -57,7 +53,8 @@ const getBondEvents = (bond: OptimisticBondType): EventType[] => {
           </Label>
           <SubLabel style={{ fontWeight: 400 }}></SubLabel>
         </>
-      )
+      ),
+      isLoading: true
     }
   ];
 };
@@ -66,11 +63,6 @@ type BondProps = { bond: OptimisticBondType; style?: ThemeUIStyleObject };
 
 export const OptimisticBond: React.FC<BondProps> = ({ bond, style }) => {
   const events = getBondEvents(bond);
-  const { dispatchEvent } = useBondView();
-
-  const handleSellBLusdPressed = () => {
-    dispatchEvent("SWAP_PRESSED", { inputToken: BLusdAmmTokenIndex.BLUSD } as SwapPressedPayload);
-  };
 
   return (
     <Flex
@@ -81,57 +73,8 @@ export const OptimisticBond: React.FC<BondProps> = ({ bond, style }) => {
         ...style
       }}
     >
-      <Flex>
-        {bond.status === "PENDING" && (
-          <Image
-            sx={{ height: 200, cursor: "pointer", borderRadius: 12 }}
-            src={nfts[bond.status]}
-            alt="TODO"
-            onClick={() => {
-              window.open("https://opensea.io", "_blank");
-            }}
-          />
-        )}
-        {bond.status === "CANCELLED" && (
-          <>
-            <Image sx={{ width: 148, cursor: "pointer", borderRadius: 12 }} src={nfts.PENDING} />
-            <Image
-              sx={{
-                width: 148,
-                cursor: "pointer",
-                borderRadius: "50%",
-                backgroundColor: "transparent",
-                ml: -148,
-                p: "28px"
-              }}
-              src={nfts[bond.status]}
-              alt="TODO"
-              onClick={() => {
-                window.open("https://opensea.io", "_blank");
-              }}
-            />
-          </>
-        )}
-        {bond.status === "CLAIMED" && (
-          <>
-            <Image sx={{ width: 148, cursor: "pointer", borderRadius: 12 }} src={nfts.PENDING} />
-            <Image
-              sx={{
-                width: 148,
-                cursor: "pointer",
-                borderRadius: "50%",
-                backgroundColor: "transparent",
-                ml: -148,
-                p: "28px"
-              }}
-              src={nfts[bond.status]}
-              alt="TODO"
-              onClick={() => {
-                window.open("https://opensea.io", "_blank");
-              }}
-            />
-          </>
-        )}
+      <Flex sx={{ width: 150, height: 210 }}>
+        <Placeholder />
       </Flex>
       <Card mt={[0, 0, 0, 0]} sx={{ borderRadius: 12, flexGrow: 1 }}>
         <Flex p={[2, 3]} sx={{ flexDirection: "column" }}>
@@ -157,20 +100,14 @@ export const OptimisticBond: React.FC<BondProps> = ({ bond, style }) => {
                 type="LUSD"
                 description={l.BOND_DEPOSIT.description}
               />
-              {bond.status === "PENDING" && (
-                <Record
-                  name={l.MARKET_VALUE.term}
-                  type="LUSD"
-                  description={l.MARKET_VALUE.description}
-                />
-              )}
+
+              <Record
+                name={l.MARKET_VALUE.term}
+                type="LUSD"
+                description={l.MARKET_VALUE.description}
+              />
             </Flex>
-            {bond.status === "PENDING" && <Actions bondId={bond.id} disabled />}
-            {bond.status !== "PENDING" && bond.status === "CLAIMED" && (
-              <Button variant="outline" sx={{ height: "44px" }} onClick={handleSellBLusdPressed}>
-                Sell bLUSD
-              </Button>
-            )}
+            <Actions bondId={bond.id} disabled />
           </Flex>
         </Flex>
       </Card>

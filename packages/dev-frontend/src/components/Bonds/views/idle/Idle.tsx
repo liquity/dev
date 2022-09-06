@@ -71,7 +71,7 @@ export const Idle: React.FC = () => {
             </Flex>
           </Heading>
           <Box sx={{ p: [2, 3] }}>
-            {!hasBonds && <Empty />}
+            <Empty />
 
             <Flex variant="layout.actions" mt={4}>
               <Button variant="primary" onClick={() => dispatchEvent("CREATE_BOND_PRESSED")}>
