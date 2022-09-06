@@ -1,4 +1,4 @@
-import { Decimal } from "@liquity/lib-base";
+import { Decimal, Percent } from "@liquity/lib-base";
 import React, { useEffect, useState } from "react";
 import { Flex, Button, Spinner, Heading, Close } from "theme-ui";
 import { Amount } from "../../../ActionDescription";
@@ -6,7 +6,7 @@ import { ErrorDescription } from "../../../ErrorDescription";
 import { Icon } from "../../../Icon";
 import { DisabledEditableRow, EditableRow, StaticRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
-import { BLusdAmmTokenIndex, SwapPayload } from "../../context/transitions";
+import { BLusdAmmTokenIndex } from "../../context/transitions";
 
 const tokenSymbol: Record<BLusdAmmTokenIndex, string> = {
   [BLusdAmmTokenIndex.BLUSD]: "bLUSD",
@@ -18,6 +18,8 @@ const outputToken: Record<BLusdAmmTokenIndex, BLusdAmmTokenIndex> = {
   [BLusdAmmTokenIndex.LUSD]: BLusdAmmTokenIndex.BLUSD
 };
 
+const marginalAmount = Decimal.ONE.div(1000);
+
 export const SwapPane: React.FC = () => {
   const {
     dispatchEvent,
@@ -28,21 +30,17 @@ export const SwapPane: React.FC = () => {
     isInputTokenApprovedWithBLusdAmm,
     getExpectedSwapOutput
   } = useBondView();
-  const inputAmountEditingState = useState<string>();
+  const editingState = useState<string>();
   const inputTokenBalance =
     (inputToken === BLusdAmmTokenIndex.BLUSD ? bLusdBalance : lusdBalance) ?? Decimal.ZERO;
-  const [inputAmount, setInputAmount] = useState<Decimal>(inputTokenBalance);
+  const [inputAmount, setInputAmount] = useState<Decimal>(Decimal.ZERO);
   const [outputAmount, setOutputAmount] = useState<Decimal>(Decimal.ZERO);
   const [exchangeRate, setExchangeRate] = useState<Decimal>(Decimal.ZERO);
+  const [priceImpact, setPriceImpact] = useState<Decimal>(Decimal.ZERO);
+  const priceImpactPct = new Percent(priceImpact);
 
-  const isApprovePending =
-    {
-      [BLusdAmmTokenIndex.BLUSD]: statuses.APPROVE_AMM_BLUSD,
-      [BLusdAmmTokenIndex.LUSD]: statuses.APPROVE_AMM_LUSD
-    }[inputToken] === "PENDING";
-
+  const isApprovePending = statuses.APPROVE_AMM === "PENDING";
   const isSwapPending = statuses.SWAP === "PENDING";
-
   const isBalanceInsufficient = inputAmount.gt(inputTokenBalance);
 
   const handleDismiss = () => {
@@ -54,7 +52,10 @@ export const SwapPane: React.FC = () => {
   };
 
   const handleConfirmPressed = () => {
-    dispatchEvent("CONFIRM_PRESSED", { inputAmount, minOutputAmount: Decimal.ZERO } as SwapPayload);
+    dispatchEvent("CONFIRM_PRESSED", {
+      inputAmount,
+      minOutputAmount: outputAmount.mul(0.995) // 0.5% slippage tolerance
+    });
   };
 
   const handleBackPressed = () => {
@@ -62,20 +63,26 @@ export const SwapPane: React.FC = () => {
   };
 
   useEffect(() => {
-    if (inputAmount.isZero) {
-      setOutputAmount(Decimal.ZERO);
-      setExchangeRate(Decimal.ZERO);
-      return;
-    }
-
     let cancelled = false;
 
     const timeoutId = setTimeout(async () => {
       try {
-        const expectedOutputAmount = await getExpectedSwapOutput(inputToken, inputAmount);
+        const [marginalOutput, outputAmount] = await Promise.all([
+          getExpectedSwapOutput(inputToken, marginalAmount),
+          inputAmount.nonZero && getExpectedSwapOutput(inputToken, inputAmount)
+        ]);
+
         if (cancelled) return;
-        setOutputAmount(expectedOutputAmount);
-        setExchangeRate(expectedOutputAmount.div(inputAmount));
+
+        const marginalExchangeRate = marginalOutput.div(marginalAmount);
+        const exchangeRate = outputAmount?.div(inputAmount);
+        const priceImpact = exchangeRate?.lte(marginalExchangeRate)
+          ? marginalExchangeRate.sub(exchangeRate).div(marginalExchangeRate)
+          : Decimal.ZERO;
+
+        setOutputAmount(outputAmount ?? Decimal.ZERO);
+        setExchangeRate(exchangeRate ?? marginalExchangeRate);
+        setPriceImpact(priceImpact);
       } catch (error) {
         console.error("getExpectedSwapOutput() failed");
         console.log(error);
@@ -109,7 +116,7 @@ export const SwapPane: React.FC = () => {
         inputId="swap-input-amount"
         amount={inputAmount.prettify(2)}
         unit={tokenSymbol[inputToken]}
-        editingState={inputAmountEditingState}
+        editingState={editingState}
         editedAmount={inputAmount.toString()}
         setEditedAmount={amount => setInputAmount(Decimal.from(amount))}
         maxAmount={inputTokenBalance.toString()}
@@ -134,6 +141,13 @@ export const SwapPane: React.FC = () => {
         unit={`${tokenSymbol[inputToken]}:${tokenSymbol[outputToken[inputToken]]}`}
       />
 
+      <StaticRow
+        label="Price impact"
+        inputId="swap-price-impact"
+        amount={priceImpactPct.toString(4)}
+        color={priceImpact.gte(0.005) ? "danger" : undefined}
+      />
+
       {isBalanceInsufficient && (
         <ErrorDescription>
           Amount exceeds your balance by{" "}
@@ -156,7 +170,7 @@ export const SwapPane: React.FC = () => {
           <Button
             variant="primary"
             onClick={handleConfirmPressed}
-            disabled={isBalanceInsufficient || isSwapPending}
+            disabled={inputAmount.isZero || isBalanceInsufficient || isSwapPending}
           >
             {isSwapPending ? <Spinner size="28px" sx={{ color: "white" }} /> : <>Confirm</>}
           </Button>

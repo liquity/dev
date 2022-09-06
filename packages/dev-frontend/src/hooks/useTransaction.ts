@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { TransactionStatus } from "../components/Bonds/context/transitions";
 
-export function useTransaction(
-  transactionFunction: (...params: any) => Promise<void>,
-  dependencies: any[]
-): [(...params: any) => Promise<void>, TransactionStatus] {
+export function useTransaction<T extends unknown[]>(
+  transactionFunction: (...params: T) => Promise<void>,
+  dependencies: unknown[]
+): [(...params: T) => Promise<void>, TransactionStatus] {
   const [status, setStatus] = useState<TransactionStatus>("IDLE");
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export function useTransaction(
   }, [status]);
 
   const transaction = useCallback(
-    async (...args) => {
+    async (...args: T) => {
       try {
         setStatus("PENDING");
         await transactionFunction(...args);

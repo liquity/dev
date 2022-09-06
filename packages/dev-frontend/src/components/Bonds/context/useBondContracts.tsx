@@ -35,6 +35,7 @@ type BondsInformation = {
   stats: Stats;
   bLusdBalance: Decimal;
   lusdBalance: Decimal;
+  lpTokenBalance: Decimal;
 };
 
 type BondContracts = {
@@ -119,8 +120,15 @@ export const useBondContracts = (): BondContracts => {
         protocolInfo.floorPrice
       );
       const stats = await api.getStats(bondNft);
-      const bLusdBalance = await api.getTokenBalance(account, bLusdToken);
-      const lusdBalance = await api.getTokenBalance(account, lusdToken);
+
+      // TODO cache LP token? Or add to addresses.json?
+      const lpToken = await api.getLpToken(bLusdAmm);
+
+      const [bLusdBalance, lusdBalance, lpTokenBalance] = await Promise.all([
+        api.getTokenBalance(account, bLusdToken),
+        api.getTokenBalance(account, lusdToken),
+        api.getTokenBalance(account, lpToken)
+      ]);
 
       return {
         treasury,
@@ -128,7 +136,8 @@ export const useBondContracts = (): BondContracts => {
         bonds,
         stats,
         bLusdBalance,
-        lusdBalance
+        lusdBalance,
+        lpTokenBalance
       };
     },
     [chickenBondManager, bondNft, bLusdToken, lusdToken, bLusdAmm]

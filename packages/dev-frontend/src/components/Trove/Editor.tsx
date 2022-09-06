@@ -66,7 +66,7 @@ const PendingAmount: React.FC<PendingAmountProps & SxProp> = ({ sx, value }) => 
 type StaticAmountsProps = {
   inputId: string;
   labelledBy?: string;
-  amount: string;
+  amount?: string;
   unit?: string;
   color?: string;
   pendingAmount?: string;
@@ -101,26 +101,28 @@ export const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
         ...sx
       }}
     >
-      <Flex sx={{ alignItems: "center" }}>
-        <Text sx={{ color, fontWeight: "medium" }}>{amount}</Text>
+      {amount && (
+        <Flex sx={{ alignItems: "center" }}>
+          <Text sx={{ color, fontWeight: "medium" }}>{amount}</Text>
 
-        {unit && (
-          <>
-            &nbsp;
-            <Text sx={{ fontWeight: "light", opacity: 0.8 }}>{unit}</Text>
-          </>
-        )}
+          {unit && (
+            <>
+              &nbsp;
+              <Text sx={{ fontWeight: "light", opacity: 0.8 }}>{unit}</Text>
+            </>
+          )}
 
-        {pendingAmount && (
-          <>
-            &nbsp;
-            <PendingAmount
-              sx={{ color: pendingColor, opacity: 0.8, fontSize: "0.666em" }}
-              value={pendingAmount}
-            />
-          </>
-        )}
-      </Flex>
+          {pendingAmount && (
+            <>
+              &nbsp;
+              <PendingAmount
+                sx={{ color: pendingColor, opacity: 0.8, fontSize: "0.666em" }}
+                value={pendingAmount}
+              />
+            </>
+          )}
+        </Flex>
+      )}
 
       {children}
     </Flex>
@@ -183,14 +185,17 @@ export const DisabledEditableRow: React.FC<DisabledEditableRowProps> = ({
   amount,
   color,
   pendingAmount,
-  pendingColor
+  pendingColor,
+  children
 }) => (
-  <Row labelId={`${inputId}-label`} {...{ label, unit }}>
+  <Row labelId={`${inputId}-label`} label={label}>
     <StaticAmounts
       sx={{ ...editableStyle, boxShadow: 0 }}
       labelledBy={`${inputId}-label`}
       {...{ inputId, amount, unit, color, pendingAmount, pendingColor }}
-    />
+    >
+      {children}
+    </StaticAmounts>
   </Row>
 );
 

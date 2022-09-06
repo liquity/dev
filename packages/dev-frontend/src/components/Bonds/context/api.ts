@@ -1,4 +1,4 @@
-import { constants } from "ethers";
+import { BigNumber, CallOverrides, constants, Contract, providers, Signer } from "ethers";
 import {
   CHICKEN_BOND_MANAGER_ADDRESS,
   BLUSD_AMM_ADDRESS
@@ -32,6 +32,12 @@ import {
 import { UNKNOWN_DATE } from "../../HorizontalTimeline";
 import { BLusdAmmTokenIndex } from "./transitions";
 import {
+  AddLiquidityEvent,
+  AddLiquidityEventObject,
+  RemoveLiquidityEvent,
+  RemoveLiquidityEventObject,
+  RemoveLiquidityOneEvent,
+  RemoveLiquidityOneEventObject,
   TokenExchangeEvent,
   TokenExchangeEventObject
 } from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
@@ -254,8 +260,31 @@ const getTreasury = async (chickenBondManager: ChickenBondManager): Promise<Trea
   };
 };
 
-const getTokenBalance = async (account: string, token: BLUSDToken | LUSDToken): Promise<Decimal> => {
+// Very minimal type that only contains what we need
+export interface ERC20 {
+  balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  totalSupply(_overrides?: CallOverrides): Promise<BigNumber>;
+}
+
+const erc20From = (tokenAddress: string, signerOrProvider: Signer | providers.Provider) =>
+  (new Contract(
+    tokenAddress,
+    [
+      "function balanceOf(address) view returns (uint256)",
+      "function totalSupply() view returns (uint256)"
+    ],
+    signerOrProvider
+  ) as unknown) as ERC20;
+
+const getLpToken = async (pool: CurveCryptoSwap2ETH) =>
+  erc20From(await pool.token(), pool.signer ?? pool.provider);
+
+const getTokenBalance = async (account: string, token: ERC20): Promise<Decimal> => {
   return decimalify(await token.balanceOf(account));
+};
+
+const getTokenTotalSupply = async (token: ERC20): Promise<Decimal> => {
+  return decimalify(await token.totalSupply());
 };
 
 const isInfiniteBondApproved = async (account: string, lusdToken: LUSDToken): Promise<boolean> => {
@@ -400,6 +429,151 @@ const swapTokens = async (
   return exchangeEvent.args;
 };
 
+const amountsFrom = (bLusdAmount: Decimal, lusdAmount: Decimal) =>
+  Array.from({
+    length: 2,
+    [BLusdAmmTokenIndex.BLUSD]: bLusdAmount.hex,
+    [BLusdAmmTokenIndex.LUSD]: lusdAmount.hex
+  }) as [string, string];
+
+const getExpectedLpTokens = async (
+  bLusdAmount: Decimal,
+  lusdAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH
+): Promise<Decimal> =>
+  decimalify(await bLusdAmm.calc_token_amount(amountsFrom(bLusdAmount, lusdAmount)));
+
+const addLiquidity = async (
+  bLusdAmount: Decimal,
+  lusdAmount: Decimal,
+  minLpTokens: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<AddLiquidityEventObject> => {
+  if (bLusdAmm === undefined) throw new Error("addLiquidity() failed: a dependency is null");
+
+  const amounts = amountsFrom(bLusdAmount, lusdAmount);
+
+  const gasEstimate = await bLusdAmm.estimateGas["add_liquidity(uint256[2],uint256)"](
+    amounts,
+    minLpTokens.hex
+  );
+
+  const receipt = await (
+    await bLusdAmm["add_liquidity(uint256[2],uint256)"](
+      amounts,
+      minLpTokens.hex,
+      { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
+    )
+  ).wait();
+
+  const addLiquidityEvent = receipt?.events?.find(
+    e => e.event === "AddLiquidity"
+  ) as Maybe<AddLiquidityEvent>;
+
+  if (addLiquidityEvent === undefined) {
+    throw new Error("addLiquidity() failed: couldn't find AddLiquidity event");
+  }
+
+  console.log("addLiquidity() finished:", addLiquidityEvent.args);
+  return addLiquidityEvent.args;
+};
+
+const getCoinBalances = (pool: CurveCryptoSwap2ETH) =>
+  Promise.all(
+    Array.from({
+      length: 2,
+      [BLusdAmmTokenIndex.BLUSD]: pool.balances(BLusdAmmTokenIndex.BLUSD).then(decimalify),
+      [BLusdAmmTokenIndex.LUSD]: pool.balances(BLusdAmmTokenIndex.LUSD).then(decimalify)
+    })
+  ) as Promise<[Decimal, Decimal]>;
+
+const getExpectedWithdrawal = async (
+  burnLp: Decimal,
+  output: BLusdAmmTokenIndex | "both",
+  bLusdAmm: CurveCryptoSwap2ETH
+): Promise<Map<BLusdAmmTokenIndex, Decimal>> => {
+  if (output === "both") {
+    const lpToken = await getLpToken(bLusdAmm);
+    const [totalLp, coinBalances] = await Promise.all([
+      getTokenTotalSupply(lpToken),
+      getCoinBalances(bLusdAmm)
+    ]);
+
+    if (totalLp.isZero || burnLp.isZero) {
+      return new Map([
+        [BLusdAmmTokenIndex.BLUSD, Decimal.ZERO],
+        [BLusdAmmTokenIndex.LUSD, Decimal.ZERO]
+      ]);
+    }
+
+    return new Map(coinBalances.map((balance, i) => [i, balance.mulDiv(burnLp, totalLp)]));
+  } else {
+    return new Map([
+      [output, await bLusdAmm.calc_withdraw_one_coin(burnLp.hex, output).then(decimalify)]
+    ]);
+  }
+};
+
+const removeLiquidity = async (
+  burnLpTokens: Decimal,
+  minBLusdAmount: Decimal,
+  minLusdAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<RemoveLiquidityEventObject> => {
+  if (bLusdAmm === undefined) throw new Error("removeLiquidity() failed: a dependency is null");
+
+  const minAmounts = amountsFrom(minBLusdAmount, minLusdAmount);
+
+  const receipt = await (
+    await bLusdAmm["remove_liquidity(uint256,uint256[2])"](burnLpTokens.hex, minAmounts)
+  ).wait();
+
+  const removeLiquidityEvent = receipt?.events?.find(
+    e => e.event === "RemoveLiquidity"
+  ) as Maybe<RemoveLiquidityEvent>;
+
+  if (removeLiquidityEvent === undefined) {
+    throw new Error("removeLiquidity() failed: couldn't find RemoveLiquidity event");
+  }
+
+  console.log("removeLiquidity() finished:", removeLiquidityEvent.args);
+  return removeLiquidityEvent.args;
+};
+
+const removeLiquidityOneCoin = async (
+  burnLpTokens: Decimal,
+  output: BLusdAmmTokenIndex,
+  minAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<RemoveLiquidityOneEventObject> => {
+  if (bLusdAmm === undefined)
+    throw new Error("removeLiquidityOneCoin() failed: a dependency is null");
+
+  const gasEstimate = await bLusdAmm.estimateGas[
+    "remove_liquidity_one_coin(uint256,uint256,uint256)"
+  ](burnLpTokens.hex, output, minAmount.hex);
+
+  const receipt = await (
+    await bLusdAmm["remove_liquidity_one_coin(uint256,uint256,uint256)"](
+      burnLpTokens.hex,
+      output,
+      minAmount.hex,
+      { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
+    )
+  ).wait();
+
+  const removeLiquidityOneEvent = receipt?.events?.find(
+    e => e.event === "RemoveLiquidityOne"
+  ) as Maybe<RemoveLiquidityOneEvent>;
+
+  if (removeLiquidityOneEvent === undefined) {
+    throw new Error("removeLiquidityOneCoin() failed: couldn't find RemoveLiquidityOne event");
+  }
+
+  console.log("removeLiquidityOneCoin() finished:", removeLiquidityOneEvent.args);
+  return removeLiquidityOneEvent.args;
+};
+
 export type BondsApi = {
   getAccountBonds: (
     account: string,
@@ -413,7 +587,8 @@ export type BondsApi = {
   ) => Promise<Bond[]>;
   getStats: (bondNft: BondNFT) => Promise<Stats>;
   getTreasury: (chickenBondManager: ChickenBondManager) => Promise<Treasury>;
-  getTokenBalance: (account: string, token: BLUSDToken | LUSDToken) => Promise<Decimal>;
+  getLpToken: (pool: CurveCryptoSwap2ETH) => Promise<ERC20>;
+  getTokenBalance: (account: string, token: ERC20) => Promise<Decimal>;
   getProtocolInfo: (
     bLusdToken: BLUSDToken,
     bLusdAmm: CurveCryptoSwap2ETH,
@@ -435,6 +610,34 @@ export type BondsApi = {
     minOutputAmount: Decimal,
     bLusdAmm: CurveCryptoSwap2ETH | undefined
   ) => Promise<TokenExchangeEventObject>;
+  getExpectedLpTokens: (
+    bLusdAmount: Decimal,
+    lusdAmount: Decimal,
+    bLusdAmm: CurveCryptoSwap2ETH
+  ) => Promise<Decimal>;
+  addLiquidity: (
+    bLusdAmount: Decimal,
+    lusdAmount: Decimal,
+    minLpTokens: Decimal,
+    bLusdAmm: CurveCryptoSwap2ETH | undefined
+  ) => Promise<AddLiquidityEventObject>;
+  getExpectedWithdrawal: (
+    burnLp: Decimal,
+    output: BLusdAmmTokenIndex | "both",
+    bLusdAmm: CurveCryptoSwap2ETH
+  ) => Promise<Map<BLusdAmmTokenIndex, Decimal>>;
+  removeLiquidity: (
+    burnLpTokens: Decimal,
+    minBLusdAmount: Decimal,
+    minLusdAmount: Decimal,
+    bLusdAmm: CurveCryptoSwap2ETH | undefined
+  ) => Promise<RemoveLiquidityEventObject>;
+  removeLiquidityOneCoin: (
+    burnLpTokens: Decimal,
+    output: BLusdAmmTokenIndex,
+    minAmount: Decimal,
+    bLusdAmm: CurveCryptoSwap2ETH | undefined
+  ) => Promise<RemoveLiquidityOneEventObject>;
   createBond: (
     lusdAmount: Decimal,
     chickenBondManager: ChickenBondManager | undefined
@@ -454,6 +657,7 @@ export const api: BondsApi = {
   getAccountBonds,
   getStats,
   getTreasury,
+  getLpToken,
   getTokenBalance,
   getProtocolInfo,
   approveInfiniteBond,
@@ -464,5 +668,10 @@ export const api: BondsApi = {
   isTokenApprovedWithBLusdAmm,
   approveTokenWithBLusdAmm,
   getExpectedSwapOutput,
-  swapTokens
+  swapTokens,
+  getExpectedLpTokens,
+  addLiquidity,
+  getExpectedWithdrawal,
+  removeLiquidity,
+  removeLiquidityOneCoin
 };

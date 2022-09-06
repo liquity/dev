@@ -29,6 +29,8 @@ export type BondViewContextType = {
   optimisticBond?: OptimisticBond;
   bLusdBalance?: Decimal;
   lusdBalance?: Decimal;
+  lpTokenBalance?: Decimal;
+  lpTokenTotalSupply?: Decimal;
   statuses: BondTransactionStatuses;
   isInfiniteBondApproved: boolean;
   isSynchronizing: boolean;
@@ -37,14 +39,16 @@ export type BondViewContextType = {
   setSimulatedMarketPrice: (marketPrice: Decimal) => void;
   resetSimulatedMarketPrice: () => void;
   hasFoundContracts: boolean;
+  isBLusdApprovedWithBlusdAmm: boolean;
+  isLusdApprovedWithBlusdAmm: boolean;
   inputToken: BLusdAmmTokenIndex;
   isInputTokenApprovedWithBLusdAmm: boolean;
   getExpectedSwapOutput: (inputToken: BLusdAmmTokenIndex, inputAmount: Decimal) => Promise<Decimal>;
-  swapTokens: (
-    inputToken: BLusdAmmTokenIndex,
-    inputAmount: Decimal,
-    minOutputAmount: Decimal
-  ) => Promise<void>;
+  getExpectedLpTokens: (bLusdAmount: Decimal, lusdAmount: Decimal) => Promise<Decimal>;
+  getExpectedWithdrawal: (
+    burnLp: Decimal,
+    output: BLusdAmmTokenIndex | "both"
+  ) => Promise<Map<BLusdAmmTokenIndex, Decimal>>;
 };
 
 export const BondViewContext = createContext<BondViewContextType | null>(null);

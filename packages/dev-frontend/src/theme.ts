@@ -318,6 +318,15 @@ const theme: Theme = {
       ...formBase
     },
 
+    radioLabel: {
+      mr: 3,
+      width: "unset",
+
+      svg: {
+        mr: 1
+      }
+    },
+
     unit: {
       ...formCell,
 
