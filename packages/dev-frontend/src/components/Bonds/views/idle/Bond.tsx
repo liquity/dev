@@ -80,6 +80,7 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
     >
       <Flex
         sx={{
+          flexShrink: 0,
           boxShadow: 2,
           borderRadius: 8.5,
           border: 1,
@@ -88,7 +89,7 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
         }}
       >
         <Image
-          sx={{ cursor: "pointer", width: "150px", height: "210px" }}
+          sx={{ cursor: "pointer", minWidth: "150px" }}
           src={bond.tokenUri}
           alt="TODO"
           onClick={() => {
