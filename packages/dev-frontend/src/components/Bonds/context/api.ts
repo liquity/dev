@@ -186,7 +186,7 @@ const getProtocolInfo = async (
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
   const marketPrice = Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle()));
   const fairPrice = marketPrice.mul(1.1); /* TODO: use real formula */
-  const floorPrice = reserveSize.eq(0) ? Decimal.ONE : reserveSize.div(bLusdSupply);
+  const floorPrice = bLusdSupply.isZero ? Decimal.ONE : reserveSize.div(bLusdSupply);
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
   const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
     24 * 60 * 60
