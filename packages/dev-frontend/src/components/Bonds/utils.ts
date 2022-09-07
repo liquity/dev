@@ -45,8 +45,9 @@ const getBreakEvenDays = (
   marketPricePremium: Decimal,
   claimBondFee: Decimal
 ): Decimal => {
-  if (marketPricePremium.lte(1)) return Decimal.INFINITY;
-  return alphaAccrualFactor.div(marketPricePremium.mul(Decimal.ONE.sub(claimBondFee)).sub(1));
+  const effectivePremium = marketPricePremium.mul(Decimal.ONE.sub(claimBondFee));
+  if (effectivePremium.lte(Decimal.ONE)) return Decimal.INFINITY;
+  return alphaAccrualFactor.div(effectivePremium.sub(Decimal.ONE));
 };
 
 const getFutureBLusdAccrualFactor = (
@@ -64,14 +65,11 @@ const getRebondDays = (
   marketPricePremium: Decimal,
   claimBondFee: Decimal
 ): Decimal => {
-  if (marketPricePremium.lte(1)) return Decimal.INFINITY;
-  const sqrt = Decimal.from(
-    Math.sqrt(parseFloat(Decimal.ONE.sub(claimBondFee).mul(marketPricePremium).toString()))
-  );
+  const effectivePremium = Decimal.ONE.sub(claimBondFee).mul(marketPricePremium);
+  if (effectivePremium.lte(Decimal.ONE)) return Decimal.INFINITY;
+  const sqrt = Decimal.from(Math.sqrt(parseFloat(effectivePremium.toString())));
   const dividend = Decimal.ONE.add(sqrt);
-  const divisor = Decimal.ONE.sub(claimBondFee).mul(marketPricePremium).gt(1)
-    ? Decimal.ONE.sub(claimBondFee).mul(marketPricePremium).sub(1)
-    : Decimal.ONE;
+  const divisor = effectivePremium.sub(Decimal.ONE);
   return alphaAccrualFactor.mul(dividend.div(divisor));
 };
 

@@ -148,7 +148,7 @@ export const _getProtocolInfo = (
   alphaAccrualFactor: Decimal
 ) => {
   const marketPricePremium = marketPrice.div(floorPrice);
-  const hasMarketPremium = marketPrice.gt(floorPrice.add(claimBondFee));
+  const hasMarketPremium = marketPricePremium.mul(Decimal.ONE.sub(claimBondFee)).gt(Decimal.ONE);
 
   const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
   const breakEvenTime = getFutureDateByDays(toFloat(breakEvenDays));
