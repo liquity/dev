@@ -159,7 +159,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         editingState={depositEditingState}
         editedAmount={deposit.toString()}
         setEditedAmount={amount => setDeposit(Decimal.min(lusdBalance, Decimal.from(amount)))}
-        maxAmount={lusdBalance.prettify(2)}
+        maxAmount={lusdBalance.toString()}
         maxedOut={deposit.eq(lusdBalance)}
       ></EditableRow>
 
