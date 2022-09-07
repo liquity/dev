@@ -148,7 +148,7 @@ export const _getProtocolInfo = (
   alphaAccrualFactor: Decimal
 ) => {
   const marketPricePremium = marketPrice.div(floorPrice);
-  const hasMarketPremium = marketPrice.gt(floorPrice.add(claimBondFee));
+  const hasMarketPremium = marketPricePremium.mul(Decimal.ONE.sub(claimBondFee)).gt(Decimal.ONE);
 
   const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
   const breakEvenTime = getFutureDateByDays(toFloat(breakEvenDays));
@@ -186,7 +186,7 @@ const getProtocolInfo = async (
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
   const marketPrice = Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle()));
   const fairPrice = marketPrice.mul(1.1); /* TODO: use real formula */
-  const floorPrice = reserveSize.eq(0) ? Decimal.ONE : reserveSize.div(bLusdSupply);
+  const floorPrice = bLusdSupply.isZero ? Decimal.ONE : reserveSize.div(bLusdSupply);
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
   const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
     24 * 60 * 60
@@ -223,29 +223,20 @@ const getProtocolInfo = async (
   };
 };
 
-const getStats = async (bondNft: BondNFT): Promise<Stats> => {
-  const totalBonds = decimalify(await bondNft.totalSupply()).mul(1e18);
-  const totalBondsNumber = parseInt(totalBonds.toString());
-  const bondIdRequests = Array.from(Array(totalBondsNumber)).map((_, index) =>
-    bondNft.tokenByIndex(index)
-  );
-  const bondIds = await Promise.all(bondIdRequests);
-  const bondStatuses = await Promise.all(bondIds.map(bondId => bondNft.getBondStatus(bondId)));
-  const pendingBonds = Decimal.from(
-    bondStatuses.filter(status => BOND_STATUS[status] === "PENDING").length
-  );
-  const cancelledBonds = Decimal.from(
-    bondStatuses.filter(status => BOND_STATUS[status] === "CANCELLED").length
-  );
-  const claimedBonds = Decimal.from(
-    bondStatuses.filter(status => BOND_STATUS[status] === "CLAIMED").length
-  );
+const getStats = async (chickenBondManager: ChickenBondManager): Promise<Stats> => {
+  const [pendingBonds, cancelledBonds, claimedBonds] = await Promise.all([
+    chickenBondManager.getOpenBondCount(),
+    chickenBondManager.countChickenOut(),
+    chickenBondManager.countChickenIn()
+  ]);
+
+  const totalBonds = pendingBonds.add(cancelledBonds).add(claimedBonds);
 
   return {
-    pendingBonds,
-    cancelledBonds,
-    claimedBonds,
-    totalBonds
+    pendingBonds: Decimal.from(pendingBonds.toString()),
+    cancelledBonds: Decimal.from(cancelledBonds.toString()),
+    claimedBonds: Decimal.from(claimedBonds.toString()),
+    totalBonds: Decimal.from(totalBonds.toString())
   };
 };
 
@@ -585,7 +576,7 @@ export type BondsApi = {
     claimBondFee: Decimal,
     floorPrice: Decimal
   ) => Promise<Bond[]>;
-  getStats: (bondNft: BondNFT) => Promise<Stats>;
+  getStats: (chickenBondManager: ChickenBondManager) => Promise<Stats>;
   getTreasury: (chickenBondManager: ChickenBondManager) => Promise<Treasury>;
   getLpToken: (pool: CurveCryptoSwap2ETH) => Promise<ERC20>;
   getTokenBalance: (account: string, token: ERC20) => Promise<Decimal>;

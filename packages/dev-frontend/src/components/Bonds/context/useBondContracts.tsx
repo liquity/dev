@@ -119,7 +119,7 @@ export const useBondContracts = (): BondContracts => {
         protocolInfo.claimBondFee,
         protocolInfo.floorPrice
       );
-      const stats = await api.getStats(bondNft);
+      const stats = await api.getStats(chickenBondManager);
 
       // TODO cache LP token? Or add to addresses.json?
       const lpToken = await api.getLpToken(bLusdAmm);
