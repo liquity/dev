@@ -58,8 +58,9 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   if (protocolInfo === undefined || simulatedProtocolInfo === undefined || lusdBalance === undefined)
     return null;
 
+  const depositMinusClaimBondFee = Decimal.ONE.sub(protocolInfo.claimBondFee).mul(deposit);
   const rebondReturn = getReturn(
-    deposit.mul(simulatedProtocolInfo.rebondAccrualFactor),
+    depositMinusClaimBondFee.mul(simulatedProtocolInfo.rebondAccrualFactor),
     deposit,
     simulatedProtocolInfo.simulatedMarketPrice
   );
@@ -128,7 +129,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
               label: (
                 <>
                   <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
-                  <SubLabel>{`${deposit
+                  <SubLabel>{`${depositMinusClaimBondFee
                     .mul(simulatedProtocolInfo.breakEvenAccrualFactor)
                     .prettify(2)} bLUSD`}</SubLabel>
                 </>
@@ -141,7 +142,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
                   <Label description={l.OPTIMUM_REBOND_TIME.description}>
                     {l.OPTIMUM_REBOND_TIME.term}
                   </Label>
-                  <SubLabel>{`${deposit
+                  <SubLabel>{`${depositMinusClaimBondFee
                     .mul(simulatedProtocolInfo.rebondAccrualFactor)
                     .prettify(2)} bLUSD`}</SubLabel>
                 </>
