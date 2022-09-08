@@ -181,6 +181,7 @@ export type Bond = {
   marketValue: Decimal;
   rebondReturn: number;
   rebondRoi: number;
+  rebondApr: number;
   claimNowReturn: number;
 };
 
