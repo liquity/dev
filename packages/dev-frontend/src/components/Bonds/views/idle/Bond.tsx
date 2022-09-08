@@ -32,7 +32,8 @@ const getBondEvents = (bond: BondType): EventType[] => {
           </SubLabel>
         </>
       ),
-      isSelected: true
+      isEndOfLife: true,
+      isMilestone: bond.status !== "PENDING"
     },
     {
       date: new Date(bond.breakEvenTime),

@@ -71,7 +71,8 @@ export const Actioning: React.FC = () => {
           <SubLabel style={{ fontWeight: 400 }}>{`${bond.accrued.prettify(2)} bLUSD`}</SubLabel>
         </>
       ),
-      isSelected: bond.status === "PENDING"
+      isEndOfLife: true,
+      isMilestone: false
     }
   ];
 
