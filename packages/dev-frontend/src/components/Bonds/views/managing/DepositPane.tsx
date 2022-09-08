@@ -7,6 +7,7 @@ import { Icon } from "../../../Icon";
 import { DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 import { BLusdAmmTokenIndex } from "../../context/transitions";
+import { PoolDetails } from "./PoolDetails";
 
 export const DepositPane: React.FC = () => {
   const {
@@ -113,10 +114,12 @@ export const DepositPane: React.FC = () => {
       </Flex>
 
       <DisabledEditableRow
-        label="Mint LP Tokens"
+        label="Mint LP tokens"
         inputId="deposit-mint-lp-tokens"
         amount={lpTokens.prettify(2)}
       />
+
+      <PoolDetails />
 
       {isAnyBalanceInsufficient && (
         <ErrorDescription>

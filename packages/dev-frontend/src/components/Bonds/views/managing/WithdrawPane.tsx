@@ -7,6 +7,7 @@ import { Icon } from "../../../Icon";
 import { DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 import { BLusdAmmTokenIndex } from "../../context/transitions";
+import { PoolDetails } from "./PoolDetails";
 
 const tokenSymbol = new Map([
   [BLusdAmmTokenIndex.BLUSD, "bLUSD"],
@@ -154,6 +155,8 @@ export const WithdrawPane: React.FC = () => {
           ))}
         </Flex>
       </DisabledEditableRow>
+
+      <PoolDetails />
 
       {isBalanceInsufficient && (
         <ErrorDescription>

@@ -69,6 +69,9 @@ export const BondViewProvider: React.FC = props => {
   const [bLusdBalance, setBLusdBalance] = useState<Decimal>();
   const [lusdBalance, setLusdBalance] = useState<Decimal>();
   const [lpTokenBalance, setLpTokenBalance] = useState<Decimal>();
+  const [lpTokenSupply, setLpTokenSupply] = useState<Decimal>();
+  const [bLusdAmmBLusdBalance, setBLusdAmmBLusdBalance] = useState<Decimal>();
+  const [bLusdAmmLusdBalance, setBLusdAmmLusdBalance] = useState<Decimal>();
   const { account, liquity } = useLiquity();
   const contracts = useBondContracts();
 
@@ -214,7 +217,10 @@ export const BondViewProvider: React.FC = props => {
           stats,
           bLusdBalance,
           lusdBalance,
-          lpTokenBalance
+          lpTokenBalance,
+          lpTokenSupply,
+          bLusdAmmBLusdBalance,
+          bLusdAmmLusdBalance
         } = latest;
 
         setProtocolInfo(protocolInfo);
@@ -237,6 +243,9 @@ export const BondViewProvider: React.FC = props => {
         setBLusdBalance(bLusdBalance);
         setLusdBalance(lusdBalance);
         setLpTokenBalance(lpTokenBalance);
+        setLpTokenSupply(lpTokenSupply);
+        setBLusdAmmBLusdBalance(bLusdAmmBLusdBalance);
+        setBLusdAmmLusdBalance(bLusdAmmLusdBalance);
         setStats(stats);
         setTreasury(treasury);
         setBonds(bonds);
@@ -492,6 +501,9 @@ export const BondViewProvider: React.FC = props => {
     bLusdBalance,
     lusdBalance,
     lpTokenBalance,
+    lpTokenSupply,
+    bLusdAmmBLusdBalance,
+    bLusdAmmLusdBalance,
     isInfiniteBondApproved,
     isSynchronizing,
     getLusdFromFaucet,
