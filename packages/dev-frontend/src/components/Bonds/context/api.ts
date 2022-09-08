@@ -470,13 +470,7 @@ const addLiquidity = async (
 };
 
 const getCoinBalances = (pool: CurveCryptoSwap2ETH) =>
-  Promise.all(
-    Array.from({
-      length: 2,
-      [BLusdAmmTokenIndex.BLUSD]: pool.balances(BLusdAmmTokenIndex.BLUSD).then(decimalify),
-      [BLusdAmmTokenIndex.LUSD]: pool.balances(BLusdAmmTokenIndex.LUSD).then(decimalify)
-    })
-  ) as Promise<[Decimal, Decimal]>;
+  Promise.all([pool.balances(0).then(decimalify), pool.balances(1).then(decimalify)]);
 
 const getExpectedWithdrawal = async (
   burnLp: Decimal,
@@ -580,6 +574,7 @@ export type BondsApi = {
   getTreasury: (chickenBondManager: ChickenBondManager) => Promise<Treasury>;
   getLpToken: (pool: CurveCryptoSwap2ETH) => Promise<ERC20>;
   getTokenBalance: (account: string, token: ERC20) => Promise<Decimal>;
+  getTokenTotalSupply: (token: ERC20) => Promise<Decimal>;
   getProtocolInfo: (
     bLusdToken: BLUSDToken,
     bLusdAmm: CurveCryptoSwap2ETH,
@@ -601,6 +596,7 @@ export type BondsApi = {
     minOutputAmount: Decimal,
     bLusdAmm: CurveCryptoSwap2ETH | undefined
   ) => Promise<TokenExchangeEventObject>;
+  getCoinBalances: (pool: CurveCryptoSwap2ETH) => Promise<[Decimal, Decimal]>;
   getExpectedLpTokens: (
     bLusdAmount: Decimal,
     lusdAmount: Decimal,
@@ -650,6 +646,7 @@ export const api: BondsApi = {
   getTreasury,
   getLpToken,
   getTokenBalance,
+  getTokenTotalSupply,
   getProtocolInfo,
   approveInfiniteBond,
   isInfiniteBondApproved,
@@ -660,6 +657,7 @@ export const api: BondsApi = {
   approveTokenWithBLusdAmm,
   getExpectedSwapOutput,
   swapTokens,
+  getCoinBalances,
   getExpectedLpTokens,
   addLiquidity,
   getExpectedWithdrawal,
