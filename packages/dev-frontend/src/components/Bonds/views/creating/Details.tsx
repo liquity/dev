@@ -121,7 +121,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
                   <SubLabel>0 bLUSD</SubLabel>
                 </>
               ),
-              isSelected: true
+              isEndOfLife: true
             },
             {
               date: simulatedProtocolInfo.breakEvenTime,
