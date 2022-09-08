@@ -2,30 +2,33 @@ import React from "react";
 import { Flex, Box, Text, Card } from "theme-ui";
 import type { ThemeUIStyleObject } from "theme-ui";
 import { InfoIcon } from "./InfoIcon";
-import { dateWithoutHours } from "./Bonds/utils";
 import { Placeholder } from "./Placeholder";
 
+const mutedGray = "#d9d9d9";
+
 const defaultCircleStyle = {
-  height: 12,
-  width: 12,
+  height: "12px",
+  width: "12px",
+  mx: "-1px",
   borderRadius: "50%",
-  border: "2px solid gray",
-  background: "none",
-  opacity: 0.3
-};
-const hollowCircleStyle = {
-  opacity: 1
+  border: "2px solid",
+  borderColor: mutedGray,
+  background: "none"
 };
 const solidCircleStyle = {
   backgroundColor: "gray",
-  opacity: 1
+  borderColor: "gray"
+};
+const transparentCircleStyle = {
+  width: "0px",
+  mx: "-2px",
+  opacity: 0
 };
 const defaultLineStyle = {
   height: 4,
   flexGrow: 1,
   border: 0,
-  backgroundColor: "gray",
-  opacity: 0.3,
+  backgroundColor: mutedGray,
   margin: 0,
   padding: 0
 };
@@ -35,8 +38,8 @@ const solidLineStyle = {
   opacity: 1
 };
 
-const fadeLineStyle = (direction: "to left" | "to right") => ({
-  background: `linear-gradient(${direction}, white, gray)`
+const fadeLineStyle = (leftColor: string, rightColor: string) => ({
+  background: `linear-gradient(to right, ${leftColor}, ${rightColor})`
 });
 
 type CircleProps = {
@@ -148,10 +151,9 @@ const Event: React.FC<EventProps> = ({
   isLoading = false
 }) => {
   if (isLoading) return <LoadingEvent label={label} />;
-  const isPast = new Date(date.toDateString()) < dateWithoutHours(Date.now());
+  const isPast = date.getTime() < Date.now();
   const isToday = date.toLocaleDateString() === new Date(Date.now()).toLocaleDateString();
   const isSelected = idx === selectedIdx;
-  const isBeforeSelected = idx < selectedIdx;
   const isUnknownDate = date.toDateString() === UNKNOWN_DATE.toDateString();
 
   let circleStyle: ThemeUIStyleObject = { ...defaultCircleStyle };
@@ -159,29 +161,26 @@ const Event: React.FC<EventProps> = ({
   let rightLineStyle: ThemeUIStyleObject = { ...defaultLineStyle };
 
   if (isPast) {
-    circleStyle = { ...hollowCircleStyle };
+    circleStyle = { ...solidCircleStyle };
     leftLineStyle = { ...solidLineStyle };
     rightLineStyle = { ...solidLineStyle };
   }
 
   if (isSelected) {
     leftLineStyle = { ...solidLineStyle };
-    circleStyle = { ...solidCircleStyle };
+    circleStyle = { ...transparentCircleStyle };
     rightLineStyle = { ...defaultLineStyle };
   }
 
   if (isFirst) {
-    leftLineStyle = { ...leftLineStyle, ...fadeLineStyle("to right") };
-  }
-
-  if (isToday && isBeforeSelected) {
-    leftLineStyle = { ...solidLineStyle };
-    circleStyle = { ...hollowCircleStyle };
-    rightLineStyle = { ...solidLineStyle };
+    leftLineStyle = { ...leftLineStyle, ...fadeLineStyle("white", "gray") };
   }
 
   if (isLast) {
-    rightLineStyle = { ...rightLineStyle, ...fadeLineStyle("to left") };
+    rightLineStyle = {
+      ...rightLineStyle,
+      ...fadeLineStyle(isPast && !isSelected ? "gray" : mutedGray, "white")
+    };
   }
 
   const dateText =
