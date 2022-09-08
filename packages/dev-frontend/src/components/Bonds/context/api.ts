@@ -110,7 +110,7 @@ const getAccountBonds = async (
           ? UNKNOWN_DATE
           : getFutureDateByDays(toFloat(breakEvenDays) - bondAgeInDays);
       const rebondTime =
-        breakEvenDays === Decimal.INFINITY
+        rebondDays === Decimal.INFINITY
           ? UNKNOWN_DATE
           : getFutureDateByDays(toFloat(rebondDays) - bondAgeInDays);
       const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
@@ -119,6 +119,7 @@ const getAccountBonds = async (
       const claimNowReturn = accrued.isZero ? 0 : getReturn(accrued, deposit, marketPrice);
       const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
       const rebondRoi = rebondReturn / toFloat(deposit);
+      const rebondApr = rebondRoi * (365 / toFloat(rebondDays));
 
       return [
         ...accumulator,
@@ -137,7 +138,8 @@ const getAccountBonds = async (
           marketValue,
           rebondReturn,
           claimNowReturn,
-          rebondRoi
+          rebondRoi,
+          rebondApr
         }
       ];
     }, [])

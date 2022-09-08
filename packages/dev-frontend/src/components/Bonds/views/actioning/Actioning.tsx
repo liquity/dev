@@ -136,7 +136,7 @@ export const Actioning: React.FC = () => {
 
           <Record
             name={l.OPTIMUM_APY.term}
-            value={percentify(bond.rebondRoi).toFixed(2) + "%"}
+            value={percentify(bond.rebondApr).toFixed(2) + "%"}
             type=""
             description={l.OPTIMUM_APY.description}
           />
