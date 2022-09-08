@@ -91,14 +91,19 @@ const getAccountBonds = async (
       const bondAgeInDays = getBondAgeInDays(startTime);
       const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
       const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
+      const depositMinusClaimBondFee = Decimal.ONE.sub(claimBondFee).mul(deposit);
       const rebondAccrual =
         rebondDays === Decimal.INFINITY
           ? Decimal.INFINITY
-          : getFutureBLusdAccrualFactor(floorPrice, rebondDays, alphaAccrualFactor).mul(deposit);
+          : getFutureBLusdAccrualFactor(floorPrice, rebondDays, alphaAccrualFactor).mul(
+              depositMinusClaimBondFee
+            );
       const breakEvenAccrual =
         breakEvenDays === Decimal.INFINITY
           ? Decimal.INFINITY
-          : getFutureBLusdAccrualFactor(floorPrice, breakEvenDays, alphaAccrualFactor).mul(deposit);
+          : getFutureBLusdAccrualFactor(floorPrice, breakEvenDays, alphaAccrualFactor).mul(
+              depositMinusClaimBondFee
+            );
 
       const breakEvenTime =
         breakEvenDays === Decimal.INFINITY
