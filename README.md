@@ -309,7 +309,7 @@ In the first year after launch:
 
 - The Liquity admin address may transfer tokens **only to verified lockup contracts with an unlock date at least one year after system deployment**
 
-Also, separate LQTY allocations are made at deployent to an EOA that will hold an amount of LQTY for bug bounties/hackathons and to a Uniswap LP reward contract. Aside from these allocations, the only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Providers via the `CommunityIssuance` contract.
+Also, separate LQTY allocations are made at deployment to an EOA that will hold an amount of LQTY for bug bounties/hackathons and to a Uniswap LP reward contract. Aside from these allocations, the only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Providers via the `CommunityIssuance` contract.
 
 ### Lockup Implementation and admin transfer restriction
 
@@ -490,7 +490,7 @@ Thus, nodes need only be re-inserted to the sorted list upon a Trove operation -
 
 ![Flow of Ether](images/ETH_flows.svg)
 
-Ether in the system lives in three Pools: the ActivePool, the DefaultPool and the StabilityPool. When an operation is made, Ether is transferred in one of three ways:
+Ether in the system lives in four Pools: the ActivePool, the DefaultPool, the StabilityPool and the CollSurplusPool. When an operation is made, Ether is transferred in one of three ways:
 
 - From a user to a Pool
 - From a Pool to a user
