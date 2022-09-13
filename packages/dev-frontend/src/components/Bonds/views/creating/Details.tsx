@@ -1,13 +1,12 @@
 /** @jsxImportSource theme-ui */
 import React, { useEffect, useMemo, useState } from "react";
-import { Flex, Heading, Button, Card, Grid, Close, Text, Image, Spinner } from "theme-ui";
+import { Flex, Heading, Button, Card, Grid, Close, Image, Spinner } from "theme-ui";
 import { Decimal } from "@liquity/lib-base";
 import { EditableRow } from "../../../Trove/Editor";
 import { Record } from "../../Record";
 import { InfoIcon } from "../../../InfoIcon";
 import { useBondView } from "../../context/BondViewContext";
 import { HorizontalTimeline, Label, SubLabel } from "../../../HorizontalTimeline";
-import { ActionDescription } from "../../../ActionDescription";
 import { EXAMPLE_NFT } from "../../context/BondViewProvider";
 import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
@@ -22,7 +21,6 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   const {
     dispatchEvent,
     statuses,
-    isInfiniteBondApproved,
     lusdBalance,
     simulatedProtocolInfo,
     setSimulatedMarketPrice,
@@ -32,18 +30,11 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   const { back } = useWizard();
   const [deposit, setDeposit] = useState<Decimal>(lusdBalance ?? Decimal.ZERO);
   const depositEditingState = useState<string>();
-  const isApprovingOrConfirming = useMemo(
-    () => statuses.APPROVE === "PENDING" || statuses.CREATE === "PENDING",
-    [statuses.APPROVE, statuses.CREATE]
-  );
+  const isConfirming = useMemo(() => statuses.CREATE === "PENDING", [statuses.CREATE]);
   const handleBack = back ?? onBack ?? (() => dispatchEvent("BACK_PRESSED"));
 
   const handleDismiss = () => {
     dispatchEvent("ABORT_PRESSED");
-  };
-
-  const handleApprovePressed = () => {
-    dispatchEvent("APPROVE_PRESSED");
   };
 
   const handleConfirmPressed = () => {
@@ -58,8 +49,9 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   if (protocolInfo === undefined || simulatedProtocolInfo === undefined || lusdBalance === undefined)
     return null;
 
+  const depositMinusClaimBondFee = Decimal.ONE.sub(protocolInfo.claimBondFee).mul(deposit);
   const rebondReturn = getReturn(
-    deposit.mul(simulatedProtocolInfo.rebondAccrualFactor),
+    depositMinusClaimBondFee.mul(simulatedProtocolInfo.rebondAccrualFactor),
     deposit,
     simulatedProtocolInfo.simulatedMarketPrice
   );
@@ -121,14 +113,14 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
                   <SubLabel>0 bLUSD</SubLabel>
                 </>
               ),
-              isSelected: true
+              isEndOfLife: true
             },
             {
               date: simulatedProtocolInfo.breakEvenTime,
               label: (
                 <>
                   <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
-                  <SubLabel>{`${deposit
+                  <SubLabel>{`${depositMinusClaimBondFee
                     .mul(simulatedProtocolInfo.breakEvenAccrualFactor)
                     .prettify(2)} bLUSD`}</SubLabel>
                 </>
@@ -141,7 +133,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
                   <Label description={l.OPTIMUM_REBOND_TIME.description}>
                     {l.OPTIMUM_REBOND_TIME.term}
                   </Label>
-                  <SubLabel>{`${deposit
+                  <SubLabel>{`${depositMinusClaimBondFee
                     .mul(simulatedProtocolInfo.rebondAccrualFactor)
                     .prettify(2)} bLUSD`}</SubLabel>
                 </>
@@ -200,46 +192,20 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         onReset={() => setSimulatedMarketPrice(protocolInfo.marketPrice)}
       />
 
-      {!isInfiniteBondApproved && (
-        <ActionDescription>
-          <Text>You are approving LUSD for bonding</Text>
-        </ActionDescription>
-      )}
-
-      {statuses.APPROVE === "FAILED" && (
-        <Warning>Failed to approve spend of LUSD. Please try again.</Warning>
-      )}
-
       {statuses.CREATE === "FAILED" && <Warning>Failed to create bond. Please try again.</Warning>}
-
-      {isInfiniteBondApproved && (
-        <ActionDescription>
-          You are bonding <Text sx={{ fontWeight: "bold" }}>{deposit.prettify(2)} LUSD</Text>
-        </ActionDescription>
-      )}
 
       <Flex pb={2} sx={{ fontSize: "15.5px", justifyContent: "center", fontStyle: "italic" }}>
         You can cancel your bond at any time to recover your deposited LUSD
       </Flex>
 
       <Flex variant="layout.actions">
-        <Button variant="cancel" onClick={handleBack} disabled={isApprovingOrConfirming}>
+        <Button variant="cancel" onClick={handleBack} disabled={isConfirming}>
           Back
         </Button>
-        {!isInfiniteBondApproved && (
-          <Button onClick={handleApprovePressed} disabled={isApprovingOrConfirming}>
-            {!isApprovingOrConfirming && <>Approve</>}
-            {isApprovingOrConfirming && (
-              <Spinner size="28px" sx={{ color: "white", position: "absolute" }} />
-            )}
-          </Button>
-        )}
-        {isInfiniteBondApproved && (
-          <Button onClick={handleConfirmPressed} disabled={isApprovingOrConfirming}>
-            {!isApprovingOrConfirming && <>Confirm</>}
-            {isApprovingOrConfirming && <Spinner size="28px" sx={{ color: "white" }} />}
-          </Button>
-        )}
+        <Button onClick={handleConfirmPressed} disabled={isConfirming}>
+          {!isConfirming && <>Confirm</>}
+          {isConfirming && <Spinner size="28px" sx={{ color: "white" }} />}
+        </Button>
       </Flex>
     </>
   );

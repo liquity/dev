@@ -27,6 +27,7 @@ import { useLiquity } from "../../../hooks/LiquityContext";
 import { useCallback } from "react";
 import type { BondsApi } from "./api";
 import type { Bond, ProtocolInfo, Stats, Treasury } from "./transitions";
+import { BLusdAmmTokenIndex } from "./transitions";
 
 type BondsInformation = {
   treasury: Treasury;
@@ -36,6 +37,9 @@ type BondsInformation = {
   bLusdBalance: Decimal;
   lusdBalance: Decimal;
   lpTokenBalance: Decimal;
+  lpTokenSupply: Decimal;
+  bLusdAmmBLusdBalance: Decimal;
+  bLusdAmmLusdBalance: Decimal;
 };
 
 type BondContracts = {
@@ -109,6 +113,7 @@ export const useBondContracts = (): BondContracts => {
         chickenBondManager,
         treasury.reserve
       );
+
       const bonds = await api.getAccountBonds(
         account,
         bondNft,
@@ -124,10 +129,18 @@ export const useBondContracts = (): BondContracts => {
       // TODO cache LP token? Or add to addresses.json?
       const lpToken = await api.getLpToken(bLusdAmm);
 
-      const [bLusdBalance, lusdBalance, lpTokenBalance] = await Promise.all([
+      const [
+        bLusdBalance,
+        lusdBalance,
+        lpTokenBalance,
+        lpTokenSupply,
+        bLusdAmmCoinBalances
+      ] = await Promise.all([
         api.getTokenBalance(account, bLusdToken),
         api.getTokenBalance(account, lusdToken),
-        api.getTokenBalance(account, lpToken)
+        api.getTokenBalance(account, lpToken),
+        api.getTokenTotalSupply(lpToken),
+        api.getCoinBalances(bLusdAmm)
       ]);
 
       return {
@@ -137,7 +150,10 @@ export const useBondContracts = (): BondContracts => {
         stats,
         bLusdBalance,
         lusdBalance,
-        lpTokenBalance
+        lpTokenBalance,
+        lpTokenSupply,
+        bLusdAmmBLusdBalance: bLusdAmmCoinBalances[BLusdAmmTokenIndex.BLUSD],
+        bLusdAmmLusdBalance: bLusdAmmCoinBalances[BLusdAmmTokenIndex.LUSD]
       };
     },
     [chickenBondManager, bondNft, bLusdToken, lusdToken, bLusdAmm]

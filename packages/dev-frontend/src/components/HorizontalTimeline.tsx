@@ -2,30 +2,34 @@ import React from "react";
 import { Flex, Box, Text, Card } from "theme-ui";
 import type { ThemeUIStyleObject } from "theme-ui";
 import { InfoIcon } from "./InfoIcon";
-import { dateWithoutHours } from "./Bonds/utils";
 import { Placeholder } from "./Placeholder";
 
+const mutedGray = "#d9d9d9";
+
 const defaultCircleStyle = {
-  height: 12,
-  width: 12,
+  height: "12px",
+  width: "12px",
+  mx: "-1px",
   borderRadius: "50%",
-  border: "2px solid gray",
+  border: "2px solid",
+  borderColor: mutedGray,
   background: "none",
-  opacity: 0.3
-};
-const hollowCircleStyle = {
-  opacity: 1
+  zIndex: 1
 };
 const solidCircleStyle = {
   backgroundColor: "gray",
-  opacity: 1
+  borderColor: "gray"
+};
+const transparentCircleStyle = {
+  width: "0px",
+  mx: "-2px",
+  opacity: 0
 };
 const defaultLineStyle = {
   height: 4,
   flexGrow: 1,
   border: 0,
-  backgroundColor: "gray",
-  opacity: 0.3,
+  backgroundColor: mutedGray,
   margin: 0,
   padding: 0
 };
@@ -35,8 +39,8 @@ const solidLineStyle = {
   opacity: 1
 };
 
-const fadeLineStyle = (direction: "to left" | "to right") => ({
-  background: `linear-gradient(${direction}, white, gray)`
+const fadeLineStyle = (leftColor: string, rightColor: string) => ({
+  background: `linear-gradient(to right, ${leftColor}, ${rightColor})`
 });
 
 type CircleProps = {
@@ -61,16 +65,15 @@ export const UNKNOWN_DATE = new Date(8640000000000000);
 export type EventType = {
   date: Date;
   label: React.ReactNode;
-  isSelected?: boolean;
+  isEndOfLife?: boolean;
+  isMilestone?: boolean;
   isLoading?: boolean;
 };
 
 type EventProps = EventType & {
   isFirst: boolean;
   isLast: boolean;
-  selectedIdx: number;
-  idx: number;
-  isLoading?: boolean;
+  isPast: boolean;
 };
 
 type LabelProps = {
@@ -141,51 +144,45 @@ const LoadingEvent: React.FC<{ label: React.ReactNode }> = ({ label }) => {
 const Event: React.FC<EventProps> = ({
   isFirst,
   isLast,
+  isPast,
   date,
   label,
-  idx,
-  selectedIdx,
-  isLoading = false
+  isEndOfLife,
+  isMilestone = true,
+  isLoading
 }) => {
   if (isLoading) return <LoadingEvent label={label} />;
-  const isPast = new Date(date.toDateString()) < dateWithoutHours(Date.now());
-  const isToday = date.toLocaleDateString() === new Date(Date.now()).toLocaleDateString();
-  const isSelected = idx === selectedIdx;
-  const isBeforeSelected = idx < selectedIdx;
+
+  const isToday = date.toLocaleDateString() === new Date().toLocaleDateString();
   const isUnknownDate = date.toDateString() === UNKNOWN_DATE.toDateString();
 
   let circleStyle: ThemeUIStyleObject = { ...defaultCircleStyle };
   let leftLineStyle: ThemeUIStyleObject = { ...defaultLineStyle };
   let rightLineStyle: ThemeUIStyleObject = { ...defaultLineStyle };
 
-  if (isPast) {
-    circleStyle = { ...hollowCircleStyle };
+  if (isPast || isEndOfLife) {
+    circleStyle = { ...solidCircleStyle };
     leftLineStyle = { ...solidLineStyle };
+  }
+
+  if (isPast) {
     rightLineStyle = { ...solidLineStyle };
   }
 
-  if (isSelected) {
-    leftLineStyle = { ...solidLineStyle };
-    circleStyle = { ...solidCircleStyle };
-    rightLineStyle = { ...defaultLineStyle };
+  if (!isMilestone) {
+    circleStyle = { ...transparentCircleStyle };
   }
 
   if (isFirst) {
-    leftLineStyle = { ...leftLineStyle, ...fadeLineStyle("to right") };
-  }
-
-  if (isToday && isBeforeSelected) {
-    leftLineStyle = { ...solidLineStyle };
-    circleStyle = { ...hollowCircleStyle };
-    rightLineStyle = { ...solidLineStyle };
+    leftLineStyle = { ...leftLineStyle, ...fadeLineStyle("white", "gray") };
   }
 
   if (isLast) {
-    rightLineStyle = { ...rightLineStyle, ...fadeLineStyle("to left") };
+    rightLineStyle = { ...rightLineStyle, ...fadeLineStyle(mutedGray, "white") };
   }
 
   const dateText =
-    isToday && isSelected
+    isToday && isEndOfLife
       ? "Now"
       : isUnknownDate
       ? "Unknown"
@@ -216,24 +213,26 @@ export const HorizontalTimeline: React.FC<HorizontalTimelineProps> = ({ events, 
   // Order by date, then by whether its selected or not (selected is newer)
   const orderedEvents = [...events].sort((a, b) =>
     a.date.getTime() === b.date.getTime()
-      ? Number(a.isSelected) - Number(b.isSelected)
+      ? Number(a.isEndOfLife) - Number(b.isEndOfLife)
       : a.date.getTime() > b.date.getTime()
       ? 1
       : -1
   );
-  const selectedIdx = orderedEvents.findIndex(event => event.isSelected);
+
+  const endOfLifeIdx = orderedEvents.findIndex(event => event.isEndOfLife);
 
   return (
     <Flex sx={{ flexGrow: 1, ...style }}>
       {orderedEvents.map((event, idx) => (
         <Event
           key={idx}
-          idx={idx}
           isFirst={idx === 0}
           isLast={idx === orderedEvents.length - 1}
+          isPast={idx < endOfLifeIdx}
           date={event.date}
           label={event.label}
-          selectedIdx={selectedIdx}
+          isEndOfLife={event.isEndOfLife}
+          isMilestone={event.isMilestone}
           isLoading={event.isLoading}
         />
       ))}

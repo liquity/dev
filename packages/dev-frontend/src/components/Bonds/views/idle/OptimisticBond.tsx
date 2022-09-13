@@ -30,7 +30,7 @@ const getBondEvents = (bond: OptimisticBondType): EventType[] => {
           <SubLabel style={{ fontWeight: 400 }}></SubLabel>
         </>
       ),
-      isSelected: true
+      isEndOfLife: true
     },
     {
       date: UNKNOWN_DATE,

@@ -71,7 +71,8 @@ export const Actioning: React.FC = () => {
           <SubLabel style={{ fontWeight: 400 }}>{`${bond.accrued.prettify(2)} bLUSD`}</SubLabel>
         </>
       ),
-      isSelected: bond.status === "PENDING"
+      isEndOfLife: true,
+      isMilestone: false
     }
   ];
 
@@ -129,14 +130,14 @@ export const Actioning: React.FC = () => {
 
           <Record
             name={l.REBOND_TIME_ROI.term}
-            value={percentify(bond.rebondRoi) + "%"}
+            value={percentify(bond.rebondRoi).toFixed(2) + "%"}
             type=""
             description={l.REBOND_TIME_ROI.description}
           />
 
           <Record
             name={l.OPTIMUM_APY.term}
-            value={percentify(bond.rebondRoi) + "%"}
+            value={percentify(bond.rebondApr).toFixed(2) + "%"}
             type=""
             description={l.OPTIMUM_APY.description}
           />

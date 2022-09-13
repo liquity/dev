@@ -1,8 +1,6 @@
 import { BigNumber, CallOverrides, constants, Contract, providers, Signer } from "ethers";
-import {
-  CHICKEN_BOND_MANAGER_ADDRESS,
-  BLUSD_AMM_ADDRESS
-} from "@liquity/chicken-bonds/lusd/addresses";
+import { splitSignature } from "ethers/lib/utils";
+import { BLUSD_AMM_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 import type { BLUSDToken, BondNFT, ChickenBondManager } from "@liquity/chicken-bonds/lusd/types";
 import type { CurveCryptoSwap2ETH } from "@liquity/chicken-bonds/lusd/types/external";
 import type {
@@ -41,6 +39,7 @@ import {
   TokenExchangeEvent,
   TokenExchangeEventObject
 } from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
+import type { EthersSigner } from "@liquity/lib-ethers";
 
 type Maybe<T> = T | undefined;
 
@@ -91,21 +90,26 @@ const getAccountBonds = async (
       const bondAgeInDays = getBondAgeInDays(startTime);
       const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
       const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
+      const depositMinusClaimBondFee = Decimal.ONE.sub(claimBondFee).mul(deposit);
       const rebondAccrual =
         rebondDays === Decimal.INFINITY
           ? Decimal.INFINITY
-          : getFutureBLusdAccrualFactor(floorPrice, rebondDays, alphaAccrualFactor).mul(deposit);
+          : getFutureBLusdAccrualFactor(floorPrice, rebondDays, alphaAccrualFactor).mul(
+              depositMinusClaimBondFee
+            );
       const breakEvenAccrual =
         breakEvenDays === Decimal.INFINITY
           ? Decimal.INFINITY
-          : getFutureBLusdAccrualFactor(floorPrice, breakEvenDays, alphaAccrualFactor).mul(deposit);
+          : getFutureBLusdAccrualFactor(floorPrice, breakEvenDays, alphaAccrualFactor).mul(
+              depositMinusClaimBondFee
+            );
 
       const breakEvenTime =
         breakEvenDays === Decimal.INFINITY
           ? UNKNOWN_DATE
           : getFutureDateByDays(toFloat(breakEvenDays) - bondAgeInDays);
       const rebondTime =
-        breakEvenDays === Decimal.INFINITY
+        rebondDays === Decimal.INFINITY
           ? UNKNOWN_DATE
           : getFutureDateByDays(toFloat(rebondDays) - bondAgeInDays);
       const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
@@ -114,6 +118,7 @@ const getAccountBonds = async (
       const claimNowReturn = accrued.isZero ? 0 : getReturn(accrued, deposit, marketPrice);
       const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
       const rebondRoi = rebondReturn / toFloat(deposit);
+      const rebondApr = rebondRoi * (365 / toFloat(rebondDays));
 
       return [
         ...accumulator,
@@ -132,7 +137,8 @@ const getAccountBonds = async (
           marketValue,
           rebondReturn,
           claimNowReturn,
-          rebondRoi
+          rebondRoi,
+          rebondApr
         }
       ];
     }, [])
@@ -278,32 +284,54 @@ const getTokenTotalSupply = async (token: ERC20): Promise<Decimal> => {
   return decimalify(await token.totalSupply());
 };
 
-const isInfiniteBondApproved = async (account: string, lusdToken: LUSDToken): Promise<boolean> => {
-  const allowance = await lusdToken.allowance(account, CHICKEN_BOND_MANAGER_ADDRESS);
-
-  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
-  // start to decrease from 2**64.
-  // However, it is practically impossible that it would decrease below 2**63.
-  return allowance.gt(constants.MaxInt256);
-};
-
-const approveInfiniteBond = async (lusdToken: LUSDToken | undefined): Promise<void> => {
-  if (lusdToken === undefined) throw new Error("approveInfiniteBond() failed: a dependency is null");
-  console.log("approveInfiniteBond() started");
-  try {
-    await (await lusdToken.approve(CHICKEN_BOND_MANAGER_ADDRESS, constants.MaxUint256._hex)).wait();
-    console.log("approveInfiniteBond() succceeded");
-  } catch (error: unknown) {
-    throw new Error(`approveInfiniteBond() failed: ${error}`);
-  }
-};
-
 const createBond = async (
   lusdAmount: Decimal,
-  chickenBondManager: ChickenBondManager | undefined
+  owner: string,
+  lusdAddress: string,
+  lusdToken: LUSDToken | undefined,
+  chickenBondManager: ChickenBondManager | undefined,
+  signer: EthersSigner
 ): Promise<BondCreatedEventObject> => {
-  if (chickenBondManager === undefined) throw new Error("createBond() failed: a dependency is null");
-  const receipt = await (await chickenBondManager.createBond(lusdAmount.hex)).wait();
+  if (chickenBondManager === undefined || lusdToken === undefined) {
+    throw new Error("createBond() failed: a dependency is null");
+  }
+
+  const TEN_MINUTES_IN_SECONDS = 60 * 10;
+  const spender = chickenBondManager.address;
+  const deadline = Math.round(Date.now() / 1000) + TEN_MINUTES_IN_SECONDS;
+  const nonce = (await lusdToken.nonces(owner)).toNumber();
+  const domain = {
+    name: await lusdToken.name(),
+    version: "1",
+    chainId: 1,
+    verifyingContract: lusdAddress
+  };
+  const types = {
+    Permit: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+      { name: "value", type: "uint256" },
+      { name: "nonce", type: "uint256" },
+      { name: "deadline", type: "uint256" }
+    ]
+  };
+  const message = {
+    owner,
+    spender,
+    value: lusdAmount.hex,
+    nonce,
+    deadline
+  };
+
+  // @ts-ignore - Ethers private func as API not stable yet
+  const signature = await signer._signTypedData(domain, types, message);
+
+  const { v, r, s } = splitSignature(signature);
+
+  const receipt = await (
+    await chickenBondManager.createBondWithPermit(owner, lusdAmount.hex, deadline, v, r, s)
+  ).wait();
+
   const createdEvent = receipt?.events?.find(
     e => e.event === "BondCreated"
   ) as Maybe<BondCreatedEvent>;
@@ -470,13 +498,7 @@ const addLiquidity = async (
 };
 
 const getCoinBalances = (pool: CurveCryptoSwap2ETH) =>
-  Promise.all(
-    Array.from({
-      length: 2,
-      [BLusdAmmTokenIndex.BLUSD]: pool.balances(BLusdAmmTokenIndex.BLUSD).then(decimalify),
-      [BLusdAmmTokenIndex.LUSD]: pool.balances(BLusdAmmTokenIndex.LUSD).then(decimalify)
-    })
-  ) as Promise<[Decimal, Decimal]>;
+  Promise.all([pool.balances(0).then(decimalify), pool.balances(1).then(decimalify)]);
 
 const getExpectedWithdrawal = async (
   burnLp: Decimal,
@@ -565,94 +587,14 @@ const removeLiquidityOneCoin = async (
   return removeLiquidityOneEvent.args;
 };
 
-export type BondsApi = {
-  getAccountBonds: (
-    account: string,
-    bondNft: BondNFT,
-    chickenBondManager: ChickenBondManager,
-    marketPrice: Decimal,
-    alphaAccrualFactor: Decimal,
-    marketPricePremium: Decimal,
-    claimBondFee: Decimal,
-    floorPrice: Decimal
-  ) => Promise<Bond[]>;
-  getStats: (chickenBondManager: ChickenBondManager) => Promise<Stats>;
-  getTreasury: (chickenBondManager: ChickenBondManager) => Promise<Treasury>;
-  getLpToken: (pool: CurveCryptoSwap2ETH) => Promise<ERC20>;
-  getTokenBalance: (account: string, token: ERC20) => Promise<Decimal>;
-  getProtocolInfo: (
-    bLusdToken: BLUSDToken,
-    bLusdAmm: CurveCryptoSwap2ETH,
-    chickenBondManager: ChickenBondManager,
-    reserveSize: Decimal
-  ) => Promise<ProtocolInfo>;
-  approveInfiniteBond: (lusdToken: LUSDToken | undefined) => Promise<void>;
-  isInfiniteBondApproved: (account: string, lusdToken: LUSDToken) => Promise<boolean>;
-  isTokenApprovedWithBLusdAmm: (account: string, token: LUSDToken | BLUSDToken) => Promise<boolean>;
-  approveTokenWithBLusdAmm: (token: LUSDToken | BLUSDToken | undefined) => Promise<void>;
-  getExpectedSwapOutput: (
-    inputToken: BLusdAmmTokenIndex,
-    inputAmount: Decimal,
-    bLusdAmm: CurveCryptoSwap2ETH
-  ) => Promise<Decimal>;
-  swapTokens: (
-    inputToken: BLusdAmmTokenIndex,
-    inputAmount: Decimal,
-    minOutputAmount: Decimal,
-    bLusdAmm: CurveCryptoSwap2ETH | undefined
-  ) => Promise<TokenExchangeEventObject>;
-  getExpectedLpTokens: (
-    bLusdAmount: Decimal,
-    lusdAmount: Decimal,
-    bLusdAmm: CurveCryptoSwap2ETH
-  ) => Promise<Decimal>;
-  addLiquidity: (
-    bLusdAmount: Decimal,
-    lusdAmount: Decimal,
-    minLpTokens: Decimal,
-    bLusdAmm: CurveCryptoSwap2ETH | undefined
-  ) => Promise<AddLiquidityEventObject>;
-  getExpectedWithdrawal: (
-    burnLp: Decimal,
-    output: BLusdAmmTokenIndex | "both",
-    bLusdAmm: CurveCryptoSwap2ETH
-  ) => Promise<Map<BLusdAmmTokenIndex, Decimal>>;
-  removeLiquidity: (
-    burnLpTokens: Decimal,
-    minBLusdAmount: Decimal,
-    minLusdAmount: Decimal,
-    bLusdAmm: CurveCryptoSwap2ETH | undefined
-  ) => Promise<RemoveLiquidityEventObject>;
-  removeLiquidityOneCoin: (
-    burnLpTokens: Decimal,
-    output: BLusdAmmTokenIndex,
-    minAmount: Decimal,
-    bLusdAmm: CurveCryptoSwap2ETH | undefined
-  ) => Promise<RemoveLiquidityOneEventObject>;
-  createBond: (
-    lusdAmount: Decimal,
-    chickenBondManager: ChickenBondManager | undefined
-  ) => Promise<BondCreatedEventObject>;
-  cancelBond: (
-    bondId: string,
-    minimumLusd: Decimal,
-    chickenBondManager: ChickenBondManager | undefined
-  ) => Promise<BondCancelledEventObject>;
-  claimBond: (
-    bondId: string,
-    chickenBondManager: ChickenBondManager | undefined
-  ) => Promise<BondClaimedEventObject>;
-};
-
-export const api: BondsApi = {
+export const api = {
   getAccountBonds,
   getStats,
   getTreasury,
   getLpToken,
   getTokenBalance,
+  getTokenTotalSupply,
   getProtocolInfo,
-  approveInfiniteBond,
-  isInfiniteBondApproved,
   createBond,
   cancelBond,
   claimBond,
@@ -660,9 +602,12 @@ export const api: BondsApi = {
   approveTokenWithBLusdAmm,
   getExpectedSwapOutput,
   swapTokens,
+  getCoinBalances,
   getExpectedLpTokens,
   addLiquidity,
   getExpectedWithdrawal,
   removeLiquidity,
   removeLiquidityOneCoin
 };
+
+export type BondsApi = typeof api;
