@@ -52,13 +52,11 @@ export const BondViewProvider: React.FC = props => {
   const [stats, setStats] = useState<Stats>();
   const [protocolInfo, setProtocolInfo] = useState<ProtocolInfo>();
   const [simulatedProtocolInfo, setSimulatedProtocolInfo] = useState<ProtocolInfo>();
-  const [isInfiniteBondApproved, setIsInfiniteBondApproved] = useState(false);
   const [isLusdApprovedWithBlusdAmm, setIsLusdApprovedWithBlusdAmm] = useState(false);
   const [isBLusdApprovedWithBlusdAmm, setIsBLusdApprovedWithBlusdAmm] = useState(false);
   const [isSynchronizing, setIsSynchronizing] = useState(true);
   const [inputToken, setInputToken] = useState<BLusdAmmTokenIndex>(BLusdAmmTokenIndex.BLUSD);
   const [statuses, setStatuses] = useState<BondTransactionStatuses>({
-    APPROVE: "IDLE",
     CREATE: "IDLE",
     CANCEL: "IDLE",
     CLAIM: "IDLE",
@@ -150,15 +148,6 @@ export const BondViewProvider: React.FC = props => {
     })();
   }, [account, liquity, contracts.lusdToken]);
   /***** /TODO */
-
-  useEffect(() => {
-    (async () => {
-      if (contracts.lusdToken === undefined || account === undefined || isInfiniteBondApproved)
-        return;
-      const isApproved = await api.isInfiniteBondApproved(account, contracts.lusdToken);
-      setIsInfiniteBondApproved(isApproved);
-    })();
-  }, [contracts.lusdToken, account, isInfiniteBondApproved]);
 
   useEffect(() => {
     (async () => {
@@ -257,11 +246,6 @@ export const BondViewProvider: React.FC = props => {
     })();
   }, [shouldSynchronize, account, contracts, simulatedProtocolInfo]);
 
-  const [approveInfiniteBond, approveStatus] = useTransaction(async () => {
-    await api.approveInfiniteBond(contracts.lusdToken);
-    setIsInfiniteBondApproved(true);
-  }, [contracts.lusdToken]);
-
   const [approveAmm, approveAmmStatus] = useTransaction(
     async (tokensNeedingApproval: BLusdAmmTokenIndex[]) => {
       for (const token of tokensNeedingApproval) {
@@ -279,7 +263,16 @@ export const BondViewProvider: React.FC = props => {
 
   const [createBond, createStatus] = useTransaction(
     async (lusdAmount: Decimal) => {
-      await api.createBond(lusdAmount, contracts.chickenBondManager);
+      if (liquity.connection.signer === undefined) return;
+
+      await api.createBond(
+        lusdAmount,
+        account,
+        LUSD_OVERRIDE_ADDRESS ?? liquity.connection.addresses.lusdToken,
+        contracts.lusdToken,
+        contracts.chickenBondManager,
+        liquity.connection.signer
+      );
       const optimisticBond: OptimisticBond = {
         id: "OPTIMISTIC_BOND",
         deposit: lusdAmount,
@@ -289,7 +282,7 @@ export const BondViewProvider: React.FC = props => {
       setOptimisticBond(optimisticBond);
       setShouldSynchronize(true);
     },
-    [contracts.chickenBondManager]
+    [contracts.chickenBondManager, contracts.lusdToken, liquity.connection.signer, account]
   );
 
   const [cancelBond, cancelStatus] = useTransaction(
@@ -399,9 +392,7 @@ export const BondViewProvider: React.FC = props => {
         viewRef.current === _view && event === _event;
 
       try {
-        if (isCurrentViewEvent("CREATING", "APPROVE_PRESSED")) {
-          await approveInfiniteBond();
-        } else if (isCurrentViewEvent("CREATING", "CONFIRM_PRESSED")) {
+        if (isCurrentViewEvent("CREATING", "CONFIRM_PRESSED")) {
           await createBond((payload as CreateBondPayload).deposit);
           await dispatchEvent("CREATE_BOND_CONFIRMED");
         } else if (isCurrentViewEvent("CANCELLING", "CONFIRM_PRESSED")) {
@@ -447,9 +438,8 @@ export const BondViewProvider: React.FC = props => {
     },
     [
       selectedBondId,
-      approveInfiniteBond,
-      createBond,
       cancelBond,
+      createBond,
       claimBond,
       selectedBond,
       approveAmm,
@@ -462,7 +452,6 @@ export const BondViewProvider: React.FC = props => {
   useEffect(() => {
     setStatuses(statuses => ({
       ...statuses,
-      APPROVE: approveStatus,
       CREATE: createStatus,
       CANCEL: cancelStatus,
       CLAIM: claimStatus,
@@ -470,15 +459,7 @@ export const BondViewProvider: React.FC = props => {
       SWAP: swapStatus,
       MANAGE_LIQUIDITY: manageLiquidityStatus
     }));
-  }, [
-    approveStatus,
-    createStatus,
-    cancelStatus,
-    claimStatus,
-    approveAmmStatus,
-    swapStatus,
-    manageLiquidityStatus
-  ]);
+  }, [createStatus, cancelStatus, claimStatus, approveAmmStatus, swapStatus, manageLiquidityStatus]);
 
   useEffect(() => {
     viewRef.current = view;
@@ -504,7 +485,6 @@ export const BondViewProvider: React.FC = props => {
     lpTokenSupply,
     bLusdAmmBLusdBalance,
     bLusdAmmLusdBalance,
-    isInfiniteBondApproved,
     isSynchronizing,
     getLusdFromFaucet,
     setSimulatedMarketPrice,

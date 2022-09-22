@@ -136,6 +136,7 @@ export interface ChickenBondManagerInterface extends utils.Interface {
         "countChickenIn()": FunctionFragment;
         "countChickenOut()": FunctionFragment;
         "createBond(uint256)": FunctionFragment;
+        "createBondWithPermit(address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
         "curveBasePool()": FunctionFragment;
         "curveDepositLUSD3CRVExchangeRateThreshold()": FunctionFragment;
         "curveLiquidityGauge()": FunctionFragment;
@@ -174,7 +175,7 @@ export interface ChickenBondManagerInterface extends utils.Interface {
         "yearnGovernanceAddress()": FunctionFragment;
         "yearnRegistry()": FunctionFragment;
     };
-    getFunction(nameOrSignatureOrTopic: "BETA" | "BOOTSTRAP_PERIOD_CHICKEN_IN" | "BOOTSTRAP_PERIOD_REDEEM" | "BOOTSTRAP_PERIOD_SHIFT" | "CHICKEN_IN_AMM_FEE" | "DECIMAL_PRECISION" | "INDEX_OF_LUSD_TOKEN_IN_CURVE_POOL" | "MINUTE_DECAY_FACTOR" | "MIN_BLUSD_SUPPLY" | "MIN_BOND_AMOUNT" | "NFT_RANDOMNESS_DIVISOR" | "SECONDS_IN_ONE_MINUTE" | "SHIFTER_DELAY" | "SHIFTER_WINDOW" | "_calcSystemBackingRatioFromBAMMValue" | "accrualAdjustmentMultiplier" | "accrualAdjustmentPeriodCount" | "accrualAdjustmentPeriodSeconds" | "accrualParameter" | "activateMigration" | "bLUSDToken" | "bammSPVault" | "baseRedemptionRate" | "bondNFT" | "calcAccruedBLUSD" | "calcBondBLUSDCap" | "calcRedemptionFeePercentage" | "calcSystemBackingRatio" | "calcTotalLUSDValue" | "calcTotalYearnCurveVaultShareValue" | "calcUpdatedAccrualParameter" | "chickenIn" | "chickenOut" | "countChickenIn" | "countChickenOut" | "createBond" | "curveBasePool" | "curveDepositLUSD3CRVExchangeRateThreshold" | "curveLiquidityGauge" | "curvePool" | "curveWithdrawal3CRVLUSDExchangeRateThreshold" | "deploymentTimestamp" | "firstChickenInTime" | "getAcquiredLUSDInCurve" | "getAcquiredLUSDInSP" | "getBAMMLUSDDebt" | "getBondData" | "getLUSDInBAMMSPVault" | "getLUSDToAcquire" | "getOpenBondCount" | "getOwnedLUSDInCurve" | "getOwnedLUSDInSP" | "getPendingLUSD" | "getPermanentLUSD" | "getTotalAcquiredLUSD" | "getTotalLUSDInCurve" | "getTreasury" | "lastRedemptionTime" | "lastShifterCountdownStartTime" | "lusdToken" | "migration" | "minimumAccrualParameter" | "redeem" | "sendFeeShare" | "shiftLUSDFromCurveToSP" | "shiftLUSDFromSPToCurve" | "startShifterCountdown" | "targetAverageAgeSeconds" | "totalWeightedStartTimes" | "yTokensHeldByCBM" | "yearnCurveVault" | "yearnGovernanceAddress" | "yearnRegistry"): FunctionFragment;
+    getFunction(nameOrSignatureOrTopic: "BETA" | "BOOTSTRAP_PERIOD_CHICKEN_IN" | "BOOTSTRAP_PERIOD_REDEEM" | "BOOTSTRAP_PERIOD_SHIFT" | "CHICKEN_IN_AMM_FEE" | "DECIMAL_PRECISION" | "INDEX_OF_LUSD_TOKEN_IN_CURVE_POOL" | "MINUTE_DECAY_FACTOR" | "MIN_BLUSD_SUPPLY" | "MIN_BOND_AMOUNT" | "NFT_RANDOMNESS_DIVISOR" | "SECONDS_IN_ONE_MINUTE" | "SHIFTER_DELAY" | "SHIFTER_WINDOW" | "_calcSystemBackingRatioFromBAMMValue" | "accrualAdjustmentMultiplier" | "accrualAdjustmentPeriodCount" | "accrualAdjustmentPeriodSeconds" | "accrualParameter" | "activateMigration" | "bLUSDToken" | "bammSPVault" | "baseRedemptionRate" | "bondNFT" | "calcAccruedBLUSD" | "calcBondBLUSDCap" | "calcRedemptionFeePercentage" | "calcSystemBackingRatio" | "calcTotalLUSDValue" | "calcTotalYearnCurveVaultShareValue" | "calcUpdatedAccrualParameter" | "chickenIn" | "chickenOut" | "countChickenIn" | "countChickenOut" | "createBond" | "createBondWithPermit" | "curveBasePool" | "curveDepositLUSD3CRVExchangeRateThreshold" | "curveLiquidityGauge" | "curvePool" | "curveWithdrawal3CRVLUSDExchangeRateThreshold" | "deploymentTimestamp" | "firstChickenInTime" | "getAcquiredLUSDInCurve" | "getAcquiredLUSDInSP" | "getBAMMLUSDDebt" | "getBondData" | "getLUSDInBAMMSPVault" | "getLUSDToAcquire" | "getOpenBondCount" | "getOwnedLUSDInCurve" | "getOwnedLUSDInSP" | "getPendingLUSD" | "getPermanentLUSD" | "getTotalAcquiredLUSD" | "getTotalLUSDInCurve" | "getTreasury" | "lastRedemptionTime" | "lastShifterCountdownStartTime" | "lusdToken" | "migration" | "minimumAccrualParameter" | "redeem" | "sendFeeShare" | "shiftLUSDFromCurveToSP" | "shiftLUSDFromSPToCurve" | "startShifterCountdown" | "targetAverageAgeSeconds" | "totalWeightedStartTimes" | "yTokensHeldByCBM" | "yearnCurveVault" | "yearnGovernanceAddress" | "yearnRegistry"): FunctionFragment;
     encodeFunctionData(functionFragment: "BETA", values?: undefined): string;
     encodeFunctionData(functionFragment: "BOOTSTRAP_PERIOD_CHICKEN_IN", values?: undefined): string;
     encodeFunctionData(functionFragment: "BOOTSTRAP_PERIOD_REDEEM", values?: undefined): string;
@@ -211,6 +212,14 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     encodeFunctionData(functionFragment: "countChickenIn", values?: undefined): string;
     encodeFunctionData(functionFragment: "countChickenOut", values?: undefined): string;
     encodeFunctionData(functionFragment: "createBond", values: [BigNumberish]): string;
+    encodeFunctionData(functionFragment: "createBondWithPermit", values: [
+        string,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BytesLike,
+        BytesLike
+    ]): string;
     encodeFunctionData(functionFragment: "curveBasePool", values?: undefined): string;
     encodeFunctionData(functionFragment: "curveDepositLUSD3CRVExchangeRateThreshold", values?: undefined): string;
     encodeFunctionData(functionFragment: "curveLiquidityGauge", values?: undefined): string;
@@ -284,6 +293,7 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     decodeFunctionResult(functionFragment: "countChickenIn", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "countChickenOut", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "createBond", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "createBondWithPermit", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "curveBasePool", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "curveDepositLUSD3CRVExchangeRateThreshold", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "curveLiquidityGauge", data: BytesLike): Result;
@@ -325,9 +335,10 @@ export interface ChickenBondManagerInterface extends utils.Interface {
         "BLUSDRedeemed(address,uint256,uint256,uint256,uint256,uint256)": EventFragment;
         "BaseRedemptionRateUpdated(uint256)": EventFragment;
         "BondCancelled(address,uint256,uint256,uint256,uint256,uint128)": EventFragment;
-        "BondClaimed(address,uint256,uint256,uint256,uint128)": EventFragment;
+        "BondClaimed(address,uint256,uint256,uint256,uint256,uint256,bool,uint128)": EventFragment;
         "BondCreated(address,uint256,uint256,uint128)": EventFragment;
         "LastRedemptionTimeUpdated(uint256)": EventFragment;
+        "MigrationTriggered(uint256)": EventFragment;
     };
     getEvent(nameOrSignatureOrTopic: "BLUSDRedeemed"): EventFragment;
     getEvent(nameOrSignatureOrTopic: "BaseRedemptionRateUpdated"): EventFragment;
@@ -335,6 +346,7 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     getEvent(nameOrSignatureOrTopic: "BondClaimed"): EventFragment;
     getEvent(nameOrSignatureOrTopic: "BondCreated"): EventFragment;
     getEvent(nameOrSignatureOrTopic: "LastRedemptionTimeUpdated"): EventFragment;
+    getEvent(nameOrSignatureOrTopic: "MigrationTriggered"): EventFragment;
 }
 export interface BLUSDRedeemedEventObject {
     redeemer: string;
@@ -382,6 +394,9 @@ export interface BondClaimedEventObject {
     bondId: BigNumber;
     lusdAmount: BigNumber;
     bLusdAmount: BigNumber;
+    lusdSurplus: BigNumber;
+    chickenInFeeAmount: BigNumber;
+    migration: boolean;
     bondFinalHalfDna: BigNumber;
 }
 export declare type BondClaimedEvent = TypedEvent<[
@@ -389,6 +404,9 @@ export declare type BondClaimedEvent = TypedEvent<[
     BigNumber,
     BigNumber,
     BigNumber,
+    BigNumber,
+    BigNumber,
+    boolean,
     BigNumber
 ], BondClaimedEventObject>;
 export declare type BondClaimedEventFilter = TypedEventFilter<BondClaimedEvent>;
@@ -412,6 +430,13 @@ export declare type LastRedemptionTimeUpdatedEvent = TypedEvent<[
     BigNumber
 ], LastRedemptionTimeUpdatedEventObject>;
 export declare type LastRedemptionTimeUpdatedEventFilter = TypedEventFilter<LastRedemptionTimeUpdatedEvent>;
+export interface MigrationTriggeredEventObject {
+    previousPermanentLUSD: BigNumber;
+}
+export declare type MigrationTriggeredEvent = TypedEvent<[
+    BigNumber
+], MigrationTriggeredEventObject>;
+export declare type MigrationTriggeredEventFilter = TypedEventFilter<MigrationTriggeredEvent>;
 export interface ChickenBondManager extends BaseContract {
     connect(signerOrProvider: Signer | Provider | string): this;
     attach(addressOrName: string): this;
@@ -469,6 +494,9 @@ export interface ChickenBondManager extends BaseContract {
         countChickenIn(overrides?: CallOverrides): Promise<[BigNumber]>;
         countChickenOut(overrides?: CallOverrides): Promise<[BigNumber]>;
         createBond(_lusdAmount: BigNumberish, overrides?: Overrides & {
+            from?: string | Promise<string>;
+        }): Promise<ContractTransaction>;
+        createBondWithPermit(owner: string, amount: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
         curveBasePool(overrides?: CallOverrides): Promise<[string]>;
@@ -587,6 +615,9 @@ export interface ChickenBondManager extends BaseContract {
     createBond(_lusdAmount: BigNumberish, overrides?: Overrides & {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
+    createBondWithPermit(owner: string, amount: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: Overrides & {
+        from?: string | Promise<string>;
+    }): Promise<ContractTransaction>;
     curveBasePool(overrides?: CallOverrides): Promise<string>;
     curveDepositLUSD3CRVExchangeRateThreshold(overrides?: CallOverrides): Promise<BigNumber>;
     curveLiquidityGauge(overrides?: CallOverrides): Promise<string>;
@@ -693,6 +724,7 @@ export interface ChickenBondManager extends BaseContract {
         countChickenIn(overrides?: CallOverrides): Promise<BigNumber>;
         countChickenOut(overrides?: CallOverrides): Promise<BigNumber>;
         createBond(_lusdAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+        createBondWithPermit(owner: string, amount: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: CallOverrides): Promise<BigNumber>;
         curveBasePool(overrides?: CallOverrides): Promise<string>;
         curveDepositLUSD3CRVExchangeRateThreshold(overrides?: CallOverrides): Promise<BigNumber>;
         curveLiquidityGauge(overrides?: CallOverrides): Promise<string>;
@@ -760,12 +792,14 @@ export interface ChickenBondManager extends BaseContract {
         BaseRedemptionRateUpdated(_baseRedemptionRate?: null): BaseRedemptionRateUpdatedEventFilter;
         "BondCancelled(address,uint256,uint256,uint256,uint256,uint128)"(bonder?: string | null, bondId?: null, principalLusdAmount?: null, minLusdAmount?: null, withdrawnLusdAmount?: null, bondFinalHalfDna?: null): BondCancelledEventFilter;
         BondCancelled(bonder?: string | null, bondId?: null, principalLusdAmount?: null, minLusdAmount?: null, withdrawnLusdAmount?: null, bondFinalHalfDna?: null): BondCancelledEventFilter;
-        "BondClaimed(address,uint256,uint256,uint256,uint128)"(bonder?: string | null, bondId?: null, lusdAmount?: null, bLusdAmount?: null, bondFinalHalfDna?: null): BondClaimedEventFilter;
-        BondClaimed(bonder?: string | null, bondId?: null, lusdAmount?: null, bLusdAmount?: null, bondFinalHalfDna?: null): BondClaimedEventFilter;
+        "BondClaimed(address,uint256,uint256,uint256,uint256,uint256,bool,uint128)"(bonder?: string | null, bondId?: null, lusdAmount?: null, bLusdAmount?: null, lusdSurplus?: null, chickenInFeeAmount?: null, migration?: null, bondFinalHalfDna?: null): BondClaimedEventFilter;
+        BondClaimed(bonder?: string | null, bondId?: null, lusdAmount?: null, bLusdAmount?: null, lusdSurplus?: null, chickenInFeeAmount?: null, migration?: null, bondFinalHalfDna?: null): BondClaimedEventFilter;
         "BondCreated(address,uint256,uint256,uint128)"(bonder?: string | null, bondId?: null, amount?: null, bondInitialHalfDna?: null): BondCreatedEventFilter;
         BondCreated(bonder?: string | null, bondId?: null, amount?: null, bondInitialHalfDna?: null): BondCreatedEventFilter;
         "LastRedemptionTimeUpdated(uint256)"(_lastRedemptionFeeOpTime?: null): LastRedemptionTimeUpdatedEventFilter;
         LastRedemptionTimeUpdated(_lastRedemptionFeeOpTime?: null): LastRedemptionTimeUpdatedEventFilter;
+        "MigrationTriggered(uint256)"(previousPermanentLUSD?: null): MigrationTriggeredEventFilter;
+        MigrationTriggered(previousPermanentLUSD?: null): MigrationTriggeredEventFilter;
     };
     estimateGas: {
         BETA(overrides?: CallOverrides): Promise<BigNumber>;
@@ -810,6 +844,9 @@ export interface ChickenBondManager extends BaseContract {
         countChickenIn(overrides?: CallOverrides): Promise<BigNumber>;
         countChickenOut(overrides?: CallOverrides): Promise<BigNumber>;
         createBond(_lusdAmount: BigNumberish, overrides?: Overrides & {
+            from?: string | Promise<string>;
+        }): Promise<BigNumber>;
+        createBondWithPermit(owner: string, amount: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<BigNumber>;
         curveBasePool(overrides?: CallOverrides): Promise<BigNumber>;
@@ -903,6 +940,9 @@ export interface ChickenBondManager extends BaseContract {
         countChickenIn(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         countChickenOut(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         createBond(_lusdAmount: BigNumberish, overrides?: Overrides & {
+            from?: string | Promise<string>;
+        }): Promise<PopulatedTransaction>;
+        createBondWithPermit(owner: string, amount: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<PopulatedTransaction>;
         curveBasePool(overrides?: CallOverrides): Promise<PopulatedTransaction>;

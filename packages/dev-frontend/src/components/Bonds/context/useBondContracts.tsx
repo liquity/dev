@@ -113,6 +113,7 @@ export const useBondContracts = (): BondContracts => {
         chickenBondManager,
         treasury.reserve
       );
+
       const bonds = await api.getAccountBonds(
         account,
         bondNft,

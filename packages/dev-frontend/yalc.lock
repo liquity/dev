@@ -2,7 +2,7 @@
   "version": "v1",
   "packages": {
     "@liquity/chicken-bonds": {
-      "signature": "43276bfd13d17506bab9f0fb4ef36467"
+      "signature": "3e1046461934969e7839b56789968bd3"
     }
   }
 }
