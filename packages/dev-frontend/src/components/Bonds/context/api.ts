@@ -13,7 +13,7 @@ import type {
 } from "@liquity/chicken-bonds/lusd/types/ChickenBondManager";
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
-import type { ProtocolInfo, Bond, BondStatus, Stats, Treasury } from "./transitions";
+import type { ProtocolInfo, Bond, BondStatus, Stats } from "./transitions";
 import {
   numberify,
   decimalify,
@@ -197,17 +197,30 @@ const getBlusdAmmPrice = async (bLusdAmm: CurveCryptoSwap2ETH): Promise<Decimal>
 const getProtocolInfo = async (
   bLusdToken: BLUSDToken,
   bLusdAmm: CurveCryptoSwap2ETH,
-  chickenBondManager: ChickenBondManager,
-  reserveSize: Decimal
+  chickenBondManager: ChickenBondManager
 ): Promise<ProtocolInfo> => {
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
   const marketPrice = await getBlusdAmmPrice(bLusdAmm);
-  const fairPrice = marketPrice.mul(1.1); /* TODO: use real formula */
-  const floorPrice = bLusdSupply.isZero ? Decimal.ONE : reserveSize.div(bLusdSupply);
+  const [pending, reserve, permanent] = await chickenBondManager.getTreasury();
+
+  const treasury = {
+    pending: decimalify(pending),
+    reserve: decimalify(reserve),
+    permanent: decimalify(permanent),
+    total: decimalify(pending.add(reserve).add(permanent))
+  };
+
+  const fairPrice = {
+    lower: treasury.total.sub(treasury.pending).div(bLusdSupply),
+    upper: treasury.total.div(bLusdSupply)
+  };
+
+  const floorPrice = bLusdSupply.isZero ? Decimal.ONE : treasury.reserve.div(bLusdSupply);
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
   const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
     24 * 60 * 60
   );
+
   const {
     marketPricePremium,
     breakEvenTime,
@@ -224,6 +237,7 @@ const getProtocolInfo = async (
   return {
     bLusdSupply,
     marketPrice,
+    treasury,
     fairPrice,
     floorPrice,
     claimBondFee,
@@ -254,17 +268,6 @@ const getStats = async (chickenBondManager: ChickenBondManager): Promise<Stats> 
     cancelledBonds: Decimal.from(cancelledBonds.toString()),
     claimedBonds: Decimal.from(claimedBonds.toString()),
     totalBonds: Decimal.from(totalBonds.toString())
-  };
-};
-
-const getTreasury = async (chickenBondManager: ChickenBondManager): Promise<Treasury> => {
-  const [pending, reserve, permanent] = await chickenBondManager.getTreasury();
-
-  return {
-    pending: decimalify(pending),
-    reserve: decimalify(reserve),
-    permanent: decimalify(permanent),
-    total: decimalify(pending.add(reserve).add(permanent))
   };
 };
 
@@ -601,7 +604,6 @@ const removeLiquidityOneCoin = async (
 export const api = {
   getAccountBonds,
   getStats,
-  getTreasury,
   getLpToken,
   getTokenBalance,
   getTokenTotalSupply,

@@ -25,9 +25,9 @@ const Metric: React.FC<MetricProps> = ({ value, unit }) => {
 };
 
 export const BondStats: React.FC<BondStatsProps> = () => {
-  const { treasury, stats, protocolInfo } = useBondView();
+  const { stats, protocolInfo } = useBondView();
 
-  if (treasury === undefined || stats === undefined || protocolInfo === undefined) return null;
+  if (stats === undefined || protocolInfo === undefined) return null;
 
   return (
     <Card variant="info">
@@ -40,7 +40,12 @@ export const BondStats: React.FC<BondStatsProps> = () => {
         <Metric value={protocolInfo.marketPrice.prettify(2)} unit="LUSD" />
       </Statistic>
       <Statistic name={l.BLUSD_FAIR_PRICE.term} tooltip={l.BLUSD_FAIR_PRICE.description}>
-        <Metric value={protocolInfo.fairPrice.prettify(2)} unit="LUSD" />
+        <Metric
+          value={`${protocolInfo.fairPrice.lower.prettify(
+            2
+          )} - ${protocolInfo.fairPrice.upper.prettify(2)}`}
+          unit="LUSD"
+        />
       </Statistic>
       <Statistic name={l.BLUSD_FLOOR_PRICE.term} tooltip={l.BLUSD_FLOOR_PRICE.description}>
         <Metric value={protocolInfo.floorPrice.prettify(2)} unit="LUSD" />
@@ -81,16 +86,16 @@ export const BondStats: React.FC<BondStatsProps> = () => {
         Treasury
       </Heading>
       <Statistic name={l.TREASURY_PENDING.term} tooltip={l.TREASURY_PENDING.description}>
-        <Metric value={treasury.pending.shorten()} unit="LUSD" />
+        <Metric value={protocolInfo.treasury.pending.shorten()} unit="LUSD" />
       </Statistic>
       <Statistic name={l.TREASURY_ACQUIRED.term} tooltip={l.TREASURY_ACQUIRED.description}>
-        <Metric value={treasury.reserve.shorten()} unit="LUSD" />
+        <Metric value={protocolInfo.treasury.reserve.shorten()} unit="LUSD" />
       </Statistic>
       <Statistic name={l.TREASURY_PERMANENT.term} tooltip={l.TREASURY_PERMANENT.description}>
-        <Metric value={treasury.permanent.shorten()} unit="LUSD" />
+        <Metric value={protocolInfo.treasury.permanent.shorten()} unit="LUSD" />
       </Statistic>
       <Statistic name={l.TREASURY_TOTAL.term} tooltip={l.TREASURY_TOTAL.description}>
-        <Metric value={treasury.total.shorten()} unit="LUSD" />
+        <Metric value={protocolInfo.treasury.total.shorten()} unit="LUSD" />
       </Statistic>
 
       <Flex mt={3}>

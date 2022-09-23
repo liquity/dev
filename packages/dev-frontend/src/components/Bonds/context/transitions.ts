@@ -201,9 +201,10 @@ export type Stats = {
 };
 
 export type ProtocolInfo = {
+  treasury: Treasury;
   bLusdSupply: Decimal;
   marketPrice: Decimal;
-  fairPrice: Decimal;
+  fairPrice: { lower: Decimal; upper: Decimal };
   floorPrice: Decimal;
   claimBondFee: Decimal;
   alphaAccrualFactor: Decimal;
