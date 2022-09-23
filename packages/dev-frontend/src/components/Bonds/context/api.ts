@@ -183,6 +183,17 @@ export const _getProtocolInfo = (
   };
 };
 
+const getBlusdAmmPrice = async (bLusdAmm: CurveCryptoSwap2ETH): Promise<Decimal> => {
+  try {
+    return decimalify(
+      await bLusdAmm.get_dy(BLusdAmmTokenIndex.BLUSD, BLusdAmmTokenIndex.LUSD, Decimal.ONE.hex)
+    );
+  } catch (error: unknown) {
+    console.error("bLUSD AMM get_dy() price failed, probably has no liquidity?", error);
+  }
+  return Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle()));
+};
+
 const getProtocolInfo = async (
   bLusdToken: BLUSDToken,
   bLusdAmm: CurveCryptoSwap2ETH,
@@ -190,7 +201,7 @@ const getProtocolInfo = async (
   reserveSize: Decimal
 ): Promise<ProtocolInfo> => {
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  const marketPrice = Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle()));
+  const marketPrice = await getBlusdAmmPrice(bLusdAmm);
   const fairPrice = marketPrice.mul(1.1); /* TODO: use real formula */
   const floorPrice = bLusdSupply.isZero ? Decimal.ONE : reserveSize.div(bLusdSupply);
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
