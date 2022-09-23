@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, Heading, Text } from "theme-ui";
+import { Card, Heading, Text, Flex } from "theme-ui";
 import * as l from "../components/Bonds/lexicon";
 import { Statistic } from "./Statistic";
 import { TreasuryChart } from "./TreasuryChart";
@@ -93,7 +93,9 @@ export const BondStats: React.FC<BondStatsProps> = () => {
         <Metric value={treasury.total.shorten()} unit="LUSD" />
       </Statistic>
 
-      <TreasuryChart />
+      <Flex mt={3}>
+        <TreasuryChart />
+      </Flex>
     </Card>
   );
 };

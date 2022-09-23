@@ -1,26 +1,10 @@
-import React from "react";
+import { Decimal } from "@liquity/lib-base";
 import { PieChart, Pie, ResponsiveContainer, Tooltip, Cell } from "recharts";
+import { useBondView } from "./Bonds/context/BondViewContext";
 
 const labels = ["Pending", "Reserve", "Permanent"];
 const colors = ["#7a77c2", "#6d6aad", "#5f5c97"];
 const RADIAN = Math.PI / 180;
-const treasury = [
-  {
-    name: "Pending",
-    value: 850000,
-    share: 7
-  },
-  {
-    name: "Reserve",
-    value: 7100000,
-    share: 62
-  },
-  {
-    name: "Permanent",
-    value: 3600000,
-    share: 31
-  }
-];
 
 // @ts-ignore
 const BucketLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, index }) => {
@@ -30,10 +14,10 @@ const BucketLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, index }) => {
 
   return (
     <text
-      fontSize={16}
+      fontSize={15}
       fontWeight={300}
-      x={index === 0 ? x + 20 : x + 10}
-      y={y}
+      x={x * 1.078}
+      y={y * 0.985}
       fill="white"
       textAnchor="middle"
       dominantBaseline="central"
@@ -43,74 +27,40 @@ const BucketLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, index }) => {
   );
 };
 
-// @ts-ignore
-const ShareLabel = ({ x, y, index }) => {
-  const radius = 20;
-  const positions = [
-    {
-      // Pending
-      text: {
-        x: -34,
-        y: 8
-      },
-      circle: {
-        x: -24,
-        y: 8
-      }
-    },
-    {
-      // Acquired
-      text: {
-        x: -3,
-        y: 20
-      },
-      circle: {
-        x: 8,
-        y: 20
-      }
-    },
-    {
-      // Permanent
-      text: {
-        x: -22,
-        y: -22
-      },
-      circle: {
-        x: -6,
-        y: -25
-      }
-    }
-  ];
-
-  return (
-    <g>
-      <circle
-        textAnchor="outside"
-        cx={x + positions[index].circle.x}
-        cy={y + positions[index].circle.y}
-        r={radius}
-        fill={colors[index]}
-      />
-      <text
-        x={x + positions[index].text.x}
-        y={y + positions[index].text.y}
-        fill="white"
-        textAnchor="outside"
-        dominantBaseline="middle"
-      >
-        {treasury[index].share}%
-      </text>
-    </g>
-  );
-};
-
 export const TreasuryChart = () => {
+  const { treasury } = useBondView();
+
+  if (treasury === undefined) return null;
+
+  const treasuryChartData = [];
+
+  if (treasury.pending !== Decimal.ZERO) {
+    treasuryChartData.push({
+      name: "Pending",
+      value: parseFloat(treasury.pending.toString())
+    });
+  }
+
+  if (treasury.reserve !== Decimal.ZERO) {
+    treasuryChartData.push({
+      name: "Reserve",
+      value: parseFloat(treasury.reserve.toString())
+    });
+  }
+
+  if (treasury.permanent !== Decimal.ZERO) {
+    treasuryChartData.push({
+      name: "Permanent",
+      value: parseFloat(treasury.permanent.toString())
+    });
+  }
+
   return (
-    <ResponsiveContainer width="100%" height={320}>
-      <PieChart width={100} height={250}>
+    <ResponsiveContainer width="100%" height={348}>
+      <PieChart width={80} height={250}>
         <Tooltip isAnimationActive={false} />
         <Pie
-          data={treasury}
+          data={treasuryChartData}
           dataKey="value"
           nameKey="name"
           cx="50%"
@@ -120,12 +70,12 @@ export const TreasuryChart = () => {
           isAnimationActive={false}
           strokeOpacity="0.55"
         >
-          {treasury.map((_, index) => (
+          {treasuryChartData.map((_, index) => (
             <Cell key={`label-${index}`} fill={colors[index]} />
           ))}
         </Pie>
         <Pie
-          data={treasury}
+          data={treasuryChartData}
           dataKey="value"
           nameKey="name"
           cx="50%"
@@ -134,10 +84,25 @@ export const TreasuryChart = () => {
           outerRadius={136}
           isAnimationActive={false}
           strokeOpacity="0.55"
-          label={ShareLabel}
+          label={({ x, y, percent, index }) => (
+            <g>
+              <circle textAnchor="middle" cx={x * 0.95} cy={y * 0.95} r={23} fill={colors[index]} />
+              <text
+                x={x * 0.95}
+                y={y * 0.95}
+                fontSize={15.5}
+                fill="white"
+                fontWeight={300}
+                textAnchor="middle"
+                dominantBaseline="central"
+              >
+                {`${(percent * 100).toFixed(0)}%`}
+              </text>
+            </g>
+          )}
           labelLine={false}
         >
-          {treasury.map((_, index) => (
+          {treasuryChartData.map((_, index) => (
             <Cell key={`share-${index}`} fill={colors[index]} />
           ))}
         </Pie>

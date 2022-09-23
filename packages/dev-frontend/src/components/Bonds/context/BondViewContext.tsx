@@ -22,9 +22,6 @@ export type BondViewContextType = {
   stats?: Stats;
   treasury?: Treasury;
   bonds?: Bond[];
-  createBond: (lusdAmount: Decimal) => Promise<void>;
-  cancelBond: (bondId: string, minimumLusd: Decimal) => Promise<void>;
-  claimBond: (bondId: string) => Promise<void>;
   selectedBond?: Bond;
   optimisticBond?: OptimisticBond;
   bLusdBalance?: Decimal;
