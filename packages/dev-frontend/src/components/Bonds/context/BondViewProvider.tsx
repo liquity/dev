@@ -6,7 +6,6 @@ import type {
   BondEvent,
   Payload,
   Bond,
-  Treasury,
   BondTransactionStatuses,
   CreateBondPayload,
   ProtocolInfo,
@@ -48,7 +47,6 @@ export const BondViewProvider: React.FC = props => {
   const [optimisticBond, setOptimisticBond] = useState<OptimisticBond>();
   const [shouldSynchronize, setShouldSynchronize] = useState<boolean>(true);
   const [bonds, setBonds] = useState<Bond[]>();
-  const [treasury, setTreasury] = useState<Treasury>();
   const [stats, setStats] = useState<Stats>();
   const [protocolInfo, setProtocolInfo] = useState<ProtocolInfo>();
   const [simulatedProtocolInfo, setSimulatedProtocolInfo] = useState<ProtocolInfo>();
@@ -200,7 +198,6 @@ export const BondViewProvider: React.FC = props => {
         }
 
         const {
-          treasury,
           protocolInfo,
           bonds,
           stats,
@@ -236,7 +233,6 @@ export const BondViewProvider: React.FC = props => {
         setBLusdAmmBLusdBalance(bLusdAmmBLusdBalance);
         setBLusdAmmLusdBalance(bLusdAmmLusdBalance);
         setStats(stats);
-        setTreasury(treasury);
         setBonds(bonds);
         setIsSynchronizing(false);
         setOptimisticBond(undefined);
@@ -472,7 +468,6 @@ export const BondViewProvider: React.FC = props => {
     optimisticBond,
     protocolInfo,
     stats,
-    treasury,
     bonds,
     statuses,
     selectedBond,

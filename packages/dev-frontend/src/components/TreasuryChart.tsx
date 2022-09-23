@@ -28,30 +28,30 @@ const BucketLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, index }) => {
 };
 
 export const TreasuryChart = () => {
-  const { treasury } = useBondView();
+  const { protocolInfo } = useBondView();
 
-  if (treasury === undefined) return null;
+  if (protocolInfo === undefined) return null;
 
   const treasuryChartData = [];
 
-  if (treasury.pending !== Decimal.ZERO) {
+  if (protocolInfo.treasury.pending !== Decimal.ZERO) {
     treasuryChartData.push({
       name: "Pending",
-      value: parseFloat(treasury.pending.toString())
+      value: parseFloat(protocolInfo.treasury.pending.toString())
     });
   }
 
-  if (treasury.reserve !== Decimal.ZERO) {
+  if (protocolInfo.treasury.reserve !== Decimal.ZERO) {
     treasuryChartData.push({
       name: "Reserve",
-      value: parseFloat(treasury.reserve.toString())
+      value: parseFloat(protocolInfo.treasury.reserve.toString())
     });
   }
 
-  if (treasury.permanent !== Decimal.ZERO) {
+  if (protocolInfo.treasury.permanent !== Decimal.ZERO) {
     treasuryChartData.push({
       name: "Permanent",
-      value: parseFloat(treasury.permanent.toString())
+      value: parseFloat(protocolInfo.treasury.permanent.toString())
     });
   }
 

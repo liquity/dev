@@ -26,11 +26,10 @@ import { useContract } from "../../../hooks/useContract";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { useCallback } from "react";
 import type { BondsApi } from "./api";
-import type { Bond, ProtocolInfo, Stats, Treasury } from "./transitions";
+import type { Bond, ProtocolInfo, Stats } from "./transitions";
 import { BLusdAmmTokenIndex } from "./transitions";
 
 type BondsInformation = {
-  treasury: Treasury;
   protocolInfo: ProtocolInfo;
   bonds: Bond[];
   stats: Stats;
@@ -106,13 +105,7 @@ export const useBondContracts = (): BondContracts => {
         return;
       }
 
-      const treasury = await api.getTreasury(chickenBondManager);
-      const protocolInfo = await api.getProtocolInfo(
-        bLusdToken,
-        bLusdAmm,
-        chickenBondManager,
-        treasury.reserve
-      );
+      const protocolInfo = await api.getProtocolInfo(bLusdToken, bLusdAmm, chickenBondManager);
 
       const bonds = await api.getAccountBonds(
         account,
@@ -144,7 +137,6 @@ export const useBondContracts = (): BondContracts => {
       ]);
 
       return {
-        treasury,
         protocolInfo,
         bonds,
         stats,

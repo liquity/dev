@@ -3,7 +3,6 @@ import type {
   BondView,
   BondEvent,
   Payload,
-  Treasury,
   Bond,
   Stats,
   BondTransactionStatuses,
@@ -20,7 +19,6 @@ export type BondViewContextType = {
   selectedBondId?: string;
   protocolInfo?: ProtocolInfo;
   stats?: Stats;
-  treasury?: Treasury;
   bonds?: Bond[];
   selectedBond?: Bond;
   optimisticBond?: OptimisticBond;
