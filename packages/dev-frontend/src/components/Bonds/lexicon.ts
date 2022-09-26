@@ -174,6 +174,16 @@ export const BLUSD_FLOOR_PRICE = {
     "The amount of LUSD that an arbitrageur could redeem bLUSD for thus creating a lower bound bLUSD market price."
 };
 
+export const BLUSD_APR = {
+  term: "APR",
+  description: "The APR of bLUSD, based on the yield generated from each bucket in the Treasury."
+};
+
+export const BLUSD_YIELD_AMPLIFICATION = {
+  term: "Yield amplification",
+  description: "The bLUSD token generates a yield which is a multiple of the Stability Pool yield."
+};
+
 export const TREASURY_TOTAL = {
   term: "Total",
   description:

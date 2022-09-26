@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, Heading, Text, Flex } from "theme-ui";
+import { Decimal } from "@liquity/lib-base";
 import * as l from "../components/Bonds/lexicon";
 import { Statistic } from "./Statistic";
 import { TreasuryChart } from "./TreasuryChart";
@@ -41,20 +42,38 @@ export const BondStats: React.FC<BondStatsProps> = () => {
       </Statistic>
       <Statistic name={l.BLUSD_FAIR_PRICE.term} tooltip={l.BLUSD_FAIR_PRICE.description}>
         <Metric
-          value={`${protocolInfo.fairPrice.lower.prettify(
-            2
-          )} - ${protocolInfo.fairPrice.upper.prettify(2)}`}
+          value={
+            protocolInfo.fairPrice.lower.eq(Decimal.INFINITY)
+              ? "N/A"
+              : `${protocolInfo.fairPrice.lower.prettify(
+                  2
+                )} - ${protocolInfo.fairPrice.upper.prettify(2)}`
+          }
           unit="LUSD"
         />
       </Statistic>
       <Statistic name={l.BLUSD_FLOOR_PRICE.term} tooltip={l.BLUSD_FLOOR_PRICE.description}>
         <Metric value={protocolInfo.floorPrice.prettify(2)} unit="LUSD" />
       </Statistic>
+      <Statistic name={l.BLUSD_APR.term} tooltip={l.BLUSD_APR.description}>
+        <Metric
+          value={protocolInfo.bLusdApr ? protocolInfo.bLusdApr.mul(100).prettify(2) : "N/A"}
+          unit="%"
+        />
+      </Statistic>
+      <Statistic
+        name={l.BLUSD_YIELD_AMPLIFICATION.term}
+        tooltip={l.BLUSD_YIELD_AMPLIFICATION.description}
+      >
+        <Metric
+          value={
+            protocolInfo.yieldAmplification ? protocolInfo.yieldAmplification.prettify(2) : "N/A"
+          }
+          unit="x"
+        />
+      </Statistic>
       <Statistic name={l.BLUSD_SUPPLY.term} tooltip={l.BLUSD_SUPPLY.description}>
         <Metric value={protocolInfo.bLusdSupply.shorten()} unit="bLUSD" />
-      </Statistic>
-      <Statistic name={"Yield amplification"} tooltip={"TODO"}>
-        <Metric value={"1.1"} unit="x" />
       </Statistic>
 
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>

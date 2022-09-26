@@ -217,6 +217,8 @@ export type ProtocolInfo = {
   rebondAccrualFactor: Decimal;
   breakEvenDays?: Decimal;
   rebondDays?: Decimal;
+  yieldAmplification?: Decimal;
+  bLusdApr?: Decimal;
 };
 
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";
