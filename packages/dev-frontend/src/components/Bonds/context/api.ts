@@ -217,7 +217,7 @@ const getProtocolInfo = async (
 
   const floorPrice = bLusdSupply.isZero ? Decimal.ONE : treasury.reserve.div(bLusdSupply);
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
-  const alphaAccrualFactor = decimalify(await chickenBondManager.accrualParameter()).div(
+  const alphaAccrualFactor = decimalify(await chickenBondManager.calcUpdatedAccrualParameter()).div(
     24 * 60 * 60
   );
 
