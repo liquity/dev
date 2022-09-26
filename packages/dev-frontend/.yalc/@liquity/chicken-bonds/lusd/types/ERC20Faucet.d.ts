@@ -4,6 +4,7 @@ import type { Listener, Provider } from "@ethersproject/providers";
 import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
 export interface ERC20FaucetInterface extends utils.Interface {
     functions: {
+        "DOMAIN_SEPARATOR()": FunctionFragment;
         "allowance(address,address)": FunctionFragment;
         "approve(address,uint256)": FunctionFragment;
         "balanceOf(address)": FunctionFragment;
@@ -13,7 +14,9 @@ export interface ERC20FaucetInterface extends utils.Interface {
         "lastTapped(address)": FunctionFragment;
         "mint(address,uint256)": FunctionFragment;
         "name()": FunctionFragment;
+        "nonces(address)": FunctionFragment;
         "owner()": FunctionFragment;
+        "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
         "renounceOwnership()": FunctionFragment;
         "symbol()": FunctionFragment;
         "tap()": FunctionFragment;
@@ -24,7 +27,8 @@ export interface ERC20FaucetInterface extends utils.Interface {
         "transferFrom(address,address,uint256)": FunctionFragment;
         "transferOwnership(address)": FunctionFragment;
     };
-    getFunction(nameOrSignatureOrTopic: "allowance" | "approve" | "balanceOf" | "decimals" | "decreaseAllowance" | "increaseAllowance" | "lastTapped" | "mint" | "name" | "owner" | "renounceOwnership" | "symbol" | "tap" | "tapAmount" | "tapPeriod" | "totalSupply" | "transfer" | "transferFrom" | "transferOwnership"): FunctionFragment;
+    getFunction(nameOrSignatureOrTopic: "DOMAIN_SEPARATOR" | "allowance" | "approve" | "balanceOf" | "decimals" | "decreaseAllowance" | "increaseAllowance" | "lastTapped" | "mint" | "name" | "nonces" | "owner" | "permit" | "renounceOwnership" | "symbol" | "tap" | "tapAmount" | "tapPeriod" | "totalSupply" | "transfer" | "transferFrom" | "transferOwnership"): FunctionFragment;
+    encodeFunctionData(functionFragment: "DOMAIN_SEPARATOR", values?: undefined): string;
     encodeFunctionData(functionFragment: "allowance", values: [string, string]): string;
     encodeFunctionData(functionFragment: "approve", values: [string, BigNumberish]): string;
     encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
@@ -34,7 +38,17 @@ export interface ERC20FaucetInterface extends utils.Interface {
     encodeFunctionData(functionFragment: "lastTapped", values: [string]): string;
     encodeFunctionData(functionFragment: "mint", values: [string, BigNumberish]): string;
     encodeFunctionData(functionFragment: "name", values?: undefined): string;
+    encodeFunctionData(functionFragment: "nonces", values: [string]): string;
     encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+    encodeFunctionData(functionFragment: "permit", values: [
+        string,
+        string,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BytesLike,
+        BytesLike
+    ]): string;
     encodeFunctionData(functionFragment: "renounceOwnership", values?: undefined): string;
     encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
     encodeFunctionData(functionFragment: "tap", values?: undefined): string;
@@ -44,6 +58,7 @@ export interface ERC20FaucetInterface extends utils.Interface {
     encodeFunctionData(functionFragment: "transfer", values: [string, BigNumberish]): string;
     encodeFunctionData(functionFragment: "transferFrom", values: [string, string, BigNumberish]): string;
     encodeFunctionData(functionFragment: "transferOwnership", values: [string]): string;
+    decodeFunctionResult(functionFragment: "DOMAIN_SEPARATOR", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
@@ -53,7 +68,9 @@ export interface ERC20FaucetInterface extends utils.Interface {
     decodeFunctionResult(functionFragment: "lastTapped", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "mint", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "nonces", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "permit", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "renounceOwnership", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "tap", data: BytesLike): Result;
@@ -118,6 +135,7 @@ export interface ERC20Faucet extends BaseContract {
     once: OnEvent<this>;
     removeListener: OnEvent<this>;
     functions: {
+        DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<[string]>;
         allowance(owner: string, spender: string, overrides?: CallOverrides): Promise<[BigNumber]>;
         approve(spender: string, amount: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
@@ -135,7 +153,11 @@ export interface ERC20Faucet extends BaseContract {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
         name(overrides?: CallOverrides): Promise<[string]>;
+        nonces(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
         owner(overrides?: CallOverrides): Promise<[string]>;
+        permit(owner: string, spender: string, value: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: Overrides & {
+            from?: string | Promise<string>;
+        }): Promise<ContractTransaction>;
         renounceOwnership(overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
@@ -156,6 +178,7 @@ export interface ERC20Faucet extends BaseContract {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
     };
+    DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
     allowance(owner: string, spender: string, overrides?: CallOverrides): Promise<BigNumber>;
     approve(spender: string, amount: BigNumberish, overrides?: Overrides & {
         from?: string | Promise<string>;
@@ -173,7 +196,11 @@ export interface ERC20Faucet extends BaseContract {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
     name(overrides?: CallOverrides): Promise<string>;
+    nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
     owner(overrides?: CallOverrides): Promise<string>;
+    permit(owner: string, spender: string, value: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: Overrides & {
+        from?: string | Promise<string>;
+    }): Promise<ContractTransaction>;
     renounceOwnership(overrides?: Overrides & {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
@@ -194,6 +221,7 @@ export interface ERC20Faucet extends BaseContract {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
     callStatic: {
+        DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<string>;
         allowance(owner: string, spender: string, overrides?: CallOverrides): Promise<BigNumber>;
         approve(spender: string, amount: BigNumberish, overrides?: CallOverrides): Promise<boolean>;
         balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
@@ -203,7 +231,9 @@ export interface ERC20Faucet extends BaseContract {
         lastTapped(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
         mint(_to: string, _amount: BigNumberish, overrides?: CallOverrides): Promise<void>;
         name(overrides?: CallOverrides): Promise<string>;
+        nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
         owner(overrides?: CallOverrides): Promise<string>;
+        permit(owner: string, spender: string, value: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: CallOverrides): Promise<void>;
         renounceOwnership(overrides?: CallOverrides): Promise<void>;
         symbol(overrides?: CallOverrides): Promise<string>;
         tap(overrides?: CallOverrides): Promise<void>;
@@ -223,6 +253,7 @@ export interface ERC20Faucet extends BaseContract {
         Transfer(from?: string | null, to?: string | null, value?: null): TransferEventFilter;
     };
     estimateGas: {
+        DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<BigNumber>;
         allowance(owner: string, spender: string, overrides?: CallOverrides): Promise<BigNumber>;
         approve(spender: string, amount: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
@@ -240,7 +271,11 @@ export interface ERC20Faucet extends BaseContract {
             from?: string | Promise<string>;
         }): Promise<BigNumber>;
         name(overrides?: CallOverrides): Promise<BigNumber>;
+        nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
         owner(overrides?: CallOverrides): Promise<BigNumber>;
+        permit(owner: string, spender: string, value: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: Overrides & {
+            from?: string | Promise<string>;
+        }): Promise<BigNumber>;
         renounceOwnership(overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<BigNumber>;
@@ -262,6 +297,7 @@ export interface ERC20Faucet extends BaseContract {
         }): Promise<BigNumber>;
     };
     populateTransaction: {
+        DOMAIN_SEPARATOR(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         allowance(owner: string, spender: string, overrides?: CallOverrides): Promise<PopulatedTransaction>;
         approve(spender: string, amount: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
@@ -279,7 +315,11 @@ export interface ERC20Faucet extends BaseContract {
             from?: string | Promise<string>;
         }): Promise<PopulatedTransaction>;
         name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+        nonces(owner: string, overrides?: CallOverrides): Promise<PopulatedTransaction>;
         owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+        permit(owner: string, spender: string, value: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, overrides?: Overrides & {
+            from?: string | Promise<string>;
+        }): Promise<PopulatedTransaction>;
         renounceOwnership(overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<PopulatedTransaction>;

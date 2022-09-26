@@ -317,7 +317,7 @@ const createBond = async (
   const domain = {
     name: await lusdToken.name(),
     version: "1",
-    chainId: 1,
+    chainId: await signer.getChainId(),
     verifyingContract: lusdAddress
   };
   const types = {

@@ -332,14 +332,16 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     decodeFunctionResult(functionFragment: "yearnGovernanceAddress", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "yearnRegistry", data: BytesLike): Result;
     events: {
+        "AccrualParameterUpdated(uint256)": EventFragment;
         "BLUSDRedeemed(address,uint256,uint256,uint256,uint256,uint256)": EventFragment;
         "BaseRedemptionRateUpdated(uint256)": EventFragment;
-        "BondCancelled(address,uint256,uint256,uint256,uint256,uint128)": EventFragment;
-        "BondClaimed(address,uint256,uint256,uint256,uint256,uint256,bool,uint128)": EventFragment;
-        "BondCreated(address,uint256,uint256,uint128)": EventFragment;
+        "BondCancelled(address,uint256,uint256,uint256,uint256,uint80)": EventFragment;
+        "BondClaimed(address,uint256,uint256,uint256,uint256,uint256,bool,uint80)": EventFragment;
+        "BondCreated(address,uint256,uint256,uint80)": EventFragment;
         "LastRedemptionTimeUpdated(uint256)": EventFragment;
         "MigrationTriggered(uint256)": EventFragment;
     };
+    getEvent(nameOrSignatureOrTopic: "AccrualParameterUpdated"): EventFragment;
     getEvent(nameOrSignatureOrTopic: "BLUSDRedeemed"): EventFragment;
     getEvent(nameOrSignatureOrTopic: "BaseRedemptionRateUpdated"): EventFragment;
     getEvent(nameOrSignatureOrTopic: "BondCancelled"): EventFragment;
@@ -348,6 +350,13 @@ export interface ChickenBondManagerInterface extends utils.Interface {
     getEvent(nameOrSignatureOrTopic: "LastRedemptionTimeUpdated"): EventFragment;
     getEvent(nameOrSignatureOrTopic: "MigrationTriggered"): EventFragment;
 }
+export interface AccrualParameterUpdatedEventObject {
+    accrualParameter: BigNumber;
+}
+export declare type AccrualParameterUpdatedEvent = TypedEvent<[
+    BigNumber
+], AccrualParameterUpdatedEventObject>;
+export declare type AccrualParameterUpdatedEventFilter = TypedEventFilter<AccrualParameterUpdatedEvent>;
 export interface BLUSDRedeemedEventObject {
     redeemer: string;
     bLusdAmount: BigNumber;
@@ -514,14 +523,12 @@ export interface ChickenBondManager extends BaseContract {
             BigNumber,
             BigNumber,
             BigNumber,
-            BigNumber,
             number
         ] & {
             lusdAmount: BigNumber;
+            claimedBLUSD: BigNumber;
             startTime: BigNumber;
             endTime: BigNumber;
-            initialHalfDna: BigNumber;
-            finalHalfDna: BigNumber;
             status: number;
         }>;
         getLUSDInBAMMSPVault(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -633,14 +640,12 @@ export interface ChickenBondManager extends BaseContract {
         BigNumber,
         BigNumber,
         BigNumber,
-        BigNumber,
         number
     ] & {
         lusdAmount: BigNumber;
+        claimedBLUSD: BigNumber;
         startTime: BigNumber;
         endTime: BigNumber;
-        initialHalfDna: BigNumber;
-        finalHalfDna: BigNumber;
         status: number;
     }>;
     getLUSDInBAMMSPVault(overrides?: CallOverrides): Promise<BigNumber>;
@@ -740,14 +745,12 @@ export interface ChickenBondManager extends BaseContract {
             BigNumber,
             BigNumber,
             BigNumber,
-            BigNumber,
             number
         ] & {
             lusdAmount: BigNumber;
+            claimedBLUSD: BigNumber;
             startTime: BigNumber;
             endTime: BigNumber;
-            initialHalfDna: BigNumber;
-            finalHalfDna: BigNumber;
             status: number;
         }>;
         getLUSDInBAMMSPVault(overrides?: CallOverrides): Promise<BigNumber>;
@@ -786,15 +789,17 @@ export interface ChickenBondManager extends BaseContract {
         yearnRegistry(overrides?: CallOverrides): Promise<string>;
     };
     filters: {
+        "AccrualParameterUpdated(uint256)"(accrualParameter?: null): AccrualParameterUpdatedEventFilter;
+        AccrualParameterUpdated(accrualParameter?: null): AccrualParameterUpdatedEventFilter;
         "BLUSDRedeemed(address,uint256,uint256,uint256,uint256,uint256)"(redeemer?: string | null, bLusdAmount?: null, minLusdAmount?: null, lusdAmount?: null, yTokens?: null, redemptionFee?: null): BLUSDRedeemedEventFilter;
         BLUSDRedeemed(redeemer?: string | null, bLusdAmount?: null, minLusdAmount?: null, lusdAmount?: null, yTokens?: null, redemptionFee?: null): BLUSDRedeemedEventFilter;
         "BaseRedemptionRateUpdated(uint256)"(_baseRedemptionRate?: null): BaseRedemptionRateUpdatedEventFilter;
         BaseRedemptionRateUpdated(_baseRedemptionRate?: null): BaseRedemptionRateUpdatedEventFilter;
-        "BondCancelled(address,uint256,uint256,uint256,uint256,uint128)"(bonder?: string | null, bondId?: null, principalLusdAmount?: null, minLusdAmount?: null, withdrawnLusdAmount?: null, bondFinalHalfDna?: null): BondCancelledEventFilter;
+        "BondCancelled(address,uint256,uint256,uint256,uint256,uint80)"(bonder?: string | null, bondId?: null, principalLusdAmount?: null, minLusdAmount?: null, withdrawnLusdAmount?: null, bondFinalHalfDna?: null): BondCancelledEventFilter;
         BondCancelled(bonder?: string | null, bondId?: null, principalLusdAmount?: null, minLusdAmount?: null, withdrawnLusdAmount?: null, bondFinalHalfDna?: null): BondCancelledEventFilter;
-        "BondClaimed(address,uint256,uint256,uint256,uint256,uint256,bool,uint128)"(bonder?: string | null, bondId?: null, lusdAmount?: null, bLusdAmount?: null, lusdSurplus?: null, chickenInFeeAmount?: null, migration?: null, bondFinalHalfDna?: null): BondClaimedEventFilter;
+        "BondClaimed(address,uint256,uint256,uint256,uint256,uint256,bool,uint80)"(bonder?: string | null, bondId?: null, lusdAmount?: null, bLusdAmount?: null, lusdSurplus?: null, chickenInFeeAmount?: null, migration?: null, bondFinalHalfDna?: null): BondClaimedEventFilter;
         BondClaimed(bonder?: string | null, bondId?: null, lusdAmount?: null, bLusdAmount?: null, lusdSurplus?: null, chickenInFeeAmount?: null, migration?: null, bondFinalHalfDna?: null): BondClaimedEventFilter;
-        "BondCreated(address,uint256,uint256,uint128)"(bonder?: string | null, bondId?: null, amount?: null, bondInitialHalfDna?: null): BondCreatedEventFilter;
+        "BondCreated(address,uint256,uint256,uint80)"(bonder?: string | null, bondId?: null, amount?: null, bondInitialHalfDna?: null): BondCreatedEventFilter;
         BondCreated(bonder?: string | null, bondId?: null, amount?: null, bondInitialHalfDna?: null): BondCreatedEventFilter;
         "LastRedemptionTimeUpdated(uint256)"(_lastRedemptionFeeOpTime?: null): LastRedemptionTimeUpdatedEventFilter;
         LastRedemptionTimeUpdated(_lastRedemptionFeeOpTime?: null): LastRedemptionTimeUpdatedEventFilter;
