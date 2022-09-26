@@ -15,5 +15,5 @@
     "watch:publish": "./scripts/watch-publish.sh",
     "watch": "run-p watch:*"
   },
-  "yalcSig": "a3d1f187857fd1134cd47b22b354bcab"
+  "yalcSig": "8404f6f6df4b467fe930fc0611cbbd23"
 }
