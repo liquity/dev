@@ -68,6 +68,7 @@ export const BondViewProvider: React.FC = props => {
   const [lpTokenSupply, setLpTokenSupply] = useState<Decimal>();
   const [bLusdAmmBLusdBalance, setBLusdAmmBLusdBalance] = useState<Decimal>();
   const [bLusdAmmLusdBalance, setBLusdAmmLusdBalance] = useState<Decimal>();
+  const [isBootstrapPeriodActive, setIsBootstrapPeriodActive] = useState<boolean>();
   const { account, liquity } = useLiquity();
   const contracts = useBondContracts();
 
@@ -461,6 +462,30 @@ export const BondViewProvider: React.FC = props => {
     viewRef.current = view;
   }, [view]);
 
+  useEffect(() => {
+    (async () => {
+      if (
+        bonds === undefined ||
+        protocolInfo === undefined ||
+        contracts.chickenBondManager === undefined
+      )
+        return;
+
+      if (protocolInfo.bLusdSupply.gt(0)) {
+        setIsBootstrapPeriodActive(false);
+        return;
+      }
+
+      const bootstrapPeriodMs =
+        (await contracts.chickenBondManager.BOOTSTRAP_PERIOD_CHICKEN_IN()).toNumber() * 1000;
+
+      const anyBondOlderThanBootstrapPeriod =
+        bonds.find(bond => Date.now() - bond.startTime > bootstrapPeriodMs) !== undefined;
+
+      setIsBootstrapPeriodActive(!anyBondOlderThanBootstrapPeriod);
+    })();
+  }, [bonds, protocolInfo, contracts.chickenBondManager]);
+
   const provider: BondViewContextType = {
     view,
     dispatchEvent,
@@ -492,7 +517,8 @@ export const BondViewProvider: React.FC = props => {
         : isLusdApprovedWithBlusdAmm,
     getExpectedSwapOutput,
     getExpectedLpTokens,
-    getExpectedWithdrawal
+    getExpectedWithdrawal,
+    isBootstrapPeriodActive
   };
 
   // @ts-ignore // TODO REMOVE
