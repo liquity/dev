@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Box, Heading, Flex, Button } from "theme-ui";
 import { Empty } from "./Empty";
 import { BondList } from "./BondList";
@@ -7,9 +7,22 @@ import { BONDS } from "../../lexicon";
 import { InfoIcon } from "../../../InfoIcon";
 import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 import { BLusdAmmTokenIndex, SwapPressedPayload } from "../../context/transitions";
+import { useLiquity } from "../../../../hooks/LiquityContext";
+
+const MAINNET_CHAIN_ID = 1;
 
 export const Idle: React.FC = () => {
+  const { liquity } = useLiquity();
   const { dispatchEvent, bonds, getLusdFromFaucet, lusdBalance, lpTokenBalance } = useBondView();
+  const [chain, setChain] = useState<number>();
+
+  useEffect(() => {
+    (async () => {
+      if (liquity.connection.signer === undefined || chain !== undefined) return;
+      const chainId = await liquity.connection.signer.getChainId();
+      setChain(chainId);
+    })();
+  }, [chain, liquity.connection.signer]);
 
   const hasBonds = bonds !== undefined && bonds.length > 0;
 
@@ -27,15 +40,16 @@ export const Idle: React.FC = () => {
   return (
     <>
       <Flex variant="layout.actions" sx={{ mt: 4, mb: 3 }}>
-        {lpTokenBalance?.nonZero ? (
-          <Button variant="outline" onClick={handleManageLiquidityPressed}>
-            Manage liquidity
-          </Button>
-        ) : (
-          <Button variant="outline" onClick={handleAddLiquidityPressed}>
-            Add liquidity
-          </Button>
-        )}
+        {chain !== MAINNET_CHAIN_ID &&
+          (lpTokenBalance?.nonZero ? (
+            <Button variant="outline" onClick={handleManageLiquidityPressed}>
+              Manage liquidity
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={handleAddLiquidityPressed}>
+              Add liquidity
+            </Button>
+          ))}
 
         <Button variant="outline" onClick={handleBuyBLusdPressed}>
           Buy bLUSD
