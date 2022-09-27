@@ -158,7 +158,10 @@ export const SwapPane: React.FC = () => {
       )}
 
       <Flex pb={2} sx={{ fontSize: "15.5px", justifyContent: "center", fontStyle: "italic" }}>
-        Your swap is performed directly in&nbsp;<Link href="//curve.fi/">Curve</Link>
+        Your swap is performed directly in&nbsp;
+        <Link href="https://curve.fi/" target="_blank">
+          Curve
+        </Link>
         &nbsp;protocol's bLUSD/LUSD pool.
       </Flex>
 
