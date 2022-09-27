@@ -24,7 +24,14 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.status === "PENDING" ? Date.now() : bond?.endTime ?? 0),
       label: (
         <>
-          <Label description={l.ACCRUED_AMOUNT.description} style={{ fontWeight: 500 }}>
+          <Label
+            description={
+              bond.status === "PENDING"
+                ? l.ACCRUED_AMOUNT.description
+                : `The date you ${statuses[bond.status].toLowerCase()} your bond.`
+            }
+            style={{ fontWeight: 500 }}
+          >
             {bond.status === "PENDING" ? l.ACCRUED_AMOUNT.term : statuses[bond.status]}
           </Label>
           <SubLabel style={{ fontWeight: 400 }}>
@@ -39,9 +46,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.breakEvenTime),
       label: (
         <>
-          <Label description="How many bLUSD are required to break-even at the current market price.">
-            {l.BREAK_EVEN_TIME.term}
-          </Label>
+          <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
           <SubLabel>{`${bond?.breakEvenAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
@@ -50,9 +55,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.rebondTime),
       label: (
         <>
-          <Label description="How many bLUSD are recommended before claiming the bond, selling the bLUSD for LUSD, and then opening another bond.">
-            {l.OPTIMUM_REBOND_TIME.term}
-          </Label>
+          <Label description={l.BREAK_EVEN_TIME.description}>{l.OPTIMUM_REBOND_TIME.term}</Label>
           <SubLabel>{`${bond?.rebondAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
