@@ -29,7 +29,6 @@ export const ReactModal: React.FC<ModalProps> = ({ children, onDismiss, style })
       isOpen={true}
       onRequestClose={handleDismiss}
       style={{ ...modalStyle, content: { ...modalStyle.content, ...style } }}
-      contentLabel="TODO"
     >
       {children}
     </Modal>

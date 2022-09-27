@@ -121,7 +121,6 @@ export const BondViewProvider: React.FC = props => {
     [bonds]
   );
 
-  /***** TODO: REMOVE */
   const getLusdFromFaucet = useCallback(async () => {
     if (contracts.lusdToken === undefined) return;
     if (
@@ -133,20 +132,6 @@ export const BondViewProvider: React.FC = props => {
       setShouldSynchronize(true);
     }
   }, [contracts.lusdToken, account]);
-
-  useEffect(() => {
-    (async () => {
-      if (account === undefined || liquity === undefined || contracts.lusdToken === undefined)
-        return;
-
-      if (process.env.REACT_APP_DEMO_MODE === "true") {
-        if ((await liquity.getTrove(account)).collateral.eq(0)) {
-          await liquity.openTrove({ depositCollateral: "11", borrowLUSD: "1800" });
-        }
-      }
-    })();
-  }, [account, liquity, contracts.lusdToken]);
-  /***** /TODO */
 
   useEffect(() => {
     (async () => {
@@ -521,8 +506,8 @@ export const BondViewProvider: React.FC = props => {
     isBootstrapPeriodActive
   };
 
-  // @ts-ignore // TODO REMOVE
-  window.bonds = provider;
+  // @ts-ignore
+  window.__LIQUITY_BONDS__ = provider;
 
   // If contracts don't load it means they're not deployed, we shouldn't block the app from running in this case
   if (protocolInfo === undefined && contracts.hasFoundContracts) return <AppLoader />;

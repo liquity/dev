@@ -23,7 +23,6 @@ export const UserAccount: React.FC = () => {
   const { accountBalance, lusdBalance: realLusdBalance, lqtyBalance } = useLiquitySelector(select);
   const { bLusdBalance, lusdBalance: customLusdBalance } = useBondView();
 
-  /***** TODO: REMOVE */
   const lusdBalance = LUSD_OVERRIDE_ADDRESS === null ? realLusdBalance : customLusdBalance;
 
   return (

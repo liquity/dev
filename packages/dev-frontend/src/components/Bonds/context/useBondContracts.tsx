@@ -119,7 +119,6 @@ export const useBondContracts = (): BondContracts => {
       );
       const stats = await api.getStats(chickenBondManager);
 
-      // TODO cache LP token? Or add to addresses.json?
       const lpToken = await api.getLpToken(bLusdAmm);
 
       const [
