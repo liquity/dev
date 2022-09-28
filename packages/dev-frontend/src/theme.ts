@@ -319,7 +319,7 @@ const theme: Theme = {
     },
 
     radioLabel: {
-      mr: 3,
+      mr: 4,
       width: "unset",
 
       svg: {

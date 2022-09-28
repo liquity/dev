@@ -1,7 +1,6 @@
-/** @jsxImportSource theme-ui */
 import { Decimal } from "@liquity/lib-base";
-import { Flex, Text, Box } from "theme-ui";
-import { StaticRow } from "../../../Trove/Editor";
+import { Text, Box } from "theme-ui";
+import { StaticRow, StaticAmounts } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 
 const PoolBalance: React.FC<{ symbol: string }> = ({ symbol, children }) => (
@@ -17,11 +16,16 @@ export const PoolDetails: React.FC = () => {
 
   return (
     <details>
-      <summary sx={{ cursor: "pointer", mb: 3 }}>Pool details</summary>
+      <Box as="summary" sx={{ cursor: "pointer", mb: 3 }}>
+        Pool details
+      </Box>
 
       <Box sx={{ mt: 3 }}>
-        <StaticRow label="Pool balance" inputId="deposit-pool-balance">
-          <Flex sx={{ alignItems: "center" }}>
+        <StaticRow label="Pool balance">
+          <StaticAmounts
+            sx={{ alignItems: "center", justifyContent: "flex-start" }}
+            inputId="deposit-pool-balance"
+          >
             <PoolBalance symbol="bLUSD">
               {(bLusdAmmBLusdBalance ?? Decimal.ZERO).prettify(2)}
             </PoolBalance>
@@ -31,7 +35,7 @@ export const PoolDetails: React.FC = () => {
             <PoolBalance symbol="LUSD">
               {(bLusdAmmLusdBalance ?? Decimal.ZERO).prettify(2)}
             </PoolBalance>
-          </Flex>
+          </StaticAmounts>
         </StaticRow>
 
         <StaticRow
