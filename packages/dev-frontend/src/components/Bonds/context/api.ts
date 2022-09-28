@@ -67,24 +67,33 @@ type YearnVault = Partial<{
 }>;
 
 const cacheYearnVaultApys = async (): Promise<void> => {
-  if (cachedYearnApys.lusd3Crv !== undefined) return;
+  try {
+    if (cachedYearnApys.lusd3Crv !== undefined) return;
 
-  const yearnResponse = (await (
-    await window.fetch("https://api.yearn.finance/v1/chains/1/vaults/all")
-  ).json()) as YearnVault[];
+    const yearnResponse = (await (
+      await window.fetch("https://api.yearn.finance/v1/chains/1/vaults/all")
+    ).json()) as YearnVault[];
 
-  const lusd3CrvVault = yearnResponse.find(
-    vault => vault?.token?.address === LUSD_3CRV_POOL_ADDRESS
-  );
+    const lusd3CrvVault = yearnResponse.find(
+      vault => vault?.token?.address === LUSD_3CRV_POOL_ADDRESS
+    );
 
-  const stabilityPoolVault = yearnResponse.find(
-    vault => vault?.token?.address === LUSD_TOKEN_ADDRESS
-  );
+    const stabilityPoolVault = yearnResponse.find(
+      vault => vault?.token?.address === LUSD_TOKEN_ADDRESS
+    );
 
-  if (lusd3CrvVault?.apy?.net_apy === undefined || stabilityPoolVault?.apy?.net_apy === undefined)
-    return;
-  cachedYearnApys.lusd3Crv = Decimal.from(lusd3CrvVault.apy.net_apy);
-  cachedYearnApys.stabilityPool = Decimal.from(stabilityPoolVault.apy.net_apy);
+    if (
+      lusd3CrvVault?.apy?.net_apy === undefined ||
+      stabilityPoolVault?.apy?.net_apy === undefined
+    ) {
+      return;
+    }
+
+    cachedYearnApys.lusd3Crv = Decimal.from(lusd3CrvVault.apy.net_apy);
+    cachedYearnApys.stabilityPool = Decimal.from(stabilityPoolVault.apy.net_apy);
+  } catch (error: unknown) {
+    console.error(error);
+  }
 };
 
 const getAccountBonds = async (
@@ -97,96 +106,102 @@ const getAccountBonds = async (
   claimBondFee: Decimal,
   floorPrice: Decimal
 ): Promise<Bond[]> => {
-  const totalBonds = (await bondNft.balanceOf(account)).toNumber();
+  try {
+    const totalBonds = (await bondNft.balanceOf(account)).toNumber();
 
-  const bondIdRequests = Array.from(Array(totalBonds)).map((_, index) =>
-    bondNft.tokenOfOwnerByIndex(account, index)
-  );
-  const bondIds = await Promise.all(bondIdRequests);
+    const bondIdRequests = Array.from(Array(totalBonds)).map((_, index) =>
+      bondNft.tokenOfOwnerByIndex(account, index)
+    );
 
-  const bondRequests = {
-    deposits: bondIds.map(bondId => bondNft.getBondAmount(bondId)),
-    accrueds: bondIds.map(bondId => chickenBondManager.calcAccruedBLUSD(bondId)),
-    startTimes: bondIds.map(bondId => bondNft.getBondStartTime(bondId)),
-    endTimes: bondIds.map(bondId => bondNft.getBondEndTime(bondId)),
-    statuses: bondIds.map(bondId => bondNft.getBondStatus(bondId)),
-    tokenUris: bondIds.map(bondId => bondNft.tokenURI(bondId))
-  };
+    const bondIds = await Promise.all(bondIdRequests);
 
-  const bondDeposits = await Promise.all(bondRequests.deposits);
-  const bondAccrueds = await Promise.all(bondRequests.accrueds);
-  const bondStartTimes = await Promise.all(bondRequests.startTimes);
-  const bondEndTimes = await Promise.all(bondRequests.endTimes);
-  const bondStatuses = await Promise.all(bondRequests.statuses);
-  const bondTokenUris = await Promise.all(bondRequests.tokenUris);
+    const bondRequests = {
+      deposits: bondIds.map(bondId => bondNft.getBondAmount(bondId)),
+      accrueds: bondIds.map(bondId => chickenBondManager.calcAccruedBLUSD(bondId)),
+      startTimes: bondIds.map(bondId => bondNft.getBondStartTime(bondId)),
+      endTimes: bondIds.map(bondId => bondNft.getBondEndTime(bondId)),
+      statuses: bondIds.map(bondId => bondNft.getBondStatus(bondId)),
+      tokenUris: bondIds.map(bondId => bondNft.tokenURI(bondId))
+    };
 
-  const bonds = bondIds
-    .reduce<Bond[]>((accumulator, _, idx) => {
-      const id = numberify(bondIds[idx]).toString();
-      const deposit = decimalify(bondDeposits[idx]);
-      const accrued = decimalify(bondAccrueds[idx]);
-      const startTime = milliseconds(numberify(bondStartTimes[idx]));
-      const endTime = milliseconds(numberify(bondEndTimes[idx]));
-      const status = BOND_STATUS[bondStatuses[idx]];
-      const tokenUri = getTokenUri(bondTokenUris[idx]);
-      const bondAgeInDays = getBondAgeInDays(startTime);
-      const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-      const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-      const depositMinusClaimBondFee = Decimal.ONE.sub(claimBondFee).mul(deposit);
-      const rebondAccrual =
-        rebondDays === Decimal.INFINITY
-          ? Decimal.INFINITY
-          : getFutureBLusdAccrualFactor(floorPrice, rebondDays, alphaAccrualFactor).mul(
-              depositMinusClaimBondFee
-            );
-      const breakEvenAccrual =
-        breakEvenDays === Decimal.INFINITY
-          ? Decimal.INFINITY
-          : getFutureBLusdAccrualFactor(floorPrice, breakEvenDays, alphaAccrualFactor).mul(
-              depositMinusClaimBondFee
-            );
+    const bondDeposits = await Promise.all(bondRequests.deposits);
+    const bondAccrueds = await Promise.all(bondRequests.accrueds);
+    const bondStartTimes = await Promise.all(bondRequests.startTimes);
+    const bondEndTimes = await Promise.all(bondRequests.endTimes);
+    const bondStatuses = await Promise.all(bondRequests.statuses);
+    const bondTokenUris = await Promise.all(bondRequests.tokenUris);
 
-      const breakEvenTime =
-        breakEvenDays === Decimal.INFINITY
-          ? UNKNOWN_DATE
-          : getFutureDateByDays(toFloat(breakEvenDays) - bondAgeInDays);
-      const rebondTime =
-        rebondDays === Decimal.INFINITY
-          ? UNKNOWN_DATE
-          : getFutureDateByDays(toFloat(rebondDays) - bondAgeInDays);
-      const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
+    const bonds = bondIds
+      .reduce<Bond[]>((accumulator, _, idx) => {
+        const id = numberify(bondIds[idx]).toString();
+        const deposit = decimalify(bondDeposits[idx]);
+        const accrued = decimalify(bondAccrueds[idx]);
+        const startTime = milliseconds(numberify(bondStartTimes[idx]));
+        const endTime = milliseconds(numberify(bondEndTimes[idx]));
+        const status = BOND_STATUS[bondStatuses[idx]];
+        const tokenUri = getTokenUri(bondTokenUris[idx]);
+        const bondAgeInDays = getBondAgeInDays(startTime);
+        const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
+        const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
+        const depositMinusClaimBondFee = Decimal.ONE.sub(claimBondFee).mul(deposit);
+        const rebondAccrual =
+          rebondDays === Decimal.INFINITY
+            ? Decimal.INFINITY
+            : getFutureBLusdAccrualFactor(floorPrice, rebondDays, alphaAccrualFactor).mul(
+                depositMinusClaimBondFee
+              );
+        const breakEvenAccrual =
+          breakEvenDays === Decimal.INFINITY
+            ? Decimal.INFINITY
+            : getFutureBLusdAccrualFactor(floorPrice, breakEvenDays, alphaAccrualFactor).mul(
+                depositMinusClaimBondFee
+              );
 
-      // Accrued bLUSD is 0 for cancelled/claimed bonds
-      const claimNowReturn = accrued.isZero ? 0 : getReturn(accrued, deposit, marketPrice);
-      const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
-      const rebondRoi = rebondReturn / toFloat(deposit);
-      const rebondApr = rebondRoi * (365 / toFloat(rebondDays));
+        const breakEvenTime =
+          breakEvenDays === Decimal.INFINITY
+            ? UNKNOWN_DATE
+            : getFutureDateByDays(toFloat(breakEvenDays) - bondAgeInDays);
+        const rebondTime =
+          rebondDays === Decimal.INFINITY
+            ? UNKNOWN_DATE
+            : getFutureDateByDays(toFloat(rebondDays) - bondAgeInDays);
+        const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
 
-      return [
-        ...accumulator,
-        {
-          id,
-          deposit,
-          accrued,
-          startTime,
-          endTime,
-          status,
-          tokenUri,
-          breakEvenAccrual,
-          rebondAccrual,
-          breakEvenTime,
-          rebondTime,
-          marketValue,
-          rebondReturn,
-          claimNowReturn,
-          rebondRoi,
-          rebondApr
-        }
-      ];
-    }, [])
-    .sort((a, b) => (a.startTime > b.startTime ? -1 : a.startTime < b.startTime ? 1 : 0));
+        // Accrued bLUSD is 0 for cancelled/claimed bonds
+        const claimNowReturn = accrued.isZero ? 0 : getReturn(accrued, deposit, marketPrice);
+        const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
+        const rebondRoi = rebondReturn / toFloat(deposit);
+        const rebondApr = rebondRoi * (365 / toFloat(rebondDays));
 
-  return bonds;
+        return [
+          ...accumulator,
+          {
+            id,
+            deposit,
+            accrued,
+            startTime,
+            endTime,
+            status,
+            tokenUri,
+            breakEvenAccrual,
+            rebondAccrual,
+            breakEvenTime,
+            rebondTime,
+            marketValue,
+            rebondReturn,
+            claimNowReturn,
+            rebondRoi,
+            rebondApr
+          }
+        ];
+      }, [])
+      .sort((a, b) => (a.startTime > b.startTime ? -1 : a.startTime < b.startTime ? 1 : 0));
+
+    return bonds;
+  } catch (error: unknown) {
+    console.error(error);
+  }
+  return [];
 };
 
 export const _getProtocolInfo = (
