@@ -1,7 +1,17 @@
 /** @jsxImportSource theme-ui */
 import React, { useRef } from "react";
-import { Box, Button, Checkbox, Close, Flex, Heading, Label, Paragraph, Link } from "theme-ui";
-import { Icon } from "../../../Icon";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Close,
+  Flex,
+  Heading,
+  Label,
+  Paragraph,
+  Link,
+  Image
+} from "theme-ui";
 import { useWizard } from "../../../Wizard/Context";
 import { useBondView } from "../../context/BondViewContext";
 import { Details } from "./Details";
@@ -25,7 +35,7 @@ const InformationContainer: React.FC = ({ children }) => {
       </Heading>
 
       <Flex sx={{ justifyContent: "center" }}>
-        <Icon name="question-circle" size="6x" />
+        <Image src="./bonds/bond-info.png" sx={{ height: "200px" }} />
       </Flex>
 
       {children}
@@ -54,7 +64,7 @@ export const Information: React.FC = () => {
         </Paragraph>
         <Paragraph sx={{ mt: 3 }}>
           Please visit the&nbsp;
-          <Link href="https://liquity.gitbook.io/chicken-bonds-docs/" target="_blank">
+          <Link href="https://liquity.gitbook.io/chicken-bonds/" target="_blank">
             docs
           </Link>
           &nbsp;to understand how LUSD bonds work.
