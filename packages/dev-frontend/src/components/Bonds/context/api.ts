@@ -259,24 +259,32 @@ const getProtocolInfo = async (
   let yieldAmplification: Maybe<Decimal> = undefined;
   let bLusdApr: Maybe<Decimal> = undefined;
 
-  if (
-    cachedYearnApys.lusd3Crv !== undefined &&
-    cachedYearnApys.stabilityPool !== undefined &&
-    bLusdSupply.gt(0)
-  ) {
-    const pendingAndReserveYield = cachedYearnApys.stabilityPool.mul(
-      treasury.pending.add(treasury.reserve)
-    );
-    const permanentYield = cachedYearnApys.lusd3Crv.mul(treasury.permanent);
-    const overallApr = pendingAndReserveYield.add(permanentYield).div(treasury.reserve);
-    yieldAmplification = overallApr.div(cachedYearnApys.stabilityPool);
-    bLusdApr = overallApr;
-  }
+  const protocolOwnedLusdInStabilityPool = decimalify(await chickenBondManager.getOwnedLUSDInSP());
+  const protocolLusdInStabilityPool = treasury.pending.add(protocolOwnedLusdInStabilityPool);
+  const protocolLusdInCurve = decimalify(await chickenBondManager.getTotalLUSDInCurve());
 
   const fairPrice = {
     lower: treasury.total.sub(treasury.pending).div(bLusdSupply),
     upper: treasury.total.div(bLusdSupply)
   };
+
+  if (cachedYearnApys.lusd3Crv !== undefined && cachedYearnApys.stabilityPool !== undefined) {
+    const protocolStabilityPoolYield = cachedYearnApys.stabilityPool.mul(
+      protocolLusdInStabilityPool
+    );
+    const protocolCurveYield = cachedYearnApys.lusd3Crv.mul(protocolLusdInCurve);
+    bLusdApr = protocolStabilityPoolYield.add(protocolCurveYield).div(treasury.reserve);
+    yieldAmplification = bLusdApr.div(cachedYearnApys.stabilityPool);
+
+    fairPrice.lower = protocolLusdInStabilityPool
+      .sub(treasury.pending)
+      .add(protocolLusdInCurve.mul(cachedYearnApys.lusd3Crv.div(cachedYearnApys.stabilityPool)))
+      .div(bLusdSupply);
+
+    fairPrice.upper = protocolLusdInStabilityPool
+      .add(protocolLusdInCurve.mul(cachedYearnApys.lusd3Crv.div(cachedYearnApys.stabilityPool)))
+      .div(bLusdSupply);
+  }
 
   const floorPrice = bLusdSupply.isZero ? Decimal.ONE : treasury.reserve.div(bLusdSupply);
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
