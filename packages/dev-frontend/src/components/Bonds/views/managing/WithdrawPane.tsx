@@ -4,7 +4,7 @@ import { Flex, Button, Spinner, Label, Radio, Text } from "theme-ui";
 import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { Icon } from "../../../Icon";
-import { DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
+import { DisabledEditableAmounts, DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 import { BLusdAmmTokenIndex } from "../../context/transitions";
 import { PoolDetails } from "./PoolDetails";
@@ -144,7 +144,7 @@ export const WithdrawPane: React.FC = () => {
       </Flex>
 
       <DisabledEditableRow label="Withdraw" inputId="withdraw-output-amount">
-        <Flex sx={{ alignItems: "center" }}>
+        <DisabledEditableAmounts sx={{ justifyContent: "flex-start" }}>
           {Array.from(withdrawal.entries()).map(([token, amount], i) => (
             <>
               {i > 0 && <Text sx={{ fontWeight: "light", mx: "12px" }}>+</Text>}
@@ -153,7 +153,7 @@ export const WithdrawPane: React.FC = () => {
               </WithdrawnAmount>
             </>
           ))}
-        </Flex>
+        </DisabledEditableAmounts>
       </DisabledEditableRow>
 
       <PoolDetails />

@@ -64,7 +64,7 @@ const PendingAmount: React.FC<PendingAmountProps & SxProp> = ({ sx, value }) => 
 );
 
 type StaticAmountsProps = {
-  inputId: string;
+  inputId?: string;
   labelledBy?: string;
   amount?: string;
   unit?: string;
@@ -167,10 +167,24 @@ export const StaticRow: React.FC<StaticRowProps> = ({
   labelId,
   labelFor,
   infoIcon,
+  amount,
+  children,
   ...props
 }) => (
-  <Row {...{ label, labelId, labelFor, infoIcon }} sx={{ mt: [-2, -3], pb: [2, 3] }}>
-    <StaticAmounts {...props} />
+  <Row
+    label={label}
+    labelId={labelId}
+    labelFor={labelFor}
+    infoIcon={infoIcon}
+    sx={{ mt: [-2, -3], pb: [2, 3] }}
+  >
+    {amount ? (
+      <StaticAmounts amount={amount} {...props}>
+        {children}
+      </StaticAmounts>
+    ) : (
+      children
+    )}
   </Row>
 );
 
@@ -178,24 +192,37 @@ type DisabledEditableRowProps = Omit<StaticAmountsProps, "labelledBy" | "onClick
   label: string;
 };
 
+export const DisabledEditableAmounts: React.FC<StaticAmountsProps & SxProp> = ({
+  inputId,
+  children,
+  sx,
+  ...props
+}) => (
+  <StaticAmounts
+    sx={{ ...editableStyle, boxShadow: 0, ...sx }}
+    labelledBy={`${inputId}-label`}
+    inputId={inputId}
+    {...props}
+  >
+    {children}
+  </StaticAmounts>
+);
+
 export const DisabledEditableRow: React.FC<DisabledEditableRowProps> = ({
   inputId,
   label,
-  unit,
   amount,
-  color,
-  pendingAmount,
-  pendingColor,
-  children
+  children,
+  ...props
 }) => (
   <Row labelId={`${inputId}-label`} label={label}>
-    <StaticAmounts
-      sx={{ ...editableStyle, boxShadow: 0 }}
-      labelledBy={`${inputId}-label`}
-      {...{ inputId, amount, unit, color, pendingAmount, pendingColor }}
-    >
-      {children}
-    </StaticAmounts>
+    {amount ? (
+      <DisabledEditableAmounts inputId={inputId} amount={amount} {...props}>
+        {children}
+      </DisabledEditableAmounts>
+    ) : (
+      children
+    )}
   </Row>
 );
 
