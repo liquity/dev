@@ -283,7 +283,11 @@ const getProtocolInfo = async (
     upper: treasury.total.div(bLusdSupply)
   };
 
-  if (cachedYearnApys.lusd3Crv !== undefined && cachedYearnApys.stabilityPool !== undefined) {
+  if (
+    cachedYearnApys.lusd3Crv !== undefined &&
+    cachedYearnApys.stabilityPool !== undefined &&
+    treasury.reserve.gt(0)
+  ) {
     const protocolStabilityPoolYield = cachedYearnApys.stabilityPool.mul(
       protocolLusdInStabilityPool
     );
