@@ -13,7 +13,7 @@ import type {
 } from "@liquity/chicken-bonds/lusd/types/ChickenBondManager";
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
-import type { ProtocolInfo, Bond, BondStatus, Stats } from "./transitions";
+import type { ProtocolInfo, Bond, BondStatus, Stats, ClaimedBonds } from "./transitions";
 import {
   numberify,
   decimalify,
@@ -96,6 +96,23 @@ const cacheYearnVaultApys = async (): Promise<void> => {
   }
 };
 
+const getClaimedBonds = async (
+  account: string,
+  chickenBondManager: ChickenBondManager
+): Promise<ClaimedBonds> => {
+  const claimedBondsFilter = await chickenBondManager.filters.BondClaimed(account);
+  const events = await chickenBondManager.queryFilter(claimedBondsFilter);
+  const claimedBonds = events.reduce((accumulator, current) => {
+    const { bondId, bLusdAmount } = current.args;
+    return {
+      ...accumulator,
+      [bondId.toNumber().toString()]: decimalify(bLusdAmount)
+    };
+  }, {});
+
+  return claimedBonds;
+};
+
 const getAccountBonds = async (
   account: string,
   bondNft: BondNFT,
@@ -130,6 +147,7 @@ const getAccountBonds = async (
     const bondEndTimes = await Promise.all(bondRequests.endTimes);
     const bondStatuses = await Promise.all(bondRequests.statuses);
     const bondTokenUris = await Promise.all(bondRequests.tokenUris);
+    const claimedBonds = await getClaimedBonds(account, chickenBondManager);
 
     const bonds = bondIds
       .reduce<Bond[]>((accumulator, _, idx) => {
@@ -172,6 +190,7 @@ const getAccountBonds = async (
         const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
         const rebondRoi = rebondReturn / toFloat(deposit);
         const rebondApr = rebondRoi * (365 / toFloat(rebondDays));
+        const claimedAmount = claimedBonds[id];
 
         return [
           ...accumulator,
@@ -191,7 +210,8 @@ const getAccountBonds = async (
             rebondReturn,
             claimNowReturn,
             rebondRoi,
-            rebondApr
+            rebondApr,
+            claimedAmount
           }
         ];
       }, [])

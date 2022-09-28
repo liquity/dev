@@ -298,16 +298,6 @@ const theme: Theme = {
     },
 
     tooltip: {
-      padding: 2,
-
-      border: 1,
-      borderColor: "muted",
-      borderRadius: "4px",
-      bg: "background",
-      boxShadow: 2,
-
-      fontSize: 1,
-      color: "text",
       fontWeight: "body",
       zIndex: 1
     }

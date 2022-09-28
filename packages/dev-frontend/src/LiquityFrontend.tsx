@@ -21,6 +21,7 @@ import { TroveViewProvider } from "./components/Trove/context/TroveViewProvider"
 import { StabilityViewProvider } from "./components/Stability/context/StabilityViewProvider";
 import { StakingViewProvider } from "./components/Staking/context/StakingViewProvider";
 import { BondViewProvider } from "./components/Bonds/context/BondViewProvider";
+import "tippy.js/dist/tippy.css"; // Tooltip default style
 
 type LiquityFrontendProps = {
   loader?: React.ReactNode;

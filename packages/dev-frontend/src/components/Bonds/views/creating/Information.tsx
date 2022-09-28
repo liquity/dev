@@ -1,7 +1,17 @@
 /** @jsxImportSource theme-ui */
 import React, { useRef } from "react";
-import { Box, Button, Checkbox, Close, Flex, Heading, Label, Paragraph, Link } from "theme-ui";
-import { Icon } from "../../../Icon";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Close,
+  Flex,
+  Heading,
+  Label,
+  Paragraph,
+  Link,
+  Image
+} from "theme-ui";
 import { useWizard } from "../../../Wizard/Context";
 import { useBondView } from "../../context/BondViewContext";
 import { Details } from "./Details";
@@ -25,7 +35,7 @@ const InformationContainer: React.FC = ({ children }) => {
       </Heading>
 
       <Flex sx={{ justifyContent: "center" }}>
-        <Icon name="question-circle" size="6x" />
+        <Image src="./bonds/bond-info.png" sx={{ height: "200px" }} />
       </Flex>
 
       {children}
@@ -49,15 +59,16 @@ export const Information: React.FC = () => {
     <InformationContainer>
       <Box sx={{ p: [2, 3] }}>
         <Paragraph sx={{ mt: 2 }}>
-          LUSD bonds receive a boosted LUSD token (bLUSD) at a discount, in exchange for LUSD.
-          Bonders can cancel their bond at any time to recover their deposited LUSD.
+          Bonds accrue a virtual balance of boosted LUSD tokens (bLUSD) over time. At any time, the
+          bonder may choose to claim their bLUSD in exchange for their LUSD, or cancel their bond to
+          recover their deposited LUSD.
         </Paragraph>
         <Paragraph sx={{ mt: 3 }}>
           Please visit the&nbsp;
-          <Link href="https://liquity.gitbook.io/chicken-bonds-docs/" target="_blank">
+          <Link href="https://liquity.gitbook.io/chicken-bonds/" target="_blank">
             docs
           </Link>
-          &nbsp;to understand how LUSD bonds work.
+          &nbsp;to understand how bonds work.
         </Paragraph>
       </Box>
 

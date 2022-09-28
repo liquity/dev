@@ -182,6 +182,7 @@ export type Bond = {
   rebondRoi: number;
   rebondApr: number;
   claimNowReturn: number;
+  claimedAmount?: Decimal;
 };
 
 export type OptimisticBond = Pick<Bond, "id" | "deposit" | "startTime" | "status">;
@@ -232,3 +233,5 @@ export type BondTransaction =
   | "MANAGE_LIQUIDITY";
 
 export type BondTransactionStatuses = Record<BondTransaction, TransactionStatus>;
+
+export type ClaimedBonds = Record<string, Decimal>;

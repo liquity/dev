@@ -36,7 +36,11 @@ const getBondEvents = (bond: BondType): EventType[] => {
             {bond.status === "PENDING" ? l.ACCRUED_AMOUNT.term : statuses[bond.status]}
           </Label>
           <SubLabel style={{ fontWeight: 400 }}>
-            {bond.status === "PENDING" ? `${bond.accrued.prettify(2)} bLUSD` : ""}
+            {bond.status === "PENDING"
+              ? `${bond.accrued.prettify(2)} bLUSD`
+              : bond.status === "CLAIMED"
+              ? `${bond?.claimedAmount?.prettify(2)} bLUSD`
+              : ""}
           </SubLabel>
         </>
       ),
