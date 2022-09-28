@@ -45,6 +45,7 @@ export type BondViewContextType = {
     burnLp: Decimal,
     output: BLusdAmmTokenIndex | "both"
   ) => Promise<Map<BLusdAmmTokenIndex, Decimal>>;
+  isBootstrapPeriodActive?: boolean;
 };
 
 export const BondViewContext = createContext<BondViewContextType | null>(null);

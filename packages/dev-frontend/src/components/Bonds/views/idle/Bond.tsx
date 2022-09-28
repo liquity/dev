@@ -6,6 +6,7 @@ import { BLusdAmmTokenIndex, Bond as BondType, SwapPressedPayload } from "../../
 import { Label, SubLabel } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
 import { statuses, useBondView } from "../../context/BondViewContext";
+import { BOND_NFT_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 
 const getBondEvents = (bond: BondType): EventType[] => {
   return [
@@ -24,7 +25,14 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.status === "PENDING" ? Date.now() : bond?.endTime ?? 0),
       label: (
         <>
-          <Label description={l.ACCRUED_AMOUNT.description} style={{ fontWeight: 500 }}>
+          <Label
+            description={
+              bond.status === "PENDING"
+                ? l.ACCRUED_AMOUNT.description
+                : `The date you ${statuses[bond.status].toLowerCase()} your bond.`
+            }
+            style={{ fontWeight: 500 }}
+          >
             {bond.status === "PENDING" ? l.ACCRUED_AMOUNT.term : statuses[bond.status]}
           </Label>
           <SubLabel style={{ fontWeight: 400 }}>
@@ -39,9 +47,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.breakEvenTime),
       label: (
         <>
-          <Label description="How many bLUSD are required to break-even at the current market price.">
-            {l.BREAK_EVEN_TIME.term}
-          </Label>
+          <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
           <SubLabel>{`${bond?.breakEvenAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
@@ -50,9 +56,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.rebondTime),
       label: (
         <>
-          <Label description="How many bLUSD are recommended before claiming the bond, selling the bLUSD for LUSD, and then opening another bond.">
-            {l.OPTIMUM_REBOND_TIME.term}
-          </Label>
+          <Label description={l.BREAK_EVEN_TIME.description}>{l.OPTIMUM_REBOND_TIME.term}</Label>
           <SubLabel>{`${bond?.rebondAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
@@ -92,9 +96,12 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
         <Image
           sx={{ cursor: "pointer", minWidth: "150px" }}
           src={bond.tokenUri}
-          alt="TODO"
+          alt="NFT image representation of your bond."
           onClick={() => {
-            window.open("https://opensea.io", "_blank");
+            window.open(
+              `https://opensea.io/assets/ethereum/${BOND_NFT_ADDRESS}/${bond.id}`,
+              "_blank"
+            );
           }}
         />
       </Flex>

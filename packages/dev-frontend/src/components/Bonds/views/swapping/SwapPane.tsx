@@ -2,7 +2,7 @@
 
 import { Decimal, Percent } from "@liquity/lib-base";
 import React, { useEffect, useRef, useState } from "react";
-import { Flex, Button, Spinner, Heading, Close, Box, Label, Radio, Input } from "theme-ui";
+import { Flex, Button, Spinner, Heading, Close, Box, Label, Radio, Input, Link } from "theme-ui";
 import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { Icon } from "../../../Icon";
@@ -315,6 +315,14 @@ export const SwapPane: React.FC = () => {
           </Amount>
         </ErrorDescription>
       )}
+
+      <Flex pb={2} sx={{ fontSize: "15.5px", justifyContent: "center", fontStyle: "italic" }}>
+        Your swap is performed directly in&nbsp;
+        <Link href="https://curve.fi/" target="_blank">
+          Curve
+        </Link>
+        &nbsp;protocol's bLUSD/LUSD pool.
+      </Flex>
 
       <Flex variant="layout.actions">
         <Button

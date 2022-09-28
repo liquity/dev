@@ -49,46 +49,16 @@ export const Information: React.FC = () => {
     <InformationContainer>
       <Box sx={{ p: [2, 3] }}>
         <Paragraph sx={{ mt: 2 }}>
-          Deposit LUSD to create a bond which exchanges LUSD to bLUSD over time.
+          LUSD bonds receive a boosted LUSD token (bLUSD) at a discount, in exchange for LUSD.
+          Bonders can cancel their bond at any time to recover their deposited LUSD.
         </Paragraph>
-        {/* <Paragraph sx={{ mt: 2 }}>
-          bLUSD is a derivative of LUSD which is fully-backed by LUSD and redeemable, but has a
-          higher yield than LUSD.
-        </Paragraph> */}
-        <Paragraph sx={{ mt: 2 }}>
-          Bonds can be cancelled at any time to fully recover the initially deposited LUSD.
+        <Paragraph sx={{ mt: 3 }}>
+          Please visit the&nbsp;
+          <Link href="https://liquity.gitbook.io/chicken-bonds-docs/" target="_blank">
+            docs
+          </Link>
+          &nbsp;to understand how LUSD bonds work.
         </Paragraph>
-        <Paragraph sx={{ mt: 2 }}>
-          Please take some time to understand how LUSD bonds work:
-        </Paragraph>
-
-        <ul>
-          <li>
-            <Link sx={{ cursor: "pointer" }} href="http://google.com" target="external">
-              What is a principal-protected investment?
-            </Link>
-          </li>
-          <li>
-            <Link sx={{ cursor: "pointer" }} href="http://google.com" target="external">
-              How do traditional bonds work?
-            </Link>
-          </li>
-          <li>
-            <Link sx={{ cursor: "pointer" }} href="http://google.com" target="external">
-              How do existing DeFi bonds work?
-            </Link>
-          </li>
-          <li>
-            <Link sx={{ cursor: "pointer" }} href="http://google.com" target="external">
-              How do LUSD bonds work?
-            </Link>
-          </li>
-          <li>
-            <Link sx={{ cursor: "pointer" }} href="http://google.com" target="external">
-              What is the LUSD bonding process?
-            </Link>
-          </li>
-        </ul>
       </Box>
 
       <Flex variant="layout.actions">
@@ -103,7 +73,7 @@ export const Information: React.FC = () => {
         <Button variant="cancel" onClick={back ? back : () => {}}>
           Back
         </Button>
-        <Button onClick={handleUnderstandPressed}>I understand</Button>
+        <Button onClick={handleUnderstandPressed}>Continue</Button>
       </Flex>
     </InformationContainer>
   );
