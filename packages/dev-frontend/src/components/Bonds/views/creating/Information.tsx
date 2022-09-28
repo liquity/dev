@@ -59,15 +59,16 @@ export const Information: React.FC = () => {
     <InformationContainer>
       <Box sx={{ p: [2, 3] }}>
         <Paragraph sx={{ mt: 2 }}>
-          LUSD bonds receive a boosted LUSD token (bLUSD) at a discount, in exchange for LUSD.
-          Bonders can cancel their bond at any time to recover their deposited LUSD.
+          Bonds accrue a virtual balance of boosted LUSD tokens (bLUSD) over time. At any time, the
+          bonder may choose to claim their bLUSD in exchange for their LUSD, or cancel their bond to
+          recover their deposited LUSD.
         </Paragraph>
         <Paragraph sx={{ mt: 3 }}>
           Please visit the&nbsp;
           <Link href="https://liquity.gitbook.io/chicken-bonds/" target="_blank">
             docs
           </Link>
-          &nbsp;to understand how LUSD bonds work.
+          &nbsp;to understand how bonds work.
         </Paragraph>
       </Box>
 
