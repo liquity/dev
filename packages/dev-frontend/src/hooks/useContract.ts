@@ -17,6 +17,9 @@ export function useContract<TContractType>(
       try {
         if (contract !== undefined || address === null) return;
 
+        const exists = (await provider.getCode(address)) !== "0x";
+        if (!exists) throw new Error(`Contract ${address} doesn't exist.`);
+
         const connectedContract = (new ethers.Contract(
           address,
           abi,
