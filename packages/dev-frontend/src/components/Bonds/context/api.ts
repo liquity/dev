@@ -268,7 +268,7 @@ const getProtocolInfo = async (
       treasury.pending.add(treasury.reserve)
     );
     const permanentYield = cachedYearnApys.lusd3Crv.mul(treasury.permanent);
-    const overallApr = pendingAndReserveYield.add(permanentYield).div(bLusdSupply);
+    const overallApr = pendingAndReserveYield.add(permanentYield).div(treasury.reserve);
     yieldAmplification = overallApr.div(cachedYearnApys.stabilityPool);
     bLusdApr = overallApr;
   }
