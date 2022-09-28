@@ -45,6 +45,48 @@ type Maybe<T> = T | undefined;
 
 const BOND_STATUS: BondStatus[] = ["NON_EXISTENT", "PENDING", "CANCELLED", "CLAIMED"];
 
+const LUSD_3CRV_POOL_ADDRESS = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
+const LUSD_TOKEN_ADDRESS = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
+
+type CachedYearnApys = {
+  lusd3Crv: Decimal | undefined;
+  stabilityPool: Decimal | undefined;
+};
+let cachedYearnApys: CachedYearnApys = {
+  lusd3Crv: undefined,
+  stabilityPool: undefined
+};
+
+type YearnVault = Partial<{
+  token: {
+    address: string;
+  };
+  apy: {
+    net_apy: number;
+  };
+}>;
+
+const cacheYearnVaultApys = async (): Promise<void> => {
+  if (cachedYearnApys.lusd3Crv !== undefined) return;
+
+  const yearnResponse = (await (
+    await window.fetch("https://api.yearn.finance/v1/chains/1/vaults/all")
+  ).json()) as YearnVault[];
+
+  const lusd3CrvVault = yearnResponse.find(
+    vault => vault?.token?.address === LUSD_3CRV_POOL_ADDRESS
+  );
+
+  const stabilityPoolVault = yearnResponse.find(
+    vault => vault?.token?.address === LUSD_TOKEN_ADDRESS
+  );
+
+  if (lusd3CrvVault?.apy?.net_apy === undefined || stabilityPoolVault?.apy?.net_apy === undefined)
+    return;
+  cachedYearnApys.lusd3Crv = Decimal.from(lusd3CrvVault.apy.net_apy);
+  cachedYearnApys.stabilityPool = Decimal.from(stabilityPoolVault.apy.net_apy);
+};
+
 const getAccountBonds = async (
   account: string,
   bondNft: BondNFT,
@@ -210,6 +252,27 @@ const getProtocolInfo = async (
     total: decimalify(pending.add(reserve).add(permanent))
   };
 
+  if (cachedYearnApys.lusd3Crv === undefined || cachedYearnApys.stabilityPool === undefined) {
+    await cacheYearnVaultApys();
+  }
+
+  let yieldAmplification: Maybe<Decimal> = undefined;
+  let bLusdApr: Maybe<Decimal> = undefined;
+
+  if (
+    cachedYearnApys.lusd3Crv !== undefined &&
+    cachedYearnApys.stabilityPool !== undefined &&
+    bLusdSupply.gt(0)
+  ) {
+    const pendingAndReserveYield = cachedYearnApys.stabilityPool.mul(
+      treasury.pending.add(treasury.reserve)
+    );
+    const permanentYield = cachedYearnApys.lusd3Crv.mul(treasury.permanent);
+    const overallApr = pendingAndReserveYield.add(permanentYield).div(treasury.reserve);
+    yieldAmplification = overallApr.div(cachedYearnApys.stabilityPool);
+    bLusdApr = overallApr;
+  }
+
   const fairPrice = {
     lower: treasury.total.sub(treasury.pending).div(bLusdSupply),
     upper: treasury.total.div(bLusdSupply)
@@ -250,7 +313,9 @@ const getProtocolInfo = async (
     rebondAccrualFactor,
     breakEvenDays,
     rebondDays,
-    simulatedMarketPrice
+    simulatedMarketPrice,
+    yieldAmplification,
+    bLusdApr
   };
 };
 
