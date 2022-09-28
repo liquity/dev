@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "theme-ui";
+import Tippy from "@tippyjs/react";
 import { useBondView } from "../../../context/BondViewContext";
 import type { SelectBondPayload } from "../../../context/transitions";
 import { CANCEL_BOND, CLAIM_BOND } from "../../../lexicon";
@@ -36,17 +37,33 @@ export const Actions: React.FC<ActionsProps> = ({ bondId, disabled = false }) =>
       >
         {CANCEL_BOND.term}
       </Button>
-      <Button
-        disabled={disabled || isBootstrapPeriodActive}
-        variant="outline"
-        sx={{ height: "44px" }}
-        style={{
-          cursor: disabled || isBootstrapPeriodActive ? "auto" : cursor
-        }}
-        onClick={handleClaimBondPressed}
-      >
-        {CLAIM_BOND.term}
-      </Button>
+      {isBootstrapPeriodActive && (
+        <Tippy
+          interactive={true}
+          placement="right"
+          content="Bonds can be claimed after the bootstrap period is complete."
+          maxWidth="268px"
+        >
+          <span>
+            <Button disabled={true} variant="outline" sx={{ height: "44px" }}>
+              {CLAIM_BOND.term}
+            </Button>
+          </span>
+        </Tippy>
+      )}
+      {!isBootstrapPeriodActive && (
+        <Button
+          disabled={disabled}
+          variant="outline"
+          sx={{ height: "44px" }}
+          style={{
+            cursor: disabled ? "auto" : cursor
+          }}
+          onClick={handleClaimBondPressed}
+        >
+          {CLAIM_BOND.term}
+        </Button>
+      )}
     </>
   );
 };
