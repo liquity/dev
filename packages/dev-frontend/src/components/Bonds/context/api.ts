@@ -48,6 +48,8 @@ const BOND_STATUS: BondStatus[] = ["NON_EXISTENT", "PENDING", "CANCELLED", "CLAI
 const LUSD_3CRV_POOL_ADDRESS = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
 const LUSD_TOKEN_ADDRESS = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
 
+const LQTY_ISSUANCE_GAS_HEADROOM = BigNumber.from(50000);
+
 type CachedYearnApys = {
   lusd3Crv: Decimal | undefined;
   stabilityPool: Decimal | undefined;
@@ -454,8 +456,19 @@ const createBond = async (
 
   const { v, r, s } = splitSignature(signature);
 
+  const gasEstimate = await chickenBondManager.estimateGas.createBondWithPermit(
+    owner,
+    lusdAmount.hex,
+    deadline,
+    v,
+    r,
+    s
+  );
+
   const receipt = await (
-    await chickenBondManager.createBondWithPermit(owner, lusdAmount.hex, deadline, v, r, s)
+    await chickenBondManager.createBondWithPermit(owner, lusdAmount.hex, deadline, v, r, s, {
+      gasLimit: gasEstimate.add(LQTY_ISSUANCE_GAS_HEADROOM)
+    })
   ).wait();
 
   const createdEvent = receipt?.events?.find(
@@ -477,7 +490,15 @@ const cancelBond = async (
 ): Promise<BondCancelledEventObject> => {
   if (chickenBondManager === undefined) throw new Error("cancelBond() failed: a dependency is null");
   console.log("cancelBond() started:", bondId, minimumLusd.toString());
-  const receipt = await (await chickenBondManager.chickenOut(bondId, minimumLusd.hex)).wait();
+
+  const gasEstimate = await chickenBondManager.estimateGas.chickenOut(bondId, minimumLusd.hex);
+
+  const receipt = await (
+    await chickenBondManager.chickenOut(bondId, minimumLusd.hex, {
+      gasLimit: gasEstimate.add(LQTY_ISSUANCE_GAS_HEADROOM)
+    })
+  ).wait();
+
   const cancelledEvent = receipt?.events?.find(
     e => e.event === "BondCancelled"
   ) as Maybe<BondCancelledEvent>;
@@ -497,7 +518,9 @@ const claimBond = async (
     if (chickenBondManager === undefined)
       throw new Error("claimBond() failed: a dependency is null");
     console.log("claimBond() started", bondId);
+
     const receipt = await (await chickenBondManager.chickenIn(bondId)).wait();
+
     const bondClaimedEvent = receipt.events?.find(
       e => e.event === "BondClaimed"
     ) as Maybe<BondClaimedEvent>;
@@ -553,12 +576,20 @@ const swapTokens = async (
 ): Promise<TokenExchangeEventObject> => {
   if (bLusdAmm === undefined) throw new Error("swapTokens() failed: a dependency is null");
 
+  const gasEstimate = await bLusdAmm.estimateGas["exchange(uint256,uint256,uint256,uint256)"](
+    inputToken,
+    getOtherToken(inputToken),
+    inputAmount.hex,
+    minOutputAmount.hex
+  );
+
   const receipt = await (
     await bLusdAmm["exchange(uint256,uint256,uint256,uint256)"](
       inputToken,
       getOtherToken(inputToken),
       inputAmount.hex,
-      minOutputAmount.hex
+      minOutputAmount.hex,
+      { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
     )
   ).wait();
 
