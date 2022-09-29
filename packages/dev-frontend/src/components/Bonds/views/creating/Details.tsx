@@ -14,6 +14,8 @@ import { Warning } from "../../../Warning";
 import type { CreateBondPayload } from "../../context/transitions";
 import { dateWithoutHours, getRebondDays, getReturn, percentify, toFloat } from "../../utils";
 import { HorizontalSlider } from "../../../HorizontalSlider";
+import { ErrorDescription } from "../../../ErrorDescription";
+import { Amount } from "../../../ActionDescription";
 
 type DetailsProps = { onBack?: () => void };
 
@@ -32,6 +34,8 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   const depositEditingState = useState<string>();
   const isConfirming = useMemo(() => statuses.CREATE === "PENDING", [statuses.CREATE]);
   const handleBack = back ?? onBack ?? (() => dispatchEvent("BACK_PRESSED"));
+  const [isDepositEnough, setIsDepositEnough] = useState<boolean>(true);
+  const [doesDepositExceedBalance, setDoesDepositExceedBalance] = useState<boolean>(false);
 
   const handleDismiss = () => {
     dispatchEvent("ABORT_PRESSED");
@@ -39,6 +43,14 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
 
   const handleConfirmPressed = () => {
     dispatchEvent("CONFIRM_PRESSED", { deposit } as CreateBondPayload);
+  };
+
+  const handleDepositAmountChanged = (amount: Decimal) => {
+    const isDepositEnough = amount.gte(100);
+    const doesDepositExceedBalance = !!lusdBalance?.lt(amount);
+    setDeposit(amount);
+    setIsDepositEnough(isDepositEnough);
+    setDoesDepositExceedBalance(doesDepositExceedBalance);
   };
 
   useEffect(() => {
@@ -150,10 +162,9 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         unit="LUSD"
         editingState={depositEditingState}
         editedAmount={deposit.toString()}
-        setEditedAmount={amount => setDeposit(Decimal.min(lusdBalance, Decimal.from(amount)))}
-        maxAmount={lusdBalance.toString()}
+        setEditedAmount={amount => handleDepositAmountChanged(Decimal.from(amount))}
         maxedOut={deposit.eq(lusdBalance)}
-      ></EditableRow>
+      />
 
       <Grid sx={{ my: 1, mb: 3, justifyItems: "center", pl: 2 }} gap="20px" columns={3}>
         <Record
@@ -193,6 +204,13 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       />
 
       {statuses.CREATE === "FAILED" && <Warning>Failed to create bond. Please try again.</Warning>}
+
+      {!isDepositEnough && <ErrorDescription>The minimum bond amount is 100 LUSD.</ErrorDescription>}
+      {doesDepositExceedBalance && (
+        <ErrorDescription>
+          Amount exceeds your balance by <Amount>{deposit.sub(lusdBalance).prettify(2)} LUSD</Amount>
+        </ErrorDescription>
+      )}
 
       <Flex pb={2} sx={{ fontSize: "15.5px", justifyContent: "center", fontStyle: "italic" }}>
         You can cancel your bond at any time to recover your deposited LUSD
