@@ -139,12 +139,12 @@ export const BLUSD_MARKET_PRICE = {
 export const BLUSD_FAIR_PRICE = {
   term: "Fair price",
   description:
-    "An estimation of the market price for bLUSD based on the current yield amplification."
+    "An estimated range of the market price of bLUSD based on the current yield amplification. The lower bound excludes the Pending bucket, the upper bound factors all buckets."
 };
 
 export const TOTAL_BONDS_STATISTIC = {
   term: "Total bonds",
-  description: "The total number of bonds, historic and current."
+  description: "The total number of bonds including: cancelled, claimed and pending."
 };
 
 export const PENDING_BONDS_STATISTIC = {
@@ -181,7 +181,8 @@ export const BLUSD_APR = {
 
 export const BLUSD_YIELD_AMPLIFICATION = {
   term: "Yield amplification",
-  description: "The bLUSD token generates a yield which is a multiple of the Stability Pool yield."
+  description:
+    "The bLUSD token generates a yield which is a multiple of the Stability Pool yield. It is derived from the total protocol yield which is being diverted to the Reserve bucket."
 };
 
 export const TREASURY_TOTAL = {

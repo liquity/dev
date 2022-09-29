@@ -148,9 +148,6 @@ export const Actioning: React.FC = () => {
         {view === "CLAIMING" && bond.claimNowReturn < 0 && (
           <Warning>You are claiming a bond which currently has a negative return</Warning>
         )}
-        {view === "CLAIMING" && bond.accrued.gte(bond.rebondAccrual) && (
-          <Warning>Your bond is ready to rebond - you've accrued more bLUSD than required</Warning>
-        )}
         {view === "CANCELLING" && bond.accrued.gte(bond.breakEvenAccrual) && (
           <Warning>Your are cancelling a bond which has accrued a positive return</Warning>
         )}
