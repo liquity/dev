@@ -558,12 +558,20 @@ const swapTokens = async (
 ): Promise<TokenExchangeEventObject> => {
   if (bLusdAmm === undefined) throw new Error("swapTokens() failed: a dependency is null");
 
+  const gasEstimate = await bLusdAmm.estimateGas["exchange(uint256,uint256,uint256,uint256)"](
+    inputToken,
+    getOtherToken(inputToken),
+    inputAmount.hex,
+    minOutputAmount.hex
+  );
+
   const receipt = await (
     await bLusdAmm["exchange(uint256,uint256,uint256,uint256)"](
       inputToken,
       getOtherToken(inputToken),
       inputAmount.hex,
-      minOutputAmount.hex
+      minOutputAmount.hex,
+      { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
     )
   ).wait();
 
