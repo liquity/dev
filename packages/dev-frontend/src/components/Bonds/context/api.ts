@@ -495,13 +495,7 @@ const claimBond = async (
       throw new Error("claimBond() failed: a dependency is null");
     console.log("claimBond() started", bondId);
 
-    const gasEstimate = await chickenBondManager.estimateGas.chickenIn(bondId);
-
-    const receipt = await (
-      await chickenBondManager.chickenIn(bondId, {
-        gasLimit: gasEstimate.add(LQTY_ISSUANCE_GAS_HEADROOM)
-      })
-    ).wait();
+    const receipt = await (await chickenBondManager.chickenIn(bondId)).wait();
 
     const bondClaimedEvent = receipt.events?.find(
       e => e.event === "BondClaimed"
