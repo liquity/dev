@@ -14,7 +14,6 @@ import { Header } from "./components/Header";
 
 import { PageSwitcher } from "./pages/PageSwitcher";
 import { RiskyTrovesPage } from "./pages/RiskyTrovesPage";
-import { RedemptionPage } from "./pages/RedemptionPage";
 import { Bonds } from "./pages/Bonds";
 
 import { TroveViewProvider } from "./components/Trove/context/TroveViewProvider";
@@ -71,9 +70,6 @@ export const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
                       </Route>
                       <Route path="/risky-troves">
                         <RiskyTrovesPage />
-                      </Route>
-                      <Route path="/redemption">
-                        <RedemptionPage />
                       </Route>
                     </Switch>
                   </Container>

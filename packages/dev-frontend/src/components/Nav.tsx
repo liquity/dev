@@ -2,8 +2,8 @@ import { Flex, Box, Badge, Text } from "theme-ui";
 import { Link } from "./Link";
 
 const TemporaryNewBadge = () => {
-  const isBeforeOctober2022 = new Date() < new Date("2022-10-01");
-  if (!isBeforeOctober2022) return null;
+  const isBeforeNovember2022 = new Date() < new Date("2022-11-01");
+  if (!isBeforeNovember2022) return null;
   return (
     <Badge ml={1} sx={{ fontSize: "12px" }}>
       New
@@ -26,9 +26,6 @@ export const Nav: React.FC = () => {
       <Flex sx={{ justifyContent: "flex-end", mr: 3, flex: 1 }}>
         <Link sx={{ fontSize: 1 }} to="/risky-troves">
           Risky Troves
-        </Link>
-        <Link sx={{ fontSize: 1 }} to="/redemption">
-          Redemption
         </Link>
       </Flex>
     </Box>
