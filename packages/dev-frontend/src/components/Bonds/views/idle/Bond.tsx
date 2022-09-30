@@ -60,7 +60,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.rebondTime),
       label: (
         <>
-          <Label description={l.BREAK_EVEN_TIME.description}>{l.OPTIMUM_REBOND_TIME.term}</Label>
+          <Label description={l.OPTIMUM_REBOND_TIME.description}>{l.OPTIMUM_REBOND_TIME.term}</Label>
           <SubLabel>{`${bond?.rebondAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
