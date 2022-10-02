@@ -71,6 +71,7 @@ export const BondViewProvider: React.FC = props => {
   const [isBootstrapPeriodActive, setIsBootstrapPeriodActive] = useState<boolean>();
   const { account, liquity } = useLiquity();
   const contracts = useBondContracts();
+  const isMainnet = contracts.lusdToken && !("tap" in contracts.lusdToken);
 
   const setSimulatedMarketPrice = useCallback(
     (marketPrice: Decimal) => {
@@ -137,19 +138,23 @@ export const BondViewProvider: React.FC = props => {
     (async () => {
       if (contracts.lusdToken === undefined || account === undefined || isLusdApprovedWithBlusdAmm)
         return;
-      const isApproved = await api.isTokenApprovedWithBLusdAmm(account, contracts.lusdToken);
+      const isApproved = await (isMainnet
+        ? api.isTokenApprovedWithBLusdAmmMainnet
+        : api.isTokenApprovedWithBLusdAmm)(account, contracts.lusdToken);
       setIsLusdApprovedWithBlusdAmm(isApproved);
     })();
-  }, [contracts.lusdToken, account, isLusdApprovedWithBlusdAmm]);
+  }, [contracts.lusdToken, account, isLusdApprovedWithBlusdAmm, isMainnet]);
 
   useEffect(() => {
     (async () => {
       if (contracts.bLusdToken === undefined || account === undefined || isBLusdApprovedWithBlusdAmm)
         return;
-      const isApproved = await api.isTokenApprovedWithBLusdAmm(account, contracts.bLusdToken);
+      const isApproved = await (isMainnet
+        ? api.isTokenApprovedWithBLusdAmmMainnet
+        : api.isTokenApprovedWithBLusdAmm)(account, contracts.bLusdToken);
       setIsBLusdApprovedWithBlusdAmm(isApproved);
     })();
-  }, [contracts.bLusdToken, account, isBLusdApprovedWithBlusdAmm]);
+  }, [contracts.bLusdToken, account, isBLusdApprovedWithBlusdAmm, isMainnet]);
 
   useEffect(() => {
     if (isSynchronizing) return;
@@ -232,15 +237,21 @@ export const BondViewProvider: React.FC = props => {
     async (tokensNeedingApproval: BLusdAmmTokenIndex[]) => {
       for (const token of tokensNeedingApproval) {
         if (token === BLusdAmmTokenIndex.BLUSD) {
-          await api.approveTokenWithBLusdAmm(contracts.bLusdToken);
+          await (isMainnet ? api.approveTokenWithBLusdAmmMainnet : api.approveTokenWithBLusdAmm)(
+            contracts.bLusdToken
+          );
+
           setIsBLusdApprovedWithBlusdAmm(true);
         } else {
-          await api.approveTokenWithBLusdAmm(contracts.lusdToken);
+          await (isMainnet ? api.approveTokenWithBLusdAmmMainnet : api.approveTokenWithBLusdAmm)(
+            contracts.lusdToken
+          );
+
           setIsLusdApprovedWithBlusdAmm(true);
         }
       }
     },
-    [contracts.bLusdToken, contracts.lusdToken]
+    [contracts.bLusdToken, contracts.lusdToken, isMainnet]
   );
 
   const [createBond, createStatus] = useTransaction(
@@ -288,14 +299,23 @@ export const BondViewProvider: React.FC = props => {
   const getExpectedSwapOutput = useCallback(
     async (inputToken: BLusdAmmTokenIndex, inputAmount: Decimal) =>
       contracts.bLusdAmm
-        ? api.getExpectedSwapOutput(inputToken, inputAmount, contracts.bLusdAmm)
+        ? (isMainnet ? api.getExpectedSwapOutputMainnet : api.getExpectedSwapOutput)(
+            inputToken,
+            inputAmount,
+            contracts.bLusdAmm
+          )
         : Decimal.ZERO,
-    [contracts.bLusdAmm]
+    [contracts.bLusdAmm, isMainnet]
   );
 
   const [swapTokens, swapStatus] = useTransaction(
     async (inputToken: BLusdAmmTokenIndex, inputAmount: Decimal, minOutputAmount: Decimal) => {
-      await api.swapTokens(inputToken, inputAmount, minOutputAmount, contracts.bLusdAmm);
+      await (isMainnet ? api.swapTokensMainnet : api.swapTokens)(
+        inputToken,
+        inputAmount,
+        minOutputAmount,
+        contracts.bLusdAmm
+      );
       setShouldSynchronize(true);
     },
     [contracts.bLusdAmm]

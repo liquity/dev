@@ -23,7 +23,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CurveCryptoSwap2ETH__factory = exports.factories = void 0;
+exports.CurveRegistrySwaps__factory = exports.CurveCryptoSwap2ETH__factory = exports.factories = void 0;
 exports.factories = __importStar(require("./factories"));
 var CurveCryptoSwap2ETH__factory_1 = require("./factories/CurveCryptoSwap2ETH__factory");
 Object.defineProperty(exports, "CurveCryptoSwap2ETH__factory", { enumerable: true, get: function () { return CurveCryptoSwap2ETH__factory_1.CurveCryptoSwap2ETH__factory; } });
+var CurveRegistrySwaps__factory_1 = require("./factories/CurveRegistrySwaps__factory");
+Object.defineProperty(exports, "CurveRegistrySwaps__factory", { enumerable: true, get: function () { return CurveRegistrySwaps__factory_1.CurveRegistrySwaps__factory; } });
