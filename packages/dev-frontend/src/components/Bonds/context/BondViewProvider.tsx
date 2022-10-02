@@ -24,6 +24,7 @@ import { AppLoader } from "../../AppLoader";
 import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 import type { ERC20Faucet } from "@liquity/chicken-bonds/lusd/types";
 import { useBondContracts } from "./useBondContracts";
+import { useWeb3React } from "@web3-react/core";
 
 // Refresh backend values every 15 seconds
 const SYNCHRONIZE_INTERVAL_MS = 15 * 1000;
@@ -71,7 +72,8 @@ export const BondViewProvider: React.FC = props => {
   const [isBootstrapPeriodActive, setIsBootstrapPeriodActive] = useState<boolean>();
   const { account, liquity } = useLiquity();
   const contracts = useBondContracts();
-  const isMainnet = contracts.lusdToken && !("tap" in contracts.lusdToken);
+  const { chainId } = useWeb3React();
+  const isMainnet = chainId === 1;
 
   const setSimulatedMarketPrice = useCallback(
     (marketPrice: Decimal) => {

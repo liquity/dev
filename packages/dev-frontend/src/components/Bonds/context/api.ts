@@ -305,24 +305,62 @@ export const _getProtocolInfo = (
   };
 };
 
+const marginalInputAmount = Decimal.ONE.div(1000);
+
 const getBlusdAmmPrice = async (bLusdAmm: CurveCryptoSwap2ETH): Promise<Decimal> => {
   try {
-    return decimalify(
-      await bLusdAmm.get_dy(BLusdAmmTokenIndex.BLUSD, BLusdAmmTokenIndex.LUSD, Decimal.ONE.hex)
+    const marginalOutputAmount = await getExpectedSwapOutput(
+      BLusdAmmTokenIndex.BLUSD,
+      marginalInputAmount,
+      bLusdAmm
     );
+
+    return marginalOutputAmount.div(marginalInputAmount);
   } catch (error: unknown) {
     console.error("bLUSD AMM get_dy() price failed, probably has no liquidity?", error);
   }
+
   return Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle()));
+};
+
+const getBlusdAmmPriceMainnet = async (bLusdAmm: CurveCryptoSwap2ETH): Promise<Decimal> => {
+  try {
+    const marginalOutputAmount = await getExpectedSwapOutputMainnet(
+      BLusdAmmTokenIndex.BLUSD,
+      marginalInputAmount,
+      bLusdAmm
+    );
+
+    return marginalOutputAmount.div(marginalInputAmount);
+  } catch (error: unknown) {
+    console.error("getExpectedSwapOutputMainnet() failed, probably no liquidity?", error);
+  }
+
+  const lusd3CrvPool = new Contract(
+    LUSD_3CRV_POOL_ADDRESS,
+    ["function get_dy(int128 i, int128 j, uint256 dx) external view returns (uint256)"],
+    bLusdAmm.provider
+  );
+
+  const oraclePrice = await bLusdAmm.price_oracle().then(decimalify);
+
+  const marginalOutputAmount = await lusd3CrvPool
+    .get_dy(1 /* 3Crv */, 0 /* LUSD */, marginalInputAmount.hex)
+    .then(decimalify);
+
+  return marginalOutputAmount.div(marginalInputAmount).div(oraclePrice);
 };
 
 const getProtocolInfo = async (
   bLusdToken: BLUSDToken,
   bLusdAmm: CurveCryptoSwap2ETH,
-  chickenBondManager: ChickenBondManager
+  chickenBondManager: ChickenBondManager,
+  isMainnet: boolean
 ): Promise<ProtocolInfo> => {
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  const marketPrice = await getBlusdAmmPrice(bLusdAmm);
+  const marketPrice = isMainnet
+    ? await getBlusdAmmPriceMainnet(bLusdAmm)
+    : await getBlusdAmmPrice(bLusdAmm);
   const [pending, reserve, permanent] = await chickenBondManager.getTreasury();
 
   const treasury = {
