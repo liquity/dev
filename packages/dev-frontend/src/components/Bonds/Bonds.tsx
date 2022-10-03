@@ -16,7 +16,7 @@ export const Bonds: React.FC = () => {
     return (
       <Container sx={{ position: "absolute", left: "30%", top: "40%" }}>
         <InfoMessage title="Unsupported network">
-          LUSD Bonds haven't been deployed to this network. Please use Ethereum mainnet.
+          LUSD Bonds don't seem to be deployed to this network.
         </InfoMessage>
       </Container>
     );

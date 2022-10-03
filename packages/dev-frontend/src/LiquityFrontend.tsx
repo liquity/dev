@@ -19,8 +19,9 @@ import { Bonds } from "./pages/Bonds";
 import { TroveViewProvider } from "./components/Trove/context/TroveViewProvider";
 import { StabilityViewProvider } from "./components/Stability/context/StabilityViewProvider";
 import { StakingViewProvider } from "./components/Staking/context/StakingViewProvider";
-import { BondViewProvider } from "./components/Bonds/context/BondViewProvider";
 import "tippy.js/dist/tippy.css"; // Tooltip default style
+import { BondsProvider } from "./components/Bonds/context/BondsProvider";
+import { AppLoader } from "./components/AppLoader";
 
 type LiquityFrontendProps = {
   loader?: React.ReactNode;
@@ -45,7 +46,7 @@ export const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
         <TroveViewProvider>
           <StabilityViewProvider>
             <StakingViewProvider>
-              <BondViewProvider>
+              <BondsProvider loader={<AppLoader />}>
                 <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
                   <Header>
                     <UserAccount />
@@ -74,7 +75,7 @@ export const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
                     </Switch>
                   </Container>
                 </Flex>
-              </BondViewProvider>
+              </BondsProvider>
             </StakingViewProvider>
           </StabilityViewProvider>
         </TroveViewProvider>
