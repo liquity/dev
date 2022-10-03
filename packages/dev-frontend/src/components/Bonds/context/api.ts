@@ -58,15 +58,23 @@ const BOND_STATUS: BondStatus[] = ["NON_EXISTENT", "PENDING", "CANCELLED", "CLAI
 
 const LUSD_3CRV_POOL_ADDRESS = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
 const LUSD_TOKEN_ADDRESS = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
-const THREECRV_TOKEN_ADDRESS = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490";
 const CURVE_REGISTRY_SWAPS_ADDRESS = "0x81C46fECa27B31F3ADC2b91eE4be9717d1cd3DD7";
 
 const LQTY_ISSUANCE_GAS_HEADROOM = BigNumber.from(50000);
 
+// [
+//   token_1,
+//   pool_1,
+//   token_2,
+//   pool_2,
+//   ...
+//   pool_{n-1},
+//   token_{n}
+// ]
 const bLusdToLusdRoute: [string, string, string, string, string] = [
   BLUSD_TOKEN_ADDRESS,
   BLUSD_AMM_ADDRESS,
-  THREECRV_TOKEN_ADDRESS,
+  LUSD_3CRV_POOL_ADDRESS, // LP token of LUSD-3Crv-f has same address as pool
   LUSD_3CRV_POOL_ADDRESS,
   LUSD_TOKEN_ADDRESS
 ];
@@ -74,8 +82,8 @@ const bLusdToLusdRoute: [string, string, string, string, string] = [
 const lusdToBLusdRoute = [...bLusdToLusdRoute].reverse() as typeof bLusdToLusdRoute;
 
 type RouteAddresses = [string, string, string, string, string, string, string, string, string];
-type RouteSwap = [BigNumberish, BigNumberish, BigNumberish];
-type RouteSwaps = [RouteSwap, RouteSwap, RouteSwap, RouteSwap];
+type RouteSwapParams = [BigNumberish, BigNumberish, BigNumberish];
+type RouteSwaps = [RouteSwapParams, RouteSwapParams, RouteSwapParams, RouteSwapParams];
 
 const getRoute = (inputToken: BLusdAmmTokenIndex): [RouteAddresses, RouteSwaps] => [
   [
@@ -86,9 +94,24 @@ const getRoute = (inputToken: BLusdAmmTokenIndex): [RouteAddresses, RouteSwaps] 
     constants.AddressZero
   ],
   [
-    inputToken === BLusdAmmTokenIndex.BLUSD ? [0, 1, 3] : [0, 1, 1],
-    inputToken === BLusdAmmTokenIndex.BLUSD ? [1, 0, 1] : [1, 0, 3],
-    [0, 0, 0],
+    // Params:
+    // 1) input token index (unused by remove_liquidity_one_coin())
+    // 2) output token index (unused by add_liquidity())
+    // 3) function to call (see below)
+    //
+    // Functions:
+    // 3 = exchange() in crypto pool
+    // 6 = add_liquidity() single-sidedly to 2-pool
+    // 9 = remove_liquidity_one_coin()
+    //
+    // Indices:
+    // - bLUSD pool: { 0: bLUSD, 1: LUSD-3Crv-f }
+    // - LUSD-3Crv-f pool: { 0: LUSD, 1: 3Crv }
+
+    //                                          bLUSD        LUSD
+    inputToken === BLusdAmmTokenIndex.BLUSD ? [0, 1, 3] : [0, 0, 6], // step 1
+    inputToken === BLusdAmmTokenIndex.BLUSD ? [0, 0, 9] : [1, 0, 3], // step 2
+    [0, 0, 0], //                                LUSD       bLUSD
     [0, 0, 0]
   ]
 ];
@@ -338,15 +361,16 @@ const getBlusdAmmPriceMainnet = async (bLusdAmm: CurveCryptoSwap2ETH): Promise<D
 
   const lusd3CrvPool = new Contract(
     LUSD_3CRV_POOL_ADDRESS,
-    ["function get_dy(int128 i, int128 j, uint256 dx) external view returns (uint256)"],
+    [
+      "function calc_withdraw_one_coin(uint256 burn_amount, int128 i) external view returns (uint256)"
+    ],
     bLusdAmm.provider
   );
 
-  const oraclePrice = await bLusdAmm.price_oracle().then(decimalify);
-
-  const marginalOutputAmount = await lusd3CrvPool
-    .get_dy(1 /* 3Crv */, 0 /* LUSD */, marginalInputAmount.hex)
-    .then(decimalify);
+  const [oraclePrice, marginalOutputAmount] = await Promise.all([
+    bLusdAmm.price_oracle().then(decimalify),
+    lusd3CrvPool.calc_withdraw_one_coin(marginalInputAmount.hex, 0 /* LUSD */).then(decimalify)
+  ]);
 
   return marginalOutputAmount.div(marginalInputAmount).div(oraclePrice);
 };
