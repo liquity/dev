@@ -5,22 +5,17 @@ import { BondList } from "./BondList";
 import { useBondView } from "../../context/BondViewContext";
 import { BONDS } from "../../lexicon";
 import { InfoIcon } from "../../../InfoIcon";
-import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 import { BLusdAmmTokenIndex, SwapPressedPayload } from "../../context/transitions";
 import { useLiquity } from "../../../../hooks/LiquityContext";
+import { useBondAddresses } from "../../context/BondAddressesContext";
 
 const MAINNET_CHAIN_ID = 1;
 
 export const Idle: React.FC = () => {
   const { liquity } = useLiquity();
-  const {
-    dispatchEvent,
-    bonds,
-    getLusdFromFaucet,
-    lusdBalance,
-    lpTokenBalance,
-    hasLoaded
-  } = useBondView();
+  const { LUSD_OVERRIDE_ADDRESS } = useBondAddresses();
+
+  const { dispatchEvent, bonds, getLusdFromFaucet, lusdBalance, lpTokenBalance } = useBondView();
   const [chain, setChain] = useState<number>();
 
   useEffect(() => {
@@ -31,11 +26,10 @@ export const Idle: React.FC = () => {
     })();
   }, [chain, liquity.connection.signer]);
 
-  if (!hasLoaded) return null;
-
   const hasBonds = bonds !== undefined && bonds.length > 0;
 
-  const showLusdFaucet = false;
+  const showLusdFaucet = LUSD_OVERRIDE_ADDRESS !== null && lusdBalance?.eq(0);
+
   const handleAddLiquidityPressed = () => dispatchEvent("ADD_LIQUIDITY_PRESSED");
   const handleManageLiquidityPressed = () => dispatchEvent("MANAGE_LIQUIDITY_PRESSED");
 
