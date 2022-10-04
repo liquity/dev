@@ -1,13 +1,9 @@
 import { BondAddressesProvider } from "./BondAddressesContext";
 import { BondViewProvider } from "./BondViewProvider";
 
-type BondsProviderProps = {
-  loader?: React.ReactNode;
-};
-
-export const BondsProvider: React.FC<BondsProviderProps> = ({ children, loader }) => {
+export const BondsProvider: React.FC = ({ children }) => {
   return (
-    <BondAddressesProvider loader={loader}>
+    <BondAddressesProvider>
       <BondViewProvider>{children}</BondViewProvider>
     </BondAddressesProvider>
   );
