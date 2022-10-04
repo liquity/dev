@@ -13,13 +13,6 @@ import {
   BondNFT__factory,
   ChickenBondManager__factory
 } from "@liquity/chicken-bonds/lusd/types";
-import {
-  BLUSD_AMM_ADDRESS,
-  BLUSD_TOKEN_ADDRESS,
-  BOND_NFT_ADDRESS,
-  CHICKEN_BOND_MANAGER_ADDRESS,
-  LUSD_OVERRIDE_ADDRESS
-} from "@liquity/chicken-bonds/lusd/addresses";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
 import LUSDTokenAbi from "@liquity/lib-ethers/abi/LUSDToken.json";
 import { useContract } from "../../../hooks/useContract";
@@ -29,6 +22,7 @@ import type { BondsApi } from "./api";
 import type { Bond, ProtocolInfo, Stats } from "./transitions";
 import { BLusdAmmTokenIndex } from "./transitions";
 import { useWeb3React } from "@web3-react/core";
+import { useBondAddresses } from "./BondAddressesContext";
 
 type BondsInformation = {
   protocolInfo: ProtocolInfo;
@@ -57,10 +51,19 @@ export const useBondContracts = (): BondContracts => {
   const { chainId } = useWeb3React();
   const isMainnet = chainId === 1;
 
+  const {
+    BLUSD_AMM_ADDRESS,
+    BLUSD_TOKEN_ADDRESS,
+    BOND_NFT_ADDRESS,
+    CHICKEN_BOND_MANAGER_ADDRESS,
+    LUSD_OVERRIDE_ADDRESS
+  } = useBondAddresses();
+
   const [lusdTokenDefault, lusdTokenDefaultStatus] = useContract<LUSDToken>(
     liquity.connection.addresses.lusdToken,
     LUSDTokenAbi
   );
+
   const [lusdTokenOverride, lusdTokenOverrideStatus] = useContract<ERC20Faucet>(
     LUSD_OVERRIDE_ADDRESS,
     ERC20Faucet__factory.abi

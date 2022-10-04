@@ -10,7 +10,7 @@ import { shortenAddress } from "../utils/shortenAddress";
 
 import { Icon } from "./Icon";
 import { useBondView } from "./Bonds/context/BondViewContext";
-import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
+import { useBondAddresses } from "./Bonds/context/BondAddressesContext";
 
 const select = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -22,6 +22,7 @@ export const UserAccount: React.FC = () => {
   const { account } = useLiquity();
   const { accountBalance, lusdBalance: realLusdBalance, lqtyBalance } = useLiquitySelector(select);
   const { bLusdBalance, lusdBalance: customLusdBalance } = useBondView();
+  const { LUSD_OVERRIDE_ADDRESS } = useBondAddresses();
 
   const lusdBalance = LUSD_OVERRIDE_ADDRESS === null ? realLusdBalance : customLusdBalance;
 

@@ -8,7 +8,6 @@ import {
   Signer
 } from "ethers";
 import { splitSignature } from "ethers/lib/utils";
-import { BLUSD_AMM_ADDRESS, BLUSD_TOKEN_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 import type { BLUSDToken, BondNFT, ChickenBondManager } from "@liquity/chicken-bonds/lusd/types";
 import {
   CurveCryptoSwap2ETH,
@@ -24,7 +23,7 @@ import type {
 } from "@liquity/chicken-bonds/lusd/types/ChickenBondManager";
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
-import type { ProtocolInfo, Bond, BondStatus, Stats, ClaimedBonds } from "./transitions";
+import type { ProtocolInfo, Bond, BondStatus, Stats, ClaimedBonds, Maybe } from "./transitions";
 import {
   numberify,
   decimalify,
@@ -51,8 +50,7 @@ import {
   TokenExchangeEventObject
 } from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
 import type { EthersSigner } from "@liquity/lib-ethers";
-
-type Maybe<T> = T | undefined;
+import mainnet from "@liquity/chicken-bonds/lusd/addresses/mainnet.json";
 
 const BOND_STATUS: BondStatus[] = ["NON_EXISTENT", "PENDING", "CANCELLED", "CLAIMED"];
 
@@ -72,8 +70,8 @@ const LQTY_ISSUANCE_GAS_HEADROOM = BigNumber.from(50000);
 //   token_{n}
 // ]
 const bLusdToLusdRoute: [string, string, string, string, string] = [
-  BLUSD_TOKEN_ADDRESS,
-  BLUSD_AMM_ADDRESS,
+  mainnet.BLUSD_TOKEN_ADDRESS ?? "",
+  mainnet.BLUSD_AMM_ADDRESS ?? "",
   LUSD_3CRV_POOL_ADDRESS, // LP token of LUSD-3Crv-f has same address as pool
   LUSD_3CRV_POOL_ADDRESS,
   LUSD_TOKEN_ADDRESS
@@ -644,9 +642,14 @@ const claimBond = async (
 
 const isTokenApprovedWithBLusdAmm = async (
   account: string,
-  token: LUSDToken | BLUSDToken
+  token: LUSDToken | BLUSDToken,
+  bLusdAmmAddress: string | null
 ): Promise<boolean> => {
-  const allowance = await token.allowance(account, BLUSD_AMM_ADDRESS);
+  if (bLusdAmmAddress === null) {
+    throw new Error("isTokenApprovedWithBLusdAmm() failed: a dependency is null");
+  }
+
+  const allowance = await token.allowance(account, bLusdAmmAddress);
 
   // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
   // start to decrease from 2**64.
@@ -666,12 +669,15 @@ const isTokenApprovedWithBLusdAmmMainnet = async (
   return allowance.gt(constants.MaxInt256);
 };
 
-const approveTokenWithBLusdAmm = async (token: LUSDToken | BLUSDToken | undefined) => {
-  if (token === undefined) {
+const approveTokenWithBLusdAmm = async (
+  token: LUSDToken | BLUSDToken | undefined,
+  bLusdAmmAddress: string | null
+) => {
+  if (token === undefined || bLusdAmmAddress === null) {
     throw new Error("approveTokenWithBLusdAmm() failed: a dependency is null");
   }
 
-  await (await token.approve(BLUSD_AMM_ADDRESS, constants.MaxUint256)).wait();
+  await (await token.approve(bLusdAmmAddress, constants.MaxUint256)).wait();
   return;
 };
 
