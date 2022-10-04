@@ -5,14 +5,16 @@ import { BondList } from "./BondList";
 import { useBondView } from "../../context/BondViewContext";
 import { BONDS } from "../../lexicon";
 import { InfoIcon } from "../../../InfoIcon";
-import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 import { BLusdAmmTokenIndex, SwapPressedPayload } from "../../context/transitions";
 import { useLiquity } from "../../../../hooks/LiquityContext";
+import { useBondAddresses } from "../../context/BondAddressesContext";
 
 const MAINNET_CHAIN_ID = 1;
 
 export const Idle: React.FC = () => {
   const { liquity } = useLiquity();
+  const { LUSD_OVERRIDE_ADDRESS } = useBondAddresses();
+
   const {
     dispatchEvent,
     bonds,
