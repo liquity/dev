@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
-import { BondViewContext, BondViewContextType } from "./BondViewContext";
+import { BondViewContext } from "./BondViewContext";
 import type {
   Stats,
   BondView,
@@ -20,10 +20,9 @@ import { Decimal } from "@liquity/lib-base";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { api, _getProtocolInfo } from "./api";
 import { useTransaction } from "../../../hooks/useTransaction";
-import { AppLoader } from "../../AppLoader";
-import { LUSD_OVERRIDE_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
 import type { ERC20Faucet } from "@liquity/chicken-bonds/lusd/types";
 import { useBondContracts } from "./useBondContracts";
+import { useBondAddresses } from "./BondAddressesContext";
 
 // Refresh backend values every 15 seconds
 const SYNCHRONIZE_INTERVAL_MS = 15 * 1000;
@@ -70,6 +69,7 @@ export const BondViewProvider: React.FC = props => {
   const [bLusdAmmLusdBalance, setBLusdAmmLusdBalance] = useState<Decimal>();
   const [isBootstrapPeriodActive, setIsBootstrapPeriodActive] = useState<boolean>();
   const { account, liquity } = useLiquity();
+  const { LUSD_OVERRIDE_ADDRESS, BLUSD_AMM_ADDRESS } = useBondAddresses();
   const contracts = useBondContracts();
 
   const setSimulatedMarketPrice = useCallback(
@@ -131,25 +131,43 @@ export const BondViewProvider: React.FC = props => {
       await (await ((contracts.lusdToken as unknown) as ERC20Faucet).tap()).wait();
       setShouldSynchronize(true);
     }
-  }, [contracts.lusdToken, account]);
+  }, [contracts.lusdToken, account, LUSD_OVERRIDE_ADDRESS]);
 
   useEffect(() => {
     (async () => {
-      if (contracts.lusdToken === undefined || account === undefined || isLusdApprovedWithBlusdAmm)
+      if (
+        BLUSD_AMM_ADDRESS === null ||
+        contracts.lusdToken === undefined ||
+        account === undefined ||
+        isLusdApprovedWithBlusdAmm
+      )
         return;
-      const isApproved = await api.isTokenApprovedWithBLusdAmm(account, contracts.lusdToken);
+      const isApproved = await api.isTokenApprovedWithBLusdAmm(
+        account,
+        contracts.lusdToken,
+        BLUSD_AMM_ADDRESS
+      );
       setIsLusdApprovedWithBlusdAmm(isApproved);
     })();
-  }, [contracts.lusdToken, account, isLusdApprovedWithBlusdAmm]);
+  }, [contracts.lusdToken, account, isLusdApprovedWithBlusdAmm, BLUSD_AMM_ADDRESS]);
 
   useEffect(() => {
     (async () => {
-      if (contracts.bLusdToken === undefined || account === undefined || isBLusdApprovedWithBlusdAmm)
+      if (
+        BLUSD_AMM_ADDRESS === null ||
+        contracts.bLusdToken === undefined ||
+        account === undefined ||
+        isBLusdApprovedWithBlusdAmm
+      )
         return;
-      const isApproved = await api.isTokenApprovedWithBLusdAmm(account, contracts.bLusdToken);
+      const isApproved = await api.isTokenApprovedWithBLusdAmm(
+        account,
+        contracts.bLusdToken,
+        BLUSD_AMM_ADDRESS
+      );
       setIsBLusdApprovedWithBlusdAmm(isApproved);
     })();
-  }, [contracts.bLusdToken, account, isBLusdApprovedWithBlusdAmm]);
+  }, [contracts.bLusdToken, account, isBLusdApprovedWithBlusdAmm, BLUSD_AMM_ADDRESS]);
 
   useEffect(() => {
     if (isSynchronizing) return;
@@ -232,10 +250,10 @@ export const BondViewProvider: React.FC = props => {
     async (tokensNeedingApproval: BLusdAmmTokenIndex[]) => {
       for (const token of tokensNeedingApproval) {
         if (token === BLusdAmmTokenIndex.BLUSD) {
-          await api.approveTokenWithBLusdAmm(contracts.bLusdToken);
+          await api.approveTokenWithBLusdAmm(contracts.bLusdToken, BLUSD_AMM_ADDRESS);
           setIsBLusdApprovedWithBlusdAmm(true);
         } else {
-          await api.approveTokenWithBLusdAmm(contracts.lusdToken);
+          await api.approveTokenWithBLusdAmm(contracts.lusdToken, BLUSD_AMM_ADDRESS);
           setIsLusdApprovedWithBlusdAmm(true);
         }
       }
@@ -471,7 +489,7 @@ export const BondViewProvider: React.FC = props => {
     })();
   }, [bonds, protocolInfo, contracts.chickenBondManager]);
 
-  const provider: BondViewContextType = {
+  const provider = {
     view,
     dispatchEvent,
     selectedBondId,
@@ -507,10 +525,7 @@ export const BondViewProvider: React.FC = props => {
   };
 
   // @ts-ignore
-  window.__LIQUITY_BONDS__ = provider;
-
-  // If contracts don't load it means they're not deployed, we shouldn't block the app from running in this case
-  if (protocolInfo === undefined && contracts.hasFoundContracts) return <AppLoader />;
+  window.__LIQUITY_BONDS__ = provider.current;
 
   return <BondViewContext.Provider value={provider}>{children}</BondViewContext.Provider>;
 };

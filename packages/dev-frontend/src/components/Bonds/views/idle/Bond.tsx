@@ -6,7 +6,7 @@ import { BLusdAmmTokenIndex, Bond as BondType, SwapPressedPayload } from "../../
 import { Label, SubLabel } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
 import { statuses, useBondView } from "../../context/BondViewContext";
-import { BOND_NFT_ADDRESS } from "@liquity/chicken-bonds/lusd/addresses";
+import { useBondAddresses } from "../../context/BondAddressesContext";
 
 const getBondEvents = (bond: BondType): EventType[] => {
   return [
@@ -73,6 +73,7 @@ type BondProps = { bond: BondType; style?: ThemeUIStyleObject };
 export const Bond: React.FC<BondProps> = ({ bond, style }) => {
   const events = getBondEvents(bond);
   const { dispatchEvent } = useBondView();
+  const { BOND_NFT_ADDRESS } = useBondAddresses();
 
   const handleSellBLusdPressed = () => {
     dispatchEvent("SWAP_PRESSED", { inputToken: BLusdAmmTokenIndex.BLUSD } as SwapPressedPayload);

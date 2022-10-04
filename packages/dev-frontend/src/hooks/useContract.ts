@@ -15,7 +15,11 @@ export function useContract<TContractType>(
   useEffect(() => {
     (async () => {
       try {
-        if (contract !== undefined || address === null) return;
+        if (contract !== undefined) return;
+        if (address === null) {
+          setContract({ instance: undefined, status: "FAILED" });
+          return;
+        }
 
         const exists = (await provider.getCode(address)) !== "0x";
         if (!exists) throw new Error(`Contract ${address} doesn't exist.`);
