@@ -321,7 +321,7 @@ export const SwapPane: React.FC = () => {
         <Link href="https://curve.fi/" target="_blank">
           Curve
         </Link>
-        &nbsp;protocol's bLUSD/LUSD pool.
+        &nbsp;protocol.
       </Flex>
 
       <Flex variant="layout.actions">

@@ -1,7 +1,18 @@
-import { BigNumber, CallOverrides, constants, Contract, providers, Signer } from "ethers";
+import {
+  BigNumber,
+  BigNumberish,
+  CallOverrides,
+  constants,
+  Contract,
+  providers,
+  Signer
+} from "ethers";
 import { splitSignature } from "ethers/lib/utils";
 import type { BLUSDToken, BondNFT, ChickenBondManager } from "@liquity/chicken-bonds/lusd/types";
-import type { CurveCryptoSwap2ETH } from "@liquity/chicken-bonds/lusd/types/external";
+import {
+  CurveCryptoSwap2ETH,
+  CurveRegistrySwaps__factory
+} from "@liquity/chicken-bonds/lusd/types/external";
 import type {
   BondCreatedEventObject,
   BondCreatedEvent,
@@ -39,13 +50,69 @@ import {
   TokenExchangeEventObject
 } from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
 import type { EthersSigner } from "@liquity/lib-ethers";
+import mainnet from "@liquity/chicken-bonds/lusd/addresses/mainnet.json";
 
 const BOND_STATUS: BondStatus[] = ["NON_EXISTENT", "PENDING", "CANCELLED", "CLAIMED"];
 
 const LUSD_3CRV_POOL_ADDRESS = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
 const LUSD_TOKEN_ADDRESS = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
+const CURVE_REGISTRY_SWAPS_ADDRESS = "0x81C46fECa27B31F3ADC2b91eE4be9717d1cd3DD7";
 
 const LQTY_ISSUANCE_GAS_HEADROOM = BigNumber.from(50000);
+
+// [
+//   token_1,
+//   pool_1,
+//   token_2,
+//   pool_2,
+//   ...
+//   pool_{n-1},
+//   token_{n}
+// ]
+const bLusdToLusdRoute: [string, string, string, string, string] = [
+  mainnet.BLUSD_TOKEN_ADDRESS ?? "",
+  mainnet.BLUSD_AMM_ADDRESS ?? "",
+  LUSD_3CRV_POOL_ADDRESS, // LP token of LUSD-3Crv-f has same address as pool
+  LUSD_3CRV_POOL_ADDRESS,
+  LUSD_TOKEN_ADDRESS
+];
+
+const lusdToBLusdRoute = [...bLusdToLusdRoute].reverse() as typeof bLusdToLusdRoute;
+
+type RouteAddresses = [string, string, string, string, string, string, string, string, string];
+type RouteSwapParams = [BigNumberish, BigNumberish, BigNumberish];
+type RouteSwaps = [RouteSwapParams, RouteSwapParams, RouteSwapParams, RouteSwapParams];
+
+const getRoute = (inputToken: BLusdAmmTokenIndex): [RouteAddresses, RouteSwaps] => [
+  [
+    ...(inputToken === BLusdAmmTokenIndex.BLUSD ? bLusdToLusdRoute : lusdToBLusdRoute),
+    constants.AddressZero,
+    constants.AddressZero,
+    constants.AddressZero,
+    constants.AddressZero
+  ],
+  [
+    // Params:
+    // 1) input token index (unused by remove_liquidity_one_coin())
+    // 2) output token index (unused by add_liquidity())
+    // 3) function to call (see below)
+    //
+    // Functions:
+    // 3 = exchange() in crypto pool
+    // 6 = add_liquidity() single-sidedly to 2-pool
+    // 9 = remove_liquidity_one_coin()
+    //
+    // Indices:
+    // - bLUSD pool: { 0: bLUSD, 1: LUSD-3Crv-f }
+    // - LUSD-3Crv-f pool: { 0: LUSD, 1: 3Crv }
+
+    //                                          bLUSD        LUSD
+    inputToken === BLusdAmmTokenIndex.BLUSD ? [0, 1, 3] : [0, 0, 6], // step 1
+    inputToken === BLusdAmmTokenIndex.BLUSD ? [0, 0, 9] : [1, 0, 3], // step 2
+    [0, 0, 0], //                                LUSD       bLUSD
+    [0, 0, 0]
+  ]
+];
 
 type CachedYearnApys = {
   lusd3Crv: Decimal | undefined;
@@ -259,24 +326,63 @@ export const _getProtocolInfo = (
   };
 };
 
+const marginalInputAmount = Decimal.ONE.div(1000);
+
 const getBlusdAmmPrice = async (bLusdAmm: CurveCryptoSwap2ETH): Promise<Decimal> => {
   try {
-    return decimalify(
-      await bLusdAmm.get_dy(BLusdAmmTokenIndex.BLUSD, BLusdAmmTokenIndex.LUSD, Decimal.ONE.hex)
+    const marginalOutputAmount = await getExpectedSwapOutput(
+      BLusdAmmTokenIndex.BLUSD,
+      marginalInputAmount,
+      bLusdAmm
     );
+
+    return marginalOutputAmount.div(marginalInputAmount);
   } catch (error: unknown) {
     console.error("bLUSD AMM get_dy() price failed, probably has no liquidity?", error);
   }
+
   return Decimal.ONE.div(decimalify(await bLusdAmm.price_oracle()));
+};
+
+const getBlusdAmmPriceMainnet = async (bLusdAmm: CurveCryptoSwap2ETH): Promise<Decimal> => {
+  try {
+    const marginalOutputAmount = await getExpectedSwapOutputMainnet(
+      BLusdAmmTokenIndex.BLUSD,
+      marginalInputAmount,
+      bLusdAmm
+    );
+
+    return marginalOutputAmount.div(marginalInputAmount);
+  } catch (error: unknown) {
+    console.error("getExpectedSwapOutputMainnet() failed, probably no liquidity?", error);
+  }
+
+  const lusd3CrvPool = new Contract(
+    LUSD_3CRV_POOL_ADDRESS,
+    [
+      "function calc_withdraw_one_coin(uint256 burn_amount, int128 i) external view returns (uint256)"
+    ],
+    bLusdAmm.provider
+  );
+
+  const [oraclePrice, marginalOutputAmount] = await Promise.all([
+    bLusdAmm.price_oracle().then(decimalify),
+    lusd3CrvPool.calc_withdraw_one_coin(marginalInputAmount.hex, 0 /* LUSD */).then(decimalify)
+  ]);
+
+  return marginalOutputAmount.div(marginalInputAmount).div(oraclePrice);
 };
 
 const getProtocolInfo = async (
   bLusdToken: BLUSDToken,
   bLusdAmm: CurveCryptoSwap2ETH,
-  chickenBondManager: ChickenBondManager
+  chickenBondManager: ChickenBondManager,
+  isMainnet: boolean
 ): Promise<ProtocolInfo> => {
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  const marketPrice = await getBlusdAmmPrice(bLusdAmm);
+  const marketPrice = isMainnet
+    ? await getBlusdAmmPriceMainnet(bLusdAmm)
+    : await getBlusdAmmPrice(bLusdAmm);
   const [pending, reserve, permanent] = await chickenBondManager.getTreasury();
 
   const treasury = {
@@ -542,7 +648,20 @@ const isTokenApprovedWithBLusdAmm = async (
   if (bLusdAmmAddress === null) {
     throw new Error("isTokenApprovedWithBLusdAmm() failed: a dependency is null");
   }
+
   const allowance = await token.allowance(account, bLusdAmmAddress);
+
+  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
+  // start to decrease from 2**64.
+  // However, it is practically impossible that it would decrease below 2**63.
+  return allowance.gt(constants.MaxInt256);
+};
+
+const isTokenApprovedWithBLusdAmmMainnet = async (
+  account: string,
+  token: LUSDToken | BLUSDToken
+): Promise<boolean> => {
+  const allowance = await token.allowance(account, CURVE_REGISTRY_SWAPS_ADDRESS);
 
   // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
   // start to decrease from 2**64.
@@ -562,6 +681,15 @@ const approveTokenWithBLusdAmm = async (
   return;
 };
 
+const approveTokenWithBLusdAmmMainnet = async (token: LUSDToken | BLUSDToken | undefined) => {
+  if (token === undefined) {
+    throw new Error("approveTokenWithBLusdAmmMainnet() failed: a dependency is null");
+  }
+
+  await (await token.approve(CURVE_REGISTRY_SWAPS_ADDRESS, constants.MaxUint256)).wait();
+  return;
+};
+
 const getOtherToken = (thisToken: BLusdAmmTokenIndex) =>
   thisToken === BLusdAmmTokenIndex.BLUSD ? BLusdAmmTokenIndex.LUSD : BLusdAmmTokenIndex.BLUSD;
 
@@ -571,6 +699,21 @@ const getExpectedSwapOutput = async (
   bLusdAmm: CurveCryptoSwap2ETH
 ): Promise<Decimal> =>
   decimalify(await bLusdAmm.get_dy(inputToken, getOtherToken(inputToken), inputAmount.hex));
+
+const getExpectedSwapOutputMainnet = async (
+  inputToken: BLusdAmmTokenIndex,
+  inputAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH
+): Promise<Decimal> => {
+  const swaps = CurveRegistrySwaps__factory.connect(CURVE_REGISTRY_SWAPS_ADDRESS, bLusdAmm.signer);
+
+  return decimalify(
+    await swaps["get_exchange_multiple_amount(address[9],uint256[3][4],uint256)"](
+      ...getRoute(inputToken),
+      inputAmount.hex
+    )
+  );
+};
 
 const swapTokens = async (
   inputToken: BLusdAmmTokenIndex,
@@ -607,6 +750,37 @@ const swapTokens = async (
 
   console.log("swapTokens() finished:", exchangeEvent.args);
   return exchangeEvent.args;
+};
+
+const swapTokensMainnet = async (
+  inputToken: BLusdAmmTokenIndex,
+  inputAmount: Decimal,
+  minOutputAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<void> => {
+  if (bLusdAmm === undefined) throw new Error("swapTokensMainnet() failed: a dependency is null");
+
+  const swaps = CurveRegistrySwaps__factory.connect(CURVE_REGISTRY_SWAPS_ADDRESS, bLusdAmm.signer);
+  const route = getRoute(inputToken);
+
+  const gasEstimate = await swaps.estimateGas[
+    "exchange_multiple(address[9],uint256[3][4],uint256,uint256)"
+  ](...route, inputAmount.hex, minOutputAmount.hex);
+
+  const receipt = await (
+    await swaps["exchange_multiple(address[9],uint256[3][4],uint256,uint256)"](
+      ...route,
+      inputAmount.hex,
+      minOutputAmount.hex,
+      { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
+    )
+  ).wait();
+
+  if (!receipt.status) {
+    throw new Error("swapTokensMainnet() failed");
+  }
+
+  console.log("swapTokensMainnet() finished");
 };
 
 const amountsFrom = (bLusdAmount: Decimal, lusdAmount: Decimal) =>
@@ -759,9 +933,13 @@ export const api = {
   cancelBond,
   claimBond,
   isTokenApprovedWithBLusdAmm,
+  isTokenApprovedWithBLusdAmmMainnet,
   approveTokenWithBLusdAmm,
+  approveTokenWithBLusdAmmMainnet,
   getExpectedSwapOutput,
+  getExpectedSwapOutputMainnet,
   swapTokens,
+  swapTokensMainnet,
   getCoinBalances,
   getExpectedLpTokens,
   addLiquidity,

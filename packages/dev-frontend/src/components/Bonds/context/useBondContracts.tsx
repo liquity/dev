@@ -21,6 +21,7 @@ import { useCallback } from "react";
 import type { BondsApi } from "./api";
 import type { Bond, ProtocolInfo, Stats } from "./transitions";
 import { BLusdAmmTokenIndex } from "./transitions";
+import { useWeb3React } from "@web3-react/core";
 import { useBondAddresses } from "./BondAddressesContext";
 
 type BondsInformation = {
@@ -47,6 +48,8 @@ type BondContracts = {
 
 export const useBondContracts = (): BondContracts => {
   const { liquity } = useLiquity();
+  const { chainId } = useWeb3React();
+  const isMainnet = chainId === 1;
 
   const {
     BLUSD_AMM_ADDRESS,
@@ -108,7 +111,12 @@ export const useBondContracts = (): BondContracts => {
         return;
       }
 
-      const protocolInfo = await api.getProtocolInfo(bLusdToken, bLusdAmm, chickenBondManager);
+      const protocolInfo = await api.getProtocolInfo(
+        bLusdToken,
+        bLusdAmm,
+        chickenBondManager,
+        isMainnet
+      );
 
       const bonds = await api.getAccountBonds(
         account,
@@ -151,7 +159,7 @@ export const useBondContracts = (): BondContracts => {
         bLusdAmmLusdBalance: bLusdAmmCoinBalances[BLusdAmmTokenIndex.LUSD]
       };
     },
-    [chickenBondManager, bondNft, bLusdToken, lusdToken, bLusdAmm]
+    [chickenBondManager, bondNft, bLusdToken, lusdToken, bLusdAmm, isMainnet]
   );
 
   return {
