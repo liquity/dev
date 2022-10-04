@@ -34,7 +34,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   const depositEditingState = useState<string>();
   const isConfirming = useMemo(() => statuses.CREATE === "PENDING", [statuses.CREATE]);
   const handleBack = back ?? onBack ?? (() => dispatchEvent("BACK_PRESSED"));
-  const [isDepositEnough, setIsDepositEnough] = useState<boolean>(true);
+  const [isDepositEnough, setIsDepositEnough] = useState<boolean>(lusdBalance?.gte(100) ?? true);
   const [doesDepositExceedBalance, setDoesDepositExceedBalance] = useState<boolean>(false);
 
   const handleDismiss = () => {

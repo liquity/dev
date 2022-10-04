@@ -57,7 +57,11 @@ export const BondStats: React.FC<BondStatsProps> = () => {
       </Statistic>
       <Statistic name={l.BLUSD_APR.term} tooltip={l.BLUSD_APR.description}>
         <Metric
-          value={protocolInfo.bLusdApr ? protocolInfo.bLusdApr.mul(100).prettify(2) : "N/A"}
+          value={
+            protocolInfo.bLusdApr && protocolInfo.bLusdSupply.gt(0)
+              ? protocolInfo.bLusdApr.mul(100).prettify(2)
+              : "N/A"
+          }
           unit="%"
         />
       </Statistic>
@@ -67,7 +71,9 @@ export const BondStats: React.FC<BondStatsProps> = () => {
       >
         <Metric
           value={
-            protocolInfo.yieldAmplification ? protocolInfo.yieldAmplification.prettify(2) : "N/A"
+            protocolInfo.yieldAmplification && protocolInfo.bLusdSupply.gt(0)
+              ? protocolInfo.yieldAmplification.prettify(2)
+              : "N/A"
           }
           unit="x"
         />

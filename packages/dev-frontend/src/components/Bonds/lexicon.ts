@@ -134,7 +134,7 @@ export const CLAIM_BOND = {
 export const BLUSD_MARKET_PRICE = {
   term: "Market price",
   description:
-    "The current price of bLUSD according to the bLUSD/LUSD Curve pool. As long as the bLUSD/LUSD is empty, the market price shown corresponds to the initial Curve v2 price parameter used to initalize the pool."
+    "The current price of bLUSD according to the bLUSD Curve pool. As long as the bLUSD pool is empty, the market price shown corresponds to the initial Curve v2 price parameter used to initalize the pool."
 };
 
 export const BLUSD_FAIR_PRICE = {
