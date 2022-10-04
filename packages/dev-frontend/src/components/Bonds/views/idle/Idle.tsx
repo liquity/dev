@@ -35,8 +35,7 @@ export const Idle: React.FC = () => {
 
   const hasBonds = bonds !== undefined && bonds.length > 0;
 
-  const showLusdFaucet = LUSD_OVERRIDE_ADDRESS !== null && lusdBalance?.eq(0);
-
+  const showLusdFaucet = false;
   const handleAddLiquidityPressed = () => dispatchEvent("ADD_LIQUIDITY_PRESSED");
   const handleManageLiquidityPressed = () => dispatchEvent("MANAGE_LIQUIDITY_PRESSED");
 
