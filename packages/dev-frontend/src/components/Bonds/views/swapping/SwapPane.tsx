@@ -316,9 +316,13 @@ export const SwapPane: React.FC = () => {
         </ErrorDescription>
       )}
 
+      {(bLusdAmmBLusdBalance?.isZero || bLusdAmmLusdBalance?.isZero) && (
+        <ErrorDescription>No liquidity in pool yet. Swap unavailable.</ErrorDescription>
+      )}
+
       <Flex pb={2} sx={{ fontSize: "15.5px", justifyContent: "center", fontStyle: "italic" }}>
         Your swap is performed directly in&nbsp;
-        <Link href="https://curve.fi/" target="_blank">
+        <Link href="https://curve.fi/factory-crypto/134" target="_blank">
           Curve
         </Link>
         &nbsp;protocol.
