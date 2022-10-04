@@ -42,7 +42,9 @@ const Line = (columns: number) =>
 const columns = 5;
 
 export const BondsTable: React.FC = () => {
-  const { bonds } = useBondView();
+  const { bonds, hasLoaded } = useBondView();
+
+  if (!hasLoaded) return null;
 
   const pendingBonds = bonds ? bonds.filter(bond => bond.status === "PENDING") : [];
   const hasBonds = pendingBonds.length > 0;

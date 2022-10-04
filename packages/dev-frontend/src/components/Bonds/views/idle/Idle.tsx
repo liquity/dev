@@ -13,7 +13,14 @@ const MAINNET_CHAIN_ID = 1;
 
 export const Idle: React.FC = () => {
   const { liquity } = useLiquity();
-  const { dispatchEvent, bonds, getLusdFromFaucet, lusdBalance, lpTokenBalance } = useBondView();
+  const {
+    dispatchEvent,
+    bonds,
+    getLusdFromFaucet,
+    lusdBalance,
+    lpTokenBalance,
+    hasLoaded
+  } = useBondView();
   const [chain, setChain] = useState<number>();
 
   useEffect(() => {
@@ -23,6 +30,8 @@ export const Idle: React.FC = () => {
       setChain(chainId);
     })();
   }, [chain, liquity.connection.signer]);
+
+  if (!hasLoaded) return null;
 
   const hasBonds = bonds !== undefined && bonds.length > 0;
 
