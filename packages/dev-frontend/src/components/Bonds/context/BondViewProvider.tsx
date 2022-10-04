@@ -535,7 +535,8 @@ export const BondViewProvider: React.FC = props => {
     getExpectedSwapOutput,
     getExpectedLpTokens,
     getExpectedWithdrawal,
-    isBootstrapPeriodActive
+    isBootstrapPeriodActive,
+    hasLoaded: protocolInfo !== undefined
   };
 
   // @ts-ignore
