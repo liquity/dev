@@ -164,6 +164,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         editedAmount={deposit.toString()}
         setEditedAmount={amount => handleDepositAmountChanged(Decimal.from(amount))}
         maxedOut={deposit.eq(lusdBalance)}
+        maxAmount={lusdBalance.toString()}
       />
 
       <Grid sx={{ my: 1, mb: 3, justifyItems: "center", pl: 2 }} gap="20px" columns={3}>
