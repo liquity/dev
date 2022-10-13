@@ -1,3 +1,4 @@
+export type { BLUSDLPZap } from "./BLUSDLPZap";
 export type { BLUSDToken } from "./BLUSDToken";
 export type { BondNFT } from "./BondNFT";
 export type { ChickenBondManager } from "./ChickenBondManager";
@@ -7,3 +8,4 @@ export { BondNFT__factory } from "./factories/BondNFT__factory";
 export { BLUSDToken__factory } from "./factories/BLUSDToken__factory";
 export { ChickenBondManager__factory } from "./factories/ChickenBondManager__factory";
 export { ERC20Faucet__factory } from "./factories/ERC20Faucet__factory";
+export { BLUSDLPZap__factory } from "./factories/BLUSDLPZap__factory";

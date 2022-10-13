@@ -121,6 +121,10 @@ const config: HardhatUserConfig = {
     kiln: {
       url: "https://rpc.kiln.themerge.dev",
       accounts: [deployerAccount]
+    },
+
+    forkedMainnet: {
+      url: "http://localhost:8545"
     }
   },
 
@@ -255,6 +259,45 @@ task("deploy", "Deploys the contracts to the network")
       console.log();
       console.log(deployment);
       console.log();
+    }
+  );
+
+type StorageSlotParams = {
+  contractAddress: string;
+  walletAddress: string;
+  slotIndex: number;
+  value: string;
+};
+
+task("setStorageSlotIndex", "Returns the index of the balanceOf storage slot in an ERC20")
+  .addParam("contractAddress", "Address of the contract")
+  .addParam("walletAddress", "Address of the wallet balance to set")
+  .addOptionalParam("slotIndex", "Index of slot to set")
+  .addOptionalParam("value", "Value of slot to set (assumed to be a number)")
+  .setAction(
+    async (
+      {
+        contractAddress,
+        walletAddress,
+        slotIndex = 0,
+        value = "1000000000000000000000"
+      }: StorageSlotParams,
+      hre
+    ) => {
+      const utils = hre.ethers.utils;
+      const erc20 = await hre.ethers.getContractAt("ERC20", contractAddress);
+      const balanceBefore = await erc20.balanceOf(walletAddress);
+      await hre.ethers.provider.send("hardhat_setStorageAt", [
+        contractAddress,
+        utils.hexStripZeros(
+          utils.keccak256(
+            utils.defaultAbiCoder.encode(["address", "uint"], [walletAddress, slotIndex])
+          )
+        ),
+        hre.ethers.utils.hexlify(hre.ethers.utils.zeroPad(hre.ethers.BigNumber.from(value)._hex, 32))
+      ]);
+      const balanceNow = await erc20.balanceOf(walletAddress);
+      console.log({ balanceBefore: balanceBefore.toString(), balanceNow: balanceNow.toString() });
     }
   );
 

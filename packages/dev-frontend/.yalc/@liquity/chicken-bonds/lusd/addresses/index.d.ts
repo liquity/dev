@@ -1,1 +1,3 @@
-export { BOND_NFT_ADDRESS, CHICKEN_BOND_MANAGER_ADDRESS, BLUSD_TOKEN_ADDRESS, BLUSD_AMM_ADDRESS, BLUSD_AMM_STAKING_ADDRESS, LUSD_OVERRIDE_ADDRESS, } from './addresses.json';
+import mainnet from './mainnet.json';
+import goerli from './goerli.json';
+export { mainnet, goerli };

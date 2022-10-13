@@ -16,7 +16,7 @@ export const PoolDetails: React.FC = () => {
 
   return (
     <details>
-      <Box as="summary" sx={{ cursor: "pointer", mb: 3 }}>
+      <Box as="summary" sx={{ cursor: "pointer", mb: 3, ml: 2 }}>
         Pool details
       </Box>
 

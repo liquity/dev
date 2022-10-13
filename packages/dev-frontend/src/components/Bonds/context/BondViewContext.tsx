@@ -25,6 +25,7 @@ export type BondViewContextType = {
   bLusdBalance?: Decimal;
   lusdBalance?: Decimal;
   lpTokenBalance?: Decimal;
+  stakedLpTokenBalance?: Decimal;
   lpTokenSupply?: Decimal;
   bLusdAmmBLusdBalance?: Decimal;
   bLusdAmmLusdBalance?: Decimal;
@@ -37,7 +38,11 @@ export type BondViewContextType = {
   hasFoundContracts: boolean;
   isBLusdApprovedWithBlusdAmm: boolean;
   isLusdApprovedWithBlusdAmm: boolean;
-  inputToken: BLusdAmmTokenIndex;
+  isLusdApprovedWithAmmZapper: boolean;
+  isBLusdApprovedWithAmmZapper: boolean;
+  isBLusdLpApprovedWithAmmZapper: boolean;
+  isBLusdLpApprovedWithGauge: boolean;
+  inputToken: BLusdAmmTokenIndex.BLUSD | BLusdAmmTokenIndex.LUSD;
   isInputTokenApprovedWithBLusdAmm: boolean;
   getExpectedSwapOutput: (inputToken: BLusdAmmTokenIndex, inputAmount: Decimal) => Promise<Decimal>;
   getExpectedLpTokens: (bLusdAmount: Decimal, lusdAmount: Decimal) => Promise<Decimal>;

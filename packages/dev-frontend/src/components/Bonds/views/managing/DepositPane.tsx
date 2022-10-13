@@ -1,13 +1,15 @@
 import { Decimal } from "@liquity/lib-base";
 import React, { useEffect, useState } from "react";
-import { Flex, Button, Spinner } from "theme-ui";
+import { Flex, Button, Spinner, Checkbox, Label, Card, Text } from "theme-ui";
 import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { Icon } from "../../../Icon";
+import { InfoIcon } from "../../../InfoIcon";
 import { DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 import { BLusdAmmTokenIndex } from "../../context/transitions";
 import { PoolDetails } from "./PoolDetails";
+import type { ApprovePressedPayload } from "../../context/transitions";
 
 export const DepositPane: React.FC = () => {
   const {
@@ -15,8 +17,8 @@ export const DepositPane: React.FC = () => {
     statuses,
     lusdBalance,
     bLusdBalance,
-    isBLusdApprovedWithBlusdAmm,
-    isLusdApprovedWithBlusdAmm,
+    isBLusdApprovedWithAmmZapper,
+    isLusdApprovedWithAmmZapper,
     getExpectedLpTokens
   } = useBondView();
 
@@ -24,25 +26,31 @@ export const DepositPane: React.FC = () => {
   const [bLusdAmount, setBLusdAmount] = useState<Decimal>(Decimal.ZERO);
   const [lusdAmount, setLusdAmount] = useState<Decimal>(Decimal.ZERO);
   const [lpTokens, setLpTokens] = useState<Decimal>(Decimal.ZERO);
+  const [shouldStakeInGauge, setShouldStakeInGauge] = useState(false);
 
   const coalescedBLusdBalance = bLusdBalance ?? Decimal.ZERO;
   const coalescedLusdBalance = lusdBalance ?? Decimal.ZERO;
 
-  const isApprovePending = statuses.APPROVE_AMM === "PENDING";
+  const isApprovePending = statuses.APPROVE_SPENDER === "PENDING";
   const isManageLiquidityPending = statuses.MANAGE_LIQUIDITY === "PENDING";
   const isBLusdBalanceInsufficient = bLusdAmount.gt(coalescedBLusdBalance);
   const isLusdBalanceInsufficient = lusdAmount.gt(coalescedLusdBalance);
   const isAnyBalanceInsufficient = isBLusdBalanceInsufficient || isLusdBalanceInsufficient;
 
-  const tokensNeedingApproval = [
-    bLusdAmount.isZero || isBLusdApprovedWithBlusdAmm ? [] : [BLusdAmmTokenIndex.BLUSD],
-    lusdAmount.isZero || isLusdApprovedWithBlusdAmm ? [] : [BLusdAmmTokenIndex.LUSD]
-  ].flat();
-
-  const areInputTokensApprovedWithBLusdAmm = tokensNeedingApproval.length === 0;
+  const lusdNeedsApproval = lusdAmount.gt(0) && !isLusdApprovedWithAmmZapper;
+  const bLusdNeedsApproval = bLusdAmount.gt(0) && !isBLusdApprovedWithAmmZapper;
+  const doTokensNeedZapperApproval = lusdNeedsApproval || bLusdNeedsApproval;
 
   const handleApprovePressed = () => {
-    dispatchEvent("APPROVE_PRESSED", { tokensNeedingApproval });
+    const tokensNeedingApproval = [];
+    if (!isLusdApprovedWithAmmZapper && lusdAmount.gt(0)) {
+      tokensNeedingApproval.push(BLusdAmmTokenIndex.LUSD);
+    }
+    if (!isBLusdApprovedWithAmmZapper && bLusdAmount.gt(0)) {
+      tokensNeedingApproval.push(BLusdAmmTokenIndex.BLUSD);
+    }
+
+    dispatchEvent("APPROVE_PRESSED", { tokensNeedingApproval } as ApprovePressedPayload);
   };
 
   const handleConfirmPressed = () => {
@@ -50,12 +58,17 @@ export const DepositPane: React.FC = () => {
       action: "addLiquidity",
       bLusdAmount,
       lusdAmount,
-      minLpTokens: Decimal.ZERO // TODO
+      minLpTokens: lpTokens,
+      shouldStakeInGauge
     });
   };
 
   const handleBackPressed = () => {
     dispatchEvent("BACK_PRESSED");
+  };
+
+  const handleToggleShouldStakeInGauge = () => {
+    setShouldStakeInGauge(toggle => !toggle);
   };
 
   useEffect(() => {
@@ -86,7 +99,7 @@ export const DepositPane: React.FC = () => {
   return (
     <>
       <EditableRow
-        label="Deposit #1"
+        label="bLUSD amount"
         inputId="deposit-blusd"
         amount={bLusdAmount.prettify(2)}
         unit="bLUSD"
@@ -98,7 +111,7 @@ export const DepositPane: React.FC = () => {
       />
 
       <EditableRow
-        label="Deposit #2"
+        label="LUSD amount"
         inputId="deposit-lusd"
         amount={lusdAmount.prettify(2)}
         unit="LUSD"
@@ -118,6 +131,23 @@ export const DepositPane: React.FC = () => {
         inputId="deposit-mint-lp-tokens"
         amount={lpTokens.prettify(2)}
       />
+
+      <Label mb={2}>
+        <Flex sx={{ alignItems: "center" }}>
+          <Checkbox checked={shouldStakeInGauge} onChange={handleToggleShouldStakeInGauge} />
+          <Text sx={{ fontWeight: 300, fontSize: "16px" }}>Stake LP tokens in Curve gauge</Text>
+          <InfoIcon
+            placement="right"
+            size="xs"
+            tooltip={
+              <Card variant="tooltip">
+                Tick this box to have your Curve LP tokens staked in the bLUSD Curve gauge. Staked LP
+                tokens will earn protocol fees and Curve rewards.
+              </Card>
+            }
+          />
+        </Flex>
+      </Label>
 
       <PoolDetails />
 
@@ -145,7 +175,7 @@ export const DepositPane: React.FC = () => {
           Back
         </Button>
 
-        {areInputTokensApprovedWithBLusdAmm ? (
+        {!doTokensNeedZapperApproval ? (
           <Button
             variant="primary"
             onClick={handleConfirmPressed}

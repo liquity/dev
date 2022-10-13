@@ -11,6 +11,7 @@ export type Addresses = {
   BOND_NFT_ADDRESS: string | null;
   CHICKEN_BOND_MANAGER_ADDRESS: string | null;
   LUSD_OVERRIDE_ADDRESS: string | null;
+  BLUSD_LP_ZAP_ADDRESS: string | null;
 };
 
 const nullAddresses: Addresses = {
@@ -19,7 +20,8 @@ const nullAddresses: Addresses = {
   BLUSD_TOKEN_ADDRESS: null,
   BOND_NFT_ADDRESS: null,
   CHICKEN_BOND_MANAGER_ADDRESS: null,
-  LUSD_OVERRIDE_ADDRESS: null
+  LUSD_OVERRIDE_ADDRESS: null,
+  BLUSD_LP_ZAP_ADDRESS: null
 };
 
 export const chainIdAddressesMap: Partial<Record<number, Addresses>> = {
