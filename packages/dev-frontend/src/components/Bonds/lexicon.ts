@@ -201,7 +201,7 @@ export const TREASURY_PENDING = {
 export const TREASURY_ACQUIRED = {
   term: "Reserve",
   description:
-    "Contains a portion of the LUSD obtained from claimed bonds and captures the yield from the entire Treasury. It acts as a reserve backing the bLUSD supply. bLUSD can be redeemed for a pro-rata share of the LUSD held in the acquired bucket."
+    "Contains a portion of the LUSD obtained from claimed bonds and captures the yield from the entire Treasury. It acts as a reserve backing the bLUSD supply. bLUSD can be redeemed for a pro-rata share of the LUSD held in the Reserve bucket."
 };
 
 export const TREASURY_PERMANENT = {
