@@ -484,7 +484,8 @@ export const BondViewProvider: React.FC = props => {
           params.burnLpTokens,
           params.output,
           params.minAmount,
-          contracts.bLusdAmmZapper
+          contracts.bLusdAmmZapper,
+          contracts.bLusdAmm
         );
       } else if (params.action === "stakeLiquidity") {
         await api.stakeLiquidity(params.stakeAmount, contracts.bLusdGauge);
