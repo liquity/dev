@@ -61,8 +61,10 @@ export const WithdrawPane: React.FC = () => {
   const isManageLiquidityPending = statuses.MANAGE_LIQUIDITY === "PENDING";
   const isBalanceInsufficient = burnLpTokens.gt(coalescedLpTokenBalance);
 
+  // bLUSD single sided removal is done directly on Curve AMM pool, so it doesn’t require approval
+  const tokensNeedingApproval = output === BLusdAmmTokenIndex.BLUSD ? [] : [BLusdAmmTokenIndex.BLUSD_LUSD_LP];
   const handleApprovePressed = () => {
-    dispatchEvent("APPROVE_PRESSED", { tokensNeedingApproval: [BLusdAmmTokenIndex.BLUSD_LUSD_LP] });
+    dispatchEvent("APPROVE_PRESSED", { tokensNeedingApproval });
   };
 
   const handleOutputChange = (e: React.ChangeEvent<HTMLInputElement>) =>

@@ -49,14 +49,6 @@ import {
   TokenExchangeEvent,
   TokenExchangeEventObject
 } from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
-import {
-  BalancedLiquidityRemovedEvent,
-  BalancedLiquidityRemovedEventObject,
-  BLusdLiquidityAddedEvent,
-  BLusdLiquidityAddedEventObject,
-  SingleLiquidityRemovedEvent,
-  SingleLiquidityRemovedEventObject
-} from "@liquity/chicken-bonds/lusd/types/BLUSDLPZap";
 import type { EthersSigner } from "@liquity/lib-ethers";
 import mainnet from "@liquity/chicken-bonds/lusd/addresses/mainnet.json";
 import type {
@@ -873,7 +865,7 @@ const addLiquidity = async (
   minLpTokens: Decimal,
   shouldStakeInGauge: boolean,
   bLusdZapper: BLUSDLPZap | undefined
-): Promise<BLusdLiquidityAddedEventObject> => {
+): Promise<void> => {
   if (bLusdZapper === undefined) throw new Error("addLiquidity() failed: a dependency is null");
 
   const zapperFunction = shouldStakeInGauge ? "addLiquidityAndStake" : "addLiquidity";
@@ -893,16 +885,11 @@ const addLiquidity = async (
     )
   ).wait();
 
-  const addLiquidityEvent = receipt?.events?.find(
-    e => e.event === "BLusdLiquidityAdded"
-  ) as Maybe<BLusdLiquidityAddedEvent>;
-
-  if (addLiquidityEvent === undefined) {
-    throw new Error("addLiquidity() failed: couldn't find AddLiquidity event");
+  if (!receipt.status) {
+    throw new Error("addLiquidity() failed");
   }
 
-  console.log("addLiquidity() finished:", addLiquidityEvent.args);
-  return addLiquidityEvent.args;
+  console.log("addLiquidity() finished");
 };
 
 const getCoinBalances = (pool: CurveCryptoSwap2ETH) =>
@@ -934,7 +921,7 @@ const removeLiquidity = async (
   minBLusdAmount: Decimal,
   minLusdAmount: Decimal,
   bLusdZapper: BLUSDLPZap | undefined
-): Promise<BalancedLiquidityRemovedEventObject> => {
+): Promise<void> => {
   if (bLusdZapper === undefined) throw new Error("removeLiquidity() failed: a dependency is null");
 
   const receipt = await (
@@ -945,29 +932,22 @@ const removeLiquidity = async (
     )
   ).wait();
 
-  const removeLiquidityEvent = receipt?.events?.find(
-    e => e.event === "BalancedLiquidityRemoved"
-  ) as Maybe<BalancedLiquidityRemovedEvent>;
-
-  if (removeLiquidityEvent === undefined) {
-    throw new Error("removeLiquidity() failed: couldn't find BalancedLiquidityRemoved event");
+  if (!receipt.status) {
+    throw new Error("removeLiquidity() failed");
   }
 
-  console.log("removeLiquidity() finished:", removeLiquidityEvent.args);
-  return removeLiquidityEvent.args;
+  console.log("removeLiquidity() finished");
 };
 
-const removeLiquidityOneCoin = async (
+const removeLiquidityLUSD = async (
   burnLpTokens: Decimal,
-  output: BLusdAmmTokenIndex,
   minAmount: Decimal,
   bLusdZapper: BLUSDLPZap | undefined
-): Promise<SingleLiquidityRemovedEventObject> => {
+): Promise<void> => {
   if (bLusdZapper === undefined)
-    throw new Error("removeLiquidityOneCoin() failed: a dependency is null");
+    throw new Error("removeLiquidityLUSD() failed: a dependency is null");
 
-  const removeLiquidityFunction =
-    output === BLusdAmmTokenIndex.LUSD ? "removeLiquidityLUSD" : "removeLiquidityBLUSD";
+  const removeLiquidityFunction = "removeLiquidityLUSD";
 
   const gasEstimate = await bLusdZapper.estimateGas[removeLiquidityFunction](
     burnLpTokens.hex,
@@ -982,16 +962,59 @@ const removeLiquidityOneCoin = async (
     )
   ).wait();
 
-  const singleLiquidityRemovedEvent = receipt?.events?.find(
-    e => e?.event === "SingleLiquidityRemoved"
-  ) as Maybe<SingleLiquidityRemovedEvent>;
-
-  if (singleLiquidityRemovedEvent === undefined) {
-    throw new Error("removeLiquidityOneCoin() failed: couldn't find SingleLiquidityRemoved event");
+  if (!receipt.status) {
+    throw new Error("removeLiquidityLUSD() failed");
   }
 
-  console.log("removeLiquidityOneCoin() finished:", singleLiquidityRemovedEvent.args);
-  return singleLiquidityRemovedEvent.args;
+  console.log("removeLiquidityLUSD() finished");
+};
+
+const removeLiquidityBLUSD = async (
+  burnLpTokens: Decimal,
+  minAmount: Decimal,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<void> => {
+  if (bLusdAmm === undefined)
+    throw new Error("removeLiquidityBLUSD() failed: a dependency is null");
+
+  const removeLiquidityFunction = "remove_liquidity_one_coin(uint256,uint256,uint256,bool)";
+
+  const gasEstimate = await bLusdAmm.estimateGas[removeLiquidityFunction](
+    burnLpTokens.hex,
+    0,
+    minAmount.hex,
+    false,
+  );
+
+  const receipt = await (
+    await bLusdAmm[removeLiquidityFunction](
+      burnLpTokens.hex,
+      0,
+      minAmount.hex,
+      false,
+      { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
+    )
+  ).wait();
+
+  if (!receipt.status) {
+    throw new Error("removeLiquidityBLUSD() failed");
+  }
+
+  console.log("removeLiquidityBLUSD() finished");
+};
+
+const removeLiquidityOneCoin = async (
+  burnLpTokens: Decimal,
+  output: BLusdAmmTokenIndex,
+  minAmount: Decimal,
+  bLusdZapper: BLUSDLPZap | undefined,
+  bLusdAmm: CurveCryptoSwap2ETH | undefined
+): Promise<void> => {
+  if (output === BLusdAmmTokenIndex.LUSD) {
+    return removeLiquidityLUSD(burnLpTokens, minAmount, bLusdZapper);
+  } else {
+    return removeLiquidityBLUSD(burnLpTokens, minAmount, bLusdAmm);
+  }
 };
 
 const stakeLiquidity = async (
