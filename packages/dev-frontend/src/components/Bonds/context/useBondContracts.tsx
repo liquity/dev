@@ -26,6 +26,7 @@ import { useCallback } from "react";
 import type { BondsApi } from "./api";
 import type { Bond, ProtocolInfo, Stats } from "./transitions";
 import { BLusdAmmTokenIndex } from "./transitions";
+import type { Addresses } from "./transitions";
 import { useWeb3React } from "@web3-react/core";
 import { useBondAddresses } from "./BondAddressesContext";
 import type { CurveLiquidityGaugeV5 } from "@liquity/chicken-bonds/lusd/types/external/CurveLiquidityGaugeV5";
@@ -44,6 +45,7 @@ type BondsInformation = {
 };
 
 type BondContracts = {
+  addresses: Addresses;
   lusdToken: LUSDToken | undefined;
   bLusdToken: BLUSDToken | undefined;
   bondNft: BondNFT | undefined;
@@ -60,6 +62,8 @@ export const useBondContracts = (): BondContracts => {
   const { chainId } = useWeb3React();
   const isMainnet = chainId === 1;
 
+  const addresses = useBondAddresses();
+
   const {
     BLUSD_AMM_ADDRESS,
     BLUSD_TOKEN_ADDRESS,
@@ -68,7 +72,7 @@ export const useBondContracts = (): BondContracts => {
     LUSD_OVERRIDE_ADDRESS,
     BLUSD_LP_ZAP_ADDRESS,
     BLUSD_AMM_STAKING_ADDRESS
-  } = useBondAddresses();
+  } = addresses;
 
   const [lusdTokenDefault, lusdTokenDefaultStatus] = useContract<LUSDToken>(
     liquity.connection.addresses.lusdToken,
@@ -198,6 +202,7 @@ export const useBondContracts = (): BondContracts => {
   );
 
   return {
+    addresses,
     lusdToken,
     bLusdToken,
     bondNft,

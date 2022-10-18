@@ -125,10 +125,21 @@ export type SwapPayload = {
   minOutputAmount: Decimal;
 };
 
+export type Address = string | null;
+
+export type Addresses = {
+  BLUSD_AMM_ADDRESS: Address;
+  BLUSD_AMM_STAKING_ADDRESS: Address;
+  BLUSD_TOKEN_ADDRESS: Address;
+  BOND_NFT_ADDRESS: Address;
+  CHICKEN_BOND_MANAGER_ADDRESS: Address;
+  LUSD_OVERRIDE_ADDRESS: Address;
+  BLUSD_LP_ZAP_ADDRESS: Address;
+};
+
 // This payload is only dispatched by "Manage liquidity"
 export type ApprovePressedPayload = {
-  tokensNeedingApproval: BLusdAmmTokenIndex[];
-  spender?: string;
+  tokensNeedingApproval: Map<BLusdAmmTokenIndex, Address>;
 };
 
 export type AddLiquidityPayload = {

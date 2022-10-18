@@ -3,16 +3,7 @@ import React, { useContext, createContext } from "react";
 
 import mainnet from "@liquity/chicken-bonds/lusd/addresses/mainnet.json";
 import goerli from "@liquity/chicken-bonds/lusd/addresses/goerli.json";
-
-export type Addresses = {
-  BLUSD_AMM_ADDRESS: string | null;
-  BLUSD_AMM_STAKING_ADDRESS: string | null;
-  BLUSD_TOKEN_ADDRESS: string | null;
-  BOND_NFT_ADDRESS: string | null;
-  CHICKEN_BOND_MANAGER_ADDRESS: string | null;
-  LUSD_OVERRIDE_ADDRESS: string | null;
-  BLUSD_LP_ZAP_ADDRESS: string | null;
-};
+import { Addresses } from "./transitions";
 
 const nullAddresses: Addresses = {
   BLUSD_AMM_ADDRESS: null,

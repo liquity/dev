@@ -9,7 +9,7 @@ import { DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 import { BLusdAmmTokenIndex } from "../../context/transitions";
 import { PoolDetails } from "./PoolDetails";
-import type { ApprovePressedPayload } from "../../context/transitions";
+import type { Address, ApprovePressedPayload } from "../../context/transitions";
 
 export const DepositPane: React.FC = () => {
   const {
@@ -19,7 +19,8 @@ export const DepositPane: React.FC = () => {
     bLusdBalance,
     isBLusdApprovedWithAmmZapper,
     isLusdApprovedWithAmmZapper,
-    getExpectedLpTokens
+    getExpectedLpTokens,
+    addresses
   } = useBondView();
 
   const editingState = useState<string>();
@@ -37,17 +38,20 @@ export const DepositPane: React.FC = () => {
   const isLusdBalanceInsufficient = lusdAmount.gt(coalescedLusdBalance);
   const isAnyBalanceInsufficient = isBLusdBalanceInsufficient || isLusdBalanceInsufficient;
 
-  const lusdNeedsApproval = lusdAmount.gt(0) && !isLusdApprovedWithAmmZapper;
-  const bLusdNeedsApproval = bLusdAmount.gt(0) && !isBLusdApprovedWithAmmZapper;
-  const doTokensNeedZapperApproval = lusdNeedsApproval || bLusdNeedsApproval;
+  const isDepositingLusd = lusdAmount.gt(0);
+  const isDepositingBLusd = bLusdAmount.gt(0);
+
+  const zapperNeedsLusdApproval = isDepositingLusd && !isLusdApprovedWithAmmZapper;
+  const zapperNeedsBLusdApproval = isDepositingBLusd && !isBLusdApprovedWithAmmZapper;
+  const isApprovalNeeded = zapperNeedsLusdApproval || zapperNeedsBLusdApproval;
 
   const handleApprovePressed = () => {
-    const tokensNeedingApproval = [];
-    if (!isLusdApprovedWithAmmZapper && lusdAmount.gt(0)) {
-      tokensNeedingApproval.push(BLusdAmmTokenIndex.LUSD);
+    const tokensNeedingApproval = new Map<BLusdAmmTokenIndex, Address>();
+    if (zapperNeedsLusdApproval) {
+      tokensNeedingApproval.set(BLusdAmmTokenIndex.LUSD, addresses.BLUSD_LP_ZAP_ADDRESS);
     }
-    if (!isBLusdApprovedWithAmmZapper && bLusdAmount.gt(0)) {
-      tokensNeedingApproval.push(BLusdAmmTokenIndex.BLUSD);
+    if (zapperNeedsBLusdApproval) {
+      tokensNeedingApproval.set(BLusdAmmTokenIndex.BLUSD, addresses.BLUSD_LP_ZAP_ADDRESS);
     }
 
     dispatchEvent("APPROVE_PRESSED", { tokensNeedingApproval } as ApprovePressedPayload);
@@ -122,15 +126,19 @@ export const DepositPane: React.FC = () => {
         maxedOut={lusdAmount.eq(coalescedLusdBalance)}
       />
 
-      <Flex sx={{ justifyContent: "center", mb: 3 }}>
-        <Icon name="arrow-down" size="lg" />
-      </Flex>
+      {!isApprovalNeeded && (
+        <>
+          <Flex sx={{ justifyContent: "center", mb: 3 }}>
+            <Icon name="arrow-down" size="lg" />
+          </Flex>
 
-      <DisabledEditableRow
-        label="Mint LP tokens"
-        inputId="deposit-mint-lp-tokens"
-        amount={lpTokens.prettify(2)}
-      />
+          <DisabledEditableRow
+            label="Mint LP tokens"
+            inputId="deposit-mint-lp-tokens"
+            amount={lpTokens.prettify(2)}
+          />
+        </>
+      )}
 
       <Label mb={2}>
         <Flex sx={{ alignItems: "center" }}>
@@ -175,7 +183,7 @@ export const DepositPane: React.FC = () => {
           Back
         </Button>
 
-        {!doTokensNeedZapperApproval ? (
+        {!isApprovalNeeded ? (
           <Button
             variant="primary"
             onClick={handleConfirmPressed}

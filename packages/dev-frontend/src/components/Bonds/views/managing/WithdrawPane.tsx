@@ -7,7 +7,7 @@ import { Icon } from "../../../Icon";
 import { DisabledEditableAmounts, DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
 import { Warning } from "../../../Warning";
 import { useBondView } from "../../context/BondViewContext";
-import { BLusdAmmTokenIndex } from "../../context/transitions";
+import { ApprovePressedPayload, BLusdAmmTokenIndex } from "../../context/transitions";
 import { PoolDetails } from "./PoolDetails";
 
 const tokenSymbol = new Map([
@@ -48,7 +48,8 @@ export const WithdrawPane: React.FC = () => {
     lpTokenBalance,
     getExpectedWithdrawal,
     isBLusdLpApprovedWithAmmZapper,
-    stakedLpTokenBalance
+    stakedLpTokenBalance,
+    addresses
   } = useBondView();
 
   const editingState = useState<string>();
@@ -60,11 +61,14 @@ export const WithdrawPane: React.FC = () => {
   const coalescedLpTokenBalance = lpTokenBalance ?? Decimal.ZERO;
   const isManageLiquidityPending = statuses.MANAGE_LIQUIDITY === "PENDING";
   const isBalanceInsufficient = burnLpTokens.gt(coalescedLpTokenBalance);
+  const needsApproval = output !== BLusdAmmTokenIndex.BLUSD && !isBLusdLpApprovedWithAmmZapper;
 
-  // bLUSD single sided removal is done directly on Curve AMM pool, so it doesn’t require approval
-  const tokensNeedingApproval = output === BLusdAmmTokenIndex.BLUSD ? [] : [BLusdAmmTokenIndex.BLUSD_LUSD_LP];
   const handleApprovePressed = () => {
-    dispatchEvent("APPROVE_PRESSED", { tokensNeedingApproval });
+    const tokensNeedingApproval = new Map();
+    if (needsApproval) {
+      tokensNeedingApproval.set(BLusdAmmTokenIndex.BLUSD_LUSD_LP, addresses.BLUSD_LP_ZAP_ADDRESS);
+    }
+    dispatchEvent("APPROVE_PRESSED", { tokensNeedingApproval } as ApprovePressedPayload);
   };
 
   const handleOutputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -195,7 +199,7 @@ export const WithdrawPane: React.FC = () => {
           Back
         </Button>
 
-        {!isBLusdLpApprovedWithAmmZapper && (
+        {needsApproval && (
           <Button
             variant="primary"
             onClick={handleApprovePressed}
@@ -205,7 +209,7 @@ export const WithdrawPane: React.FC = () => {
           </Button>
         )}
 
-        {isBLusdLpApprovedWithAmmZapper && (
+        {!needsApproval && (
           <Button
             variant="primary"
             onClick={handleConfirmPressed}

@@ -4,13 +4,17 @@ import { Flex, Button, Spinner, Text } from "theme-ui";
 import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { EditableRow } from "../../../Trove/Editor";
-import { useBondAddresses } from "../../context/BondAddressesContext";
 import { useBondView } from "../../context/BondViewContext";
-import { BLusdAmmTokenIndex } from "../../context/transitions";
+import { ApprovePressedPayload, BLusdAmmTokenIndex } from "../../context/transitions";
 
 export const StakePane: React.FC = () => {
-  const { dispatchEvent, statuses, lpTokenBalance, isBLusdLpApprovedWithGauge } = useBondView();
-  const { BLUSD_AMM_STAKING_ADDRESS } = useBondAddresses();
+  const {
+    dispatchEvent,
+    statuses,
+    lpTokenBalance,
+    isBLusdLpApprovedWithGauge,
+    addresses
+  } = useBondView();
 
   const editingState = useState<string>();
   const [stakeAmount, setStakeAmount] = useState<Decimal>(Decimal.ZERO);
@@ -21,10 +25,16 @@ export const StakePane: React.FC = () => {
   const isBalanceInsufficient = stakeAmount.gt(coalescedLpTokenBalance);
 
   const handleApprovePressed = () => {
+    const tokensNeedingApproval = new Map();
+    if (!isBLusdLpApprovedWithGauge) {
+      tokensNeedingApproval.set(
+        BLusdAmmTokenIndex.BLUSD_LUSD_LP,
+        addresses.BLUSD_AMM_STAKING_ADDRESS
+      );
+    }
     dispatchEvent("APPROVE_PRESSED", {
-      tokensNeedingApproval: [BLusdAmmTokenIndex.BLUSD_LUSD_LP],
-      spender: BLUSD_AMM_STAKING_ADDRESS ?? undefined
-    });
+      tokensNeedingApproval
+    } as ApprovePressedPayload);
   };
 
   const handleConfirmPressed = () => {

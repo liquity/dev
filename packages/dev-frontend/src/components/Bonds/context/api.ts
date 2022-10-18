@@ -750,6 +750,11 @@ const getExpectedSwapOutputMainnet = async (
   inputAmount: Decimal,
   bLusdAmm: CurveCryptoSwap2ETH
 ): Promise<Decimal> => {
+  const bLusdAmmBalance = await bLusdAmm.balances(0);
+  // Initial Curve bLUSD price before liquidity = 1.29, reciprocal expected
+  const reciprocal = Decimal.from(1).div(1.29);
+  if (bLusdAmmBalance.eq(0)) return inputAmount.div(reciprocal);
+
   const swaps = CurveRegistrySwaps__factory.connect(CURVE_REGISTRY_SWAPS_ADDRESS, bLusdAmm.signer);
 
   return decimalify(
@@ -828,33 +833,32 @@ const swapTokensMainnet = async (
   console.log("swapTokensMainnet() finished");
 };
 
+const getExpectedLpTokensAmountViaZapper = async (
+  bLusdAmount: Decimal,
+  lusdAmount: Decimal,
+  bLusdZapper: BLUSDLPZap
+): Promise<Decimal> => {
+  // allow 0.1% rounding error
+  return decimalify(await bLusdZapper.getMinLPTokens(bLusdAmount.hex, lusdAmount.hex)).mul(0.99);
+};
+
 const getExpectedLpTokens = async (
   bLusdAmount: Decimal,
   lusdAmount: Decimal,
-  bLusdZapper: BLUSDLPZap,
-  signer: Signer
+  bLusdZapper: BLUSDLPZap
 ): Promise<Decimal> => {
   // Curve's calc_token_amount has rounding errors and they enforce a minimum 0.1% slippage
   let expectedLpTokenAmount = Decimal.ZERO;
   try {
-    expectedLpTokenAmount = decimalify(
-      await bLusdZapper.getMinLPTokens(bLusdAmount.hex, lusdAmount.hex)
-    ).mul(0.99);
+    // If the user is depositing bLUSD single sided, they won't have approved any.. TODO
+    expectedLpTokenAmount = await getExpectedLpTokensAmountViaZapper(
+      bLusdAmount,
+      lusdAmount,
+      bLusdZapper
+    );
   } catch {
-    // Curve throws if there's no liquidity, in which case we can fallback to a staticCall
-    // TODO: check the below below works
-    const gasEstimate = await bLusdZapper.estimateGas.addLiquidity(
-      bLusdAmount.hex,
-      lusdAmount.hex,
-      Decimal.ZERO.hex
-    );
-    expectedLpTokenAmount = decimalify(
-      await bLusdZapper
-        .connect(signer)
-        .callStatic.addLiquidity(bLusdAmount.hex, lusdAmount.hex, Decimal.ZERO.hex, {
-          gasLimit: gasEstimate.mul(6).div(5) // Add 20% overhead (we've seen it fail otherwise)
-        })
-    );
+    // Curve throws if there's no liquidity
+    return expectedLpTokenAmount;
   }
   return expectedLpTokenAmount;
 };
@@ -898,7 +902,8 @@ const getCoinBalances = (pool: CurveCryptoSwap2ETH) =>
 const getExpectedWithdrawal = async (
   burnLp: Decimal,
   output: BLusdAmmTokenIndex | "both",
-  bLusdZapper: BLUSDLPZap
+  bLusdZapper: BLUSDLPZap,
+  bLusdAmm: CurveCryptoSwap2ETH
 ): Promise<Map<BLusdAmmTokenIndex, Decimal>> => {
   if (output === "both") {
     const [bLusdAmount, lusdAmount] = await bLusdZapper.getMinWithdrawBalanced(burnLp.hex);
@@ -910,9 +915,9 @@ const getExpectedWithdrawal = async (
   } else {
     const withdrawEstimatorFunction =
       output === BLusdAmmTokenIndex.LUSD
-        ? bLusdZapper.getMinWithdrawLUSD
-        : bLusdZapper.getMinWithdrawBLUSD;
-    return new Map([[output, await withdrawEstimatorFunction(burnLp.hex).then(decimalify)]]);
+        ? () => bLusdZapper.getMinWithdrawLUSD(burnLp.hex)
+        : () => bLusdAmm.calc_withdraw_one_coin(burnLp.hex, 0);
+    return new Map([[output, await withdrawEstimatorFunction().then(decimalify)]]);
   }
 };
 
@@ -974,8 +979,7 @@ const removeLiquidityBLUSD = async (
   minAmount: Decimal,
   bLusdAmm: CurveCryptoSwap2ETH | undefined
 ): Promise<void> => {
-  if (bLusdAmm === undefined)
-    throw new Error("removeLiquidityBLUSD() failed: a dependency is null");
+  if (bLusdAmm === undefined) throw new Error("removeLiquidityBLUSD() failed: a dependency is null");
 
   const removeLiquidityFunction = "remove_liquidity_one_coin(uint256,uint256,uint256,bool)";
 
@@ -983,7 +987,7 @@ const removeLiquidityBLUSD = async (
     burnLpTokens.hex,
     0,
     minAmount.hex,
-    false,
+    false
   );
 
   const receipt = await (
