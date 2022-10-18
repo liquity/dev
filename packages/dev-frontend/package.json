@@ -10,6 +10,7 @@
     "@fortawesome/free-solid-svg-icons": "5.15.2",
     "@fortawesome/react-fontawesome": "0.1.14",
     "@liquity/chicken-bonds": "file:.yalc/@liquity/chicken-bonds",
+    "@metamask/eth-sig-util": "5.0.0",
     "@popperjs/core": "2.9.1",
     "@testing-library/dom": "7.30.0",
     "@testing-library/jest-dom": "5.11.9",

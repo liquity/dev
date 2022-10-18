@@ -17,12 +17,15 @@ import {
 import { useBondView } from "../../context/BondViewContext";
 import { BLusdAmmTokenIndex } from "../../context/transitions";
 
-const tokenSymbol: Record<BLusdAmmTokenIndex, string> = {
+const tokenSymbol: Record<BLusdAmmTokenIndex.BLUSD | BLusdAmmTokenIndex.LUSD, string> = {
   [BLusdAmmTokenIndex.BLUSD]: "bLUSD",
   [BLusdAmmTokenIndex.LUSD]: "LUSD"
 };
 
-const outputToken: Record<BLusdAmmTokenIndex, BLusdAmmTokenIndex> = {
+const outputToken: Record<
+  BLusdAmmTokenIndex.BLUSD | BLusdAmmTokenIndex.LUSD,
+  BLusdAmmTokenIndex.BLUSD | BLusdAmmTokenIndex.LUSD
+> = {
   [BLusdAmmTokenIndex.BLUSD]: BLusdAmmTokenIndex.LUSD,
   [BLusdAmmTokenIndex.LUSD]: BLusdAmmTokenIndex.BLUSD
 };

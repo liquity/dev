@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ERC20Faucet__factory = exports.ChickenBondManager__factory = exports.BLUSDToken__factory = exports.BondNFT__factory = exports.factories = void 0;
+exports.BLUSDLPZap__factory = exports.ERC20Faucet__factory = exports.ChickenBondManager__factory = exports.BLUSDToken__factory = exports.BondNFT__factory = exports.factories = void 0;
 exports.factories = __importStar(require("./factories"));
 var BondNFT__factory_1 = require("./factories/BondNFT__factory");
 Object.defineProperty(exports, "BondNFT__factory", { enumerable: true, get: function () { return BondNFT__factory_1.BondNFT__factory; } });
@@ -33,3 +33,5 @@ var ChickenBondManager__factory_1 = require("./factories/ChickenBondManager__fac
 Object.defineProperty(exports, "ChickenBondManager__factory", { enumerable: true, get: function () { return ChickenBondManager__factory_1.ChickenBondManager__factory; } });
 var ERC20Faucet__factory_1 = require("./factories/ERC20Faucet__factory");
 Object.defineProperty(exports, "ERC20Faucet__factory", { enumerable: true, get: function () { return ERC20Faucet__factory_1.ERC20Faucet__factory; } });
+var BLUSDLPZap__factory_1 = require("./factories/BLUSDLPZap__factory");
+Object.defineProperty(exports, "BLUSDLPZap__factory", { enumerable: true, get: function () { return BLUSDLPZap__factory_1.BLUSDLPZap__factory; } });

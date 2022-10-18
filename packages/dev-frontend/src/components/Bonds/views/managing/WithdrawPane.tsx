@@ -5,8 +5,9 @@ import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { Icon } from "../../../Icon";
 import { DisabledEditableAmounts, DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
+import { Warning } from "../../../Warning";
 import { useBondView } from "../../context/BondViewContext";
-import { BLusdAmmTokenIndex } from "../../context/transitions";
+import { ApprovePressedPayload, BLusdAmmTokenIndex } from "../../context/transitions";
 import { PoolDetails } from "./PoolDetails";
 
 const tokenSymbol = new Map([
@@ -41,16 +42,34 @@ const zeros = new Map<BLusdAmmTokenIndex, Decimal>([
 ]);
 
 export const WithdrawPane: React.FC = () => {
-  const { dispatchEvent, statuses, lpTokenBalance, getExpectedWithdrawal } = useBondView();
+  const {
+    dispatchEvent,
+    statuses,
+    lpTokenBalance,
+    getExpectedWithdrawal,
+    isBLusdLpApprovedWithAmmZapper,
+    stakedLpTokenBalance,
+    addresses
+  } = useBondView();
 
   const editingState = useState<string>();
   const [burnLpTokens, setBurnLp] = useState<Decimal>(Decimal.ZERO);
   const [output, setOutput] = useState<BLusdAmmTokenIndex | "both">("both");
   const [withdrawal, setWithdrawal] = useState<Map<BLusdAmmTokenIndex, Decimal>>(zeros);
 
+  const isApprovePending = statuses.APPROVE_SPENDER === "PENDING";
   const coalescedLpTokenBalance = lpTokenBalance ?? Decimal.ZERO;
   const isManageLiquidityPending = statuses.MANAGE_LIQUIDITY === "PENDING";
   const isBalanceInsufficient = burnLpTokens.gt(coalescedLpTokenBalance);
+  const needsApproval = output !== BLusdAmmTokenIndex.BLUSD && !isBLusdLpApprovedWithAmmZapper;
+
+  const handleApprovePressed = () => {
+    const tokensNeedingApproval = new Map();
+    if (needsApproval) {
+      tokensNeedingApproval.set(BLusdAmmTokenIndex.BLUSD_LUSD_LP, addresses.BLUSD_LP_ZAP_ADDRESS);
+    }
+    dispatchEvent("APPROVE_PRESSED", { tokensNeedingApproval } as ApprovePressedPayload);
+  };
 
   const handleOutputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setOutput(checkOutput(e.target.value));
@@ -104,6 +123,12 @@ export const WithdrawPane: React.FC = () => {
 
   return (
     <>
+      {stakedLpTokenBalance?.nonZero && (
+        <Warning>
+          You {lpTokenBalance?.nonZero && " also "} have {stakedLpTokenBalance.shorten()} staked LP
+          tokens. Unstake them to withdraw liquidity from them.
+        </Warning>
+      )}
       <EditableRow
         label="Burn LP Tokens"
         inputId="withdraw-burn-lp"
@@ -146,12 +171,12 @@ export const WithdrawPane: React.FC = () => {
       <DisabledEditableRow label="Withdraw" inputId="withdraw-output-amount">
         <DisabledEditableAmounts sx={{ justifyContent: "flex-start" }}>
           {Array.from(withdrawal.entries()).map(([token, amount], i) => (
-            <>
+            <React.Fragment key={i}>
               {i > 0 && <Text sx={{ fontWeight: "light", mx: "12px" }}>+</Text>}
               <WithdrawnAmount symbol={tokenSymbol.get(token) ?? ""}>
                 {amount.prettify(2)}
               </WithdrawnAmount>
-            </>
+            </React.Fragment>
           ))}
         </DisabledEditableAmounts>
       </DisabledEditableRow>
@@ -166,17 +191,37 @@ export const WithdrawPane: React.FC = () => {
       )}
 
       <Flex variant="layout.actions">
-        <Button variant="cancel" onClick={handleBackPressed} disabled={isManageLiquidityPending}>
+        <Button
+          variant="cancel"
+          onClick={handleBackPressed}
+          disabled={isApprovePending || isManageLiquidityPending}
+        >
           Back
         </Button>
 
-        <Button
-          variant="primary"
-          onClick={handleConfirmPressed}
-          disabled={burnLpTokens.isZero || isBalanceInsufficient || isManageLiquidityPending}
-        >
-          {isManageLiquidityPending ? <Spinner size="28px" sx={{ color: "white" }} /> : <>Confirm</>}
-        </Button>
+        {needsApproval && (
+          <Button
+            variant="primary"
+            onClick={handleApprovePressed}
+            disabled={burnLpTokens.isZero || isApprovePending}
+          >
+            {isApprovePending ? <Spinner size="28px" sx={{ color: "white" }} /> : <>Approve</>}
+          </Button>
+        )}
+
+        {!needsApproval && (
+          <Button
+            variant="primary"
+            onClick={handleConfirmPressed}
+            disabled={burnLpTokens.isZero || isBalanceInsufficient || isManageLiquidityPending}
+          >
+            {isManageLiquidityPending ? (
+              <Spinner size="28px" sx={{ color: "white" }} />
+            ) : (
+              <>Confirm</>
+            )}
+          </Button>
+        )}
       </Flex>
     </>
   );
