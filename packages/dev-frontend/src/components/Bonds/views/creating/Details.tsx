@@ -192,10 +192,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
 
       <HorizontalSlider
         name={"Simulate market price"}
-        description={`
-                The market price of bLUSD impacts how long it will take to rebond and break even. The
-                market price has a minimum value ("floor price") which is determined by the
-                Treasury's Reserve bucket relative to the bLUSD supply.`}
+        description={`The market price of bLUSD impacts how long it will take to rebond and break even. The actual times may be overestimated as the simulator is based on the current bLUSD accrual rate, not taking into account potential rate adjustments (see https://liquity.gitbook.io/chicken-bonds/faq/economic-design#_44lrt4qpho3a).`}
         value={simulatedProtocolInfo.simulatedMarketPrice}
         min={marketPriceMin}
         max={marketPriceMax}
