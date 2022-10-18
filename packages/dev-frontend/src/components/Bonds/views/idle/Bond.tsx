@@ -104,7 +104,7 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
           alt="NFT image representation of your bond."
           onClick={() => {
             window.open(
-              `https://opensea.io/assets/ethereum/${BOND_NFT_ADDRESS}/${bond.id}`,
+              `https://looksrare.org/collections/${BOND_NFT_ADDRESS}/${bond.id}`,
               "_blank"
             );
           }}
