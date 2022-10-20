@@ -13,6 +13,10 @@ const PoolBalance: React.FC<{ symbol: string }> = ({ symbol, children }) => (
 
 export const PoolDetails: React.FC = () => {
   const { lpTokenSupply, bLusdAmmBLusdBalance, bLusdAmmLusdBalance } = useBondView();
+  const poolBalanceRatio =
+    bLusdAmmBLusdBalance && bLusdAmmLusdBalance
+      ? bLusdAmmLusdBalance.div(bLusdAmmBLusdBalance)
+      : Decimal.ONE;
 
   return (
     <details>
@@ -29,12 +33,21 @@ export const PoolDetails: React.FC = () => {
             <PoolBalance symbol="bLUSD">
               {(bLusdAmmBLusdBalance ?? Decimal.ZERO).prettify(2)}
             </PoolBalance>
-
             <Text sx={{ fontWeight: "light", mx: "12px" }}>+</Text>
-
             <PoolBalance symbol="LUSD">
               {(bLusdAmmLusdBalance ?? Decimal.ZERO).prettify(2)}
             </PoolBalance>
+          </StaticAmounts>
+        </StaticRow>
+
+        <StaticRow label="Pool balance ratio">
+          <StaticAmounts
+            sx={{ alignItems: "center", justifyContent: "flex-start" }}
+            inputId="deposit-pool-ratio"
+          >
+            <PoolBalance symbol="bLUSD">1</PoolBalance>
+            <Text sx={{ fontWeight: "thin", mx: "6px" }}>:</Text>
+            <PoolBalance symbol="LUSD">{poolBalanceRatio.prettify(2)}</PoolBalance>
           </StaticAmounts>
         </StaticRow>
 
