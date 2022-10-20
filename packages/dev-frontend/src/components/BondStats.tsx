@@ -65,6 +65,14 @@ export const BondStats: React.FC<BondStatsProps> = () => {
           unit="%"
         />
       </Statistic>
+      <Statistic name={l.BLUSD_LP_APR.term} tooltip={l.BLUSD_LP_APR.description}>
+        <Metric
+          value={
+            protocolInfo?.bLusdLpApr !== undefined ? protocolInfo.bLusdLpApr.prettify(2) : "N/A"
+          }
+          unit="%"
+        />
+      </Statistic>
       <Statistic
         name={l.BLUSD_YIELD_AMPLIFICATION.term}
         tooltip={l.BLUSD_YIELD_AMPLIFICATION.description}

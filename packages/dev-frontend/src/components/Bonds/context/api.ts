@@ -124,10 +124,13 @@ const getRoute = (inputToken: BLusdAmmTokenIndex): [RouteAddresses, RouteSwaps] 
 type CachedYearnApys = {
   lusd3Crv: Decimal | undefined;
   stabilityPool: Decimal | undefined;
+  bLusdLusd3Crv: Decimal | undefined;
 };
-let cachedYearnApys: CachedYearnApys = {
+
+let cachedApys: CachedYearnApys = {
   lusd3Crv: undefined,
-  stabilityPool: undefined
+  stabilityPool: undefined,
+  bLusdLusd3Crv: undefined
 };
 
 type YearnVault = Partial<{
@@ -139,9 +142,35 @@ type YearnVault = Partial<{
   };
 }>;
 
+type CurveApy = Partial<{
+  data: {
+    poolData: Array<{ id: string; gaugeRewards: Array<{ apy: number }> }>;
+  };
+}>;
+
+const CURVE_POOL_ID = "factory-crypto-134";
+
+const cacheCurveLpApy = async (): Promise<void> => {
+  try {
+    const curveResponse = (await (
+      await window.fetch("https://api.curve.fi/api/getPools/ethereum/factory-crypto")
+    ).json()) as CurveApy;
+
+    const pool = curveResponse.data?.poolData.find(pool => pool.id === CURVE_POOL_ID);
+    const apy = pool?.gaugeRewards.reduce((total, current) => total + current.apy, 0);
+
+    if (apy === undefined) return;
+
+    cachedApys.bLusdLusd3Crv = Decimal.from(apy);
+  } catch (error: unknown) {
+    console.log("cacheCurveLpApy failed");
+    console.error(error);
+  }
+};
+
 const cacheYearnVaultApys = async (): Promise<void> => {
   try {
-    if (cachedYearnApys.lusd3Crv !== undefined) return;
+    if (cachedApys.lusd3Crv !== undefined) return;
 
     const yearnResponse = (await (
       await window.fetch("https://api.yearn.finance/v1/chains/1/vaults/all")
@@ -162,9 +191,10 @@ const cacheYearnVaultApys = async (): Promise<void> => {
       return;
     }
 
-    cachedYearnApys.lusd3Crv = Decimal.from(lusd3CrvVault.apy.net_apy);
-    cachedYearnApys.stabilityPool = Decimal.from(stabilityPoolVault.apy.net_apy);
+    cachedApys.lusd3Crv = Decimal.from(lusd3CrvVault.apy.net_apy);
+    cachedApys.stabilityPool = Decimal.from(stabilityPoolVault.apy.net_apy);
   } catch (error: unknown) {
+    console.log("cacheYearnVaultApys failed");
     console.error(error);
   }
 };
@@ -399,12 +429,17 @@ const getProtocolInfo = async (
     total: decimalify(pending.add(reserve).add(permanent))
   };
 
-  if (cachedYearnApys.lusd3Crv === undefined || cachedYearnApys.stabilityPool === undefined) {
+  if (cachedApys.lusd3Crv === undefined || cachedApys.stabilityPool === undefined) {
     await cacheYearnVaultApys();
+  }
+
+  if (cachedApys.bLusdLusd3Crv === undefined) {
+    await cacheCurveLpApy();
   }
 
   let yieldAmplification: Maybe<Decimal> = undefined;
   let bLusdApr: Maybe<Decimal> = undefined;
+  let bLusdLpApr: Maybe<Decimal> = cachedApys.bLusdLusd3Crv;
 
   const protocolOwnedLusdInStabilityPool = decimalify(await chickenBondManager.getOwnedLUSDInSP());
   const protocolLusdInStabilityPool = treasury.pending.add(protocolOwnedLusdInStabilityPool);
@@ -416,24 +451,22 @@ const getProtocolInfo = async (
   };
 
   if (
-    cachedYearnApys.lusd3Crv !== undefined &&
-    cachedYearnApys.stabilityPool !== undefined &&
+    cachedApys.lusd3Crv !== undefined &&
+    cachedApys.stabilityPool !== undefined &&
     treasury.reserve.gt(0)
   ) {
-    const protocolStabilityPoolYield = cachedYearnApys.stabilityPool.mul(
-      protocolLusdInStabilityPool
-    );
-    const protocolCurveYield = cachedYearnApys.lusd3Crv.mul(protocolLusdInCurve);
+    const protocolStabilityPoolYield = cachedApys.stabilityPool.mul(protocolLusdInStabilityPool);
+    const protocolCurveYield = cachedApys.lusd3Crv.mul(protocolLusdInCurve);
     bLusdApr = protocolStabilityPoolYield.add(protocolCurveYield).div(treasury.reserve);
-    yieldAmplification = bLusdApr.div(cachedYearnApys.stabilityPool);
+    yieldAmplification = bLusdApr.div(cachedApys.stabilityPool);
 
     fairPrice.lower = protocolLusdInStabilityPool
       .sub(treasury.pending)
-      .add(protocolLusdInCurve.mul(cachedYearnApys.lusd3Crv.div(cachedYearnApys.stabilityPool)))
+      .add(protocolLusdInCurve.mul(cachedApys.lusd3Crv.div(cachedApys.stabilityPool)))
       .div(bLusdSupply);
 
     fairPrice.upper = protocolLusdInStabilityPool
-      .add(protocolLusdInCurve.mul(cachedYearnApys.lusd3Crv.div(cachedYearnApys.stabilityPool)))
+      .add(protocolLusdInCurve.mul(cachedApys.lusd3Crv.div(cachedApys.stabilityPool)))
       .div(bLusdSupply);
   }
 
@@ -474,7 +507,8 @@ const getProtocolInfo = async (
     rebondDays,
     simulatedMarketPrice,
     yieldAmplification,
-    bLusdApr
+    bLusdApr,
+    bLusdLpApr
   };
 };
 

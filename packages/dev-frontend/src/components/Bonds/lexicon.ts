@@ -180,6 +180,12 @@ export const BLUSD_APR = {
   description: "The APR of bLUSD, based on the yield generated from each bucket in the Treasury."
 };
 
+export const BLUSD_LP_APR = {
+  term: "LP APR",
+  description:
+    "The APR from providing liquidity to the bLUSD/LUSD-3CRV pool. A combination of LUSD rewards from Chicken-in fees and Curve rewards."
+};
+
 export const BLUSD_YIELD_AMPLIFICATION = {
   term: "Yield amplification",
   description:
