@@ -14,6 +14,9 @@
       "**/react-scripts"
     ]
   },
+  "engines": {
+    "node": ">=14.0.0 <17.0.0"
+  },
   "release": {
     "extends": "semantic-release-monorepo",
     "branches": [

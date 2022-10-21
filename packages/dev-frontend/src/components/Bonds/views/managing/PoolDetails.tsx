@@ -34,7 +34,7 @@ export const PoolDetails: React.FC = () => {
               {(bLusdAmmBLusdBalance ?? Decimal.ZERO).prettify(2)}
             </PoolBalance>
             <Text sx={{ fontWeight: "light", mx: "12px" }}>+</Text>
-            <PoolBalance symbol="LUSD">
+            <PoolBalance symbol="LUSD-3CRV">
               {(bLusdAmmLusdBalance ?? Decimal.ZERO).prettify(2)}
             </PoolBalance>
           </StaticAmounts>
