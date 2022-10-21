@@ -64,6 +64,7 @@ const BOND_STATUS: BondStatus[] = ["NON_EXISTENT", "PENDING", "CANCELLED", "CLAI
 const LUSD_3CRV_POOL_ADDRESS = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
 const LUSD_TOKEN_ADDRESS = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
 const CURVE_REGISTRY_SWAPS_ADDRESS = "0x81C46fECa27B31F3ADC2b91eE4be9717d1cd3DD7";
+const BLUSD_LUSD_3CRV_POOL_ADDRESS = "0x74ED5d42203806c8CDCf2F04Ca5F60DC777b901c";
 
 const LQTY_ISSUANCE_GAS_HEADROOM = BigNumber.from(50000);
 
@@ -142,9 +143,15 @@ type YearnVault = Partial<{
   };
 }>;
 
-type CurveApy = Partial<{
+type CurvePoolData = Partial<{
   data: {
     poolData: Array<{ id: string; gaugeRewards: Array<{ apy: number }> }>;
+  };
+}>;
+
+type CurvePoolDetails = Partial<{
+  data: {
+    poolDetails: Array<{ poolAddress: string; apy: number }>;
   };
 }>;
 
@@ -152,16 +159,25 @@ const CURVE_POOL_ID = "factory-crypto-134";
 
 const cacheCurveLpApy = async (): Promise<void> => {
   try {
-    const curveResponse = (await (
+    const curvePoolDataResponse = (await (
       await window.fetch("https://api.curve.fi/api/getPools/ethereum/factory-crypto")
-    ).json()) as CurveApy;
+    ).json()) as CurvePoolData;
 
-    const pool = curveResponse.data?.poolData.find(pool => pool.id === CURVE_POOL_ID);
-    const apy = pool?.gaugeRewards.reduce((total, current) => total + current.apy, 0);
+    const curvePoolDetailsResponse = (await await (
+      await window.fetch("https://api.curve.fi/api/getFactoryAPYs?version=crypto")
+    ).json()) as CurvePoolDetails;
 
-    if (apy === undefined) return;
+    const poolData = curvePoolDataResponse.data?.poolData.find(pool => pool.id === CURVE_POOL_ID);
+    const rewardsApr = poolData?.gaugeRewards.reduce((total, current) => total + current.apy, 0);
+    const baseApr = curvePoolDetailsResponse?.data?.poolDetails?.find(
+      pool => pool.poolAddress === BLUSD_LUSD_3CRV_POOL_ADDRESS
+    )?.apy;
 
-    cachedApys.bLusdLusd3Crv = Decimal.from(apy);
+    if (rewardsApr === undefined && baseApr === undefined) return;
+
+    const apr = (rewardsApr ?? 0) + (baseApr ?? 0);
+
+    cachedApys.bLusdLusd3Crv = Decimal.from(apr);
   } catch (error: unknown) {
     console.log("cacheCurveLpApy failed");
     console.error(error);
