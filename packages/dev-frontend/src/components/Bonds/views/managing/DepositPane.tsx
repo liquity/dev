@@ -20,7 +20,9 @@ export const DepositPane: React.FC = () => {
     isBLusdApprovedWithAmmZapper,
     isLusdApprovedWithAmmZapper,
     getExpectedLpTokens,
-    addresses
+    addresses,
+    bLusdAmmBLusdBalance,
+    bLusdAmmLusdBalance
   } = useBondView();
 
   const editingState = useState<string>();
@@ -28,6 +30,7 @@ export const DepositPane: React.FC = () => {
   const [lusdAmount, setLusdAmount] = useState<Decimal>(Decimal.ZERO);
   const [lpTokens, setLpTokens] = useState<Decimal>(Decimal.ZERO);
   const [shouldStakeInGauge, setShouldStakeInGauge] = useState(false);
+  const [shouldDepositBalanced, setShouldDepositBalanced] = useState(true);
 
   const coalescedBLusdBalance = bLusdBalance ?? Decimal.ZERO;
   const coalescedLusdBalance = lusdBalance ?? Decimal.ZERO;
@@ -44,6 +47,11 @@ export const DepositPane: React.FC = () => {
   const zapperNeedsLusdApproval = isDepositingLusd && !isLusdApprovedWithAmmZapper;
   const zapperNeedsBLusdApproval = isDepositingBLusd && !isBLusdApprovedWithAmmZapper;
   const isApprovalNeeded = zapperNeedsLusdApproval || zapperNeedsBLusdApproval;
+
+  const poolBalanceRatio =
+    bLusdAmmBLusdBalance && bLusdAmmLusdBalance
+      ? bLusdAmmLusdBalance.div(bLusdAmmBLusdBalance)
+      : Decimal.ONE;
 
   const handleApprovePressed = () => {
     const tokensNeedingApproval = new Map<BLusdAmmTokenIndex, Address>();
@@ -73,6 +81,24 @@ export const DepositPane: React.FC = () => {
 
   const handleToggleShouldStakeInGauge = () => {
     setShouldStakeInGauge(toggle => !toggle);
+  };
+
+  const handleToggleShouldDepositBalanced = () => {
+    if (!shouldDepositBalanced) {
+      setBLusdAmount(Decimal.ZERO);
+      setLusdAmount(Decimal.ZERO);
+    }
+    setShouldDepositBalanced(toggle => !toggle);
+  };
+
+  const handleSetAmount = (token: "bLUSD" | "LUSD", amount: Decimal) => {
+    if (shouldDepositBalanced) {
+      if (token === "bLUSD") setLusdAmount(poolBalanceRatio.mul(amount));
+      else if (token === "LUSD") setBLusdAmount(amount.div(poolBalanceRatio));
+    }
+
+    if (token === "bLUSD") setBLusdAmount(amount);
+    else if (token === "LUSD") setLusdAmount(amount);
   };
 
   useEffect(() => {
@@ -109,7 +135,7 @@ export const DepositPane: React.FC = () => {
         unit="bLUSD"
         editingState={editingState}
         editedAmount={bLusdAmount.toString()}
-        setEditedAmount={amount => setBLusdAmount(Decimal.from(amount))}
+        setEditedAmount={amount => handleSetAmount("bLUSD", Decimal.from(amount))}
         maxAmount={coalescedBLusdBalance.toString()}
         maxedOut={bLusdAmount.eq(coalescedBLusdBalance)}
       />
@@ -121,24 +147,37 @@ export const DepositPane: React.FC = () => {
         unit="LUSD"
         editingState={editingState}
         editedAmount={lusdAmount.toString()}
-        setEditedAmount={amount => setLusdAmount(Decimal.from(amount))}
+        setEditedAmount={amount => handleSetAmount("LUSD", Decimal.from(amount))}
         maxAmount={coalescedLusdBalance.toString()}
         maxedOut={lusdAmount.eq(coalescedLusdBalance)}
       />
 
-      {!isApprovalNeeded && (
-        <>
-          <Flex sx={{ justifyContent: "center", mb: 3 }}>
-            <Icon name="arrow-down" size="lg" />
-          </Flex>
+      <Flex sx={{ justifyContent: "center", mb: 3 }}>
+        <Icon name="arrow-down" size="lg" />
+      </Flex>
 
-          <DisabledEditableRow
-            label="Mint LP tokens"
-            inputId="deposit-mint-lp-tokens"
-            amount={lpTokens.prettify(2)}
+      <DisabledEditableRow
+        label="Mint LP tokens"
+        inputId="deposit-mint-lp-tokens"
+        amount={lpTokens.prettify(2)}
+      />
+
+      <Label>
+        <Flex sx={{ alignItems: "center" }}>
+          <Checkbox checked={shouldDepositBalanced} onChange={handleToggleShouldDepositBalanced} />
+          <Text sx={{ fontWeight: 300, fontSize: "16px" }}>Deposit tokens in a balanced ratio</Text>
+          <InfoIcon
+            placement="right"
+            size="xs"
+            tooltip={
+              <Card variant="tooltip">
+                Tick this box to deposit bLUSD and LUSD-3CRV in the pool's current liquidity ratio.
+                Current ratio = 1 bLUSD : {poolBalanceRatio.prettify(2)} LUSD.
+              </Card>
+            }
           />
-        </>
-      )}
+        </Flex>
+      </Label>
 
       <Label mb={2}>
         <Flex sx={{ alignItems: "center" }}>
