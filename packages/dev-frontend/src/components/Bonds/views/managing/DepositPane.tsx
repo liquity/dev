@@ -93,8 +93,8 @@ export const DepositPane: React.FC = () => {
 
   const handleSetAmount = (token: "bLUSD" | "LUSD", amount: Decimal) => {
     if (shouldDepositBalanced) {
-      if (token === "bLUSD") setLusdAmount(amount.div(poolBalanceRatio));
-      else if (token === "LUSD") setBLusdAmount(poolBalanceRatio.mul(amount));
+      if (token === "bLUSD") setLusdAmount(poolBalanceRatio.mul(amount));
+      else if (token === "LUSD") setBLusdAmount(amount.div(poolBalanceRatio));
     }
 
     if (token === "bLUSD") setBLusdAmount(amount);
