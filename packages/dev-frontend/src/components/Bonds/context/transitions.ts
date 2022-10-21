@@ -246,6 +246,7 @@ export type ProtocolInfo = {
   rebondDays?: Decimal;
   yieldAmplification?: Decimal;
   bLusdApr?: Decimal;
+  bLusdLpApr?: Decimal;
 };
 
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";
