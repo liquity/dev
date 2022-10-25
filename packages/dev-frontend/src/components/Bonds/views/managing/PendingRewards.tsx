@@ -7,12 +7,12 @@ export const PendingRewards: React.FC<{ open?: boolean }> = ({ open = false }) =
   const { lpRewards } = useBondView();
 
   return (
-    <details open={open}>
-      <Box as="summary" sx={{ cursor: "pointer", mb: 3, ml: 2 }}>
+    <>
+      <Box as="summary" sx={{ cursor: "pointer", mt: 1, mb: 2, ml: 2 }}>
         Rewards
       </Box>
 
-      <Flex sx={{ mt: 3 }}>
+      <Flex>
         {lpRewards?.map(reward => {
           console.log(reward, 1);
           return (
@@ -35,6 +35,6 @@ export const PendingRewards: React.FC<{ open?: boolean }> = ({ open = false }) =
           <Flex>You have no pending rewards</Flex>
         )}
       </Flex>
-    </details>
+    </>
   );
 };
