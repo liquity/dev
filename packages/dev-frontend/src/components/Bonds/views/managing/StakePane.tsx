@@ -1,6 +1,6 @@
 import { Decimal } from "@liquity/lib-base";
 import React, { useState } from "react";
-import { Flex, Button, Spinner, Text } from "theme-ui";
+import { Flex, Button, Spinner } from "theme-ui";
 import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { EditableRow } from "../../../Trove/Editor";
@@ -61,10 +61,10 @@ export const StakePane: React.FC = () => {
         maxedOut={stakeAmount.eq(coalescedLpTokenBalance)}
       />
 
-      <Text sx={{ fontWeight: 300, fontSize: "16px" }}>
+      <Flex my={3} sx={{ fontWeight: 300, fontSize: "16px" }}>
         Your LP tokens will be staked in the bLUSD Curve gauge to earn protocol fees and Curve
         rewards.
-      </Text>
+      </Flex>
 
       {isBalanceInsufficient && (
         <ErrorDescription>

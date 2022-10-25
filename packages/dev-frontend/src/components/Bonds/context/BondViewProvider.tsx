@@ -12,7 +12,8 @@ import type {
   OptimisticBond,
   SwapPayload,
   ApprovePressedPayload,
-  ManageLiquidityPayload
+  ManageLiquidityPayload,
+  BLusdLpRewards
 } from "./transitions";
 import { BLusdAmmTokenIndex } from "./transitions";
 import { transitions } from "./transitions";
@@ -50,6 +51,7 @@ export const BondViewProvider: React.FC = props => {
   const [stats, setStats] = useState<Stats>();
   const [protocolInfo, setProtocolInfo] = useState<ProtocolInfo>();
   const [simulatedProtocolInfo, setSimulatedProtocolInfo] = useState<ProtocolInfo>();
+  const [lpRewards, setLpRewards] = useState<BLusdLpRewards>();
   const [isLusdApprovedWithBlusdAmm, setIsLusdApprovedWithBlusdAmm] = useState(false);
   const [isBLusdApprovedWithBlusdAmm, setIsBLusdApprovedWithBlusdAmm] = useState(false);
   const [isLusdApprovedWithAmmZapper, setIsLusdApprovedWithAmmZapper] = useState(false);
@@ -285,7 +287,8 @@ export const BondViewProvider: React.FC = props => {
           stakedLpTokenBalance,
           lpTokenSupply,
           bLusdAmmBLusdBalance,
-          bLusdAmmLusdBalance
+          bLusdAmmLusdBalance,
+          lpRewards
         } = latest;
 
         setProtocolInfo(protocolInfo);
@@ -305,6 +308,7 @@ export const BondViewProvider: React.FC = props => {
           });
         }
 
+        setLpRewards(lpRewards);
         setBLusdBalance(bLusdBalance);
         setLusdBalance(lusdBalance);
         setLpTokenBalance(lpTokenBalance);
@@ -492,6 +496,8 @@ export const BondViewProvider: React.FC = props => {
         await api.stakeLiquidity(params.stakeAmount, contracts.bLusdGauge);
       } else if (params.action === "unstakeLiquidity") {
         await api.unstakeLiquidity(params.unstakeAmount, contracts.bLusdGauge);
+      } else if (params.action === "claimLpRewards") {
+        await api.claimLpRewards(contracts.bLusdGauge);
       }
       setShouldSynchronize(true);
     },
@@ -687,8 +693,9 @@ export const BondViewProvider: React.FC = props => {
     getExpectedLpTokens,
     getExpectedWithdrawal,
     isBootstrapPeriodActive,
-    hasLoaded: protocolInfo !== undefined,
-    addresses: contracts.addresses
+    hasLoaded: protocolInfo !== undefined && bonds !== undefined,
+    addresses: contracts.addresses,
+    lpRewards
   };
 
   // @ts-ignore

@@ -9,7 +9,8 @@ import type {
   ProtocolInfo,
   OptimisticBond,
   BLusdAmmTokenIndex,
-  Addresses
+  Addresses,
+  BLusdLpRewards
 } from "./transitions";
 import { PENDING_STATUS, CANCELLED_STATUS, CLAIMED_STATUS } from "../lexicon";
 import { Decimal } from "@liquity/lib-base";
@@ -54,6 +55,7 @@ export type BondViewContextType = {
   isBootstrapPeriodActive?: boolean;
   hasLoaded: boolean;
   addresses: Addresses;
+  lpRewards: BLusdLpRewards | undefined;
 };
 
 export const BondViewContext = createContext<BondViewContextType | null>(null);

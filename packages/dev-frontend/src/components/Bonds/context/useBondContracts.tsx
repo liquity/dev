@@ -1,4 +1,4 @@
-import type { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@liquity/lib-base";
 import {
   BLUSDLPZap,
   BLUSDLPZap__factory,
@@ -24,7 +24,7 @@ import { useContract } from "../../../hooks/useContract";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { useCallback } from "react";
 import type { BondsApi } from "./api";
-import type { Bond, ProtocolInfo, Stats } from "./transitions";
+import type { BLusdLpRewards, Bond, ProtocolInfo, Stats } from "./transitions";
 import { BLusdAmmTokenIndex } from "./transitions";
 import type { Addresses } from "./transitions";
 import { useWeb3React } from "@web3-react/core";
@@ -42,6 +42,7 @@ type BondsInformation = {
   lpTokenSupply: Decimal;
   bLusdAmmBLusdBalance: Decimal;
   bLusdAmmLusdBalance: Decimal;
+  lpRewards: BLusdLpRewards;
 };
 
 type BondContracts = {
@@ -127,16 +128,17 @@ export const useBondContracts = (): BondContracts => {
     ].find(status => status === "FAILED") === undefined;
 
   const getLatestData = useCallback(
-    async (account: string, api: BondsApi) => {
+    async (account: string, api: BondsApi): Promise<BondsInformation | undefined> => {
       if (
         lusdToken === undefined ||
         bondNft === undefined ||
         chickenBondManager === undefined ||
         bLusdToken === undefined ||
         bLusdAmm === undefined ||
+        bLusdGauge === undefined ||
         BLUSD_AMM_STAKING_ADDRESS === null
       ) {
-        return;
+        return undefined;
       }
 
       const protocolInfo = await api.getProtocolInfo(
@@ -177,6 +179,8 @@ export const useBondContracts = (): BondContracts => {
         api.getCoinBalances(bLusdAmm)
       ]);
 
+      const lpRewards = await api.getLpRewards(account, bLusdGauge);
+
       return {
         protocolInfo,
         bonds,
@@ -187,7 +191,8 @@ export const useBondContracts = (): BondContracts => {
         stakedLpTokenBalance,
         lpTokenSupply,
         bLusdAmmBLusdBalance: bLusdAmmCoinBalances[BLusdAmmTokenIndex.BLUSD],
-        bLusdAmmLusdBalance: bLusdAmmCoinBalances[BLusdAmmTokenIndex.LUSD]
+        bLusdAmmLusdBalance: bLusdAmmCoinBalances[BLusdAmmTokenIndex.LUSD],
+        lpRewards
       };
     },
     [
@@ -197,7 +202,8 @@ export const useBondContracts = (): BondContracts => {
       lusdToken,
       bLusdAmm,
       isMainnet,
-      BLUSD_AMM_STAKING_ADDRESS
+      BLUSD_AMM_STAKING_ADDRESS,
+      bLusdGauge
     ]
   );
 

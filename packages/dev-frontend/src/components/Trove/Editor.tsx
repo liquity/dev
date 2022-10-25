@@ -4,7 +4,7 @@ import { Text, Flex, Label, Input, SxProp, Button, ThemeUICSSProperties } from "
 import { Icon } from "../Icon";
 
 type RowProps = SxProp & {
-  label: string;
+  label: string | React.ReactNode;
   labelId?: string;
   labelFor?: string;
   infoIcon?: React.ReactNode;

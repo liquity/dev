@@ -1,10 +1,11 @@
 import { Decimal } from "@liquity/lib-base";
 import React, { useState } from "react";
-import { Flex, Button, Spinner, Text } from "theme-ui";
+import { Flex, Button, Spinner } from "theme-ui";
 import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { EditableRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
+import { PendingRewards } from "./PendingRewards";
 
 export const UnstakePane: React.FC = () => {
   const { dispatchEvent, statuses, stakedLpTokenBalance } = useBondView();
@@ -40,9 +41,12 @@ export const UnstakePane: React.FC = () => {
         maxedOut={unstakeAmount.eq(coalescedStakedLpTokenBalance)}
       />
 
-      <Text sx={{ fontWeight: 300, fontSize: "16px" }}>
+      <PendingRewards open />
+
+      <Flex mb={3} sx={{ fontWeight: 300, fontSize: "16px" }}>
         Your staked LP tokens will be unstaked from the bLUSD Curve gauge and moved into your wallet.
-      </Text>
+        Pending rewards will also be claimed and moved into your wallet.
+      </Flex>
 
       {isBalanceInsufficient && (
         <ErrorDescription>

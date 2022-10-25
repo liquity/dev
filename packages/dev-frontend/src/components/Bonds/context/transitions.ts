@@ -174,12 +174,17 @@ export type UnstakeLiquidityPayload = {
   unstakeAmount: Decimal;
 };
 
+export type ClaimLpRewardsPayload = {
+  action: "claimLpRewards";
+};
+
 export type ManageLiquidityPayload =
   | AddLiquidityPayload
   | RemoveLiquidityPayload
   | RemoveLiquidityOneCoinPayload
   | StakeLiquidityPayload
-  | UnstakeLiquidityPayload;
+  | UnstakeLiquidityPayload
+  | ClaimLpRewardsPayload;
 
 export type Payload =
   | CreateBondPayload
@@ -265,3 +270,5 @@ export type BondTransactionStatuses = Record<BondTransaction, TransactionStatus>
 export type ClaimedBonds = Record<string, Decimal>;
 
 export type Maybe<T> = T | undefined;
+
+export type BLusdLpRewards = Array<{ name: string; address: string; amount: Decimal }>;

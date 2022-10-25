@@ -6,6 +6,7 @@ import { DepositPane } from "./DepositPane";
 import { WithdrawPane } from "./WithdrawPane";
 import { StakePane } from "./StakePane";
 import { UnstakePane } from "./UnstakePane";
+import { RewardsPane } from "./RewardsPane";
 
 interface LinkProps extends NavLinkProps {
   active?: boolean;
@@ -19,9 +20,9 @@ const Link: React.FC<LinkProps> = ({ active, children, ...props }) => (
 
 export const ManagingLiquidity: React.FC = () => {
   const { dispatchEvent } = useBondView();
-  const [selectedPane, setSelectedPane] = useState<"deposit" | "withdraw" | "stake" | "unstake">(
-    "deposit"
-  );
+  const [selectedPane, setSelectedPane] = useState<
+    "deposit" | "withdraw" | "stake" | "unstake" | "claim"
+  >("deposit");
 
   const handleDismiss = () => {
     dispatchEvent("ABORT_PRESSED");
@@ -57,12 +58,17 @@ export const ManagingLiquidity: React.FC = () => {
         <Link active={selectedPane === "unstake"} onClick={() => setSelectedPane("unstake")}>
           Unstake
         </Link>
+
+        <Link active={selectedPane === "claim"} onClick={() => setSelectedPane("claim")}>
+          Rewards
+        </Link>
       </Flex>
 
       {selectedPane === "deposit" && <DepositPane />}
       {selectedPane === "withdraw" && <WithdrawPane />}
       {selectedPane === "stake" && <StakePane />}
       {selectedPane === "unstake" && <UnstakePane />}
+      {selectedPane === "claim" && <RewardsPane />}
     </ReactModal>
   );
 };

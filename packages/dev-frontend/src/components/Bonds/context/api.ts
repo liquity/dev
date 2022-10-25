@@ -29,7 +29,15 @@ import type {
 } from "@liquity/chicken-bonds/lusd/types/ChickenBondManager";
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
-import type { ProtocolInfo, Bond, BondStatus, Stats, ClaimedBonds, Maybe } from "./transitions";
+import type {
+  ProtocolInfo,
+  Bond,
+  BondStatus,
+  Stats,
+  ClaimedBonds,
+  Maybe,
+  BLusdLpRewards
+} from "./transitions";
 import {
   numberify,
   decimalify,
@@ -65,6 +73,12 @@ const LUSD_3CRV_POOL_ADDRESS = "0xEd279fDD11cA84bEef15AF5D39BB4d4bEE23F0cA";
 const LUSD_TOKEN_ADDRESS = "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0";
 const CURVE_REGISTRY_SWAPS_ADDRESS = "0x81C46fECa27B31F3ADC2b91eE4be9717d1cd3DD7";
 const BLUSD_LUSD_3CRV_POOL_ADDRESS = "0x74ED5d42203806c8CDCf2F04Ca5F60DC777b901c";
+const CRV_TOKEN_ADDRESS = "0xD533a949740bb3306d119CC777fa900bA034cd52";
+
+const TOKEN_ADDRESS_NAME_MAP: Record<string, string> = {
+  [LUSD_TOKEN_ADDRESS]: "LUSD",
+  [CRV_TOKEN_ADDRESS]: "CRV"
+};
 
 const LQTY_ISSUANCE_GAS_HEADROOM = BigNumber.from(50000);
 
@@ -1118,6 +1132,38 @@ const unstakeLiquidity = async (
   return withdrawEvent.args;
 };
 
+const claimLpRewards = async (bLusdGauge: CurveLiquidityGaugeV5 | undefined): Promise<void> => {
+  if (bLusdGauge === undefined) {
+    throw new Error("claimLpRewards() failed: a dependency is null");
+  }
+
+  const receipt = await (await bLusdGauge["claim_rewards()"]()).wait();
+
+  if (!receipt.status) {
+    throw new Error("claimLpRewards() failed: no transaction receipt status received.");
+  }
+};
+
+const getLpRewards = async (
+  account: string,
+  bLusdGauge: CurveLiquidityGaugeV5
+): Promise<BLusdLpRewards> => {
+  let rewards: BLusdLpRewards = [];
+
+  const totalRewardTokens = (await bLusdGauge.reward_count()).toNumber();
+
+  for (let tokenIndex = 0; tokenIndex < totalRewardTokens; tokenIndex++) {
+    const tokenAddress = await bLusdGauge.reward_tokens(tokenIndex);
+    const tokenRewards = decimalify(await bLusdGauge.claimable_reward(account, tokenAddress));
+    const tokenName =
+      TOKEN_ADDRESS_NAME_MAP[tokenAddress] ||
+      `${tokenAddress.slice(0, 5)}..${tokenAddress.slice(tokenAddress.length - 3)}`;
+
+    rewards.push({ name: tokenName, address: tokenAddress, amount: tokenRewards });
+  }
+  return rewards;
+};
+
 export const api = {
   getAccountBonds,
   getStats,
@@ -1146,7 +1192,9 @@ export const api = {
   removeLiquidity,
   removeLiquidityOneCoin,
   stakeLiquidity,
-  unstakeLiquidity
+  unstakeLiquidity,
+  getLpRewards,
+  claimLpRewards
 };
 
 export type BondsApi = typeof api;
