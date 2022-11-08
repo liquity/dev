@@ -13450,6 +13450,11 @@ ky@^0.11.2:
   resolved "https://registry.yarnpkg.com/ky/-/ky-0.11.2.tgz#4ffe6621d9d9ab61bf0f5500542e3a96d1ba0815"
   integrity sha512-5Aou5BWue5/mkPqIRqzSWW+0Hkl403pr/2AIrCKYw7cVl/Xoe8Xe4KLBO0PRjbz7GnRe1/8wW1KhqQNFFE7/GQ==
 
+lambert-w-function@3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/lambert-w-function/-/lambert-w-function-3.0.0.tgz#49527242ffa55695b8e814426c5d32afb952a6f1"
+  integrity sha512-yLAtG8+uM7FrLJR9WN37Fol9uURNW2OUR8PSbVp4kXjTmHMu7TqQgvdTceuUlVOR00qh8Skl2J2KeqCSfgzFyQ==
+
 language-subtag-registry@~0.3.2:
   version "0.3.21"
   resolved "https://registry.yarnpkg.com/language-subtag-registry/-/language-subtag-registry-0.3.21.tgz#04ac218bea46f04cb039084602c6da9e788dd45a"

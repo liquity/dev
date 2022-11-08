@@ -72,7 +72,7 @@ type BondProps = { bond: BondType; style?: ThemeUIStyleObject };
 
 export const Bond: React.FC<BondProps> = ({ bond, style }) => {
   const events = getBondEvents(bond);
-  const { dispatchEvent } = useBondView();
+  const { dispatchEvent, protocolInfo } = useBondView();
   const { BOND_NFT_ADDRESS } = useBondAddresses();
 
   const handleSellBLusdPressed = () => {
