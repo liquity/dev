@@ -117,13 +117,12 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
             events={events}
           />
 
-          <Flex mt={4} variant="layout.actions" sx={{ justifyContent: "flex-end" }}>
+          <Flex mt={4} pl={3} variant="layout.actions" sx={{ justifyContent: "flex-end" }}>
             <Flex
               sx={{
                 justifyContent: "flex-start",
                 flexGrow: 1,
                 alignItems: "center",
-                pl: 4,
                 gap: "0 28px",
                 fontSize: "14.5px"
               }}

@@ -366,7 +366,7 @@ const getAccountBonds = async (
         const claimNowReturn = accrued.isZero ? 0 : getReturn(accrued, deposit, marketPrice);
         const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
         const rebondRoi = rebondReturn / toFloat(deposit);
-        const rebondApr = rebondRoi * (365 / toFloat(rebondPeriodInDays));
+        const rebondApr = rebondRoi * (365 / (bondAgeInDays + remainingRebondDays));
         const claimedAmount = claimedBonds[id];
 
         return [

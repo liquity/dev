@@ -91,7 +91,7 @@ export const Actioning: React.FC = () => {
           }}
         />
       </Heading>
-      <Flex m={4} sx={{ justifyContent: "center" }}>
+      <Flex my={4} mx={2} sx={{ justifyContent: "center" }}>
         <HorizontalTimeline events={events} />
       </Flex>
       <Grid gap="12px" columns={3} sx={{ my: 4, justifyItems: "center" }}>
