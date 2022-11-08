@@ -95,8 +95,8 @@ const getDaysUntilControllerStartsAdjusting = (
   averageBondAgeInSeconds: Decimal,
   targetBondAgeInSeconds: Decimal
 ): Decimal => {
-  const secondsUntil = averageBondAgeInSeconds.gt(targetBondAgeInSeconds)
-    ? averageBondAgeInSeconds.sub(targetBondAgeInSeconds)
+  const secondsUntil = targetBondAgeInSeconds.gt(averageBondAgeInSeconds)
+    ? targetBondAgeInSeconds.sub(averageBondAgeInSeconds)
     : Decimal.ZERO;
   const daysUntil = secondsToDays(parseFloat(secondsUntil.toString()));
   return Decimal.from(daysUntil);

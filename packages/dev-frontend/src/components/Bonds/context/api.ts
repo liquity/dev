@@ -498,7 +498,6 @@ const getProtocolInfo = async (
   isMainnet: boolean
 ): Promise<ProtocolInfo> => {
   const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  // const marketPrice = Decimal.from(1.1);
   const marketPrice = isMainnet
     ? await getBlusdAmmPriceMainnet(bLusdAmm)
     : await getBlusdAmmPrice(bLusdAmm);
