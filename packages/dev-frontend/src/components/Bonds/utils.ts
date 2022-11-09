@@ -1,3 +1,4 @@
+import { ChickenBondManager } from "@liquity/chicken-bonds/lusd/types";
 import { Decimal } from "@liquity/lib-base";
 import { BigNumber } from "ethers";
 
@@ -79,6 +80,18 @@ const getFutureDateByDays = (days: number): Date => {
   return new Date(Math.round(Date.now() + daysToMilliseconds(days)));
 };
 
+const getFloorPrice = async (
+  chickenBondManager: ChickenBondManager,
+  bLusdSupply: Decimal
+): Promise<Decimal> => {
+  return decimalify(
+    (await chickenBondManager.getBAMMLUSDDebt())
+      .add(await chickenBondManager.getTotalLUSDInCurve())
+      .sub(await chickenBondManager.getPendingLUSD())
+      .sub(await chickenBondManager.getPermanentLUSD())
+  ).div(bLusdSupply);
+};
+
 export {
   milliseconds,
   toFloat,
@@ -93,5 +106,6 @@ export {
   getFutureBLusdAccrualFactor,
   getBreakEvenDays,
   getRebondDays,
-  getFutureDateByDays
+  getFutureDateByDays,
+  getFloorPrice
 };

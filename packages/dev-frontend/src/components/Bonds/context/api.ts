@@ -49,7 +49,8 @@ import {
   getBreakEvenDays,
   getFutureBLusdAccrualFactor,
   getFutureDateByDays,
-  getRebondDays
+  getRebondDays,
+  getFloorPrice
 } from "../utils";
 import { UNKNOWN_DATE } from "../../HorizontalTimeline";
 import { BLusdAmmTokenIndex } from "./transitions";
@@ -500,7 +501,10 @@ const getProtocolInfo = async (
       .div(bLusdSupply);
   }
 
-  const floorPrice = bLusdSupply.isZero ? Decimal.ONE : treasury.reserve.div(bLusdSupply);
+  const floorPrice = bLusdSupply.isZero
+    ? Decimal.ONE
+    : await getFloorPrice(chickenBondManager, bLusdSupply);
+
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
   const alphaAccrualFactor = decimalify(await chickenBondManager.calcUpdatedAccrualParameter()).div(
     24 * 60 * 60
