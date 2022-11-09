@@ -9,7 +9,7 @@ import { statuses, useBondView } from "../../context/BondViewContext";
 import { useBondAddresses } from "../../context/BondAddressesContext";
 
 const getBondEvents = (bond: BondType): EventType[] => {
-  return [
+  const events = [
     {
       date: new Date(bond.startTime),
       label: (
@@ -46,8 +46,11 @@ const getBondEvents = (bond: BondType): EventType[] => {
       ),
       isEndOfLife: true,
       isMilestone: bond.status !== "PENDING"
-    },
-    {
+    }
+  ];
+
+  if (bond.status === "PENDING") {
+    events.push({
       date: new Date(bond.breakEvenTime),
       label: (
         <>
@@ -55,8 +58,9 @@ const getBondEvents = (bond: BondType): EventType[] => {
           <SubLabel>{`${bond?.breakEvenAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
-    },
-    {
+    });
+
+    events.push({
       date: new Date(bond.rebondTime),
       label: (
         <>
@@ -64,8 +68,9 @@ const getBondEvents = (bond: BondType): EventType[] => {
           <SubLabel>{`${bond?.rebondAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
-    }
-  ];
+    });
+  }
+  return events;
 };
 
 type BondProps = { bond: BondType; style?: ThemeUIStyleObject };
