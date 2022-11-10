@@ -1,5 +1,5 @@
 import { Decimal } from "@liquity/lib-base";
-import { Text, Box } from "theme-ui";
+import { Text, Box, Flex } from "theme-ui";
 import { StaticRow, StaticAmounts } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 
@@ -12,7 +12,7 @@ const PoolBalance: React.FC<{ symbol: string }> = ({ symbol, children }) => (
 );
 
 export const PoolDetails: React.FC = () => {
-  const { lpTokenSupply, bLusdAmmBLusdBalance, bLusdAmmLusdBalance } = useBondView();
+  const { lpTokenSupply, bLusdAmmBLusdBalance, bLusdAmmLusdBalance, protocolInfo } = useBondView();
   const poolBalanceRatio =
     bLusdAmmBLusdBalance && bLusdAmmLusdBalance
       ? bLusdAmmLusdBalance.div(bLusdAmmBLusdBalance)
@@ -51,11 +51,18 @@ export const PoolDetails: React.FC = () => {
           </StaticAmounts>
         </StaticRow>
 
-        <StaticRow
-          label="LP token supply"
-          inputId="deposit-mint-lp-tokens"
-          amount={(lpTokenSupply ?? Decimal.ZERO).prettify(2)}
-        />
+        <Flex>
+          <StaticRow
+            label="LP token supply"
+            inputId="deposit-mint-lp-tokens"
+            amount={(lpTokenSupply ?? Decimal.ZERO).prettify(2)}
+          />
+          <StaticRow
+            label="bLUSD market price"
+            inputId="blusd-market-rice"
+            amount={(protocolInfo?.marketPrice ?? Decimal.INFINITY).prettify(2)}
+          />
+        </Flex>
       </Box>
     </details>
   );
