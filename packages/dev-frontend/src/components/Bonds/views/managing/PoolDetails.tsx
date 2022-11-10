@@ -47,7 +47,7 @@ export const PoolDetails: React.FC = () => {
           >
             <PoolBalance symbol="bLUSD">1</PoolBalance>
             <Text sx={{ fontWeight: "thin", mx: "6px" }}>:</Text>
-            <PoolBalance symbol="LUSD">{poolBalanceRatio.prettify(2)}</PoolBalance>
+            <PoolBalance symbol="LUSD-3CRV">{poolBalanceRatio.prettify(2)}</PoolBalance>
           </StaticAmounts>
         </StaticRow>
 
