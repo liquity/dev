@@ -3,7 +3,7 @@ import { InfoIcon } from "../../../InfoIcon";
 import { StaticRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 
-export const PendingRewards: React.FC<{ open?: boolean }> = ({ open = false }) => {
+export const PendingRewards: React.FC<{ open?: boolean }> = () => {
   const { lpRewards } = useBondView();
 
   return (
@@ -14,7 +14,6 @@ export const PendingRewards: React.FC<{ open?: boolean }> = ({ open = false }) =
 
       <Flex>
         {lpRewards?.map(reward => {
-          console.log(reward, 1);
           return (
             <StaticRow
               amount={reward.amount.shorten()}
