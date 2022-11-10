@@ -9,7 +9,7 @@ import { statuses, useBondView } from "../../context/BondViewContext";
 import { useBondAddresses } from "../../context/BondAddressesContext";
 
 const getBondEvents = (bond: BondType): EventType[] => {
-  return [
+  const events = [
     {
       date: new Date(bond.startTime),
       label: (
@@ -46,8 +46,11 @@ const getBondEvents = (bond: BondType): EventType[] => {
       ),
       isEndOfLife: true,
       isMilestone: bond.status !== "PENDING"
-    },
-    {
+    }
+  ];
+
+  if (bond.status === "PENDING") {
+    events.push({
       date: new Date(bond.breakEvenTime),
       label: (
         <>
@@ -55,8 +58,9 @@ const getBondEvents = (bond: BondType): EventType[] => {
           <SubLabel>{`${bond?.breakEvenAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
-    },
-    {
+    });
+
+    events.push({
       date: new Date(bond.rebondTime),
       label: (
         <>
@@ -64,8 +68,9 @@ const getBondEvents = (bond: BondType): EventType[] => {
           <SubLabel>{`${bond?.rebondAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
         </>
       )
-    }
-  ];
+    });
+  }
+  return events;
 };
 
 type BondProps = { bond: BondType; style?: ThemeUIStyleObject };
@@ -117,13 +122,12 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
             events={events}
           />
 
-          <Flex mt={4} variant="layout.actions" sx={{ justifyContent: "flex-end" }}>
+          <Flex mt={4} pl={3} variant="layout.actions" sx={{ justifyContent: "flex-end" }}>
             <Flex
               sx={{
                 justifyContent: "flex-start",
                 flexGrow: 1,
                 alignItems: "center",
-                pl: 4,
                 gap: "0 28px",
                 fontSize: "14.5px"
               }}

@@ -214,6 +214,9 @@ export type Bond = {
   rebondApr: number;
   claimNowReturn: number;
   claimedAmount?: Decimal;
+  bondAgeInDays: number;
+  remainingRebondDays: number;
+  remainingBreakEvenDays: number;
 };
 
 export type OptimisticBond = Pick<Bond, "id" | "deposit" | "startTime" | "status">;
@@ -241,17 +244,17 @@ export type ProtocolInfo = {
   claimBondFee: Decimal;
   alphaAccrualFactor: Decimal;
   marketPricePremium: Decimal;
-  breakEvenTime: Date;
-  rebondTime: Date;
   hasMarketPremium: boolean;
   simulatedMarketPrice: Decimal;
   breakEvenAccrualFactor: Decimal;
   rebondAccrualFactor: Decimal;
-  breakEvenDays?: Decimal;
-  rebondDays?: Decimal;
+  breakEvenPeriodInDays: Decimal;
+  rebondPeriodInDays: Decimal;
   yieldAmplification?: Decimal;
   bLusdApr?: Decimal;
   bLusdLpApr?: Decimal;
+  controllerTargetAge: Decimal;
+  averageBondAge: Decimal;
 };
 
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";

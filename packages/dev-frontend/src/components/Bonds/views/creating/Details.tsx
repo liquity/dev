@@ -12,7 +12,16 @@ import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
 import { Warning } from "../../../Warning";
 import type { CreateBondPayload } from "../../context/transitions";
-import { dateWithoutHours, getRebondDays, getReturn, percentify, toFloat } from "../../utils";
+import {
+  dateWithoutHours,
+  getReturn,
+  percentify,
+  toFloat,
+  getRemainingRebondOrBreakEvenDays,
+  getBreakEvenPeriodInDays,
+  getRebondPeriodInDays,
+  getRebondOrBreakEvenTimeWithControllerAdjustment
+} from "../../utils";
 import { HorizontalSlider } from "../../../HorizontalSlider";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { Amount } from "../../../ActionDescription";
@@ -73,10 +82,38 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
     protocolInfo.marketPrice.mul(1.1),
     protocolInfo.floorPrice.mul(1.5)
   ).prettify(2);
-  const rebondDays = getRebondDays(
+
+  const rebondDays = getRebondPeriodInDays(
     simulatedProtocolInfo.alphaAccrualFactor,
     simulatedProtocolInfo.marketPricePremium,
     protocolInfo.claimBondFee
+  );
+
+  const controllerAdjustedRebondDays = getRemainingRebondOrBreakEvenDays(
+    Decimal.ZERO,
+    simulatedProtocolInfo.controllerTargetAge,
+    simulatedProtocolInfo.averageBondAge,
+    rebondDays
+  );
+
+  const breakEvenDays = getBreakEvenPeriodInDays(
+    simulatedProtocolInfo.alphaAccrualFactor,
+    simulatedProtocolInfo.marketPricePremium,
+    protocolInfo.claimBondFee
+  );
+
+  const breakEvenTime = getRebondOrBreakEvenTimeWithControllerAdjustment(
+    Decimal.ZERO,
+    simulatedProtocolInfo.controllerTargetAge,
+    simulatedProtocolInfo.averageBondAge,
+    Decimal.from(breakEvenDays)
+  );
+
+  const rebondTime = getRebondOrBreakEvenTimeWithControllerAdjustment(
+    Decimal.ZERO,
+    simulatedProtocolInfo.controllerTargetAge,
+    simulatedProtocolInfo.averageBondAge,
+    Decimal.from(rebondDays)
   );
 
   return (
@@ -128,7 +165,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
               isEndOfLife: true
             },
             {
-              date: simulatedProtocolInfo.breakEvenTime,
+              date: breakEvenTime,
               label: (
                 <>
                   <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
@@ -139,7 +176,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
               )
             },
             {
-              date: simulatedProtocolInfo.rebondTime,
+              date: rebondTime,
               label: (
                 <>
                   <Label description={l.OPTIMUM_REBOND_TIME.description}>
@@ -184,7 +221,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
 
         <Record
           name={l.OPTIMUM_APY.term}
-          value={percentify(rebondRoi * (365 / toFloat(rebondDays))).toFixed(2) + "%"}
+          value={percentify(rebondRoi * (365 / controllerAdjustedRebondDays)).toFixed(2) + "%"}
           type=""
           description={l.OPTIMUM_APY.description}
         />
