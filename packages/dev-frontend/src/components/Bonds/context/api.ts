@@ -46,10 +46,12 @@ import {
   toFloat,
   getReturn,
   getTokenUri,
-  getBreakEvenDays,
   getFutureBLusdAccrualFactor,
-  getFutureDateByDays,
-  getRebondDays,
+  getRebondPeriodInDays,
+  getBreakEvenPeriodInDays,
+  getAverageBondAgeInSeconds,
+  getRemainingRebondOrBreakEvenDays,
+  getRebondOrBreakEvenTimeWithControllerAdjustment,
   getFloorPrice
 } from "../utils";
 import { UNKNOWN_DATE } from "../../HorizontalTimeline";
@@ -251,13 +253,19 @@ const getAccountBonds = async (
   account: string,
   bondNft: BondNFT,
   chickenBondManager: ChickenBondManager,
-  marketPrice: Decimal,
-  alphaAccrualFactor: Decimal,
-  marketPricePremium: Decimal,
-  claimBondFee: Decimal,
-  floorPrice: Decimal
+  protocolInfo: ProtocolInfo
 ): Promise<Bond[]> => {
   try {
+    const {
+      marketPrice,
+      alphaAccrualFactor,
+      marketPricePremium,
+      claimBondFee,
+      floorPrice,
+      controllerTargetAge,
+      averageBondAge
+    } = protocolInfo;
+
     const totalBonds = (await bondNft.balanceOf(account)).toNumber();
 
     const bondIdRequests = Array.from(Array(totalBonds)).map((_, index) =>
@@ -293,37 +301,73 @@ const getAccountBonds = async (
         const status = BOND_STATUS[bondStatuses[idx]];
         const tokenUri = getTokenUri(bondTokenUris[idx]);
         const bondAgeInDays = getBondAgeInDays(startTime);
-        const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-        const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
+        const rebondPeriodInDays = getRebondPeriodInDays(
+          alphaAccrualFactor,
+          marketPricePremium,
+          claimBondFee
+        );
+        const bondAgeInSeconds = Decimal.from(Date.now() - startTime).div(1000);
+        const remainingRebondDays = getRemainingRebondOrBreakEvenDays(
+          bondAgeInSeconds,
+          controllerTargetAge,
+          averageBondAge,
+          rebondPeriodInDays
+        );
+
+        const breakEvenPeriodInDays = getBreakEvenPeriodInDays(
+          alphaAccrualFactor,
+          marketPricePremium,
+          claimBondFee
+        );
+        const remainingBreakEvenDays = getRemainingRebondOrBreakEvenDays(
+          bondAgeInSeconds,
+          controllerTargetAge,
+          averageBondAge,
+          breakEvenPeriodInDays
+        );
+
         const depositMinusClaimBondFee = Decimal.ONE.sub(claimBondFee).mul(deposit);
         const rebondAccrual =
-          rebondDays === Decimal.INFINITY
+          rebondPeriodInDays === Decimal.INFINITY
             ? Decimal.INFINITY
-            : getFutureBLusdAccrualFactor(floorPrice, rebondDays, alphaAccrualFactor).mul(
+            : getFutureBLusdAccrualFactor(floorPrice, rebondPeriodInDays, alphaAccrualFactor).mul(
                 depositMinusClaimBondFee
               );
+
         const breakEvenAccrual =
-          breakEvenDays === Decimal.INFINITY
+          breakEvenPeriodInDays === Decimal.INFINITY
             ? Decimal.INFINITY
-            : getFutureBLusdAccrualFactor(floorPrice, breakEvenDays, alphaAccrualFactor).mul(
+            : getFutureBLusdAccrualFactor(floorPrice, breakEvenPeriodInDays, alphaAccrualFactor).mul(
                 depositMinusClaimBondFee
               );
 
         const breakEvenTime =
-          breakEvenDays === Decimal.INFINITY
+          breakEvenPeriodInDays === Decimal.INFINITY
             ? UNKNOWN_DATE
-            : getFutureDateByDays(toFloat(breakEvenDays) - bondAgeInDays);
+            : getRebondOrBreakEvenTimeWithControllerAdjustment(
+                bondAgeInSeconds,
+                controllerTargetAge,
+                averageBondAge,
+                breakEvenPeriodInDays
+              );
+
         const rebondTime =
-          rebondDays === Decimal.INFINITY
+          rebondPeriodInDays === Decimal.INFINITY
             ? UNKNOWN_DATE
-            : getFutureDateByDays(toFloat(rebondDays) - bondAgeInDays);
+            : getRebondOrBreakEvenTimeWithControllerAdjustment(
+                bondAgeInSeconds,
+                controllerTargetAge,
+                averageBondAge,
+                rebondPeriodInDays
+              );
+
         const marketValue = decimalify(bondAccrueds[idx]).mul(marketPrice);
 
         // Accrued bLUSD is 0 for cancelled/claimed bonds
         const claimNowReturn = accrued.isZero ? 0 : getReturn(accrued, deposit, marketPrice);
         const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
         const rebondRoi = rebondReturn / toFloat(deposit);
-        const rebondApr = rebondRoi * (365 / toFloat(rebondDays));
+        const rebondApr = rebondRoi * (365 / (bondAgeInDays + remainingRebondDays));
         const claimedAmount = claimedBonds[id];
 
         return [
@@ -345,7 +389,10 @@ const getAccountBonds = async (
             claimNowReturn,
             rebondRoi,
             rebondApr,
-            claimedAmount
+            claimedAmount,
+            bondAgeInDays,
+            remainingRebondDays,
+            remainingBreakEvenDays
           }
         ];
       }, [])
@@ -367,30 +414,34 @@ export const _getProtocolInfo = (
   const marketPricePremium = marketPrice.div(floorPrice);
   const hasMarketPremium = marketPricePremium.mul(Decimal.ONE.sub(claimBondFee)).gt(Decimal.ONE);
 
-  const breakEvenDays = getBreakEvenDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const breakEvenTime = getFutureDateByDays(toFloat(breakEvenDays));
-  const rebondDays = getRebondDays(alphaAccrualFactor, marketPricePremium, claimBondFee);
-  const rebondTime = getFutureDateByDays(toFloat(rebondDays));
+  const breakEvenPeriodInDays = getBreakEvenPeriodInDays(
+    alphaAccrualFactor,
+    marketPricePremium,
+    claimBondFee
+  );
+  const rebondPeriodInDays = getRebondPeriodInDays(
+    alphaAccrualFactor,
+    marketPricePremium,
+    claimBondFee
+  );
   const breakEvenAccrualFactor = getFutureBLusdAccrualFactor(
     floorPrice,
-    breakEvenDays,
+    breakEvenPeriodInDays,
     alphaAccrualFactor
   );
   const rebondAccrualFactor = getFutureBLusdAccrualFactor(
     floorPrice,
-    rebondDays,
+    rebondPeriodInDays,
     alphaAccrualFactor
   );
 
   return {
     marketPricePremium,
-    breakEvenTime,
-    rebondTime,
     hasMarketPremium,
     breakEvenAccrualFactor,
     rebondAccrualFactor,
-    breakEvenDays,
-    rebondDays
+    breakEvenPeriodInDays,
+    rebondPeriodInDays
   };
 };
 
@@ -512,16 +563,23 @@ const getProtocolInfo = async (
 
   const {
     marketPricePremium,
-    breakEvenTime,
-    rebondTime,
     hasMarketPremium,
     breakEvenAccrualFactor,
     rebondAccrualFactor,
-    breakEvenDays,
-    rebondDays
+    breakEvenPeriodInDays,
+    rebondPeriodInDays
   } = _getProtocolInfo(marketPrice, floorPrice, claimBondFee, alphaAccrualFactor);
 
   const simulatedMarketPrice = hasMarketPremium ? marketPrice : floorPrice.mul(1.1);
+
+  const controllerTargetAge = Decimal.from(
+    (await chickenBondManager.targetAverageAgeSeconds()).toString()
+  );
+
+  const averageBondAge = getAverageBondAgeInSeconds(
+    decimalify(await chickenBondManager.totalWeightedStartTimes()),
+    treasury.pending
+  );
 
   return {
     bLusdSupply,
@@ -532,17 +590,17 @@ const getProtocolInfo = async (
     claimBondFee,
     alphaAccrualFactor,
     marketPricePremium,
-    breakEvenTime,
-    rebondTime,
     hasMarketPremium,
     breakEvenAccrualFactor,
     rebondAccrualFactor,
-    breakEvenDays,
-    rebondDays,
+    breakEvenPeriodInDays,
+    rebondPeriodInDays,
     simulatedMarketPrice,
     yieldAmplification,
     bLusdApr,
-    bLusdLpApr
+    bLusdLpApr,
+    controllerTargetAge,
+    averageBondAge
   };
 };
 

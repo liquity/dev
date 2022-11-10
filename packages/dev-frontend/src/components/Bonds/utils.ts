@@ -1,6 +1,7 @@
 import { ChickenBondManager } from "@liquity/chicken-bonds/lusd/types";
 import { Decimal } from "@liquity/lib-base";
 import { BigNumber } from "ethers";
+import { lambertW0 } from "lambert-w-function";
 
 const milliseconds = (seconds: number) => seconds * 1000;
 
@@ -43,7 +44,7 @@ const getTokenUri = (encodedTokenUri: string): string => {
   return tokenUri;
 };
 
-const getBreakEvenDays = (
+const getBreakEvenPeriodInDays = (
   alphaAccrualFactor: Decimal,
   marketPricePremium: Decimal,
   claimBondFee: Decimal
@@ -63,7 +64,7 @@ const getFutureBLusdAccrualFactor = (
   return Decimal.ONE.div(floorPrice).mul(duration.div(duration.add(alphaAccrualFactor)));
 };
 
-const getRebondDays = (
+const getRebondPeriodInDays = (
   alphaAccrualFactor: Decimal,
   marketPricePremium: Decimal,
   claimBondFee: Decimal
@@ -76,7 +77,7 @@ const getRebondDays = (
   return alphaAccrualFactor.mul(dividend.div(divisor));
 };
 
-const getFutureDateByDays = (days: number): Date => {
+const getFutureDateInDays = (days: number): Date => {
   return new Date(Math.round(Date.now() + daysToMilliseconds(days)));
 };
 
@@ -92,6 +93,88 @@ const getFloorPrice = async (
   ).div(bLusdSupply);
 };
 
+const getAverageBondAgeInSeconds = (
+  totalWeightedStartTimes: Decimal,
+  pendingBucketLusd: Decimal
+): Decimal => {
+  const averageStartTimeMs =
+    Math.round(parseFloat(totalWeightedStartTimes.div(pendingBucketLusd).toString())) * 1000;
+  const averageBondAgeInSeconds = Decimal.from(Date.now() - averageStartTimeMs).div(1000);
+
+  return averageBondAgeInSeconds;
+};
+
+const getDaysUntilControllerStartsAdjusting = (
+  averageBondAgeInSeconds: Decimal,
+  targetBondAgeInSeconds: Decimal
+): Decimal => {
+  const secondsUntil = targetBondAgeInSeconds.gt(averageBondAgeInSeconds)
+    ? targetBondAgeInSeconds.sub(averageBondAgeInSeconds)
+    : Decimal.ZERO;
+  const daysUntil = secondsToDays(parseFloat(secondsUntil.toString()));
+  return Decimal.from(daysUntil);
+};
+
+/*
+  Given the current rebond/break-even period, work out how many days
+  until the bond age will meet the reduced rebond/break-even period
+
+  Formula:
+     bondAge + max((averageBondAge - targetBondAge), 0) + k = 0.99^k * rebondOrBreakEvenPeriod
+    (0.99 because the controller reduces alpha by 1% per day)
+  
+  Solved for k =
+    -(W(-(ln(0.99)x / 0.99^(bondAge + max((averageBondAge - targetBondAge), 0))) + ln(0.99) * (bondAge + max((averageBondAge - targetBondAge), 0))) / ln(0.99)
+  Where:
+    k = days until bond meets the reduced rebond/break-even period
+    W = lambert W function
+*/
+const getRemainingRebondOrBreakEvenDays = (
+  bondAgeInSeconds: Decimal,
+  targetBondAgeInSeconds: Decimal,
+  averageBondAgeInSeconds: Decimal,
+  rebondOrBreakEvenPeriodInDays: Decimal
+): number => {
+  const bondAgeInDays = secondsToDays(toFloat(bondAgeInSeconds));
+  const daysUntilControllerStartsAdjusting = toFloat(
+    getDaysUntilControllerStartsAdjusting(averageBondAgeInSeconds, targetBondAgeInSeconds)
+  );
+  const rebondOrBreakEvenDaysRemaining = toFloat(rebondOrBreakEvenPeriodInDays) - bondAgeInDays;
+
+  if (rebondOrBreakEvenDaysRemaining < daysUntilControllerStartsAdjusting) {
+    return rebondOrBreakEvenDaysRemaining;
+  }
+
+  const lambertDividend = Math.log(0.99) * toFloat(rebondOrBreakEvenPeriodInDays);
+  const lambertDivisor = 0.99 ** (bondAgeInDays + daysUntilControllerStartsAdjusting);
+  const lambertQuotient = lambertW0(-(lambertDividend / lambertDivisor));
+
+  const formulaDividend =
+    lambertQuotient + Math.log(0.99) * (bondAgeInDays + daysUntilControllerStartsAdjusting);
+
+  const formulaDivisor = Math.log(0.99);
+
+  const daysUntilBondReachesRebondOrBreakEven = -(formulaDividend / formulaDivisor);
+
+  return daysUntilBondReachesRebondOrBreakEven;
+};
+
+const getRebondOrBreakEvenTimeWithControllerAdjustment = (
+  bondAgeInSeconds: Decimal,
+  targetBondAgeInSeconds: Decimal,
+  averageBondAgeInSeconds: Decimal,
+  rebondOrBreakEvenPeriodInDays: Decimal
+): Date => {
+  const daysUntilBondReachesRebondOrBreakEven = getRemainingRebondOrBreakEvenDays(
+    bondAgeInSeconds,
+    targetBondAgeInSeconds,
+    averageBondAgeInSeconds,
+    rebondOrBreakEvenPeriodInDays
+  );
+
+  return getFutureDateInDays(daysUntilBondReachesRebondOrBreakEven);
+};
+
 export {
   milliseconds,
   toFloat,
@@ -104,8 +187,10 @@ export {
   getReturn,
   getTokenUri,
   getFutureBLusdAccrualFactor,
-  getBreakEvenDays,
-  getRebondDays,
-  getFutureDateByDays,
+  getBreakEvenPeriodInDays,
+  getRebondPeriodInDays,
+  getAverageBondAgeInSeconds,
+  getRemainingRebondOrBreakEvenDays,
+  getRebondOrBreakEvenTimeWithControllerAdjustment,
   getFloorPrice
 };
