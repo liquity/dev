@@ -175,7 +175,7 @@ export const BLUSD_FLOOR_PRICE = {
 };
 
 export const BLUSD_APR = {
-  term: "APR",
+  term: "bLUSD APR",
   description: "The APR of bLUSD, based on the yield generated from each bucket in the Treasury."
 };
 
