@@ -3,7 +3,7 @@ import { InfoIcon } from "../../../InfoIcon";
 import { StaticRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 
-export const PendingRewards: React.FC<{ open?: boolean }> = () => {
+export const PendingRewards: React.FC = () => {
   const { lpRewards } = useBondView();
 
   return (

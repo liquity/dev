@@ -21,7 +21,7 @@ export const RewardsPane: React.FC = () => {
 
   return (
     <>
-      <PendingRewards open />
+      <PendingRewards />
 
       <Flex variant="layout.actions">
         <Button variant="cancel" onClick={handleBackPressed} disabled={isManageLiquidityPending}>

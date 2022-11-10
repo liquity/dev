@@ -41,7 +41,7 @@ export const UnstakePane: React.FC = () => {
         maxedOut={unstakeAmount.eq(coalescedStakedLpTokenBalance)}
       />
 
-      <PendingRewards open />
+      <PendingRewards />
 
       <Flex mb={3} sx={{ fontWeight: 300, fontSize: "16px" }}>
         Your staked LP tokens will be unstaked from the bLUSD Curve gauge and moved into your wallet.
