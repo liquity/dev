@@ -11,7 +11,7 @@ export const BONDS = {
 export const NOT_BONDED_YET = {
   term: "You don't have any pending bonds.",
   description:
-    "You can bond LUSD to obtain Boosted LUSD (bLUSD) - a yield-amplified derivative of LUSD."
+    "You can bond LUSD to obtain Boosted LUSD (bLUSD) - a yield-amplified version of LUSD."
 };
 
 export const BONDS_NAVIGATION = {
@@ -175,7 +175,7 @@ export const BLUSD_FLOOR_PRICE = {
 };
 
 export const BLUSD_APR = {
-  term: "APR",
+  term: "bLUSD APR",
   description: "The APR of bLUSD, based on the yield generated from each bucket in the Treasury."
 };
 

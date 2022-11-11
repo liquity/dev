@@ -576,15 +576,9 @@ export const BondViewProvider: React.FC = props => {
           const { inputAmount, minOutputAmount } = payload as SwapPayload;
           await swapTokens(inputToken, inputAmount, minOutputAmount);
           await dispatchEvent("SWAP_CONFIRMED");
-        } else if (
-          isCurrentViewEvent("ADDING_LIQUIDITY", "APPROVE_PRESSED") ||
-          isCurrentViewEvent("MANAGING_LIQUIDITY", "APPROVE_PRESSED")
-        ) {
+        } else if (isCurrentViewEvent("MANAGING_LIQUIDITY", "APPROVE_PRESSED")) {
           await approveTokens(payload as ApprovePressedPayload);
-        } else if (
-          isCurrentViewEvent("ADDING_LIQUIDITY", "CONFIRM_PRESSED") ||
-          isCurrentViewEvent("MANAGING_LIQUIDITY", "CONFIRM_PRESSED")
-        ) {
+        } else if (isCurrentViewEvent("MANAGING_LIQUIDITY", "CONFIRM_PRESSED")) {
           await manageLiquidity(payload as ManageLiquidityPayload);
           await dispatchEvent("MANAGE_LIQUIDITY_CONFIRMED");
         }

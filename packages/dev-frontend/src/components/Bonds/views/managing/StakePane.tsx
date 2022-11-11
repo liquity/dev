@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import { Flex, Button, Spinner } from "theme-ui";
 import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
-import { EditableRow } from "../../../Trove/Editor";
+import { EditableRow, StaticAmounts, StaticRow } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
 import { ApprovePressedPayload, BLusdAmmTokenIndex } from "../../context/transitions";
+import { PoolBalance } from "./PoolBalance";
 
 export const StakePane: React.FC = () => {
   const {
@@ -13,7 +14,8 @@ export const StakePane: React.FC = () => {
     statuses,
     lpTokenBalance,
     isBLusdLpApprovedWithGauge,
-    addresses
+    addresses,
+    protocolInfo
   } = useBondView();
 
   const editingState = useState<string>();
@@ -60,6 +62,16 @@ export const StakePane: React.FC = () => {
         maxAmount={coalescedLpTokenBalance.toString()}
         maxedOut={stakeAmount.eq(coalescedLpTokenBalance)}
       />
+
+      <Flex mt={3}>
+        <StaticRow label="bLUSD LP APR">
+          <StaticAmounts sx={{ alignItems: "center", justifyContent: "flex-start" }}>
+            <PoolBalance symbol="%">
+              {(protocolInfo?.bLusdLpApr ?? Decimal.INFINITY).prettify(2)}
+            </PoolBalance>{" "}
+          </StaticAmounts>
+        </StaticRow>
+      </Flex>
 
       <Flex my={3} sx={{ fontWeight: 300, fontSize: "16px" }}>
         Your LP tokens will be staked in the bLUSD Curve gauge to earn protocol fees and Curve

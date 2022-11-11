@@ -5,17 +5,9 @@ type Creating = "CREATING";
 type Cancelling = "CANCELLING";
 type Claiming = "CLAIMING";
 type Swapping = "SWAPPING";
-type AddingLiquidity = "ADDING_LIQUIDITY";
 type ManagingLiquidity = "MANAGING_LIQUIDITY";
 
-export type BondView =
-  | Idle
-  | Creating
-  | Cancelling
-  | Claiming
-  | Swapping
-  | AddingLiquidity
-  | ManagingLiquidity;
+export type BondView = Idle | Creating | Cancelling | Claiming | Swapping | ManagingLiquidity;
 
 /* UI events */
 type CreateBondPressed = "CREATE_BOND_PRESSED";
@@ -61,7 +53,6 @@ export const transitions: BondEventTransitions = {
     CANCEL_BOND_PRESSED: "CANCELLING",
     CLAIM_BOND_PRESSED: "CLAIMING",
     SWAP_PRESSED: "SWAPPING",
-    ADD_LIQUIDITY_PRESSED: "ADDING_LIQUIDITY",
     MANAGE_LIQUIDITY_PRESSED: "MANAGING_LIQUIDITY"
   },
   CREATING: {
@@ -88,14 +79,6 @@ export const transitions: BondEventTransitions = {
     APPROVE_PRESSED: "SWAPPING",
     CONFIRM_PRESSED: "SWAPPING",
     SWAP_CONFIRMED: "IDLE"
-  },
-  // Special case of managing liquidity when no deposit exists, and thus withdrawal is not possible
-  ADDING_LIQUIDITY: {
-    ABORT_PRESSED: "IDLE",
-    BACK_PRESSED: "IDLE",
-    APPROVE_PRESSED: "ADDING_LIQUIDITY",
-    CONFIRM_PRESSED: "ADDING_LIQUIDITY",
-    MANAGE_LIQUIDITY_CONFIRMED: "IDLE" // use the same event as in MANAGING_LIQUIDITY
   },
   MANAGING_LIQUIDITY: {
     ABORT_PRESSED: "IDLE",

@@ -30,7 +30,7 @@ export const BondList: React.FC = () => {
 
       <Switch>
         <Route exact path={path}>
-          <Redirect to={`${path}/all`} />
+          <Redirect to={`${path}/pending`} />
         </Route>
         <Route path={`${path}/:bondFilter`}>
           <FilteredBondList />

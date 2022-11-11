@@ -13,15 +13,7 @@ export const Idle: React.FC = () => {
   const { liquity } = useLiquity();
   const { LUSD_OVERRIDE_ADDRESS } = useBondAddresses();
 
-  const {
-    dispatchEvent,
-    bonds,
-    getLusdFromFaucet,
-    lusdBalance,
-    lpTokenBalance,
-    stakedLpTokenBalance,
-    hasLoaded
-  } = useBondView();
+  const { dispatchEvent, bonds, getLusdFromFaucet, lusdBalance, hasLoaded } = useBondView();
   const [chain, setChain] = useState<number>();
 
   useEffect(() => {
@@ -38,7 +30,6 @@ export const Idle: React.FC = () => {
 
   const showLusdFaucet = LUSD_OVERRIDE_ADDRESS !== null && lusdBalance?.eq(0);
 
-  const handleAddLiquidityPressed = () => dispatchEvent("ADD_LIQUIDITY_PRESSED");
   const handleManageLiquidityPressed = () => dispatchEvent("MANAGE_LIQUIDITY_PRESSED");
 
   const handleBuyBLusdPressed = () =>
@@ -50,15 +41,9 @@ export const Idle: React.FC = () => {
   return (
     <>
       <Flex variant="layout.actions" sx={{ mt: 4, mb: 3 }}>
-        {lpTokenBalance?.nonZero || stakedLpTokenBalance?.nonZero ? (
-          <Button variant="outline" onClick={handleManageLiquidityPressed}>
-            Manage liquidity
-          </Button>
-        ) : (
-          <Button variant="outline" onClick={handleAddLiquidityPressed}>
-            Add liquidity
-          </Button>
-        )}
+        <Button variant="outline" onClick={handleManageLiquidityPressed}>
+          Manage liquidity
+        </Button>
 
         <Button variant="outline" onClick={handleBuyBLusdPressed}>
           Buy bLUSD
