@@ -8,7 +8,7 @@ export const PendingRewards: React.FC = () => {
 
   return (
     <>
-      <Box as="summary" sx={{ cursor: "pointer", mt: 1, mb: 2, ml: 2 }}>
+      <Box as="summary" sx={{ cursor: "pointer", mt: 1, mb: 2, ml: 3 }}>
         Rewards
       </Box>
 

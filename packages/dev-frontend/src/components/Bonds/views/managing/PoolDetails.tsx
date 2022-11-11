@@ -2,14 +2,7 @@ import { Decimal } from "@liquity/lib-base";
 import { Text, Box, Flex } from "theme-ui";
 import { StaticRow, StaticAmounts } from "../../../Trove/Editor";
 import { useBondView } from "../../context/BondViewContext";
-
-const PoolBalance: React.FC<{ symbol: string }> = ({ symbol, children }) => (
-  <>
-    <Text sx={{ fontWeight: "medium" }}>{children}</Text>
-    &nbsp;
-    <Text sx={{ fontWeight: "light", opacity: 0.8 }}>{symbol}</Text>
-  </>
-);
+import { PoolBalance } from "./PoolBalance";
 
 export const PoolDetails: React.FC = () => {
   const { lpTokenSupply, bLusdAmmBLusdBalance, bLusdAmmLusdBalance, protocolInfo } = useBondView();
@@ -57,11 +50,22 @@ export const PoolDetails: React.FC = () => {
             inputId="deposit-mint-lp-tokens"
             amount={(lpTokenSupply ?? Decimal.ZERO).prettify(2)}
           />
-          <StaticRow
-            label="bLUSD market price"
-            inputId="blusd-market-rice"
-            amount={(protocolInfo?.marketPrice ?? Decimal.INFINITY).prettify(2)}
-          />
+
+          <StaticRow label="bLUSD price">
+            <StaticAmounts sx={{ alignItems: "center", justifyContent: "flex-start" }}>
+              <PoolBalance symbol="LUSD">
+                {(protocolInfo?.marketPrice ?? Decimal.INFINITY).prettify(2)}
+              </PoolBalance>{" "}
+            </StaticAmounts>
+          </StaticRow>
+
+          <StaticRow label="bLUSD LP APR">
+            <StaticAmounts sx={{ alignItems: "center", justifyContent: "flex-start" }}>
+              <PoolBalance symbol="%">
+                {(protocolInfo?.bLusdLpApr ?? Decimal.INFINITY).prettify(2)}
+              </PoolBalance>{" "}
+            </StaticAmounts>
+          </StaticRow>
         </Flex>
       </Box>
     </details>

@@ -29,7 +29,7 @@ export const DepositPane: React.FC = () => {
   const [bLusdAmount, setBLusdAmount] = useState<Decimal>(Decimal.ZERO);
   const [lusdAmount, setLusdAmount] = useState<Decimal>(Decimal.ZERO);
   const [lpTokens, setLpTokens] = useState<Decimal>(Decimal.ZERO);
-  const [shouldStakeInGauge, setShouldStakeInGauge] = useState(false);
+  const [shouldStakeInGauge, setShouldStakeInGauge] = useState(true);
   const [shouldDepositBalanced, setShouldDepositBalanced] = useState(true);
 
   const coalescedBLusdBalance = bLusdBalance ?? Decimal.ZERO;
