@@ -414,6 +414,12 @@ There is also a return condition `bothOraclesLiveAndUnbrokenAndSimilarPrice` whi
 
 The current `PriceFeed.sol` contract has an external `fetchPrice()` function that is called by core Liquity functions which require a current ETH:USD price.  `fetchPrice()` calls each oracle's proxy, asserts on the responses, and converts returned prices to 18 digits.
 
+### Tellor price data lag
+
+Liquity sees a Tellor ETH-USD price that is at least 15 minutes old. This is because Tellor operates via proof-of-stake, and some dispute period is needed in which fake prices can be disputed. When a Tellor price is disputed, it is removed from the list of prices that Liquity sees. This dispute period ensures that, given at least one responsive disputer who disputes fake ETH prices, Liquity will never consume fake price data from Tellor.
+
+The choice of 15 minutes for the dispute period was based on careful analysis of the impact of a delayed ETH price on a Liquity system. We used historical ETH price data and looked at the impact of different delay lengths. 15 minutes was chosen as a sweet spot that gives plenty of time for disputers to respond to fake prices, while keeping any adverse impacts on Liquity to a minimum.
+
 ### PriceFeed Logic
 
 The PriceFeed contract fetches the current price and previous price from Chainlink and changes its state (called `Status`) based on certain conditions.
