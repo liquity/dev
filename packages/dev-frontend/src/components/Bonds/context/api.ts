@@ -554,6 +554,10 @@ const getProtocolInfo = async (
 
   const floorPrice = bLusdSupply.isZero
     ? Decimal.ONE
+    : decimalify(await chickenBondManager.calcSystemBackingRatio());
+
+  const floorPriceWithoutPendingHarvests = bLusdSupply.isZero
+    ? Decimal.ONE
     : await getFloorPrice(chickenBondManager, bLusdSupply);
 
   const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
@@ -600,7 +604,8 @@ const getProtocolInfo = async (
     bLusdApr,
     bLusdLpApr,
     controllerTargetAge,
-    averageBondAge
+    averageBondAge,
+    floorPriceWithoutPendingHarvests
   };
 };
 

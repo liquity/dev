@@ -53,7 +53,7 @@ export const BondStats: React.FC<BondStatsProps> = () => {
         />
       </Statistic>
       <Statistic name={l.BLUSD_FLOOR_PRICE.term} tooltip={l.BLUSD_FLOOR_PRICE.description}>
-        <Metric value={protocolInfo.floorPrice.prettify(4)} unit="LUSD" />
+        <Metric value={protocolInfo.floorPriceWithoutPendingHarvests.prettify(4)} unit="LUSD" />
       </Statistic>
       <Statistic name={l.BLUSD_APR.term} tooltip={l.BLUSD_APR.description}>
         <Metric
