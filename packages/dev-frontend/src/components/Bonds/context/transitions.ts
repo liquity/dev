@@ -238,6 +238,7 @@ export type ProtocolInfo = {
   bLusdLpApr?: Decimal;
   controllerTargetAge: Decimal;
   averageBondAge: Decimal;
+  floorPriceWithoutPendingHarvests: Decimal;
 };
 
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";
