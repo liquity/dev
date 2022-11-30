@@ -368,23 +368,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         singleLiquidation.collGasCompensation = _getCollGasCompensation(singleLiquidation.entireTroveColl);
         singleLiquidation.LUSDGasCompensation = LUSD_GAS_COMPENSATION;
         vars.collToLiquidate = singleLiquidation.entireTroveColl.sub(singleLiquidation.collGasCompensation);
-
-        // If ICR <= 100%, purely redistribute the Trove across all active Troves
-        if (_ICR <= _100pct) {
-            _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, vars.pendingDebtReward, vars.pendingCollReward);
-            _removeStake(_borrower);
-           
-            singleLiquidation.debtToOffset = 0;
-            singleLiquidation.collToSendToSP = 0;
-            singleLiquidation.debtToRedistribute = singleLiquidation.entireTroveDebt;
-            singleLiquidation.collToRedistribute = vars.collToLiquidate;
-
-            _closeTrove(_borrower, Status.closedByLiquidation);
-            emit TroveLiquidated(_borrower, singleLiquidation.entireTroveDebt, singleLiquidation.entireTroveColl, TroveManagerOperation.liquidateInRecoveryMode);
-            emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.liquidateInRecoveryMode);
-            
-        // If 100% < ICR < MCR, offset as much as possible, and redistribute the remainder
-        } else if ((_ICR > _100pct) && (_ICR < MCR)) {
+  
+        // If ICR < MCR, offset as much as possible, and redistribute the remainder
+        if (_ICR < MCR) {
              _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, vars.pendingDebtReward, vars.pendingCollReward);
             _removeStake(_borrower);
 
