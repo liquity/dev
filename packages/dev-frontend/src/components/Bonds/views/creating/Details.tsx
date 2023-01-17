@@ -6,7 +6,7 @@ import { EditableRow } from "../../../Trove/Editor";
 import { Record } from "../../Record";
 import { InfoIcon } from "../../../InfoIcon";
 import { useBondView } from "../../context/BondViewContext";
-import { HorizontalTimeline, Label, SubLabel } from "../../../HorizontalTimeline";
+import { HorizontalTimeline, Label, SubLabel, UNKNOWN_DATE } from "../../../HorizontalTimeline";
 import { EXAMPLE_NFT } from "../../context/BondViewProvider";
 import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
@@ -25,6 +25,7 @@ import {
 import { HorizontalSlider } from "../../../HorizontalSlider";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { Amount } from "../../../ActionDescription";
+import { InfiniteEstimate } from "../InfiniteEstimation";
 
 type DetailsProps = { onBack?: () => void };
 
@@ -70,6 +71,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   if (protocolInfo === undefined || simulatedProtocolInfo === undefined || lusdBalance === undefined)
     return null;
 
+  const hasMarketPremium = simulatedProtocolInfo.hasMarketPremium;
   const depositMinusClaimBondFee = Decimal.ONE.sub(protocolInfo.claimBondFee).mul(deposit);
   const rebondReturn = getReturn(
     depositMinusClaimBondFee.mul(simulatedProtocolInfo.rebondAccrualFactor),
@@ -77,7 +79,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
     simulatedProtocolInfo.simulatedMarketPrice
   );
   const rebondRoi = rebondReturn / toFloat(deposit) || 0;
-  const marketPriceMin = protocolInfo.floorPrice.add(0.015).prettify(2); // Add 0.015 to prevent market_price=floor_price infinity issues
+  const marketPriceMin = protocolInfo.floorPrice.mul(1.025).prettify(2); // Enough to display what happens below the 3% chicken in fee
   const marketPriceMax = Decimal.max(
     protocolInfo.marketPrice.mul(1.1),
     protocolInfo.floorPrice.mul(1.5)
@@ -102,19 +104,31 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
     protocolInfo.claimBondFee
   );
 
-  const breakEvenTime = getRebondOrBreakEvenTimeWithControllerAdjustment(
-    Decimal.ZERO,
-    simulatedProtocolInfo.controllerTargetAge,
-    simulatedProtocolInfo.averageBondAge,
-    Decimal.from(breakEvenDays)
-  );
+  const breakEvenTime = breakEvenDays.eq(Decimal.INFINITY)
+    ? UNKNOWN_DATE
+    : getRebondOrBreakEvenTimeWithControllerAdjustment(
+        Decimal.ZERO,
+        simulatedProtocolInfo.controllerTargetAge,
+        simulatedProtocolInfo.averageBondAge,
+        breakEvenDays
+      );
 
-  const rebondTime = getRebondOrBreakEvenTimeWithControllerAdjustment(
-    Decimal.ZERO,
-    simulatedProtocolInfo.controllerTargetAge,
-    simulatedProtocolInfo.averageBondAge,
-    Decimal.from(rebondDays)
-  );
+  const rebondTime = rebondDays.eq(Decimal.INFINITY)
+    ? UNKNOWN_DATE
+    : getRebondOrBreakEvenTimeWithControllerAdjustment(
+        Decimal.ZERO,
+        simulatedProtocolInfo.controllerTargetAge,
+        simulatedProtocolInfo.averageBondAge,
+        rebondDays
+      );
+
+  const breakEvenAccrual = hasMarketPremium
+    ? depositMinusClaimBondFee.mul(simulatedProtocolInfo.breakEvenAccrualFactor)
+    : Decimal.INFINITY;
+
+  const rebondAccrual = hasMarketPremium
+    ? depositMinusClaimBondFee.mul(simulatedProtocolInfo.rebondAccrualFactor)
+    : Decimal.INFINITY;
 
   return (
     <>
@@ -169,9 +183,11 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
               label: (
                 <>
                   <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
-                  <SubLabel>{`${depositMinusClaimBondFee
-                    .mul(simulatedProtocolInfo.breakEvenAccrualFactor)
-                    .prettify(2)} bLUSD`}</SubLabel>
+                  <SubLabel>
+                    <InfiniteEstimate estimate={breakEvenAccrual}>
+                      {breakEvenAccrual.prettify(2)} bLUSD
+                    </InfiniteEstimate>
+                  </SubLabel>
                 </>
               )
             },
@@ -182,9 +198,11 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
                   <Label description={l.OPTIMUM_REBOND_TIME.description}>
                     {l.OPTIMUM_REBOND_TIME.term}
                   </Label>
-                  <SubLabel>{`${depositMinusClaimBondFee
-                    .mul(simulatedProtocolInfo.rebondAccrualFactor)
-                    .prettify(2)} bLUSD`}</SubLabel>
+                  <SubLabel>
+                    <InfiniteEstimate estimate={rebondAccrual}>
+                      {rebondAccrual.prettify(2)} bLUSD
+                    </InfiniteEstimate>
+                  </SubLabel>
                 </>
               )
             }
@@ -207,21 +225,25 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       <Grid sx={{ my: 1, mb: 3, justifyItems: "center", pl: 2 }} gap="20px" columns={3}>
         <Record
           name={l.REBOND_RETURN.term}
-          value={rebondReturn.toFixed(2)}
+          value={hasMarketPremium ? rebondReturn.toFixed(2) : "N/A"}
           type="LUSD"
           description={l.REBOND_RETURN.description}
         />
 
         <Record
           name={l.REBOND_TIME_ROI.term}
-          value={percentify(rebondRoi).toFixed(2) + "%"}
+          value={hasMarketPremium ? percentify(rebondRoi).toFixed(2) + "%" : "N/A"}
           type=""
           description={l.REBOND_TIME_ROI.description}
         />
 
         <Record
           name={l.OPTIMUM_APY.term}
-          value={percentify(rebondRoi * (365 / controllerAdjustedRebondDays)).toFixed(2) + "%"}
+          value={
+            hasMarketPremium
+              ? percentify(rebondRoi * (365 / controllerAdjustedRebondDays)).toFixed(2) + "%"
+              : "N/A"
+          }
           type=""
           description={l.OPTIMUM_APY.description}
         />
@@ -235,10 +257,17 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         max={marketPriceMax}
         type="LUSD"
         onSliderChange={value => setSimulatedMarketPrice(value)}
-        onReset={() => setSimulatedMarketPrice(protocolInfo.marketPrice)}
+        onReset={() => resetSimulatedMarketPrice()}
       />
 
       {statuses.CREATE === "FAILED" && <Warning>Failed to create bond. Please try again.</Warning>}
+
+      {!protocolInfo.hasMarketPremium && (
+        <Warning>
+          When the market price is less than 3% above the floor price, it's not profitable to bond.
+          Buying bLUSD from the market currently generates a higher return than bonding.
+        </Warning>
+      )}
 
       {!isDepositEnough && <ErrorDescription>The minimum bond amount is 100 LUSD.</ErrorDescription>}
       {doesDepositExceedBalance && (

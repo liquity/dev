@@ -224,3 +224,8 @@ export const TREASURY_PERMANENT = {
 export const ESTIMATES_ONLY_NOTICE = {
   description: "These metrics are estimations based on the current bLUSD market price"
 };
+
+export const INFINITE_ESTIMATION = {
+  description:
+    "The market price premium is currently too low to make bonding profitable. Bonds will be profitable again if the premium returns."
+};

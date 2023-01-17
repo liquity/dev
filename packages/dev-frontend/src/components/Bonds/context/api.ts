@@ -574,7 +574,7 @@ const getProtocolInfo = async (
     rebondPeriodInDays
   } = _getProtocolInfo(marketPrice, floorPrice, claimBondFee, alphaAccrualFactor);
 
-  const simulatedMarketPrice = hasMarketPremium ? marketPrice : floorPrice.mul(1.1);
+  const simulatedMarketPrice = marketPrice;
 
   const controllerTargetAge = Decimal.from(
     (await chickenBondManager.targetAverageAgeSeconds()).toString()

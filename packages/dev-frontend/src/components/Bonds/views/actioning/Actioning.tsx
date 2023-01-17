@@ -12,6 +12,7 @@ import { Warning } from "../../../Warning";
 import { ReactModal } from "../../../ReactModal";
 import { percentify } from "../../utils";
 import { Decimal } from "@liquity/lib-base";
+import { InfiniteEstimate } from "../InfiniteEstimation";
 
 export const Actioning: React.FC = () => {
   const { dispatchEvent, view, selectedBond: bond } = useBondView();
@@ -49,7 +50,11 @@ export const Actioning: React.FC = () => {
       label: (
         <>
           <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
-          <SubLabel>{`${bond.breakEvenAccrual.prettify(2)} bLUSD`}</SubLabel>
+          <SubLabel>
+            <InfiniteEstimate estimate={bond.breakEvenAccrual}>
+              {bond.breakEvenAccrual.prettify(2)} bLUSD
+            </InfiniteEstimate>
+          </SubLabel>
         </>
       )
     },
@@ -58,7 +63,11 @@ export const Actioning: React.FC = () => {
       label: (
         <>
           <Label description={l.OPTIMUM_REBOND_TIME.description}>{l.OPTIMUM_REBOND_TIME.term}</Label>
-          <SubLabel>{`${bond.rebondAccrual.prettify(2)} bLUSD`}</SubLabel>
+          <SubLabel>
+            <InfiniteEstimate estimate={bond.rebondAccrual}>
+              {bond.rebondAccrual.prettify(2)} bLUSD
+            </InfiniteEstimate>
+          </SubLabel>
         </>
       )
     },

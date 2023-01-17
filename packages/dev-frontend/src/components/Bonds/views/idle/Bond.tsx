@@ -7,6 +7,7 @@ import { Label, SubLabel } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
 import { statuses, useBondView } from "../../context/BondViewContext";
 import { useBondAddresses } from "../../context/BondAddressesContext";
+import { InfiniteEstimate } from "../InfiniteEstimation";
 
 const getBondEvents = (bond: BondType): EventType[] => {
   const events = [
@@ -14,9 +15,7 @@ const getBondEvents = (bond: BondType): EventType[] => {
       date: new Date(bond.startTime),
       label: (
         <>
-          <Label description="bLUSD accrual starts off at 0 and increases over time.">
-            {l.BOND_CREATED.term}
-          </Label>
+          <Label description={l.BOND_CREATED.description}>{l.BOND_CREATED.term}</Label>
           <SubLabel>{`0.00 bLUSD`}</SubLabel>
         </>
       )
@@ -55,7 +54,11 @@ const getBondEvents = (bond: BondType): EventType[] => {
       label: (
         <>
           <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
-          <SubLabel>{`${bond?.breakEvenAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
+          <SubLabel>
+            <InfiniteEstimate estimate={bond?.breakEvenAccrual}>
+              {bond?.breakEvenAccrual?.prettify(2) ?? "?"} bLUSD
+            </InfiniteEstimate>
+          </SubLabel>
         </>
       )
     });
@@ -65,7 +68,11 @@ const getBondEvents = (bond: BondType): EventType[] => {
       label: (
         <>
           <Label description={l.OPTIMUM_REBOND_TIME.description}>{l.OPTIMUM_REBOND_TIME.term}</Label>
-          <SubLabel>{`${bond?.rebondAccrual?.prettify(2) ?? "?"} bLUSD`}</SubLabel>
+          <SubLabel>
+            <InfiniteEstimate estimate={bond?.rebondAccrual}>
+              {bond?.rebondAccrual?.prettify(2) ?? "?"} bLUSD
+            </InfiniteEstimate>
+          </SubLabel>
         </>
       )
     });
