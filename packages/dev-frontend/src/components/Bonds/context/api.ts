@@ -585,6 +585,8 @@ const getProtocolInfo = async (
     treasury.pending
   );
 
+  const windDownPrice = treasury.reserve.add(treasury.permanent).div(bLusdSupply);
+
   return {
     bLusdSupply,
     marketPrice,
@@ -605,7 +607,8 @@ const getProtocolInfo = async (
     bLusdLpApr,
     controllerTargetAge,
     averageBondAge,
-    floorPriceWithoutPendingHarvests
+    floorPriceWithoutPendingHarvests,
+    windDownPrice
   };
 };
 

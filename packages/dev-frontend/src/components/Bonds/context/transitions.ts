@@ -239,6 +239,7 @@ export type ProtocolInfo = {
   controllerTargetAge: Decimal;
   averageBondAge: Decimal;
   floorPriceWithoutPendingHarvests: Decimal;
+  windDownPrice: Decimal;
 };
 
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";

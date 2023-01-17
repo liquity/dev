@@ -174,6 +174,12 @@ export const BLUSD_FLOOR_PRICE = {
     "The amount of LUSD that an arbitrageur could redeem bLUSD for thus creating a lower bound bLUSD market price."
 };
 
+export const BLUSD_WIND_DOWN_PRICE = {
+  term: "Wind down price",
+  description:
+    "The protocol supports a graceful wind down mechanism whereby Yearn Finance governance can trigger a special function which moves the Permanent bucket LUSD into the Reserve, thus increasing the floor price. This new floor price is the 'wind down price'."
+};
+
 export const BLUSD_APR = {
   term: "bLUSD APR",
   description: "The APR of bLUSD, based on the yield generated from each bucket in the Treasury."
