@@ -11,6 +11,7 @@ import { Claim } from "./actions/claim/Claim";
 import { Warning } from "../../../Warning";
 import { ReactModal } from "../../../ReactModal";
 import { percentify } from "../../utils";
+import { Decimal } from "@liquity/lib-base";
 
 export const Actioning: React.FC = () => {
   const { dispatchEvent, view, selectedBond: bond } = useBondView();
@@ -38,7 +39,7 @@ export const Actioning: React.FC = () => {
       date: new Date(bond.startTime),
       label: (
         <>
-          <Label>{l.BOND_CREATED.term}</Label>
+          <Label description={l.BOND_CREATED.description}>{l.BOND_CREATED.term}</Label>
           <SubLabel>{`0 bLUSD`}</SubLabel>
         </>
       )
@@ -47,7 +48,7 @@ export const Actioning: React.FC = () => {
       date: new Date(bond.breakEvenTime),
       label: (
         <>
-          <Label>{l.BREAK_EVEN_TIME.term}</Label>
+          <Label description={l.BREAK_EVEN_TIME.description}>{l.BREAK_EVEN_TIME.term}</Label>
           <SubLabel>{`${bond.breakEvenAccrual.prettify(2)} bLUSD`}</SubLabel>
         </>
       )
@@ -56,7 +57,7 @@ export const Actioning: React.FC = () => {
       date: new Date(bond.rebondTime),
       label: (
         <>
-          <Label>{l.OPTIMUM_REBOND_TIME.term}</Label>
+          <Label description={l.OPTIMUM_REBOND_TIME.description}>{l.OPTIMUM_REBOND_TIME.term}</Label>
           <SubLabel>{`${bond.rebondAccrual.prettify(2)} bLUSD`}</SubLabel>
         </>
       )
@@ -123,22 +124,28 @@ export const Actioning: React.FC = () => {
         <Grid gap="20px" columns={3} sx={{ my: 2, justifyItems: "center" }}>
           <Record
             name={l.REBOND_RETURN.term}
-            value={bond.rebondReturn.toFixed(2)}
+            value={bond.rebondAccrual.eq(Decimal.INFINITY) ? "N/A" : bond.rebondReturn.toFixed(2)}
             type="LUSD"
             description={l.REBOND_RETURN.description}
           />
 
           <Record
             name={l.REBOND_TIME_ROI.term}
-            value={percentify(bond.rebondRoi).toFixed(2) + "%"}
-            type=""
+            value={
+              bond.rebondAccrual.eq(Decimal.INFINITY)
+                ? "N/A"
+                : percentify(bond.rebondRoi).toFixed(2) + "%"
+            }
             description={l.REBOND_TIME_ROI.description}
           />
 
           <Record
             name={l.OPTIMUM_APY.term}
-            value={percentify(bond.rebondApr).toFixed(2) + "%"}
-            type=""
+            value={
+              bond.rebondAccrual.eq(Decimal.INFINITY)
+                ? "N/A"
+                : percentify(bond.rebondApr).toFixed(2) + "%"
+            }
             description={l.OPTIMUM_APY.description}
           />
         </Grid>

@@ -20,7 +20,7 @@ export const BONDS_NAVIGATION = {
 
 export const BOND_CREATED = {
   term: "Bond created",
-  description: "The date you created your bond."
+  description: "The date you created your bond. The bLUSD accrual starts at 0 and increases over time."
 };
 
 export const AVAILABLE_BONDS = {

@@ -6,7 +6,7 @@ type RecordType = {
   name: string;
   description: string;
   value?: string;
-  type: string;
+  type?: string;
   style?: ThemeUIStyleObject;
 };
 
