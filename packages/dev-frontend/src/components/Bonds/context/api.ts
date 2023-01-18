@@ -29,15 +29,7 @@ import type {
 } from "@liquity/chicken-bonds/lusd/types/ChickenBondManager";
 import { Decimal } from "@liquity/lib-base";
 import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
-import type {
-  ProtocolInfo,
-  Bond,
-  BondStatus,
-  Stats,
-  ClaimedBonds,
-  Maybe,
-  BLusdLpRewards
-} from "./transitions";
+import type { ProtocolInfo, Bond, BondStatus, Stats, Maybe, BLusdLpRewards } from "./transitions";
 import {
   numberify,
   decimalify,
@@ -482,39 +474,89 @@ const getProtocolInfo = async (
   chickenBondManager: ChickenBondManager,
   isMainnet: boolean
 ): Promise<ProtocolInfo> => {
-  const bLusdSupply = decimalify(await bLusdToken.totalSupply());
-  const marketPrice = isMainnet
-    ? await getBlusdAmmPriceMainnet(bLusdAmm)
-    : await getBlusdAmmPrice(bLusdAmm);
-  const [pending, reserve, permanent] = await chickenBondManager.getTreasury();
+  // TS breaks when including this call, or any more than 10 elements, in the Promise.all below.
+  const bammLusdDebtRequest = chickenBondManager.getBAMMLUSDDebt().then(decimalify);
+
+  const [
+    bLusdSupply,
+    marketPrice,
+    _treasury,
+    protocolOwnedLusdInStabilityPool,
+    protocolLusdInCurve,
+    _floorPrice,
+    claimBondFee,
+    alphaAccrualFactor,
+    controllerTargetAge,
+    totalWeightedStartTimes
+  ] = await Promise.all([
+    bLusdToken.totalSupply().then(decimalify),
+    isMainnet ? getBlusdAmmPriceMainnet(bLusdAmm) : getBlusdAmmPrice(bLusdAmm),
+    chickenBondManager.getTreasury().then(bucket => bucket.map(decimalify)),
+    chickenBondManager.getOwnedLUSDInSP().then(decimalify),
+    chickenBondManager.getTotalLUSDInCurve().then(decimalify),
+    chickenBondManager.calcSystemBackingRatio().then(decimalify),
+    chickenBondManager.CHICKEN_IN_AMM_FEE().then(decimalify),
+    chickenBondManager.calcUpdatedAccrualParameter().then(p => decimalify(p).div(24 * 60 * 60)),
+    chickenBondManager.targetAverageAgeSeconds().then(t => Decimal.from(t.toString())),
+    chickenBondManager.totalWeightedStartTimes().then(decimalify)
+  ]);
+
+  const bammLusdDebt = await bammLusdDebtRequest;
 
   const treasury = {
-    pending: decimalify(pending),
-    reserve: decimalify(reserve),
-    permanent: decimalify(permanent),
-    total: decimalify(pending.add(reserve).add(permanent))
+    pending: _treasury[0],
+    reserve: _treasury[1],
+    permanent: _treasury[2],
+    total: _treasury[0].add(_treasury[1]).add(_treasury[2])
   };
 
-  if (cachedApys.lusd3Crv === undefined || cachedApys.stabilityPool === undefined) {
-    await cacheYearnVaultApys();
-  }
+  const cachedApysRequests =
+    cachedApys.lusd3Crv === undefined ||
+    cachedApys.stabilityPool === undefined ||
+    cachedApys.bLusdLusd3Crv === undefined
+      ? [cacheYearnVaultApys(), cacheCurveLpApy()]
+      : null;
 
-  if (cachedApys.bLusdLusd3Crv === undefined) {
-    await cacheCurveLpApy();
-  }
+  const protocolLusdInStabilityPool = treasury.pending.add(protocolOwnedLusdInStabilityPool);
+
+  const floorPrice = bLusdSupply.isZero ? Decimal.ONE : _floorPrice;
+
+  const floorPriceWithoutPendingHarvests = bLusdSupply.isZero
+    ? Decimal.ONE
+    : getFloorPrice(
+        bammLusdDebt,
+        protocolLusdInCurve,
+        treasury.pending,
+        treasury.permanent,
+        bLusdSupply
+      );
+
+  const averageBondAge = getAverageBondAgeInSeconds(totalWeightedStartTimes, treasury.pending);
 
   let yieldAmplification: Maybe<Decimal> = undefined;
   let bLusdApr: Maybe<Decimal> = undefined;
   let bLusdLpApr: Maybe<Decimal> = cachedApys.bLusdLusd3Crv;
 
-  const protocolOwnedLusdInStabilityPool = decimalify(await chickenBondManager.getOwnedLUSDInSP());
-  const protocolLusdInStabilityPool = treasury.pending.add(protocolOwnedLusdInStabilityPool);
-  const protocolLusdInCurve = decimalify(await chickenBondManager.getTotalLUSDInCurve());
-
   const fairPrice = {
     lower: treasury.total.sub(treasury.pending).div(bLusdSupply),
     upper: treasury.total.div(bLusdSupply)
   };
+
+  const {
+    marketPricePremium,
+    hasMarketPremium,
+    breakEvenAccrualFactor,
+    rebondAccrualFactor,
+    breakEvenPeriodInDays,
+    rebondPeriodInDays
+  } = _getProtocolInfo(marketPrice, floorPrice, claimBondFee, alphaAccrualFactor);
+
+  const simulatedMarketPrice = marketPrice;
+
+  const windDownPrice = treasury.reserve.add(treasury.permanent).div(bLusdSupply);
+
+  // We need to know APYs to calculate the stats below
+  if (cachedApysRequests) await Promise.all(cachedApysRequests);
 
   if (
     cachedApys.lusd3Crv !== undefined &&
@@ -535,41 +577,6 @@ const getProtocolInfo = async (
       .add(protocolLusdInCurve.mul(cachedApys.lusd3Crv.div(cachedApys.stabilityPool)))
       .div(bLusdSupply);
   }
-
-  const floorPrice = bLusdSupply.isZero
-    ? Decimal.ONE
-    : decimalify(await chickenBondManager.calcSystemBackingRatio());
-
-  const floorPriceWithoutPendingHarvests = bLusdSupply.isZero
-    ? Decimal.ONE
-    : await getFloorPrice(chickenBondManager, bLusdSupply);
-
-  const claimBondFee = decimalify(await chickenBondManager.CHICKEN_IN_AMM_FEE());
-  const alphaAccrualFactor = decimalify(await chickenBondManager.calcUpdatedAccrualParameter()).div(
-    24 * 60 * 60
-  );
-
-  const {
-    marketPricePremium,
-    hasMarketPremium,
-    breakEvenAccrualFactor,
-    rebondAccrualFactor,
-    breakEvenPeriodInDays,
-    rebondPeriodInDays
-  } = _getProtocolInfo(marketPrice, floorPrice, claimBondFee, alphaAccrualFactor);
-
-  const simulatedMarketPrice = marketPrice;
-
-  const controllerTargetAge = Decimal.from(
-    (await chickenBondManager.targetAverageAgeSeconds()).toString()
-  );
-
-  const averageBondAge = getAverageBondAgeInSeconds(
-    decimalify(await chickenBondManager.totalWeightedStartTimes()),
-    treasury.pending
-  );
-
-  const windDownPrice = treasury.reserve.add(treasury.permanent).div(bLusdSupply);
 
   return {
     bLusdSupply,

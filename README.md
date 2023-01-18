@@ -1555,11 +1555,7 @@ ALCHEMY_API_KEY=enter_your_key_here yarn start-fork
 yarn start-demo:dev-frontend
 ```
 
-This spawns a modified version of dev-frontend that automatically signs transactions so you don't need to interact with a browser wallet. It directly uses the local blockchain node. This lets you play around with Liquity more freely.
-
-Make sure you configure your browser wallet to use the local fork RPC node: `http://localhost:8045`
-
-When you no longer need the forked frontend mode, press Ctrl+C.
+This spawns a modified version of dev-frontend that automatically signs transactions so you don't need to interact with a browser wallet. It directly uses the local forked RPC node. 
 
 #### Build dev-frontend for production
 
