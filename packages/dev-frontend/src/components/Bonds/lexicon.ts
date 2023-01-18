@@ -175,9 +175,9 @@ export const BLUSD_FLOOR_PRICE = {
 };
 
 export const BLUSD_WIND_DOWN_PRICE = {
-  term: "Wind down price",
+  term: "Net asset value",
   description:
-    "The protocol supports a graceful wind down mechanism whereby Yearn Finance governance can trigger a special function which moves the Permanent bucket LUSD into the Reserve, thus increasing the floor price. This new floor price is the 'wind down price'."
+    "The protocol supports a graceful wind down mechanism for migration purposes, whereby Yearn Finance governance can trigger a special function which moves the Permanent bucket LUSD into the Reserve, thus enabling all bLUSD to be redeemed for a higher floor price."
 };
 
 export const BLUSD_APR = {
