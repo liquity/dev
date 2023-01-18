@@ -232,23 +232,6 @@ const cacheYearnVaultApys = async (): Promise<void> => {
   }
 };
 
-const getClaimedBonds = async (
-  account: string,
-  chickenBondManager: ChickenBondManager
-): Promise<ClaimedBonds> => {
-  const claimedBondsFilter = await chickenBondManager.filters.BondClaimed(account);
-  const events = await chickenBondManager.queryFilter(claimedBondsFilter);
-  const claimedBonds = events.reduce((accumulator, current) => {
-    const { bondId, bLusdAmount } = current.args;
-    return {
-      ...accumulator,
-      [bondId.toNumber().toString()]: decimalify(bLusdAmount)
-    };
-  }, {});
-
-  return claimedBonds;
-};
-
 const getAccountBonds = async (
   account: string,
   bondNft: BondNFT,
@@ -280,7 +263,8 @@ const getAccountBonds = async (
       startTimes: bondIds.map(bondId => bondNft.getBondStartTime(bondId)),
       endTimes: bondIds.map(bondId => bondNft.getBondEndTime(bondId)),
       statuses: bondIds.map(bondId => bondNft.getBondStatus(bondId)),
-      tokenUris: bondIds.map(bondId => bondNft.tokenURI(bondId))
+      tokenUris: bondIds.map(bondId => bondNft.tokenURI(bondId)),
+      claimedAmounts: bondIds.map(bondId => bondNft.getBondClaimedBLUSD(bondId))
     };
 
     const bondDeposits = await Promise.all(bondRequests.deposits);
@@ -289,7 +273,7 @@ const getAccountBonds = async (
     const bondEndTimes = await Promise.all(bondRequests.endTimes);
     const bondStatuses = await Promise.all(bondRequests.statuses);
     const bondTokenUris = await Promise.all(bondRequests.tokenUris);
-    const claimedBonds = await getClaimedBonds(account, chickenBondManager);
+    const bondClaimedAmounts = await Promise.all(bondRequests.claimedAmounts);
 
     const bonds = bondIds
       .reduce<Bond[]>((accumulator, _, idx) => {
@@ -368,7 +352,7 @@ const getAccountBonds = async (
         const rebondReturn = accrued.isZero ? 0 : getReturn(rebondAccrual, deposit, marketPrice);
         const rebondRoi = rebondReturn / toFloat(deposit);
         const rebondApr = rebondRoi * (365 / (bondAgeInDays + remainingRebondDays));
-        const claimedAmount = claimedBonds[id];
+        const claimedAmount = Decimal.from(numberify(bondClaimedAmounts[idx]));
 
         return [
           ...accumulator,
