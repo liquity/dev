@@ -255,8 +255,6 @@ export type BondTransaction =
 
 export type BondTransactionStatuses = Record<BondTransaction, TransactionStatus>;
 
-export type ClaimedBonds = Record<string, Decimal>;
-
 export type Maybe<T> = T | undefined;
 
 export type BLusdLpRewards = Array<{ name: string; address: string; amount: Decimal }>;
