@@ -1,4 +1,4 @@
-import { Flex, Card, Text, Slider as ThemeUiSlider, Button } from "theme-ui";
+import { Flex, Text, Slider as ThemeUiSlider, Button } from "theme-ui";
 import { Decimal } from "@liquity/lib-base";
 import { toFloat } from "./Bonds/utils";
 import { InfoIcon } from "./InfoIcon";
@@ -27,7 +27,7 @@ export const HorizontalSlider: React.FC<SliderProps> = ({
   onReset
 }) => {
   return (
-    <Flex mb={2} sx={{ flexDirection: "column" }}>
+    <Flex mb={2} mx={1} sx={{ flexDirection: "column" }}>
       <Flex
         as="h4"
         sx={{
@@ -36,22 +36,25 @@ export const HorizontalSlider: React.FC<SliderProps> = ({
           justifyContent: "center"
         }}
       >
+        {name}
+        <InfoIcon size="xs" tooltip={description} />
         {onReset && (
           <Button
             variant="icon"
             sx={{
-              position: "absolute",
-              left: "66%",
-              mt: "6px",
-              fontSize: 1
+              m: 0,
+              ml: "24px",
+              mt: 1,
+              border: "none",
+              fontSize: 1,
+              width: 0,
+              height: 0
             }}
             onClick={onReset}
           >
             Reset
           </Button>
         )}
-        {name}
-        <InfoIcon size="xs" tooltip={<Card variant="tooltip">{description}</Card>} />
       </Flex>
 
       <Flex sx={{ flexGrow: 1, alignItems: "center" }}>

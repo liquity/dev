@@ -105,57 +105,39 @@ export const Actioning: React.FC = () => {
         <HorizontalTimeline events={events} />
       </Flex>
       <Grid gap="12px" columns={3} sx={{ my: 4, justifyItems: "center" }}>
-        <Record
-          name={l.BOND_DEPOSIT.term}
-          value={bond.deposit.prettify(2)}
-          type="LUSD"
-          description={l.BOND_DEPOSIT.description}
-        />
+        <Record lexicon={l.BOND_DEPOSIT} value={bond.deposit.prettify(2)} type="LUSD" />
 
-        <Record
-          name={l.MARKET_VALUE.term}
-          value={bond.marketValue.prettify(2)}
-          type="LUSD"
-          description={l.MARKET_VALUE.description}
-        />
+        <Record lexicon={l.MARKET_VALUE} value={bond.marketValue.prettify(2)} type="LUSD" />
 
         {view === "CLAIMING" && (
-          <Record
-            name={l.BOND_RETURN.term}
-            value={bond.claimNowReturn.toFixed(2)}
-            type="LUSD"
-            description={l.BOND_RETURN.description}
-          />
+          <Record lexicon={l.BOND_RETURN} value={bond.claimNowReturn.toFixed(2)} type="LUSD" />
         )}
       </Grid>
       <details>
         <summary sx={{ pl: 2, mt: 4, cursor: "pointer" }}>Rebond estimations</summary>
         <Grid gap="20px" columns={3} sx={{ my: 2, justifyItems: "center" }}>
           <Record
-            name={l.REBOND_RETURN.term}
+            lexicon={l.REBOND_RETURN}
             value={bond.rebondAccrual.eq(Decimal.INFINITY) ? "N/A" : bond.rebondReturn.toFixed(2)}
             type="LUSD"
-            description={l.REBOND_RETURN.description}
           />
 
           <Record
-            name={l.REBOND_TIME_ROI.term}
+            lexicon={l.REBOND_TIME_ROI}
             value={
               bond.rebondAccrual.eq(Decimal.INFINITY)
                 ? "N/A"
                 : percentify(bond.rebondRoi).toFixed(2) + "%"
             }
-            description={l.REBOND_TIME_ROI.description}
           />
 
           <Record
-            name={l.OPTIMUM_APY.term}
+            lexicon={l.OPTIMUM_APY}
             value={
               bond.rebondAccrual.eq(Decimal.INFINITY)
                 ? "N/A"
                 : percentify(bond.rebondApr).toFixed(2) + "%"
             }
-            description={l.OPTIMUM_APY.description}
           />
         </Grid>
       </details>

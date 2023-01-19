@@ -94,18 +94,9 @@ export const OptimisticBond: React.FC<BondProps> = ({ bond, style }) => {
                 fontSize: "14.5px"
               }}
             >
-              <Record
-                name={l.BOND_DEPOSIT.term}
-                value={bond.deposit.prettify(2)}
-                type="LUSD"
-                description={l.BOND_DEPOSIT.description}
-              />
+              <Record lexicon={l.BOND_DEPOSIT} value={bond.deposit.prettify(2)} type="LUSD" />
 
-              <Record
-                name={l.MARKET_VALUE.term}
-                type="LUSD"
-                description={l.MARKET_VALUE.description}
-              />
+              <Record lexicon={l.MARKET_VALUE} type="LUSD" />
             </Flex>
             <Actions bondId={bond.id} disabled />
           </Flex>

@@ -11,7 +11,8 @@ const modalStyle = {
     transform: "translate(-50%, -50%)",
     maxWidth: "620px",
     width: "580px",
-    maxHeight: "94vh"
+    maxHeight: "94vh",
+    overflow: "visible"
   },
   overlay: { zIndex: 2 }
 };
@@ -28,9 +29,20 @@ export const ReactModal: React.FC<ModalProps> = ({ children, onDismiss, style })
     <Modal
       isOpen={true}
       onRequestClose={handleDismiss}
-      style={{ ...modalStyle, content: { ...modalStyle.content, ...style } }}
+      style={{
+        ...modalStyle,
+        content: { ...modalStyle.content, ...style }
+      }}
     >
-      {children}
+      <div
+        style={{
+          position: "static",
+          overflowY: "scroll",
+          maxHeight: "90vh"
+        }}
+      >
+        {children}
+      </div>
     </Modal>
   );
 };

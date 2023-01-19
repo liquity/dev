@@ -224,28 +224,25 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
 
       <Grid sx={{ my: 1, mb: 3, justifyItems: "center", pl: 2 }} gap="20px" columns={3}>
         <Record
-          name={l.REBOND_RETURN.term}
+          lexicon={l.REBOND_RETURN}
           value={hasMarketPremium ? rebondReturn.toFixed(2) : "N/A"}
           type="LUSD"
-          description={l.REBOND_RETURN.description}
         />
 
         <Record
-          name={l.REBOND_TIME_ROI.term}
+          lexicon={l.REBOND_TIME_ROI}
           value={hasMarketPremium ? percentify(rebondRoi).toFixed(2) + "%" : "N/A"}
           type=""
-          description={l.REBOND_TIME_ROI.description}
         />
 
         <Record
-          name={l.OPTIMUM_APY.term}
+          lexicon={l.OPTIMUM_APY}
           value={
             hasMarketPremium
               ? percentify(rebondRoi * (365 / controllerAdjustedRebondDays)).toFixed(2) + "%"
               : "N/A"
           }
           type=""
-          description={l.OPTIMUM_APY.description}
         />
       </Grid>
 
@@ -264,8 +261,8 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
 
       {!protocolInfo.hasMarketPremium && (
         <Warning>
-          When the market price is less than 3% above the floor price, it's not profitable to bond.
-          Buying bLUSD from the market currently generates a higher return than bonding.
+          When the bLUSD market price is less than 3% above the floor price, it's not profitable to
+          bond. Buying bLUSD from the market currently generates a higher return than bonding.
         </Warning>
       )}
 

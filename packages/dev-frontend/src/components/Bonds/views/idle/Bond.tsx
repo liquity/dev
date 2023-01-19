@@ -139,18 +139,12 @@ export const Bond: React.FC<BondProps> = ({ bond, style }) => {
                 fontSize: "14.5px"
               }}
             >
-              <Record
-                name={l.BOND_DEPOSIT.term}
-                value={bond.deposit.prettify(2)}
-                type="LUSD"
-                description={l.BOND_DEPOSIT.description}
-              />
+              <Record lexicon={l.BOND_DEPOSIT} value={bond.deposit.prettify(2)} type="LUSD" />
               {bond.status === "PENDING" && (
                 <Record
-                  name={l.MARKET_VALUE.term}
+                  lexicon={l.MARKET_VALUE}
                   value={bond?.marketValue?.prettify(2) ?? "0"}
                   type="LUSD"
-                  description={l.MARKET_VALUE.description}
                 />
               )}
             </Flex>

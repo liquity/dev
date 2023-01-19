@@ -1,6 +1,5 @@
 import { Decimal, Decimalish } from "@liquity/lib-base";
 import { InfoIcon } from "../../InfoIcon";
-import { Card } from "theme-ui";
 import * as l from "../lexicon";
 
 type InfiniteEstimateProps = {
@@ -15,7 +14,8 @@ export const InfiniteEstimate: React.FC<InfiniteEstimateProps> = ({ estimate, ch
       {Decimal.INFINITY.toString()}
       <InfoIcon
         size="xs"
-        tooltip={<Card variant="tooltip">{l.INFINITE_ESTIMATION.description}</Card>}
+        tooltip={l.INFINITE_ESTIMATION.description}
+        link={l.INFINITE_ESTIMATION.link}
       />
       &nbsp;
     </>

@@ -5,8 +5,8 @@ import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useLiquity } from "../hooks/LiquityContext";
-import { COIN, GT } from "../strings";
 import { Statistic } from "./Statistic";
+import * as l from "../lexicon";
 
 const selectBalances = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -20,9 +20,9 @@ const Balances: React.FC = () => {
   return (
     <Box sx={{ mb: 3 }}>
       <Heading>My Account Balances</Heading>
-      <Statistic name="ETH"> {accountBalance.prettify(4)}</Statistic>
-      <Statistic name={COIN}> {lusdBalance.prettify()}</Statistic>
-      <Statistic name={GT}>{lqtyBalance.prettify()}</Statistic>
+      <Statistic lexicon={l.ETH}>{accountBalance.prettify(4)}</Statistic>
+      <Statistic lexicon={l.LUSD}>{lusdBalance.prettify()}</Statistic>
+      <Statistic lexicon={l.LQTY}>{lqtyBalance.prettify()}</Statistic>
     </Box>
   );
 };
@@ -92,54 +92,25 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
         Protocol
       </Heading>
 
-      <Statistic
-        name="Borrowing Fee"
-        tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
-      >
-        {borrowingFeePct.toString(2)}
-      </Statistic>
+      <Statistic lexicon={l.BORROW_FEE}>{borrowingFeePct.toString(2)}</Statistic>
 
-      <Statistic
-        name="TVL"
-        tooltip="The Total Value Locked (TVL) is the total value of Ether locked as collateral in the system, given in ETH and USD."
-      >
+      <Statistic lexicon={l.TVL}>
         {total.collateral.shorten()} <Text sx={{ fontSize: 1 }}>&nbsp;ETH</Text>
         <Text sx={{ fontSize: 1 }}>
           &nbsp;(${Decimal.from(total.collateral.mul(price)).shorten()})
         </Text>
       </Statistic>
-      <Statistic name="Troves" tooltip="The total number of active Troves in the system.">
-        {Decimal.from(numberOfTroves).prettify(0)}
-      </Statistic>
-      <Statistic name="LUSD supply" tooltip="The total LUSD minted by the Liquity Protocol.">
-        {total.debt.shorten()}
-      </Statistic>
+      <Statistic lexicon={l.TROVES}>{Decimal.from(numberOfTroves).prettify(0)}</Statistic>
+      <Statistic lexicon={l.LUSD_SUPPLY}>{total.debt.shorten()}</Statistic>
       {lusdInStabilityPoolPct && (
-        <Statistic
-          name="LUSD in Stability Pool"
-          tooltip="The total LUSD currently held in the Stability Pool, expressed as an amount and a fraction of the LUSD supply.
-        "
-        >
+        <Statistic lexicon={l.STABILITY_POOL_LUSD}>
           {lusdInStabilityPool.shorten()}
           <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct.toString(1)})</Text>
         </Statistic>
       )}
-      <Statistic
-        name="Staked LQTY"
-        tooltip="The total amount of LQTY that is staked for earning fee revenue."
-      >
-        {totalStakedLQTY.shorten()}
-      </Statistic>
-      <Statistic
-        name="Total Collateral Ratio"
-        tooltip="The ratio of the Dollar value of the entire system collateral at the current ETH:USD price, to the entire system debt."
-      >
-        {totalCollateralRatioPct.prettify()}
-      </Statistic>
-      <Statistic
-        name="Recovery Mode"
-        tooltip="Recovery Mode is activated when the Total Collateral Ratio (TCR) falls below 150%. When active, your Trove can be liquidated if its collateral ratio is below the TCR. The maximum collateral you can lose from liquidation is capped at 110% of your Trove's debt. Operations are also restricted that would negatively impact the TCR."
-      >
+      <Statistic lexicon={l.STAKED_LQTY}>{totalStakedLQTY.shorten()}</Statistic>
+      <Statistic lexicon={l.TCR}>{totalCollateralRatioPct.prettify()}</Statistic>
+      <Statistic lexicon={l.RECOVERY_MODE}>
         {total.collateralRatioIsBelowCritical(price) ? <Box color="danger">Yes</Box> : "No"}
       </Statistic>
       {}
@@ -147,14 +118,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         Frontend
       </Heading>
-      {kickbackRatePct && (
-        <Statistic
-          name="Kickback Rate"
-          tooltip="A rate between 0 and 100% set by the Frontend Operator that determines the fraction of LQTY that will be paid out as a kickback to the Stability Providers using the frontend."
-        >
-          {kickbackRatePct}%
-        </Statistic>
-      )}
+      {kickbackRatePct && <Statistic lexicon={l.KICKBACK_RATE}>{kickbackRatePct}%</Statistic>}
 
       <Box sx={{ mt: 3, opacity: 0.66 }}>
         <Box sx={{ fontSize: 0 }}>

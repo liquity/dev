@@ -10,7 +10,9 @@ import { SentLiquityTransaction, LiquityReceipt } from "@liquity/lib-base";
 
 import { useLiquity } from "../hooks/LiquityContext";
 
-import { Tooltip, TooltipProps, Hoverable } from "./Tooltip";
+import { Tooltip } from "./Tooltip";
+import type { TooltipProps } from "./Tooltip";
+
 import { TransactionStatus } from "./TransactionStatus";
 
 type TransactionIdle = {
@@ -112,7 +114,7 @@ export type TransactionFunction = (
 type TransactionProps<C> = {
   id: string;
   tooltip?: string;
-  tooltipPlacement?: TooltipProps<C>["placement"];
+  tooltipPlacement?: TooltipProps["placement"];
   showFailure?: "asTooltip" | "asChildText";
   requires?: readonly (readonly [boolean, string])[];
   send: TransactionFunction;
@@ -154,7 +156,7 @@ export const useTransactionFunction = (
   return [sendTransaction, transactionState];
 };
 
-export function Transaction<C extends React.ReactElement<ButtonlikeProps & Hoverable>>({
+export function Transaction<C extends React.ReactElement<ButtonlikeProps>>({
   id,
   tooltip,
   tooltipPlacement,
