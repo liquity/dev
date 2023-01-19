@@ -26,6 +26,7 @@ import { HorizontalSlider } from "../../../HorizontalSlider";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { Amount } from "../../../ActionDescription";
 import { InfiniteEstimate } from "../InfiniteEstimation";
+import { LearnMoreLink } from "../../../Tooltip";
 
 type DetailsProps = { onBack?: () => void };
 
@@ -263,7 +264,8 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       {!protocolInfo.hasMarketPremium && (
         <Warning>
           When the bLUSD market price is less than 3% above the floor price, it's not profitable to
-          bond. Buying bLUSD from the market currently generates a higher return than bonding.
+          bond. Buying bLUSD from the market currently generates a higher return than bonding.{" "}
+          <LearnMoreLink link={l.INFINITE_ESTIMATION.link} />
         </Warning>
       )}
 
