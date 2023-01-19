@@ -1,20 +1,21 @@
-import { ThemeUIStyleObject, Flex, Card, Text } from "theme-ui";
+import { ThemeUIStyleObject, Flex, Text } from "theme-ui";
 import { InfoIcon } from "../InfoIcon";
 import { Placeholder } from "../Placeholder";
+import type { Lexicon } from "../../lexicon";
 
 type RecordType = {
-  name: string;
-  description: string;
+  lexicon: Lexicon;
+  description?: string;
   value?: string;
-  type: string;
+  type?: string;
   style?: ThemeUIStyleObject;
 };
 
-export const Record: React.FC<RecordType> = ({ name, description, value, type, style }) => {
+export const Record: React.FC<RecordType> = ({ lexicon, value, type, style }) => {
   return (
     <Flex sx={{ flexDirection: "column", ...style }}>
       <Flex as="h4" sx={{ fontWeight: "300", alignItems: "baseline", justifyContent: "center" }}>
-        {name} <InfoIcon size="xs" tooltip={<Card variant="tooltip">{description}</Card>} />
+        {lexicon.term} <InfoIcon size="xs" tooltip={lexicon.description} link={lexicon.link} />
       </Flex>
       <Text as="h3" sx={{ display: "flex", justifyContent: "center" }}>
         {value ? (

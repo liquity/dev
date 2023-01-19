@@ -8,8 +8,8 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 1,
       forking: {
-        url: `https://eth-mainnet.alchemyapi.io/v2/${alchemyApiKey}`,
-        blockNumber: 15767479
+        url: `https://eth-mainnet.g.alchemy.com/v2/${alchemyApiKey}`,
+        blockNumber: 16233419
       },
       accounts: [
         {

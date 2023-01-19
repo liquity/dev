@@ -12,7 +12,7 @@ type RowProps = SxProp & {
 
 export const Row: React.FC<RowProps> = ({ sx, label, labelId, labelFor, children, infoIcon }) => {
   return (
-    <Flex sx={{ alignItems: "stretch", ...sx }}>
+    <Flex sx={{ alignItems: "stretch", position: "relative", width: "100%", ...sx }}>
       <Label
         id={labelId}
         htmlFor={labelFor}
@@ -21,7 +21,6 @@ export const Row: React.FC<RowProps> = ({ sx, label, labelId, labelFor, children
           pl: 3,
           pt: "12px",
           position: "absolute",
-
           fontSize: 1,
           border: 1,
           borderColor: "transparent"

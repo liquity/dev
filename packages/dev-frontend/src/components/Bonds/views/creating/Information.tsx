@@ -65,7 +65,7 @@ export const Information: React.FC = () => {
         </Paragraph>
         <Paragraph sx={{ mt: 3 }}>
           Please visit the&nbsp;
-          <Link href="https://liquity.gitbook.io/chicken-bonds/" target="_blank">
+          <Link href="https://docs.chickenbonds.org/" target="_blank">
             docs
           </Link>
           &nbsp;to understand how bonds work.

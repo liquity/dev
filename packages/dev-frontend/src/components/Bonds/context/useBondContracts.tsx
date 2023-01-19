@@ -141,18 +141,26 @@ export const useBondContracts = (): BondContracts => {
         return undefined;
       }
 
-      const protocolInfo = await api.getProtocolInfo(
+      const protocolInfoPromise = api.getProtocolInfo(
         bLusdToken,
         bLusdAmm,
         chickenBondManager,
         isMainnet
       );
 
-      const bonds = await api.getAccountBonds(account, bondNft, chickenBondManager, protocolInfo);
-      const stats = await api.getStats(chickenBondManager);
+      const bondsPromise = api.getAccountBonds(
+        account,
+        bondNft,
+        chickenBondManager,
+        await protocolInfoPromise
+      );
 
-      const lpToken = await api.getLpToken(bLusdAmm);
-      const lpStakingContract = await api.erc20From(BLUSD_AMM_STAKING_ADDRESS, bLusdAmm.provider);
+      const [protocolInfo, stats, lpToken, lpStakingContract] = await Promise.all([
+        protocolInfoPromise,
+        api.getStats(chickenBondManager),
+        api.getLpToken(bLusdAmm),
+        api.erc20From(BLUSD_AMM_STAKING_ADDRESS, bLusdAmm.provider)
+      ]);
 
       const [
         bLusdBalance,
@@ -160,17 +168,19 @@ export const useBondContracts = (): BondContracts => {
         lpTokenBalance,
         stakedLpTokenBalance,
         lpTokenSupply,
-        bLusdAmmCoinBalances
+        bLusdAmmCoinBalances,
+        lpRewards
       ] = await Promise.all([
         api.getTokenBalance(account, bLusdToken),
         api.getTokenBalance(account, lusdToken),
         api.getTokenBalance(account, lpToken),
         api.getTokenBalance(account, lpStakingContract),
         api.getTokenTotalSupply(lpToken),
-        api.getCoinBalances(bLusdAmm)
+        api.getCoinBalances(bLusdAmm),
+        api.getLpRewards(account, bLusdGauge)
       ]);
 
-      const lpRewards = await api.getLpRewards(account, bLusdGauge);
+      const bonds = await bondsPromise;
 
       return {
         protocolInfo,

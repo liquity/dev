@@ -1,5 +1,5 @@
 import React from "react";
-import { Flex, Box, Text, Card } from "theme-ui";
+import { Flex, Box, Text } from "theme-ui";
 import type { ThemeUIStyleObject } from "theme-ui";
 import { InfoIcon } from "./InfoIcon";
 import { Placeholder } from "./Placeholder";
@@ -111,16 +111,7 @@ export const Label: React.FC<LabelProps> = ({ children, description, style }) =>
     >
       {children}
       &nbsp;
-      {description ? (
-        <InfoIcon
-          size="xs"
-          tooltip={
-            <Card variant="tooltip" sx={{ width: "200px" }}>
-              {description}
-            </Card>
-          }
-        />
-      ) : null}
+      {description ? <InfoIcon size="xs" tooltip={description} /> : null}
     </Flex>
   );
 };

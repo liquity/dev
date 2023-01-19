@@ -37,10 +37,10 @@ export const BondStats: React.FC<BondStatsProps> = () => {
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         bLUSD
       </Heading>
-      <Statistic name={l.BLUSD_MARKET_PRICE.term} tooltip={l.BLUSD_MARKET_PRICE.description}>
+      <Statistic lexicon={l.BLUSD_MARKET_PRICE}>
         <Metric value={protocolInfo.marketPrice.prettify(3)} unit="LUSD" />
       </Statistic>
-      <Statistic name={l.BLUSD_FAIR_PRICE.term} tooltip={l.BLUSD_FAIR_PRICE.description}>
+      <Statistic lexicon={l.BLUSD_FAIR_PRICE}>
         <Metric
           value={
             protocolInfo.fairPrice.lower.eq(Decimal.INFINITY)
@@ -52,10 +52,13 @@ export const BondStats: React.FC<BondStatsProps> = () => {
           unit="LUSD"
         />
       </Statistic>
-      <Statistic name={l.BLUSD_FLOOR_PRICE.term} tooltip={l.BLUSD_FLOOR_PRICE.description}>
+      <Statistic lexicon={l.BLUSD_FLOOR_PRICE}>
         <Metric value={protocolInfo.floorPriceWithoutPendingHarvests.prettify(4)} unit="LUSD" />
       </Statistic>
-      <Statistic name={l.BLUSD_APR.term} tooltip={l.BLUSD_APR.description}>
+      <Statistic lexicon={l.BLUSD_WIND_DOWN_PRICE}>
+        <Metric value={protocolInfo.windDownPrice.prettify(4)} unit="LUSD" />
+      </Statistic>
+      <Statistic lexicon={l.BLUSD_APR}>
         <Metric
           value={
             protocolInfo.bLusdApr && protocolInfo.bLusdSupply.gt(0)
@@ -65,7 +68,7 @@ export const BondStats: React.FC<BondStatsProps> = () => {
           unit="%"
         />
       </Statistic>
-      <Statistic name={l.BLUSD_LP_APR.term} tooltip={l.BLUSD_LP_APR.description}>
+      <Statistic lexicon={l.BLUSD_LP_APR}>
         <Metric
           value={
             protocolInfo?.bLusdLpApr !== undefined ? protocolInfo.bLusdLpApr.prettify(2) : "N/A"
@@ -73,10 +76,7 @@ export const BondStats: React.FC<BondStatsProps> = () => {
           unit="%"
         />
       </Statistic>
-      <Statistic
-        name={l.BLUSD_YIELD_AMPLIFICATION.term}
-        tooltip={l.BLUSD_YIELD_AMPLIFICATION.description}
-      >
+      <Statistic lexicon={l.BLUSD_YIELD_AMPLIFICATION}>
         <Metric
           value={
             protocolInfo.yieldAmplification && protocolInfo.bLusdSupply.gt(0)
@@ -86,48 +86,39 @@ export const BondStats: React.FC<BondStatsProps> = () => {
           unit="x"
         />
       </Statistic>
-      <Statistic name={l.BLUSD_SUPPLY.term} tooltip={l.BLUSD_SUPPLY.description}>
+      <Statistic lexicon={l.BLUSD_SUPPLY}>
         <Metric value={protocolInfo.bLusdSupply.shorten()} unit="bLUSD" />
       </Statistic>
 
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         Statistics
       </Heading>
-      <Statistic
-        name={l.PENDING_BONDS_STATISTIC.term}
-        tooltip={l.PENDING_BONDS_STATISTIC.description}
-      >
+      <Statistic lexicon={l.PENDING_BONDS_STATISTIC}>
         <Metric value={stats.pendingBonds.prettify(0)} />
       </Statistic>
-      <Statistic
-        name={l.CANCELLED_BONDS_STATISTIC.term}
-        tooltip={l.CANCELLED_BONDS_STATISTIC.description}
-      >
+      <Statistic lexicon={l.CANCELLED_BONDS_STATISTIC}>
         <Metric value={stats.cancelledBonds.prettify(0)} />
       </Statistic>
-      <Statistic
-        name={l.CLAIMED_BONDS_STATISTIC.term}
-        tooltip={l.CLAIMED_BONDS_STATISTIC.description}
-      >
+      <Statistic lexicon={l.CLAIMED_BONDS_STATISTIC}>
         <Metric value={stats.claimedBonds.prettify(0)} />
       </Statistic>
-      <Statistic name={l.TOTAL_BONDS_STATISTIC.term} tooltip={l.TOTAL_BONDS_STATISTIC.description}>
+      <Statistic lexicon={l.TOTAL_BONDS_STATISTIC}>
         <Metric value={stats.totalBonds.prettify(0)} />
       </Statistic>
 
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         Treasury
       </Heading>
-      <Statistic name={l.TREASURY_PENDING.term} tooltip={l.TREASURY_PENDING.description}>
+      <Statistic lexicon={l.TREASURY_PENDING}>
         <Metric value={protocolInfo.treasury.pending.shorten()} unit="LUSD" />
       </Statistic>
-      <Statistic name={l.TREASURY_ACQUIRED.term} tooltip={l.TREASURY_ACQUIRED.description}>
+      <Statistic lexicon={l.TREASURY_ACQUIRED}>
         <Metric value={protocolInfo.treasury.reserve.shorten()} unit="LUSD" />
       </Statistic>
-      <Statistic name={l.TREASURY_PERMANENT.term} tooltip={l.TREASURY_PERMANENT.description}>
+      <Statistic lexicon={l.TREASURY_PERMANENT}>
         <Metric value={protocolInfo.treasury.permanent.shorten()} unit="LUSD" />
       </Statistic>
-      <Statistic name={l.TREASURY_TOTAL.term} tooltip={l.TREASURY_TOTAL.description}>
+      <Statistic lexicon={l.TREASURY_TOTAL}>
         <Metric value={protocolInfo.treasury.total.shorten()} unit="LUSD" />
       </Statistic>
 

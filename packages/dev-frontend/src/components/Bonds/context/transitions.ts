@@ -239,6 +239,7 @@ export type ProtocolInfo = {
   controllerTargetAge: Decimal;
   averageBondAge: Decimal;
   floorPriceWithoutPendingHarvests: Decimal;
+  windDownPrice: Decimal;
 };
 
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";
@@ -253,8 +254,6 @@ export type BondTransaction =
   | "MANAGE_LIQUIDITY";
 
 export type BondTransactionStatuses = Record<BondTransaction, TransactionStatus>;
-
-export type ClaimedBonds = Record<string, Decimal>;
 
 export type Maybe<T> = T | undefined;
 

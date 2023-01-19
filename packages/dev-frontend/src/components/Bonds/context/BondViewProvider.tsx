@@ -58,7 +58,7 @@ export const BondViewProvider: React.FC = props => {
   const [isBLusdApprovedWithAmmZapper, setIsBLusdApprovedWithAmmZapper] = useState(false);
   const [isBLusdLpApprovedWithAmmZapper, setIsBLusdLpApprovedWithAmmZapper] = useState(false);
   const [isBLusdLpApprovedWithGauge, setIsBLusdLpApprovedWithGauge] = useState(false);
-  const [isSynchronizing, setIsSynchronizing] = useState(true);
+  const [isSynchronizing, setIsSynchronizing] = useState(false);
   const [inputToken, setInputToken] = useState<BLusdAmmTokenIndex.BLUSD | BLusdAmmTokenIndex.LUSD>(
     BLusdAmmTokenIndex.BLUSD
   );
@@ -157,7 +157,6 @@ export const BondViewProvider: React.FC = props => {
       if (
         BLUSD_AMM_ADDRESS === null ||
         contracts.lusdToken === undefined ||
-        account === undefined ||
         isLusdApprovedWithBlusdAmm
       ) {
         return;
@@ -175,7 +174,6 @@ export const BondViewProvider: React.FC = props => {
       if (
         BLUSD_AMM_ADDRESS === null ||
         contracts.bLusdToken === undefined ||
-        account === undefined ||
         isBLusdApprovedWithBlusdAmm
       ) {
         return;
@@ -194,7 +192,6 @@ export const BondViewProvider: React.FC = props => {
       if (
         BLUSD_LP_ZAP_ADDRESS === null ||
         contracts.lusdToken === undefined ||
-        account === undefined ||
         isLusdApprovedWithAmmZapper
       ) {
         return;
@@ -229,7 +226,6 @@ export const BondViewProvider: React.FC = props => {
       if (
         BLUSD_LP_ZAP_ADDRESS === null ||
         contracts.bLusdToken === undefined ||
-        account === undefined ||
         isBLusdApprovedWithAmmZapper
       ) {
         return;
@@ -263,12 +259,12 @@ export const BondViewProvider: React.FC = props => {
           contracts.chickenBondManager === undefined ||
           contracts.bLusdToken === undefined ||
           contracts.bLusdAmm === undefined ||
-          !shouldSynchronize
+          contracts.bLusdGauge === undefined ||
+          !shouldSynchronize ||
+          isSynchronizing
         ) {
           return;
         }
-
-        setShouldSynchronize(false);
         setIsSynchronizing(true);
 
         const latest = await contracts.getLatestData(account, api);
@@ -308,6 +304,7 @@ export const BondViewProvider: React.FC = props => {
           });
         }
 
+        setShouldSynchronize(false);
         setLpRewards(lpRewards);
         setBLusdBalance(bLusdBalance);
         setLusdBalance(lusdBalance);
@@ -325,7 +322,7 @@ export const BondViewProvider: React.FC = props => {
 
       setIsSynchronizing(false);
     })();
-  }, [shouldSynchronize, account, contracts, simulatedProtocolInfo]);
+  }, [isSynchronizing, shouldSynchronize, account, contracts, simulatedProtocolInfo]);
 
   const [approveAmm, approveAmmStatus] = useTransaction(
     async (tokensNeedingApproval: BLusdAmmTokenIndex[]) => {

@@ -6,6 +6,8 @@ import * as lexicon from "./lexicon";
 import { Empty } from "./views/idle/Empty";
 import { Link } from "../Link";
 import { useBondView } from "./context/BondViewContext";
+import { Decimal } from "@liquity/lib-base";
+import { InfiniteEstimate } from "./views/InfiniteEstimation";
 
 const {
   BONDS,
@@ -34,6 +36,8 @@ const formatDays = (days: number) =>
     ? "Now"
     : parseFloat(days.toFixed(1)) < 1
     ? `${days.toFixed(1)} days`
+    : days > 10000
+    ? Decimal.INFINITY.toString()
     : `${days.toFixed(0)} days`;
 
 const Line = (columns: number) =>
@@ -107,17 +111,23 @@ export const BondsTable: React.FC = () => {
             {Line(5)}
 
             {pendingBonds.map((bond, idx) => {
-              const breakEvenDays =
-                (bond.breakEvenTime.getTime() - Date.now()) / 1000 / 60 / 60 / 24;
-              const rebondDays = (bond.rebondTime.getTime() - Date.now()) / 1000 / 60 / 60 / 24;
+              const breakEvenDays = formatDays(
+                (bond.breakEvenTime.getTime() - Date.now()) / 1000 / 60 / 60 / 24
+              );
+              const rebondDays = formatDays(
+                (bond.rebondTime.getTime() - Date.now()) / 1000 / 60 / 60 / 24
+              );
               return (
                 <React.Fragment key={idx}>
                   <Text>{bond.deposit.shorten()} LUSD</Text>
                   <Text>{bond.accrued.shorten()} bLUSD</Text>
                   <Text>{bond.marketValue.shorten()} LUSD</Text>
-                  <Text>{formatDays(breakEvenDays)}</Text>
-                  <Text>{formatDays(rebondDays)}</Text>
-
+                  <Text>
+                    <InfiniteEstimate estimate={breakEvenDays} />
+                  </Text>
+                  <Text>
+                    <InfiniteEstimate estimate={rebondDays} />
+                  </Text>
                   {Line(5)}
                 </React.Fragment>
               );
