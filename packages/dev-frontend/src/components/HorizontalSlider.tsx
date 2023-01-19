@@ -5,7 +5,8 @@ import { InfoIcon } from "./InfoIcon";
 
 type SliderProps = {
   name: string;
-  description: string;
+  description?: string;
+  descriptionLink?: string;
   value: Decimal;
   type: string;
   min: string;
@@ -18,6 +19,7 @@ type SliderProps = {
 export const HorizontalSlider: React.FC<SliderProps> = ({
   name,
   description,
+  descriptionLink,
   value,
   type,
   min,
@@ -37,7 +39,7 @@ export const HorizontalSlider: React.FC<SliderProps> = ({
         }}
       >
         {name}
-        <InfoIcon size="xs" tooltip={description} />
+        {description && <InfoIcon size="xs" tooltip={description} link={descriptionLink} />}
         {onReset && (
           <Button
             variant="icon"
