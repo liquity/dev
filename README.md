@@ -780,7 +780,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `getEntireSystemDebt()` Returns the systemic entire debt assigned to Troves, i.e. the sum of the LUSDDebt in the Active Pool and the Default Pool.
 
-`getTCR()`: returns the total collateralization ratio (TCR) of the system.  The TCR is based on the the entire system debt and collateral (including pending rewards).
+`getTCR()`: returns the total collateralization ratio (TCR) of the system.  The TCR is based on the entire system debt and collateral (including pending rewards).
 
 `checkRecoveryMode()`: reveals whether or not the system is in Recovery Mode (i.e. whether the Total Collateralization Ratio (TCR) is below the Critical Collateralization Ratio (CCR)).
 
@@ -792,7 +792,7 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 - `firstRedemptionHint` is a positional hint for the first redeemable Trove (i.e. Trove with the lowest ICR >= MCR).
 - `partialRedemptionHintNICR` is the final nominal ICR of the last Trove after being hit by partial redemption, or zero in case of no partial redemption (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
-- `truncatedLUSDamount` is the maximum amount that can be redeemed out of the the provided `_LUSDamount`. This can be lower than `_LUSDamount` when redeeming the full amount would leave the last Trove of the redemption sequence with less debt than the minimum allowed value.
+- `truncatedLUSDamount` is the maximum amount that can be redeemed out of the provided `_LUSDamount`. This can be lower than `_LUSDamount` when redeeming the full amount would leave the last Trove of the redemption sequence with less debt than the minimum allowed value.
 
 The number of Troves to consider for redemption can be capped by passing a non-zero value as `_maxIterations`, while passing zero will leave it uncapped.
 
@@ -1064,7 +1064,7 @@ Stability Providers expect a positive ROI on their initial deposit. That is:
 
 When a liquidation hits the Stability Pool, it is known as an **offset**: the debt of the Trove is offset against the LUSD in the Pool. When **x** LUSD debt is offset, the debt is cancelled, and **x** LUSD in the Pool is burned. When the LUSD Stability Pool is greater than the debt of the Trove, all the Trove's debt is cancelled, and all its ETH is shared between depositors. This is a **pure offset**.
 
-It can happen that the LUSD in the Stability Pool is less than the debt of a Trove. In this case, the the whole Stability Pool will be used to offset a fraction of the Trove’s debt, and an equal fraction of the Trove’s ETH collateral will be assigned to Stability Providers. The remainder of the Trove’s debt and ETH gets redistributed to active Troves. This is a **mixed offset and redistribution**.
+It can happen that the LUSD in the Stability Pool is less than the debt of a Trove. In this case, the whole Stability Pool will be used to offset a fraction of the Trove’s debt, and an equal fraction of the Trove’s ETH collateral will be assigned to Stability Providers. The remainder of the Trove’s debt and ETH gets redistributed to active Troves. This is a **mixed offset and redistribution**.
 
 Because the ETH collateral fraction matches the offset debt fraction, the effective ICR of the collateral and debt that is offset, is equal to the ICR of the Trove. So, for depositors, the ROI per liquidation depends only on the ICR of the liquidated Trove.
 
