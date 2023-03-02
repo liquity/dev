@@ -39,7 +39,7 @@ export interface BlockPolledLiquityStoreExtraState {
   /** @internal */
   _feesFactory: (blockTimestamp: number, recoveryMode: boolean) => Fees;
 
-  bammAllowance: boolean;
+  bammAllowance: any;
 }
 
 /**

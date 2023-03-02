@@ -610,14 +610,14 @@ export class ReadableEthersLiquity implements ReadableLiquity {
       : { status: "unregistered" };
   }
 
-  async getBammAllowance(overrides?: EthersCallOverrides): Promise<boolean> {
+  async getBammAllowance(overrides?: EthersCallOverrides): Promise<any> {
     const { lusdToken, bamm } = _getContracts(this.connection);
     const address = _requireAddress(this.connection);
     const reallyLargeAllowance = BigNumber.from("0x8888888888888888888888888888888888888888888888888888888888888888")
 
     const allowance = await lusdToken.allowance(address, bamm.address)
     console.log({allowance})
-    const bammAllowance = allowance.gt(reallyLargeAllowance)
+    const bammAllowance = allowance
     return bammAllowance;
   }
 }
