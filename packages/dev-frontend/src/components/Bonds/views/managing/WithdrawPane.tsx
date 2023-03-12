@@ -76,18 +76,28 @@ export const WithdrawPane: React.FC = () => {
 
   const handleConfirmPressed = () => {
     if (output === "both") {
+      const minBLusdAmount = withdrawal.get(BLusdAmmTokenIndex.BLUSD);
+      const minLusdAmount = withdrawal.get(BLusdAmmTokenIndex.LUSD);
+
+      if (minBLusdAmount === undefined || minBLusdAmount === Decimal.ZERO) return;
+      if (minLusdAmount === undefined || minLusdAmount === Decimal.ZERO) return;
+
       dispatchEvent("CONFIRM_PRESSED", {
         action: "removeLiquidity",
         burnLpTokens,
-        minBLusdAmount: Decimal.ZERO, // TODO
-        minLusdAmount: Decimal.ZERO // TODO
+        minBLusdAmount,
+        minLusdAmount
       });
     } else {
+      const minAmount = withdrawal.get(output);
+
+      if (minAmount === undefined || minAmount === Decimal.ZERO) return;
+
       dispatchEvent("CONFIRM_PRESSED", {
         action: "removeLiquidityOneCoin",
         burnLpTokens,
         output,
-        minAmount: Decimal.ZERO // TODO
+        minAmount
       });
     }
   };
