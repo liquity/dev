@@ -9,6 +9,7 @@ import { Wallet } from "@ethersproject/wallet";
 import { Signer } from "@ethersproject/abstract-signer";
 import { ContractFactory, Overrides } from "@ethersproject/contracts";
 
+import { ethers } from "hardhat";
 import { task, HardhatUserConfig, types, extendEnvironment } from "hardhat/config";
 import { HardhatRuntimeEnvironment, NetworkUserConfig } from "hardhat/types";
 import "@nomiclabs/hardhat-ethers";
@@ -19,6 +20,7 @@ import { deployAndSetupContracts, deployTellorCaller, setSilent } from "./utils/
 import { _connectToContracts, _LiquityDeploymentJSON, _priceFeedIsTestnet } from "./src/contracts";
 
 import accounts from "./accounts.json";
+import { HardhatEthersHelpers } from "@nomiclabs/hardhat-ethers/types";
 
 dotenv.config();
 
@@ -146,6 +148,7 @@ declare module "hardhat/types/runtime" {
       wethAddress?: string,
       overrides?: Overrides
     ) => Promise<_LiquityDeploymentJSON>;
+    ethers: typeof ethers & HardhatEthersHelpers;
   }
 }
 
