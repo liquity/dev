@@ -101,7 +101,7 @@ export const WithdrawPane: React.FC = () => {
         minAmount
       });
     }
-  };;
+  }
 
   const handleBackPressed = () => {
     dispatchEvent("BACK_PRESSED");
