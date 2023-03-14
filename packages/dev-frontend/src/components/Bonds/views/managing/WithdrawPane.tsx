@@ -76,22 +76,33 @@ export const WithdrawPane: React.FC = () => {
     setOutput(checkOutput(e.target.value));
 
   const handleConfirmPressed = () => {
+    const curveSlippage = 0.001; // Allow mininum of %0.1% slippage due to Curve rounding issues
     if (output === "both") {
+      const minBLusdAmount = withdrawal.get(BLusdAmmTokenIndex.BLUSD)?.mul(1 - curveSlippage);
+      const minLusdAmount = withdrawal.get(BLusdAmmTokenIndex.LUSD)?.mul(1 - curveSlippage);
+
+      if (minBLusdAmount === undefined || minBLusdAmount === Decimal.ZERO) return;
+      if (minLusdAmount === undefined || minLusdAmount === Decimal.ZERO) return;
+
       dispatchEvent("CONFIRM_PRESSED", {
         action: "removeLiquidity",
         burnLpTokens,
-        minBLusdAmount: Decimal.ZERO, // TODO
-        minLusdAmount: Decimal.ZERO // TODO
+        minBLusdAmount,
+        minLusdAmount
       });
     } else {
+      const minAmount = withdrawal.get(output)?.mul(1 - curveSlippage);
+
+      if (minAmount === undefined || minAmount === Decimal.ZERO) return;
+
       dispatchEvent("CONFIRM_PRESSED", {
         action: "removeLiquidityOneCoin",
         burnLpTokens,
         output,
-        minAmount: Decimal.ZERO // TODO
+        minAmount
       });
     }
-  };
+  }
 
   const handleBackPressed = () => {
     dispatchEvent("BACK_PRESSED");
@@ -222,4 +233,4 @@ export const WithdrawPane: React.FC = () => {
       </Flex>
     </>
   );
-};
+};;
