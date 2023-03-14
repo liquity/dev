@@ -1557,6 +1557,9 @@ yarn start-demo:dev-frontend
 
 This spawns a modified version of dev-frontend that automatically signs transactions so you don't need to interact with a browser wallet. It directly uses the local forked RPC node. 
 
+You may need to wait a minute or so for your fork mainnet provider to load and cache all the blockchain state at your chosen block number. Refresh the page after 5 minutes.
+
+
 #### Build dev-frontend for production
 
 In a freshly cloned & installed monorepo, or if you have only modified code inside the dev-frontend package:
