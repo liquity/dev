@@ -2689,10 +2689,10 @@
   resolved "https://registry.yarnpkg.com/@mdx-js/react/-/react-1.6.22.tgz#ae09b4744fddc74714ee9f9d6f17a66e77c43573"
   integrity sha512-TDoPum4SHdfPiGSAaRBw7ECyI8VaHpK8GJugbJIJuqyh6kzw9ZLJZW3HGL3NNrJGxcAixUvqROm+YuQOo5eXtg==
 
-"@metamask/eth-sig-util@5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@metamask/eth-sig-util/-/eth-sig-util-5.0.0.tgz#106364008029d30a231668a7133d6d0dae60adf6"
-  integrity sha512-wBOfkmPJoQG3c6kfxxJxQKfzxqSVtMxRjMD4C6xNtGU+TEuBacC3jIgjUUPlC5MTWu4XFo1Y8VWrmc1AlwAitA==
+"@metamask/eth-sig-util@5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@metamask/eth-sig-util/-/eth-sig-util-5.0.1.tgz#1200e9dc30e75431d8d3394a5f057a5b2a4c4fdc"
+  integrity sha512-+LzrvgqCGq/R/bOtBTGTRjm22u0L4j35cHl3m4N71+0l0M+sqnPkYJ51QEIhHeWQE2xgNojzci93/8Vj9TsYuQ==
   dependencies:
     "@ethereumjs/util" "^8.0.0"
     bn.js "4.11.8"
