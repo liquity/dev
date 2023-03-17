@@ -244,7 +244,7 @@ export const RiskyTroves: React.FC<RiskyTrovesProps> = ({ pageSize }) => {
               {troves.map(
                 trove =>
                   !trove.isEmpty && ( // making sure the Trove hasn't been liquidated
-                    // (TODO: remove check after we can fetch multiple Troves in one call)
+                    // (WONT-FIX: remove check after we can fetch multiple Troves in one call)
                     <tr key={trove.ownerAddress}>
                       <td
                         style={{

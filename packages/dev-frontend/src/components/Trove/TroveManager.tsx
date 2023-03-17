@@ -169,7 +169,7 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
   }, [collateral, debt, dispatch]);
 
   const borrowingRate = fees.borrowingRate();
-  const maxBorrowingRate = borrowingRate.add(0.005); // TODO slippage tolerance
+  const maxBorrowingRate = borrowingRate.add(0.005); // WONT-FIX slippage tolerance
 
   const [validChange, description] = validateTroveChange(
     original,
