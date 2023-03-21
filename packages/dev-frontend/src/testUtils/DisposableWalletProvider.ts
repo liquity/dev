@@ -45,7 +45,7 @@ export class DisposableWalletProvider {
       }
     ]);
 
-    // TODO maybe wait for tx to be mined (not a problem on devchains though)
+    // WONT-FIX maybe wait for tx to be mined (not a problem on devchains though)
   }
 
   async send(method: string, params: any[]): Promise<any> {

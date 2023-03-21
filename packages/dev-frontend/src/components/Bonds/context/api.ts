@@ -981,7 +981,7 @@ const getExpectedLpTokens = async (
   // Curve's calc_token_amount has rounding errors and they enforce a minimum 0.1% slippage
   let expectedLpTokenAmount = Decimal.ZERO;
   try {
-    // If the user is depositing bLUSD single sided, they won't have approved any.. TODO
+    // If the user is depositing bLUSD single sided, they won't have approved any.. WONT-FIX
     expectedLpTokenAmount = await getExpectedLpTokensAmountViaZapper(
       bLusdAmount,
       lusdAmount,
