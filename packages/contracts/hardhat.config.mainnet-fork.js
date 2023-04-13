@@ -55,9 +55,10 @@ module.exports = {
     },
     networks: {
         hardhat: {
-            accounts: accountsList,
+            // https://github.com/NomicFoundation/hardhat/issues/1226#issuecomment-774492503
+            //accounts: accountsList,
             gas: 10000000,  // tx gas limit
-            blockGasLimit: 12500000, 
+            blockGasLimit: 12500000,
             gasPrice: process.env.GAS_PRICE ? parseInt(process.env.GAS_PRICE) : 20000000000,
             forking: {
                 url: alchemyUrl(),
