@@ -4,13 +4,14 @@
 
 ## TransactableLiquity.withdrawGainsFromStaking() method
 
-Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md) from LQTY stake.
+Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [1USD gain](./lib-base.lqtystake.lusdgain.md) from LQTY stake.
 
 <b>Signature:</b>
 
 ```typescript
 withdrawGainsFromStaking(): Promise<void>;
 ```
+
 <b>Returns:</b>
 
 Promise&lt;void&gt;
@@ -18,4 +19,3 @@ Promise&lt;void&gt;
 ## Exceptions
 
 Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
-

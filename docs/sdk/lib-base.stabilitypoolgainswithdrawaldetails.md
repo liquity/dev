@@ -9,15 +9,14 @@ Details of a [withdrawGainsFromStabilityPool()](./lib-base.transactableliquity.w
 <b>Signature:</b>
 
 ```typescript
-export interface StabilityPoolGainsWithdrawalDetails 
+export interface StabilityPoolGainsWithdrawalDetails
 ```
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [collateralGain](./lib-base.stabilitypoolgainswithdrawaldetails.collateralgain.md) | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) paid out to the depositor in this transaction. |
-|  [lqtyReward](./lib-base.stabilitypoolgainswithdrawaldetails.lqtyreward.md) | [Decimal](./lib-base.decimal.md) | Amount of LQTY rewarded to the depositor in this transaction. |
-|  [lusdLoss](./lib-base.stabilitypoolgainswithdrawaldetails.lusdloss.md) | [Decimal](./lib-base.decimal.md) | Amount of LUSD burned from the deposit by liquidations since the last modification. |
-|  [newLUSDDeposit](./lib-base.stabilitypoolgainswithdrawaldetails.newlusddeposit.md) | [Decimal](./lib-base.decimal.md) | Amount of LUSD in the deposit directly after this transaction. |
-
+| Property                                                                           | Type                             | Description                                                                           |
+| ---------------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------------------- |
+| [collateralGain](./lib-base.stabilitypoolgainswithdrawaldetails.collateralgain.md) | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) paid out to the depositor in this transaction. |
+| [lqtyReward](./lib-base.stabilitypoolgainswithdrawaldetails.lqtyreward.md)         | [Decimal](./lib-base.decimal.md) | Amount of LQTY rewarded to the depositor in this transaction.                         |
+| [lusdLoss](./lib-base.stabilitypoolgainswithdrawaldetails.lusdloss.md)             | [Decimal](./lib-base.decimal.md) | Amount of 1USD burned from the deposit by liquidations since the last modification.   |
+| [new1USDDeposit](./lib-base.stabilitypoolgainswithdrawaldetails.newlusddeposit.md) | [Decimal](./lib-base.decimal.md) | Amount of 1USD in the deposit directly after this transaction.                        |

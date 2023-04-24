@@ -4,7 +4,7 @@
 
 ## PopulatableLiquity.stakeUniTokens() method
 
-Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn LQTY.
+Stake Uniswap ETH/1USD LP tokens to participate in liquidity mining and earn LQTY.
 
 <b>Signature:</b>
 
@@ -14,11 +14,10 @@ stakeUniTokens(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentL
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LP tokens to add to new or existing stake. |
+| Parameter | Type                                   | Description                                          |
+| --------- | -------------------------------------- | ---------------------------------------------------- |
+| amount    | [Decimalish](./lib-base.decimalish.md) | Amount of LP tokens to add to new or existing stake. |
 
 <b>Returns:</b>
 
 Promise&lt;[PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.md)<!-- -->&lt;P, [SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- -->&lt;S, [LiquityReceipt](./lib-base.liquityreceipt.md)<!-- -->&lt;R, void&gt;&gt;&gt;&gt;
-

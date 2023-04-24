@@ -14,7 +14,6 @@ redemptionRate: Decimal;
 
 ## Remarks
 
-Note that the actual rate paid by a redemption transaction will depend on the amount of LUSD being redeemed.
+Note that the actual rate paid by a redemption transaction will depend on the amount of 1USD being redeemed.
 
 Use [Fees.redemptionRate()](./lib-base.fees.redemptionrate.md) to calculate a precise redemption rate.
-

@@ -9,7 +9,7 @@ Represents a user's LQTY stake and accrued gains.
 <b>Signature:</b>
 
 ```typescript
-export declare class LQTYStake 
+export declare class LQTYStake
 ```
 
 ## Remarks
@@ -20,18 +20,17 @@ The constructor for this class is marked as internal. Third-party code should no
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [collateralGain](./lib-base.lqtystake.collateralgain.md) |  | [Decimal](./lib-base.decimal.md) | Collateral gain available to withdraw. |
-|  [isEmpty](./lib-base.lqtystake.isempty.md) |  | boolean |  |
-|  [lusdGain](./lib-base.lqtystake.lusdgain.md) |  | [Decimal](./lib-base.decimal.md) | LUSD gain available to withdraw. |
-|  [stakedLQTY](./lib-base.lqtystake.stakedlqty.md) |  | [Decimal](./lib-base.decimal.md) | The amount of LQTY that's staked. |
+| Property                                                 | Modifiers | Type                             | Description                            |
+| -------------------------------------------------------- | --------- | -------------------------------- | -------------------------------------- |
+| [collateralGain](./lib-base.lqtystake.collateralgain.md) |           | [Decimal](./lib-base.decimal.md) | Collateral gain available to withdraw. |
+| [isEmpty](./lib-base.lqtystake.isempty.md)               |           | boolean                          |                                        |
+| [lusdGain](./lib-base.lqtystake.lusdgain.md)             |           | [Decimal](./lib-base.decimal.md) | 1USD gain available to withdraw.       |
+| [stakedLQTY](./lib-base.lqtystake.stakedlqty.md)         |           | [Decimal](./lib-base.decimal.md) | The amount of LQTY that's staked.      |
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [apply(change)](./lib-base.lqtystake.apply.md) |  | Apply a [LQTYStakeChange](./lib-base.lqtystakechange.md) to this <code>LQTYStake</code>. |
-|  [equals(that)](./lib-base.lqtystake.equals.md) |  | Compare to another instance of <code>LQTYStake</code>. |
-|  [whatChanged(thatStakedLQTY)](./lib-base.lqtystake.whatchanged.md) |  | Calculate the difference between this <code>LQTYStake</code> and <code>thatStakedLQTY</code>. |
-
+| Method                                                             | Modifiers | Description                                                                                   |
+| ------------------------------------------------------------------ | --------- | --------------------------------------------------------------------------------------------- |
+| [apply(change)](./lib-base.lqtystake.apply.md)                     |           | Apply a [LQTYStakeChange](./lib-base.lqtystakechange.md) to this <code>LQTYStake</code>.      |
+| [equals(that)](./lib-base.lqtystake.equals.md)                     |           | Compare to another instance of <code>LQTYStake</code>.                                        |
+| [whatChanged(thatStakedLQTY)](./lib-base.lqtystake.whatchanged.md) |           | Calculate the difference between this <code>LQTYStake</code> and <code>thatStakedLQTY</code>. |

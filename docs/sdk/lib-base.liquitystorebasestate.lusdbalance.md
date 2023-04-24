@@ -4,7 +4,7 @@
 
 ## LiquityStoreBaseState.lusdBalance property
 
-User's LUSD token balance.
+User's 1USD token balance.
 
 <b>Signature:</b>
 

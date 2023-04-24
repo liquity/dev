@@ -4,7 +4,7 @@
 
 ## LQTYStake.lusdGain property
 
-LUSD gain available to withdraw.
+1USD gain available to withdraw.
 
 <b>Signature:</b>
 

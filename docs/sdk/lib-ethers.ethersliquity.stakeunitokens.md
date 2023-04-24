@@ -4,7 +4,7 @@
 
 ## EthersLiquity.stakeUniTokens() method
 
-Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn LQTY.
+Stake Uniswap ETH/1USD LP tokens to participate in liquidity mining and earn LQTY.
 
 <b>Signature:</b>
 
@@ -14,10 +14,10 @@ stakeUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Prom
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LP tokens to add to new or existing stake. |
-|  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
+| Parameter | Type                                                                     | Description                                          |
+| --------- | ------------------------------------------------------------------------ | ---------------------------------------------------- |
+| amount    | [Decimalish](./lib-base.decimalish.md)                                   | Amount of LP tokens to add to new or existing stake. |
+| overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |                                                      |
 
 <b>Returns:</b>
 
@@ -26,4 +26,3 @@ Promise&lt;void&gt;
 ## Exceptions
 
 Throws [EthersTransactionFailedError](./lib-ethers.etherstransactionfailederror.md) in case of transaction failure. Throws [EthersTransactionCancelledError](./lib-ethers.etherstransactioncancellederror.md) if the transaction is cancelled or replaced.
-

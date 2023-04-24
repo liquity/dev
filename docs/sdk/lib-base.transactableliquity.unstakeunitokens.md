@@ -4,7 +4,7 @@
 
 ## TransactableLiquity.unstakeUniTokens() method
 
-Withdraw Uniswap ETH/LUSD LP tokens from liquidity mining.
+Withdraw Uniswap ETH/1USD LP tokens from liquidity mining.
 
 <b>Signature:</b>
 
@@ -14,9 +14,9 @@ unstakeUniTokens(amount: Decimalish): Promise<void>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LP tokens to withdraw. |
+| Parameter | Type                                   | Description                      |
+| --------- | -------------------------------------- | -------------------------------- |
+| amount    | [Decimalish](./lib-base.decimalish.md) | Amount of LP tokens to withdraw. |
 
 <b>Returns:</b>
 
@@ -25,4 +25,3 @@ Promise&lt;void&gt;
 ## Exceptions
 
 Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
-

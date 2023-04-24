@@ -4,7 +4,7 @@
 
 ## TransactableLiquity.stakeUniTokens() method
 
-Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn LQTY.
+Stake Uniswap ETH/1USD LP tokens to participate in liquidity mining and earn LQTY.
 
 <b>Signature:</b>
 
@@ -14,9 +14,9 @@ stakeUniTokens(amount: Decimalish): Promise<void>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LP tokens to add to new or existing stake. |
+| Parameter | Type                                   | Description                                          |
+| --------- | -------------------------------------- | ---------------------------------------------------- |
+| amount    | [Decimalish](./lib-base.decimalish.md) | Amount of LP tokens to add to new or existing stake. |
 
 <b>Returns:</b>
 
@@ -25,4 +25,3 @@ Promise&lt;void&gt;
 ## Exceptions
 
 Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of transaction failure.
-

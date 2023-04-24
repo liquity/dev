@@ -4,7 +4,7 @@
 
 ## ReadableLiquity.getUniTokenAllowance() method
 
-Get the liquidity mining contract's allowance of a holder's Uniswap ETH/LUSD LP tokens.
+Get the liquidity mining contract's allowance of a holder's Uniswap ETH/1USD LP tokens.
 
 <b>Signature:</b>
 
@@ -14,11 +14,10 @@ getUniTokenAllowance(address?: string): Promise<Decimal>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  address | string | Address holding the Uniswap ETH/LUSD LP tokens. |
+| Parameter | Type   | Description                                     |
+| --------- | ------ | ----------------------------------------------- |
+| address   | string | Address holding the Uniswap ETH/1USD LP tokens. |
 
 <b>Returns:</b>
 
 Promise&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt;
-

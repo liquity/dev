@@ -4,23 +4,22 @@
 
 ## StabilityDeposit.whatChanged() method
 
-Calculate the difference between the `currentLUSD` in this Stability Deposit and `thatLUSD`<!-- -->.
+Calculate the difference between the `current1USD` in this Stability Deposit and `that1USD`<!-- -->.
 
 <b>Signature:</b>
 
 ```typescript
-whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined;
+whatChanged(that1USD: Decimalish): StabilityDepositChange<Decimal> | undefined;
 ```
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  thatLUSD | [Decimalish](./lib-base.decimalish.md) |  |
+| Parameter | Type                                   | Description |
+| --------- | -------------------------------------- | ----------- |
+| that1USD  | [Decimalish](./lib-base.decimalish.md) |             |
 
 <b>Returns:</b>
 
 [StabilityDepositChange](./lib-base.stabilitydepositchange.md)<!-- -->&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt; \| undefined
 
 An object representing the change, or `undefined` if the deposited amounts are equal.
-

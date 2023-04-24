@@ -4,7 +4,7 @@
 
 ## PopulatableLiquity.approveUniTokens() method
 
-Allow the liquidity mining contract to use Uniswap ETH/LUSD LP tokens for [staking](./lib-base.transactableliquity.stakeunitokens.md)<!-- -->.
+Allow the liquidity mining contract to use Uniswap ETH/1USD LP tokens for [staking](./lib-base.transactableliquity.stakeunitokens.md)<!-- -->.
 
 <b>Signature:</b>
 
@@ -14,9 +14,9 @@ approveUniTokens(allowance?: Decimalish): Promise<PopulatedLiquityTransaction<P,
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  allowance | [Decimalish](./lib-base.decimalish.md) | Maximum amount of LP tokens that will be transferrable to liquidity mining (<code>2^256 - 1</code> by default). |
+| Parameter | Type                                   | Description                                                                                                     |
+| --------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| allowance | [Decimalish](./lib-base.decimalish.md) | Maximum amount of LP tokens that will be transferrable to liquidity mining (<code>2^256 - 1</code> by default). |
 
 <b>Returns:</b>
 
@@ -25,4 +25,3 @@ Promise&lt;[PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.
 ## Remarks
 
 Must be performed before calling [stakeUniTokens()](./lib-base.transactableliquity.stakeunitokens.md)<!-- -->.
-

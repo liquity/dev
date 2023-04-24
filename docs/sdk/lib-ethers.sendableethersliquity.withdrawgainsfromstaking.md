@@ -4,7 +4,7 @@
 
 ## SendableEthersLiquity.withdrawGainsFromStaking() method
 
-Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md) from LQTY stake.
+Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [1USD gain](./lib-base.lqtystake.lusdgain.md) from LQTY stake.
 
 <b>Signature:</b>
 
@@ -14,11 +14,10 @@ withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<SentEt
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
+| Parameter | Type                                                                     | Description |
+| --------- | ------------------------------------------------------------------------ | ----------- |
+| overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |             |
 
 <b>Returns:</b>
 
 Promise&lt;[SentEthersLiquityTransaction](./lib-ethers.sentethersliquitytransaction.md)<!-- -->&lt;void&gt;&gt;
-

@@ -9,12 +9,14 @@ Represents the change between two Stability Deposit states.
 <b>Signature:</b>
 
 ```typescript
-export declare type StabilityDepositChange<T> = {
-    depositLUSD: T;
-    withdrawLUSD?: undefined;
-} | {
-    depositLUSD?: undefined;
-    withdrawLUSD: T;
-    withdrawAllLUSD: boolean;
-};
+export declare type StabilityDepositChange<T> =
+  | {
+      deposit1USD: T;
+      withdraw1USD?: undefined;
+    }
+  | {
+      deposit1USD?: undefined;
+      withdraw1USD: T;
+      withdrawAll1USD: boolean;
+    };
 ```

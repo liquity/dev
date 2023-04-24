@@ -4,14 +4,14 @@
 
 ## ReadableLiquity.getTotalStakedUniTokens() method
 
-Get the total amount of Uniswap ETH/LUSD LP tokens currently staked in liquidity mining.
+Get the total amount of Uniswap ETH/1USD LP tokens currently staked in liquidity mining.
 
 <b>Signature:</b>
 
 ```typescript
 getTotalStakedUniTokens(): Promise<Decimal>;
 ```
+
 <b>Returns:</b>
 
 Promise&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt;
-

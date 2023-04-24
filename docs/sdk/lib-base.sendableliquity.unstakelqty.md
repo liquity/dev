@@ -14,9 +14,9 @@ unstakeLQTY(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceip
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LQTY to withdraw. |
+| Parameter | Type                                   | Description                 |
+| --------- | -------------------------------------- | --------------------------- |
+| amount    | [Decimalish](./lib-base.decimalish.md) | Amount of LQTY to withdraw. |
 
 <b>Returns:</b>
 
@@ -24,5 +24,4 @@ Promise&lt;[SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- --
 
 ## Remarks
 
-As a side-effect, the transaction will also pay out the LQTY stake's [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md)<!-- -->.
-
+As a side-effect, the transaction will also pay out the LQTY stake's [collateral gain](./lib-base.lqtystake.collateralgain.md) and [1USD gain](./lib-base.lqtystake.lusdgain.md)<!-- -->.

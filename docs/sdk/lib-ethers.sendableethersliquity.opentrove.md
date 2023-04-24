@@ -4,7 +4,7 @@
 
 ## SendableEthersLiquity.openTrove() method
 
-Open a new Trove by depositing collateral and borrowing LUSD.
+Open a new Trove by depositing collateral and borrowing 1USD.
 
 <b>Signature:</b>
 
@@ -14,11 +14,11 @@ openTrove(params: TroveCreationParams<Decimalish>, maxBorrowingRateOrOptionalPar
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  params | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; | How much to deposit and borrow. |
-|  maxBorrowingRateOrOptionalParams | [Decimalish](./lib-base.decimalish.md) \| [BorrowingOperationOptionalParams](./lib-ethers.borrowingoperationoptionalparams.md) |  |
-|  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
+| Parameter                        | Type                                                                                                                           | Description                     |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- |
+| params                           | [TroveCreationParams](./lib-base.trovecreationparams.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt;         | How much to deposit and borrow. |
+| maxBorrowingRateOrOptionalParams | [Decimalish](./lib-base.decimalish.md) \| [BorrowingOperationOptionalParams](./lib-ethers.borrowingoperationoptionalparams.md) |                                 |
+| overrides                        | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md)                                                       |                                 |
 
 <b>Returns:</b>
 
@@ -27,4 +27,3 @@ Promise&lt;[SentEthersLiquityTransaction](./lib-ethers.sentethersliquitytransact
 ## Remarks
 
 If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum acceptable rate.
-

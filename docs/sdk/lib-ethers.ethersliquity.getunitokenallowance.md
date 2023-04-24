@@ -4,7 +4,7 @@
 
 ## EthersLiquity.getUniTokenAllowance() method
 
-Get the liquidity mining contract's allowance of a holder's Uniswap ETH/LUSD LP tokens.
+Get the liquidity mining contract's allowance of a holder's Uniswap ETH/1USD LP tokens.
 
 <b>Signature:</b>
 
@@ -14,12 +14,11 @@ getUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  address | string | Address holding the Uniswap ETH/LUSD LP tokens. |
-|  overrides | [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |  |
+| Parameter | Type                                                       | Description                                     |
+| --------- | ---------------------------------------------------------- | ----------------------------------------------- |
+| address   | string                                                     | Address holding the Uniswap ETH/1USD LP tokens. |
+| overrides | [EthersCallOverrides](./lib-ethers.etherscalloverrides.md) |                                                 |
 
 <b>Returns:</b>
 
 Promise&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt;
-

@@ -4,7 +4,7 @@
 
 ## PopulatableEthersLiquity.unstakeUniTokens() method
 
-Withdraw Uniswap ETH/LUSD LP tokens from liquidity mining.
+Withdraw Uniswap ETH/1USD LP tokens from liquidity mining.
 
 <b>Signature:</b>
 
@@ -14,12 +14,11 @@ unstakeUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Pr
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LP tokens to withdraw. |
-|  overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |  |
+| Parameter | Type                                                                     | Description                      |
+| --------- | ------------------------------------------------------------------------ | -------------------------------- |
+| amount    | [Decimalish](./lib-base.decimalish.md)                                   | Amount of LP tokens to withdraw. |
+| overrides | [EthersTransactionOverrides](./lib-ethers.etherstransactionoverrides.md) |                                  |
 
 <b>Returns:</b>
 
 Promise&lt;[PopulatedEthersLiquityTransaction](./lib-ethers.populatedethersliquitytransaction.md)<!-- -->&lt;void&gt;&gt;
-

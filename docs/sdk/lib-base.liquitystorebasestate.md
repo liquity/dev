@@ -9,33 +9,32 @@ State variables read from the blockchain.
 <b>Signature:</b>
 
 ```typescript
-export interface LiquityStoreBaseState 
+export interface LiquityStoreBaseState
 ```
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [accountBalance](./lib-base.liquitystorebasestate.accountbalance.md) | [Decimal](./lib-base.decimal.md) | User's native currency balance (e.g. Ether). |
-|  [collateralSurplusBalance](./lib-base.liquitystorebasestate.collateralsurplusbalance.md) | [Decimal](./lib-base.decimal.md) | Amount of leftover collateral available for withdrawal to the user. |
-|  [frontend](./lib-base.liquitystorebasestate.frontend.md) | [FrontendStatus](./lib-base.frontendstatus.md) | Status of currently used frontend. |
-|  [liquidityMiningLQTYReward](./lib-base.liquitystorebasestate.liquiditymininglqtyreward.md) | [Decimal](./lib-base.decimal.md) | Amount of LQTY the user has earned through mining liquidity. |
-|  [liquidityMiningStake](./lib-base.liquitystorebasestate.liquidityminingstake.md) | [Decimal](./lib-base.decimal.md) | Amount of Uniswap ETH/LUSD LP tokens the user has staked in liquidity mining. |
-|  [lqtyBalance](./lib-base.liquitystorebasestate.lqtybalance.md) | [Decimal](./lib-base.decimal.md) | User's LQTY token balance. |
-|  [lqtyStake](./lib-base.liquitystorebasestate.lqtystake.md) | [LQTYStake](./lib-base.lqtystake.md) | User's LQTY stake. |
-|  [lusdBalance](./lib-base.liquitystorebasestate.lusdbalance.md) | [Decimal](./lib-base.decimal.md) | User's LUSD token balance. |
-|  [lusdInStabilityPool](./lib-base.liquitystorebasestate.lusdinstabilitypool.md) | [Decimal](./lib-base.decimal.md) | Total amount of LUSD currently deposited in the Stability Pool. |
-|  [numberOfTroves](./lib-base.liquitystorebasestate.numberoftroves.md) | number | Number of Troves that are currently open. |
-|  [ownFrontend](./lib-base.liquitystorebasestate.ownfrontend.md) | [FrontendStatus](./lib-base.frontendstatus.md) | Status of user's own frontend. |
-|  [price](./lib-base.liquitystorebasestate.price.md) | [Decimal](./lib-base.decimal.md) | Current price of the native currency (e.g. Ether) in USD. |
-|  [remainingLiquidityMiningLQTYReward](./lib-base.liquitystorebasestate.remainingliquiditymininglqtyreward.md) | [Decimal](./lib-base.decimal.md) | Remaining LQTY that will be collectively rewarded to liquidity miners. |
-|  [remainingStabilityPoolLQTYReward](./lib-base.liquitystorebasestate.remainingstabilitypoollqtyreward.md) | [Decimal](./lib-base.decimal.md) | Remaining LQTY that will be collectively rewarded to stability depositors. |
-|  [stabilityDeposit](./lib-base.liquitystorebasestate.stabilitydeposit.md) | [StabilityDeposit](./lib-base.stabilitydeposit.md) | User's stability deposit. |
-|  [total](./lib-base.liquitystorebasestate.total.md) | [Trove](./lib-base.trove.md) | Total collateral and debt in the Liquity system. |
-|  [totalRedistributed](./lib-base.liquitystorebasestate.totalredistributed.md) | [Trove](./lib-base.trove.md) | Total collateral and debt per stake that has been liquidated through redistribution. |
-|  [totalStakedLQTY](./lib-base.liquitystorebasestate.totalstakedlqty.md) | [Decimal](./lib-base.decimal.md) | Total amount of LQTY currently staked. |
-|  [totalStakedUniTokens](./lib-base.liquitystorebasestate.totalstakedunitokens.md) | [Decimal](./lib-base.decimal.md) | Total amount of Uniswap ETH/LUSD LP tokens currently staked in liquidity mining. |
-|  [troveBeforeRedistribution](./lib-base.liquitystorebasestate.trovebeforeredistribution.md) | [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | User's Trove in its state after the last direct modification. |
-|  [uniTokenAllowance](./lib-base.liquitystorebasestate.unitokenallowance.md) | [Decimal](./lib-base.decimal.md) | The liquidity mining contract's allowance of user's Uniswap ETH/LUSD LP tokens. |
-|  [uniTokenBalance](./lib-base.liquitystorebasestate.unitokenbalance.md) | [Decimal](./lib-base.decimal.md) | User's Uniswap ETH/LUSD LP token balance. |
-
+| Property                                                                                                     | Type                                                                           | Description                                                                          |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| [accountBalance](./lib-base.liquitystorebasestate.accountbalance.md)                                         | [Decimal](./lib-base.decimal.md)                                               | User's native currency balance (e.g. Ether).                                         |
+| [collateralSurplusBalance](./lib-base.liquitystorebasestate.collateralsurplusbalance.md)                     | [Decimal](./lib-base.decimal.md)                                               | Amount of leftover collateral available for withdrawal to the user.                  |
+| [frontend](./lib-base.liquitystorebasestate.frontend.md)                                                     | [FrontendStatus](./lib-base.frontendstatus.md)                                 | Status of currently used frontend.                                                   |
+| [liquidityMiningLQTYReward](./lib-base.liquitystorebasestate.liquiditymininglqtyreward.md)                   | [Decimal](./lib-base.decimal.md)                                               | Amount of LQTY the user has earned through mining liquidity.                         |
+| [liquidityMiningStake](./lib-base.liquitystorebasestate.liquidityminingstake.md)                             | [Decimal](./lib-base.decimal.md)                                               | Amount of Uniswap ETH/1USD LP tokens the user has staked in liquidity mining.        |
+| [lqtyBalance](./lib-base.liquitystorebasestate.lqtybalance.md)                                               | [Decimal](./lib-base.decimal.md)                                               | User's LQTY token balance.                                                           |
+| [lqtyStake](./lib-base.liquitystorebasestate.lqtystake.md)                                                   | [LQTYStake](./lib-base.lqtystake.md)                                           | User's LQTY stake.                                                                   |
+| [lusdBalance](./lib-base.liquitystorebasestate.lusdbalance.md)                                               | [Decimal](./lib-base.decimal.md)                                               | User's 1USD token balance.                                                           |
+| [lusdInStabilityPool](./lib-base.liquitystorebasestate.lusdinstabilitypool.md)                               | [Decimal](./lib-base.decimal.md)                                               | Total amount of 1USD currently deposited in the Stability Pool.                      |
+| [numberOfTroves](./lib-base.liquitystorebasestate.numberoftroves.md)                                         | number                                                                         | Number of Troves that are currently open.                                            |
+| [ownFrontend](./lib-base.liquitystorebasestate.ownfrontend.md)                                               | [FrontendStatus](./lib-base.frontendstatus.md)                                 | Status of user's own frontend.                                                       |
+| [price](./lib-base.liquitystorebasestate.price.md)                                                           | [Decimal](./lib-base.decimal.md)                                               | Current price of the native currency (e.g. Ether) in USD.                            |
+| [remainingLiquidityMiningLQTYReward](./lib-base.liquitystorebasestate.remainingliquiditymininglqtyreward.md) | [Decimal](./lib-base.decimal.md)                                               | Remaining LQTY that will be collectively rewarded to liquidity miners.               |
+| [remainingStabilityPoolLQTYReward](./lib-base.liquitystorebasestate.remainingstabilitypoollqtyreward.md)     | [Decimal](./lib-base.decimal.md)                                               | Remaining LQTY that will be collectively rewarded to stability depositors.           |
+| [stabilityDeposit](./lib-base.liquitystorebasestate.stabilitydeposit.md)                                     | [StabilityDeposit](./lib-base.stabilitydeposit.md)                             | User's stability deposit.                                                            |
+| [total](./lib-base.liquitystorebasestate.total.md)                                                           | [Trove](./lib-base.trove.md)                                                   | Total collateral and debt in the Liquity system.                                     |
+| [totalRedistributed](./lib-base.liquitystorebasestate.totalredistributed.md)                                 | [Trove](./lib-base.trove.md)                                                   | Total collateral and debt per stake that has been liquidated through redistribution. |
+| [totalStakedLQTY](./lib-base.liquitystorebasestate.totalstakedlqty.md)                                       | [Decimal](./lib-base.decimal.md)                                               | Total amount of LQTY currently staked.                                               |
+| [totalStakedUniTokens](./lib-base.liquitystorebasestate.totalstakedunitokens.md)                             | [Decimal](./lib-base.decimal.md)                                               | Total amount of Uniswap ETH/1USD LP tokens currently staked in liquidity mining.     |
+| [troveBeforeRedistribution](./lib-base.liquitystorebasestate.trovebeforeredistribution.md)                   | [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | User's Trove in its state after the last direct modification.                        |
+| [uniTokenAllowance](./lib-base.liquitystorebasestate.unitokenallowance.md)                                   | [Decimal](./lib-base.decimal.md)                                               | The liquidity mining contract's allowance of user's Uniswap ETH/1USD LP tokens.      |
+| [uniTokenBalance](./lib-base.liquitystorebasestate.unitokenbalance.md)                                       | [Decimal](./lib-base.decimal.md)                                               | User's Uniswap ETH/1USD LP token balance.                                            |

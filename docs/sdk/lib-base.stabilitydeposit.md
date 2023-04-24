@@ -9,7 +9,7 @@ A Stability Deposit and its accrued gains.
 <b>Signature:</b>
 
 ```typescript
-export declare class StabilityDeposit 
+export declare class StabilityDeposit
 ```
 
 ## Remarks
@@ -18,20 +18,19 @@ The constructor for this class is marked as internal. Third-party code should no
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [collateralGain](./lib-base.stabilitydeposit.collateralgain.md) |  | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) received in exchange for the used-up LUSD. |
-|  [currentLUSD](./lib-base.stabilitydeposit.currentlusd.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD left in the Stability Deposit. |
-|  [frontendTag](./lib-base.stabilitydeposit.frontendtag.md) |  | string | Address of frontend through which this Stability Deposit was made. |
-|  [initialLUSD](./lib-base.stabilitydeposit.initiallusd.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD in the Stability Deposit at the time of the last direct modification. |
-|  [isEmpty](./lib-base.stabilitydeposit.isempty.md) |  | boolean |  |
-|  [lqtyReward](./lib-base.stabilitydeposit.lqtyreward.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LQTY rewarded since the last modification of the Stability Deposit. |
+| Property                                                        | Modifiers | Type                             | Description                                                                          |
+| --------------------------------------------------------------- | --------- | -------------------------------- | ------------------------------------------------------------------------------------ |
+| [collateralGain](./lib-base.stabilitydeposit.collateralgain.md) |           | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) received in exchange for the used-up 1USD.    |
+| [current1USD](./lib-base.stabilitydeposit.currentlusd.md)       |           | [Decimal](./lib-base.decimal.md) | Amount of 1USD left in the Stability Deposit.                                        |
+| [frontendTag](./lib-base.stabilitydeposit.frontendtag.md)       |           | string                           | Address of frontend through which this Stability Deposit was made.                   |
+| [initial1USD](./lib-base.stabilitydeposit.initiallusd.md)       |           | [Decimal](./lib-base.decimal.md) | Amount of 1USD in the Stability Deposit at the time of the last direct modification. |
+| [isEmpty](./lib-base.stabilitydeposit.isempty.md)               |           | boolean                          |                                                                                      |
+| [lqtyReward](./lib-base.stabilitydeposit.lqtyreward.md)         |           | [Decimal](./lib-base.decimal.md) | Amount of LQTY rewarded since the last modification of the Stability Deposit.        |
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [apply(change)](./lib-base.stabilitydeposit.apply.md) |  | Apply a [StabilityDepositChange](./lib-base.stabilitydepositchange.md) to this Stability Deposit. |
-|  [equals(that)](./lib-base.stabilitydeposit.equals.md) |  | Compare to another instance of <code>StabilityDeposit</code>. |
-|  [whatChanged(thatLUSD)](./lib-base.stabilitydeposit.whatchanged.md) |  | Calculate the difference between the <code>currentLUSD</code> in this Stability Deposit and <code>thatLUSD</code>. |
-
+| Method                                                              | Modifiers | Description                                                                                                        |
+| ------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------ |
+| [apply(change)](./lib-base.stabilitydeposit.apply.md)               |           | Apply a [StabilityDepositChange](./lib-base.stabilitydepositchange.md) to this Stability Deposit.                  |
+| [equals(that)](./lib-base.stabilitydeposit.equals.md)               |           | Compare to another instance of <code>StabilityDeposit</code>.                                                      |
+| [whatChanged(that1USD)](./lib-base.stabilitydeposit.whatchanged.md) |           | Calculate the difference between the <code>current1USD</code> in this Stability Deposit and <code>that1USD</code>. |

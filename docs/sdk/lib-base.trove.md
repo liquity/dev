@@ -9,7 +9,7 @@ A combination of collateral and debt.
 <b>Signature:</b>
 
 ```typescript
-export declare class Trove 
+export declare class Trove
 ```
 
 ## Remarks
@@ -18,35 +18,34 @@ The constructor for this class is marked as internal. Third-party code should no
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [collateral](./lib-base.trove.collateral.md) |  | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) collateralized. |
-|  [debt](./lib-base.trove.debt.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD owed. |
-|  [isEmpty](./lib-base.trove.isempty.md) |  | boolean |  |
-|  [netDebt](./lib-base.trove.netdebt.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD that must be repaid to close this Trove. |
+| Property                                     | Modifiers | Type                             | Description                                             |
+| -------------------------------------------- | --------- | -------------------------------- | ------------------------------------------------------- |
+| [collateral](./lib-base.trove.collateral.md) |           | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) collateralized.  |
+| [debt](./lib-base.trove.debt.md)             |           | [Decimal](./lib-base.decimal.md) | Amount of 1USD owed.                                    |
+| [isEmpty](./lib-base.trove.isempty.md)       |           | boolean                          |                                                         |
+| [netDebt](./lib-base.trove.netdebt.md)       |           | [Decimal](./lib-base.decimal.md) | Amount of 1USD that must be repaid to close this Trove. |
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [add(that)](./lib-base.trove.add.md) |  |  |
-|  [addCollateral(collateral)](./lib-base.trove.addcollateral.md) |  |  |
-|  [addDebt(debt)](./lib-base.trove.adddebt.md) |  |  |
-|  [adjust(params, borrowingRate)](./lib-base.trove.adjust.md) |  | Calculate the result of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) transaction on this Trove. |
-|  [adjustTo(that, borrowingRate)](./lib-base.trove.adjustto.md) |  | Calculate the parameters of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) transaction that will change this Trove into the given Trove. |
-|  [apply(change, borrowingRate)](./lib-base.trove.apply.md) |  | Make a new Trove by applying a [TroveChange](./lib-base.trovechange.md) to this Trove. |
-|  [collateralRatio(price)](./lib-base.trove.collateralratio.md) |  | Calculate the Trove's collateralization ratio at a given price. |
-|  [collateralRatioIsBelowCritical(price)](./lib-base.trove.collateralratioisbelowcritical.md) |  | Whether the collateralization ratio is less than the [CRITICAL\_COLLATERAL\_RATIO](./lib-base.critical_collateral_ratio.md) at a given price. |
-|  [collateralRatioIsBelowMinimum(price)](./lib-base.trove.collateralratioisbelowminimum.md) |  | Whether the Trove is undercollateralized at a given price. |
-|  [create(params, borrowingRate)](./lib-base.trove.create.md) | <code>static</code> | Calculate the result of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction. |
-|  [equals(that)](./lib-base.trove.equals.md) |  |  |
-|  [isOpenableInRecoveryMode(price)](./lib-base.trove.isopenableinrecoverymode.md) |  | Whether the Trove is sufficiently collateralized to be opened during recovery mode. |
-|  [multiply(multiplier)](./lib-base.trove.multiply.md) |  |  |
-|  [recreate(that, borrowingRate)](./lib-base.trove.recreate.md) | <code>static</code> | Calculate the parameters of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction that will result in the given Trove. |
-|  [setCollateral(collateral)](./lib-base.trove.setcollateral.md) |  |  |
-|  [setDebt(debt)](./lib-base.trove.setdebt.md) |  |  |
-|  [subtract(that)](./lib-base.trove.subtract.md) |  |  |
-|  [subtractCollateral(collateral)](./lib-base.trove.subtractcollateral.md) |  |  |
-|  [subtractDebt(debt)](./lib-base.trove.subtractdebt.md) |  |  |
-|  [whatChanged(that, borrowingRate)](./lib-base.trove.whatchanged.md) |  | Calculate the difference between this Trove and another. |
-
+| Method                                                                                      | Modifiers           | Description                                                                                                                                                 |
+| ------------------------------------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [add(that)](./lib-base.trove.add.md)                                                        |                     |                                                                                                                                                             |
+| [addCollateral(collateral)](./lib-base.trove.addcollateral.md)                              |                     |                                                                                                                                                             |
+| [addDebt(debt)](./lib-base.trove.adddebt.md)                                                |                     |                                                                                                                                                             |
+| [adjust(params, borrowingRate)](./lib-base.trove.adjust.md)                                 |                     | Calculate the result of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) transaction on this Trove.                                        |
+| [adjustTo(that, borrowingRate)](./lib-base.trove.adjustto.md)                               |                     | Calculate the parameters of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) transaction that will change this Trove into the given Trove. |
+| [apply(change, borrowingRate)](./lib-base.trove.apply.md)                                   |                     | Make a new Trove by applying a [TroveChange](./lib-base.trovechange.md) to this Trove.                                                                      |
+| [collateralRatio(price)](./lib-base.trove.collateralratio.md)                               |                     | Calculate the Trove's collateralization ratio at a given price.                                                                                             |
+| [collateralRatioIsBelowCritical(price)](./lib-base.trove.collateralratioisbelowcritical.md) |                     | Whether the collateralization ratio is less than the [CRITICAL_COLLATERAL_RATIO](./lib-base.critical_collateral_ratio.md) at a given price.                 |
+| [collateralRatioIsBelowMinimum(price)](./lib-base.trove.collateralratioisbelowminimum.md)   |                     | Whether the Trove is undercollateralized at a given price.                                                                                                  |
+| [create(params, borrowingRate)](./lib-base.trove.create.md)                                 | <code>static</code> | Calculate the result of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction.                                                          |
+| [equals(that)](./lib-base.trove.equals.md)                                                  |                     |                                                                                                                                                             |
+| [isOpenableInRecoveryMode(price)](./lib-base.trove.isopenableinrecoverymode.md)             |                     | Whether the Trove is sufficiently collateralized to be opened during recovery mode.                                                                         |
+| [multiply(multiplier)](./lib-base.trove.multiply.md)                                        |                     |                                                                                                                                                             |
+| [recreate(that, borrowingRate)](./lib-base.trove.recreate.md)                               | <code>static</code> | Calculate the parameters of an [openTrove()](./lib-base.transactableliquity.opentrove.md) transaction that will result in the given Trove.                  |
+| [setCollateral(collateral)](./lib-base.trove.setcollateral.md)                              |                     |                                                                                                                                                             |
+| [setDebt(debt)](./lib-base.trove.setdebt.md)                                                |                     |                                                                                                                                                             |
+| [subtract(that)](./lib-base.trove.subtract.md)                                              |                     |                                                                                                                                                             |
+| [subtractCollateral(collateral)](./lib-base.trove.subtractcollateral.md)                    |                     |                                                                                                                                                             |
+| [subtractDebt(debt)](./lib-base.trove.subtractdebt.md)                                      |                     |                                                                                                                                                             |
+| [whatChanged(that, borrowingRate)](./lib-base.trove.whatchanged.md)                         |                     | Calculate the difference between this Trove and another.                                                                                                    |

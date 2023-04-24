@@ -4,7 +4,7 @@
 
 ## LiquityStoreBaseState.lusdInStabilityPool property
 
-Total amount of LUSD currently deposited in the Stability Pool.
+Total amount of 1USD currently deposited in the Stability Pool.
 
 <b>Signature:</b>
 

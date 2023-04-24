@@ -14,10 +14,10 @@ redemptionRate(redeemedFractionOfSupply?: Decimalish, when?: Date): Decimal;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  redeemedFractionOfSupply | [Decimalish](./lib-base.decimalish.md) | The amount of LUSD being redeemed divided by the total supply. |
-|  when | Date | Optional timestamp that can be used to calculate what the redemption rate would decay to at a point of time in the future. |
+| Parameter                | Type                                   | Description                                                                                                                |
+| ------------------------ | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| redeemedFractionOfSupply | [Decimalish](./lib-base.decimalish.md) | The amount of 1USD being redeemed divided by the total supply.                                                             |
+| when                     | Date                                   | Optional timestamp that can be used to calculate what the redemption rate would decay to at a point of time in the future. |
 
 <b>Returns:</b>
 
@@ -27,21 +27,18 @@ redemptionRate(redeemedFractionOfSupply?: Decimalish, when?: Date): Decimal;
 
 By default, the fee is calculated at the time of the latest block. This can be overridden using the `when` parameter.
 
-Unlike the borrowing rate, the redemption rate depends on the amount being redeemed. To be more precise, it depends on the fraction of the redeemed amount compared to the total LUSD supply, which must be passed as a parameter.
+Unlike the borrowing rate, the redemption rate depends on the amount being redeemed. To be more precise, it depends on the fraction of the redeemed amount compared to the total 1USD supply, which must be passed as a parameter.
 
-To calculate the redemption fee in LUSD, multiply the redeemed LUSD amount with the redemption rate.
+To calculate the redemption fee in 1USD, multiply the redeemed 1USD amount with the redemption rate.
 
 ## Example
-
 
 ```typescript
 const fees = await liquity.getFees();
 const total = await liquity.getTotal();
 
-const redeemedLUSDAmount = Decimal.from(100);
-const redeemedFractionOfSupply = redeemedLUSDAmount.div(total.debt);
+const redeemed1USDAmount = Decimal.from(100);
+const redeemedFractionOfSupply = redeemed1USDAmount.div(total.debt);
 const redemptionRate = fees.redemptionRate(redeemedFractionOfSupply);
-const redemptionFeeLUSD = redemptionRate.mul(redeemedLUSDAmount);
-
+const redemptionFee1USD = redemptionRate.mul(redeemed1USDAmount);
 ```
-

@@ -9,7 +9,10 @@ Parameters of an [adjustTrove()](./lib-base.transactableliquity.adjusttrove.md) 
 <b>Signature:</b>
 
 ```typescript
-export declare type TroveAdjustmentParams<T = unknown> = (_CollateralChange<T> & _NoDebtChange) | (_DebtChange<T> & _NoCollateralChange) | (_CollateralChange<T> & _DebtChange<T>);
+export declare type TroveAdjustmentParams<T = unknown> =
+  | (_CollateralChange<T> & _NoDebtChange)
+  | (_DebtChange<T> & _NoCollateralChange)
+  | (_CollateralChange<T> & _DebtChange<T>);
 ```
 
 ## Remarks
@@ -18,7 +21,7 @@ The type parameter `T` specifies the allowed value type(s) of the particular `Tr
 
 Even though all properties are optional, a valid `TroveAdjustmentParams` object must define at least one.
 
-Defining both `depositCollateral` and `withdrawCollateral`<!-- -->, or both `borrowLUSD` and `repayLUSD` at the same time is disallowed, and will result in a type-checking error.
+Defining both `depositCollateral` and `withdrawCollateral`<!-- -->, or both `borrow1USD` and `repay1USD` at the same time is disallowed, and will result in a type-checking error.
 
 <h2>Properties</h2>
 
@@ -30,9 +33,8 @@ Defining both `depositCollateral` and `withdrawCollateral`<!-- -->, or both `bor
 
 <tr> <td> withdrawCollateral? </td> <td> T </td> <td> <i>(Optional)</i> The amount of collateral that's withdrawn. </td> </tr>
 
-<tr> <td> borrowLUSD? </td> <td> T </td> <td> <i>(Optional)</i> The amount of LUSD that's borrowed. </td> </tr>
+<tr> <td> borrow1USD? </td> <td> T </td> <td> <i>(Optional)</i> The amount of 1USD that's borrowed. </td> </tr>
 
-<tr> <td> repayLUSD? </td> <td> T </td> <td> <i>(Optional)</i> The amount of LUSD that's repaid. </td> </tr>
+<tr> <td> repay1USD? </td> <td> T </td> <td> <i>(Optional)</i> The amount of 1USD that's repaid. </td> </tr>
 
 </table>
-

@@ -4,7 +4,7 @@
 
 ## ReadableLiquity.getUniTokenBalance() method
 
-Get the amount of Uniswap ETH/LUSD LP tokens held by an address.
+Get the amount of Uniswap ETH/1USD LP tokens held by an address.
 
 <b>Signature:</b>
 
@@ -14,11 +14,10 @@ getUniTokenBalance(address?: string): Promise<Decimal>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  address | string | Address whose balance should be retrieved. |
+| Parameter | Type   | Description                                |
+| --------- | ------ | ------------------------------------------ |
+| address   | string | Address whose balance should be retrieved. |
 
 <b>Returns:</b>
 
 Promise&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt;
-

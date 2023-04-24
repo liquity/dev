@@ -4,7 +4,7 @@
 
 ## Trove.netDebt property
 
-Amount of LUSD that must be repaid to close this Trove.
+Amount of 1USD that must be repaid to close this Trove.
 
 <b>Signature:</b>
 
@@ -15,4 +15,3 @@ get netDebt(): Decimal;
 ## Remarks
 
 This doesn't include the liquidation reserve, which is refunded in case of normal closure.
-

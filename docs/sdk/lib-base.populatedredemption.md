@@ -9,27 +9,27 @@ A redemption transaction that has been prepared for sending.
 <b>Signature:</b>
 
 ```typescript
-export interface PopulatedRedemption<P = unknown, S = unknown, R = unknown> extends PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>> 
+export interface PopulatedRedemption<P = unknown, S = unknown, R = unknown> extends PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>
 ```
+
 <b>Extends:</b> [PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.md)<!-- -->&lt;P, [SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- -->&lt;S, [LiquityReceipt](./lib-base.liquityreceipt.md)<!-- -->&lt;R, [RedemptionDetails](./lib-base.redemptiondetails.md)<!-- -->&gt;&gt;&gt;
 
 ## Remarks
 
-The Liquity protocol fulfills redemptions by repaying the debt of Troves in ascending order of their collateralization ratio, and taking a portion of their collateral in exchange. Due to the [minimum debt](./lib-base.lusd_minimum_debt.md) requirement that Troves must fulfill, some LUSD amounts are not possible to redeem exactly.
+The Liquity protocol fulfills redemptions by repaying the debt of Troves in ascending order of their collateralization ratio, and taking a portion of their collateral in exchange. Due to the [minimum debt](./lib-base.lusd_minimum_debt.md) requirement that Troves must fulfill, some 1USD amounts are not possible to redeem exactly.
 
-When [redeemLUSD()](./lib-base.populatableliquity.redeemlusd.md) is called with an amount that can't be fully redeemed, the amount will be truncated (see the `redeemableLUSDAmount` property). When this happens, the redeemer can either redeem the truncated amount by sending the transaction unchanged, or prepare a new transaction by [increasing the amount](./lib-base.populatedredemption.increaseamountbyminimumnetdebt.md) to the next lowest possible value, which is the sum of the truncated amount and [LUSD\_MINIMUM\_NET\_DEBT](./lib-base.lusd_minimum_net_debt.md)<!-- -->.
+When [redeem1USD()](./lib-base.populatableliquity.redeemlusd.md) is called with an amount that can't be fully redeemed, the amount will be truncated (see the `redeemable1USDAmount` property). When this happens, the redeemer can either redeem the truncated amount by sending the transaction unchanged, or prepare a new transaction by [increasing the amount](./lib-base.populatedredemption.increaseamountbyminimumnetdebt.md) to the next lowest possible value, which is the sum of the truncated amount and [1USD_MINIMUM_NET_DEBT](./lib-base.lusd_minimum_net_debt.md)<!-- -->.
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [attemptedLUSDAmount](./lib-base.populatedredemption.attemptedlusdamount.md) | [Decimal](./lib-base.decimal.md) | Amount of LUSD the redeemer is trying to redeem. |
-|  [isTruncated](./lib-base.populatedredemption.istruncated.md) | boolean | Whether <code>redeemableLUSDAmount</code> is less than <code>attemptedLUSDAmount</code>. |
-|  [redeemableLUSDAmount](./lib-base.populatedredemption.redeemablelusdamount.md) | [Decimal](./lib-base.decimal.md) | Maximum amount of LUSD that is currently redeemable from <code>attemptedLUSDAmount</code>. |
+| Property                                                                       | Type                             | Description                                                                                |
+| ------------------------------------------------------------------------------ | -------------------------------- | ------------------------------------------------------------------------------------------ |
+| [attempted1USDAmount](./lib-base.populatedredemption.attemptedlusdamount.md)   | [Decimal](./lib-base.decimal.md) | Amount of 1USD the redeemer is trying to redeem.                                           |
+| [isTruncated](./lib-base.populatedredemption.istruncated.md)                   | boolean                          | Whether <code>redeemable1USDAmount</code> is less than <code>attempted1USDAmount</code>.   |
+| [redeemable1USDAmount](./lib-base.populatedredemption.redeemablelusdamount.md) | [Decimal](./lib-base.decimal.md) | Maximum amount of 1USD that is currently redeemable from <code>attempted1USDAmount</code>. |
 
 ## Methods
 
-|  Method | Description |
-|  --- | --- |
-|  [increaseAmountByMinimumNetDebt(maxRedemptionRate)](./lib-base.populatedredemption.increaseamountbyminimumnetdebt.md) | Prepare a new transaction by increasing the attempted amount to the next lowest redeemable value. |
-
+| Method                                                                                                                | Description                                                                                       |
+| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| [increaseAmountByMinimumNetDebt(maxRedemptionRate)](./lib-base.populatedredemption.increaseamountbyminimumnetdebt.md) | Prepare a new transaction by increasing the attempted amount to the next lowest redeemable value. |

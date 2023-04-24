@@ -14,13 +14,12 @@ apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  change | [StabilityDepositChange](./lib-base.stabilitydepositchange.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; \| undefined |  |
+| Parameter | Type                                                                                                                                      | Description |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| change    | [StabilityDepositChange](./lib-base.stabilitydepositchange.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; \| undefined |             |
 
 <b>Returns:</b>
 
 [Decimal](./lib-base.decimal.md)
 
-The new deposited LUSD amount.
-
+The new deposited 1USD amount.
