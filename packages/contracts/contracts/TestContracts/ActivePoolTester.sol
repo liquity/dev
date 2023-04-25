@@ -6,8 +6,8 @@ import "../ActivePool.sol";
 
 contract ActivePoolTester is ActivePool {
     
-    function unprotectedIncreaseLUSDDebt(uint _amount) external {
-        LUSDDebt  = LUSDDebt.add(_amount);
+    function unprotectedIncrease1USDDebt(uint _amount) external {
+        ONEUSDDebt  = ONEUSDDebt.add(_amount);
     }
 
     function unprotectedPayable() external payable {
