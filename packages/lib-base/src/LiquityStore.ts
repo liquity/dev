@@ -25,25 +25,25 @@ export interface LiquityStoreBaseState {
   /** User's native currency balance (e.g. Ether). */
   accountBalance: Decimal;
 
-  /** User's LUSD token balance. */
-  lusdBalance: Decimal;
+  /** User's 1USD token balance. */
+  oneusdBalance: Decimal;
 
   /** User's LQTY token balance. */
   lqtyBalance: Decimal;
 
-  /** User's Uniswap ETH/LUSD LP token balance. */
+  /** User's Uniswap ONE/1USD LP token balance. */
   uniTokenBalance: Decimal;
 
-  /** The liquidity mining contract's allowance of user's Uniswap ETH/LUSD LP tokens. */
+  /** The liquidity mining contract's allowance of user's Uniswap ONE/1USD LP tokens. */
   uniTokenAllowance: Decimal;
 
   /** Remaining LQTY that will be collectively rewarded to liquidity miners. */
   remainingLiquidityMiningLQTYReward: Decimal;
 
-  /** Amount of Uniswap ETH/LUSD LP tokens the user has staked in liquidity mining. */
+  /** Amount of Uniswap ONE/1USD LP tokens the user has staked in liquidity mining. */
   liquidityMiningStake: Decimal;
 
-  /** Total amount of Uniswap ETH/LUSD LP tokens currently staked in liquidity mining. */
+  /** Total amount of Uniswap ONE/1USD LP tokens currently staked in liquidity mining. */
   totalStakedUniTokens: Decimal;
 
   /** Amount of LQTY the user has earned through mining liquidity. */
@@ -58,11 +58,11 @@ export interface LiquityStoreBaseState {
    */
   collateralSurplusBalance: Decimal;
 
-  /** Current price of the native currency (e.g. Ether) in USD. */
+  /** Current price of the native currency (e.g. ONE) in USD. */
   price: Decimal;
 
-  /** Total amount of LUSD currently deposited in the Stability Pool. */
-  lusdInStabilityPool: Decimal;
+  /** Total amount of 1USD currently deposited in the Stability Pool. */
+  oneusdInStabilityPool: Decimal;
 
   /** Total collateral and debt in the Liquity system. */
   total: Trove;
@@ -130,7 +130,7 @@ export interface LiquityStoreDerivedState {
    * Current redemption rate.
    *
    * @remarks
-   * Note that the actual rate paid by a redemption transaction will depend on the amount of LUSD
+   * Note that the actual rate paid by a redemption transaction will depend on the amount of 1USD
    * being redeemed.
    *
    * Use {@link Fees.redemptionRate} to calculate a precise redemption rate.
@@ -352,11 +352,11 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.accountBalance
       ),
 
-      lusdBalance: this._updateIfChanged(
+      oneusdBalance: this._updateIfChanged(
         eq,
-        "lusdBalance",
-        baseState.lusdBalance,
-        baseStateUpdate.lusdBalance
+        "oneusdBalance",
+        baseState.oneusdBalance,
+        baseStateUpdate.oneusdBalance
       ),
 
       lqtyBalance: this._updateIfChanged(
@@ -415,11 +415,11 @@ export abstract class LiquityStore<T = unknown> {
 
       price: this._updateIfChanged(eq, "price", baseState.price, baseStateUpdate.price),
 
-      lusdInStabilityPool: this._updateIfChanged(
+      oneusdInStabilityPool: this._updateIfChanged(
         eq,
-        "lusdInStabilityPool",
-        baseState.lusdInStabilityPool,
-        baseStateUpdate.lusdInStabilityPool
+        "oneusdInStabilityPool",
+        baseState.oneusdInStabilityPool,
+        baseStateUpdate.oneusdInStabilityPool
       ),
 
       total: this._updateIfChanged(equals, "total", baseState.total, baseStateUpdate.total),

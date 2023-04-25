@@ -169,14 +169,14 @@ export interface SendableLiquity<R = unknown, S = unknown>
     amount: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
 
-  /** {@inheritDoc TransactableLiquity.borrowLUSD} */
-  borrowLUSD(
+  /** {@inheritDoc TransactableLiquity.borrow1USD} */
+  borrow1USD(
     amount: Decimalish,
     maxBorrowingRate?: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
 
-  /** {@inheritDoc TransactableLiquity.repayLUSD} */
-  repayLUSD(
+  /** {@inheritDoc TransactableLiquity.repay1USD} */
+  repay1USD(
     amount: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
 
@@ -193,14 +193,14 @@ export interface SendableLiquity<R = unknown, S = unknown>
     maximumNumberOfTrovesToLiquidate: number
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, LiquidationDetails>>>;
 
-  /** {@inheritDoc TransactableLiquity.depositLUSDInStabilityPool} */
-  depositLUSDInStabilityPool(
+  /** {@inheritDoc TransactableLiquity.deposit1USDInStabilityPool} */
+  deposit1USDInStabilityPool(
     amount: Decimalish,
     frontendTag?: string
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>>;
 
-  /** {@inheritDoc TransactableLiquity.withdrawLUSDFromStabilityPool} */
-  withdrawLUSDFromStabilityPool(
+  /** {@inheritDoc TransactableLiquity.withdraw1USDFromStabilityPool} */
+  withdraw1USDFromStabilityPool(
     amount: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>>;
 
@@ -214,8 +214,8 @@ export interface SendableLiquity<R = unknown, S = unknown>
     SentLiquityTransaction<S, LiquityReceipt<R, CollateralGainTransferDetails>>
   >;
 
-  /** {@inheritDoc TransactableLiquity.sendLUSD} */
-  sendLUSD(
+  /** {@inheritDoc TransactableLiquity.send1USD} */
+  send1USD(
     toAddress: string,
     amount: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
@@ -226,8 +226,8 @@ export interface SendableLiquity<R = unknown, S = unknown>
     amount: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
 
-  /** {@inheritDoc TransactableLiquity.redeemLUSD} */
-  redeemLUSD(
+  /** {@inheritDoc TransactableLiquity.redeem1USD} */
+  redeem1USD(
     amount: Decimalish,
     maxRedemptionRate?: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>;
