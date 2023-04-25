@@ -51,7 +51,7 @@ contract LPTokenWrapper is ILPTokenWrapper {
 }
 
 /*
- * On deployment a new Uniswap pool will be created for the pair 1USD/ETH and its token will be set here.
+ * On deployment a new Uniswap pool will be created for the pair 1USD/ONE and its token will be set here.
 
  * Essentially the way it works is:
 

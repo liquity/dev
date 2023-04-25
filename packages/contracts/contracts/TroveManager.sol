@@ -89,27 +89,27 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     uint public totalCollateralSnapshot;
 
     /*
-    * L_ETH and L_1USDDebt track the sums of accumulated liquidation rewards per unit staked. During its lifetime, each stake earns:
+    * L_ONE and L_1USDDebt track the sums of accumulated liquidation rewards per unit staked. During its lifetime, each stake earns:
     *
-    * An ETH gain of ( stake * [L_ETH - L_ETH(0)] )
+    * An ONE gain of ( stake * [L_ONE - L_ONE(0)] )
     * A ONEUSDDebt increase  of ( stake * [L_1USDDebt - L_1USDDebt(0)] )
     *
-    * Where L_ETH(0) and L_1USDDebt(0) are snapshots of L_ETH and L_1USDDebt for the active Trove taken at the instant the stake was made
+    * Where L_ONE(0) and L_1USDDebt(0) are snapshots of L_ONE and L_1USDDebt for the active Trove taken at the instant the stake was made
     */
-    uint public L_ETH;
+    uint public L_ONE;
     uint public L_1USDDebt;
 
     // Map addresses with active troves to their RewardSnapshot
     mapping (address => RewardSnapshot) public rewardSnapshots;
 
-    // Object containing the ETH and 1USD snapshots for a given active trove
-    struct RewardSnapshot { uint ETH; uint ONEUSDDebt;}
+    // Object containing the ONE and 1USD snapshots for a given active trove
+    struct RewardSnapshot { uint ONE; uint ONEUSDDebt;}
 
     // Array of all active trove addresses - used to to compute an approximate hint off-chain, for the sorted list insertion
     address[] public TroveOwners;
 
     // Error trackers for the trove redistribution calculation
-    uint public lastETHError_Redistribution;
+    uint public lastONEError_Redistribution;
     uint public last1USDDebtError_Redistribution;
 
     /*
@@ -181,9 +181,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     struct RedemptionTotals {
         uint remaining1USD;
         uint total1USDToRedeem;
-        uint totalETHDrawn;
-        uint ETHFee;
-        uint ETHToSendToRedeemer;
+        uint totalONEDrawn;
+        uint ONEFee;
+        uint ONEToSendToRedeemer;
         uint decayedBaseRate;
         uint price;
         uint total1USDSupplyAtStart;
@@ -191,7 +191,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     struct SingleRedemptionValues {
         uint ONEUSDLot;
-        uint ETHLot;
+        uint ONELot;
         bool cancelledPartial;
     }
 
@@ -210,15 +210,15 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _collGasCompensation, uint _1USDGasCompensation);
-    event Redemption(uint _attempted1USDAmount, uint _actual1USDAmount, uint _ETHSent, uint _ETHFee);
+    event Redemption(uint _attempted1USDAmount, uint _actual1USDAmount, uint _ONESent, uint _ONEFee);
     event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint _stake, TroveManagerOperation _operation);
     event TroveLiquidated(address indexed _borrower, uint _debt, uint _coll, TroveManagerOperation _operation);
     event BaseRateUpdated(uint _baseRate);
     event LastFeeOpTimeUpdated(uint _lastFeeOpTime);
     event TotalStakesUpdated(uint _newTotalStakes);
     event SystemSnapshotsUpdated(uint _totalStakesSnapshot, uint _totalCollateralSnapshot);
-    event LTermsUpdated(uint _L_ETH, uint _L_1USDDebt);
-    event TroveSnapshotsUpdated(uint _L_ETH, uint _L_1USDDebt);
+    event LTermsUpdated(uint _L_ONE, uint _L_1USDDebt);
+    event TroveSnapshotsUpdated(uint _L_ONE, uint _L_1USDDebt);
     event TroveIndexUpdated(address _borrower, uint _newIndex);
 
      enum TroveManagerOperation {
@@ -462,7 +462,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     /*
-    *  Get its offset coll/debt and ETH gas comp, and close the trove.
+    *  Get its offset coll/debt and ONE gas comp, and close the trove.
     */
     function _getCappedOffsetVals
     (
@@ -521,11 +521,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         require(totals.totalDebtInSequence > 0, "TroveManager: nothing to liquidate");
 
-        // Move liquidated ETH and 1USD to the appropriate pools
+        // Move liquidated ONE and 1USD to the appropriate pools
         stabilityPoolCached.offset(totals.totalDebtToOffset, totals.totalCollToSendToSP);
         _redistributeDebtAndColl(contractsCache.activePool, contractsCache.defaultPool, totals.totalDebtToRedistribute, totals.totalCollToRedistribute);
         if (totals.totalCollSurplus > 0) {
-            contractsCache.activePool.sendETH(address(collSurplusPool), totals.totalCollSurplus);
+            contractsCache.activePool.sendONE(address(collSurplusPool), totals.totalCollSurplus);
         }
 
         // Update system snapshots
@@ -663,11 +663,11 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         require(totals.totalDebtInSequence > 0, "TroveManager: nothing to liquidate");
 
-        // Move liquidated ETH and 1USD to the appropriate pools
+        // Move liquidated ONE and 1USD to the appropriate pools
         stabilityPoolCached.offset(totals.totalDebtToOffset, totals.totalCollToSendToSP);
         _redistributeDebtAndColl(activePoolCached, defaultPoolCached, totals.totalDebtToRedistribute, totals.totalCollToRedistribute);
         if (totals.totalCollSurplus > 0) {
-            activePoolCached.sendETH(address(collSurplusPool), totals.totalCollSurplus);
+            activePoolCached.sendONE(address(collSurplusPool), totals.totalCollSurplus);
         }
 
         // Update system snapshots
@@ -793,21 +793,21 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         return newTotals;
     }
 
-    function _sendGasCompensation(IActivePool _activePool, address _liquidator, uint _1USD, uint _ETH) internal {
+    function _sendGasCompensation(IActivePool _activePool, address _liquidator, uint _1USD, uint _ONE) internal {
         if (_1USD > 0) {
             oneusdToken.returnFromPool(gasPoolAddress, _liquidator, _1USD);
         }
 
-        if (_ETH > 0) {
-            _activePool.sendETH(_liquidator, _ETH);
+        if (_ONE > 0) {
+            _activePool.sendONE(_liquidator, _ONE);
         }
     }
 
     // Move a Trove's pending debt and collateral rewards from distributions, from the Default Pool to the Active Pool
-    function _movePendingTroveRewardsToActivePool(IActivePool _activePool, IDefaultPool _defaultPool, uint _1USD, uint _ETH) internal {
+    function _movePendingTroveRewardsToActivePool(IActivePool _activePool, IDefaultPool _defaultPool, uint _1USD, uint _ONE) internal {
         _defaultPool.decrease1USDDebt(_1USD);
         _activePool.increase1USDDebt(_1USD);
-        _defaultPool.sendETHToActivePool(_ETH);
+        _defaultPool.sendONEToActivePool(_ONE);
     }
 
     // --- Redemption functions ---
@@ -827,12 +827,12 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the Trove minus the liquidation reserve
         singleRedemption.ONEUSDLot = LiquityMath._min(_max1USDamount, Troves[_borrower].debt.sub(ONEUSD_GAS_COMPENSATION));
 
-        // Get the ETHLot of equivalent value in USD
-        singleRedemption.ETHLot = singleRedemption.ONEUSDLot.mul(DECIMAL_PRECISION).div(_price);
+        // Get the ONELot of equivalent value in USD
+        singleRedemption.ONELot = singleRedemption.ONEUSDLot.mul(DECIMAL_PRECISION).div(_price);
 
-        // Decrease the debt and collateral of the current Trove according to the 1USD lot and corresponding ETH to send
+        // Decrease the debt and collateral of the current Trove according to the 1USD lot and corresponding ONE to send
         uint newDebt = (Troves[_borrower].debt).sub(singleRedemption.ONEUSDLot);
-        uint newColl = (Troves[_borrower].coll).sub(singleRedemption.ETHLot);
+        uint newColl = (Troves[_borrower].coll).sub(singleRedemption.ONELot);
 
         if (newDebt == ONEUSD_GAS_COMPENSATION) {
             // No debt left in the Trove (except for the liquidation reserve), therefore the trove gets closed
@@ -874,19 +874,19 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     /*
     * Called when a full redemption occurs, and closes the trove.
-    * The redeemer swaps (debt - liquidation reserve) 1USD for (debt - liquidation reserve) worth of ETH, so the 1USD liquidation reserve left corresponds to the remaining debt.
+    * The redeemer swaps (debt - liquidation reserve) 1USD for (debt - liquidation reserve) worth of ONE, so the 1USD liquidation reserve left corresponds to the remaining debt.
     * In order to close the trove, the 1USD liquidation reserve is burned, and the corresponding debt is removed from the active pool.
     * The debt recorded on the trove's struct is zero'd elswhere, in _closeTrove.
-    * Any surplus ETH left in the trove, is sent to the Coll surplus pool, and can be later claimed by the borrower.
+    * Any surplus ONE left in the trove, is sent to the Coll surplus pool, and can be later claimed by the borrower.
     */
-    function _redeemCloseTrove(ContractsCache memory _contractsCache, address _borrower, uint _1USD, uint _ETH) internal {
+    function _redeemCloseTrove(ContractsCache memory _contractsCache, address _borrower, uint _1USD, uint _ONE) internal {
         _contractsCache.oneusdToken.burn(gasPoolAddress, _1USD);
-        // Update Active Pool 1USD, and send ETH to account
+        // Update Active Pool 1USD, and send ONE to account
         _contractsCache.activePool.decrease1USDDebt(_1USD);
 
-        // send ETH from Active Pool to CollSurplus Pool
-        _contractsCache.collSurplusPool.accountSurplus(_borrower, _ETH);
-        _contractsCache.activePool.sendETH(address(_contractsCache.collSurplusPool), _ETH);
+        // send ONE from Active Pool to CollSurplus Pool
+        _contractsCache.collSurplusPool.accountSurplus(_borrower, _ONE);
+        _contractsCache.activePool.sendONE(address(_contractsCache.collSurplusPool), _ONE);
     }
 
     function _isValidFirstRedemptionHint(ISortedTroves _sortedTroves, address _firstRedemptionHint, uint _price) internal view returns (bool) {
@@ -991,63 +991,63 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             if (singleRedemption.cancelledPartial) break; // Partial redemption was cancelled (out-of-date hint, or new net debt < minimum), therefore we could not redeem from the last Trove
 
             totals.total1USDToRedeem  = totals.total1USDToRedeem.add(singleRedemption.ONEUSDLot);
-            totals.totalETHDrawn = totals.totalETHDrawn.add(singleRedemption.ETHLot);
+            totals.totalONEDrawn = totals.totalONEDrawn.add(singleRedemption.ONELot);
 
             totals.remaining1USD = totals.remaining1USD.sub(singleRedemption.ONEUSDLot);
             currentBorrower = nextUserToCheck;
         }
-        require(totals.totalETHDrawn > 0, "TroveManager: Unable to redeem any amount");
+        require(totals.totalONEDrawn > 0, "TroveManager: Unable to redeem any amount");
 
         // Decay the baseRate due to time passed, and then increase it according to the size of this redemption.
         // Use the saved total 1USD supply value, from before it was reduced by the redemption.
-        _updateBaseRateFromRedemption(totals.totalETHDrawn, totals.price, totals.total1USDSupplyAtStart);
+        _updateBaseRateFromRedemption(totals.totalONEDrawn, totals.price, totals.total1USDSupplyAtStart);
 
-        // Calculate the ETH fee
-        totals.ETHFee = _getRedemptionFee(totals.totalETHDrawn);
+        // Calculate the ONE fee
+        totals.ONEFee = _getRedemptionFee(totals.totalONEDrawn);
 
-        _requireUserAcceptsFee(totals.ETHFee, totals.totalETHDrawn, _maxFeePercentage);
+        _requireUserAcceptsFee(totals.ONEFee, totals.totalONEDrawn, _maxFeePercentage);
 
-        // Send the ETH fee to the LQTY staking contract
-        contractsCache.activePool.sendETH(address(contractsCache.lqtyStaking), totals.ETHFee);
-        contractsCache.lqtyStaking.increaseF_ETH(totals.ETHFee);
+        // Send the ONE fee to the LQTY staking contract
+        contractsCache.activePool.sendONE(address(contractsCache.lqtyStaking), totals.ONEFee);
+        contractsCache.lqtyStaking.increaseF_ONE(totals.ONEFee);
 
-        totals.ETHToSendToRedeemer = totals.totalETHDrawn.sub(totals.ETHFee);
+        totals.ONEToSendToRedeemer = totals.totalONEDrawn.sub(totals.ONEFee);
 
-        emit Redemption(_1USDamount, totals.total1USDToRedeem, totals.totalETHDrawn, totals.ETHFee);
+        emit Redemption(_1USDamount, totals.total1USDToRedeem, totals.totalONEDrawn, totals.ONEFee);
 
-        // Burn the total 1USD that is cancelled with debt, and send the redeemed ETH to msg.sender
+        // Burn the total 1USD that is cancelled with debt, and send the redeemed ONE to msg.sender
         contractsCache.oneusdToken.burn(msg.sender, totals.total1USDToRedeem);
-        // Update Active Pool 1USD, and send ETH to account
+        // Update Active Pool 1USD, and send ONE to account
         contractsCache.activePool.decrease1USDDebt(totals.total1USDToRedeem);
-        contractsCache.activePool.sendETH(msg.sender, totals.ETHToSendToRedeemer);
+        contractsCache.activePool.sendONE(msg.sender, totals.ONEToSendToRedeemer);
     }
 
     // --- Helper functions ---
 
     // Return the nominal collateral ratio (ICR) of a given Trove, without the price. Takes a trove's pending coll and debt rewards from redistributions into account.
     function getNominalICR(address _borrower) public view override returns (uint) {
-        (uint currentETH, uint current1USDDebt) = _getCurrentTroveAmounts(_borrower);
+        (uint currentONE, uint current1USDDebt) = _getCurrentTroveAmounts(_borrower);
 
-        uint NICR = LiquityMath._computeNominalCR(currentETH, current1USDDebt);
+        uint NICR = LiquityMath._computeNominalCR(currentONE, current1USDDebt);
         return NICR;
     }
 
     // Return the current collateral ratio (ICR) of a given Trove. Takes a trove's pending coll and debt rewards from redistributions into account.
     function getCurrentICR(address _borrower, uint _price) public view override returns (uint) {
-        (uint currentETH, uint current1USDDebt) = _getCurrentTroveAmounts(_borrower);
+        (uint currentONE, uint current1USDDebt) = _getCurrentTroveAmounts(_borrower);
 
-        uint ICR = LiquityMath._computeCR(currentETH, current1USDDebt, _price);
+        uint ICR = LiquityMath._computeCR(currentONE, current1USDDebt, _price);
         return ICR;
     }
 
     function _getCurrentTroveAmounts(address _borrower) internal view returns (uint, uint) {
-        uint pendingETHReward = getPendingETHReward(_borrower);
+        uint pendingONEReward = getPendingONEReward(_borrower);
         uint pending1USDDebtReward = getPending1USDDebtReward(_borrower);
 
-        uint currentETH = Troves[_borrower].coll.add(pendingETHReward);
+        uint currentONE = Troves[_borrower].coll.add(pendingONEReward);
         uint current1USDDebt = Troves[_borrower].debt.add(pending1USDDebtReward);
 
-        return (currentETH, current1USDDebt);
+        return (currentONE, current1USDDebt);
     }
 
     function applyPendingRewards(address _borrower) external override {
@@ -1061,17 +1061,17 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             _requireTroveIsActive(_borrower);
 
             // Compute pending rewards
-            uint pendingETHReward = getPendingETHReward(_borrower);
+            uint pendingONEReward = getPendingONEReward(_borrower);
             uint pending1USDDebtReward = getPending1USDDebtReward(_borrower);
 
             // Apply pending rewards to trove's state
-            Troves[_borrower].coll = Troves[_borrower].coll.add(pendingETHReward);
+            Troves[_borrower].coll = Troves[_borrower].coll.add(pendingONEReward);
             Troves[_borrower].debt = Troves[_borrower].debt.add(pending1USDDebtReward);
 
             _updateTroveRewardSnapshots(_borrower);
 
             // Transfer from DefaultPool to ActivePool
-            _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, pending1USDDebtReward, pendingETHReward);
+            _movePendingTroveRewardsToActivePool(_activePool, _defaultPool, pending1USDDebtReward, pendingONEReward);
 
             emit TroveUpdated(
                 _borrower,
@@ -1083,30 +1083,30 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         }
     }
 
-    // Update borrower's snapshots of L_ETH and L_1USDDebt to reflect the current values
+    // Update borrower's snapshots of L_ONE and L_1USDDebt to reflect the current values
     function updateTroveRewardSnapshots(address _borrower) external override {
         _requireCallerIsBorrowerOperations();
        return _updateTroveRewardSnapshots(_borrower);
     }
 
     function _updateTroveRewardSnapshots(address _borrower) internal {
-        rewardSnapshots[_borrower].ETH = L_ETH;
+        rewardSnapshots[_borrower].ONE = L_ONE;
         rewardSnapshots[_borrower].ONEUSDDebt = L_1USDDebt;
-        emit TroveSnapshotsUpdated(L_ETH, L_1USDDebt);
+        emit TroveSnapshotsUpdated(L_ONE, L_1USDDebt);
     }
 
-    // Get the borrower's pending accumulated ETH reward, earned by their stake
-    function getPendingETHReward(address _borrower) public view override returns (uint) {
-        uint snapshotETH = rewardSnapshots[_borrower].ETH;
-        uint rewardPerUnitStaked = L_ETH.sub(snapshotETH);
+    // Get the borrower's pending accumulated ONE reward, earned by their stake
+    function getPendingONEReward(address _borrower) public view override returns (uint) {
+        uint snapshotONE = rewardSnapshots[_borrower].ONE;
+        uint rewardPerUnitStaked = L_ONE.sub(snapshotONE);
 
         if ( rewardPerUnitStaked == 0 || Troves[_borrower].status != Status.active) { return 0; }
 
         uint stake = Troves[_borrower].stake;
 
-        uint pendingETHReward = stake.mul(rewardPerUnitStaked).div(DECIMAL_PRECISION);
+        uint pendingONEReward = stake.mul(rewardPerUnitStaked).div(DECIMAL_PRECISION);
 
-        return pendingETHReward;
+        return pendingONEReward;
     }
     
     // Get the borrower's pending accumulated 1USD reward, earned by their stake
@@ -1131,7 +1131,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         */
         if (Troves[_borrower].status != Status.active) {return false;}
        
-        return (rewardSnapshots[_borrower].ETH < L_ETH);
+        return (rewardSnapshots[_borrower].ONE < L_ONE);
     }
 
     // Return the Troves entire debt and coll, including pending rewards from redistributions.
@@ -1141,16 +1141,16 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         public
         view
         override
-        returns (uint debt, uint coll, uint pending1USDDebtReward, uint pendingETHReward)
+        returns (uint debt, uint coll, uint pending1USDDebtReward, uint pendingONEReward)
     {
         debt = Troves[_borrower].debt;
         coll = Troves[_borrower].coll;
 
         pending1USDDebtReward = getPending1USDDebtReward(_borrower);
-        pendingETHReward = getPendingETHReward(_borrower);
+        pendingONEReward = getPendingONEReward(_borrower);
 
         debt = debt.add(pending1USDDebtReward);
-        coll = coll.add(pendingETHReward);
+        coll = coll.add(pendingONEReward);
     }
 
     function removeStake(address _borrower) external override {
@@ -1205,7 +1205,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         /*
         * Add distributed coll and debt rewards-per-unit-staked to the running totals. Division uses a "feedback"
-        * error correction, to keep the cumulative error low in the running totals L_ETH and L_1USDDebt:
+        * error correction, to keep the cumulative error low in the running totals L_ONE and L_1USDDebt:
         *
         * 1) Form numerators which compensate for the floor division errors that occurred the last time this
         * function was called.
@@ -1214,26 +1214,26 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         * 4) Store these errors for use in the next correction when this function is called.
         * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
-        uint ETHNumerator = _coll.mul(DECIMAL_PRECISION).add(lastETHError_Redistribution);
+        uint ONENumerator = _coll.mul(DECIMAL_PRECISION).add(lastONEError_Redistribution);
         uint ONEUSDDebtNumerator = _debt.mul(DECIMAL_PRECISION).add(last1USDDebtError_Redistribution);
 
         // Get the per-unit-staked terms
-        uint ETHRewardPerUnitStaked = ETHNumerator.div(totalStakes);
+        uint ONERewardPerUnitStaked = ONENumerator.div(totalStakes);
         uint ONEUSDDebtRewardPerUnitStaked = ONEUSDDebtNumerator.div(totalStakes);
 
-        lastETHError_Redistribution = ETHNumerator.sub(ETHRewardPerUnitStaked.mul(totalStakes));
+        lastONEError_Redistribution = ONENumerator.sub(ONERewardPerUnitStaked.mul(totalStakes));
         last1USDDebtError_Redistribution = ONEUSDDebtNumerator.sub(ONEUSDDebtRewardPerUnitStaked.mul(totalStakes));
 
         // Add per-unit-staked terms to the running totals
-        L_ETH = L_ETH.add(ETHRewardPerUnitStaked);
+        L_ONE = L_ONE.add(ONERewardPerUnitStaked);
         L_1USDDebt = L_1USDDebt.add(ONEUSDDebtRewardPerUnitStaked);
 
-        emit LTermsUpdated(L_ETH, L_1USDDebt);
+        emit LTermsUpdated(L_ONE, L_1USDDebt);
 
         // Transfer coll and debt from ActivePool to DefaultPool
         _activePool.decrease1USDDebt(_debt);
         _defaultPool.increase1USDDebt(_debt);
-        _activePool.sendETH(address(_defaultPool), _coll);
+        _activePool.sendONE(address(_defaultPool), _coll);
     }
 
     function closeTrove(address _borrower) external override {
@@ -1251,7 +1251,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         Troves[_borrower].coll = 0;
         Troves[_borrower].debt = 0;
 
-        rewardSnapshots[_borrower].ETH = 0;
+        rewardSnapshots[_borrower].ONE = 0;
         rewardSnapshots[_borrower].ONEUSDDebt = 0;
 
         _removeTroveOwner(_borrower, TroveOwnersArrayLength);
@@ -1264,15 +1264,15 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     *
     * The calculation excludes a portion of collateral that is in the ActivePool:
     *
-    * the total ETH gas compensation from the liquidation sequence
+    * the total ONE gas compensation from the liquidation sequence
     *
-    * The ETH as compensation must be excluded as it is always sent out at the very end of the liquidation sequence.
+    * The ONE as compensation must be excluded as it is always sent out at the very end of the liquidation sequence.
     */
     function _updateSystemSnapshots_excludeCollRemainder(IActivePool _activePool, uint _collRemainder) internal {
         totalStakesSnapshot = totalStakes;
 
-        uint activeColl = _activePool.getETH();
-        uint liquidatedColl = defaultPool.getETH();
+        uint activeColl = _activePool.getONE();
+        uint liquidatedColl = defaultPool.getONE();
         totalCollateralSnapshot = activeColl.sub(_collRemainder).add(liquidatedColl);
 
         emit SystemSnapshotsUpdated(totalStakesSnapshot, totalCollateralSnapshot);
@@ -1332,7 +1332,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         return _checkRecoveryMode(_price);
     }
 
-    // Check whether or not the system *would be* in Recovery Mode, given an ETH:USD price, and the entire system coll and debt.
+    // Check whether or not the system *would be* in Recovery Mode, given an ONE:USD price, and the entire system coll and debt.
     function _checkPotentialRecoveryMode(
         uint _entireSystemColl,
         uint _entireSystemDebt,
@@ -1355,12 +1355,12 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     * then,
     * 2) increases the baseRate based on the amount redeemed, as a proportion of total supply
     */
-    function _updateBaseRateFromRedemption(uint _ETHDrawn,  uint _price, uint _total1USDSupply) internal returns (uint) {
+    function _updateBaseRateFromRedemption(uint _ONEDrawn,  uint _price, uint _total1USDSupply) internal returns (uint) {
         uint decayedBaseRate = _calcDecayedBaseRate();
 
-        /* Convert the drawn ETH back to 1USD at face value rate (1 1USD:1 USD), in order to get
+        /* Convert the drawn ONE back to 1USD at face value rate (1 1USD:1 USD), in order to get
         * the fraction of total supply that was redeemed at face value. */
-        uint redeemed1USDFraction = _ETHDrawn.mul(_price).div(_total1USDSupply);
+        uint redeemed1USDFraction = _ONEDrawn.mul(_price).div(_total1USDSupply);
 
         uint newBaseRate = decayedBaseRate.add(redeemed1USDFraction.div(BETA));
         newBaseRate = LiquityMath._min(newBaseRate, DECIMAL_PRECISION); // cap baseRate at a maximum of 100%
@@ -1391,17 +1391,17 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         );
     }
 
-    function _getRedemptionFee(uint _ETHDrawn) internal view returns (uint) {
-        return _calcRedemptionFee(getRedemptionRate(), _ETHDrawn);
+    function _getRedemptionFee(uint _ONEDrawn) internal view returns (uint) {
+        return _calcRedemptionFee(getRedemptionRate(), _ONEDrawn);
     }
 
-    function getRedemptionFeeWithDecay(uint _ETHDrawn) external view override returns (uint) {
-        return _calcRedemptionFee(getRedemptionRateWithDecay(), _ETHDrawn);
+    function getRedemptionFeeWithDecay(uint _ONEDrawn) external view override returns (uint) {
+        return _calcRedemptionFee(getRedemptionRateWithDecay(), _ONEDrawn);
     }
 
-    function _calcRedemptionFee(uint _redemptionRate, uint _ETHDrawn) internal pure returns (uint) {
-        uint redemptionFee = _redemptionRate.mul(_ETHDrawn).div(DECIMAL_PRECISION);
-        require(redemptionFee < _ETHDrawn, "TroveManager: Fee would eat up all returned collateral");
+    function _calcRedemptionFee(uint _redemptionRate, uint _ONEDrawn) internal pure returns (uint) {
+        uint redemptionFee = _redemptionRate.mul(_ONEDrawn).div(DECIMAL_PRECISION);
+        require(redemptionFee < _ONEDrawn, "TroveManager: Fee would eat up all returned collateral");
         return redemptionFee;
     }
 

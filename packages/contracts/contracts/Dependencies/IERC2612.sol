@@ -7,7 +7,7 @@ pragma solidity 0.6.11;
  *
  * Adds the {permit} method, which can be used to change one's
  * {IERC20-allowance} without having to send a transaction, by signing a
- * message. This allows users to spend tokens without having to hold Ether.
+ * message. This allows users to spend tokens without having to hold One.
  *
  * See https://eips.ethereum.org/EIPS/eip-2612.
  * 

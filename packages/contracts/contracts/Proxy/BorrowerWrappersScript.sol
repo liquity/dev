@@ -11,12 +11,12 @@ import "../Interfaces/IStabilityPool.sol";
 import "../Interfaces/IPriceFeed.sol";
 import "../Interfaces/ILQTYStaking.sol";
 import "./BorrowerOperationsScript.sol";
-import "./ETHTransferScript.sol";
+import "./ONETransferScript.sol";
 import "./LQTYStakingScript.sol";
 import "../Dependencies/console.sol";
 
 
-contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, LQTYStakingScript {
+contract BorrowerWrappersScript is BorrowerOperationsScript, ONETransferScript, LQTYStakingScript {
     using SafeMath for uint;
 
     string constant public NAME = "BorrowerWrappersScript";
@@ -90,7 +90,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         uint lqtyBalanceAfter = lqtyToken.balanceOf(address(this));
         uint claimedCollateral = collBalanceAfter.sub(collBalanceBefore);
 
-        // Add claimed ETH to trove, get more 1USD and stake it into the Stability Pool
+        // Add claimed ONE to trove, get more 1USD and stake it into the Stability Pool
         if (claimedCollateral > 0) {
             _requireUserHasTrove(address(this));
             uint ONEUSDAmount = _getNet1USDAmount(claimedCollateral);

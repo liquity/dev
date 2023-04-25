@@ -15,7 +15,7 @@ library LiquityMath {
      * - Making it “too high” could lead to overflows.
      * - Making it “too low” could lead to an ICR equal to zero, due to truncation from Solidity floor division. 
      *
-     * This value of 1e20 is chosen for safety: the NICR will only overflow for numerator > ~1e39 ETH,
+     * This value of 1e20 is chosen for safety: the NICR will only overflow for numerator > ~1e39 ONE,
      * and will only truncate to 0 if the denominator is at least 1e20 times greater than the numerator.
      *
      */

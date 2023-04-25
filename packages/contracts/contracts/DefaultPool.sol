@@ -9,10 +9,10 @@ import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 /*
- * The Default Pool holds the ETH and 1USD debt (but not 1USD tokens) from liquidations that have been redistributed
+ * The Default Pool holds the ONE and 1USD debt (but not 1USD tokens) from liquidations that have been redistributed
  * to active troves but not yet "applied", i.e. not yet recorded on a recipient active trove's struct.
  *
- * When a trove makes an operation that applies its pending ETH and 1USD debt, its pending ETH and 1USD debt is moved
+ * When a trove makes an operation that applies its pending ONE and 1USD debt, its pending ONE and 1USD debt is moved
  * from the Default Pool to the Active Pool.
  */
 contract DefaultPool is Ownable, CheckContract, IDefaultPool {
@@ -22,12 +22,12 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     address public troveManagerAddress;
     address public activePoolAddress;
-    uint256 internal ETH;  // deposited ETH tracker
+    uint256 internal ONE;  // deposited ONE tracker
     uint256 internal ONEUSDDebt;  // debt
 
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
     event DefaultPool1USDDebtUpdated(uint _1USDDebt);
-    event DefaultPoolETHBalanceUpdated(uint _ETH);
+    event DefaultPoolONEBalanceUpdated(uint _ONE);
 
     // --- Dependency setters ---
 
@@ -53,12 +53,12 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     // --- Getters for public variables. Required by IPool interface ---
 
     /*
-    * Returns the ETH state variable.
+    * Returns the ONE state variable.
     *
-    * Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts.
+    * Not necessarily equal to the the contract's raw ONE balance - ether can be forcibly sent to contracts.
     */
-    function getETH() external view override returns (uint) {
-        return ETH;
+    function getONE() external view override returns (uint) {
+        return ONE;
     }
 
     function get1USDDebt() external view override returns (uint) {
@@ -67,15 +67,15 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     // --- Pool functionality ---
 
-    function sendETHToActivePool(uint _amount) external override {
+    function sendONEToActivePool(uint _amount) external override {
         _requireCallerIsTroveManager();
         address activePool = activePoolAddress; // cache to save an SLOAD
-        ETH = ETH.sub(_amount);
-        emit DefaultPoolETHBalanceUpdated(ETH);
-        emit EtherSent(activePool, _amount);
+        ONE = ONE.sub(_amount);
+        emit DefaultPoolONEBalanceUpdated(ONE);
+        emit OneSent(activePool, _amount);
 
         (bool success, ) = activePool.call{ value: _amount }("");
-        require(success, "DefaultPool: sending ETH failed");
+        require(success, "DefaultPool: sending ONE failed");
     }
 
     function increase1USDDebt(uint _amount) external override {
@@ -104,7 +104,7 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     receive() external payable {
         _requireCallerIsActivePool();
-        ETH = ETH.add(msg.value);
-        emit DefaultPoolETHBalanceUpdated(ETH);
+        ONE = ONE.add(msg.value);
+        emit DefaultPoolONEBalanceUpdated(ONE);
     }
 }

@@ -209,18 +209,18 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         emit ONEUSDBorrowingFeePaid(msg.sender, vars.ONEUSDFee);
     }
 
-    // Send ETH as collateral to a trove
+    // Send ONE as collateral to a trove
     function addColl(address _upperHint, address _lowerHint) external payable override {
         _adjustTrove(msg.sender, 0, 0, false, _upperHint, _lowerHint, 0);
     }
 
-    // Send ETH as collateral to a trove. Called by only the Stability Pool.
-    function moveETHGainToTrove(address _borrower, address _upperHint, address _lowerHint) external payable override {
+    // Send ONE as collateral to a trove. Called by only the Stability Pool.
+    function moveONEGainToTrove(address _borrower, address _upperHint, address _lowerHint) external payable override {
         _requireCallerIsStabilityPool();
         _adjustTrove(_borrower, 0, 0, false, _upperHint, _lowerHint, 0);
     }
 
-    // Withdraw ETH collateral from a trove
+    // Withdraw ONE collateral from a trove
     function withdrawColl(uint _collWithdrawal, address _upperHint, address _lowerHint) external override {
         _adjustTrove(msg.sender, _collWithdrawal, 0, false, _upperHint, _lowerHint, 0);
     }
@@ -261,12 +261,12 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         _requireNonZeroAdjustment(_collWithdrawal, _1USDChange);
         _requireTroveisActive(contractsCache.troveManager, _borrower);
 
-        // Confirm the operation is either a borrower adjusting their own trove, or a pure ETH transfer from the Stability Pool to a trove
+        // Confirm the operation is either a borrower adjusting their own trove, or a pure ONE transfer from the Stability Pool to a trove
         assert(msg.sender == _borrower || (msg.sender == stabilityPoolAddress && msg.value > 0 && _1USDChange == 0));
 
         contractsCache.troveManager.applyPendingRewards(_borrower);
 
-        // Get the collChange based on whether or not ETH was sent in the transaction
+        // Get the collChange based on whether or not ONE was sent in the transaction
         (vars.collChange, vars.isCollIncrease) = _getCollChange(msg.value, _collWithdrawal);
 
         vars.netDebtChange = _1USDChange;
@@ -306,7 +306,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         emit ONEUSDBorrowingFeePaid(msg.sender,  vars.ONEUSDFee);
 
         // Use the unmodified _1USDChange here, as we don't send the fee to the user
-        _moveTokensAndETHfromAdjustment(
+        _moveTokensAndONEfromAdjustment(
             contractsCache.activePool,
             contractsCache.oneusdToken,
             msg.sender,
@@ -347,14 +347,14 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         _repay1USD(activePoolCached, oneusdTokenCached, gasPoolAddress, ONEUSD_GAS_COMPENSATION);
 
         // Send the collateral back to the user
-        activePoolCached.sendETH(msg.sender, coll);
+        activePoolCached.sendONE(msg.sender, coll);
     }
 
     /**
      * Claim remaining collateral from a redemption or from a liquidation with ICR > MCR in Recovery Mode
      */
     function claimCollateral() external override {
-        // send ETH from CollSurplus Pool to owner
+        // send ONE from CollSurplus Pool to owner
         collSurplusPool.claimColl(msg.sender);
     }
 
@@ -416,7 +416,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         return (newColl, newDebt);
     }
 
-    function _moveTokensAndETHfromAdjustment
+    function _moveTokensAndONEfromAdjustment
     (
         IActivePool _activePool,
         I1USDToken _1usdToken,
@@ -438,14 +438,14 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         if (_isCollIncrease) {
             _activePoolAddColl(_activePool, _collChange);
         } else {
-            _activePool.sendETH(_borrower, _collChange);
+            _activePool.sendONE(_borrower, _collChange);
         }
     }
 
-    // Send ETH to Active Pool and increase its recorded ETH balance
+    // Send ONE to Active Pool and increase its recorded ONE balance
     function _activePoolAddColl(IActivePool _activePool, uint _amount) internal {
         (bool success, ) = address(_activePool).call{value: _amount}("");
-        require(success, "BorrowerOps: Sending ETH to ActivePool failed");
+        require(success, "BorrowerOps: Sending ONE to ActivePool failed");
     }
 
     // Issue the specified amount of 1USD to _account and increases the total active debt (_netDebtIncrease potentially includes a 1USDFee)

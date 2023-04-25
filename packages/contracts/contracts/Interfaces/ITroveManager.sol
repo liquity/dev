@@ -27,15 +27,15 @@ interface ITroveManager is ILiquityBase {
     event LQTYStakingAddressChanged(address _lqtyStakingAddress);
 
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _collGasCompensation, uint _1USDGasCompensation);
-    event Redemption(uint _attempted1USDAmount, uint _actual1USDAmount, uint _ETHSent, uint _ETHFee);
+    event Redemption(uint _attempted1USDAmount, uint _actual1USDAmount, uint _ONESent, uint _ONEFee);
     event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, uint8 operation);
     event TroveLiquidated(address indexed _borrower, uint _debt, uint _coll, uint8 operation);
     event BaseRateUpdated(uint _baseRate);
     event LastFeeOpTimeUpdated(uint _lastFeeOpTime);
     event TotalStakesUpdated(uint _newTotalStakes);
     event SystemSnapshotsUpdated(uint _totalStakesSnapshot, uint _totalCollateralSnapshot);
-    event LTermsUpdated(uint _L_ETH, uint _L_1USDDebt);
-    event TroveSnapshotsUpdated(uint _L_ETH, uint _L_1USDDebt);
+    event LTermsUpdated(uint _L_ONE, uint _L_1USDDebt);
+    event TroveSnapshotsUpdated(uint _L_ONE, uint _L_1USDDebt);
     event TroveIndexUpdated(address _borrower, uint _newIndex);
 
     // --- Functions ---
@@ -90,7 +90,7 @@ interface ITroveManager is ILiquityBase {
 
     function applyPendingRewards(address _borrower) external;
 
-    function getPendingETHReward(address _borrower) external view returns (uint);
+    function getPendingONEReward(address _borrower) external view returns (uint);
 
     function getPending1USDDebtReward(address _borrower) external view returns (uint);
 
@@ -100,7 +100,7 @@ interface ITroveManager is ILiquityBase {
         uint debt, 
         uint coll, 
         uint pending1USDDebtReward, 
-        uint pendingETHReward
+        uint pendingONEReward
     );
 
     function closeTrove(address _borrower) external;
@@ -110,7 +110,7 @@ interface ITroveManager is ILiquityBase {
     function getRedemptionRate() external view returns (uint);
     function getRedemptionRateWithDecay() external view returns (uint);
 
-    function getRedemptionFeeWithDecay(uint _ETHDrawn) external view returns (uint);
+    function getRedemptionFeeWithDecay(uint _ONEDrawn) external view returns (uint);
 
     function getBorrowingRate() external view returns (uint);
     function getBorrowingRateWithDecay() external view returns (uint);

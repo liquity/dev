@@ -24,7 +24,7 @@ contract StabilityPoolScript is CheckContract {
         stabilityPool.withdrawFromSP(_amount);
     }
 
-    function withdrawETHGainToTrove(address _upperHint, address _lowerHint) external {
-        stabilityPool.withdrawETHGainToTrove(_upperHint, _lowerHint);
+    function withdrawONEGainToTrove(address _upperHint, address _lowerHint) external {
+        stabilityPool.withdrawONEGainToTrove(_upperHint, _lowerHint);
     }
 }
