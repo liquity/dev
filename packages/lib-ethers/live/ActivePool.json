@@ -22,7 +22,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_ETH",
+          "name": "_ONE",
           "type": "uint256"
         }
       ],
@@ -78,7 +78,7 @@
           "type": "uint256"
         }
       ],
-      "name": "ETHBalanceUpdated",
+      "name": "ONEBalanceUpdated",
       "type": "event"
     },
     {
@@ -288,7 +288,7 @@
           "type": "uint256"
         }
       ],
-      "name": "sendETH",
+      "name": "sendONE",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

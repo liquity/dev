@@ -54,12 +54,12 @@
           },
           {
             "internalType": "uint256",
-            "name": "snapshotETH",
+            "name": "snapshotONE",
             "type": "uint256"
           },
           {
             "internalType": "uint256",
-            "name": "snapshotLUSDDebt",
+            "name": "snapshot1USDDebt",
             "type": "uint256"
           }
         ],

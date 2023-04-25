@@ -109,30 +109,17 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_L_ETH",
+        "name": "_L_ONE",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_L_LUSDDebt",
+        "name": "_L_1USDDebt",
         "type": "uint256"
       }
     ],
     "name": "LTermsUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_newLUSDTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "LUSDTokenAddressChanged",
     "type": "event"
   },
   {
@@ -172,11 +159,24 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_LUSDGasCompensation",
+        "name": "_1USDGasCompensation",
         "type": "uint256"
       }
     ],
     "name": "Liquidation",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_new1USDTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "ONEUSDTokenAddressChanged",
     "type": "event"
   },
   {
@@ -217,25 +217,25 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_attemptedLUSDAmount",
+        "name": "_attempted1USDAmount",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_actualLUSDAmount",
+        "name": "_actual1USDAmount",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_ETHSent",
+        "name": "_ONESent",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_ETHFee",
+        "name": "_ONEFee",
         "type": "uint256"
       }
     ],
@@ -356,13 +356,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_L_ETH",
+        "name": "_L_ONE",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_L_LUSDDebt",
+        "name": "_L_1USDDebt",
         "type": "uint256"
       }
     ],
@@ -473,7 +473,7 @@
   },
   {
     "inputs": [],
-    "name": "LUSD_GAS_COMPENSATION",
+    "name": "L_1USDDebt",
     "outputs": [
       {
         "internalType": "uint256",
@@ -486,20 +486,7 @@
   },
   {
     "inputs": [],
-    "name": "L_ETH",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "L_LUSDDebt",
+    "name": "L_ONE",
     "outputs": [
       {
         "internalType": "uint256",
@@ -570,6 +557,19 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "ONEUSD_GAS_COMPENSATION",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -873,7 +873,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_LUSDDebt",
+        "name": "_1USDDebt",
         "type": "uint256"
       }
     ],
@@ -892,7 +892,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_LUSDDebt",
+        "name": "_1USDDebt",
         "type": "uint256"
       }
     ],
@@ -979,12 +979,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "pendingLUSDDebtReward",
+        "name": "pending1USDDebtReward",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "pendingETHReward",
+        "name": "pendingONEReward",
         "type": "uint256"
       }
     ],
@@ -1044,7 +1044,7 @@
         "type": "address"
       }
     ],
-    "name": "getPendingETHReward",
+    "name": "getPending1USDDebtReward",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1063,7 +1063,7 @@
         "type": "address"
       }
     ],
-    "name": "getPendingLUSDDebtReward",
+    "name": "getPendingONEReward",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1078,7 +1078,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_ETHDrawn",
+        "name": "_ONEDrawn",
         "type": "uint256"
       }
     ],
@@ -1328,7 +1328,7 @@
   },
   {
     "inputs": [],
-    "name": "lastETHError_Redistribution",
+    "name": "last1USDDebtError_Redistribution",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1354,7 +1354,7 @@
   },
   {
     "inputs": [],
-    "name": "lastLUSDDebtError_Redistribution",
+    "name": "lastONEError_Redistribution",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1419,10 +1419,10 @@
   },
   {
     "inputs": [],
-    "name": "lusdToken",
+    "name": "oneusdToken",
     "outputs": [
       {
-        "internalType": "contract ILUSDToken",
+        "internalType": "contract I1USDToken",
         "name": "",
         "type": "address"
       }
@@ -1460,7 +1460,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_LUSDamount",
+        "name": "_1USDamount",
         "type": "uint256"
       },
       {
@@ -1524,12 +1524,12 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "ETH",
+        "name": "ONE",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "LUSDDebt",
+        "name": "ONEUSDDebt",
         "type": "uint256"
       }
     ],
@@ -1575,7 +1575,7 @@
       },
       {
         "internalType": "address",
-        "name": "_lusdTokenAddress",
+        "name": "_1usdTokenAddress",
         "type": "address"
       },
       {

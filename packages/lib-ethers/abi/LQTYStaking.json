@@ -30,18 +30,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "_account",
-        "type": "address"
-      },
-      {
-        "indexed": false,
         "internalType": "uint256",
-        "name": "_amount",
+        "name": "_F_1USD",
         "type": "uint256"
       }
     ],
-    "name": "EtherSent",
+    "name": "F_1USDUpdated",
     "type": "event"
   },
   {
@@ -50,24 +44,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_F_ETH",
+        "name": "_F_ONE",
         "type": "uint256"
       }
     ],
-    "name": "F_ETHUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_F_LUSD",
-        "type": "uint256"
-      }
-    ],
-    "name": "F_LUSDUpdated",
+    "name": "F_ONEUpdated",
     "type": "event"
   },
   {
@@ -89,11 +70,30 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_lusdTokenAddress",
+        "name": "_1usdTokenAddress",
         "type": "address"
       }
     ],
-    "name": "LUSDTokenAddressSet",
+    "name": "ONEUSDTokenAddressSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "OneSent",
     "type": "event"
   },
   {
@@ -146,13 +146,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_F_ETH",
+        "name": "_F_ONE",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_F_LUSD",
+        "name": "_F_1USD",
         "type": "uint256"
       }
     ],
@@ -171,13 +171,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "LUSDGain",
+        "name": "ONEUSDGain",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "ETHGain",
+        "name": "ONEGain",
         "type": "uint256"
       }
     ],
@@ -225,7 +225,7 @@
   },
   {
     "inputs": [],
-    "name": "F_ETH",
+    "name": "F_1USD",
     "outputs": [
       {
         "internalType": "uint256",
@@ -238,7 +238,7 @@
   },
   {
     "inputs": [],
-    "name": "F_LUSD",
+    "name": "F_ONE",
     "outputs": [
       {
         "internalType": "uint256",
@@ -296,7 +296,7 @@
         "type": "address"
       }
     ],
-    "name": "getPendingETHGain",
+    "name": "getPending1USDGain",
     "outputs": [
       {
         "internalType": "uint256",
@@ -315,7 +315,7 @@
         "type": "address"
       }
     ],
-    "name": "getPendingLUSDGain",
+    "name": "getPendingONEGain",
     "outputs": [
       {
         "internalType": "uint256",
@@ -330,11 +330,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_ETHFee",
+        "name": "_1USDFee",
         "type": "uint256"
       }
     ],
-    "name": "increaseF_ETH",
+    "name": "increaseF_1USD",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -343,11 +343,11 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_LUSDFee",
+        "name": "_ONEFee",
         "type": "uint256"
       }
     ],
-    "name": "increaseF_LUSD",
+    "name": "increaseF_ONE",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -380,10 +380,10 @@
   },
   {
     "inputs": [],
-    "name": "lusdToken",
+    "name": "oneusdToken",
     "outputs": [
       {
-        "internalType": "contract ILUSDToken",
+        "internalType": "contract I1USDToken",
         "name": "",
         "type": "address"
       }
@@ -413,7 +413,7 @@
       },
       {
         "internalType": "address",
-        "name": "_lusdTokenAddress",
+        "name": "_1usdTokenAddress",
         "type": "address"
       },
       {
@@ -449,12 +449,12 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "F_ETH_Snapshot",
+        "name": "F_ONE_Snapshot",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "F_LUSD_Snapshot",
+        "name": "F_1USD_Snapshot",
         "type": "uint256"
       }
     ],

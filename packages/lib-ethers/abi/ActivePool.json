@@ -4,6 +4,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256",
+        "name": "_1USDDebt",
+        "type": "uint256"
+      }
+    ],
+    "name": "ActivePool1USDDebtUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_newActivePoolAddress",
         "type": "address"
@@ -18,24 +31,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_ETH",
+        "name": "_ONE",
         "type": "uint256"
       }
     ],
-    "name": "ActivePoolETHBalanceUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_LUSDDebt",
-        "type": "uint256"
-      }
-    ],
-    "name": "ActivePoolLUSDDebtUpdated",
+    "name": "ActivePoolONEBalanceUpdated",
     "type": "event"
   },
   {
@@ -74,7 +74,20 @@
         "type": "uint256"
       }
     ],
-    "name": "ETHBalanceUpdated",
+    "name": "ONEBalanceUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_newBalance",
+        "type": "uint256"
+      }
+    ],
+    "name": "ONEUSDBalanceUpdated",
     "type": "event"
   },
   {
@@ -93,20 +106,7 @@
         "type": "uint256"
       }
     ],
-    "name": "EtherSent",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_newBalance",
-        "type": "uint256"
-      }
-    ],
-    "name": "LUSDBalanceUpdated",
+    "name": "OneSent",
     "type": "event"
   },
   {
@@ -188,7 +188,7 @@
         "type": "uint256"
       }
     ],
-    "name": "decreaseLUSDDebt",
+    "name": "decrease1USDDebt",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -208,7 +208,7 @@
   },
   {
     "inputs": [],
-    "name": "getETH",
+    "name": "get1USDDebt",
     "outputs": [
       {
         "internalType": "uint256",
@@ -221,7 +221,7 @@
   },
   {
     "inputs": [],
-    "name": "getLUSDDebt",
+    "name": "getONE",
     "outputs": [
       {
         "internalType": "uint256",
@@ -240,7 +240,7 @@
         "type": "uint256"
       }
     ],
-    "name": "increaseLUSDDebt",
+    "name": "increase1USDDebt",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -284,7 +284,7 @@
         "type": "uint256"
       }
     ],
-    "name": "sendETH",
+    "name": "sendONE",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

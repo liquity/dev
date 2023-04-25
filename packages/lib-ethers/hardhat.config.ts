@@ -95,7 +95,7 @@ const wethAddresses = {
   kovan: "0xd0A1E359811322d97991E03f863a0C30C2cF029C"
 };
 
-const hasWETH = (network: string): network is keyof typeof wethAddresses => network in wethAddresses;
+const hasWONE = (network: string): network is keyof typeof wethAddresses => network in wethAddresses;
 
 const config: HardhatUserConfig = {
   networks: {
@@ -201,7 +201,7 @@ task("deploy", "Deploys the contracts to the network")
   )
   .addOptionalParam(
     "createUniswapPair",
-    "Create a real Uniswap v2 WETH-LUSD pair instead of a mock ERC20 token",
+    "Create a real Uniswap v2 WONE-1USD pair instead of a mock ERC20 token",
     undefined,
     types.boolean
   )
@@ -218,8 +218,8 @@ task("deploy", "Deploys the contracts to the network")
 
       let wethAddress: string | undefined = undefined;
       if (createUniswapPair) {
-        if (!hasWETH(env.network.name)) {
-          throw new Error(`WETH not deployed on ${env.network.name}`);
+        if (!hasWONE(env.network.name)) {
+          throw new Error(`WONE not deployed on ${env.network.name}`);
         }
         wethAddress = wethAddresses[env.network.name];
       }

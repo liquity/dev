@@ -22,7 +22,7 @@ async function example() {
   const liquity = await EthersLiquity.connect(wallet);
 
   const { newTrove } = await liquity.openTrove({
-    depositCollateral: 5, // ETH
+    depositCollateral: 5, // ONE
     borrow1USD: 2000
   });
 

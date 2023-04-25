@@ -109,10 +109,10 @@ const deployContracts = async (
   return [
     {
       ...addresses,
-      lusdToken: await deployContract(
+      oneusdToken: await deployContract(
         deployer,
         getContractFactory,
-        "LUSDToken",
+        "ONEUSDToken",
         addresses.troveManager,
         addresses.stabilityPool,
         addresses.borrowerOperations,
@@ -159,7 +159,7 @@ const connectContracts = async (
     activePool,
     borrowerOperations,
     troveManager,
-    lusdToken,
+    oneusdToken,
     collSurplusPool,
     communityIssuance,
     defaultPool,
@@ -199,7 +199,7 @@ const connectContracts = async (
         gasPool.address,
         collSurplusPool.address,
         priceFeed.address,
-        lusdToken.address,
+        oneusdToken.address,
         sortedTroves.address,
         lqtyToken.address,
         lqtyStaking.address,
@@ -216,7 +216,7 @@ const connectContracts = async (
         collSurplusPool.address,
         priceFeed.address,
         sortedTroves.address,
-        lusdToken.address,
+        oneusdToken.address,
         lqtyStaking.address,
         { ...overrides, nonce }
       ),
@@ -226,7 +226,7 @@ const connectContracts = async (
         borrowerOperations.address,
         troveManager.address,
         activePool.address,
-        lusdToken.address,
+        oneusdToken.address,
         sortedTroves.address,
         priceFeed.address,
         communityIssuance.address,
@@ -265,7 +265,7 @@ const connectContracts = async (
     nonce =>
       lqtyStaking.setAddresses(
         lqtyToken.address,
-        lusdToken.address,
+        oneusdToken.address,
         troveManager.address,
         borrowerOperations.address,
         activePool.address,
@@ -318,7 +318,7 @@ export const deployAndSetupContracts = async (
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   _priceFeedIsTestnet = true,
   _isDev = true,
-  wethAddress?: string,
+  woneAddress?: string,
   overrides?: Overrides
 ): Promise<_LiquityDeploymentJSON> => {
   if (!deployer.provider) {
@@ -336,7 +336,7 @@ export const deployAndSetupContracts = async (
     totalStabilityPoolLQTYReward: "0",
     liquidityMiningLQTYRewardRate: "0",
     _priceFeedIsTestnet,
-    _uniTokenIsMock: !wethAddress,
+    _uniTokenIsMock: !woneAddress,
     _isDev,
 
     ...(await deployContracts(deployer, getContractFactory, _priceFeedIsTestnet, overrides).then(
@@ -346,8 +346,8 @@ export const deployAndSetupContracts = async (
         addresses: {
           ...addresses,
 
-          uniToken: await (wethAddress
-            ? createUniswapV2Pair(deployer, wethAddress, addresses.lusdToken, overrides)
+          uniToken: await (woneAddress
+            ? createUniswapV2Pair(deployer, woneAddress, addresses.oneusdToken, overrides)
             : deployMockUniToken(deployer, getContractFactory, overrides))
         }
       })
