@@ -61,7 +61,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       contracts = await deploymentHelper.deployLiquityCore()
       const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
       contracts.troveManager = await TroveManagerTester.new()
-      contracts = await deploymentHelper.deployONEUSDToken(contracts)
+      contracts = await deploymentHelper.deploy1USDToken(contracts)
 
       priceFeed = contracts.priceFeedTestnet
       oneusdToken = contracts.oneusdToken
