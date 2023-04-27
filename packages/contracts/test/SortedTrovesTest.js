@@ -4,7 +4,7 @@ const testHelpers = require("../utils/testHelpers.js")
 const SortedTroves = artifacts.require("SortedTroves")
 const SortedTrovesTester = artifacts.require("SortedTrovesTester")
 const TroveManagerTester = artifacts.require("TroveManagerTester")
-const LUSDToken = artifacts.require("LUSDToken")
+const ONEUSDToken = artifacts.require("ONEUSDToken")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -12,24 +12,24 @@ const toBN = th.toBN
 const mv = testHelpers.MoneyValues
 
 contract('SortedTroves', async accounts => {
-  
+
   const assertSortedListIsOrdered = async (contracts) => {
     const price = await contracts.priceFeedTestnet.getPrice()
 
     let trove = await contracts.sortedTroves.getLast()
     while (trove !== (await contracts.sortedTroves.getFirst())) {
-      
+
       // Get the adjacent upper trove ("prev" moves up the list, from lower ICR -> higher ICR)
       const prevTrove = await contracts.sortedTroves.getPrev(trove)
-     
+
       const troveICR = await contracts.troveManager.getCurrentICR(trove, price)
       const prevTroveICR = await contracts.troveManager.getCurrentICR(prevTrove, price)
-      
+
       assert.isTrue(prevTroveICR.gte(troveICR))
 
       const troveNICR = await contracts.troveManager.getNominalICR(trove)
       const prevTroveNICR = await contracts.troveManager.getNominalICR(prevTrove)
-      
+
       assert.isTrue(prevTroveNICR.gte(troveNICR))
 
       // climb the list
@@ -47,20 +47,20 @@ contract('SortedTroves', async accounts => {
   let sortedTroves
   let troveManager
   let borrowerOperations
-  let lusdToken
+  let oneusdToken
 
   const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   let contracts
 
-  const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
+  const getOpenTrove1USDAmount = async (totalDebt) => th.getOpenTrove1USDAmount(contracts, totalDebt)
   const openTrove = async (params) => th.openTrove(contracts, params)
 
   describe('SortedTroves', () => {
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
       contracts.troveManager = await TroveManagerTester.new()
-      contracts.lusdToken = await LUSDToken.new(
+      contracts.oneusdToken = await ONEUSDToken.new(
         contracts.troveManager.address,
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address
@@ -71,7 +71,7 @@ contract('SortedTroves', async accounts => {
       sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager
       borrowerOperations = contracts.borrowerOperations
-      lusdToken = contracts.lusdToken
+      oneusdToken = contracts.oneusdToken
 
       await deploymentHelper.connectLQTYContracts(LQTYContracts)
       await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
@@ -109,21 +109,21 @@ contract('SortedTroves', async accounts => {
     })
 
     it('contains(): returns false for addresses that opened and then closed a trove', async () => {
-      await openTrove({ ICR: toBN(dec(1000, 18)), extraLUSDAmount: toBN(dec(3000, 18)), extraParams: { from: whale } })
+      await openTrove({ ICR: toBN(dec(1000, 18)), extra1USDAmount: toBN(dec(3000, 18)), extraParams: { from: whale } })
 
       await openTrove({ ICR: toBN(dec(150, 16)), extraParams: { from: alice } })
       await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: bob } })
       await openTrove({ ICR: toBN(dec(2000, 18)), extraParams: { from: carol } })
 
       // to compensate borrowing fees
-      await lusdToken.transfer(alice, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(bob, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(carol, dec(1000, 18), { from: whale })
+      await oneusdToken.transfer(alice, dec(1000, 18), { from: whale })
+      await oneusdToken.transfer(bob, dec(1000, 18), { from: whale })
+      await oneusdToken.transfer(carol, dec(1000, 18), { from: whale })
 
       // A, B, C close troves
       await borrowerOperations.closeTrove({ from: alice })
-      await borrowerOperations.closeTrove({ from:bob })
-      await borrowerOperations.closeTrove({ from:carol })
+      await borrowerOperations.closeTrove({ from: bob })
+      await borrowerOperations.closeTrove({ from: carol })
 
       // Confirm trove statuses became closed
       assert.equal((await troveManager.Troves(alice))[3], '2')
@@ -138,21 +138,21 @@ contract('SortedTroves', async accounts => {
 
     // true for addresses that opened -> closed -> opened a trove
     it('contains(): returns true for addresses that opened, closed and then re-opened a trove', async () => {
-      await openTrove({ ICR: toBN(dec(1000, 18)), extraLUSDAmount: toBN(dec(3000, 18)), extraParams: { from: whale } })
+      await openTrove({ ICR: toBN(dec(1000, 18)), extra1USDAmount: toBN(dec(3000, 18)), extraParams: { from: whale } })
 
       await openTrove({ ICR: toBN(dec(150, 16)), extraParams: { from: alice } })
       await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: bob } })
       await openTrove({ ICR: toBN(dec(2000, 18)), extraParams: { from: carol } })
 
       // to compensate borrowing fees
-      await lusdToken.transfer(alice, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(bob, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(carol, dec(1000, 18), { from: whale })
+      await oneusdToken.transfer(alice, dec(1000, 18), { from: whale })
+      await oneusdToken.transfer(bob, dec(1000, 18), { from: whale })
+      await oneusdToken.transfer(carol, dec(1000, 18), { from: whale })
 
       // A, B, C close troves
       await borrowerOperations.closeTrove({ from: alice })
-      await borrowerOperations.closeTrove({ from:bob })
-      await borrowerOperations.closeTrove({ from:carol })
+      await borrowerOperations.closeTrove({ from: bob })
+      await borrowerOperations.closeTrove({ from: carol })
 
       // Confirm trove statuses became closed
       assert.equal((await troveManager.Troves(alice))[3], '2')
@@ -204,7 +204,7 @@ contract('SortedTroves', async accounts => {
 
     // --- findInsertPosition ---
 
-    it("Finds the correct insert position given two addresses that loosely bound the correct position", async () => { 
+    it("Finds the correct insert position given two addresses that loosely bound the correct position", async () => {
       await priceFeed.setPrice(dec(100, 18))
 
       // NICR sorted in descending order
@@ -222,16 +222,16 @@ contract('SortedTroves', async accounts => {
       const hints = await sortedTroves.findInsertPosition(targetNICR, A, E)
 
       // Expect the exact correct insert hints have been returned
-      assert.equal(hints[0], B )
-      assert.equal(hints[1], C )
+      assert.equal(hints[0], B)
+      assert.equal(hints[1], C)
 
       // The price doesn’t affect the hints
       await priceFeed.setPrice(dec(500, 18))
       const hints2 = await sortedTroves.findInsertPosition(targetNICR, A, E)
 
       // Expect the exact correct insert hints have been returned
-      assert.equal(hints2[0], B )
-      assert.equal(hints2[1], C )
+      assert.equal(hints2[0], B)
+      assert.equal(hints2[1], C)
     })
 
     //--- Ordering --- 
@@ -254,7 +254,7 @@ contract('SortedTroves', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(5, 21), J, J, { from: J, value: dec(1345, 'ether') })
 
       const price_1 = await priceFeed.getPrice()
-      
+
       // Check troves are ordered
       await assertSortedListIsOrdered(contracts)
 
@@ -291,7 +291,7 @@ contract('SortedTroves', async accounts => {
     })
 
     context('when params are properly set', () => {
-      beforeEach('set params', async() => {
+      beforeEach('set params', async () => {
         await sortedTroves.setParams(2, sortedTrovesTester.address, sortedTrovesTester.address)
       })
 

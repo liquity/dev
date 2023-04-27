@@ -22,7 +22,7 @@ const DELEGATE_OWNER = '0xBA1BA1ba1BA1bA1bA1Ba1BA1ba1BA1bA1ba1ba1B';
 // Mainnet addresses; adjust for testnets
 
 const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
-const LUSD = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
+const 1USD = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
 const CHAINLINK_ETHUSD_PROXY = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419';
 
 const tokens = [LUSD, WETH];
@@ -119,8 +119,8 @@ async function main() {
 
   // Construct magic userData
   const initUserData =
-        ethers.utils.defaultAbiCoder.encode(['uint256', 'uint256[]'],
-                                            [JOIN_KIND_INIT, initialBalances]);
+    ethers.utils.defaultAbiCoder.encode(['uint256', 'uint256[]'],
+      [JOIN_KIND_INIT, initialBalances]);
   const joinPoolRequest = {
     assets: tokens,
     maxAmountsIn: initialBalances,
@@ -161,7 +161,7 @@ async function main() {
   );
   const txApproveLusd = await lusd.approve(VAULT, lusd_balance);
   const approveLusdReceipt = await txApproveLusd.wait();
-  console.log('Approve LUSD gas: ', approveLusdReceipt.gasUsed.toString());
+  console.log('Approve 1USD gas: ', approveLusdReceipt.gasUsed.toString());
 
   // joins and exits are done on the Vault, not the pool
   const tx2 = await vault.joinPool(poolId, deployerWalletAddress, deployerWalletAddress, joinPoolRequest);

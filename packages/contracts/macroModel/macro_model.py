@@ -69,7 +69,7 @@ delta = -20
 
 #close troves
 sd_closetroves=0.5
-#sensitivity to LUSD price
+#sensitivity to 1USD price
 beta = 0.2
 
 #open troves
@@ -84,7 +84,7 @@ sd_opentroves=0.5
 n_steady=0.5
 initial_open=10
 
-#sensitivity to LUSD price & issuance fee
+#sensitivity to 1USD price & issuance fee
 alpha = 0.3
 
 #number of runs in simulation
@@ -241,7 +241,7 @@ def open_troves(troves, index1, price_LUSD_previous):
 
   return[troves, number_opentroves, issuance_LUSD_open]
 
-"""# LUSD Market
+"""# 1USD Market
 
 Stability Pool
 """
@@ -473,7 +473,7 @@ fig.add_trace(
     secondary_y=True,
 )
 fig.update_layout(
-    title_text="Price Dynamics of LUSD and Ether"
+    title_text="Price Dynamics of 1USD and Ether"
 )
 fig.update_xaxes(tick0=0, dtick=1, title_text="Month")
 fig.update_yaxes(title_text="LUSD Price", secondary_y=False)
@@ -490,7 +490,7 @@ fig.add_trace(
     secondary_y=True,
 )
 fig.update_layout(
-    title_text="Dynamics of Trove Numbers and LUSD Supply"
+    title_text="Dynamics of Trove Numbers and 1USD Supply"
 )
 fig.update_xaxes(tick0=0, dtick=1, title_text="Month")
 fig.update_yaxes(title_text="Number of Troves", secondary_y=False)
@@ -758,7 +758,7 @@ fig.add_trace(
     secondary_y=False,
 )
 fig.update_layout(
-    title_text="Price Dynamics of LUSD and Ether"
+    title_text="Price Dynamics of 1USD and Ether"
 )
 fig.update_xaxes(tick0=0, dtick=1, title_text="Month")
 fig.update_yaxes(title_text="LUSD Price", secondary_y=False)
@@ -783,7 +783,7 @@ fig.add_trace(
     secondary_y=True,
 )
 fig.update_layout(
-    title_text="Dynamics of Trove Numbers and LUSD Supply"
+    title_text="Dynamics of Trove Numbers and 1USD Supply"
 )
 fig.update_xaxes(tick0=0, dtick=1, title_text="Month")
 fig.update_yaxes(title_text="Number of Troves", secondary_y=False)

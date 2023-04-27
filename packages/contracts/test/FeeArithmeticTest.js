@@ -946,7 +946,7 @@ contract('Fee arithmetic tests', async accounts => {
         assert.isTrue(response.receipt.status)
 
         const result = await mathTester.callDecPow(base, exponent)
-    
+
         const error = expected.sub(result).abs()
 
         console.log(`run: ${i}. base: ${base}, exp: ${exponent}, res: ${result}, error: ${error}`)
@@ -965,7 +965,7 @@ contract('Fee arithmetic tests', async accounts => {
         assert.isTrue(response.receipt.status)
 
         const result = await mathTester.callDecPow(base, exponent)
-    
+
         const error = expected.sub(result).abs()
 
         console.log(`run: ${i}. base: ${base}, exp: ${exponent}, res: ${result}, error: ${error}`)

@@ -52,7 +52,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
     contracts.stabilityPool = await StabilityPool.new()
-    contracts = await deploymentHelper.deployLUSDToken(contracts)
+    contracts = await deploymentHelper.deploy1USDToken(contracts)
 
     stabilityPool = contracts.stabilityPool
     borrowerOperations = contracts.borrowerOperations
@@ -67,11 +67,11 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   // Accuracy tests
   it("getCumulativeIssuanceFraction(): fraction doesn't increase if less than a minute has passed", async () => {
-   // progress time 1 week 
+    // progress time 1 week 
     await th.fastForwardTime(timeValues.MINUTES_IN_ONE_WEEK, web3.currentProvider)
 
     await communityIssuanceTester.unprotectedIssueLQTY()
-   
+
     const issuanceFractionBefore = await communityIssuanceTester.getCumulativeIssuanceFraction()
     assert.isTrue(issuanceFractionBefore.gt(th.toBN('0')))
     console.log(`issuance fraction before: ${issuanceFractionBefore}`)
@@ -421,7 +421,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
 
   // --- Token issuance for yearly halving ---
 
-   // Error tolerance: 1e-3, i.e. 1/1000th of a token
+  // Error tolerance: 1e-3, i.e. 1/1000th of a token
 
   it("Total LQTY tokens issued is 42.20 after a minute", async () => {
     const initialIssuance = await communityIssuanceTester.totalLQTYIssued()
@@ -804,7 +804,7 @@ contract('LQTY community issuance arithmetic tests', async accounts => {
   Abs. error: -47499999999 */
 
 
-    // TODO: Convert to 25mil issuance schedule
+  // TODO: Convert to 25mil issuance schedule
   it.skip("Frequent token issuance: issuance event every day, for 30 years", async () => {
     // Register front end with kickback rate = 100%
     await stabilityPool.registerFrontEnd(dec(1, 18), { from: frontEnd_1 })

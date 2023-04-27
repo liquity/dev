@@ -55,11 +55,11 @@ const ABDKOperations = async () => {
     const res12 = await functionCaller.abdkMath_toUInt_view(res11)
     console.log(`result of 0.5 * 6, performed in 64.64, converted back to uint64: ${res12}`)
 
-    // Example computaton: LUSD -> Ether price conversion
+    // Example computaton: 1USD -> Ether price conversion
 
     // price = 200.12345678, stored as uint
-    // convert 6123456700909.123456789123456789 LUSD to Ether
-    // amount = 6123456700909.123456789123456789 LUSD / 200.12345678 
+    // convert 6123456700909.123456789123456789 1USD to Ether
+    // amount = 6123456700909.123456789123456789 1USD / 200.12345678 
 
     // expect amount 30598395607.571232843807983401100033706903271291774255... Ether
 
@@ -121,7 +121,7 @@ const ABDKOperations = async () => {
     // returns 10979513.468051490981687838
     // accurate to 17 digits
 
-    /* TODO: will L_ETH, L_LUSD overflow if stored as 64.64? Possibly need to store as uint, divide by 1e18, then use
+    /* TODO: will L_ETH, L_1USD overflow if stored as 64.64? Possibly need to store as uint, divide by 1e18, then use
     the resulting 64.64  */
 
     // // --- Ratio Multiplication ---
@@ -186,14 +186,14 @@ const checkGasFromSSTORE = async () => {
     const tx8 = await functionCaller.repeatedlySetVal(50)
 
     const gasUsed1 = (tx1.receipt.gasUsed - 21000)
-    const gasUsed2 = (tx2.receipt.gasUsed - 21000)/2
-    const gasUsed9 = (tx9.receipt.gasUsed - 21000)/3
-    const gasUsed3 = (tx3.receipt.gasUsed - 21000)/5
-    const gasUsed4 = (tx4.receipt.gasUsed - 21000)/10
-    const gasUsed5 = (tx5.receipt.gasUsed - 21000)/20
-    const gasUsed6 = (tx6.receipt.gasUsed - 21000)/30
-    const gasUsed7 = (tx7.receipt.gasUsed - 21000)/40
-    const gasUsed8 = (tx8.receipt.gasUsed - 21000)/50
+    const gasUsed2 = (tx2.receipt.gasUsed - 21000) / 2
+    const gasUsed9 = (tx9.receipt.gasUsed - 21000) / 3
+    const gasUsed3 = (tx3.receipt.gasUsed - 21000) / 5
+    const gasUsed4 = (tx4.receipt.gasUsed - 21000) / 10
+    const gasUsed5 = (tx5.receipt.gasUsed - 21000) / 20
+    const gasUsed6 = (tx6.receipt.gasUsed - 21000) / 30
+    const gasUsed7 = (tx7.receipt.gasUsed - 21000) / 40
+    const gasUsed8 = (tx8.receipt.gasUsed - 21000) / 50
 
     console.log(`gas used per write, setting val once: ${gasUsed1}`)
     console.log(`gas used per write, setting val 2 times: ${gasUsed2}`)
@@ -206,7 +206,7 @@ const checkGasFromSSTORE = async () => {
     console.log(`gas used per write, setting val 50 times: ${gasUsed8}`)
 }
 
-const checkGasFromInternalCall = async() => {
+const checkGasFromInternalCall = async () => {
     const functionCaller = await FunctionCaller.new();
 
     const tx1 = await functionCaller.callInternalStorageCheck();

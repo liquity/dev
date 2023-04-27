@@ -6,7 +6,7 @@ const DSProxy = artifacts.require('DSProxy')
 const buildUserProxies = async (users) => {
   const proxies = {}
   const proxyFactory = await DSProxyFactory.new()
-  for(let user of users) {
+  for (let user of users) {
     const proxyTx = await proxyFactory.build({ from: user })
     proxies[user] = await DSProxy.at(proxyTx.logs[0].args.proxy)
   }
@@ -15,7 +15,7 @@ const buildUserProxies = async (users) => {
 }
 
 class Proxy {
-  constructor (owner, proxies, scriptAddress, contract) {
+  constructor(owner, proxies, scriptAddress, contract) {
     this.owner = owner
     this.proxies = proxies
     this.scriptAddress = scriptAddress
@@ -103,12 +103,12 @@ class BorrowerOperationsProxy extends Proxy {
     return this.forwardFunction(params, 'withdrawColl(uint256,address,address)')
   }
 
-  async withdrawLUSD(...params) {
-    return this.forwardFunction(params, 'withdrawLUSD(uint256,uint256,address,address)')
+  async withdraw1USD(...params) {
+    return this.forwardFunction(params, 'withdraw1USD(uint256,uint256,address,address)')
   }
 
-  async repayLUSD(...params) {
-    return this.forwardFunction(params, 'repayLUSD(uint256,address,address)')
+  async repay1USD(...params) {
+    return this.forwardFunction(params, 'repay1USD(uint256,address,address)')
   }
 
   async closeTrove(...params) {
@@ -135,8 +135,8 @@ class BorrowerOperationsProxy extends Proxy {
     return this.proxyFunction('getCompositeDebt', params)
   }
 
-  async LUSD_GAS_COMPENSATION(...params) {
-    return this.proxyFunction('LUSD_GAS_COMPENSATION', params)
+  async ONEUSD_GAS_COMPENSATION(...params) {
+    return this.proxyFunction('ONEUSD_GAS_COMPENSATION', params)
   }
 
   async MIN_NET_DEBT(...params) {
@@ -199,8 +199,8 @@ class TroveManagerProxy extends Proxy {
     return this.proxyFunction('getPendingETHReward', params)
   }
 
-  async getPendingLUSDDebtReward(...params) {
-    return this.proxyFunction('getPendingLUSDDebtReward', params)
+  async getPending1USDDebtReward(...params) {
+    return this.proxyFunction('getPending1USDDebtReward', params)
   }
 
   async liquidate(user) {
@@ -231,8 +231,8 @@ class TroveManagerProxy extends Proxy {
     return this.proxyFunction('L_ETH', [])
   }
 
-  async L_LUSDDebt() {
-    return this.proxyFunction('L_LUSDDebt', [])
+  async L_1USDDebt() {
+    return this.proxyFunction('L_1USDDebt', [])
   }
 
   async rewardSnapshots(user) {
@@ -285,8 +285,8 @@ class StabilityPoolProxy extends Proxy {
     return this.forwardFunction(params, 'provideToSP(uint256,address)')
   }
 
-  async getCompoundedLUSDDeposit(user) {
-    return this.proxyFunctionWithUser('getCompoundedLUSDDeposit', user)
+  async getCompounded1USDDeposit(user) {
+    return this.proxyFunctionWithUser('getCompounded1USDDeposit', user)
   }
 
   async deposits(user) {
@@ -394,8 +394,8 @@ class LQTYStakingProxy extends Proxy {
     return this.proxyFunctionWithUser('stakes', user)
   }
 
-  async F_LUSD(user) {
-    return this.proxyFunctionWithUser('F_LUSD', user)
+  async F_1USD(user) {
+    return this.proxyFunctionWithUser('F_1USD', user)
   }
 }
 

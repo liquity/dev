@@ -25,7 +25,7 @@ def logGlobalState(contracts):
     print('Total Coll      ', total_coll)
     SP_LUSD = contracts.stabilityPool.getTotalLUSDDeposits().to("ether")
     SP_ETH = contracts.stabilityPool.getETH().to("ether")
-    print('SP LUSD         ', SP_LUSD)
+    print('SP 1USD         ', SP_LUSD)
     print('SP ETH          ', SP_ETH)
     price_ether_current = contracts.priceFeedTestnet.getPrice()
     ETH_price = price_ether_current.to("ether")

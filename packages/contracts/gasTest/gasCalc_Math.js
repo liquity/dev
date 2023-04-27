@@ -10,7 +10,7 @@ const timeValues = testHelpers.TimeValues
 
 /* Script that logs gas costs for Liquity math functions. */
 contract('Gas costs for math functions', async accounts => {
-  
+
   const bountyAddress = accounts[998]
   const lpRewardsAddress = accounts[999]
 
@@ -31,7 +31,7 @@ contract('Gas costs for math functions', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
-    lusdToken = contracts.lusdToken
+    oneusdToken = contracts.oneusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool
@@ -164,7 +164,7 @@ contract('Gas costs for math functions', async accounts => {
 
     data50Years.push(`exponentiation: exponent vs gas cost: exponent in units of minutes, max exponent is 50 years \n`)
 
-    
+
     for (let n = 2; n <= timeValues.MINUTES_IN_ONE_YEAR * 50; n += timeValues.MINUTES_IN_ONE_WEEK) {
       console.log(`n: ${n}`)
       const runs = 1
