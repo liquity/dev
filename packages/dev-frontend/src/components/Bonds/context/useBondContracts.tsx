@@ -2,7 +2,7 @@ import { Decimal } from "@liquity/lib-base";
 import {
   BLUSDLPZap,
   BLUSDLPZap__factory,
-  BLUSDToken,
+  BONEUSDToken,
   BondNFT,
   ChickenBondManager,
   ERC20Faucet,
@@ -14,12 +14,12 @@ import {
 } from "@liquity/chicken-bonds/lusd/types/external";
 import { CurveCryptoSwap2ETH__factory } from "@liquity/chicken-bonds/lusd/types/external";
 import {
-  BLUSDToken__factory,
+  BONEUSDToken__factory,
   BondNFT__factory,
   ChickenBondManager__factory
 } from "@liquity/chicken-bonds/lusd/types";
-import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
-import LUSDTokenAbi from "@liquity/lib-ethers/abi/LUSDToken.json";
+import type { ONEUSDToken } from "@liquity/lib-ethers/dist/types";
+import ONEUSDTokenAbi from "@liquity/lib-ethers/abi/ONEUSDToken.json";
 import { useContract } from "../../../hooks/useContract";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { useCallback } from "react";
@@ -47,8 +47,8 @@ type BondsInformation = {
 
 type BondContracts = {
   addresses: Addresses;
-  lusdToken: LUSDToken | undefined;
-  bLusdToken: BLUSDToken | undefined;
+  oneusdToken: ONEUSDToken | undefined;
+  bLusdToken: BONEUSDToken | undefined;
   bondNft: BondNFT | undefined;
   chickenBondManager: ChickenBondManager | undefined;
   bLusdAmm: CurveCryptoSwap2ETH | undefined;
@@ -75,24 +75,24 @@ export const useBondContracts = (): BondContracts => {
     BLUSD_AMM_STAKING_ADDRESS
   } = addresses;
 
-  const [lusdTokenDefault, lusdTokenDefaultStatus] = useContract<LUSDToken>(
+  const [lusdTokenDefault, oneusdTokenDefaultStatus] = useContract<ONEUSDToken>(
     liquity.connection.addresses.lusdToken,
-    LUSDTokenAbi
+    ONEUSDTokenAbi
   );
 
-  const [lusdTokenOverride, lusdTokenOverrideStatus] = useContract<ERC20Faucet>(
+  const [lusdTokenOverride, oneusdTokenOverrideStatus] = useContract<ERC20Faucet>(
     LUSD_OVERRIDE_ADDRESS,
     ERC20Faucet__factory.abi
   );
 
-  const [lusdToken, lusdTokenStatus] =
+  const [lusdToken, oneusdTokenStatus] =
     LUSD_OVERRIDE_ADDRESS === null
-      ? [lusdTokenDefault, lusdTokenDefaultStatus]
-      : [(lusdTokenOverride as unknown) as LUSDToken, lusdTokenOverrideStatus];
+      ? [lusdTokenDefault, oneusdTokenDefaultStatus]
+      : [(lusdTokenOverride as unknown) as ONEUSDToken, oneusdTokenOverrideStatus];
 
-  const [bLusdToken, bLusdTokenStatus] = useContract<BLUSDToken>(
+  const [bLusdToken, bLusdTokenStatus] = useContract<BONEUSDToken>(
     BLUSD_TOKEN_ADDRESS,
-    BLUSDToken__factory.abi
+    BONEUSDToken__factory.abi
   );
 
   const [bondNft, bondNftStatus] = useContract<BondNFT>(BOND_NFT_ADDRESS, BondNFT__factory.abi);
@@ -118,7 +118,7 @@ export const useBondContracts = (): BondContracts => {
 
   const hasFoundContracts =
     [
-      lusdTokenStatus,
+      oneusdTokenStatus,
       bondNftStatus,
       chickenBondManagerStatus,
       bLusdTokenStatus,
@@ -130,7 +130,7 @@ export const useBondContracts = (): BondContracts => {
   const getLatestData = useCallback(
     async (account: string, api: BondsApi): Promise<BondsInformation | undefined> => {
       if (
-        lusdToken === undefined ||
+        oneusdToken === undefined ||
         bondNft === undefined ||
         chickenBondManager === undefined ||
         bLusdToken === undefined ||
@@ -172,7 +172,7 @@ export const useBondContracts = (): BondContracts => {
         lpRewards
       ] = await Promise.all([
         api.getTokenBalance(account, bLusdToken),
-        api.getTokenBalance(account, lusdToken),
+        api.getTokenBalance(account, oneusdToken),
         api.getTokenBalance(account, lpToken),
         api.getTokenBalance(account, lpStakingContract),
         api.getTokenTotalSupply(lpToken),
@@ -200,7 +200,7 @@ export const useBondContracts = (): BondContracts => {
       chickenBondManager,
       bondNft,
       bLusdToken,
-      lusdToken,
+      oneusdToken,
       bLusdAmm,
       isMainnet,
       BLUSD_AMM_STAKING_ADDRESS,
@@ -210,7 +210,7 @@ export const useBondContracts = (): BondContracts => {
 
   return {
     addresses,
-    lusdToken,
+    oneusdToken,
     bLusdToken,
     bondNft,
     chickenBondManager,

@@ -2,7 +2,7 @@ import type { BaseContract, BigNumber, BigNumberish, BytesLike, CallOverrides, C
 import type { FunctionFragment, Result, EventFragment } from "@ethersproject/abi";
 import type { Listener, Provider } from "@ethersproject/providers";
 import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent } from "./common";
-export interface BLUSDTokenInterface extends utils.Interface {
+export interface BONEUSDTokenInterface extends utils.Interface {
     functions: {
         "allowance(address,address)": FunctionFragment;
         "approve(address,uint256)": FunctionFragment;
@@ -100,11 +100,11 @@ export declare type TransferEvent = TypedEvent<[
     BigNumber
 ], TransferEventObject>;
 export declare type TransferEventFilter = TypedEventFilter<TransferEvent>;
-export interface BLUSDToken extends BaseContract {
+export interface BONEUSDToken extends BaseContract {
     connect(signerOrProvider: Signer | Provider | string): this;
     attach(addressOrName: string): this;
     deployed(): Promise<this>;
-    interface: BLUSDTokenInterface;
+    interface: BONEUSDTokenInterface;
     queryFilter<TEvent extends TypedEvent>(event: TypedEventFilter<TEvent>, fromBlockOrBlockhash?: string | number | undefined, toBlock?: string | number | undefined): Promise<Array<TEvent>>;
     listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>;
     listeners(eventName?: string): Array<Listener>;

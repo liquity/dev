@@ -10,7 +10,7 @@ import {
 } from "ethers";
 import { splitSignature } from "ethers/lib/utils";
 import type {
-  BLUSDToken,
+  BONEUSDToken,
   BondNFT,
   ChickenBondManager,
   BLUSDLPZap
@@ -28,7 +28,7 @@ import type {
   BondClaimedEvent
 } from "@liquity/chicken-bonds/lusd/types/ChickenBondManager";
 import { Decimal } from "@liquity/lib-base";
-import type { LUSDToken } from "@liquity/lib-ethers/dist/types";
+import type { ONEUSDToken } from "@liquity/lib-ethers/dist/types";
 import type { ProtocolInfo, Bond, BondStatus, Stats, Maybe, BLusdLpRewards } from "./transitions";
 import {
   numberify,
@@ -126,7 +126,7 @@ const getRoute = (inputToken: BLusdAmmTokenIndex): [RouteAddresses, RouteSwaps] 
     //                                          bLUSD        LUSD
     inputToken === BLusdAmmTokenIndex.BLUSD ? [0, 1, 3] : [0, 0, 6], // step 1
     inputToken === BLusdAmmTokenIndex.BLUSD ? [0, 0, 9] : [1, 0, 3], // step 2
-    [0, 0, 0], //                                LUSD       bLUSD
+    [0, 0, 0], //                                1USD       bLUSD
     [0, 0, 0]
   ]
 ];
@@ -462,14 +462,14 @@ const getBlusdAmmPriceMainnet = async (bLusdAmm: CurveCryptoSwap2ETH): Promise<D
 
   const [oraclePrice, marginalOutputAmount] = await Promise.all([
     bLusdAmm.price_oracle().then(decimalify),
-    lusd3CrvPool.calc_withdraw_one_coin(marginalInputAmount.hex, 0 /* LUSD */).then(decimalify)
+    lusd3CrvPool.calc_withdraw_one_coin(marginalInputAmount.hex, 0 /* 1USD */).then(decimalify)
   ]);
 
   return marginalOutputAmount.div(marginalInputAmount).div(oraclePrice);
 };
 
 const getProtocolInfo = async (
-  bLusdToken: BLUSDToken,
+  bLusdToken: BONEUSDToken,
   bLusdAmm: CurveCryptoSwap2ETH,
   chickenBondManager: ChickenBondManager,
   isMainnet: boolean
@@ -656,23 +656,23 @@ const getTokenTotalSupply = async (token: ERC20): Promise<Decimal> => {
 };
 
 const createBond = async (
-  lusdAmount: Decimal,
+  oneusdAmount: Decimal,
   owner: string,
   lusdAddress: string,
-  lusdToken: LUSDToken | undefined,
+  oneusdToken: ONEUSDToken | undefined,
   chickenBondManager: ChickenBondManager | undefined,
   signer: EthersSigner
 ): Promise<BondCreatedEventObject> => {
-  if (chickenBondManager === undefined || lusdToken === undefined) {
+  if (chickenBondManager === undefined || oneusdToken === undefined) {
     throw new Error("createBond() failed: a dependency is null");
   }
 
   const TEN_MINUTES_IN_SECONDS = 60 * 10;
   const spender = chickenBondManager.address;
   const deadline = Math.round(Date.now() / 1000) + TEN_MINUTES_IN_SECONDS;
-  const nonce = (await lusdToken.nonces(owner)).toNumber();
+  const nonce = (await oneusdToken.nonces(owner)).toNumber();
   const domain = {
-    name: await lusdToken.name(),
+    name: await oneusdToken.name(),
     version: "1",
     chainId: await signer.getChainId(),
     verifyingContract: lusdAddress
@@ -689,7 +689,7 @@ const createBond = async (
   const message = {
     owner,
     spender,
-    value: lusdAmount.hex,
+    value: oneusdAmount.hex,
     nonce,
     deadline
   };
@@ -701,7 +701,7 @@ const createBond = async (
 
   const gasEstimate = await chickenBondManager.estimateGas.createBondWithPermit(
     owner,
-    lusdAmount.hex,
+    oneusdAmount.hex,
     deadline,
     v,
     r,
@@ -709,7 +709,7 @@ const createBond = async (
   );
 
   const receipt = await (
-    await chickenBondManager.createBondWithPermit(owner, lusdAmount.hex, deadline, v, r, s, {
+    await chickenBondManager.createBondWithPermit(owner, oneusdAmount.hex, deadline, v, r, s, {
       gasLimit: gasEstimate.add(LQTY_ISSUANCE_GAS_HEADROOM)
     })
   ).wait();
@@ -794,7 +794,7 @@ const claimBond = async (
 
 const isTokenApprovedWithBLusdAmm = async (
   account: string,
-  token: LUSDToken | BLUSDToken,
+  token: ONEUSDToken | BONEUSDToken,
   bLusdAmmAddress: string | null
 ): Promise<boolean> => {
   if (bLusdAmmAddress === null) {
@@ -803,7 +803,7 @@ const isTokenApprovedWithBLusdAmm = async (
 
   const allowance = await token.allowance(account, bLusdAmmAddress);
 
-  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
+  // Unlike bLUSD, 1USD doesn't explicitly handle infinite approvals, therefore the allowance will
   // start to decrease from 2**64.
   // However, it is practically impossible that it would decrease below 2**63.
   return allowance.gt(constants.MaxInt256);
@@ -811,11 +811,11 @@ const isTokenApprovedWithBLusdAmm = async (
 
 const isTokenApprovedWithBLusdAmmMainnet = async (
   account: string,
-  token: LUSDToken | BLUSDToken
+  token: ONEUSDToken | BONEUSDToken
 ): Promise<boolean> => {
   const allowance = await token.allowance(account, CURVE_REGISTRY_SWAPS_ADDRESS);
 
-  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
+  // Unlike bLUSD, 1USD doesn't explicitly handle infinite approvals, therefore the allowance will
   // start to decrease from 2**64.
   // However, it is practically impossible that it would decrease below 2**63.
   return allowance.gt(constants.MaxInt256);
@@ -823,7 +823,7 @@ const isTokenApprovedWithBLusdAmmMainnet = async (
 
 const isTokenApprovedWithAmmZapper = async (
   account: string,
-  token: LUSDToken | BLUSDToken | ERC20,
+  token: ONEUSDToken | BONEUSDToken | ERC20,
   ammZapperAddress: string | null
 ): Promise<boolean> => {
   if (ammZapperAddress === null) {
@@ -834,7 +834,7 @@ const isTokenApprovedWithAmmZapper = async (
 };
 
 const approveTokenWithBLusdAmm = async (
-  token: LUSDToken | BLUSDToken | undefined,
+  token: ONEUSDToken | BONEUSDToken | undefined,
   bLusdAmmAddress: string | null
 ) => {
   if (token === undefined || bLusdAmmAddress === null) {
@@ -846,7 +846,7 @@ const approveTokenWithBLusdAmm = async (
 };
 
 const approveToken = async (
-  token: LUSDToken | BLUSDToken | ERC20 | undefined,
+  token: ONEUSDToken | BONEUSDToken | ERC20 | undefined,
   spenderAddress: string | null
 ) => {
   if (token === undefined || spenderAddress === null) {
@@ -857,7 +857,7 @@ const approveToken = async (
   return;
 };
 
-const approveTokenWithBLusdAmmMainnet = async (token: LUSDToken | BLUSDToken | undefined) => {
+const approveTokenWithBLusdAmmMainnet = async (token: ONEUSDToken | BONEUSDToken | undefined) => {
   if (token === undefined) {
     throw new Error("approveTokenWithBLusdAmmMainnet() failed: a dependency is null");
   }
@@ -966,16 +966,16 @@ const swapTokensMainnet = async (
 
 const getExpectedLpTokensAmountViaZapper = async (
   bLusdAmount: Decimal,
-  lusdAmount: Decimal,
+  oneusdAmount: Decimal,
   bLusdZapper: BLUSDLPZap
 ): Promise<Decimal> => {
   // allow 0.1% rounding error
-  return decimalify(await bLusdZapper.getMinLPTokens(bLusdAmount.hex, lusdAmount.hex)).mul(0.99);
+  return decimalify(await bLusdZapper.getMinLPTokens(bLusdAmount.hex, oneusdAmount.hex)).mul(0.99);
 };
 
 const getExpectedLpTokens = async (
   bLusdAmount: Decimal,
-  lusdAmount: Decimal,
+  oneusdAmount: Decimal,
   bLusdZapper: BLUSDLPZap
 ): Promise<Decimal> => {
   // Curve's calc_token_amount has rounding errors and they enforce a minimum 0.1% slippage
@@ -984,7 +984,7 @@ const getExpectedLpTokens = async (
     // If the user is depositing bLUSD single sided, they won't have approved any.. WONT-FIX
     expectedLpTokenAmount = await getExpectedLpTokensAmountViaZapper(
       bLusdAmount,
-      lusdAmount,
+      oneusdAmount,
       bLusdZapper
     );
   } catch {
@@ -996,7 +996,7 @@ const getExpectedLpTokens = async (
 
 const addLiquidity = async (
   bLusdAmount: Decimal,
-  lusdAmount: Decimal,
+  oneusdAmount: Decimal,
   minLpTokens: Decimal,
   shouldStakeInGauge: boolean,
   bLusdZapper: BLUSDLPZap | undefined
@@ -1007,14 +1007,14 @@ const addLiquidity = async (
 
   const gasEstimate = await bLusdZapper.estimateGas[zapperFunction](
     bLusdAmount.hex,
-    lusdAmount.hex,
+    oneusdAmount.hex,
     minLpTokens.hex
   );
 
   const receipt = await (
     await bLusdZapper[zapperFunction](
       bLusdAmount.hex,
-      lusdAmount.hex,
+      oneusdAmount.hex,
       minLpTokens.hex,
       { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
     )
@@ -1037,11 +1037,11 @@ const getExpectedWithdrawal = async (
   bLusdAmm: CurveCryptoSwap2ETH
 ): Promise<Map<BLusdAmmTokenIndex, Decimal>> => {
   if (output === "both") {
-    const [bLusdAmount, lusdAmount] = await bLusdZapper.getMinWithdrawBalanced(burnLp.hex);
+    const [bLusdAmount, oneusdAmount] = await bLusdZapper.getMinWithdrawBalanced(burnLp.hex);
 
     return new Map([
       [BLusdAmmTokenIndex.BLUSD, decimalify(bLusdAmount)],
-      [BLusdAmmTokenIndex.LUSD, decimalify(lusdAmount)]
+      [BLusdAmmTokenIndex.LUSD, decimalify(oneusdAmount)]
     ]);
   } else {
     const withdrawEstimatorFunction =

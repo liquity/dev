@@ -141,33 +141,33 @@ export const BondViewProvider: React.FC = props => {
   );
 
   const getLusdFromFaucet = useCallback(async () => {
-    if (contracts.lusdToken === undefined) return;
+    if (contracts.oneusdToken === undefined) return;
     if (
       LUSD_OVERRIDE_ADDRESS !== null &&
-      (await contracts.lusdToken.balanceOf(account)).eq(0) &&
-      "tap" in contracts.lusdToken
+      (await contracts.oneusdToken.balanceOf(account)).eq(0) &&
+      "tap" in contracts.oneusdToken
     ) {
-      await (await ((contracts.lusdToken as unknown) as ERC20Faucet).tap()).wait();
+      await (await ((contracts.oneusdToken as unknown) as ERC20Faucet).tap()).wait();
       setShouldSynchronize(true);
     }
-  }, [contracts.lusdToken, account, LUSD_OVERRIDE_ADDRESS]);
+  }, [contracts.oneusdToken, account, LUSD_OVERRIDE_ADDRESS]);
 
   useEffect(() => {
     (async () => {
       if (
         BLUSD_AMM_ADDRESS === null ||
-        contracts.lusdToken === undefined ||
+        contracts.oneusdToken === undefined ||
         isLusdApprovedWithBlusdAmm
       ) {
         return;
       }
       const isApproved = await (isMainnet
-        ? api.isTokenApprovedWithBLusdAmmMainnet(account, contracts.lusdToken)
-        : api.isTokenApprovedWithBLusdAmm(account, contracts.lusdToken, BLUSD_AMM_ADDRESS));
+        ? api.isTokenApprovedWithBLusdAmmMainnet(account, contracts.oneusdToken)
+        : api.isTokenApprovedWithBLusdAmm(account, contracts.oneusdToken, BLUSD_AMM_ADDRESS));
 
       setIsLusdApprovedWithBlusdAmm(isApproved);
     })();
-  }, [contracts.lusdToken, account, isLusdApprovedWithBlusdAmm, isMainnet, BLUSD_AMM_ADDRESS]);
+  }, [contracts.oneusdToken, account, isLusdApprovedWithBlusdAmm, isMainnet, BLUSD_AMM_ADDRESS]);
 
   useEffect(() => {
     (async () => {
@@ -191,7 +191,7 @@ export const BondViewProvider: React.FC = props => {
     (async () => {
       if (
         BLUSD_LP_ZAP_ADDRESS === null ||
-        contracts.lusdToken === undefined ||
+        contracts.oneusdToken === undefined ||
         isLusdApprovedWithAmmZapper
       ) {
         return;
@@ -199,13 +199,13 @@ export const BondViewProvider: React.FC = props => {
 
       const isLusdApproved = await api.isTokenApprovedWithAmmZapper(
         account,
-        contracts.lusdToken,
+        contracts.oneusdToken,
         BLUSD_LP_ZAP_ADDRESS
       );
 
       setIsLusdApprovedWithAmmZapper(isLusdApproved);
     })();
-  }, [contracts.lusdToken, account, isLusdApprovedWithAmmZapper, BLUSD_LP_ZAP_ADDRESS]);
+  }, [contracts.oneusdToken, account, isLusdApprovedWithAmmZapper, BLUSD_LP_ZAP_ADDRESS]);
 
   useEffect(() => {
     (async () => {
@@ -254,7 +254,7 @@ export const BondViewProvider: React.FC = props => {
     (async () => {
       try {
         if (
-          contracts.lusdToken === undefined ||
+          contracts.oneusdToken === undefined ||
           contracts.bondNft === undefined ||
           contracts.chickenBondManager === undefined ||
           contracts.bLusdToken === undefined ||
@@ -335,14 +335,14 @@ export const BondViewProvider: React.FC = props => {
           setIsBLusdApprovedWithBlusdAmm(true);
         } else {
           await (isMainnet
-            ? api.approveTokenWithBLusdAmmMainnet(contracts.lusdToken)
-            : api.approveTokenWithBLusdAmm(contracts.lusdToken, BLUSD_AMM_ADDRESS));
+            ? api.approveTokenWithBLusdAmmMainnet(contracts.oneusdToken)
+            : api.approveTokenWithBLusdAmm(contracts.oneusdToken, BLUSD_AMM_ADDRESS));
 
           setIsLusdApprovedWithBlusdAmm(true);
         }
       }
     },
-    [contracts.bLusdToken, contracts.lusdToken, isMainnet, BLUSD_AMM_ADDRESS]
+    [contracts.bLusdToken, contracts.oneusdToken, isMainnet, BLUSD_AMM_ADDRESS]
   );
 
   const [approveTokens, approveTokensStatus] = useTransaction(
@@ -357,7 +357,7 @@ export const BondViewProvider: React.FC = props => {
             setIsBLusdApprovedWithAmmZapper(true);
           }
         } else if (token === BLusdAmmTokenIndex.LUSD) {
-          await api.approveToken(contracts.lusdToken, BLUSD_LP_ZAP_ADDRESS);
+          await api.approveToken(contracts.oneusdToken, BLUSD_LP_ZAP_ADDRESS);
           setIsLusdApprovedWithAmmZapper(true);
         } else if (token === BLusdAmmTokenIndex.BLUSD_LUSD_LP && spender === undefined) {
           const lpToken = await api.getLpToken(contracts.bLusdAmm);
@@ -377,7 +377,7 @@ export const BondViewProvider: React.FC = props => {
     [
       contracts.bLusdAmm,
       contracts.bLusdToken,
-      contracts.lusdToken,
+      contracts.oneusdToken,
       BLUSD_LP_ZAP_ADDRESS,
       BLUSD_AMM_STAKING_ADDRESS,
       BLUSD_AMM_ADDRESS,
@@ -387,27 +387,27 @@ export const BondViewProvider: React.FC = props => {
   );
 
   const [createBond, createStatus] = useTransaction(
-    async (lusdAmount: Decimal) => {
+    async (oneusdAmount: Decimal) => {
       if (liquity.connection.signer === undefined) return;
 
       await api.createBond(
-        lusdAmount,
+        oneusdAmount,
         account,
         LUSD_OVERRIDE_ADDRESS ?? liquity.connection.addresses.lusdToken,
-        contracts.lusdToken,
+        contracts.oneusdToken,
         contracts.chickenBondManager,
         liquity.connection.signer
       );
       const optimisticBond: OptimisticBond = {
         id: "OPTIMISTIC_BOND",
-        deposit: lusdAmount,
+        deposit: oneusdAmount,
         startTime: Date.now(),
         status: "PENDING"
       };
       setOptimisticBond(optimisticBond);
       setShouldSynchronize(true);
     },
-    [contracts.chickenBondManager, contracts.lusdToken, liquity.connection.signer, account]
+    [contracts.chickenBondManager, contracts.oneusdToken, liquity.connection.signer, account]
   );
 
   const [cancelBond, cancelStatus] = useTransaction(
@@ -454,11 +454,11 @@ export const BondViewProvider: React.FC = props => {
   );
 
   const getExpectedLpTokens = useCallback(
-    async (bLusdAmount: Decimal, lusdAmount: Decimal) => {
+    async (bLusdAmount: Decimal, oneusdAmount: Decimal) => {
       if (liquity.connection.signer === undefined) return Decimal.ZERO;
 
       return contracts.bLusdAmmZapper
-        ? api.getExpectedLpTokens(bLusdAmount, lusdAmount, contracts.bLusdAmmZapper)
+        ? api.getExpectedLpTokens(bLusdAmount, oneusdAmount, contracts.bLusdAmmZapper)
         : Decimal.ZERO;
     },
     [contracts.bLusdAmmZapper, liquity.connection.signer]
@@ -469,7 +469,7 @@ export const BondViewProvider: React.FC = props => {
       if (params.action === "addLiquidity") {
         await api.addLiquidity(
           params.bLusdAmount,
-          params.lusdAmount,
+          params.oneusdAmount,
           params.minLpTokens,
           params.shouldStakeInGauge,
           contracts.bLusdAmmZapper

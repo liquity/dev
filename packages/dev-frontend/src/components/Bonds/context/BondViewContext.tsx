@@ -47,7 +47,7 @@ export type BondViewContextType = {
   inputToken: BLusdAmmTokenIndex.BLUSD | BLusdAmmTokenIndex.LUSD;
   isInputTokenApprovedWithBLusdAmm: boolean;
   getExpectedSwapOutput: (inputToken: BLusdAmmTokenIndex, inputAmount: Decimal) => Promise<Decimal>;
-  getExpectedLpTokens: (bLusdAmount: Decimal, lusdAmount: Decimal) => Promise<Decimal>;
+  getExpectedLpTokens: (bLusdAmount: Decimal, oneusdAmount: Decimal) => Promise<Decimal>;
   getExpectedWithdrawal: (
     burnLp: Decimal,
     output: BLusdAmmTokenIndex | "both"

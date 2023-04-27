@@ -31,7 +31,7 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
         <>
           You are withdrawing{" "}
           <Amount>
-            {change.withdrawLUSD.prettify()} {COIN}
+            {change.withdraw1USD.prettify()} {COIN}
           </Amount>{" "}
           to your wallet
         </>

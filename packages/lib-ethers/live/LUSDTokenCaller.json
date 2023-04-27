@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "LUSDTokenCaller",
-  "sourceName": "contracts/TestContracts/LUSDTokenCaller.sol",
+  "contractName": "ONEUSDTokenCaller",
+  "sourceName": "contracts/TestContracts/ONEUSDTokenCaller.sol",
   "abi": [
     {
       "inputs": [
@@ -88,7 +88,7 @@
     {
       "inputs": [
         {
-          "internalType": "contract ILUSDToken",
+          "internalType": "contract IONEUSDToken",
           "name": "_LUSD",
           "type": "address"
         }

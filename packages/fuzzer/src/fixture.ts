@@ -38,7 +38,7 @@ type GasHistograms = Pick<
   | "closeTrove"
   | "redeemLUSD"
   | "depositLUSDInStabilityPool"
-  | "withdrawLUSDFromStabilityPool"
+  | "withdraw1USDFromStabilityPool"
   | "stakeLQTY"
   | "unstakeLQTY"
 >;
@@ -76,7 +76,7 @@ export class Fixture {
       closeTrove: new GasHistogram(),
       redeemLUSD: new GasHistogram(),
       depositLUSDInStabilityPool: new GasHistogram(),
-      withdrawLUSDFromStabilityPool: new GasHistogram(),
+      withdraw1USDFromStabilityPool: new GasHistogram(),
       stakeLQTY: new GasHistogram(),
       unstakeLQTY: new GasHistogram()
     };
@@ -119,8 +119,8 @@ export class Fixture {
           ? 1.51
           : Decimal.max(trove.collateralRatio(this.price).add(0.00001), 1.11);
 
-      let newTrove = trove.isEmpty ? Trove.create({ depositCollateral: 1, borrowLUSD: 0 }) : trove;
-      newTrove = newTrove.adjust({ borrowLUSD: amount.sub(lusdBalance).mul(2) });
+      let newTrove = trove.isEmpty ? Trove.create({ depositCollateral: 1, borrow1USD: 0 }) : trove;
+      newTrove = newTrove.adjust({ borrow1USD: amount.sub(lusdBalance).mul(2) });
 
       if (newTrove.debt.lt(LUSD_MINIMUM_DEBT)) {
         newTrove = newTrove.setDebt(LUSD_MINIMUM_DEBT);
@@ -262,7 +262,7 @@ export class Fixture {
       const adjusted = trove.adjust(params, fees.borrowingRate());
 
       return (
-        (params.withdrawCollateral?.nonZero || params.borrowLUSD?.nonZero) &&
+        (params.withdrawCollateral?.nonZero || params.borrow1USD?.nonZero) &&
         (adjusted.collateralRatioIsBelowMinimum(this.price) ||
           (total.collateralRatioIsBelowCritical(this.price)
             ? adjusted._nominalCollateralRatio.lt(trove._nominalCollateralRatio)
@@ -374,17 +374,17 @@ export class Fixture {
     if (cannotWithdraw(amount)) {
       console.log(
         `// [${shortenAddress(userAddress)}] ` +
-          `withdrawLUSDFromStabilityPool(${amount}) expected to fail`
+          `withdraw1USDFromStabilityPool(${amount}) expected to fail`
       );
 
-      await this.gasHistograms.withdrawLUSDFromStabilityPool.expectFailure(() =>
-        liquity.withdrawLUSDFromStabilityPool(amount, { gasPrice: 0 })
+      await this.gasHistograms.withdraw1USDFromStabilityPool.expectFailure(() =>
+        liquity.withdraw1USDFromStabilityPool(amount, { gasPrice: 0 })
       );
     } else {
-      console.log(`[${shortenAddress(userAddress)}] withdrawLUSDFromStabilityPool(${amount})`);
+      console.log(`[${shortenAddress(userAddress)}] withdraw1USDFromStabilityPool(${amount})`);
 
-      await this.gasHistograms.withdrawLUSDFromStabilityPool.expectSuccess(() =>
-        liquity.send.withdrawLUSDFromStabilityPool(amount, { gasPrice: 0 })
+      await this.gasHistograms.withdraw1USDFromStabilityPool.expectSuccess(() =>
+        liquity.send.withdraw1USDFromStabilityPool(amount, { gasPrice: 0 })
       );
     }
   }

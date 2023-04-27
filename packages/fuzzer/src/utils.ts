@@ -64,7 +64,7 @@ export const randomCollateralChange = ({ collateral }: Trove) =>
 export const randomDebtChange = ({ debt }: Trove) =>
   Math.random() < 0.5
     ? { repayLUSD: debt.mul(1.1 * Math.random()) }
-    : { borrowLUSD: debt.mul(0.5 * Math.random()) };
+    : { borrow1USD: debt.mul(0.5 * Math.random()) };
 
 export const getListOfTroves = async (liquity: ReadableLiquity) =>
   liquity.getTroves({

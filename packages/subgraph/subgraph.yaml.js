@@ -187,10 +187,10 @@ dataSources:
         - event: StakingGainsWithdrawn(indexed address,uint256,uint256)
           handler: handleStakeGainsWithdrawn
 ${[
-  ["LUSDToken", addresses.lusdToken],
-  ["LQTYToken", addresses.lqtyToken]
-].map(
-  ([name, address]) => yaml`
+    ["ONEUSDToken", addresses.lusdToken],
+    ["LQTYToken", addresses.lqtyToken]
+  ].map(
+    ([name, address]) => yaml`
   - name: ${name}
     kind: ethereum/contract
     network: mainnet
@@ -217,6 +217,6 @@ ${[
         - event: Approval(indexed address,indexed address,uint256)
           handler: handleTokenApproval
 `
-)}`;
+  )}`;
 
 fs.writeFileSync("subgraph.yaml", manifest);

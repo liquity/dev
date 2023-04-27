@@ -66,11 +66,11 @@ export const validateStabilityDepositChange = (
     ];
   }
 
-  if (change.withdrawLUSD && haveUndercollateralizedTroves) {
+  if (change.withdraw1USD && haveUndercollateralizedTroves) {
     return [
       undefined,
       <ErrorDescription>
-        You're not allowed to withdraw LUSD from your Stability Deposit when there are
+        You're not allowed to withdraw 1USD from your Stability Deposit when there are
         undercollateralized Troves. Please liquidate those Troves or try again later.
       </ErrorDescription>
     ];

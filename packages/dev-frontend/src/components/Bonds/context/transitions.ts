@@ -128,7 +128,7 @@ export type ApprovePressedPayload = {
 export type AddLiquidityPayload = {
   action: "addLiquidity";
   bLusdAmount: Decimal;
-  lusdAmount: Decimal;
+  oneusdAmount: Decimal;
   minLpTokens: Decimal;
   shouldStakeInGauge: boolean;
 };

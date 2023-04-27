@@ -17,7 +17,7 @@ type Global @entity {
   totalNumberOfLQTYStakes: Int!
   numberOfActiveLQTYStakes: Int!
 
-  "Total amount of LUSD paid as borrowing fees"
+  "Total amount of 1USD paid as borrowing fees"
   totalBorrowingFeesPaid: BigDecimal!
   "Total amount of ETH paid as redemption fees"
   totalRedemptionFeesPaid: BigDecimal!

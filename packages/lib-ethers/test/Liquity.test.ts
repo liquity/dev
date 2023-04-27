@@ -588,7 +588,7 @@ describe("EthersLiquity", () => {
 
       expect(details).to.deep.equal({
         oneusdLoss: smallStabilityDeposit,
-        newONEUSDDeposit: Decimal.ZERO,
+        new1USDDeposit: Decimal.ZERO,
         lqtyReward: Decimal.ZERO,
 
         collateralGain: troveWithVeryLowICR.collateral

@@ -59,7 +59,7 @@ export const Information: React.FC = () => {
     <InformationContainer>
       <Box sx={{ p: [2, 3] }}>
         <Paragraph sx={{ mt: 2 }}>
-          Bonds accrue a virtual balance of boosted LUSD tokens (bLUSD) over time. At any time, the
+          Bonds accrue a virtual balance of boosted 1USD tokens (bLUSD) over time. At any time, the
           bonder may choose to claim their bLUSD in exchange for their LUSD, or cancel their bond to
           recover their deposited LUSD.
         </Paragraph>

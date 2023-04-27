@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "LUSDTokenTester",
-  "sourceName": "contracts/TestContracts/LUSDTokenTester.sol",
+  "contractName": "ONEUSDTokenTester",
+  "sourceName": "contracts/TestContracts/ONEUSDTokenTester.sol",
   "abi": [
     {
       "inputs": [
@@ -78,7 +78,7 @@
           "type": "uint256"
         }
       ],
-      "name": "LUSDTokenBalanceUpdated",
+      "name": "ONEUSDTokenBalanceUpdated",
       "type": "event"
     },
     {

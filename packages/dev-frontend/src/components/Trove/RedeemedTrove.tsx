@@ -25,7 +25,7 @@ export const RedeemedTrove: React.FC = () => {
         <InfoMessage title="Your Trove has been redeemed.">
           {hasSurplusCollateral
             ? "Please reclaim your remaining collateral before opening a new Trove."
-            : "You can borrow LUSD by opening a Trove."}
+            : "You can borrow 1USD by opening a Trove."}
         </InfoMessage>
 
         <Flex variant="layout.actions">

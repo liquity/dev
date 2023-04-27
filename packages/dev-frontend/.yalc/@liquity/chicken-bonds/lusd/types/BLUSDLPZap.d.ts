@@ -9,7 +9,7 @@ export interface BLUSDLPZapInterface extends utils.Interface {
         "bLUSDGauge()": FunctionFragment;
         "bLUSDLUSD3CRVLPToken()": FunctionFragment;
         "bLUSDLUSD3CRVPool()": FunctionFragment;
-        "bLUSDToken()": FunctionFragment;
+        "bONEUSDToken()": FunctionFragment;
         "getMinLPTokens(uint256,uint256)": FunctionFragment;
         "getMinWithdrawBalanced(uint256)": FunctionFragment;
         "getMinWithdrawLUSD(uint256)": FunctionFragment;
@@ -18,13 +18,13 @@ export interface BLUSDLPZapInterface extends utils.Interface {
         "removeLiquidityBalanced(uint256,uint256,uint256)": FunctionFragment;
         "removeLiquidityLUSD(uint256,uint256)": FunctionFragment;
     };
-    getFunction(nameOrSignatureOrTopic: "addLiquidity" | "addLiquidityAndStake" | "bLUSDGauge" | "bLUSDLUSD3CRVLPToken" | "bLUSDLUSD3CRVPool" | "bLUSDToken" | "getMinLPTokens" | "getMinWithdrawBalanced" | "getMinWithdrawLUSD" | "lusd3CRVPool" | "lusdToken" | "removeLiquidityBalanced" | "removeLiquidityLUSD"): FunctionFragment;
+    getFunction(nameOrSignatureOrTopic: "addLiquidity" | "addLiquidityAndStake" | "bLUSDGauge" | "bLUSDLUSD3CRVLPToken" | "bLUSDLUSD3CRVPool" | "bONEUSDToken" | "getMinLPTokens" | "getMinWithdrawBalanced" | "getMinWithdrawLUSD" | "lusd3CRVPool" | "lusdToken" | "removeLiquidityBalanced" | "removeLiquidityLUSD"): FunctionFragment;
     encodeFunctionData(functionFragment: "addLiquidity", values: [BigNumberish, BigNumberish, BigNumberish]): string;
     encodeFunctionData(functionFragment: "addLiquidityAndStake", values: [BigNumberish, BigNumberish, BigNumberish]): string;
     encodeFunctionData(functionFragment: "bLUSDGauge", values?: undefined): string;
     encodeFunctionData(functionFragment: "bLUSDLUSD3CRVLPToken", values?: undefined): string;
     encodeFunctionData(functionFragment: "bLUSDLUSD3CRVPool", values?: undefined): string;
-    encodeFunctionData(functionFragment: "bLUSDToken", values?: undefined): string;
+    encodeFunctionData(functionFragment: "bONEUSDToken", values?: undefined): string;
     encodeFunctionData(functionFragment: "getMinLPTokens", values: [BigNumberish, BigNumberish]): string;
     encodeFunctionData(functionFragment: "getMinWithdrawBalanced", values: [BigNumberish]): string;
     encodeFunctionData(functionFragment: "getMinWithdrawLUSD", values: [BigNumberish]): string;
@@ -37,7 +37,7 @@ export interface BLUSDLPZapInterface extends utils.Interface {
     decodeFunctionResult(functionFragment: "bLUSDGauge", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "bLUSDLUSD3CRVLPToken", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "bLUSDLUSD3CRVPool", data: BytesLike): Result;
-    decodeFunctionResult(functionFragment: "bLUSDToken", data: BytesLike): Result;
+    decodeFunctionResult(functionFragment: "bONEUSDToken", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getMinLPTokens", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getMinWithdrawBalanced", data: BytesLike): Result;
     decodeFunctionResult(functionFragment: "getMinWithdrawLUSD", data: BytesLike): Result;
@@ -62,17 +62,17 @@ export interface BLUSDLPZap extends BaseContract {
     once: OnEvent<this>;
     removeListener: OnEvent<this>;
     functions: {
-        addLiquidity(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
+        addLiquidity(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
-        addLiquidityAndStake(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
+        addLiquidityAndStake(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
         bLUSDGauge(overrides?: CallOverrides): Promise<[string]>;
         bLUSDLUSD3CRVLPToken(overrides?: CallOverrides): Promise<[string]>;
         bLUSDLUSD3CRVPool(overrides?: CallOverrides): Promise<[string]>;
-        bLUSDToken(overrides?: CallOverrides): Promise<[string]>;
-        getMinLPTokens(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, overrides?: CallOverrides): Promise<[BigNumber] & {
+        bONEUSDToken(overrides?: CallOverrides): Promise<[string]>;
+        getMinLPTokens(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, overrides?: CallOverrides): Promise<[BigNumber] & {
             bLUSDLUSD3CRVTokens: BigNumber;
         }>;
         getMinWithdrawBalanced(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<[
@@ -80,13 +80,13 @@ export interface BLUSDLPZap extends BaseContract {
             BigNumber
         ] & {
             bLUSDAmount: BigNumber;
-            lusdAmount: BigNumber;
+            oneusdAmount: BigNumber;
         }>;
         getMinWithdrawLUSD(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<[BigNumber] & {
-            lusdAmount: BigNumber;
+            oneusdAmount: BigNumber;
         }>;
         lusd3CRVPool(overrides?: CallOverrides): Promise<[string]>;
-        lusdToken(overrides?: CallOverrides): Promise<[string]>;
+        oneusdToken(overrides?: CallOverrides): Promise<[string]>;
         removeLiquidityBalanced(_lpAmount: BigNumberish, _minBLUSD: BigNumberish, _minLUSD: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
@@ -94,27 +94,27 @@ export interface BLUSDLPZap extends BaseContract {
             from?: string | Promise<string>;
         }): Promise<ContractTransaction>;
     };
-    addLiquidity(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
+    addLiquidity(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
-    addLiquidityAndStake(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
+    addLiquidityAndStake(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
     bLUSDGauge(overrides?: CallOverrides): Promise<string>;
     bLUSDLUSD3CRVLPToken(overrides?: CallOverrides): Promise<string>;
     bLUSDLUSD3CRVPool(overrides?: CallOverrides): Promise<string>;
-    bLUSDToken(overrides?: CallOverrides): Promise<string>;
-    getMinLPTokens(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+    bONEUSDToken(overrides?: CallOverrides): Promise<string>;
+    getMinLPTokens(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
     getMinWithdrawBalanced(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<[
         BigNumber,
         BigNumber
     ] & {
         bLUSDAmount: BigNumber;
-        lusdAmount: BigNumber;
+        oneusdAmount: BigNumber;
     }>;
     getMinWithdrawLUSD(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
     lusd3CRVPool(overrides?: CallOverrides): Promise<string>;
-    lusdToken(overrides?: CallOverrides): Promise<string>;
+    oneusdToken(overrides?: CallOverrides): Promise<string>;
     removeLiquidityBalanced(_lpAmount: BigNumberish, _minBLUSD: BigNumberish, _minLUSD: BigNumberish, overrides?: Overrides & {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
@@ -122,43 +122,43 @@ export interface BLUSDLPZap extends BaseContract {
         from?: string | Promise<string>;
     }): Promise<ContractTransaction>;
     callStatic: {
-        addLiquidity(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
-        addLiquidityAndStake(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+        addLiquidity(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+        addLiquidityAndStake(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
         bLUSDGauge(overrides?: CallOverrides): Promise<string>;
         bLUSDLUSD3CRVLPToken(overrides?: CallOverrides): Promise<string>;
         bLUSDLUSD3CRVPool(overrides?: CallOverrides): Promise<string>;
-        bLUSDToken(overrides?: CallOverrides): Promise<string>;
-        getMinLPTokens(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+        bONEUSDToken(overrides?: CallOverrides): Promise<string>;
+        getMinLPTokens(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
         getMinWithdrawBalanced(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<[
             BigNumber,
             BigNumber
         ] & {
             bLUSDAmount: BigNumber;
-            lusdAmount: BigNumber;
+            oneusdAmount: BigNumber;
         }>;
         getMinWithdrawLUSD(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
         lusd3CRVPool(overrides?: CallOverrides): Promise<string>;
-        lusdToken(overrides?: CallOverrides): Promise<string>;
+        oneusdToken(overrides?: CallOverrides): Promise<string>;
         removeLiquidityBalanced(_lpAmount: BigNumberish, _minBLUSD: BigNumberish, _minLUSD: BigNumberish, overrides?: CallOverrides): Promise<void>;
         removeLiquidityLUSD(_lpAmount: BigNumberish, _minLUSD: BigNumberish, overrides?: CallOverrides): Promise<void>;
     };
     filters: {};
     estimateGas: {
-        addLiquidity(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
+        addLiquidity(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<BigNumber>;
-        addLiquidityAndStake(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
+        addLiquidityAndStake(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<BigNumber>;
         bLUSDGauge(overrides?: CallOverrides): Promise<BigNumber>;
         bLUSDLUSD3CRVLPToken(overrides?: CallOverrides): Promise<BigNumber>;
         bLUSDLUSD3CRVPool(overrides?: CallOverrides): Promise<BigNumber>;
-        bLUSDToken(overrides?: CallOverrides): Promise<BigNumber>;
-        getMinLPTokens(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
+        bONEUSDToken(overrides?: CallOverrides): Promise<BigNumber>;
+        getMinLPTokens(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
         getMinWithdrawBalanced(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
         getMinWithdrawLUSD(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
         lusd3CRVPool(overrides?: CallOverrides): Promise<BigNumber>;
-        lusdToken(overrides?: CallOverrides): Promise<BigNumber>;
+        oneusdToken(overrides?: CallOverrides): Promise<BigNumber>;
         removeLiquidityBalanced(_lpAmount: BigNumberish, _minBLUSD: BigNumberish, _minLUSD: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<BigNumber>;
@@ -167,21 +167,21 @@ export interface BLUSDLPZap extends BaseContract {
         }): Promise<BigNumber>;
     };
     populateTransaction: {
-        addLiquidity(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
+        addLiquidity(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<PopulatedTransaction>;
-        addLiquidityAndStake(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
+        addLiquidityAndStake(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, _minLPTokens: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<PopulatedTransaction>;
         bLUSDGauge(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         bLUSDLUSD3CRVLPToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         bLUSDLUSD3CRVPool(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-        bLUSDToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-        getMinLPTokens(_bLUSDAmount: BigNumberish, _lusdAmount: BigNumberish, overrides?: CallOverrides): Promise<PopulatedTransaction>;
+        bONEUSDToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+        getMinLPTokens(_bLUSDAmount: BigNumberish, _oneusdAmount: BigNumberish, overrides?: CallOverrides): Promise<PopulatedTransaction>;
         getMinWithdrawBalanced(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<PopulatedTransaction>;
         getMinWithdrawLUSD(_lpAmount: BigNumberish, overrides?: CallOverrides): Promise<PopulatedTransaction>;
         lusd3CRVPool(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-        lusdToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+        oneusdToken(overrides?: CallOverrides): Promise<PopulatedTransaction>;
         removeLiquidityBalanced(_lpAmount: BigNumberish, _minBLUSD: BigNumberish, _minLUSD: BigNumberish, overrides?: Overrides & {
             from?: string | Promise<string>;
         }): Promise<PopulatedTransaction>;

@@ -6,7 +6,7 @@ import { Decimal, LUSD_MINIMUM_NET_DEBT, Trove } from "@liquity/lib-base";
 import App from "./App";
 
 const TEST_TIMEOUT = 5000;
-const params = { depositCollateral: Decimal.from(20), borrowLUSD: LUSD_MINIMUM_NET_DEBT };
+const params = { depositCollateral: Decimal.from(20), borrow1USD: LUSD_MINIMUM_NET_DEBT };
 const trove = Trove.create(params);
 
 jest.setTimeout(TEST_TIMEOUT);

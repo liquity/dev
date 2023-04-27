@@ -67,11 +67,11 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_F_LUSD",
+          "name": "_F_1USD",
           "type": "uint256"
         }
       ],
-      "name": "F_LUSDUpdated",
+      "name": "F_1USDUpdated",
       "type": "event"
     },
     {
@@ -97,7 +97,7 @@
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressSet",
+      "name": "ONEUSDTokenAddressSet",
       "type": "event"
     },
     {
@@ -137,7 +137,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_F_LUSD",
+          "name": "_F_1USD",
           "type": "uint256"
         }
       ],
@@ -254,7 +254,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseF_LUSD",
+      "name": "increaseF_1USD",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

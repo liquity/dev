@@ -27,7 +27,7 @@ export const DepositPane: React.FC = () => {
 
   const editingState = useState<string>();
   const [bLusdAmount, setBLusdAmount] = useState<Decimal>(Decimal.ZERO);
-  const [lusdAmount, setLusdAmount] = useState<Decimal>(Decimal.ZERO);
+  const [oneusdAmount, setLusdAmount] = useState<Decimal>(Decimal.ZERO);
   const [lpTokens, setLpTokens] = useState<Decimal>(Decimal.ZERO);
   const [shouldStakeInGauge, setShouldStakeInGauge] = useState(true);
   const [shouldDepositBalanced, setShouldDepositBalanced] = useState(true);
@@ -38,10 +38,10 @@ export const DepositPane: React.FC = () => {
   const isApprovePending = statuses.APPROVE_SPENDER === "PENDING";
   const isManageLiquidityPending = statuses.MANAGE_LIQUIDITY === "PENDING";
   const isBLusdBalanceInsufficient = bLusdAmount.gt(coalescedBLusdBalance);
-  const isLusdBalanceInsufficient = lusdAmount.gt(coalescedLusdBalance);
+  const isLusdBalanceInsufficient = oneusdAmount.gt(coalescedLusdBalance);
   const isAnyBalanceInsufficient = isBLusdBalanceInsufficient || isLusdBalanceInsufficient;
 
-  const isDepositingLusd = lusdAmount.gt(0);
+  const isDepositingLusd = oneusdAmount.gt(0);
   const isDepositingBLusd = bLusdAmount.gt(0);
 
   const zapperNeedsLusdApproval = isDepositingLusd && !isLusdApprovedWithAmmZapper;
@@ -69,7 +69,7 @@ export const DepositPane: React.FC = () => {
     dispatchEvent("CONFIRM_PRESSED", {
       action: "addLiquidity",
       bLusdAmount,
-      lusdAmount,
+      oneusdAmount,
       minLpTokens: lpTokens,
       shouldStakeInGauge
     });
@@ -102,7 +102,7 @@ export const DepositPane: React.FC = () => {
   };
 
   useEffect(() => {
-    if (bLusdAmount.isZero && lusdAmount.isZero) {
+    if (bLusdAmount.isZero && oneusdAmount.isZero) {
       setLpTokens(Decimal.ZERO);
       return;
     }
@@ -111,7 +111,7 @@ export const DepositPane: React.FC = () => {
 
     const timeoutId = setTimeout(async () => {
       try {
-        const expectedLpTokens = await getExpectedLpTokens(bLusdAmount, lusdAmount);
+        const expectedLpTokens = await getExpectedLpTokens(bLusdAmount, oneusdAmount);
         if (cancelled) return;
         setLpTokens(expectedLpTokens);
       } catch (error) {
@@ -124,7 +124,7 @@ export const DepositPane: React.FC = () => {
       clearTimeout(timeoutId);
       cancelled = true;
     };
-  }, [bLusdAmount, lusdAmount, getExpectedLpTokens]);
+  }, [bLusdAmount, oneusdAmount, getExpectedLpTokens]);
 
   return (
     <>
@@ -143,13 +143,13 @@ export const DepositPane: React.FC = () => {
       <EditableRow
         label="LUSD amount"
         inputId="deposit-lusd"
-        amount={lusdAmount.prettify(2)}
+        amount={oneusdAmount.prettify(2)}
         unit="LUSD"
         editingState={editingState}
-        editedAmount={lusdAmount.toString()}
+        editedAmount={oneusdAmount.toString()}
         setEditedAmount={amount => handleSetAmount("LUSD", Decimal.from(amount))}
         maxAmount={coalescedLusdBalance.toString()}
-        maxedOut={lusdAmount.eq(coalescedLusdBalance)}
+        maxedOut={oneusdAmount.eq(coalescedLusdBalance)}
       />
 
       <Flex sx={{ justifyContent: "center", mb: 3 }}>
@@ -208,7 +208,7 @@ export const DepositPane: React.FC = () => {
             </>
           )}
           {isLusdBalanceInsufficient && (
-            <Amount>{lusdAmount.sub(coalescedLusdBalance).prettify(2)} LUSD</Amount>
+            <Amount>{oneusdAmount.sub(coalescedLusdBalance).prettify(2)} LUSD</Amount>
           )}
         </ErrorDescription>
       )}
@@ -227,7 +227,7 @@ export const DepositPane: React.FC = () => {
             variant="primary"
             onClick={handleConfirmPressed}
             disabled={
-              (bLusdAmount.isZero && lusdAmount.isZero) ||
+              (bLusdAmount.isZero && oneusdAmount.isZero) ||
               isAnyBalanceInsufficient ||
               isManageLiquidityPending
             }

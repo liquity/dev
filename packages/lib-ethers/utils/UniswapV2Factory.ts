@@ -45,7 +45,7 @@ export const createUniswapV2Pair = async (
     signer
   ) as unknown) as UniswapV2Factory;
 
-  log(`Creating Uniswap v2 WETH <=> LUSD pair...`);
+  log(`Creating Uniswap v2 WETH <=> 1USD pair...`);
 
   const tx = await factory.createPair(tokenA, tokenB, { ...overrides });
   const receipt = await tx.wait();

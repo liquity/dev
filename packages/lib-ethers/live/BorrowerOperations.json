@@ -97,7 +97,7 @@
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressChanged",
+      "name": "ONEUSDTokenAddressChanged",
       "type": "event"
     },
     {
@@ -529,7 +529,7 @@
       "name": "lusdToken",
       "outputs": [
         {
-          "internalType": "contract ILUSDToken",
+          "internalType": "contract IONEUSDToken",
           "name": "",
           "type": "address"
         }
@@ -767,7 +767,7 @@
           "type": "address"
         }
       ],
-      "name": "withdrawLUSD",
+      "name": "withdraw1USD",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

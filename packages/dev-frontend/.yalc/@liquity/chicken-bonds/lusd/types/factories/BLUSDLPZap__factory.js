@@ -15,7 +15,7 @@ const _abi = [
             },
             {
                 internalType: "uint256",
-                name: "_lusdAmount",
+                name: "_oneusdAmount",
                 type: "uint256",
             },
             {
@@ -44,7 +44,7 @@ const _abi = [
             },
             {
                 internalType: "uint256",
-                name: "_lusdAmount",
+                name: "_oneusdAmount",
                 type: "uint256",
             },
             {
@@ -105,7 +105,7 @@ const _abi = [
     },
     {
         inputs: [],
-        name: "bLUSDToken",
+        name: "bONEUSDToken",
         outputs: [
             {
                 internalType: "contract IERC20",
@@ -125,7 +125,7 @@ const _abi = [
             },
             {
                 internalType: "uint256",
-                name: "_lusdAmount",
+                name: "_oneusdAmount",
                 type: "uint256",
             },
         ],
@@ -157,7 +157,7 @@ const _abi = [
             },
             {
                 internalType: "uint256",
-                name: "lusdAmount",
+                name: "oneusdAmount",
                 type: "uint256",
             },
         ],
@@ -176,7 +176,7 @@ const _abi = [
         outputs: [
             {
                 internalType: "uint256",
-                name: "lusdAmount",
+                name: "oneusdAmount",
                 type: "uint256",
             },
         ],

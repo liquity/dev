@@ -132,11 +132,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newLUSDTokenAddress",
+          "name": "_newONEUSDTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressChanged",
+      "name": "ONEUSDTokenAddressChanged",
       "type": "event"
     },
     {
@@ -1426,7 +1426,7 @@
       "name": "lusdToken",
       "outputs": [
         {
-          "internalType": "contract ILUSDToken",
+          "internalType": "contract IONEUSDToken",
           "name": "",
           "type": "address"
         }

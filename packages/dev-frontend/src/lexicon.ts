@@ -7,7 +7,7 @@ export type Lexicon = {
 export const BORROW_FEE: Lexicon = {
   term: "Borrowing Fee",
   description:
-    "The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
+    "The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on 1USD redemption volumes."
 };
 
 export const TVL: Lexicon = {
@@ -36,7 +36,7 @@ export const RECOVERY_MODE: Lexicon = {
 export const STABILITY_POOL_LUSD: Lexicon = {
   term: "LUSD in Stability Pool",
   description:
-    "The total LUSD currently held in the Stability Pool, expressed as an amount and a fraction of the LUSD supply."
+    "The total 1USD currently held in the Stability Pool, expressed as an amount and a fraction of the 1USD supply."
 };
 
 export const KICKBACK_RATE: Lexicon = {
@@ -64,5 +64,5 @@ export const TROVES: Lexicon = {
 
 export const LUSD_SUPPLY: Lexicon = {
   term: "LUSD supply",
-  description: "The total LUSD minted by the Liquity Protocol."
+  description: "The total 1USD minted by the Liquity Protocol."
 };

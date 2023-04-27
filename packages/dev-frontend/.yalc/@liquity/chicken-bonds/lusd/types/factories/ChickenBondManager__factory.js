@@ -52,7 +52,7 @@ const _abi = [
                     },
                     {
                         internalType: "address",
-                        name: "bLUSDTokenAddress",
+                        name: "bONEUSDTokenAddress",
                         type: "address",
                     },
                     {
@@ -203,7 +203,7 @@ const _abi = [
             {
                 indexed: false,
                 internalType: "uint256",
-                name: "lusdAmount",
+                name: "oneusdAmount",
                 type: "uint256",
             },
             {
@@ -296,7 +296,7 @@ const _abi = [
             {
                 indexed: false,
                 internalType: "uint256",
-                name: "lusdAmount",
+                name: "oneusdAmount",
                 type: "uint256",
             },
             {
@@ -470,7 +470,7 @@ const _abi = [
     },
     {
         inputs: [],
-        name: "INDEX_OF_LUSD_TOKEN_IN_CURVE_POOL",
+        name: "INDEX_OF_1USD_TOKEN_IN_CURVE_POOL",
         outputs: [
             {
                 internalType: "int128",
@@ -652,10 +652,10 @@ const _abi = [
     },
     {
         inputs: [],
-        name: "bLUSDToken",
+        name: "bONEUSDToken",
         outputs: [
             {
-                internalType: "contract IBLUSDToken",
+                internalType: "contract IBONEUSDToken",
                 name: "",
                 type: "address",
             },
@@ -872,7 +872,7 @@ const _abi = [
         inputs: [
             {
                 internalType: "uint256",
-                name: "_lusdAmount",
+                name: "_oneusdAmount",
                 type: "uint256",
             },
         ],
@@ -1073,7 +1073,7 @@ const _abi = [
         outputs: [
             {
                 internalType: "uint256",
-                name: "lusdAmount",
+                name: "oneusdAmount",
                 type: "uint256",
             },
             {
@@ -1277,7 +1277,7 @@ const _abi = [
         name: "lusdToken",
         outputs: [
             {
-                internalType: "contract ILUSDToken",
+                internalType: "contract IONEUSDToken",
                 name: "",
                 type: "address",
             },
@@ -1344,7 +1344,7 @@ const _abi = [
         inputs: [
             {
                 internalType: "uint256",
-                name: "_lusdAmount",
+                name: "_oneusdAmount",
                 type: "uint256",
             },
         ],

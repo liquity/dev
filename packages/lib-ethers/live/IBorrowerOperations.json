@@ -97,7 +97,7 @@
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressChanged",
+      "name": "ONEUSDTokenAddressChanged",
       "type": "event"
     },
     {
@@ -475,7 +475,7 @@
           "type": "address"
         }
       ],
-      "name": "withdrawLUSD",
+      "name": "withdraw1USD",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
