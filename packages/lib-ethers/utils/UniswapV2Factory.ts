@@ -12,9 +12,9 @@ const factoryAbi = [
   "event PairCreated(address indexed token0, address indexed token1, address pair, uint)"
 ];
 
-const factoryAddress = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+const factoryAddress = "0xc35DADB65012eC5796536bD9864eD8773aBc74C4";
 
-const hasFactory = (chainId: number) => [1, 3, 4, 5, 42].includes(chainId);
+// const hasFactory = (chainId: number) => [1, 3, 4, 5, 42, 31337, 1666700000].includes(chainId);
 
 interface UniswapV2Factory
   extends _TypedLiquityContract<
@@ -34,10 +34,12 @@ export const createUniswapV2Pair = async (
   overrides?: Overrides
 ): Promise<string> => {
   const chainId = await signer.getChainId();
+  console.log(chainId)
+  console.log("Creating Uniswap v2 WONE <=> 1USD pair...", tokenA, tokenB)
 
-  if (!hasFactory(chainId)) {
-    throw new Error(`UniswapV2Factory is not deployed on this network (chainId = ${chainId})`);
-  }
+  // if (!hasFactory(chainId)) {
+  //   throw new Error(`UniswapV2Factory is not deployed on this network (chainId = ${chainId})`);
+  // }
 
   const factory = (new _LiquityContract(
     factoryAddress,
