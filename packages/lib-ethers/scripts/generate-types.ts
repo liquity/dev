@@ -18,7 +18,8 @@ import LQTYStaking from "../../contracts/artifacts/contracts/LQTY/LQTYStaking.so
 import LQTYToken from "../../contracts/artifacts/contracts/LQTY/LQTYToken.sol/LQTYToken.json";
 import MultiTroveGetter from "../../contracts/artifacts/contracts/MultiTroveGetter.sol/MultiTroveGetter.json";
 import PriceFeed from "../../contracts/artifacts/contracts/PriceFeed.sol/PriceFeed.json";
-import PriceFeedTestnet from "../../contracts/artifacts/contracts/TestContracts/PriceFeedTestnet.sol/PriceFeedTestnet.json";
+import PriceFeedTestnet from "../../contracts/artifacts/contracts/PriceFeedTestnet.sol/PriceFeedTestnet.json";
+import PriceFeedLocalnet from "../../contracts/artifacts/contracts/TestContracts/PriceFeedLocalnet.sol/PriceFeedLocalnet.json";
 import SortedTroves from "../../contracts/artifacts/contracts/SortedTroves.sol/SortedTroves.json";
 import StabilityPool from "../../contracts/artifacts/contracts/StabilityPool.sol/StabilityPool.json";
 import TroveManager from "../../contracts/artifacts/contracts/TroveManager.sol/TroveManager.json";
@@ -159,6 +160,7 @@ const contractArtifacts = [
   MultiTroveGetter,
   PriceFeed,
   PriceFeedTestnet,
+  PriceFeedLocalnet,
   SortedTroves,
   StabilityPool,
   TroveManager,

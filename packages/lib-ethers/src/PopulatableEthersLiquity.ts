@@ -51,7 +51,7 @@ import {
 } from "./EthersLiquityConnection";
 
 import { decimalify, promiseAllValues } from "./_utils";
-import { _priceFeedIsTestnet, _uniTokenIsMock } from "./contracts";
+import { _uniTokenIsMock } from "./contracts";
 import { logsToString } from "./parseLogs";
 import { ReadableEthersLiquity } from "./ReadableEthersLiquity";
 
@@ -1042,7 +1042,7 @@ export class PopulatableEthersLiquity
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
     const { priceFeed } = _getContracts(this._readable.connection);
 
-    if (!_priceFeedIsTestnet(priceFeed)) {
+    if (!("setPrice" in priceFeed)) {
       throw new Error("setPrice() unavailable on this deployment of Liquity");
     }
 

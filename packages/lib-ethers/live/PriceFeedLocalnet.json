@@ -1,0 +1,69 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "PriceFeedTestnet",
+  "sourceName": "contracts/TestContracts/PriceFeedTestnet.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "_lastGoodPrice",
+          "type": "uint256"
+        }
+      ],
+      "name": "LastGoodPriceUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "fetchPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "name": "setPrice",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052680ad78ebc5ac620000060005534801561001d57600080fd5b5060cb8061002c6000396000f3fe6080604052348015600f57600080fd5b5060043610603c5760003560e01c80630fdb11cf14604157806391b7f5ed14605957806398d5fdca146041575b600080fd5b60476087565b60408051918252519081900360200190f35b607360048036036020811015606d57600080fd5b5035608d565b604080519115158252519081900360200190f35b60005490565b60005560019056fea2646970667358221220987d1afde74388e098a39b40724f88f529e6c3ebb79473037c7e38555b3a243e64736f6c634300060b0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610603c5760003560e01c80630fdb11cf14604157806391b7f5ed14605957806398d5fdca146041575b600080fd5b60476087565b60408051918252519081900360200190f35b607360048036036020811015606d57600080fd5b5035608d565b604080519115158252519081900360200190f35b60005490565b60005560019056fea2646970667358221220987d1afde74388e098a39b40724f88f529e6c3ebb79473037c7e38555b3a243e64736f6c634300060b0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

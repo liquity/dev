@@ -98,7 +98,33 @@
   },
   {
     "inputs": [],
+    "name": "ONEUSD_TELLOR_REQ_ID",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "TARGET_DIGITS",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "TELLOR_DIGITS",
     "outputs": [
       {
         "internalType": "uint256",
@@ -193,6 +219,11 @@
         "internalType": "address",
         "name": "_priceAggregatorAddress",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_tellorCallerAddress",
+        "type": "address"
       }
     ],
     "name": "setAddresses",
@@ -208,6 +239,19 @@
         "internalType": "enum PriceFeed.Status",
         "name": "",
         "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "tellorCaller",
+    "outputs": [
+      {
+        "internalType": "contract ITellorCaller",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",

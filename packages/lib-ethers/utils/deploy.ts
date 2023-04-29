@@ -1,6 +1,7 @@
 import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction, ContractFactory, Overrides } from "@ethersproject/contracts";
 import { Wallet } from "@ethersproject/wallet";
+import { PriceFeedType } from "../src/types";
 
 import { Decimal } from "@liquity/lib-base";
 
@@ -55,7 +56,7 @@ const deployContract: (
 const deployContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
-  priceFeedIsTestnet = true,
+  priceFeedType: PriceFeedType = "localnet",
   overrides?: Overrides
 ): Promise<[addresses: Omit<_LiquityContractAddresses, "uniToken">, startBlock: number]> => {
   const [activePoolAddress, startBlock] = await deployContractAndGetBlockNumber(
@@ -91,7 +92,7 @@ const deployContracts = async (
     priceFeed: await deployContract(
       deployer,
       getContractFactory,
-      priceFeedIsTestnet ? "PriceFeedTestnet" : "PriceFeed",
+      priceFeedType === 'mainnet' ? "PriceFeed" : (priceFeedType === 'testnet' ? "PriceFeedTestnet" : "PriceFeedLocalnet"),
       { ...overrides }
     ),
     sortedTroves: await deployContract(deployer, getContractFactory, "SortedTroves", {
@@ -316,7 +317,7 @@ const deployMockUniToken = (
 export const deployAndSetupContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
-  _priceFeedIsTestnet = true,
+  _priceFeedType: PriceFeedType = "localnet",
   _isDev = true,
   woneAddress?: string,
   overrides?: Overrides
@@ -335,11 +336,11 @@ export const deployAndSetupContracts = async (
     bootstrapPeriod: 0,
     totalStabilityPoolLQTYReward: "0",
     liquidityMiningLQTYRewardRate: "0",
-    _priceFeedIsTestnet,
+    _priceFeedType: _priceFeedType,
     _uniTokenIsMock: !woneAddress,
     _isDev,
 
-    ...(await deployContracts(deployer, getContractFactory, _priceFeedIsTestnet, overrides).then(
+    ...(await deployContracts(deployer, getContractFactory, _priceFeedType, overrides).then(
       async ([addresses, startBlock]) => ({
         startBlock,
 

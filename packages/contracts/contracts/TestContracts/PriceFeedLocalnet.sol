@@ -8,7 +8,7 @@ import "../Interfaces/IPriceFeed.sol";
 * PriceFeed placeholder for testnet and development. The price is simply set manually and saved in a state 
 * variable. The contract does not connect to a live Chainlink price feed. 
 */
-contract PriceFeedTestnet is IPriceFeed {
+contract PriceFeedLocalnet is IPriceFeed {
     
     uint256 private _price = 200 * 1e18;
 

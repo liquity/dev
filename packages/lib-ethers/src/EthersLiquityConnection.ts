@@ -6,7 +6,7 @@ import { Decimal } from "@liquity/lib-base";
 import devOrNull from "../deployments/dev.json";
 
 import { numberify, panic } from "./_utils";
-import { EthersProvider, EthersSigner } from "./types";
+import { EthersProvider, EthersSigner, PriceFeedType } from "./types";
 
 import {
   _connectToContracts,
@@ -71,7 +71,7 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
   readonly addresses: Record<string, string>;
 
   /** @internal */
-  readonly _priceFeedIsTestnet: boolean;
+  readonly _priceFeedType: PriceFeedType;
 
   /** @internal */
   readonly _isDev: boolean;

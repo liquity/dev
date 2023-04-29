@@ -241,7 +241,7 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
     readonly _isDev: boolean;
     readonly liquidityMiningLQTYRewardRate: Decimal;
     // @internal (undocumented)
-    readonly _priceFeedIsTestnet: boolean;
+    readonly _priceFeedType: PriceFeedType;
     readonly provider: EthersProvider;
     readonly signer?: EthersSigner;
     readonly startBlock: number;
@@ -411,6 +411,9 @@ export class PopulatedEthersRedemption extends PopulatedEthersLiquityTransaction
     // (undocumented)
     readonly redeemable1USDAmount: Decimal;
 }
+
+// @public (undocumented)
+export type PriceFeedType = "mainnet" | "testnet" | "localnet";
 
 // @internal (undocumented)
 export enum _RawErrorReason {

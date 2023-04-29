@@ -24,8 +24,9 @@ import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
 import lqtyStakingAbi from "../abi/LQTYStaking.json";
 import multiTroveGetterAbi from "../abi/MultiTroveGetter.json";
-import priceFeedAbi from "../abi/PriceFeed.json";
+import priceFeedLocalnetAbi from "../abi/PriceFeedLocalnet.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
+import priceFeedAbi from "../abi/PriceFeed.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 import gasPoolAbi from "../abi/GasPool.json";
@@ -48,6 +49,7 @@ import {
   MultiTroveGetter,
   PriceFeed,
   PriceFeedTestnet,
+  PriceFeedLocalnet,
   SortedTroves,
   StabilityPool,
   GasPool,
@@ -56,7 +58,7 @@ import {
   IERC20
 } from "../types";
 
-import { EthersProvider, EthersSigner } from "./types";
+import { EthersProvider, EthersSigner, PriceFeedType } from "./types";
 
 export interface _TypedLogDescription<T> extends Omit<LogDescription, "args"> {
   args: T;
@@ -177,7 +179,7 @@ export interface _LiquityContracts {
   lockupContractFactory: LockupContractFactory;
   lqtyStaking: LQTYStaking;
   multiTroveGetter: MultiTroveGetter;
-  priceFeed: PriceFeed | PriceFeedTestnet;
+  priceFeed: PriceFeed | PriceFeedTestnet | PriceFeedLocalnet;
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
   gasPool: GasPool;
@@ -186,9 +188,9 @@ export interface _LiquityContracts {
 }
 
 /** @internal */
-export const _priceFeedIsTestnet = (
-  priceFeed: PriceFeed | PriceFeedTestnet
-): priceFeed is PriceFeedTestnet => "setPrice" in priceFeed;
+export const _priceFeedHasSetPrice = (
+  priceFeed: PriceFeed | PriceFeedTestnet | PriceFeedLocalnet
+): boolean => "setPrice" in priceFeed;
 
 /** @internal */
 export const _uniTokenIsMock = (uniToken: IERC20 | ERC20Mock): uniToken is ERC20Mock =>
@@ -201,7 +203,7 @@ export type _LiquityContractAddresses = Record<LiquityContractsKey, string>;
 
 type LiquityContractAbis = Record<LiquityContractsKey, JsonFragment[]>;
 
-const getAbi = (priceFeedIsTestnet: boolean, uniTokenIsMock: boolean): LiquityContractAbis => ({
+const getAbi = (priceFeedType: PriceFeedType, uniTokenIsMock: boolean): LiquityContractAbis => ({
   activePool: activePoolAbi,
   borrowerOperations: borrowerOperationsAbi,
   troveManager: troveManagerAbi,
@@ -213,7 +215,7 @@ const getAbi = (priceFeedIsTestnet: boolean, uniTokenIsMock: boolean): LiquityCo
   lockupContractFactory: lockupContractFactoryAbi,
   lqtyStaking: lqtyStakingAbi,
   multiTroveGetter: multiTroveGetterAbi,
-  priceFeed: priceFeedIsTestnet ? priceFeedTestnetAbi : priceFeedAbi,
+  priceFeed: priceFeedType === "mainnet" ? priceFeedAbi : (priceFeedType === "testnet" ? priceFeedTestnetAbi : priceFeedLocalnetAbi),
   sortedTroves: sortedTrovesAbi,
   stabilityPool: stabilityPoolAbi,
   gasPool: gasPoolAbi,
@@ -240,7 +242,7 @@ export interface _LiquityDeploymentJSON {
   readonly bootstrapPeriod: number;
   readonly totalStabilityPoolLQTYReward: string;
   readonly liquidityMiningLQTYRewardRate: string;
-  readonly _priceFeedIsTestnet: boolean;
+  readonly _priceFeedType: "mainnet" | "testnet" | "localnet";
   readonly _uniTokenIsMock: boolean;
   readonly _isDev: boolean;
 }
@@ -248,9 +250,9 @@ export interface _LiquityDeploymentJSON {
 /** @internal */
 export const _connectToContracts = (
   signerOrProvider: EthersSigner | EthersProvider,
-  { addresses, _priceFeedIsTestnet, _uniTokenIsMock }: _LiquityDeploymentJSON
+  { addresses, _priceFeedType, _uniTokenIsMock }: _LiquityDeploymentJSON
 ): _LiquityContracts => {
-  const abi = getAbi(_priceFeedIsTestnet, _uniTokenIsMock);
+  const abi = getAbi(_priceFeedType, _uniTokenIsMock);
 
   return mapLiquityContracts(
     addresses,
