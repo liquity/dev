@@ -19,6 +19,8 @@ import { deployAndSetupContracts, setSilent } from "./utils/deploy";
 import { _connectToContracts, _LiquityDeploymentJSON, _priceFeedIsTestnet } from "./src/contracts";
 
 import accounts from "./accounts.json";
+import { PriceFeed } from "./types";
+import { PriceFeedTestnet } from "./types";
 
 type PriceFeedType = "mainnet" | "testnet" | "localnet"
 
@@ -197,13 +199,15 @@ task("deploy", "Deploys the contracts to the network")
 
       setSilent(false);
 
-      const deployment = await env.deployLiquity(deployer, useRealPriceFeed, woneAddress, overrides);
+      const deployment = await env.deployLiquity(deployer, priceFeedType, woneAddress, overrides);
 
       switch (priceFeedType) {
         case 'mainnet': {
           const contracts = _connectToContracts(deployer, deployment);
 
-          await contracts.priceFeed.setAddresses(
+          if (priceFeedType)
+
+          await (contracts.priceFeed as PriceFeed).setAddresses(
             oracleAddresses['mainnet'].chainlink,
             oracleAddresses['mainnet'].chainlink,
             { gasLimit: 100000 }
@@ -212,7 +216,7 @@ task("deploy", "Deploys the contracts to the network")
         }
         case 'testnet': {
           const contracts = _connectToContracts(deployer, deployment);
-          await contracts.priceFeed.setAddresses(
+          await (contracts.priceFeed as PriceFeedTestnet).setAddresses(
             oracleAddresses['testnet'].chainlink,
             { gasLimit: 100000 }
           );
