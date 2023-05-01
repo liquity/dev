@@ -4,7 +4,7 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { BlockTag, TransactionResponse, TransactionReceipt } from "@ethersproject/abstract-provider";
 import { PopulatedTransaction } from "@ethersproject/contracts";
 
-export type PriceFeedType = "mainnet" | "testnet" | "localnet"
+export type PriceFeedType = "mainnet" | "testnet" | "dev"
 /**
  * Optional parameters taken by {@link EthersLiquity} transaction functions.
  *

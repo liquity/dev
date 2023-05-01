@@ -16,13 +16,13 @@ import "@nomiclabs/hardhat-ethers";
 import { Decimal } from "@liquity/lib-base";
 
 import { deployAndSetupContracts, setSilent } from "./utils/deploy";
-import { _connectToContracts, _LiquityDeploymentJSON, _priceFeedIsTestnet } from "./src/contracts";
+import { _connectToContracts, _LiquityDeploymentJSON } from "./src/contracts";
 
 import accounts from "./accounts.json";
 import { PriceFeed } from "./types";
 import { PriceFeedTestnet } from "./types";
 
-type PriceFeedType = "mainnet" | "testnet" | "localnet"
+type PriceFeedType = "mainnet" | "testnet" | "dev"
 
 dotenv.config();
 
@@ -58,7 +58,7 @@ const deployerAccount = process.env.DEPLOYER_PRIVATE_KEY || Wallet.createRandom(
 const devChainRichAccount = "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7";
 
 const oracleAddresses = {
-  localnet: {},
+  dev: {},
   testnet: {
     chainlink: "0xcEe686F89bc0dABAd95AEAAC980aE1d97A075FAD"
   },
@@ -169,7 +169,7 @@ task("deploy", "Deploys the contracts to the network")
   .addOptionalParam("gasPrice", "Price to pay for 1 gas [Gwei]", undefined, types.float)
   .addOptionalParam(
     "priceFeedType",
-    "Use one of mainnet/singleOracle/testnet",
+    "Use one of mainnet/testnet/dev",
     undefined,
     types.string
   )
@@ -184,8 +184,8 @@ task("deploy", "Deploys the contracts to the network")
       const overrides = { gasPrice: gasPrice && Decimal.from(gasPrice).div(1000000000).hex };
       const [deployer] = await env.ethers.getSigners();
 
-      priceFeedType = priceFeedType || "testnet"
-      if (["mainnet", "testnet", "localnet"].includes(priceFeedType))  {
+      priceFeedType = priceFeedType || "dev"
+      if (!["mainnet", "testnet", "dev"].includes(priceFeedType))  {
         throw new Error("Invalid PriceFeed type") 
       }
 
@@ -205,8 +205,6 @@ task("deploy", "Deploys the contracts to the network")
         case 'mainnet': {
           const contracts = _connectToContracts(deployer, deployment);
 
-          if (priceFeedType)
-
           await (contracts.priceFeed as PriceFeed).setAddresses(
             oracleAddresses['mainnet'].chainlink,
             oracleAddresses['mainnet'].chainlink,
@@ -222,7 +220,7 @@ task("deploy", "Deploys the contracts to the network")
           );
           break
         }
-        case 'localnet': {
+        case 'dev': {
           break
         }
       }

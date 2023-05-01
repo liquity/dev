@@ -413,7 +413,7 @@ export class PopulatedEthersRedemption extends PopulatedEthersLiquityTransaction
 }
 
 // @public (undocumented)
-export type PriceFeedType = "mainnet" | "testnet" | "localnet";
+export type PriceFeedType = "mainnet" | "testnet" | "dev";
 
 // @internal (undocumented)
 export enum _RawErrorReason {

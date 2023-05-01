@@ -56,7 +56,7 @@ const deployContract: (
 const deployContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
-  priceFeedType: PriceFeedType = "localnet",
+  priceFeedType: PriceFeedType = "dev",
   overrides?: Overrides
 ): Promise<[addresses: Omit<_LiquityContractAddresses, "uniToken">, startBlock: number]> => {
   const [activePoolAddress, startBlock] = await deployContractAndGetBlockNumber(
@@ -317,7 +317,7 @@ const deployMockUniToken = (
 export const deployAndSetupContracts = async (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
-  _priceFeedType: PriceFeedType = "localnet",
+  _priceFeedType: PriceFeedType = "dev",
   _isDev = true,
   woneAddress?: string,
   overrides?: Overrides
