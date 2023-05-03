@@ -8,14 +8,16 @@ import "../Dependencies/console.sol";
 
 contract MockStdReference is IStdReference {
 	uint256 rate; 
-	uint256 updatedAt;
+	uint256 lastUpdatedBase;
+	uint256 lastUpdatedQuote;
 
 	function setRate(uint256 _rate) external {
 		rate = _rate;
 	}
 
-	function setUpdatedAt(uint256 _updatedAt) external {
-		updatedAt = _updatedAt;
+	function setUpdatedAt(uint256 _lastUpdatedBase, uint256 _lastUpdatedQuote) external {
+		lastUpdatedBase = _lastUpdatedBase;
+		lastUpdatedQuote = _lastUpdatedQuote;
 	}
 
 	function getReferenceData(string memory _base, string memory _quote) 
@@ -24,7 +26,7 @@ contract MockStdReference is IStdReference {
 		override
 		returns (ReferenceData memory)
 	{
-		return ReferenceData(rate, updatedAt, updatedAt);
+		return ReferenceData(rate, lastUpdatedBase, lastUpdatedQuote);
 	}
 
 	function getReferenceDataBulk(string[] memory _bases, string[] memory _quotes)
@@ -35,7 +37,7 @@ contract MockStdReference is IStdReference {
 	{
 		ReferenceData[] memory results = new ReferenceData[](_bases.length);
 		for (uint i = 0; i < _bases.length; i++) {
-			results[i] = ReferenceData(rate, updatedAt, updatedAt);
+			results[i] = ReferenceData(rate, lastUpdatedBase, lastUpdatedQuote);
 		}
 		return results;
 	}

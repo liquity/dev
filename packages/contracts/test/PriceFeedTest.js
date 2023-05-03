@@ -82,7 +82,7 @@ contract('PriceFeed', async accounts => {
     const STATUSES = ["bandWorking", "bandNotWorking"]
     const setRateCorrectly = async (price = dec(100, 18)) => {
       await mockBand.setRate(price)
-      await mockBand.setUpdatedAt(now)
+      await mockBand.setUpdatedAt(now, now)
       return await priceFeedTestnet.fetchPrice()
     }
 
@@ -131,25 +131,30 @@ contract('PriceFeed', async accounts => {
       await priceFeedTestnet.setAddresses(mockBand.address, { from: owner })
 
       await setRateCorrectly()
-
       await mockBand.setRate(dec(150, 18));
-      await mockBand.setUpdatedAt(0);
+      await mockBand.setUpdatedAt(0, now);
       const resUpdated0 = await priceFeedTestnet.fetchPrice()
       assert.equal(resUpdated0.receipt.logs[0].event, 'PriceFeedStatusChanged')
       assert.equal(await priceFeedTestnet.lastGoodPrice(), dec(100, 18))
       assert.equal(STATUSES[await priceFeedTestnet.status()], "bandNotWorking")
 
       await setRateCorrectly()
-
       await mockBand.setRate(dec(150, 18));
-      await mockBand.setUpdatedAt(now + 1000000);
+      await mockBand.setUpdatedAt(now, 0);
+      const resUpdated0quote = await priceFeedTestnet.fetchPrice()
+      assert.equal(resUpdated0quote.receipt.logs[0].event, 'PriceFeedStatusChanged')
+      assert.equal(await priceFeedTestnet.lastGoodPrice(), dec(100, 18))
+      assert.equal(STATUSES[await priceFeedTestnet.status()], "bandNotWorking")
+
+      await setRateCorrectly()
+      await mockBand.setRate(dec(150, 18));
+      await mockBand.setUpdatedAt(now + 1000000, now);
       const resUpdatedFuture = await priceFeedTestnet.fetchPrice()
       assert.equal(resUpdatedFuture.receipt.logs[0].event, 'PriceFeedStatusChanged')
       assert.equal(STATUSES[await priceFeedTestnet.status()], "bandNotWorking")
       assert.equal(await priceFeedTestnet.lastGoodPrice(), dec(100, 18))
 
       await setRateCorrectly()
-
       await mockBand.setRate(dec(0, 18));
       const resUpdatedRate0 = await priceFeedTestnet.fetchPrice()
       assert.equal(resUpdatedRate0.receipt.logs[0].event, 'PriceFeedStatusChanged')

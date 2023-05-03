@@ -9,10 +9,10 @@ import "./Dependencies/LiquityMath.sol";
 import "./Dependencies/IStdReference.sol";
 
 /*
-* PriceFeed for testnet deployment, to be connected to Chainlink's live ONE:USD aggregator reference 
+* PriceFeed for testnet deployment, to be connected to Bands's live ONE:USD aggregator reference
 * contract.
 *
-* The PriceFeed uses Chainlink as primary oracle and no secondary oracle. 
+* The PriceFeed uses Band as the only oracle and no secondary oracle.
 * ** This contract is only for testnet purposes **
 */
 contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
@@ -22,18 +22,13 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
 
     IStdReference public priceAggregator;
 
-    /* 
-    * The maximum relative price difference between two oracle responses allowed in order for the PriceFeed
-    * to return to using the Chainlink oracle. 18-digit precision.
-    */
-    uint constant public MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
-
-    // The last good price seen from an oracle by Liquity
+    // The last good price seen from the oracle by Liquity
     uint public lastGoodPrice;
 
     struct BandResponse {
-        uint256 rate; // base/quote exchange rate, multiplied by 1e18.
-        uint256 lastUpdated;
+        uint256 rate; // base/quote exchange rate
+        uint256 lastUpdatedBase;
+        uint256 lastUpdatedQuote;
         bool success;
     }
 
@@ -42,7 +37,7 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
         bandNotWorking
     }
 
-    // The current status of the PricFeed, which determines the conditions for the next price fetch attempt
+    // The current status of the PricFeed.
     Status public status;
 
     event LastGoodPriceUpdated(uint _lastGoodPrice);
@@ -81,11 +76,11 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
     *
     * Non-view function - it stores the last good price seen by Liquity.
     *
-    * Uses a main oracle (Chainlink) and if it fails it uses the last good price seen by Liquity.
+    * Uses a main oracle (Band) and if it fails it uses the last good price seen by Liquity.
     *
     */
     function fetchPrice() external override returns (uint) {
-        // Get current and previous price data from Chainlink
+        // Get current price data from Band
         BandResponse memory bandResponse = _getBandResponse();
 
         if (status == Status.bandWorking) {
@@ -108,17 +103,13 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
 
     // --- Helper functions ---
 
-    /* Chainlink is considered broken if its current or previous round data is in any way bad. We check the previous round
-    * for two reasons:
-    *
-    * 1) It is necessary data for the price deviation check in case 1,
-    * and
-    * 2) Chainlink is the PriceFeed's preferred primary oracle - having two consecutive valid round responses adds
-    * peace of mind when using or returning to Chainlink.
-    */
+    /*
+     * Band is considered broken if its data is in any way bad.
+     */
     function _bandIsBroken(BandResponse memory _response) internal view returns (bool) {
         if (!_response.success) {return true;}
-        if (_response.lastUpdated == 0 || _response.lastUpdated > block.timestamp) {return true;}
+        if (_response.lastUpdatedBase == 0 || _response.lastUpdatedBase > block.timestamp) {return true;}
+        if (_response.lastUpdatedQuote == 0 || _response.lastUpdatedQuote > block.timestamp) {return true;}
         // Check for non-positive price
         if (_response.rate <= 0) {return true;}
 
@@ -143,11 +134,8 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
         // Try to get the price data from the previous round:
         try priceAggregator.getReferenceData("ONE", "USD") returns (IStdReference.ReferenceData memory response) {
 
-            // Return max of lastUpdatedBase and lastUpdatedQuote
-            bandResponse.lastUpdated = response.lastUpdatedBase > response.lastUpdatedQuote ?
-                response.lastUpdatedBase :
-                response.lastUpdatedQuote;
-
+            bandResponse.lastUpdatedBase = response.lastUpdatedBase;
+            bandResponse.lastUpdatedQuote = response.lastUpdatedQuote;
             bandResponse.rate = response.rate;
             bandResponse.success = true;
 
