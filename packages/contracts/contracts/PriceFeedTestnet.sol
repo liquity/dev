@@ -23,7 +23,10 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
     IStdReference public priceAggregator;
 
     // The last good price seen from the oracle by Liquity
-    uint public lastGoodPrice;
+    uint public _lastGoodPrice;
+    uint public lastGoodPriceUpdatedAt;
+
+    uint constant public LAST_GOOD_PRICE_MAX_HOURS = 4 hours;
 
     struct BandResponse {
         uint256 rate; // base/quote exchange rate
@@ -60,6 +63,7 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
 
         // Get an initial price from Band to serve as first reference for lastGoodPrice
         BandResponse memory bandResponse = _getBandResponse();
+        require(!_bandIsBroken(bandResponse), "Invalid Band response");
         
         _storeBandPrice(bandResponse);
 
@@ -86,8 +90,8 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
         if (status == Status.bandWorking) {
             if (_bandIsBroken(bandResponse)) {
                 _changeStatus(Status.bandNotWorking);
-                return lastGoodPrice; 
-            }  
+                return lastGoodPrice();
+            }
 
             return _storeBandPrice(bandResponse);
         }
@@ -97,8 +101,15 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
                 _changeStatus(Status.bandWorking);
                 return _storeBandPrice(bandResponse);
             }
-            return lastGoodPrice;
+            return lastGoodPrice();
         }
+    }
+
+    function lastGoodPrice() public view returns (uint) {
+        if (lastGoodPriceUpdatedAt.add(LAST_GOOD_PRICE_MAX_HOURS) < block.timestamp) {
+            revert("PriceFeed: lastGoodPrice is too old");
+        }
+        return _lastGoodPrice;
     }
 
     // --- Helper functions ---
@@ -122,10 +133,11 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
     }
 
     function _storeBandPrice(BandResponse memory _bandResponse) internal returns (uint) {
-        lastGoodPrice = _bandResponse.rate;
-        emit LastGoodPriceUpdated(lastGoodPrice);
+        _lastGoodPrice = _bandResponse.rate;
+        lastGoodPriceUpdatedAt = _bandResponse.lastUpdatedBase > _bandResponse.lastUpdatedQuote ? _bandResponse.lastUpdatedBase : _bandResponse.lastUpdatedQuote;
+        emit LastGoodPriceUpdated(_lastGoodPrice);
 
-        return lastGoodPrice;
+        return _lastGoodPrice;
     }
 
     // --- Oracle response wrapper functions ---

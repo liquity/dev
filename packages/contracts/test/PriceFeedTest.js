@@ -7,6 +7,7 @@ const MockTellor = artifacts.require("./MockTellor.sol")
 const MockBand = artifacts.require("./MockStdReference.sol")
 const TellorCaller = artifacts.require("./TellorCaller.sol")
 
+const { network } = require("hardhat")
 const testHelpers = require("../utils/testHelpers.js")
 const th = testHelpers.TestHelper
 
@@ -77,12 +78,12 @@ contract('PriceFeed', async accounts => {
     })
   })
 
-  describe.only('Pricefeed single oracle setup', async accounts => {
+  describe.only('PricefeedTestnet single oracle', async accounts => {
     const now = Math.floor(Date.now() / 1000)
     const STATUSES = ["bandWorking", "bandNotWorking"]
-    const setRateCorrectly = async (price = dec(100, 18)) => {
+    const setRateCorrectly = async (price = dec(100, 18), lastUpdated = now) => {
       await mockBand.setRate(price)
-      await mockBand.setUpdatedAt(now, now)
+      await mockBand.setUpdatedAt(lastUpdated, lastUpdated)
       return await priceFeedTestnet.fetchPrice()
     }
 
@@ -161,6 +162,39 @@ contract('PriceFeed', async accounts => {
       assert.equal(STATUSES[await priceFeedTestnet.status()], "bandNotWorking")
       assert.equal(await priceFeedTestnet.lastGoodPrice(), dec(100, 18))
     })
+
+    it('fetchPrice does not return last price if 4 hours passed', async () => {
+      await priceFeedTestnet.setAddresses(mockBand.address, { from: owner })
+      await setRateCorrectly()
+      await mockBand.setRate(dec(0, 18));
+      const resUpdatedRate0 = await priceFeedTestnet.fetchPrice()
+      assert.equal(resUpdatedRate0.receipt.logs[0].event, 'PriceFeedStatusChanged')
+
+      const lastRate = await priceFeedTestnet.lastGoodPrice()
+      assert.equal(lastRate, dec(100, 18))
+
+      await network.provider.send("evm_increaseTime", [3600 * 4])
+      await network.provider.send("evm_mine")
+      const after4hours = priceFeedTestnet.fetchPrice()
+      await assertRevert(after4hours, "PriceFeed: lastGoodPrice is too old")
+
+      await setRateCorrectly(dec(160, 18), now + 3600 * 4)
+      assert.equal(await priceFeedTestnet.lastGoodPrice(), dec(160, 18));
+
+      await mockBand.setRate(dec(0, 18));
+      await network.provider.send("evm_increaseTime", [3600 * 4])
+      await network.provider.send("evm_mine")
+      const after4hours2 = priceFeedTestnet.fetchPrice()
+      await assertRevert(after4hours2, "PriceFeed: lastGoodPrice is too old")
+
+      await setRateCorrectly(dec(170, 18), now + 3600 * 8);
+      assert.equal(await priceFeedTestnet.lastGoodPrice(), dec(170, 18));
+
+      await network.provider.send("evm_increaseTime", [3600 * 4])
+      await network.provider.send("evm_mine")
+      const after4hours3 = priceFeedTestnet.lastGoodPrice()
+      await assertRevert(after4hours3, "PriceFeed: lastGoodPrice is too old")
+    })
   })
 
   describe('Mainnet PriceFeed setup', async accounts => {
@@ -182,7 +216,7 @@ contract('PriceFeed', async accounts => {
       }
     })
 
-    it("setAddresses should fail whe called by nonOwner", async () => {
+    it("setAddresses should fail when called by nonOwner", async () => {
       await assertRevert(
         priceFeed.setAddresses(mockChainlink.address, mockTellor.address, { from: alice }),
         "Ownable: caller is not the owner"
