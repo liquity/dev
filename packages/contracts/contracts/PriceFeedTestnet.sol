@@ -27,6 +27,7 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
     uint public lastGoodPriceUpdatedAt;
 
     uint constant public LAST_GOOD_PRICE_MAX_HOURS = 4 hours;
+    uint constant public STALE_BAND_MAX_HOURS = 2 hours;
 
     struct BandResponse {
         uint256 rate; // base/quote exchange rate
@@ -63,7 +64,7 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
 
         // Get an initial price from Band to serve as first reference for lastGoodPrice
         BandResponse memory bandResponse = _getBandResponse();
-        require(!_bandIsBroken(bandResponse), "Invalid Band response");
+        require(!_bandIsBroken(bandResponse) && !_bandIsFrozen(bandResponse), "Invalid Band response");
         
         _storeBandPrice(bandResponse);
 
@@ -88,7 +89,7 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
         BandResponse memory bandResponse = _getBandResponse();
 
         if (status == Status.bandWorking) {
-            if (_bandIsBroken(bandResponse)) {
+            if (_bandIsBroken(bandResponse) || _bandIsFrozen(bandResponse)) {
                 _changeStatus(Status.bandNotWorking);
                 return lastGoodPrice();
             }
@@ -97,7 +98,7 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
         }
 
         if (status == Status.bandNotWorking) {
-            if (!_bandIsBroken(bandResponse)) {
+            if (!_bandIsBroken(bandResponse) && !_bandIsFrozen(bandResponse)) {
                 _changeStatus(Status.bandWorking);
                 return _storeBandPrice(bandResponse);
             }
@@ -126,6 +127,12 @@ contract PriceFeedTestnet is Ownable, CheckContract, IPriceFeed {
 
         return false;
     }
+
+    function _bandIsFrozen(BandResponse memory _response) internal view returns (bool) {
+        return (_response.lastUpdatedBase + STALE_BAND_MAX_HOURS < block.timestamp) &&
+               (_response.lastUpdatedQuote + STALE_BAND_MAX_HOURS < block.timestamp);
+    }
+
 
     function _changeStatus(Status _status) internal {
         status = _status;
