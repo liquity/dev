@@ -14,7 +14,7 @@ const mv = testHelpers.MoneyValues
 contract('SortedTroves', async accounts => {
 
   const assertSortedListIsOrdered = async (contracts) => {
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
 
     let trove = await contracts.sortedTroves.getLast()
     while (trove !== (await contracts.sortedTroves.getFirst())) {
@@ -67,7 +67,7 @@ contract('SortedTroves', async accounts => {
       )
       const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
 
-      priceFeed = contracts.priceFeedTestnet
+      priceFeed = contracts.priceFeedLocalnet
       sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager
       borrowerOperations = contracts.borrowerOperations

@@ -27,7 +27,7 @@ def logGlobalState(contracts):
     SP_ETH = contracts.stabilityPool.getETH().to("ether")
     print('SP 1USD         ', SP_LUSD)
     print('SP ETH          ', SP_ETH)
-    price_ether_current = contracts.priceFeedTestnet.getPrice()
+    price_ether_current = contracts.priceFeedLocalnet.getPrice()
     ETH_price = price_ether_current.to("ether")
     print('ETH price       ', ETH_price)
     TCR = contracts.troveManager.getTCR(price_ether_current).to("ether")

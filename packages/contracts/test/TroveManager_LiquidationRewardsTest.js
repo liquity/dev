@@ -47,7 +47,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     )
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
 
-    priceFeed = contracts.priceFeedTestnet
+    priceFeed = contracts.priceFeedLocalnet
     oneusdToken = contracts.oneusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager

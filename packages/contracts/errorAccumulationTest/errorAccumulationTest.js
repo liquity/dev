@@ -26,7 +26,7 @@ contract('TroveManager', async accounts => {
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
     oneusdToken = contracts.oneusdToken
-    priceFeed = contracts.priceFeedTestnet
+    priceFeed = contracts.priceFeedLocalnet
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool

@@ -25,7 +25,7 @@ def setAddresses(contracts):
         contracts.stabilityPool.address,
         contracts.gasPool.address,
         contracts.collSurplusPool.address,
-        contracts.priceFeedTestnet.address,
+        contracts.priceFeedLocalnet.address,
         contracts.oneusdToken.address,
         contracts.sortedTroves.address,
         contracts.lqtyToken.address,
@@ -40,7 +40,7 @@ def setAddresses(contracts):
         contracts.stabilityPool.address,
         contracts.gasPool.address,
         contracts.collSurplusPool.address,
-        contracts.priceFeedTestnet.address,
+        contracts.priceFeedLocalnet.address,
         contracts.sortedTroves.address,
         contracts.oneusdToken.address,
         contracts.lqtyStaking.address,
@@ -53,7 +53,7 @@ def setAddresses(contracts):
         contracts.activePool.address,
         contracts.oneusdToken.address,
         contracts.sortedTroves.address,
-        contracts.priceFeedTestnet.address,
+        contracts.priceFeedLocalnet.address,
         contracts.communityIssuance.address,
         { 'from': accounts[0] }
     )
@@ -111,7 +111,7 @@ def add_accounts():
 def contracts():
     contracts = Contracts()
 
-    contracts.priceFeedTestnet = PriceFeedTestnet.deploy({ 'from': accounts[0] })
+    contracts.priceFeedLocalnet = PriceFeedTestnet.deploy({ 'from': accounts[0] })
     contracts.sortedTroves = SortedTroves.deploy({ 'from': accounts[0] })
     contracts.troveManager = TroveManager.deploy({ 'from': accounts[0] })
     contracts.activePool = ActivePool.deploy({ 'from': accounts[0] })
@@ -192,7 +192,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
     ONEUSD_GAS_COMPENSATION = contracts.troveManager.ONEUSD_GAS_COMPENSATION() / 1e18
     MIN_NET_DEBT = contracts.troveManager.MIN_NET_DEBT() / 1e18
 
-    contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]), { 'from': accounts[0] })
+    contracts.priceFeedLocalnet.setPrice(floatToWei(price_ether[0]), { 'from': accounts[0] })
     # whale
     whale_coll = 30000.0
     contracts.borrowerOperations.openTrove(MAX_FEE, Wei(10e24), ZERO_ADDRESS, ZERO_ADDRESS,
@@ -225,7 +225,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             print('  -------------------\n')
             #exogenous ether price input
             price_ether_current = price_ether[index]
-            contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
+            contracts.priceFeedLocalnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
 
             #trove liquidation & return of stability pool
             result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_1USD, price_LQTY_current, data, index)

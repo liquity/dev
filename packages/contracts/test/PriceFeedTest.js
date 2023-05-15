@@ -1,4 +1,3 @@
-
 const PriceFeed = artifacts.require("./PriceFeedTester.sol")
 const PriceFeedLocalnet = artifacts.require("./TestContracts/PriceFeedLocalnet.sol")
 const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
@@ -78,7 +77,7 @@ contract('PriceFeed', async accounts => {
     })
   })
 
-  describe.only('PricefeedTestnet single oracle', async accounts => {
+  describe('PricefeedTestnet single oracle', async accounts => {
     const now = Math.floor(Date.now() / 1000)
     const STATUSES = ["bandWorking", "bandNotWorking"]
     const setRateCorrectly = async (price = dec(100, 18), lastUpdated = now) => {

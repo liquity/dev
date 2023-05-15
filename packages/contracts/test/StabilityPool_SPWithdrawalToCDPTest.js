@@ -63,7 +63,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       contracts.troveManager = await TroveManagerTester.new()
       contracts = await deploymentHelper.deploy1USDToken(contracts)
 
-      priceFeed = contracts.priceFeedTestnet
+      priceFeed = contracts.priceFeedLocalnet
       oneusdToken = contracts.oneusdToken
       sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager

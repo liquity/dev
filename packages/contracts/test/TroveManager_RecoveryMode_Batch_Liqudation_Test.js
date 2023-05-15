@@ -34,7 +34,7 @@ contract('TroveManager - in Recovery Mode - back to normal mode in 1 tx', async 
 
     troveManager = contracts.troveManager
     stabilityPool = contracts.stabilityPool
-    priceFeed = contracts.priceFeedTestnet
+    priceFeed = contracts.priceFeedLocalnet
     sortedTroves = contracts.sortedTroves
 
     await deploymentHelper.connectLQTYContracts(LQTYContracts)

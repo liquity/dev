@@ -30,7 +30,7 @@ contract('Gas costs for math functions', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
-    priceFeed = contracts.priceFeedTestnet
+    priceFeed = contracts.priceFeedLocalnet
     oneusdToken = contracts.oneusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager

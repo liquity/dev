@@ -50,7 +50,7 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
 
       const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
 
-      priceFeed = contracts.priceFeedTestnet
+      priceFeed = contracts.priceFeedLocalnet
       oneusdToken = contracts.oneusdToken
       stabilityPool = contracts.stabilityPool
       sortedTroves = contracts.sortedTroves

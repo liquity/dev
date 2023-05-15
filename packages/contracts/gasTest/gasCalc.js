@@ -49,7 +49,7 @@ contract('Gas cost tests', async accounts => {
     contracts = await deploymentHelper.deployTesterContractsHardhat()
     const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
-    priceFeed = contracts.priceFeedTestnet
+    priceFeed = contracts.priceFeedLocalnet
     oneusdToken = contracts.oneusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager

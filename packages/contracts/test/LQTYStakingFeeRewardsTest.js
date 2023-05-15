@@ -58,7 +58,7 @@ contract('LQTYStaking revenue share tests', async accounts => {
     await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
 
     nonPayable = await NonPayable.new()
-    priceFeed = contracts.priceFeedTestnet
+    priceFeed = contracts.priceFeedLocalnet
     oneusdToken = contracts.oneusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager

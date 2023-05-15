@@ -218,7 +218,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
       const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress)
 
       stabilityPool = contracts.stabilityPool
-      priceFeed = contracts.priceFeedTestnet
+      priceFeed = contracts.priceFeedLocalnet
       oneusdToken = contracts.oneusdToken
       stabilityPool = contracts.stabilityPool
       troveManager = contracts.troveManager

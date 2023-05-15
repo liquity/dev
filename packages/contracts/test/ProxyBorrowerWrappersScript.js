@@ -79,7 +79,7 @@ contract('BorrowerWrappers', async accounts => {
     const users = [alice, bob, carol, dennis, whale, A, B, C, D, E, defaulter_1, defaulter_2]
     await deploymentHelper.deployProxyScripts(contracts, LQTYContracts, owner, users)
 
-    priceFeed = contracts.priceFeedTestnet
+    priceFeed = contracts.priceFeedLocalnet
     oneusdToken = contracts.oneusdToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager

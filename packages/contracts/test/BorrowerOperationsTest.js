@@ -83,7 +83,7 @@ contract('BorrowerOperations', async accounts => {
         await deploymentHelper.deployProxyScripts(contracts, LQTYContracts, owner, users)
       }
 
-      priceFeed = contracts.priceFeedTestnet
+      priceFeed = contracts.priceFeedLocalnet
       oneusdToken = contracts.oneusdToken
       sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager

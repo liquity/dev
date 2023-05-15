@@ -219,7 +219,7 @@ class TestHelper {
 
   static async logActiveAccounts(contracts, n) {
     const count = await contracts.sortedTroves.getSize()
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
 
     n = (typeof n == 'undefined') ? count : n
 
@@ -283,12 +283,12 @@ class TestHelper {
 
 
   static async checkRecoveryMode(contracts) {
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
     return contracts.troveManager.checkRecoveryMode(price)
   }
 
   static async getTCR(contracts) {
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
     return contracts.troveManager.getTCR(price)
   }
 
@@ -591,7 +591,7 @@ class TestHelper {
 
   static async openTrove_allAccounts_randomETH_random1USD(minETH, maxETH, accounts, contracts, min1USDProportion, max1USDProportion, logging = false) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
     const _1e18 = web3.utils.toBN('1000000000000000000')
 
     let i = 0
@@ -688,7 +688,7 @@ class TestHelper {
     const netDebt = await this.getActualDebtFromComposite(totalDebt, contracts)
 
     if (ICR) {
-      const price = await contracts.priceFeedTestnet.getPrice()
+      const price = await contracts.priceFeedLocalnet.getPrice()
       extraParams.value = ICR.mul(totalDebt).div(price)
     }
 
@@ -722,7 +722,7 @@ class TestHelper {
     if (ICR) {
       assert(extraParams.from, "A from account is needed")
       const { debt, coll } = await contracts.troveManager.getEntireDebtAndColl(extraParams.from)
-      const price = await contracts.priceFeedTestnet.getPrice()
+      const price = await contracts.priceFeedLocalnet.getPrice()
       const targetDebt = coll.mul(price).div(ICR)
       assert(targetDebt > debt, "ICR is already greater than or equal to target")
       increasedTotalDebt = targetDebt.sub(debt)
@@ -928,7 +928,7 @@ class TestHelper {
 
   static async getCurrentICR_allAccounts(accounts, contracts, functionCaller) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
 
     for (const account of accounts) {
       const tx = await functionCaller.troveManager_getCurrentICR(account, price)
@@ -941,7 +941,7 @@ class TestHelper {
   // --- Redemption functions ---
 
   static async redeemCollateral(redeemer, contracts, ONEUSDAmount, gasPrice = 0, maxFee = this._100pct) {
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
     const tx = await this.performRedemptionTx(redeemer, price, contracts, ONEUSDAmount, maxFee, gasPrice)
     const gas = await this.gasUsed(tx)
     return gas
@@ -952,14 +952,14 @@ class TestHelper {
     if (gasPrice == undefined) {
       gasPrice = 0;
     }
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
     const tx = await this.performRedemptionTx(redeemer, price, contracts, ONEUSDAmount, maxFee, gasPrice)
     return tx
   }
 
   static async redeemCollateral_allAccounts_randomAmount(min, max, accounts, contracts) {
     const gasCostList = []
-    const price = await contracts.priceFeedTestnet.getPrice()
+    const price = await contracts.priceFeedLocalnet.getPrice()
 
     for (const redeemer of accounts) {
       const rand1USDAmount = this.randAmountInWei(min, max)

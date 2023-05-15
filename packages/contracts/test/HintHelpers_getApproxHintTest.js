@@ -85,7 +85,7 @@ contract('HintHelpers', async accounts => {
     troveManager = contracts.troveManager
     borrowerOperations = contracts.borrowerOperations
     hintHelpers = contracts.hintHelpers
-    priceFeed = contracts.priceFeedTestnet
+    priceFeed = contracts.priceFeedLocalnet
 
     await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
     await deploymentHelper.connectLQTYContracts(LQTYContracts)
