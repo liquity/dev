@@ -1,8 +1,10 @@
 import React from "react";
-import { Web3ReactProvider } from "@web3-react/core";
+import { createClient, WagmiConfig } from "wagmi";
+import { mainnet, goerli } from "wagmi/chains";
+import { ConnectKitProvider, getDefaultClient } from "connectkit";
 import { Flex, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
 
-import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
+// import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
 import { LiquityProvider } from "./hooks/LiquityContext";
 import { WalletConnector } from "./components/WalletConnector";
 import { TransactionProvider } from "./components/Transaction";
@@ -35,13 +37,20 @@ getConfig().then(config => {
   Object.assign(window, { config });
 });
 
-const EthersWeb3ReactProvider: React.FC = ({ children }) => {
-  return (
-    <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
-      {children}
-    </Web3ReactProvider>
-  );
-};
+const wagmiClient = createClient(
+  getDefaultClient({
+    appName: "Liquity",
+    chains: [mainnet, goerli]
+  })
+);
+
+// const EthersWeb3ReactProvider: React.FC = ({ children }) => {
+//   return (
+//     <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
+//       {children}
+//     </Web3ReactProvider>
+//   );
+// };
 
 const UnsupportedMainnetFallback: React.FC = () => (
   <Flex
@@ -91,21 +100,23 @@ const App = () => {
   );
 
   return (
-    <EthersWeb3ReactProvider>
-      <ThemeProvider theme={theme}>
-        <WalletConnector loader={<AppLoader />}>
-          <LiquityProvider
-            loader={<AppLoader />}
-            unsupportedNetworkFallback={unsupportedNetworkFallback}
-            unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
-          >
-            <TransactionProvider>
-              <LiquityFrontend loader={<AppLoader />} />
-            </TransactionProvider>
-          </LiquityProvider>
-        </WalletConnector>
-      </ThemeProvider>
-    </EthersWeb3ReactProvider>
+    <WagmiConfig client={wagmiClient}>
+      <ConnectKitProvider>
+        <ThemeProvider theme={theme}>
+          <WalletConnector loader={<AppLoader />}>
+            <LiquityProvider
+              loader={<AppLoader />}
+              unsupportedNetworkFallback={unsupportedNetworkFallback}
+              unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
+            >
+              <TransactionProvider>
+                <LiquityFrontend loader={<AppLoader />} />
+              </TransactionProvider>
+            </LiquityProvider>
+          </WalletConnector>
+        </ThemeProvider>
+      </ConnectKitProvider>
+    </WagmiConfig>
   );
 };
 

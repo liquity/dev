@@ -27,7 +27,7 @@ import type { BondsApi } from "./api";
 import type { BLusdLpRewards, Bond, ProtocolInfo, Stats } from "./transitions";
 import { BLusdAmmTokenIndex } from "./transitions";
 import type { Addresses } from "./transitions";
-import { useWeb3React } from "@web3-react/core";
+import { useChainId } from "wagmi";
 import { useBondAddresses } from "./BondAddressesContext";
 import type { CurveLiquidityGaugeV5 } from "@liquity/chicken-bonds/lusd/types/external/CurveLiquidityGaugeV5";
 
@@ -60,7 +60,7 @@ type BondContracts = {
 
 export const useBondContracts = (): BondContracts => {
   const { liquity } = useLiquity();
-  const { chainId } = useWeb3React();
+  const chainId = useChainId();
   const isMainnet = chainId === 1;
 
   const addresses = useBondAddresses();

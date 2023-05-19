@@ -23,7 +23,7 @@ import { api, _getProtocolInfo } from "./api";
 import { useTransaction } from "../../../hooks/useTransaction";
 import type { ERC20Faucet } from "@liquity/chicken-bonds/lusd/types";
 import { useBondContracts } from "./useBondContracts";
-import { useWeb3React } from "@web3-react/core";
+import { useChainId } from "wagmi";
 import { useBondAddresses } from "./BondAddressesContext";
 
 // Refresh backend values every 15 seconds
@@ -88,7 +88,7 @@ export const BondViewProvider: React.FC = props => {
     BLUSD_AMM_STAKING_ADDRESS
   } = useBondAddresses();
   const contracts = useBondContracts();
-  const { chainId } = useWeb3React();
+  const chainId = useChainId();
   const isMainnet = chainId === 1;
 
   const setSimulatedMarketPrice = useCallback(

@@ -13,9 +13,7 @@
     "@liquity/chicken-bonds": "file:.yalc/@liquity/chicken-bonds",
     "@metamask/eth-sig-util": "5.0.1",
     "@tippyjs/react": "4.2.5",
-    "@web3-react/core": "6.1.9",
-    "@web3-react/injected-connector": "6.0.7",
-    "@web3-react/types": "6.0.7",
+    "connectkit": "1.2.4",
     "ethers": "5.7.2",
     "lambert-w-function": "3.0.0",
     "react": "17.0.1",
@@ -25,7 +23,8 @@
     "react-modal": "^3.15.1",
     "react-router-dom": "5.2.0",
     "recharts": "2.1.10",
-    "theme-ui": "0.6.0-canary.1544.5359f8a1e408a4dfeb74a9ae39688270286e534a.0"
+    "theme-ui": "0.6.0-canary.1544.5359f8a1e408a4dfeb74a9ae39688270286e534a.0",
+    "wagmi": "0.12.13"
   },
   "devDependencies": {
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",

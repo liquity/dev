@@ -1,9 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-// import { Signer } from "@ethersproject/abstract-signer";
 import { getNetwork } from "@ethersproject/networks";
-import { Web3Provider } from "@ethersproject/providers";
-import { useWeb3React } from "@web3-react/core";
+import { useProvider, useSigner, useAccount, useChainId } from "wagmi";
 
 import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
@@ -43,20 +41,23 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   unsupportedNetworkFallback,
   unsupportedMainnetFallback
 }) => {
-  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
+  const provider = useProvider();
+  const signer = useSigner();
+  const account = useAccount();
+  const chainId = useChainId();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
 
   const connection = useMemo(() => {
-    if (config && provider && account && chainId) {
+    if (config && provider && signer.data && account.address && chainId) {
       try {
-        return _connectByChainId(provider, provider.getSigner(account), chainId, {
-          userAddress: account,
+        return _connectByChainId(provider, signer.data, chainId, {
+          userAddress: account.address,
           frontendTag: config.frontendTag,
           useStore: "blockPolled"
         });
       } catch {}
     }
-  }, [config, provider, account, chainId]);
+  }, [config, provider, signer.data, account.address, chainId]);
 
   useEffect(() => {
     getConfig().then(setConfig);
@@ -90,7 +91,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     }
   }, [config, connection]);
 
-  if (!config || !provider || !account || !chainId) {
+  if (!config || !provider || !account.address || !chainId) {
     return <>{loader}</>;
   }
 
@@ -106,7 +107,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   liquity.store.logging = true;
 
   return (
-    <LiquityContext.Provider value={{ config, account, provider, liquity }}>
+    <LiquityContext.Provider value={{ config, account: account.address, provider, liquity }}>
       {children}
     </LiquityContext.Provider>
   );
