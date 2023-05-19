@@ -61,7 +61,7 @@
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "start": "vite",
     "start-demo": "cross-env REACT_APP_DEMO_MODE=true run-s start",
-    "build": "run-s build:*",
+    "build": "run-s 'build:*'",
     "build:set-version": "node scripts/set-version.cjs",
     "build:tsc": "tsc",
     "build:vite": "vite build",

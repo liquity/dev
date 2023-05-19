@@ -32,6 +32,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - run: yarn install --frozen-lockfile
+      - run: yarn prepare
       - run: yarn build
 
       - name: Test SDK & UI

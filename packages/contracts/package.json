@@ -8,7 +8,7 @@
   },
   "scripts": {
     "hardhat": "hardhat",
-    "prepare": "run-s prepare:*",
+    "prepare": "run-s 'prepare:*'",
     "prepare:compile": "hardhat compile",
     "prepare:set-version": "node scripts/set-version.js",
     "test": "hardhat test",

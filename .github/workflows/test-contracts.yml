@@ -34,6 +34,7 @@ jobs:
             ${{ runner.os }}-yarn-
 
       - run: yarn install --frozen-lockfile
+      - run: yarn prepare
 
       - name: Test contracts
         run: yarn test-contracts

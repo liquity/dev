@@ -16,7 +16,7 @@
   "repository": "https://github.com/liquity/dev",
   "scripts": {
     "eslint": "eslint",
-    "prepare": "run-s prepare:*",
+    "prepare": "run-s 'prepare:*'",
     "prepare:eslint": "eslint src",
     "prepare:tsc": "tsc --project tsconfig.dist.json"
   },
