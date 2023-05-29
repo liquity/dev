@@ -490,7 +490,7 @@ Thus, nodes need only be re-inserted to the sorted list upon a Trove operation -
 
 ![Flow of Ether](images/ETH_flows.svg)
 
-Ether in the system lives in four Pools: the ActivePool, the DefaultPool, the StabilityPool and the CollSurplusPool. When an operation is made, Ether is transferred in one of three ways:
+Ether in the system lives in four Pools: the ActivePool, the DefaultPool, the StabilityPool and the CollSurplusPool, plus LQTYStaking contract. When an operation is made, Ether is transferred in one of three ways:
 
 - From a user to a Pool
 - From a Pool to a user
@@ -499,6 +499,8 @@ Ether in the system lives in four Pools: the ActivePool, the DefaultPool, the St
 Ether is recorded on an _individual_ level, but stored in _aggregate_ in a Pool. An active Trove with collateral and debt has a struct in the TroveManager that stores its ether collateral value in a uint, but its actual Ether is in the balance of the ActivePool contract.
 
 Likewise, the StabilityPool holds the total accumulated ETH gains from liquidations for all depositors.
+
+LQTYStaking receives ETH coming from redemption fees.
 
 **Borrower Operations**
 
