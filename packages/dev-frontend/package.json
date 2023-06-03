@@ -43,7 +43,7 @@
     "recharts": "2.1.10",
     "source-map-explorer": "2.5.2",
     "theme-ui": "0.6.0-canary.1544.5359f8a1e408a4dfeb74a9ae39688270286e534a.0",
-    "typescript": "4.1.5",
+    "typescript": "4.9.5",
     "yalc": "1.0.0-pre.53"
   },
   "scripts": {
