@@ -12,7 +12,7 @@ import mainnet from "../deployments/mainnet.json";
 import kiln from "../deployments/kiln.json";
 
 import { numberify, panic } from "./_utils";
-import { EthersProvider, EthersSigner, EthersTransactionOverrides } from "./types";
+import { EthersProvider, EthersSigner } from "./types";
 
 import {
   _connectToContracts,
