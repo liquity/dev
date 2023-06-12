@@ -1179,6 +1179,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ethersproject/experimental@npm:5.7.0":
+  version: 5.7.0
+  resolution: "@ethersproject/experimental@npm:5.7.0"
+  dependencies:
+    "@ethersproject/web": ^5.7.0
+    ethers: ^5.7.0
+    scrypt-js: 3.0.1
+  checksum: a4973371be9b984d5834df5d6fe3d4d1641204ec859a6d4e11e4a972a3a4a2dd7c0eae6a9a86b90f30faa3633a86ab153197bff6e853fb3ff8f847e0340a3c24
+  languageName: node
+  linkType: hard
+
 "@ethersproject/hash@npm:5.7.0, @ethersproject/hash@npm:>=5.0.0-beta.128, @ethersproject/hash@npm:^5.0.4, @ethersproject/hash@npm:^5.7.0":
   version: 5.7.0
   resolution: "@ethersproject/hash@npm:5.7.0"
@@ -1736,6 +1747,7 @@ __metadata:
   dependencies:
     "@esbuild-plugins/node-modules-polyfill": ^0.2.2
     "@ethersproject/abi": 5.7.0
+    "@ethersproject/experimental": 5.7.0
     "@fortawesome/fontawesome-svg-core": 1.2.34
     "@fortawesome/free-regular-svg-icons": 5.15.2
     "@fortawesome/free-solid-svg-icons": 5.15.2
@@ -1758,7 +1770,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^5.57.1
     "@typescript-eslint/parser": ^5.57.1
     "@vitejs/plugin-react-swc": ^3.0.0
-    connectkit: 1.2.4
+    connectkit: ^1.3.0
     cross-env: 7.0.3
     eslint: ^8.38.0
     eslint-plugin-react-hooks: ^4.6.0
@@ -1781,7 +1793,7 @@ __metadata:
     typescript: ^5.0.4
     vite: ^4.3.2
     vitest: ^0.31.0
-    wagmi: 0.12.13
+    wagmi: ^0.12.0
     yalc: 1.0.0-pre.53
   languageName: unknown
   linkType: soft
@@ -8015,9 +8027,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"connectkit@npm:1.2.4":
-  version: 1.2.4
-  resolution: "connectkit@npm:1.2.4"
+"connectkit@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "connectkit@npm:1.3.0"
   dependencies:
     buffer: ^6.0.3
     detect-browser: ^5.3.0
@@ -8032,7 +8044,7 @@ __metadata:
     react: 17.x || 18.x
     react-dom: 17.x || 18.x
     wagmi: 0.12.x
-  checksum: f2ac12b7229542bd54d51e650d7fd9f3f64e969b1fb868056d19ec31e5caa532106b5553c694c4a681e22993c6db7d8d3e7978907d0f81b4ea7f8905e21049b7
+  checksum: b54fc6b7267be17d3fff69cb51f38d8537ca40d4611fb2685bb41501cac05b77e91cc35c1b5542958aae2d6d0bc1f987210ca3951b7e55e88da7b417f90195a0
   languageName: node
   linkType: hard
 
@@ -10412,7 +10424,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ethers@npm:5.7.2, ethers@npm:^5.4.3, ethers@npm:^5.7.2":
+"ethers@npm:5.7.2, ethers@npm:^5.4.3, ethers@npm:^5.7.0, ethers@npm:^5.7.2":
   version: 5.7.2
   resolution: "ethers@npm:5.7.2"
   dependencies:
@@ -22795,7 +22807,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wagmi@npm:0.12.13":
+"wagmi@npm:^0.12.0":
   version: 0.12.13
   resolution: "wagmi@npm:0.12.13"
   dependencies:

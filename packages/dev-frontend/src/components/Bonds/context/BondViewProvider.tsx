@@ -51,6 +51,7 @@ export const BondViewProvider: React.FC = props => {
   const [stats, setStats] = useState<Stats>();
   const [protocolInfo, setProtocolInfo] = useState<ProtocolInfo>();
   const [simulatedProtocolInfo, setSimulatedProtocolInfo] = useState<ProtocolInfo>();
+  const [isInfiniteBondApproved, setIsInfiniteBondApproved] = useState(false);
   const [lpRewards, setLpRewards] = useState<BLusdLpRewards>();
   const [isLusdApprovedWithBlusdAmm, setIsLusdApprovedWithBlusdAmm] = useState(false);
   const [isBLusdApprovedWithBlusdAmm, setIsBLusdApprovedWithBlusdAmm] = useState(false);
@@ -63,6 +64,7 @@ export const BondViewProvider: React.FC = props => {
     BLusdAmmTokenIndex.BLUSD
   );
   const [statuses, setStatuses] = useState<BondTransactionStatuses>({
+    APPROVE: "IDLE",
     CREATE: "IDLE",
     CANCEL: "IDLE",
     CLAIM: "IDLE",
@@ -141,16 +143,39 @@ export const BondViewProvider: React.FC = props => {
   );
 
   const getLusdFromFaucet = useCallback(async () => {
-    if (contracts.lusdToken === undefined) return;
+    if (contracts.lusdToken === undefined || liquity.connection.signer === undefined) return;
+
     if (
       LUSD_OVERRIDE_ADDRESS !== null &&
       (await contracts.lusdToken.balanceOf(account)).eq(0) &&
       "tap" in contracts.lusdToken
     ) {
-      await (await ((contracts.lusdToken as unknown) as ERC20Faucet).tap()).wait();
+      await (
+        await ((contracts.lusdToken as unknown) as ERC20Faucet)
+          .connect(liquity.connection.signer)
+          .tap()
+      ).wait();
       setShouldSynchronize(true);
     }
-  }, [contracts.lusdToken, account, LUSD_OVERRIDE_ADDRESS]);
+  }, [contracts.lusdToken, account, LUSD_OVERRIDE_ADDRESS, liquity.connection.signer]);
+
+  useEffect(() => {
+    (async () => {
+      if (
+        contracts.lusdToken === undefined ||
+        contracts.chickenBondManager === undefined ||
+        account === undefined ||
+        isInfiniteBondApproved
+      )
+        return;
+      const isApproved = await api.isInfiniteBondApproved(
+        account,
+        contracts.lusdToken,
+        contracts.chickenBondManager
+      );
+      setIsInfiniteBondApproved(isApproved);
+    })();
+  }, [contracts.lusdToken, contracts.chickenBondManager, account, isInfiniteBondApproved]);
 
   useEffect(() => {
     (async () => {
@@ -324,25 +349,48 @@ export const BondViewProvider: React.FC = props => {
     })();
   }, [isSynchronizing, shouldSynchronize, account, contracts, simulatedProtocolInfo]);
 
+  const [approveInfiniteBond, approveStatus] = useTransaction(async () => {
+    await api.approveInfiniteBond(
+      contracts.lusdToken,
+      contracts.chickenBondManager,
+      liquity.connection.signer
+    );
+    setIsInfiniteBondApproved(true);
+  }, [contracts.lusdToken, contracts.chickenBondManager, liquity.connection.signer]);
+
   const [approveAmm, approveAmmStatus] = useTransaction(
     async (tokensNeedingApproval: BLusdAmmTokenIndex[]) => {
       for (const token of tokensNeedingApproval) {
         if (token === BLusdAmmTokenIndex.BLUSD) {
           await (isMainnet
-            ? api.approveTokenWithBLusdAmmMainnet(contracts.bLusdToken)
-            : api.approveTokenWithBLusdAmm(contracts.bLusdToken, BLUSD_AMM_ADDRESS));
+            ? api.approveTokenWithBLusdAmmMainnet(contracts.bLusdToken, liquity.connection.signer)
+            : api.approveTokenWithBLusdAmm(
+                contracts.bLusdToken,
+                BLUSD_AMM_ADDRESS,
+                liquity.connection.signer
+              ));
 
           setIsBLusdApprovedWithBlusdAmm(true);
         } else {
           await (isMainnet
-            ? api.approveTokenWithBLusdAmmMainnet(contracts.lusdToken)
-            : api.approveTokenWithBLusdAmm(contracts.lusdToken, BLUSD_AMM_ADDRESS));
+            ? api.approveTokenWithBLusdAmmMainnet(contracts.lusdToken, liquity.connection.signer)
+            : api.approveTokenWithBLusdAmm(
+                contracts.lusdToken,
+                BLUSD_AMM_ADDRESS,
+                liquity.connection.signer
+              ));
 
           setIsLusdApprovedWithBlusdAmm(true);
         }
       }
     },
-    [contracts.bLusdToken, contracts.lusdToken, isMainnet, BLUSD_AMM_ADDRESS]
+    [
+      contracts.bLusdToken,
+      contracts.lusdToken,
+      isMainnet,
+      BLUSD_AMM_ADDRESS,
+      liquity.connection.signer
+    ]
   );
 
   const [approveTokens, approveTokensStatus] = useTransaction(
@@ -350,22 +398,26 @@ export const BondViewProvider: React.FC = props => {
       if (contracts.bLusdAmm === undefined) return;
       for (const [token, spender] of Array.from(tokensNeedingApproval)) {
         if (token === BLusdAmmTokenIndex.BLUSD) {
-          await api.approveToken(contracts.bLusdToken, spender);
+          await api.approveToken(contracts.bLusdToken, spender, liquity.connection.signer);
           if (spender === BLUSD_AMM_ADDRESS) {
             setIsBLusdApprovedWithBlusdAmm(true);
           } else if (spender === BLUSD_LP_ZAP_ADDRESS) {
             setIsBLusdApprovedWithAmmZapper(true);
           }
         } else if (token === BLusdAmmTokenIndex.LUSD) {
-          await api.approveToken(contracts.lusdToken, BLUSD_LP_ZAP_ADDRESS);
+          await api.approveToken(
+            contracts.lusdToken,
+            BLUSD_LP_ZAP_ADDRESS,
+            liquity.connection.signer
+          );
           setIsLusdApprovedWithAmmZapper(true);
         } else if (token === BLusdAmmTokenIndex.BLUSD_LUSD_LP && spender === undefined) {
           const lpToken = await api.getLpToken(contracts.bLusdAmm);
-          await api.approveToken(lpToken, BLUSD_LP_ZAP_ADDRESS);
+          await api.approveToken(lpToken, BLUSD_LP_ZAP_ADDRESS, liquity.connection.signer);
           setIsBLusdLpApprovedWithAmmZapper(true);
         } else if (token === BLusdAmmTokenIndex.BLUSD_LUSD_LP) {
           const lpToken = await api.getLpToken(contracts.bLusdAmm);
-          await api.approveToken(lpToken, spender);
+          await api.approveToken(lpToken, spender, liquity.connection.signer);
           if (spender === BLUSD_LP_ZAP_ADDRESS) {
             setIsBLusdLpApprovedWithAmmZapper(true);
           } else if (spender === BLUSD_AMM_STAKING_ADDRESS) {
@@ -381,20 +433,15 @@ export const BondViewProvider: React.FC = props => {
       BLUSD_LP_ZAP_ADDRESS,
       BLUSD_AMM_STAKING_ADDRESS,
       BLUSD_AMM_ADDRESS,
-      isBLusdApprovedWithAmmZapper,
-      isLusdApprovedWithAmmZapper
+      liquity.connection.signer
     ]
   );
 
   const [createBond, createStatus] = useTransaction(
     async (lusdAmount: Decimal) => {
-      if (liquity.connection.signer === undefined) return;
-
       await api.createBond(
         lusdAmount,
         account,
-        LUSD_OVERRIDE_ADDRESS ?? liquity.connection.addresses.lusdToken,
-        contracts.lusdToken,
         contracts.chickenBondManager,
         liquity.connection.signer
       );
@@ -407,25 +454,31 @@ export const BondViewProvider: React.FC = props => {
       setOptimisticBond(optimisticBond);
       setShouldSynchronize(true);
     },
-    [contracts.chickenBondManager, contracts.lusdToken, liquity.connection.signer, account]
+    [contracts.chickenBondManager, liquity.connection.signer, account]
   );
 
   const [cancelBond, cancelStatus] = useTransaction(
     async (bondId: string, minimumLusd: Decimal) => {
-      await api.cancelBond(bondId, minimumLusd, contracts.chickenBondManager);
+      await api.cancelBond(
+        bondId,
+        minimumLusd,
+        account,
+        contracts.chickenBondManager,
+        liquity.connection.signer
+      );
       removeBondFromList(bondId);
       setShouldSynchronize(true);
     },
-    [contracts.chickenBondManager, removeBondFromList]
+    [contracts.chickenBondManager, removeBondFromList, liquity.connection.signer, account]
   );
 
   const [claimBond, claimStatus] = useTransaction(
     async (bondId: string) => {
-      await api.claimBond(bondId, contracts.chickenBondManager);
+      await api.claimBond(bondId, account, contracts.chickenBondManager, liquity.connection.signer);
       changeBondStatusToClaimed(bondId);
       setShouldSynchronize(true);
     },
-    [contracts.chickenBondManager, changeBondStatusToClaimed]
+    [contracts.chickenBondManager, changeBondStatusToClaimed, liquity.connection.signer, account]
   );
 
   const getExpectedSwapOutput = useCallback(
@@ -446,22 +499,22 @@ export const BondViewProvider: React.FC = props => {
         inputToken,
         inputAmount,
         minOutputAmount,
-        contracts.bLusdAmm
+        contracts.bLusdAmm,
+        liquity.connection.signer,
+        account
       );
       setShouldSynchronize(true);
     },
-    [contracts.bLusdAmm]
+    [contracts.bLusdAmm, isMainnet, liquity.connection.signer, account]
   );
 
   const getExpectedLpTokens = useCallback(
     async (bLusdAmount: Decimal, lusdAmount: Decimal) => {
-      if (liquity.connection.signer === undefined) return Decimal.ZERO;
-
       return contracts.bLusdAmmZapper
         ? api.getExpectedLpTokens(bLusdAmount, lusdAmount, contracts.bLusdAmmZapper)
         : Decimal.ZERO;
     },
-    [contracts.bLusdAmmZapper, liquity.connection.signer]
+    [contracts.bLusdAmmZapper]
   );
 
   const [manageLiquidity, manageLiquidityStatus] = useTransaction(
@@ -472,14 +525,17 @@ export const BondViewProvider: React.FC = props => {
           params.lusdAmount,
           params.minLpTokens,
           params.shouldStakeInGauge,
-          contracts.bLusdAmmZapper
+          contracts.bLusdAmmZapper,
+          liquity.connection.signer,
+          account
         );
       } else if (params.action === "removeLiquidity") {
         await api.removeLiquidity(
           params.burnLpTokens,
           params.minBLusdAmount,
           params.minLusdAmount,
-          contracts.bLusdAmmZapper
+          contracts.bLusdAmmZapper,
+          liquity.connection.signer
         );
       } else if (params.action === "removeLiquidityOneCoin") {
         await api.removeLiquidityOneCoin(
@@ -487,18 +543,34 @@ export const BondViewProvider: React.FC = props => {
           params.output,
           params.minAmount,
           contracts.bLusdAmmZapper,
-          contracts.bLusdAmm
+          contracts.bLusdAmm,
+          liquity.connection.signer,
+          account
         );
       } else if (params.action === "stakeLiquidity") {
-        await api.stakeLiquidity(params.stakeAmount, contracts.bLusdGauge);
+        await api.stakeLiquidity(
+          params.stakeAmount,
+          contracts.bLusdGauge,
+          liquity.connection.signer
+        );
       } else if (params.action === "unstakeLiquidity") {
-        await api.unstakeLiquidity(params.unstakeAmount, contracts.bLusdGauge);
+        await api.unstakeLiquidity(
+          params.unstakeAmount,
+          contracts.bLusdGauge,
+          liquity.connection.signer
+        );
       } else if (params.action === "claimLpRewards") {
-        await api.claimLpRewards(contracts.bLusdGauge);
+        await api.claimLpRewards(contracts.bLusdGauge, liquity.connection.signer);
       }
       setShouldSynchronize(true);
     },
-    [contracts.bLusdAmmZapper, contracts.bLusdGauge]
+    [
+      contracts.bLusdAmmZapper,
+      contracts.bLusdGauge,
+      contracts.bLusdAmm,
+      liquity.connection.signer,
+      account
+    ]
   );
 
   const getExpectedWithdrawal = useCallback(
@@ -546,7 +618,9 @@ export const BondViewProvider: React.FC = props => {
         viewRef.current === _view && event === _event;
 
       try {
-        if (isCurrentViewEvent("CREATING", "CONFIRM_PRESSED")) {
+        if (isCurrentViewEvent("CREATING", "APPROVE_PRESSED")) {
+          await approveInfiniteBond();
+        } else if (isCurrentViewEvent("CREATING", "CONFIRM_PRESSED")) {
           await createBond((payload as CreateBondPayload).deposit);
           await dispatchEvent("CREATE_BOND_CONFIRMED");
         } else if (isCurrentViewEvent("CANCELLING", "CONFIRM_PRESSED")) {
@@ -585,6 +659,7 @@ export const BondViewProvider: React.FC = props => {
     },
     [
       selectedBondId,
+      approveInfiniteBond,
       cancelBond,
       createBond,
       claimBond,
@@ -600,6 +675,7 @@ export const BondViewProvider: React.FC = props => {
   useEffect(() => {
     setStatuses(statuses => ({
       ...statuses,
+      APPROVE: approveStatus,
       CREATE: createStatus,
       CANCEL: cancelStatus,
       CLAIM: claimStatus,
@@ -609,6 +685,7 @@ export const BondViewProvider: React.FC = props => {
       MANAGE_LIQUIDITY: manageLiquidityStatus
     }));
   }, [
+    approveStatus,
     createStatus,
     cancelStatus,
     claimStatus,
@@ -663,6 +740,7 @@ export const BondViewProvider: React.FC = props => {
     lpTokenSupply,
     bLusdAmmBLusdBalance,
     bLusdAmmLusdBalance,
+    isInfiniteBondApproved,
     isSynchronizing,
     getLusdFromFaucet,
     setSimulatedMarketPrice,
@@ -689,8 +767,7 @@ export const BondViewProvider: React.FC = props => {
     lpRewards
   };
 
-  // @ts-ignore
-  window.__LIQUITY_BONDS__ = provider.current;
+  // window.__LIQUITY_BONDS__ = provider.current;
 
   return <BondViewContext.Provider value={provider}>{children}</BondViewContext.Provider>;
 };

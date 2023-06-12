@@ -4,11 +4,14 @@ import { isAddress, getAddress } from "@ethersproject/address";
 export type LiquityFrontendConfig = {
   frontendTag: string;
   infuraApiKey?: string;
+  alchemyApiKey?: string;
   testnetOnly?: boolean;
+  walletConnectProjectId: string;
 };
 
 const defaultConfig: LiquityFrontendConfig = {
-  frontendTag: AddressZero
+  frontendTag: AddressZero,
+  walletConnectProjectId: "b16efb4fd41473c0f45dbad8efa15a00"
 };
 
 function hasKey<K extends string>(o: object, k: K): o is Record<K, unknown> {

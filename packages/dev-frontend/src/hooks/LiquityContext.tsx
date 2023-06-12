@@ -24,7 +24,7 @@ const LiquityContext = createContext<LiquityContextValue | undefined>(undefined)
 
 type LiquityProviderProps = {
   loader?: React.ReactNode;
-  unsupportedNetworkFallback?: (chainId: number) => React.ReactNode;
+  unsupportedNetworkFallback?: React.ReactNode;
   unsupportedMainnetFallback?: React.ReactNode;
 };
 
@@ -55,7 +55,9 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
           frontendTag: config.frontendTag,
           useStore: "blockPolled"
         });
-      } catch {}
+      } catch (err) {
+        console.error(err);
+      }
     }
   }, [config, provider, signer.data, account.address, chainId]);
 
@@ -91,7 +93,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     }
   }, [config, connection]);
 
-  if (!config || !provider || !account.address || !chainId) {
+  if (!config || !account.address || !connection) {
     return <>{loader}</>;
   }
 
@@ -100,14 +102,16 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   }
 
   if (!connection) {
-    return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
+    return <>{unsupportedNetworkFallback}</>;
   }
 
   const liquity = EthersLiquity._from(connection);
   liquity.store.logging = true;
 
   return (
-    <LiquityContext.Provider value={{ config, account: account.address, provider, liquity }}>
+    <LiquityContext.Provider
+      value={{ config, account: account.address, provider: connection.provider, liquity }}
+    >
       {children}
     </LiquityContext.Provider>
   );

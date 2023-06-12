@@ -15,11 +15,7 @@ import theme from "./theme";
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 import { LiquityFrontend } from "./LiquityFrontend";
 import { AppLoader } from "./components/AppLoader";
-
-if (window.ethereum) {
-  // Silence MetaMask warning in console
-  Object.assign(window.ethereum, { autoRefreshOnNetworkChange: false });
-}
+import { useAsyncValue } from "./hooks/AsyncValue";
 
 if (import.meta.env.REACT_APP_DEMO_MODE === "true") {
   const ethereum = new DisposableWalletProvider(
@@ -37,21 +33,6 @@ getConfig().then(config => {
   Object.assign(window, { config });
 });
 
-const wagmiClient = createClient(
-  getDefaultClient({
-    appName: "Liquity",
-    chains: [mainnet, goerli]
-  })
-);
-
-// const EthersWeb3ReactProvider: React.FC = ({ children }) => {
-//   return (
-//     <Web3ReactProvider getLibrary={provider => new BatchedWebSocketAugmentedWeb3Provider(provider)}>
-//       {children}
-//     </Web3ReactProvider>
-//   );
-// };
-
 const UnsupportedMainnetFallback: React.FC = () => (
   <Flex
     sx={{
@@ -66,9 +47,7 @@ const UnsupportedMainnetFallback: React.FC = () => (
       <Icon name="exclamation-triangle" /> This app is for testing purposes only.
     </Heading>
 
-    <Paragraph sx={{ mb: 3 }}>
-      Please change your network to Ropsten, Rinkeby, Kovan, Görli or Kiln.
-    </Paragraph>
+    <Paragraph sx={{ mb: 3 }}>Please change your network to Görli.</Paragraph>
 
     <Paragraph>
       If you'd like to use the Liquity Protocol on mainnet, please pick a frontend{" "}
@@ -80,43 +59,57 @@ const UnsupportedMainnetFallback: React.FC = () => (
   </Flex>
 );
 
+const UnsupportedNetworkFallback: React.FC = () => (
+  <Flex
+    sx={{
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      height: "100vh",
+      textAlign: "center"
+    }}
+  >
+    <Heading sx={{ mb: 3 }}>
+      <Icon name="exclamation-triangle" /> Liquity is not deployed to this network.
+    </Heading>
+    Please switch to Ropsten, Rinkeby, Kovan, Görli or Kiln.
+  </Flex>
+);
+
 const App = () => {
-  const unsupportedNetworkFallback = (chainId: number) => (
-    <Flex
-      sx={{
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        textAlign: "center"
-      }}
-    >
-      <Heading sx={{ mb: 3 }}>
-        <Icon name="exclamation-triangle" /> Liquity is not yet deployed to{" "}
-        {chainId === 1 ? "mainnet" : "this network"}.
-      </Heading>
-      Please switch to Ropsten, Rinkeby, Kovan, Görli or Kiln.
-    </Flex>
-  );
+  const config = useAsyncValue(getConfig);
+  const loader = <AppLoader />;
 
   return (
-    <WagmiConfig client={wagmiClient}>
-      <ConnectKitProvider>
-        <ThemeProvider theme={theme}>
-          <WalletConnector loader={<AppLoader />}>
-            <LiquityProvider
-              loader={<AppLoader />}
-              unsupportedNetworkFallback={unsupportedNetworkFallback}
-              unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
-            >
-              <TransactionProvider>
-                <LiquityFrontend loader={<AppLoader />} />
-              </TransactionProvider>
-            </LiquityProvider>
-          </WalletConnector>
-        </ThemeProvider>
-      </ConnectKitProvider>
-    </WagmiConfig>
+    <ThemeProvider theme={theme}>
+      {config.loaded && (
+        <WagmiConfig
+          client={createClient(
+            getDefaultClient({
+              appName: "Liquity",
+              chains: config.value.testnetOnly ? [goerli] : [mainnet, goerli],
+              walletConnectProjectId: config.value.walletConnectProjectId,
+              infuraId: config.value.infuraApiKey,
+              alchemyId: config.value.alchemyApiKey
+            })
+          )}
+        >
+          <ConnectKitProvider options={{ hideBalance: true }}>
+            <WalletConnector loader={loader}>
+              <LiquityProvider
+                loader={loader}
+                unsupportedNetworkFallback={<UnsupportedNetworkFallback />}
+                unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
+              >
+                <TransactionProvider>
+                  <LiquityFrontend loader={loader} />
+                </TransactionProvider>
+              </LiquityProvider>
+            </WalletConnector>
+          </ConnectKitProvider>
+        </WagmiConfig>
+      )}
+    </ThemeProvider>
   );
 };
 

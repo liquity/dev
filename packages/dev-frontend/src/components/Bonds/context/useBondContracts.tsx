@@ -106,7 +106,7 @@ export const useBondContracts = (): BondContracts => {
     CurveCryptoSwap2ETH__factory.abi
   );
 
-  const [bLusdAmmZapper, bLusAmmZapperStatus] = useContract<BLUSDLPZap>(
+  const [bLusdAmmZapper, bLusdAmmZapperStatus] = useContract<BLUSDLPZap>(
     BLUSD_LP_ZAP_ADDRESS,
     BLUSDLPZap__factory.abi
   );
@@ -123,7 +123,7 @@ export const useBondContracts = (): BondContracts => {
       chickenBondManagerStatus,
       bLusdTokenStatus,
       bLusdAmmStatus,
-      bLusAmmZapperStatus,
+      ...(isMainnet ? [bLusdAmmZapperStatus] : []),
       bLusdGaugeStatus
     ].find(status => status === "FAILED") === undefined;
 
@@ -135,8 +135,7 @@ export const useBondContracts = (): BondContracts => {
         chickenBondManager === undefined ||
         bLusdToken === undefined ||
         bLusdAmm === undefined ||
-        bLusdGauge === undefined ||
-        BLUSD_AMM_STAKING_ADDRESS === null
+        bLusdGauge === undefined
       ) {
         return undefined;
       }
@@ -155,11 +154,10 @@ export const useBondContracts = (): BondContracts => {
         await protocolInfoPromise
       );
 
-      const [protocolInfo, stats, lpToken, lpStakingContract] = await Promise.all([
+      const [protocolInfo, stats, lpToken] = await Promise.all([
         protocolInfoPromise,
         api.getStats(chickenBondManager),
-        api.getLpToken(bLusdAmm),
-        api.erc20From(BLUSD_AMM_STAKING_ADDRESS, bLusdAmm.provider)
+        api.getLpToken(bLusdAmm)
       ]);
 
       const [
@@ -174,10 +172,10 @@ export const useBondContracts = (): BondContracts => {
         api.getTokenBalance(account, bLusdToken),
         api.getTokenBalance(account, lusdToken),
         api.getTokenBalance(account, lpToken),
-        api.getTokenBalance(account, lpStakingContract),
+        isMainnet ? api.getTokenBalance(account, bLusdGauge) : Decimal.ZERO,
         api.getTokenTotalSupply(lpToken),
         api.getCoinBalances(bLusdAmm),
-        api.getLpRewards(account, bLusdGauge)
+        isMainnet ? api.getLpRewards(account, bLusdGauge) : []
       ]);
 
       const bonds = await bondsPromise;
@@ -196,16 +194,7 @@ export const useBondContracts = (): BondContracts => {
         lpRewards
       };
     },
-    [
-      chickenBondManager,
-      bondNft,
-      bLusdToken,
-      lusdToken,
-      bLusdAmm,
-      isMainnet,
-      BLUSD_AMM_STAKING_ADDRESS,
-      bLusdGauge
-    ]
+    [chickenBondManager, bondNft, bLusdToken, lusdToken, bLusdAmm, isMainnet, bLusdGauge]
   );
 
   return {

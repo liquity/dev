@@ -37,5 +37,8 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "./src/setupTests.ts"
+  },
+  server: {
+    cors: false
   }
 });
