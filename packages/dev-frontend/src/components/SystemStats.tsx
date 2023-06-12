@@ -130,7 +130,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
           {import.meta.env.DEV ? (
             "development"
           ) : (
-            <GitHubCommit>{import.meta.env.REACT_APP_VERSION}</GitHubCommit>
+            <GitHubCommit>{import.meta.env.VITE_APP_VERSION}</GitHubCommit>
           )}
         </Box>
       </Box>

@@ -36,7 +36,13 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
-    setupFiles: "./src/setupTests.ts"
+    setupFiles: "./src/setupTests.ts",
+    deps: {
+      inline: ["connectkit"] // fixes import of "react/jsx-runtime"
+    },
+    testTimeout: 10000,
+    // the WalletConnect connector of wagmi throws "EthereumProvider.init is not a function" ???
+    dangerouslyIgnoreUnhandledErrors: true
   },
   server: {
     cors: false

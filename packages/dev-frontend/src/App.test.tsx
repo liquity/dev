@@ -13,6 +13,9 @@ const trove = Trove.create(params);
 test("there's no smoke", async () => {
   const { getByText, getByLabelText, findByText } = render(<App />);
 
+  fireEvent.click(await findByText(/connect wallet/i));
+  fireEvent.click(getByText(/browser wallet/i));
+
   expect(await findByText(/you can borrow lusd by opening a trove/i)).toBeInTheDocument();
 
   fireEvent.click(getByText(/open trove/i));
@@ -20,9 +23,7 @@ test("there's no smoke", async () => {
   fireEvent.change(getByLabelText(/^collateral$/i), { target: { value: `${trove.collateral}` } });
   fireEvent.click(getByLabelText(/^borrow$/i));
   fireEvent.change(getByLabelText(/^borrow$/i), { target: { value: `${trove.debt}` } });
-
-  const confirmButton = await findByText(/confirm/i);
-  fireEvent.click(confirmButton);
+  fireEvent.click(await findByText(/confirm/i));
 
   expect(await findByText(/adjust/i)).toBeInTheDocument();
 });

@@ -93,7 +93,7 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
     }
   }, [config, connection]);
 
-  if (!config || !account.address || !connection) {
+  if (!config || !account.address) {
     return <>{loader}</>;
   }
 

@@ -1,6 +1,6 @@
 import React from "react";
 import { createClient, WagmiConfig } from "wagmi";
-import { mainnet, goerli } from "wagmi/chains";
+import { mainnet, goerli, localhost } from "wagmi/chains";
 import { ConnectKitProvider, getDefaultClient } from "connectkit";
 import { Flex, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
 
@@ -17,9 +17,11 @@ import { LiquityFrontend } from "./LiquityFrontend";
 import { AppLoader } from "./components/AppLoader";
 import { useAsyncValue } from "./hooks/AsyncValue";
 
-if (import.meta.env.REACT_APP_DEMO_MODE === "true") {
+const isDemoMode = import.meta.env.VITE_APP_DEMO_MODE === "true";
+
+if (isDemoMode) {
   const ethereum = new DisposableWalletProvider(
-    import.meta.env.REACT_APP_RPC_URL || `http://${window.location.hostname}:8545`,
+    import.meta.env.VITE_APP_RPC_URL || `http://${window.location.hostname || "localhost"}:8545`,
     "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7"
   );
 
@@ -70,9 +72,9 @@ const UnsupportedNetworkFallback: React.FC = () => (
     }}
   >
     <Heading sx={{ mb: 3 }}>
-      <Icon name="exclamation-triangle" /> Liquity is not deployed to this network.
+      <Icon name="exclamation-triangle" /> Liquity is not supported on this network.
     </Heading>
-    Please switch to Ropsten, Rinkeby, Kovan, Görli or Kiln.
+    Please switch to mainnet or Görli.
   </Flex>
 );
 
@@ -87,7 +89,12 @@ const App = () => {
           client={createClient(
             getDefaultClient({
               appName: "Liquity",
-              chains: config.value.testnetOnly ? [goerli] : [mainnet, goerli],
+              chains:
+                isDemoMode || import.meta.env.MODE === "test"
+                  ? [localhost]
+                  : config.value.testnetOnly
+                  ? [goerli]
+                  : [mainnet, goerli],
               walletConnectProjectId: config.value.walletConnectProjectId,
               infuraId: config.value.infuraApiKey,
               alchemyId: config.value.alchemyApiKey

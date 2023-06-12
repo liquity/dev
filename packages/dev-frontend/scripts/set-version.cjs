@@ -1,7 +1,7 @@
 const { execSync } = require("child_process");
 const { existsSync, readFileSync, writeFileSync } = require("fs");
 
-const envVar = "REACT_APP_VERSION";
+const envVar = "VITE_APP_VERSION";
 const envVarPattern = new RegExp(`^${envVar}=.*`);
 
 const getCommitHash = () => {
