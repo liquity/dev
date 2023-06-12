@@ -12,7 +12,7 @@ import mainnet from "../deployments/mainnet.json";
 import kiln from "../deployments/kiln.json";
 
 import { numberify, panic } from "./_utils";
-import { EthersProvider, EthersSigner } from "./types";
+import { EthersProvider, EthersSigner, EthersTransactionOverrides } from "./types";
 
 import {
   _connectToContracts,
@@ -169,6 +169,12 @@ export const _requireAddress = (
   overrides?.from ?? connection.userAddress ?? panic(new Error("A user address is required"));
 
 /** @internal */
+export const _prepareOverrides = (
+  connection: EthersLiquityConnection,
+  overrides?: EthersTransactionOverrides
+): EthersTransactionOverrides => ({ ...overrides, from: _requireAddress(connection, overrides) });
+
+/** @internal */
 export const _requireFrontendAddress = (connection: EthersLiquityConnection): string =>
   connection.frontendTag ?? panic(new Error("A frontend address is required"));
 
@@ -314,8 +320,8 @@ export function _connectByChainId(
   return connectionFrom(
     provider,
     signer,
-    _connectToContracts(signer ?? provider, deployment),
-    _connectToMulticall(signer ?? provider, chainId),
+    _connectToContracts(provider, deployment),
+    _connectToMulticall(provider, chainId),
     deployment,
     optionalParams
   );
