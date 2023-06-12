@@ -46,7 +46,6 @@ import {
 import {
   EthersLiquityConnection,
   _getContracts,
-  _prepareOverrides,
   _requireAddress,
   _requireSigner
 } from "./EthersLiquityConnection";
@@ -693,6 +692,10 @@ export class PopulatableEthersLiquity
     );
   }
 
+  private _prepareOverrides(overrides?: EthersTransactionOverrides): EthersTransactionOverrides {
+    return { ...overrides, from: _requireAddress(this._readable.connection, overrides) };
+  }
+
   private async _findHintsForNominalCollateralRatio(
     nominalCollateralRatio: Decimal,
     ownAddress?: string
@@ -816,7 +819,7 @@ export class PopulatableEthersLiquity
     maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<TroveCreationDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { borrowerOperations } = _getContracts(this._readable.connection);
 
     const normalizedParams = _normalizeTroveCreation(params);
@@ -894,7 +897,7 @@ export class PopulatableEthersLiquity
   async closeTrove(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<TroveClosureDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { borrowerOperations } = _getContracts(this._readable.connection);
 
     return this._wrapTroveClosure(
@@ -941,7 +944,7 @@ export class PopulatableEthersLiquity
     maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<TroveAdjustmentDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { borrowerOperations } = _getContracts(this._readable.connection);
 
     const normalizedParams = _normalizeTroveAdjustment(params);
@@ -1031,7 +1034,7 @@ export class PopulatableEthersLiquity
   async claimCollateralSurplus(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { borrowerOperations } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1044,7 +1047,7 @@ export class PopulatableEthersLiquity
     price: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { priceFeed } = _getContracts(this._readable.connection);
 
     if (!_priceFeedIsTestnet(priceFeed)) {
@@ -1061,7 +1064,7 @@ export class PopulatableEthersLiquity
     address: string | string[],
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<LiquidationDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { troveManager } = _getContracts(this._readable.connection);
 
     if (Array.isArray(address)) {
@@ -1084,7 +1087,7 @@ export class PopulatableEthersLiquity
     maximumNumberOfTrovesToLiquidate: number,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<LiquidationDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { troveManager } = _getContracts(this._readable.connection);
 
     return this._wrapLiquidation(
@@ -1102,7 +1105,7 @@ export class PopulatableEthersLiquity
     frontendTag?: string,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { stabilityPool } = _getContracts(this._readable.connection);
     const depositLUSD = Decimal.from(amount);
 
@@ -1122,7 +1125,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityDepositChangeDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { stabilityPool } = _getContracts(this._readable.connection);
 
     return this._wrapStabilityDepositWithdrawal(
@@ -1138,7 +1141,7 @@ export class PopulatableEthersLiquity
   async withdrawGainsFromStabilityPool(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<StabilityPoolGainsWithdrawalDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { stabilityPool } = _getContracts(this._readable.connection);
 
     return this._wrapStabilityPoolGainsWithdrawal(
@@ -1154,7 +1157,7 @@ export class PopulatableEthersLiquity
   async transferCollateralGainToTrove(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<CollateralGainTransferDetails>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { stabilityPool } = _getContracts(this._readable.connection);
 
     const [initialTrove, stabilityDeposit] = await Promise.all([
@@ -1179,7 +1182,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { lusdToken } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1198,7 +1201,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { lqtyToken } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1217,7 +1220,7 @@ export class PopulatableEthersLiquity
     maxRedemptionRate?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersRedemption> {
-    const preparedOverrides = _prepareOverrides(this._readable.connection, overrides);
+    const preparedOverrides = this._prepareOverrides(overrides);
     const { troveManager } = _getContracts(this._readable.connection);
     const attemptedLUSDAmount = Decimal.from(amount);
 
@@ -1287,7 +1290,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { lqtyStaking } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1300,7 +1303,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { lqtyStaking } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1320,7 +1323,7 @@ export class PopulatableEthersLiquity
     kickbackRate: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { stabilityPool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1339,7 +1342,7 @@ export class PopulatableEthersLiquity
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
     address ??= _requireAddress(this._readable.connection, overrides);
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { uniToken } = _getContracts(this._readable.connection);
 
     if (!_uniTokenIsMock(uniToken)) {
@@ -1356,7 +1359,7 @@ export class PopulatableEthersLiquity
     allowance?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { uniToken, unipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1374,7 +1377,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { unipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1391,7 +1394,7 @@ export class PopulatableEthersLiquity
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { unipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1407,7 +1410,7 @@ export class PopulatableEthersLiquity
   async withdrawLQTYRewardFromLiquidityMining(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { unipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
@@ -1419,7 +1422,7 @@ export class PopulatableEthersLiquity
   async exitLiquidityMining(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    overrides = _prepareOverrides(this._readable.connection, overrides);
+    overrides = this._prepareOverrides(overrides);
     const { unipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(

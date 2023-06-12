@@ -169,12 +169,6 @@ export const _requireAddress = (
   overrides?.from ?? connection.userAddress ?? panic(new Error("A user address is required"));
 
 /** @internal */
-export const _prepareOverrides = (
-  connection: EthersLiquityConnection,
-  overrides?: EthersTransactionOverrides
-): EthersTransactionOverrides => ({ ...overrides, from: _requireAddress(connection, overrides) });
-
-/** @internal */
 export const _requireFrontendAddress = (connection: EthersLiquityConnection): string =>
   connection.frontendTag ?? panic(new Error("A frontend address is required"));
 
