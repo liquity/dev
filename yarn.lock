@@ -1521,11 +1521,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-cli@npm:^0.20.0":
-  version: 0.20.0
-  resolution: "@graphprotocol/graph-cli@npm:0.20.0"
+"@graphprotocol/graph-cli@npm:^0.20.1":
+  version: 0.20.1
+  resolution: "@graphprotocol/graph-cli@npm:0.20.1"
   dependencies:
-    assemblyscript: "git+https://github.com/AssemblyScript/assemblyscript.git#36040d5b5312f19a025782b5e36663823494c2f3"
+    assemblyscript: "git+https://github.com/AssemblyScript/assemblyscript.git#v0.6"
     chalk: ^3.0.0
     chokidar: ^3.0.2
     debug: ^4.1.1
@@ -1551,16 +1551,16 @@ __metadata:
       optional: true
   bin:
     graph: bin/graph
-  checksum: ecc4ad5563d238ab7bdc1465b0fd0c9a1ff99d686eb6aca0b41ffa1b362025181bacacc34297f1c7c10f598cc4bd13b0fb3f69b5959cc925f229a6abb45bfa6e
+  checksum: 8fd59409ff9d1ad0c6082ad2ff6153cac09ec54417ca1a93999150c98003237c7afa5f282dacafbfabb64d886ba8a010f20fe1d3681fa97aea89b0e0901bfd73
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-ts@npm:^0.20.0":
-  version: 0.20.0
-  resolution: "@graphprotocol/graph-ts@npm:0.20.0"
+"@graphprotocol/graph-ts@npm:^0.20.1":
+  version: 0.20.1
+  resolution: "@graphprotocol/graph-ts@npm:0.20.1"
   dependencies:
-    assemblyscript: "git+https://github.com/AssemblyScript/assemblyscript.git#36040d5b5312f19a025782b5e36663823494c2f3"
-  checksum: 0d61b37d927b0f3dd1428c65a8c1f8ee6bff84e061c7100ba9e4f81095a11857a308f595926d48b0ae2b1dd54e334bccc9c6db4fd24c8c0bb2607fa2bf0ddd95
+    assemblyscript: "git+https://github.com/AssemblyScript/assemblyscript.git#v0.6"
+  checksum: d98e729d08b10e65f88f64ef619fb99bb76788ae01a1805169908de2d2aa42d6ea21f8d69fecd77375d6a5d79d920e70d0e815f67068b84cf071b388b4984afa
   languageName: node
   linkType: hard
 
@@ -1929,8 +1929,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@liquity/subgraph@workspace:packages/subgraph"
   dependencies:
-    "@graphprotocol/graph-cli": ^0.20.0
-    "@graphprotocol/graph-ts": ^0.20.0
+    "@graphprotocol/graph-cli": ^0.20.1
+    "@graphprotocol/graph-ts": ^0.20.1
     npm-run-all: ^4.1.5
   languageName: unknown
   linkType: soft
@@ -6304,9 +6304,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyscript@git+https://github.com/AssemblyScript/assemblyscript.git#36040d5b5312f19a025782b5e36663823494c2f3":
+"assemblyscript@git+https://github.com/AssemblyScript/assemblyscript.git#v0.6":
   version: 0.6.0
-  resolution: "assemblyscript@https://github.com/AssemblyScript/assemblyscript.git#commit=36040d5b5312f19a025782b5e36663823494c2f3"
+  resolution: "assemblyscript@https://github.com/AssemblyScript/assemblyscript.git#commit=3ed76a97f05335504166fce1653da75f4face28f"
   dependencies:
     "@protobufjs/utf8": ^1.1.0
     binaryen: 77.0.0-nightly.20190407
@@ -6317,7 +6317,7 @@ __metadata:
   bin:
     asc: bin/asc
     asinit: bin/asinit
-  checksum: b31854d77203dc90bb6fa88a7466a71a746ea25667b1a4f5d57c95bfc6ab3dde4bff9e6c323143a3a63e8e0fe64ca8b52046b7e43e461b52444f0fd7ba129252
+  checksum: 8a407db6179addfaa5fcc637543a755ecc22ae8dd5e8259492305afd0d2bb73eae019d4178f79b515f75648d71dfda2c1ceb0c7421bff7817aebb2e2f5c8bfe7
   languageName: node
   linkType: hard
 
