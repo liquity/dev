@@ -44,6 +44,17 @@ const parseConfig = (json: unknown): LiquityFrontendConfig => {
       }
     }
 
+    if (hasKey(json, "alchemyApiKey") && json.alchemyApiKey !== "") {
+      const { alchemyApiKey } = json;
+
+      if (typeof alchemyApiKey === "string") {
+        config.alchemyApiKey = alchemyApiKey;
+      } else {
+        console.error("Malformed alchemyApiKey:");
+        console.log(alchemyApiKey);
+      }
+    }
+
     if (hasKey(json, "testnetOnly")) {
       const { testnetOnly } = json;
 
