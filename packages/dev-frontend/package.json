@@ -2,7 +2,6 @@
   "name": "@liquity/dev-frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
   "type": "module",
   "dependencies": {
     "@ethersproject/abi": "5.7.0",

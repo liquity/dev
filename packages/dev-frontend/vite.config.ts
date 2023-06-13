@@ -7,6 +7,7 @@ import RollupPluginPolyfillNode from "rollup-plugin-polyfill-node";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "./",
   plugins: [react()],
   optimizeDeps: {
     include: [
