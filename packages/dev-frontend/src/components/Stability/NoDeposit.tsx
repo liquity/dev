@@ -5,7 +5,7 @@ import { useStabilityView } from "./context/StabilityViewContext";
 import { RemainingLQTY } from "./RemainingLQTY";
 import { Yield } from "./Yield";
 
-export const NoDeposit: React.FC = props => {
+export const NoDeposit: React.FC = () => {
   const { dispatchEvent } = useStabilityView();
 
   const handleOpenTrove = useCallback(() => {

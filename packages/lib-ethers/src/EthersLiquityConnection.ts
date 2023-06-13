@@ -314,8 +314,8 @@ export function _connectByChainId(
   return connectionFrom(
     provider,
     signer,
-    _connectToContracts(signer ?? provider, deployment),
-    _connectToMulticall(signer ?? provider, chainId),
+    _connectToContracts(provider, deployment),
+    _connectToMulticall(provider, chainId),
     deployment,
     optionalParams
   );

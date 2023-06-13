@@ -9,7 +9,7 @@ export function useContract<TContractType>(
   address: string | null,
   abi: ContractInterface
 ): [TContractType | undefined, ContractStatus] {
-  const { provider, liquity } = useLiquity();
+  const { provider } = useLiquity();
   const [contract, setContract] = useState<Contract<TContractType>>();
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export function useContract<TContractType>(
         const connectedContract = (new ethers.Contract(
           address,
           abi,
-          liquity.connection.signer
+          provider
         ) as unknown) as TContractType;
 
         setContract({ instance: connectedContract, status: "LOADED" });
@@ -39,7 +39,7 @@ export function useContract<TContractType>(
         );
       }
     })();
-  }, [provider, liquity.connection.signer, address, abi, contract]);
+  }, [provider, address, abi, contract]);
 
   return [contract?.instance, contract?.status || "UNKNOWN"];
 }

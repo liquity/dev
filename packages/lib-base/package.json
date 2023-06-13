@@ -15,14 +15,14 @@
   "types": "dist/index.d.ts",
   "repository": "https://github.com/liquity/dev",
   "scripts": {
-    "prepare": "run-s prepare:*",
+    "prepare": "run-s 'prepare:*'",
     "prepare:eslint": "eslint src",
     "prepare:tsc": "tsc --project tsconfig.dist.json",
     "prepare:api": "api-extractor run --local",
     "test": "mocha --require ts-node/register"
   },
   "dependencies": {
-    "@ethersproject/bignumber": "5.4.1"
+    "@ethersproject/bignumber": "5.7.0"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "7.13.2",

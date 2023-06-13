@@ -1,4 +1,4 @@
-import { useWeb3React } from "@web3-react/core";
+import { useChainId } from "wagmi";
 import React, { useContext, createContext } from "react";
 
 import mainnet from "@liquity/chicken-bonds/lusd/addresses/mainnet.json";
@@ -34,7 +34,7 @@ export const useBondAddresses = (): Addresses => {
 };
 
 export const BondAddressesProvider: React.FC = ({ children }) => {
-  const { chainId } = useWeb3React();
+  const chainId = useChainId();
 
   const addresses: Addresses =
     chainId !== undefined ? chainIdAddressesMap[chainId] ?? nullAddresses : nullAddresses;

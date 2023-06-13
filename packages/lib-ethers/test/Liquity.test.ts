@@ -230,7 +230,7 @@ describe("EthersLiquity", () => {
           Promise.resolve(() => new Fees(0, 0.99, 1, new Date(), new Date(), false)),
 
         connection: {
-          signerOrProvider: user,
+          userAddress: await user.getAddress(),
           _contracts: {
             borrowerOperations,
             hintHelpers,

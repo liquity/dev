@@ -6,7 +6,8 @@ type CoinGeckoSimplePriceResponse<T extends string, U extends string> = {
   };
 };
 
-const hasProp = <T, P extends string>(o: T, p: P): o is T & { [_ in P]: unknown } => p in o;
+const hasProp = <T extends object, P extends string>(o: T, p: P): o is T & { [_ in P]: unknown } =>
+  p in o;
 
 const validateCoinGeckoSimplePriceResponse = <T extends string, U extends string>(
   expectedCoinIds: readonly T[],
@@ -23,6 +24,10 @@ const validateCoinGeckoSimplePriceResponse = <T extends string, U extends string
     }
 
     const coinPrices = body[coinId];
+
+    if (typeof coinPrices !== "object" || coinPrices === null) {
+      throw new Error(`unexpected response from CoinGecko`);
+    }
 
     for (const currency of expectedCurrencies) {
       if (!hasProp(coinPrices, currency)) {

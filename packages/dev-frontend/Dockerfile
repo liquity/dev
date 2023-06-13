@@ -4,4 +4,4 @@
 FROM nginx
 COPY etc /etc
 COPY docker-entrypoint.d /docker-entrypoint.d
-COPY build /usr/share/nginx/html
+COPY dist /usr/share/nginx/html

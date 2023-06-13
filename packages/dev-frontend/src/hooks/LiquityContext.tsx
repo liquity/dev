@@ -1,11 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-// import { Signer } from "@ethersproject/abstract-signer";
-import { getNetwork } from "@ethersproject/networks";
-import { Web3Provider } from "@ethersproject/providers";
-import { useWeb3React } from "@web3-react/core";
+import { FallbackProvider } from "@ethersproject/providers";
+import { useProvider, useSigner, useAccount, useChainId } from "wagmi";
 
-import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
   BlockPolledLiquityStore,
   EthersLiquity,
@@ -14,6 +11,7 @@ import {
 } from "@liquity/lib-ethers";
 
 import { LiquityFrontendConfig, getConfig } from "../config";
+import { BatchedProvider } from "../providers/BatchingProvider";
 
 type LiquityContextValue = {
   config: LiquityFrontendConfig;
@@ -26,16 +24,9 @@ const LiquityContext = createContext<LiquityContextValue | undefined>(undefined)
 
 type LiquityProviderProps = {
   loader?: React.ReactNode;
-  unsupportedNetworkFallback?: (chainId: number) => React.ReactNode;
+  unsupportedNetworkFallback?: React.ReactNode;
   unsupportedMainnetFallback?: React.ReactNode;
 };
-
-const wsParams = (network: string, infuraApiKey: string): [string, string] => [
-  `wss://${network === "homestead" ? "mainnet" : network}.infura.io/ws/v3/${infuraApiKey}`,
-  network
-];
-
-const webSocketSupportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
@@ -43,54 +34,34 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   unsupportedNetworkFallback,
   unsupportedMainnetFallback
 }) => {
-  const { library: provider, account, chainId } = useWeb3React<Web3Provider>();
+  const provider = useProvider<FallbackProvider>();
+  const signer = useSigner();
+  const account = useAccount();
+  const chainId = useChainId();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
 
   const connection = useMemo(() => {
-    if (config && provider && account && chainId) {
+    if (config && provider && signer.data && account.address && chainId) {
+      const batchedProvider = new BatchedProvider(provider, chainId);
+      // batchedProvider._debugLog = true;
+
       try {
-        return _connectByChainId(provider, provider.getSigner(account), chainId, {
-          userAddress: account,
+        return _connectByChainId(batchedProvider, signer.data, chainId, {
+          userAddress: account.address,
           frontendTag: config.frontendTag,
           useStore: "blockPolled"
         });
-      } catch {}
+      } catch (err) {
+        console.error(err);
+      }
     }
-  }, [config, provider, account, chainId]);
+  }, [config, provider, signer.data, account.address, chainId]);
 
   useEffect(() => {
     getConfig().then(setConfig);
   }, []);
 
-  useEffect(() => {
-    if (config && connection) {
-      const { provider, chainId } = connection;
-
-      if (isBatchedProvider(provider) && provider.chainId !== chainId) {
-        provider.chainId = chainId;
-      }
-
-      if (isWebSocketAugmentedProvider(provider)) {
-        const network = getNetwork(chainId);
-
-        if (
-          network.name &&
-          webSocketSupportedNetworks.includes(network.name) &&
-          config.infuraApiKey
-        ) {
-          provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
-        } else if (connection._isDev) {
-          provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
-        }
-
-        return () => {
-          provider.closeWebSocket();
-        };
-      }
-    }
-  }, [config, connection]);
-
-  if (!config || !provider || !account || !chainId) {
+  if (!config || !account.address) {
     return <>{loader}</>;
   }
 
@@ -99,14 +70,16 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   }
 
   if (!connection) {
-    return unsupportedNetworkFallback ? <>{unsupportedNetworkFallback(chainId)}</> : null;
+    return <>{unsupportedNetworkFallback}</>;
   }
 
   const liquity = EthersLiquity._from(connection);
   liquity.store.logging = true;
 
   return (
-    <LiquityContext.Provider value={{ config, account, provider, liquity }}>
+    <LiquityContext.Provider
+      value={{ config, account: account.address, provider: connection.provider, liquity }}
+    >
       {children}
     </LiquityContext.Provider>
   );

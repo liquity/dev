@@ -1,12 +1,13 @@
 /** @jsxImportSource theme-ui */
 import React, { useEffect, useMemo, useState } from "react";
-import { Flex, Heading, Button, Card, Grid, Close, Image, Spinner } from "theme-ui";
+import { Flex, Heading, Button, Card, Grid, Close, Text, Image, Spinner } from "theme-ui";
 import { Decimal } from "@liquity/lib-base";
 import { EditableRow } from "../../../Trove/Editor";
 import { Record } from "../../Record";
 import { InfoIcon } from "../../../InfoIcon";
 import { useBondView } from "../../context/BondViewContext";
 import { HorizontalTimeline, Label, SubLabel, UNKNOWN_DATE } from "../../../HorizontalTimeline";
+import { ActionDescription } from "../../../ActionDescription";
 import { EXAMPLE_NFT } from "../../context/BondViewProvider";
 import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
@@ -34,6 +35,7 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   const {
     dispatchEvent,
     statuses,
+    isInfiniteBondApproved,
     lusdBalance,
     simulatedProtocolInfo,
     setSimulatedMarketPrice,
@@ -43,13 +45,20 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
   const { back } = useWizard();
   const [deposit, setDeposit] = useState<Decimal>(lusdBalance ?? Decimal.ZERO);
   const depositEditingState = useState<string>();
-  const isConfirming = useMemo(() => statuses.CREATE === "PENDING", [statuses.CREATE]);
+  const isApprovingOrConfirming = useMemo(
+    () => statuses.APPROVE === "PENDING" || statuses.CREATE === "PENDING",
+    [statuses.APPROVE, statuses.CREATE]
+  );
   const handleBack = back ?? onBack ?? (() => dispatchEvent("BACK_PRESSED"));
   const [isDepositEnough, setIsDepositEnough] = useState<boolean>(lusdBalance?.gte(100) ?? true);
   const [doesDepositExceedBalance, setDoesDepositExceedBalance] = useState<boolean>(false);
 
   const handleDismiss = () => {
     dispatchEvent("ABORT_PRESSED");
+  };
+
+  const handleApprovePressed = () => {
+    dispatchEvent("APPROVE_PRESSED");
   };
 
   const handleConfirmPressed = () => {
@@ -259,14 +268,30 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
         onReset={() => resetSimulatedMarketPrice()}
       />
 
-      {statuses.CREATE === "FAILED" && <Warning>Failed to create bond. Please try again.</Warning>}
-
       {!protocolInfo.hasMarketPremium && (
         <Warning>
           When the bLUSD market price is less than 3% above the floor price, it's not profitable to
           bond. Buying bLUSD from the market currently generates a higher return than bonding.{" "}
           <LearnMoreLink link={l.INFINITE_ESTIMATION.link} />
         </Warning>
+      )}
+
+      {!isInfiniteBondApproved && (
+        <ActionDescription>
+          <Text>You are approving LUSD for bonding</Text>
+        </ActionDescription>
+      )}
+
+      {statuses.APPROVE === "FAILED" && (
+        <Warning>Failed to approve spend of LUSD. Please try again.</Warning>
+      )}
+
+      {statuses.CREATE === "FAILED" && <Warning>Failed to create bond. Please try again.</Warning>}
+
+      {isInfiniteBondApproved && (
+        <ActionDescription>
+          You are bonding <Text sx={{ fontWeight: "bold" }}>{deposit.prettify(2)} LUSD</Text>
+        </ActionDescription>
       )}
 
       {!isDepositEnough && <ErrorDescription>The minimum bond amount is 100 LUSD.</ErrorDescription>}
@@ -281,13 +306,23 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       </Flex>
 
       <Flex variant="layout.actions">
-        <Button variant="cancel" onClick={handleBack} disabled={isConfirming}>
+        <Button variant="cancel" onClick={handleBack} disabled={isApprovingOrConfirming}>
           Back
         </Button>
-        <Button onClick={handleConfirmPressed} disabled={isConfirming}>
-          {!isConfirming && <>Confirm</>}
-          {isConfirming && <Spinner size="28px" sx={{ color: "white" }} />}
-        </Button>
+        {!isInfiniteBondApproved && (
+          <Button onClick={handleApprovePressed} disabled={isApprovingOrConfirming}>
+            {!isApprovingOrConfirming && <>Approve</>}
+            {isApprovingOrConfirming && (
+              <Spinner size="28px" sx={{ color: "white", position: "absolute" }} />
+            )}
+          </Button>
+        )}
+        {isInfiniteBondApproved && (
+          <Button onClick={handleConfirmPressed} disabled={isApprovingOrConfirming}>
+            {!isApprovingOrConfirming && <>Confirm</>}
+            {isApprovingOrConfirming && <Spinner size="28px" sx={{ color: "white" }} />}
+          </Button>
+        )}
       </Flex>
     </>
   );

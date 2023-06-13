@@ -59,6 +59,7 @@ export const transitions: BondEventTransitions = {
     ABORT_PRESSED: "IDLE",
     CREATE_BOND_CONFIRMED: "IDLE",
     BACK_PRESSED: "IDLE",
+    APPROVE_PRESSED: "CREATING",
     CONFIRM_PRESSED: "CREATING"
   },
   CLAIMING: {
@@ -245,6 +246,7 @@ export type ProtocolInfo = {
 export type TransactionStatus = "IDLE" | "PENDING" | "CONFIRMED" | "FAILED";
 
 export type BondTransaction =
+  | "APPROVE"
   | "CREATE"
   | "CANCEL"
   | "CLAIM"

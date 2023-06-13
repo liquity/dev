@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, Flex, Box, Heading } from "theme-ui";
+import { Text, Flex, Box, Heading, Button } from "theme-ui";
 
 import { Decimal, LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
@@ -11,6 +11,7 @@ import { shortenAddress } from "../utils/shortenAddress";
 import { Icon } from "./Icon";
 import { useBondView } from "./Bonds/context/BondViewContext";
 import { useBondAddresses } from "./Bonds/context/BondAddressesContext";
+import { ConnectKitButton } from "connectkit";
 
 const select = ({ accountBalance, lusdBalance, lqtyBalance }: LiquityStoreState) => ({
   accountBalance,
@@ -27,18 +28,28 @@ export const UserAccount: React.FC = () => {
   const lusdBalance = LUSD_OVERRIDE_ADDRESS === null ? realLusdBalance : customLusdBalance;
 
   return (
-    <Box sx={{ display: ["none", "flex"] }}>
-      <Flex sx={{ alignItems: "center" }}>
-        <Icon name="user-circle" size="lg" />
-        <Flex sx={{ ml: 3, mr: 4, flexDirection: "column" }}>
-          <Heading sx={{ fontSize: 1 }}>Connected as</Heading>
-          <Text as="span" sx={{ fontSize: 1 }}>
-            {shortenAddress(account)}
-          </Text>
-        </Flex>
-      </Flex>
+    <Flex>
+      <ConnectKitButton.Custom>
+        {connectKit => (
+          <Button
+            variant="outline"
+            sx={{ alignItems: "center", p: 2, mr: 3 }}
+            onClick={connectKit.show}
+          >
+            <Icon name="user-circle" size="lg" />
+            <Text as="span" sx={{ ml: 2, fontSize: 1 }}>
+              {shortenAddress(account)}
+            </Text>
+          </Button>
+        )}
+      </ConnectKitButton.Custom>
 
-      <Flex sx={{ alignItems: "center" }}>
+      <Box
+        sx={{
+          display: ["none", "flex"],
+          alignItems: "center"
+        }}
+      >
         <Icon name="wallet" size="lg" />
 
         {([
@@ -52,7 +63,7 @@ export const UserAccount: React.FC = () => {
             <Text sx={{ fontSize: 1 }}>{balance.prettify()}</Text>
           </Flex>
         ))}
-      </Flex>
-    </Box>
+      </Box>
+    </Flex>
   );
 };

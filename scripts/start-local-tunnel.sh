@@ -58,4 +58,4 @@ fi
 
 
 # Start frontend with configured RPC URL
-PORT=32318 BROWSER=none REACT_APP_RPC_URL="$NGROK_RPC_URL" yarn workspace @liquity/dev-frontend start-demo >/dev/null &
+PORT=32318 BROWSER=none VITE_APP_RPC_URL="$NGROK_RPC_URL" yarn workspace @liquity/dev-frontend start-demo >/dev/null &

@@ -8,7 +8,7 @@ import {
   providers,
   Signer
 } from "ethers";
-import { splitSignature } from "ethers/lib/utils";
+// import { splitSignature } from "ethers/lib/utils";
 import type {
   BLUSDToken,
   BondNFT,
@@ -52,7 +52,6 @@ import {
   TokenExchangeEvent,
   TokenExchangeEventObject
 } from "@liquity/chicken-bonds/lusd/types/external/CurveCryptoSwap2ETH";
-import type { EthersSigner } from "@liquity/lib-ethers";
 import mainnet from "@liquity/chicken-bonds/lusd/addresses/mainnet.json";
 import type {
   CurveLiquidityGaugeV5,
@@ -137,7 +136,7 @@ type CachedYearnApys = {
   bLusdLusd3Crv: Decimal | undefined;
 };
 
-let cachedApys: CachedYearnApys = {
+const cachedApys: CachedYearnApys = {
   lusd3Crv: undefined,
   stabilityPool: undefined,
   bLusdLusd3Crv: undefined
@@ -535,7 +534,7 @@ const getProtocolInfo = async (
 
   let yieldAmplification: Maybe<Decimal> = undefined;
   let bLusdApr: Maybe<Decimal> = undefined;
-  let bLusdLpApr: Maybe<Decimal> = cachedApys.bLusdLusd3Crv;
+  const bLusdLpApr: Maybe<Decimal> = cachedApys.bLusdLusd3Crv;
 
   const fairPrice = {
     lower: treasury.total.sub(treasury.pending).div(bLusdSupply),
@@ -655,7 +654,84 @@ const getTokenTotalSupply = async (token: ERC20): Promise<Decimal> => {
   return decimalify(await token.totalSupply());
 };
 
+const isInfiniteBondApproved = async (
+  account: string,
+  lusdToken: LUSDToken,
+  chickenBondManager: ChickenBondManager
+): Promise<boolean> => {
+  const allowance = await lusdToken.allowance(account, chickenBondManager.address);
+
+  // Unlike bLUSD, LUSD doesn't explicitly handle infinite approvals, therefore the allowance will
+  // start to decrease from 2**64.
+  // However, it is practically impossible that it would decrease below 2**63.
+  return allowance.gt(constants.MaxInt256);
+};
+
+const approveInfiniteBond = async (
+  lusdToken: LUSDToken | undefined,
+  chickenBondManager: ChickenBondManager | undefined,
+  signer: Signer | undefined
+): Promise<void> => {
+  if (lusdToken === undefined || chickenBondManager === undefined || signer === undefined) {
+    throw new Error("approveInfiniteBond() failed: a dependency is null");
+  }
+
+  console.log("approveInfiniteBond() started");
+
+  try {
+    await (
+      await ((lusdToken as unknown) as Contract)
+        .connect(signer)
+        .approve(chickenBondManager.address, constants.MaxUint256._hex)
+    ).wait();
+
+    console.log("approveInfiniteBond() succceeded");
+  } catch (error: unknown) {
+    throw new Error(`approveInfiniteBond() failed: ${error}`);
+  }
+};
+
 const createBond = async (
+  lusdAmount: Decimal,
+  owner: string,
+  chickenBondManager: ChickenBondManager | undefined,
+  signer: Signer | undefined
+): Promise<BondCreatedEventObject> => {
+  if (chickenBondManager === undefined || signer === undefined) {
+    throw new Error("createBond() failed: a dependency is null");
+  }
+
+  const gasEstimate = await chickenBondManager.estimateGas.createBond(lusdAmount.hex, {
+    from: owner
+  });
+
+  const receipt = await (
+    await chickenBondManager.connect(signer).createBond(lusdAmount.hex, {
+      gasLimit: gasEstimate.add(LQTY_ISSUANCE_GAS_HEADROOM)
+    })
+  ).wait();
+
+  console.log(
+    "CREATE BOND",
+    receipt?.events,
+    receipt?.events?.map(c => c.event),
+    receipt?.events?.find(e => e.event === "BondCreated")
+  );
+
+  const createdEvent = receipt?.events?.find(
+    e => e.event === "BondCreated"
+  ) as Maybe<BondCreatedEvent>;
+
+  if (createdEvent === undefined) {
+    throw new Error("createBond() failed: couldn't find BondCreated event");
+  }
+
+  console.log("createBond() finished:", createdEvent.args);
+  return createdEvent.args;
+};
+
+/*
+const createBondWithPermit = async (
   lusdAmount: Decimal,
   owner: string,
   lusdAddress: string,
@@ -664,7 +740,7 @@ const createBond = async (
   signer: EthersSigner
 ): Promise<BondCreatedEventObject> => {
   if (chickenBondManager === undefined || lusdToken === undefined) {
-    throw new Error("createBond() failed: a dependency is null");
+    throw new Error("createBondWithPermit() failed: a dependency is null");
   }
 
   const TEN_MINUTES_IN_SECONDS = 60 * 10;
@@ -731,19 +807,27 @@ const createBond = async (
   console.log("createBond() finished:", createdEvent.args);
   return createdEvent.args;
 };
+*/
 
 const cancelBond = async (
   bondId: string,
   minimumLusd: Decimal,
-  chickenBondManager: ChickenBondManager | undefined
+  owner: string,
+  chickenBondManager: ChickenBondManager | undefined,
+  signer: Signer | undefined
 ): Promise<BondCancelledEventObject> => {
-  if (chickenBondManager === undefined) throw new Error("cancelBond() failed: a dependency is null");
+  if (chickenBondManager === undefined || signer === undefined) {
+    throw new Error("cancelBond() failed: a dependency is null");
+  }
+
   console.log("cancelBond() started:", bondId, minimumLusd.toString());
 
-  const gasEstimate = await chickenBondManager.estimateGas.chickenOut(bondId, minimumLusd.hex);
+  const gasEstimate = await chickenBondManager.estimateGas.chickenOut(bondId, minimumLusd.hex, {
+    from: owner
+  });
 
   const receipt = await (
-    await chickenBondManager.chickenOut(bondId, minimumLusd.hex, {
+    await chickenBondManager.connect(signer).chickenOut(bondId, minimumLusd.hex, {
       gasLimit: gasEstimate.add(LQTY_ISSUANCE_GAS_HEADROOM)
     })
   ).wait();
@@ -755,23 +839,28 @@ const cancelBond = async (
   if (cancelledEvent === undefined) {
     throw new Error("cancelBond() failed: couldn't find BondCancelled event");
   }
+
   console.log("cancelBond() finished:", cancelledEvent.args);
   return cancelledEvent.args;
 };
 
 const claimBond = async (
   bondId: string,
-  chickenBondManager: ChickenBondManager | undefined
+  owner: string,
+  chickenBondManager: ChickenBondManager | undefined,
+  signer: Signer | undefined
 ): Promise<BondClaimedEventObject> => {
   try {
-    if (chickenBondManager === undefined)
+    if (chickenBondManager === undefined || signer === undefined) {
       throw new Error("claimBond() failed: a dependency is null");
+    }
+
     console.log("claimBond() started", bondId);
 
-    const gasEstimate = await chickenBondManager.estimateGas.chickenIn(bondId);
+    const gasEstimate = await chickenBondManager.estimateGas.chickenIn(bondId, { from: owner });
 
     const receipt = await (
-      await chickenBondManager.chickenIn(bondId, {
+      await chickenBondManager.connect(signer).chickenIn(bondId, {
         gasLimit: gasEstimate.add(LQTY_ISSUANCE_GAS_HEADROOM)
       })
     ).wait();
@@ -835,34 +924,47 @@ const isTokenApprovedWithAmmZapper = async (
 
 const approveTokenWithBLusdAmm = async (
   token: LUSDToken | BLUSDToken | undefined,
-  bLusdAmmAddress: string | null
+  bLusdAmmAddress: string | null,
+  signer: Signer | undefined
 ) => {
-  if (token === undefined || bLusdAmmAddress === null) {
+  if (token === undefined || bLusdAmmAddress === null || signer === undefined) {
     throw new Error("approveTokenWithBLusdAmm() failed: a dependency is null");
   }
 
-  await (await token.approve(bLusdAmmAddress, constants.MaxUint256)).wait();
+  await (
+    await (token as Contract).connect(signer).approve(bLusdAmmAddress, constants.MaxUint256)
+  ).wait();
   return;
 };
 
 const approveToken = async (
   token: LUSDToken | BLUSDToken | ERC20 | undefined,
-  spenderAddress: string | null
+  spenderAddress: string | null,
+  signer: Signer | undefined
 ) => {
-  if (token === undefined || spenderAddress === null) {
+  if (token === undefined || spenderAddress === null || signer === undefined) {
     throw new Error("approveToken() failed: a dependency is null");
   }
 
-  await (await token.approve(spenderAddress, constants.MaxUint256)).wait();
+  await (
+    await (token as Contract).connect(signer).approve(spenderAddress, constants.MaxUint256)
+  ).wait();
   return;
 };
 
-const approveTokenWithBLusdAmmMainnet = async (token: LUSDToken | BLUSDToken | undefined) => {
-  if (token === undefined) {
+const approveTokenWithBLusdAmmMainnet = async (
+  token: LUSDToken | BLUSDToken | undefined,
+  signer: Signer | undefined
+) => {
+  if (token === undefined || signer === undefined) {
     throw new Error("approveTokenWithBLusdAmmMainnet() failed: a dependency is null");
   }
 
-  await (await token.approve(CURVE_REGISTRY_SWAPS_ADDRESS, constants.MaxUint256)).wait();
+  await (
+    await (token as Contract)
+      .connect(signer)
+      .approve(CURVE_REGISTRY_SWAPS_ADDRESS, constants.MaxUint256)
+  ).wait();
   return;
 };
 
@@ -886,7 +988,7 @@ const getExpectedSwapOutputMainnet = async (
   const reciprocal = Decimal.from(1).div(1.29);
   if (bLusdAmmBalance.eq(0)) return inputAmount.div(reciprocal);
 
-  const swaps = CurveRegistrySwaps__factory.connect(CURVE_REGISTRY_SWAPS_ADDRESS, bLusdAmm.signer);
+  const swaps = CurveRegistrySwaps__factory.connect(CURVE_REGISTRY_SWAPS_ADDRESS, bLusdAmm.provider);
 
   return decimalify(
     await swaps["get_exchange_multiple_amount(address[9],uint256[3][4],uint256)"](
@@ -900,19 +1002,20 @@ const swapTokens = async (
   inputToken: BLusdAmmTokenIndex,
   inputAmount: Decimal,
   minOutputAmount: Decimal,
-  bLusdAmm: CurveCryptoSwap2ETH | undefined
+  bLusdAmm: CurveCryptoSwap2ETH | undefined,
+  signer: Signer | undefined,
+  account: string
 ): Promise<TokenExchangeEventObject> => {
-  if (bLusdAmm === undefined) throw new Error("swapTokens() failed: a dependency is null");
+  if (bLusdAmm === undefined || signer === undefined) {
+    throw new Error("swapTokens() failed: a dependency is null");
+  }
 
-  const gasEstimate = await bLusdAmm.estimateGas["exchange(uint256,uint256,uint256,uint256)"](
-    inputToken,
-    getOtherToken(inputToken),
-    inputAmount.hex,
-    minOutputAmount.hex
-  );
+  const gasEstimate = await bLusdAmm.estimateGas[
+    "exchange(uint256,uint256,uint256,uint256)"
+  ](inputToken, getOtherToken(inputToken), inputAmount.hex, minOutputAmount.hex, { from: account });
 
   const receipt = await (
-    await bLusdAmm["exchange(uint256,uint256,uint256,uint256)"](
+    await bLusdAmm.connect(signer)["exchange(uint256,uint256,uint256,uint256)"](
       inputToken,
       getOtherToken(inputToken),
       inputAmount.hex,
@@ -937,19 +1040,23 @@ const swapTokensMainnet = async (
   inputToken: BLusdAmmTokenIndex,
   inputAmount: Decimal,
   minOutputAmount: Decimal,
-  bLusdAmm: CurveCryptoSwap2ETH | undefined
+  bLusdAmm: CurveCryptoSwap2ETH | undefined,
+  signer: Signer | undefined,
+  account: string
 ): Promise<void> => {
-  if (bLusdAmm === undefined) throw new Error("swapTokensMainnet() failed: a dependency is null");
+  if (bLusdAmm === undefined || signer === undefined) {
+    throw new Error("swapTokensMainnet() failed: a dependency is null");
+  }
 
   const swaps = CurveRegistrySwaps__factory.connect(CURVE_REGISTRY_SWAPS_ADDRESS, bLusdAmm.signer);
   const route = getRoute(inputToken);
 
   const gasEstimate = await swaps.estimateGas[
     "exchange_multiple(address[9],uint256[3][4],uint256,uint256)"
-  ](...route, inputAmount.hex, minOutputAmount.hex);
+  ](...route, inputAmount.hex, minOutputAmount.hex, { from: account });
 
   const receipt = await (
-    await swaps["exchange_multiple(address[9],uint256[3][4],uint256,uint256)"](
+    await swaps.connect(signer)["exchange_multiple(address[9],uint256[3][4],uint256,uint256)"](
       ...route,
       inputAmount.hex,
       minOutputAmount.hex,
@@ -999,20 +1106,25 @@ const addLiquidity = async (
   lusdAmount: Decimal,
   minLpTokens: Decimal,
   shouldStakeInGauge: boolean,
-  bLusdZapper: BLUSDLPZap | undefined
+  bLusdZapper: BLUSDLPZap | undefined,
+  signer: Signer | undefined,
+  account: string
 ): Promise<void> => {
-  if (bLusdZapper === undefined) throw new Error("addLiquidity() failed: a dependency is null");
+  if (bLusdZapper === undefined || signer === undefined) {
+    throw new Error("addLiquidity() failed: a dependency is null");
+  }
 
   const zapperFunction = shouldStakeInGauge ? "addLiquidityAndStake" : "addLiquidity";
 
   const gasEstimate = await bLusdZapper.estimateGas[zapperFunction](
     bLusdAmount.hex,
     lusdAmount.hex,
-    minLpTokens.hex
+    minLpTokens.hex,
+    { from: account }
   );
 
   const receipt = await (
-    await bLusdZapper[zapperFunction](
+    await bLusdZapper.connect(signer)[zapperFunction](
       bLusdAmount.hex,
       lusdAmount.hex,
       minLpTokens.hex,
@@ -1056,16 +1168,17 @@ const removeLiquidity = async (
   burnLpTokens: Decimal,
   minBLusdAmount: Decimal,
   minLusdAmount: Decimal,
-  bLusdZapper: BLUSDLPZap | undefined
+  bLusdZapper: BLUSDLPZap | undefined,
+  signer: Signer | undefined
 ): Promise<void> => {
-  if (bLusdZapper === undefined) throw new Error("removeLiquidity() failed: a dependency is null");
+  if (bLusdZapper === undefined || signer === undefined) {
+    throw new Error("removeLiquidity() failed: a dependency is null");
+  }
 
   const receipt = await (
-    await bLusdZapper.removeLiquidityBalanced(
-      burnLpTokens.hex,
-      minBLusdAmount.hex,
-      minLusdAmount.hex
-    )
+    await bLusdZapper
+      .connect(signer)
+      .removeLiquidityBalanced(burnLpTokens.hex, minBLusdAmount.hex, minLusdAmount.hex)
   ).wait();
 
   if (!receipt.status) {
@@ -1078,20 +1191,24 @@ const removeLiquidity = async (
 const removeLiquidityLUSD = async (
   burnLpTokens: Decimal,
   minAmount: Decimal,
-  bLusdZapper: BLUSDLPZap | undefined
+  bLusdZapper: BLUSDLPZap | undefined,
+  signer: Signer | undefined,
+  account: string
 ): Promise<void> => {
-  if (bLusdZapper === undefined)
+  if (bLusdZapper === undefined || signer === undefined) {
     throw new Error("removeLiquidityLUSD() failed: a dependency is null");
+  }
 
   const removeLiquidityFunction = "removeLiquidityLUSD";
 
   const gasEstimate = await bLusdZapper.estimateGas[removeLiquidityFunction](
     burnLpTokens.hex,
-    minAmount.hex
+    minAmount.hex,
+    { from: account }
   );
 
   const receipt = await (
-    await bLusdZapper[removeLiquidityFunction](
+    await bLusdZapper.connect(signer)[removeLiquidityFunction](
       burnLpTokens.hex,
       minAmount.hex,
       { gasLimit: gasEstimate.mul(6).div(5) } // Add 20% overhead (we've seen it fail otherwise)
@@ -1108,9 +1225,13 @@ const removeLiquidityLUSD = async (
 const removeLiquidityBLUSD = async (
   burnLpTokens: Decimal,
   minAmount: Decimal,
-  bLusdAmm: CurveCryptoSwap2ETH | undefined
+  bLusdAmm: CurveCryptoSwap2ETH | undefined,
+  signer: Signer | undefined,
+  account: string
 ): Promise<void> => {
-  if (bLusdAmm === undefined) throw new Error("removeLiquidityBLUSD() failed: a dependency is null");
+  if (bLusdAmm === undefined || signer === undefined) {
+    throw new Error("removeLiquidityBLUSD() failed: a dependency is null");
+  }
 
   const removeLiquidityFunction = "remove_liquidity_one_coin(uint256,uint256,uint256,bool)";
 
@@ -1118,11 +1239,12 @@ const removeLiquidityBLUSD = async (
     burnLpTokens.hex,
     0,
     minAmount.hex,
-    false
+    false,
+    { from: account }
   );
 
   const receipt = await (
-    await bLusdAmm[removeLiquidityFunction](
+    await bLusdAmm.connect(signer)[removeLiquidityFunction](
       burnLpTokens.hex,
       0,
       minAmount.hex,
@@ -1143,23 +1265,29 @@ const removeLiquidityOneCoin = async (
   output: BLusdAmmTokenIndex,
   minAmount: Decimal,
   bLusdZapper: BLUSDLPZap | undefined,
-  bLusdAmm: CurveCryptoSwap2ETH | undefined
+  bLusdAmm: CurveCryptoSwap2ETH | undefined,
+  signer: Signer | undefined,
+  account: string
 ): Promise<void> => {
   if (output === BLusdAmmTokenIndex.LUSD) {
-    return removeLiquidityLUSD(burnLpTokens, minAmount, bLusdZapper);
+    return removeLiquidityLUSD(burnLpTokens, minAmount, bLusdZapper, signer, account);
   } else {
-    return removeLiquidityBLUSD(burnLpTokens, minAmount, bLusdAmm);
+    return removeLiquidityBLUSD(burnLpTokens, minAmount, bLusdAmm, signer, account);
   }
 };
 
 const stakeLiquidity = async (
   stakeAmount: Decimal,
-  bLusdGauge: CurveLiquidityGaugeV5 | undefined
+  bLusdGauge: CurveLiquidityGaugeV5 | undefined,
+  signer: Signer | undefined
 ): Promise<DepositEventObject> => {
-  if (bLusdGauge === undefined) {
+  if (bLusdGauge === undefined || signer === undefined) {
     throw new Error("stakeLiquidity() failed: a dependency is null");
   }
-  const receipt = await (await bLusdGauge["deposit(uint256)"](stakeAmount.hex)).wait();
+
+  const receipt = await (
+    await bLusdGauge.connect(signer)["deposit(uint256)"](stakeAmount.hex)
+  ).wait();
 
   const depositEvent = receipt?.events?.find(e => e?.event === "Deposit") as Maybe<DepositEvent>;
 
@@ -1173,14 +1301,15 @@ const stakeLiquidity = async (
 
 const unstakeLiquidity = async (
   unstakeAmount: Decimal,
-  bLusdGauge: CurveLiquidityGaugeV5 | undefined
+  bLusdGauge: CurveLiquidityGaugeV5 | undefined,
+  signer: Signer | undefined
 ): Promise<WithdrawEventObject> => {
-  if (bLusdGauge === undefined) {
+  if (bLusdGauge === undefined || signer === undefined) {
     throw new Error("unstakeLiquidity() failed: a dependency is null");
   }
-  const claimRewards = true;
+
   const receipt = await (
-    await bLusdGauge["withdraw(uint256,bool)"](unstakeAmount.hex, claimRewards)
+    await bLusdGauge.connect(signer)["withdraw(uint256,bool)"](unstakeAmount.hex, true)
   ).wait();
 
   const withdrawEvent = receipt?.events?.find(e => e?.event === "Withdraw") as Maybe<WithdrawEvent>;
@@ -1193,12 +1322,15 @@ const unstakeLiquidity = async (
   return withdrawEvent.args;
 };
 
-const claimLpRewards = async (bLusdGauge: CurveLiquidityGaugeV5 | undefined): Promise<void> => {
-  if (bLusdGauge === undefined) {
+const claimLpRewards = async (
+  bLusdGauge: CurveLiquidityGaugeV5 | undefined,
+  signer: Signer | undefined
+): Promise<void> => {
+  if (bLusdGauge === undefined || signer === undefined) {
     throw new Error("claimLpRewards() failed: a dependency is null");
   }
 
-  const receipt = await (await bLusdGauge["claim_rewards()"]()).wait();
+  const receipt = await (await bLusdGauge.connect(signer)["claim_rewards()"]()).wait();
 
   if (!receipt.status) {
     throw new Error("claimLpRewards() failed: no transaction receipt status received.");
@@ -1209,7 +1341,7 @@ const getLpRewards = async (
   account: string,
   bLusdGauge: CurveLiquidityGaugeV5
 ): Promise<BLusdLpRewards> => {
-  let rewards: BLusdLpRewards = [];
+  const rewards: BLusdLpRewards = [];
 
   const totalRewardTokens = (await bLusdGauge.reward_count()).toNumber();
 
@@ -1233,6 +1365,8 @@ export const api = {
   getTokenBalance,
   getTokenTotalSupply,
   getProtocolInfo,
+  approveInfiniteBond,
+  isInfiniteBondApproved,
   createBond,
   cancelBond,
   claimBond,

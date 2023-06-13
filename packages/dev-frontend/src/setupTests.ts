@@ -4,8 +4,8 @@
 // learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom/extend-expect";
 
+import fetch from "node-fetch";
 import { configure } from "@testing-library/dom";
-
 import { DisposableWalletProvider } from "./testUtils/DisposableWalletProvider";
 
 // Loading the Liquity store takes longer without Multicall
@@ -19,7 +19,4 @@ const ethereum = new DisposableWalletProvider(
 // Let web3-react's InjectedConnector find our DisposableWalletProvider
 Object.assign(window, { ethereum });
 
-// Object.fromEntries = <T = any>(
-//   entries: Iterable<readonly [PropertyKey, T]>
-// ): { [k in PropertyKey]: T } =>
-//   Object.assign({}, ...Array.from(entries).map(([k, v]) => ({ [k]: v })));
+window.fetch = fetch as typeof window.fetch; // node-fetch is not perfectly compliant...

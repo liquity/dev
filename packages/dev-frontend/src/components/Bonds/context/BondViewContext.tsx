@@ -32,6 +32,7 @@ export type BondViewContextType = {
   bLusdAmmBLusdBalance?: Decimal;
   bLusdAmmLusdBalance?: Decimal;
   statuses: BondTransactionStatuses;
+  isInfiniteBondApproved: boolean;
   isSynchronizing: boolean;
   getLusdFromFaucet: () => Promise<void>;
   simulatedProtocolInfo?: ProtocolInfo;
