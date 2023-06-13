@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
-import { getNetwork } from "@ethersproject/networks";
+import { FallbackProvider } from "@ethersproject/providers";
 import { useProvider, useSigner, useAccount, useChainId } from "wagmi";
 
-import { isBatchedProvider, isWebSocketAugmentedProvider } from "@liquity/providers";
 import {
   BlockPolledLiquityStore,
   EthersLiquity,
@@ -12,6 +11,7 @@ import {
 } from "@liquity/lib-ethers";
 
 import { LiquityFrontendConfig, getConfig } from "../config";
+import { BatchedProvider } from "../providers/BatchingProvider";
 
 type LiquityContextValue = {
   config: LiquityFrontendConfig;
@@ -28,20 +28,13 @@ type LiquityProviderProps = {
   unsupportedMainnetFallback?: React.ReactNode;
 };
 
-const wsParams = (network: string, infuraApiKey: string): [string, string] => [
-  `wss://${network === "homestead" ? "mainnet" : network}.infura.io/ws/v3/${infuraApiKey}`,
-  network
-];
-
-const webSocketSupportedNetworks = ["homestead", "kovan", "rinkeby", "ropsten", "goerli"];
-
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,
   loader,
   unsupportedNetworkFallback,
   unsupportedMainnetFallback
 }) => {
-  const provider = useProvider();
+  const provider = useProvider<FallbackProvider>();
   const signer = useSigner();
   const account = useAccount();
   const chainId = useChainId();
@@ -49,8 +42,11 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
 
   const connection = useMemo(() => {
     if (config && provider && signer.data && account.address && chainId) {
+      const batchedProvider = new BatchedProvider(provider, chainId);
+      // batchedProvider._debugLog = true;
+
       try {
-        return _connectByChainId(provider, signer.data, chainId, {
+        return _connectByChainId(batchedProvider, signer.data, chainId, {
           userAddress: account.address,
           frontendTag: config.frontendTag,
           useStore: "blockPolled"
@@ -64,34 +60,6 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   useEffect(() => {
     getConfig().then(setConfig);
   }, []);
-
-  useEffect(() => {
-    if (config && connection) {
-      const { provider, chainId } = connection;
-
-      if (isBatchedProvider(provider) && provider.chainId !== chainId) {
-        provider.chainId = chainId;
-      }
-
-      if (isWebSocketAugmentedProvider(provider)) {
-        const network = getNetwork(chainId);
-
-        if (
-          network.name &&
-          webSocketSupportedNetworks.includes(network.name) &&
-          config.infuraApiKey
-        ) {
-          provider.openWebSocket(...wsParams(network.name, config.infuraApiKey));
-        } else if (connection._isDev) {
-          provider.openWebSocket(`ws://${window.location.hostname}:8546`, chainId);
-        }
-
-        return () => {
-          provider.closeWebSocket();
-        };
-      }
-    }
-  }, [config, connection]);
 
   if (!config || !account.address) {
     return <>{loader}</>;
