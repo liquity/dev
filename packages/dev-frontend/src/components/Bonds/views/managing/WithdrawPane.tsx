@@ -42,7 +42,6 @@ const zeros = new Map<BLusdAmmTokenIndex, Decimal>([
 ]);
 
 export const WithdrawPane: React.FC = () => {
-  const DISABLE_WITHDRAWALS = true;
   const {
     dispatchEvent,
     statuses,
@@ -102,7 +101,7 @@ export const WithdrawPane: React.FC = () => {
         minAmount
       });
     }
-  }
+  };
 
   const handleBackPressed = () => {
     dispatchEvent("BACK_PRESSED");
@@ -222,7 +221,11 @@ export const WithdrawPane: React.FC = () => {
         )}
 
         {!needsApproval && (
-          <Button variant="primary" onClick={handleConfirmPressed} disabled={DISABLE_WITHDRAWALS}>
+          <Button
+            variant="primary"
+            onClick={handleConfirmPressed}
+            disabled={burnLpTokens.isZero || isBalanceInsufficient || isManageLiquidityPending}
+          >
             {isManageLiquidityPending ? (
               <Spinner size="28px" sx={{ color: "white" }} />
             ) : (
