@@ -9,6 +9,7 @@ import RollupPluginPolyfillNode from "rollup-plugin-polyfill-node";
 export default defineConfig({
   base: "./",
   plugins: [react()],
+  define: { "process.env": {} }, // Coinbase SDK wants this
   optimizeDeps: {
     include: [
       "@liquity/providers",
