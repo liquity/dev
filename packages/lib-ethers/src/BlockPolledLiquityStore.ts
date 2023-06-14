@@ -1,3 +1,4 @@
+import assert from "assert";
 import { AddressZero } from "@ethersproject/constants";
 
 import {
@@ -184,7 +185,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       }
     });
 
-    const blockListener = async (blockTag: number) => {
+    const handleBlock = async (blockTag: number) => {
       const state = await this._get(blockTag);
 
       if (this._loaded) {
@@ -194,10 +195,30 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       }
     };
 
+    let latestBlock: number | undefined;
+    let timerId: ReturnType<typeof setTimeout> | undefined;
+
+    const blockListener = (blockTag: number) => {
+      latestBlock = Math.max(blockTag, latestBlock ?? blockTag);
+
+      if (timerId !== undefined) {
+        clearTimeout(timerId);
+      }
+
+      timerId = setTimeout(() => {
+        assert(latestBlock !== undefined);
+        handleBlock(latestBlock);
+      }, 50);
+    };
+
     this._provider.on("block", blockListener);
 
     return () => {
       this._provider.off("block", blockListener);
+
+      if (timerId !== undefined) {
+        clearTimeout(timerId);
+      }
     };
   }
 
