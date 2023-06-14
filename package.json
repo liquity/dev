@@ -55,6 +55,7 @@
     "docs:collect-sdk-apis": "node scripts/collect-sdk-apis.js",
     "docs:api-documenter": "api-documenter generate -i temp/sdk-apis -o docs/sdk",
     "fuzzer": "yarn workspace @liquity/fuzzer fuzzer",
+    "postinstall": "run-s prepare",
     "prepare": "run-s 'prepare:*'",
     "prepare:contracts": "yarn workspace @liquity/contracts prepare",
     "prepare:lib-base": "yarn workspace @liquity/lib-base prepare",

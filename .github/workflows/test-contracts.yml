@@ -28,7 +28,6 @@ jobs:
           FORCE_COLOR: 0
 
       - run: yarn install --immutable
-      - run: yarn prepare
 
       - name: Test contracts
         run: yarn test-contracts
@@ -52,7 +51,6 @@ jobs:
           FORCE_COLOR: 0
 
       - run: yarn install --immutable
-      - run: yarn prepare
 
       - name: Test contract coverage
         run: yarn coverage

@@ -26,7 +26,6 @@ jobs:
           FORCE_COLOR: 0
 
       - run: yarn install --immutable
-      - run: yarn prepare
       - run: yarn build
 
       - name: Test SDK & UI
