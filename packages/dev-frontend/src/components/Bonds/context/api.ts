@@ -1048,7 +1048,7 @@ const swapTokensMainnet = async (
     throw new Error("swapTokensMainnet() failed: a dependency is null");
   }
 
-  const swaps = CurveRegistrySwaps__factory.connect(CURVE_REGISTRY_SWAPS_ADDRESS, bLusdAmm.signer);
+  const swaps = CurveRegistrySwaps__factory.connect(CURVE_REGISTRY_SWAPS_ADDRESS, bLusdAmm.provider);
   const route = getRoute(inputToken);
 
   const gasEstimate = await swaps.estimateGas[
