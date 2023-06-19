@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Provider } from "@ethersproject/abstract-provider";
 import { FallbackProvider } from "@ethersproject/providers";
-import { useProvider, useSigner, useAccount, useChainId } from "wagmi";
+import { usePublicClient, useWalletClient, useAccount, useChainId } from "wagmi";
 
 import {
   BlockPolledLiquityStore,
@@ -34,8 +34,8 @@ export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   unsupportedNetworkFallback,
   unsupportedMainnetFallback
 }) => {
-  const provider = useProvider<FallbackProvider>();
-  const signer = useSigner();
+  const provider = usePublicClient<FallbackProvider>();
+  const signer = useWalletClient();
   const account = useAccount();
   const chainId = useChainId();
   const [config, setConfig] = useState<LiquityFrontendConfig>();
