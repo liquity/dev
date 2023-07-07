@@ -23,10 +23,10 @@ No Etherscan Url defined, skipping verification
 No Etherscan Url defined, skipping verification
 No Etherscan Url defined, skipping verification
 Contract objects addresses:
-lqtyStaking: 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
+stblStaking: 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
 lockupContractFactory: 0x2eBeF24dA09489218Ba2BECb01867F6DaAeDcD4B
 communityIssuance: 0xD8c9D9071123a059C6E0A945cF0e0c82b508d816
-lqtyToken: 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
+stblToken: 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
 Unipool address: 0xd37a77E71ddF3373a79BE2eBB76B6c4808bDF0d5
 time now: 1617612442
 time oneYearFromNow: 1649148442
@@ -46,8 +46,8 @@ lockupContract addr: 0x015f...Cabf,
             on-chain beneficiary addr: 0x7AdD...FD6F
             unlockTime: 1649148442
             
-STORED ADDRESSES IN LQTY TOKEN
-multi-sig address stored in LQTYToken : 0xb8a9...Ca1C
-LQTY Safe address: 0xb8a9...Ca1C
-INITIAL LQTY BALANCES
-Unipool LQTY balance       : 1333333.333333333333333333
+STORED ADDRESSES IN STBL TOKEN
+multi-sig address stored in STBLToken : 0xb8a9...Ca1C
+STBL Safe address: 0xb8a9...Ca1C
+INITIAL STBL BALANCES
+Unipool STBL balance       : 1333333.333333333333333333

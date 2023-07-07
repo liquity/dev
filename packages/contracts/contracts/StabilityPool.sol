@@ -129,19 +129,19 @@ import "./Dependencies/console.sol";
  * https://github.com/liquity/liquity/blob/master/papers/Scalable_Reward_Distribution_with_Compounding_Stakes.pdf
  *
  *
- * --- LQTY ISSUANCE TO STABILITY POOL DEPOSITORS ---
+ * --- STBL ISSUANCE TO STABILITY POOL DEPOSITORS ---
  *
- * An LQTY issuance event occurs at every deposit operation, and every liquidation.
+ * An STBL issuance event occurs at every deposit operation, and every liquidation.
  *
  * Each deposit is tagged with the address of the front end through which it was made.
  *
- * All deposits earn a share of the issued LQTY in proportion to the deposit as a share of total deposits. The LQTY earned
+ * All deposits earn a share of the issued STBL in proportion to the deposit as a share of total deposits. The STBL earned
  * by a given deposit, is split between the depositor and the front end through which the deposit was made, based on the front end's kickbackRate.
  *
  * Please see the system Readme for an overview:
- * https://github.com/liquity/dev/blob/main/README.md#lqty-issuance-to-stability-providers
+ * https://github.com/liquity/dev/blob/main/README.md#stbl-issuance-to-stability-providers
  *
- * We use the same mathematical product-sum approach to track LQTY gains for depositors, where 'G' is the sum corresponding to LQTY gains.
+ * We use the same mathematical product-sum approach to track STBL gains for depositors, where 'G' is the sum corresponding to STBL gains.
  * The product P (and snapshot P_t) is re-used, as the ratio P/P_t tracks a deposit's depletion due to liquidations.
  *
  */
@@ -220,16 +220,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     mapping (uint128 => mapping(uint128 => uint)) public epochToScaleToSum;
 
     /*
-    * Similarly, the sum 'G' is used to calculate LQTY gains. During it's lifetime, each deposit d_t earns a LQTY gain of
+    * Similarly, the sum 'G' is used to calculate STBL gains. During it's lifetime, each deposit d_t earns a STBL gain of
     *  ( d_t * [G - G_t] )/P_t, where G_t is the depositor's snapshot of G taken at time t when  the deposit was made.
     *
-    *  LQTY reward events occur are triggered by depositor operations (new deposit, topup, withdrawal), and liquidations.
-    *  In each case, the LQTY reward is issued (i.e. G is updated), before other state changes are made.
+    *  STBL reward events occur are triggered by depositor operations (new deposit, topup, withdrawal), and liquidations.
+    *  In each case, the STBL reward is issued (i.e. G is updated), before other state changes are made.
     */
     mapping (uint128 => mapping(uint128 => uint)) public epochToScaleToG;
 
-    // Error tracker for the error correction in the LQTY issuance calculation
-    uint public lastLQTYError;
+    // Error tracker for the error correction in the STBL issuance calculation
+    uint public lastSTBLError;
     // Error trackers for the error correction in the offset calculation
     uint public lastETHError_Offset;
     uint public lastLUSDLossError_Offset;
@@ -263,8 +263,8 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
 
     event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _LUSDLoss);
-    event LQTYPaidToDepositor(address indexed _depositor, uint _LQTY);
-    event LQTYPaidToFrontEnd(address indexed _frontEnd, uint _LQTY);
+    event STBLPaidToDepositor(address indexed _depositor, uint _STBL);
+    event STBLPaidToFrontEnd(address indexed _frontEnd, uint _STBL);
     event EtherSent(address _to, uint _amount);
 
     // --- Contract setters ---
@@ -323,10 +323,10 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     /*  provideToSP():
     *
-    * - Triggers a LQTY issuance, based on time passed since the last issuance. The LQTY issuance is shared between *all* depositors and front ends
+    * - Triggers a STBL issuance, based on time passed since the last issuance. The STBL issuance is shared between *all* depositors and front ends
     * - Tags the deposit with the provided front end tag param, if it's a new deposit
-    * - Sends depositor's accumulated gains (LQTY, ETH) to depositor
-    * - Sends the tagged front end's accumulated LQTY gains to the tagged front end
+    * - Sends depositor's accumulated gains (STBL, ETH) to depositor
+    * - Sends the tagged front end's accumulated STBL gains to the tagged front end
     * - Increases deposit and tagged front end's stake, and takes new snapshots for each.
     */
     function provideToSP(uint _amount, address _frontEndTag) external override {
@@ -338,16 +338,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         ICommunityIssuance communityIssuanceCached = communityIssuance;
 
-        _triggerLQTYIssuance(communityIssuanceCached);
+        _triggerSTBLIssuance(communityIssuanceCached);
 
         if (initialDeposit == 0) {_setFrontEndTag(msg.sender, _frontEndTag);}
         uint depositorETHGain = getDepositorETHGain(msg.sender);
         uint compoundedLUSDDeposit = getCompoundedLUSDDeposit(msg.sender);
         uint LUSDLoss = initialDeposit.sub(compoundedLUSDDeposit); // Needed only for event log
 
-        // First pay out any LQTY gains
+        // First pay out any STBL gains
         address frontEnd = deposits[msg.sender].frontEndTag;
-        _payOutLQTYGains(communityIssuanceCached, msg.sender, frontEnd);
+        _payOutSTBLGains(communityIssuanceCached, msg.sender, frontEnd);
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
@@ -368,10 +368,10 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     /*  withdrawFromSP():
     *
-    * - Triggers a LQTY issuance, based on time passed since the last issuance. The LQTY issuance is shared between *all* depositors and front ends
+    * - Triggers a STBL issuance, based on time passed since the last issuance. The STBL issuance is shared between *all* depositors and front ends
     * - Removes the deposit's front end tag if it is a full withdrawal
-    * - Sends all depositor's accumulated gains (LQTY, ETH) to depositor
-    * - Sends the tagged front end's accumulated LQTY gains to the tagged front end
+    * - Sends all depositor's accumulated gains (STBL, ETH) to depositor
+    * - Sends the tagged front end's accumulated STBL gains to the tagged front end
     * - Decreases deposit and tagged front end's stake, and takes new snapshots for each.
     *
     * If _amount > userDeposit, the user withdraws all of their compounded deposit.
@@ -383,7 +383,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         ICommunityIssuance communityIssuanceCached = communityIssuance;
 
-        _triggerLQTYIssuance(communityIssuanceCached);
+        _triggerSTBLIssuance(communityIssuanceCached);
 
         uint depositorETHGain = getDepositorETHGain(msg.sender);
 
@@ -391,9 +391,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint LUSDtoWithdraw = LiquityMath._min(_amount, compoundedLUSDDeposit);
         uint LUSDLoss = initialDeposit.sub(compoundedLUSDDeposit); // Needed only for event log
 
-        // First pay out any LQTY gains
+        // First pay out any STBL gains
         address frontEnd = deposits[msg.sender].frontEndTag;
-        _payOutLQTYGains(communityIssuanceCached, msg.sender, frontEnd);
+        _payOutSTBLGains(communityIssuanceCached, msg.sender, frontEnd);
         
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
@@ -414,9 +414,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     /* withdrawETHGainToTrove:
-    * - Triggers a LQTY issuance, based on time passed since the last issuance. The LQTY issuance is shared between *all* depositors and front ends
-    * - Sends all depositor's LQTY gain to  depositor
-    * - Sends all tagged front end's LQTY gain to the tagged front end
+    * - Triggers a STBL issuance, based on time passed since the last issuance. The STBL issuance is shared between *all* depositors and front ends
+    * - Sends all depositor's STBL gain to  depositor
+    * - Sends all tagged front end's STBL gain to the tagged front end
     * - Transfers the depositor's entire ETH gain from the Stability Pool to the caller's trove
     * - Leaves their compounded deposit in the Stability Pool
     * - Updates snapshots for deposit and tagged front end stake */
@@ -428,16 +428,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         ICommunityIssuance communityIssuanceCached = communityIssuance;
 
-        _triggerLQTYIssuance(communityIssuanceCached);
+        _triggerSTBLIssuance(communityIssuanceCached);
 
         uint depositorETHGain = getDepositorETHGain(msg.sender);
 
         uint compoundedLUSDDeposit = getCompoundedLUSDDeposit(msg.sender);
         uint LUSDLoss = initialDeposit.sub(compoundedLUSDDeposit); // Needed only for event log
 
-        // First pay out any LQTY gains
+        // First pay out any STBL gains
         address frontEnd = deposits[msg.sender].frontEndTag;
-        _payOutLQTYGains(communityIssuanceCached, msg.sender, frontEnd);
+        _payOutSTBLGains(communityIssuanceCached, msg.sender, frontEnd);
 
         // Update front end stake
         uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
@@ -460,34 +460,34 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         borrowerOperations.moveETHGainToTrove{ value: depositorETHGain }(msg.sender, _upperHint, _lowerHint);
     }
 
-    // --- LQTY issuance functions ---
+    // --- STBL issuance functions ---
 
-    function _triggerLQTYIssuance(ICommunityIssuance _communityIssuance) internal {
-        uint LQTYIssuance = _communityIssuance.issueLQTY();
-       _updateG(LQTYIssuance);
+    function _triggerSTBLIssuance(ICommunityIssuance _communityIssuance) internal {
+        uint STBLIssuance = _communityIssuance.issueSTBL();
+       _updateG(STBLIssuance);
     }
 
-    function _updateG(uint _LQTYIssuance) internal {
+    function _updateG(uint _STBLIssuance) internal {
         uint totalLUSD = totalLUSDDeposits; // cached to save an SLOAD
         /*
-        * When total deposits is 0, G is not updated. In this case, the LQTY issued can not be obtained by later
+        * When total deposits is 0, G is not updated. In this case, the STBL issued can not be obtained by later
         * depositors - it is missed out on, and remains in the balanceof the CommunityIssuance contract.
         *
         */
-        if (totalLUSD == 0 || _LQTYIssuance == 0) {return;}
+        if (totalLUSD == 0 || _STBLIssuance == 0) {return;}
 
-        uint LQTYPerUnitStaked;
-        LQTYPerUnitStaked =_computeLQTYPerUnitStaked(_LQTYIssuance, totalLUSD);
+        uint STBLPerUnitStaked;
+        STBLPerUnitStaked =_computeSTBLPerUnitStaked(_STBLIssuance, totalLUSD);
 
-        uint marginalLQTYGain = LQTYPerUnitStaked.mul(P);
-        epochToScaleToG[currentEpoch][currentScale] = epochToScaleToG[currentEpoch][currentScale].add(marginalLQTYGain);
+        uint marginalSTBLGain = STBLPerUnitStaked.mul(P);
+        epochToScaleToG[currentEpoch][currentScale] = epochToScaleToG[currentEpoch][currentScale].add(marginalSTBLGain);
 
         emit G_Updated(epochToScaleToG[currentEpoch][currentScale], currentEpoch, currentScale);
     }
 
-    function _computeLQTYPerUnitStaked(uint _LQTYIssuance, uint _totalLUSDDeposits) internal returns (uint) {
+    function _computeSTBLPerUnitStaked(uint _STBLIssuance, uint _totalLUSDDeposits) internal returns (uint) {
         /*  
-        * Calculate the LQTY-per-unit staked.  Division uses a "feedback" error correction, to keep the 
+        * Calculate the STBL-per-unit staked.  Division uses a "feedback" error correction, to keep the 
         * cumulative error low in the running total G:
         *
         * 1) Form a numerator which compensates for the floor division error that occurred the last time this 
@@ -497,12 +497,12 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * 4) Store this error for use in the next correction when this function is called.
         * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
-        uint LQTYNumerator = _LQTYIssuance.mul(DECIMAL_PRECISION).add(lastLQTYError);
+        uint STBLNumerator = _STBLIssuance.mul(DECIMAL_PRECISION).add(lastSTBLError);
 
-        uint LQTYPerUnitStaked = LQTYNumerator.div(_totalLUSDDeposits);
-        lastLQTYError = LQTYNumerator.sub(LQTYPerUnitStaked.mul(_totalLUSDDeposits));
+        uint STBLPerUnitStaked = STBLNumerator.div(_totalLUSDDeposits);
+        lastSTBLError = STBLNumerator.sub(STBLPerUnitStaked.mul(_totalLUSDDeposits));
 
-        return LQTYPerUnitStaked;
+        return STBLPerUnitStaked;
     }
 
     // --- Liquidation functions ---
@@ -517,7 +517,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint totalLUSD = totalLUSDDeposits; // cached to save an SLOAD
         if (totalLUSD == 0 || _debtToOffset == 0) { return; }
 
-        _triggerLQTYIssuance(communityIssuance);
+        _triggerSTBLIssuance(communityIssuance);
 
         (uint ETHGainPerUnitStaked,
             uint LUSDLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalLUSD);
@@ -678,12 +678,12 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     /*
-    * Calculate the LQTY gain earned by a deposit since its last snapshots were taken.
-    * Given by the formula:  LQTY = d0 * (G - G(0))/P(0)
+    * Calculate the STBL gain earned by a deposit since its last snapshots were taken.
+    * Given by the formula:  STBL = d0 * (G - G(0))/P(0)
     * where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
     * d0 is the last recorded deposit value.
     */
-    function getDepositorLQTYGain(address _depositor) public view override returns (uint) {
+    function getDepositorSTBLGain(address _depositor) public view override returns (uint) {
         uint initialDeposit = deposits[_depositor].initialValue;
         if (initialDeposit == 0) {return 0;}
 
@@ -698,18 +698,18 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         Snapshots memory snapshots = depositSnapshots[_depositor];
 
-        uint LQTYGain = kickbackRate.mul(_getLQTYGainFromSnapshots(initialDeposit, snapshots)).div(DECIMAL_PRECISION);
+        uint STBLGain = kickbackRate.mul(_getSTBLGainFromSnapshots(initialDeposit, snapshots)).div(DECIMAL_PRECISION);
 
-        return LQTYGain;
+        return STBLGain;
     }
 
     /*
-    * Return the LQTY gain earned by the front end. Given by the formula:  E = D0 * (G - G(0))/P(0)
+    * Return the STBL gain earned by the front end. Given by the formula:  E = D0 * (G - G(0))/P(0)
     * where G(0) and P(0) are the depositor's snapshots of the sum G and product P, respectively.
     *
     * D0 is the last recorded value of the front end's total tagged deposits.
     */
-    function getFrontEndLQTYGain(address _frontEnd) public view override returns (uint) {
+    function getFrontEndSTBLGain(address _frontEnd) public view override returns (uint) {
         uint frontEndStake = frontEndStakes[_frontEnd];
         if (frontEndStake == 0) { return 0; }
 
@@ -718,14 +718,14 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         Snapshots memory snapshots = frontEndSnapshots[_frontEnd];
 
-        uint LQTYGain = frontEndShare.mul(_getLQTYGainFromSnapshots(frontEndStake, snapshots)).div(DECIMAL_PRECISION);
-        return LQTYGain;
+        uint STBLGain = frontEndShare.mul(_getSTBLGainFromSnapshots(frontEndStake, snapshots)).div(DECIMAL_PRECISION);
+        return STBLGain;
     }
 
-    function _getLQTYGainFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view returns (uint) {
+    function _getSTBLGainFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view returns (uint) {
        /*
-        * Grab the sum 'G' from the epoch at which the stake was made. The LQTY gain may span up to one scale change.
-        * If it does, the second portion of the LQTY gain is scaled by 1e9.
+        * Grab the sum 'G' from the epoch at which the stake was made. The STBL gain may span up to one scale change.
+        * If it does, the second portion of the STBL gain is scaled by 1e9.
         * If the gain spans no scale change, the second portion will be 0.
         */
         uint128 epochSnapshot = snapshots.epoch;
@@ -736,9 +736,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot].sub(G_Snapshot);
         uint secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot.add(1)].div(SCALE_FACTOR);
 
-        uint LQTYGain = initialStake.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(DECIMAL_PRECISION);
+        uint STBLGain = initialStake.mul(firstPortion.add(secondPortion)).div(P_Snapshot).div(DECIMAL_PRECISION);
 
-        return LQTYGain;
+        return STBLGain;
     }
 
     // --- Compounded deposit and compounded front end stake ---
@@ -819,7 +819,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         return compoundedStake;
     }
 
-    // --- Sender functions for LUSD deposit, ETH gains and LQTY gains ---
+    // --- Sender functions for LUSD deposit, ETH gains and STBL gains ---
 
     // Transfer the LUSD tokens from the user to the Stability Pool's address, and update its recorded LUSD
     function _sendLUSDtoStabilityPool(address _address, uint _amount) internal {
@@ -922,18 +922,18 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         emit FrontEndSnapshotUpdated(_frontEnd, currentP, currentG);
     }
 
-    function _payOutLQTYGains(ICommunityIssuance _communityIssuance, address _depositor, address _frontEnd) internal {
-        // Pay out front end's LQTY gain
+    function _payOutSTBLGains(ICommunityIssuance _communityIssuance, address _depositor, address _frontEnd) internal {
+        // Pay out front end's STBL gain
         if (_frontEnd != address(0)) {
-            uint frontEndLQTYGain = getFrontEndLQTYGain(_frontEnd);
-            _communityIssuance.sendLQTY(_frontEnd, frontEndLQTYGain);
-            emit LQTYPaidToFrontEnd(_frontEnd, frontEndLQTYGain);
+            uint frontEndSTBLGain = getFrontEndSTBLGain(_frontEnd);
+            _communityIssuance.sendSTBL(_frontEnd, frontEndSTBLGain);
+            emit STBLPaidToFrontEnd(_frontEnd, frontEndSTBLGain);
         }
 
-        // Pay out depositor's LQTY gain
-        uint depositorLQTYGain = getDepositorLQTYGain(_depositor);
-        _communityIssuance.sendLQTY(_depositor, depositorLQTYGain);
-        emit LQTYPaidToDepositor(_depositor, depositorLQTYGain);
+        // Pay out depositor's STBL gain
+        uint depositorSTBLGain = getDepositorSTBLGain(_depositor);
+        _communityIssuance.sendSTBL(_depositor, depositorSTBLGain);
+        emit STBLPaidToDepositor(_depositor, depositorSTBLGain);
     }
 
     // --- 'require' functions ---

@@ -220,8 +220,8 @@ export interface SendableLiquity<R = unknown, S = unknown>
     amount: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
 
-  /** {@inheritDoc TransactableLiquity.sendLQTY} */
-  sendLQTY(
+  /** {@inheritDoc TransactableLiquity.sendSTBL} */
+  sendSTBL(
     toAddress: string,
     amount: Decimalish
   ): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
@@ -235,11 +235,11 @@ export interface SendableLiquity<R = unknown, S = unknown>
   /** {@inheritDoc TransactableLiquity.claimCollateralSurplus} */
   claimCollateralSurplus(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
 
-  /** {@inheritDoc TransactableLiquity.stakeLQTY} */
-  stakeLQTY(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
+  /** {@inheritDoc TransactableLiquity.stakeSTBL} */
+  stakeSTBL(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
 
-  /** {@inheritDoc TransactableLiquity.unstakeLQTY} */
-  unstakeLQTY(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
+  /** {@inheritDoc TransactableLiquity.unstakeSTBL} */
+  unstakeSTBL(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
 
   /** {@inheritDoc TransactableLiquity.withdrawGainsFromStaking} */
   withdrawGainsFromStaking(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
@@ -255,8 +255,8 @@ export interface SendableLiquity<R = unknown, S = unknown>
   /** {@inheritDoc TransactableLiquity.unstakeUniTokens} */
   unstakeUniTokens(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
 
-  /** {@inheritDoc TransactableLiquity.withdrawLQTYRewardFromLiquidityMining} */
-  withdrawLQTYRewardFromLiquidityMining(): Promise<
+  /** {@inheritDoc TransactableLiquity.withdrawSTBLRewardFromLiquidityMining} */
+  withdrawSTBLRewardFromLiquidityMining(): Promise<
     SentLiquityTransaction<S, LiquityReceipt<R, void>>
   >;
 

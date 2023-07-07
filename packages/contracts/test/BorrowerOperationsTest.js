@@ -45,8 +45,8 @@ contract('BorrowerOperations', async accounts => {
   let stabilityPool
   let defaultPool
   let borrowerOperations
-  let lqtyStaking
-  let lqtyToken
+  let stblStaking
+  let stblToken
 
   let contracts
 
@@ -72,15 +72,15 @@ contract('BorrowerOperations', async accounts => {
       contracts.borrowerOperations = await BorrowerOperationsTester.new()
       contracts.troveManager = await TroveManagerTester.new()
       contracts = await deploymentHelper.deployLUSDTokenTester(contracts)
-      const LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
+      const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
 
-      await deploymentHelper.connectLQTYContracts(LQTYContracts)
-      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+      await deploymentHelper.connectSTBLContracts(STBLContracts)
+      await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
+      await deploymentHelper.connectSTBLContractsToCore(STBLContracts, contracts)
 
       if (withProxy) {
         const users = [alice, bob, carol, dennis, whale, A, B, C, D, E]
-        await deploymentHelper.deployProxyScripts(contracts, LQTYContracts, owner, users)
+        await deploymentHelper.deployProxyScripts(contracts, STBLContracts, owner, users)
       }
 
       priceFeed = contracts.priceFeedTestnet
@@ -93,10 +93,10 @@ contract('BorrowerOperations', async accounts => {
       borrowerOperations = contracts.borrowerOperations
       hintHelpers = contracts.hintHelpers
 
-      lqtyStaking = LQTYContracts.lqtyStaking
-      lqtyToken = LQTYContracts.lqtyToken
-      communityIssuance = LQTYContracts.communityIssuance
-      lockupContractFactory = LQTYContracts.lockupContractFactory
+      stblStaking = STBLContracts.stblStaking
+      stblToken = STBLContracts.stblToken
+      communityIssuance = STBLContracts.communityIssuance
+      lockupContractFactory = STBLContracts.lockupContractFactory
 
       LUSD_GAS_COMPENSATION = await borrowerOperations.LUSD_GAS_COMPENSATION()
       MIN_NET_DEBT = await borrowerOperations.MIN_NET_DEBT()
@@ -961,15 +961,15 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(baseRate_2.lt(baseRate_1))
     })
 
-    it("withdrawLUSD(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+    it("withdrawLUSD(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract", async () => {
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY LUSD balance before == 0
-      const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStaking_LUSDBalance_Before, '0')
+      // Check STBL LUSD balance before == 0
+      const stblStaking_LUSDBalance_Before = await lusdToken.balanceOf(stblStaking.address)
+      assert.equal(stblStaking_LUSDBalance_Before, '0')
 
       await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
       await openTrove({ extraLUSDAmount: toBN(dec(30, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -991,17 +991,17 @@ contract('BorrowerOperations', async accounts => {
       // D withdraws LUSD
       await borrowerOperations.withdrawLUSD(th._100pct, dec(37, 18), C, C, { from: D })
 
-      // Check LQTY LUSD balance after has increased
-      const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
+      // Check STBL LUSD balance after has increased
+      const stblStaking_LUSDBalance_After = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStaking_LUSDBalance_After.gt(stblStaking_LUSDBalance_Before))
     })
 
     if (!withProxy) { // TODO: use rawLogs instead of logs
       it("withdrawLUSD(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct", async () => {
-        // time fast-forwards 1 year, and multisig stakes 1 LQTY
+        // time fast-forwards 1 year, and multisig stakes 1 STBL
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-        await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-        await lqtyStaking.stake(dec(1, 18), { from: multisig })
+        await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+        await stblStaking.stake(dec(1, 18), { from: multisig })
 
         await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
         await openTrove({ extraLUSDAmount: toBN(dec(30, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -1035,14 +1035,14 @@ contract('BorrowerOperations', async accounts => {
       })
     }
 
-    it("withdrawLUSD(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+    it("withdrawLUSD(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked", async () => {
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY contract LUSD fees-per-unit-staked is zero
-      const F_LUSD_Before = await lqtyStaking.F_LUSD()
+      // Check STBL contract LUSD fees-per-unit-staked is zero
+      const F_LUSD_Before = await stblStaking.F_LUSD()
       assert.equal(F_LUSD_Before, '0')
 
       await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
@@ -1065,20 +1065,20 @@ contract('BorrowerOperations', async accounts => {
       // D withdraws LUSD
       await borrowerOperations.withdrawLUSD(th._100pct, toBN(dec(37, 18)), D, D, { from: D })
 
-      // Check LQTY contract LUSD fees-per-unit-staked has increased
-      const F_LUSD_After = await lqtyStaking.F_LUSD()
+      // Check STBL contract LUSD fees-per-unit-staked has increased
+      const F_LUSD_After = await stblStaking.F_LUSD()
       assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
     })
 
     it("withdrawLUSD(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY Staking contract balance before == 0
-      const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStaking_LUSDBalance_Before, '0')
+      // Check STBL Staking contract balance before == 0
+      const stblStaking_LUSDBalance_Before = await lusdToken.balanceOf(stblStaking.address)
+      assert.equal(stblStaking_LUSDBalance_Before, '0')
 
       await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
       await openTrove({ extraLUSDAmount: toBN(dec(30, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -1103,9 +1103,9 @@ contract('BorrowerOperations', async accounts => {
       const D_LUSDRequest = toBN(dec(37, 18))
       await borrowerOperations.withdrawLUSD(th._100pct, D_LUSDRequest, D, D, { from: D })
 
-      // Check LQTY staking LUSD balance has increased
-      const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
+      // Check STBL staking LUSD balance has increased
+      const stblStaking_LUSDBalance_After = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStaking_LUSDBalance_After.gt(stblStaking_LUSDBalance_Before))
 
       // Check D's LUSD balance now equals their initial balance plus request LUSD
       const D_LUSDBalanceAfter = await lusdToken.balanceOf(D)
@@ -1123,22 +1123,22 @@ contract('BorrowerOperations', async accounts => {
       const baseRate_1 = await troveManager.baseRate()
       assert.equal(baseRate_1, '0')
 
-      // A artificially receives LQTY, then stakes it
-      await lqtyToken.unprotectedMint(A, dec(100, 18))
-      await lqtyStaking.stake(dec(100, 18), { from: A })
+      // A artificially receives STBL, then stakes it
+      await stblToken.unprotectedMint(A, dec(100, 18))
+      await stblStaking.stake(dec(100, 18), { from: A })
 
       // 2 hours pass
       th.fastForwardTime(7200, web3.currentProvider)
 
-      // Check LQTY LUSD balance before == 0
-      const F_LUSD_Before = await lqtyStaking.F_LUSD()
+      // Check STBL LUSD balance before == 0
+      const F_LUSD_Before = await stblStaking.F_LUSD()
       assert.equal(F_LUSD_Before, '0')
 
       // D withdraws LUSD
       await borrowerOperations.withdrawLUSD(th._100pct, dec(37, 18), D, D, { from: D })
 
-      // Check LQTY LUSD balance after > 0
-      const F_LUSD_After = await lqtyStaking.F_LUSD()
+      // Check STBL LUSD balance after > 0
+      const F_LUSD_After = await stblStaking.F_LUSD()
       assert.isTrue(F_LUSD_After.gt('0'))
     })
 
@@ -1711,15 +1711,15 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(baseRate_2.lt(baseRate_1))
     })
 
-    it("adjustTrove(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+    it("adjustTrove(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract", async () => {
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY LUSD balance before == 0
-      const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStaking_LUSDBalance_Before, '0')
+      // Check STBL LUSD balance before == 0
+      const stblStaking_LUSDBalance_Before = await lusdToken.balanceOf(stblStaking.address)
+      assert.equal(stblStaking_LUSDBalance_Before, '0')
 
       await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
       await openTrove({ extraLUSDAmount: toBN(dec(30, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -1740,17 +1740,17 @@ contract('BorrowerOperations', async accounts => {
       // D adjusts trove
       await openTrove({ extraLUSDAmount: toBN(dec(37, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
-      // Check LQTY LUSD balance after has increased
-      const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
+      // Check STBL LUSD balance after has increased
+      const stblStaking_LUSDBalance_After = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStaking_LUSDBalance_After.gt(stblStaking_LUSDBalance_Before))
     })
 
     if (!withProxy) { // TODO: use rawLogs instead of logs
       it("adjustTrove(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct", async () => {
-        // time fast-forwards 1 year, and multisig stakes 1 LQTY
+        // time fast-forwards 1 year, and multisig stakes 1 STBL
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-        await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-        await lqtyStaking.stake(dec(1, 18), { from: multisig })
+        await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+        await stblStaking.stake(dec(1, 18), { from: multisig })
 
         await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
         await openTrove({ extraLUSDAmount: toBN(dec(30, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -1785,14 +1785,14 @@ contract('BorrowerOperations', async accounts => {
       })
     }
 
-    it("adjustTrove(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+    it("adjustTrove(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked", async () => {
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY contract LUSD fees-per-unit-staked is zero
-      const F_LUSD_Before = await lqtyStaking.F_LUSD()
+      // Check STBL contract LUSD fees-per-unit-staked is zero
+      const F_LUSD_Before = await stblStaking.F_LUSD()
       assert.equal(F_LUSD_Before, '0')
 
       await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
@@ -1815,20 +1815,20 @@ contract('BorrowerOperations', async accounts => {
       // D adjusts trove
       await borrowerOperations.adjustTrove(th._100pct, 0, dec(37, 18), true, D, D, { from: D })
 
-      // Check LQTY contract LUSD fees-per-unit-staked has increased
-      const F_LUSD_After = await lqtyStaking.F_LUSD()
+      // Check STBL contract LUSD fees-per-unit-staked has increased
+      const F_LUSD_After = await stblStaking.F_LUSD()
       assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
     })
 
     it("adjustTrove(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY Staking contract balance before == 0
-      const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStaking_LUSDBalance_Before, '0')
+      // Check STBL Staking contract balance before == 0
+      const stblStaking_LUSDBalance_Before = await lusdToken.balanceOf(stblStaking.address)
+      assert.equal(stblStaking_LUSDBalance_Before, '0')
 
       await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
       await openTrove({ extraLUSDAmount: toBN(dec(30, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -1853,16 +1853,16 @@ contract('BorrowerOperations', async accounts => {
       const LUSDRequest_D = toBN(dec(40, 18))
       await borrowerOperations.adjustTrove(th._100pct, 0, LUSDRequest_D, true, D, D, { from: D })
 
-      // Check LQTY staking LUSD balance has increased
-      const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
+      // Check STBL staking LUSD balance has increased
+      const stblStaking_LUSDBalance_After = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStaking_LUSDBalance_After.gt(stblStaking_LUSDBalance_Before))
 
       // Check D's LUSD balance has increased by their requested LUSD
       const D_LUSDBalanceAfter = await lusdToken.balanceOf(D)
       assert.isTrue(D_LUSDBalanceAfter.eq(D_LUSDBalanceBefore.add(LUSDRequest_D)))
     })
 
-    it("adjustTrove(): Borrowing at zero base rate changes LUSD balance of LQTY staking contract", async () => {
+    it("adjustTrove(): Borrowing at zero base rate changes LUSD balance of STBL staking contract", async () => {
       await openTrove({ ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
       await openTrove({ extraLUSDAmount: toBN(dec(30, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
       await openTrove({ extraLUSDAmount: toBN(dec(40, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -1877,18 +1877,18 @@ contract('BorrowerOperations', async accounts => {
       th.fastForwardTime(7200, web3.currentProvider)
 
       // Check staking LUSD balance before > 0
-      const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStaking_LUSDBalance_Before.gt(toBN('0')))
+      const stblStaking_LUSDBalance_Before = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStaking_LUSDBalance_Before.gt(toBN('0')))
 
       // D adjusts trove
       await borrowerOperations.adjustTrove(th._100pct, 0, dec(37, 18), true, D, D, { from: D })
 
       // Check staking LUSD balance after > staking balance before
-      const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
+      const stblStaking_LUSDBalance_After = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStaking_LUSDBalance_After.gt(stblStaking_LUSDBalance_Before))
     })
 
-    it("adjustTrove(): Borrowing at zero base rate changes LQTY staking contract LUSD fees-per-unit-staked", async () => {
+    it("adjustTrove(): Borrowing at zero base rate changes STBL staking contract LUSD fees-per-unit-staked", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: whale, value: toBN(dec(100, 'ether')) } })
       await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
       await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
@@ -1902,19 +1902,19 @@ contract('BorrowerOperations', async accounts => {
       // 2 hours pass
       th.fastForwardTime(7200, web3.currentProvider)
 
-      // A artificially receives LQTY, then stakes it
-      await lqtyToken.unprotectedMint(A, dec(100, 18))
-      await lqtyStaking.stake(dec(100, 18), { from: A })
+      // A artificially receives STBL, then stakes it
+      await stblToken.unprotectedMint(A, dec(100, 18))
+      await stblStaking.stake(dec(100, 18), { from: A })
 
       // Check staking LUSD balance before == 0
-      const F_LUSD_Before = await lqtyStaking.F_LUSD()
+      const F_LUSD_Before = await stblStaking.F_LUSD()
       assert.isTrue(F_LUSD_Before.eq(toBN('0')))
 
       // D adjusts trove
       await borrowerOperations.adjustTrove(th._100pct, 0, dec(37, 18), true, D, D, { from: D })
 
       // Check staking LUSD balance increases
-      const F_LUSD_After = await lqtyStaking.F_LUSD()
+      const F_LUSD_After = await stblStaking.F_LUSD()
       assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
     })
 
@@ -2166,12 +2166,12 @@ contract('BorrowerOperations', async accounts => {
 
       assert.isTrue(await th.checkRecoveryMode(contracts))
 
-      // B stakes LQTY
-      await lqtyToken.unprotectedMint(bob, dec(100, 18))
-      await lqtyStaking.stake(dec(100, 18), { from: bob })
+      // B stakes STBL
+      await stblToken.unprotectedMint(bob, dec(100, 18))
+      await stblStaking.stake(dec(100, 18), { from: bob })
 
-      const lqtyStakingLUSDBalanceBefore = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStakingLUSDBalanceBefore.gt(toBN('0')))
+      const stblStakingLUSDBalanceBefore = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStakingLUSDBalanceBefore.gt(toBN('0')))
 
       const txAlice = await borrowerOperations.adjustTrove(th._100pct, 0, dec(50, 18), true, alice, alice, { from: alice, value: dec(100, 'ether') })
       assert.isTrue(txAlice.receipt.status)
@@ -2183,8 +2183,8 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(await th.checkRecoveryMode(contracts))
 
       // Check no fee was sent to staking contract
-      const lqtyStakingLUSDBalanceAfter = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStakingLUSDBalanceAfter.toString(), lqtyStakingLUSDBalanceBefore.toString())
+      const stblStakingLUSDBalanceAfter = await lusdToken.balanceOf(stblStaking.address)
+      assert.equal(stblStakingLUSDBalanceAfter.toString(), stblStakingLUSDBalanceBefore.toString())
     })
 
     it("adjustTrove(): reverts when change would cause the TCR of the system to fall below the CCR", async () => {
@@ -3376,15 +3376,15 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(baseRate_2.lt(baseRate_1))
     })
 
-    it("openTrove(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+    it("openTrove(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract", async () => {
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY LUSD balance before == 0
-      const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStaking_LUSDBalance_Before, '0')
+      // Check STBL LUSD balance before == 0
+      const stblStaking_LUSDBalance_Before = await lusdToken.balanceOf(stblStaking.address)
+      assert.equal(stblStaking_LUSDBalance_Before, '0')
 
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
       await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -3405,17 +3405,17 @@ contract('BorrowerOperations', async accounts => {
       // D opens trove 
       await openTrove({ extraLUSDAmount: toBN(dec(40000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
-      // Check LQTY LUSD balance after has increased
-      const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
+      // Check STBL LUSD balance after has increased
+      const stblStaking_LUSDBalance_After = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStaking_LUSDBalance_After.gt(stblStaking_LUSDBalance_Before))
     })
 
     if (!withProxy) { // TODO: use rawLogs instead of logs
       it("openTrove(): borrowing at non-zero base records the (drawn debt + fee  + liq. reserve) on the Trove struct", async () => {
-        // time fast-forwards 1 year, and multisig stakes 1 LQTY
+        // time fast-forwards 1 year, and multisig stakes 1 STBL
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-        await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-        await lqtyStaking.stake(dec(1, 18), { from: multisig })
+        await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+        await stblStaking.stake(dec(1, 18), { from: multisig })
 
         await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
         await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -3448,14 +3448,14 @@ contract('BorrowerOperations', async accounts => {
       })
     }
 
-    it("openTrove(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+    it("openTrove(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked", async () => {
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY contract LUSD fees-per-unit-staked is zero
-      const F_LUSD_Before = await lqtyStaking.F_LUSD()
+      // Check STBL contract LUSD fees-per-unit-staked is zero
+      const F_LUSD_Before = await stblStaking.F_LUSD()
       assert.equal(F_LUSD_Before, '0')
 
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
@@ -3477,20 +3477,20 @@ contract('BorrowerOperations', async accounts => {
       // D opens trove 
       await openTrove({ extraLUSDAmount: toBN(dec(37, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
-      // Check LQTY contract LUSD fees-per-unit-staked has increased
-      const F_LUSD_After = await lqtyStaking.F_LUSD()
+      // Check STBL contract LUSD fees-per-unit-staked has increased
+      const F_LUSD_After = await stblStaking.F_LUSD()
       assert.isTrue(F_LUSD_After.gt(F_LUSD_Before))
     })
 
     it("openTrove(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 LQTY
+      // time fast-forwards 1 year, and multisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await lqtyToken.approve(lqtyStaking.address, dec(1, 18), { from: multisig })
-      await lqtyStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
+      await stblStaking.stake(dec(1, 18), { from: multisig })
 
-      // Check LQTY Staking contract balance before == 0
-      const lqtyStaking_LUSDBalance_Before = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.equal(lqtyStaking_LUSDBalance_Before, '0')
+      // Check STBL Staking contract balance before == 0
+      const stblStaking_LUSDBalance_Before = await lusdToken.balanceOf(stblStaking.address)
+      assert.equal(stblStaking_LUSDBalance_Before, '0')
 
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
       await openTrove({ extraLUSDAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -3512,16 +3512,16 @@ contract('BorrowerOperations', async accounts => {
       const LUSDRequest_D = toBN(dec(40000, 18))
       await borrowerOperations.openTrove(th._100pct, LUSDRequest_D, D, D, { from: D, value: dec(500, 'ether') })
 
-      // Check LQTY staking LUSD balance has increased
-      const lqtyStaking_LUSDBalance_After = await lusdToken.balanceOf(lqtyStaking.address)
-      assert.isTrue(lqtyStaking_LUSDBalance_After.gt(lqtyStaking_LUSDBalance_Before))
+      // Check STBL staking LUSD balance has increased
+      const stblStaking_LUSDBalance_After = await lusdToken.balanceOf(stblStaking.address)
+      assert.isTrue(stblStaking_LUSDBalance_After.gt(stblStaking_LUSDBalance_Before))
 
       // Check D's LUSD balance now equals their requested LUSD
       const LUSDBalance_D = await lusdToken.balanceOf(D)
       assert.isTrue(LUSDRequest_D.eq(LUSDBalance_D))
     })
 
-    it("openTrove(): Borrowing at zero base rate changes the LQTY staking contract LUSD fees-per-unit-staked", async () => {
+    it("openTrove(): Borrowing at zero base rate changes the STBL staking contract LUSD fees-per-unit-staked", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(5000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
       await openTrove({ extraLUSDAmount: toBN(dec(5000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: B } })
       await openTrove({ extraLUSDAmount: toBN(dec(5000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: C } })
@@ -3533,19 +3533,19 @@ contract('BorrowerOperations', async accounts => {
       // 2 hours pass
       th.fastForwardTime(7200, web3.currentProvider)
 
-      // Check LUSD reward per LQTY staked == 0
-      const F_LUSD_Before = await lqtyStaking.F_LUSD()
+      // Check LUSD reward per STBL staked == 0
+      const F_LUSD_Before = await stblStaking.F_LUSD()
       assert.equal(F_LUSD_Before, '0')
 
-      // A stakes LQTY
-      await lqtyToken.unprotectedMint(A, dec(100, 18))
-      await lqtyStaking.stake(dec(100, 18), { from: A })
+      // A stakes STBL
+      await stblToken.unprotectedMint(A, dec(100, 18))
+      await stblStaking.stake(dec(100, 18), { from: A })
 
       // D opens trove 
       await openTrove({ extraLUSDAmount: toBN(dec(37, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: D } })
 
-      // Check LUSD reward per LQTY staked > 0
-      const F_LUSD_After = await lqtyStaking.F_LUSD()
+      // Check LUSD reward per STBL staked > 0
+      const F_LUSD_After = await stblStaking.F_LUSD()
       assert.isTrue(F_LUSD_After.gt(toBN('0')))
     })
 

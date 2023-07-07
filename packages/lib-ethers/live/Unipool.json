@@ -9,11 +9,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lqtyTokenAddress",
+          "name": "_stblTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LQTYTokenAddressChanged",
+      "name": "STBLTokenAddressChanged",
       "type": "event"
     },
     {
@@ -230,10 +230,10 @@
     },
     {
       "inputs": [],
-      "name": "lqtyToken",
+      "name": "stblToken",
       "outputs": [
         {
-          "internalType": "contract ILQTYToken",
+          "internalType": "contract ISTBLToken",
           "name": "",
           "type": "address"
         }
@@ -329,7 +329,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_lqtyTokenAddress",
+          "name": "_stblTokenAddress",
           "type": "address"
         },
         {

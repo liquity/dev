@@ -264,11 +264,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_LQTY",
+        "name": "_STBL",
         "type": "uint256"
       }
     ],
-    "name": "LQTYPaidToDepositor",
+    "name": "STBLPaidToDepositor",
     "type": "event"
   },
   {
@@ -283,11 +283,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_LQTY",
+        "name": "_STBL",
         "type": "uint256"
       }
     ],
-    "name": "LQTYPaidToFrontEnd",
+    "name": "STBLPaidToFrontEnd",
     "type": "event"
   },
   {
@@ -936,7 +936,7 @@
         "type": "address"
       }
     ],
-    "name": "getDepositorLQTYGain",
+    "name": "getDepositorSTBLGain",
     "outputs": [
       {
         "internalType": "uint256",
@@ -994,7 +994,7 @@
         "type": "address"
       }
     ],
-    "name": "getFrontEndLQTYGain",
+    "name": "getFrontEndSTBLGain",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1046,7 +1046,7 @@
   },
   {
     "inputs": [],
-    "name": "lastLQTYError",
+    "name": "lastSTBLError",
     "outputs": [
       {
         "internalType": "uint256",

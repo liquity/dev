@@ -16,17 +16,17 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
 
   const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
 
-  let LQTYContracts
+  let STBLContracts
 
   // 1e24 = 1 million tokens with 18 decimal digits
-  const LQTYEntitlement_A = dec(1, 24)
-  const LQTYEntitlement_B = dec(2, 24)
-  const LQTYEntitlement_C = dec(3, 24)
-  const LQTYEntitlement_D = dec(4, 24)
-  const LQTYEntitlement_E = dec(5, 24)
+  const STBLEntitlement_A = dec(1, 24)
+  const STBLEntitlement_B = dec(2, 24)
+  const STBLEntitlement_C = dec(3, 24)
+  const STBLEntitlement_D = dec(4, 24)
+  const STBLEntitlement_E = dec(5, 24)
 
-  let lqtyStaking
-  let lqtyToken
+  let stblStaking
+  let stblToken
   let communityIssuance
   let lockupContractFactory
 
@@ -34,23 +34,23 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
+    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
+    await deploymentHelper.connectSTBLContracts(STBLContracts)
 
-    lqtyStaking = LQTYContracts.lqtyStaking
-    lqtyToken = LQTYContracts.lqtyToken
-    communityIssuance = LQTYContracts.communityIssuance
-    lockupContractFactory = LQTYContracts.lockupContractFactory
+    stblStaking = STBLContracts.stblStaking
+    stblToken = STBLContracts.stblToken
+    communityIssuance = STBLContracts.communityIssuance
+    lockupContractFactory = STBLContracts.lockupContractFactory
 
-    oneYearFromSystemDeployment = await th.getTimeFromSystemDeployment(lqtyToken, web3, timeValues.SECONDS_IN_ONE_YEAR)
+    oneYearFromSystemDeployment = await th.getTimeFromSystemDeployment(stblToken, web3, timeValues.SECONDS_IN_ONE_YEAR)
   })
 
   // --- LCs ---
 
   describe('Deploying LCs', async accounts => {
-    it("LQTY Deployer can deploy LCs through the Factory", async () => {
+    it("STBL Deployer can deploy LCs through the Factory", async () => {
     
-      // LQTY deployer deploys LCs
+      // STBL deployer deploys LCs
       const LCDeploymentTx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
       const LCDeploymentTx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
       const LCDeploymentTx_C = await lockupContractFactory.deployLockupContract(C, oneYearFromSystemDeployment, { from: liquityAG })
@@ -73,15 +73,15 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       assert.isTrue(LCDeploymentTx_4.receipt.status)
     })
 
-    it("LQTY Deployer can deploy LCs directly", async () => {
-      // LQTY deployer deploys LCs
-      const LC_A = await LockupContract.new(lqtyToken.address, A, oneYearFromSystemDeployment, { from: liquityAG })
+    it("STBL Deployer can deploy LCs directly", async () => {
+      // STBL deployer deploys LCs
+      const LC_A = await LockupContract.new(stblToken.address, A, oneYearFromSystemDeployment, { from: liquityAG })
       const LC_A_txReceipt = await web3.eth.getTransactionReceipt(LC_A.transactionHash)
 
-      const LC_B = await LockupContract.new(lqtyToken.address, B, oneYearFromSystemDeployment, { from: liquityAG })
+      const LC_B = await LockupContract.new(stblToken.address, B, oneYearFromSystemDeployment, { from: liquityAG })
       const LC_B_txReceipt = await web3.eth.getTransactionReceipt(LC_B.transactionHash)
 
-      const LC_C = await LockupContract.new(lqtyToken.address, C, oneYearFromSystemDeployment, { from: liquityAG })
+      const LC_C = await LockupContract.new(stblToken.address, C, oneYearFromSystemDeployment, { from: liquityAG })
       const LC_C_txReceipt = await web3.eth.getTransactionReceipt(LC_C.transactionHash)
 
       // Check deployment succeeded
@@ -92,13 +92,13 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
 
     it("Anyone can deploy LCs directly", async () => {
       // Various EOAs deploy LCs
-      const LC_A = await LockupContract.new(lqtyToken.address, A, oneYearFromSystemDeployment, { from: D })
+      const LC_A = await LockupContract.new(stblToken.address, A, oneYearFromSystemDeployment, { from: D })
       const LC_A_txReceipt = await web3.eth.getTransactionReceipt(LC_A.transactionHash)
 
-      const LC_B = await LockupContract.new(lqtyToken.address, B, oneYearFromSystemDeployment, { from: E })
+      const LC_B = await LockupContract.new(stblToken.address, B, oneYearFromSystemDeployment, { from: E })
       const LC_B_txReceipt = await web3.eth.getTransactionReceipt(LC_B.transactionHash)
 
-      const LC_C = await LockupContract.new(lqtyToken.address, C, oneYearFromSystemDeployment, { from: F })
+      const LC_C = await LockupContract.new(stblToken.address, C, oneYearFromSystemDeployment, { from: F })
       const LC_C_txReceipt = await web3.eth.getTransactionReceipt(LC_C.transactionHash)
 
       // Check deployment succeeded
@@ -203,9 +203,9 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
 
     it("Direct deployment of LC sets the unlockTime in the LC", async () => {
       // Deploy 3 LCs directly
-      const LC_A = await LockupContract.new(lqtyToken.address, A, oneYearFromSystemDeployment, { from: liquityAG })
-      const LC_B = await LockupContract.new(lqtyToken.address, B, '230582305895235', { from: B })
-      const LC_C = await LockupContract.new(lqtyToken.address, C, dec(20, 18), { from: E })
+      const LC_A = await LockupContract.new(stblToken.address, A, oneYearFromSystemDeployment, { from: liquityAG })
+      const LC_B = await LockupContract.new(stblToken.address, B, '230582305895235', { from: B })
+      const LC_C = await LockupContract.new(stblToken.address, C, dec(20, 18), { from: E })
 
       // Grab contract addresses from deployment tx events
       const unlockTime_A = await LC_A.unlockTime()
@@ -236,9 +236,9 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       const nearlyOneYear = toBN(oneYearFromSystemDeployment).sub(toBN('60'))  // 1 minute short of 1 year
       
       // Deploy 3 LCs directly with unlockTime < 1 year from system deployment
-      const LCDeploymentPromise_A = LockupContract.new(lqtyToken.address, A, nearlyOneYear, { from: liquityAG })
-      const LCDeploymentPromise_B = LockupContract.new(lqtyToken.address, B, '37', { from: B })
-      const LCDeploymentPromise_C = LockupContract.new(lqtyToken.address, C, '43200', { from: E })
+      const LCDeploymentPromise_A = LockupContract.new(stblToken.address, A, nearlyOneYear, { from: liquityAG })
+      const LCDeploymentPromise_B = LockupContract.new(stblToken.address, B, '37', { from: B })
+      const LCDeploymentPromise_C = LockupContract.new(stblToken.address, C, '43200', { from: E })
      
       // Confirm contract deployments revert
       await assertRevert(LCDeploymentPromise_A, "LockupContract: unlock time must be at least one year after system deployment")
@@ -250,7 +250,7 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
   })
 
   describe('Funding LCs', async accounts => {
-    it("LQTY transfer from LQTY deployer to their deployed LC increases the LQTY balance of the LC", async () => {
+    it("STBL transfer from STBL deployer to their deployed LC increases the STBL balance of the LC", async () => {
       // Deploy 5 LCs
       const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
@@ -265,27 +265,27 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       const LCAddress_D = await th.getLCAddressFromDeploymentTx(deployedLCtx_D)
       const LCAddress_E = await th.getLCAddressFromDeploymentTx(deployedLCtx_E)
 
-      assert.equal(await lqtyToken.balanceOf(LCAddress_A), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_B), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_C), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_D), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_E), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_A), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_B), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_C), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_D), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_E), '0')
 
-      // Multisig transfers LQTY to each LC
-      await lqtyToken.transfer(LCAddress_A, LQTYEntitlement_A, { from: multisig })
-      await lqtyToken.transfer(LCAddress_B, LQTYEntitlement_B, { from: multisig })
-      await lqtyToken.transfer(LCAddress_C, LQTYEntitlement_C, { from: multisig })
-      await lqtyToken.transfer(LCAddress_D, LQTYEntitlement_D, { from: multisig })
-      await lqtyToken.transfer(LCAddress_E, LQTYEntitlement_E, { from: multisig })
+      // Multisig transfers STBL to each LC
+      await stblToken.transfer(LCAddress_A, STBLEntitlement_A, { from: multisig })
+      await stblToken.transfer(LCAddress_B, STBLEntitlement_B, { from: multisig })
+      await stblToken.transfer(LCAddress_C, STBLEntitlement_C, { from: multisig })
+      await stblToken.transfer(LCAddress_D, STBLEntitlement_D, { from: multisig })
+      await stblToken.transfer(LCAddress_E, STBLEntitlement_E, { from: multisig })
 
-      assert.equal(await lqtyToken.balanceOf(LCAddress_A), LQTYEntitlement_A)
-      assert.equal(await lqtyToken.balanceOf(LCAddress_B), LQTYEntitlement_B)
-      assert.equal(await lqtyToken.balanceOf(LCAddress_C), LQTYEntitlement_C)
-      assert.equal(await lqtyToken.balanceOf(LCAddress_D), LQTYEntitlement_D)
-      assert.equal(await lqtyToken.balanceOf(LCAddress_E), LQTYEntitlement_E)
+      assert.equal(await stblToken.balanceOf(LCAddress_A), STBLEntitlement_A)
+      assert.equal(await stblToken.balanceOf(LCAddress_B), STBLEntitlement_B)
+      assert.equal(await stblToken.balanceOf(LCAddress_C), STBLEntitlement_C)
+      assert.equal(await stblToken.balanceOf(LCAddress_D), STBLEntitlement_D)
+      assert.equal(await stblToken.balanceOf(LCAddress_E), STBLEntitlement_E)
     })
 
-    it("LQTY Multisig can transfer LQTY to LCs deployed through the factory by anyone", async () => {  
+    it("STBL Multisig can transfer STBL to LCs deployed through the factory by anyone", async () => {  
       // Various accts deploy 5 LCs
       const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: F })
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: G })
@@ -300,27 +300,27 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       const LCAddress_D = await th.getLCAddressFromDeploymentTx(deployedLCtx_D)
       const LCAddress_E = await th.getLCAddressFromDeploymentTx(deployedLCtx_E)
 
-      assert.equal(await lqtyToken.balanceOf(LCAddress_A), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_B), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_C), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_D), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_E), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_A), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_B), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_C), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_D), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_E), '0')
 
-      // Multisig transfers LQTY to each LC
-      await lqtyToken.transfer(LCAddress_A, dec(1, 18), { from: multisig })
-      await lqtyToken.transfer(LCAddress_B, dec(2, 18), { from: multisig })
-      await lqtyToken.transfer(LCAddress_C, dec(3, 18), { from: multisig })
-      await lqtyToken.transfer(LCAddress_D, dec(4, 18), { from: multisig })
-      await lqtyToken.transfer(LCAddress_E, dec(5, 18), { from: multisig })
+      // Multisig transfers STBL to each LC
+      await stblToken.transfer(LCAddress_A, dec(1, 18), { from: multisig })
+      await stblToken.transfer(LCAddress_B, dec(2, 18), { from: multisig })
+      await stblToken.transfer(LCAddress_C, dec(3, 18), { from: multisig })
+      await stblToken.transfer(LCAddress_D, dec(4, 18), { from: multisig })
+      await stblToken.transfer(LCAddress_E, dec(5, 18), { from: multisig })
 
-      assert.equal(await lqtyToken.balanceOf(LCAddress_A), dec(1, 18))
-      assert.equal(await lqtyToken.balanceOf(LCAddress_B), dec(2, 18))
-      assert.equal(await lqtyToken.balanceOf(LCAddress_C), dec(3, 18))
-      assert.equal(await lqtyToken.balanceOf(LCAddress_D), dec(4, 18))
-      assert.equal(await lqtyToken.balanceOf(LCAddress_E), dec(5, 18))
+      assert.equal(await stblToken.balanceOf(LCAddress_A), dec(1, 18))
+      assert.equal(await stblToken.balanceOf(LCAddress_B), dec(2, 18))
+      assert.equal(await stblToken.balanceOf(LCAddress_C), dec(3, 18))
+      assert.equal(await stblToken.balanceOf(LCAddress_D), dec(4, 18))
+      assert.equal(await stblToken.balanceOf(LCAddress_E), dec(5, 18))
     })
 
-    // can't transfer LQTY to any LCs that were deployed directly
+    // can't transfer STBL to any LCs that were deployed directly
   })
 
   describe('Withdrawal attempts on funded, inactive LCs immediately after funding', async accounts => {
@@ -335,14 +335,14 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
       const LC_C = await th.getLCFromDeploymentTx(deployedLCtx_C)
 
-      // Multisig transfers LQTY to each LC
-      await lqtyToken.transfer(LC_A.address, LQTYEntitlement_A, { from: multisig })
-      await lqtyToken.transfer(LC_B.address, LQTYEntitlement_B, { from: multisig })
-      await lqtyToken.transfer(LC_C.address, LQTYEntitlement_C, { from: multisig })
+      // Multisig transfers STBL to each LC
+      await stblToken.transfer(LC_A.address, STBLEntitlement_A, { from: multisig })
+      await stblToken.transfer(LC_B.address, STBLEntitlement_B, { from: multisig })
+      await stblToken.transfer(LC_C.address, STBLEntitlement_C, { from: multisig })
 
-      assert.equal(await lqtyToken.balanceOf(LC_A.address), LQTYEntitlement_A)
-      assert.equal(await lqtyToken.balanceOf(LC_B.address), LQTYEntitlement_B)
-      assert.equal(await lqtyToken.balanceOf(LC_C.address), LQTYEntitlement_C)
+      assert.equal(await stblToken.balanceOf(LC_A.address), STBLEntitlement_A)
+      assert.equal(await stblToken.balanceOf(LC_B.address), STBLEntitlement_B)
+      assert.equal(await stblToken.balanceOf(LC_C.address), STBLEntitlement_C)
 
       const LCs = [LC_A, LC_B, LC_C]
 
@@ -350,7 +350,7 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       for (LC of LCs) {
         try {
           const beneficiary = await LC.beneficiary()
-          const withdrawalAttemptTx = await LC.withdrawLQTY({ from: beneficiary })
+          const withdrawalAttemptTx = await LC.withdrawSTBL({ from: beneficiary })
           assert.isFalse(withdrawalAttemptTx.receipt.status)
         } catch (error) {
           assert.include(error.message, "revert")
@@ -358,7 +358,7 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       }
     })
 
-    it("LQTY multisig can't withraw from a LC which it funded", async () => {
+    it("STBL multisig can't withraw from a LC which it funded", async () => {
       // Deploy 3 LCs
       const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: liquityAG })
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
@@ -369,21 +369,21 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
       const LC_C = await th.getLCFromDeploymentTx(deployedLCtx_C)
 
-      // Multisig transfers LQTY to each LC
-      await lqtyToken.transfer(LC_A.address, LQTYEntitlement_A, { from: multisig })
-      await lqtyToken.transfer(LC_B.address, LQTYEntitlement_B, { from: multisig })
-      await lqtyToken.transfer(LC_C.address, LQTYEntitlement_C, { from: multisig })
+      // Multisig transfers STBL to each LC
+      await stblToken.transfer(LC_A.address, STBLEntitlement_A, { from: multisig })
+      await stblToken.transfer(LC_B.address, STBLEntitlement_B, { from: multisig })
+      await stblToken.transfer(LC_C.address, STBLEntitlement_C, { from: multisig })
 
-      assert.equal(await lqtyToken.balanceOf(LC_A.address), LQTYEntitlement_A)
-      assert.equal(await lqtyToken.balanceOf(LC_B.address), LQTYEntitlement_B)
-      assert.equal(await lqtyToken.balanceOf(LC_C.address), LQTYEntitlement_C)
+      assert.equal(await stblToken.balanceOf(LC_A.address), STBLEntitlement_A)
+      assert.equal(await stblToken.balanceOf(LC_B.address), STBLEntitlement_B)
+      assert.equal(await stblToken.balanceOf(LC_C.address), STBLEntitlement_C)
 
       const LCs = [LC_A, LC_B, LC_C]
 
-      // LQTY multisig attempts to withdraw from LCs
+      // STBL multisig attempts to withdraw from LCs
       for (LC of LCs) {
         try {
-          const withdrawalAttemptTx = await LC.withdrawLQTY({ from: multisig })
+          const withdrawalAttemptTx = await LC.withdrawSTBL({ from: multisig })
           assert.isFalse(withdrawalAttemptTx.receipt.status)
         } catch (error) {
           assert.include(error.message, "revert")
@@ -393,34 +393,34 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
 
     it("No one can withraw from a LC", async () => {
       // Deploy 3 LCs
-      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, LQTYEntitlement_A, { from: D })
+      const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, STBLEntitlement_A, { from: D })
 
       // Grab contract objects from deployment tx events
       const LC_A = await th.getLCFromDeploymentTx(deployedLCtx_A)
 
-      // LiquityAG transfers LQTY to the LC
-      await lqtyToken.transfer(LC_A.address, LQTYEntitlement_A, { from: multisig })
+      // LiquityAG transfers STBL to the LC
+      await stblToken.transfer(LC_A.address, STBLEntitlement_A, { from: multisig })
 
-      assert.equal(await lqtyToken.balanceOf(LC_A.address), LQTYEntitlement_A)
+      assert.equal(await stblToken.balanceOf(LC_A.address), STBLEntitlement_A)
 
 
       // Various EOAs attempt to withdraw from LCs
       try {
-        const withdrawalAttemptTx = await LC_A.withdrawLQTY({ from: G })
+        const withdrawalAttemptTx = await LC_A.withdrawSTBL({ from: G })
         assert.isFalse(withdrawalAttemptTx.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
 
       try {
-        const withdrawalAttemptTx = await LC_A.withdrawLQTY({ from: H })
+        const withdrawalAttemptTx = await LC_A.withdrawSTBL({ from: H })
         assert.isFalse(withdrawalAttemptTx.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")
       }
 
       try {
-        const withdrawalAttemptTx = await LC_A.withdrawLQTY({ from: I })
+        const withdrawalAttemptTx = await LC_A.withdrawSTBL({ from: I })
         assert.isFalse(withdrawalAttemptTx.receipt.status)
       } catch (error) {
         assert.include(error.message, "revert")

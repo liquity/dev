@@ -16,12 +16,12 @@ import { Validation } from "../Validation";
 
 const selector = ({
   liquidityMiningStake,
-  liquidityMiningLQTYReward,
+  liquidityMiningSTBLReward,
   uniTokenBalance,
   totalStakedUniTokens
 }: LiquityStoreState) => ({
   liquidityMiningStake,
-  liquidityMiningLQTYReward,
+  liquidityMiningSTBLReward,
   uniTokenBalance,
   totalStakedUniTokens
 });
@@ -32,7 +32,7 @@ export const Adjusting: React.FC = () => {
   const { dispatchEvent } = useFarmView();
   const {
     liquidityMiningStake,
-    liquidityMiningLQTYReward,
+    liquidityMiningSTBLReward,
     uniTokenBalance,
     totalStakedUniTokens
   } = useLiquitySelector(selector);
@@ -105,8 +105,8 @@ export const Adjusting: React.FC = () => {
         <StaticRow
           label="Reward"
           inputId="farm-reward-amount"
-          amount={liquidityMiningLQTYReward.prettify(4)}
-          color={liquidityMiningLQTYReward.nonZero && "success"}
+          amount={liquidityMiningSTBLReward.prettify(4)}
+          color={liquidityMiningSTBLReward.nonZero && "success"}
           unit={GT}
         />
 

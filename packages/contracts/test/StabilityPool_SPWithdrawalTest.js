@@ -59,7 +59,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
       contracts.troveManager = await TroveManagerTester.new()
       contracts = await deploymentHelper.deployLUSDToken(contracts)
 
@@ -72,9 +72,9 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       defaultPool = contracts.defaultPool
       borrowerOperations = contracts.borrowerOperations
 
-      await deploymentHelper.connectLQTYContracts(LQTYContracts)
-      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+      await deploymentHelper.connectSTBLContracts(STBLContracts)
+      await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
+      await deploymentHelper.connectSTBLContractsToCore(STBLContracts, contracts)
     })
 
     // --- Compounding tests ---

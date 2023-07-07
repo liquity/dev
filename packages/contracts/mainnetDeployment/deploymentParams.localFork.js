@@ -12,7 +12,7 @@ const externalAddrs  = {
 
 const liquityAddrs = {
   GENERAL_SAFE:"0x8be7e24263c199ebfcfd6aebca83f8d7ed85a5dd",  // Hardhat dev address
-  LQTY_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74",  //  Hardhat dev address
+  STBL_SAFE:"0x20c81d658aae3a8580d990e441a9ef2c9809be74",  //  Hardhat dev address
   DEPLOYER: "0x31c57298578f7508B5982062cfEc5ec8BD346247" // hardhat first account
 }
 

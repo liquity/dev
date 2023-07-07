@@ -65,7 +65,7 @@ contract('SortedTroves', async accounts => {
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address
       )
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
 
       priceFeed = contracts.priceFeedTestnet
       sortedTroves = contracts.sortedTroves
@@ -73,9 +73,9 @@ contract('SortedTroves', async accounts => {
       borrowerOperations = contracts.borrowerOperations
       lusdToken = contracts.lusdToken
 
-      await deploymentHelper.connectLQTYContracts(LQTYContracts)
-      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+      await deploymentHelper.connectSTBLContracts(STBLContracts)
+      await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
+      await deploymentHelper.connectSTBLContractsToCore(STBLContracts, contracts)
     })
 
     it('contains(): returns true for addresses that have opened troves', async () => {

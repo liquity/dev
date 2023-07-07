@@ -30,16 +30,16 @@ contract('TroveManager - in Recovery Mode - back to normal mode in 1 tx', async 
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
     )
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
 
     troveManager = contracts.troveManager
     stabilityPool = contracts.stabilityPool
     priceFeed = contracts.priceFeedTestnet
     sortedTroves = contracts.sortedTroves
 
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
-    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+    await deploymentHelper.connectSTBLContracts(STBLContracts)
+    await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
+    await deploymentHelper.connectSTBLContractsToCore(STBLContracts, contracts)
   })
 
   context('Batch liquidations', () => {

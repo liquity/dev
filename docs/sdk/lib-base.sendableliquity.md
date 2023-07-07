@@ -37,16 +37,16 @@ Implemented by [SendableEthersLiquity](./lib-ethers.sendableethersliquity.md)<!-
 |  [redeemLUSD(amount, maxRedemptionRate)](./lib-base.sendableliquity.redeemlusd.md) | Redeem LUSD to native currency (e.g. Ether) at face value. |
 |  [registerFrontend(kickbackRate)](./lib-base.sendableliquity.registerfrontend.md) | Register current wallet address as a Liquity frontend. |
 |  [repayLUSD(amount)](./lib-base.sendableliquity.repaylusd.md) | Adjust existing Trove by repaying some of its debt. |
-|  [sendLQTY(toAddress, amount)](./lib-base.sendableliquity.sendlqty.md) | Send LQTY tokens to an address. |
+|  [sendSTBL(toAddress, amount)](./lib-base.sendableliquity.sendstbl.md) | Send STBL tokens to an address. |
 |  [sendLUSD(toAddress, amount)](./lib-base.sendableliquity.sendlusd.md) | Send LUSD tokens to an address. |
-|  [stakeLQTY(amount)](./lib-base.sendableliquity.stakelqty.md) | Stake LQTY to start earning fee revenue or increase existing stake. |
-|  [stakeUniTokens(amount)](./lib-base.sendableliquity.stakeunitokens.md) | Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn LQTY. |
+|  [stakeSTBL(amount)](./lib-base.sendableliquity.stakestbl.md) | Stake STBL to start earning fee revenue or increase existing stake. |
+|  [stakeUniTokens(amount)](./lib-base.sendableliquity.stakeunitokens.md) | Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn STBL. |
 |  [transferCollateralGainToTrove()](./lib-base.sendableliquity.transfercollateralgaintotrove.md) | Transfer [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) from Stability Deposit to Trove. |
-|  [unstakeLQTY(amount)](./lib-base.sendableliquity.unstakelqty.md) | Withdraw LQTY from staking. |
+|  [unstakeSTBL(amount)](./lib-base.sendableliquity.unstakestbl.md) | Withdraw STBL from staking. |
 |  [unstakeUniTokens(amount)](./lib-base.sendableliquity.unstakeunitokens.md) | Withdraw Uniswap ETH/LUSD LP tokens from liquidity mining. |
 |  [withdrawCollateral(amount)](./lib-base.sendableliquity.withdrawcollateral.md) | Adjust existing Trove by withdrawing some of its collateral. |
-|  [withdrawGainsFromStabilityPool()](./lib-base.sendableliquity.withdrawgainsfromstabilitypool.md) | Withdraw [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [LQTY reward](./lib-base.stabilitydeposit.lqtyreward.md) from Stability Deposit. |
-|  [withdrawGainsFromStaking()](./lib-base.sendableliquity.withdrawgainsfromstaking.md) | Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md) from LQTY stake. |
-|  [withdrawLQTYRewardFromLiquidityMining()](./lib-base.sendableliquity.withdrawlqtyrewardfromliquiditymining.md) | Withdraw LQTY that has been earned by mining liquidity. |
+|  [withdrawGainsFromStabilityPool()](./lib-base.sendableliquity.withdrawgainsfromstabilitypool.md) | Withdraw [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [STBL reward](./lib-base.stabilitydeposit.stblreward.md) from Stability Deposit. |
+|  [withdrawGainsFromStaking()](./lib-base.sendableliquity.withdrawgainsfromstaking.md) | Withdraw [collateral gain](./lib-base.stblstake.collateralgain.md) and [LUSD gain](./lib-base.stblstake.lusdgain.md) from STBL stake. |
+|  [withdrawSTBLRewardFromLiquidityMining()](./lib-base.sendableliquity.withdrawstblrewardfromliquiditymining.md) | Withdraw STBL that has been earned by mining liquidity. |
 |  [withdrawLUSDFromStabilityPool(amount)](./lib-base.sendableliquity.withdrawlusdfromstabilitypool.md) | Withdraw LUSD from Stability Deposit. |
 

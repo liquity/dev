@@ -17,7 +17,7 @@ export interface StabilityPoolGainsWithdrawalDetails
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [collateralGain](./lib-base.stabilitypoolgainswithdrawaldetails.collateralgain.md) | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) paid out to the depositor in this transaction. |
-|  [lqtyReward](./lib-base.stabilitypoolgainswithdrawaldetails.lqtyreward.md) | [Decimal](./lib-base.decimal.md) | Amount of LQTY rewarded to the depositor in this transaction. |
+|  [stblReward](./lib-base.stabilitypoolgainswithdrawaldetails.stblreward.md) | [Decimal](./lib-base.decimal.md) | Amount of STBL rewarded to the depositor in this transaction. |
 |  [lusdLoss](./lib-base.stabilitypoolgainswithdrawaldetails.lusdloss.md) | [Decimal](./lib-base.decimal.md) | Amount of LUSD burned from the deposit by liquidations since the last modification. |
 |  [newLUSDDeposit](./lib-base.stabilitypoolgainswithdrawaldetails.newlusddeposit.md) | [Decimal](./lib-base.decimal.md) | Amount of LUSD in the deposit directly after this transaction. |
 

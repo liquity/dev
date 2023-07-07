@@ -3,7 +3,7 @@ import { Signer } from "@ethersproject/abstract-signer";
 import {
   Decimal,
   Decimalish,
-  LQTYStake,
+  STBLStake,
   LUSD_MINIMUM_DEBT,
   StabilityDeposit,
   TransactableLiquity,
@@ -39,8 +39,8 @@ type GasHistograms = Pick<
   | "redeemLUSD"
   | "depositLUSDInStabilityPool"
   | "withdrawLUSDFromStabilityPool"
-  | "stakeLQTY"
-  | "unstakeLQTY"
+  | "stakeSTBL"
+  | "unstakeSTBL"
 >;
 
 export class Fixture {
@@ -77,8 +77,8 @@ export class Fixture {
       redeemLUSD: new GasHistogram(),
       depositLUSDInStabilityPool: new GasHistogram(),
       withdrawLUSDFromStabilityPool: new GasHistogram(),
-      stakeLQTY: new GasHistogram(),
-      unstakeLQTY: new GasHistogram()
+      stakeSTBL: new GasHistogram(),
+      unstakeSTBL: new GasHistogram()
     };
   }
 
@@ -390,33 +390,33 @@ export class Fixture {
   }
 
   async stakeRandomAmount(userAddress: string, liquity: Liquity) {
-    const lqtyBalance = await this.funderLiquity.getLQTYBalance();
-    const amount = lqtyBalance.mul(Math.random() / 2);
+    const stblBalance = await this.funderLiquity.getSTBLBalance();
+    const amount = stblBalance.mul(Math.random() / 2);
 
-    await this.funderLiquity.sendLQTY(userAddress, amount);
+    await this.funderLiquity.sendSTBL(userAddress, amount);
 
     if (amount.eq(0)) {
-      console.log(`// [${shortenAddress(userAddress)}] stakeLQTY(${amount}) expected to fail`);
+      console.log(`// [${shortenAddress(userAddress)}] stakeSTBL(${amount}) expected to fail`);
 
-      await this.gasHistograms.stakeLQTY.expectFailure(() =>
-        liquity.stakeLQTY(amount, { gasPrice: 0 })
+      await this.gasHistograms.stakeSTBL.expectFailure(() =>
+        liquity.stakeSTBL(amount, { gasPrice: 0 })
       );
     } else {
-      console.log(`[${shortenAddress(userAddress)}] stakeLQTY(${amount})`);
+      console.log(`[${shortenAddress(userAddress)}] stakeSTBL(${amount})`);
 
-      await this.gasHistograms.stakeLQTY.expectSuccess(() =>
-        liquity.send.stakeLQTY(amount, { gasPrice: 0 })
+      await this.gasHistograms.stakeSTBL.expectSuccess(() =>
+        liquity.send.stakeSTBL(amount, { gasPrice: 0 })
       );
     }
   }
 
-  async unstakeRandomAmount(userAddress: string, liquity: Liquity, stake: LQTYStake) {
-    const amount = stake.stakedLQTY.mul(1.1 * Math.random()).add(10 * Math.random());
+  async unstakeRandomAmount(userAddress: string, liquity: Liquity, stake: STBLStake) {
+    const amount = stake.stakedSTBL.mul(1.1 * Math.random()).add(10 * Math.random());
 
-    console.log(`[${shortenAddress(userAddress)}] unstakeLQTY(${amount})`);
+    console.log(`[${shortenAddress(userAddress)}] unstakeSTBL(${amount})`);
 
-    await this.gasHistograms.unstakeLQTY.expectSuccess(() =>
-      liquity.send.unstakeLQTY(amount, { gasPrice: 0 })
+    await this.gasHistograms.unstakeSTBL.expectSuccess(() =>
+      liquity.send.unstakeSTBL(amount, { gasPrice: 0 })
     );
   }
 
@@ -428,11 +428,11 @@ export class Fixture {
     }
   }
 
-  async sweepLQTY(liquity: Liquity) {
-    const lqtyBalance = await liquity.getLQTYBalance();
+  async sweepSTBL(liquity: Liquity) {
+    const stblBalance = await liquity.getSTBLBalance();
 
-    if (lqtyBalance.nonZero) {
-      await liquity.sendLQTY(this.funderAddress, lqtyBalance, { gasPrice: 0 });
+    if (stblBalance.nonZero) {
+      await liquity.sendSTBL(this.funderAddress, stblBalance, { gasPrice: 0 });
     }
   }
 

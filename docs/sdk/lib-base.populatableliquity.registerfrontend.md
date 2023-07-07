@@ -16,7 +16,7 @@ registerFrontend(kickbackRate: Decimalish): Promise<PopulatedLiquityTransaction<
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  kickbackRate | [Decimalish](./lib-base.decimalish.md) | The portion of LQTY rewards to pass onto users of the frontend (between 0 and 1). |
+|  kickbackRate | [Decimalish](./lib-base.decimalish.md) | The portion of STBL rewards to pass onto users of the frontend (between 0 and 1). |
 
 <b>Returns:</b>
 

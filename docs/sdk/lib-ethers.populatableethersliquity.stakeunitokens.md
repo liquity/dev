@@ -4,7 +4,7 @@
 
 ## PopulatableEthersLiquity.stakeUniTokens() method
 
-Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn LQTY.
+Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn STBL.
 
 <b>Signature:</b>
 

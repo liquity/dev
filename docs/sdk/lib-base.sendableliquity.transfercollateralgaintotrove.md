@@ -19,5 +19,5 @@ Promise&lt;[SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- --
 
 The collateral gain is transfered to the Trove as additional collateral.
 
-As a side-effect, the transaction will also pay out the Stability Deposit's [LQTY reward](./lib-base.stabilitydeposit.lqtyreward.md)<!-- -->.
+As a side-effect, the transaction will also pay out the Stability Deposit's [STBL reward](./lib-base.stabilitydeposit.stblreward.md)<!-- -->.
 

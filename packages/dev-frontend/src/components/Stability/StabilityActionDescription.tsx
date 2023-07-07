@@ -15,7 +15,7 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
   change
 }) => {
   const collateralGain = originalDeposit.collateralGain.nonZero?.prettify(4).concat(" ETH");
-  const lqtyReward = originalDeposit.lqtyReward.nonZero?.prettify().concat(" ", GT);
+  const stblReward = originalDeposit.stblReward.nonZero?.prettify().concat(" ", GT);
 
   return (
     <ActionDescription>
@@ -36,16 +36,16 @@ export const StabilityActionDescription: React.FC<StabilityActionDescriptionProp
           to your wallet
         </>
       )}
-      {(collateralGain || lqtyReward) && (
+      {(collateralGain || stblReward) && (
         <>
           {" "}
           and claiming at least{" "}
-          {collateralGain && lqtyReward ? (
+          {collateralGain && stblReward ? (
             <>
-              <Amount>{collateralGain}</Amount> and <Amount>{lqtyReward}</Amount>
+              <Amount>{collateralGain}</Amount> and <Amount>{stblReward}</Amount>
             </>
           ) : (
-            <Amount>{collateralGain ?? lqtyReward}</Amount>
+            <Amount>{collateralGain ?? stblReward}</Amount>
           )}
         </>
       )}

@@ -9,11 +9,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lqtyTokenAddress",
+          "name": "_stblTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LQTYTokenAddressSet",
+      "name": "STBLTokenAddressSet",
       "type": "event"
     },
     {
@@ -54,11 +54,11 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_totalLQTYIssued",
+          "name": "_totalSTBLIssued",
           "type": "uint256"
         }
       ],
-      "name": "TotalLQTYIssuedUpdated",
+      "name": "TotalSTBLIssuedUpdated",
       "type": "event"
     },
     {
@@ -89,7 +89,7 @@
     },
     {
       "inputs": [],
-      "name": "LQTYSupplyCap",
+      "name": "STBLSupplyCap",
       "outputs": [
         {
           "internalType": "uint256",
@@ -167,7 +167,7 @@
     },
     {
       "inputs": [],
-      "name": "issueLQTY",
+      "name": "issueSTBL",
       "outputs": [
         {
           "internalType": "uint256",
@@ -180,10 +180,10 @@
     },
     {
       "inputs": [],
-      "name": "lqtyToken",
+      "name": "stblToken",
       "outputs": [
         {
-          "internalType": "contract ILQTYToken",
+          "internalType": "contract ISTBLToken",
           "name": "",
           "type": "address"
         }
@@ -199,7 +199,7 @@
           "type": "uint256"
         }
       ],
-      "name": "obtainLQTY",
+      "name": "obtainSTBL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -226,11 +226,11 @@
         },
         {
           "internalType": "uint256",
-          "name": "_LQTYamount",
+          "name": "_STBLamount",
           "type": "uint256"
         }
       ],
-      "name": "sendLQTY",
+      "name": "sendSTBL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -239,7 +239,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_lqtyTokenAddress",
+          "name": "_stblTokenAddress",
           "type": "address"
         },
         {
@@ -268,7 +268,7 @@
     },
     {
       "inputs": [],
-      "name": "totalLQTYIssued",
+      "name": "totalSTBLIssued",
       "outputs": [
         {
           "internalType": "uint256",
@@ -281,7 +281,7 @@
     },
     {
       "inputs": [],
-      "name": "unprotectedIssueLQTY",
+      "name": "unprotectedIssueSTBL",
       "outputs": [
         {
           "internalType": "uint256",

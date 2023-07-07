@@ -17,7 +17,7 @@ depositLUSDInStabilityPool(amount: Decimalish, frontendTag?: string): Promise<Po
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  amount | [Decimalish](./lib-base.decimalish.md) | Amount of LUSD to add to new or existing deposit. |
-|  frontendTag | string | Address that should receive a share of this deposit's LQTY rewards. |
+|  frontendTag | string | Address that should receive a share of this deposit's STBL rewards. |
 
 <b>Returns:</b>
 
@@ -27,5 +27,5 @@ Promise&lt;[PopulatedLiquityTransaction](./lib-base.populatedliquitytransaction.
 
 The `frontendTag` parameter is only effective when making a new deposit.
 
-As a side-effect, the transaction will also pay out an existing Stability Deposit's [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [LQTY reward](./lib-base.stabilitydeposit.lqtyreward.md)<!-- -->.
+As a side-effect, the transaction will also pay out an existing Stability Deposit's [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [STBL reward](./lib-base.stabilitydeposit.stblreward.md)<!-- -->.
 

@@ -87,7 +87,7 @@ const deployContracts = async (
       "LockupContractFactory",
       { ...overrides }
     ),
-    lqtyStaking: await deployContract(deployer, getContractFactory, "LQTYStaking", { ...overrides }),
+    stblStaking: await deployContract(deployer, getContractFactory, "STBLStaking", { ...overrides }),
     priceFeed: await deployContract(
       deployer,
       getContractFactory,
@@ -119,12 +119,12 @@ const deployContracts = async (
         { ...overrides }
       ),
 
-      lqtyToken: await deployContract(
+      stblToken: await deployContract(
         deployer,
         getContractFactory,
-        "LQTYToken",
+        "STBLToken",
         addresses.communityIssuance,
-        addresses.lqtyStaking,
+        addresses.stblStaking,
         addresses.lockupContractFactory,
         Wallet.createRandom().address, // _bountyAddress (TODO: parameterize this)
         addresses.unipool, // _lpRewardsAddress
@@ -163,10 +163,10 @@ const connectContracts = async (
     collSurplusPool,
     communityIssuance,
     defaultPool,
-    lqtyToken,
+    stblToken,
     hintHelpers,
     lockupContractFactory,
-    lqtyStaking,
+    stblStaking,
     priceFeed,
     sortedTroves,
     stabilityPool,
@@ -201,8 +201,8 @@ const connectContracts = async (
         priceFeed.address,
         lusdToken.address,
         sortedTroves.address,
-        lqtyToken.address,
-        lqtyStaking.address,
+        stblToken.address,
+        stblStaking.address,
         { ...overrides, nonce }
       ),
 
@@ -217,7 +217,7 @@ const connectContracts = async (
         priceFeed.address,
         sortedTroves.address,
         lusdToken.address,
-        lqtyStaking.address,
+        stblStaking.address,
         { ...overrides, nonce }
       ),
 
@@ -263,8 +263,8 @@ const connectContracts = async (
       }),
 
     nonce =>
-      lqtyStaking.setAddresses(
-        lqtyToken.address,
+      stblStaking.setAddresses(
+        stblToken.address,
         lusdToken.address,
         troveManager.address,
         borrowerOperations.address,
@@ -273,19 +273,19 @@ const connectContracts = async (
       ),
 
     nonce =>
-      lockupContractFactory.setLQTYTokenAddress(lqtyToken.address, {
+      lockupContractFactory.setSTBLTokenAddress(stblToken.address, {
         ...overrides,
         nonce
       }),
 
     nonce =>
-      communityIssuance.setAddresses(lqtyToken.address, stabilityPool.address, {
+      communityIssuance.setAddresses(stblToken.address, stabilityPool.address, {
         ...overrides,
         nonce
       }),
 
     nonce =>
-      unipool.setParams(lqtyToken.address, uniToken.address, 2 * 30 * 24 * 60 * 60, {
+      unipool.setParams(stblToken.address, uniToken.address, 2 * 30 * 24 * 60 * 60, {
         ...overrides,
         nonce
       })
@@ -333,8 +333,8 @@ export const deployAndSetupContracts = async (
     version: "unknown",
     deploymentDate: new Date().getTime(),
     bootstrapPeriod: 0,
-    totalStabilityPoolLQTYReward: "0",
-    liquidityMiningLQTYRewardRate: "0",
+    totalStabilityPoolSTBLReward: "0",
+    liquidityMiningSTBLRewardRate: "0",
     _priceFeedIsTestnet,
     _uniTokenIsMock: !wethAddress,
     _isDev,
@@ -359,20 +359,20 @@ export const deployAndSetupContracts = async (
   log("Connecting contracts...");
   await connectContracts(contracts, deployer, overrides);
 
-  const lqtyTokenDeploymentTime = await contracts.lqtyToken.getDeploymentStartTime();
+  const stblTokenDeploymentTime = await contracts.stblToken.getDeploymentStartTime();
   const bootstrapPeriod = await contracts.troveManager.BOOTSTRAP_PERIOD();
-  const totalStabilityPoolLQTYReward = await contracts.communityIssuance.LQTYSupplyCap();
-  const liquidityMiningLQTYRewardRate = await contracts.unipool.rewardRate();
+  const totalStabilityPoolSTBLReward = await contracts.communityIssuance.STBLSupplyCap();
+  const liquidityMiningSTBLRewardRate = await contracts.unipool.rewardRate();
 
   return {
     ...deployment,
-    deploymentDate: lqtyTokenDeploymentTime.toNumber() * 1000,
+    deploymentDate: stblTokenDeploymentTime.toNumber() * 1000,
     bootstrapPeriod: bootstrapPeriod.toNumber(),
-    totalStabilityPoolLQTYReward: `${Decimal.fromBigNumberString(
-      totalStabilityPoolLQTYReward.toHexString()
+    totalStabilityPoolSTBLReward: `${Decimal.fromBigNumberString(
+      totalStabilityPoolSTBLReward.toHexString()
     )}`,
-    liquidityMiningLQTYRewardRate: `${Decimal.fromBigNumberString(
-      liquidityMiningLQTYRewardRate.toHexString()
+    liquidityMiningSTBLRewardRate: `${Decimal.fromBigNumberString(
+      liquidityMiningSTBLRewardRate.toHexString()
     )}`
   };
 };

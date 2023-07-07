@@ -57,14 +57,14 @@ $ hardhat test
       ✓ remove(): reverts when called by an account that is not TroveManager
       ✓ reinsert(): reverts when called by an account that is neither BorrowerOps nor TroveManager
     LockupContract
-      ✓ withdrawLQTY(): reverts when caller is not beneficiary (68ms)
-    LQTYStaking
+      ✓ withdrawSTBL(): reverts when caller is not beneficiary (68ms)
+    STBLStaking
       ✓ increaseF_LUSD(): reverts when caller is not TroveManager
-    LQTYToken
-      ✓ sendToLQTYStaking(): reverts when caller is not the LQTYSstaking (49ms)
+    STBLToken
+      ✓ sendToSTBLStaking(): reverts when caller is not the STBLSstaking (49ms)
     CommunityIssuance
-      ✓ sendLQTY(): reverts when caller is not the StabilityPool
-      ✓ issueLQTY(): reverts when caller is not the StabilityPool
+      ✓ sendSTBL(): reverts when caller is not the StabilityPool
+      ✓ issueSTBL(): reverts when caller is not the StabilityPool
 
   Contract: BorrowerOperations
     Without proxy
@@ -98,9 +98,9 @@ $ hardhat test
       ✓ withdrawLUSD(): doesn't change base rate if it is already zero (1044ms)
       ✓ withdrawLUSD(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation (899ms)
       ✓ withdrawLUSD(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity (852ms)
-      ✓ withdrawLUSD(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract (1004ms)
+      ✓ withdrawLUSD(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract (1004ms)
       ✓ withdrawLUSD(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct (923ms)
-      ✓ withdrawLUSD(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked (986ms)
+      ✓ withdrawLUSD(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked (986ms)
       ✓ withdrawLUSD(): Borrowing at non-zero base rate sends requested amount to the user (1562ms)
       ✓ withdrawLUSD(): Borrowing at zero base rate changes LUSD fees-per-unit-staked (839ms)
       ✓ withdrawLUSD(): Borrowing at zero base rate sends debt request to user (790ms)
@@ -131,12 +131,12 @@ $ hardhat test
       ✓ adjustTrove(): doesn't change base rate if it is already zero (545ms)
       ✓ adjustTrove(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation (819ms)
       ✓ adjustTrove(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity (866ms)
-      ✓ adjustTrove(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract (889ms)
+      ✓ adjustTrove(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract (889ms)
       ✓ adjustTrove(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct (1013ms)
-      ✓ adjustTrove(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked (837ms)
+      ✓ adjustTrove(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked (837ms)
       ✓ adjustTrove(): Borrowing at non-zero base rate sends requested amount to the user (895ms)
-      ✓ adjustTrove(): Borrowing at zero base rate changes LUSD balance of LQTY staking contract (783ms)
-      ✓ adjustTrove(): Borrowing at zero base rate changes LQTY staking contract LUSD fees-per-unit-staked (881ms)
+      ✓ adjustTrove(): Borrowing at zero base rate changes LUSD balance of STBL staking contract (783ms)
+      ✓ adjustTrove(): Borrowing at zero base rate changes STBL staking contract LUSD fees-per-unit-staked (881ms)
       ✓ adjustTrove(): Borrowing at zero base rate sends total requested LUSD to the user (783ms)
       ✓ adjustTrove(): reverts when calling address has no active trove (416ms)
       ✓ adjustTrove(): reverts in Recovery Mode when the adjustment would reduce the TCR (654ms)
@@ -199,11 +199,11 @@ $ hardhat test
       ✓ openTrove(): reverts if fee exceeds max fee percentage (747ms)
       ✓ openTrove(): succeeds when fee is less than max fee percentage (930ms)
       ✓ openTrove(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity (965ms)
-      ✓ openTrove(): borrowing at non-zero base rate sends LUSD fee to LQTY staking contract (923ms)
+      ✓ openTrove(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract (923ms)
       ✓ openTrove(): borrowing at non-zero base records the (drawn debt + fee  + liq. reserve) on the Trove struct (865ms)
-      ✓ openTrove(): Borrowing at non-zero base rate increases the LQTY staking contract LUSD fees-per-unit-staked (794ms)
+      ✓ openTrove(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked (794ms)
       ✓ openTrove(): Borrowing at non-zero base rate sends requested amount to the user (832ms)
-      ✓ openTrove(): Borrowing at zero base rate changes the LQTY staking contract LUSD fees-per-unit-staked (602ms)
+      ✓ openTrove(): Borrowing at zero base rate changes the STBL staking contract LUSD fees-per-unit-staked (602ms)
       ✓ openTrove(): Borrowing at zero base rate charges minimum fee (316ms)
       ✓ openTrove(): reverts when system is in Recovery Mode and ICR < CCR (320ms)
       ✓ openTrove(): reverts when trove ICR < MCR (536ms)
@@ -260,7 +260,7 @@ $ hardhat test
     ✓ Sets the correct ActivePool address in TroveManager
     ✓ Sets the correct DefaultPool address in TroveManager
     ✓ Sets the correct StabilityPool address in TroveManager
-    ✓ Sets the correct LQTYStaking address in TroveManager
+    ✓ Sets the correct STBLStaking address in TroveManager
     ✓ Sets the correct StabilityPool address in ActivePool
     ✓ Sets the correct DefaultPool address in ActivePool (133ms)
     ✓ Sets the correct BorrowerOperations address in ActivePool
@@ -278,17 +278,17 @@ $ hardhat test
     ✓ Sets the correct SortedTroves address in BorrowerOperations
     ✓ Sets the correct ActivePool address in BorrowerOperations
     ✓ Sets the correct DefaultPool address in BorrowerOperations
-    ✓ Sets the correct LQTYStaking address in BorrowerOperations
-    ✓ Sets the correct LQTYToken address in LQTYStaking
-    ✓ Sets the correct ActivePool address in LQTYStaking
-    ✓ Sets the correct ActivePool address in LQTYStaking
-    ✓ Sets the correct ActivePool address in LQTYStaking
-    ✓ Sets the correct BorrowerOperations address in LQTYStaking
-    ✓ Sets the correct CommunityIssuance address in LQTYToken
-    ✓ Sets the correct LQTYStaking address in LQTYToken
-    ✓ Sets the correct LockupContractFactory address in LQTYToken
-    ✓ Sets the correct LQTYToken address in LockupContractFactory
-    ✓ Sets the correct LQTYToken address in CommunityIssuance
+    ✓ Sets the correct STBLStaking address in BorrowerOperations
+    ✓ Sets the correct STBLToken address in STBLStaking
+    ✓ Sets the correct ActivePool address in STBLStaking
+    ✓ Sets the correct ActivePool address in STBLStaking
+    ✓ Sets the correct ActivePool address in STBLStaking
+    ✓ Sets the correct BorrowerOperations address in STBLStaking
+    ✓ Sets the correct CommunityIssuance address in STBLToken
+    ✓ Sets the correct STBLStaking address in STBLToken
+    ✓ Sets the correct LockupContractFactory address in STBLToken
+    ✓ Sets the correct STBLToken address in LockupContractFactory
+    ✓ Sets the correct STBLToken address in CommunityIssuance
     ✓ Sets the correct StabilityPool address in CommunityIssuance
 
   Contract: DefaultPool
@@ -344,7 +344,7 @@ TCR: 11.892415157517211309
     ✓ Trove ordering: increasing collateral, constant debt. Price successively increases. Troves should maintain ordering by ICR (3885ms)
     ✓ Trove ordering: Constant raw collateral ratio (excluding virtual debt). Price successively increases. Troves should maintain ordering by ICR (2042ms)
 
-  Contract: LQTY Token
+  Contract: STBL Token
     ✓ balanceOf(): gets the balance of the account (43ms)
     ✓ totalSupply(): gets the total supply
     ✓ name(): returns the token's name
@@ -364,7 +364,7 @@ TCR: 11.892415157517211309
     ✓ mint(): reverts when beneficiary is address(0)
     ✓ increaseAllowance(): increases an account's allowance by the correct amount
     ✓ decreaseAllowance(): decreases an account's allowance by the correct amount
-    ✓ sendToLQTYStaking(): changes balances of LQTYStaking and calling account by the correct amounts (48ms)
+    ✓ sendToSTBLStaking(): changes balances of STBLStaking and calling account by the correct amounts (48ms)
     ✓ Initializes PERMIT_TYPEHASH correctly
     ✓ Initializes DOMAIN_SEPARATOR correctly
     ✓ Initial nonce for a given address is 0
@@ -381,9 +381,9 @@ TCR: 11.892415157517211309
 
   Contract: Deploying and funding One Year Lockup Contracts
     Deploying LCs
-      ✓ LQTY Deployer can deploy LCs through the Factory (121ms)
+      ✓ STBL Deployer can deploy LCs through the Factory (121ms)
       ✓ Anyone can deploy LCs through the Factory (71ms)
-      ✓ LQTY Deployer can deploy LCs directly (43ms)
+      ✓ STBL Deployer can deploy LCs directly (43ms)
       ✓ Anyone can deploy LCs directly (43ms)
       ✓ LC deployment stores the beneficiary's address in the LC (1806ms)
       ✓ LC deployment through the Factory registers the LC in the Factory (99ms)
@@ -393,63 +393,63 @@ TCR: 11.892415157517211309
       ✓ LC deployment through the Factory reverts when the unlockTime is < 1 year from system deployment (50ms)
       ✓ Direct deployment of LC reverts when the unlockTime is < 1 year from system deployment (54ms)
     Funding LCs
-      ✓ LQTY transfer from LQTY deployer to their deployed LC increases the LQTY balance of the LC (397ms)
-      ✓ LQTY Multisig can transfer LQTY to LCs deployed through the factory by anyone (168ms)
+      ✓ STBL transfer from STBL deployer to their deployed LC increases the STBL balance of the LC (397ms)
+      ✓ STBL Multisig can transfer STBL to LCs deployed through the factory by anyone (168ms)
     Withdrawal attempts on funded, inactive LCs immediately after funding
       ✓ Beneficiary can't withdraw from their funded LC (346ms)
-      ✓ LQTY multisig can't withraw from a LC which it funded (271ms)
+      ✓ STBL multisig can't withraw from a LC which it funded (271ms)
       ✓ No one can withraw from a LC (78ms)
 
-  Contract: Deploying the LQTY contracts: LCF, CI, LQTYStaking, and LQTYToken 
+  Contract: Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken 
     CommunityIssuance deployment
       ✓ Stores the deployer's address
-    LQTYStaking deployment
+    STBLStaking deployment
       ✓ Stores the deployer's address
-    LQTYToken deployment
+    STBLToken deployment
       ✓ Stores the multisig's address
       ✓ Stores the CommunityIssuance address
       ✓ Stores the LockupContractFactory address
-      ✓ Mints the correct LQTY amount to the multisig's address: (64.66 million)
-      ✓ Mints the correct LQTY amount to the CommunityIssuance contract address: 32 million
-      ✓ Mints the correct LQTY amount to the bountyAddress EOA: 2 million
-      ✓ Mints the correct LQTY amount to the lpRewardsAddress EOA: 1.33 million
+      ✓ Mints the correct STBL amount to the multisig's address: (64.66 million)
+      ✓ Mints the correct STBL amount to the CommunityIssuance contract address: 32 million
+      ✓ Mints the correct STBL amount to the bountyAddress EOA: 2 million
+      ✓ Mints the correct STBL amount to the lpRewardsAddress EOA: 1.33 million
     Community Issuance deployment
       ✓ Stores the deployer's address
       ✓ Has a supply cap of 32 million
-      ✓ Liquity AG can set addresses if CI's LQTY balance is equal or greater than 32 million  (393ms)
-      ✓ Liquity AG can't set addresses if CI's LQTY balance is < 32 million  (367ms)
-    Connecting LQTYToken to LCF, CI and LQTYStaking
-      ✓ sets the correct LQTYToken address in LQTYStaking (1866ms)
-      ✓ sets the correct LQTYToken address in LockupContractFactory
-      ✓ sets the correct LQTYToken address in CommunityIssuance (203ms)
+      ✓ Liquity AG can set addresses if CI's STBL balance is equal or greater than 32 million  (393ms)
+      ✓ Liquity AG can't set addresses if CI's STBL balance is < 32 million  (367ms)
+    Connecting STBLToken to LCF, CI and STBLStaking
+      ✓ sets the correct STBLToken address in STBLStaking (1866ms)
+      ✓ sets the correct STBLToken address in LockupContractFactory
+      ✓ sets the correct STBLToken address in CommunityIssuance (203ms)
 
   Contract: During the initial lockup period
-    LQTY transfer during first year after LQTY deployment
-      ✓ Liquity multisig can not transfer LQTY to a LC that was deployed directly (105ms)
+    STBL transfer during first year after STBL deployment
+      ✓ Liquity multisig can not transfer STBL to a LC that was deployed directly (105ms)
       ✓ Liquity multisig can not transfer to an EOA or Liquity system contracts (302ms)
-      ✓ Liquity multisig can not approve any EOA or Liquity system contract to spend their LQTY (546ms)
+      ✓ Liquity multisig can not approve any EOA or Liquity system contract to spend their STBL (546ms)
       ✓ Liquity multisig can not increaseAllowance for any EOA or Liquity contract (285ms)
       ✓ Liquity multisig can not decreaseAllowance for any EOA or Liquity contract (338ms)
       ✓ Liquity multisig can not be the sender in a transferFrom() call
-      ✓ Liquity multisig can not stake their LQTY in the staking contract
-      ✓ Anyone (other than Liquity multisig) can transfer LQTY to LCs deployed by anyone through the Factory (359ms)
-      ✓ Anyone (other than Liquity multisig) can transfer LQTY to LCs deployed by anyone directly (141ms)
+      ✓ Liquity multisig can not stake their STBL in the staking contract
+      ✓ Anyone (other than Liquity multisig) can transfer STBL to LCs deployed by anyone through the Factory (359ms)
+      ✓ Anyone (other than Liquity multisig) can transfer STBL to LCs deployed by anyone directly (141ms)
       ✓ Anyone (other than liquity multisig) can transfer to an EOA (106ms)
-      ✓ Anyone (other than liquity multisig) can approve any EOA or to spend their LQTY
+      ✓ Anyone (other than liquity multisig) can approve any EOA or to spend their STBL
       ✓ Anyone (other than liquity multisig) can increaseAllowance for any EOA or Liquity contract (244ms)
       ✓ Anyone (other than liquity multisig) can decreaseAllowance for any EOA or Liquity contract (693ms)
       ✓ Anyone (other than liquity multisig) can be the sender in a transferFrom() call (62ms)
-      ✓ Anyone (other than liquity AG) can stake their LQTY in the staking contract
+      ✓ Anyone (other than liquity AG) can stake their STBL in the staking contract
     Lockup Contract Factory negative tests
-      ✓ deployLockupContract(): reverts when LQTY token address is not set (197ms)
-    Transferring LQTY to LCs
-      ✓ Liquity multisig can transfer LQTY (vesting) to lockup contracts they deployed (198ms)
-      ✓ Liquity multisig can transfer LQTY to lockup contracts deployed by anyone (1798ms)
+      ✓ deployLockupContract(): reverts when STBL token address is not set (197ms)
+    Transferring STBL to LCs
+      ✓ Liquity multisig can transfer STBL (vesting) to lockup contracts they deployed (198ms)
+      ✓ Liquity multisig can transfer STBL to lockup contracts deployed by anyone (1798ms)
     Deploying new LCs
-      ✓ LQTY Deployer can deploy LCs through the Factory (46ms)
+      ✓ STBL Deployer can deploy LCs through the Factory (46ms)
       ✓ Liquity multisig can deploy LCs through the Factory
       ✓ Anyone can deploy LCs through the Factory (80ms)
-      ✓ LQTY Deployer can deploy LCs directly (44ms)
+      ✓ STBL Deployer can deploy LCs directly (44ms)
       ✓ Liquity multisig can deploy LCs directly (45ms)
       ✓ Anyone can deploy LCs directly (46ms)
       ✓ Anyone can deploy LCs with unlockTime = one year from deployment, directly and through factory (102ms)
@@ -463,37 +463,37 @@ TCR: 11.892415157517211309
 
   Contract: After the initial lockup period has passed
     Deploying new LCs
-      ✓ LQTY Deployer can deploy new LCs
+      ✓ STBL Deployer can deploy new LCs
       ✓ Anyone can deploy new LCs (42ms)
       ✓ Anyone can deploy new LCs with unlockTime in the past (65ms)
       ✓ Anyone can deploy new LCs with unlockTime in the future (46ms)
     Beneficiary withdrawal from initial LC
       ✓ A beneficiary can withdraw their full entitlement from their LC (256ms)
       ✓ A beneficiary on a vesting schedule can withdraw their total vested amount from their LC (155ms)
-      ✓ Beneficiaries can withraw full LQTY balance of LC if it has increased since lockup period ended (234ms)
+      ✓ Beneficiaries can withraw full STBL balance of LC if it has increased since lockup period ended (234ms)
     Withdrawal attempts from LCs by non-beneficiaries
-      ✓ LQTY Multisig can't withdraw from a LC they deployed through the Factory
-      ✓ LQTY Multisig can't withdraw from a LC that someone else deployed
+      ✓ STBL Multisig can't withdraw from a LC they deployed through the Factory
+      ✓ STBL Multisig can't withdraw from a LC that someone else deployed
       ✓ Non-beneficiaries cannot withdraw from a LC (189ms)
-    Transferring LQTY
-      ✓ LQTY multisig can transfer LQTY to LCs they deployed (176ms)
-      ✓ LQTY multisig can transfer tokens to LCs deployed by anyone (104ms)
-      ✓ LQTY multisig can transfer LQTY directly to any externally owned account (141ms)
-      ✓ Anyone can transfer LQTY to LCs deployed by anyone (179ms)
+    Transferring STBL
+      ✓ STBL multisig can transfer STBL to LCs they deployed (176ms)
+      ✓ STBL multisig can transfer tokens to LCs deployed by anyone (104ms)
+      ✓ STBL multisig can transfer STBL directly to any externally owned account (141ms)
+      ✓ Anyone can transfer STBL to LCs deployed by anyone (179ms)
       ✓ Anyone can transfer to an EOA (421ms)
-      ✓ Anyone can approve any EOA to spend their LQTY
+      ✓ Anyone can approve any EOA to spend their STBL
       ✓ Anyone can increaseAllowance for any EOA or Liquity contract (2441ms)
       ✓ Anyone can decreaseAllowance for any EOA or Liquity contract (1034ms)
       ✓ Anyone can be the sender in a transferFrom() call (101ms)
-      ✓ Anyone can stake their LQTY in the staking contract (55ms)
+      ✓ Anyone can stake their STBL in the staking contract (55ms)
     Withdrawal Attempts on new LCs before unlockTime has passed
-      ✓ LQTY Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory, before the unlockTime (44ms)
-      ✓ LQTY Deployer can't withdraw from a funded LC that someone else deployed, before the unlockTime (448ms)
+      ✓ STBL Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory, before the unlockTime (44ms)
+      ✓ STBL Deployer can't withdraw from a funded LC that someone else deployed, before the unlockTime (448ms)
       ✓ Beneficiary can't withdraw from their funded LC, before the unlockTime (284ms)
       ✓ No one can withdraw from a beneficiary's funded LC, before the unlockTime (443ms)
     Withdrawals from new LCs after unlockTime has passed
-      ✓ LQTY Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory, after the unlockTime (100ms)
-      ✓ LQTY multisig can't withdraw from a funded LC when they are not the beneficiary, after the unlockTime (529ms)
+      ✓ STBL Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory, after the unlockTime (100ms)
+      ✓ STBL multisig can't withdraw from a funded LC when they are not the beneficiary, after the unlockTime (529ms)
       ✓ Beneficiary can withdraw from their funded LC, after the unlockTime (97ms)
       ✓ Non-beneficiaries can't withdraw from a beneficiary's funded LC, after the unlockTime (226ms)
 
@@ -506,7 +506,7 @@ TCR: 11.892415157517211309
     ✓ add(): reverts if overflows
     ✓ sub(): reverts if underflows
 
-  Contract: LQTY community issuance arithmetic tests
+  Contract: STBL community issuance arithmetic tests
 issuance fraction before: 949066037374286
 issuance fraction after: 949066037374286
     ✓ getCumulativeIssuanceFraction(): fraction doesn't increase if less than a minute has passed (45ms)
@@ -524,36 +524,36 @@ issuance fraction after: 949066037374286
     ✓ Cumulative issuance fraction is 0.999 after 10 years
     ✓ Cumulative issuance fraction is 0.999999 after 20 years (78ms)
     ✓ Cumulative issuance fraction is 0.999999999 after 30 years (55ms)
-    ✓ Total LQTY tokens issued is 42.20 after a minute (38ms)
-    ✓ Total LQTY tokens issued is 2,531.94 after an hour (41ms)
-    ✓ Total LQTY tokens issued is 60,711.40 after a day (136ms)
-    ✓ Total LQTY tokens issued is 422,568.60 after a week (331ms)
-    ✓ Total LQTY tokens issued is 1,772,113.21 after a month
-    ✓ Total LQTY tokens issued is 5,027,363.22 after 3 months (40ms)
-    ✓ Total LQTY tokens issued is 9,264,902.04 after 6 months (47ms)
-    ✓ Total LQTY tokens issued is 16,000,000 after a year (47ms)
-    ✓ Total LQTY tokens issued is 24,000,000 after 2 years (47ms)
-    ✓ Total LQTY tokens issued is 28,000,000 after 3 years (75ms)
-    ✓ Total LQTY tokens issued is 30,000,000 after 4 years (40ms)
-    ✓ Total LQTY tokens issued is 31,968,750 after 10 years (69ms)
-    ✓ Total LQTY tokens issued is 31,999,969.48 after 20 years (68ms)
-    ✓ Total LQTY tokens issued is 31,999,999.97 after 30 years (87ms)
+    ✓ Total STBL tokens issued is 42.20 after a minute (38ms)
+    ✓ Total STBL tokens issued is 2,531.94 after an hour (41ms)
+    ✓ Total STBL tokens issued is 60,711.40 after a day (136ms)
+    ✓ Total STBL tokens issued is 422,568.60 after a week (331ms)
+    ✓ Total STBL tokens issued is 1,772,113.21 after a month
+    ✓ Total STBL tokens issued is 5,027,363.22 after 3 months (40ms)
+    ✓ Total STBL tokens issued is 9,264,902.04 after 6 months (47ms)
+    ✓ Total STBL tokens issued is 16,000,000 after a year (47ms)
+    ✓ Total STBL tokens issued is 24,000,000 after 2 years (47ms)
+    ✓ Total STBL tokens issued is 28,000,000 after 3 years (75ms)
+    ✓ Total STBL tokens issued is 30,000,000 after 4 years (40ms)
+    ✓ Total STBL tokens issued is 31,968,750 after 10 years (69ms)
+    ✓ Total STBL tokens issued is 31,999,969.48 after 20 years (68ms)
+    ✓ Total STBL tokens issued is 31,999,999.97 after 30 years (87ms)
     - Frequent token issuance: issuance event every year, for 30 years
     - Frequent token issuance: issuance event every day, for 30 years
     - Frequent token issuance: issuance event every minute, for 1 month
     - Frequent token issuance: issuance event every minute, for 1 year
 
-  Contract: LQTYStaking revenue share tests
+  Contract: STBLStaking revenue share tests
     ✓ stake(): reverts if amount is zero (74ms)
-    ✓ ETH fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0 (1562ms)
-    ✓ ETH fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0 (3540ms)
-    ✓ LUSD fee per LQTY staked increases when a redemption fee is triggered and totalStakes > 0 (1757ms)
-    ✓ LUSD fee per LQTY staked doesn't change when a redemption fee is triggered and totalStakes == 0 (1705ms)
-    ✓ LQTY Staking: A single staker earns all ETH and LQTY fees that occur (2143ms)
+    ✓ ETH fee per STBL staked increases when a redemption fee is triggered and totalStakes > 0 (1562ms)
+    ✓ ETH fee per STBL staked doesn't change when a redemption fee is triggered and totalStakes == 0 (3540ms)
+    ✓ LUSD fee per STBL staked increases when a redemption fee is triggered and totalStakes > 0 (1757ms)
+    ✓ LUSD fee per STBL staked doesn't change when a redemption fee is triggered and totalStakes == 0 (1705ms)
+    ✓ STBL Staking: A single staker earns all ETH and STBL fees that occur (2143ms)
     ✓ stake(): Top-up sends out all accumulated ETH and LUSD gains to the staker (2138ms)
     ✓ getPendingETHGain(): Returns the staker's correct pending ETH gain (1856ms)
     ✓ getPendingLUSDGain(): Returns the staker's correct pending LUSD gain (1965ms)
-    ✓ LQTY Staking: Multiple stakers earn the correct share of all ETH and LQTY fees, based on their stake size (3133ms)
+    ✓ STBL Staking: Multiple stakers earn the correct share of all ETH and STBL fees, based on their stake size (3133ms)
     ✓ unstake(): reverts if caller has ETH gains and can't receive ETH (1149ms)
     ✓ receive(): reverts when it receives ETH from an address that is not the Active Pool
     ✓ unstake(): reverts if user has no stake
@@ -621,10 +621,10 @@ issuance fraction after: 949066037374286
       ✓ setParams(): reverts when called by non-owner, with wrong addresses, or twice (157ms)
     CommunityIssuance
       ✓ setAddresses(): reverts when called by non-owner, with wrong addresses, or twice (136ms)
-    LQTYStaking
+    STBLStaking
       ✓ setAddresses(): reverts when called by non-owner, with wrong addresses, or twice (261ms)
     LockupContractFactory
-      ✓ setLQTYAddress(): reverts when called by non-owner, with wrong address, or twice (216ms)
+      ✓ setSTBLAddress(): reverts when called by non-owner, with wrong address, or twice (216ms)
 
   Contract: StabilityPool
     ✓ getETH(): gets the recorded ETH balance
@@ -801,21 +801,21 @@ issuance fraction after: 949066037374286
         ✓ reInsert(): fails if new NICR is zero (43ms)
         ✓ findInsertPosition(): No prevId for hint - ascend list starting from nextId, result is after the tail
 
-  Contract: StabilityPool - LQTY Rewards
-    LQTY Rewards
-totalLQTYIssued_1: 30370113195977152000000
-totalLQTYIssued_2: 30370113195977152000000
-      ✓ liquidation < 1 minute after a deposit does not change totalLQTYIssued (743ms)
-      ✓ withdrawFromSP(): reward term G does not update when no LQTY is issued (634ms)
-      ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct LQTY gain. No liquidations. No front end. (1479ms)
-      ✓ withdrawFromSP(): Depositors with varying initial deposit withdraw correct LQTY gain. No liquidations. No front end. (1345ms)
-      ✓ withdrawFromSP(): Depositors with varying initial deposit withdraw correct LQTY gain. No liquidations. No front end. (1925ms)
-      ✓ withdrawFromSP(): Depositor withdraws correct LQTY gain after serial pool-emptying liquidations. No front-ends. (5752ms)
-      ✓ LQTY issuance for a given period is not obtainable if the SP was empty during the period (551ms)
-      ✓ withdrawFromSP(): Several deposits of 100 LUSD span one scale factor change. Depositors withdraw correct LQTY gains (6075ms)
-      ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct LQTY gain. No liquidations. Front ends and kickback rates. (1660ms)
-      ✓ withdrawFromSP(): Depositors with varying initial deposit withdraw correct LQTY gain. Front ends and kickback rates (2813ms)
-      ✓ withdrawFromSP(): Several deposits of 10k LUSD span one scale factor change. Depositors withdraw correct LQTY gains (4788ms)
+  Contract: StabilityPool - STBL Rewards
+    STBL Rewards
+totalSTBLIssued_1: 30370113195977152000000
+totalSTBLIssued_2: 30370113195977152000000
+      ✓ liquidation < 1 minute after a deposit does not change totalSTBLIssued (743ms)
+      ✓ withdrawFromSP(): reward term G does not update when no STBL is issued (634ms)
+      ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct STBL gain. No liquidations. No front end. (1479ms)
+      ✓ withdrawFromSP(): Depositors with varying initial deposit withdraw correct STBL gain. No liquidations. No front end. (1345ms)
+      ✓ withdrawFromSP(): Depositors with varying initial deposit withdraw correct STBL gain. No liquidations. No front end. (1925ms)
+      ✓ withdrawFromSP(): Depositor withdraws correct STBL gain after serial pool-emptying liquidations. No front-ends. (5752ms)
+      ✓ STBL issuance for a given period is not obtainable if the SP was empty during the period (551ms)
+      ✓ withdrawFromSP(): Several deposits of 100 LUSD span one scale factor change. Depositors withdraw correct STBL gains (6075ms)
+      ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct STBL gain. No liquidations. Front ends and kickback rates. (1660ms)
+      ✓ withdrawFromSP(): Depositors with varying initial deposit withdraw correct STBL gain. Front ends and kickback rates (2813ms)
+      ✓ withdrawFromSP(): Several deposits of 10k LUSD span one scale factor change. Depositors withdraw correct STBL gains (4788ms)
 
   Contract: Pool Manager: Sum-Product rounding errors
     - Rounding errors: 100 deposits of 100LUSD into SP, then 200 liquidations of 49LUSD
@@ -903,20 +903,20 @@ alice deposit: 0
       ✓ provideToSP(): doesn't impact any troves, including the caller's trove (1810ms)
       ✓ provideToSP(): doesn't protect the depositor's trove from liquidation (1082ms)
       ✓ provideToSP(): providing 0 LUSD reverts (1091ms)
-      ✓ provideToSP(), new deposit: when SP > 0, triggers LQTY reward event - increases the sum G (1072ms)
+      ✓ provideToSP(), new deposit: when SP > 0, triggers STBL reward event - increases the sum G (1072ms)
       ✓ provideToSP(), new deposit: when SP is empty, doesn't update G (4734ms)
       ✓ provideToSP(), new deposit: sets the correct front end tag (1128ms)
-      ✓ provideToSP(), new deposit: depositor does not receive any LQTY rewards (671ms)
-      ✓ provideToSP(), new deposit after past full withdrawal: depositor does not receive any LQTY rewards (1679ms)
-      ✓ provideToSP(), new eligible deposit: tagged front end receives LQTY rewards (1605ms)
+      ✓ provideToSP(), new deposit: depositor does not receive any STBL rewards (671ms)
+      ✓ provideToSP(), new deposit after past full withdrawal: depositor does not receive any STBL rewards (1679ms)
+      ✓ provideToSP(), new eligible deposit: tagged front end receives STBL rewards (1605ms)
       ✓ provideToSP(), new eligible deposit: tagged front end's stake increases (848ms)
       ✓ provideToSP(), new eligible deposit: tagged front end's snapshots update (1913ms)
       ✓ provideToSP(), new deposit: depositor does not receive ETH gains (957ms)
       ✓ provideToSP(), new deposit after past full withdrawal: depositor does not receive ETH gains (1928ms)
-      ✓ provideToSP(), topup: triggers LQTY reward event - increases the sum G (1007ms)
+      ✓ provideToSP(), topup: triggers STBL reward event - increases the sum G (1007ms)
       ✓ provideToSP(), topup from different front end: doesn't change the front end tag (1511ms)
-      ✓ provideToSP(), topup: depositor receives LQTY rewards (1487ms)
-      ✓ provideToSP(), topup: tagged front end receives LQTY rewards (1036ms)
+      ✓ provideToSP(), topup: depositor receives STBL rewards (1487ms)
+      ✓ provideToSP(), topup: tagged front end receives STBL rewards (1036ms)
       ✓ provideToSP(), topup: tagged front end's stake increases (1816ms)
       ✓ provideToSP(), topup: tagged front end's snapshots update (1816ms)
       ✓ provideToSP(): reverts when amount is zero (686ms)
@@ -942,10 +942,10 @@ alice deposit: 0
       ✓ withdrawFromSP(): Request to withdraw 2^256-1 LUSD only withdraws the caller's compounded deposit (1229ms)
       ✓ withdrawFromSP(): caller can withdraw full deposit and ETH gain during Recovery Mode (4371ms)
       ✓ getDepositorETHGain(): depositor does not earn further ETH gains from liquidations while their compounded deposit == 0:  (1831ms)
-      ✓ withdrawFromSP(): triggers LQTY reward event - increases the sum G (982ms)
+      ✓ withdrawFromSP(): triggers STBL reward event - increases the sum G (982ms)
       ✓ withdrawFromSP(), partial withdrawal: doesn't change the front end tag (1421ms)
-      ✓ withdrawFromSP(), partial withdrawal: depositor receives LQTY rewards (1155ms)
-      ✓ withdrawFromSP(), partial withdrawal: tagged front end receives LQTY rewards (1245ms)
+      ✓ withdrawFromSP(), partial withdrawal: depositor receives STBL rewards (1155ms)
+      ✓ withdrawFromSP(), partial withdrawal: tagged front end receives STBL rewards (1245ms)
       ✓ withdrawFromSP(), partial withdrawal: tagged front end's stake decreases (1803ms)
       ✓ withdrawFromSP(), partial withdrawal: tagged front end's snapshots update (1713ms)
       ✓ withdrawFromSP(), full withdrawal: removes deposit's front end tag (970ms)
@@ -961,10 +961,10 @@ alice deposit: 0
       ✓ withdrawETHGainToTrove(): All depositors withdraw, each withdraw their correct ETH gain (2591ms)
       ✓ withdrawETHGainToTrove(): caller can withdraw full deposit and ETH gain to their trove during Recovery Mode (1629ms)
       ✓ withdrawETHGainToTrove(): reverts if user has no trove (967ms)
-      ✓ withdrawETHGainToTrove(): triggers LQTY reward event - increases the sum G (1298ms)
+      ✓ withdrawETHGainToTrove(): triggers STBL reward event - increases the sum G (1298ms)
       ✓ withdrawETHGainToTrove(), partial withdrawal: doesn't change the front end tag (4778ms)
-      ✓ withdrawETHGainToTrove(), eligible deposit: depositor receives LQTY rewards (1607ms)
-      ✓ withdrawETHGainToTrove(), eligible deposit: tagged front end receives LQTY rewards (1701ms)
+      ✓ withdrawETHGainToTrove(), eligible deposit: depositor receives STBL rewards (1607ms)
+      ✓ withdrawETHGainToTrove(), eligible deposit: tagged front end receives STBL rewards (1701ms)
       ✓ withdrawETHGainToTrove(), eligible deposit: tagged front end's stake decreases (5345ms)
       ✓ withdrawETHGainToTrove(), eligible deposit: tagged front end's snapshots update (1984ms)
       ✓ withdrawETHGainToTrove(): reverts when depositor has no ETH gain (1172ms)
@@ -1130,7 +1130,7 @@ gasUsed:  636956
     ✓ liquidate(): liquidates a SP depositor's trove with ICR < 110%, and the liquidation correctly impacts their SP deposit and ETH gain (1141ms)
     ✓ liquidate(): does not alter the liquidated user's token balance (1104ms)
     ✓ liquidate(): liquidates based on entire/collateral debt (including pending rewards), not raw collateral/debt (1573ms)
-    ✓ liquidate(): when SP > 0, triggers LQTY reward event - increases the sum G (1081ms)
+    ✓ liquidate(): when SP > 0, triggers STBL reward event - increases the sum G (1081ms)
     ✓ liquidate(): when SP is empty, doesn't update G (1127ms)
     ✓ liquidateTroves(): liquidates a Trove that a) was skipped in a previous liquidation and b) has pending rewards (5574ms)
     ✓ liquidateTroves(): closes every Trove with ICR < MCR, when n > number of undercollateralized troves (2003ms)
@@ -1143,7 +1143,7 @@ gasUsed:  636956
     ✓ liquidateTroves(): A liquidation sequence containing Pool offsets increases the TCR (6204ms)
     ✓ liquidateTroves(): A liquidation sequence of pure redistributions decreases the TCR, due to gas compensation, but up to 0.5% (1929ms)
     ✓ liquidateTroves(): Liquidating troves with SP deposits correctly impacts their SP deposit and ETH gain (1214ms)
-    ✓ liquidateTroves(): when SP > 0, triggers LQTY reward event - increases the sum G (5057ms)
+    ✓ liquidateTroves(): when SP > 0, triggers STBL reward event - increases the sum G (5057ms)
     ✓ liquidateTroves(): when SP is empty, doesn't update G (1722ms)
     ✓ batchLiquidateTroves(): liquidates a Trove that a) was skipped in a previous liquidation and b) has pending rewards (1912ms)
     ✓ batchLiquidateTroves(): closes every trove with ICR < MCR in the given array (1351ms)
@@ -1152,7 +1152,7 @@ gasUsed:  636956
     ✓ batchLiquidateTroves(): reverts if array is empty (978ms)
     ✓ batchLiquidateTroves(): skips if trove is non-existent (1295ms)
     ✓ batchLiquidateTroves(): skips if a trove has been closed (5183ms)
-    ✓ batchLiquidateTroves: when SP > 0, triggers LQTY reward event - increases the sum G (1428ms)
+    ✓ batchLiquidateTroves: when SP > 0, triggers STBL reward event - increases the sum G (1428ms)
     ✓ batchLiquidateTroves(): when SP is empty, doesn't update G (1655ms)
     ✓ getRedemptionHints(): gets the address of the first Trove and the final ICR of the last Trove involved in a redemption (621ms)
     ✓ getRedemptionHints(): returns 0 as partialRedemptionHintNICR when reaching _maxIterations (715ms)
@@ -1183,10 +1183,10 @@ gasUsed:  636956
     ✓ redeemCollateral(): a redemption made when base rate is zero increases the base rate (1187ms)
     ✓ redeemCollateral(): a redemption made when base rate is non-zero increases the base rate, for negligible time passed (1987ms)
     ✓ redeemCollateral(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation [ @skip-on-coverage ] (2515ms)
-    ✓ redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to LQTY staking contract (5136ms)
-    ✓ redeemCollateral(): a redemption made at zero base increases the ETH-fees-per-LQTY-staked in LQTY Staking contract (1207ms)
-    ✓ redeemCollateral(): a redemption made at a non-zero base rate send a non-zero ETHFee to LQTY staking contract (1730ms)
-    ✓ redeemCollateral(): a redemption made at a non-zero base rate increases ETH-per-LQTY-staked in the staking contract (5971ms)
+    ✓ redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to STBL staking contract (5136ms)
+    ✓ redeemCollateral(): a redemption made at zero base increases the ETH-fees-per-STBL-staked in STBL Staking contract (1207ms)
+    ✓ redeemCollateral(): a redemption made at a non-zero base rate send a non-zero ETHFee to STBL staking contract (1730ms)
+    ✓ redeemCollateral(): a redemption made at a non-zero base rate increases ETH-per-STBL-staked in the staking contract (5971ms)
     ✓ redeemCollateral(): a redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer (1113ms)
     ✓ redeemCollateral(): a full redemption (leaving trove with 0 debt), closes the trove (1553ms)
     ✓ redeemCollateral(): emits correct debt and coll values in each redeemed trove's TroveUpdated event (1416ms)

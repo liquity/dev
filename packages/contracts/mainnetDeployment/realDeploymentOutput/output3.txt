@@ -33,18 +33,18 @@ hintHelpers: 0xE84251b93D9524E0d2e621Ba7dc7cb3579F997C0
 tellorCaller: 0xAd430500ECDa11E38C9bCB08a702274b94641112
 Using previously deployed unipool contract at address 0xd37a77E71ddF3373a79BE2eBB76B6c4808bDF0d5
 No Etherscan Url defined, skipping verification
-Using previously deployed lqtyStaking contract at address 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
+Using previously deployed stblStaking contract at address 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
 Using previously deployed lockupContractFactory contract at address 0x2eBeF24dA09489218Ba2BECb01867F6DaAeDcD4B
 Using previously deployed communityIssuance contract at address 0xD8c9D9071123a059C6E0A945cF0e0c82b508d816
-Using previously deployed lqtyToken contract at address 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
+Using previously deployed stblToken contract at address 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
 No Etherscan Url defined, skipping verification
 Using previously deployed multiTroveGetter contract at address 0xFc92d0E9Fa35df17E3A6d9F40716ca2cE749922B
 No Etherscan Url defined, skipping verification
 Contract objects addresses:
-lqtyStaking: 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
+stblStaking: 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
 lockupContractFactory: 0x2eBeF24dA09489218Ba2BECb01867F6DaAeDcD4B
 communityIssuance: 0xD8c9D9071123a059C6E0A945cF0e0c82b508d816
-lqtyToken: 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
+stblToken: 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
 Unipool address: 0xd37a77E71ddF3373a79BE2eBB76B6c4808bDF0d5
 time now: 1617614445
 time oneYearFromNow: 1649150445
@@ -66,12 +66,12 @@ lockupContract addr: 0x015f...Cabf,
             on-chain beneficiary addr: 0x7AdD...FD6F
             unlockTime: 1649148442
             
-STORED ADDRESSES IN LQTY TOKEN
-multi-sig address stored in LQTYToken : 0xb8a9...Ca1C
-LQTY Safe address: 0xb8a9...Ca1C
-INITIAL LQTY BALANCES
-Unipool LQTY balance       : 1333333.333333333333333333
-LQTY Safe balance     : 64666666.666666666666666667
+STORED ADDRESSES IN STBL TOKEN
+multi-sig address stored in STBLToken : 0xb8a9...Ca1C
+STBL Safe address: 0xb8a9...Ca1C
+INITIAL STBL BALANCES
+Unipool STBL balance       : 1333333.333333333333333333
+STBL Safe balance     : 64666666.666666666666666667
 General Safe balance       : 2000000.000000000000000000
 Community Issuance balance: 31999873.402199592704000000
 PRICEFEED CHECKS
@@ -97,24 +97,24 @@ LUSD-ETH Pair's ETH reserves before provision: 1.000000000000000000
 Liquidity already provided to Uniswap
 LUSD-ETH Pair's LUSD reserves after provision: 2021.901094070000000000
 LUSD-ETH Pair's ETH reserves after provision: 1.000000000000000000
-CHECK LP STAKING EARNS LQTY
+CHECK LP STAKING EARNS STBL
 deployer's LP token balance: 44.965554528661157277
 LUSDETHPair addr: 0xF20EF17b889b437C151eB5bA15A47bFc62bfF469
 Pair addr stored in Unipool: 0xF20EF17b889b437C151eB5bA15A47bFc62bfF469
-deployer's farmed LQTY before staking LP tokens: 541.593180482069370908
+deployer's farmed STBL before staking LP tokens: 541.593180482069370908
 Already staked in Unipool
 wait 90 seconds before checking earnings... 
-deployer's farmed LQTY from Unipool after waiting ~1.5mins: 570.987654320987654268
-deployer LQTY Balance Before SP deposit: 103.597800407296000000
-CHECK DEPLOYER MAKING DEPOSIT AND EARNING LQTY
+deployer's farmed STBL from Unipool after waiting ~1.5mins: 570.987654320987654268
+deployer STBL Balance Before SP deposit: 103.597800407296000000
+CHECK DEPLOYER MAKING DEPOSIT AND EARNING STBL
 deployer SP deposit before making deposit: .000000000000000000
 deployer SP deposit after depositing 15 LUSD: 15.000000000000000000
 wait 90 seconds before withdrawing...
 CHECK BENEFICIARY ATTEMPTING WITHDRAWAL FROM LC
-account2 LQTY bal before withdrawal attempt: .000000000000000000
-account2's LC LQTY bal before withdrawal attempt: 20.000000000000000000
-account2's LQTY bal after LC withdrawal attempt: .000000000000000000
-account2's LC LQTY bal LC withdrawal attempt: 20.000000000000000000
-CHECK DEPLOYER STAKING LQTY
-deployer LQTY bal before staking: 93.597800407296000000
+account2 STBL bal before withdrawal attempt: .000000000000000000
+account2's LC STBL bal before withdrawal attempt: 20.000000000000000000
+account2's STBL bal after LC withdrawal attempt: .000000000000000000
+account2's LC STBL bal LC withdrawal attempt: 20.000000000000000000
+CHECK DEPLOYER STAKING STBL
+deployer STBL bal before staking: 93.597800407296000000
 deployer stake before staking: 13.000000000000000000

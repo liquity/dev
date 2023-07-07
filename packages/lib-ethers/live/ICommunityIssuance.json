@@ -9,11 +9,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lqtyTokenAddress",
+          "name": "_stblTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LQTYTokenAddressSet",
+      "name": "STBLTokenAddressSet",
       "type": "event"
     },
     {
@@ -35,16 +35,16 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_totalLQTYIssued",
+          "name": "_totalSTBLIssued",
           "type": "uint256"
         }
       ],
-      "name": "TotalLQTYIssuedUpdated",
+      "name": "TotalSTBLIssuedUpdated",
       "type": "event"
     },
     {
       "inputs": [],
-      "name": "issueLQTY",
+      "name": "issueSTBL",
       "outputs": [
         {
           "internalType": "uint256",
@@ -64,11 +64,11 @@
         },
         {
           "internalType": "uint256",
-          "name": "_LQTYamount",
+          "name": "_STBLamount",
           "type": "uint256"
         }
       ],
-      "name": "sendLQTY",
+      "name": "sendSTBL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -77,7 +77,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "_lqtyTokenAddress",
+          "name": "_stblTokenAddress",
           "type": "address"
         },
         {

@@ -69,16 +69,16 @@ contract('LUSDToken', async accounts => {
       const contracts = await deploymentHelper.deployTesterContractsHardhat()
 
 
-      const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
 
-      await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-      await deploymentHelper.connectLQTYContracts(LQTYContracts)
-      await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+      await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
+      await deploymentHelper.connectSTBLContracts(STBLContracts)
+      await deploymentHelper.connectSTBLContractsToCore(STBLContracts, contracts)
 
       lusdTokenOriginal = contracts.lusdToken
       if (withProxy) {
         const users = [ alice, bob, carol, dennis ]
-        await deploymentHelper.deployProxyScripts(contracts, LQTYContracts, owner, users)
+        await deploymentHelper.deployProxyScripts(contracts, STBLContracts, owner, users)
       }
 
       lusdTokenTester = contracts.lusdToken

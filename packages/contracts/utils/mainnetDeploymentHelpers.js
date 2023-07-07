@@ -136,48 +136,48 @@ class MainnetDeploymentHelper {
     return coreContracts
   }
 
-  async deployLQTYContractsMainnet(bountyAddress, lpRewardsAddress, multisigAddress, deploymentState) {
-    const lqtyStakingFactory = await this.getFactory("LQTYStaking")
+  async deploySTBLContractsMainnet(bountyAddress, lpRewardsAddress, multisigAddress, deploymentState) {
+    const stblStakingFactory = await this.getFactory("STBLStaking")
     const lockupContractFactory_Factory = await this.getFactory("LockupContractFactory")
     const communityIssuanceFactory = await this.getFactory("CommunityIssuance")
-    const lqtyTokenFactory = await this.getFactory("LQTYToken")
+    const stblTokenFactory = await this.getFactory("STBLToken")
 
-    const lqtyStaking = await this.loadOrDeploy(lqtyStakingFactory, 'lqtyStaking', deploymentState)
+    const stblStaking = await this.loadOrDeploy(stblStakingFactory, 'stblStaking', deploymentState)
     const lockupContractFactory = await this.loadOrDeploy(lockupContractFactory_Factory, 'lockupContractFactory', deploymentState)
     const communityIssuance = await this.loadOrDeploy(communityIssuanceFactory, 'communityIssuance', deploymentState)
 
-    // Deploy LQTY Token, passing Community Issuance and Factory addresses to the constructor
-    const lqtyTokenParams = [
+    // Deploy STBL Token, passing Community Issuance and Factory addresses to the constructor
+    const stblTokenParams = [
       communityIssuance.address,
-      lqtyStaking.address,
+      stblStaking.address,
       lockupContractFactory.address,
       bountyAddress,
       lpRewardsAddress,
       multisigAddress
     ]
-    const lqtyToken = await this.loadOrDeploy(
-      lqtyTokenFactory,
-      'lqtyToken',
+    const stblToken = await this.loadOrDeploy(
+      stblTokenFactory,
+      'stblToken',
       deploymentState,
-      lqtyTokenParams
+      stblTokenParams
     )
 
     if (!this.configParams.ETHERSCAN_BASE_URL) {
       console.log('No Etherscan Url defined, skipping verification')
     } else {
-      await this.verifyContract('lqtyStaking', deploymentState)
+      await this.verifyContract('stblStaking', deploymentState)
       await this.verifyContract('lockupContractFactory', deploymentState)
       await this.verifyContract('communityIssuance', deploymentState)
-      await this.verifyContract('lqtyToken', deploymentState, lqtyTokenParams)
+      await this.verifyContract('stblToken', deploymentState, stblTokenParams)
     }
 
-    const LQTYContracts = {
-      lqtyStaking,
+    const STBLContracts = {
+      stblStaking,
       lockupContractFactory,
       communityIssuance,
-      lqtyToken
+      stblToken
     }
-    return LQTYContracts
+    return STBLContracts
   }
 
   async deployUnipoolMainnet(deploymentState) {
@@ -221,7 +221,7 @@ class MainnetDeploymentHelper {
     return owner == ZERO_ADDRESS
   }
   // Connect contracts to their dependencies
-  async connectCoreContractsMainnet(contracts, LQTYContracts, chainlinkProxyAddress) {
+  async connectCoreContractsMainnet(contracts, STBLContracts, chainlinkProxyAddress) {
     const gasPrice = this.configParams.GAS_PRICE
     // Set ChainlinkAggregatorProxy and TellorCaller in the PriceFeed
     await this.isOwnershipRenounced(contracts.priceFeed) ||
@@ -248,8 +248,8 @@ class MainnetDeploymentHelper {
         contracts.priceFeed.address,
         contracts.lusdToken.address,
         contracts.sortedTroves.address,
-        LQTYContracts.lqtyToken.address,
-        LQTYContracts.lqtyStaking.address,
+        STBLContracts.stblToken.address,
+        STBLContracts.stblStaking.address,
 	{gasPrice}
       ))
 
@@ -265,7 +265,7 @@ class MainnetDeploymentHelper {
         contracts.priceFeed.address,
         contracts.sortedTroves.address,
         contracts.lusdToken.address,
-        LQTYContracts.lqtyStaking.address,
+        STBLContracts.stblStaking.address,
 	{gasPrice}
       ))
 
@@ -278,7 +278,7 @@ class MainnetDeploymentHelper {
         contracts.lusdToken.address,
         contracts.sortedTroves.address,
         contracts.priceFeed.address,
-        LQTYContracts.communityIssuance.address,
+        STBLContracts.communityIssuance.address,
 	{gasPrice}
       ))
 
@@ -315,18 +315,18 @@ class MainnetDeploymentHelper {
       ))
   }
 
-  async connectLQTYContractsMainnet(LQTYContracts) {
+  async connectSTBLContractsMainnet(STBLContracts) {
     const gasPrice = this.configParams.GAS_PRICE
-    // Set LQTYToken address in LCF
-    await this.isOwnershipRenounced(LQTYContracts.lqtyStaking) ||
-      await this.sendAndWaitForTransaction(LQTYContracts.lockupContractFactory.setLQTYTokenAddress(LQTYContracts.lqtyToken.address, {gasPrice}))
+    // Set STBLToken address in LCF
+    await this.isOwnershipRenounced(STBLContracts.stblStaking) ||
+      await this.sendAndWaitForTransaction(STBLContracts.lockupContractFactory.setSTBLTokenAddress(STBLContracts.stblToken.address, {gasPrice}))
   }
 
-  async connectLQTYContractsToCoreMainnet(LQTYContracts, coreContracts) {
+  async connectSTBLContractsToCoreMainnet(STBLContracts, coreContracts) {
     const gasPrice = this.configParams.GAS_PRICE
-    await this.isOwnershipRenounced(LQTYContracts.lqtyStaking) ||
-      await this.sendAndWaitForTransaction(LQTYContracts.lqtyStaking.setAddresses(
-        LQTYContracts.lqtyToken.address,
+    await this.isOwnershipRenounced(STBLContracts.stblStaking) ||
+      await this.sendAndWaitForTransaction(STBLContracts.stblStaking.setAddresses(
+        STBLContracts.stblToken.address,
         coreContracts.lusdToken.address,
         coreContracts.troveManager.address, 
         coreContracts.borrowerOperations.address,
@@ -334,18 +334,18 @@ class MainnetDeploymentHelper {
 	{gasPrice}
       ))
 
-    await this.isOwnershipRenounced(LQTYContracts.communityIssuance) ||
-      await this.sendAndWaitForTransaction(LQTYContracts.communityIssuance.setAddresses(
-        LQTYContracts.lqtyToken.address,
+    await this.isOwnershipRenounced(STBLContracts.communityIssuance) ||
+      await this.sendAndWaitForTransaction(STBLContracts.communityIssuance.setAddresses(
+        STBLContracts.stblToken.address,
         coreContracts.stabilityPool.address,
 	{gasPrice}
       ))
   }
 
-  async connectUnipoolMainnet(uniPool, LQTYContracts, LUSDWETHPairAddr, duration) {
+  async connectUnipoolMainnet(uniPool, STBLContracts, LUSDWETHPairAddr, duration) {
     const gasPrice = this.configParams.GAS_PRICE
     await this.isOwnershipRenounced(uniPool) ||
-      await this.sendAndWaitForTransaction(uniPool.setParams(LQTYContracts.lqtyToken.address, LUSDWETHPairAddr, duration, {gasPrice}))
+      await this.sendAndWaitForTransaction(uniPool.setParams(STBLContracts.stblToken.address, LUSDWETHPairAddr, duration, {gasPrice}))
   }
 
   // --- Verify on Ethrescan ---

@@ -42,11 +42,11 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
 - [Project Structure](#project-structure)
   - [Directories](#directories)
   - [Branches](#branches)
-- [LQTY Token Architecture](#lqty-token-architecture)
-  - [LQTY Lockup contracts and token vesting](#lqty-lockup-contracts-and-token-vesting)
+- [STBL Token Architecture](#stbl-token-architecture)
+  - [STBL Lockup contracts and token vesting](#stbl-lockup-contracts-and-token-vesting)
   - [Lockup Implementation and admin transfer restriction](#lockup-implementation-and-admin-transfer-restriction)
   - [Launch sequence and vesting process](#launch-sequence-and-vesting-process)
-    - [Deploy LQTY Contracts](#deploy-lqty-contracts)
+    - [Deploy STBL Contracts](#deploy-stbl-contracts)
     - [Deploy and fund Lockup Contracts](#deploy-and-fund-lockup-contracts)
     - [Deploy Liquity Core](#deploy-liquity-core)
     - [During one year lockup period](#during-one-year-lockup-period)
@@ -63,7 +63,7 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
   - [Keeping a sorted list of Troves ordered by ICR](#keeping-a-sorted-list-of-troves-ordered-by-icr)
   - [Flow of Ether in Liquity](#flow-of-ether-in-liquity)
   - [Flow of LUSD tokens in Liquity](#flow-of-lusd-tokens-in-liquity)
-  - [Flow of LQTY Tokens in Liquity](#flow-of-lqty-tokens-in-liquity)
+  - [Flow of STBL Tokens in Liquity](#flow-of-stbl-tokens-in-liquity)
 - [Expected User Behaviors](#expected-user-behaviors)
 - [Contract Ownership and Function Permissions](#contract-ownership-and-function-permissions)
 - [Deployment to a Development Blockchain](#deployment-to-a-development-blockchain)
@@ -79,10 +79,10 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
   - [TroveManager Functions - `TroveManager.sol`](#trovemanager-functions---trovemanagersol)
   - [Hint Helper Functions - `HintHelpers.sol`](#hint-helper-functions---hinthelperssol)
   - [Stability Pool Functions - `StabilityPool.sol`](#stability-pool-functions---stabilitypoolsol)
-  - [LQTY Staking Functions  `LQTYStaking.sol`](#lqty-staking-functions--lqtystakingsol)
+  - [STBL Staking Functions  `STBLStaking.sol`](#stbl-staking-functions--stblstakingsol)
   - [Lockup Contract Factory `LockupContractFactory.sol`](#lockup-contract-factory-lockupcontractfactorysol)
   - [Lockup contract - `LockupContract.sol`](#lockup-contract---lockupcontractsol)
-  - [LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`](#lusd-token-lusdtokensol-and-lqty-token-lqtytokensol)
+  - [LUSD token `LUSDToken.sol` and STBL token `STBLToken.sol`](#lusd-token-lusdtokensol-and-stbl-token-stbltokensol)
 - [Supplying Hints to Trove operations](#supplying-hints-to-trove-operations)
   - [Hints for `redeemCollateral`](#hints-for-redeemcollateral)
     - [First redemption hint](#first-redemption-hint)
@@ -98,19 +98,19 @@ Visit [liquity.org](https://www.liquity.org) to find out more and join the discu
   - [Stability Pool example](#stability-pool-example)
   - [Stability Pool implementation](#stability-pool-implementation)
   - [How deposits and ETH gains are tracked](#how-deposits-and-eth-gains-are-tracked)
-- [LQTY Issuance to Stability Providers](#lqty-issuance-to-stability-providers)
-  - [LQTY Issuance schedule](#lqty-issuance-schedule)
-  - [LQTY Issuance implementation](#lqty-issuance-implementation)
-  - [Handling the front end LQTY gain](#handling-the-front-end-lqty-gain)
-  - [LQTY reward events and payouts](#lqty-reward-events-and-payouts)
-- [LQTY issuance to liquity providers](#lqty-issuance-to-liquity-providers)
+- [STBL Issuance to Stability Providers](#stbl-issuance-to-stability-providers)
+  - [STBL Issuance schedule](#stbl-issuance-schedule)
+  - [STBL Issuance implementation](#stbl-issuance-implementation)
+  - [Handling the front end STBL gain](#handling-the-front-end-stbl-gain)
+  - [STBL reward events and payouts](#stbl-reward-events-and-payouts)
+- [STBL issuance to liquity providers](#stbl-issuance-to-liquity-providers)
 - [Liquity System Fees](#liquity-system-fees)
   - [Redemption Fee](#redemption-fee)
   - [Issuance fee](#issuance-fee)
   - [Fee Schedule](#fee-schedule)
   - [Intuition behind fees](#intuition-behind-fees)
   - [Fee decay Implementation](#fee-decay-implementation)
-  - [Staking LQTY and earning fees](#staking-lqty-and-earning-fees)
+  - [Staking STBL and earning fees](#staking-stbl-and-earning-fees)
 - [Redistributions and Corrected Stakes](#redistributions-and-corrected-stakes)
   - [Corrected Stake Solution](#corrected-stake-solution)
 - [Math Proofs](#math-proofs)
@@ -282,78 +282,78 @@ Backend development is done in the Hardhat framework, and allows Liquity to be d
 
 As of 18/01/2021, the current working branch is `main`. `master` is out of date.
 
-## LQTY Token Architecture
+## STBL Token Architecture
 
-The Liquity system incorporates a secondary token, LQTY. This token entitles the holder to a share of the system revenue generated by redemption fees and  issuance fees.
+The Liquity system incorporates a secondary token, STBL. This token entitles the holder to a share of the system revenue generated by redemption fees and  issuance fees.
 
-To earn a share of system fees, the LQTY holder must stake their LQTY in a staking contract.
+To earn a share of system fees, the STBL holder must stake their STBL in a staking contract.
 
-Liquity also issues LQTY to Stability Providers, in a continous time-based manner.
+Liquity also issues STBL to Stability Providers, in a continous time-based manner.
 
-The LQTY contracts consist of:
+The STBL contracts consist of:
 
-`LQTYStaking.sol` - the staking contract, containing stake and unstake functionality for LQTY holders. This contract receives ETH fees from redemptions, and LUSD fees from new debt issuance.
+`STBLStaking.sol` - the staking contract, containing stake and unstake functionality for STBL holders. This contract receives ETH fees from redemptions, and LUSD fees from new debt issuance.
 
-`CommunityIssuance.sol` - This contract handles the issuance of LQTY tokens to Stability Providers as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the `CommunityIssuance` automatically receives 32 million LQTY - the “community issuance” supply. The contract steadily issues these LQTY tokens to the Stability Providers over time.
+`CommunityIssuance.sol` - This contract handles the issuance of STBL tokens to Stability Providers as a function of time. It is controlled by the `StabilityPool`. Upon system launch, the `CommunityIssuance` automatically receives 32 million STBL - the “community issuance” supply. The contract steadily issues these STBL tokens to the Stability Providers over time.
 
-`LQTYToken.sol` - This is the LQTY ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
+`STBLToken.sol` - This is the STBL ERC20 contract. It has a hard cap supply of 100 million, and during the first year, restricts transfers from the Liquity admin address, a regular Ethereum address controlled by the project company Liquity AG. **Note that the Liquity admin address has no extra privileges and does not retain any control over the Liquity protocol once deployed.**
 
-### LQTY Lockup contracts and token vesting
+### STBL Lockup contracts and token vesting
 
-Some LQTY is reserved for team members and partners, and is locked up for one year upon system launch. Additionally, some team members receive LQTY vested on a monthly basis, which during the first year, is transferred directly to their lockup contract.
+Some STBL is reserved for team members and partners, and is locked up for one year upon system launch. Additionally, some team members receive STBL vested on a monthly basis, which during the first year, is transferred directly to their lockup contract.
 
 In the first year after launch:
 
-- All team members and partners are unable to access their locked up LQTY tokens
+- All team members and partners are unable to access their locked up STBL tokens
 
 - The Liquity admin address may transfer tokens **only to verified lockup contracts with an unlock date at least one year after system deployment**
 
-Also, separate LQTY allocations are made at deployent to an EOA that will hold an amount of LQTY for bug bounties/hackathons and to a Uniswap LP reward contract. Aside from these allocations, the only LQTY made freely available in this first year is the LQTY that is publically issued to Stability Providers via the `CommunityIssuance` contract.
+Also, separate STBL allocations are made at deployent to an EOA that will hold an amount of STBL for bug bounties/hackathons and to a Uniswap LP reward contract. Aside from these allocations, the only STBL made freely available in this first year is the STBL that is publically issued to Stability Providers via the `CommunityIssuance` contract.
 
 ### Lockup Implementation and admin transfer restriction
 
-A `LockupContractFactory` is used to deploy `LockupContracts` in the first year. During the first year, the `LQTYToken` checks that any transfer from the Liquity admin address is to a valid `LockupContract` that is registered in and was deployed through the `LockupContractFactory`.
+A `LockupContractFactory` is used to deploy `LockupContracts` in the first year. During the first year, the `STBLToken` checks that any transfer from the Liquity admin address is to a valid `LockupContract` that is registered in and was deployed through the `LockupContractFactory`.
 
 ### Launch sequence and vesting process
 
-#### Deploy LQTY Contracts
+#### Deploy STBL Contracts
 1. Liquity admin deploys `LockupContractFactory`
 2. Liquity admin deploys `CommunityIssuance`
-3. Liquity admin deploys `LQTYStaking` 
+3. Liquity admin deploys `STBLStaking` 
 4. Liquity admin creates a Pool in Uniswap for LUSD/ETH and deploys `Unipool` (LP rewards contract), which knows the address of the Pool
-5. Liquity admin deploys `LQTYToken`, which upon deployment:
+5. Liquity admin deploys `STBLToken`, which upon deployment:
 - Stores the `CommunityIssuance` and `LockupContractFactory` addresses
-- Mints LQTY tokens to `CommunityIssuance`, the Liquity admin address, the `Unipool` LP rewards address, and the bug bounty address
-6. Liquity admin sets `LQTYToken` address in `LockupContractFactory`, `CommunityIssuance`, `LQTYStaking`, and `Unipool`
+- Mints STBL tokens to `CommunityIssuance`, the Liquity admin address, the `Unipool` LP rewards address, and the bug bounty address
+6. Liquity admin sets `STBLToken` address in `LockupContractFactory`, `CommunityIssuance`, `STBLStaking`, and `Unipool`
 
 #### Deploy and fund Lockup Contracts
 7. Liquity admin tells `LockupContractFactory` to deploy a `LockupContract` for each beneficiary, with an `unlockTime` set to exactly one year after system deployment
-8. Liquity admin transfers LQTY to each `LockupContract`, according to their entitlement
+8. Liquity admin transfers STBL to each `LockupContract`, according to their entitlement
 
 #### Deploy Liquity Core
 9. Liquity admin deploys the Liquity core system
 10. Liquity admin connects Liquity core system internally (with setters)
-11. Liquity admin connects `LQTYStaking` to Liquity core contracts and `LQTYToken`
-13. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `LQTYToken`
+11. Liquity admin connects `STBLStaking` to Liquity core contracts and `STBLToken`
+13. Liquity admin connects `CommunityIssuance` to Liquity core contracts and `STBLToken`
 
 #### During one year lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners’ `LockupContracts`, as per their vesting schedules
-- Liquity admin may only transfer LQTY to `LockupContracts`
+- Liquity admin may only transfer STBL to `LockupContracts`
 - Anyone may deploy new `LockupContracts` via the Factory, setting any `unlockTime` that is >= 1 year from system deployment
 
 #### Upon end of one year lockup period
 - All beneficiaries may withdraw their entire entitlements
-- Liquity admin address restriction on LQTY transfers is automatically lifted, and Liquity admin may now transfer LQTY to any address
+- Liquity admin address restriction on STBL transfers is automatically lifted, and Liquity admin may now transfer STBL to any address
 - Anyone may deploy new `LockupContracts` via the Factory, setting any `unlockTime` in the future
 
 #### Post-lockup period
 - Liquity admin periodically transfers newly vested tokens to team & partners, directly to their individual addresses, or to a fresh lockup contract if required.
 
-_NOTE: In the final architecture, a multi-sig contract will be used to move LQTY Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `LQTYToken` in step 4, and receive LQTY tokens. It will be used to move LQTY in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
+_NOTE: In the final architecture, a multi-sig contract will be used to move STBL Tokens, rather than the single Liquity admin EOA. It will be deployed at the start of the sequence, and have its address recorded in  `STBLToken` in step 4, and receive STBL tokens. It will be used to move STBL in step 7, and during & after the lockup period. The Liquity admin EOA will only be used for deployment of contracts in steps 1-4 and 9._
 
 _The current code does not utilize a multi-sig. It implements the launch architecture outlined above._
 
-_Additionally, a LP staking contract will receive the initial LP staking reward allowance, rather than an EOA. It will be used to hold and issue LQTY to users who stake LP tokens that correspond to certain pools on DEXs._
+_Additionally, a LP staking contract will receive the initial LP staking reward allowance, rather than an EOA. It will be used to hold and issue STBL to users who stake LP tokens that correspond to certain pools on DEXs._
 
 ## Core System Architecture
 
@@ -367,13 +367,13 @@ The three main contracts - `BorrowerOperations.sol`, `TroveManager.sol` and `Sta
 
 ### Core Smart Contracts
 
-`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their Trove: Trove creation, ETH top-up / withdrawal, stablecoin issuance and repayment. It also sends issuance fees to the `LQTYStaking` contract. BorrowerOperations functions call in to TroveManager, telling it to update Trove state, where necessary. BorrowerOperations functions also call in to the various Pools, telling them to move Ether/Tokens between Pools or between Pool <> user, where necessary.
+`BorrowerOperations.sol` - contains the basic operations by which borrowers interact with their Trove: Trove creation, ETH top-up / withdrawal, stablecoin issuance and repayment. It also sends issuance fees to the `STBLStaking` contract. BorrowerOperations functions call in to TroveManager, telling it to update Trove state, where necessary. BorrowerOperations functions also call in to the various Pools, telling them to move Ether/Tokens between Pools or between Pool <> user, where necessary.
 
-`TroveManager.sol` - contains functionality for liquidations and redemptions. It sends redemption fees to the `LQTYStaking` contract. Also contains the state of each Trove - i.e. a record of the Trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to the various Pools to tell them to move Ether/tokens between Pools, where necessary.
+`TroveManager.sol` - contains functionality for liquidations and redemptions. It sends redemption fees to the `STBLStaking` contract. Also contains the state of each Trove - i.e. a record of the Trove’s collateral and debt. TroveManager does not hold value (i.e. Ether / other tokens). TroveManager functions call in to the various Pools to tell them to move Ether/tokens between Pools, where necessary.
 
 `LiquityBase.sol` - Both TroveManager and BorrowerOperations inherit from the parent contract LiquityBase, which contains global constants and some common functions.
 
-`StabilityPool.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH and LQTY gains. Holds the LUSD Stability Pool deposits, and the ETH gains for depositors, from liquidations.
+`StabilityPool.sol` - contains functionality for Stability Pool operations: making deposits, and withdrawing compounded deposits and accumulated ETH and STBL gains. Holds the LUSD Stability Pool deposits, and the ETH gains for depositors, from liquidations.
 
 `LUSDToken.sol` - the stablecoin token contract, which implements the ERC20 fungible token standard in conjunction with EIP-2612 and a mechanism that blocks (accidental) transfers to addresses like the StabilityPool and address(0) that are not supposed to receive funds through direct transfers. The contract mints, burns and transfers LUSD tokens.
 
@@ -516,7 +516,7 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | batchLiquidateTroves (offset)           | collateral to be offset                | ActivePool->StabilityPool     |
 | batchLiquidateTroves (redistribution).  | collateral to be redistributed         | ActivePool->DefaultPool       |
 | redeemCollateral                        | collateral to be swapped with redeemer | ActivePool->msg.sender        |
-| redeemCollateral                        | redemption fee                         | ActivePool->LQTYStaking       |
+| redeemCollateral                        | redemption fee                         | ActivePool->STBLStaking       |
 | redeemCollateral                        | trove's collateral surplus             | ActivePool->CollSurplusPool |
 
 **Stability Pool**
@@ -527,12 +527,12 @@ Likewise, the StabilityPool holds the total accumulated ETH gains from liquidati
 | withdrawFromSP         | depositor's accumulated ETH gain | StabilityPool -> msg.sender                       |
 | withdrawETHGainToTrove | depositor's accumulated ETH gain | StabilityPool -> BorrowerOperations -> ActivePool |
 
-**LQTY Staking**
+**STBL Staking**
 
 | Function    | ETH quantity                                   | Path                     |
 |-------------|------------------------------------------------|--------------------------|
-| stake       | staker's accumulated ETH gain from system fees | LQTYStaking ->msg.sender |
-| unstake     | staker's accumulated ETH gain from system fees | LQTYStaking ->msg.sender |
+| stake       | staker's accumulated ETH gain from system fees | STBLStaking ->msg.sender |
+| unstake     | staker's accumulated ETH gain from system fees | STBLStaking ->msg.sender |
 
 ### Flow of LUSD tokens in Liquity
 
@@ -551,12 +551,12 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | Function                      | LUSD Quantity | ERC20 Operation                      |
 |-------------------------------|---------------|--------------------------------------|
 | openTrove                     | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
-|                               | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+|                               | Issuance fee  | LUSD._mint(STBLStaking,  LUSDFee)    |
 | withdrawLUSD                  | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
-|                               | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+|                               | Issuance fee  | LUSD._mint(STBLStaking,  LUSDFee)    |
 | repayLUSD                     | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
 | adjustTrove: withdrawing LUSD | Drawn LUSD    | LUSD._mint(msg.sender, _LUSDAmount)  |
-|                               | Issuance fee  | LUSD._mint(LQTYStaking,  LUSDFee)    |
+|                               | Issuance fee  | LUSD._mint(STBLStaking,  LUSDFee)    |
 | adjustTrove: repaying LUSD    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount)  |
 | closeTrove                    | Repaid LUSD   | LUSD._burn(msg.sender, _LUSDAmount) |
 
@@ -576,36 +576,36 @@ The only time LUSD is transferred to/from a Liquity contract, is when a user dep
 | provideToSP    | deposit / top-up | LUSD._transfer(msg.sender, stabilityPoolAddress, _amount);  |
 | withdrawFromSP | withdrawal       | LUSD._transfer(stabilityPoolAddress, msg.sender, _amount);  |
 
-**LQTY Staking**
+**STBL Staking**
 
 | Function | LUSD Quantity                                   | ERC20 Operation                                           |
 |----------|-------------------------------------------------|-----------------------------------------------------------|
-| stake    | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
-| unstake  | staker's accumulated LUSD gain from system fees | LUSD._transfer(LQTYStakingAddress, msg.sender, LUSDGain); |
+| stake    | staker's accumulated LUSD gain from system fees | LUSD._transfer(STBLStakingAddress, msg.sender, LUSDGain); |
+| unstake  | staker's accumulated LUSD gain from system fees | LUSD._transfer(STBLStakingAddress, msg.sender, LUSDGain); |
 
-### Flow of LQTY Tokens in Liquity
+### Flow of STBL Tokens in Liquity
 
-![Flow of LQTY](images/LQTY_flows.svg)
+![Flow of STBL](images/STBL_flows.svg)
 
-Stability Providers and Frontend Operators receive LQTY gains according to their share of the total LUSD deposits, and the LQTY community issuance schedule.  Once obtained, LQTY can be staked and unstaked with the `LQTYStaking` contract.
+Stability Providers and Frontend Operators receive STBL gains according to their share of the total LUSD deposits, and the STBL community issuance schedule.  Once obtained, STBL can be staked and unstaked with the `STBLStaking` contract.
 
 **Stability Pool**
 
-| Function               | LQTY Quantity       | ERC20 Operation                                                       |
+| Function               | STBL Quantity       | ERC20 Operation                                                       |
 |------------------------|---------------------|-----------------------------------------------------------------------|
-| provideToSP            | depositor LQTY gain | LQTY._transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
-|                        | front end LQTY gain | LQTY._transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
-| withdrawFromSP         | depositor LQTY gain | LQTY._transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
-|                        | front end LQTY gain | LQTY._transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
-| withdrawETHGainToTrove | depositor LQTY gain | LQTY._transfer(stabilityPoolAddress, msg.sender, depositorLQTYGain); |
-|                        | front end LQTY gain | LQTY._transfer(stabilityPoolAddress, _frontEnd, frontEndLQTYGain);   |
+| provideToSP            | depositor STBL gain | STBL._transfer(stabilityPoolAddress, msg.sender, depositorSTBLGain); |
+|                        | front end STBL gain | STBL._transfer(stabilityPoolAddress, _frontEnd, frontEndSTBLGain);   |
+| withdrawFromSP         | depositor STBL gain | STBL._transfer(stabilityPoolAddress, msg.sender, depositorSTBLGain); |
+|                        | front end STBL gain | STBL._transfer(stabilityPoolAddress, _frontEnd, frontEndSTBLGain);   |
+| withdrawETHGainToTrove | depositor STBL gain | STBL._transfer(stabilityPoolAddress, msg.sender, depositorSTBLGain); |
+|                        | front end STBL gain | STBL._transfer(stabilityPoolAddress, _frontEnd, frontEndSTBLGain);   |
 
-**LQTY Staking Contract**
+**STBL Staking Contract**
 
-| Function | LQTY Quantity                  | ERC20 Operation                                           |
+| Function | STBL Quantity                  | ERC20 Operation                                           |
 |----------|--------------------------------|-----------------------------------------------------------|
-| stake    | staker's LQTY deposit / top-up | LQTY._transfer(msg.sender, LQTYStakingAddress, _amount); |
-| unstake  | staker's LQTY withdrawal       | LQTY._transfer(LQTYStakingAddress, msg.sender, _amount); |
+| stake    | staker's STBL deposit / top-up | STBL._transfer(msg.sender, STBLStakingAddress, _amount); |
+| unstake  | staker's STBL withdrawal       | STBL._transfer(STBLStakingAddress, msg.sender, _amount); |
 
 
 ## Expected User Behaviors
@@ -616,7 +616,7 @@ Anyone may call the public liquidation functions, and attempt to liquidate one o
 
 LUSD token holders may also redeem their tokens, and swap an amount of tokens 1-for-1 in value (minus fees) with Ether.
 
-LQTY token holders may stake their LQTY, to earn a share of the system fee revenue, in ETH and LUSD.
+STBL token holders may stake their STBL, to earn a share of the system fee revenue, in ETH and LUSD.
 
 ## Contract Ownership and Function Permissions
 
@@ -791,39 +791,39 @@ The number of Troves to consider for redemption can be capped by passing a non-z
 
 ### Stability Pool Functions - `StabilityPool.sol`
 
-`provideToSP(uint _amount, address _frontEndTag)`: allows stablecoin holders to deposit `_amount` of LUSD to the Stability Pool. It sends `_amount` of LUSD from their address to the Pool, and tops up their LUSD deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already has a non-zero deposit, it sends their accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end.
+`provideToSP(uint _amount, address _frontEndTag)`: allows stablecoin holders to deposit `_amount` of LUSD to the Stability Pool. It sends `_amount` of LUSD from their address to the Pool, and tops up their LUSD deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already has a non-zero deposit, it sends their accumulated ETH and STBL gains to their address, and pays out their front end’s STBL gain to their front end.
 
-`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of LUSD from the Stability Pool, up to the value of their remaining Stability deposit. It decreases their LUSD balance by `_amount` and decreases their front end’s stake by `_amount`. It sends the depositor’s accumulated ETH and LQTY gains to their address, and pays out their front end’s LQTY gain to their front end. If the user makes a partial withdrawal, their deposit remainder will earn further gains. To prevent potential loss evasion by depositors, withdrawals from the Stability Pool are suspended when there are liquidable Troves with ICR < 110% in the system.
+`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of LUSD from the Stability Pool, up to the value of their remaining Stability deposit. It decreases their LUSD balance by `_amount` and decreases their front end’s stake by `_amount`. It sends the depositor’s accumulated ETH and STBL gains to their address, and pays out their front end’s STBL gain to their front end. If the user makes a partial withdrawal, their deposit remainder will earn further gains. To prevent potential loss evasion by depositors, withdrawals from the Stability Pool are suspended when there are liquidable Troves with ICR < 110% in the system.
 
-`withdrawETHGainToTrove(address _hint)`: sends the user's entire accumulated ETH gain to the user's active Trove, and updates their Stability deposit with its accumulated loss from debt absorptions. Sends the depositor's LQTY gain to the depositor, and sends the tagged front end's LQTY gain to the front end.
+`withdrawETHGainToTrove(address _hint)`: sends the user's entire accumulated ETH gain to the user's active Trove, and updates their Stability deposit with its accumulated loss from debt absorptions. Sends the depositor's STBL gain to the depositor, and sends the tagged front end's STBL gain to the front end.
 
 `registerFrontEnd(uint _kickbackRate)`: Registers an address as a front end and sets their chosen kickback rate in range `[0,1]`.
 
 `getDepositorETHGain(address _depositor)`: returns the accumulated ETH gain for a given Stability Pool depositor
 
-`getDepositorLQTYGain(address _depositor)`: returns the accumulated LQTY gain for a given Stability Pool depositor
+`getDepositorSTBLGain(address _depositor)`: returns the accumulated STBL gain for a given Stability Pool depositor
 
-`getFrontEndLQTYGain(address _frontEnd)`: returns the accumulated LQTY gain for a given front end
+`getFrontEndSTBLGain(address _frontEnd)`: returns the accumulated STBL gain for a given front end
 
 `getCompoundedLUSDDeposit(address _depositor)`: returns the remaining deposit amount for a given Stability Pool depositor
 
 `getCompoundedFrontEndStake(address _frontEnd)`: returns the remaining front end stake for a given front end
 
-### LQTY Staking Functions  `LQTYStaking.sol`
+### STBL Staking Functions  `STBLStaking.sol`
 
- `stake(uint _LQTYamount)`: sends `_LQTYAmount` from the caller to the staking contract, and increases their stake. If the caller already has a non-zero stake, it pays out their accumulated ETH and LUSD gains from staking.
+ `stake(uint _STBLamount)`: sends `_STBLAmount` from the caller to the staking contract, and increases their stake. If the caller already has a non-zero stake, it pays out their accumulated ETH and LUSD gains from staking.
 
- `unstake(uint _LQTYamount)`: reduces the caller’s stake by `_LQTYamount`, up to a maximum of their entire stake. It pays out their accumulated ETH and LUSD gains from staking.
+ `unstake(uint _STBLamount)`: reduces the caller’s stake by `_STBLamount`, up to a maximum of their entire stake. It pays out their accumulated ETH and LUSD gains from staking.
 
 ### Lockup Contract Factory `LockupContractFactory.sol`
 
-`deployLockupContract(address _beneficiary, uint _unlockTime)`; Deploys a `LockupContract`, and sets the beneficiary’s address, and the `_unlockTime` - the instant in time at which the LQTY can be withrawn by the beneficiary.
+`deployLockupContract(address _beneficiary, uint _unlockTime)`; Deploys a `LockupContract`, and sets the beneficiary’s address, and the `_unlockTime` - the instant in time at which the STBL can be withrawn by the beneficiary.
 
 ### Lockup contract - `LockupContract.sol`
 
-`withdrawLQTY()`: When the current time is later than the `unlockTime` and the caller is the beneficiary, it transfers their LQTY to them.
+`withdrawSTBL()`: When the current time is later than the `unlockTime` and the caller is the beneficiary, it transfers their STBL to them.
 
-### LUSD token `LUSDToken.sol` and LQTY token `LQTYToken.sol`
+### LUSD token `LUSDToken.sol` and STBL token `STBLToken.sol`
 
 Standard ERC20 and EIP2612 (`permit()` ) functionality.
 
@@ -1143,27 +1143,27 @@ Any time a depositor updates their deposit (withdrawal, top-up) their ETH gain i
 
 This is similar in spirit to the simpler [Scalable Reward Distribution on the Ethereum Network by Bogdan Batog et al](http://batog.info/papers/scalable-reward-distribution.pdf), however, the mathematics is more involved as we handle a compounding, decreasing stake, and a corresponding ETH reward.
 
-## LQTY Issuance to Stability Providers
+## STBL Issuance to Stability Providers
 
-Stability Providers earn LQTY tokens continuously over time, in proportion to the size of their deposit. This is known as “Community Issuance”, and is handled by `CommunityIssuance.sol`.
+Stability Providers earn STBL tokens continuously over time, in proportion to the size of their deposit. This is known as “Community Issuance”, and is handled by `CommunityIssuance.sol`.
 
-Upon system deployment and activation, `CommunityIssuance` holds an initial LQTY supply, currently (provisionally) set at 32 million LQTY tokens.
+Upon system deployment and activation, `CommunityIssuance` holds an initial STBL supply, currently (provisionally) set at 32 million STBL tokens.
 
 Each Stability Pool deposit is tagged with a front end tag - the Ethereum address of the front end through which the deposit was made. Stability deposits made directly with the protocol (no front end) are tagged with the zero address.
 
-When a deposit earns LQTY, it is split between the depositor, and the front end through which the deposit was made. Upon registering as a front end, a front end chooses a “kickback rate”: this is the percentage of LQTY earned by a tagged deposit, to allocate to the depositor. Thus, the total LQTY received by a depositor is the total LQTY earned by their deposit, multiplied by `kickbackRate`. The front end takes a cut of `1-kickbackRate` of the LQTY earned by the deposit.
+When a deposit earns STBL, it is split between the depositor, and the front end through which the deposit was made. Upon registering as a front end, a front end chooses a “kickback rate”: this is the percentage of STBL earned by a tagged deposit, to allocate to the depositor. Thus, the total STBL received by a depositor is the total STBL earned by their deposit, multiplied by `kickbackRate`. The front end takes a cut of `1-kickbackRate` of the STBL earned by the deposit.
 
-### LQTY Issuance schedule
+### STBL Issuance schedule
 
-The overall community issuance schedule for LQTY is sub-linear and monotonic. We currently (provisionally) implement a yearly “halving” schedule, described by the cumulative issuance function:
+The overall community issuance schedule for STBL is sub-linear and monotonic. We currently (provisionally) implement a yearly “halving” schedule, described by the cumulative issuance function:
 
 `supplyCap * (1 - 0.5^t)`
 
-where `t` is year and `supplyCap` is (provisionally) set to represent 32 million LQTY tokens.
+where `t` is year and `supplyCap` is (provisionally) set to represent 32 million STBL tokens.
 
-It results in the following cumulative issuance schedule for the community LQTY supply:
+It results in the following cumulative issuance schedule for the community STBL supply:
 
-| Year | Total community LQTY issued |
+| Year | Total community STBL issued |
 |------|-----------------------------|
 | 0    | 0%                          |
 | 1    | 50%                         |
@@ -1172,46 +1172,46 @@ It results in the following cumulative issuance schedule for the community LQTY 
 | 4    | 93.75%                      |
 | 5    | 96.88%                      |
 
-The shape of the LQTY issuance curve is intended to incentivize both early depositors, and long-term deposits.
+The shape of the STBL issuance curve is intended to incentivize both early depositors, and long-term deposits.
 
-Although the LQTY issuance curve follows a yearly halving schedule, in practice the `CommunityIssuance` contract use time intervals of one minute, for more fine-grained reward calculations.
+Although the STBL issuance curve follows a yearly halving schedule, in practice the `CommunityIssuance` contract use time intervals of one minute, for more fine-grained reward calculations.
 
-### LQTY Issuance implementation
+### STBL Issuance implementation
 
-The continuous time-based LQTY issuance is chunked into discrete reward events, that occur at every deposit change (new deposit, top-up, withdrawal), and every liquidation, before other state changes are made.
+The continuous time-based STBL issuance is chunked into discrete reward events, that occur at every deposit change (new deposit, top-up, withdrawal), and every liquidation, before other state changes are made.
 
-In a LQTY reward event, the LQTY to be issued is calculated based on time passed since the last reward event, `block.timestamp - lastLQTYIssuanceTime`, and the cumulative issuance function.
+In a STBL reward event, the STBL to be issued is calculated based on time passed since the last reward event, `block.timestamp - lastSTBLIssuanceTime`, and the cumulative issuance function.
 
-The LQTY produced in this issuance event is shared between depositors, in proportion to their deposit sizes.
+The STBL produced in this issuance event is shared between depositors, in proportion to their deposit sizes.
 
-To efficiently and accurately track LQTY gains for depositors and front ends as deposits decrease over time from liquidations, we re-use the [algorithm for rewards from a compounding, decreasing stake](https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf). It is the same algorithm used for the ETH gain from liquidations.
+To efficiently and accurately track STBL gains for depositors and front ends as deposits decrease over time from liquidations, we re-use the [algorithm for rewards from a compounding, decreasing stake](https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf). It is the same algorithm used for the ETH gain from liquidations.
 
-The same product `P` is used, and a sum `G` is used to track LQTY rewards, and each deposit gets a new snapshot of `P` and `G` when it is updated.
+The same product `P` is used, and a sum `G` is used to track STBL rewards, and each deposit gets a new snapshot of `P` and `G` when it is updated.
 
-### Handling the front end LQTY gain
+### Handling the front end STBL gain
 
-As mentioned in [LQTY Issuance to Stability Providers](#lqty-issuance-to-stability-providers), in a LQTY reward event generating `LQTY_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * LQTY_d` and the depositor receives `k * LQTY_d`.
+As mentioned in [STBL Issuance to Stability Providers](#stbl-issuance-to-stability-providers), in a STBL reward event generating `STBL_d` for a deposit `d` made through a front end with kickback rate `k`, the front end receives `(1-k) * STBL_d` and the depositor receives `k * STBL_d`.
 
-The front end should earn a cut of LQTY gains for all deposits tagged with its front end.
+The front end should earn a cut of STBL gains for all deposits tagged with its front end.
 
-Thus, we use a virtual stake for the front end, equal to the sum of all its tagged deposits. The front end’s accumulated LQTY gain is calculated in the same way as an individual deposit, using the product `P` and sum `G`.
+Thus, we use a virtual stake for the front end, equal to the sum of all its tagged deposits. The front end’s accumulated STBL gain is calculated in the same way as an individual deposit, using the product `P` and sum `G`.
 
 Also, whenever one of the front end’s depositors tops or withdraws their deposit, the same change is applied to the front-end’s stake.
 
-### LQTY reward events and payouts
+### STBL reward events and payouts
 
 When a deposit is changed (top-up, withdrawal):
 
-- A LQTY reward event occurs, and `G` is updated
-- Its ETH and LQTY gains are paid out
-- Its tagged front end’s LQTY gains are paid out to that front end
+- A STBL reward event occurs, and `G` is updated
+- Its ETH and STBL gains are paid out
+- Its tagged front end’s STBL gains are paid out to that front end
 - The deposit is updated, with new snapshots of `P`, `S` and `G`
 - The front end’s stake updated, with new snapshots of `P` and `G`
 
 When a liquidation occurs:
-- A LQTY reward event occurs, and `G` is updated
+- A STBL reward event occurs, and `G` is updated
 
-## LQTY issuance to liquity providers
+## STBL issuance to liquity providers
 
 On deployment a new Uniswap pool will be created for the pair LUSD/ETH and a Staking rewards contract will be deployed. The contract is based on [Unipool by Synthetix](https://github.com/Synthetixio/Unipool/blob/master/contracts/Unipool.sol). More information about their liquidity rewards program can be found in the [original SIP 31](https://sips.synthetix.io/sips/sip-31) and in [their blog](https://blog.synthetix.io/new-uniswap-seth-lp-reward-system/).
 
@@ -1222,15 +1222,15 @@ Essentially the way it works is:
 - Liqudity providers can claim their rewards when they want
 - Liqudity providers can unstake UNIv2 tokens to exit the program (i.e., stop earning rewards) when they want
 
-Our implementation is simpler because funds for rewards will only be added once, on deployment of LQTY token (for more technical details about the differences, see PR #271 on our repo).
+Our implementation is simpler because funds for rewards will only be added once, on deployment of STBL token (for more technical details about the differences, see PR #271 on our repo).
 
-The amount of LQTY tokens that will be minted to rewards contract is 1.33M, and the duration of the program will be 30 days. If at some point the total amount of staked tokens is zero, the clock will be “stopped”, so the period will be extended by the time during which the staking pool is empty, in order to avoid getting LQTY tokens locked. That also means that the start time for the program will be the event that occurs first: either LQTY token contract is deployed, and therefore LQTY tokens are minted to Unipool contract, or first liquidity provider stakes UNIv2 tokens into it.
+The amount of STBL tokens that will be minted to rewards contract is 1.33M, and the duration of the program will be 30 days. If at some point the total amount of staked tokens is zero, the clock will be “stopped”, so the period will be extended by the time during which the staking pool is empty, in order to avoid getting STBL tokens locked. That also means that the start time for the program will be the event that occurs first: either STBL token contract is deployed, and therefore STBL tokens are minted to Unipool contract, or first liquidity provider stakes UNIv2 tokens into it.
 
 ## Liquity System Fees
 
-Liquity generates fee revenue from certain operations. Fees are captured by the LQTY token.
+Liquity generates fee revenue from certain operations. Fees are captured by the STBL token.
 
-A LQTY holder may stake their LQTY, and earn a share of all system fees, proportional to their share of the total LQTY staked.
+A STBL holder may stake their STBL, and earn a share of all system fees, proportional to their share of the total STBL staked.
 
 Liquity generates revenue in two ways: redemptions, and issuance of new LUSD tokens.
 
@@ -1240,13 +1240,13 @@ Redemptions fees are paid in ETH. Issuance fees (when a user opens a Trove, or i
 
 The redemption fee is taken as a cut of the total ETH drawn from the system in a redemption. It is based on the current redemption rate.
 
-In the `TroveManager`, `redeemCollateral` calculates the ETH fee and transfers it to the staking contract, `LQTYStaking.sol`
+In the `TroveManager`, `redeemCollateral` calculates the ETH fee and transfers it to the staking contract, `STBLStaking.sol`
 
 ### Issuance fee
 
 The issuance fee is charged on the LUSD drawn by the user and is added to the Trove's LUSD debt. It is based on the current borrowing rate.
 
-When new LUSD are drawn via one of the `BorrowerOperations` functions `openTrove`, `withdrawLUSD` or `adjustTrove`, an extra amount `LUSDFee` is minted, and an equal amount of debt is added to the user’s Trove. The `LUSDFee` is transferred to the staking contract, `LQTYStaking.sol`.
+When new LUSD are drawn via one of the `BorrowerOperations` functions `openTrove`, `withdrawLUSD` or `adjustTrove`, an extra amount `LUSDFee` is minted, and an equal amount of debt is added to the user’s Trove. The `LUSDFee` is transferred to the staking contract, `STBLStaking.sol`.
 
 ### Fee Schedule
 
@@ -1281,11 +1281,11 @@ Time is measured in units of minutes. The `baseRate` decay is based on `block.ti
 
 The decay parameter is tuned such that the fee changes by a factor of 0.99 per hour, i.e. it loses 1% of its current value per hour. At that rate, after one week, the baseRate decays to 18% of its prior value. The exact decay parameter is subject to change, and will be fine-tuned via economic modelling.
 
-### Staking LQTY and earning fees
+### Staking STBL and earning fees
 
-LQTY holders may `stake` and `unstake` their LQTY in the `LQTYStaking.sol` contract. 
+STBL holders may `stake` and `unstake` their STBL in the `STBLStaking.sol` contract. 
 
-When a fee event occurs, the fee in LUSD or ETH is sent to the staking contract, and a reward-per-unit-staked sum (`F_ETH`, or `F_LUSD`) is incremented. A LQTY stake earns a share of the fee equal to its share of the total LQTY staked, at the instant the fee occurred.
+When a fee event occurs, the fee in LUSD or ETH is sent to the staking contract, and a reward-per-unit-staked sum (`F_ETH`, or `F_LUSD`) is incremented. A STBL stake earns a share of the fee equal to its share of the total STBL staked, at the instant the fee occurred.
 
 This staking formula and implementation follows the basic [“Batog” pull-based reward distribution](http://batog.info/papers/scalable-reward-distribution.pdf).
 
@@ -1381,7 +1381,7 @@ _**Critical collateralization ratio (CCR):**_ 150%. When the TCR is below the CC
 
 _**Borrower:**_ an externally owned account or contract that locks collateral in a Trove and issues LUSD tokens to their own address. They “borrow” LUSD tokens against their ETH collateral.
 
-_**Depositor:**_ an externally owned account or contract that has assigned LUSD tokens to the Stability Pool, in order to earn returns from liquidations, and receive LQTY token issuance.
+_**Depositor:**_ an externally owned account or contract that has assigned LUSD tokens to the Stability Pool, in order to earn returns from liquidations, and receive STBL token issuance.
 
 _**Redemption:**_ the act of swapping LUSD tokens with the system, in return for an equivalent value of ETH. Any account with a LUSD token balance may redeem them, whether or not they are a borrower.
 
@@ -1592,7 +1592,7 @@ If you're planning to publicly host a frontend, you might need to pass the Docke
 
 #### FRONTEND_TAG
 
-If you want to receive a share of the LQTY rewards earned by users of your frontend, set this variable to the Ethereum address you want the LQTY to be sent to.
+If you want to receive a share of the STBL rewards earned by users of your frontend, set this variable to the Ethereum address you want the STBL to be sent to.
 
 #### INFURA_API_KEY
 
@@ -1600,7 +1600,7 @@ This is an optional parameter. If you'd like your frontend to use Infura's [WebS
 
 ### Setting a kickback rate
 
-The kickback rate is the portion of LQTY you pass on to users of your frontend. For example with a kickback rate of 80%, you receive 20% while users get the other 80. Before you can start to receive a share of LQTY rewards, you'll need to set this parameter by making a transaction on-chain.
+The kickback rate is the portion of STBL you pass on to users of your frontend. For example with a kickback rate of 80%, you receive 20% while users get the other 80. Before you can start to receive a share of STBL rewards, you'll need to set this parameter by making a transaction on-chain.
 
 It is highly recommended that you do this while running a frontend locally, before you start hosting it publicly:
 
@@ -1720,14 +1720,14 @@ The content of this readme document (“Readme”) is of purely informational na
 
 Please read this Disclaimer carefully before accessing, interacting with, or using the Liquity Protocol software, consisting of the Liquity Protocol technology stack (in particular its smart contracts) as well as any other Liquity technology such as e.g., the launch kit for frontend operators (together the “Liquity Protocol Software”). 
 
-While Liquity AG developed the Liquity Protocol Software, the Liquity Protocol Software runs in a fully decentralized and autonomous manner on the Ethereum network. Liquity AG is not involved in the operation of the Liquity Protocol Software nor has it any control over transactions made using its smart contracts. Further, Liquity AG does neither enter into any relationship with users of the Liquity Protocol Software and/or frontend operators, nor does it operate an own frontend. Any and all functionalities of the Liquity Protocol Software, including the LUSD and the LQTY, are of purely technical nature and there is no claim towards any private individual or legal entity in this regard.
+While Liquity AG developed the Liquity Protocol Software, the Liquity Protocol Software runs in a fully decentralized and autonomous manner on the Ethereum network. Liquity AG is not involved in the operation of the Liquity Protocol Software nor has it any control over transactions made using its smart contracts. Further, Liquity AG does neither enter into any relationship with users of the Liquity Protocol Software and/or frontend operators, nor does it operate an own frontend. Any and all functionalities of the Liquity Protocol Software, including the LUSD and the STBL, are of purely technical nature and there is no claim towards any private individual or legal entity in this regard.
 
-LIQUITY AG IS NOT LIABLE TO ANY USER FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE, IN CONNECTION WITH THE USE OR INABILITY TO USE THE LIQUITY PROTOCOL SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF ETH, LUSD OR LQTY, NON-ALLOCATION OF TECHNICAL FEES TO LQTY HOLDERS, LOSS OF DATA, BUSINESS INTERRUPTION, DATA BEING RENDERED INACCURATE OR OTHER LOSSES SUSTAINED BY A USER OR THIRD PARTIES AS A RESULT OF THE LIQUITY PROTOCOL SOFTWARE AND/OR ANY ACTIVITY OF A FRONTEND OPERATOR OR A FAILURE OF THE LIQUITY PROTOCOL SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE).
+LIQUITY AG IS NOT LIABLE TO ANY USER FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE, IN CONNECTION WITH THE USE OR INABILITY TO USE THE LIQUITY PROTOCOL SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF ETH, LUSD OR STBL, NON-ALLOCATION OF TECHNICAL FEES TO STBL HOLDERS, LOSS OF DATA, BUSINESS INTERRUPTION, DATA BEING RENDERED INACCURATE OR OTHER LOSSES SUSTAINED BY A USER OR THIRD PARTIES AS A RESULT OF THE LIQUITY PROTOCOL SOFTWARE AND/OR ANY ACTIVITY OF A FRONTEND OPERATOR OR A FAILURE OF THE LIQUITY PROTOCOL SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE).
 
 The Liquity Protocol Software has been developed and published under the GNU GPL v3 open-source license, which forms an integral part of this disclaimer. 
 
-THE LIQUITY PROTOCOL SOFTWARE HAS BEEN PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. THE LIQUITY PROTOCOL SOFTWARE IS HIGHLY EXPERIMENTAL AND ANY REAL ETH AND/OR LUSD AND/OR LQTY SENT, STAKED OR DEPOSITED TO THE LIQUITY PROTOCOL SOFTWARE ARE AT RISK OF BEING LOST INDEFINITELY, WITHOUT ANY KIND OF CONSIDERATION.
+THE LIQUITY PROTOCOL SOFTWARE HAS BEEN PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. THE LIQUITY PROTOCOL SOFTWARE IS HIGHLY EXPERIMENTAL AND ANY REAL ETH AND/OR LUSD AND/OR STBL SENT, STAKED OR DEPOSITED TO THE LIQUITY PROTOCOL SOFTWARE ARE AT RISK OF BEING LOST INDEFINITELY, WITHOUT ANY KIND OF CONSIDERATION.
 
 There are no official frontend operators, and the use of any frontend is made by users at their own risk. To assess the trustworthiness of a frontend operator lies in the sole responsibility of the users and must be made carefully.
 
-User is solely responsible for complying with applicable law when interacting (in particular, when using ETH, LUSD, LQTY or other Token) with the Liquity Protocol Software whatsoever. 
+User is solely responsible for complying with applicable law when interacting (in particular, when using ETH, LUSD, STBL or other Token) with the Liquity Protocol Software whatsoever. 

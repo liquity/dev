@@ -35,18 +35,18 @@ hintHelpers: 0xE84251b93D9524E0d2e621Ba7dc7cb3579F997C0
 tellorCaller: 0xAd430500ECDa11E38C9bCB08a702274b94641112
 Using previously deployed unipool contract at address 0xd37a77E71ddF3373a79BE2eBB76B6c4808bDF0d5
 No Etherscan Url defined, skipping verification
-Using previously deployed lqtyStaking contract at address 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
+Using previously deployed stblStaking contract at address 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
 Using previously deployed lockupContractFactory contract at address 0x2eBeF24dA09489218Ba2BECb01867F6DaAeDcD4B
 Using previously deployed communityIssuance contract at address 0xD8c9D9071123a059C6E0A945cF0e0c82b508d816
-Using previously deployed lqtyToken contract at address 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
+Using previously deployed stblToken contract at address 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
 No Etherscan Url defined, skipping verification
 Using previously deployed multiTroveGetter contract at address 0xFc92d0E9Fa35df17E3A6d9F40716ca2cE749922B
 No Etherscan Url defined, skipping verification
 Contract objects addresses:
-lqtyStaking: 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
+stblStaking: 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
 lockupContractFactory: 0x2eBeF24dA09489218Ba2BECb01867F6DaAeDcD4B
 communityIssuance: 0xD8c9D9071123a059C6E0A945cF0e0c82b508d816
-lqtyToken: 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
+stblToken: 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
 Unipool address: 0xd37a77E71ddF3373a79BE2eBB76B6c4808bDF0d5
 time now: 1617636561
 time oneYearFromNow: 1649172561
@@ -65,7 +65,7 @@ TCR: 168348637
 Base rate: .000000000000000000
 Current borrowing rate: .005000000000000000
 Total LUSD SP deposits: 23144610.168682191763472677
-Total LQTY staked: 12076.701882176568203927
+Total STBL staked: 12076.701882176568203927
 Total LP (LUSD-ETH) tokens staked in unipool: 25391.699082314105793539
 TroveManager state variables:
 Total trove stakes: 22706.606961025510177440
@@ -79,8 +79,8 @@ Current epoch: .000000000000000000
 Current scale: .000000000000000000
 Sum S, at current epoch and scale: 1316865179060.000000000000000000
 Sum G, at current epoch and scale: 350440404386765668230.305464806947340628
-LQTYStaking state variables:
+STBLStaking state variables:
 F_LUSD: 551.177204461747963720
 F_ETH: .000000000000000000
 CommunityIssuance state variables:
-Total LQTY issued to depositors / front ends: 17592.871388312448000000
+Total STBL issued to depositors / front ends: 17592.871388312448000000

@@ -14,13 +14,13 @@ export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiq
     // (undocumented)
     getFrontendStatus(address?: string, ...extraParams: T): Promise<FrontendStatus>;
     // (undocumented)
-    getLiquidityMiningLQTYReward(address?: string, ...extraParams: T): Promise<Decimal>;
+    getLiquidityMiningSTBLReward(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getLiquidityMiningStake(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
-    getLQTYBalance(address?: string, ...extraParams: T): Promise<Decimal>;
+    getSTBLBalance(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
-    getLQTYStake(address?: string, ...extraParams: T): Promise<LQTYStake>;
+    getSTBLStake(address?: string, ...extraParams: T): Promise<STBLStake>;
     // (undocumented)
     getLUSDBalance(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
@@ -30,9 +30,9 @@ export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiq
     // (undocumented)
     getPrice(...extraParams: T): Promise<Decimal>;
     // (undocumented)
-    getRemainingLiquidityMiningLQTYReward(...extraParams: T): Promise<Decimal>;
+    getRemainingLiquidityMiningSTBLReward(...extraParams: T): Promise<Decimal>;
     // (undocumented)
-    getRemainingStabilityPoolLQTYReward(...extraParams: T): Promise<Decimal>;
+    getRemainingStabilityPoolSTBLReward(...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getStabilityDeposit(address?: string, ...extraParams: T): Promise<StabilityDeposit>;
     // (undocumented)
@@ -40,7 +40,7 @@ export class _CachedReadableLiquity<T extends unknown[]> implements _ReadableLiq
     // (undocumented)
     getTotalRedistributed(...extraParams: T): Promise<Trove>;
     // (undocumented)
-    getTotalStakedLQTY(...extraParams: T): Promise<Decimal>;
+    getTotalStakedSTBL(...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getTotalStakedUniTokens(...extraParams: T): Promise<Decimal>;
     // (undocumented)
@@ -263,23 +263,23 @@ export interface LiquityStoreBaseState {
     // @internal (undocumented)
     _feesInNormalMode: Fees;
     frontend: FrontendStatus;
-    liquidityMiningLQTYReward: Decimal;
+    liquidityMiningSTBLReward: Decimal;
     liquidityMiningStake: Decimal;
-    lqtyBalance: Decimal;
-    lqtyStake: LQTYStake;
+    stblBalance: Decimal;
+    stblStake: STBLStake;
     lusdBalance: Decimal;
     lusdInStabilityPool: Decimal;
     numberOfTroves: number;
     ownFrontend: FrontendStatus;
     price: Decimal;
-    remainingLiquidityMiningLQTYReward: Decimal;
-    remainingStabilityPoolLQTYReward: Decimal;
+    remainingLiquidityMiningSTBLReward: Decimal;
+    remainingStabilityPoolSTBLReward: Decimal;
     // @internal (undocumented)
     _riskiestTroveBeforeRedistribution: TroveWithPendingRedistribution;
     stabilityDeposit: StabilityDeposit;
     total: Trove;
     totalRedistributed: Trove;
-    totalStakedLQTY: Decimal;
+    totalStakedSTBL: Decimal;
     totalStakedUniTokens: Decimal;
     troveBeforeRedistribution: TroveWithPendingRedistribution;
     uniTokenAllowance: Decimal;
@@ -306,29 +306,29 @@ export interface LiquityStoreListenerParams<T = unknown> {
 export type LiquityStoreState<T = unknown> = LiquityStoreBaseState & LiquityStoreDerivedState & T;
 
 // @public
-export class LQTYStake {
+export class STBLStake {
     // @internal
-    constructor(stakedLQTY?: Decimal, collateralGain?: Decimal, lusdGain?: Decimal);
-    apply(change: LQTYStakeChange<Decimalish> | undefined): Decimal;
+    constructor(stakedSTBL?: Decimal, collateralGain?: Decimal, lusdGain?: Decimal);
+    apply(change: STBLStakeChange<Decimalish> | undefined): Decimal;
     readonly collateralGain: Decimal;
-    equals(that: LQTYStake): boolean;
+    equals(that: STBLStake): boolean;
     // (undocumented)
     get isEmpty(): boolean;
     readonly lusdGain: Decimal;
-    readonly stakedLQTY: Decimal;
+    readonly stakedSTBL: Decimal;
     // @internal (undocumented)
     toString(): string;
-    whatChanged(thatStakedLQTY: Decimalish): LQTYStakeChange<Decimal> | undefined;
+    whatChanged(thatStakedSTBL: Decimalish): STBLStakeChange<Decimal> | undefined;
 }
 
 // @public
-export type LQTYStakeChange<T> = {
-    stakeLQTY: T;
-    unstakeLQTY?: undefined;
+export type STBLStakeChange<T> = {
+    stakeSTBL: T;
+    unstakeSTBL?: undefined;
 } | {
-    stakeLQTY?: undefined;
-    unstakeLQTY: T;
-    unstakeAllLQTY: boolean;
+    stakeSTBL?: undefined;
+    unstakeSTBL: T;
+    unstakeAllSTBL: boolean;
 };
 
 // @public
@@ -458,19 +458,19 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown> exten
     redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish): Promise<PopulatedRedemption<P, S, R>>;
     registerFrontend(kickbackRate: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     repayLUSD(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>>;
-    sendLQTY(toAddress: string, amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
+    sendSTBL(toAddress: string, amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     sendLUSD(toAddress: string, amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     // @internal (undocumented)
     setPrice(price: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
-    stakeLQTY(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
+    stakeSTBL(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     stakeUniTokens(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     transferCollateralGainToTrove(): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, CollateralGainTransferDetails>>>>;
-    unstakeLQTY(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
+    unstakeSTBL(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     unstakeUniTokens(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     withdrawCollateral(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>>;
     withdrawGainsFromStabilityPool(): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, StabilityPoolGainsWithdrawalDetails>>>>;
     withdrawGainsFromStaking(): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
-    withdrawLQTYRewardFromLiquidityMining(): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
+    withdrawSTBLRewardFromLiquidityMining(): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
     withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>>>;
 }
 
@@ -493,20 +493,20 @@ export interface ReadableLiquity {
     getCollateralSurplusBalance(address?: string): Promise<Decimal>;
     getFees(): Promise<Fees>;
     getFrontendStatus(address?: string): Promise<FrontendStatus>;
-    getLiquidityMiningLQTYReward(address?: string): Promise<Decimal>;
+    getLiquidityMiningSTBLReward(address?: string): Promise<Decimal>;
     getLiquidityMiningStake(address?: string): Promise<Decimal>;
-    getLQTYBalance(address?: string): Promise<Decimal>;
-    getLQTYStake(address?: string): Promise<LQTYStake>;
+    getSTBLBalance(address?: string): Promise<Decimal>;
+    getSTBLStake(address?: string): Promise<STBLStake>;
     getLUSDBalance(address?: string): Promise<Decimal>;
     getLUSDInStabilityPool(): Promise<Decimal>;
     getNumberOfTroves(): Promise<number>;
     getPrice(): Promise<Decimal>;
-    getRemainingLiquidityMiningLQTYReward(): Promise<Decimal>;
-    getRemainingStabilityPoolLQTYReward(): Promise<Decimal>;
+    getRemainingLiquidityMiningSTBLReward(): Promise<Decimal>;
+    getRemainingStabilityPoolSTBLReward(): Promise<Decimal>;
     getStabilityDeposit(address?: string): Promise<StabilityDeposit>;
     getTotal(): Promise<Trove>;
     getTotalRedistributed(): Promise<Trove>;
-    getTotalStakedLQTY(): Promise<Decimal>;
+    getTotalStakedSTBL(): Promise<Decimal>;
     getTotalStakedUniTokens(): Promise<Decimal>;
     getTrove(address?: string): Promise<UserTrove>;
     getTroveBeforeRedistribution(address?: string): Promise<TroveWithPendingRedistribution>;
@@ -565,19 +565,19 @@ export interface SendableLiquity<R = unknown, S = unknown> extends _SendableFrom
     redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, RedemptionDetails>>>;
     registerFrontend(kickbackRate: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     repayLUSD(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
-    sendLQTY(toAddress: string, amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
+    sendSTBL(toAddress: string, amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     sendLUSD(toAddress: string, amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     // @internal (undocumented)
     setPrice(price: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-    stakeLQTY(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
+    stakeSTBL(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     stakeUniTokens(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     transferCollateralGainToTrove(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, CollateralGainTransferDetails>>>;
-    unstakeLQTY(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
+    unstakeSTBL(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     unstakeUniTokens(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     withdrawCollateral(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, TroveAdjustmentDetails>>>;
     withdrawGainsFromStabilityPool(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, StabilityPoolGainsWithdrawalDetails>>>;
     withdrawGainsFromStaking(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
-    withdrawLQTYRewardFromLiquidityMining(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
+    withdrawSTBLRewardFromLiquidityMining(): Promise<SentLiquityTransaction<S, LiquityReceipt<R, void>>>;
     withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<SentLiquityTransaction<S, LiquityReceipt<R, StabilityDepositChangeDetails>>>;
 }
 
@@ -591,7 +591,7 @@ export interface SentLiquityTransaction<S = unknown, T extends LiquityReceipt = 
 // @public
 export class StabilityDeposit {
     // @internal
-    constructor(initialLUSD: Decimal, currentLUSD: Decimal, collateralGain: Decimal, lqtyReward: Decimal, frontendTag: string);
+    constructor(initialLUSD: Decimal, currentLUSD: Decimal, collateralGain: Decimal, stblReward: Decimal, frontendTag: string);
     apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
     readonly collateralGain: Decimal;
     readonly currentLUSD: Decimal;
@@ -600,7 +600,7 @@ export class StabilityDeposit {
     readonly initialLUSD: Decimal;
     // (undocumented)
     get isEmpty(): boolean;
-    readonly lqtyReward: Decimal;
+    readonly stblReward: Decimal;
     // @internal (undocumented)
     toString(): string;
     whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined;
@@ -624,7 +624,7 @@ export interface StabilityDepositChangeDetails extends StabilityPoolGainsWithdra
 // @public
 export interface StabilityPoolGainsWithdrawalDetails {
     collateralGain: Decimal;
-    lqtyReward: Decimal;
+    stblReward: Decimal;
     lusdLoss: Decimal;
     newLUSDDeposit: Decimal;
 }
@@ -655,19 +655,19 @@ export interface TransactableLiquity {
     redeemLUSD(amount: Decimalish, maxRedemptionRate?: Decimalish): Promise<RedemptionDetails>;
     registerFrontend(kickbackRate: Decimalish): Promise<void>;
     repayLUSD(amount: Decimalish): Promise<TroveAdjustmentDetails>;
-    sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
+    sendSTBL(toAddress: string, amount: Decimalish): Promise<void>;
     sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
     // @internal (undocumented)
     setPrice(price: Decimalish): Promise<void>;
-    stakeLQTY(amount: Decimalish): Promise<void>;
+    stakeSTBL(amount: Decimalish): Promise<void>;
     stakeUniTokens(amount: Decimalish): Promise<void>;
     transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
-    unstakeLQTY(amount: Decimalish): Promise<void>;
+    unstakeSTBL(amount: Decimalish): Promise<void>;
     unstakeUniTokens(amount: Decimalish): Promise<void>;
     withdrawCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
     withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
     withdrawGainsFromStaking(): Promise<void>;
-    withdrawLQTYRewardFromLiquidityMining(): Promise<void>;
+    withdrawSTBLRewardFromLiquidityMining(): Promise<void>;
     withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
 }
 

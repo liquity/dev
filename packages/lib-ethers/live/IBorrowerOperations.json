@@ -61,11 +61,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lqtyStakingAddress",
+          "name": "_stblStakingAddress",
           "type": "address"
         }
       ],
-      "name": "LQTYStakingAddressChanged",
+      "name": "STBLStakingAddressChanged",
       "type": "event"
     },
     {
@@ -420,7 +420,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lqtyStakingAddress",
+          "name": "_stblStakingAddress",
           "type": "address"
         }
       ],

@@ -6,11 +6,11 @@ import { useLiquitySelector } from "@liquity/lib-react";
 import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";
 
-const selectLQTYStake = ({ lqtyStake }: LiquityStoreState) => lqtyStake;
+const selectSTBLStake = ({ stblStake }: LiquityStoreState) => stblStake;
 
 export const StakingGainsAction: React.FC = () => {
   const { liquity } = useLiquity();
-  const { collateralGain, lusdGain } = useLiquitySelector(selectLQTYStake);
+  const { collateralGain, lusdGain } = useLiquitySelector(selectSTBLStake);
 
   const [sendTransaction] = useTransactionFunction(
     "stake",

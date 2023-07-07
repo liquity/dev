@@ -32,18 +32,18 @@ hintHelpers: 0xAB1b14AfAE47054ca29A23858A7850E859aE6E31
 tellorCaller: 0x093FA46A3FC715B65E9A6d37ACD92d99F48B81F6
 Using previously deployed unipool contract at address 0xBAeE57B5e130fC602F0859e6f85029Ec47340298
 No Etherscan Url defined, skipping verification
-Using previously deployed lqtyStaking contract at address 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
+Using previously deployed stblStaking contract at address 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
 Using previously deployed lockupContractFactory contract at address 0xe6dEcadA1d49466F09c5bfb69F6C14f376B2Eece
 Using previously deployed communityIssuance contract at address 0x89c5eaD36eCA8d7c0840ddD461d406Ad637CD35D
-Using previously deployed lqtyToken contract at address 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
+Using previously deployed stblToken contract at address 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
 No Etherscan Url defined, skipping verification
 Using previously deployed multiTroveGetter contract at address 0x1AfE186670C7DAF5E085ae6269Da9762621F2b71
 No Etherscan Url defined, skipping verification
 Contract objects addresses:
-lqtyStaking: 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
+stblStaking: 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
 lockupContractFactory: 0xe6dEcadA1d49466F09c5bfb69F6C14f376B2Eece
 communityIssuance: 0x89c5eaD36eCA8d7c0840ddD461d406Ad637CD35D
-lqtyToken: 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
+stblToken: 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
 Unipool address: 0xBAeE57B5e130fC602F0859e6f85029Ec47340298
 time now: 1617493712
 time oneYearFromNow: 1649029712
@@ -62,8 +62,8 @@ lockupContract addr: 0x55CC...74ab,
           on-chain beneficiary addr: 0x625b...996a
           unlockTime: 1649027889
           
-Unipool LQTY balance       : 1332511.757789535567313421
-LQTY Deployer balance     : 64666666.666666666666666667
+Unipool STBL balance       : 1332511.757789535567313421
+STBL Deployer balance     : 64666666.666666666666666667
 General Safe balance       : 2000000.000000000000000000
 Community Issuance balance: 31951864.655992765250031575
 PriceFeed first stored price: 2096.630546500000000000
@@ -93,12 +93,12 @@ LUSDETHPair addr: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 Pair addr stored in Unipool: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 Already staked in Unipool
 wait 90 seconds before checking earnings... 
-deployer's earned LQTY from Unipool after ~1.5mins: .000000000000000707
-deployer LQTY Balance Before SP deposit: 1986.702254180435641327
-CHECK DEPLOYER MAKING DEPOSIT AND EARNING LQTY
+deployer's earned STBL from Unipool after ~1.5mins: .000000000000000707
+deployer STBL Balance Before SP deposit: 1986.702254180435641327
+CHECK DEPLOYER MAKING DEPOSIT AND EARNING STBL
 deployer SP deposit before making deposit: 30.000000000000000000
 deployer SP deposit after depositing 15 LUSD: 45.000000000000000000
 wait 90 seconds before withdrawing...
 deployer SP deposit after full withdrawal: .000000000000000000
-deployer LQTY Balance after SP deposit withdrawal: 2156.497045159803174982
+deployer STBL Balance after SP deposit withdrawal: 2156.497045159803174982
 CHECK BENEFICIARY ATTEMPTING WITHDRAWAL FROM LC

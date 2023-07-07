@@ -36,7 +36,7 @@ contract('Gas cost tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployTesterContractsHardhat()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
 
     priceFeed = contracts.priceFeedTestnet
     lusdToken = contracts.lusdToken
@@ -50,14 +50,14 @@ contract('Gas cost tests', async accounts => {
 
     functionCaller = contracts.functionCaller
 
-    lqtyStaking = LQTYContracts.lqtyStaking
-    lqtyToken = LQTYContracts.lqtyToken
-    communityIssuance = LQTYContracts.communityIssuance
-    lockupContractFactory = LQTYContracts.lockupContractFactory
+    stblStaking = STBLContracts.stblStaking
+    stblToken = STBLContracts.stblToken
+    communityIssuance = STBLContracts.communityIssuance
+    lockupContractFactory = STBLContracts.lockupContractFactory
 
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
-    await deploymentHelper.connectCoreContracts(contracts, LQTYContracts)
-    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, contracts)
+    await deploymentHelper.connectSTBLContracts(STBLContracts)
+    await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
+    await deploymentHelper.connectSTBLContractsToCore(STBLContracts, contracts)
   })
 
   // --- TESTS ---

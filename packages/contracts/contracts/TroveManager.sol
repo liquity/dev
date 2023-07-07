@@ -7,8 +7,8 @@ import "./Interfaces/IStabilityPool.sol";
 import "./Interfaces/ICollSurplusPool.sol";
 import "./Interfaces/ILUSDToken.sol";
 import "./Interfaces/ISortedTroves.sol";
-import "./Interfaces/ILQTYToken.sol";
-import "./Interfaces/ILQTYStaking.sol";
+import "./Interfaces/ISTBLToken.sol";
+import "./Interfaces/ISTBLStaking.sol";
 import "./Dependencies/LiquityBase.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
@@ -29,9 +29,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     ILUSDToken public override lusdToken;
 
-    ILQTYToken public override lqtyToken;
+    ISTBLToken public override stblToken;
 
-    ILQTYStaking public override lqtyStaking;
+    ISTBLStaking public override stblStaking;
 
     // A doubly linked list of Troves, sorted by their sorted by their collateral ratios
     ISortedTroves public sortedTroves;
@@ -171,7 +171,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         IActivePool activePool;
         IDefaultPool defaultPool;
         ILUSDToken lusdToken;
-        ILQTYStaking lqtyStaking;
+        ISTBLStaking stblStaking;
         ISortedTroves sortedTroves;
         ICollSurplusPool collSurplusPool;
         address gasPoolAddress;
@@ -206,8 +206,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     event GasPoolAddressChanged(address _gasPoolAddress);
     event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
     event SortedTrovesAddressChanged(address _sortedTrovesAddress);
-    event LQTYTokenAddressChanged(address _lqtyTokenAddress);
-    event LQTYStakingAddressChanged(address _lqtyStakingAddress);
+    event STBLTokenAddressChanged(address _stblTokenAddress);
+    event STBLStakingAddressChanged(address _stblStakingAddress);
 
     event Liquidation(uint _liquidatedDebt, uint _liquidatedColl, uint _collGasCompensation, uint _LUSDGasCompensation);
     event Redemption(uint _attemptedLUSDAmount, uint _actualLUSDAmount, uint _ETHSent, uint _ETHFee);
@@ -241,8 +241,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         address _priceFeedAddress,
         address _lusdTokenAddress,
         address _sortedTrovesAddress,
-        address _lqtyTokenAddress,
-        address _lqtyStakingAddress
+        address _stblTokenAddress,
+        address _stblStakingAddress
     )
         external
         override
@@ -257,8 +257,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         checkContract(_priceFeedAddress);
         checkContract(_lusdTokenAddress);
         checkContract(_sortedTrovesAddress);
-        checkContract(_lqtyTokenAddress);
-        checkContract(_lqtyStakingAddress);
+        checkContract(_stblTokenAddress);
+        checkContract(_stblStakingAddress);
 
         borrowerOperationsAddress = _borrowerOperationsAddress;
         activePool = IActivePool(_activePoolAddress);
@@ -269,8 +269,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         priceFeed = IPriceFeed(_priceFeedAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
-        lqtyToken = ILQTYToken(_lqtyTokenAddress);
-        lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
+        stblToken = ISTBLToken(_stblTokenAddress);
+        stblStaking = ISTBLStaking(_stblStakingAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit ActivePoolAddressChanged(_activePoolAddress);
@@ -281,8 +281,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         emit PriceFeedAddressChanged(_priceFeedAddress);
         emit LUSDTokenAddressChanged(_lusdTokenAddress);
         emit SortedTrovesAddressChanged(_sortedTrovesAddress);
-        emit LQTYTokenAddressChanged(_lqtyTokenAddress);
-        emit LQTYStakingAddressChanged(_lqtyStakingAddress);
+        emit STBLTokenAddressChanged(_stblTokenAddress);
+        emit STBLStakingAddressChanged(_stblStakingAddress);
 
         _renounceOwnership();
     }
@@ -497,7 +497,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             activePool,
             defaultPool,
             ILUSDToken(address(0)),
-            ILQTYStaking(address(0)),
+            ISTBLStaking(address(0)),
             sortedTroves,
             ICollSurplusPool(address(0)),
             address(0)
@@ -938,7 +938,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             activePool,
             defaultPool,
             lusdToken,
-            lqtyStaking,
+            stblStaking,
             sortedTroves,
             collSurplusPool,
             gasPoolAddress
@@ -1007,9 +1007,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
         _requireUserAcceptsFee(totals.ETHFee, totals.totalETHDrawn, _maxFeePercentage);
 
-        // Send the ETH fee to the LQTY staking contract
-        contractsCache.activePool.sendETH(address(contractsCache.lqtyStaking), totals.ETHFee);
-        contractsCache.lqtyStaking.increaseF_ETH(totals.ETHFee);
+        // Send the ETH fee to the STBL staking contract
+        contractsCache.activePool.sendETH(address(contractsCache.stblStaking), totals.ETHFee);
+        contractsCache.stblStaking.increaseF_ETH(totals.ETHFee);
 
         totals.ETHToSendToRedeemer = totals.totalETHDrawn.sub(totals.ETHFee);
 
@@ -1498,7 +1498,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function _requireAfterBootstrapPeriod() internal view {
-        uint systemDeploymentTime = lqtyToken.getDeploymentStartTime();
+        uint systemDeploymentTime = stblToken.getDeploymentStartTime();
         require(block.timestamp >= systemDeploymentTime.add(BOOTSTRAP_PERIOD), "TroveManager: Redemptions are not allowed during bootstrap phase");
     }
 

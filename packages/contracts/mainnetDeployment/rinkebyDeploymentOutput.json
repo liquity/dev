@@ -63,7 +63,7 @@
     "txHash": "0x456c8d5b498916ce95712562bbf62a83054e3debebf693d2e3500a9da884b10b",
     "verification": "https://rinkeby.etherscan.io/address/0x14d97516560433c0B04FfB16d7FF85B82a1b83fE#code"
   },
-  "lqtyStaking": {
+  "stblStaking": {
     "address": "0x35D3293EA6dD210b8Ca25668ae266ca4C834Ea1b",
     "txHash": "0xa18478e512a9c4d10b4dbceb2f480801cbaf23840a6360cead7884c89552b157",
     "verification": "https://rinkeby.etherscan.io/address/0x35D3293EA6dD210b8Ca25668ae266ca4C834Ea1b#code"
@@ -78,7 +78,7 @@
     "txHash": "0x4bd750cf57d752c530370c80da406a1f7a4223a0c4919b4232f2140eecd68c73",
     "verification": "https://rinkeby.etherscan.io/address/0x3Ba2d54d0471600FF32CEd86F5075D8Fa0c0b109#code"
   },
-  "lqtyToken": {
+  "stblToken": {
     "address": "0xf8A1aA1c34970aCE24041ef038A442732d942b89",
     "txHash": "0x9d96ab7d87d0dcbefc3bc7081d317e25c3c324a2a09cbe5db6e8ed5aa18078d0",
     "verification": "https://rinkeby.etherscan.io/address/0xf8A1aA1c34970aCE24041ef038A442732d942b89#code"

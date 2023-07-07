@@ -16,7 +16,7 @@ export interface EthersLiquityConnectionOptionalParams
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [frontendTag?](./lib-ethers.ethersliquityconnectionoptionalparams.frontendtag.md) | string | <i>(Optional)</i> Address that will receive LQTY rewards from newly created Stability Deposits by default. |
-|  [userAddress?](./lib-ethers.ethersliquityconnectionoptionalparams.useraddress.md) | string | <i>(Optional)</i> Address whose Trove, Stability Deposit, LQTY Stake and balances will be read by default. |
+|  [frontendTag?](./lib-ethers.ethersliquityconnectionoptionalparams.frontendtag.md) | string | <i>(Optional)</i> Address that will receive STBL rewards from newly created Stability Deposits by default. |
+|  [userAddress?](./lib-ethers.ethersliquityconnectionoptionalparams.useraddress.md) | string | <i>(Optional)</i> Address whose Trove, Stability Deposit, STBL Stake and balances will be read by default. |
 |  [useStore?](./lib-ethers.ethersliquityconnectionoptionalparams.usestore.md) | [EthersLiquityStoreOption](./lib-ethers.ethersliquitystoreoption.md) | <i>(Optional)</i> Create a [LiquityStore](./lib-base.liquitystore.md) and expose it as the <code>store</code> property. |
 

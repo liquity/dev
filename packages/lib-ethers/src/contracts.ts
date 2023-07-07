@@ -19,10 +19,10 @@ import lusdTokenAbi from "../abi/LUSDToken.json";
 import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
-import lqtyTokenAbi from "../abi/LQTYToken.json";
+import stblTokenAbi from "../abi/STBLToken.json";
 import hintHelpersAbi from "../abi/HintHelpers.json";
 import lockupContractFactoryAbi from "../abi/LockupContractFactory.json";
-import lqtyStakingAbi from "../abi/LQTYStaking.json";
+import stblStakingAbi from "../abi/STBLStaking.json";
 import multiTroveGetterAbi from "../abi/MultiTroveGetter.json";
 import priceFeedAbi from "../abi/PriceFeed.json";
 import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
@@ -41,10 +41,10 @@ import {
   CollSurplusPool,
   CommunityIssuance,
   DefaultPool,
-  LQTYToken,
+  STBLToken,
   HintHelpers,
   LockupContractFactory,
-  LQTYStaking,
+  STBLStaking,
   MultiTroveGetter,
   PriceFeed,
   PriceFeedTestnet,
@@ -172,10 +172,10 @@ export interface _LiquityContracts {
   collSurplusPool: CollSurplusPool;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
-  lqtyToken: LQTYToken;
+  stblToken: STBLToken;
   hintHelpers: HintHelpers;
   lockupContractFactory: LockupContractFactory;
-  lqtyStaking: LQTYStaking;
+  stblStaking: STBLStaking;
   multiTroveGetter: MultiTroveGetter;
   priceFeed: PriceFeed | PriceFeedTestnet;
   sortedTroves: SortedTroves;
@@ -208,10 +208,10 @@ const getAbi = (priceFeedIsTestnet: boolean, uniTokenIsMock: boolean): LiquityCo
   lusdToken: lusdTokenAbi,
   communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
-  lqtyToken: lqtyTokenAbi,
+  stblToken: stblTokenAbi,
   hintHelpers: hintHelpersAbi,
   lockupContractFactory: lockupContractFactoryAbi,
-  lqtyStaking: lqtyStakingAbi,
+  stblStaking: stblStakingAbi,
   multiTroveGetter: multiTroveGetterAbi,
   priceFeed: priceFeedIsTestnet ? priceFeedTestnetAbi : priceFeedAbi,
   sortedTroves: sortedTrovesAbi,
@@ -238,8 +238,8 @@ export interface _LiquityDeploymentJSON {
   readonly deploymentDate: number;
   readonly startBlock: number;
   readonly bootstrapPeriod: number;
-  readonly totalStabilityPoolLQTYReward: string;
-  readonly liquidityMiningLQTYRewardRate: string;
+  readonly totalStabilityPoolSTBLReward: string;
+  readonly liquidityMiningSTBLRewardRate: string;
   readonly _priceFeedIsTestnet: boolean;
   readonly _uniTokenIsMock: boolean;
   readonly _isDev: boolean;

@@ -90,9 +90,9 @@ export const chaos = async ({
           await fixture.withdrawRandomAmountFromStabilityPool(user.address, liquity, deposit);
         }
       } else if (x < 0.9) {
-        const stake = await liquity.getLQTYStake();
+        const stake = await liquity.getSTBLStake();
 
-        if (stake.stakedLQTY.isZero || x < 0.8) {
+        if (stake.stakedSTBL.isZero || x < 0.8) {
           await fixture.stakeRandomAmount(user.address, liquity);
         } else {
           await fixture.unstakeRandomAmount(user.address, liquity, stake);
@@ -102,7 +102,7 @@ export const chaos = async ({
       }
 
       // await fixture.sweepLUSD(liquity);
-      await fixture.sweepLQTY(liquity);
+      await fixture.sweepSTBL(liquity);
 
       const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
       const totalRedistributed = await deployerLiquity.getTotalRedistributed();

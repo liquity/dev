@@ -74,8 +74,8 @@ interface BorrowerOperationsCalls {
   getEntireSystemColl(_overrides?: CallOverrides): Promise<BigNumber>;
   getEntireSystemDebt(_overrides?: CallOverrides): Promise<BigNumber>;
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
-  lqtyStaking(_overrides?: CallOverrides): Promise<string>;
-  lqtyStakingAddress(_overrides?: CallOverrides): Promise<string>;
+  stblStaking(_overrides?: CallOverrides): Promise<string>;
+  stblStakingAddress(_overrides?: CallOverrides): Promise<string>;
   lusdToken(_overrides?: CallOverrides): Promise<string>;
   owner(_overrides?: CallOverrides): Promise<string>;
   priceFeed(_overrides?: CallOverrides): Promise<string>;
@@ -91,7 +91,7 @@ interface BorrowerOperationsTransactions {
   moveETHGainToTrove(_borrower: string, _upperHint: string, _lowerHint: string, _overrides?: PayableOverrides): Promise<void>;
   openTrove(_maxFeePercentage: BigNumberish, _LUSDAmount: BigNumberish, _upperHint: string, _lowerHint: string, _overrides?: PayableOverrides): Promise<void>;
   repayLUSD(_LUSDAmount: BigNumberish, _upperHint: string, _lowerHint: string, _overrides?: Overrides): Promise<void>;
-  setAddresses(_troveManagerAddress: string, _activePoolAddress: string, _defaultPoolAddress: string, _stabilityPoolAddress: string, _gasPoolAddress: string, _collSurplusPoolAddress: string, _priceFeedAddress: string, _sortedTrovesAddress: string, _lusdTokenAddress: string, _lqtyStakingAddress: string, _overrides?: Overrides): Promise<void>;
+  setAddresses(_troveManagerAddress: string, _activePoolAddress: string, _defaultPoolAddress: string, _stabilityPoolAddress: string, _gasPoolAddress: string, _collSurplusPoolAddress: string, _priceFeedAddress: string, _sortedTrovesAddress: string, _lusdTokenAddress: string, _stblStakingAddress: string, _overrides?: Overrides): Promise<void>;
   withdrawColl(_collWithdrawal: BigNumberish, _upperHint: string, _lowerHint: string, _overrides?: Overrides): Promise<void>;
   withdrawLUSD(_maxFeePercentage: BigNumberish, _LUSDAmount: BigNumberish, _upperHint: string, _lowerHint: string, _overrides?: Overrides): Promise<void>;
 }
@@ -103,7 +103,7 @@ export interface BorrowerOperations
     CollSurplusPoolAddressChanged(_collSurplusPoolAddress?: null): EventFilter;
     DefaultPoolAddressChanged(_defaultPoolAddress?: null): EventFilter;
     GasPoolAddressChanged(_gasPoolAddress?: null): EventFilter;
-    LQTYStakingAddressChanged(_lqtyStakingAddress?: null): EventFilter;
+    STBLStakingAddressChanged(_stblStakingAddress?: null): EventFilter;
     LUSDBorrowingFeePaid(_borrower?: string | null, _LUSDFee?: null): EventFilter;
     LUSDTokenAddressChanged(_lusdTokenAddress?: null): EventFilter;
     OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
@@ -118,7 +118,7 @@ export interface BorrowerOperations
   extractEvents(logs: Log[], name: "CollSurplusPoolAddressChanged"): _TypedLogDescription<{ _collSurplusPoolAddress: string }>[];
   extractEvents(logs: Log[], name: "DefaultPoolAddressChanged"): _TypedLogDescription<{ _defaultPoolAddress: string }>[];
   extractEvents(logs: Log[], name: "GasPoolAddressChanged"): _TypedLogDescription<{ _gasPoolAddress: string }>[];
-  extractEvents(logs: Log[], name: "LQTYStakingAddressChanged"): _TypedLogDescription<{ _lqtyStakingAddress: string }>[];
+  extractEvents(logs: Log[], name: "STBLStakingAddressChanged"): _TypedLogDescription<{ _stblStakingAddress: string }>[];
   extractEvents(logs: Log[], name: "LUSDBorrowingFeePaid"): _TypedLogDescription<{ _borrower: string; _LUSDFee: BigNumber }>[];
   extractEvents(logs: Log[], name: "LUSDTokenAddressChanged"): _TypedLogDescription<{ _lusdTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "OwnershipTransferred"): _TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
@@ -168,35 +168,35 @@ export interface CollSurplusPool
 interface CommunityIssuanceCalls {
   DECIMAL_PRECISION(_overrides?: CallOverrides): Promise<BigNumber>;
   ISSUANCE_FACTOR(_overrides?: CallOverrides): Promise<BigNumber>;
-  LQTYSupplyCap(_overrides?: CallOverrides): Promise<BigNumber>;
+  STBLSupplyCap(_overrides?: CallOverrides): Promise<BigNumber>;
   NAME(_overrides?: CallOverrides): Promise<string>;
   SECONDS_IN_ONE_MINUTE(_overrides?: CallOverrides): Promise<BigNumber>;
   deploymentTime(_overrides?: CallOverrides): Promise<BigNumber>;
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
-  lqtyToken(_overrides?: CallOverrides): Promise<string>;
+  stblToken(_overrides?: CallOverrides): Promise<string>;
   owner(_overrides?: CallOverrides): Promise<string>;
   stabilityPoolAddress(_overrides?: CallOverrides): Promise<string>;
-  totalLQTYIssued(_overrides?: CallOverrides): Promise<BigNumber>;
+  totalSTBLIssued(_overrides?: CallOverrides): Promise<BigNumber>;
 }
 
 interface CommunityIssuanceTransactions {
-  issueLQTY(_overrides?: Overrides): Promise<BigNumber>;
-  sendLQTY(_account: string, _LQTYamount: BigNumberish, _overrides?: Overrides): Promise<void>;
-  setAddresses(_lqtyTokenAddress: string, _stabilityPoolAddress: string, _overrides?: Overrides): Promise<void>;
+  issueSTBL(_overrides?: Overrides): Promise<BigNumber>;
+  sendSTBL(_account: string, _STBLamount: BigNumberish, _overrides?: Overrides): Promise<void>;
+  setAddresses(_stblTokenAddress: string, _stabilityPoolAddress: string, _overrides?: Overrides): Promise<void>;
 }
 
 export interface CommunityIssuance
   extends _TypedLiquityContract<CommunityIssuanceCalls, CommunityIssuanceTransactions> {
   readonly filters: {
-    LQTYTokenAddressSet(_lqtyTokenAddress?: null): EventFilter;
+    STBLTokenAddressSet(_stblTokenAddress?: null): EventFilter;
     OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
     StabilityPoolAddressSet(_stabilityPoolAddress?: null): EventFilter;
-    TotalLQTYIssuedUpdated(_totalLQTYIssued?: null): EventFilter;
+    TotalSTBLIssuedUpdated(_totalSTBLIssued?: null): EventFilter;
   };
-  extractEvents(logs: Log[], name: "LQTYTokenAddressSet"): _TypedLogDescription<{ _lqtyTokenAddress: string }>[];
+  extractEvents(logs: Log[], name: "STBLTokenAddressSet"): _TypedLogDescription<{ _stblTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "OwnershipTransferred"): _TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
   extractEvents(logs: Log[], name: "StabilityPoolAddressSet"): _TypedLogDescription<{ _stabilityPoolAddress: string }>[];
-  extractEvents(logs: Log[], name: "TotalLQTYIssuedUpdated"): _TypedLogDescription<{ _totalLQTYIssued: BigNumber }>[];
+  extractEvents(logs: Log[], name: "TotalSTBLIssuedUpdated"): _TypedLogDescription<{ _totalSTBLIssued: BigNumber }>[];
 }
 
 interface DefaultPoolCalls {
@@ -354,23 +354,23 @@ interface LockupContractFactoryCalls {
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
   isRegisteredLockup(_contractAddress: string, _overrides?: CallOverrides): Promise<boolean>;
   lockupContractToDeployer(arg0: string, _overrides?: CallOverrides): Promise<string>;
-  lqtyTokenAddress(_overrides?: CallOverrides): Promise<string>;
+  stblTokenAddress(_overrides?: CallOverrides): Promise<string>;
   owner(_overrides?: CallOverrides): Promise<string>;
 }
 
 interface LockupContractFactoryTransactions {
   deployLockupContract(_beneficiary: string, _unlockTime: BigNumberish, _overrides?: Overrides): Promise<void>;
-  setLQTYTokenAddress(_lqtyTokenAddress: string, _overrides?: Overrides): Promise<void>;
+  setSTBLTokenAddress(_stblTokenAddress: string, _overrides?: Overrides): Promise<void>;
 }
 
 export interface LockupContractFactory
   extends _TypedLiquityContract<LockupContractFactoryCalls, LockupContractFactoryTransactions> {
   readonly filters: {
-    LQTYTokenAddressSet(_lqtyTokenAddress?: null): EventFilter;
+    STBLTokenAddressSet(_stblTokenAddress?: null): EventFilter;
     LockupContractDeployedThroughFactory(_lockupContractAddress?: null, _beneficiary?: null, _unlockTime?: null, _deployer?: null): EventFilter;
     OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
   };
-  extractEvents(logs: Log[], name: "LQTYTokenAddressSet"): _TypedLogDescription<{ _lqtyTokenAddress: string }>[];
+  extractEvents(logs: Log[], name: "STBLTokenAddressSet"): _TypedLogDescription<{ _stblTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "LockupContractDeployedThroughFactory"): _TypedLogDescription<{ _lockupContractAddress: string; _beneficiary: string; _unlockTime: BigNumber; _deployer: string }>[];
   extractEvents(logs: Log[], name: "OwnershipTransferred"): _TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
 }
@@ -422,7 +422,7 @@ export interface LUSDToken
   extractEvents(logs: Log[], name: "TroveManagerAddressChanged"): _TypedLogDescription<{ _troveManagerAddress: string }>[];
 }
 
-interface LQTYStakingCalls {
+interface STBLStakingCalls {
   DECIMAL_PRECISION(_overrides?: CallOverrides): Promise<BigNumber>;
   F_ETH(_overrides?: CallOverrides): Promise<BigNumber>;
   F_LUSD(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -432,38 +432,38 @@ interface LQTYStakingCalls {
   getPendingETHGain(_user: string, _overrides?: CallOverrides): Promise<BigNumber>;
   getPendingLUSDGain(_user: string, _overrides?: CallOverrides): Promise<BigNumber>;
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
-  lqtyToken(_overrides?: CallOverrides): Promise<string>;
+  stblToken(_overrides?: CallOverrides): Promise<string>;
   lusdToken(_overrides?: CallOverrides): Promise<string>;
   owner(_overrides?: CallOverrides): Promise<string>;
   snapshots(arg0: string, _overrides?: CallOverrides): Promise<{ F_ETH_Snapshot: BigNumber; F_LUSD_Snapshot: BigNumber }>;
   stakes(arg0: string, _overrides?: CallOverrides): Promise<BigNumber>;
-  totalLQTYStaked(_overrides?: CallOverrides): Promise<BigNumber>;
+  totalSTBLStaked(_overrides?: CallOverrides): Promise<BigNumber>;
   troveManagerAddress(_overrides?: CallOverrides): Promise<string>;
 }
 
-interface LQTYStakingTransactions {
+interface STBLStakingTransactions {
   increaseF_ETH(_ETHFee: BigNumberish, _overrides?: Overrides): Promise<void>;
   increaseF_LUSD(_LUSDFee: BigNumberish, _overrides?: Overrides): Promise<void>;
-  setAddresses(_lqtyTokenAddress: string, _lusdTokenAddress: string, _troveManagerAddress: string, _borrowerOperationsAddress: string, _activePoolAddress: string, _overrides?: Overrides): Promise<void>;
-  stake(_LQTYamount: BigNumberish, _overrides?: Overrides): Promise<void>;
-  unstake(_LQTYamount: BigNumberish, _overrides?: Overrides): Promise<void>;
+  setAddresses(_stblTokenAddress: string, _lusdTokenAddress: string, _troveManagerAddress: string, _borrowerOperationsAddress: string, _activePoolAddress: string, _overrides?: Overrides): Promise<void>;
+  stake(_STBLamount: BigNumberish, _overrides?: Overrides): Promise<void>;
+  unstake(_STBLamount: BigNumberish, _overrides?: Overrides): Promise<void>;
 }
 
-export interface LQTYStaking
-  extends _TypedLiquityContract<LQTYStakingCalls, LQTYStakingTransactions> {
+export interface STBLStaking
+  extends _TypedLiquityContract<STBLStakingCalls, STBLStakingTransactions> {
   readonly filters: {
     ActivePoolAddressSet(_activePoolAddress?: null): EventFilter;
     BorrowerOperationsAddressSet(_borrowerOperationsAddress?: null): EventFilter;
     EtherSent(_account?: null, _amount?: null): EventFilter;
     F_ETHUpdated(_F_ETH?: null): EventFilter;
     F_LUSDUpdated(_F_LUSD?: null): EventFilter;
-    LQTYTokenAddressSet(_lqtyTokenAddress?: null): EventFilter;
+    STBLTokenAddressSet(_stblTokenAddress?: null): EventFilter;
     LUSDTokenAddressSet(_lusdTokenAddress?: null): EventFilter;
     OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
     StakeChanged(staker?: string | null, newStake?: null): EventFilter;
     StakerSnapshotsUpdated(_staker?: null, _F_ETH?: null, _F_LUSD?: null): EventFilter;
     StakingGainsWithdrawn(staker?: string | null, LUSDGain?: null, ETHGain?: null): EventFilter;
-    TotalLQTYStakedUpdated(_totalLQTYStaked?: null): EventFilter;
+    TotalSTBLStakedUpdated(_totalSTBLStaked?: null): EventFilter;
     TroveManagerAddressSet(_troveManager?: null): EventFilter;
   };
   extractEvents(logs: Log[], name: "ActivePoolAddressSet"): _TypedLogDescription<{ _activePoolAddress: string }>[];
@@ -471,17 +471,17 @@ export interface LQTYStaking
   extractEvents(logs: Log[], name: "EtherSent"): _TypedLogDescription<{ _account: string; _amount: BigNumber }>[];
   extractEvents(logs: Log[], name: "F_ETHUpdated"): _TypedLogDescription<{ _F_ETH: BigNumber }>[];
   extractEvents(logs: Log[], name: "F_LUSDUpdated"): _TypedLogDescription<{ _F_LUSD: BigNumber }>[];
-  extractEvents(logs: Log[], name: "LQTYTokenAddressSet"): _TypedLogDescription<{ _lqtyTokenAddress: string }>[];
+  extractEvents(logs: Log[], name: "STBLTokenAddressSet"): _TypedLogDescription<{ _stblTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "LUSDTokenAddressSet"): _TypedLogDescription<{ _lusdTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "OwnershipTransferred"): _TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
   extractEvents(logs: Log[], name: "StakeChanged"): _TypedLogDescription<{ staker: string; newStake: BigNumber }>[];
   extractEvents(logs: Log[], name: "StakerSnapshotsUpdated"): _TypedLogDescription<{ _staker: string; _F_ETH: BigNumber; _F_LUSD: BigNumber }>[];
   extractEvents(logs: Log[], name: "StakingGainsWithdrawn"): _TypedLogDescription<{ staker: string; LUSDGain: BigNumber; ETHGain: BigNumber }>[];
-  extractEvents(logs: Log[], name: "TotalLQTYStakedUpdated"): _TypedLogDescription<{ _totalLQTYStaked: BigNumber }>[];
+  extractEvents(logs: Log[], name: "TotalSTBLStakedUpdated"): _TypedLogDescription<{ _totalSTBLStaked: BigNumber }>[];
   extractEvents(logs: Log[], name: "TroveManagerAddressSet"): _TypedLogDescription<{ _troveManager: string }>[];
 }
 
-interface LQTYTokenCalls {
+interface STBLTokenCalls {
   ONE_YEAR_IN_SECONDS(_overrides?: CallOverrides): Promise<BigNumber>;
   allowance(owner: string, spender: string, _overrides?: CallOverrides): Promise<BigNumber>;
   balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
@@ -491,7 +491,7 @@ interface LQTYTokenCalls {
   getDeploymentStartTime(_overrides?: CallOverrides): Promise<BigNumber>;
   getLpRewardsEntitlement(_overrides?: CallOverrides): Promise<BigNumber>;
   lockupContractFactory(_overrides?: CallOverrides): Promise<string>;
-  lqtyStakingAddress(_overrides?: CallOverrides): Promise<string>;
+  stblStakingAddress(_overrides?: CallOverrides): Promise<string>;
   multisigAddress(_overrides?: CallOverrides): Promise<string>;
   name(_overrides?: CallOverrides): Promise<string>;
   nonces(owner: string, _overrides?: CallOverrides): Promise<BigNumber>;
@@ -501,28 +501,28 @@ interface LQTYTokenCalls {
   version(_overrides?: CallOverrides): Promise<string>;
 }
 
-interface LQTYTokenTransactions {
+interface STBLTokenTransactions {
   approve(spender: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
   decreaseAllowance(spender: string, subtractedValue: BigNumberish, _overrides?: Overrides): Promise<boolean>;
   increaseAllowance(spender: string, addedValue: BigNumberish, _overrides?: Overrides): Promise<boolean>;
   permit(owner: string, spender: string, amount: BigNumberish, deadline: BigNumberish, v: BigNumberish, r: BytesLike, s: BytesLike, _overrides?: Overrides): Promise<void>;
-  sendToLQTYStaking(_sender: string, _amount: BigNumberish, _overrides?: Overrides): Promise<void>;
+  sendToSTBLStaking(_sender: string, _amount: BigNumberish, _overrides?: Overrides): Promise<void>;
   transfer(recipient: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
   transferFrom(sender: string, recipient: string, amount: BigNumberish, _overrides?: Overrides): Promise<boolean>;
 }
 
-export interface LQTYToken
-  extends _TypedLiquityContract<LQTYTokenCalls, LQTYTokenTransactions> {
+export interface STBLToken
+  extends _TypedLiquityContract<STBLTokenCalls, STBLTokenTransactions> {
   readonly filters: {
     Approval(owner?: string | null, spender?: string | null, value?: null): EventFilter;
     CommunityIssuanceAddressSet(_communityIssuanceAddress?: null): EventFilter;
-    LQTYStakingAddressSet(_lqtyStakingAddress?: null): EventFilter;
+    STBLStakingAddressSet(_stblStakingAddress?: null): EventFilter;
     LockupContractFactoryAddressSet(_lockupContractFactoryAddress?: null): EventFilter;
     Transfer(from?: string | null, to?: string | null, value?: null): EventFilter;
   };
   extractEvents(logs: Log[], name: "Approval"): _TypedLogDescription<{ owner: string; spender: string; value: BigNumber }>[];
   extractEvents(logs: Log[], name: "CommunityIssuanceAddressSet"): _TypedLogDescription<{ _communityIssuanceAddress: string }>[];
-  extractEvents(logs: Log[], name: "LQTYStakingAddressSet"): _TypedLogDescription<{ _lqtyStakingAddress: string }>[];
+  extractEvents(logs: Log[], name: "STBLStakingAddressSet"): _TypedLogDescription<{ _stblStakingAddress: string }>[];
   extractEvents(logs: Log[], name: "LockupContractFactoryAddressSet"): _TypedLogDescription<{ _lockupContractFactoryAddress: string }>[];
   extractEvents(logs: Log[], name: "Transfer"): _TypedLogDescription<{ from: string; to: string; value: BigNumber }>[];
 }
@@ -666,15 +666,15 @@ interface StabilityPoolCalls {
   getCompoundedFrontEndStake(_frontEnd: string, _overrides?: CallOverrides): Promise<BigNumber>;
   getCompoundedLUSDDeposit(_depositor: string, _overrides?: CallOverrides): Promise<BigNumber>;
   getDepositorETHGain(_depositor: string, _overrides?: CallOverrides): Promise<BigNumber>;
-  getDepositorLQTYGain(_depositor: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  getDepositorSTBLGain(_depositor: string, _overrides?: CallOverrides): Promise<BigNumber>;
   getETH(_overrides?: CallOverrides): Promise<BigNumber>;
   getEntireSystemColl(_overrides?: CallOverrides): Promise<BigNumber>;
   getEntireSystemDebt(_overrides?: CallOverrides): Promise<BigNumber>;
-  getFrontEndLQTYGain(_frontEnd: string, _overrides?: CallOverrides): Promise<BigNumber>;
+  getFrontEndSTBLGain(_frontEnd: string, _overrides?: CallOverrides): Promise<BigNumber>;
   getTotalLUSDDeposits(_overrides?: CallOverrides): Promise<BigNumber>;
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
   lastETHError_Offset(_overrides?: CallOverrides): Promise<BigNumber>;
-  lastLQTYError(_overrides?: CallOverrides): Promise<BigNumber>;
+  lastSTBLError(_overrides?: CallOverrides): Promise<BigNumber>;
   lastLUSDLossError_Offset(_overrides?: CallOverrides): Promise<BigNumber>;
   lusdToken(_overrides?: CallOverrides): Promise<string>;
   owner(_overrides?: CallOverrides): Promise<string>;
@@ -708,8 +708,8 @@ export interface StabilityPool
     FrontEndStakeChanged(_frontEnd?: string | null, _newFrontEndStake?: null, _depositor?: null): EventFilter;
     FrontEndTagSet(_depositor?: string | null, _frontEnd?: string | null): EventFilter;
     G_Updated(_G?: null, _epoch?: null, _scale?: null): EventFilter;
-    LQTYPaidToDepositor(_depositor?: string | null, _LQTY?: null): EventFilter;
-    LQTYPaidToFrontEnd(_frontEnd?: string | null, _LQTY?: null): EventFilter;
+    STBLPaidToDepositor(_depositor?: string | null, _STBL?: null): EventFilter;
+    STBLPaidToFrontEnd(_frontEnd?: string | null, _STBL?: null): EventFilter;
     LUSDTokenAddressChanged(_newLUSDTokenAddress?: null): EventFilter;
     OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
     P_Updated(_P?: null): EventFilter;
@@ -735,8 +735,8 @@ export interface StabilityPool
   extractEvents(logs: Log[], name: "FrontEndStakeChanged"): _TypedLogDescription<{ _frontEnd: string; _newFrontEndStake: BigNumber; _depositor: string }>[];
   extractEvents(logs: Log[], name: "FrontEndTagSet"): _TypedLogDescription<{ _depositor: string; _frontEnd: string }>[];
   extractEvents(logs: Log[], name: "G_Updated"): _TypedLogDescription<{ _G: BigNumber; _epoch: BigNumber; _scale: BigNumber }>[];
-  extractEvents(logs: Log[], name: "LQTYPaidToDepositor"): _TypedLogDescription<{ _depositor: string; _LQTY: BigNumber }>[];
-  extractEvents(logs: Log[], name: "LQTYPaidToFrontEnd"): _TypedLogDescription<{ _frontEnd: string; _LQTY: BigNumber }>[];
+  extractEvents(logs: Log[], name: "STBLPaidToDepositor"): _TypedLogDescription<{ _depositor: string; _STBL: BigNumber }>[];
+  extractEvents(logs: Log[], name: "STBLPaidToFrontEnd"): _TypedLogDescription<{ _frontEnd: string; _STBL: BigNumber }>[];
   extractEvents(logs: Log[], name: "LUSDTokenAddressChanged"): _TypedLogDescription<{ _newLUSDTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "OwnershipTransferred"): _TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
   extractEvents(logs: Log[], name: "P_Updated"): _TypedLogDescription<{ _P: BigNumber }>[];
@@ -801,8 +801,8 @@ interface TroveManagerCalls {
   lastETHError_Redistribution(_overrides?: CallOverrides): Promise<BigNumber>;
   lastFeeOperationTime(_overrides?: CallOverrides): Promise<BigNumber>;
   lastLUSDDebtError_Redistribution(_overrides?: CallOverrides): Promise<BigNumber>;
-  lqtyStaking(_overrides?: CallOverrides): Promise<string>;
-  lqtyToken(_overrides?: CallOverrides): Promise<string>;
+  stblStaking(_overrides?: CallOverrides): Promise<string>;
+  stblToken(_overrides?: CallOverrides): Promise<string>;
   lusdToken(_overrides?: CallOverrides): Promise<string>;
   owner(_overrides?: CallOverrides): Promise<string>;
   priceFeed(_overrides?: CallOverrides): Promise<string>;
@@ -828,7 +828,7 @@ interface TroveManagerTransactions {
   liquidateTroves(_n: BigNumberish, _overrides?: Overrides): Promise<void>;
   redeemCollateral(_LUSDamount: BigNumberish, _firstRedemptionHint: string, _upperPartialRedemptionHint: string, _lowerPartialRedemptionHint: string, _partialRedemptionHintNICR: BigNumberish, _maxIterations: BigNumberish, _maxFeePercentage: BigNumberish, _overrides?: Overrides): Promise<void>;
   removeStake(_borrower: string, _overrides?: Overrides): Promise<void>;
-  setAddresses(_borrowerOperationsAddress: string, _activePoolAddress: string, _defaultPoolAddress: string, _stabilityPoolAddress: string, _gasPoolAddress: string, _collSurplusPoolAddress: string, _priceFeedAddress: string, _lusdTokenAddress: string, _sortedTrovesAddress: string, _lqtyTokenAddress: string, _lqtyStakingAddress: string, _overrides?: Overrides): Promise<void>;
+  setAddresses(_borrowerOperationsAddress: string, _activePoolAddress: string, _defaultPoolAddress: string, _stabilityPoolAddress: string, _gasPoolAddress: string, _collSurplusPoolAddress: string, _priceFeedAddress: string, _lusdTokenAddress: string, _sortedTrovesAddress: string, _stblTokenAddress: string, _stblStakingAddress: string, _overrides?: Overrides): Promise<void>;
   setTroveStatus(_borrower: string, _num: BigNumberish, _overrides?: Overrides): Promise<void>;
   updateStakeAndTotalStakes(_borrower: string, _overrides?: Overrides): Promise<BigNumber>;
   updateTroveRewardSnapshots(_borrower: string, _overrides?: Overrides): Promise<void>;
@@ -843,8 +843,8 @@ export interface TroveManager
     CollSurplusPoolAddressChanged(_collSurplusPoolAddress?: null): EventFilter;
     DefaultPoolAddressChanged(_defaultPoolAddress?: null): EventFilter;
     GasPoolAddressChanged(_gasPoolAddress?: null): EventFilter;
-    LQTYStakingAddressChanged(_lqtyStakingAddress?: null): EventFilter;
-    LQTYTokenAddressChanged(_lqtyTokenAddress?: null): EventFilter;
+    STBLStakingAddressChanged(_stblStakingAddress?: null): EventFilter;
+    STBLTokenAddressChanged(_stblTokenAddress?: null): EventFilter;
     LTermsUpdated(_L_ETH?: null, _L_LUSDDebt?: null): EventFilter;
     LUSDTokenAddressChanged(_newLUSDTokenAddress?: null): EventFilter;
     LastFeeOpTimeUpdated(_lastFeeOpTime?: null): EventFilter;
@@ -867,8 +867,8 @@ export interface TroveManager
   extractEvents(logs: Log[], name: "CollSurplusPoolAddressChanged"): _TypedLogDescription<{ _collSurplusPoolAddress: string }>[];
   extractEvents(logs: Log[], name: "DefaultPoolAddressChanged"): _TypedLogDescription<{ _defaultPoolAddress: string }>[];
   extractEvents(logs: Log[], name: "GasPoolAddressChanged"): _TypedLogDescription<{ _gasPoolAddress: string }>[];
-  extractEvents(logs: Log[], name: "LQTYStakingAddressChanged"): _TypedLogDescription<{ _lqtyStakingAddress: string }>[];
-  extractEvents(logs: Log[], name: "LQTYTokenAddressChanged"): _TypedLogDescription<{ _lqtyTokenAddress: string }>[];
+  extractEvents(logs: Log[], name: "STBLStakingAddressChanged"): _TypedLogDescription<{ _stblStakingAddress: string }>[];
+  extractEvents(logs: Log[], name: "STBLTokenAddressChanged"): _TypedLogDescription<{ _stblTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "LTermsUpdated"): _TypedLogDescription<{ _L_ETH: BigNumber; _L_LUSDDebt: BigNumber }>[];
   extractEvents(logs: Log[], name: "LUSDTokenAddressChanged"): _TypedLogDescription<{ _newLUSDTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "LastFeeOpTimeUpdated"): _TypedLogDescription<{ _lastFeeOpTime: BigNumber }>[];
@@ -894,7 +894,7 @@ interface UnipoolCalls {
   isOwner(_overrides?: CallOverrides): Promise<boolean>;
   lastTimeRewardApplicable(_overrides?: CallOverrides): Promise<BigNumber>;
   lastUpdateTime(_overrides?: CallOverrides): Promise<BigNumber>;
-  lqtyToken(_overrides?: CallOverrides): Promise<string>;
+  stblToken(_overrides?: CallOverrides): Promise<string>;
   owner(_overrides?: CallOverrides): Promise<string>;
   periodFinish(_overrides?: CallOverrides): Promise<BigNumber>;
   rewardPerToken(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -908,7 +908,7 @@ interface UnipoolCalls {
 
 interface UnipoolTransactions {
   claimReward(_overrides?: Overrides): Promise<void>;
-  setParams(_lqtyTokenAddress: string, _uniTokenAddress: string, _duration: BigNumberish, _overrides?: Overrides): Promise<void>;
+  setParams(_stblTokenAddress: string, _uniTokenAddress: string, _duration: BigNumberish, _overrides?: Overrides): Promise<void>;
   stake(amount: BigNumberish, _overrides?: Overrides): Promise<void>;
   withdraw(amount: BigNumberish, _overrides?: Overrides): Promise<void>;
   withdrawAndClaim(_overrides?: Overrides): Promise<void>;
@@ -917,7 +917,7 @@ interface UnipoolTransactions {
 export interface Unipool
   extends _TypedLiquityContract<UnipoolCalls, UnipoolTransactions> {
   readonly filters: {
-    LQTYTokenAddressChanged(_lqtyTokenAddress?: null): EventFilter;
+    STBLTokenAddressChanged(_stblTokenAddress?: null): EventFilter;
     OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
     RewardAdded(reward?: null): EventFilter;
     RewardPaid(user?: string | null, reward?: null): EventFilter;
@@ -925,7 +925,7 @@ export interface Unipool
     UniTokenAddressChanged(_uniTokenAddress?: null): EventFilter;
     Withdrawn(user?: string | null, amount?: null): EventFilter;
   };
-  extractEvents(logs: Log[], name: "LQTYTokenAddressChanged"): _TypedLogDescription<{ _lqtyTokenAddress: string }>[];
+  extractEvents(logs: Log[], name: "STBLTokenAddressChanged"): _TypedLogDescription<{ _stblTokenAddress: string }>[];
   extractEvents(logs: Log[], name: "OwnershipTransferred"): _TypedLogDescription<{ previousOwner: string; newOwner: string }>[];
   extractEvents(logs: Log[], name: "RewardAdded"): _TypedLogDescription<{ reward: BigNumber }>[];
   extractEvents(logs: Log[], name: "RewardPaid"): _TypedLogDescription<{ user: string; reward: BigNumber }>[];

@@ -30,16 +30,16 @@ borrowerOperations: 0x4E4E2eC25B1F591bb591d42A944eCc1CB9C79d8A
 hintHelpers: 0xAB1b14AfAE47054ca29A23858A7850E859aE6E31
 tellorCaller: 0x093FA46A3FC715B65E9A6d37ACD92d99F48B81F6
 Using previously deployed unipool contract at address 0xBAeE57B5e130fC602F0859e6f85029Ec47340298
-Using previously deployed lqtyStaking contract at address 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
+Using previously deployed stblStaking contract at address 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
 Using previously deployed lockupContractFactory contract at address 0xe6dEcadA1d49466F09c5bfb69F6C14f376B2Eece
 Using previously deployed communityIssuance contract at address 0x89c5eaD36eCA8d7c0840ddD461d406Ad637CD35D
-Using previously deployed lqtyToken contract at address 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
+Using previously deployed stblToken contract at address 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
 Using previously deployed multiTroveGetter contract at address 0x1AfE186670C7DAF5E085ae6269Da9762621F2b71
 Contract objects addresses:
-lqtyStaking: 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
+stblStaking: 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
 lockupContractFactory: 0xe6dEcadA1d49466F09c5bfb69F6C14f376B2Eece
 communityIssuance: 0x89c5eaD36eCA8d7c0840ddD461d406Ad637CD35D
-lqtyToken: 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
+stblToken: 0x05F1b3d2C7C90A61DA377942A35DF94B80537790
 Unipool address: 0xBAeE57B5e130fC602F0859e6f85029Ec47340298
 time now: 1617288159
 time oneYearFromNow: 1648824159
@@ -49,8 +49,8 @@ Using previously deployed TEST_INVESTOR_C lockup contract at address 0x98f95E112
 Using previously deployed TEST_INVESTOR_D lockup contract at address 0x45ad07343D58dEedacB1EbD935A1f220CA77aEC1
 Using previously deployed TEST_INVESTOR_E lockup contract at address 0x6E57f531239c0E892f79c349b830bC38c8120597
 current Chainlink price: 192651094164
-Unipool LQTY balance       : 1333333.333333333333333333
-LQTY Deployer balance     : 64666666.666666666666666667
+Unipool STBL balance       : 1333333.333333333333333333
+STBL Deployer balance     : 64666666.666666666666666667
 General Safe balance       : 2000000.000000000000000000
 Community Issuance balance: 32000000.000000000000000000
 PriceFeed first stored price: 1946.203658610000000000
@@ -76,4 +76,4 @@ LUSD-ETH Pair's ETH reserves after provision: 1.000000000000000000
 deployer's LP token balance: 43.892037337539936894
 LUSDETHPair addr: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 Pair addr stored in Unipool: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
-deployer's earned LQTY from Unipool after ~1.5mins: 34.538506760728982948
+deployer's earned STBL from Unipool after ~1.5mins: 34.538506760728982948

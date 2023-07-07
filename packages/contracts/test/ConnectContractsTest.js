@@ -14,14 +14,14 @@ contract('Deployment script - Sets correct contract addresses dependencies after
   let defaultPool
   let functionCaller
   let borrowerOperations
-  let lqtyStaking
-  let lqtyToken
+  let stblStaking
+  let stblToken
   let communityIssuance
   let lockupContractFactory
 
   before(async () => {
     const coreContracts = await deploymentHelper.deployLiquityCore()
-    const LQTYContracts = await deploymentHelper.deployLQTYContracts(bountyAddress, lpRewardsAddress, multisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
 
     priceFeed = coreContracts.priceFeedTestnet
     lusdToken = coreContracts.lusdToken
@@ -33,14 +33,14 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     functionCaller = coreContracts.functionCaller
     borrowerOperations = coreContracts.borrowerOperations
 
-    lqtyStaking = LQTYContracts.lqtyStaking
-    lqtyToken = LQTYContracts.lqtyToken
-    communityIssuance = LQTYContracts.communityIssuance
-    lockupContractFactory = LQTYContracts.lockupContractFactory
+    stblStaking = STBLContracts.stblStaking
+    stblToken = STBLContracts.stblToken
+    communityIssuance = STBLContracts.communityIssuance
+    lockupContractFactory = STBLContracts.lockupContractFactory
 
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
-    await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
-    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
+    await deploymentHelper.connectSTBLContracts(STBLContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, STBLContracts)
+    await deploymentHelper.connectSTBLContractsToCore(STBLContracts, coreContracts)
   })
 
   it('Sets the correct PriceFeed address in TroveManager', async () => {
@@ -102,12 +102,12 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(stabilityPoolAddress, recordedStabilityPoolAddresss)
   })
 
-  // LQTY Staking in TroveM
-  it('Sets the correct LQTYStaking address in TroveManager', async () => {
-    const lqtyStakingAddress = lqtyStaking.address
+  // STBL Staking in TroveM
+  it('Sets the correct STBLStaking address in TroveManager', async () => {
+    const stblStakingAddress = stblStaking.address
 
-    const recordedLQTYStakingAddress = await troveManager.lqtyStaking()
-    assert.equal(lqtyStakingAddress, recordedLQTYStakingAddress)
+    const recordedSTBLStakingAddress = await troveManager.stblStaking()
+    assert.equal(stblStakingAddress, recordedSTBLStakingAddress)
   })
 
   // Active Pool
@@ -247,101 +247,101 @@ contract('Deployment script - Sets correct contract addresses dependencies after
     assert.equal(defaultPoolAddress, recordedDefaultPoolAddress)
   })
 
-  // LQTY Staking in BO
-  it('Sets the correct LQTYStaking address in BorrowerOperations', async () => {
-    const lqtyStakingAddress = lqtyStaking.address
+  // STBL Staking in BO
+  it('Sets the correct STBLStaking address in BorrowerOperations', async () => {
+    const stblStakingAddress = stblStaking.address
 
-    const recordedLQTYStakingAddress = await borrowerOperations.lqtyStakingAddress()
-    assert.equal(lqtyStakingAddress, recordedLQTYStakingAddress)
+    const recordedSTBLStakingAddress = await borrowerOperations.stblStakingAddress()
+    assert.equal(stblStakingAddress, recordedSTBLStakingAddress)
   })
 
 
-  // --- LQTY Staking ---
+  // --- STBL Staking ---
 
-  // Sets LQTYToken in LQTYStaking
-  it('Sets the correct LQTYToken address in LQTYStaking', async () => {
-    const lqtyTokenAddress = lqtyToken.address
+  // Sets STBLToken in STBLStaking
+  it('Sets the correct STBLToken address in STBLStaking', async () => {
+    const stblTokenAddress = stblToken.address
 
-    const recordedLQTYTokenAddress = await lqtyStaking.lqtyToken()
-    assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
+    const recordedSTBLTokenAddress = await stblStaking.stblToken()
+    assert.equal(stblTokenAddress, recordedSTBLTokenAddress)
   })
 
-  // Sets ActivePool in LQTYStaking
-  it('Sets the correct ActivePool address in LQTYStaking', async () => {
+  // Sets ActivePool in STBLStaking
+  it('Sets the correct ActivePool address in STBLStaking', async () => {
     const activePoolAddress = activePool.address
 
-    const recordedActivePoolAddress = await lqtyStaking.activePoolAddress()
+    const recordedActivePoolAddress = await stblStaking.activePoolAddress()
     assert.equal(activePoolAddress, recordedActivePoolAddress)
   })
 
-  // Sets LUSDToken in LQTYStaking
-  it('Sets the correct ActivePool address in LQTYStaking', async () => {
+  // Sets LUSDToken in STBLStaking
+  it('Sets the correct ActivePool address in STBLStaking', async () => {
     const lusdTokenAddress = lusdToken.address
 
-    const recordedLUSDTokenAddress = await lqtyStaking.lusdToken()
+    const recordedLUSDTokenAddress = await stblStaking.lusdToken()
     assert.equal(lusdTokenAddress, recordedLUSDTokenAddress)
   })
 
-  // Sets TroveManager in LQTYStaking
-  it('Sets the correct ActivePool address in LQTYStaking', async () => {
+  // Sets TroveManager in STBLStaking
+  it('Sets the correct ActivePool address in STBLStaking', async () => {
     const troveManagerAddress = troveManager.address
 
-    const recordedTroveManagerAddress = await lqtyStaking.troveManagerAddress()
+    const recordedTroveManagerAddress = await stblStaking.troveManagerAddress()
     assert.equal(troveManagerAddress, recordedTroveManagerAddress)
   })
 
-  // Sets BorrowerOperations in LQTYStaking
-  it('Sets the correct BorrowerOperations address in LQTYStaking', async () => {
+  // Sets BorrowerOperations in STBLStaking
+  it('Sets the correct BorrowerOperations address in STBLStaking', async () => {
     const borrowerOperationsAddress = borrowerOperations.address
 
-    const recordedBorrowerOperationsAddress = await lqtyStaking.borrowerOperationsAddress()
+    const recordedBorrowerOperationsAddress = await stblStaking.borrowerOperationsAddress()
     assert.equal(borrowerOperationsAddress, recordedBorrowerOperationsAddress)
   })
 
-  // ---  LQTYToken ---
+  // ---  STBLToken ---
 
-  // Sets CI in LQTYToken
-  it('Sets the correct CommunityIssuance address in LQTYToken', async () => {
+  // Sets CI in STBLToken
+  it('Sets the correct CommunityIssuance address in STBLToken', async () => {
     const communityIssuanceAddress = communityIssuance.address
 
-    const recordedcommunityIssuanceAddress = await lqtyToken.communityIssuanceAddress()
+    const recordedcommunityIssuanceAddress = await stblToken.communityIssuanceAddress()
     assert.equal(communityIssuanceAddress, recordedcommunityIssuanceAddress)
   })
 
-  // Sets LQTYStaking in LQTYToken
-  it('Sets the correct LQTYStaking address in LQTYToken', async () => {
-    const lqtyStakingAddress = lqtyStaking.address
+  // Sets STBLStaking in STBLToken
+  it('Sets the correct STBLStaking address in STBLToken', async () => {
+    const stblStakingAddress = stblStaking.address
 
-    const recordedLQTYStakingAddress =  await lqtyToken.lqtyStakingAddress()
-    assert.equal(lqtyStakingAddress, recordedLQTYStakingAddress)
+    const recordedSTBLStakingAddress =  await stblToken.stblStakingAddress()
+    assert.equal(stblStakingAddress, recordedSTBLStakingAddress)
   })
 
-  // Sets LCF in LQTYToken
-  it('Sets the correct LockupContractFactory address in LQTYToken', async () => {
+  // Sets LCF in STBLToken
+  it('Sets the correct LockupContractFactory address in STBLToken', async () => {
     const LCFAddress = lockupContractFactory.address
 
-    const recordedLCFAddress =  await lqtyToken.lockupContractFactory()
+    const recordedLCFAddress =  await stblToken.lockupContractFactory()
     assert.equal(LCFAddress, recordedLCFAddress)
   })
 
   // --- LCF  ---
 
-  // Sets LQTYToken in LockupContractFactory
-  it('Sets the correct LQTYToken address in LockupContractFactory', async () => {
-    const lqtyTokenAddress = lqtyToken.address
+  // Sets STBLToken in LockupContractFactory
+  it('Sets the correct STBLToken address in LockupContractFactory', async () => {
+    const stblTokenAddress = stblToken.address
 
-    const recordedLQTYTokenAddress = await lockupContractFactory.lqtyTokenAddress()
-    assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
+    const recordedSTBLTokenAddress = await lockupContractFactory.stblTokenAddress()
+    assert.equal(stblTokenAddress, recordedSTBLTokenAddress)
   })
 
   // --- CI ---
 
-  // Sets LQTYToken in CommunityIssuance
-  it('Sets the correct LQTYToken address in CommunityIssuance', async () => {
-    const lqtyTokenAddress = lqtyToken.address
+  // Sets STBLToken in CommunityIssuance
+  it('Sets the correct STBLToken address in CommunityIssuance', async () => {
+    const stblTokenAddress = stblToken.address
 
-    const recordedLQTYTokenAddress = await communityIssuance.lqtyToken()
-    assert.equal(lqtyTokenAddress, recordedLQTYTokenAddress)
+    const recordedSTBLTokenAddress = await communityIssuance.stblToken()
+    assert.equal(stblTokenAddress, recordedSTBLTokenAddress)
   })
 
   it('Sets the correct StabilityPool address in CommunityIssuance', async () => {

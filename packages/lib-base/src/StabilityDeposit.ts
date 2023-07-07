@@ -24,8 +24,8 @@ export class StabilityDeposit {
   /** Amount of native currency (e.g. Ether) received in exchange for the used-up LUSD. */
   readonly collateralGain: Decimal;
 
-  /** Amount of LQTY rewarded since the last modification of the Stability Deposit. */
-  readonly lqtyReward: Decimal;
+  /** Amount of STBL rewarded since the last modification of the Stability Deposit. */
+  readonly stblReward: Decimal;
 
   /**
    * Address of frontend through which this Stability Deposit was made.
@@ -41,13 +41,13 @@ export class StabilityDeposit {
     initialLUSD: Decimal,
     currentLUSD: Decimal,
     collateralGain: Decimal,
-    lqtyReward: Decimal,
+    stblReward: Decimal,
     frontendTag: string
   ) {
     this.initialLUSD = initialLUSD;
     this.currentLUSD = currentLUSD;
     this.collateralGain = collateralGain;
-    this.lqtyReward = lqtyReward;
+    this.stblReward = stblReward;
     this.frontendTag = frontendTag;
 
     if (this.currentLUSD.gt(this.initialLUSD)) {
@@ -60,7 +60,7 @@ export class StabilityDeposit {
       this.initialLUSD.isZero &&
       this.currentLUSD.isZero &&
       this.collateralGain.isZero &&
-      this.lqtyReward.isZero
+      this.stblReward.isZero
     );
   }
 
@@ -70,7 +70,7 @@ export class StabilityDeposit {
       `{ initialLUSD: ${this.initialLUSD}` +
       `, currentLUSD: ${this.currentLUSD}` +
       `, collateralGain: ${this.collateralGain}` +
-      `, lqtyReward: ${this.lqtyReward}` +
+      `, stblReward: ${this.stblReward}` +
       `, frontendTag: "${this.frontendTag}" }`
     );
   }
@@ -83,7 +83,7 @@ export class StabilityDeposit {
       this.initialLUSD.eq(that.initialLUSD) &&
       this.currentLUSD.eq(that.currentLUSD) &&
       this.collateralGain.eq(that.collateralGain) &&
-      this.lqtyReward.eq(that.lqtyReward) &&
+      this.stblReward.eq(that.stblReward) &&
       this.frontendTag === that.frontendTag
     );
   }

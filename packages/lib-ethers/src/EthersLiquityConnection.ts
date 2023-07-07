@@ -74,11 +74,11 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
   /** Time period (in seconds) after `deploymentDate` during which redemptions are disabled. */
   readonly bootstrapPeriod: number;
 
-  /** Total amount of LQTY allocated for rewarding stability depositors. */
-  readonly totalStabilityPoolLQTYReward: Decimal;
+  /** Total amount of STBL allocated for rewarding stability depositors. */
+  readonly totalStabilityPoolSTBLReward: Decimal;
 
-  /** Amount of LQTY collectively rewarded to stakers of the liquidity mining pool per second. */
-  readonly liquidityMiningLQTYRewardRate: Decimal;
+  /** Amount of STBL collectively rewarded to stakers of the liquidity mining pool per second. */
+  readonly liquidityMiningSTBLRewardRate: Decimal;
 
   /** A mapping of Liquity contracts' names to their addresses. */
   readonly addresses: Record<string, string>;
@@ -107,8 +107,8 @@ const connectionFrom = (
   _multicall: _Multicall | undefined,
   {
     deploymentDate,
-    totalStabilityPoolLQTYReward,
-    liquidityMiningLQTYRewardRate,
+    totalStabilityPoolSTBLReward,
+    liquidityMiningSTBLRewardRate,
     ...deployment
   }: _LiquityDeploymentJSON,
   optionalParams?: EthersLiquityConnectionOptionalParams
@@ -127,8 +127,8 @@ const connectionFrom = (
     _contracts,
     _multicall,
     deploymentDate: new Date(deploymentDate),
-    totalStabilityPoolLQTYReward: Decimal.from(totalStabilityPoolLQTYReward),
-    liquidityMiningLQTYRewardRate: Decimal.from(liquidityMiningLQTYRewardRate),
+    totalStabilityPoolSTBLReward: Decimal.from(totalStabilityPoolSTBLReward),
+    liquidityMiningSTBLRewardRate: Decimal.from(liquidityMiningSTBLRewardRate),
     ...deployment,
     ...optionalParams
   });
@@ -247,7 +247,7 @@ const validStoreOptions = ["blockPolled"];
  */
 export interface EthersLiquityConnectionOptionalParams {
   /**
-   * Address whose Trove, Stability Deposit, LQTY Stake and balances will be read by default.
+   * Address whose Trove, Stability Deposit, STBL Stake and balances will be read by default.
    *
    * @remarks
    * For example {@link EthersLiquity.getTrove | getTrove(address?)} will return the Trove owned by
@@ -259,7 +259,7 @@ export interface EthersLiquityConnectionOptionalParams {
   readonly userAddress?: string;
 
   /**
-   * Address that will receive LQTY rewards from newly created Stability Deposits by default.
+   * Address that will receive STBL rewards from newly created Stability Deposits by default.
    *
    * @remarks
    * For example

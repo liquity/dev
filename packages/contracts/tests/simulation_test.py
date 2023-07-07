@@ -28,8 +28,8 @@ def setAddresses(contracts):
         contracts.priceFeedTestnet.address,
         contracts.lusdToken.address,
         contracts.sortedTroves.address,
-        contracts.lqtyToken.address,
-        contracts.lqtyStaking.address,
+        contracts.stblToken.address,
+        contracts.stblStaking.address,
         { 'from': accounts[0] }
     )
 
@@ -43,7 +43,7 @@ def setAddresses(contracts):
         contracts.priceFeedTestnet.address,
         contracts.sortedTroves.address,
         contracts.lusdToken.address,
-        contracts.lqtyStaking.address,
+        contracts.stblStaking.address,
         { 'from': accounts[0] }
     )
 
@@ -85,9 +85,9 @@ def setAddresses(contracts):
         { 'from': accounts[0] }
     )
 
-    # LQTY
-    contracts.lqtyStaking.setAddresses(
-        contracts.lqtyToken.address,
+    # STBL
+    contracts.stblStaking.setAddresses(
+        contracts.stblToken.address,
         contracts.lusdToken.address,
         contracts.troveManager.address,
         contracts.borrowerOperations.address,
@@ -96,7 +96,7 @@ def setAddresses(contracts):
     )
 
     contracts.communityIssuance.setAddresses(
-        contracts.lqtyToken.address,
+        contracts.stblToken.address,
         contracts.stabilityPool.address,
         { 'from': accounts[0] }
     )
@@ -127,13 +127,13 @@ def contracts():
         contracts.borrowerOperations.address,
         { 'from': accounts[0] }
     )
-    # LQTY
-    contracts.lqtyStaking = LQTYStaking.deploy({ 'from': accounts[0] })
+    # STBL
+    contracts.stblStaking = STBLStaking.deploy({ 'from': accounts[0] })
     contracts.communityIssuance = CommunityIssuance.deploy({ 'from': accounts[0] })
     contracts.lockupContractFactory = LockupContractFactory.deploy({ 'from': accounts[0] })
-    contracts.lqtyToken = LQTYToken.deploy(
+    contracts.stblToken = STBLToken.deploy(
         contracts.communityIssuance.address,
-        contracts.lqtyStaking.address,
+        contracts.stblStaking.address,
         contracts.lockupContractFactory.address,
         accounts[0], # bountyAddress
         accounts[0],  # lpRewardsAddress
@@ -149,7 +149,7 @@ def contracts():
 def print_expectations():
     # ether_price_one_year = price_ether_initial * (1 + drift_ether)**8760
     # print("Expected ether price at the end of the year: $", ether_price_one_year)
-    print("Expected LQTY price at the end of first month: $", price_LQTY_initial * (1 + drift_LQTY)**720)
+    print("Expected STBL price at the end of first month: $", price_STBL_initial * (1 + drift_STBL)**720)
 
     print("\n Open troves")
     print("E(Q_t^e)    = ", collateral_gamma_k * collateral_gamma_theta)
@@ -175,7 +175,7 @@ def _test_test(contracts):
 
 * exogenous ether price input
 * trove liquidation
-* return of the previous period's stability pool determined (liquidation gain & airdropped LQTY gain)
+* return of the previous period's stability pool determined (liquidation gain & airdropped STBL gain)
 * trove closure
 * trove adjustment
 * open troves
@@ -186,7 +186,7 @@ def _test_test(contracts):
 * LUSD liquidity pool demand determined
 * LUSD price determined
 * redemption & redemption fee
-* LQTY pool return determined
+* STBL pool return determined
 """
 def test_run_simulation(add_accounts, contracts, print_expectations):
     LUSD_GAS_COMPENSATION = contracts.troveManager.LUSD_GAS_COMPENSATION() / 1e18
@@ -203,7 +203,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
     inactive_accounts = [*range(1, len(accounts))]
 
     price_LUSD = 1
-    price_LQTY_current = price_LQTY_initial
+    price_STBL_current = price_STBL_initial
 
     data = {"airdrop_gain": [0] * n_sim, "liquidation_gain": [0] * n_sim, "issuance_fee": [0] * n_sim, "redemption_fee": [0] * n_sim}
     total_lusd_redempted = 0
@@ -217,7 +217,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
 
     with open('tests/simulation.csv', 'w', newline='') as csvfile:
         datawriter = csv.writer(csvfile, delimiter=',')
-        datawriter.writerow(['iteration', 'ETH_price', 'price_LUSD', 'price_LQTY', 'num_troves', 'total_coll', 'total_debt', 'TCR', 'recovery_mode', 'last_ICR', 'SP_LUSD', 'SP_ETH', 'total_coll_added', 'total_coll_liquidated', 'total_lusd_redempted'])
+        datawriter.writerow(['iteration', 'ETH_price', 'price_LUSD', 'price_STBL', 'num_troves', 'total_coll', 'total_debt', 'TCR', 'recovery_mode', 'last_ICR', 'SP_LUSD', 'SP_ETH', 'total_coll_added', 'total_coll_liquidated', 'total_lusd_redempted'])
 
         #Simulation Process
         for index in range(1, n_sim):
@@ -228,7 +228,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
 
             #trove liquidation & return of stability pool
-            result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, price_LQTY_current, data, index)
+            result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, price_STBL_current, data, index)
             total_coll_liquidated = total_coll_liquidated + result_liquidation[0]
             return_stability = result_liquidation[1]
 
@@ -250,17 +250,17 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             [price_LUSD, redemption_pool, redemption_fee, issuance_LUSD_stabilizer] = price_stabilizer(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
             total_lusd_redempted = total_lusd_redempted + redemption_pool
             print('LUSD price', price_LUSD)
-            print('LQTY price', price_LQTY_current)
+            print('STBL price', price_STBL_current)
 
             issuance_fee = price_LUSD * (issuance_LUSD_adjust + issuance_LUSD_open + issuance_LUSD_stabilizer)
             data['issuance_fee'][index] = issuance_fee
             data['redemption_fee'][index] = redemption_fee
 
-            #LQTY Market
-            result_LQTY = LQTY_market(index, data)
-            price_LQTY_current = result_LQTY[0]
-            #annualized_earning = result_LQTY[1]
-            #MC_LQTY_current = result_LQTY[2]
+            #STBL Market
+            result_STBL = STBL_market(index, data)
+            price_STBL_current = result_STBL[0]
+            #annualized_earning = result_STBL[1]
+            #MC_STBL_current = result_STBL[2]
 
             [ETH_price, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_LUSD, SP_ETH] = logGlobalState(contracts)
             print('Total redempted ', total_lusd_redempted)
@@ -269,6 +269,6 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             print(f'Ratio ETH liquid {100 * total_coll_liquidated / total_coll_added}%')
             print(' ----------------------\n')
 
-            datawriter.writerow([index, ETH_price, price_LUSD, price_LQTY_current, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_LUSD, SP_ETH, total_coll_added, total_coll_liquidated, total_lusd_redempted])
+            datawriter.writerow([index, ETH_price, price_LUSD, price_STBL_current, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_LUSD, SP_ETH, total_coll_added, total_coll_liquidated, total_lusd_redempted])
 
             assert price_LUSD > 0

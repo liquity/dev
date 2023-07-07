@@ -4,17 +4,17 @@ import { LiquityStoreState } from "@liquity/lib-base";
 import { useLiquitySelector } from "@liquity/lib-react";
 import { InfoMessage } from "../../../InfoMessage";
 import { UnstakeAndClaim } from "../UnstakeAndClaim";
-import { RemainingLQTY } from "../RemainingLQTY";
+import { RemainingSTBL } from "../RemainingSTBL";
 import { StaticRow } from "../../../Trove/Editor";
 import { GT, LP } from "../../../../strings";
 
-const selector = ({ liquidityMiningStake, liquidityMiningLQTYReward }: LiquityStoreState) => ({
+const selector = ({ liquidityMiningStake, liquidityMiningSTBLReward }: LiquityStoreState) => ({
   liquidityMiningStake,
-  liquidityMiningLQTYReward
+  liquidityMiningSTBLReward
 });
 
 export const Disabled: React.FC = () => {
-  const { liquidityMiningStake, liquidityMiningLQTYReward } = useLiquitySelector(selector);
+  const { liquidityMiningStake, liquidityMiningSTBLReward } = useLiquitySelector(selector);
   const hasStake = !liquidityMiningStake.isZero;
 
   return (
@@ -22,12 +22,12 @@ export const Disabled: React.FC = () => {
       <Heading>
         Uniswap Liquidity Farm
         <Flex sx={{ justifyContent: "flex-end" }}>
-          <RemainingLQTY />
+          <RemainingSTBL />
         </Flex>
       </Heading>
       <Box sx={{ p: [2, 3] }}>
         <InfoMessage title="Liquidity farming period has finished">
-          <Flex>There are no more LQTY rewards left to farm</Flex>
+          <Flex>There are no more STBL rewards left to farm</Flex>
         </InfoMessage>
         {hasStake && (
           <>
@@ -41,8 +41,8 @@ export const Disabled: React.FC = () => {
               <StaticRow
                 label="Reward"
                 inputId="farm-reward"
-                amount={liquidityMiningLQTYReward.prettify(4)}
-                color={liquidityMiningLQTYReward.nonZero && "success"}
+                amount={liquidityMiningSTBLReward.prettify(4)}
+                color={liquidityMiningSTBLReward.nonZero && "success"}
                 unit={GT}
               />
             </Box>

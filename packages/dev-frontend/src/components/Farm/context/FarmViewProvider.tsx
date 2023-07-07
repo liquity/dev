@@ -12,37 +12,37 @@ const transition = (view: FarmView, event: FarmEvent): FarmView => {
 
 const getInitialView = (
   liquidityMiningStake: Decimal,
-  remainingLiquidityMiningLQTYReward: Decimal,
-  liquidityMiningLQTYReward: Decimal
+  remainingLiquidityMiningSTBLReward: Decimal,
+  liquidityMiningSTBLReward: Decimal
 ): FarmView => {
-  if (remainingLiquidityMiningLQTYReward.isZero) return "DISABLED";
-  if (liquidityMiningStake.isZero && liquidityMiningLQTYReward.isZero) return "INACTIVE";
+  if (remainingLiquidityMiningSTBLReward.isZero) return "DISABLED";
+  if (liquidityMiningStake.isZero && liquidityMiningSTBLReward.isZero) return "INACTIVE";
   return "ACTIVE";
 };
 
 const selector = ({
   liquidityMiningStake,
-  remainingLiquidityMiningLQTYReward,
-  liquidityMiningLQTYReward
+  remainingLiquidityMiningSTBLReward,
+  liquidityMiningSTBLReward
 }: LiquityStoreState) => ({
   liquidityMiningStake,
-  remainingLiquidityMiningLQTYReward,
-  liquidityMiningLQTYReward
+  remainingLiquidityMiningSTBLReward,
+  liquidityMiningSTBLReward
 });
 
 export const FarmViewProvider: React.FC = props => {
   const { children } = props;
   const {
     liquidityMiningStake,
-    remainingLiquidityMiningLQTYReward,
-    liquidityMiningLQTYReward
+    remainingLiquidityMiningSTBLReward,
+    liquidityMiningSTBLReward
   } = useLiquitySelector(selector);
 
   const [view, setView] = useState<FarmView>(
     getInitialView(
       liquidityMiningStake,
-      remainingLiquidityMiningLQTYReward,
-      liquidityMiningLQTYReward
+      remainingLiquidityMiningSTBLReward,
+      liquidityMiningSTBLReward
     )
   );
   const viewRef = useRef<FarmView>(view);
@@ -64,12 +64,12 @@ export const FarmViewProvider: React.FC = props => {
   }, [view]);
 
   useEffect(() => {
-    if (liquidityMiningStake.isZero && liquidityMiningLQTYReward.isZero) {
+    if (liquidityMiningStake.isZero && liquidityMiningSTBLReward.isZero) {
       dispatchEvent("UNSTAKE_AND_CLAIM_CONFIRMED");
-    } else if (liquidityMiningStake.isZero && !liquidityMiningLQTYReward.isZero) {
+    } else if (liquidityMiningStake.isZero && !liquidityMiningSTBLReward.isZero) {
       dispatchEvent("UNSTAKE_CONFIRMED");
     }
-  }, [liquidityMiningStake.isZero, liquidityMiningLQTYReward.isZero, dispatchEvent]);
+  }, [liquidityMiningStake.isZero, liquidityMiningSTBLReward.isZero, dispatchEvent]);
 
   const provider = {
     view,

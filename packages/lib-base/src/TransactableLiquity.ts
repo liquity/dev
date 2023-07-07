@@ -125,8 +125,8 @@ export interface StabilityPoolGainsWithdrawalDetails {
   /** Amount of native currency (e.g. Ether) paid out to the depositor in this transaction. */
   collateralGain: Decimal;
 
-  /** Amount of LQTY rewarded to the depositor in this transaction. */
-  lqtyReward: Decimal;
+  /** Amount of STBL rewarded to the depositor in this transaction. */
+  stblReward: Decimal;
 }
 
 /**
@@ -313,7 +313,7 @@ export interface TransactableLiquity {
    * Make a new Stability Deposit, or top up existing one.
    *
    * @param amount - Amount of LUSD to add to new or existing deposit.
-   * @param frontendTag - Address that should receive a share of this deposit's LQTY rewards.
+   * @param frontendTag - Address that should receive a share of this deposit's STBL rewards.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -323,7 +323,7 @@ export interface TransactableLiquity {
    *
    * As a side-effect, the transaction will also pay out an existing Stability Deposit's
    * {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @liquity/lib-base#StabilityDeposit.stblReward | STBL reward}.
    */
   depositLUSDInStabilityPool(
     amount: Decimalish,
@@ -341,13 +341,13 @@ export interface TransactableLiquity {
    * @remarks
    * As a side-effect, the transaction will also pay out the Stability Deposit's
    * {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @liquity/lib-base#StabilityDeposit.stblReward | STBL reward}.
    */
   withdrawLUSDFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
 
   /**
    * Withdraw {@link @liquity/lib-base#StabilityDeposit.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward} from Stability Deposit.
+   * {@link @liquity/lib-base#StabilityDeposit.stblReward | STBL reward} from Stability Deposit.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -365,7 +365,7 @@ export interface TransactableLiquity {
    * The collateral gain is transfered to the Trove as additional collateral.
    *
    * As a side-effect, the transaction will also pay out the Stability Deposit's
-   * {@link @liquity/lib-base#StabilityDeposit.lqtyReward | LQTY reward}.
+   * {@link @liquity/lib-base#StabilityDeposit.stblReward | STBL reward}.
    */
   transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
 
@@ -381,15 +381,15 @@ export interface TransactableLiquity {
   sendLUSD(toAddress: string, amount: Decimalish): Promise<void>;
 
   /**
-   * Send LQTY tokens to an address.
+   * Send STBL tokens to an address.
    *
    * @param toAddress - Address of receipient.
-   * @param amount - Amount of LQTY to send.
+   * @param amount - Amount of STBL to send.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
-  sendLQTY(toAddress: string, amount: Decimalish): Promise<void>;
+  sendSTBL(toAddress: string, amount: Decimalish): Promise<void>;
 
   /**
    * Redeem LUSD to native currency (e.g. Ether) at face value.
@@ -420,38 +420,38 @@ export interface TransactableLiquity {
   claimCollateralSurplus(): Promise<void>;
 
   /**
-   * Stake LQTY to start earning fee revenue or increase existing stake.
+   * Stake STBL to start earning fee revenue or increase existing stake.
    *
-   * @param amount - Amount of LQTY to add to new or existing stake.
-   *
-   * @throws
-   * Throws {@link TransactionFailedError} in case of transaction failure.
-   *
-   * @remarks
-   * As a side-effect, the transaction will also pay out an existing LQTY stake's
-   * {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain}.
-   */
-  stakeLQTY(amount: Decimalish): Promise<void>;
-
-  /**
-   * Withdraw LQTY from staking.
-   *
-   * @param amount - Amount of LQTY to withdraw.
+   * @param amount - Amount of STBL to add to new or existing stake.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    *
    * @remarks
-   * As a side-effect, the transaction will also pay out the LQTY stake's
-   * {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain}.
+   * As a side-effect, the transaction will also pay out an existing STBL stake's
+   * {@link @liquity/lib-base#STBLStake.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#STBLStake.lusdGain | LUSD gain}.
    */
-  unstakeLQTY(amount: Decimalish): Promise<void>;
+  stakeSTBL(amount: Decimalish): Promise<void>;
 
   /**
-   * Withdraw {@link @liquity/lib-base#LQTYStake.collateralGain | collateral gain} and
-   * {@link @liquity/lib-base#LQTYStake.lusdGain | LUSD gain} from LQTY stake.
+   * Withdraw STBL from staking.
+   *
+   * @param amount - Amount of STBL to withdraw.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   *
+   * @remarks
+   * As a side-effect, the transaction will also pay out the STBL stake's
+   * {@link @liquity/lib-base#STBLStake.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#STBLStake.lusdGain | LUSD gain}.
+   */
+  unstakeSTBL(amount: Decimalish): Promise<void>;
+
+  /**
+   * Withdraw {@link @liquity/lib-base#STBLStake.collateralGain | collateral gain} and
+   * {@link @liquity/lib-base#STBLStake.lusdGain | LUSD gain} from STBL stake.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
@@ -475,7 +475,7 @@ export interface TransactableLiquity {
   approveUniTokens(allowance?: Decimalish): Promise<void>;
 
   /**
-   * Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn LQTY.
+   * Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn STBL.
    *
    * @param amount - Amount of LP tokens to add to new or existing stake.
    *
@@ -495,12 +495,12 @@ export interface TransactableLiquity {
   unstakeUniTokens(amount: Decimalish): Promise<void>;
 
   /**
-   * Withdraw LQTY that has been earned by mining liquidity.
+   * Withdraw STBL that has been earned by mining liquidity.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
-  withdrawLQTYRewardFromLiquidityMining(): Promise<void>;
+  withdrawSTBLRewardFromLiquidityMining(): Promise<void>;
 
   /**
    * Withdraw all staked LP tokens from liquidity mining and claim reward.
@@ -513,7 +513,7 @@ export interface TransactableLiquity {
   /**
    * Register current wallet address as a Liquity frontend.
    *
-   * @param kickbackRate - The portion of LQTY rewards to pass onto users of the frontend
+   * @param kickbackRate - The portion of STBL rewards to pass onto users of the frontend
    *                       (between 0 and 1).
    *
    * @throws

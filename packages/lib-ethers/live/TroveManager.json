@@ -87,11 +87,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lqtyStakingAddress",
+          "name": "_stblStakingAddress",
           "type": "address"
         }
       ],
-      "name": "LQTYStakingAddressChanged",
+      "name": "STBLStakingAddressChanged",
       "type": "event"
     },
     {
@@ -100,11 +100,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lqtyTokenAddress",
+          "name": "_stblTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LQTYTokenAddressChanged",
+      "name": "STBLTokenAddressChanged",
       "type": "event"
     },
     {
@@ -1397,10 +1397,10 @@
     },
     {
       "inputs": [],
-      "name": "lqtyStaking",
+      "name": "stblStaking",
       "outputs": [
         {
-          "internalType": "contract ILQTYStaking",
+          "internalType": "contract ISTBLStaking",
           "name": "",
           "type": "address"
         }
@@ -1410,10 +1410,10 @@
     },
     {
       "inputs": [],
-      "name": "lqtyToken",
+      "name": "stblToken",
       "outputs": [
         {
-          "internalType": "contract ILQTYToken",
+          "internalType": "contract ISTBLToken",
           "name": "",
           "type": "address"
         }
@@ -1589,12 +1589,12 @@
         },
         {
           "internalType": "address",
-          "name": "_lqtyTokenAddress",
+          "name": "_stblTokenAddress",
           "type": "address"
         },
         {
           "internalType": "address",
-          "name": "_lqtyStakingAddress",
+          "name": "_stblStakingAddress",
           "type": "address"
         }
       ],

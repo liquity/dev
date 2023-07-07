@@ -7,7 +7,7 @@ const { TestHelper } = require('../utils/testHelpers.js');
 const { assertRevert } = TestHelper;
 
 const Uni = artifacts.require('ERC20Mock');
-const Lqty = artifacts.require('LQTYToken');
+const Stbl = artifacts.require('STBLToken');
 const Unipool = artifacts.require('Unipool');
 const NonPayable = artifacts.require('NonPayable');
 
@@ -49,17 +49,17 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       that.pool = await Unipool.new();
 
       const communityIssuance = await NonPayable.new();
-      const lqtyStaking = await NonPayable.new();
+      const stblStaking = await NonPayable.new();
       const lockupContractFactory = await NonPayable.new();
-      that.lqty = await Lqty.new(
+      that.stbl = await Stbl.new(
         communityIssuance.address,
-        lqtyStaking.address,
+        stblStaking.address,
         lockupContractFactory.address,
         bountyAddress,
         that.pool.address,
         multisig
       );
-      that.lpRewardsEntitlement = await that.lqty.getLpRewardsEntitlement();
+      that.lpRewardsEntitlement = await that.stbl.getLpRewardsEntitlement();
       that.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
       that.rewardRate = that.lpRewardsEntitlement.div(that.DURATION);
 
@@ -77,7 +77,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
   describe('Unipool', async function () {
     beforeEach(async function () {
       await deploy(this);
-      await this.pool.setParams(this.lqty.address, this.uni.address, this.DURATION);
+      await this.pool.setParams(this.stbl.address, this.uni.address, this.DURATION);
     });
 
     it('Two stakers with the same stakes wait DURATION', async function () {
@@ -203,7 +203,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3));
       expect(await this.pool.earned(wallet1)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3).mul(stake1).div(_1e18));
       expect(await this.pool.earned(wallet2)).to.be.bignumber.equal('0');
-      expect(await this.lqty.balanceOf(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.add(rewardPerToken3).mul(stake2).div(_1e18));
+      expect(await this.stbl.balanceOf(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.add(rewardPerToken3).mul(stake2).div(_1e18));
       expect(await this.pool.earned(wallet3)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken3.mul(stake3).div(_1e18));
 
       await time.increaseTo(stakeTime1.add(this.DURATION));
@@ -249,7 +249,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       const rewardPerToken2 = this.rewardRate.mul(timeDiff2).mul(_1e18).div(stake1.add(stake2));
       expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2));
       expect(await this.pool.earned(wallet1)).to.be.bignumber.equal('0');
-      expect(await this.lqty.balanceOf(wallet1)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).mul(stake1).div(_1e18));
+      expect(await this.stbl.balanceOf(wallet1)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).mul(stake1).div(_1e18));
       expect(await this.pool.earned(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.mul(stake2).div(_1e18));
 
       await time.increase(this.DURATION.div(new BN(6)));
@@ -264,7 +264,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       expect(await this.pool.rewardPerToken()).to.be.bignumber.almostEqualDiv1e18(rewardPerToken1.add(rewardPerToken2).add(rewardPerToken3));
       expect(await this.pool.earned(wallet1)).to.be.bignumber.equal('0');
       expect(await this.pool.earned(wallet2)).to.be.bignumber.equal('0');
-      expect(await this.lqty.balanceOf(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.add(rewardPerToken3).mul(stake2).div(_1e18));
+      expect(await this.stbl.balanceOf(wallet2)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken2.add(rewardPerToken3).mul(stake2).div(_1e18));
 
       await time.increase(this.DURATION.div(new BN(6)));
 
@@ -293,7 +293,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
       expect(await this.pool.earned(wallet1)).to.be.bignumber.equal('0');
       expect(await this.pool.earned(wallet2)).to.be.bignumber.equal('0');
       expect(await this.pool.earned(wallet3)).to.be.bignumber.equal('0');
-      expect(await this.lqty.balanceOf(wallet3)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken4.mul(stake3).div(_1e18));
+      expect(await this.stbl.balanceOf(wallet3)).to.be.bignumber.almostEqualDiv1e18(rewardPerToken4.mul(stake3).div(_1e18));
 
       await time.increase(this.DURATION.div(new BN(2)));
 

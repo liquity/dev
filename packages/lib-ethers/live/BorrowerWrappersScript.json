@@ -17,7 +17,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lqtyStakingAddress",
+          "name": "_stblStakingAddress",
           "type": "address"
         }
       ],
@@ -236,7 +236,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_LQTYamount",
+          "name": "_STBLamount",
           "type": "uint256"
         }
       ],

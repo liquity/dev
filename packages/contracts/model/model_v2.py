@@ -71,7 +71,7 @@ def get_new_base_fee(data, redeemed_amount):
     base_fee = (data.base_fee[-1] + (redeemed_amount / (2 * data.token_supply[-1]))) *params.D
     return base_fee
 
-# return the exogenous market demand for holding LQTY tokens. Assume constant. Could be a function of:
+# return the exogenous market demand for holding STBL tokens. Assume constant. Could be a function of:
 # - Demand for a safe-haven $1-pegged asset  
 # - Traders' demand for short-term liquidity
 def get_token_demand():

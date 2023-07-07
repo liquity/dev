@@ -37,16 +37,16 @@ export declare class PopulatableEthersLiquity implements PopulatableLiquity<Ethe
 |  [redeemLUSD(amount, maxRedemptionRate, overrides)](./lib-ethers.populatableethersliquity.redeemlusd.md) |  | Redeem LUSD to native currency (e.g. Ether) at face value. |
 |  [registerFrontend(kickbackRate, overrides)](./lib-ethers.populatableethersliquity.registerfrontend.md) |  | Register current wallet address as a Liquity frontend. |
 |  [repayLUSD(amount, overrides)](./lib-ethers.populatableethersliquity.repaylusd.md) |  | Adjust existing Trove by repaying some of its debt. |
-|  [sendLQTY(toAddress, amount, overrides)](./lib-ethers.populatableethersliquity.sendlqty.md) |  | Send LQTY tokens to an address. |
+|  [sendSTBL(toAddress, amount, overrides)](./lib-ethers.populatableethersliquity.sendstbl.md) |  | Send STBL tokens to an address. |
 |  [sendLUSD(toAddress, amount, overrides)](./lib-ethers.populatableethersliquity.sendlusd.md) |  | Send LUSD tokens to an address. |
-|  [stakeLQTY(amount, overrides)](./lib-ethers.populatableethersliquity.stakelqty.md) |  | Stake LQTY to start earning fee revenue or increase existing stake. |
-|  [stakeUniTokens(amount, overrides)](./lib-ethers.populatableethersliquity.stakeunitokens.md) |  | Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn LQTY. |
+|  [stakeSTBL(amount, overrides)](./lib-ethers.populatableethersliquity.stakestbl.md) |  | Stake STBL to start earning fee revenue or increase existing stake. |
+|  [stakeUniTokens(amount, overrides)](./lib-ethers.populatableethersliquity.stakeunitokens.md) |  | Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn STBL. |
 |  [transferCollateralGainToTrove(overrides)](./lib-ethers.populatableethersliquity.transfercollateralgaintotrove.md) |  | Transfer [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) from Stability Deposit to Trove. |
-|  [unstakeLQTY(amount, overrides)](./lib-ethers.populatableethersliquity.unstakelqty.md) |  | Withdraw LQTY from staking. |
+|  [unstakeSTBL(amount, overrides)](./lib-ethers.populatableethersliquity.unstakestbl.md) |  | Withdraw STBL from staking. |
 |  [unstakeUniTokens(amount, overrides)](./lib-ethers.populatableethersliquity.unstakeunitokens.md) |  | Withdraw Uniswap ETH/LUSD LP tokens from liquidity mining. |
 |  [withdrawCollateral(amount, overrides)](./lib-ethers.populatableethersliquity.withdrawcollateral.md) |  | Adjust existing Trove by withdrawing some of its collateral. |
-|  [withdrawGainsFromStabilityPool(overrides)](./lib-ethers.populatableethersliquity.withdrawgainsfromstabilitypool.md) |  | Withdraw [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [LQTY reward](./lib-base.stabilitydeposit.lqtyreward.md) from Stability Deposit. |
-|  [withdrawGainsFromStaking(overrides)](./lib-ethers.populatableethersliquity.withdrawgainsfromstaking.md) |  | Withdraw [collateral gain](./lib-base.lqtystake.collateralgain.md) and [LUSD gain](./lib-base.lqtystake.lusdgain.md) from LQTY stake. |
-|  [withdrawLQTYRewardFromLiquidityMining(overrides)](./lib-ethers.populatableethersliquity.withdrawlqtyrewardfromliquiditymining.md) |  | Withdraw LQTY that has been earned by mining liquidity. |
+|  [withdrawGainsFromStabilityPool(overrides)](./lib-ethers.populatableethersliquity.withdrawgainsfromstabilitypool.md) |  | Withdraw [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [STBL reward](./lib-base.stabilitydeposit.stblreward.md) from Stability Deposit. |
+|  [withdrawGainsFromStaking(overrides)](./lib-ethers.populatableethersliquity.withdrawgainsfromstaking.md) |  | Withdraw [collateral gain](./lib-base.stblstake.collateralgain.md) and [LUSD gain](./lib-base.stblstake.lusdgain.md) from STBL stake. |
+|  [withdrawSTBLRewardFromLiquidityMining(overrides)](./lib-ethers.populatableethersliquity.withdrawstblrewardfromliquiditymining.md) |  | Withdraw STBL that has been earned by mining liquidity. |
 |  [withdrawLUSDFromStabilityPool(amount, overrides)](./lib-ethers.populatableethersliquity.withdrawlusdfromstabilitypool.md) |  | Withdraw LUSD from Stability Deposit. |
 

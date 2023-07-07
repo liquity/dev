@@ -57,11 +57,11 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_lqtyStakingAddress",
+        "name": "_stblStakingAddress",
         "type": "address"
       }
     ],
-    "name": "LQTYStakingAddressChanged",
+    "name": "STBLStakingAddressChanged",
     "type": "event"
   },
   {
@@ -496,10 +496,10 @@
   },
   {
     "inputs": [],
-    "name": "lqtyStaking",
+    "name": "stblStaking",
     "outputs": [
       {
-        "internalType": "contract ILQTYStaking",
+        "internalType": "contract ISTBLStaking",
         "name": "",
         "type": "address"
       }
@@ -509,7 +509,7 @@
   },
   {
     "inputs": [],
-    "name": "lqtyStakingAddress",
+    "name": "stblStakingAddress",
     "outputs": [
       {
         "internalType": "address",
@@ -682,7 +682,7 @@
       },
       {
         "internalType": "address",
-        "name": "_lqtyStakingAddress",
+        "name": "_stblStakingAddress",
         "type": "address"
       }
     ],

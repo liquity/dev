@@ -23,7 +23,7 @@ contract('After the initial lockup period has passed', async accounts => {
   const SECONDS_IN_ONE_YEAR = timeValues.SECONDS_IN_ONE_YEAR
   const maxBytes32 = th.maxBytes32
 
-  let LQTYContracts
+  let STBLContracts
   let coreContracts
 
   // LCs for team members on vesting schedules
@@ -49,11 +49,11 @@ contract('After the initial lockup period has passed', async accounts => {
   const teamMemberMonthlyVesting_2 = dec(2, 23)
   const teamMemberMonthlyVesting_3 = dec(3, 23)
 
-  const LQTYEntitlement_A = dec(1, 24)
-  const LQTYEntitlement_B = dec(2, 24)
-  const LQTYEntitlement_C = dec(3, 24)
-  const LQTYEntitlement_D = dec(4, 24)
-  const LQTYEntitlement_E = dec(5, 24)
+  const STBLEntitlement_A = dec(1, 24)
+  const STBLEntitlement_B = dec(2, 24)
+  const STBLEntitlement_C = dec(3, 24)
+  const STBLEntitlement_D = dec(4, 24)
+  const STBLEntitlement_E = dec(5, 24)
 
   let oneYearFromSystemDeployment
   let twoYearsFromSystemDeployment
@@ -62,25 +62,25 @@ contract('After the initial lockup period has passed', async accounts => {
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    LQTYContracts = await deploymentHelper.deployLQTYTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
+    STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
     coreContracts = await deploymentHelper.deployLiquityCore()
 
-    lqtyStaking = LQTYContracts.lqtyStaking
-    lqtyToken = LQTYContracts.lqtyToken
-    communityIssuance = LQTYContracts.communityIssuance
-    lockupContractFactory = LQTYContracts.lockupContractFactory
+    stblStaking = STBLContracts.stblStaking
+    stblToken = STBLContracts.stblToken
+    communityIssuance = STBLContracts.communityIssuance
+    lockupContractFactory = STBLContracts.lockupContractFactory
 
-    await deploymentHelper.connectLQTYContracts(LQTYContracts)
-    await deploymentHelper.connectCoreContracts(coreContracts, LQTYContracts)
-    await deploymentHelper.connectLQTYContractsToCore(LQTYContracts, coreContracts)
+    await deploymentHelper.connectSTBLContracts(STBLContracts)
+    await deploymentHelper.connectCoreContracts(coreContracts, STBLContracts)
+    await deploymentHelper.connectSTBLContractsToCore(STBLContracts, coreContracts)
 
-    oneYearFromSystemDeployment = await th.getTimeFromSystemDeployment(lqtyToken, web3, timeValues.SECONDS_IN_ONE_YEAR)
+    oneYearFromSystemDeployment = await th.getTimeFromSystemDeployment(stblToken, web3, timeValues.SECONDS_IN_ONE_YEAR)
     justOverOneYearFromSystemDeployment = oneYearFromSystemDeployment.add(toBN('1'))
 
     const secondsInTwoYears = toBN(timeValues.SECONDS_IN_ONE_YEAR).mul(toBN('2'))
     const secondsIn18Months = toBN(timeValues.SECONDS_IN_ONE_MONTH).mul(toBN('18'))
-    twoYearsFromSystemDeployment = await th.getTimeFromSystemDeployment(lqtyToken, web3, secondsInTwoYears)
-    _18monthsFromSystemDeployment = await th.getTimeFromSystemDeployment(lqtyToken, web3, secondsIn18Months)
+    twoYearsFromSystemDeployment = await th.getTimeFromSystemDeployment(stblToken, web3, secondsInTwoYears)
+    _18monthsFromSystemDeployment = await th.getTimeFromSystemDeployment(stblToken, web3, secondsIn18Months)
 
     // Deploy 3 LCs for team members on vesting schedules
     const deployedLCtx_T1 = await lockupContractFactory.deployLockupContract(teamMember_1, oneYearFromSystemDeployment, { from: liquityAG })
@@ -101,24 +101,24 @@ contract('After the initial lockup period has passed', async accounts => {
     LC_I2 = await th.getLCFromDeploymentTx(deployedLCtx_I2)
     LC_I3 = await th.getLCFromDeploymentTx(deployedLCtx_I3)
 
-    // Multisig transfers initial LQTY entitlements to LCs
-    await lqtyToken.transfer(LC_T1.address, teamMemberInitialEntitlement_1, { from: multisig })
-    await lqtyToken.transfer(LC_T2.address, teamMemberInitialEntitlement_2, { from: multisig })
-    await lqtyToken.transfer(LC_T3.address, teamMemberInitialEntitlement_3, { from: multisig })
+    // Multisig transfers initial STBL entitlements to LCs
+    await stblToken.transfer(LC_T1.address, teamMemberInitialEntitlement_1, { from: multisig })
+    await stblToken.transfer(LC_T2.address, teamMemberInitialEntitlement_2, { from: multisig })
+    await stblToken.transfer(LC_T3.address, teamMemberInitialEntitlement_3, { from: multisig })
 
-    await lqtyToken.transfer(LC_I1.address, investorInitialEntitlement_1, { from: multisig })
-    await lqtyToken.transfer(LC_I2.address, investorInitialEntitlement_2, { from: multisig })
-    await lqtyToken.transfer(LC_I3.address, investorInitialEntitlement_3, { from: multisig })
+    await stblToken.transfer(LC_I1.address, investorInitialEntitlement_1, { from: multisig })
+    await stblToken.transfer(LC_I2.address, investorInitialEntitlement_2, { from: multisig })
+    await stblToken.transfer(LC_I3.address, investorInitialEntitlement_3, { from: multisig })
 
-    const systemDeploymentTime = await lqtyToken.getDeploymentStartTime()
+    const systemDeploymentTime = await stblToken.getDeploymentStartTime()
 
     // Every thirty days, mutlsig transfers vesting amounts to team members
     for (i = 0; i < 12; i++) {
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      await lqtyToken.transfer(LC_T1.address, teamMemberMonthlyVesting_1, { from: multisig })
-      await lqtyToken.transfer(LC_T2.address, teamMemberMonthlyVesting_2, { from: multisig })
-      await lqtyToken.transfer(LC_T3.address, teamMemberMonthlyVesting_3, { from: multisig })
+      await stblToken.transfer(LC_T1.address, teamMemberMonthlyVesting_1, { from: multisig })
+      await stblToken.transfer(LC_T2.address, teamMemberMonthlyVesting_2, { from: multisig })
+      await stblToken.transfer(LC_T3.address, teamMemberMonthlyVesting_3, { from: multisig })
     }
 
     // After Since only 360 days have passed, fast forward 5 more days, until LCs unlock
@@ -133,8 +133,8 @@ contract('After the initial lockup period has passed', async accounts => {
   })
 
   describe('Deploying new LCs', async accounts => {
-    it("LQTY Deployer can deploy new LCs", async () => {
-      // LQTY deployer deploys LCs
+    it("STBL Deployer can deploy new LCs", async () => {
+      // STBL deployer deploys LCs
       const LCDeploymentTx_A = await lockupContractFactory.deployLockupContract(A, justOverOneYearFromSystemDeployment, { from: liquityAG })
       const LCDeploymentTx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: liquityAG })
       const LCDeploymentTx_C = await lockupContractFactory.deployLockupContract(C, '9595995999999900000023423234', { from: liquityAG })
@@ -207,136 +207,136 @@ contract('After the initial lockup period has passed', async accounts => {
   describe('Beneficiary withdrawal from initial LC', async accounts => {
     it("A beneficiary can withdraw their full entitlement from their LC", async () => {
 
-      // Check LQTY balances of investors' LCs are equal to their initial entitlements
-      assert.equal(await lqtyToken.balanceOf(LC_I1.address), investorInitialEntitlement_1)
-      assert.equal(await lqtyToken.balanceOf(LC_I2.address), investorInitialEntitlement_2)
-      assert.equal(await lqtyToken.balanceOf(LC_I3.address), investorInitialEntitlement_3)
+      // Check STBL balances of investors' LCs are equal to their initial entitlements
+      assert.equal(await stblToken.balanceOf(LC_I1.address), investorInitialEntitlement_1)
+      assert.equal(await stblToken.balanceOf(LC_I2.address), investorInitialEntitlement_2)
+      assert.equal(await stblToken.balanceOf(LC_I3.address), investorInitialEntitlement_3)
 
-      // Check LQTY balances of investors are 0
-      assert.equal(await lqtyToken.balanceOf(investor_1), '0')
-      assert.equal(await lqtyToken.balanceOf(investor_2), '0')
-      assert.equal(await lqtyToken.balanceOf(investor_3), '0')
+      // Check STBL balances of investors are 0
+      assert.equal(await stblToken.balanceOf(investor_1), '0')
+      assert.equal(await stblToken.balanceOf(investor_2), '0')
+      assert.equal(await stblToken.balanceOf(investor_3), '0')
 
       // All investors withdraw from their respective LCs
-      await LC_I1.withdrawLQTY({ from: investor_1 })
-      await LC_I2.withdrawLQTY({ from: investor_2 })
-      await LC_I3.withdrawLQTY({ from: investor_3 })
+      await LC_I1.withdrawSTBL({ from: investor_1 })
+      await LC_I2.withdrawSTBL({ from: investor_2 })
+      await LC_I3.withdrawSTBL({ from: investor_3 })
 
-      // Check LQTY balances of investors now equal their entitlements
-      assert.equal(await lqtyToken.balanceOf(investor_1), investorInitialEntitlement_1)
-      assert.equal(await lqtyToken.balanceOf(investor_2), investorInitialEntitlement_2)
-      assert.equal(await lqtyToken.balanceOf(investor_3), investorInitialEntitlement_3)
+      // Check STBL balances of investors now equal their entitlements
+      assert.equal(await stblToken.balanceOf(investor_1), investorInitialEntitlement_1)
+      assert.equal(await stblToken.balanceOf(investor_2), investorInitialEntitlement_2)
+      assert.equal(await stblToken.balanceOf(investor_3), investorInitialEntitlement_3)
 
-      // Check LQTY balances of investors' LCs are now 0
-      assert.equal(await lqtyToken.balanceOf(LC_I1.address), '0')
-      assert.equal(await lqtyToken.balanceOf(LC_I2.address), '0')
-      assert.equal(await lqtyToken.balanceOf(LC_I3.address), '0')
+      // Check STBL balances of investors' LCs are now 0
+      assert.equal(await stblToken.balanceOf(LC_I1.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_I2.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_I3.address), '0')
     })
 
     it("A beneficiary on a vesting schedule can withdraw their total vested amount from their LC", async () => {
-      // Get LQTY balances of LCs for beneficiaries (team members) on vesting schedules
-      const LQTYBalanceOfLC_T1_Before = await lqtyToken.balanceOf(LC_T1.address)
-      const LQTYBalanceOfLC_T2_Before = await lqtyToken.balanceOf(LC_T2.address)
-      const LQTYBalanceOfLC_T3_Before = await lqtyToken.balanceOf(LC_T3.address)
+      // Get STBL balances of LCs for beneficiaries (team members) on vesting schedules
+      const STBLBalanceOfLC_T1_Before = await stblToken.balanceOf(LC_T1.address)
+      const STBLBalanceOfLC_T2_Before = await stblToken.balanceOf(LC_T2.address)
+      const STBLBalanceOfLC_T3_Before = await stblToken.balanceOf(LC_T3.address)
 
-      // Check LQTY balances of vesting beneficiaries' LCs are greater than their initial entitlements
-      assert.isTrue(LQTYBalanceOfLC_T1_Before.gt(th.toBN(teamMemberInitialEntitlement_1)))
-      assert.isTrue(LQTYBalanceOfLC_T2_Before.gt(th.toBN(teamMemberInitialEntitlement_2)))
-      assert.isTrue(LQTYBalanceOfLC_T3_Before.gt(th.toBN(teamMemberInitialEntitlement_3)))
+      // Check STBL balances of vesting beneficiaries' LCs are greater than their initial entitlements
+      assert.isTrue(STBLBalanceOfLC_T1_Before.gt(th.toBN(teamMemberInitialEntitlement_1)))
+      assert.isTrue(STBLBalanceOfLC_T2_Before.gt(th.toBN(teamMemberInitialEntitlement_2)))
+      assert.isTrue(STBLBalanceOfLC_T3_Before.gt(th.toBN(teamMemberInitialEntitlement_3)))
 
-      // Check LQTY balances of beneficiaries are 0
-      assert.equal(await lqtyToken.balanceOf(teamMember_1), '0')
-      assert.equal(await lqtyToken.balanceOf(teamMember_2), '0')
-      assert.equal(await lqtyToken.balanceOf(teamMember_3), '0')
+      // Check STBL balances of beneficiaries are 0
+      assert.equal(await stblToken.balanceOf(teamMember_1), '0')
+      assert.equal(await stblToken.balanceOf(teamMember_2), '0')
+      assert.equal(await stblToken.balanceOf(teamMember_3), '0')
 
       // All beneficiaries withdraw from their respective LCs
-      await LC_T1.withdrawLQTY({ from: teamMember_1 })
-      await LC_T2.withdrawLQTY({ from: teamMember_2 })
-      await LC_T3.withdrawLQTY({ from: teamMember_3 })
+      await LC_T1.withdrawSTBL({ from: teamMember_1 })
+      await LC_T2.withdrawSTBL({ from: teamMember_2 })
+      await LC_T3.withdrawSTBL({ from: teamMember_3 })
 
-      // Check beneficiaries' LQTY balances now equal their accumulated vested entitlements
-      assert.isTrue((await lqtyToken.balanceOf(teamMember_1)).eq(LQTYBalanceOfLC_T1_Before))
-      assert.isTrue((await lqtyToken.balanceOf(teamMember_2)).eq(LQTYBalanceOfLC_T2_Before))
-      assert.isTrue((await lqtyToken.balanceOf(teamMember_3)).eq(LQTYBalanceOfLC_T3_Before))
+      // Check beneficiaries' STBL balances now equal their accumulated vested entitlements
+      assert.isTrue((await stblToken.balanceOf(teamMember_1)).eq(STBLBalanceOfLC_T1_Before))
+      assert.isTrue((await stblToken.balanceOf(teamMember_2)).eq(STBLBalanceOfLC_T2_Before))
+      assert.isTrue((await stblToken.balanceOf(teamMember_3)).eq(STBLBalanceOfLC_T3_Before))
 
-      // Check LQTY balances of beneficiaries' LCs are now 0
-      assert.equal(await lqtyToken.balanceOf(LC_T1.address), '0')
-      assert.equal(await lqtyToken.balanceOf(LC_T2.address), '0')
-      assert.equal(await lqtyToken.balanceOf(LC_T3.address), '0')
+      // Check STBL balances of beneficiaries' LCs are now 0
+      assert.equal(await stblToken.balanceOf(LC_T1.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_T2.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_T3.address), '0')
     })
 
-    it("Beneficiaries can withraw full LQTY balance of LC if it has increased since lockup period ended", async () => {
-      // Check LQTY balances of investors' LCs are equal to their initial entitlements
-      assert.equal(await lqtyToken.balanceOf(LC_I1.address), investorInitialEntitlement_1)
-      assert.equal(await lqtyToken.balanceOf(LC_I2.address), investorInitialEntitlement_2)
-      assert.equal(await lqtyToken.balanceOf(LC_I3.address), investorInitialEntitlement_3)
+    it("Beneficiaries can withraw full STBL balance of LC if it has increased since lockup period ended", async () => {
+      // Check STBL balances of investors' LCs are equal to their initial entitlements
+      assert.equal(await stblToken.balanceOf(LC_I1.address), investorInitialEntitlement_1)
+      assert.equal(await stblToken.balanceOf(LC_I2.address), investorInitialEntitlement_2)
+      assert.equal(await stblToken.balanceOf(LC_I3.address), investorInitialEntitlement_3)
 
-      // Check LQTY balances of investors are 0
-      assert.equal(await lqtyToken.balanceOf(investor_1), '0')
-      assert.equal(await lqtyToken.balanceOf(investor_2), '0')
-      assert.equal(await lqtyToken.balanceOf(investor_3), '0')
+      // Check STBL balances of investors are 0
+      assert.equal(await stblToken.balanceOf(investor_1), '0')
+      assert.equal(await stblToken.balanceOf(investor_2), '0')
+      assert.equal(await stblToken.balanceOf(investor_3), '0')
 
-      // LQTY multisig sends extra LQTY to investor LCs
-      await lqtyToken.transfer(LC_I1.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_I2.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_I3.address, dec(1, 24), { from: multisig })
+      // STBL multisig sends extra STBL to investor LCs
+      await stblToken.transfer(LC_I1.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_I2.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_I3.address, dec(1, 24), { from: multisig })
 
       // 1 month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // LQTY multisig again sends extra LQTY to investor LCs
-      await lqtyToken.transfer(LC_I1.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_I2.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_I3.address, dec(1, 24), { from: multisig })
+      // STBL multisig again sends extra STBL to investor LCs
+      await stblToken.transfer(LC_I1.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_I2.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_I3.address, dec(1, 24), { from: multisig })
 
-      // Get LQTY balances of LCs for investors 
-      const LQTYBalanceOfLC_I1_Before = await lqtyToken.balanceOf(LC_I1.address)
-      const LQTYBalanceOfLC_I2_Before = await lqtyToken.balanceOf(LC_I2.address)
-      const LQTYBalanceOfLC_I3_Before = await lqtyToken.balanceOf(LC_I3.address)
+      // Get STBL balances of LCs for investors 
+      const STBLBalanceOfLC_I1_Before = await stblToken.balanceOf(LC_I1.address)
+      const STBLBalanceOfLC_I2_Before = await stblToken.balanceOf(LC_I2.address)
+      const STBLBalanceOfLC_I3_Before = await stblToken.balanceOf(LC_I3.address)
 
-      // Check LQTY balances of investors' LCs are greater than their initial entitlements
-      assert.isTrue(LQTYBalanceOfLC_I1_Before.gt(th.toBN(investorInitialEntitlement_1)))
-      assert.isTrue(LQTYBalanceOfLC_I2_Before.gt(th.toBN(investorInitialEntitlement_2)))
-      assert.isTrue(LQTYBalanceOfLC_I3_Before.gt(th.toBN(investorInitialEntitlement_3)))
+      // Check STBL balances of investors' LCs are greater than their initial entitlements
+      assert.isTrue(STBLBalanceOfLC_I1_Before.gt(th.toBN(investorInitialEntitlement_1)))
+      assert.isTrue(STBLBalanceOfLC_I2_Before.gt(th.toBN(investorInitialEntitlement_2)))
+      assert.isTrue(STBLBalanceOfLC_I3_Before.gt(th.toBN(investorInitialEntitlement_3)))
 
       // All investors withdraw from their respective LCs
-      await LC_I1.withdrawLQTY({ from: investor_1 })
-      await LC_I2.withdrawLQTY({ from: investor_2 })
-      await LC_I3.withdrawLQTY({ from: investor_3 })
+      await LC_I1.withdrawSTBL({ from: investor_1 })
+      await LC_I2.withdrawSTBL({ from: investor_2 })
+      await LC_I3.withdrawSTBL({ from: investor_3 })
 
-      // Check LQTY balances of investors now equal their LC balances prior to withdrawal
-      assert.isTrue((await lqtyToken.balanceOf(investor_1)).eq(LQTYBalanceOfLC_I1_Before))
-      assert.isTrue((await lqtyToken.balanceOf(investor_2)).eq(LQTYBalanceOfLC_I2_Before))
-      assert.isTrue((await lqtyToken.balanceOf(investor_3)).eq(LQTYBalanceOfLC_I3_Before))
+      // Check STBL balances of investors now equal their LC balances prior to withdrawal
+      assert.isTrue((await stblToken.balanceOf(investor_1)).eq(STBLBalanceOfLC_I1_Before))
+      assert.isTrue((await stblToken.balanceOf(investor_2)).eq(STBLBalanceOfLC_I2_Before))
+      assert.isTrue((await stblToken.balanceOf(investor_3)).eq(STBLBalanceOfLC_I3_Before))
 
-      // Check LQTY balances of investors' LCs are now 0
-      assert.equal(await lqtyToken.balanceOf(LC_I1.address), '0')
-      assert.equal(await lqtyToken.balanceOf(LC_I2.address), '0')
-      assert.equal(await lqtyToken.balanceOf(LC_I3.address), '0')
+      // Check STBL balances of investors' LCs are now 0
+      assert.equal(await stblToken.balanceOf(LC_I1.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_I2.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_I3.address), '0')
     })
   })
 
   describe('Withdrawal attempts from LCs by non-beneficiaries', async accounts => {
-    it("LQTY Multisig can't withdraw from a LC they deployed through the Factory", async () => {
+    it("STBL Multisig can't withdraw from a LC they deployed through the Factory", async () => {
       try {
-        const withdrawalAttempt = await LC_T1.withdrawLQTY({ from: multisig })
+        const withdrawalAttempt = await LC_T1.withdrawSTBL({ from: multisig })
         assert.isFalse(withdrawalAttempt.receipt.status)
       } catch (error) {
         assert.include(error.message, "LockupContract: caller is not the beneficiary")
       }
     })
 
-    it("LQTY Multisig can't withdraw from a LC that someone else deployed", async () => {
+    it("STBL Multisig can't withdraw from a LC that someone else deployed", async () => {
       // Account D deploys a new LC via the Factory
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, oneYearFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-      //LQTY multisig fund the newly deployed LCs
-      await lqtyToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
+      //STBL multisig fund the newly deployed LCs
+      await stblToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
 
-      // LQTY multisig attempts withdrawal from LC
+      // STBL multisig attempts withdrawal from LC
       try {
-        const withdrawalAttempt_B = await LC_B.withdrawLQTY({ from: multisig })
+        const withdrawalAttempt_B = await LC_B.withdrawSTBL({ from: multisig })
         assert.isFalse(withdrawalAttempt_B.receipt.status)
       } catch (error) {
         assert.include(error.message, "LockupContract: caller is not the beneficiary")
@@ -360,7 +360,7 @@ contract('After the initial lockup period has passed', async accounts => {
       // Several EOAs attempt to withdraw from the LC that has teamMember_2 as beneficiary
       for (account of variousEOAs) {
         try {
-          const withdrawalAttempt = await LC_T2.withdrawLQTY({ from: account })
+          const withdrawalAttempt = await LC_T2.withdrawSTBL({ from: account })
           assert.isFalse(withdrawalAttempt.receipt.status)
         } catch (error) {
           assert.include(error.message, "LockupContract: caller is not the beneficiary")
@@ -369,50 +369,50 @@ contract('After the initial lockup period has passed', async accounts => {
     })
   })
 
-  describe('Transferring LQTY', async accounts => {
-    it("LQTY multisig can transfer LQTY to LCs they deployed", async () => {
-      const initialLQTYBalanceOfLC_T1 = await lqtyToken.balanceOf(LC_T1.address)
-      const initialLQTYBalanceOfLC_T2 = await lqtyToken.balanceOf(LC_T2.address)
-      const initialLQTYBalanceOfLC_T3 = await lqtyToken.balanceOf(LC_T3.address)
+  describe('Transferring STBL', async accounts => {
+    it("STBL multisig can transfer STBL to LCs they deployed", async () => {
+      const initialSTBLBalanceOfLC_T1 = await stblToken.balanceOf(LC_T1.address)
+      const initialSTBLBalanceOfLC_T2 = await stblToken.balanceOf(LC_T2.address)
+      const initialSTBLBalanceOfLC_T3 = await stblToken.balanceOf(LC_T3.address)
 
       // One month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // LQTY multisig transfers vesting amount
-      await lqtyToken.transfer(LC_T1.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_T2.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_T3.address, dec(1, 24), { from: multisig })
+      // STBL multisig transfers vesting amount
+      await stblToken.transfer(LC_T1.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_T2.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_T3.address, dec(1, 24), { from: multisig })
 
-      // Get new LC LQTY balances
-      const LQTYBalanceOfLC_T1_1 = await lqtyToken.balanceOf(LC_T1.address)
-      const LQTYBalanceOfLC_T2_1 = await lqtyToken.balanceOf(LC_T2.address)
-      const LQTYBalanceOfLC_T3_1 = await lqtyToken.balanceOf(LC_T3.address)
+      // Get new LC STBL balances
+      const STBLBalanceOfLC_T1_1 = await stblToken.balanceOf(LC_T1.address)
+      const STBLBalanceOfLC_T2_1 = await stblToken.balanceOf(LC_T2.address)
+      const STBLBalanceOfLC_T3_1 = await stblToken.balanceOf(LC_T3.address)
 
       // // Check team member LC balances have increased 
-      assert.isTrue(LQTYBalanceOfLC_T1_1.eq(th.toBN(initialLQTYBalanceOfLC_T1).add(th.toBN(dec(1, 24)))))
-      assert.isTrue(LQTYBalanceOfLC_T2_1.eq(th.toBN(initialLQTYBalanceOfLC_T2).add(th.toBN(dec(1, 24)))))
-      assert.isTrue(LQTYBalanceOfLC_T3_1.eq(th.toBN(initialLQTYBalanceOfLC_T3).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(STBLBalanceOfLC_T1_1.eq(th.toBN(initialSTBLBalanceOfLC_T1).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(STBLBalanceOfLC_T2_1.eq(th.toBN(initialSTBLBalanceOfLC_T2).add(th.toBN(dec(1, 24)))))
+      assert.isTrue(STBLBalanceOfLC_T3_1.eq(th.toBN(initialSTBLBalanceOfLC_T3).add(th.toBN(dec(1, 24)))))
 
       // Another month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // LQTY multisig transfers vesting amount
-      await lqtyToken.transfer(LC_T1.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_T2.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_T3.address, dec(1, 24), { from: multisig })
+      // STBL multisig transfers vesting amount
+      await stblToken.transfer(LC_T1.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_T2.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_T3.address, dec(1, 24), { from: multisig })
 
-      // Get new LC LQTY balances
-      const LQTYBalanceOfLC_T1_2 = await lqtyToken.balanceOf(LC_T1.address)
-      const LQTYBalanceOfLC_T2_2 = await lqtyToken.balanceOf(LC_T2.address)
-      const LQTYBalanceOfLC_T3_2 = await lqtyToken.balanceOf(LC_T3.address)
+      // Get new LC STBL balances
+      const STBLBalanceOfLC_T1_2 = await stblToken.balanceOf(LC_T1.address)
+      const STBLBalanceOfLC_T2_2 = await stblToken.balanceOf(LC_T2.address)
+      const STBLBalanceOfLC_T3_2 = await stblToken.balanceOf(LC_T3.address)
 
       // Check team member LC balances have increased again
-      assert.isTrue(LQTYBalanceOfLC_T1_2.eq(LQTYBalanceOfLC_T1_1.add(th.toBN(dec(1, 24)))))
-      assert.isTrue(LQTYBalanceOfLC_T2_2.eq(LQTYBalanceOfLC_T2_1.add(th.toBN(dec(1, 24)))))
-      assert.isTrue(LQTYBalanceOfLC_T3_2.eq(LQTYBalanceOfLC_T3_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(STBLBalanceOfLC_T1_2.eq(STBLBalanceOfLC_T1_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(STBLBalanceOfLC_T2_2.eq(STBLBalanceOfLC_T2_1.add(th.toBN(dec(1, 24)))))
+      assert.isTrue(STBLBalanceOfLC_T3_2.eq(STBLBalanceOfLC_T3_1.add(th.toBN(dec(1, 24)))))
     })
 
-    it("LQTY multisig can transfer tokens to LCs deployed by anyone", async () => {
+    it("STBL multisig can transfer tokens to LCs deployed by anyone", async () => {
       // A, B, C each deploy a lockup contract ith themself as beneficiary
       const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: A })
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, justOverOneYearFromSystemDeployment, { from: B })
@@ -423,46 +423,46 @@ contract('After the initial lockup period has passed', async accounts => {
       const LC_C = await th.getLCFromDeploymentTx(deployedLCtx_C)
 
       // Check balances of LCs are 0
-      assert.equal(await lqtyToken.balanceOf(LC_A.address), '0')
-      assert.equal(await lqtyToken.balanceOf(LC_B.address), '0')
-      assert.equal(await lqtyToken.balanceOf(LC_C.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_A.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_B.address), '0')
+      assert.equal(await stblToken.balanceOf(LC_C.address), '0')
 
       // One month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // LQTY multisig transfers LQTY to LCs deployed by other accounts
-      await lqtyToken.transfer(LC_A.address, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(LC_B.address, dec(2, 24), { from: multisig })
-      await lqtyToken.transfer(LC_C.address, dec(3, 24), { from: multisig })
+      // STBL multisig transfers STBL to LCs deployed by other accounts
+      await stblToken.transfer(LC_A.address, dec(1, 24), { from: multisig })
+      await stblToken.transfer(LC_B.address, dec(2, 24), { from: multisig })
+      await stblToken.transfer(LC_C.address, dec(3, 24), { from: multisig })
 
       // Check balances of LCs have increased
-      assert.equal(await lqtyToken.balanceOf(LC_A.address), dec(1, 24))
-      assert.equal(await lqtyToken.balanceOf(LC_B.address), dec(2, 24))
-      assert.equal(await lqtyToken.balanceOf(LC_C.address), dec(3, 24))
+      assert.equal(await stblToken.balanceOf(LC_A.address), dec(1, 24))
+      assert.equal(await stblToken.balanceOf(LC_B.address), dec(2, 24))
+      assert.equal(await stblToken.balanceOf(LC_C.address), dec(3, 24))
     })
 
-    it("LQTY multisig can transfer LQTY directly to any externally owned account", async () => {
-      // Check LQTY balances of EOAs
-      assert.equal(await lqtyToken.balanceOf(A), '0')
-      assert.equal(await lqtyToken.balanceOf(B), '0')
-      assert.equal(await lqtyToken.balanceOf(C), '0')
+    it("STBL multisig can transfer STBL directly to any externally owned account", async () => {
+      // Check STBL balances of EOAs
+      assert.equal(await stblToken.balanceOf(A), '0')
+      assert.equal(await stblToken.balanceOf(B), '0')
+      assert.equal(await stblToken.balanceOf(C), '0')
 
-      // LQTY multisig transfers LQTY to EOAs
-      const txA = await lqtyToken.transfer(A, dec(1, 24), { from: multisig })
-      const txB = await lqtyToken.transfer(B, dec(2, 24), { from: multisig })
-      const txC = await lqtyToken.transfer(C, dec(3, 24), { from: multisig })
+      // STBL multisig transfers STBL to EOAs
+      const txA = await stblToken.transfer(A, dec(1, 24), { from: multisig })
+      const txB = await stblToken.transfer(B, dec(2, 24), { from: multisig })
+      const txC = await stblToken.transfer(C, dec(3, 24), { from: multisig })
 
       // Check new balances have increased by correct amount
-      assert.equal(await lqtyToken.balanceOf(A), dec(1, 24))
-      assert.equal(await lqtyToken.balanceOf(B), dec(2, 24))
-      assert.equal(await lqtyToken.balanceOf(C), dec(3, 24))
+      assert.equal(await stblToken.balanceOf(A), dec(1, 24))
+      assert.equal(await stblToken.balanceOf(B), dec(2, 24))
+      assert.equal(await stblToken.balanceOf(C), dec(3, 24))
     })
 
-    it("Anyone can transfer LQTY to LCs deployed by anyone", async () => {
-      // Start D, E, F with some LQTY
-      await lqtyToken.transfer(D, dec(1, 24), { from: multisig })
-      await lqtyToken.transfer(E, dec(2, 24), { from: multisig })
-      await lqtyToken.transfer(F, dec(3, 24), { from: multisig })
+    it("Anyone can transfer STBL to LCs deployed by anyone", async () => {
+      // Start D, E, F with some STBL
+      await stblToken.transfer(D, dec(1, 24), { from: multisig })
+      await stblToken.transfer(E, dec(2, 24), { from: multisig })
+      await stblToken.transfer(F, dec(3, 24), { from: multisig })
 
       // H, I, J deploy lockup contracts with A, B, C as beneficiaries, respectively
       const deployedLCtx_A = await lockupContractFactory.deployLockupContract(A, oneYearFromSystemDeployment, { from: H })
@@ -475,187 +475,187 @@ contract('After the initial lockup period has passed', async accounts => {
       const LCAddress_C = await th.getLCAddressFromDeploymentTx(deployedLCtx_C)
 
       // Check balances of LCs are 0
-      assert.equal(await lqtyToken.balanceOf(LCAddress_A), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_B), '0')
-      assert.equal(await lqtyToken.balanceOf(LCAddress_C), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_A), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_B), '0')
+      assert.equal(await stblToken.balanceOf(LCAddress_C), '0')
 
-      // D, E, F transfer LQTY to LCs
-      await lqtyToken.transfer(LCAddress_A, dec(1, 24), { from: D })
-      await lqtyToken.transfer(LCAddress_B, dec(2, 24), { from: E })
-      await lqtyToken.transfer(LCAddress_C, dec(3, 24), { from: F })
+      // D, E, F transfer STBL to LCs
+      await stblToken.transfer(LCAddress_A, dec(1, 24), { from: D })
+      await stblToken.transfer(LCAddress_B, dec(2, 24), { from: E })
+      await stblToken.transfer(LCAddress_C, dec(3, 24), { from: F })
 
       // Check balances of LCs has increased
-      assert.equal(await lqtyToken.balanceOf(LCAddress_A), dec(1, 24))
-      assert.equal(await lqtyToken.balanceOf(LCAddress_B), dec(2, 24))
-      assert.equal(await lqtyToken.balanceOf(LCAddress_C), dec(3, 24))
+      assert.equal(await stblToken.balanceOf(LCAddress_A), dec(1, 24))
+      assert.equal(await stblToken.balanceOf(LCAddress_B), dec(2, 24))
+      assert.equal(await stblToken.balanceOf(LCAddress_C), dec(3, 24))
     })
 
 
     it("Anyone can transfer to an EOA", async () => {
-      // Start D, E, liquityAG with some LQTY
-      await lqtyToken.unprotectedMint(D, dec(1, 24))
-      await lqtyToken.unprotectedMint(E, dec(2, 24))
-      await lqtyToken.unprotectedMint(liquityAG, dec(3, 24))
-      await lqtyToken.unprotectedMint(multisig, dec(4, 24))
+      // Start D, E, liquityAG with some STBL
+      await stblToken.unprotectedMint(D, dec(1, 24))
+      await stblToken.unprotectedMint(E, dec(2, 24))
+      await stblToken.unprotectedMint(liquityAG, dec(3, 24))
+      await stblToken.unprotectedMint(multisig, dec(4, 24))
 
-      // LQTY holders transfer to other EOAs
-      const LQTYtransferTx_1 = await lqtyToken.transfer(A, dec(1, 18), { from: D })
-      const LQTYtransferTx_2 = await lqtyToken.transfer(liquityAG, dec(1, 18), { from: E })
-      const LQTYtransferTx_3 = await lqtyToken.transfer(F, dec(1, 18), { from: liquityAG })
-      const LQTYtransferTx_4 = await lqtyToken.transfer(G, dec(1, 18), { from: multisig })
+      // STBL holders transfer to other EOAs
+      const STBLtransferTx_1 = await stblToken.transfer(A, dec(1, 18), { from: D })
+      const STBLtransferTx_2 = await stblToken.transfer(liquityAG, dec(1, 18), { from: E })
+      const STBLtransferTx_3 = await stblToken.transfer(F, dec(1, 18), { from: liquityAG })
+      const STBLtransferTx_4 = await stblToken.transfer(G, dec(1, 18), { from: multisig })
 
-      assert.isTrue(LQTYtransferTx_1.receipt.status)
-      assert.isTrue(LQTYtransferTx_2.receipt.status)
-      assert.isTrue(LQTYtransferTx_3.receipt.status)
-      assert.isTrue(LQTYtransferTx_4.receipt.status)
+      assert.isTrue(STBLtransferTx_1.receipt.status)
+      assert.isTrue(STBLtransferTx_2.receipt.status)
+      assert.isTrue(STBLtransferTx_3.receipt.status)
+      assert.isTrue(STBLtransferTx_4.receipt.status)
     })
 
-    it("Anyone can approve any EOA to spend their LQTY", async () => {
-      // EOAs approve EOAs to spend LQTY
-      const LQTYapproveTx_1 = await lqtyToken.approve(A, dec(1, 18), { from: multisig })
-      const LQTYapproveTx_2 = await lqtyToken.approve(B, dec(1, 18), { from: G })
-      const LQTYapproveTx_3 = await lqtyToken.approve(liquityAG, dec(1, 18), { from: F })
-      await assert.isTrue(LQTYapproveTx_1.receipt.status)
-      await assert.isTrue(LQTYapproveTx_2.receipt.status)
-      await assert.isTrue(LQTYapproveTx_3.receipt.status)
+    it("Anyone can approve any EOA to spend their STBL", async () => {
+      // EOAs approve EOAs to spend STBL
+      const STBLapproveTx_1 = await stblToken.approve(A, dec(1, 18), { from: multisig })
+      const STBLapproveTx_2 = await stblToken.approve(B, dec(1, 18), { from: G })
+      const STBLapproveTx_3 = await stblToken.approve(liquityAG, dec(1, 18), { from: F })
+      await assert.isTrue(STBLapproveTx_1.receipt.status)
+      await assert.isTrue(STBLapproveTx_2.receipt.status)
+      await assert.isTrue(STBLapproveTx_3.receipt.status)
     })
 
     it("Anyone can increaseAllowance for any EOA or Liquity contract", async () => {
-      // Anyone can increaseAllowance of EOAs to spend LQTY
-      const LQTYIncreaseAllowanceTx_1 = await lqtyToken.increaseAllowance(A, dec(1, 18), { from: multisig })
-      const LQTYIncreaseAllowanceTx_2 = await lqtyToken.increaseAllowance(B, dec(1, 18), { from: G })
-      const LQTYIncreaseAllowanceTx_3 = await lqtyToken.increaseAllowance(multisig, dec(1, 18), { from: F })
-      await assert.isTrue(LQTYIncreaseAllowanceTx_1.receipt.status)
-      await assert.isTrue(LQTYIncreaseAllowanceTx_2.receipt.status)
-      await assert.isTrue(LQTYIncreaseAllowanceTx_3.receipt.status)
+      // Anyone can increaseAllowance of EOAs to spend STBL
+      const STBLIncreaseAllowanceTx_1 = await stblToken.increaseAllowance(A, dec(1, 18), { from: multisig })
+      const STBLIncreaseAllowanceTx_2 = await stblToken.increaseAllowance(B, dec(1, 18), { from: G })
+      const STBLIncreaseAllowanceTx_3 = await stblToken.increaseAllowance(multisig, dec(1, 18), { from: F })
+      await assert.isTrue(STBLIncreaseAllowanceTx_1.receipt.status)
+      await assert.isTrue(STBLIncreaseAllowanceTx_2.receipt.status)
+      await assert.isTrue(STBLIncreaseAllowanceTx_3.receipt.status)
 
       // Increase allowance of Liquity contracts from F
       for (const contract of Object.keys(coreContracts)) {
-        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
-        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+        const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
       // Increase allowance of Liquity contracts from multisig
       for (const contract of Object.keys(coreContracts)) {
-        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: multisig })
-        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+        const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: multisig })
+        await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
-      // Increase allowance of LQTY contracts from F
-      for (const contract of Object.keys(LQTYContracts)) {
-        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: F })
-        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      // Increase allowance of STBL contracts from F
+      for (const contract of Object.keys(STBLContracts)) {
+        const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(STBLContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
       // Increase allowance of LQT contracts from multisig
-      for (const contract of Object.keys(LQTYContracts)) {
-        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: multisig })
-        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      for (const contract of Object.keys(STBLContracts)) {
+        const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(STBLContracts[contract].address, dec(1, 18), { from: multisig })
+        await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
     })
 
     it("Anyone can decreaseAllowance for any EOA or Liquity contract", async () => {
       //First, increase allowance of A, B LiqAG and core contracts
-      const LQTYapproveTx_1 = await lqtyToken.approve(A, dec(1, 18), { from: multisig })
-      const LQTYapproveTx_2 = await lqtyToken.approve(B, dec(1, 18), { from: G })
-      const LQTYapproveTx_3 = await lqtyToken.approve(multisig, dec(1, 18), { from: F })
-      await assert.isTrue(LQTYapproveTx_1.receipt.status)
-      await assert.isTrue(LQTYapproveTx_2.receipt.status)
-      await assert.isTrue(LQTYapproveTx_3.receipt.status)
+      const STBLapproveTx_1 = await stblToken.approve(A, dec(1, 18), { from: multisig })
+      const STBLapproveTx_2 = await stblToken.approve(B, dec(1, 18), { from: G })
+      const STBLapproveTx_3 = await stblToken.approve(multisig, dec(1, 18), { from: F })
+      await assert.isTrue(STBLapproveTx_1.receipt.status)
+      await assert.isTrue(STBLapproveTx_2.receipt.status)
+      await assert.isTrue(STBLapproveTx_3.receipt.status)
 
       // --- SETUP ---
 
       // IncreaseAllowance of core contracts, from F
       for (const contract of Object.keys(coreContracts)) {
-        const LQTYtransferTx = await lqtyToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
-        await assert.isTrue(LQTYtransferTx.receipt.status)
+        const STBLtransferTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(STBLtransferTx.receipt.status)
       }
 
       // IncreaseAllowance of core contracts, from multisig
       for (const contract of Object.keys(coreContracts)) {
-        const LQTYtransferTx = await lqtyToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: multisig })
-        await assert.isTrue(LQTYtransferTx.receipt.status)
+        const STBLtransferTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: multisig })
+        await assert.isTrue(STBLtransferTx.receipt.status)
       }
 
-      // Increase allowance of LQTY contracts from F
-      for (const contract of Object.keys(LQTYContracts)) {
-        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: F })
-        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      // Increase allowance of STBL contracts from F
+      for (const contract of Object.keys(STBLContracts)) {
+        const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(STBLContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
       // Increase allowance of LQTT contracts from multisig 
-      for (const contract of Object.keys(LQTYContracts)) {
-        const LQTYIncreaseAllowanceTx = await lqtyToken.increaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: multisig })
-        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      for (const contract of Object.keys(STBLContracts)) {
+        const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(STBLContracts[contract].address, dec(1, 18), { from: multisig })
+        await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
       // --- TEST ---
 
       // Decrease allowance of A, B, multisig
-      const LQTYDecreaseAllowanceTx_1 = await lqtyToken.decreaseAllowance(A, dec(1, 18), { from: multisig })
-      const LQTYDecreaseAllowanceTx_2 = await lqtyToken.decreaseAllowance(B, dec(1, 18), { from: G })
-      const LQTYDecreaseAllowanceTx_3 = await lqtyToken.decreaseAllowance(multisig, dec(1, 18), { from: F })
-      await assert.isTrue(LQTYDecreaseAllowanceTx_1.receipt.status)
-      await assert.isTrue(LQTYDecreaseAllowanceTx_2.receipt.status)
-      await assert.isTrue(LQTYDecreaseAllowanceTx_3.receipt.status)
+      const STBLDecreaseAllowanceTx_1 = await stblToken.decreaseAllowance(A, dec(1, 18), { from: multisig })
+      const STBLDecreaseAllowanceTx_2 = await stblToken.decreaseAllowance(B, dec(1, 18), { from: G })
+      const STBLDecreaseAllowanceTx_3 = await stblToken.decreaseAllowance(multisig, dec(1, 18), { from: F })
+      await assert.isTrue(STBLDecreaseAllowanceTx_1.receipt.status)
+      await assert.isTrue(STBLDecreaseAllowanceTx_2.receipt.status)
+      await assert.isTrue(STBLDecreaseAllowanceTx_3.receipt.status)
 
       // Decrease allowance of core contracts, from F
       for (const contract of Object.keys(coreContracts)) {
-        const LQTYDecreaseAllowanceTx = await lqtyToken.decreaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
-        await assert.isTrue(LQTYDecreaseAllowanceTx.receipt.status)
+        const STBLDecreaseAllowanceTx = await stblToken.decreaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(STBLDecreaseAllowanceTx.receipt.status)
       }
 
       // Decrease allowance of core contracts from multisig
       for (const contract of Object.keys(coreContracts)) {
-        const LQTYDecreaseAllowanceTx = await lqtyToken.decreaseAllowance(coreContracts[contract].address, dec(1, 18), { from: multisig })
-        await assert.isTrue(LQTYDecreaseAllowanceTx.receipt.status)
+        const STBLDecreaseAllowanceTx = await stblToken.decreaseAllowance(coreContracts[contract].address, dec(1, 18), { from: multisig })
+        await assert.isTrue(STBLDecreaseAllowanceTx.receipt.status)
       }
 
-      // Decrease allowance of LQTY contracts from F
-      for (const contract of Object.keys(LQTYContracts)) {
-        const LQTYIncreaseAllowanceTx = await lqtyToken.decreaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: F })
-        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      // Decrease allowance of STBL contracts from F
+      for (const contract of Object.keys(STBLContracts)) {
+        const STBLIncreaseAllowanceTx = await stblToken.decreaseAllowance(STBLContracts[contract].address, dec(1, 18), { from: F })
+        await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
-      // Decrease allowance of LQTY contracts from multisig
-      for (const contract of Object.keys(LQTYContracts)) {
-        const LQTYIncreaseAllowanceTx = await lqtyToken.decreaseAllowance(LQTYContracts[contract].address, dec(1, 18), { from: multisig })
-        await assert.isTrue(LQTYIncreaseAllowanceTx.receipt.status)
+      // Decrease allowance of STBL contracts from multisig
+      for (const contract of Object.keys(STBLContracts)) {
+        const STBLIncreaseAllowanceTx = await stblToken.decreaseAllowance(STBLContracts[contract].address, dec(1, 18), { from: multisig })
+        await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
     })
 
     it("Anyone can be the sender in a transferFrom() call", async () => {
       // Fund B, C
-      await lqtyToken.unprotectedMint(B, dec(1, 18))
-      await lqtyToken.unprotectedMint(C, dec(1, 18))
+      await stblToken.unprotectedMint(B, dec(1, 18))
+      await stblToken.unprotectedMint(C, dec(1, 18))
 
       // LiqAG, B, C approve F, G, multisig respectively
-      await lqtyToken.approve(F, dec(1, 18), { from: multisig })
-      await lqtyToken.approve(G, dec(1, 18), { from: B })
-      await lqtyToken.approve(multisig, dec(1, 18), { from: C })
+      await stblToken.approve(F, dec(1, 18), { from: multisig })
+      await stblToken.approve(G, dec(1, 18), { from: B })
+      await stblToken.approve(multisig, dec(1, 18), { from: C })
 
       // Approved addresses transfer from the address they're approved for
-      const LQTYtransferFromTx_1 = await lqtyToken.transferFrom(multisig, F, dec(1, 18), { from: F })
-      const LQTYtransferFromTx_2 = await lqtyToken.transferFrom(B, multisig, dec(1, 18), { from: G })
-      const LQTYtransferFromTx_3 = await lqtyToken.transferFrom(C, A, dec(1, 18), { from: multisig })
-      await assert.isTrue(LQTYtransferFromTx_1.receipt.status)
-      await assert.isTrue(LQTYtransferFromTx_2.receipt.status)
-      await assert.isTrue(LQTYtransferFromTx_3.receipt.status)
+      const STBLtransferFromTx_1 = await stblToken.transferFrom(multisig, F, dec(1, 18), { from: F })
+      const STBLtransferFromTx_2 = await stblToken.transferFrom(B, multisig, dec(1, 18), { from: G })
+      const STBLtransferFromTx_3 = await stblToken.transferFrom(C, A, dec(1, 18), { from: multisig })
+      await assert.isTrue(STBLtransferFromTx_1.receipt.status)
+      await assert.isTrue(STBLtransferFromTx_2.receipt.status)
+      await assert.isTrue(STBLtransferFromTx_3.receipt.status)
     })
 
-    it("Anyone can stake their LQTY in the staking contract", async () => {
+    it("Anyone can stake their STBL in the staking contract", async () => {
       // Fund F
-      await lqtyToken.unprotectedMint(F, dec(1, 18))
+      await stblToken.unprotectedMint(F, dec(1, 18))
 
-      const LQTYStakingTx_1 = await lqtyStaking.stake(dec(1, 18), { from: F })
-      const LQTYStakingTx_2 = await lqtyStaking.stake(dec(1, 18), { from: multisig })
-      await assert.isTrue(LQTYStakingTx_1.receipt.status)
-      await assert.isTrue(LQTYStakingTx_2.receipt.status)
+      const STBLStakingTx_1 = await stblStaking.stake(dec(1, 18), { from: F })
+      const STBLStakingTx_2 = await stblStaking.stake(dec(1, 18), { from: multisig })
+      await assert.isTrue(STBLStakingTx_1.receipt.status)
+      await assert.isTrue(STBLStakingTx_2.receipt.status)
     })
   })
 
   describe('Withdrawal Attempts on new LCs before unlockTime has passed', async accounts => {
-    it("LQTY Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory, before the unlockTime", async () => {
+    it("STBL Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory, before the unlockTime", async () => {
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, _18monthsFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
@@ -664,31 +664,31 @@ contract('After the initial lockup period has passed', async accounts => {
       const unlockTime = await LC_B.unlockTime()
       assert.isTrue(currentTime.lt(unlockTime))
 
-      // LQTY multisig attempts withdrawal from LC they deployed through the Factory
+      // STBL multisig attempts withdrawal from LC they deployed through the Factory
       try {
-        const withdrawalAttempt = await LC_B.withdrawLQTY({ from: multisig })
+        const withdrawalAttempt = await LC_B.withdrawSTBL({ from: multisig })
         assert.isFalse(withdrawalAttempt.receipt.status)
       } catch (error) {
         assert.include(error.message, "LockupContract: caller is not the beneficiary")
       }
     })
 
-    it("LQTY Deployer can't withdraw from a funded LC that someone else deployed, before the unlockTime", async () => {
+    it("STBL Deployer can't withdraw from a funded LC that someone else deployed, before the unlockTime", async () => {
       // Account D deploys a new LC via the Factory
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, _18monthsFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-      //LQTY multisig fund the newly deployed LCs
-      await lqtyToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
+      //STBL multisig fund the newly deployed LCs
+      await stblToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
 
       // Check currentTime < unlockTime
       const currentTime = toBN(await th.getLatestBlockTimestamp(web3))
       const unlockTime = await LC_B.unlockTime()
       assert.isTrue(currentTime.lt(unlockTime))
 
-      // LQTY multisig attempts withdrawal from LCs
+      // STBL multisig attempts withdrawal from LCs
       try {
-        const withdrawalAttempt_B = await LC_B.withdrawLQTY({ from: multisig })
+        const withdrawalAttempt_B = await LC_B.withdrawSTBL({ from: multisig })
         assert.isFalse(withdrawalAttempt_B.receipt.status)
       } catch (error) {
         assert.include(error.message, "LockupContract: caller is not the beneficiary")
@@ -700,8 +700,8 @@ contract('After the initial lockup period has passed', async accounts => {
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, _18monthsFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-      // LQTY multisig funds contracts
-      await lqtyToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
+      // STBL multisig funds contracts
+      await stblToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
 
       // Check currentTime < unlockTime
       const currentTime = toBN(await th.getLatestBlockTimestamp(web3))
@@ -710,7 +710,7 @@ contract('After the initial lockup period has passed', async accounts => {
 
       try {
         const beneficiary = await LC_B.beneficiary()
-        const withdrawalAttempt = await LC_B.withdrawLQTY({ from: beneficiary })
+        const withdrawalAttempt = await LC_B.withdrawSTBL({ from: beneficiary })
         assert.isFalse(withdrawalAttempt.receipt.status)
       } catch (error) {
         assert.include(error.message, "LockupContract: The lockup duration must have passed")
@@ -722,8 +722,8 @@ contract('After the initial lockup period has passed', async accounts => {
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, _18monthsFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-      // LQTY multisig funds contracts
-      await lqtyToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
+      // STBL multisig funds contracts
+      await stblToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
 
       // Check currentTime < unlockTime
       const currentTime = toBN(await th.getLatestBlockTimestamp(web3))
@@ -735,7 +735,7 @@ contract('After the initial lockup period has passed', async accounts => {
       // Several EOAs attempt to withdraw from LC deployed by D
       for (account of variousEOAs) {
         try {
-          const withdrawalAttempt = await LC_B.withdrawLQTY({ from: account })
+          const withdrawalAttempt = await LC_B.withdrawSTBL({ from: account })
           assert.isFalse(withdrawalAttempt.receipt.status)
         } catch (error) {
           assert.include(error.message, "LockupContract: caller is not the beneficiary")
@@ -745,7 +745,7 @@ contract('After the initial lockup period has passed', async accounts => {
   })
 
   describe('Withdrawals from new LCs after unlockTime has passed', async accounts => {
-    it("LQTY Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory, after the unlockTime", async () => {
+    it("STBL Deployer can't withdraw from a funded LC they deployed for another beneficiary through the Factory, after the unlockTime", async () => {
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, _18monthsFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
@@ -756,22 +756,22 @@ contract('After the initial lockup period has passed', async accounts => {
       const unlockTime = await LC_B.unlockTime()
       assert.isTrue(currentTime.gt(unlockTime))
 
-      // LQTY multisig attempts withdrawal from LC they deployed through the Factory
+      // STBL multisig attempts withdrawal from LC they deployed through the Factory
       try {
-        const withdrawalAttempt = await LC_B.withdrawLQTY({ from: multisig })
+        const withdrawalAttempt = await LC_B.withdrawSTBL({ from: multisig })
         assert.isFalse(withdrawalAttempt.receipt.status)
       } catch (error) {
         assert.include(error.message, "LockupContract: caller is not the beneficiary")
       }
     })
 
-    it("LQTY multisig can't withdraw from a funded LC when they are not the beneficiary, after the unlockTime", async () => {
+    it("STBL multisig can't withdraw from a funded LC when they are not the beneficiary, after the unlockTime", async () => {
       // Account D deploys a new LC via the Factory
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, _18monthsFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-      //LQTY multisig fund the newly deployed LC
-      await lqtyToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
+      //STBL multisig fund the newly deployed LC
+      await stblToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
@@ -780,9 +780,9 @@ contract('After the initial lockup period has passed', async accounts => {
       const unlockTime = await LC_B.unlockTime()
       assert.isTrue(currentTime.gt(unlockTime))
 
-      // LQTY multisig attempts withdrawal from LCs
+      // STBL multisig attempts withdrawal from LCs
       try {
-        const withdrawalAttempt_B = await LC_B.withdrawLQTY({ from: multisig })
+        const withdrawalAttempt_B = await LC_B.withdrawSTBL({ from: multisig })
         assert.isFalse(withdrawalAttempt_B.receipt.status)
       } catch (error) {
         assert.include(error.message, "LockupContract: caller is not the beneficiary")
@@ -794,8 +794,8 @@ contract('After the initial lockup period has passed', async accounts => {
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, _18monthsFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-      // LQTY multisig funds contract
-      await lqtyToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
+      // STBL multisig funds contract
+      await stblToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
@@ -808,14 +808,14 @@ contract('After the initial lockup period has passed', async accounts => {
       assert.equal(beneficiary, B)
 
       // Get B's balance before
-      const B_balanceBefore = await lqtyToken.balanceOf(B)
+      const B_balanceBefore = await stblToken.balanceOf(B)
       assert.equal(B_balanceBefore, '0')
       
-      const withdrawalAttempt = await LC_B.withdrawLQTY({ from: B })
+      const withdrawalAttempt = await LC_B.withdrawSTBL({ from: B })
       assert.isTrue(withdrawalAttempt.receipt.status)
 
        // Get B's balance after
-       const B_balanceAfter = await lqtyToken.balanceOf(B)
+       const B_balanceAfter = await stblToken.balanceOf(B)
        assert.equal(B_balanceAfter, dec(2, 18))
     })
 
@@ -824,8 +824,8 @@ contract('After the initial lockup period has passed', async accounts => {
       const deployedLCtx_B = await lockupContractFactory.deployLockupContract(B, _18monthsFromSystemDeployment, { from: D })
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-      // LQTY multisig funds contracts
-      await lqtyToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
+      // STBL multisig funds contracts
+      await stblToken.transfer(LC_B.address, dec(2, 18), { from: multisig })
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
@@ -839,7 +839,7 @@ contract('After the initial lockup period has passed', async accounts => {
       // Several EOAs attempt to withdraw from LC deployed by D
       for (account of variousEOAs) {
         try {
-          const withdrawalAttempt = await LC_B.withdrawLQTY({ from: account })
+          const withdrawalAttempt = await LC_B.withdrawSTBL({ from: account })
           assert.isFalse(withdrawalAttempt.receipt.status)
         } catch (error) {
           assert.include(error.message, "LockupContract: caller is not the beneficiary")

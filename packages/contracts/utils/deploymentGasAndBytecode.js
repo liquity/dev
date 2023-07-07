@@ -9,13 +9,13 @@ const StabilityPool = artifacts.require("./StabilityPool.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
-const LQTYStaking = artifacts.require("./LQTY/LQTYStaking.sol")
-const LQTYToken = artifacts.require("./LQTY/LQTYToken.sol")
-const LockupContractFactory = artifacts.require("./LQTY/LockupContractFactory.sol")
-const CommunityIssuance = artifacts.require("./LQTY/CommunityIssuance.sol")
+const STBLStaking = artifacts.require("./STBL/STBLStaking.sol")
+const STBLToken = artifacts.require("./STBL/STBLToken.sol")
+const LockupContractFactory = artifacts.require("./STBL/LockupContractFactory.sol")
+const CommunityIssuance = artifacts.require("./STBL/CommunityIssuance.sol")
 const HintHelpers = artifacts.require("./HintHelpers.sol")
 
-const CommunityIssuanceTester = artifacts.require("./LQTY/CommunityIssuanceTester.sol")
+const CommunityIssuanceTester = artifacts.require("./STBL/CommunityIssuanceTester.sol")
 const ActivePoolTester = artifacts.require("./ActivePoolTester.sol")
 const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
@@ -41,9 +41,9 @@ const coreContractABIs = [
   HintHelpers,
 ]
 
-const LQTYContractABIs = [
-  LQTYStaking,
-  LQTYToken,
+const STBLContractABIs = [
+  STBLStaking,
+  STBLToken,
   LockupContractFactory,
   CommunityIssuance
 ]
@@ -109,19 +109,19 @@ const logContractBytecodeLengths = (contractABIs) => {
 // Run script: log deployment gas costs and bytecode lengths for all contracts
 async function main() {
   const coreContracts = await dh.deployLiquityCoreHardhat()
-  const LQTYContracts = await dh.deployLQTYContractsHardhat(ARBITRARY_ADDRESS, ARBITRARY_ADDRESS)
+  const STBLContracts = await dh.deploySTBLContractsHardhat(ARBITRARY_ADDRESS, ARBITRARY_ADDRESS)
   const testerContracts = await dh.deployTesterContractsHardhat()
 
-  await dh.connectCoreContracts(coreContracts, LQTYContracts)
-  await dh.connectLQTYContracts(LQTYContracts)
-  await dh.connectLQTYContractsToCore(LQTYContracts, coreContracts)
+  await dh.connectCoreContracts(coreContracts, STBLContracts)
+  await dh.connectSTBLContracts(STBLContracts)
+  await dh.connectSTBLContractsToCore(STBLContracts, coreContracts)
 
 
   console.log(`\n`)
-  console.log(`LQTY CONTRACTS`)
-  await logContractDeploymentCosts(LQTYContracts)
+  console.log(`STBL CONTRACTS`)
+  await logContractDeploymentCosts(STBLContracts)
   console.log(`\n`)
-  logContractBytecodeLengths(LQTYContractABIs)
+  logContractBytecodeLengths(STBLContractABIs)
   console.log(`\n`)
 
   console.log(`CORE CONTRACTS`)

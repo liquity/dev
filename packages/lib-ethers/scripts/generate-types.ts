@@ -6,16 +6,16 @@ import { Interface, ParamType } from "@ethersproject/abi";
 import ActivePool from "../../contracts/artifacts/contracts/ActivePool.sol/ActivePool.json";
 import BorrowerOperations from "../../contracts/artifacts/contracts/BorrowerOperations.sol/BorrowerOperations.json";
 import CollSurplusPool from "../../contracts/artifacts/contracts/CollSurplusPool.sol/CollSurplusPool.json";
-import CommunityIssuance from "../../contracts/artifacts/contracts/LQTY/CommunityIssuance.sol/CommunityIssuance.json";
+import CommunityIssuance from "../../contracts/artifacts/contracts/STBL/CommunityIssuance.sol/CommunityIssuance.json";
 import DefaultPool from "../../contracts/artifacts/contracts/DefaultPool.sol/DefaultPool.json";
 import ERC20Mock from "../../contracts/artifacts/contracts/LPRewards/TestContracts/ERC20Mock.sol/ERC20Mock.json";
 import GasPool from "../../contracts/artifacts/contracts/GasPool.sol/GasPool.json";
 import HintHelpers from "../../contracts/artifacts/contracts/HintHelpers.sol/HintHelpers.json";
 import IERC20 from "../../contracts/artifacts/@openzeppelin/contracts/token/ERC20/IERC20.sol/IERC20.json";
-import LockupContractFactory from "../../contracts/artifacts/contracts/LQTY/LockupContractFactory.sol/LockupContractFactory.json";
+import LockupContractFactory from "../../contracts/artifacts/contracts/STBL/LockupContractFactory.sol/LockupContractFactory.json";
 import LUSDToken from "../../contracts/artifacts/contracts/LUSDToken.sol/LUSDToken.json";
-import LQTYStaking from "../../contracts/artifacts/contracts/LQTY/LQTYStaking.sol/LQTYStaking.json";
-import LQTYToken from "../../contracts/artifacts/contracts/LQTY/LQTYToken.sol/LQTYToken.json";
+import STBLStaking from "../../contracts/artifacts/contracts/STBL/STBLStaking.sol/STBLStaking.json";
+import STBLToken from "../../contracts/artifacts/contracts/STBL/STBLToken.sol/STBLToken.json";
 import MultiTroveGetter from "../../contracts/artifacts/contracts/MultiTroveGetter.sol/MultiTroveGetter.json";
 import PriceFeed from "../../contracts/artifacts/contracts/PriceFeed.sol/PriceFeed.json";
 import PriceFeedTestnet from "../../contracts/artifacts/contracts/TestContracts/PriceFeedTestnet.sol/PriceFeedTestnet.json";
@@ -154,8 +154,8 @@ const contractArtifacts = [
   IERC20,
   LockupContractFactory,
   LUSDToken,
-  LQTYStaking,
-  LQTYToken,
+  STBLStaking,
+  STBLToken,
   MultiTroveGetter,
   PriceFeed,
   PriceFeedTestnet,
