@@ -33,6 +33,7 @@
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.3.0",
     "@openzeppelin/test-helpers": "^0.5.10",
+    "usingtellor": "^5.0.4",
     "eth-gas-reporter": "^0.2.22",
     "hardhat": "^2.6.1",
     "hardhat-gas-reporter": "^1.0.1",
