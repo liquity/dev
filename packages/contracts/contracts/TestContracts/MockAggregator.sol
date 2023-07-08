@@ -35,11 +35,11 @@ contract MockAggregator is AggregatorV3Interface {
         prevPrice = _prevPrice;
     }
 
-    function setPrevUpdateTime(uint _prevUpdateTime) external {
+    function setPrevUpdateTime(uint256 _prevUpdateTime) external {
         prevUpdateTime = _prevUpdateTime;
     }
 
-    function setUpdateTime(uint _updateTime) external  {
+    function setUpdateTime(uint256 _updateTime) external  {
         updateTime = _updateTime;
     }
 

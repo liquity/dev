@@ -42,34 +42,34 @@ contract LiquityBase is BaseMath, ILiquityBase {
     // --- Gas compensation functions ---
 
     // Returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation
-    function _getCompositeDebt(uint _debt) internal pure returns (uint) {
+    function _getCompositeDebt(uint256 _debt) internal pure returns (uint) {
         return _debt + XBRL_GAS_COMPENSATION;
     }
 
-    function _getNetDebt(uint _debt) internal pure returns (uint) {
+    function _getNetDebt(uint256 _debt) internal pure returns (uint) {
         return _debt - XBRL_GAS_COMPENSATION;
     }
 
     // Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation.
-    function _getCollGasCompensation(uint _entireColl) internal pure returns (uint) {
+    function _getCollGasCompensation(uint256 _entireColl) internal pure returns (uint) {
         return _entireColl / PERCENT_DIVISOR;
     }
 
-    function getEntireSystemColl() public view returns (uint entireSystemColl) {
+    function getEntireSystemColl() public view returns (uint256 entireSystemColl) {
         uint256 activeColl = activePool.getETH();
         uint256 liquidatedColl = defaultPool.getETH();
 
         return activeColl + liquidatedColl;
     }
 
-    function getEntireSystemDebt() public view returns (uint entireSystemDebt) {
+    function getEntireSystemDebt() public view returns (uint256 entireSystemDebt) {
         uint256 activeDebt = activePool.getXBRLDebt();
         uint256 closedDebt = defaultPool.getXBRLDebt();
 
         return activeDebt + closedDebt;
     }
 
-    function _getTCR(uint _price) internal view returns (uint TCR) {
+    function _getTCR(uint256 _price) internal view returns (uint256 TCR) {
         uint256 entireSystemColl = getEntireSystemColl();
         uint256 entireSystemDebt = getEntireSystemDebt();
 
@@ -78,13 +78,13 @@ contract LiquityBase is BaseMath, ILiquityBase {
         return TCR;
     }
 
-    function _checkRecoveryMode(uint _price) internal view returns (bool) {
+    function _checkRecoveryMode(uint256 _price) internal view returns (bool) {
         uint256 TCR = _getTCR(_price);
 
         return TCR < CCR;
     }
 
-    function _requireUserAcceptsFee(uint _fee, uint256 _amount, uint256 _maxFeePercentage) internal pure {
+    function _requireUserAcceptsFee(uint256 _fee, uint256 _amount, uint256 _maxFeePercentage) internal pure {
         uint256 feePercentage = _fee * DECIMAL_PRECISION / _amount;
         require(feePercentage <= _maxFeePercentage, "Fee exceeded provided maximum");
     }

@@ -8,7 +8,7 @@ interface ICommunityIssuance {
     
     event STBLTokenAddressSet(address _stblTokenAddress);
     event StabilityPoolAddressSet(address _stabilityPoolAddress);
-    event TotalSTBLIssuedUpdated(uint _totalSTBLIssued);
+    event TotalSTBLIssuedUpdated(uint256 _totalSTBLIssued);
 
     // --- Functions ---
 

@@ -14,9 +14,9 @@ interface ISTBLStaking {
 
     event StakeChanged(address indexed staker, uint256 newStake);
     event StakingGainsWithdrawn(address indexed staker, uint256 XBRLGain, uint256 ETHGain);
-    event F_ETHUpdated(uint _F_ETH);
-    event F_XBRLUpdated(uint _F_XBRL);
-    event TotalSTBLStakedUpdated(uint _totalSTBLStaked);
+    event F_ETHUpdated(uint256 _F_ETH);
+    event F_XBRLUpdated(uint256 _F_XBRL);
+    event TotalSTBLStakedUpdated(uint256 _totalSTBLStaked);
     event EtherSent(address _account, uint256 _amount);
     event StakerSnapshotsUpdated(address _staker, uint256 _F_ETH, uint256 _F_XBRL);
 
@@ -31,13 +31,13 @@ interface ISTBLStaking {
         address _activePoolAddress
     )  external;
 
-    function stake(uint _STBLamount) external;
+    function stake(uint256 _STBLamount) external;
 
-    function unstake(uint _STBLamount) external;
+    function unstake(uint256 _STBLamount) external;
 
-    function increaseF_ETH(uint _ETHFee) external; 
+    function increaseF_ETH(uint256 _ETHFee) external; 
 
-    function increaseF_XBRL(uint _STBLFee) external;  
+    function increaseF_XBRL(uint256 _STBLFee) external;  
 
     function getPendingETHGain(address _user) external view returns (uint);
 

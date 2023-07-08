@@ -15,7 +15,7 @@ contract MockTellor {
 
     // --- Setters for mock price data ---
 
-    function setPrice(uint _price) external {
+    function setPrice(uint256 _price) external {
         price = _price;
     }
 
@@ -23,7 +23,7 @@ contract MockTellor {
         didRetrieve = _didRetrieve;
     }
 
-    function setUpdateTime(uint _updateTime) external {
+    function setUpdateTime(uint256 _updateTime) external {
         updateTime = _updateTime;
     }
 

@@ -7,8 +7,8 @@ interface IPool {
     
     // --- Events ---
     
-    event ETHBalanceUpdated(uint _newBalance);
-    event XBRLBalanceUpdated(uint _newBalance);
+    event ETHBalanceUpdated(uint256 _newBalance);
+    event XBRLBalanceUpdated(uint256 _newBalance);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
@@ -20,7 +20,7 @@ interface IPool {
 
     function getXBRLDebt() external view returns (uint);
 
-    function increaseXBRLDebt(uint _amount) external;
+    function increaseXBRLDebt(uint256 _amount) external;
 
-    function decreaseXBRLDebt(uint _amount) external;
+    function decreaseXBRLDebt(uint256 _amount) external;
 }

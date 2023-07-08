@@ -43,7 +43,7 @@ contract FunctionCaller {
         return troveManager.getCurrentICR(_address, _price);  
     }
 
-    function sortedTroves_findInsertPosition(uint _NICR, address _prevId, address _nextId) external returns (address, address) {
+    function sortedTroves_findInsertPosition(uint256 _NICR, address _prevId, address _nextId) external returns (address, address) {
         return sortedTroves.findInsertPosition(_NICR, _prevId, _nextId);
     }
 }

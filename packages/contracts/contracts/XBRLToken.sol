@@ -75,13 +75,13 @@ contract XBRLToken is CheckContract, IXBRLToken {
         checkContract(_borrowerOperationsAddress);
 
         troveManagerAddress = _troveManagerAddress;
-        emit TroveManagerAddressChanged(_troveManagerAddress);
+        emit TroveManagerAddressAdded(_troveManagerAddress);
 
         stabilityPoolAddress = _stabilityPoolAddress;
-        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
+        emit StabilityPoolAddressAdded(_stabilityPoolAddress);
 
         borrowerOperationsAddress = _borrowerOperationsAddress;        
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
+        emit BorrowerOperationsAddressAdded(_borrowerOperationsAddress);
         
         bytes32 hashedName = keccak256(bytes(_NAME));
         bytes32 hashedVersion = keccak256(bytes(_VERSION));
@@ -183,7 +183,7 @@ contract XBRLToken is CheckContract, IXBRLToken {
         external 
         override 
     {            
-        require(deadline >= now, 'XBRL: expired deadline');
+        require(deadline >= block.timestamp, 'XBRL: expired deadline');
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', 
                          domainSeparator(), keccak256(abi.encode(
                          _PERMIT_TYPEHASH, owner, spender, amount, 

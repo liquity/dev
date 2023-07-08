@@ -14,7 +14,7 @@ contract STBLStakingScript is CheckContract {
         STBLStaking = ISTBLStaking(_stblStakingAddress);
     }
 
-    function stake(uint _STBLamount) external {
+    function stake(uint256 _STBLamount) external {
         STBLStaking.stake(_STBLamount);
     }
 }

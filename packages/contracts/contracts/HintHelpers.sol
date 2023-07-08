@@ -84,7 +84,7 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
         firstRedemptionHint = currentTroveuser;
 
         if (_maxIterations == 0) {
-            _maxIterations = uint(-1);
+            _maxIterations = type(uint256).max;
         }
 
         while (currentTroveuser != address(0) && remainingXBRL > 0 && _maxIterations-- > 0) {
@@ -126,7 +126,7 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
     Submitting numTrials = k * sqrt(length), with k = 15 makes it very, very likely that the ouput address will 
     be <= sqrt(length) positions away from the correct insert position.
     */
-    function getApproxHint(uint _CR, uint256 _numTrials, uint256 _inputRandomSeed)
+    function getApproxHint(uint256 _CR, uint256 _numTrials, uint256 _inputRandomSeed)
         external
         view
         returns (address hintAddress, uint256 diff, uint256 latestRandomSeed)
@@ -161,11 +161,11 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
         }
     }
 
-    function computeNominalCR(uint _coll, uint256 _debt) external pure returns (uint) {
+    function computeNominalCR(uint256 _coll, uint256 _debt) external pure returns (uint) {
         return LiquityMath._computeNominalCR(_coll, _debt);
     }
 
-    function computeCR(uint _coll, uint256 _debt, uint256 _price) external pure returns (uint) {
+    function computeCR(uint256 _coll, uint256 _debt, uint256 _price) external pure returns (uint) {
         return LiquityMath._computeCR(_coll, _debt, _price);
     }
 }

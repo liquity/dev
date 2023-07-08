@@ -164,7 +164,7 @@ const ABDKOperations = async () => {
     
     ABDK.mulu is for: (64.64dec * uint)  -> uint.  i.e. for rewardPerUnitStaked  * stake -> reward
     
-    ABDK.divu is for: (uint / uint)  -> 64.64dec.  i.e. for liquidatedETH / totalStakes 
+    ABDK.divu is for: (uint256 / uint)  -> 64.64dec.  i.e. for liquidatedETH / totalStakes 
     
     */
 }

@@ -233,8 +233,8 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     // --- Events ---
 
-    event StabilityPoolETHBalanceUpdated(uint _newBalance);
-    event StabilityPoolXBRLBalanceUpdated(uint _newBalance);
+    event StabilityPoolETHBalanceUpdated(uint256 _newBalance);
+    event StabilityPoolXBRLBalanceUpdated(uint256 _newBalance);
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
@@ -245,9 +245,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
 
-    event P_Updated(uint _P);
-    event S_Updated(uint _S, uint128 _epoch, uint128 _scale);
-    event G_Updated(uint _G, uint128 _epoch, uint128 _scale);
+    event P_Updated(uint256 _P);
+    event S_Updated(uint256 _S, uint128 _epoch, uint128 _scale);
+    event G_Updated(uint256 _G, uint128 _epoch, uint128 _scale);
     event EpochUpdated(uint128 _currentEpoch);
     event ScaleUpdated(uint128 _currentScale);
 
@@ -326,7 +326,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * - Sends the tagged front end's accumulated STBL gains to the tagged front end
     * - Increases deposit and tagged front end's stake, and takes new snapshots for each.
     */
-    function provideToSP(uint _amount, address _frontEndTag) external override {
+    function provideToSP(uint256 _amount, address _frontEndTag) external override {
         _requireFrontEndIsRegisteredOrZero(_frontEndTag);
         _requireFrontEndNotRegistered(msg.sender);
         _requireNonZeroAmount(_amount);
@@ -373,7 +373,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     *
     * If _amount > userDeposit, the user withdraws all of their compounded deposit.
     */
-    function withdrawFromSP(uint _amount) external override {
+    function withdrawFromSP(uint256 _amount) external override {
         if (_amount !=0) {_requireNoUnderCollateralizedTroves();}
         uint256 initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
@@ -464,7 +464,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
        _updateG(STBLIssuance);
     }
 
-    function _updateG(uint _STBLIssuance) internal {
+    function _updateG(uint256 _STBLIssuance) internal {
         uint256 totalXBRL = totalXBRLDeposits; // cached to save an SLOAD
         /*
         * When total deposits is 0, G is not updated. In this case, the STBL issued can not be obtained by later
@@ -482,7 +482,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         emit G_Updated(epochToScaleToG[currentEpoch][currentScale], currentEpoch, currentScale);
     }
 
-    function _computeSTBLPerUnitStaked(uint _STBLIssuance, uint256 _totalXBRLDeposits) internal returns (uint) {
+    function _computeSTBLPerUnitStaked(uint256 _STBLIssuance, uint256 _totalXBRLDeposits) internal returns (uint) {
         /*  
         * Calculate the STBL-per-unit staked.  Division uses a "feedback" error correction, to keep the 
         * cumulative error low in the running total G:
@@ -509,14 +509,14 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
     * Only called by liquidation functions in the TroveManager.
     */
-    function offset(uint _debtToOffset, uint256 _collToAdd) external override {
+    function offset(uint256 _debtToOffset, uint256 _collToAdd) external override {
         _requireCallerIsTroveManager();
         uint256 totalXBRL = totalXBRLDeposits; // cached to save an SLOAD
         if (totalXBRL == 0 || _debtToOffset == 0) { return; }
 
         _triggerSTBLIssuance(communityIssuance);
 
-        (uint ETHGainPerUnitStaked,
+        (uint256 ETHGainPerUnitStaked,
             uint256 XBRLLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalXBRL);
 
         _updateRewardSumAndProduct(ETHGainPerUnitStaked, XBRLLossPerUnitStaked);  // updates S and P
@@ -532,7 +532,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint256 _totalXBRLDeposits
     )
         internal
-        returns (uint ETHGainPerUnitStaked, uint256 XBRLLossPerUnitStaked)
+        returns (uint256 ETHGainPerUnitStaked, uint256 XBRLLossPerUnitStaked)
     {
         /*
         * Compute the XBRL and ETH rewards. Uses a "feedback" error correction, to keep
@@ -568,7 +568,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     // Update the Stability Pool reward sum S and product P
-    function _updateRewardSumAndProduct(uint _ETHGainPerUnitStaked, uint256 _XBRLLossPerUnitStaked) internal {
+    function _updateRewardSumAndProduct(uint256 _ETHGainPerUnitStaked, uint256 _XBRLLossPerUnitStaked) internal {
         uint256 currentP = P;
         uint256 newP;
 
@@ -618,7 +618,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         emit P_Updated(newP);
     }
 
-    function _moveOffsetCollAndDebt(uint _collToAdd, uint256 _debtToOffset) internal {
+    function _moveOffsetCollAndDebt(uint256 _collToAdd, uint256 _debtToOffset) internal {
         IActivePool activePoolCached = activePool;
 
         // Cancel the liquidated XBRL debt with the XBRL in the stability pool
@@ -631,7 +631,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         activePoolCached.sendETH(address(this), _collToAdd);
     }
 
-    function _decreaseXBRL(uint _amount) internal {
+    function _decreaseXBRL(uint256 _amount) internal {
         uint256 newTotalXBRLDeposits = totalXBRLDeposits - _amount;
         totalXBRLDeposits = newTotalXBRLDeposits;
         emit StabilityPoolXBRLBalanceUpdated(newTotalXBRLDeposits);
@@ -655,7 +655,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         return ETHGain;
     }
 
-    function _getETHGainFromSnapshots(uint initialDeposit, Snapshots memory snapshots) internal view returns (uint) {
+    function _getETHGainFromSnapshots(uint256 initialDeposit, Snapshots memory snapshots) internal view returns (uint) {
         /*
         * Grab the sum 'S' from the epoch at which the stake was made. The ETH gain may span up to one scale change.
         * If it does, the second portion of the ETH gain is scaled by 1e9.
@@ -719,7 +719,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         return STBLGain;
     }
 
-    function _getSTBLGainFromSnapshots(uint initialStake, Snapshots memory snapshots) internal view returns (uint) {
+    function _getSTBLGainFromSnapshots(uint256 initialStake, Snapshots memory snapshots) internal view returns (uint) {
        /*
         * Grab the sum 'G' from the epoch at which the stake was made. The STBL gain may span up to one scale change.
         * If it does, the second portion of the STBL gain is scaled by 1e9.
@@ -826,7 +826,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         emit StabilityPoolXBRLBalanceUpdated(newTotalXBRLDeposits);
     }
 
-    function _sendETHGainToDepositor(uint _amount) internal {
+    function _sendETHGainToDepositor(uint256 _amount) internal {
         if (_amount == 0) {return;}
         uint256 newETH = ETH - _amount;
         ETH = newETH;
@@ -848,7 +848,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     // --- External Front End functions ---
 
     // Front end makes a one-time selection of kickback rate upon registering
-    function registerFrontEnd(uint _kickbackRate) external override {
+    function registerFrontEnd(uint256 _kickbackRate) external override {
         _requireFrontEndNotRegistered(msg.sender);
         _requireUserHasNoDeposit(msg.sender);
         _requireValidKickbackRate(_kickbackRate);
@@ -950,7 +950,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         require(ICR >= MCR, "StabilityPool: Cannot withdraw while there are troves with ICR < MCR");
     }
 
-    function _requireUserHasDeposit(uint _initialDeposit) internal pure {
+    function _requireUserHasDeposit(uint256 _initialDeposit) internal pure {
         require(_initialDeposit > 0, 'StabilityPool: User must have a non-zero deposit');
     }
 
@@ -959,7 +959,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         require(initialDeposit == 0, 'StabilityPool: User must have no deposit');
     }
 
-    function _requireNonZeroAmount(uint _amount) internal pure {
+    function _requireNonZeroAmount(uint256 _amount) internal pure {
         require(_amount > 0, 'StabilityPool: Amount must be non-zero');
     }
 
@@ -981,7 +981,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
             "StabilityPool: Tag must be a registered front end, or the zero address");
     }
 
-    function  _requireValidKickbackRate(uint _kickbackRate) internal pure {
+    function  _requireValidKickbackRate(uint256 _kickbackRate) internal pure {
         require (_kickbackRate <= DECIMAL_PRECISION, "StabilityPool: Kickback rate must be in range [0,1]");
     }
 

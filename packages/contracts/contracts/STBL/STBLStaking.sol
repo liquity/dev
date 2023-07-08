@@ -47,9 +47,9 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
 
     event StakeChanged(address indexed staker, uint256 newStake);
     event StakingGainsWithdrawn(address indexed staker, uint256 XBRLGain, uint256 ETHGain);
-    event F_ETHUpdated(uint _F_ETH);
-    event F_XBRLUpdated(uint _F_XBRL);
-    event TotalSTBLStakedUpdated(uint _totalSTBLStaked);
+    event F_ETHUpdated(uint256 _F_ETH);
+    event F_XBRLUpdated(uint256 _F_XBRL);
+    event TotalSTBLStakedUpdated(uint256 _totalSTBLStaked);
     event EtherSent(address _account, uint256 _amount);
     event StakerSnapshotsUpdated(address _staker, uint256 _F_ETH, uint256 _F_XBRL);
 
@@ -89,7 +89,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     }
 
     // If caller has a pre-existing stake, send any accumulated ETH and XBRL gains to them. 
-    function stake(uint _STBLamount) external override {
+    function stake(uint256 _STBLamount) external override {
         _requireNonZeroAmount(_STBLamount);
 
         uint256 currentStake = stakes[msg.sender];
@@ -126,7 +126,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
 
     // Unstake the STBL and send the it back to the caller, along with their accumulated XBRL & ETH gains. 
     // If requested amount > stake, send their entire stake.
-    function unstake(uint _STBLamount) external override {
+    function unstake(uint256 _STBLamount) external override {
         uint256 currentStake = stakes[msg.sender];
         _requireUserHasStake(currentStake);
 
@@ -161,7 +161,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
 
     // --- Reward-per-unit-staked increase functions. Called by Liquity core contracts ---
 
-    function increaseF_ETH(uint _ETHFee) external override {
+    function increaseF_ETH(uint256 _ETHFee) external override {
         _requireCallerIsTroveManager();
         uint256 ETHFeePerSTBLStaked;
      
@@ -171,7 +171,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
         emit F_ETHUpdated(F_ETH);
     }
 
-    function increaseF_XBRL(uint _XBRLFee) external override {
+    function increaseF_XBRL(uint256 _XBRLFee) external override {
         _requireCallerIsBorrowerOperations();
         uint256 XBRLFeePerSTBLStaked;
         
@@ -211,7 +211,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
         emit StakerSnapshotsUpdated(_user, F_ETH, F_XBRL);
     }
 
-    function _sendETHGainToUser(uint ETHGain) internal {
+    function _sendETHGainToUser(uint256 ETHGain) internal {
         emit EtherSent(msg.sender, ETHGain);
         (bool success, ) = msg.sender.call{value: ETHGain}("");
         require(success, "STBLStaking: Failed to send accumulated ETHGain");
@@ -231,11 +231,11 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
         require(msg.sender == activePoolAddress, "STBLStaking: caller is not ActivePool");
     }
 
-    function _requireUserHasStake(uint currentStake) internal pure {  
+    function _requireUserHasStake(uint256 currentStake) internal pure {  
         require(currentStake > 0, 'STBLStaking: User must have a non-zero stake');  
     }
 
-    function _requireNonZeroAmount(uint _amount) internal pure {
+    function _requireNonZeroAmount(uint256 _amount) internal pure {
         require(_amount > 0, 'STBLStaking: Amount must be non-zero');
     }
 

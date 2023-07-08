@@ -8,9 +8,9 @@ import "./IPool.sol";
 interface IDefaultPool is IPool {
     // --- Events ---
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event DefaultPoolXBRLDebtUpdated(uint _XBRLDebt);
-    event DefaultPoolETHBalanceUpdated(uint _ETH);
+    event DefaultPoolXBRLDebtUpdated(uint256 _XBRLDebt);
+    event DefaultPoolETHBalanceUpdated(uint256 _ETH);
 
     // --- Functions ---
-    function sendETHToActivePool(uint _amount) external;
+    function sendETHToActivePool(uint256 _amount) external;
 }

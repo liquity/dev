@@ -251,7 +251,7 @@ contract STBLToken is CheckContract, ISTBLToken {
         external 
         override 
     {            
-        require(deadline >= now, 'STBL: expired deadline');
+        require(deadline >= block.timestamp, 'STBL: expired deadline');
         bytes32 digest = keccak256(abi.encodePacked('\x19\x01', 
                          domainSeparator(), keccak256(abi.encode(
                          _PERMIT_TYPEHASH, owner, spender, amount, 

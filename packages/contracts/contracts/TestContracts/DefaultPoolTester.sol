@@ -6,7 +6,7 @@ import "../DefaultPool.sol";
 
 contract DefaultPoolTester is DefaultPool {
     
-    function unprotectedIncreaseXBRLDebt(uint _amount) external {
+    function unprotectedIncreaseXBRLDebt(uint256 _amount) external {
         XBRLDebt += _amount;
     }
 

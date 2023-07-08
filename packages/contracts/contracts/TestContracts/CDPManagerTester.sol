@@ -9,11 +9,11 @@ for testing the parent's internal functions. */
 
 contract TroveManagerTester is TroveManager {
 
-    function computeICR(uint _coll, uint256 _debt, uint256 _price) external pure returns (uint) {
+    function computeICR(uint256 _coll, uint256 _debt, uint256 _price) external pure returns (uint) {
         return LiquityMath._computeCR(_coll, _debt, _price);
     }
 
-    function getCollGasCompensation(uint _coll) external pure returns (uint) {
+    function getCollGasCompensation(uint256 _coll) external pure returns (uint) {
         return _getCollGasCompensation(_coll);
     }
 
@@ -21,7 +21,7 @@ contract TroveManagerTester is TroveManager {
         return XBRL_GAS_COMPENSATION;
     }
 
-    function getCompositeDebt(uint _debt) external pure returns (uint) {
+    function getCompositeDebt(uint256 _debt) external pure returns (uint) {
         return _getCompositeDebt(_debt);
     }
 
@@ -41,15 +41,15 @@ contract TroveManagerTester is TroveManager {
         lastFeeOperationTime = block.timestamp;
     }
 
-    function setBaseRate(uint _baseRate) external {
+    function setBaseRate(uint256 _baseRate) external {
         baseRate = _baseRate;
     }
 
-    function callGetRedemptionFee(uint _ETHDrawn) external view returns (uint) {
+    function callGetRedemptionFee(uint256 _ETHDrawn) external view returns (uint) {
         _getRedemptionFee(_ETHDrawn);
     }  
 
-    function getActualDebtFromComposite(uint _debtVal) external pure returns (uint) {
+    function getActualDebtFromComposite(uint256 _debtVal) external pure returns (uint) {
         return _getNetDebt(_debtVal);
     }
 

@@ -81,7 +81,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     // The current status of the PricFeed, which determines the conditions for the next price fetch attempt
     Status public status;
 
-    event LastGoodPriceUpdated(uint _lastGoodPrice);
+    event LastGoodPriceUpdated(uint256 _lastGoodPrice);
     event PriceFeedStatusChanged(Status newStatus);
 
     // --- Dependency setters ---
@@ -463,7 +463,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return percentEthUsdPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES || percentBrlUsdPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
     }
 
-    function _scaleChainlinkPriceByDigits(uint _price, uint256 _answerDigits) internal pure returns (uint) {
+    function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits) internal pure returns (uint) {
         /*
         * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Liquity.
         * At date of Liquity launch, Chainlink uses an 8-digit price, but we also handle the possibility of
@@ -482,7 +482,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return price;
     }
 
-    function _scaleTellorPriceByDigits(uint _price) internal pure returns (uint) {
+    function _scaleTellorPriceByDigits(uint256 _price) internal pure returns (uint) {
         return _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
     }
 
@@ -491,7 +491,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         emit PriceFeedStatusChanged(_status);
     }
 
-    function _storePrice(uint _currentPrice) internal {
+    function _storePrice(uint256 _currentPrice) internal {
         lastGoodPrice = _currentPrice;
         emit LastGoodPriceUpdated(_currentPrice);
     }

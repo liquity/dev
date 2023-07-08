@@ -733,15 +733,15 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Borrower (Trove) Operations - `BorrowerOperations.sol`
 
-`openTrove(uint _maxFeePercentage, uint _XBRLAmount, address _upperHint, address _lowerHint)`: payable function that creates a Trove for the caller with the requested debt, and the Ether received as collateral. Successful execution is conditional mainly on the resulting collateralization ratio which must exceed the minimum (110% in Normal Mode, 150% in Recovery Mode). In addition to the requested debt, extra debt is issued to pay the issuance fee, and cover the gas compensation. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when a redemption transaction is processed first, driving up the issuance fee. 
+`openTrove(uint256 _maxFeePercentage, uint _XBRLAmount, address _upperHint, address _lowerHint)`: payable function that creates a Trove for the caller with the requested debt, and the Ether received as collateral. Successful execution is conditional mainly on the resulting collateralization ratio which must exceed the minimum (110% in Normal Mode, 150% in Recovery Mode). In addition to the requested debt, extra debt is issued to pay the issuance fee, and cover the gas compensation. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when a redemption transaction is processed first, driving up the issuance fee. 
 
 `addColl(address _upperHint, address _lowerHint))`: payable function that adds the received Ether to the caller's active Trove.
 
-`withdrawColl(uint _amount, address _upperHint, address _lowerHint)`: withdraws `_amount` of collateral from the caller’s Trove. Executes only if the user has an active Trove, the withdrawal would not pull the user’s Trove below the minimum collateralization ratio, and the resulting total collateralization ratio of the system is above 150%. 
+`withdrawColl(uint256 _amount, address _upperHint, address _lowerHint)`: withdraws `_amount` of collateral from the caller’s Trove. Executes only if the user has an active Trove, the withdrawal would not pull the user’s Trove below the minimum collateralization ratio, and the resulting total collateralization ratio of the system is above 150%. 
 
-`function withdrawXBRL(uint _maxFeePercentage, uint _XBRLAmount, address _upperHint, address _lowerHint)`: issues `_amount` of XBRL from the caller’s Trove to the caller. Executes only if the Trove's collateralization ratio would remain above the minimum, and the resulting total collateralization ratio is above 150%. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when a redemption transaction is processed first, driving up the issuance fee.
+`function withdrawXBRL(uint256 _maxFeePercentage, uint _XBRLAmount, address _upperHint, address _lowerHint)`: issues `_amount` of XBRL from the caller’s Trove to the caller. Executes only if the Trove's collateralization ratio would remain above the minimum, and the resulting total collateralization ratio is above 150%. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when a redemption transaction is processed first, driving up the issuance fee.
 
-`repayXBRL(uint _amount, address _upperHint, address _lowerHint)`: repay `_amount` of XBRL to the caller’s Trove, subject to leaving 50 debt in the Trove (which corresponds to the 50 XBRL gas compensation).
+`repayXBRL(uint256 _amount, address _upperHint, address _lowerHint)`: repay `_amount` of XBRL to the caller’s Trove, subject to leaving 50 debt in the Trove (which corresponds to the 50 XBRL gas compensation).
 
 `_adjustTrove(address _borrower, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint _maxFeePercentage)`: enables a borrower to simultaneously change both their collateral and debt, subject to all the restrictions that apply to individual increases/decreases of each quantity with the following particularity: if the adjustment reduces the collateralization ratio of the Trove, the function only executes if the resulting total collateralization ratio is above 150%. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when a redemption transaction is processed first, driving up the issuance fee. The parameter is ignored if the debt is not increased with the transaction.
 
@@ -753,11 +753,11 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 `liquidate(address _borrower)`: callable by anyone, attempts to liquidate the Trove of `_user`. Executes successfully if `_user`’s Trove meets the conditions for liquidation (e.g. in Normal Mode, it liquidates if the Trove's ICR < the system MCR).  
 
-`liquidateTroves(uint n)`: callable by anyone, checks for under-collateralized Troves below MCR and liquidates up to `n`, starting from the Trove with the lowest collateralization ratio; subject to gas constraints and the actual number of under-collateralized Troves. The gas costs of `liquidateTroves(uint n)` mainly depend on the number of Troves that are liquidated, and whether the Troves are offset against the Stability Pool or redistributed. For n=1, the gas costs per liquidated Trove are roughly between 215K-400K, for n=5 between 80K-115K, for n=10 between 70K-82K, and for n=50 between 60K-65K.
+`liquidateTroves(uint256 n)`: callable by anyone, checks for under-collateralized Troves below MCR and liquidates up to `n`, starting from the Trove with the lowest collateralization ratio; subject to gas constraints and the actual number of under-collateralized Troves. The gas costs of `liquidateTroves(uint256 n)` mainly depend on the number of Troves that are liquidated, and whether the Troves are offset against the Stability Pool or redistributed. For n=1, the gas costs per liquidated Trove are roughly between 215K-400K, for n=5 between 80K-115K, for n=10 between 70K-82K, and for n=50 between 60K-65K.
 
 `batchLiquidateTroves(address[] calldata _troveArray)`: callable by anyone, accepts a custom list of Troves addresses as an argument. Steps through the provided list and attempts to liquidate every Trove, until it reaches the end or it runs out of gas. A Trove is liquidated only if it meets the conditions for liquidation. For a batch of 10 Troves, the gas costs per liquidated Trove are roughly between 75K-83K, for a batch of 50 Troves between 54K-69K.
 
-`redeemCollateral(uint _XBRLAmount, address _firstRedemptionHint, address _upperPartialRedemptionHint, address _lowerPartialRedemptionHint, uint _partialRedemptionHintNICR, uint _maxIterations, uint _maxFeePercentage)`: redeems `_XBRLamount` of stablecoins for ether from the system. Decreases the caller’s XBRL balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient XBRL to redeem. The number of Troves redeemed from is capped by `_maxIterations`. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when another redemption transaction is processed first, driving up the redemption fee.
+`redeemCollateral(uint256 _XBRLAmount, address _firstRedemptionHint, address _upperPartialRedemptionHint, address _lowerPartialRedemptionHint, uint _partialRedemptionHintNICR, uint _maxIterations, uint _maxFeePercentage)`: redeems `_XBRLamount` of stablecoins for ether from the system. Decreases the caller’s XBRL balance, and sends them the corresponding amount of ETH. Executes successfully if the caller has sufficient XBRL to redeem. The number of Troves redeemed from is capped by `_maxIterations`. The borrower has to provide a `_maxFeePercentage` that he/she is willing to accept in case of a fee slippage, i.e. when another redemption transaction is processed first, driving up the redemption fee.
 
 `getCurrentICR(address _user, uint _price)`: computes the user’s individual collateralization ratio (ICR) based on their total collateral and total XBRL debt. Returns 2^256 -1 if they have 0 debt.
 
@@ -779,9 +779,9 @@ All data structures with the ‘public’ visibility specifier are ‘gettable�
 
 ### Hint Helper Functions - `HintHelpers.sol`
 
-`function getApproxHint(uint _CR, uint _numTrials, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a Trove to the sorted list.
+`function getApproxHint(uint256 _CR, uint _numTrials, uint _inputRandomSeed)`: helper function, returns a positional hint for the sorted list. Used for transactions that must efficiently re-insert a Trove to the sorted list.
 
-`getRedemptionHints(uint _XBRLamount, uint _price, uint _maxIterations)`: helper function specifically for redemptions. Returns three hints:
+`getRedemptionHints(uint256 _XBRLamount, uint _price, uint _maxIterations)`: helper function specifically for redemptions. Returns three hints:
 
 - `firstRedemptionHint` is a positional hint for the first redeemable Trove (i.e. Trove with the lowest ICR >= MCR).
 - `partialRedemptionHintNICR` is the final nominal ICR of the last Trove after being hit by partial redemption, or zero in case of no partial redemption (see [Hints for `redeemCollateral`](#hints-for-redeemcollateral)).
@@ -791,13 +791,13 @@ The number of Troves to consider for redemption can be capped by passing a non-z
 
 ### Stability Pool Functions - `StabilityPool.sol`
 
-`provideToSP(uint _amount, address _frontEndTag)`: allows stablecoin holders to deposit `_amount` of XBRL to the Stability Pool. It sends `_amount` of XBRL from their address to the Pool, and tops up their XBRL deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already has a non-zero deposit, it sends their accumulated ETH and STBL gains to their address, and pays out their front end’s STBL gain to their front end.
+`provideToSP(uint256 _amount, address _frontEndTag)`: allows stablecoin holders to deposit `_amount` of XBRL to the Stability Pool. It sends `_amount` of XBRL from their address to the Pool, and tops up their XBRL deposit by `_amount` and their tagged front end’s stake by `_amount`. If the depositor already has a non-zero deposit, it sends their accumulated ETH and STBL gains to their address, and pays out their front end’s STBL gain to their front end.
 
-`withdrawFromSP(uint _amount)`: allows a stablecoin holder to withdraw `_amount` of XBRL from the Stability Pool, up to the value of their remaining Stability deposit. It decreases their XBRL balance by `_amount` and decreases their front end’s stake by `_amount`. It sends the depositor’s accumulated ETH and STBL gains to their address, and pays out their front end’s STBL gain to their front end. If the user makes a partial withdrawal, their deposit remainder will earn further gains. To prevent potential loss evasion by depositors, withdrawals from the Stability Pool are suspended when there are liquidable Troves with ICR < 110% in the system.
+`withdrawFromSP(uint256 _amount)`: allows a stablecoin holder to withdraw `_amount` of XBRL from the Stability Pool, up to the value of their remaining Stability deposit. It decreases their XBRL balance by `_amount` and decreases their front end’s stake by `_amount`. It sends the depositor’s accumulated ETH and STBL gains to their address, and pays out their front end’s STBL gain to their front end. If the user makes a partial withdrawal, their deposit remainder will earn further gains. To prevent potential loss evasion by depositors, withdrawals from the Stability Pool are suspended when there are liquidable Troves with ICR < 110% in the system.
 
 `withdrawETHGainToTrove(address _hint)`: sends the user's entire accumulated ETH gain to the user's active Trove, and updates their Stability deposit with its accumulated loss from debt absorptions. Sends the depositor's STBL gain to the depositor, and sends the tagged front end's STBL gain to the front end.
 
-`registerFrontEnd(uint _kickbackRate)`: Registers an address as a front end and sets their chosen kickback rate in range `[0,1]`.
+`registerFrontEnd(uint256 _kickbackRate)`: Registers an address as a front end and sets their chosen kickback rate in range `[0,1]`.
 
 `getDepositorETHGain(address _depositor)`: returns the accumulated ETH gain for a given Stability Pool depositor
 
@@ -811,9 +811,9 @@ The number of Troves to consider for redemption can be capped by passing a non-z
 
 ### STBL Staking Functions  `STBLStaking.sol`
 
- `stake(uint _STBLamount)`: sends `_STBLAmount` from the caller to the staking contract, and increases their stake. If the caller already has a non-zero stake, it pays out their accumulated ETH and XBRL gains from staking.
+ `stake(uint256 _STBLamount)`: sends `_STBLAmount` from the caller to the staking contract, and increases their stake. If the caller already has a non-zero stake, it pays out their accumulated ETH and XBRL gains from staking.
 
- `unstake(uint _STBLamount)`: reduces the caller’s stake by `_STBLamount`, up to a maximum of their entire stake. It pays out their accumulated ETH and XBRL gains from staking.
+ `unstake(uint256 _STBLamount)`: reduces the caller’s stake by `_STBLamount`, up to a maximum of their entire stake. It pays out their accumulated ETH and XBRL gains from staking.
 
 ### Lockup Contract Factory `LockupContractFactory.sol`
 
@@ -851,7 +851,7 @@ The better the ‘hint’ is, the shorter the list traversal, and the cheaper th
 
 The `HintHelpers::getApproxHint(...)` function can be used to generate a useful hint pointing to a Trove relatively close to the target position, which can then be passed as an argument to the desired Trove operation or to `SortedTroves::findInsertPosition(...)` to get its two direct neighbors as ‘exact‘ hints (based on the current state of the system).
 
-`getApproxHint(uint _CR, uint _numTrials, uint _inputRandomSeed)` randomly selects `numTrials` amount of Troves, and returns the one with the closest position in the list to where a Trove with a nominal collateralization ratio of `_CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.
+`getApproxHint(uint256 _CR, uint _numTrials, uint _inputRandomSeed)` randomly selects `numTrials` amount of Troves, and returns the one with the closest position in the list to where a Trove with a nominal collateralization ratio of `_CR` should be inserted. It can be shown mathematically that for `numTrials = k * sqrt(n)`, the function's gas cost is with very high probability worst case `O(sqrt(n)) if k >= 10`. For scalability reasons (Infura is able to serve up to ~4900 trials), the function also takes a random seed `_inputRandomSeed` to make sure that calls with different seeds may lead to a different results, allowing for better approximations through multiple consecutive runs.
 
 **Trove operation without a hint**
 
@@ -1033,9 +1033,9 @@ But if the redemption causes an amount (debt - 200) to be cancelled, the Trove i
 
 Gas compensation functions are found in the parent _LiquityBase.sol_ contract:
 
-`_getCollGasCompensation(uint _entireColl)` returns the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
+`_getCollGasCompensation(uint256 _entireColl)` returns the amount of ETH to be drawn from a trove's collateral and sent as gas compensation. 
 
-`_getCompositeDebt(uint _debt)` returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation.
+`_getCompositeDebt(uint256 _debt)` returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation.
 
 ## The Stability Pool
 

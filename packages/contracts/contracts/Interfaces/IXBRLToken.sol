@@ -9,9 +9,9 @@ interface IXBRLToken is IERC20, IERC2612 {
     
     // --- Events ---
 
-    event TroveManagerAddressChanged(address _troveManagerAddress);
-    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
+    event TroveManagerAddressAdded(address _troveManagerAddress);
+    event StabilityPoolAddressAdded(address _newStabilityPoolAddress);
+    event BorrowerOperationsAddressAdded(address _newBorrowerOperationsAddress);
 
     event XBRLTokenBalanceUpdated(address _user, uint256 _amount);
 

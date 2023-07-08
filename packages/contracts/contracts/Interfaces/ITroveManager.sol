@@ -26,16 +26,16 @@ interface ITroveManager is ILiquityBase {
     event STBLTokenAddressChanged(address _stblTokenAddress);
     event STBLStakingAddressChanged(address _stblStakingAddress);
 
-    event Liquidation(uint _liquidatedDebt, uint256 _liquidatedColl, uint256 _collGasCompensation, uint256 _XBRLGasCompensation);
-    event Redemption(uint _attemptedXBRLAmount, uint256 _actualXBRLAmount, uint256 _ETHSent, uint256 _ETHFee);
+    event Liquidation(uint256 _liquidatedDebt, uint256 _liquidatedColl, uint256 _collGasCompensation, uint256 _XBRLGasCompensation);
+    event Redemption(uint256 _attemptedXBRLAmount, uint256 _actualXBRLAmount, uint256 _ETHSent, uint256 _ETHFee);
     event TroveUpdated(address indexed _borrower, uint256 _debt, uint256 _coll, uint256 stake, uint8 operation);
     event TroveLiquidated(address indexed _borrower, uint256 _debt, uint256 _coll, uint8 operation);
-    event BaseRateUpdated(uint _baseRate);
-    event LastFeeOpTimeUpdated(uint _lastFeeOpTime);
-    event TotalStakesUpdated(uint _newTotalStakes);
-    event SystemSnapshotsUpdated(uint _totalStakesSnapshot, uint256 _totalCollateralSnapshot);
-    event LTermsUpdated(uint _L_ETH, uint256 _L_XBRLDebt);
-    event TroveSnapshotsUpdated(uint _L_ETH, uint256 _L_XBRLDebt);
+    event BaseRateUpdated(uint256 _baseRate);
+    event LastFeeOpTimeUpdated(uint256 _lastFeeOpTime);
+    event TotalStakesUpdated(uint256 _newTotalStakes);
+    event SystemSnapshotsUpdated(uint256 _totalStakesSnapshot, uint256 _totalCollateralSnapshot);
+    event LTermsUpdated(uint256 _L_ETH, uint256 _L_XBRLDebt);
+    event TroveSnapshotsUpdated(uint256 _L_ETH, uint256 _L_XBRLDebt);
     event TroveIndexUpdated(address _borrower, uint256 _newIndex);
 
     // --- Functions ---
@@ -61,14 +61,14 @@ interface ITroveManager is ILiquityBase {
 
     function getTroveOwnersCount() external view returns (uint);
 
-    function getTroveFromTroveOwnersArray(uint _index) external view returns (address);
+    function getTroveFromTroveOwnersArray(uint256 _index) external view returns (address);
 
     function getNominalICR(address _borrower) external view returns (uint);
     function getCurrentICR(address _borrower, uint256 _price) external view returns (uint);
 
     function liquidate(address _borrower) external;
 
-    function liquidateTroves(uint _n) external;
+    function liquidateTroves(uint256 _n) external;
 
     function batchLiquidateTroves(address[] calldata _troveArray) external;
 
@@ -86,7 +86,7 @@ interface ITroveManager is ILiquityBase {
 
     function updateTroveRewardSnapshots(address _borrower) external;
 
-    function addTroveOwnerToArray(address _borrower) external returns (uint index);
+    function addTroveOwnerToArray(address _borrower) external returns (uint256 index);
 
     function applyPendingRewards(address _borrower) external;
 
@@ -110,13 +110,13 @@ interface ITroveManager is ILiquityBase {
     function getRedemptionRate() external view returns (uint);
     function getRedemptionRateWithDecay() external view returns (uint);
 
-    function getRedemptionFeeWithDecay(uint _ETHDrawn) external view returns (uint);
+    function getRedemptionFeeWithDecay(uint256 _ETHDrawn) external view returns (uint);
 
     function getBorrowingRate() external view returns (uint);
     function getBorrowingRateWithDecay() external view returns (uint);
 
-    function getBorrowingFee(uint XBRLDebt) external view returns (uint);
-    function getBorrowingFeeWithDecay(uint _XBRLDebt) external view returns (uint);
+    function getBorrowingFee(uint256 XBRLDebt) external view returns (uint);
+    function getBorrowingFeeWithDecay(uint256 _XBRLDebt) external view returns (uint);
 
     function decayBaseRateFromBorrowing() external;
 
@@ -138,7 +138,7 @@ interface ITroveManager is ILiquityBase {
 
     function decreaseTroveDebt(address _borrower, uint256 _collDecrease) external returns (uint); 
 
-    function getTCR(uint _price) external view returns (uint);
+    function getTCR(uint256 _price) external view returns (uint);
 
-    function checkRecoveryMode(uint _price) external view returns (bool);
+    function checkRecoveryMode(uint256 _price) external view returns (bool);
 }

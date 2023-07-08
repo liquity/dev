@@ -60,7 +60,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         stblStaking = stblStakingCached;
     }
 
-    function claimCollateralAndOpenTrove(uint _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable {
+    function claimCollateralAndOpenTrove(uint256 _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable {
         uint256 balanceBefore = address(this).balance;
 
         // Claim collateral
@@ -77,7 +77,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         borrowerOperations.openTrove{ value: totalCollateral }(_maxFee, _XBRLAmount, _upperHint, _lowerHint);
     }
 
-    function claimSPRewardsAndRecycle(uint _maxFee, address _upperHint, address _lowerHint) external {
+    function claimSPRewardsAndRecycle(uint256 _maxFee, address _upperHint, address _lowerHint) external {
         uint256 collBalanceBefore = address(this).balance;
         uint256 stblBalanceBefore = stblToken.balanceOf(address(this));
 
@@ -106,7 +106,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         }
     }
 
-    function claimStakingGainsAndRecycle(uint _maxFee, address _upperHint, address _lowerHint) external {
+    function claimStakingGainsAndRecycle(uint256 _maxFee, address _upperHint, address _lowerHint) external {
         uint256 collBalanceBefore = address(this).balance;
         uint256 xbrlBalanceBefore = xbrlToken.balanceOf(address(this));
         uint256 stblBalanceBefore = stblToken.balanceOf(address(this));
@@ -139,7 +139,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
 
     }
 
-    function _getNetXBRLAmount(uint _collateral) internal returns (uint) {
+    function _getNetXBRLAmount(uint256 _collateral) internal returns (uint) {
         uint256 price = priceFeed.fetchPrice();
         uint256 ICR = troveManager.getCurrentICR(address(this), price);
 

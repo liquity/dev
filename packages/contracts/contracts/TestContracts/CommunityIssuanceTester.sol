@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 import "../STBL/CommunityIssuance.sol";
 
 contract CommunityIssuanceTester is CommunityIssuance {
-    function obtainSTBL(uint _amount) external {
+    function obtainSTBL(uint256 _amount) external {
         stblToken.transfer(msg.sender, _amount);
     }
 

@@ -29,8 +29,8 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event ActivePoolXBRLDebtUpdated(uint _XBRLDebt);
-    event ActivePoolETHBalanceUpdated(uint _ETH);
+    event ActivePoolXBRLDebtUpdated(uint256 _XBRLDebt);
+    event ActivePoolETHBalanceUpdated(uint256 _ETH);
 
     // --- Contract setters ---
 
@@ -88,13 +88,13 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
         require(success, "ActivePool: sending ETH failed");
     }
 
-    function increaseXBRLDebt(uint _amount) external override {
+    function increaseXBRLDebt(uint256 _amount) external override {
         _requireCallerIsBOorTroveM();
         XBRLDebt += _amount;
         emit ActivePoolXBRLDebtUpdated(XBRLDebt);
     }
 
-    function decreaseXBRLDebt(uint _amount) external override {
+    function decreaseXBRLDebt(uint256 _amount) external override {
         _requireCallerIsBOorTroveMorSP();
         XBRLDebt -= _amount;
         emit ActivePoolXBRLDebtUpdated(XBRLDebt);

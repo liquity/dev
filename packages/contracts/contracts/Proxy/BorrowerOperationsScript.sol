@@ -14,7 +14,7 @@ contract BorrowerOperationsScript is CheckContract {
         borrowerOperations = _borrowerOperations;
     }
 
-    function openTrove(uint _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable {
+    function openTrove(uint256 _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable {
         borrowerOperations.openTrove{ value: msg.value }(_maxFee, _XBRLAmount, _upperHint, _lowerHint);
     }
 
@@ -22,15 +22,15 @@ contract BorrowerOperationsScript is CheckContract {
         borrowerOperations.addColl{ value: msg.value }(_upperHint, _lowerHint);
     }
 
-    function withdrawColl(uint _amount, address _upperHint, address _lowerHint) external {
+    function withdrawColl(uint256 _amount, address _upperHint, address _lowerHint) external {
         borrowerOperations.withdrawColl(_amount, _upperHint, _lowerHint);
     }
 
-    function withdrawXBRL(uint _maxFee, uint256 _amount, address _upperHint, address _lowerHint) external {
+    function withdrawXBRL(uint256 _maxFee, uint256 _amount, address _upperHint, address _lowerHint) external {
         borrowerOperations.withdrawXBRL(_maxFee, _amount, _upperHint, _lowerHint);
     }
 
-    function repayXBRL(uint _amount, address _upperHint, address _lowerHint) external {
+    function repayXBRL(uint256 _amount, address _upperHint, address _lowerHint) external {
         borrowerOperations.repayXBRL(_amount, _upperHint, _lowerHint);
     }
 
@@ -38,7 +38,7 @@ contract BorrowerOperationsScript is CheckContract {
         borrowerOperations.closeTrove();
     }
 
-    function adjustTrove(uint _maxFee, uint256 _collWithdrawal, uint256 _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable {
+    function adjustTrove(uint256 _maxFee, uint256 _collWithdrawal, uint256 _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable {
         borrowerOperations.adjustTrove{ value: msg.value }(_maxFee, _collWithdrawal, _debtChange, isDebtIncrease, _upperHint, _lowerHint);
     }
 

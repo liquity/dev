@@ -37,23 +37,23 @@ interface IBorrowerOperations {
         address _stblStakingAddress
     ) external;
 
-    function openTrove(uint _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable;
+    function openTrove(uint256 _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable;
 
     function addColl(address _upperHint, address _lowerHint) external payable;
 
     function moveETHGainToTrove(address _user, address _upperHint, address _lowerHint) external payable;
 
-    function withdrawColl(uint _amount, address _upperHint, address _lowerHint) external;
+    function withdrawColl(uint256 _amount, address _upperHint, address _lowerHint) external;
 
-    function withdrawXBRL(uint _maxFee, uint256 _amount, address _upperHint, address _lowerHint) external;
+    function withdrawXBRL(uint256 _maxFee, uint256 _amount, address _upperHint, address _lowerHint) external;
 
-    function repayXBRL(uint _amount, address _upperHint, address _lowerHint) external;
+    function repayXBRL(uint256 _amount, address _upperHint, address _lowerHint) external;
 
     function closeTrove() external;
 
-    function adjustTrove(uint _maxFee, uint256 _collWithdrawal, uint256 _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable;
+    function adjustTrove(uint256 _maxFee, uint256 _collWithdrawal, uint256 _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable;
 
     function claimCollateral() external;
 
-    function getCompositeDebt(uint _debt) external pure returns (uint);
+    function getCompositeDebt(uint256 _debt) external pure returns (uint);
 }

@@ -32,7 +32,7 @@ contract LockupContract {
     // --- Events ---
 
     event LockupContractCreated(address _beneficiary, uint256 _unlockTime);
-    event LockupContractEmptied(uint _STBLwithdrawal);
+    event LockupContractEmptied(uint256 _STBLwithdrawal);
 
     // --- Functions ---
 
@@ -77,7 +77,7 @@ contract LockupContract {
         require(block.timestamp >= unlockTime, "LockupContract: The lockup duration must have passed");
     }
 
-    function _requireUnlockTimeIsAtLeastOneYearAfterSystemDeployment(uint _unlockTime) internal view {
+    function _requireUnlockTimeIsAtLeastOneYearAfterSystemDeployment(uint256 _unlockTime) internal view {
         uint256 systemDeploymentTime = stblToken.getDeploymentStartTime();
         require(_unlockTime >= systemDeploymentTime + SECONDS_IN_ONE_YEAR, "LockupContract: unlock time must be at least one year after system deployment");
     }

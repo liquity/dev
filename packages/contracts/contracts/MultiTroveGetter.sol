@@ -60,18 +60,18 @@ contract MultiTroveGetter {
         }
     }
 
-    function _getMultipleSortedTrovesFromHead(uint _startIdx, uint256 _count)
+    function _getMultipleSortedTrovesFromHead(uint256 _startIdx, uint256 _count)
         internal view returns (CombinedTroveData[] memory _troves)
     {
         address currentTroveowner = sortedTroves.getFirst();
 
-        for (uint idx = 0; idx < _startIdx; ++idx) {
+        for (uint256 idx = 0; idx < _startIdx; ++idx) {
             currentTroveowner = sortedTroves.getNext(currentTroveowner);
         }
 
         _troves = new CombinedTroveData[](_count);
 
-        for (uint idx = 0; idx < _count; ++idx) {
+        for (uint256 idx = 0; idx < _count; ++idx) {
             _troves[idx].owner = currentTroveowner;
             (
                 _troves[idx].debt,
@@ -89,18 +89,18 @@ contract MultiTroveGetter {
         }
     }
 
-    function _getMultipleSortedTrovesFromTail(uint _startIdx, uint256 _count)
+    function _getMultipleSortedTrovesFromTail(uint256 _startIdx, uint256 _count)
         internal view returns (CombinedTroveData[] memory _troves)
     {
         address currentTroveowner = sortedTroves.getLast();
 
-        for (uint idx = 0; idx < _startIdx; ++idx) {
+        for (uint256 idx = 0; idx < _startIdx; ++idx) {
             currentTroveowner = sortedTroves.getPrev(currentTroveowner);
         }
 
         _troves = new CombinedTroveData[](_count);
 
-        for (uint idx = 0; idx < _count; ++idx) {
+        for (uint256 idx = 0; idx < _count; ++idx) {
             _troves[idx].owner = currentTroveowner;
             (
                 _troves[idx].debt,

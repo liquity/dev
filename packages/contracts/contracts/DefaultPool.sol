@@ -23,8 +23,8 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     uint256 internal XBRLDebt;  // debt
 
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event DefaultPoolXBRLDebtUpdated(uint _XBRLDebt);
-    event DefaultPoolETHBalanceUpdated(uint _ETH);
+    event DefaultPoolXBRLDebtUpdated(uint256 _XBRLDebt);
+    event DefaultPoolETHBalanceUpdated(uint256 _ETH);
 
     // --- Dependency setters ---
 
@@ -64,7 +64,7 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     // --- Pool functionality ---
 
-    function sendETHToActivePool(uint _amount) external override {
+    function sendETHToActivePool(uint256 _amount) external override {
         _requireCallerIsTroveManager();
         address activePool = activePoolAddress; // cache to save an SLOAD
         ETH -= _amount;
@@ -75,13 +75,13 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
         require(success, "DefaultPool: sending ETH failed");
     }
 
-    function increaseXBRLDebt(uint _amount) external override {
+    function increaseXBRLDebt(uint256 _amount) external override {
         _requireCallerIsTroveManager();
         XBRLDebt += _amount;
         emit DefaultPoolXBRLDebtUpdated(XBRLDebt);
     }
 
-    function decreaseXBRLDebt(uint _amount) external override {
+    function decreaseXBRLDebt(uint256 _amount) external override {
         _requireCallerIsTroveManager();
         XBRLDebt -= _amount;
         emit DefaultPoolXBRLDebtUpdated(XBRLDebt);

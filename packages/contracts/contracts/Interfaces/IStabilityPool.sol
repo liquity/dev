@@ -37,8 +37,8 @@ interface IStabilityPool {
 
     // --- Events ---
     
-    event StabilityPoolETHBalanceUpdated(uint _newBalance);
-    event StabilityPoolXBRLBalanceUpdated(uint _newBalance);
+    event StabilityPoolETHBalanceUpdated(uint256 _newBalance);
+    event StabilityPoolXBRLBalanceUpdated(uint256 _newBalance);
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
@@ -49,9 +49,9 @@ interface IStabilityPool {
     event PriceFeedAddressChanged(address _newPriceFeedAddress);
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
 
-    event P_Updated(uint _P);
-    event S_Updated(uint _S, uint128 _epoch, uint128 _scale);
-    event G_Updated(uint _G, uint128 _epoch, uint128 _scale);
+    event P_Updated(uint256 _P);
+    event S_Updated(uint256 _S, uint128 _epoch, uint128 _scale);
+    event G_Updated(uint256 _G, uint128 _epoch, uint128 _scale);
     event EpochUpdated(uint128 _currentEpoch);
     event ScaleUpdated(uint128 _currentScale);
 
@@ -96,7 +96,7 @@ interface IStabilityPool {
      * - Sends the tagged front end's accumulated STBL gains to the tagged front end
      * - Increases deposit and tagged front end's stake, and takes new snapshots for each.
      */
-    function provideToSP(uint _amount, address _frontEndTag) external;
+    function provideToSP(uint256 _amount, address _frontEndTag) external;
 
     /*
      * Initial checks:
@@ -111,7 +111,7 @@ interface IStabilityPool {
      *
      * If _amount > userDeposit, the user withdraws all of their compounded deposit.
      */
-    function withdrawFromSP(uint _amount) external;
+    function withdrawFromSP(uint256 _amount) external;
 
     /*
      * Initial checks:
@@ -136,7 +136,7 @@ interface IStabilityPool {
      * ---
      * Front end makes a one-time selection of kickback rate upon registering
      */
-    function registerFrontEnd(uint _kickbackRate) external;
+    function registerFrontEnd(uint256 _kickbackRate) external;
 
     /*
      * Initial checks:
@@ -146,7 +146,7 @@ interface IStabilityPool {
      * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
      * Only called by liquidation functions in the TroveManager.
      */
-    function offset(uint _debt, uint256 _coll) external;
+    function offset(uint256 _debt, uint256 _coll) external;
 
     /*
      * Returns the total amount of ETH held by the pool, accounted in an internal variable instead of `balance`,
