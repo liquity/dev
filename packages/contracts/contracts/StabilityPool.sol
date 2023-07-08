@@ -166,19 +166,19 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
    // --- Data structures ---
 
     struct FrontEnd {
-        uint kickbackRate;
+        uint256 kickbackRate;
         bool registered;
     }
 
     struct Deposit {
-        uint initialValue;
+        uint256 initialValue;
         address frontEndTag;
     }
 
     struct Snapshots {
-        uint S;
-        uint P;
-        uint G;
+        uint256 S;
+        uint256 P;
+        uint256 G;
         uint128 scale;
         uint128 epoch;
     }
@@ -196,9 +196,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * During its lifetime, a deposit's value evolves from d_t to d_t * P / P_t , where P_t
     * is the snapshot of P taken at the instant the deposit was made. 18-digit decimal.
     */
-    uint public P = DECIMAL_PRECISION;
+    uint256 public P = DECIMAL_PRECISION;
 
-    uint public constant SCALE_FACTOR = 1e9;
+    uint256 public constant SCALE_FACTOR = 1e9;
 
     // Each time the scale of P shifts by SCALE_FACTOR, the scale is incremented by 1
     uint128 public currentScale;
@@ -226,10 +226,10 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     mapping (uint128 => mapping(uint128 => uint)) public epochToScaleToG;
 
     // Error tracker for the error correction in the STBL issuance calculation
-    uint public lastSTBLError;
+    uint256 public lastSTBLError;
     // Error trackers for the error correction in the offset calculation
-    uint public lastETHError_Offset;
-    uint public lastXBRLLossError_Offset;
+    uint256 public lastETHError_Offset;
+    uint256 public lastXBRLLossError_Offset;
 
     // --- Events ---
 
@@ -251,18 +251,18 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     event EpochUpdated(uint128 _currentEpoch);
     event ScaleUpdated(uint128 _currentScale);
 
-    event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
+    event FrontEndRegistered(address indexed _frontEnd, uint256 _kickbackRate);
     event FrontEndTagSet(address indexed _depositor, address indexed _frontEnd);
 
-    event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
-    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
-    event UserDepositChanged(address indexed _depositor, uint _newDeposit);
-    event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
+    event DepositSnapshotUpdated(address indexed _depositor, uint256 _P, uint256 _S, uint256 _G);
+    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint256 _P, uint256 _G);
+    event UserDepositChanged(address indexed _depositor, uint256 _newDeposit);
+    event FrontEndStakeChanged(address indexed _frontEnd, uint256 _newFrontEndStake, address _depositor);
 
-    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _XBRLLoss);
-    event STBLPaidToDepositor(address indexed _depositor, uint _STBL);
-    event STBLPaidToFrontEnd(address indexed _frontEnd, uint _STBL);
-    event EtherSent(address _to, uint _amount);
+    event ETHGainWithdrawn(address indexed _depositor, uint256 _ETH, uint256 _XBRLLoss);
+    event STBLPaidToDepositor(address indexed _depositor, uint256 _STBL);
+    event STBLPaidToFrontEnd(address indexed _frontEnd, uint256 _STBL);
+    event EtherSent(address _to, uint256 _amount);
 
     // --- Contract setters ---
 
@@ -331,30 +331,30 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         _requireFrontEndNotRegistered(msg.sender);
         _requireNonZeroAmount(_amount);
 
-        uint initialDeposit = deposits[msg.sender].initialValue;
+        uint256 initialDeposit = deposits[msg.sender].initialValue;
 
         ICommunityIssuance communityIssuanceCached = communityIssuance;
 
         _triggerSTBLIssuance(communityIssuanceCached);
 
         if (initialDeposit == 0) {_setFrontEndTag(msg.sender, _frontEndTag);}
-        uint depositorETHGain = getDepositorETHGain(msg.sender);
-        uint compoundedXBRLDeposit = getCompoundedXBRLDeposit(msg.sender);
-        uint XBRLLoss = initialDeposit - compoundedXBRLDeposit; // Needed only for event log
+        uint256 depositorETHGain = getDepositorETHGain(msg.sender);
+        uint256 compoundedXBRLDeposit = getCompoundedXBRLDeposit(msg.sender);
+        uint256 XBRLLoss = initialDeposit - compoundedXBRLDeposit; // Needed only for event log
 
         // First pay out any STBL gains
         address frontEnd = deposits[msg.sender].frontEndTag;
         _payOutSTBLGains(communityIssuanceCached, msg.sender, frontEnd);
 
         // Update front end stake
-        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
-        uint newFrontEndStake = compoundedFrontEndStake + _amount;
+        uint256 compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint256 newFrontEndStake = compoundedFrontEndStake + _amount;
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
         _sendXBRLtoStabilityPool(msg.sender, _amount);
 
-        uint newDeposit = compoundedXBRLDeposit + _amount;
+        uint256 newDeposit = compoundedXBRLDeposit + _amount;
         _updateDepositAndSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
 
@@ -375,33 +375,33 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     */
     function withdrawFromSP(uint _amount) external override {
         if (_amount !=0) {_requireNoUnderCollateralizedTroves();}
-        uint initialDeposit = deposits[msg.sender].initialValue;
+        uint256 initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
 
         ICommunityIssuance communityIssuanceCached = communityIssuance;
 
         _triggerSTBLIssuance(communityIssuanceCached);
 
-        uint depositorETHGain = getDepositorETHGain(msg.sender);
+        uint256 depositorETHGain = getDepositorETHGain(msg.sender);
 
-        uint compoundedXBRLDeposit = getCompoundedXBRLDeposit(msg.sender);
-        uint XBRLtoWithdraw = LiquityMath._min(_amount, compoundedXBRLDeposit);
-        uint XBRLLoss = initialDeposit - compoundedXBRLDeposit; // Needed only for event log
+        uint256 compoundedXBRLDeposit = getCompoundedXBRLDeposit(msg.sender);
+        uint256 XBRLtoWithdraw = LiquityMath._min(_amount, compoundedXBRLDeposit);
+        uint256 XBRLLoss = initialDeposit - compoundedXBRLDeposit; // Needed only for event log
 
         // First pay out any STBL gains
         address frontEnd = deposits[msg.sender].frontEndTag;
         _payOutSTBLGains(communityIssuanceCached, msg.sender, frontEnd);
         
         // Update front end stake
-        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
-        uint newFrontEndStake = compoundedFrontEndStake - XBRLtoWithdraw;
+        uint256 compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint256 newFrontEndStake = compoundedFrontEndStake - XBRLtoWithdraw;
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
         _sendXBRLToDepositor(msg.sender, XBRLtoWithdraw);
 
         // Update deposit
-        uint newDeposit = compoundedXBRLDeposit - XBRLtoWithdraw;
+        uint256 newDeposit = compoundedXBRLDeposit - XBRLtoWithdraw;
         _updateDepositAndSnapshots(msg.sender, newDeposit);
         emit UserDepositChanged(msg.sender, newDeposit);
 
@@ -418,7 +418,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * - Leaves their compounded deposit in the Stability Pool
     * - Updates snapshots for deposit and tagged front end stake */
     function withdrawETHGainToTrove(address _upperHint, address _lowerHint) external override {
-        uint initialDeposit = deposits[msg.sender].initialValue;
+        uint256 initialDeposit = deposits[msg.sender].initialValue;
         _requireUserHasDeposit(initialDeposit);
         _requireUserHasTrove(msg.sender);
         _requireUserHasETHGain(msg.sender);
@@ -427,18 +427,18 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         _triggerSTBLIssuance(communityIssuanceCached);
 
-        uint depositorETHGain = getDepositorETHGain(msg.sender);
+        uint256 depositorETHGain = getDepositorETHGain(msg.sender);
 
-        uint compoundedXBRLDeposit = getCompoundedXBRLDeposit(msg.sender);
-        uint XBRLLoss = initialDeposit - compoundedXBRLDeposit; // Needed only for event log
+        uint256 compoundedXBRLDeposit = getCompoundedXBRLDeposit(msg.sender);
+        uint256 XBRLLoss = initialDeposit - compoundedXBRLDeposit; // Needed only for event log
 
         // First pay out any STBL gains
         address frontEnd = deposits[msg.sender].frontEndTag;
         _payOutSTBLGains(communityIssuanceCached, msg.sender, frontEnd);
 
         // Update front end stake
-        uint compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
-        uint newFrontEndStake = compoundedFrontEndStake;
+        uint256 compoundedFrontEndStake = getCompoundedFrontEndStake(frontEnd);
+        uint256 newFrontEndStake = compoundedFrontEndStake;
         _updateFrontEndStakeAndSnapshots(frontEnd, newFrontEndStake);
         emit FrontEndStakeChanged(frontEnd, newFrontEndStake, msg.sender);
 
@@ -460,12 +460,12 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     // --- STBL issuance functions ---
 
     function _triggerSTBLIssuance(ICommunityIssuance _communityIssuance) internal {
-        uint STBLIssuance = _communityIssuance.issueSTBL();
+        uint256 STBLIssuance = _communityIssuance.issueSTBL();
        _updateG(STBLIssuance);
     }
 
     function _updateG(uint _STBLIssuance) internal {
-        uint totalXBRL = totalXBRLDeposits; // cached to save an SLOAD
+        uint256 totalXBRL = totalXBRLDeposits; // cached to save an SLOAD
         /*
         * When total deposits is 0, G is not updated. In this case, the STBL issued can not be obtained by later
         * depositors - it is missed out on, and remains in the balanceof the CommunityIssuance contract.
@@ -473,16 +473,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         */
         if (totalXBRL == 0 || _STBLIssuance == 0) {return;}
 
-        uint STBLPerUnitStaked;
+        uint256 STBLPerUnitStaked;
         STBLPerUnitStaked =_computeSTBLPerUnitStaked(_STBLIssuance, totalXBRL);
 
-        uint marginalSTBLGain = STBLPerUnitStaked * P;
+        uint256 marginalSTBLGain = STBLPerUnitStaked * P;
         epochToScaleToG[currentEpoch][currentScale] = epochToScaleToG[currentEpoch][currentScale] + marginalSTBLGain;
 
         emit G_Updated(epochToScaleToG[currentEpoch][currentScale], currentEpoch, currentScale);
     }
 
-    function _computeSTBLPerUnitStaked(uint _STBLIssuance, uint _totalXBRLDeposits) internal returns (uint) {
+    function _computeSTBLPerUnitStaked(uint _STBLIssuance, uint256 _totalXBRLDeposits) internal returns (uint) {
         /*  
         * Calculate the STBL-per-unit staked.  Division uses a "feedback" error correction, to keep the 
         * cumulative error low in the running total G:
@@ -494,9 +494,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * 4) Store this error for use in the next correction when this function is called.
         * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
-        uint STBLNumerator = _STBLIssuance * DECIMAL_PRECISION + lastSTBLError;
+        uint256 STBLNumerator = _STBLIssuance * DECIMAL_PRECISION + lastSTBLError;
 
-        uint STBLPerUnitStaked = STBLNumerator / _totalXBRLDeposits;
+        uint256 STBLPerUnitStaked = STBLNumerator / _totalXBRLDeposits;
         lastSTBLError = STBLNumerator - STBLPerUnitStaked * _totalXBRLDeposits;
 
         return STBLPerUnitStaked;
@@ -509,15 +509,15 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
     * Only called by liquidation functions in the TroveManager.
     */
-    function offset(uint _debtToOffset, uint _collToAdd) external override {
+    function offset(uint _debtToOffset, uint256 _collToAdd) external override {
         _requireCallerIsTroveManager();
-        uint totalXBRL = totalXBRLDeposits; // cached to save an SLOAD
+        uint256 totalXBRL = totalXBRLDeposits; // cached to save an SLOAD
         if (totalXBRL == 0 || _debtToOffset == 0) { return; }
 
         _triggerSTBLIssuance(communityIssuance);
 
         (uint ETHGainPerUnitStaked,
-            uint XBRLLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalXBRL);
+            uint256 XBRLLossPerUnitStaked) = _computeRewardsPerUnitStaked(_collToAdd, _debtToOffset, totalXBRL);
 
         _updateRewardSumAndProduct(ETHGainPerUnitStaked, XBRLLossPerUnitStaked);  // updates S and P
 
@@ -527,12 +527,12 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     // --- Offset helper functions ---
 
     function _computeRewardsPerUnitStaked(
-        uint _collToAdd,
-        uint _debtToOffset,
-        uint _totalXBRLDeposits
+        uint256 _collToAdd,
+        uint256 _debtToOffset,
+        uint256 _totalXBRLDeposits
     )
         internal
-        returns (uint ETHGainPerUnitStaked, uint XBRLLossPerUnitStaked)
+        returns (uint ETHGainPerUnitStaked, uint256 XBRLLossPerUnitStaked)
     {
         /*
         * Compute the XBRL and ETH rewards. Uses a "feedback" error correction, to keep
@@ -545,14 +545,14 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * 4) Store these errors for use in the next correction when this function is called.
         * 5) Note: static analysis tools complain about this "division before multiplication", however, it is intended.
         */
-        uint ETHNumerator = _collToAdd * DECIMAL_PRECISION + lastETHError_Offset;
+        uint256 ETHNumerator = _collToAdd * DECIMAL_PRECISION + lastETHError_Offset;
 
         assert(_debtToOffset <= _totalXBRLDeposits);
         if (_debtToOffset == _totalXBRLDeposits) {
             XBRLLossPerUnitStaked = DECIMAL_PRECISION;  // When the Pool depletes to 0, so does each deposit 
             lastXBRLLossError_Offset = 0;
         } else {
-            uint XBRLLossNumerator = _debtToOffset * DECIMAL_PRECISION - lastXBRLLossError_Offset;
+            uint256 XBRLLossNumerator = _debtToOffset * DECIMAL_PRECISION - lastXBRLLossError_Offset;
             /*
             * Add 1 to make error in quotient positive. We want "slightly too much" XBRL loss,
             * which ensures the error in any given compoundedXBRLDeposit favors the Stability Pool.
@@ -568,20 +568,20 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     // Update the Stability Pool reward sum S and product P
-    function _updateRewardSumAndProduct(uint _ETHGainPerUnitStaked, uint _XBRLLossPerUnitStaked) internal {
-        uint currentP = P;
-        uint newP;
+    function _updateRewardSumAndProduct(uint _ETHGainPerUnitStaked, uint256 _XBRLLossPerUnitStaked) internal {
+        uint256 currentP = P;
+        uint256 newP;
 
         assert(_XBRLLossPerUnitStaked <= DECIMAL_PRECISION);
         /*
         * The newProductFactor is the factor by which to change all deposits, due to the depletion of Stability Pool XBRL in the liquidation.
         * We make the product factor 0 if there was a pool-emptying. Otherwise, it is (1 - XBRLLossPerUnitStaked)
         */
-        uint newProductFactor = uint(DECIMAL_PRECISION) - _XBRLLossPerUnitStaked;
+        uint256 newProductFactor = uint(DECIMAL_PRECISION) - _XBRLLossPerUnitStaked;
 
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
-        uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
+        uint256 currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
 
         /*
         * Calculate the new S first, before we update P.
@@ -590,8 +590,8 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         *
         * Since S corresponds to ETH gain, and P to deposit loss, we update S first.
         */
-        uint marginalETHGain = _ETHGainPerUnitStaked * currentP;
-        uint newS = currentS + marginalETHGain;
+        uint256 marginalETHGain = _ETHGainPerUnitStaked * currentP;
+        uint256 newS = currentS + marginalETHGain;
         epochToScaleToSum[currentEpochCached][currentScaleCached] = newS;
         emit S_Updated(newS, currentEpochCached, currentScaleCached);
 
@@ -618,7 +618,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         emit P_Updated(newP);
     }
 
-    function _moveOffsetCollAndDebt(uint _collToAdd, uint _debtToOffset) internal {
+    function _moveOffsetCollAndDebt(uint _collToAdd, uint256 _debtToOffset) internal {
         IActivePool activePoolCached = activePool;
 
         // Cancel the liquidated XBRL debt with the XBRL in the stability pool
@@ -632,7 +632,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     function _decreaseXBRL(uint _amount) internal {
-        uint newTotalXBRLDeposits = totalXBRLDeposits - _amount;
+        uint256 newTotalXBRLDeposits = totalXBRLDeposits - _amount;
         totalXBRLDeposits = newTotalXBRLDeposits;
         emit StabilityPoolXBRLBalanceUpdated(newTotalXBRLDeposits);
     }
@@ -645,13 +645,13 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * d0 is the last recorded deposit value.
     */
     function getDepositorETHGain(address _depositor) public view override returns (uint) {
-        uint initialDeposit = deposits[_depositor].initialValue;
+        uint256 initialDeposit = deposits[_depositor].initialValue;
 
         if (initialDeposit == 0) { return 0; }
 
         Snapshots memory snapshots = depositSnapshots[_depositor];
 
-        uint ETHGain = _getETHGainFromSnapshots(initialDeposit, snapshots);
+        uint256 ETHGain = _getETHGainFromSnapshots(initialDeposit, snapshots);
         return ETHGain;
     }
 
@@ -663,13 +663,13 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         */
         uint128 epochSnapshot = snapshots.epoch;
         uint128 scaleSnapshot = snapshots.scale;
-        uint S_Snapshot = snapshots.S;
-        uint P_Snapshot = snapshots.P;
+        uint256 S_Snapshot = snapshots.S;
+        uint256 P_Snapshot = snapshots.P;
 
-        uint firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot] - S_Snapshot;
-        uint secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot + 1] / SCALE_FACTOR;
+        uint256 firstPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot] - S_Snapshot;
+        uint256 secondPortion = epochToScaleToSum[epochSnapshot][scaleSnapshot + 1] / SCALE_FACTOR;
 
-        uint ETHGain = initialDeposit * (firstPortion + secondPortion) / P_Snapshot / DECIMAL_PRECISION;
+        uint256 ETHGain = initialDeposit * (firstPortion + secondPortion) / P_Snapshot / DECIMAL_PRECISION;
 
         return ETHGain;
     }
@@ -681,7 +681,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * d0 is the last recorded deposit value.
     */
     function getDepositorSTBLGain(address _depositor) public view override returns (uint) {
-        uint initialDeposit = deposits[_depositor].initialValue;
+        uint256 initialDeposit = deposits[_depositor].initialValue;
         if (initialDeposit == 0) {return 0;}
 
         address frontEndTag = deposits[_depositor].frontEndTag;
@@ -691,11 +691,11 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         * Otherwise, their cut of the deposit's earnings is equal to the kickbackRate, set by the front end through
         * which they made their deposit.
         */
-        uint kickbackRate = frontEndTag == address(0) ? DECIMAL_PRECISION : frontEnds[frontEndTag].kickbackRate;
+        uint256 kickbackRate = frontEndTag == address(0) ? DECIMAL_PRECISION : frontEnds[frontEndTag].kickbackRate;
 
         Snapshots memory snapshots = depositSnapshots[_depositor];
 
-        uint STBLGain = kickbackRate * _getSTBLGainFromSnapshots(initialDeposit, snapshots) / DECIMAL_PRECISION;
+        uint256 STBLGain = kickbackRate * _getSTBLGainFromSnapshots(initialDeposit, snapshots) / DECIMAL_PRECISION;
 
         return STBLGain;
     }
@@ -707,15 +707,15 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * D0 is the last recorded value of the front end's total tagged deposits.
     */
     function getFrontEndSTBLGain(address _frontEnd) public view override returns (uint) {
-        uint frontEndStake = frontEndStakes[_frontEnd];
+        uint256 frontEndStake = frontEndStakes[_frontEnd];
         if (frontEndStake == 0) { return 0; }
 
-        uint kickbackRate = frontEnds[_frontEnd].kickbackRate;
-        uint frontEndShare = uint(DECIMAL_PRECISION) - kickbackRate;
+        uint256 kickbackRate = frontEnds[_frontEnd].kickbackRate;
+        uint256 frontEndShare = uint(DECIMAL_PRECISION) - kickbackRate;
 
         Snapshots memory snapshots = frontEndSnapshots[_frontEnd];
 
-        uint STBLGain = frontEndShare * _getSTBLGainFromSnapshots(frontEndStake, snapshots) / DECIMAL_PRECISION;
+        uint256 STBLGain = frontEndShare * _getSTBLGainFromSnapshots(frontEndStake, snapshots) / DECIMAL_PRECISION;
         return STBLGain;
     }
 
@@ -727,13 +727,13 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         */
         uint128 epochSnapshot = snapshots.epoch;
         uint128 scaleSnapshot = snapshots.scale;
-        uint G_Snapshot = snapshots.G;
-        uint P_Snapshot = snapshots.P;
+        uint256 G_Snapshot = snapshots.G;
+        uint256 P_Snapshot = snapshots.P;
 
-        uint firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot] - G_Snapshot;
-        uint secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot + 1] / SCALE_FACTOR;
+        uint256 firstPortion = epochToScaleToG[epochSnapshot][scaleSnapshot] - G_Snapshot;
+        uint256 secondPortion = epochToScaleToG[epochSnapshot][scaleSnapshot + 1] / SCALE_FACTOR;
 
-        uint STBLGain = ((initialStake * (firstPortion + secondPortion)) / P_Snapshot) / DECIMAL_PRECISION;
+        uint256 STBLGain = ((initialStake * (firstPortion + secondPortion)) / P_Snapshot) / DECIMAL_PRECISION;
 
         return STBLGain;
     }
@@ -745,12 +745,12 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * where P(0) is the depositor's snapshot of the product P, taken when they last updated their deposit.
     */
     function getCompoundedXBRLDeposit(address _depositor) public view override returns (uint) {
-        uint initialDeposit = deposits[_depositor].initialValue;
+        uint256 initialDeposit = deposits[_depositor].initialValue;
         if (initialDeposit == 0) { return 0; }
 
         Snapshots memory snapshots = depositSnapshots[_depositor];
 
-        uint compoundedDeposit = _getCompoundedStakeFromSnapshots(initialDeposit, snapshots);
+        uint256 compoundedDeposit = _getCompoundedStakeFromSnapshots(initialDeposit, snapshots);
         return compoundedDeposit;
     }
 
@@ -762,32 +762,32 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     * The front end's compounded stake is equal to the sum of its depositors' compounded deposits.
     */
     function getCompoundedFrontEndStake(address _frontEnd) public view override returns (uint) {
-        uint frontEndStake = frontEndStakes[_frontEnd];
+        uint256 frontEndStake = frontEndStakes[_frontEnd];
         if (frontEndStake == 0) { return 0; }
 
         Snapshots memory snapshots = frontEndSnapshots[_frontEnd];
 
-        uint compoundedFrontEndStake = _getCompoundedStakeFromSnapshots(frontEndStake, snapshots);
+        uint256 compoundedFrontEndStake = _getCompoundedStakeFromSnapshots(frontEndStake, snapshots);
         return compoundedFrontEndStake;
     }
 
     // Internal function, used to calculcate compounded deposits and compounded front end stakes.
     function _getCompoundedStakeFromSnapshots(
-        uint initialStake,
+        uint256 initialStake,
         Snapshots memory snapshots
     )
         internal
         view
         returns (uint)
     {
-        uint snapshot_P = snapshots.P;
+        uint256 snapshot_P = snapshots.P;
         uint128 scaleSnapshot = snapshots.scale;
         uint128 epochSnapshot = snapshots.epoch;
 
         // If stake was made before a pool-emptying event, then it has been fully cancelled with debt -- so, return 0
         if (epochSnapshot < currentEpoch) { return 0; }
 
-        uint compoundedStake;
+        uint256 compoundedStake;
         uint128 scaleDiff = currentScale - scaleSnapshot;
 
         /* Compute the compounded stake. If a scale change in P was made during the stake's lifetime,
@@ -819,16 +819,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     // --- Sender functions for XBRL deposit, ETH gains and STBL gains ---
 
     // Transfer the XBRL tokens from the user to the Stability Pool's address, and update its recorded XBRL
-    function _sendXBRLtoStabilityPool(address _address, uint _amount) internal {
+    function _sendXBRLtoStabilityPool(address _address, uint256 _amount) internal {
         xbrlToken.sendToPool(_address, address(this), _amount);
-        uint newTotalXBRLDeposits = totalXBRLDeposits + _amount;
+        uint256 newTotalXBRLDeposits = totalXBRLDeposits + _amount;
         totalXBRLDeposits = newTotalXBRLDeposits;
         emit StabilityPoolXBRLBalanceUpdated(newTotalXBRLDeposits);
     }
 
     function _sendETHGainToDepositor(uint _amount) internal {
         if (_amount == 0) {return;}
-        uint newETH = ETH - _amount;
+        uint256 newETH = ETH - _amount;
         ETH = newETH;
         emit StabilityPoolETHBalanceUpdated(newETH);
         emit EtherSent(msg.sender, _amount);
@@ -838,7 +838,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     // Send XBRL to user and decrease XBRL in Pool
-    function _sendXBRLToDepositor(address _depositor, uint XBRLWithdrawal) internal {
+    function _sendXBRLToDepositor(address _depositor, uint256 XBRLWithdrawal) internal {
         if (XBRLWithdrawal == 0) {return;}
 
         xbrlToken.returnFromPool(address(this), _depositor, XBRLWithdrawal);
@@ -867,7 +867,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
 
-    function _updateDepositAndSnapshots(address _depositor, uint _newValue) internal {
+    function _updateDepositAndSnapshots(address _depositor, uint256 _newValue) internal {
         deposits[_depositor].initialValue = _newValue;
 
         if (_newValue == 0) {
@@ -878,11 +878,11 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         }
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
-        uint currentP = P;
+        uint256 currentP = P;
 
         // Get S and G for the current epoch and current scale
-        uint currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
-        uint currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
+        uint256 currentS = epochToScaleToSum[currentEpochCached][currentScaleCached];
+        uint256 currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
 
         // Record new snapshots of the latest running product P, sum S, and sum G, for the depositor
         depositSnapshots[_depositor].P = currentP;
@@ -894,7 +894,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         emit DepositSnapshotUpdated(_depositor, currentP, currentS, currentG);
     }
 
-    function _updateFrontEndStakeAndSnapshots(address _frontEnd, uint _newValue) internal {
+    function _updateFrontEndStakeAndSnapshots(address _frontEnd, uint256 _newValue) internal {
         frontEndStakes[_frontEnd] = _newValue;
 
         if (_newValue == 0) {
@@ -905,10 +905,10 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         uint128 currentScaleCached = currentScale;
         uint128 currentEpochCached = currentEpoch;
-        uint currentP = P;
+        uint256 currentP = P;
 
         // Get G for the current epoch and current scale
-        uint currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
+        uint256 currentG = epochToScaleToG[currentEpochCached][currentScaleCached];
 
         // Record new snapshots of the latest running product P and sum G for the front end
         frontEndSnapshots[_frontEnd].P = currentP;
@@ -922,13 +922,13 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     function _payOutSTBLGains(ICommunityIssuance _communityIssuance, address _depositor, address _frontEnd) internal {
         // Pay out front end's STBL gain
         if (_frontEnd != address(0)) {
-            uint frontEndSTBLGain = getFrontEndSTBLGain(_frontEnd);
+            uint256 frontEndSTBLGain = getFrontEndSTBLGain(_frontEnd);
             _communityIssuance.sendSTBL(_frontEnd, frontEndSTBLGain);
             emit STBLPaidToFrontEnd(_frontEnd, frontEndSTBLGain);
         }
 
         // Pay out depositor's STBL gain
-        uint depositorSTBLGain = getDepositorSTBLGain(_depositor);
+        uint256 depositorSTBLGain = getDepositorSTBLGain(_depositor);
         _communityIssuance.sendSTBL(_depositor, depositorSTBLGain);
         emit STBLPaidToDepositor(_depositor, depositorSTBLGain);
     }
@@ -944,9 +944,9 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     function _requireNoUnderCollateralizedTroves() internal {
-        uint price = priceFeed.fetchPrice();
+        uint256 price = priceFeed.fetchPrice();
         address lowestTrove = sortedTroves.getLast();
-        uint ICR = troveManager.getCurrentICR(lowestTrove, price);
+        uint256 ICR = troveManager.getCurrentICR(lowestTrove, price);
         require(ICR >= MCR, "StabilityPool: Cannot withdraw while there are troves with ICR < MCR");
     }
 
@@ -955,7 +955,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
      function _requireUserHasNoDeposit(address _address) internal view {
-        uint initialDeposit = deposits[_address].initialValue;
+        uint256 initialDeposit = deposits[_address].initialValue;
         require(initialDeposit == 0, 'StabilityPool: User must have no deposit');
     }
 
@@ -968,7 +968,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     }
 
     function _requireUserHasETHGain(address _depositor) internal view {
-        uint ETHGain = getDepositorETHGain(_depositor);
+        uint256 ETHGain = getDepositorETHGain(_depositor);
         require(ETHGain > 0, "StabilityPool: caller must have non-zero ETH Gain");
     }
 

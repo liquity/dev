@@ -31,23 +31,23 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     address troveManagerAddress;
 
     // Use to convert a price answer to an 18-digit precision uint
-    uint constant public TARGET_DIGITS = 18;  
-    uint constant public TELLOR_DIGITS = 6;
+    uint256 constant public TARGET_DIGITS = 18;  
+    uint256 constant public TELLOR_DIGITS = 6;
 
     // Maximum time period allowed since Chainlink's latest round data timestamp, beyond which Chainlink is considered frozen.
-    uint constant public TIMEOUT = 14400;  // 4 hours: 60 * 60 * 4
+    uint256 constant public TIMEOUT = 14400;  // 4 hours: 60 * 60 * 4
     
     // Maximum deviation allowed between two consecutive Chainlink oracle prices. 18-digit precision.
-    uint constant public MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND =  5e17; // 50%
+    uint256 constant public MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND =  5e17; // 50%
 
     /* 
     * The maximum relative price difference between two oracle responses allowed in order for the PriceFeed
     * to return to using the Chainlink oracle. 18-digit precision.
     */
-    uint constant public MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
+    uint256 constant public MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
 
     // The last good price seen from an oracle by Liquity
-    uint public lastGoodPrice;
+    uint256 public lastGoodPrice;
 
     struct ChainlinkResponse {
         uint80 ethUsdRoundId;
@@ -378,23 +378,23 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     function _chainlinkPriceChangeAboveMax(ChainlinkResponse memory _currentResponse, ChainlinkResponse memory _prevResponse) internal pure returns (bool) {
-        uint currentScaledEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.ethUsdAnswer), _currentResponse.ethUsdDecimals);
-        uint prevScaledEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.ethUsdAnswer), _prevResponse.ethUsdDecimals);
-        uint currentScaledBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.brlUsdAnswer), _currentResponse.brlUsdDecimals);
-        uint prevScaledBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.brlUsdAnswer), _prevResponse.brlUsdDecimals);
+        uint256 currentScaledEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.ethUsdAnswer), _currentResponse.ethUsdDecimals);
+        uint256 prevScaledEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.ethUsdAnswer), _prevResponse.ethUsdDecimals);
+        uint256 currentScaledBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.brlUsdAnswer), _currentResponse.brlUsdDecimals);
+        uint256 prevScaledBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.brlUsdAnswer), _prevResponse.brlUsdDecimals);
 
-        uint minEthUsdPrice = LiquityMath._min(currentScaledEthUsdPrice, prevScaledEthUsdPrice);
-        uint maxEthUsdPrice = LiquityMath._max(currentScaledEthUsdPrice, prevScaledEthUsdPrice);
-        uint minBrlUsdPrice = LiquityMath._min(currentScaledBrlUsdPrice, prevScaledBrlUsdPrice);
-        uint maxBrlUsdPrice = LiquityMath._max(currentScaledBrlUsdPrice, prevScaledBrlUsdPrice);
+        uint256 minEthUsdPrice = LiquityMath._min(currentScaledEthUsdPrice, prevScaledEthUsdPrice);
+        uint256 maxEthUsdPrice = LiquityMath._max(currentScaledEthUsdPrice, prevScaledEthUsdPrice);
+        uint256 minBrlUsdPrice = LiquityMath._min(currentScaledBrlUsdPrice, prevScaledBrlUsdPrice);
+        uint256 maxBrlUsdPrice = LiquityMath._max(currentScaledBrlUsdPrice, prevScaledBrlUsdPrice);
 
         /*
         * Use the larger price as the denominator:
         * - If price decreased, the percentage deviation is in relation to the the previous price.
         * - If price increased, the percentage deviation is in relation to the current price.
         */
-        uint ethUsdPercentDeviation = (maxEthUsdPrice - minEthUsdPrice) * DECIMAL_PRECISION / maxEthUsdPrice;
-        uint brlUsdPercentDeviation = (maxBrlUsdPrice - minBrlUsdPrice) * DECIMAL_PRECISION / maxBrlUsdPrice;
+        uint256 ethUsdPercentDeviation = (maxEthUsdPrice - minEthUsdPrice) * DECIMAL_PRECISION / maxEthUsdPrice;
+        uint256 brlUsdPercentDeviation = (maxBrlUsdPrice - minBrlUsdPrice) * DECIMAL_PRECISION / maxBrlUsdPrice;
 
         // Return true if price has more than doubled, or more than halved.
         return ethUsdPercentDeviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND || brlUsdPercentDeviation > MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND;
@@ -443,18 +443,18 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     function _bothOraclesSimilarPrice( ChainlinkResponse memory _chainlinkResponse, TellorResponse memory _tellorResponse) internal pure returns (bool) {
-        uint scaledChainlinkEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.ethUsdAnswer), _chainlinkResponse.ethUsdDecimals);
-        uint scaledChainlinkBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.brlUsdAnswer), _chainlinkResponse.brlUsdDecimals);
-        uint scaledTellorEthUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.ethUsdValue);
-        uint scaledTellorBrlUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.brlUsdValue);
+        uint256 scaledChainlinkEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.ethUsdAnswer), _chainlinkResponse.ethUsdDecimals);
+        uint256 scaledChainlinkBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.brlUsdAnswer), _chainlinkResponse.brlUsdDecimals);
+        uint256 scaledTellorEthUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.ethUsdValue);
+        uint256 scaledTellorBrlUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.brlUsdValue);
 
         // Get the relative price difference between the oracles. Use the lower price as the denominator, i.e. the reference for the calculation.
-        uint minEthUsdPrice = LiquityMath._min(scaledTellorEthUsdPrice, scaledChainlinkEthUsdPrice);
-        uint maxEthUsdPrice = LiquityMath._max(scaledTellorEthUsdPrice, scaledChainlinkEthUsdPrice);
-        uint minBrlUsdPrice = LiquityMath._min(scaledTellorBrlUsdPrice, scaledChainlinkBrlUsdPrice);
-        uint maxBrlUsdPrice = LiquityMath._max(scaledTellorBrlUsdPrice, scaledChainlinkBrlUsdPrice);
-        uint percentEthUsdPriceDifference = (maxEthUsdPrice - minEthUsdPrice) * DECIMAL_PRECISION / minEthUsdPrice;
-        uint percentBrlUsdPriceDifference = (maxBrlUsdPrice - minBrlUsdPrice) * DECIMAL_PRECISION / minBrlUsdPrice;
+        uint256 minEthUsdPrice = LiquityMath._min(scaledTellorEthUsdPrice, scaledChainlinkEthUsdPrice);
+        uint256 maxEthUsdPrice = LiquityMath._max(scaledTellorEthUsdPrice, scaledChainlinkEthUsdPrice);
+        uint256 minBrlUsdPrice = LiquityMath._min(scaledTellorBrlUsdPrice, scaledChainlinkBrlUsdPrice);
+        uint256 maxBrlUsdPrice = LiquityMath._max(scaledTellorBrlUsdPrice, scaledChainlinkBrlUsdPrice);
+        uint256 percentEthUsdPriceDifference = (maxEthUsdPrice - minEthUsdPrice) * DECIMAL_PRECISION / minEthUsdPrice;
+        uint256 percentBrlUsdPriceDifference = (maxBrlUsdPrice - minBrlUsdPrice) * DECIMAL_PRECISION / minBrlUsdPrice;
 
         /*
         * Return true if the relative price difference is <= 3%: if so, we assume both oracles are probably reporting
@@ -463,14 +463,14 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return percentEthUsdPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES || percentBrlUsdPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
     }
 
-    function _scaleChainlinkPriceByDigits(uint _price, uint _answerDigits) internal pure returns (uint) {
+    function _scaleChainlinkPriceByDigits(uint _price, uint256 _answerDigits) internal pure returns (uint) {
         /*
         * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Liquity.
         * At date of Liquity launch, Chainlink uses an 8-digit price, but we also handle the possibility of
         * future changes.
         *
         */
-        uint price;
+        uint256 price;
         if (_answerDigits >= TARGET_DIGITS) {
             // Scale the returned price value down to Liquity's target precision
             price = _price / (10 ** (_answerDigits - TARGET_DIGITS));
@@ -497,18 +497,18 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
      function _storeTellorPrice(TellorResponse memory _tellorResponse) internal returns (uint) {
-        uint scaledTellorBrlUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.brlUsdValue);
-        uint scaledTellorEthUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.ethUsdValue);
-        uint calculatedEthBrlPrice = scaledTellorEthUsdPrice / scaledTellorBrlUsdPrice;
+        uint256 scaledTellorBrlUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.brlUsdValue);
+        uint256 scaledTellorEthUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.ethUsdValue);
+        uint256 calculatedEthBrlPrice = scaledTellorEthUsdPrice / scaledTellorBrlUsdPrice;
         _storePrice(calculatedEthBrlPrice);
 
         return calculatedEthBrlPrice;
     }
 
     function _storeChainlinkPrice(ChainlinkResponse memory _chainlinkResponse) internal returns (uint) {
-        uint scaledChainlinkEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.ethUsdAnswer), _chainlinkResponse.ethUsdDecimals);
-        uint scaledChainlinkBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.brlUsdAnswer), _chainlinkResponse.brlUsdDecimals);
-        uint calculatedEthBrlPrice = scaledChainlinkEthUsdPrice / scaledChainlinkBrlUsdPrice;
+        uint256 scaledChainlinkEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.ethUsdAnswer), _chainlinkResponse.ethUsdDecimals);
+        uint256 scaledChainlinkBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.brlUsdAnswer), _chainlinkResponse.brlUsdDecimals);
+        uint256 calculatedEthBrlPrice = scaledChainlinkEthUsdPrice / scaledChainlinkBrlUsdPrice;
         _storePrice(calculatedEthBrlPrice);
 
         return calculatedEthBrlPrice;

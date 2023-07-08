@@ -16,5 +16,5 @@ interface ICommunityIssuance {
 
     function issueSTBL() external returns (uint);
 
-    function sendSTBL(address _account, uint _STBLamount) external;
+    function sendSTBL(address _account, uint256 _STBLamount) external;
 }

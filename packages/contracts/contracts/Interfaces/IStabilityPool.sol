@@ -55,18 +55,18 @@ interface IStabilityPool {
     event EpochUpdated(uint128 _currentEpoch);
     event ScaleUpdated(uint128 _currentScale);
 
-    event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
+    event FrontEndRegistered(address indexed _frontEnd, uint256 _kickbackRate);
     event FrontEndTagSet(address indexed _depositor, address indexed _frontEnd);
 
-    event DepositSnapshotUpdated(address indexed _depositor, uint _P, uint _S, uint _G);
-    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint _P, uint _G);
-    event UserDepositChanged(address indexed _depositor, uint _newDeposit);
-    event FrontEndStakeChanged(address indexed _frontEnd, uint _newFrontEndStake, address _depositor);
+    event DepositSnapshotUpdated(address indexed _depositor, uint256 _P, uint256 _S, uint256 _G);
+    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint256 _P, uint256 _G);
+    event UserDepositChanged(address indexed _depositor, uint256 _newDeposit);
+    event FrontEndStakeChanged(address indexed _frontEnd, uint256 _newFrontEndStake, address _depositor);
 
-    event ETHGainWithdrawn(address indexed _depositor, uint _ETH, uint _XBRLLoss);
-    event STBLPaidToDepositor(address indexed _depositor, uint _STBL);
-    event STBLPaidToFrontEnd(address indexed _frontEnd, uint _STBL);
-    event EtherSent(address _to, uint _amount);
+    event ETHGainWithdrawn(address indexed _depositor, uint256 _ETH, uint256 _XBRLLoss);
+    event STBLPaidToDepositor(address indexed _depositor, uint256 _STBL);
+    event STBLPaidToFrontEnd(address indexed _frontEnd, uint256 _STBL);
+    event EtherSent(address _to, uint256 _amount);
 
     // --- Functions ---
 
@@ -146,7 +146,7 @@ interface IStabilityPool {
      * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
      * Only called by liquidation functions in the TroveManager.
      */
-    function offset(uint _debt, uint _coll) external;
+    function offset(uint _debt, uint256 _coll) external;
 
     /*
      * Returns the total amount of ETH held by the pool, accounted in an internal variable instead of `balance`,

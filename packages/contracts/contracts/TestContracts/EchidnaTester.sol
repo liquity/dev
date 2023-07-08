@@ -21,11 +21,11 @@ import "./EchidnaProxy.sol";
 
 contract EchidnaTester {
 
-    uint constant private NUMBER_OF_ACTORS = 100;
-    uint constant private INITIAL_BALANCE = 1e24;
-    uint private MCR;
-    uint private CCR;
-    uint private XBRL_GAS_COMPENSATION;
+    uint256 constant private NUMBER_OF_ACTORS = 100;
+    uint256 constant private INITIAL_BALANCE = 1e24;
+    uint256 private MCR;
+    uint256 private CCR;
+    uint256 private XBRL_GAS_COMPENSATION;
 
     TroveManager public troveManager;
     BorrowerOperations public borrowerOperations;
@@ -40,7 +40,7 @@ contract EchidnaTester {
 
     EchidnaProxy[NUMBER_OF_ACTORS] public echidnaProxies;
 
-    uint private numberOfTroves;
+    uint256 private numberOfTroves;
 
     constructor() public payable {
         troveManager = new TroveManager();
@@ -105,48 +105,48 @@ contract EchidnaTester {
     // TroveManager
 
     function liquidateExt(uint _i, address _user) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].liquidatePrx(_user);
     }
 
-    function liquidateTrovesExt(uint _i, uint _n) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function liquidateTrovesExt(uint _i, uint256 _n) external {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].liquidateTrovesPrx(_n);
     }
 
     function batchLiquidateTrovesExt(uint _i, address[] calldata _troveArray) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].batchLiquidateTrovesPrx(_troveArray);
     }
 
     function redeemCollateralExt(
-        uint _i,
-        uint _XBRLAmount,
+        uint256 _i,
+        uint256 _XBRLAmount,
         address _firstRedemptionHint,
         address _upperPartialRedemptionHint,
         address _lowerPartialRedemptionHint,
-        uint _partialRedemptionHintNICR
+        uint256 _partialRedemptionHintNICR
     ) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].redeemCollateralPrx(_XBRLAmount, _firstRedemptionHint, _upperPartialRedemptionHint, _lowerPartialRedemptionHint, _partialRedemptionHintNICR, 0, 0);
     }
 
     // Borrower Operations
 
-    function getAdjustedETH(uint actorBalance, uint _ETH, uint ratio) internal view returns (uint) {
-        uint price = priceFeedTestnet.getPrice();
+    function getAdjustedETH(uint actorBalance, uint256 _ETH, uint256 ratio) internal view returns (uint) {
+        uint256 price = priceFeedTestnet.getPrice();
         require(price > 0);
-        uint minETH = ratio * XBRL_GAS_COMPENSATION / price;
+        uint256 minETH = ratio * XBRL_GAS_COMPENSATION / price;
         require(actorBalance > minETH);
-        uint ETH = minETH + _ETH % (actorBalance - minETH);
+        uint256 ETH = minETH + _ETH % (actorBalance - minETH);
         return ETH;
     }
 
-    function getAdjustedXBRL(uint ETH, uint _XBRLAmount, uint ratio) internal view returns (uint) {
-        uint price = priceFeedTestnet.getPrice();
-        uint XBRLAmount = _XBRLAmount;
-        uint compositeDebt = XBRLAmount + XBRL_GAS_COMPENSATION;
-        uint ICR = LiquityMath._computeCR(ETH, compositeDebt, price);
+    function getAdjustedXBRL(uint ETH, uint256 _XBRLAmount, uint256 ratio) internal view returns (uint) {
+        uint256 price = priceFeedTestnet.getPrice();
+        uint256 XBRLAmount = _XBRLAmount;
+        uint256 compositeDebt = XBRLAmount + XBRL_GAS_COMPENSATION;
+        uint256 ICR = LiquityMath._computeCR(ETH, compositeDebt, price);
         if (ICR < ratio) {
             compositeDebt = ETH * price / ratio;
             XBRLAmount = compositeDebt - XBRL_GAS_COMPENSATION;
@@ -154,14 +154,14 @@ contract EchidnaTester {
         return XBRLAmount;
     }
 
-    function openTroveExt(uint _i, uint _ETH, uint _XBRLAmount) public payable {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function openTroveExt(uint _i, uint256 _ETH, uint256 _XBRLAmount) public payable {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         EchidnaProxy echidnaProxy = echidnaProxies[actor];
-        uint actorBalance = address(echidnaProxy).balance;
+        uint256 actorBalance = address(echidnaProxy).balance;
 
         // we pass in CCR instead of MCR in case it’s the first one
-        uint ETH = getAdjustedETH(actorBalance, _ETH, CCR);
-        uint XBRLAmount = getAdjustedXBRL(ETH, _XBRLAmount, CCR);
+        uint256 ETH = getAdjustedETH(actorBalance, _ETH, CCR);
+        uint256 XBRLAmount = getAdjustedXBRL(ETH, _XBRLAmount, CCR);
 
         //console.log('ETH', ETH);
         //console.log('XBRLAmount', XBRLAmount);
@@ -174,53 +174,53 @@ contract EchidnaTester {
         //assert(numberOfTroves == 0);
     }
 
-    function openTroveRawExt(uint _i, uint _ETH, uint _XBRLAmount, address _upperHint, address _lowerHint, uint _maxFee) public payable {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function openTroveRawExt(uint _i, uint256 _ETH, uint256 _XBRLAmount, address _upperHint, address _lowerHint, uint256 _maxFee) public payable {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].openTrovePrx(_ETH, _XBRLAmount, _upperHint, _lowerHint, _maxFee);
     }
 
-    function addCollExt(uint _i, uint _ETH) external payable {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function addCollExt(uint _i, uint256 _ETH) external payable {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         EchidnaProxy echidnaProxy = echidnaProxies[actor];
-        uint actorBalance = address(echidnaProxy).balance;
+        uint256 actorBalance = address(echidnaProxy).balance;
 
-        uint ETH = getAdjustedETH(actorBalance, _ETH, MCR);
+        uint256 ETH = getAdjustedETH(actorBalance, _ETH, MCR);
 
         echidnaProxy.addCollPrx(ETH, address(0), address(0));
     }
 
-    function addCollRawExt(uint _i, uint _ETH, address _upperHint, address _lowerHint) external payable {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function addCollRawExt(uint _i, uint256 _ETH, address _upperHint, address _lowerHint) external payable {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].addCollPrx(_ETH, _upperHint, _lowerHint);
     }
 
-    function withdrawCollExt(uint _i, uint _amount, address _upperHint, address _lowerHint) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function withdrawCollExt(uint _i, uint256 _amount, address _upperHint, address _lowerHint) external {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].withdrawCollPrx(_amount, _upperHint, _lowerHint);
     }
 
-    function withdrawXBRLExt(uint _i, uint _amount, address _upperHint, address _lowerHint, uint _maxFee) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function withdrawXBRLExt(uint _i, uint256 _amount, address _upperHint, address _lowerHint, uint256 _maxFee) external {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].withdrawXBRLPrx(_amount, _upperHint, _lowerHint, _maxFee);
     }
 
-    function repayXBRLExt(uint _i, uint _amount, address _upperHint, address _lowerHint) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function repayXBRLExt(uint _i, uint256 _amount, address _upperHint, address _lowerHint) external {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].repayXBRLPrx(_amount, _upperHint, _lowerHint);
     }
 
     function closeTroveExt(uint _i) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].closeTrovePrx();
     }
 
-    function adjustTroveExt(uint _i, uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease) external payable {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function adjustTroveExt(uint _i, uint256 _ETH, uint256 _collWithdrawal, uint256 _debtChange, bool _isDebtIncrease) external payable {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         EchidnaProxy echidnaProxy = echidnaProxies[actor];
-        uint actorBalance = address(echidnaProxy).balance;
+        uint256 actorBalance = address(echidnaProxy).balance;
 
-        uint ETH = getAdjustedETH(actorBalance, _ETH, MCR);
-        uint debtChange = _debtChange;
+        uint256 ETH = getAdjustedETH(actorBalance, _ETH, MCR);
+        uint256 debtChange = _debtChange;
         if (_isDebtIncrease) {
             // TODO: add current amount already withdrawn:
             debtChange = getAdjustedXBRL(ETH, uint(_debtChange), MCR);
@@ -229,47 +229,47 @@ contract EchidnaTester {
         echidnaProxy.adjustTrovePrx(ETH, _collWithdrawal, debtChange, _isDebtIncrease, address(0), address(0), 0);
     }
 
-    function adjustTroveRawExt(uint _i, uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint _maxFee) external payable {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function adjustTroveRawExt(uint _i, uint256 _ETH, uint256 _collWithdrawal, uint256 _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint256 _maxFee) external payable {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].adjustTrovePrx(_ETH, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint, _maxFee);
     }
 
     // Pool Manager
 
-    function provideToSPExt(uint _i, uint _amount, address _frontEndTag) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function provideToSPExt(uint _i, uint256 _amount, address _frontEndTag) external {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].provideToSPPrx(_amount, _frontEndTag);
     }
 
-    function withdrawFromSPExt(uint _i, uint _amount) external {
-        uint actor = _i % NUMBER_OF_ACTORS;
+    function withdrawFromSPExt(uint _i, uint256 _amount) external {
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].withdrawFromSPPrx(_amount);
     }
 
     // XBRL Token
 
     function transferExt(uint _i, address recipient, uint256 amount) external returns (bool) {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].transferPrx(recipient, amount);
     }
 
     function approveExt(uint _i, address spender, uint256 amount) external returns (bool) {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].approvePrx(spender, amount);
     }
 
     function transferFromExt(uint _i, address sender, address recipient, uint256 amount) external returns (bool) {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].transferFromPrx(sender, recipient, amount);
     }
 
     function increaseAllowanceExt(uint _i, address spender, uint256 addedValue) external returns (bool) {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].increaseAllowancePrx(spender, addedValue);
     }
 
     function decreaseAllowanceExt(uint _i, address spender, uint256 subtractedValue) external returns (bool) {
-        uint actor = _i % NUMBER_OF_ACTORS;
+        uint256 actor = _i % NUMBER_OF_ACTORS;
         echidnaProxies[actor].decreaseAllowancePrx(spender, subtractedValue);
     }
 
@@ -389,7 +389,7 @@ contract EchidnaTester {
 
     // TODO: What should we do with this? Should it be allowed? Should it be a canary?
     function echidna_price() public view returns(bool) {
-        uint price = priceFeedTestnet.getPrice();
+        uint256 price = priceFeedTestnet.getPrice();
         
         if (price == 0) {
             return false;
@@ -402,18 +402,18 @@ contract EchidnaTester {
 
     // Total XBRL matches
     function echidna_XBRL_global_balances() public view returns(bool) {
-        uint totalSupply = xbrlToken.totalSupply();
-        uint gasPoolBalance = xbrlToken.balanceOf(address(gasPool));
+        uint256 totalSupply = xbrlToken.totalSupply();
+        uint256 gasPoolBalance = xbrlToken.balanceOf(address(gasPool));
 
-        uint activePoolBalance = activePool.getXBRLDebt();
-        uint defaultPoolBalance = defaultPool.getXBRLDebt();
+        uint256 activePoolBalance = activePool.getXBRLDebt();
+        uint256 defaultPoolBalance = defaultPool.getXBRLDebt();
         if (totalSupply != activePoolBalance + defaultPoolBalance) {
             return false;
         }
 
-        uint stabilityPoolBalance = stabilityPool.getTotalXBRLDeposits();
+        uint256 stabilityPoolBalance = stabilityPool.getTotalXBRLDeposits();
         address currentTrove = sortedTroves.getFirst();
-        uint trovesBalance;
+        uint256 trovesBalance;
         while (currentTrove != address(0)) {
             trovesBalance += xbrlToken.balanceOf(address(currentTrove));
             currentTrove = sortedTroves.getNext(currentTrove);

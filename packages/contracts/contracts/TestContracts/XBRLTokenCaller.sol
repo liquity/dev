@@ -11,11 +11,11 @@ contract XBRLTokenCaller {
         XBRL = _XBRL;
     }
 
-    function xbrlMint(address _account, uint _amount) external {
+    function xbrlMint(address _account, uint256 _amount) external {
         XBRL.mint(_account, _amount);
     }
 
-    function xbrlBurn(address _account, uint _amount) external {
+    function xbrlBurn(address _account, uint256 _amount) external {
         XBRL.burn(_account, _amount);
     }
 

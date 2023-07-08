@@ -11,8 +11,8 @@ interface ICollSurplusPool {
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
 
-    event CollBalanceUpdated(address indexed _account, uint _newBalance);
-    event EtherSent(address _to, uint _amount);
+    event CollBalanceUpdated(address indexed _account, uint256 _newBalance);
+    event EtherSent(address _to, uint256 _amount);
 
     // --- Contract setters ---
 
@@ -26,7 +26,7 @@ interface ICollSurplusPool {
 
     function getCollateral(address _account) external view returns (uint);
 
-    function accountSurplus(address _account, uint _amount) external;
+    function accountSurplus(address _account, uint256 _amount) external;
 
     function claimColl(address _account) external;
 }

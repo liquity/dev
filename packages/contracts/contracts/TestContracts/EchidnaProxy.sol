@@ -44,19 +44,19 @@ contract EchidnaProxy {
     }
 
     function redeemCollateralPrx(
-        uint _XBRLAmount,
+        uint256 _XBRLAmount,
         address _firstRedemptionHint,
         address _upperPartialRedemptionHint,
         address _lowerPartialRedemptionHint,
-        uint _partialRedemptionHintNICR,
-        uint _maxIterations,
-        uint _maxFee
+        uint256 _partialRedemptionHintNICR,
+        uint256 _maxIterations,
+        uint256 _maxFee
     ) external {
         troveManager.redeemCollateral(_XBRLAmount, _firstRedemptionHint, _upperPartialRedemptionHint, _lowerPartialRedemptionHint, _partialRedemptionHintNICR, _maxIterations, _maxFee);
     }
 
     // Borrower Operations
-    function openTrovePrx(uint _ETH, uint _XBRLAmount, address _upperHint, address _lowerHint, uint _maxFee) external payable {
+    function openTrovePrx(uint _ETH, uint256 _XBRLAmount, address _upperHint, address _lowerHint, uint256 _maxFee) external payable {
         borrowerOperations.openTrove{value: _ETH}(_maxFee, _XBRLAmount, _upperHint, _lowerHint);
     }
 
@@ -68,7 +68,7 @@ contract EchidnaProxy {
         borrowerOperations.withdrawColl(_amount, _upperHint, _lowerHint);
     }
 
-    function withdrawXBRLPrx(uint _amount, address _upperHint, address _lowerHint, uint _maxFee) external {
+    function withdrawXBRLPrx(uint _amount, address _upperHint, address _lowerHint, uint256 _maxFee) external {
         borrowerOperations.withdrawXBRL(_maxFee, _amount, _upperHint, _lowerHint);
     }
 
@@ -80,7 +80,7 @@ contract EchidnaProxy {
         borrowerOperations.closeTrove();
     }
 
-    function adjustTrovePrx(uint _ETH, uint _collWithdrawal, uint _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint _maxFee) external payable {
+    function adjustTrovePrx(uint _ETH, uint256 _collWithdrawal, uint256 _debtChange, bool _isDebtIncrease, address _upperHint, address _lowerHint, uint256 _maxFee) external payable {
         borrowerOperations.adjustTrove{value: _ETH}(_maxFee, _collWithdrawal, _debtChange, _isDebtIncrease, _upperHint, _lowerHint);
     }
 

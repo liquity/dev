@@ -12,13 +12,13 @@ interface ISTBLStaking {
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
 
-    event StakeChanged(address indexed staker, uint newStake);
-    event StakingGainsWithdrawn(address indexed staker, uint XBRLGain, uint ETHGain);
+    event StakeChanged(address indexed staker, uint256 newStake);
+    event StakingGainsWithdrawn(address indexed staker, uint256 XBRLGain, uint256 ETHGain);
     event F_ETHUpdated(uint _F_ETH);
     event F_XBRLUpdated(uint _F_XBRL);
     event TotalSTBLStakedUpdated(uint _totalSTBLStaked);
-    event EtherSent(address _account, uint _amount);
-    event StakerSnapshotsUpdated(address _staker, uint _F_ETH, uint _F_XBRL);
+    event EtherSent(address _account, uint256 _amount);
+    event StakerSnapshotsUpdated(address _staker, uint256 _F_ETH, uint256 _F_XBRL);
 
     // --- Functions ---
 

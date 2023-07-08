@@ -60,38 +60,38 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         stblStaking = stblStakingCached;
     }
 
-    function claimCollateralAndOpenTrove(uint _maxFee, uint _XBRLAmount, address _upperHint, address _lowerHint) external payable {
-        uint balanceBefore = address(this).balance;
+    function claimCollateralAndOpenTrove(uint _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable {
+        uint256 balanceBefore = address(this).balance;
 
         // Claim collateral
         borrowerOperations.claimCollateral();
 
-        uint balanceAfter = address(this).balance;
+        uint256 balanceAfter = address(this).balance;
 
         // already checked in CollSurplusPool
         assert(balanceAfter > balanceBefore);
 
-        uint totalCollateral = balanceAfter - balanceBefore + msg.value;
+        uint256 totalCollateral = balanceAfter - balanceBefore + msg.value;
 
         // Open trove with obtained collateral, plus collateral sent by user
         borrowerOperations.openTrove{ value: totalCollateral }(_maxFee, _XBRLAmount, _upperHint, _lowerHint);
     }
 
     function claimSPRewardsAndRecycle(uint _maxFee, address _upperHint, address _lowerHint) external {
-        uint collBalanceBefore = address(this).balance;
-        uint stblBalanceBefore = stblToken.balanceOf(address(this));
+        uint256 collBalanceBefore = address(this).balance;
+        uint256 stblBalanceBefore = stblToken.balanceOf(address(this));
 
         // Claim rewards
         stabilityPool.withdrawFromSP(0);
 
-        uint collBalanceAfter = address(this).balance;
-        uint stblBalanceAfter = stblToken.balanceOf(address(this));
-        uint claimedCollateral = collBalanceAfter - collBalanceBefore;
+        uint256 collBalanceAfter = address(this).balance;
+        uint256 stblBalanceAfter = stblToken.balanceOf(address(this));
+        uint256 claimedCollateral = collBalanceAfter - collBalanceBefore;
 
         // Add claimed ETH to trove, get more XBRL and stake it into the Stability Pool
         if (claimedCollateral > 0) {
             _requireUserHasTrove(address(this));
-            uint XBRLAmount = _getNetXBRLAmount(claimedCollateral);
+            uint256 XBRLAmount = _getNetXBRLAmount(claimedCollateral);
             borrowerOperations.adjustTrove{ value: claimedCollateral }(_maxFee, 0, XBRLAmount, true, _upperHint, _lowerHint);
             // Provide withdrawn XBRL to Stability Pool
             if (XBRLAmount > 0) {
@@ -100,24 +100,24 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         }
 
         // Stake claimed STBL
-        uint claimedSTBL = stblBalanceAfter - stblBalanceBefore;
+        uint256 claimedSTBL = stblBalanceAfter - stblBalanceBefore;
         if (claimedSTBL > 0) {
             stblStaking.stake(claimedSTBL);
         }
     }
 
     function claimStakingGainsAndRecycle(uint _maxFee, address _upperHint, address _lowerHint) external {
-        uint collBalanceBefore = address(this).balance;
-        uint xbrlBalanceBefore = xbrlToken.balanceOf(address(this));
-        uint stblBalanceBefore = stblToken.balanceOf(address(this));
+        uint256 collBalanceBefore = address(this).balance;
+        uint256 xbrlBalanceBefore = xbrlToken.balanceOf(address(this));
+        uint256 stblBalanceBefore = stblToken.balanceOf(address(this));
 
         // Claim gains
         stblStaking.unstake(0);
 
-        uint gainedCollateral = address(this).balance - collBalanceBefore; // stack too deep issues :'(
-        uint gainedXBRL = xbrlToken.balanceOf(address(this)) - xbrlBalanceBefore;
+        uint256 gainedCollateral = address(this).balance - collBalanceBefore; // stack too deep issues :'(
+        uint256 gainedXBRL = xbrlToken.balanceOf(address(this)) - xbrlBalanceBefore;
 
-        uint netXBRLAmount;
+        uint256 netXBRLAmount;
         // Top up trove and get more XBRL, keeping ICR constant
         if (gainedCollateral > 0) {
             _requireUserHasTrove(address(this));
@@ -125,13 +125,13 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
             borrowerOperations.adjustTrove{ value: gainedCollateral }(_maxFee, 0, netXBRLAmount, true, _upperHint, _lowerHint);
         }
 
-        uint totalXBRL = gainedXBRL + netXBRLAmount;
+        uint256 totalXBRL = gainedXBRL + netXBRLAmount;
         if (totalXBRL > 0) {
             stabilityPool.provideToSP(totalXBRL, address(0));
 
             // Providing to Stability Pool also triggers STBL claim, so stake it if any
-            uint stblBalanceAfter = stblToken.balanceOf(address(this));
-            uint claimedSTBL = stblBalanceAfter - stblBalanceBefore;
+            uint256 stblBalanceAfter = stblToken.balanceOf(address(this));
+            uint256 claimedSTBL = stblBalanceAfter - stblBalanceBefore;
             if (claimedSTBL > 0) {
                 stblStaking.stake(claimedSTBL);
             }
@@ -140,12 +140,12 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
     }
 
     function _getNetXBRLAmount(uint _collateral) internal returns (uint) {
-        uint price = priceFeed.fetchPrice();
-        uint ICR = troveManager.getCurrentICR(address(this), price);
+        uint256 price = priceFeed.fetchPrice();
+        uint256 ICR = troveManager.getCurrentICR(address(this), price);
 
-        uint XBRLAmount = _collateral * price / ICR;
-        uint borrowingRate = troveManager.getBorrowingRateWithDecay();
-        uint netDebt = XBRLAmount * LiquityMath.DECIMAL_PRECISION / (LiquityMath.DECIMAL_PRECISION + borrowingRate);
+        uint256 XBRLAmount = _collateral * price / ICR;
+        uint256 borrowingRate = troveManager.getBorrowingRateWithDecay();
+        uint256 netDebt = XBRLAmount * LiquityMath.DECIMAL_PRECISION / (LiquityMath.DECIMAL_PRECISION + borrowingRate);
 
         return netDebt;
     }

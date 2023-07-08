@@ -17,17 +17,17 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     string constant public NAME = "STBLStaking";
 
     mapping( address => uint) public stakes;
-    uint public totalSTBLStaked;
+    uint256 public totalSTBLStaked;
 
-    uint public F_ETH;  // Running sum of ETH fees per-STBL-staked
-    uint public F_XBRL; // Running sum of STBL fees per-STBL-staked
+    uint256 public F_ETH;  // Running sum of ETH fees per-STBL-staked
+    uint256 public F_XBRL; // Running sum of STBL fees per-STBL-staked
 
     // User snapshots of F_ETH and F_XBRL, taken at the point at which their latest deposit was made
     mapping (address => Snapshot) public snapshots; 
 
     struct Snapshot {
-        uint F_ETH_Snapshot;
-        uint F_XBRL_Snapshot;
+        uint256 F_ETH_Snapshot;
+        uint256 F_XBRL_Snapshot;
     }
     
     ISTBLToken public stblToken;
@@ -45,13 +45,13 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
 
-    event StakeChanged(address indexed staker, uint newStake);
-    event StakingGainsWithdrawn(address indexed staker, uint XBRLGain, uint ETHGain);
+    event StakeChanged(address indexed staker, uint256 newStake);
+    event StakingGainsWithdrawn(address indexed staker, uint256 XBRLGain, uint256 ETHGain);
     event F_ETHUpdated(uint _F_ETH);
     event F_XBRLUpdated(uint _F_XBRL);
     event TotalSTBLStakedUpdated(uint _totalSTBLStaked);
-    event EtherSent(address _account, uint _amount);
-    event StakerSnapshotsUpdated(address _staker, uint _F_ETH, uint _F_XBRL);
+    event EtherSent(address _account, uint256 _amount);
+    event StakerSnapshotsUpdated(address _staker, uint256 _F_ETH, uint256 _F_XBRL);
 
     // --- Functions ---
 
@@ -92,10 +92,10 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     function stake(uint _STBLamount) external override {
         _requireNonZeroAmount(_STBLamount);
 
-        uint currentStake = stakes[msg.sender];
+        uint256 currentStake = stakes[msg.sender];
 
-        uint ETHGain;
-        uint XBRLGain;
+        uint256 ETHGain;
+        uint256 XBRLGain;
         // Grab any accumulated ETH and XBRL gains from the current stake
         if (currentStake != 0) {
             ETHGain = _getPendingETHGain(msg.sender);
@@ -104,7 +104,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     
        _updateUserSnapshots(msg.sender);
 
-        uint newStake = currentStake + _STBLamount;
+        uint256 newStake = currentStake + _STBLamount;
 
         // Increase user’s stake and total STBL staked
         stakes[msg.sender] = newStake;
@@ -127,19 +127,19 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     // Unstake the STBL and send the it back to the caller, along with their accumulated XBRL & ETH gains. 
     // If requested amount > stake, send their entire stake.
     function unstake(uint _STBLamount) external override {
-        uint currentStake = stakes[msg.sender];
+        uint256 currentStake = stakes[msg.sender];
         _requireUserHasStake(currentStake);
 
         // Grab any accumulated ETH and XBRL gains from the current stake
-        uint ETHGain = _getPendingETHGain(msg.sender);
-        uint XBRLGain = _getPendingXBRLGain(msg.sender);
+        uint256 ETHGain = _getPendingETHGain(msg.sender);
+        uint256 XBRLGain = _getPendingXBRLGain(msg.sender);
         
         _updateUserSnapshots(msg.sender);
 
         if (_STBLamount > 0) {
-            uint STBLToWithdraw = LiquityMath._min(_STBLamount, currentStake);
+            uint256 STBLToWithdraw = LiquityMath._min(_STBLamount, currentStake);
 
-            uint newStake = currentStake - STBLToWithdraw;
+            uint256 newStake = currentStake - STBLToWithdraw;
 
             // Decrease user's stake and total STBL staked
             stakes[msg.sender] = newStake;
@@ -163,7 +163,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
 
     function increaseF_ETH(uint _ETHFee) external override {
         _requireCallerIsTroveManager();
-        uint ETHFeePerSTBLStaked;
+        uint256 ETHFeePerSTBLStaked;
      
         if (totalSTBLStaked > 0) {ETHFeePerSTBLStaked = _ETHFee * DECIMAL_PRECISION / totalSTBLStaked;}
 
@@ -173,7 +173,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
 
     function increaseF_XBRL(uint _XBRLFee) external override {
         _requireCallerIsBorrowerOperations();
-        uint XBRLFeePerSTBLStaked;
+        uint256 XBRLFeePerSTBLStaked;
         
         if (totalSTBLStaked > 0) {XBRLFeePerSTBLStaked = _XBRLFee * DECIMAL_PRECISION / totalSTBLStaked;}
         
@@ -188,8 +188,8 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     }
 
     function _getPendingETHGain(address _user) internal view returns (uint) {
-        uint F_ETH_Snapshot = snapshots[_user].F_ETH_Snapshot;
-        uint ETHGain = stakes[_user] * (F_ETH - F_ETH_Snapshot) / DECIMAL_PRECISION;
+        uint256 F_ETH_Snapshot = snapshots[_user].F_ETH_Snapshot;
+        uint256 ETHGain = stakes[_user] * (F_ETH - F_ETH_Snapshot) / DECIMAL_PRECISION;
         return ETHGain;
     }
 
@@ -198,8 +198,8 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     }
 
     function _getPendingXBRLGain(address _user) internal view returns (uint) {
-        uint F_XBRL_Snapshot = snapshots[_user].F_XBRL_Snapshot;
-        uint XBRLGain = stakes[_user] * (F_XBRL - F_XBRL_Snapshot) / DECIMAL_PRECISION;
+        uint256 F_XBRL_Snapshot = snapshots[_user].F_XBRL_Snapshot;
+        uint256 XBRLGain = stakes[_user] * (F_XBRL - F_XBRL_Snapshot) / DECIMAL_PRECISION;
         return XBRLGain;
     }
 

@@ -14,7 +14,7 @@ contract BorrowerOperationsScript is CheckContract {
         borrowerOperations = _borrowerOperations;
     }
 
-    function openTrove(uint _maxFee, uint _XBRLAmount, address _upperHint, address _lowerHint) external payable {
+    function openTrove(uint _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable {
         borrowerOperations.openTrove{ value: msg.value }(_maxFee, _XBRLAmount, _upperHint, _lowerHint);
     }
 
@@ -26,7 +26,7 @@ contract BorrowerOperationsScript is CheckContract {
         borrowerOperations.withdrawColl(_amount, _upperHint, _lowerHint);
     }
 
-    function withdrawXBRL(uint _maxFee, uint _amount, address _upperHint, address _lowerHint) external {
+    function withdrawXBRL(uint _maxFee, uint256 _amount, address _upperHint, address _lowerHint) external {
         borrowerOperations.withdrawXBRL(_maxFee, _amount, _upperHint, _lowerHint);
     }
 
@@ -38,7 +38,7 @@ contract BorrowerOperationsScript is CheckContract {
         borrowerOperations.closeTrove();
     }
 
-    function adjustTrove(uint _maxFee, uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable {
+    function adjustTrove(uint _maxFee, uint256 _collWithdrawal, uint256 _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable {
         borrowerOperations.adjustTrove{ value: msg.value }(_maxFee, _collWithdrawal, _debtChange, isDebtIncrease, _upperHint, _lowerHint);
     }
 

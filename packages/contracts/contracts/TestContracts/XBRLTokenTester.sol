@@ -22,7 +22,7 @@ contract XBRLTokenTester is XBRLToken {
         _mint(_account, _amount);
     }
 
-    function unprotectedBurn(address _account, uint _amount) external {
+    function unprotectedBurn(address _account, uint256 _amount) external {
         // No check on caller here
         
         _burn(_account, _amount);
@@ -51,7 +51,7 @@ contract XBRLTokenTester is XBRLToken {
         }
     }
 
-    function getDigest(address owner, address spender, uint amount, uint nonce, uint deadline) external view returns (bytes32) {
+    function getDigest(address owner, address spender, uint256 amount, uint256 nonce, uint256 deadline) external view returns (bytes32) {
         return keccak256(abi.encodePacked(
                 uint16(0x1901),
                 domainSeparator(),

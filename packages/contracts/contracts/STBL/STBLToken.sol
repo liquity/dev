@@ -59,7 +59,7 @@ contract STBLToken is CheckContract, ISTBLToken {
 
     mapping (address => uint256) private _balances;
     mapping (address => mapping (address => uint256)) private _allowances;
-    uint private _totalSupply;
+    uint256 private _totalSupply;
 
     // --- EIP 2612 Data ---
 
@@ -80,18 +80,18 @@ contract STBLToken is CheckContract, ISTBLToken {
 
     // --- STBLToken specific data ---
 
-    uint public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
+    uint256 public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
 
-    // uint for use with SafeMath
-    uint internal _1_MILLION = 1e24;    // 1e6 * 1e18 = 1e24
+    // uint256 for use with SafeMath
+    uint256 internal _1_MILLION = 1e24;    // 1e6 * 1e18 = 1e24
 
-    uint internal immutable deploymentStartTime;
+    uint256 internal immutable deploymentStartTime;
     address public immutable multisigAddress;
 
     address public immutable communityIssuanceAddress;
     address public immutable stblStakingAddress;
 
-    uint internal immutable lpRewardsEntitlement;
+    uint256 internal immutable lpRewardsEntitlement;
 
     ILockupContractFactory public immutable lockupContractFactory;
 
@@ -135,18 +135,18 @@ contract STBLToken is CheckContract, ISTBLToken {
         
         // --- Initial STBL allocations ---
      
-        uint bountyEntitlement = _1_MILLION * 2; // Allocate 2 million for bounties/hackathons
+        uint256 bountyEntitlement = _1_MILLION * 2; // Allocate 2 million for bounties/hackathons
         _mint(_bountyAddress, bountyEntitlement);
 
-        uint depositorsAndFrontEndsEntitlement = _1_MILLION * 32; // Allocate 32 million to the algorithmic issuance schedule
+        uint256 depositorsAndFrontEndsEntitlement = _1_MILLION * 32; // Allocate 32 million to the algorithmic issuance schedule
         _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
 
-        uint _lpRewardsEntitlement = _1_MILLION * 4 / 3;  // Allocate 1.33 million for LP rewards
+        uint256 _lpRewardsEntitlement = _1_MILLION * 4 / 3;  // Allocate 1.33 million for LP rewards
         lpRewardsEntitlement = _lpRewardsEntitlement;
         _mint(_lpRewardsAddress, _lpRewardsEntitlement);
         
         // Allocate the remainder to the STBL Multisig: (100 - 2 - 32 - 1.33) million = 64.66 million
-        uint multisigEntitlement = _1_MILLION * 100
+        uint256 multisigEntitlement = _1_MILLION * 100
             - bountyEntitlement
             - depositorsAndFrontEndsEntitlement
             - _lpRewardsEntitlement;
@@ -244,8 +244,8 @@ contract STBLToken is CheckContract, ISTBLToken {
     (
         address owner, 
         address spender, 
-        uint amount, 
-        uint deadline, 
+        uint256 amount, 
+        uint256 deadline, 
         uint8 v, 
         bytes32 r, 
         bytes32 s

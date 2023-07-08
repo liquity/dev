@@ -14,24 +14,24 @@ import "../Interfaces/ILiquityBase.sol";
 * common functions. 
 */
 contract LiquityBase is BaseMath, ILiquityBase {
-    uint constant public _100pct = 1000000000000000000; // 1e18 == 100%
+    uint256 constant public _100pct = 1000000000000000000; // 1e18 == 100%
 
     // Minimum collateral ratio for individual troves
-    uint constant public MCR = 1100000000000000000; // 110%
+    uint256 constant public MCR = 1100000000000000000; // 110%
 
     // Critical system collateral ratio. If the system's total collateral ratio (TCR) falls below the CCR, Recovery Mode is triggered.
-    uint constant public CCR = 1500000000000000000; // 150%
+    uint256 constant public CCR = 1500000000000000000; // 150%
 
     // Amount of XBRL to be locked in gas pool on opening troves
-    uint constant public XBRL_GAS_COMPENSATION = 200e18;
+    uint256 constant public XBRL_GAS_COMPENSATION = 200e18;
 
     // Minimum amount of net XBRL debt a trove must have
-    uint constant public MIN_NET_DEBT = 1800e18;
-    // uint constant public MIN_NET_DEBT = 0; 
+    uint256 constant public MIN_NET_DEBT = 1800e18;
+    // uint256 constant public MIN_NET_DEBT = 0; 
 
-    uint constant public PERCENT_DIVISOR = 200; // dividing by 200 yields 0.5%
+    uint256 constant public PERCENT_DIVISOR = 200; // dividing by 200 yields 0.5%
 
-    uint constant public BORROWING_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
+    uint256 constant public BORROWING_FEE_FLOOR = DECIMAL_PRECISION / 1000 * 5; // 0.5%
 
     IActivePool public activePool;
 
@@ -56,22 +56,22 @@ contract LiquityBase is BaseMath, ILiquityBase {
     }
 
     function getEntireSystemColl() public view returns (uint entireSystemColl) {
-        uint activeColl = activePool.getETH();
-        uint liquidatedColl = defaultPool.getETH();
+        uint256 activeColl = activePool.getETH();
+        uint256 liquidatedColl = defaultPool.getETH();
 
         return activeColl + liquidatedColl;
     }
 
     function getEntireSystemDebt() public view returns (uint entireSystemDebt) {
-        uint activeDebt = activePool.getXBRLDebt();
-        uint closedDebt = defaultPool.getXBRLDebt();
+        uint256 activeDebt = activePool.getXBRLDebt();
+        uint256 closedDebt = defaultPool.getXBRLDebt();
 
         return activeDebt + closedDebt;
     }
 
     function _getTCR(uint _price) internal view returns (uint TCR) {
-        uint entireSystemColl = getEntireSystemColl();
-        uint entireSystemDebt = getEntireSystemDebt();
+        uint256 entireSystemColl = getEntireSystemColl();
+        uint256 entireSystemDebt = getEntireSystemDebt();
 
         TCR = LiquityMath._computeCR(entireSystemColl, entireSystemDebt, _price);
 
@@ -79,13 +79,13 @@ contract LiquityBase is BaseMath, ILiquityBase {
     }
 
     function _checkRecoveryMode(uint _price) internal view returns (bool) {
-        uint TCR = _getTCR(_price);
+        uint256 TCR = _getTCR(_price);
 
         return TCR < CCR;
     }
 
-    function _requireUserAcceptsFee(uint _fee, uint _amount, uint _maxFeePercentage) internal pure {
-        uint feePercentage = _fee * DECIMAL_PRECISION / _amount;
+    function _requireUserAcceptsFee(uint _fee, uint256 _amount, uint256 _maxFeePercentage) internal pure {
+        uint256 feePercentage = _fee * DECIMAL_PRECISION / _amount;
         require(feePercentage <= _maxFeePercentage, "Fee exceeded provided maximum");
     }
 }

@@ -18,7 +18,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
 
     string constant public NAME = "CommunityIssuance";
 
-    uint constant public SECONDS_IN_ONE_MINUTE = 60;
+    uint256 constant public SECONDS_IN_ONE_MINUTE = 60;
 
    /* The issuance factor F determines the curvature of the issuance curve.
     *
@@ -34,7 +34,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     * F = 0.5 ** (1/525600)
     * F = 0.999998681227695000 
     */
-    uint constant public ISSUANCE_FACTOR = 999998681227695000;
+    uint256 constant public ISSUANCE_FACTOR = 999998681227695000;
 
     /* 
     * The community STBL supply cap is the starting balance of the Community Issuance contract.
@@ -42,14 +42,14 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     * 
     * Set to 32M (slightly less than 1/3) of total STBL supply.
     */
-    uint constant public STBLSupplyCap = 32e24; // 32 million
+    uint256 constant public STBLSupplyCap = 32e24; // 32 million
 
     ISTBLToken public stblToken;
 
     address public stabilityPoolAddress;
 
-    uint public totalSTBLIssued;
-    uint public immutable deploymentTime;
+    uint256 public totalSTBLIssued;
+    uint256 public immutable deploymentTime;
 
     // --- Events ---
 
@@ -79,7 +79,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
         stabilityPoolAddress = _stabilityPoolAddress;
 
         // When STBLToken deployed, it should have transferred CommunityIssuance's STBL entitlement
-        uint STBLBalance = stblToken.balanceOf(address(this));
+        uint256 STBLBalance = stblToken.balanceOf(address(this));
         assert(STBLBalance >= STBLSupplyCap);
 
         emit STBLTokenAddressSet(_stblTokenAddress);
@@ -91,8 +91,8 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     function issueSTBL() external override returns (uint) {
         _requireCallerIsStabilityPool();
 
-        uint latestTotalSTBLIssued = STBLSupplyCap * _getCumulativeIssuanceFraction() / DECIMAL_PRECISION;
-        uint issuance = latestTotalSTBLIssued - totalSTBLIssued;
+        uint256 latestTotalSTBLIssued = STBLSupplyCap * _getCumulativeIssuanceFraction() / DECIMAL_PRECISION;
+        uint256 issuance = latestTotalSTBLIssued - totalSTBLIssued;
 
         totalSTBLIssued = latestTotalSTBLIssued;
         emit TotalSTBLIssuedUpdated(latestTotalSTBLIssued);
@@ -106,19 +106,19 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     t:  time passed since last STBL issuance event  */
     function _getCumulativeIssuanceFraction() internal view returns (uint) {
         // Get the time passed since deployment
-        uint timePassedInMinutes = block.timestamp - deploymentTime / SECONDS_IN_ONE_MINUTE;
+        uint256 timePassedInMinutes = block.timestamp - deploymentTime / SECONDS_IN_ONE_MINUTE;
 
         // f^t
-        uint power = LiquityMath._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
+        uint256 power = LiquityMath._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
 
         //  (1 - f^t)
-        uint cumulativeIssuanceFraction = (uint(DECIMAL_PRECISION) - power);
+        uint256 cumulativeIssuanceFraction = (uint(DECIMAL_PRECISION) - power);
         assert(cumulativeIssuanceFraction <= DECIMAL_PRECISION); // must be in range [0,1]
 
         return cumulativeIssuanceFraction;
     }
 
-    function sendSTBL(address _account, uint _STBLamount) external override {
+    function sendSTBL(address _account, uint256 _STBLamount) external override {
         _requireCallerIsStabilityPool();
 
         stblToken.transfer(_account, _STBLamount);

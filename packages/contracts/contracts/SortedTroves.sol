@@ -48,7 +48,7 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
 
     event TroveManagerAddressChanged(address _troveManagerAddress);
     event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
-    event NodeAdded(address _id, uint _NICR);
+    event NodeAdded(address _id, uint256 _NICR);
     event NodeRemoved(address _id);
 
     address public borrowerOperationsAddress;

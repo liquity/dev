@@ -11,12 +11,12 @@ contract MultiTroveGetter {
     struct CombinedTroveData {
         address owner;
 
-        uint debt;
-        uint coll;
-        uint stake;
+        uint256 debt;
+        uint256 coll;
+        uint256 stake;
 
-        uint snapshotETH;
-        uint snapshotXBRLDebt;
+        uint256 snapshotETH;
+        uint256 snapshotXBRLDebt;
     }
 
     TroveManager public troveManager; // XXX Troves missing from ITroveManager?
@@ -27,10 +27,10 @@ contract MultiTroveGetter {
         sortedTroves = _sortedTroves;
     }
 
-    function getMultipleSortedTroves(int _startIdx, uint _count)
+    function getMultipleSortedTroves(int _startIdx, uint256 _count)
         external view returns (CombinedTroveData[] memory _troves)
     {
-        uint startIdx;
+        uint256 startIdx;
         bool descend;
 
         if (_startIdx >= 0) {
@@ -41,12 +41,12 @@ contract MultiTroveGetter {
             descend = false;
         }
 
-        uint sortedTrovesSize = sortedTroves.getSize();
+        uint256 sortedTrovesSize = sortedTroves.getSize();
 
         if (startIdx >= sortedTrovesSize) {
             _troves = new CombinedTroveData[](0);
         } else {
-            uint maxCount = sortedTrovesSize - startIdx;
+            uint256 maxCount = sortedTrovesSize - startIdx;
 
             if (_count > maxCount) {
                 _count = maxCount;
@@ -60,7 +60,7 @@ contract MultiTroveGetter {
         }
     }
 
-    function _getMultipleSortedTrovesFromHead(uint _startIdx, uint _count)
+    function _getMultipleSortedTrovesFromHead(uint _startIdx, uint256 _count)
         internal view returns (CombinedTroveData[] memory _troves)
     {
         address currentTroveowner = sortedTroves.getFirst();
@@ -89,7 +89,7 @@ contract MultiTroveGetter {
         }
     }
 
-    function _getMultipleSortedTrovesFromTail(uint _startIdx, uint _count)
+    function _getMultipleSortedTrovesFromTail(uint _startIdx, uint256 _count)
         internal view returns (CombinedTroveData[] memory _troves)
     {
         address currentTroveowner = sortedTroves.getLast();

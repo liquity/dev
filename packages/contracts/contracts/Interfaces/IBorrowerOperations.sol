@@ -18,9 +18,9 @@ interface IBorrowerOperations {
     event XBRLTokenAddressChanged(address _xbrlTokenAddress);
     event STBLStakingAddressChanged(address _stblStakingAddress);
 
-    event TroveCreated(address indexed _borrower, uint arrayIndex);
-    event TroveUpdated(address indexed _borrower, uint _debt, uint _coll, uint stake, uint8 operation);
-    event XBRLBorrowingFeePaid(address indexed _borrower, uint _XBRLFee);
+    event TroveCreated(address indexed _borrower, uint256 arrayIndex);
+    event TroveUpdated(address indexed _borrower, uint256 _debt, uint256 _coll, uint256 stake, uint8 operation);
+    event XBRLBorrowingFeePaid(address indexed _borrower, uint256 _XBRLFee);
 
     // --- Functions ---
 
@@ -37,7 +37,7 @@ interface IBorrowerOperations {
         address _stblStakingAddress
     ) external;
 
-    function openTrove(uint _maxFee, uint _XBRLAmount, address _upperHint, address _lowerHint) external payable;
+    function openTrove(uint _maxFee, uint256 _XBRLAmount, address _upperHint, address _lowerHint) external payable;
 
     function addColl(address _upperHint, address _lowerHint) external payable;
 
@@ -45,13 +45,13 @@ interface IBorrowerOperations {
 
     function withdrawColl(uint _amount, address _upperHint, address _lowerHint) external;
 
-    function withdrawXBRL(uint _maxFee, uint _amount, address _upperHint, address _lowerHint) external;
+    function withdrawXBRL(uint _maxFee, uint256 _amount, address _upperHint, address _lowerHint) external;
 
     function repayXBRL(uint _amount, address _upperHint, address _lowerHint) external;
 
     function closeTrove() external;
 
-    function adjustTrove(uint _maxFee, uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable;
+    function adjustTrove(uint _maxFee, uint256 _collWithdrawal, uint256 _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable;
 
     function claimCollateral() external;
 

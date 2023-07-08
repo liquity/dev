@@ -12,7 +12,7 @@ interface IPool {
     event ActivePoolAddressChanged(address _newActivePoolAddress);
     event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
-    event EtherSent(address _to, uint _amount);
+    event EtherSent(address _to, uint256 _amount);
 
     // --- Functions ---
     

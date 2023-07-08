@@ -78,7 +78,7 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
 
     // --- Pool functionality ---
 
-    function sendETH(address _account, uint _amount) external override {
+    function sendETH(address _account, uint256 _amount) external override {
         _requireCallerIsBOorTroveMorSP();
         ETH -= _amount;
         emit ActivePoolETHBalanceUpdated(ETH);

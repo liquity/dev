@@ -9,7 +9,7 @@ for testing the parent's internal functions. */
 
 contract TroveManagerTester is TroveManager {
 
-    function computeICR(uint _coll, uint _debt, uint _price) external pure returns (uint) {
+    function computeICR(uint _coll, uint256 _debt, uint256 _price) external pure returns (uint) {
         return LiquityMath._computeCR(_coll, _debt, _price);
     }
 
@@ -54,7 +54,7 @@ contract TroveManagerTester is TroveManager {
     }
 
     function callInternalRemoveTroveOwner(address _troveOwner) external {
-        uint troveOwnersArrayLength = TroveOwners.length;
+        uint256 troveOwnersArrayLength = TroveOwners.length;
         _removeTroveOwner(_troveOwner, troveOwnersArrayLength);
     }
 }

@@ -10,13 +10,13 @@ contract BorrowerOperationsTester is BorrowerOperations {
 
     function getNewICRFromTroveChange
     (
-        uint _coll, 
-        uint _debt, 
-        uint _collChange, 
+        uint256 _coll, 
+        uint256 _debt, 
+        uint256 _collChange, 
         bool isCollIncrease, 
-        uint _debtChange, 
+        uint256 _debtChange, 
         bool isDebtIncrease, 
-        uint _price
+        uint256 _price
     ) 
     external
     pure
@@ -27,11 +27,11 @@ contract BorrowerOperationsTester is BorrowerOperations {
 
     function getNewTCRFromTroveChange
     (
-        uint _collChange, 
+        uint256 _collChange, 
         bool isCollIncrease,  
-        uint _debtChange, 
+        uint256 _debtChange, 
         bool isDebtIncrease, 
-        uint _price
+        uint256 _price
     ) 
     external 
     view
@@ -40,15 +40,15 @@ contract BorrowerOperationsTester is BorrowerOperations {
         return _getNewTCRFromTroveChange(_collChange, isCollIncrease, _debtChange, isDebtIncrease, _price);
     }
 
-    function getUSDValue(uint _coll, uint _price) external pure returns (uint) {
+    function getUSDValue(uint _coll, uint256 _price) external pure returns (uint) {
         return _getUSDValue(_coll, _price);
     }
 
     function callInternalAdjustLoan
     (
         address _borrower, 
-        uint _collWithdrawal, 
-        uint _debtChange, 
+        uint256 _collWithdrawal, 
+        uint256 _debtChange, 
         bool _isDebtIncrease, 
         address _upperHint,
         address _lowerHint)

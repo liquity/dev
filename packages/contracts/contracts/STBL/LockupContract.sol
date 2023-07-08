@@ -20,18 +20,18 @@ contract LockupContract {
     // --- Data ---
     string constant public NAME = "LockupContract";
 
-    uint constant public SECONDS_IN_ONE_YEAR = 31536000; 
+    uint256 constant public SECONDS_IN_ONE_YEAR = 31536000; 
 
     address public immutable beneficiary;
 
     ISTBLToken public stblToken;
 
     // Unlock time is the Unix point in time at which the beneficiary can withdraw.
-    uint public unlockTime;
+    uint256 public unlockTime;
 
     // --- Events ---
 
-    event LockupContractCreated(address _beneficiary, uint _unlockTime);
+    event LockupContractCreated(address _beneficiary, uint256 _unlockTime);
     event LockupContractEmptied(uint _STBLwithdrawal);
 
     // --- Functions ---
@@ -40,7 +40,7 @@ contract LockupContract {
     (
         address _stblTokenAddress, 
         address _beneficiary, 
-        uint _unlockTime
+        uint256 _unlockTime
     )
         public 
     {
@@ -62,7 +62,7 @@ contract LockupContract {
         _requireLockupDurationHasPassed();
 
         ISTBLToken stblTokenCached = stblToken;
-        uint STBLBalance = stblTokenCached.balanceOf(address(this));
+        uint256 STBLBalance = stblTokenCached.balanceOf(address(this));
         stblTokenCached.transfer(beneficiary, STBLBalance);
         emit LockupContractEmptied(STBLBalance);
     }
@@ -78,7 +78,7 @@ contract LockupContract {
     }
 
     function _requireUnlockTimeIsAtLeastOneYearAfterSystemDeployment(uint _unlockTime) internal view {
-        uint systemDeploymentTime = stblToken.getDeploymentStartTime();
+        uint256 systemDeploymentTime = stblToken.getDeploymentStartTime();
         require(_unlockTime >= systemDeploymentTime + SECONDS_IN_ONE_YEAR, "LockupContract: unlock time must be at least one year after system deployment");
     }
 }

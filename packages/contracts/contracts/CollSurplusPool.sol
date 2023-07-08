@@ -27,8 +27,8 @@ contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
     event ActivePoolAddressChanged(address _newActivePoolAddress);
 
-    event CollBalanceUpdated(address indexed _account, uint _newBalance);
-    event EtherSent(address _to, uint _amount);
+    event CollBalanceUpdated(address indexed _account, uint256 _newBalance);
+    event EtherSent(address _to, uint256 _amount);
     
     // --- Contract setters ---
 
@@ -68,10 +68,10 @@ contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
 
     // --- Pool functionality ---
 
-    function accountSurplus(address _account, uint _amount) external override {
+    function accountSurplus(address _account, uint256 _amount) external override {
         _requireCallerIsTroveManager();
 
-        uint newAmount = balances[_account] + _amount;
+        uint256 newAmount = balances[_account] + _amount;
         balances[_account] = newAmount;
 
         emit CollBalanceUpdated(_account, newAmount);
@@ -79,7 +79,7 @@ contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
 
     function claimColl(address _account) external override {
         _requireCallerIsBorrowerOperations();
-        uint claimableColl = balances[_account];
+        uint256 claimableColl = balances[_account];
         require(claimableColl > 0, "CollSurplusPool: No collateral available to claim");
 
         balances[_account] = 0;

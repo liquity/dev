@@ -174,8 +174,8 @@ contract XBRLToken is CheckContract, IXBRLToken {
     (
         address owner, 
         address spender, 
-        uint amount, 
-        uint deadline, 
+        uint256 amount, 
+        uint256 deadline, 
         uint8 v, 
         bytes32 r, 
         bytes32 s

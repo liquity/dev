@@ -11,8 +11,8 @@ contract MockAggregator is AggregatorV3Interface {
     uint8 private decimalsVal = 8;
     int private price;
     int private prevPrice;
-    uint private updateTime;
-    uint private prevUpdateTime;
+    uint256 private updateTime;
+    uint256 private prevUpdateTime;
 
     uint80 private latestRoundId;
     uint80 private prevRoundId;

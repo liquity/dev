@@ -13,5 +13,5 @@ interface IActivePool is IPool {
     event ActivePoolETHBalanceUpdated(uint _ETH);
 
     // --- Functions ---
-    function sendETH(address _account, uint _amount) external;
+    function sendETH(address _account, uint256 _amount) external;
 }

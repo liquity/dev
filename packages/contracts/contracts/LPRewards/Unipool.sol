@@ -93,7 +93,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
     function setParams(
         address _stblTokenAddress,
         address _uniTokenAddress,
-        uint _duration
+        uint256 _duration
     )
         external
         override

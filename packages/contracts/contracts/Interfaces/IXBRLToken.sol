@@ -13,7 +13,7 @@ interface IXBRLToken is IERC20, IERC2612 {
     event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 
-    event XBRLTokenBalanceUpdated(address _user, uint _amount);
+    event XBRLTokenBalanceUpdated(address _user, uint256 _amount);
 
     // --- Functions ---
 

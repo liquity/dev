@@ -8,8 +8,8 @@ contract MockTellor {
     // --- Mock price data ---
 
     bool didRetrieve = true; // default to a positive retrieval
-    uint private price;
-    uint private updateTime;
+    uint256 private price;
+    uint256 private updateTime;
 
     bool private revertRequest;
 

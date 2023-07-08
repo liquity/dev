@@ -6,7 +6,7 @@ import "./console.sol";
 
 library LiquityMath {
 
-    uint internal constant DECIMAL_PRECISION = 1e18;
+    uint256 internal constant DECIMAL_PRECISION = 1e18;
 
     /* Precision for Nominal ICR (independent of price). Rationale for the value:
      *
@@ -17,13 +17,13 @@ library LiquityMath {
      * and will only truncate to 0 if the denominator is at least 1e20 times greater than the numerator.
      *
      */
-    uint internal constant NICR_PRECISION = 1e20;
+    uint256 internal constant NICR_PRECISION = 1e20;
 
-    function _min(uint _a, uint _b) internal pure returns (uint) {
+    function _min(uint _a, uint256 _b) internal pure returns (uint) {
         return (_a < _b) ? _a : _b;
     }
 
-    function _max(uint _a, uint _b) internal pure returns (uint) {
+    function _max(uint _a, uint256 _b) internal pure returns (uint) {
         return (_a >= _b) ? _a : _b;
     }
 
@@ -34,8 +34,8 @@ library LiquityMath {
     *
     * Used only inside the exponentiation, _decPow().
     */
-    function decMul(uint x, uint y) internal pure returns (uint decProd) {
-        uint prod_xy = x * y;
+    function decMul(uint x, uint256 y) internal pure returns (uint decProd) {
+        uint256 prod_xy = x * y;
 
         decProd = (prod_xy + (DECIMAL_PRECISION / 2)) / DECIMAL_PRECISION;
     }
@@ -58,15 +58,15 @@ library LiquityMath {
     * In function 1), the decayed base rate will be 0 for 1000 years or > 1000 years
     * In function 2), the difference in tokens issued at 1000 years and any time > 1000 years, will be negligible
     */
-    function _decPow(uint _base, uint _minutes) internal pure returns (uint) {
+    function _decPow(uint _base, uint256 _minutes) internal pure returns (uint) {
        
         if (_minutes > 525600000) {_minutes = 525600000;}  // cap to avoid overflow
     
         if (_minutes == 0) {return DECIMAL_PRECISION;}
 
-        uint y = DECIMAL_PRECISION;
-        uint x = _base;
-        uint n = _minutes;
+        uint256 y = DECIMAL_PRECISION;
+        uint256 x = _base;
+        uint256 n = _minutes;
 
         // Exponentiation-by-squaring
         while (n > 1) {
@@ -83,11 +83,11 @@ library LiquityMath {
         return decMul(x, y);
   }
 
-    function _getAbsoluteDifference(uint _a, uint _b) internal pure returns (uint) {
+    function _getAbsoluteDifference(uint _a, uint256 _b) internal pure returns (uint) {
         return (_a >= _b) ? _a - _b : _b - _a;
     }
 
-    function _computeNominalCR(uint _coll, uint _debt) internal pure returns (uint) {
+    function _computeNominalCR(uint _coll, uint256 _debt) internal pure returns (uint) {
         if (_debt > 0) {
             return _coll * NICR_PRECISION / _debt;
         }
@@ -97,9 +97,9 @@ library LiquityMath {
         }
     }
 
-    function _computeCR(uint _coll, uint _debt, uint _price) internal pure returns (uint) {
+    function _computeCR(uint _coll, uint256 _debt, uint256 _price) internal pure returns (uint) {
         if (_debt > 0) {
-            uint newCollRatio = _coll * _price / _debt;
+            uint256 newCollRatio = _coll * _price / _debt;
 
             return newCollRatio;
         }
