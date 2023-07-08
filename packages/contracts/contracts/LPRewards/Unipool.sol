@@ -3,7 +3,6 @@
 pragma solidity ^0.8.17;
 
 import "../Dependencies/LiquityMath.sol";
-import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
 import "../Interfaces/ISTBLToken.sol";
@@ -21,7 +20,6 @@ import "../Dependencies/console.sol";
 
 // LPTokenWrapper contains the basic staking functionality
 contract LPTokenWrapper is ILPTokenWrapper {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     IERC20 public uniToken;
@@ -38,14 +36,14 @@ contract LPTokenWrapper is ILPTokenWrapper {
     }
 
     function stake(uint256 amount) public virtual override {
-        _totalSupply = _totalSupply.add(amount);
-        _balances[msg.sender] = _balances[msg.sender].add(amount);
+        _totalSupply += amount;
+        _balances[msg.sender] += amount;
         uniToken.safeTransferFrom(msg.sender, address(this), amount);
     }
 
     function withdraw(uint256 amount) public virtual override {
-        _totalSupply = _totalSupply.sub(amount);
-        _balances[msg.sender] = _balances[msg.sender].sub(amount);
+        _totalSupply -= amount;
+        _balances[msg.sender] -= amount;
         uniToken.safeTransfer(msg.sender, amount);
     }
 }
@@ -127,22 +125,15 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
             return rewardPerTokenStored;
         }
         return
-            rewardPerTokenStored.add(
-                lastTimeRewardApplicable()
-                    .sub(lastUpdateTime)
-                    .mul(rewardRate)
-                    .mul(1e18)
-                    .div(totalSupply())
-            );
+            rewardPerTokenStored +
+            (((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate) * 1e18 / totalSupply());
     }
 
     // Returns the amount that an account can claim
     function earned(address account) public view override returns (uint256) {
         return
-            balanceOf(account)
-                .mul(rewardPerToken().sub(userRewardPerTokenPaid[account]))
-                .div(1e18)
-                .add(rewards[account]);
+            ((balanceOf(account) * (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18)
+            + rewards[account];
     }
 
     // stake visibility is public as overriding LPTokenWrapper's stake() function
@@ -198,10 +189,10 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
 
         _updateReward();
 
-        rewardRate = _reward.div(_duration);
+        rewardRate = _reward / _duration;
 
         lastUpdateTime = block.timestamp;
-        periodFinish = block.timestamp.add(_duration);
+        periodFinish = block.timestamp + _duration;
         emit RewardAdded(_reward);
     }
 
@@ -214,16 +205,16 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
              * to get the new finish date we must add to the current timestamp the difference between
              * the original finish time and the last update, i.e.:
              *
-             * periodFinish = block.timestamp.add(periodFinish.sub(lastUpdateTime));
+             * periodFinish = block.timestamp + periodFinish - lastUpdateTime;
              *
              * If we have not reached the end yet, we must extend it by adding to it the difference between
              * the current timestamp and the last update (the period where the supply has been empty), i.e.:
              *
-             * periodFinish = periodFinish.add(block.timestamp.sub(lastUpdateTime));
+             * periodFinish = periodFinish + block.timestamp - lastUpdateTime;
              *
              * Both formulas are equivalent.
              */
-            periodFinish = periodFinish.add(block.timestamp.sub(lastUpdateTime));
+            periodFinish = periodFinish + block.timestamp - lastUpdateTime;
         }
     }
 

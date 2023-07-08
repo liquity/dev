@@ -135,21 +135,21 @@ contract STBLToken is CheckContract, ISTBLToken {
         
         // --- Initial STBL allocations ---
      
-        uint bountyEntitlement = _1_MILLION.mul(2); // Allocate 2 million for bounties/hackathons
+        uint bountyEntitlement = _1_MILLION * 2; // Allocate 2 million for bounties/hackathons
         _mint(_bountyAddress, bountyEntitlement);
 
-        uint depositorsAndFrontEndsEntitlement = _1_MILLION.mul(32); // Allocate 32 million to the algorithmic issuance schedule
+        uint depositorsAndFrontEndsEntitlement = _1_MILLION * 32; // Allocate 32 million to the algorithmic issuance schedule
         _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
 
-        uint _lpRewardsEntitlement = _1_MILLION.mul(4).div(3);  // Allocate 1.33 million for LP rewards
+        uint _lpRewardsEntitlement = _1_MILLION * 4 / 3;  // Allocate 1.33 million for LP rewards
         lpRewardsEntitlement = _lpRewardsEntitlement;
         _mint(_lpRewardsAddress, _lpRewardsEntitlement);
         
         // Allocate the remainder to the STBL Multisig: (100 - 2 - 32 - 1.33) million = 64.66 million
-        uint multisigEntitlement = _1_MILLION.mul(100)
-            .sub(bountyEntitlement)
-            .sub(depositorsAndFrontEndsEntitlement)
-            .sub(_lpRewardsEntitlement);
+        uint multisigEntitlement = _1_MILLION * 100
+            - bountyEntitlement
+            - depositorsAndFrontEndsEntitlement
+            - _lpRewardsEntitlement;
 
         _mint(_multisigAddress, multisigEntitlement);
     }
@@ -202,21 +202,25 @@ contract STBLToken is CheckContract, ISTBLToken {
         _requireValidRecipient(recipient);
 
         _transfer(sender, recipient, amount);
-        _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        uint256 currentAllowance = _allowances[sender][msg.sender];
+        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        _approve(sender, msg.sender, currentAllowance - amount);
         return true;
     }
 
     function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
         if (_isFirstYear()) { _requireCallerIsNotMultisig(); }
         
-        _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
+        _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
         if (_isFirstYear()) { _requireCallerIsNotMultisig(); }
         
-        _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        uint256 currentAllowance = _allowances[msg.sender][spender];
+        require(currentAllowance >= amount, "ERC20: decreased allowance below zero");
+        _approve(spender, msg.sender, currentAllowance - subtractedValue);
         return true;
     }
 
@@ -279,16 +283,16 @@ contract STBLToken is CheckContract, ISTBLToken {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
-        _balances[recipient] = _balances[recipient].add(amount);
+        _balances[sender] -= amount, "ERC20: transfer amount exceeds balance";
+        _balances[recipient] += amount;
         emit Transfer(sender, recipient, amount);
     }
 
     function _mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
 
-        _totalSupply = _totalSupply.add(amount);
-        _balances[account] = _balances[account].add(amount);
+        _totalSupply += amount;
+        _balances[account] += amount;
         emit Transfer(address(0), account, amount);
     }
 
@@ -307,7 +311,7 @@ contract STBLToken is CheckContract, ISTBLToken {
     }
 
     function _isFirstYear() internal view returns (bool) {
-        return (block.timestamp.sub(deploymentStartTime) < ONE_YEAR_IN_SECONDS);
+        return ((block.timestamp - deploymentStartTime) < ONE_YEAR_IN_SECONDS);
     }
 
     // --- 'require' functions ---

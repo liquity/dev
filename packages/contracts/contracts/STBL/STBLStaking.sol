@@ -3,7 +3,6 @@
 pragma solidity ^0.8.17;
 
 import "../Dependencies/BaseMath.sol";
-import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
 import "../Dependencies/console.sol";
@@ -13,7 +12,6 @@ import "../Dependencies/LiquityMath.sol";
 import "../Interfaces/IXBRLToken.sol";
 
 contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
-    using SafeMath for uint;
 
     // --- Data ---
     string constant public NAME = "STBLStaking";
@@ -106,11 +104,11 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     
        _updateUserSnapshots(msg.sender);
 
-        uint newStake = currentStake.add(_STBLamount);
+        uint newStake = currentStake + _STBLamount;
 
         // Increase user’s stake and total STBL staked
         stakes[msg.sender] = newStake;
-        totalSTBLStaked = totalSTBLStaked.add(_STBLamount);
+        totalSTBLStaked = totalSTBLStaked + _STBLamount;
         emit TotalSTBLStakedUpdated(totalSTBLStaked);
 
         // Transfer STBL from caller to this contract
@@ -141,11 +139,11 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
         if (_STBLamount > 0) {
             uint STBLToWithdraw = LiquityMath._min(_STBLamount, currentStake);
 
-            uint newStake = currentStake.sub(STBLToWithdraw);
+            uint newStake = currentStake - STBLToWithdraw;
 
             // Decrease user's stake and total STBL staked
             stakes[msg.sender] = newStake;
-            totalSTBLStaked = totalSTBLStaked.sub(STBLToWithdraw);
+            totalSTBLStaked -= STBLToWithdraw;
             emit TotalSTBLStakedUpdated(totalSTBLStaked);
 
             // Transfer unstaked STBL to user
@@ -167,9 +165,9 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
         _requireCallerIsTroveManager();
         uint ETHFeePerSTBLStaked;
      
-        if (totalSTBLStaked > 0) {ETHFeePerSTBLStaked = _ETHFee.mul(DECIMAL_PRECISION).div(totalSTBLStaked);}
+        if (totalSTBLStaked > 0) {ETHFeePerSTBLStaked = _ETHFee * DECIMAL_PRECISION / totalSTBLStaked;}
 
-        F_ETH = F_ETH.add(ETHFeePerSTBLStaked); 
+        F_ETH += ETHFeePerSTBLStaked; 
         emit F_ETHUpdated(F_ETH);
     }
 
@@ -177,9 +175,9 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
         _requireCallerIsBorrowerOperations();
         uint XBRLFeePerSTBLStaked;
         
-        if (totalSTBLStaked > 0) {XBRLFeePerSTBLStaked = _XBRLFee.mul(DECIMAL_PRECISION).div(totalSTBLStaked);}
+        if (totalSTBLStaked > 0) {XBRLFeePerSTBLStaked = _XBRLFee * DECIMAL_PRECISION / totalSTBLStaked;}
         
-        F_XBRL = F_XBRL.add(XBRLFeePerSTBLStaked);
+        F_XBRL += XBRLFeePerSTBLStaked;
         emit F_XBRLUpdated(F_XBRL);
     }
 
@@ -191,7 +189,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
 
     function _getPendingETHGain(address _user) internal view returns (uint) {
         uint F_ETH_Snapshot = snapshots[_user].F_ETH_Snapshot;
-        uint ETHGain = stakes[_user].mul(F_ETH.sub(F_ETH_Snapshot)).div(DECIMAL_PRECISION);
+        uint ETHGain = stakes[_user] * (F_ETH - F_ETH_Snapshot) / DECIMAL_PRECISION;
         return ETHGain;
     }
 
@@ -201,7 +199,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
 
     function _getPendingXBRLGain(address _user) internal view returns (uint) {
         uint F_XBRL_Snapshot = snapshots[_user].F_XBRL_Snapshot;
-        uint XBRLGain = stakes[_user].mul(F_XBRL.sub(F_XBRL_Snapshot)).div(DECIMAL_PRECISION);
+        uint XBRLGain = stakes[_user] * (F_XBRL - F_XBRL_Snapshot) / DECIMAL_PRECISION;
         return XBRLGain;
     }
 

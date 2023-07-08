@@ -91,8 +91,8 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     function issueSTBL() external override returns (uint) {
         _requireCallerIsStabilityPool();
 
-        uint latestTotalSTBLIssued = STBLSupplyCap.mul(_getCumulativeIssuanceFraction()).div(DECIMAL_PRECISION);
-        uint issuance = latestTotalSTBLIssued.sub(totalSTBLIssued);
+        uint latestTotalSTBLIssued = STBLSupplyCap * _getCumulativeIssuanceFraction() / DECIMAL_PRECISION;
+        uint issuance = latestTotalSTBLIssued - totalSTBLIssued;
 
         totalSTBLIssued = latestTotalSTBLIssued;
         emit TotalSTBLIssuedUpdated(latestTotalSTBLIssued);
@@ -106,13 +106,13 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     t:  time passed since last STBL issuance event  */
     function _getCumulativeIssuanceFraction() internal view returns (uint) {
         // Get the time passed since deployment
-        uint timePassedInMinutes = block.timestamp.sub(deploymentTime).div(SECONDS_IN_ONE_MINUTE);
+        uint timePassedInMinutes = block.timestamp - deploymentTime / SECONDS_IN_ONE_MINUTE;
 
         // f^t
         uint power = LiquityMath._decPow(ISSUANCE_FACTOR, timePassedInMinutes);
 
         //  (1 - f^t)
-        uint cumulativeIssuanceFraction = (uint(DECIMAL_PRECISION).sub(power));
+        uint cumulativeIssuanceFraction = (uint(DECIMAL_PRECISION) - power);
         assert(cumulativeIssuanceFraction <= DECIMAL_PRECISION); // must be in range [0,1]
 
         return cumulativeIssuanceFraction;

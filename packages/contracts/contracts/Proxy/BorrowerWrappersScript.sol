@@ -100,7 +100,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         }
 
         // Stake claimed STBL
-        uint claimedSTBL = stblBalanceAfter.sub(stblBalanceBefore);
+        uint claimedSTBL = stblBalanceAfter - stblBalanceBefore;
         if (claimedSTBL > 0) {
             stblStaking.stake(claimedSTBL);
         }
@@ -131,7 +131,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
 
             // Providing to Stability Pool also triggers STBL claim, so stake it if any
             uint stblBalanceAfter = stblToken.balanceOf(address(this));
-            uint claimedSTBL = stblBalanceAfter.sub(stblBalanceBefore);
+            uint claimedSTBL = stblBalanceAfter - stblBalanceBefore;
             if (claimedSTBL > 0) {
                 stblStaking.stake(claimedSTBL);
             }

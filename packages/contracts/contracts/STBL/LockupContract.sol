@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.17;
 
-import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ISTBLToken.sol";
 
 /*
@@ -17,8 +16,7 @@ import "../Interfaces/ISTBLToken.sol";
 * enter circulating supply and cannot be staked to earn system revenue.
 */
 contract LockupContract {
-    using SafeMath for uint;
-
+    
     // --- Data ---
     string constant public NAME = "LockupContract";
 
@@ -81,6 +79,6 @@ contract LockupContract {
 
     function _requireUnlockTimeIsAtLeastOneYearAfterSystemDeployment(uint _unlockTime) internal view {
         uint systemDeploymentTime = stblToken.getDeploymentStartTime();
-        require(_unlockTime >= systemDeploymentTime.add(SECONDS_IN_ONE_YEAR), "LockupContract: unlock time must be at least one year after system deployment");
+        require(_unlockTime >= systemDeploymentTime + SECONDS_IN_ONE_YEAR, "LockupContract: unlock time must be at least one year after system deployment");
     }
 }
