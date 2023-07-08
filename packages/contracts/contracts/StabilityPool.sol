@@ -231,39 +231,6 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     uint256 public lastETHError_Offset;
     uint256 public lastXBRLLossError_Offset;
 
-    // --- Events ---
-
-    event StabilityPoolETHBalanceUpdated(uint256 _newBalance);
-    event StabilityPoolXBRLBalanceUpdated(uint256 _newBalance);
-
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event ActivePoolAddressChanged(address _newActivePoolAddress);
-    event DefaultPoolAddressChanged(address _newDefaultPoolAddress);
-    event XBRLTokenAddressChanged(address _newXBRLTokenAddress);
-    event SortedTrovesAddressChanged(address _newSortedTrovesAddress);
-    event PriceFeedAddressChanged(address _newPriceFeedAddress);
-    event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
-
-    event P_Updated(uint256 _P);
-    event S_Updated(uint256 _S, uint128 _epoch, uint128 _scale);
-    event G_Updated(uint256 _G, uint128 _epoch, uint128 _scale);
-    event EpochUpdated(uint128 _currentEpoch);
-    event ScaleUpdated(uint128 _currentScale);
-
-    event FrontEndRegistered(address indexed _frontEnd, uint256 _kickbackRate);
-    event FrontEndTagSet(address indexed _depositor, address indexed _frontEnd);
-
-    event DepositSnapshotUpdated(address indexed _depositor, uint256 _P, uint256 _S, uint256 _G);
-    event FrontEndSnapshotUpdated(address indexed _frontEnd, uint256 _P, uint256 _G);
-    event UserDepositChanged(address indexed _depositor, uint256 _newDeposit);
-    event FrontEndStakeChanged(address indexed _frontEnd, uint256 _newFrontEndStake, address _depositor);
-
-    event ETHGainWithdrawn(address indexed _depositor, uint256 _ETH, uint256 _XBRLLoss);
-    event STBLPaidToDepositor(address indexed _depositor, uint256 _STBL);
-    event STBLPaidToFrontEnd(address indexed _frontEnd, uint256 _STBL);
-    event EtherSent(address _to, uint256 _amount);
-
     // --- Contract setters ---
 
     function setAddresses(
@@ -990,6 +957,6 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
     receive() external payable {
         _requireCallerIsActivePool();
         ETH += msg.value;
-        StabilityPoolETHBalanceUpdated(ETH);
+        emit StabilityPoolETHBalanceUpdated(ETH);
     }
 }

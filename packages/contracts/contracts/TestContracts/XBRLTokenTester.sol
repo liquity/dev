@@ -12,7 +12,7 @@ contract XBRLTokenTester is XBRLToken {
         address _troveManagerAddress,
         address _stabilityPoolAddress,
         address _borrowerOperationsAddress
-    ) public XBRLToken(_troveManagerAddress,
+    ) XBRLToken(_troveManagerAddress,
                       _stabilityPoolAddress,
                       _borrowerOperationsAddress) {}
     
@@ -44,7 +44,7 @@ contract XBRLTokenTester is XBRLToken {
         _approve(owner, spender, amount);
     }
 
-    function getChainId() external pure returns (uint256 chainID) {
+    function getChainId() external view returns (uint256 chainID) {
         //return _chainID(); // it’s private
         assembly {
             chainID := chainid()

@@ -20,15 +20,6 @@ contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
     uint256 internal ETH;
     // Collateral surplus claimable by trove owners
     mapping (address => uint) internal balances;
-
-    // --- Events ---
-
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
-    event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event ActivePoolAddressChanged(address _newActivePoolAddress);
-
-    event CollBalanceUpdated(address indexed _account, uint256 _newBalance);
-    event EtherSent(address _to, uint256 _amount);
     
     // --- Contract setters ---
 

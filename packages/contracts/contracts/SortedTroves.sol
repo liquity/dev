@@ -47,9 +47,6 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
     string constant public NAME = "SortedTroves";
 
     event TroveManagerAddressChanged(address _troveManagerAddress);
-    event BorrowerOperationsAddressChanged(address _borrowerOperationsAddress);
-    event NodeAdded(address _id, uint256 _NICR);
-    event NodeRemoved(address _id);
 
     address public borrowerOperationsAddress;
 
@@ -196,7 +193,7 @@ contract SortedTroves is Ownable, CheckContract, ISortedTroves {
 
         delete data.nodes[_id];
         data.size -= 1;
-        NodeRemoved(_id);
+        emit NodeRemoved(_id);
     }
 
     /*

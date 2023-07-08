@@ -13,7 +13,7 @@ contract LiquityMathTester {
     }
 
     // Non-view wrapper for gas test
-    function callDecPowTx(uint256 _base, uint256 _n) external returns (uint) {
+    function callDecPowTx(uint256 _base, uint256 _n) external pure returns (uint) {
         return LiquityMath._decPow(_base, _n);
     }
 

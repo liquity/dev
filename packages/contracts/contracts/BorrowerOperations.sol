@@ -78,20 +78,7 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         adjustTrove
     }
 
-    event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event ActivePoolAddressChanged(address _activePoolAddress);
-    event DefaultPoolAddressChanged(address _defaultPoolAddress);
-    event StabilityPoolAddressChanged(address _stabilityPoolAddress);
-    event GasPoolAddressChanged(address _gasPoolAddress);
-    event CollSurplusPoolAddressChanged(address _collSurplusPoolAddress);
-    event PriceFeedAddressChanged(address  _newPriceFeedAddress);
-    event SortedTrovesAddressChanged(address _sortedTrovesAddress);
-    event XBRLTokenAddressChanged(address _xbrlTokenAddress);
-    event STBLStakingAddressChanged(address _stblStakingAddress);
-
-    event TroveCreated(address indexed _borrower, uint256 arrayIndex);
     event TroveUpdated(address indexed _borrower, uint256 _debt, uint256 _coll, uint256 stake, BorrowerOperation operation);
-    event XBRLBorrowingFeePaid(address indexed _borrower, uint256 _XBRLFee);
     
     // --- Dependency setters ---
 

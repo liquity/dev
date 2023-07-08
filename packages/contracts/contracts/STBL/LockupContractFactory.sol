@@ -33,11 +33,6 @@ contract LockupContractFactory is ILockupContractFactory, Ownable, CheckContract
     
     mapping (address => address) public lockupContractToDeployer;
 
-    // --- Events ---
-
-    event STBLTokenAddressSet(address _stblTokenAddress);
-    event LockupContractDeployedThroughFactory(address _lockupContractAddress, address _beneficiary, uint256 _unlockTime, address _deployer);
-
     // --- Functions ---
 
     function setSTBLTokenAddress(address _stblTokenAddress) external override onlyOwner {

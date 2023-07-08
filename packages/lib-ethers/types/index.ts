@@ -408,11 +408,11 @@ export interface XBRLToken
   extends _TypedLiquityContract<XBRLTokenCalls, XBRLTokenTransactions> {
   readonly filters: {
     Approval(owner?: string | null, spender?: string | null, value?: null): EventFilter;
-    BorrowerOperationsAddressAdded(_newBorrowerOperationsAddress?: null): EventFilter;
+    BorrowerOperationsAddressChanged(_newBorrowerOperationsAddress?: null): EventFilter;
     XBRLTokenBalanceUpdated(_user?: null, _amount?: null): EventFilter;
-    StabilityPoolAddressAdded(_newStabilityPoolAddress?: null): EventFilter;
+    StabilityPoolAddressChanged(_newStabilityPoolAddress?: null): EventFilter;
     Transfer(from?: string | null, to?: string | null, value?: null): EventFilter;
-    TroveManagerAddressAdded(_troveManagerAddress?: null): EventFilter;
+    TroveManagerAddressChanged(_troveManagerAddress?: null): EventFilter;
   };
   extractEvents(logs: Log[], name: "Approval"): _TypedLogDescription<{ owner: string; spender: string; value: BigNumber }>[];
   extractEvents(logs: Log[], name: "BorrowerOperationsAddressChanged"): _TypedLogDescription<{ _newBorrowerOperationsAddress: string }>[];

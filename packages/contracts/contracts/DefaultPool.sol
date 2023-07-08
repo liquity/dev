@@ -22,10 +22,6 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     uint256 internal ETH;  // deposited ETH tracker
     uint256 internal XBRLDebt;  // debt
 
-    event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event DefaultPoolXBRLDebtUpdated(uint256 _XBRLDebt);
-    event DefaultPoolETHBalanceUpdated(uint256 _ETH);
-
     // --- Dependency setters ---
 
     function setAddresses(

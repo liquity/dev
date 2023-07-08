@@ -48,12 +48,6 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     uint256 public totalSTBLIssued;
     uint256 public immutable deploymentTime;
 
-    // --- Events ---
-
-    event STBLTokenAddressSet(address _stblTokenAddress);
-    event StabilityPoolAddressSet(address _stabilityPoolAddress);
-    event TotalSTBLIssuedUpdated(uint256 _totalSTBLIssued);
-
     // --- Functions ---
 
     constructor() public {

@@ -93,12 +93,6 @@ contract STBLToken is CheckContract, ISTBLToken {
 
     ILockupContractFactory public immutable lockupContractFactory;
 
-    // --- Events ---
-
-    event CommunityIssuanceAddressSet(address _communityIssuanceAddress);
-    event STBLStakingAddressSet(address _stblStakingAddress);
-    event LockupContractFactoryAddressSet(address _lockupContractFactoryAddress);
-
     // --- Functions ---
 
     constructor
@@ -267,7 +261,7 @@ contract STBLToken is CheckContract, ISTBLToken {
 
     // --- Internal operations ---
 
-    function _chainID() private pure returns (uint256 chainID) {
+    function _chainID() private view returns (uint256 chainID) {
         assembly {
             chainID := chainid()
         }

@@ -59,7 +59,7 @@
           "type": "address"
         }
       ],
-      "name": "BorrowerOperationsAddressAdded",
+      "name": "BorrowerOperationsAddressChanged",
       "type": "event"
     },
     {
@@ -91,7 +91,7 @@
           "type": "address"
         }
       ],
-      "name": "StabilityPoolAddressAdded",
+      "name": "StabilityPoolAddressChanged",
       "type": "event"
     },
     {
@@ -129,7 +129,7 @@
           "type": "address"
         }
       ],
-      "name": "TroveManagerAddressAdded",
+      "name": "TroveManagerAddressChanged",
       "type": "event"
     },
     {

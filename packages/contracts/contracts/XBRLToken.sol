@@ -56,11 +56,6 @@ contract XBRLToken is CheckContract, IXBRLToken {
     address public immutable troveManagerAddress;
     address public immutable stabilityPoolAddress;
     address public immutable borrowerOperationsAddress;
-    
-    // --- Events ---
-    event TroveManagerAddressChanged(address _troveManagerAddress);
-    event StabilityPoolAddressChanged(address _newStabilityPoolAddress);
-    event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
 
     constructor
     ( 
@@ -75,13 +70,13 @@ contract XBRLToken is CheckContract, IXBRLToken {
         checkContract(_borrowerOperationsAddress);
 
         troveManagerAddress = _troveManagerAddress;
-        emit TroveManagerAddressAdded(_troveManagerAddress);
+        emit TroveManagerAddressChanged(_troveManagerAddress);
 
         stabilityPoolAddress = _stabilityPoolAddress;
-        emit StabilityPoolAddressAdded(_stabilityPoolAddress);
+        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
 
         borrowerOperationsAddress = _borrowerOperationsAddress;        
-        emit BorrowerOperationsAddressAdded(_borrowerOperationsAddress);
+        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         
         bytes32 hashedName = keccak256(bytes(_NAME));
         bytes32 hashedVersion = keccak256(bytes(_VERSION));
@@ -199,14 +194,14 @@ contract XBRLToken is CheckContract, IXBRLToken {
 
     // --- Internal operations ---
 
-    function _chainID() private pure returns (uint256 chainID) {
+    function _chainID() private view returns (uint256 chainID) {
         assembly {
             chainID := chainid()
         }
     }
     
-    function _buildDomainSeparator(bytes32 typeHash, bytes32 name, bytes32 version) private view returns (bytes32) {
-        return keccak256(abi.encode(typeHash, name, version, _chainID(), address(this)));
+    function _buildDomainSeparator(bytes32 typeHash, bytes32 name, bytes32 hashedVersion) private view returns (bytes32) {
+        return keccak256(abi.encode(typeHash, name, hashedVersion, _chainID(), address(this)));
     }
 
     // --- Internal operations ---
@@ -286,25 +281,25 @@ contract XBRLToken is CheckContract, IXBRLToken {
             "XBRL: Caller is neither TroveManager nor StabilityPool");
     }
 
-    // --- Optional functions ---
+   // --- Optional functions ---
 
-    function name() external view override returns (string memory) {
+    function name() external pure override returns (string memory) {
         return _NAME;
     }
 
-    function symbol() external view override returns (string memory) {
+    function symbol() external pure override returns (string memory) {
         return _SYMBOL;
     }
 
-    function decimals() external view override returns (uint8) {
+    function decimals() external pure override returns (uint8) {
         return _DECIMALS;
     }
 
-    function version() external view override returns (string memory) {
+    function version() external pure override returns (string memory) {
         return _VERSION;
     }
 
-    function permitTypeHash() external view override returns (bytes32) {
+    function permitTypeHash() external pure override returns (bytes32) {
         return _PERMIT_TYPEHASH;
     }
 }

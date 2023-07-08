@@ -37,22 +37,6 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
     address public borrowerOperationsAddress;
     address public activePoolAddress;
 
-    // --- Events ---
-
-    event STBLTokenAddressSet(address _stblTokenAddress);
-    event XBRLTokenAddressSet(address _xbrlTokenAddress);
-    event TroveManagerAddressSet(address _troveManager);
-    event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
-    event ActivePoolAddressSet(address _activePoolAddress);
-
-    event StakeChanged(address indexed staker, uint256 newStake);
-    event StakingGainsWithdrawn(address indexed staker, uint256 XBRLGain, uint256 ETHGain);
-    event F_ETHUpdated(uint256 _F_ETH);
-    event F_XBRLUpdated(uint256 _F_XBRL);
-    event TotalSTBLStakedUpdated(uint256 _totalSTBLStaked);
-    event EtherSent(address _account, uint256 _amount);
-    event StakerSnapshotsUpdated(address _staker, uint256 _F_ETH, uint256 _F_XBRL);
-
     // --- Functions ---
 
     function setAddresses
