@@ -89,32 +89,32 @@ contract HintHelpers is LiquityBase, Ownable, CheckContract {
 
         while (currentTroveuser != address(0) && remainingXBRL > 0 && _maxIterations-- > 0) {
             uint netXBRLDebt = _getNetDebt(troveManager.getTroveDebt(currentTroveuser))
-                .add(troveManager.getPendingXBRLDebtReward(currentTroveuser));
+                + troveManager.getPendingXBRLDebtReward(currentTroveuser);
 
             if (netXBRLDebt > remainingXBRL) {
                 if (netXBRLDebt > MIN_NET_DEBT) {
-                    uint maxRedeemableXBRL = LiquityMath._min(remainingXBRL, netXBRLDebt.sub(MIN_NET_DEBT));
+                    uint maxRedeemableXBRL = LiquityMath._min(remainingXBRL, netXBRLDebt - MIN_NET_DEBT);
 
                     uint ETH = troveManager.getTroveColl(currentTroveuser)
-                        .add(troveManager.getPendingETHReward(currentTroveuser));
+                        + troveManager.getPendingETHReward(currentTroveuser);
 
-                    uint newColl = ETH.sub(maxRedeemableXBRL.mul(DECIMAL_PRECISION).div(_price));
-                    uint newDebt = netXBRLDebt.sub(maxRedeemableXBRL);
+                    uint newColl = ETH - (maxRedeemableXBRL * DECIMAL_PRECISION / _price);
+                    uint newDebt = netXBRLDebt - maxRedeemableXBRL;
 
                     uint compositeDebt = _getCompositeDebt(newDebt);
                     partialRedemptionHintNICR = LiquityMath._computeNominalCR(newColl, compositeDebt);
 
-                    remainingXBRL = remainingXBRL.sub(maxRedeemableXBRL);
+                    remainingXBRL -= maxRedeemableXBRL;
                 }
                 break;
             } else {
-                remainingXBRL = remainingXBRL.sub(netXBRLDebt);
+                remainingXBRL -= netXBRLDebt;
             }
 
             currentTroveuser = sortedTrovesCached.getPrev(currentTroveuser);
         }
 
-        truncatedXBRLamount = _XBRLamount.sub(remainingXBRL);
+        truncatedXBRLamount = _XBRLamount - remainingXBRL;
     }
 
     /* getApproxHint() - return address of a Trove that is, on average, (length / numTrials) positions away in the 

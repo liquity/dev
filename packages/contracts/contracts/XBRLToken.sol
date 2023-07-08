@@ -3,7 +3,6 @@
 pragma solidity ^0.8.17;
 
 import "./Interfaces/IXBRLToken.sol";
-import "./Dependencies/SafeMath.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 /*
@@ -25,11 +24,10 @@ import "./Dependencies/console.sol";
 */
 
 contract XBRLToken is CheckContract, IXBRLToken {
-    using SafeMath for uint256;
     
     uint256 private _totalSupply;
-    string constant internal _NAME = "XBRL Stablecoin";
-    string constant internal _SYMBOL = "XBRL";
+    string constant internal _NAME = "xBRL Stablecoin";
+    string constant internal _SYMBOL = "xBRL";
     string constant internal _VERSION = "1";
     uint8 constant internal _DECIMALS = 18;
     
@@ -144,17 +142,21 @@ contract XBRLToken is CheckContract, IXBRLToken {
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
         _requireValidRecipient(recipient);
         _transfer(sender, recipient, amount);
-        _approve(sender, msg.sender, _allowances[sender][msg.sender].sub(amount, "ERC20: transfer amount exceeds allowance"));
+        uint256 currentAllowance = _allowances[sender][msg.sender];
+        require(currentAllowance >= amount, "ERC20: transfer amount exceeds allowance");
+        _approve(sender, msg.sender, currentAllowance - amount);
         return true;
     }
 
     function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
-        _approve(msg.sender, spender, _allowances[msg.sender][spender].add(addedValue));
+        _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
-        _approve(msg.sender, spender, _allowances[msg.sender][spender].sub(subtractedValue, "ERC20: decreased allowance below zero"));
+        uint256 currentAllowance = _allowances[msg.sender][spender];
+        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
+        _approve(msg.sender, spender, currentAllowance - subtractedValue);
         return true;
     }
 
@@ -214,24 +216,26 @@ contract XBRLToken is CheckContract, IXBRLToken {
         assert(sender != address(0));
         assert(recipient != address(0));
 
-        _balances[sender] = _balances[sender].sub(amount, "ERC20: transfer amount exceeds balance");
-        _balances[recipient] = _balances[recipient].add(amount);
+        require(_balances[sender] >= amount, "ERC20: transfer amount exceeds balance");
+        _balances[sender] -= amount;
+        _balances[recipient] += amount;
         emit Transfer(sender, recipient, amount);
     }
 
     function _mint(address account, uint256 amount) internal {
         assert(account != address(0));
 
-        _totalSupply = _totalSupply.add(amount);
-        _balances[account] = _balances[account].add(amount);
+        totalSupply = _totalSupply + amount;
+        _balances[account] = _balances[account] + amount;
         emit Transfer(address(0), account, amount);
     }
 
     function _burn(address account, uint256 amount) internal {
         assert(account != address(0));
         
-        _balances[account] = _balances[account].sub(amount, "ERC20: burn amount exceeds balance");
-        _totalSupply = _totalSupply.sub(amount);
+        require(_balances[account] >= amount, "ERC20: burn amount exceeds balance");
+        _balances[account] -= amount;
+        _totalSupply -= amount;
         emit Transfer(account, address(0), amount);
     }
 

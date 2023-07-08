@@ -14,8 +14,6 @@ import "../Interfaces/ILiquityBase.sol";
 * common functions. 
 */
 contract LiquityBase is BaseMath, ILiquityBase {
-    using SafeMath for uint;
-
     uint constant public _100pct = 1000000000000000000; // 1e18 == 100%
 
     // Minimum collateral ratio for individual troves
@@ -45,11 +43,11 @@ contract LiquityBase is BaseMath, ILiquityBase {
 
     // Returns the composite debt (drawn debt + gas compensation) of a trove, for the purpose of ICR calculation
     function _getCompositeDebt(uint _debt) internal pure returns (uint) {
-        return _debt.add(XBRL_GAS_COMPENSATION);
+        return _debt + XBRL_GAS_COMPENSATION;
     }
 
     function _getNetDebt(uint _debt) internal pure returns (uint) {
-        return _debt.sub(XBRL_GAS_COMPENSATION);
+        return _debt - XBRL_GAS_COMPENSATION;
     }
 
     // Return the amount of ETH to be drawn from a trove's collateral and sent as gas compensation.
@@ -61,14 +59,14 @@ contract LiquityBase is BaseMath, ILiquityBase {
         uint activeColl = activePool.getETH();
         uint liquidatedColl = defaultPool.getETH();
 
-        return activeColl.add(liquidatedColl);
+        return activeColl + liquidatedColl;
     }
 
     function getEntireSystemDebt() public view returns (uint entireSystemDebt) {
         uint activeDebt = activePool.getXBRLDebt();
         uint closedDebt = defaultPool.getXBRLDebt();
 
-        return activeDebt.add(closedDebt);
+        return activeDebt + closedDebt;
     }
 
     function _getTCR(uint _price) internal view returns (uint TCR) {
@@ -87,7 +85,7 @@ contract LiquityBase is BaseMath, ILiquityBase {
     }
 
     function _requireUserAcceptsFee(uint _fee, uint _amount, uint _maxFeePercentage) internal pure {
-        uint feePercentage = _fee.mul(DECIMAL_PRECISION).div(_amount);
+        uint feePercentage = _fee * DECIMAL_PRECISION / _amount;
         require(feePercentage <= _maxFeePercentage, "Fee exceeded provided maximum");
     }
 }

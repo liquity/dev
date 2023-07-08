@@ -16,8 +16,8 @@ contract CommunityIssuanceTester is CommunityIssuance {
     function unprotectedIssueSTBL() external returns (uint) {
         // No checks on caller address
        
-        uint latestTotalSTBLIssued = STBLSupplyCap.mul(_getCumulativeIssuanceFraction()).div(DECIMAL_PRECISION);
-        uint issuance = latestTotalSTBLIssued.sub(totalSTBLIssued);
+        uint latestTotalSTBLIssued = STBLSupplyCap * _getCumulativeIssuanceFraction() / DECIMAL_PRECISION;
+        uint issuance = latestTotalSTBLIssued - totalSTBLIssued;
       
         totalSTBLIssued = latestTotalSTBLIssued;
         return issuance;

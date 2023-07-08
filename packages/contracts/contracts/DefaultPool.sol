@@ -3,7 +3,6 @@
 pragma solidity ^0.8.17;
 
 import './Interfaces/IDefaultPool.sol';
-import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
@@ -16,8 +15,6 @@ import "./Dependencies/console.sol";
  * from the Default Pool to the Active Pool.
  */
 contract DefaultPool is Ownable, CheckContract, IDefaultPool {
-    using SafeMath for uint256;
-
     string constant public NAME = "DefaultPool";
 
     address public troveManagerAddress;
@@ -70,7 +67,7 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     function sendETHToActivePool(uint _amount) external override {
         _requireCallerIsTroveManager();
         address activePool = activePoolAddress; // cache to save an SLOAD
-        ETH = ETH.sub(_amount);
+        ETH -= _amount;
         emit DefaultPoolETHBalanceUpdated(ETH);
         emit EtherSent(activePool, _amount);
 
@@ -80,13 +77,13 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     function increaseXBRLDebt(uint _amount) external override {
         _requireCallerIsTroveManager();
-        XBRLDebt = XBRLDebt.add(_amount);
+        XBRLDebt += _amount;
         emit DefaultPoolXBRLDebtUpdated(XBRLDebt);
     }
 
     function decreaseXBRLDebt(uint _amount) external override {
         _requireCallerIsTroveManager();
-        XBRLDebt = XBRLDebt.sub(_amount);
+        XBRLDebt -= _amount;
         emit DefaultPoolXBRLDebtUpdated(XBRLDebt);
     }
 
@@ -104,7 +101,7 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     receive() external payable {
         _requireCallerIsActivePool();
-        ETH = ETH.add(msg.value);
+        ETH += msg.value;
         emit DefaultPoolETHBalanceUpdated(ETH);
     }
 }

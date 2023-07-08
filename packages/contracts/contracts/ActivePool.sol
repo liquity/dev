@@ -3,7 +3,6 @@
 pragma solidity ^0.8.17;
 
 import './Interfaces/IActivePool.sol';
-import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
@@ -16,7 +15,6 @@ import "./Dependencies/console.sol";
  *
  */
 contract ActivePool is Ownable, CheckContract, IActivePool {
-    using SafeMath for uint256;
 
     string constant public NAME = "ActivePool";
 
@@ -82,7 +80,7 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
 
     function sendETH(address _account, uint _amount) external override {
         _requireCallerIsBOorTroveMorSP();
-        ETH = ETH.sub(_amount);
+        ETH -= _amount;
         emit ActivePoolETHBalanceUpdated(ETH);
         emit EtherSent(_account, _amount);
 
@@ -92,14 +90,14 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
 
     function increaseXBRLDebt(uint _amount) external override {
         _requireCallerIsBOorTroveM();
-        XBRLDebt  = XBRLDebt.add(_amount);
-        ActivePoolXBRLDebtUpdated(XBRLDebt);
+        XBRLDebt += _amount;
+        emit ActivePoolXBRLDebtUpdated(XBRLDebt);
     }
 
     function decreaseXBRLDebt(uint _amount) external override {
         _requireCallerIsBOorTroveMorSP();
-        XBRLDebt = XBRLDebt.sub(_amount);
-        ActivePoolXBRLDebtUpdated(XBRLDebt);
+        XBRLDebt -= _amount;
+        emit ActivePoolXBRLDebtUpdated(XBRLDebt);
     }
 
     // --- 'require' functions ---
@@ -130,7 +128,7 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
 
     receive() external payable {
         _requireCallerIsBorrowerOperationsOrDefaultPool();
-        ETH = ETH.add(msg.value);
+        ETH += msg.value;
         emit ActivePoolETHBalanceUpdated(ETH);
     }
 }

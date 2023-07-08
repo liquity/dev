@@ -3,14 +3,12 @@
 pragma solidity ^0.8.17;
 
 import "./Interfaces/ICollSurplusPool.sol";
-import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 
 contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
-    using SafeMath for uint256;
 
     string constant public NAME = "CollSurplusPool";
 
@@ -73,7 +71,7 @@ contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
     function accountSurplus(address _account, uint _amount) external override {
         _requireCallerIsTroveManager();
 
-        uint newAmount = balances[_account].add(_amount);
+        uint newAmount = balances[_account] + _amount;
         balances[_account] = newAmount;
 
         emit CollBalanceUpdated(_account, newAmount);
@@ -87,7 +85,7 @@ contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
         balances[_account] = 0;
         emit CollBalanceUpdated(_account, 0);
 
-        ETH = ETH.sub(claimableColl);
+        ETH = -= claimableColl;
         emit EtherSent(_account, claimableColl);
 
         (bool success, ) = _account.call{ value: claimableColl }("");
@@ -118,6 +116,6 @@ contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
 
     receive() external payable {
         _requireCallerIsActivePool();
-        ETH = ETH.add(msg.value);
+        ETH += msg.value;
     }
 }

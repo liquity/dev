@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.17;
 
-import "../Dependencies/SafeMath.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/IERC20.sol";
 import "../Interfaces/IBorrowerOperations.sol";
@@ -17,7 +16,6 @@ import "../Dependencies/console.sol";
 
 
 contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, STBLStakingScript {
-    using SafeMath for uint;
 
     string constant public NAME = "BorrowerWrappersScript";
 
@@ -73,7 +71,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         // already checked in CollSurplusPool
         assert(balanceAfter > balanceBefore);
 
-        uint totalCollateral = balanceAfter.sub(balanceBefore).add(msg.value);
+        uint totalCollateral = balanceAfter - balanceBefore + msg.value;
 
         // Open trove with obtained collateral, plus collateral sent by user
         borrowerOperations.openTrove{ value: totalCollateral }(_maxFee, _XBRLAmount, _upperHint, _lowerHint);
@@ -88,7 +86,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
 
         uint collBalanceAfter = address(this).balance;
         uint stblBalanceAfter = stblToken.balanceOf(address(this));
-        uint claimedCollateral = collBalanceAfter.sub(collBalanceBefore);
+        uint claimedCollateral = collBalanceAfter - collBalanceBefore;
 
         // Add claimed ETH to trove, get more XBRL and stake it into the Stability Pool
         if (claimedCollateral > 0) {
@@ -116,8 +114,8 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         // Claim gains
         stblStaking.unstake(0);
 
-        uint gainedCollateral = address(this).balance.sub(collBalanceBefore); // stack too deep issues :'(
-        uint gainedXBRL = xbrlToken.balanceOf(address(this)).sub(xbrlBalanceBefore);
+        uint gainedCollateral = address(this).balance - collBalanceBefore; // stack too deep issues :'(
+        uint gainedXBRL = xbrlToken.balanceOf(address(this)) - xbrlBalanceBefore;
 
         uint netXBRLAmount;
         // Top up trove and get more XBRL, keeping ICR constant
@@ -127,7 +125,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
             borrowerOperations.adjustTrove{ value: gainedCollateral }(_maxFee, 0, netXBRLAmount, true, _upperHint, _lowerHint);
         }
 
-        uint totalXBRL = gainedXBRL.add(netXBRLAmount);
+        uint totalXBRL = gainedXBRL + netXBRLAmount;
         if (totalXBRL > 0) {
             stabilityPool.provideToSP(totalXBRL, address(0));
 
@@ -145,9 +143,9 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
         uint price = priceFeed.fetchPrice();
         uint ICR = troveManager.getCurrentICR(address(this), price);
 
-        uint XBRLAmount = _collateral.mul(price).div(ICR);
+        uint XBRLAmount = _collateral * price / ICR;
         uint borrowingRate = troveManager.getBorrowingRateWithDecay();
-        uint netDebt = XBRLAmount.mul(LiquityMath.DECIMAL_PRECISION).div(LiquityMath.DECIMAL_PRECISION.add(borrowingRate));
+        uint netDebt = XBRLAmount * LiquityMath.DECIMAL_PRECISION / (LiquityMath.DECIMAL_PRECISION + borrowingRate);
 
         return netDebt;
     }
