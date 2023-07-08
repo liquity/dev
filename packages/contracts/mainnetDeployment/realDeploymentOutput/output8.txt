@@ -1,4 +1,4 @@
-Compiling 86 files with 0.6.11
+Compiling 86 files with 0.8.17
 Compilation finished successfully
 Mon, 05 Apr 2021 15:29:32 GMT
 Loading previous deployment...

@@ -64,7 +64,7 @@ deployment start time: 1617611590
 time oneYearFromDeployment: 1649147590
 Using previously deployed ACCOUNT_32 lockup contract at address 0x0051099Cac8F0C27467425bE5Eedd96078e6f748
 Nothing to compile
-Compiling 1 file with 0.6.11
+Compiling 1 file with 0.8.17
 Successfully submitted source code for contract
 contracts/STBL/LockupContract.sol:LockupContract at 0x0051099Cac8F0C27467425bE5Eedd96078e6f748
 for verification on Etherscan. Waiting for verification result...
@@ -72,9 +72,9 @@ for verification on Etherscan. Waiting for verification result...
 Successfully verified contract LockupContract on Etherscan.
 https://etherscan.io/address/0x0051099Cac8F0C27467425bE5Eedd96078e6f748#code
 Using previously deployed ACCOUNT_33 lockup contract at address 0xBa4a395251dBEb49a17BA0d09eAB6cb3F55752F9
-Compiling 86 files with 0.6.11
+Compiling 86 files with 0.8.17
 Compilation finished successfully
-Compiling 1 file with 0.6.11
+Compiling 1 file with 0.8.17
 Successfully submitted source code for contract
 contracts/STBL/LockupContract.sol:LockupContract at 0xBa4a395251dBEb49a17BA0d09eAB6cb3F55752F9
 for verification on Etherscan. Waiting for verification result...

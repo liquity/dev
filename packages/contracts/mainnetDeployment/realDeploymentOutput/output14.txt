@@ -63,7 +63,7 @@ Unipool address: 0xd37a77E71ddF3373a79BE2eBB76B6c4808bDF0d5
 deployment start time: 1617611590
 time oneYearFromDeployment: 1649147590
 Nothing to compile
-Compiling 1 file with 0.6.11
+Compiling 1 file with 0.8.17
 Successfully submitted source code for contract
 contracts/STBL/LockupContract.sol:LockupContract at 0x5eced47f98e1357E5184FC876335549794FDA513
 for verification on Etherscan. Waiting for verification result...

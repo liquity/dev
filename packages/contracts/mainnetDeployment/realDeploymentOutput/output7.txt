@@ -50,7 +50,7 @@ Using previously deployed communityIssuance contract at address 0xD8c9D9071123a0
 Using previously deployed stblToken contract at address 0x6DEA81C8171D0bA574754EF6F8b412F2Ed88c54D
 Contract stblStaking already verified
 Nothing to compile
-Compiling 1 file with 0.6.11
+Compiling 1 file with 0.8.17
 Successfully submitted source code for contract
 contracts/STBL/LockupContractFactory.sol:LockupContractFactory at 0x2eBeF24dA09489218Ba2BECb01867F6DaAeDcD4B
 for verification on Etherscan. Waiting for verification result...
@@ -60,7 +60,7 @@ https://etherscan.io/address/0x2eBeF24dA09489218Ba2BECb01867F6DaAeDcD4B#code
 Contract communityIssuance already verified
 Contract stblToken already verified
 Using previously deployed multiTroveGetter contract at address 0xFc92d0E9Fa35df17E3A6d9F40716ca2cE749922B
-Compiling 86 files with 0.6.11
+Compiling 86 files with 0.8.17
 Compilation finished successfully
 Contract objects addresses:
 stblStaking: 0x4f9Fbb3f1E99B56e0Fe2892e623Ed36A76Fc605d
