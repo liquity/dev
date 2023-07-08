@@ -7,7 +7,7 @@ import { useFarmView } from "../../context/FarmViewContext";
 import { RemainingSTBL } from "../RemainingSTBL";
 import { Yield } from "../Yield";
 
-const uniLink = (lusdAddress: string) => `https://app.uniswap.org/#/add/ETH/${lusdAddress}`;
+const uniLink = (xbrlAddress: string) => `https://app.uniswap.org/#/add/ETH/${xbrlAddress}`;
 
 export const Inactive: React.FC = () => {
   const { dispatchEvent } = useFarmView();
@@ -32,12 +32,12 @@ export const Inactive: React.FC = () => {
       </Heading>
       <Box sx={{ p: [2, 3] }}>
         <InfoMessage title="You aren't farming STBL.">
-          <Paragraph>You can farm STBL by staking your Uniswap ETH/LUSD LP tokens.</Paragraph>
+          <Paragraph>You can farm STBL by staking your Uniswap ETH/XBRL LP tokens.</Paragraph>
 
           <Paragraph sx={{ mt: 2 }}>
             You can obtain LP tokens by adding liquidity to the{" "}
-            <Link href={uniLink(addresses["lusdToken"])} target="_blank">
-              ETH/LUSD pool on Uniswap. <Icon name="external-link-alt" size="xs" />
+            <Link href={uniLink(addresses["xbrlToken"])} target="_blank">
+              ETH/XBRL pool on Uniswap. <Icon name="external-link-alt" size="xs" />
             </Link>
           </Paragraph>
         </InfoMessage>

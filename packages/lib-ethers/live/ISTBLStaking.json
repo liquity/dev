@@ -67,11 +67,11 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_F_LUSD",
+          "name": "_F_XBRL",
           "type": "uint256"
         }
       ],
-      "name": "F_LUSDUpdated",
+      "name": "F_XBRLUpdated",
       "type": "event"
     },
     {
@@ -93,11 +93,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_xbrlTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressSet",
+      "name": "XBRLTokenAddressSet",
       "type": "event"
     },
     {
@@ -137,7 +137,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_F_LUSD",
+          "name": "_F_XBRL",
           "type": "uint256"
         }
       ],
@@ -156,7 +156,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "LUSDGain",
+          "name": "XBRLGain",
           "type": "uint256"
         },
         {
@@ -222,7 +222,7 @@
           "type": "address"
         }
       ],
-      "name": "getPendingLUSDGain",
+      "name": "getPendingXBRLGain",
       "outputs": [
         {
           "internalType": "uint256",
@@ -254,7 +254,7 @@
           "type": "uint256"
         }
       ],
-      "name": "increaseF_LUSD",
+      "name": "increaseF_XBRL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -268,7 +268,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_xbrlTokenAddress",
           "type": "address"
         },
         {

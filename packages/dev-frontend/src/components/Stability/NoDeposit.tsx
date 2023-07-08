@@ -21,8 +21,8 @@ export const NoDeposit: React.FC = props => {
         </Flex>
       </Heading>
       <Box sx={{ p: [2, 3] }}>
-        <InfoMessage title="You have no LUSD in the Stability Pool.">
-          You can earn ETH and STBL rewards by depositing LUSD.
+        <InfoMessage title="You have no XBRL in the Stability Pool.">
+          You can earn ETH and STBL rewards by depositing XBRL.
         </InfoMessage>
 
         <Flex variant="layout.actions">

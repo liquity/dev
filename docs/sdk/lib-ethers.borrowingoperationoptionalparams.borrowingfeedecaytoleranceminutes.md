@@ -14,7 +14,7 @@ borrowingFeeDecayToleranceMinutes?: number;
 
 ## Remarks
 
-Transactions that borrow LUSD must pay a variable borrowing fee, which is added to the Trove's debt. This fee increases whenever a redemption occurs, and otherwise decays exponentially. Due to this decay, a Trove's collateral ratio can end up being higher than initially calculated if the transaction is pending for a long time. When this happens, the backend has to iterate over the sorted list of Troves to find a new position for the Trove, which costs extra gas.
+Transactions that borrow XBRL must pay a variable borrowing fee, which is added to the Trove's debt. This fee increases whenever a redemption occurs, and otherwise decays exponentially. Due to this decay, a Trove's collateral ratio can end up being higher than initially calculated if the transaction is pending for a long time. When this happens, the backend has to iterate over the sorted list of Troves to find a new position for the Trove, which costs extra gas.
 
 The SDK can estimate how much the gas costs of the transaction may increase due to this decay, and can include additional gas to ensure that it will still succeed, even if it ends up pending for a relatively long time. This parameter specifies the length of time that should be covered by the extra gas.
 

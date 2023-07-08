@@ -20,11 +20,11 @@ export interface LiquityStoreBaseState
 |  [collateralSurplusBalance](./lib-base.liquitystorebasestate.collateralsurplusbalance.md) | [Decimal](./lib-base.decimal.md) | Amount of leftover collateral available for withdrawal to the user. |
 |  [frontend](./lib-base.liquitystorebasestate.frontend.md) | [FrontendStatus](./lib-base.frontendstatus.md) | Status of currently used frontend. |
 |  [liquidityMiningSTBLReward](./lib-base.liquitystorebasestate.liquidityminingstblreward.md) | [Decimal](./lib-base.decimal.md) | Amount of STBL the user has earned through mining liquidity. |
-|  [liquidityMiningStake](./lib-base.liquitystorebasestate.liquidityminingstake.md) | [Decimal](./lib-base.decimal.md) | Amount of Uniswap ETH/LUSD LP tokens the user has staked in liquidity mining. |
+|  [liquidityMiningStake](./lib-base.liquitystorebasestate.liquidityminingstake.md) | [Decimal](./lib-base.decimal.md) | Amount of Uniswap ETH/XBRL LP tokens the user has staked in liquidity mining. |
 |  [stblBalance](./lib-base.liquitystorebasestate.stblbalance.md) | [Decimal](./lib-base.decimal.md) | User's STBL token balance. |
 |  [stblStake](./lib-base.liquitystorebasestate.stblstake.md) | [STBLStake](./lib-base.stblstake.md) | User's STBL stake. |
-|  [lusdBalance](./lib-base.liquitystorebasestate.lusdbalance.md) | [Decimal](./lib-base.decimal.md) | User's LUSD token balance. |
-|  [lusdInStabilityPool](./lib-base.liquitystorebasestate.lusdinstabilitypool.md) | [Decimal](./lib-base.decimal.md) | Total amount of LUSD currently deposited in the Stability Pool. |
+|  [xbrlBalance](./lib-base.liquitystorebasestate.xbrlbalance.md) | [Decimal](./lib-base.decimal.md) | User's XBRL token balance. |
+|  [xbrlInStabilityPool](./lib-base.liquitystorebasestate.xbrlinstabilitypool.md) | [Decimal](./lib-base.decimal.md) | Total amount of XBRL currently deposited in the Stability Pool. |
 |  [numberOfTroves](./lib-base.liquitystorebasestate.numberoftroves.md) | number | Number of Troves that are currently open. |
 |  [ownFrontend](./lib-base.liquitystorebasestate.ownfrontend.md) | [FrontendStatus](./lib-base.frontendstatus.md) | Status of user's own frontend. |
 |  [price](./lib-base.liquitystorebasestate.price.md) | [Decimal](./lib-base.decimal.md) | Current price of the native currency (e.g. Ether) in USD. |
@@ -34,8 +34,8 @@ export interface LiquityStoreBaseState
 |  [total](./lib-base.liquitystorebasestate.total.md) | [Trove](./lib-base.trove.md) | Total collateral and debt in the Liquity system. |
 |  [totalRedistributed](./lib-base.liquitystorebasestate.totalredistributed.md) | [Trove](./lib-base.trove.md) | Total collateral and debt per stake that has been liquidated through redistribution. |
 |  [totalStakedSTBL](./lib-base.liquitystorebasestate.totalstakedstbl.md) | [Decimal](./lib-base.decimal.md) | Total amount of STBL currently staked. |
-|  [totalStakedUniTokens](./lib-base.liquitystorebasestate.totalstakedunitokens.md) | [Decimal](./lib-base.decimal.md) | Total amount of Uniswap ETH/LUSD LP tokens currently staked in liquidity mining. |
+|  [totalStakedUniTokens](./lib-base.liquitystorebasestate.totalstakedunitokens.md) | [Decimal](./lib-base.decimal.md) | Total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. |
 |  [troveBeforeRedistribution](./lib-base.liquitystorebasestate.trovebeforeredistribution.md) | [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | User's Trove in its state after the last direct modification. |
-|  [uniTokenAllowance](./lib-base.liquitystorebasestate.unitokenallowance.md) | [Decimal](./lib-base.decimal.md) | The liquidity mining contract's allowance of user's Uniswap ETH/LUSD LP tokens. |
-|  [uniTokenBalance](./lib-base.liquitystorebasestate.unitokenbalance.md) | [Decimal](./lib-base.decimal.md) | User's Uniswap ETH/LUSD LP token balance. |
+|  [uniTokenAllowance](./lib-base.liquitystorebasestate.unitokenallowance.md) | [Decimal](./lib-base.decimal.md) | The liquidity mining contract's allowance of user's Uniswap ETH/XBRL LP tokens. |
+|  [uniTokenBalance](./lib-base.liquitystorebasestate.unitokenbalance.md) | [Decimal](./lib-base.decimal.md) | User's Uniswap ETH/XBRL LP token balance. |
 

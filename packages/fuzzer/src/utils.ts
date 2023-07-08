@@ -10,7 +10,7 @@ import {
   Trove,
   TroveWithPendingRedistribution,
   ReadableLiquity,
-  LUSD_LIQUIDATION_RESERVE
+  XBRL_LIQUIDATION_RESERVE
 } from "@liquity/lib-base";
 import { EthersLiquity, ReadableEthersLiquity } from "@liquity/lib-ethers";
 import { SubgraphLiquity } from "@liquity/lib-subgraph";
@@ -38,11 +38,11 @@ export const createRandomTrove = (price: Decimal) => {
   if (Math.random() < 0.5) {
     const collateral = Decimal.from(randomValue);
     const maxDebt = parseInt(price.mul(collateral).toString(0));
-    const debt = LUSD_LIQUIDATION_RESERVE.add(truncateLastDigits(maxDebt - benford(maxDebt)));
+    const debt = XBRL_LIQUIDATION_RESERVE.add(truncateLastDigits(maxDebt - benford(maxDebt)));
 
     return new Trove(collateral, debt);
   } else {
-    const debt = LUSD_LIQUIDATION_RESERVE.add(100 * randomValue);
+    const debt = XBRL_LIQUIDATION_RESERVE.add(100 * randomValue);
 
     const collateral = Decimal.from(
       debt
@@ -63,8 +63,8 @@ export const randomCollateralChange = ({ collateral }: Trove) =>
 
 export const randomDebtChange = ({ debt }: Trove) =>
   Math.random() < 0.5
-    ? { repayLUSD: debt.mul(1.1 * Math.random()) }
-    : { borrowLUSD: debt.mul(0.5 * Math.random()) };
+    ? { repayXBRL: debt.mul(1.1 * Math.random()) }
+    : { borrowXBRL: debt.mul(0.5 * Math.random()) };
 
 export const getListOfTroves = async (liquity: ReadableLiquity) =>
   liquity.getTroves({
@@ -239,7 +239,7 @@ const checks = [
   new EqualityCheck("price", l => l.getPrice(), decimalsEqual),
   new EqualityCheck("total", l => l.getTotal(), trovesRoughlyEqual),
   new EqualityCheck("totalRedistributed", l => l.getTotalRedistributed(), trovesEqual),
-  new EqualityCheck("tokensInStabilityPool", l => l.getLUSDInStabilityPool(), decimalsEqual)
+  new EqualityCheck("tokensInStabilityPool", l => l.getXBRLInStabilityPool(), decimalsEqual)
 ];
 
 export const checkSubgraph = async (subgraph: SubgraphLiquity, l1Liquity: ReadableLiquity) => {

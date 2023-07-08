@@ -169,11 +169,11 @@ export function updateTrove(
   trove.save();
 }
 
-export function setBorrowingFeeOfLastTroveChange(_LUSDFee: BigInt): void {
+export function setBorrowingFeeOfLastTroveChange(_XBRLFee: BigInt): void {
   let lastChangeSequenceNumber = getLastChangeSequenceNumber();
 
   let lastTroveChange = TroveChange.load(lastChangeSequenceNumber.toString());
-  lastTroveChange.borrowingFee = decimalize(_LUSDFee);
+  lastTroveChange.borrowingFee = decimalize(_XBRLFee);
   lastTroveChange.save();
 }
 

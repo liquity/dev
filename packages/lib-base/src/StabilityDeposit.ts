@@ -6,8 +6,8 @@ import { Decimal, Decimalish } from "./Decimal";
  * @public
  */
 export type StabilityDepositChange<T> =
-  | { depositLUSD: T; withdrawLUSD?: undefined }
-  | { depositLUSD?: undefined; withdrawLUSD: T; withdrawAllLUSD: boolean };
+  | { depositXBRL: T; withdrawXBRL?: undefined }
+  | { depositXBRL?: undefined; withdrawXBRL: T; withdrawAllXBRL: boolean };
 
 /**
  * A Stability Deposit and its accrued gains.
@@ -15,13 +15,13 @@ export type StabilityDepositChange<T> =
  * @public
  */
 export class StabilityDeposit {
-  /** Amount of LUSD in the Stability Deposit at the time of the last direct modification. */
-  readonly initialLUSD: Decimal;
+  /** Amount of XBRL in the Stability Deposit at the time of the last direct modification. */
+  readonly initialXBRL: Decimal;
 
-  /** Amount of LUSD left in the Stability Deposit. */
-  readonly currentLUSD: Decimal;
+  /** Amount of XBRL left in the Stability Deposit. */
+  readonly currentXBRL: Decimal;
 
-  /** Amount of native currency (e.g. Ether) received in exchange for the used-up LUSD. */
+  /** Amount of native currency (e.g. Ether) received in exchange for the used-up XBRL. */
   readonly collateralGain: Decimal;
 
   /** Amount of STBL rewarded since the last modification of the Stability Deposit. */
@@ -38,27 +38,27 @@ export class StabilityDeposit {
 
   /** @internal */
   constructor(
-    initialLUSD: Decimal,
-    currentLUSD: Decimal,
+    initialXBRL: Decimal,
+    currentXBRL: Decimal,
     collateralGain: Decimal,
     stblReward: Decimal,
     frontendTag: string
   ) {
-    this.initialLUSD = initialLUSD;
-    this.currentLUSD = currentLUSD;
+    this.initialXBRL = initialXBRL;
+    this.currentXBRL = currentXBRL;
     this.collateralGain = collateralGain;
     this.stblReward = stblReward;
     this.frontendTag = frontendTag;
 
-    if (this.currentLUSD.gt(this.initialLUSD)) {
-      throw new Error("currentLUSD can't be greater than initialLUSD");
+    if (this.currentXBRL.gt(this.initialXBRL)) {
+      throw new Error("currentXBRL can't be greater than initialXBRL");
     }
   }
 
   get isEmpty(): boolean {
     return (
-      this.initialLUSD.isZero &&
-      this.currentLUSD.isZero &&
+      this.initialXBRL.isZero &&
+      this.currentXBRL.isZero &&
       this.collateralGain.isZero &&
       this.stblReward.isZero
     );
@@ -67,8 +67,8 @@ export class StabilityDeposit {
   /** @internal */
   toString(): string {
     return (
-      `{ initialLUSD: ${this.initialLUSD}` +
-      `, currentLUSD: ${this.currentLUSD}` +
+      `{ initialXBRL: ${this.initialXBRL}` +
+      `, currentXBRL: ${this.currentXBRL}` +
       `, collateralGain: ${this.collateralGain}` +
       `, stblReward: ${this.stblReward}` +
       `, frontendTag: "${this.frontendTag}" }`
@@ -80,8 +80,8 @@ export class StabilityDeposit {
    */
   equals(that: StabilityDeposit): boolean {
     return (
-      this.initialLUSD.eq(that.initialLUSD) &&
-      this.currentLUSD.eq(that.currentLUSD) &&
+      this.initialXBRL.eq(that.initialXBRL) &&
+      this.currentXBRL.eq(that.currentXBRL) &&
       this.collateralGain.eq(that.collateralGain) &&
       this.stblReward.eq(that.stblReward) &&
       this.frontendTag === that.frontendTag
@@ -89,38 +89,38 @@ export class StabilityDeposit {
   }
 
   /**
-   * Calculate the difference between the `currentLUSD` in this Stability Deposit and `thatLUSD`.
+   * Calculate the difference between the `currentXBRL` in this Stability Deposit and `thatXBRL`.
    *
    * @returns An object representing the change, or `undefined` if the deposited amounts are equal.
    */
-  whatChanged(thatLUSD: Decimalish): StabilityDepositChange<Decimal> | undefined {
-    thatLUSD = Decimal.from(thatLUSD);
+  whatChanged(thatXBRL: Decimalish): StabilityDepositChange<Decimal> | undefined {
+    thatXBRL = Decimal.from(thatXBRL);
 
-    if (thatLUSD.lt(this.currentLUSD)) {
-      return { withdrawLUSD: this.currentLUSD.sub(thatLUSD), withdrawAllLUSD: thatLUSD.isZero };
+    if (thatXBRL.lt(this.currentXBRL)) {
+      return { withdrawXBRL: this.currentXBRL.sub(thatXBRL), withdrawAllXBRL: thatXBRL.isZero };
     }
 
-    if (thatLUSD.gt(this.currentLUSD)) {
-      return { depositLUSD: thatLUSD.sub(this.currentLUSD) };
+    if (thatXBRL.gt(this.currentXBRL)) {
+      return { depositXBRL: thatXBRL.sub(this.currentXBRL) };
     }
   }
 
   /**
    * Apply a {@link StabilityDepositChange} to this Stability Deposit.
    *
-   * @returns The new deposited LUSD amount.
+   * @returns The new deposited XBRL amount.
    */
   apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal {
     if (!change) {
-      return this.currentLUSD;
+      return this.currentXBRL;
     }
 
-    if (change.withdrawLUSD !== undefined) {
-      return change.withdrawAllLUSD || this.currentLUSD.lte(change.withdrawLUSD)
+    if (change.withdrawXBRL !== undefined) {
+      return change.withdrawAllXBRL || this.currentXBRL.lte(change.withdrawXBRL)
         ? Decimal.ZERO
-        : this.currentLUSD.sub(change.withdrawLUSD);
+        : this.currentXBRL.sub(change.withdrawXBRL);
     } else {
-      return this.currentLUSD.add(change.depositLUSD);
+      return this.currentXBRL.add(change.depositXBRL);
     }
   }
 }

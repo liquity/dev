@@ -76,11 +76,11 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_LUSDFee",
+        "name": "_XBRLFee",
         "type": "uint256"
       }
     ],
-    "name": "LUSDBorrowingFeePaid",
+    "name": "XBRLBorrowingFeePaid",
     "type": "event"
   },
   {
@@ -89,11 +89,11 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_lusdTokenAddress",
+        "name": "_xbrlTokenAddress",
         "type": "address"
       }
     ],
-    "name": "LUSDTokenAddressChanged",
+    "name": "XBRLTokenAddressChanged",
     "type": "event"
   },
   {
@@ -264,7 +264,7 @@
   },
   {
     "inputs": [],
-    "name": "LUSD_GAS_COMPENSATION",
+    "name": "XBRL_GAS_COMPENSATION",
     "outputs": [
       {
         "internalType": "uint256",
@@ -385,7 +385,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_LUSDChange",
+        "name": "_XBRLChange",
         "type": "uint256"
       },
       {
@@ -522,10 +522,10 @@
   },
   {
     "inputs": [],
-    "name": "lusdToken",
+    "name": "xbrlToken",
     "outputs": [
       {
-        "internalType": "contract ILUSDToken",
+        "internalType": "contract IXBRLToken",
         "name": "",
         "type": "address"
       }
@@ -565,7 +565,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_LUSDAmount",
+        "name": "_XBRLAmount",
         "type": "uint256"
       },
       {
@@ -614,7 +614,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_LUSDAmount",
+        "name": "_XBRLAmount",
         "type": "uint256"
       },
       {
@@ -628,7 +628,7 @@
         "type": "address"
       }
     ],
-    "name": "repayLUSD",
+    "name": "repayXBRL",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -677,7 +677,7 @@
       },
       {
         "internalType": "address",
-        "name": "_lusdTokenAddress",
+        "name": "_xbrlTokenAddress",
         "type": "address"
       },
       {
@@ -749,7 +749,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_LUSDAmount",
+        "name": "_XBRLAmount",
         "type": "uint256"
       },
       {
@@ -763,7 +763,7 @@
         "type": "address"
       }
     ],
-    "name": "withdrawLUSD",
+    "name": "withdrawXBRL",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

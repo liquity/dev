@@ -1,4 +1,4 @@
-import { Transfer, Approval } from "../../generated/LUSDToken/ERC20";
+import { Transfer, Approval } from "../../generated/XBRLToken/ERC20";
 
 import { updateBalance } from "../entities/TokenBalance";
 import { updateAllowance } from "../entities/TokenAllowance";

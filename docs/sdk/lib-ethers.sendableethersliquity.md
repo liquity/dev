@@ -24,29 +24,29 @@ export declare class SendableEthersLiquity implements SendableLiquity<EthersTran
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [adjustTrove(params, maxBorrowingRateOrOptionalParams, overrides)](./lib-ethers.sendableethersliquity.adjusttrove.md) |  | Adjust existing Trove by changing its collateral, debt, or both. |
-|  [approveUniTokens(allowance, overrides)](./lib-ethers.sendableethersliquity.approveunitokens.md) |  | Allow the liquidity mining contract to use Uniswap ETH/LUSD LP tokens for [staking](./lib-base.transactableliquity.stakeunitokens.md)<!-- -->. |
-|  [borrowLUSD(amount, maxBorrowingRate, overrides)](./lib-ethers.sendableethersliquity.borrowlusd.md) |  | Adjust existing Trove by borrowing more LUSD. |
+|  [approveUniTokens(allowance, overrides)](./lib-ethers.sendableethersliquity.approveunitokens.md) |  | Allow the liquidity mining contract to use Uniswap ETH/XBRL LP tokens for [staking](./lib-base.transactableliquity.stakeunitokens.md)<!-- -->. |
+|  [borrowXBRL(amount, maxBorrowingRate, overrides)](./lib-ethers.sendableethersliquity.borrowxbrl.md) |  | Adjust existing Trove by borrowing more XBRL. |
 |  [claimCollateralSurplus(overrides)](./lib-ethers.sendableethersliquity.claimcollateralsurplus.md) |  | Claim leftover collateral after a liquidation or redemption. |
 |  [closeTrove(overrides)](./lib-ethers.sendableethersliquity.closetrove.md) |  | Close existing Trove by repaying all debt and withdrawing all collateral. |
 |  [depositCollateral(amount, overrides)](./lib-ethers.sendableethersliquity.depositcollateral.md) |  | Adjust existing Trove by depositing more collateral. |
-|  [depositLUSDInStabilityPool(amount, frontendTag, overrides)](./lib-ethers.sendableethersliquity.depositlusdinstabilitypool.md) |  | Make a new Stability Deposit, or top up existing one. |
+|  [depositXBRLInStabilityPool(amount, frontendTag, overrides)](./lib-ethers.sendableethersliquity.depositxbrlinstabilitypool.md) |  | Make a new Stability Deposit, or top up existing one. |
 |  [exitLiquidityMining(overrides)](./lib-ethers.sendableethersliquity.exitliquiditymining.md) |  | Withdraw all staked LP tokens from liquidity mining and claim reward. |
 |  [liquidate(address, overrides)](./lib-ethers.sendableethersliquity.liquidate.md) |  | Liquidate one or more undercollateralized Troves. |
 |  [liquidateUpTo(maximumNumberOfTrovesToLiquidate, overrides)](./lib-ethers.sendableethersliquity.liquidateupto.md) |  | Liquidate the least collateralized Troves up to a maximum number. |
-|  [openTrove(params, maxBorrowingRateOrOptionalParams, overrides)](./lib-ethers.sendableethersliquity.opentrove.md) |  | Open a new Trove by depositing collateral and borrowing LUSD. |
-|  [redeemLUSD(amount, maxRedemptionRate, overrides)](./lib-ethers.sendableethersliquity.redeemlusd.md) |  | Redeem LUSD to native currency (e.g. Ether) at face value. |
+|  [openTrove(params, maxBorrowingRateOrOptionalParams, overrides)](./lib-ethers.sendableethersliquity.opentrove.md) |  | Open a new Trove by depositing collateral and borrowing XBRL. |
+|  [redeemXBRL(amount, maxRedemptionRate, overrides)](./lib-ethers.sendableethersliquity.redeemxbrl.md) |  | Redeem XBRL to native currency (e.g. Ether) at face value. |
 |  [registerFrontend(kickbackRate, overrides)](./lib-ethers.sendableethersliquity.registerfrontend.md) |  | Register current wallet address as a Liquity frontend. |
-|  [repayLUSD(amount, overrides)](./lib-ethers.sendableethersliquity.repaylusd.md) |  | Adjust existing Trove by repaying some of its debt. |
+|  [repayXBRL(amount, overrides)](./lib-ethers.sendableethersliquity.repayxbrl.md) |  | Adjust existing Trove by repaying some of its debt. |
 |  [sendSTBL(toAddress, amount, overrides)](./lib-ethers.sendableethersliquity.sendstbl.md) |  | Send STBL tokens to an address. |
-|  [sendLUSD(toAddress, amount, overrides)](./lib-ethers.sendableethersliquity.sendlusd.md) |  | Send LUSD tokens to an address. |
+|  [sendXBRL(toAddress, amount, overrides)](./lib-ethers.sendableethersliquity.sendxbrl.md) |  | Send XBRL tokens to an address. |
 |  [stakeSTBL(amount, overrides)](./lib-ethers.sendableethersliquity.stakestbl.md) |  | Stake STBL to start earning fee revenue or increase existing stake. |
-|  [stakeUniTokens(amount, overrides)](./lib-ethers.sendableethersliquity.stakeunitokens.md) |  | Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn STBL. |
+|  [stakeUniTokens(amount, overrides)](./lib-ethers.sendableethersliquity.stakeunitokens.md) |  | Stake Uniswap ETH/XBRL LP tokens to participate in liquidity mining and earn STBL. |
 |  [transferCollateralGainToTrove(overrides)](./lib-ethers.sendableethersliquity.transfercollateralgaintotrove.md) |  | Transfer [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) from Stability Deposit to Trove. |
 |  [unstakeSTBL(amount, overrides)](./lib-ethers.sendableethersliquity.unstakestbl.md) |  | Withdraw STBL from staking. |
-|  [unstakeUniTokens(amount, overrides)](./lib-ethers.sendableethersliquity.unstakeunitokens.md) |  | Withdraw Uniswap ETH/LUSD LP tokens from liquidity mining. |
+|  [unstakeUniTokens(amount, overrides)](./lib-ethers.sendableethersliquity.unstakeunitokens.md) |  | Withdraw Uniswap ETH/XBRL LP tokens from liquidity mining. |
 |  [withdrawCollateral(amount, overrides)](./lib-ethers.sendableethersliquity.withdrawcollateral.md) |  | Adjust existing Trove by withdrawing some of its collateral. |
 |  [withdrawGainsFromStabilityPool(overrides)](./lib-ethers.sendableethersliquity.withdrawgainsfromstabilitypool.md) |  | Withdraw [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [STBL reward](./lib-base.stabilitydeposit.stblreward.md) from Stability Deposit. |
-|  [withdrawGainsFromStaking(overrides)](./lib-ethers.sendableethersliquity.withdrawgainsfromstaking.md) |  | Withdraw [collateral gain](./lib-base.stblstake.collateralgain.md) and [LUSD gain](./lib-base.stblstake.lusdgain.md) from STBL stake. |
+|  [withdrawGainsFromStaking(overrides)](./lib-ethers.sendableethersliquity.withdrawgainsfromstaking.md) |  | Withdraw [collateral gain](./lib-base.stblstake.collateralgain.md) and [XBRL gain](./lib-base.stblstake.xbrlgain.md) from STBL stake. |
 |  [withdrawSTBLRewardFromLiquidityMining(overrides)](./lib-ethers.sendableethersliquity.withdrawstblrewardfromliquiditymining.md) |  | Withdraw STBL that has been earned by mining liquidity. |
-|  [withdrawLUSDFromStabilityPool(amount, overrides)](./lib-ethers.sendableethersliquity.withdrawlusdfromstabilitypool.md) |  | Withdraw LUSD from Stability Deposit. |
+|  [withdrawXBRLFromStabilityPool(amount, overrides)](./lib-ethers.sendableethersliquity.withdrawxbrlfromstabilitypool.md) |  | Withdraw XBRL from Stability Deposit. |
 

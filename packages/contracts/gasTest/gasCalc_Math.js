@@ -31,7 +31,7 @@ contract('Gas costs for math functions', async accounts => {
     const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
-    lusdToken = contracts.lusdToken
+    xbrlToken = contracts.xbrlToken
     sortedTroves = contracts.sortedTroves
     troveManager = contracts.troveManager
     activePool = contracts.activePool

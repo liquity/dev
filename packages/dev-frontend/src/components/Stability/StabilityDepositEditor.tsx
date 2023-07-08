@@ -18,41 +18,41 @@ import { EditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { InfoIcon } from "../InfoIcon";
 
-const select = ({ lusdBalance, lusdInStabilityPool }: LiquityStoreState) => ({
-  lusdBalance,
-  lusdInStabilityPool
+const select = ({ xbrlBalance, xbrlInStabilityPool }: LiquityStoreState) => ({
+  xbrlBalance,
+  xbrlInStabilityPool
 });
 
 type StabilityDepositEditorProps = {
   originalDeposit: StabilityDeposit;
-  editedLUSD: Decimal;
+  editedXBRL: Decimal;
   changePending: boolean;
   dispatch: (action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }) => void;
 };
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   originalDeposit,
-  editedLUSD,
+  editedXBRL,
   changePending,
   dispatch,
   children
 }) => {
-  const { lusdBalance, lusdInStabilityPool } = useLiquitySelector(select);
+  const { xbrlBalance, xbrlInStabilityPool } = useLiquitySelector(select);
   const editingState = useState<string>();
 
-  const edited = !editedLUSD.eq(originalDeposit.currentLUSD);
+  const edited = !editedXBRL.eq(originalDeposit.currentXBRL);
 
-  const maxAmount = originalDeposit.currentLUSD.add(lusdBalance);
-  const maxedOut = editedLUSD.eq(maxAmount);
+  const maxAmount = originalDeposit.currentXBRL.add(xbrlBalance);
+  const maxedOut = editedXBRL.eq(maxAmount);
 
-  const lusdInStabilityPoolAfterChange = lusdInStabilityPool
-    .sub(originalDeposit.currentLUSD)
-    .add(editedLUSD);
+  const xbrlInStabilityPoolAfterChange = xbrlInStabilityPool
+    .sub(originalDeposit.currentXBRL)
+    .add(editedXBRL);
 
-  const originalPoolShare = originalDeposit.currentLUSD.mulDiv(100, lusdInStabilityPool);
-  const newPoolShare = editedLUSD.mulDiv(100, lusdInStabilityPoolAfterChange);
+  const originalPoolShare = originalDeposit.currentXBRL.mulDiv(100, xbrlInStabilityPool);
+  const newPoolShare = editedXBRL.mulDiv(100, xbrlInStabilityPoolAfterChange);
   const poolShareChange =
-    originalDeposit.currentLUSD.nonZero &&
+    originalDeposit.currentXBRL.nonZero &&
     Difference.between(newPoolShare, originalPoolShare).nonZero;
 
   return (
@@ -74,12 +74,12 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
         <EditableRow
           label="Deposit"
           inputId="deposit-stbl"
-          amount={editedLUSD.prettify()}
+          amount={editedXBRL.prettify()}
           maxAmount={maxAmount.toString()}
           maxedOut={maxedOut}
           unit={COIN}
           {...{ editingState }}
-          editedAmount={editedLUSD.toString(2)}
+          editedAmount={editedXBRL.toString(2)}
           setEditedAmount={newValue => dispatch({ type: "setDeposit", newValue })}
         />
 

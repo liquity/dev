@@ -31,14 +31,14 @@ const liquidatableInRecoveryMode = (
   trove: UserTrove,
   price: Decimal,
   totalCollateralRatio: Decimal,
-  lusdInStabilityPool: Decimal
+  xbrlInStabilityPool: Decimal
 ) => {
   const collateralRatio = trove.collateralRatio(price);
 
   if (collateralRatio.gte(MINIMUM_COLLATERAL_RATIO) && collateralRatio.lt(totalCollateralRatio)) {
     return [
-      trove.debt.lte(lusdInStabilityPool),
-      "There's not enough LUSD in the Stability pool to cover the debt"
+      trove.debt.lte(xbrlInStabilityPool),
+      "There's not enough XBRL in the Stability pool to cover the debt"
     ] as const;
   } else {
     return liquidatableInNormalMode(trove, price);
@@ -53,14 +53,14 @@ const select = ({
   numberOfTroves,
   price,
   total,
-  lusdInStabilityPool,
+  xbrlInStabilityPool,
   blockTag
 }: BlockPolledLiquityStoreState) => ({
   numberOfTroves,
   price,
   recoveryMode: total.collateralRatioIsBelowCritical(price),
   totalCollateralRatio: total.collateralRatio(price),
-  lusdInStabilityPool,
+  xbrlInStabilityPool,
   blockTag
 });
 
@@ -70,7 +70,7 @@ export const RiskyTroves: React.FC<RiskyTrovesProps> = ({ pageSize }) => {
     numberOfTroves,
     recoveryMode,
     totalCollateralRatio,
-    lusdInStabilityPool,
+    xbrlInStabilityPool,
     price
   } = useLiquitySelector(select);
   const { liquity } = useLiquity();
@@ -325,7 +325,7 @@ export const RiskyTroves: React.FC<RiskyTrovesProps> = ({ pageSize }) => {
                                   trove,
                                   price,
                                   totalCollateralRatio,
-                                  lusdInStabilityPool
+                                  xbrlInStabilityPool
                                 )
                               : liquidatableInNormalMode(trove, price)
                           ]}

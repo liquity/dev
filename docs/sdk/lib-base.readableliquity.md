@@ -24,11 +24,11 @@ Implemented by [EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->.
 |  [getFees()](./lib-base.readableliquity.getfees.md) | Get a calculator for current fees. |
 |  [getFrontendStatus(address)](./lib-base.readableliquity.getfrontendstatus.md) | Check whether an address is registered as a Liquity frontend, and what its kickback rate is. |
 |  [getLiquidityMiningSTBLReward(address)](./lib-base.readableliquity.getliquidityminingstblreward.md) | Get the amount of STBL earned by an address through mining liquidity. |
-|  [getLiquidityMiningStake(address)](./lib-base.readableliquity.getliquidityminingstake.md) | Get the amount of Uniswap ETH/LUSD LP tokens currently staked by an address in liquidity mining. |
+|  [getLiquidityMiningStake(address)](./lib-base.readableliquity.getliquidityminingstake.md) | Get the amount of Uniswap ETH/XBRL LP tokens currently staked by an address in liquidity mining. |
 |  [getSTBLBalance(address)](./lib-base.readableliquity.getstblbalance.md) | Get the amount of STBL held by an address. |
 |  [getSTBLStake(address)](./lib-base.readableliquity.getstblstake.md) | Get the current state of an STBL Stake. |
-|  [getLUSDBalance(address)](./lib-base.readableliquity.getlusdbalance.md) | Get the amount of LUSD held by an address. |
-|  [getLUSDInStabilityPool()](./lib-base.readableliquity.getlusdinstabilitypool.md) | Get the total amount of LUSD currently deposited in the Stability Pool. |
+|  [getXBRLBalance(address)](./lib-base.readableliquity.getxbrlbalance.md) | Get the amount of XBRL held by an address. |
+|  [getXBRLInStabilityPool()](./lib-base.readableliquity.getxbrlinstabilitypool.md) | Get the total amount of XBRL currently deposited in the Stability Pool. |
 |  [getNumberOfTroves()](./lib-base.readableliquity.getnumberoftroves.md) | Get number of Troves that are currently open. |
 |  [getPrice()](./lib-base.readableliquity.getprice.md) | Get the current price of the native currency (e.g. Ether) in USD. |
 |  [getRemainingLiquidityMiningSTBLReward()](./lib-base.readableliquity.getremainingliquidityminingstblreward.md) | Get the remaining STBL that will be collectively rewarded to liquidity miners. |
@@ -37,10 +37,10 @@ Implemented by [EthersLiquity](./lib-ethers.ethersliquity.md)<!-- -->.
 |  [getTotal()](./lib-base.readableliquity.gettotal.md) | Get the total amount of collateral and debt in the Liquity system. |
 |  [getTotalRedistributed()](./lib-base.readableliquity.gettotalredistributed.md) | Get the total collateral and debt per stake that has been liquidated through redistribution. |
 |  [getTotalStakedSTBL()](./lib-base.readableliquity.gettotalstakedstbl.md) | Get the total amount of STBL currently staked. |
-|  [getTotalStakedUniTokens()](./lib-base.readableliquity.gettotalstakedunitokens.md) | Get the total amount of Uniswap ETH/LUSD LP tokens currently staked in liquidity mining. |
+|  [getTotalStakedUniTokens()](./lib-base.readableliquity.gettotalstakedunitokens.md) | Get the total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. |
 |  [getTrove(address)](./lib-base.readableliquity.gettrove.md) | Get the current state of a Trove. |
 |  [getTroveBeforeRedistribution(address)](./lib-base.readableliquity.gettrovebeforeredistribution.md) | Get a Trove in its state after the last direct modification. |
 |  [getTroves(params)](./lib-base.readableliquity.gettroves_1.md) | Get a slice from the list of Troves. |
-|  [getUniTokenAllowance(address)](./lib-base.readableliquity.getunitokenallowance.md) | Get the liquidity mining contract's allowance of a holder's Uniswap ETH/LUSD LP tokens. |
-|  [getUniTokenBalance(address)](./lib-base.readableliquity.getunitokenbalance.md) | Get the amount of Uniswap ETH/LUSD LP tokens held by an address. |
+|  [getUniTokenAllowance(address)](./lib-base.readableliquity.getunitokenallowance.md) | Get the liquidity mining contract's allowance of a holder's Uniswap ETH/XBRL LP tokens. |
+|  [getUniTokenBalance(address)](./lib-base.readableliquity.getunitokenbalance.md) | Get the amount of Uniswap ETH/XBRL LP tokens held by an address. |
 

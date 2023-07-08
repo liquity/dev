@@ -16,11 +16,11 @@ Using previously deployed collSurplusPool contract at address 0x4428EF2Edc5f091e
 Using previously deployed borrowerOperations contract at address 0x4E4E2eC25B1F591bb591d42A944eCc1CB9C79d8A
 Using previously deployed hintHelpers contract at address 0xAB1b14AfAE47054ca29A23858A7850E859aE6E31
 Using previously deployed tellorCaller contract at address 0x093FA46A3FC715B65E9A6d37ACD92d99F48B81F6
-Using previously deployed lusdToken contract at address 0xaa052d8b915c9311e5EA234dd24105d6208087A5
+Using previously deployed xbrlToken contract at address 0xaa052d8b915c9311e5EA234dd24105d6208087A5
 No Etherscan Url defined, skipping verification
 Contract objects addresses:
 priceFeed: 0x891d882fDACd2cB8DAeA5289f6019676E797EE5F
-lusdToken: 0xaa052d8b915c9311e5EA234dd24105d6208087A5
+xbrlToken: 0xaa052d8b915c9311e5EA234dd24105d6208087A5
 sortedTroves: 0xb8493cD0E7135462502DF048deeFc9b650fa789F
 troveManager: 0x111Bf64dA957C55601C6D0f9DB2Eb1aef4dDEE23
 activePool: 0x741d21A9dd5dcc14cc5cd84cD91fd74638AFA313
@@ -77,7 +77,7 @@ Community Issuance balance: 31951373.982475769951532035
 PRICEFEED CHECKS
 PriceFeed first stored price: 2071.640000000000000000
 PriceFeed initial status: 0
-Unipool's stored LUSD-ETH Uniswap Pair address: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
+Unipool's stored XBRL-ETH Uniswap Pair address: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 SYSTEM GLOBAL VARS CHECKS
 system liquidation reserve: 200.000000000000000000
 system min net debt      : 1800.000000000000000000
@@ -87,19 +87,19 @@ deployer debt: 3215.000000000000000000
 deployer coll: 3.000000000000000000
 deployer stake: 3.000000000000000000
 deployer's trove status: 1
-deployer's LUSD balance: 2311.224204161781052791
-LUSD-ETH Pair token 0: 0xaa05...87A5,
-        LUSDToken contract addr: 0xaa05...87A5
-LUSD-ETH Pair token 1: 0xC02a...6Cc2,
+deployer's XBRL balance: 2311.224204161781052791
+XBRL-ETH Pair token 0: 0xaa05...87A5,
+        XBRLToken contract addr: 0xaa05...87A5
+XBRL-ETH Pair token 1: 0xC02a...6Cc2,
         WETH ERC20 contract addr: 0xc02a...6cc2
-LUSD-ETH Pair's LUSD reserves before provision: 40.036378355965833891
-LUSD-ETH Pair's ETH reserves before provision: .188993756164807541
+XBRL-ETH Pair's XBRL reserves before provision: 40.036378355965833891
+XBRL-ETH Pair's ETH reserves before provision: .188993756164807541
 Liquidity already provided to Uniswap
-LUSD-ETH Pair's LUSD reserves after provision: 40.036378355965833891
-LUSD-ETH Pair's ETH reserves after provision: .188993756164807541
+XBRL-ETH Pair's XBRL reserves after provision: 40.036378355965833891
+XBRL-ETH Pair's ETH reserves after provision: .188993756164807541
 CHECK LP STAKING EARNS STBL
 deployer's LP token balance: 2.194601866876996844
-LUSDETHPair addr: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
+XBRLETHPair addr: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 Pair addr stored in Unipool: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 deployer's farmed STBL before staking LP tokens: .000000000000074273
 Already staked in Unipool
@@ -108,7 +108,7 @@ deployer's farmed STBL from Unipool after waiting ~1.5mins: .000000000000074376
 deployer STBL Balance Before SP deposit: 1398.375771175734140867
 CHECK DEPLOYER MAKING DEPOSIT AND EARNING STBL
 deployer SP deposit before making deposit: .000000000000000000
-deployer SP deposit after depositing 15 LUSD: 15.000000000000000000
+deployer SP deposit after depositing 15 XBRL: 15.000000000000000000
 wait 90 seconds before withdrawing...
 deployer SP deposit after full withdrawal: .000000000000000000
 deployer STBL Balance after SP deposit withdrawal: 1423.940289013143416702
@@ -122,33 +122,33 @@ deployer STBL bal before staking: 1413.940289013143416702
 deployer stake before staking: 65.000000000000000000
 deployer STBL bal after staking: 1400.940289013143416702
 deployer stake after staking: 78.000000000000000000
-deployer pending LUSD revenue share: .000000000000000000
+deployer pending XBRL revenue share: .000000000000000000
 Acct 2 already has an active trove
 acct2 debt: 2210.000000000000000000
 acct2 coll: 1.500000000000000000
 acct2 stake: 1.500000000000000000
 acct2 trove status: 1
-deployer pending LUSD revenue share from staking, after acct 2 opened trove: .000000000000000000
+deployer pending XBRL revenue share from staking, after acct 2 opened trove: .000000000000000000
 CHECK DEPLOYER WITHDRAWING STAKING GAINS
-deployer LUSD bal before withdrawing staking gains: 2312.174204161781052766
-deployer LUSD bal after withdrawing staking gains: 2312.174204161781052766
-LUSD-ETH Pair's current LUSD reserves: 40.036378355965833891
-LUSD-ETH Pair's current ETH reserves: .188993756164807541
+deployer XBRL bal before withdrawing staking gains: 2312.174204161781052766
+deployer XBRL bal after withdrawing staking gains: 2312.174204161781052766
+XBRL-ETH Pair's current XBRL reserves: 40.036378355965833891
+XBRL-ETH Pair's current ETH reserves: .188993756164807541
 number of troves: 3 
 Trove list size: 3 
 Entire system debt: 7615.950000000000000000
 Entire system coll: 6.000000000000000000
 Base rate: .000000000000000000
 Current borrowing rate: .005000000000000000
-Total LUSD SP deposits: 34.160000000000000000
+Total XBRL SP deposits: 34.160000000000000000
 Total STBL staked: 78.000000000000000000
-Total LP (LUSD-ETH) tokens staked in unipool: .552691887045032822
+Total LP (XBRL-ETH) tokens staked in unipool: .552691887045032822
 TroveManager state variables:
 Total trove stakes: 6.000000000000000000
 Snapshot of total trove stakes before last liq. : .000000000000000000
 Snapshot of total trove collateral before last liq. : .000000000000000000
 L_ETH: .000000000000000000
-L_LUSDDebt: .000000000000000000
+L_XBRLDebt: .000000000000000000
 StabilityPool state variables:
 Product P: 1.000000000000000000
 Current epoch: .000000000000000000
@@ -156,7 +156,7 @@ Current scale: .000000000000000000
 Sum S, at current epoch and scale: .000000000000000000
 Sum G, at current epoch and scale: 4750380241679283576465.000000000000000000
 STBLStaking state variables:
-F_LUSD: .881913509376195942
+F_XBRL: .881913509376195942
 F_ETH: .000000000000000000
 CommunityIssuance state variables:
 Total STBL issued to depositors / front ends: 234364.490152675424000000

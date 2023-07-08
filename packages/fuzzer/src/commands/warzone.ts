@@ -1,6 +1,6 @@
 import { Wallet } from "@ethersproject/wallet";
 
-import { Decimal, LUSD_MINIMUM_DEBT, Trove } from "@liquity/lib-base";
+import { Decimal, XBRL_MINIMUM_DEBT, Trove } from "@liquity/lib-base";
 import { EthersLiquity } from "@liquity/lib-ethers";
 
 import { deployer, funder, provider } from "../globals";
@@ -17,7 +17,7 @@ export const warzone = async ({ troves: numberOfTroves }: WarzoneParams) => {
   for (let i = 1; i <= numberOfTroves; ++i) {
     const user = Wallet.createRandom().connect(provider);
     const userAddress = await user.getAddress();
-    const debt = LUSD_MINIMUM_DEBT.add(99999 * Math.random());
+    const debt = XBRL_MINIMUM_DEBT.add(99999 * Math.random());
     const collateral = debt.mulDiv(1.11 + 3 * Math.random(), price);
 
     const liquity = await EthersLiquity.connect(user);
@@ -36,8 +36,8 @@ export const warzone = async ({ troves: numberOfTroves }: WarzoneParams) => {
     );
 
     if (i % 4 === 0) {
-      const lusdBalance = await liquity.getLUSDBalance();
-      await liquity.depositLUSDInStabilityPool(lusdBalance);
+      const xbrlBalance = await liquity.getXBRLBalance();
+      await liquity.depositXBRLInStabilityPool(xbrlBalance);
     }
 
     if (i % 10 === 0) {

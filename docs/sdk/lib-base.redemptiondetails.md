@@ -4,7 +4,7 @@
 
 ## RedemptionDetails interface
 
-Details of a [redeemLUSD()](./lib-base.transactableliquity.redeemlusd.md) transaction.
+Details of a [redeemXBRL()](./lib-base.transactableliquity.redeemxbrl.md) transaction.
 
 <b>Signature:</b>
 
@@ -16,8 +16,8 @@ export interface RedemptionDetails
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [actualLUSDAmount](./lib-base.redemptiondetails.actuallusdamount.md) | [Decimal](./lib-base.decimal.md) | Amount of LUSD that was actually redeemed by the transaction. |
-|  [attemptedLUSDAmount](./lib-base.redemptiondetails.attemptedlusdamount.md) | [Decimal](./lib-base.decimal.md) | Amount of LUSD the redeemer tried to redeem. |
+|  [actualXBRLAmount](./lib-base.redemptiondetails.actualxbrlamount.md) | [Decimal](./lib-base.decimal.md) | Amount of XBRL that was actually redeemed by the transaction. |
+|  [attemptedXBRLAmount](./lib-base.redemptiondetails.attemptedxbrlamount.md) | [Decimal](./lib-base.decimal.md) | Amount of XBRL the redeemer tried to redeem. |
 |  [collateralTaken](./lib-base.redemptiondetails.collateraltaken.md) | [Decimal](./lib-base.decimal.md) | Amount of collateral (e.g. Ether) taken from Troves by the transaction. |
 |  [fee](./lib-base.redemptiondetails.fee.md) | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) deducted as fee from collateral taken. |
 

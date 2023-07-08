@@ -1,6 +1,6 @@
 import {
   TroveUpdated,
-  LUSDBorrowingFeePaid
+  XBRLBorrowingFeePaid
 } from "../../generated/BorrowerOperations/BorrowerOperations";
 
 import { getTroveOperationFromBorrowerOperation } from "../types/TroveOperation";
@@ -19,7 +19,7 @@ export function handleTroveUpdated(event: TroveUpdated): void {
   );
 }
 
-export function handleLUSDBorrowingFeePaid(event: LUSDBorrowingFeePaid): void {
-  setBorrowingFeeOfLastTroveChange(event.params._LUSDFee);
-  increaseTotalBorrowingFeesPaid(event.params._LUSDFee);
+export function handleXBRLBorrowingFeePaid(event: XBRLBorrowingFeePaid): void {
+  setBorrowingFeeOfLastTroveChange(event.params._XBRLFee);
+  increaseTotalBorrowingFeesPaid(event.params._XBRLFee);
 }

@@ -104,7 +104,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_LUSDLoss",
+          "name": "_XBRLLoss",
           "type": "uint256"
         }
       ],
@@ -300,11 +300,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newLUSDTokenAddress",
+          "name": "_newXBRLTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressChanged",
+      "name": "XBRLTokenAddressChanged",
       "type": "event"
     },
     {
@@ -407,7 +407,7 @@
           "type": "uint256"
         }
       ],
-      "name": "StabilityPoolLUSDBalanceUpdated",
+      "name": "StabilityPoolXBRLBalanceUpdated",
       "type": "event"
     },
     {
@@ -469,7 +469,7 @@
           "type": "address"
         }
       ],
-      "name": "getCompoundedLUSDDeposit",
+      "name": "getCompoundedXBRLDeposit",
       "outputs": [
         {
           "internalType": "uint256",
@@ -552,7 +552,7 @@
     },
     {
       "inputs": [],
-      "name": "getTotalLUSDDeposits",
+      "name": "getTotalXBRLDeposits",
       "outputs": [
         {
           "internalType": "uint256",
@@ -631,7 +631,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_xbrlTokenAddress",
           "type": "address"
         },
         {

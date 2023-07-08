@@ -85,7 +85,7 @@
   },
   {
     "inputs": [],
-    "name": "LUSD_GAS_COMPENSATION",
+    "name": "XBRL_GAS_COMPENSATION",
     "outputs": [
       {
         "internalType": "uint256",
@@ -309,7 +309,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_LUSDamount",
+        "name": "_XBRLamount",
         "type": "uint256"
       },
       {
@@ -337,7 +337,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "truncatedLUSDamount",
+        "name": "truncatedXBRLamount",
         "type": "uint256"
       }
     ],

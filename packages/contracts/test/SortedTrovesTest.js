@@ -4,7 +4,7 @@ const testHelpers = require("../utils/testHelpers.js")
 const SortedTroves = artifacts.require("SortedTroves")
 const SortedTrovesTester = artifacts.require("SortedTrovesTester")
 const TroveManagerTester = artifacts.require("TroveManagerTester")
-const LUSDToken = artifacts.require("LUSDToken")
+const XBRLToken = artifacts.require("XBRLToken")
 
 const th = testHelpers.TestHelper
 const dec = th.dec
@@ -47,20 +47,20 @@ contract('SortedTroves', async accounts => {
   let sortedTroves
   let troveManager
   let borrowerOperations
-  let lusdToken
+  let xbrlToken
 
   const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
 
   let contracts
 
-  const getOpenTroveLUSDAmount = async (totalDebt) => th.getOpenTroveLUSDAmount(contracts, totalDebt)
+  const getOpenTroveXBRLAmount = async (totalDebt) => th.getOpenTroveXBRLAmount(contracts, totalDebt)
   const openTrove = async (params) => th.openTrove(contracts, params)
 
   describe('SortedTroves', () => {
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
       contracts.troveManager = await TroveManagerTester.new()
-      contracts.lusdToken = await LUSDToken.new(
+      contracts.xbrlToken = await XBRLToken.new(
         contracts.troveManager.address,
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address
@@ -71,7 +71,7 @@ contract('SortedTroves', async accounts => {
       sortedTroves = contracts.sortedTroves
       troveManager = contracts.troveManager
       borrowerOperations = contracts.borrowerOperations
-      lusdToken = contracts.lusdToken
+      xbrlToken = contracts.xbrlToken
 
       await deploymentHelper.connectSTBLContracts(STBLContracts)
       await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
@@ -109,16 +109,16 @@ contract('SortedTroves', async accounts => {
     })
 
     it('contains(): returns false for addresses that opened and then closed a trove', async () => {
-      await openTrove({ ICR: toBN(dec(1000, 18)), extraLUSDAmount: toBN(dec(3000, 18)), extraParams: { from: whale } })
+      await openTrove({ ICR: toBN(dec(1000, 18)), extraXBRLAmount: toBN(dec(3000, 18)), extraParams: { from: whale } })
 
       await openTrove({ ICR: toBN(dec(150, 16)), extraParams: { from: alice } })
       await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: bob } })
       await openTrove({ ICR: toBN(dec(2000, 18)), extraParams: { from: carol } })
 
       // to compensate borrowing fees
-      await lusdToken.transfer(alice, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(bob, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(carol, dec(1000, 18), { from: whale })
+      await xbrlToken.transfer(alice, dec(1000, 18), { from: whale })
+      await xbrlToken.transfer(bob, dec(1000, 18), { from: whale })
+      await xbrlToken.transfer(carol, dec(1000, 18), { from: whale })
 
       // A, B, C close troves
       await borrowerOperations.closeTrove({ from: alice })
@@ -138,16 +138,16 @@ contract('SortedTroves', async accounts => {
 
     // true for addresses that opened -> closed -> opened a trove
     it('contains(): returns true for addresses that opened, closed and then re-opened a trove', async () => {
-      await openTrove({ ICR: toBN(dec(1000, 18)), extraLUSDAmount: toBN(dec(3000, 18)), extraParams: { from: whale } })
+      await openTrove({ ICR: toBN(dec(1000, 18)), extraXBRLAmount: toBN(dec(3000, 18)), extraParams: { from: whale } })
 
       await openTrove({ ICR: toBN(dec(150, 16)), extraParams: { from: alice } })
       await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: bob } })
       await openTrove({ ICR: toBN(dec(2000, 18)), extraParams: { from: carol } })
 
       // to compensate borrowing fees
-      await lusdToken.transfer(alice, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(bob, dec(1000, 18), { from: whale })
-      await lusdToken.transfer(carol, dec(1000, 18), { from: whale })
+      await xbrlToken.transfer(alice, dec(1000, 18), { from: whale })
+      await xbrlToken.transfer(bob, dec(1000, 18), { from: whale })
+      await xbrlToken.transfer(carol, dec(1000, 18), { from: whale })
 
       // A, B, C close troves
       await borrowerOperations.closeTrove({ from: alice })

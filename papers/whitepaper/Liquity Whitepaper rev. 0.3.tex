@@ -28,7 +28,7 @@
 \maketitle
 
 \section*{Abstract}
-Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against their collateral without paying interest. After locking up ETH as collateral in a smart contract and creating an individual position called a “Trove”, the user can get instant liquidity by minting LUSD, a USD-pegged stablecoin. Each Trove is required to be collateralized at a minimum of 110\%. Any owner of LUSD can redeem their stablecoins for the underlying collateral at any time. The redemption mechanism along with algorithmically adjusted fees guarantee a minimum stablecoin value of \$1. 
+Liquity is a decentralized protocol that allows Ether holders to obtain maximum liquidity against their collateral without paying interest. After locking up ETH as collateral in a smart contract and creating an individual position called a “Trove”, the user can get instant liquidity by minting XBRL, a USD-pegged stablecoin. Each Trove is required to be collateralized at a minimum of 110\%. Any owner of XBRL can redeem their stablecoins for the underlying collateral at any time. The redemption mechanism along with algorithmically adjusted fees guarantee a minimum stablecoin value of \$1. 
 
 An unprecedented liquidation mechanism based on incentivized stability deposits and a redistribution cycle from riskier to safer Troves provides stability at a much lower collateral ratio than current systems. Stability is maintained via economically-driven user interactions and arbitrage, rather than by active governance or monetary interventions. 
 The protocol has built-in incentives that encourage both early adoption and the operation of multiple front ends, enhancing decentralization.
@@ -74,7 +74,7 @@ A better system is possible. Liquity improves upon the mentioned issues by offer
 \subsection{Interest-free liquidity}
 Liquity provides liquidity without charging borrowers interest or recurring fees. ETH holders can obtain liquidity against their collateral for free. However, as an algorithmically controlled monetary instrument, the protocol charges an Borrowing Fee (as a one-time fee) for newly drawn liquidity to support the peg with the USD.
 
-Users are free to utilize their stablecoin, LUSD, to participate in the broader DeFi market consisting of many different products which are designed to generate yield.
+Users are free to utilize their stablecoin, XBRL, to participate in the broader DeFi market consisting of many different products which are designed to generate yield.
 
 \subsection{Low collateral ratio (110\%)}
 When an individual position’s collateral ratio falls below a certain threshold, a lending system must take special action to ensure the stablecoin supply remains fully backed. In existing systems, this is done by liquidating the position in an interactive process. Selling the collateral from undercollateralized positions at a fixed price is inefficient by design as it requires a significant discount to the current collateral price to ensure that it can be sold quickly in difficult situations. Collateral auctions replace discounts by an economically fair, but potentially lengthy and error-prone\footnote{On March 12 (“Black Thursday”) and 13, 2020, 35 000 ETH worth \$8.32 million were withdrawn through zero bids in MakerDAO’s collateral auctions due to the dramatic increase of the Ethereum gas price. See https://medium.com/@whiterabbit/black-thursday-for-makerdao-8-32-million-was-liquidated-for-0-dai-36b83cac56b6} bidding mechanism. The longer it takes to sell the collateral\footnote{The duration of the auction usually depends on the number of bidders, which creates an unfortunate tradeoff since a large number of bidders is good for the auction, but potentially leads to longer auctions and higher exogenous price risks.}, the higher the risk that its value might drop further. Auction-based systems thus have to set their liquidation ratio\footnote{The ratio between the current collateral value (in USD) and the debt below which a liquidation may occur. The liquidation ratio may or may not equal the Minimum Collateral Ratio needed to open a position.} high enough to provide an extra margin for subsequent price drops during liquidation.
@@ -82,16 +82,16 @@ When an individual position’s collateral ratio falls below a certain threshold
 Liquity applies a novel two-step liquidation mechanism aimed at instantly liquidating undercollateralized positions. Since the acquirers are known in advance, there is no need to find a buyer for a collateral buyout on the spot when a position becomes undercollateralized. This advantage allows for a considerable reduction in the collateral ratio, while keeping stability high. The system also relies on sufficient collateralization of all positions in aggregate, rather than on the collateral of individual positions.
 
 \subsection{Hard price floor}
-Liquity follows a maximally expansive monetary policy through providing free liquidity at zero issuance costs by default. On the other hand, the issued LUSD tokens are fully redeemable against the collateral. This enables the protocol to grow rapidly, but not so fast as to lose control over the peg.
+Liquity follows a maximally expansive monetary policy through providing free liquidity at zero issuance costs by default. On the other hand, the issued XBRL tokens are fully redeemable against the collateral. This enables the protocol to grow rapidly, but not so fast as to lose control over the peg.
 
-LUSD tokens can be returned to the protocol (redeemed) in exchange for an ETH amount worth the face value of the returned LUSD minus a Redemption Fee. This direct price stability mechanism results in a price floor of \$1. At lower rates, arbitrageurs can make profits by redeeming LUSD for ETH and immediately selling the latter at a higher dollar price than the current value of the returned LUSD. Arbitrageurs will thus help to restore the peg by driving demand for LUSD, as the Redemption Fees are designed to enable arbitrage gains whenever the peg is broken.
+XBRL tokens can be returned to the protocol (redeemed) in exchange for an ETH amount worth the face value of the returned XBRL minus a Redemption Fee. This direct price stability mechanism results in a price floor of \$1. At lower rates, arbitrageurs can make profits by redeeming XBRL for ETH and immediately selling the latter at a higher dollar price than the current value of the returned XBRL. Arbitrageurs will thus help to restore the peg by driving demand for XBRL, as the Redemption Fees are designed to enable arbitrage gains whenever the peg is broken.
 
 \subsection{Governance-free algorithmic monetary policy}
 Unlike competing platforms, Liquity does not rely on a governance mechanism to vote on monetary interventions like changing an interest rate. All protocol parameters are either preset and immutable or algorithmically controlled by the protocol itself, making governance redundant.
 
-Liquity uses the current fraction of redeemed LUSD as an indicator of a peg deviation in order to autonomously set a base rate, which determines both the Redemption Fee and the Borrowing Fee. The base rate increases with the number of redeemed tokens and tends to decay to 0\% again when no redemptions take place. As opposed to an unpredictably fluctuating interest-rate, the Borrowing Fee immediately and predictably reduces the attractiveness of new loans and throttles the generation of fresh LUSD. In addition, redemption of LUSD for ETH directly decreases the current stablecoin supply and may motivate low-collateral borrowers to repay their loans, which has the same effect. 
+Liquity uses the current fraction of redeemed XBRL as an indicator of a peg deviation in order to autonomously set a base rate, which determines both the Redemption Fee and the Borrowing Fee. The base rate increases with the number of redeemed tokens and tends to decay to 0\% again when no redemptions take place. As opposed to an unpredictably fluctuating interest-rate, the Borrowing Fee immediately and predictably reduces the attractiveness of new loans and throttles the generation of fresh XBRL. In addition, redemption of XBRL for ETH directly decreases the current stablecoin supply and may motivate low-collateral borrowers to repay their loans, which has the same effect. 
 
-These measures exert upward pressure on the value of LUSD whenever it is less than \$1, and help to stabilize its price.
+These measures exert upward pressure on the value of XBRL whenever it is less than \$1, and help to stabilize its price.
 
 \subsection{Censorship resistance}
 Liquity is a protocol rather than a platform. There is no administrator with special privileges that could interfere with, alter, or halt the operation of the protocol in any way.
@@ -99,25 +99,25 @@ Liquity is a protocol rather than a platform. There is no administrator with spe
 Frontend operation is provided by third parties which make the system decentralized and resistant to censorship, while benefiting from growth incentives. Frontend Operators can either download the web interface provided as a launch kit or opt for creating their own custom user interface and integrate it with other services.
 
 \subsection{Growth and early adopter incentives}
-Users that drive growth and robustness by contributing to system stability get rewarded with STBL, the system's secondary token. These tokens can be staked in order to earn a proportion of the protocol revenue stemming from issuance and Redemption Fees. The protocol continuously issues STBL to front ends and to users who have deposited LUSD to the Stability Pool. STBL is issued according to a release schedule that halves the number of tokens distributed each year, favoring early adopters.
+Users that drive growth and robustness by contributing to system stability get rewarded with STBL, the system's secondary token. These tokens can be staked in order to earn a proportion of the protocol revenue stemming from issuance and Redemption Fees. The protocol continuously issues STBL to front ends and to users who have deposited XBRL to the Stability Pool. STBL is issued according to a release schedule that halves the number of tokens distributed each year, favoring early adopters.
 
 The allocation of STBL between Frontend Operators and users is based on a kickback rate that can be freely set by the front end operator between 0\% and 100\%. Front ends will thus compete via the kickback rates, making the system attractive to users and early adopters.
 
 \section{System functionality}
 \subsection{Borrower operations }
-Anyone may obtain liquidity anytime in an entirely permissionless manner after depositing ETH into a \textbf{Trove\footnote{Each Trove is linked to a specific Ethereum address. An Ethereum address can only own one single Trove.} }.The deposited ETH collateral gets locked up in the Trove and allows its owner to withdraw up to \textbf{90.91\%}\footnote{Called loan-to-value ratio or LTV.} of its current dollar value in the form of LUSD stablecoins. In other words, the Trove must always maintain a \textbf{Minimum Collateral Ratio (MCR)} of 110\%, defined as the ratio of the current dollar value of the collateral to the withdrawn liquidity. Borrowers can repay or borrow more liquidity within the limits of the MCR whenever they wish. Within the same limit, they can retrieve their collateral. Moreover, a Trove can be topped up with more collateral as needed. 
+Anyone may obtain liquidity anytime in an entirely permissionless manner after depositing ETH into a \textbf{Trove\footnote{Each Trove is linked to a specific Ethereum address. An Ethereum address can only own one single Trove.} }.The deposited ETH collateral gets locked up in the Trove and allows its owner to withdraw up to \textbf{90.91\%}\footnote{Called loan-to-value ratio or LTV.} of its current dollar value in the form of XBRL stablecoins. In other words, the Trove must always maintain a \textbf{Minimum Collateral Ratio (MCR)} of 110\%, defined as the ratio of the current dollar value of the collateral to the withdrawn liquidity. Borrowers can repay or borrow more liquidity within the limits of the MCR whenever they wish. Within the same limit, they can retrieve their collateral. Moreover, a Trove can be topped up with more collateral as needed. 
 
-The protocol imposes a minimum debt of 2,000 LUSD.\footnote{This requirement prevents the system from being spammed with small Troves with low collateral ratios which could impair the redemption mechanism by making its gas costs prohibitive.}. Thus, Troves can only be opened with an initial debt of at least 2,000 LUSD and may never go below a debt of 2,000 LUSD, unless when fully repaid and closed.
+The protocol imposes a minimum debt of 2,000 XBRL.\footnote{This requirement prevents the system from being spammed with small Troves with low collateral ratios which could impair the redemption mechanism by making its gas costs prohibitive.}. Thus, Troves can only be opened with an initial debt of at least 2,000 XBRL and may never go below a debt of 2,000 XBRL, unless when fully repaid and closed.
 \\
 
 
-\textit{Liquidation Reserve}. When a borrower opens a new Trove, an amount of 200 LUSD is reserved and held back by the protocol as a compensation for the gas costs if the Trove needs to be liquidated at some point. The 200 LUSD is added to the Trove's debt, impacting its collateral ratio. When a borrower closes their Trove, the Liquidation Reserve is refunded, i.e. the corresponding 200 LUSD debt on the Trove is cancelled. The borrower thus needs to pay back 200 LUSD less to fully pay off their debt. \\
+\textit{Liquidation Reserve}. When a borrower opens a new Trove, an amount of 200 XBRL is reserved and held back by the protocol as a compensation for the gas costs if the Trove needs to be liquidated at some point. The 200 XBRL is added to the Trove's debt, impacting its collateral ratio. When a borrower closes their Trove, the Liquidation Reserve is refunded, i.e. the corresponding 200 XBRL debt on the Trove is cancelled. The borrower thus needs to pay back 200 XBRL less to fully pay off their debt. \\
 
 \textit{Borrowing Fee}.   The protocol charges a one-time Borrowing Fee for the borrowed liquidity. The fee is added to the Trove's debt and is given by a \textbf{base rate} + 0.5\% (see 3.3 Redemption mechanism “Redemption fee and base rate”) multiplied by the amount of liquidity drawn by the borrower. The minimum Borrowing Fee is 0.5\%, and the maximum is 5\%. \\
 
 \begin{tcolorbox}
 \textbf{Example}\\
-The base rate stands at 0.5\%. The borrower opens a new Trove by depositing 4 ETH and draws 4,000 LUSD. Being subject to a Liquidation Reserve of 200 LUSD and charged a 1\% fee on the 4,000 LUSD, the borrower will obtain 4,000 LUSD, while incurring a debt of 4,240 LUSD (4,000 + 200 + 40). To close the Trove and fully retrieve the 4 ETH, the borrower needs to repay 4,040 LUSD as the Liquidation Reserve gets refunded.
+The base rate stands at 0.5\%. The borrower opens a new Trove by depositing 4 ETH and draws 4,000 XBRL. Being subject to a Liquidation Reserve of 200 XBRL and charged a 1\% fee on the 4,000 XBRL, the borrower will obtain 4,000 XBRL, while incurring a debt of 4,240 XBRL (4,000 + 200 + 40). To close the Trove and fully retrieve the 4 ETH, the borrower needs to repay 4,040 XBRL as the Liquidation Reserve gets refunded.
 \end{tcolorbox}
 
 \textit{Restrictions due to Recovery Mode}.   Borrower operations are restricted in several respects when the system is in Recovery Mode or at the verge of it (see 5 Recovery Mode). 
@@ -126,14 +126,14 @@ To avoid liquidation despite ETH price changes, it is highly recommended to keep
 
 \subsection{Stability Pool operations}
 The Stability Pool is the first line of defense in maintaining system solvency: stability deposits absorb and cancel the debt from defaulted Troves. In return, Stability Pool participants are rewarded with the acquisition of collateral from liquidated positions at a significant discount. Participants will also continuously receive an allocation of STBL tokens.
-LUSD holders can become Stability Providers by depositing LUSD tokens into the Stability Pool. In principle, the deposited tokens can be withdrawn from the pool anytime, so long as they have not been used for absorbing defaulted Troves. However, deposit withdrawal is temporarily disabled when there are undercollateralized Troves in the system that can be liquidated.
+XBRL holders can become Stability Providers by depositing XBRL tokens into the Stability Pool. In principle, the deposited tokens can be withdrawn from the pool anytime, so long as they have not been used for absorbing defaulted Troves. However, deposit withdrawal is temporarily disabled when there are undercollateralized Troves in the system that can be liquidated.
 
-When a Trove is liquidated, some amount of LUSD in the Stability Pool which corresponds to the debt of the liquidated Trove is burned. In exchange, the Stability Pool receives all of the collateral from that Trove. Because liquidations happen just below 110\%, this means participants achieve a collateral gain in ETH at the time of liquidation. The Stability Providers’s current deposit as a proportion of the total LUSD in the pool determines the collateral share it receives from the liquidation\footnote{As a deposit will shrink over time by absorbing liquidations, the reward calculation results in a “negative” compounding of the deposited LUSD.}. 
+When a Trove is liquidated, some amount of XBRL in the Stability Pool which corresponds to the debt of the liquidated Trove is burned. In exchange, the Stability Pool receives all of the collateral from that Trove. Because liquidations happen just below 110\%, this means participants achieve a collateral gain in ETH at the time of liquidation. The Stability Providers’s current deposit as a proportion of the total XBRL in the pool determines the collateral share it receives from the liquidation\footnote{As a deposit will shrink over time by absorbing liquidations, the reward calculation results in a “negative” compounding of the deposited XBRL.}. 
 
-While Stability Providers are free to withdraw all or part of their remaining LUSD deposit, the system always pays out the entire collateral gain made by the depositor. Stability Providers that are also borrowers can choose to transfer the collateral gain to their Troves instead of paying it out to their Ethereum addresses. In other words, the system uses the accumulated ETH to top up their own collateral. 
+While Stability Providers are free to withdraw all or part of their remaining XBRL deposit, the system always pays out the entire collateral gain made by the depositor. Stability Providers that are also borrowers can choose to transfer the collateral gain to their Troves instead of paying it out to their Ethereum addresses. In other words, the system uses the accumulated ETH to top up their own collateral. 
 
 \subsection{Redemption mechanism}
-Liquity’s token, LUSD, is a fully redeemable stablecoin. At any time\footnote{To protect the system from bank run-like situations, redemptions are suspended if the Total Collateral Ratio (TCR) is below 110\%.}, the system allows holders to redeem their LUSD tokens for the underlying ETH collateral based on the face value of the redeemed tokens, the current ETH:USD rate and the current base rate. This enables direct arbitrage whenever LUSD trades for less than \$1, by creating a \textbf{price floor for LUSD}.\\
+Liquity’s token, XBRL, is a fully redeemable stablecoin. At any time\footnote{To protect the system from bank run-like situations, redemptions are suspended if the Total Collateral Ratio (TCR) is below 110\%.}, the system allows holders to redeem their XBRL tokens for the underlying ETH collateral based on the face value of the redeemed tokens, the current ETH:USD rate and the current base rate. This enables direct arbitrage whenever XBRL trades for less than \$1, by creating a \textbf{price floor for XBRL}.\\
 
 \begin{figure}[h]
 \centering
@@ -143,24 +143,24 @@ Liquity’s token, LUSD, is a fully redeemable stablecoin. At any time\footnote{
 \includegraphics[width=6.75cm]{a4.png}
 \end{figure}
 
-When redeemed, the system uses the LUSD to repay the riskiest Trove(s) with the currently lowest collateral ratio, and transfers the respective amount of ETH from the affected positions to the redeemer. The amount taken from each borrower is capped by their corresponding debt, so the affected borrowers can keep their collateral surpluses. In other words, borrowers lose the same nominal amount of debt (in LUSD) as they lose collateral (in USD) and do not suffer a net loss from redemptions. On the flipside, redemptions have a positive effect on the total collateralization of the system, increasing robustness and price stability.
+When redeemed, the system uses the XBRL to repay the riskiest Trove(s) with the currently lowest collateral ratio, and transfers the respective amount of ETH from the affected positions to the redeemer. The amount taken from each borrower is capped by their corresponding debt, so the affected borrowers can keep their collateral surpluses. In other words, borrowers lose the same nominal amount of debt (in XBRL) as they lose collateral (in USD) and do not suffer a net loss from redemptions. On the flipside, redemptions have a positive effect on the total collateralization of the system, increasing robustness and price stability.
 
-Troves that are fully redeemed from, i.e. whose debt is 0, are automatically closed, and the borrower can reclaim the ETH surplus. The protocol enforces by truncating the redeemed amount that no Trove can be left with a non-zero debt below 2,000 LUSD. \\
+Troves that are fully redeemed from, i.e. whose debt is 0, are automatically closed, and the borrower can reclaim the ETH surplus. The protocol enforces by truncating the redeemed amount that no Trove can be left with a non-zero debt below 2,000 XBRL. \\
 
-\textit{Redemption Fee and base rate}. Liquity aims to determine the Redemption Fee in function of the current base rate and the redeemed LUSD amount as a proportion of the entire stablecoin supply. The base rate is initialized to 0\% at system launch.
+\textit{Redemption Fee and base rate}. Liquity aims to determine the Redemption Fee in function of the current base rate and the redeemed XBRL amount as a proportion of the entire stablecoin supply. The base rate is initialized to 0\% at system launch.
 
-Upon every redemption, the base rate is increased by the proportion of redeemed LUSD and then applied to the current redemption as follows:
+Upon every redemption, the base rate is increased by the proportion of redeemed XBRL and then applied to the current redemption as follows:
 $$b(t):=b(t-1)+\alpha\times\frac{m}{n}$$
-where $b(t)$ is the base rate at time $t,m$ the amount of redeemed LUSD, $n$ the current supply of LUSD and $\alpha$ a constant parameter set to $0.5$.\\
+where $b(t)$ is the base rate at time $t,m$ the amount of redeemed XBRL, $n$ the current supply of XBRL and $\alpha$ a constant parameter set to $0.5$.\\
 
-The base rate decays over time due to a decay factor that is applied with every redemption and issuance of LUSD prior to calculating the resulting fee. The decay is of the form:
+The base rate decays over time due to a decay factor that is applied with every redemption and issuance of XBRL prior to calculating the resulting fee. The decay is of the form:
 $$b(t):=b(t-1)\times\delta^{\triangle t}$$
 where $\delta$ is a decay factor (e.g. 0.94) and $\triangle t$ the time elapsed since the last redemption or loan issuance. The decay factor $\delta$ is chosen such that the half-life of the base rate is 12 hours. \\
 
-Redemptions are thus subject to a \textbf{Redemption Fee} which is a function of the \textbf{base rate} and the redeemed amount of LUSD. The minimum Redemption Fee is 0.5\%. The fee is subtracted from the redeemed LUSD, reducing the ETH that the redeemer receives in return.\\
+Redemptions are thus subject to a \textbf{Redemption Fee} which is a function of the \textbf{base rate} and the redeemed amount of XBRL. The minimum Redemption Fee is 0.5\%. The fee is subtracted from the redeemed XBRL, reducing the ETH that the redeemer receives in return.\\
 \begin{tcolorbox}
 \textbf{Example}\\
-LUSD currently trades at \$0.95, and the current base rate is 1.4\%. An arbitrageur redeems 150,000 LUSD, while the total LUSD supply is 10 million. The last redemption happened 2 hours ago and no liquidity has been issued in the meantime. The hourly decay factor is 0.94.\\
+XBRL currently trades at \$0.95, and the current base rate is 1.4\%. An arbitrageur redeems 150,000 XBRL, while the total XBRL supply is 10 million. The last redemption happened 2 hours ago and no liquidity has been issued in the meantime. The hourly decay factor is 0.94.\\
 
 The system first applies the decay rate to the current base rate:
 $$b(t):=b(t-1)\times\delta^{\triangle t}=0.014\times0.94^2=0.01237$$
@@ -168,7 +168,7 @@ It then increases the base rate in proportion to the fraction of total supply re
 $$b(t):=b(t-1)+0.5\times\frac{m}{n}=0.01237+0.5\times\frac{150000}{10000000}=0.01987$$
 \\
 
-As a result, the redeemer receives 147,019.44 USD [$150,000 \times (1 - 0.01987)$] worth of ETH. Since the exchanged LUSD is currently worth only 142,500 USD [$150,000 \times 0.95$], the redeemer achieves an arbitrage gain of USD 4,519.44.
+As a result, the redeemer receives 147,019.44 USD [$150,000 \times (1 - 0.01987)$] worth of ETH. Since the exchanged XBRL is currently worth only 142,500 USD [$150,000 \times 0.95$], the redeemer achieves an arbitrage gain of USD 4,519.44.
 \end{tcolorbox}
 
 \section{Trove liquidation mechanism}
@@ -176,7 +176,7 @@ To ensure that the entire stablecoin supply remains fully backed by collateral, 
 
 Liquidation can be triggered by anybody and allows liquidating multiple Troves in one batch, either by specifying a set of Troves or in ascending order starting from the Trove with the lowest collateral ratio. While the former approach allows to quickly liquidate large Troves, the latter is more resilient against the race conditions that may occur in case of multiple simultaneous liquidations.
 
-In most cases, Stability Providers and/or high-collateral Troves will have a financial incentive to trigger liquidations as fast as possible. To compensate for the gas costs of a liquidation even in times of high gas prices, Liquity pays the reserved 200 LUSD (see 3.1 Borrower operations) plus 0.5\% of the Trove’s collateral (ETH) to the liquidator.
+In most cases, Stability Providers and/or high-collateral Troves will have a financial incentive to trigger liquidations as fast as possible. To compensate for the gas costs of a liquidation even in times of high gas prices, Liquity pays the reserved 200 XBRL (see 3.1 Borrower operations) plus 0.5\% of the Trove’s collateral (ETH) to the liquidator.
 \\
 
 Liquity utilizes a two-step liquidation mechanism in the following order of priority:
@@ -186,9 +186,9 @@ Liquity utilizes a two-step liquidation mechanism in the following order of prio
 \end{enumerate}
 
 \subsection{Offset undercollateralized Troves against the Stability Pool}
-As mentioned above, the Stability Pool is funded by Stability Providers who deposit LUSD tokens to the contract. It primarily functions as a “shock absorber”: deposited tokens soak up liquidated LUSD debts, and depositors are rewarded for their contribution. 
+As mentioned above, the Stability Pool is funded by Stability Providers who deposit XBRL tokens to the contract. It primarily functions as a “shock absorber”: deposited tokens soak up liquidated XBRL debts, and depositors are rewarded for their contribution. 
 
-When a Trove becomes undercollateralized ($<$110\%) due to a drop in the ETH price, the debt (in LUSD) can be immediately offset against the same amount of pooled LUSD tokens, which get burned by the system. In return, the system transfers 99.5\% of the collateral (in ETH) from the liquidated Trove to the Stability Pool, while paying out the remaining 0.5\% to the liquidator.\\
+When a Trove becomes undercollateralized ($<$110\%) due to a drop in the ETH price, the debt (in XBRL) can be immediately offset against the same amount of pooled XBRL tokens, which get burned by the system. In return, the system transfers 99.5\% of the collateral (in ETH) from the liquidated Trove to the Stability Pool, while paying out the remaining 0.5\% to the liquidator.\\
 
 \begin{figure}[h]
 \centering
@@ -200,14 +200,14 @@ When a Trove becomes undercollateralized ($<$110\%) due to a drop in the ETH pri
 \includegraphics[width=6.75cm]{a10.png}
 \end{figure}
 
-The LUSD tokens in the Stability Pool will thus be replaced by ETH over time. Generally, each liquidation contributes a \textbf{collateral surplus gain} to the pool: the collateral is almost always worth more (in USD) than the burned LUSD tokens. This holds because the liquidation is triggered below a collateral ratio of 110\%, but with a very high probability significantly above 100\%\footnote{The actual liquidation ratio depends on the price volatility and the update frequency of the price oracle and will be slightly lower than 110\%. Liquity uses the Chainlink oracle which updates the ETH:USD price every 3 hours and whenever the price changes by more than 0.5\%.} (unless ETH drops by $>$9.09\% between two price feed updates).
+The XBRL tokens in the Stability Pool will thus be replaced by ETH over time. Generally, each liquidation contributes a \textbf{collateral surplus gain} to the pool: the collateral is almost always worth more (in USD) than the burned XBRL tokens. This holds because the liquidation is triggered below a collateral ratio of 110\%, but with a very high probability significantly above 100\%\footnote{The actual liquidation ratio depends on the price volatility and the update frequency of the price oracle and will be slightly lower than 110\%. Liquity uses the Chainlink oracle which updates the ETH:USD price every 3 hours and whenever the price changes by more than 0.5\%.} (unless ETH drops by $>$9.09\% between two price feed updates).
 
-A Stability Provider receives shares of the liquidations that occur during the lifetime of their LUSD deposit. Upon obtaining the collateral, the combined value of the remaining LUSD deposit and the ETH gain will very likely exceed the prior value of deposit. Stability Providers are thus incentivized by this expectation of positive returns.
+A Stability Provider receives shares of the liquidations that occur during the lifetime of their XBRL deposit. Upon obtaining the collateral, the combined value of the remaining XBRL deposit and the ETH gain will very likely exceed the prior value of deposit. Stability Providers are thus incentivized by this expectation of positive returns.
 
-An individual’s share of the surplus gains depends on the ratio of its remaining LUSD deposit (as reduced by past liquidations) to the total amount of LUSD contained in the pool. If no new deposits are made, all individual shares will stay the same throughout liquidations. As new deposits are made, earlier depositors are incentivized to top up their deposit, to maintain their share of future rewards.
+An individual’s share of the surplus gains depends on the ratio of its remaining XBRL deposit (as reduced by past liquidations) to the total amount of XBRL contained in the pool. If no new deposits are made, all individual shares will stay the same throughout liquidations. As new deposits are made, earlier depositors are incentivized to top up their deposit, to maintain their share of future rewards.
 
 \subsection{Redistribute undercollateralized Troves to other borrowers}
-It is possible that the LUSD tokens contained in the Stability Pool are not sufficient to offset all undercollateralized Troves, or that a trove’s debt can only be partially absorbed as the Stability Pool runs out of LUSD during a liquidation. In such a case, the system redistributes the remaining debt and collateral from the partially liquidated Trove as well as the remaining undercollateralized Troves to all existing positions.
+It is possible that the XBRL tokens contained in the Stability Pool are not sufficient to offset all undercollateralized Troves, or that a trove’s debt can only be partially absorbed as the Stability Pool runs out of XBRL during a liquidation. In such a case, the system redistributes the remaining debt and collateral from the partially liquidated Trove as well as the remaining undercollateralized Troves to all existing positions.
 
 The redistribution of the collateral and debt is done in proportion to the recipient Trove’s collateral amount. This means that Troves which are heavily collateralized will receive more debt and collateral from liquidated positions than those with low collateralization, ensuring that the system does not create cascading liquidations.\\
 
@@ -248,7 +248,7 @@ The two charts show the Troves A, B, C and D with their debt and collateral amou
 Receiving collateral and debt shares should generally result in a \textbf{net gain for borrowers}, though at the same time it reduces their own collateral ratios. The risk of being drawn down and becoming undercollateralized as a recipient is minimal, and only affects Troves that are already very close to the Minimum Collateral Ratio (e.g. 111\%).
 
 \section{Recovery mode}
-System solvency depends on the amount of LUSD tokens in the Stability Pool and ultimately on the Total Collateral Ratio (TCR) across all Troves, given by the total collateral (in USD) divided by the total debt (in LUSD). 
+System solvency depends on the amount of XBRL tokens in the Stability Pool and ultimately on the Total Collateral Ratio (TCR) across all Troves, given by the total collateral (in USD) divided by the total debt (in XBRL). 
 
 To keep the system sufficiently collateralized even in times of crisis, the protocol incorporates a Recovery Mode, which is triggered as an \textbf{ultima ratio} if the TCR falls below the critical threshold of 150\%. In this special mode of operation, Troves with a collateral ratio between 110\% and the current TCR become subject to liquidation as well. Such extra liquidations are only possible against the Stability Pool (i.e. they are exempt from redistribution), and require that the entire debt can be liquidated at once. 
 

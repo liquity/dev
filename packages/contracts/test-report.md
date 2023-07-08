@@ -36,18 +36,18 @@ $ hardhat test
       ✓ decreaseTroveDebt(): reverts when called by an account that is not BorrowerOperations
     ActivePool
       ✓ sendETH(): reverts when called by an account that is not BO nor TroveM nor SP
-      ✓ increaseLUSDDebt(): reverts when called by an account that is not BO nor TroveM
-      ✓ decreaseLUSDDebt(): reverts when called by an account that is not BO nor TroveM nor SP
+      ✓ increaseXBRLDebt(): reverts when called by an account that is not BO nor TroveM
+      ✓ decreaseXBRLDebt(): reverts when called by an account that is not BO nor TroveM nor SP
       ✓ fallback(): reverts when called by an account that is not Borrower Operations nor Default Pool
     DefaultPool
       ✓ sendETHToActivePool(): reverts when called by an account that is not TroveManager
-      ✓ increaseLUSDDebt(): reverts when called by an account that is not TroveManager
-      ✓ decreaseLUSD(): reverts when called by an account that is not TroveManager
+      ✓ increaseXBRLDebt(): reverts when called by an account that is not TroveManager
+      ✓ decreaseXBRL(): reverts when called by an account that is not TroveManager
       ✓ fallback(): reverts when called by an account that is not the Active Pool
     StabilityPool
       ✓ offset(): reverts when called by an account that is not TroveManager
       ✓ fallback(): reverts when called by an account that is not the Active Pool
-    LUSDToken
+    XBRLToken
       ✓ mint(): reverts when called by an account that is not BorrowerOperations
       ✓ burn(): reverts when called by an account that is not BO nor TroveM nor SP
       ✓ sendToPool(): reverts when called by an account that is not StabilityPool
@@ -59,7 +59,7 @@ $ hardhat test
     LockupContract
       ✓ withdrawSTBL(): reverts when caller is not beneficiary (68ms)
     STBLStaking
-      ✓ increaseF_LUSD(): reverts when caller is not TroveManager
+      ✓ increaseF_XBRL(): reverts when caller is not TroveManager
     STBLToken
       ✓ sendToSTBLStaking(): reverts when caller is not the STBLSstaking (49ms)
     CommunityIssuance
@@ -73,7 +73,7 @@ $ hardhat test
       ✓ addColl(), active Trove: adds the correct collateral amount to the Trove (194ms)
       ✓ addColl(), active Trove: Trove is in sortedList before and after (213ms)
       ✓ addColl(), active Trove: updates the stake and updates the total stakes (225ms)
-      ✓ addColl(), active Trove: applies pending rewards and updates user's L_ETH, L_LUSDDebt snapshots (736ms)
+      ✓ addColl(), active Trove: applies pending rewards and updates user's L_ETH, L_XBRLDebt snapshots (736ms)
       ✓ addColl(), reverts if trove is non-existent or closed (831ms)
       ✓ addColl(): can add collateral in Recovery Mode (252ms)
       ✓ withdrawColl(): reverts when withdrawal would leave trove with ICR < MCR (349ms)
@@ -88,41 +88,41 @@ $ hardhat test
       ✓ withdrawColl(): reduces ActivePool ETH and raw ether by correct amount (291ms)
       ✓ withdrawColl(): updates the stake and updates the total stakes (342ms)
       ✓ withdrawColl(): sends the correct amount of ETH to the user (289ms)
-      ✓ withdrawColl(): applies pending rewards and updates user's L_ETH, L_LUSDDebt snapshots (1205ms)
-      ✓ withdrawLUSD(): reverts when withdrawal would leave trove with ICR < MCR (516ms)
-      ✓ withdrawLUSD(): decays a non-zero base rate (1192ms)
-      ✓ withdrawLUSD(): reverts if max fee > 100% (668ms)
-      ✓ withdrawLUSD(): reverts if max fee < 0.5% in Normal mode (639ms)
-      ✓ withdrawLUSD(): reverts if fee exceeds max fee percentage (938ms)
-      ✓ withdrawLUSD(): succeeds when fee is less than max fee percentage (1272ms)
-      ✓ withdrawLUSD(): doesn't change base rate if it is already zero (1044ms)
-      ✓ withdrawLUSD(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation (899ms)
-      ✓ withdrawLUSD(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity (852ms)
-      ✓ withdrawLUSD(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract (1004ms)
-      ✓ withdrawLUSD(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct (923ms)
-      ✓ withdrawLUSD(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked (986ms)
-      ✓ withdrawLUSD(): Borrowing at non-zero base rate sends requested amount to the user (1562ms)
-      ✓ withdrawLUSD(): Borrowing at zero base rate changes LUSD fees-per-unit-staked (839ms)
-      ✓ withdrawLUSD(): Borrowing at zero base rate sends debt request to user (790ms)
-      ✓ withdrawLUSD(): reverts when calling address does not have active trove (370ms)
-      ✓ withdrawLUSD(): reverts when requested withdrawal amount is zero LUSD (459ms)
-      ✓ withdrawLUSD(): reverts when system is in Recovery Mode (649ms)
-      ✓ withdrawLUSD(): reverts when withdrawal would bring the trove's ICR < MCR (347ms)
-      ✓ withdrawLUSD(): reverts when a withdrawal would cause the TCR of the system to fall below the CCR (439ms)
-      ✓ withdrawLUSD(): reverts if system is in Recovery Mode (312ms)
-      ✓ withdrawLUSD(): increases the Trove's LUSD debt by the correct amount (208ms)
-      ✓ withdrawLUSD(): increases LUSD debt in ActivePool by correct amount (230ms)
-      ✓ withdrawLUSD(): increases user LUSDToken balance by correct amount (243ms)
-      ✓ repayLUSD(): reverts when repayment would leave trove with ICR < MCR (392ms)
-      ✓ repayLUSD(): Succeeds when it would leave trove with net debt >= minimum net debt (435ms)
-      ✓ repayLUSD(): reverts when it would leave trove with net debt < minimum net debt (256ms)
-      ✓ repayLUSD(): reverts when calling address does not have active trove (431ms)
-      ✓ repayLUSD(): reverts when attempted repayment is > the debt of the trove (418ms)
-      ✓ repayLUSD(): reduces the Trove's LUSD debt by the correct amount (403ms)
-      ✓ repayLUSD(): decreases LUSD debt in ActivePool by correct amount (406ms)
-      ✓ repayLUSD(): decreases user LUSDToken balance by correct amount (404ms)
-      ✓ repayLUSD(): can repay debt in Recovery Mode (557ms)
-      ✓ repayLUSD(): Reverts if borrower has insufficient LUSD balance to cover his debt repayment (1122ms)
+      ✓ withdrawColl(): applies pending rewards and updates user's L_ETH, L_XBRLDebt snapshots (1205ms)
+      ✓ withdrawXBRL(): reverts when withdrawal would leave trove with ICR < MCR (516ms)
+      ✓ withdrawXBRL(): decays a non-zero base rate (1192ms)
+      ✓ withdrawXBRL(): reverts if max fee > 100% (668ms)
+      ✓ withdrawXBRL(): reverts if max fee < 0.5% in Normal mode (639ms)
+      ✓ withdrawXBRL(): reverts if fee exceeds max fee percentage (938ms)
+      ✓ withdrawXBRL(): succeeds when fee is less than max fee percentage (1272ms)
+      ✓ withdrawXBRL(): doesn't change base rate if it is already zero (1044ms)
+      ✓ withdrawXBRL(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation (899ms)
+      ✓ withdrawXBRL(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity (852ms)
+      ✓ withdrawXBRL(): borrowing at non-zero base rate sends XBRL fee to STBL staking contract (1004ms)
+      ✓ withdrawXBRL(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct (923ms)
+      ✓ withdrawXBRL(): Borrowing at non-zero base rate increases the STBL staking contract XBRL fees-per-unit-staked (986ms)
+      ✓ withdrawXBRL(): Borrowing at non-zero base rate sends requested amount to the user (1562ms)
+      ✓ withdrawXBRL(): Borrowing at zero base rate changes XBRL fees-per-unit-staked (839ms)
+      ✓ withdrawXBRL(): Borrowing at zero base rate sends debt request to user (790ms)
+      ✓ withdrawXBRL(): reverts when calling address does not have active trove (370ms)
+      ✓ withdrawXBRL(): reverts when requested withdrawal amount is zero XBRL (459ms)
+      ✓ withdrawXBRL(): reverts when system is in Recovery Mode (649ms)
+      ✓ withdrawXBRL(): reverts when withdrawal would bring the trove's ICR < MCR (347ms)
+      ✓ withdrawXBRL(): reverts when a withdrawal would cause the TCR of the system to fall below the CCR (439ms)
+      ✓ withdrawXBRL(): reverts if system is in Recovery Mode (312ms)
+      ✓ withdrawXBRL(): increases the Trove's XBRL debt by the correct amount (208ms)
+      ✓ withdrawXBRL(): increases XBRL debt in ActivePool by correct amount (230ms)
+      ✓ withdrawXBRL(): increases user XBRLToken balance by correct amount (243ms)
+      ✓ repayXBRL(): reverts when repayment would leave trove with ICR < MCR (392ms)
+      ✓ repayXBRL(): Succeeds when it would leave trove with net debt >= minimum net debt (435ms)
+      ✓ repayXBRL(): reverts when it would leave trove with net debt < minimum net debt (256ms)
+      ✓ repayXBRL(): reverts when calling address does not have active trove (431ms)
+      ✓ repayXBRL(): reverts when attempted repayment is > the debt of the trove (418ms)
+      ✓ repayXBRL(): reduces the Trove's XBRL debt by the correct amount (403ms)
+      ✓ repayXBRL(): decreases XBRL debt in ActivePool by correct amount (406ms)
+      ✓ repayXBRL(): decreases user XBRLToken balance by correct amount (404ms)
+      ✓ repayXBRL(): can repay debt in Recovery Mode (557ms)
+      ✓ repayXBRL(): Reverts if borrower has insufficient XBRL balance to cover his debt repayment (1122ms)
       ✓ adjustTrove(): reverts when adjustment would leave trove with ICR < MCR (572ms)
       ✓ adjustTrove(): reverts if max fee < 0.5% in Normal mode (313ms)
       ✓ adjustTrove(): allows max fee < 0.5% in Recovery mode (577ms)
@@ -131,13 +131,13 @@ $ hardhat test
       ✓ adjustTrove(): doesn't change base rate if it is already zero (545ms)
       ✓ adjustTrove(): lastFeeOpTime doesn't update if less time than decay interval has passed since the last fee operation (819ms)
       ✓ adjustTrove(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity (866ms)
-      ✓ adjustTrove(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract (889ms)
+      ✓ adjustTrove(): borrowing at non-zero base rate sends XBRL fee to STBL staking contract (889ms)
       ✓ adjustTrove(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct (1013ms)
-      ✓ adjustTrove(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked (837ms)
+      ✓ adjustTrove(): Borrowing at non-zero base rate increases the STBL staking contract XBRL fees-per-unit-staked (837ms)
       ✓ adjustTrove(): Borrowing at non-zero base rate sends requested amount to the user (895ms)
-      ✓ adjustTrove(): Borrowing at zero base rate changes LUSD balance of STBL staking contract (783ms)
-      ✓ adjustTrove(): Borrowing at zero base rate changes STBL staking contract LUSD fees-per-unit-staked (881ms)
-      ✓ adjustTrove(): Borrowing at zero base rate sends total requested LUSD to the user (783ms)
+      ✓ adjustTrove(): Borrowing at zero base rate changes XBRL balance of STBL staking contract (783ms)
+      ✓ adjustTrove(): Borrowing at zero base rate changes STBL staking contract XBRL fees-per-unit-staked (881ms)
+      ✓ adjustTrove(): Borrowing at zero base rate sends total requested XBRL to the user (783ms)
       ✓ adjustTrove(): reverts when calling address has no active trove (416ms)
       ✓ adjustTrove(): reverts in Recovery Mode when the adjustment would reduce the TCR (654ms)
       ✓ adjustTrove(): collateral withdrawal reverts in Recovery Mode (370ms)
@@ -147,7 +147,7 @@ $ hardhat test
       ✓ adjustTrove(): A trove with ICR > CCR in Recovery Mode can improve their ICR (524ms)
       ✓ adjustTrove(): debt increase in Recovery Mode charges no fee (543ms)
       ✓ adjustTrove(): reverts when change would cause the TCR of the system to fall below the CCR (587ms)
-      ✓ adjustTrove(): reverts when LUSD repaid is > debt of the trove (451ms)
+      ✓ adjustTrove(): reverts when XBRL repaid is > debt of the trove (451ms)
       ✓ adjustTrove(): reverts when attempted ETH withdrawal is >= the trove's collateral (683ms)
       ✓ adjustTrove(): reverts when change would cause the ICR of the trove to fall below the MCR (521ms)
       ✓ adjustTrove(): With 0 coll change, doesnt change borrower's coll or ActivePool coll (289ms)
@@ -158,18 +158,18 @@ $ hardhat test
       ✓ adjustTrove(): updates borrower's debt and coll with coll decrease, debt increase (346ms)
       ✓ adjustTrove(): updates borrower's stake and totalStakes with a coll increase (385ms)
       ✓ adjustTrove():  updates borrower's stake and totalStakes with a coll decrease (553ms)
-      ✓ adjustTrove(): changes LUSDToken balance by the requested decrease (529ms)
-      ✓ adjustTrove(): changes LUSDToken balance by the requested increase (577ms)
+      ✓ adjustTrove(): changes XBRLToken balance by the requested decrease (529ms)
+      ✓ adjustTrove(): changes XBRLToken balance by the requested increase (577ms)
       ✓ adjustTrove(): Changes the activePool ETH and raw ether balance by the requested decrease (1371ms)
       ✓ adjustTrove(): Changes the activePool ETH and raw ether balance by the amount of ETH sent (548ms)
-      ✓ adjustTrove(): Changes the LUSD debt in ActivePool by requested decrease (541ms)
-      ✓ adjustTrove(): Changes the LUSD debt in ActivePool by requested increase (397ms)
+      ✓ adjustTrove(): Changes the XBRL debt in ActivePool by requested decrease (541ms)
+      ✓ adjustTrove(): Changes the XBRL debt in ActivePool by requested increase (397ms)
       ✓ adjustTrove(): new coll = 0 and new debt = 0 is not allowed, as gas compensation still counts toward ICR (385ms)
       ✓ adjustTrove(): Reverts if requested debt increase and amount is zero (292ms)
       ✓ adjustTrove(): Reverts if requested coll withdrawal and ether is sent (288ms)
       ✓ adjustTrove(): Reverts if it’s zero adjustment (137ms)
       ✓ adjustTrove(): Reverts if requested coll withdrawal is greater than trove's collateral (402ms)
-      ✓ adjustTrove(): Reverts if borrower has insufficient LUSD balance to cover his debt repayment (496ms)
+      ✓ adjustTrove(): Reverts if borrower has insufficient XBRL balance to cover his debt repayment (496ms)
       ✓ Internal _adjustTrove(): reverts when op is a withdrawal and _borrower param is not the msg.sender (475ms)
       ✓ closeTrove(): reverts when it would lower the TCR below CCR (471ms)
       ✓ closeTrove(): reverts when calling address does not have active trove (221ms)
@@ -184,9 +184,9 @@ $ hardhat test
       ✓ closeTrove(): reduces ActivePool debt by correct amount (522ms)
       ✓ closeTrove(): updates the the total stakes (790ms)
       ✓ closeTrove(): sends the correct amount of ETH to the user (390ms)
-      ✓ closeTrove(): subtracts the debt of the closed Trove from the Borrower's LUSDToken balance (405ms)
+      ✓ closeTrove(): subtracts the debt of the closed Trove from the Borrower's XBRLToken balance (405ms)
       ✓ closeTrove(): applies pending rewards (1267ms)
-      ✓ closeTrove(): reverts if borrower has insufficient LUSD balance to repay his entire debt (347ms)
+      ✓ closeTrove(): reverts if borrower has insufficient XBRL balance to repay his entire debt (347ms)
       ✓ openTrove(): emits a TroveUpdated event with the correct collateral and debt (820ms)
       ✓ openTrove(): Opens a trove with net debt >= minimum net debt (235ms)
       ✓ openTrove(): reverts if net debt < minimum net debt (294ms)
@@ -199,11 +199,11 @@ $ hardhat test
       ✓ openTrove(): reverts if fee exceeds max fee percentage (747ms)
       ✓ openTrove(): succeeds when fee is less than max fee percentage (930ms)
       ✓ openTrove(): borrower can't grief the baseRate and stop it decaying by issuing debt at higher frequency than the decay granularity (965ms)
-      ✓ openTrove(): borrowing at non-zero base rate sends LUSD fee to STBL staking contract (923ms)
+      ✓ openTrove(): borrowing at non-zero base rate sends XBRL fee to STBL staking contract (923ms)
       ✓ openTrove(): borrowing at non-zero base records the (drawn debt + fee  + liq. reserve) on the Trove struct (865ms)
-      ✓ openTrove(): Borrowing at non-zero base rate increases the STBL staking contract LUSD fees-per-unit-staked (794ms)
+      ✓ openTrove(): Borrowing at non-zero base rate increases the STBL staking contract XBRL fees-per-unit-staked (794ms)
       ✓ openTrove(): Borrowing at non-zero base rate sends requested amount to the user (832ms)
-      ✓ openTrove(): Borrowing at zero base rate changes the STBL staking contract LUSD fees-per-unit-staked (602ms)
+      ✓ openTrove(): Borrowing at zero base rate changes the STBL staking contract XBRL fees-per-unit-staked (602ms)
       ✓ openTrove(): Borrowing at zero base rate charges minimum fee (316ms)
       ✓ openTrove(): reverts when system is in Recovery Mode and ICR < CCR (320ms)
       ✓ openTrove(): reverts when trove ICR < MCR (536ms)
@@ -216,11 +216,11 @@ $ hardhat test
       ✓ openTrove(): creates a stake and adds it to total stakes (281ms)
       ✓ openTrove(): inserts Trove to Sorted Troves list (370ms)
       ✓ openTrove(): Increases the activePool ETH and raw ether balance by correct amount (294ms)
-      ✓ openTrove(): records up-to-date initial snapshots of L_ETH and L_LUSDDebt (639ms)
+      ✓ openTrove(): records up-to-date initial snapshots of L_ETH and L_XBRLDebt (639ms)
       ✓ openTrove(): allows a user to open a Trove, then close it, then re-open it (687ms)
-      ✓ openTrove(): increases the Trove's LUSD debt by the correct amount (129ms)
-      ✓ openTrove(): increases LUSD debt in ActivePool by the debt of the trove (162ms)
-      ✓ openTrove(): increases user LUSDToken balance by correct amount (85ms)
+      ✓ openTrove(): increases the Trove's XBRL debt by the correct amount (129ms)
+      ✓ openTrove(): increases XBRL debt in ActivePool by the debt of the trove (162ms)
+      ✓ openTrove(): increases user XBRLToken balance by correct amount (85ms)
       ✓ getCompositeDebt(): returns debt + gas comp
       ✓ closeTrove(): fails if owner cannot receive ETH (440ms)
       getNewICRFromTroveChange() returns the correct ICR
@@ -254,7 +254,7 @@ $ hardhat test
 
   Contract: Deployment script - Sets correct contract addresses dependencies after deployment
     ✓ Sets the correct PriceFeed address in TroveManager
-    ✓ Sets the correct LUSDToken address in TroveManager
+    ✓ Sets the correct XBRLToken address in TroveManager
     ✓ Sets the correct SortedTroves address in TroveManager
     ✓ Sets the correct BorrowerOperations address in TroveManager
     ✓ Sets the correct ActivePool address in TroveManager
@@ -267,7 +267,7 @@ $ hardhat test
     ✓ Sets the correct TroveManager address in ActivePool
     ✓ Sets the correct ActivePool address in StabilityPool
     ✓ Sets the correct BorrowerOperations address in StabilityPool
-    ✓ Sets the correct LUSDToken address in StabilityPool
+    ✓ Sets the correct XBRLToken address in StabilityPool
     ✓ Sets the correct TroveManager address in StabilityPool
     ✓ Sets the correct TroveManager address in DefaultPool
     ✓ Sets the correct ActivePool address in DefaultPool
@@ -547,19 +547,19 @@ issuance fraction after: 949066037374286
     ✓ stake(): reverts if amount is zero (74ms)
     ✓ ETH fee per STBL staked increases when a redemption fee is triggered and totalStakes > 0 (1562ms)
     ✓ ETH fee per STBL staked doesn't change when a redemption fee is triggered and totalStakes == 0 (3540ms)
-    ✓ LUSD fee per STBL staked increases when a redemption fee is triggered and totalStakes > 0 (1757ms)
-    ✓ LUSD fee per STBL staked doesn't change when a redemption fee is triggered and totalStakes == 0 (1705ms)
+    ✓ XBRL fee per STBL staked increases when a redemption fee is triggered and totalStakes > 0 (1757ms)
+    ✓ XBRL fee per STBL staked doesn't change when a redemption fee is triggered and totalStakes == 0 (1705ms)
     ✓ STBL Staking: A single staker earns all ETH and STBL fees that occur (2143ms)
-    ✓ stake(): Top-up sends out all accumulated ETH and LUSD gains to the staker (2138ms)
+    ✓ stake(): Top-up sends out all accumulated ETH and XBRL gains to the staker (2138ms)
     ✓ getPendingETHGain(): Returns the staker's correct pending ETH gain (1856ms)
-    ✓ getPendingLUSDGain(): Returns the staker's correct pending LUSD gain (1965ms)
+    ✓ getPendingXBRLGain(): Returns the staker's correct pending XBRL gain (1965ms)
     ✓ STBL Staking: Multiple stakers earn the correct share of all ETH and STBL fees, based on their stake size (3133ms)
     ✓ unstake(): reverts if caller has ETH gains and can't receive ETH (1149ms)
     ✓ receive(): reverts when it receives ETH from an address that is not the Active Pool
     ✓ unstake(): reverts if user has no stake
     ✓ Test requireCallerIsTroveManager
 
-  Contract: LUSDToken
+  Contract: XBRLToken
     Basic token functions, without Proxy
       ✓ balanceOf(): gets the balance of the account
       ✓ totalSupply(): gets the total supply
@@ -628,20 +628,20 @@ issuance fraction after: 949066037374286
 
   Contract: StabilityPool
     ✓ getETH(): gets the recorded ETH balance
-    ✓ getTotalLUSDDeposits(): gets the recorded LUSD balance
+    ✓ getTotalXBRLDeposits(): gets the recorded XBRL balance
 
   Contract: ActivePool
     ✓ getETH(): gets the recorded ETH balance
-    ✓ getLUSDDebt(): gets the recorded LUSD balance
-    ✓ increaseLUSD(): increases the recorded LUSD balance by the correct amount
-    ✓ decreaseLUSD(): decreases the recorded LUSD balance by the correct amount
+    ✓ getXBRLDebt(): gets the recorded XBRL balance
+    ✓ increaseXBRL(): increases the recorded XBRL balance by the correct amount
+    ✓ decreaseXBRL(): decreases the recorded XBRL balance by the correct amount
     ✓ sendETH(): decreases the recorded ETH balance by the correct amount
 
   Contract: DefaultPool
-    ✓ getETH(): gets the recorded LUSD balance
-    ✓ getLUSDDebt(): gets the recorded LUSD balance
-    ✓ increaseLUSD(): increases the recorded LUSD balance by the correct amount
-    ✓ decreaseLUSD(): decreases the recorded LUSD balance by the correct amount (57ms)
+    ✓ getETH(): gets the recorded XBRL balance
+    ✓ getXBRLDebt(): gets the recorded XBRL balance
+    ✓ increaseXBRL(): increases the recorded XBRL balance by the correct amount
+    ✓ decreaseXBRL(): decreases the recorded XBRL balance by the correct amount (57ms)
     ✓ sendETHToActivePool(): decreases the recorded ETH balance by the correct amount (50ms)
 
   Contract: PriceFeed
@@ -773,8 +773,8 @@ issuance fraction after: 949066037374286
     ✓ claimStakingGainsAndRecycle(): only owner can call it (1384ms)
     ✓ claimStakingGainsAndRecycle(): reverts if user has no trove (1253ms)
     ✓ claimStakingGainsAndRecycle(): with only ETH gain (1595ms)
-    ✓ claimStakingGainsAndRecycle(): with only LUSD gain (821ms)
-    ✓ claimStakingGainsAndRecycle(): with both ETH and LUSD gains (1593ms)
+    ✓ claimStakingGainsAndRecycle(): with only XBRL gain (821ms)
+    ✓ claimStakingGainsAndRecycle(): with both ETH and XBRL gains (1593ms)
 
   Contract: SortedTroves
     SortedTroves
@@ -812,31 +812,31 @@ totalSTBLIssued_2: 30370113195977152000000
       ✓ withdrawFromSP(): Depositors with varying initial deposit withdraw correct STBL gain. No liquidations. No front end. (1925ms)
       ✓ withdrawFromSP(): Depositor withdraws correct STBL gain after serial pool-emptying liquidations. No front-ends. (5752ms)
       ✓ STBL issuance for a given period is not obtainable if the SP was empty during the period (551ms)
-      ✓ withdrawFromSP(): Several deposits of 100 LUSD span one scale factor change. Depositors withdraw correct STBL gains (6075ms)
+      ✓ withdrawFromSP(): Several deposits of 100 XBRL span one scale factor change. Depositors withdraw correct STBL gains (6075ms)
       ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct STBL gain. No liquidations. Front ends and kickback rates. (1660ms)
       ✓ withdrawFromSP(): Depositors with varying initial deposit withdraw correct STBL gain. Front ends and kickback rates (2813ms)
-      ✓ withdrawFromSP(): Several deposits of 10k LUSD span one scale factor change. Depositors withdraw correct STBL gains (4788ms)
+      ✓ withdrawFromSP(): Several deposits of 10k XBRL span one scale factor change. Depositors withdraw correct STBL gains (4788ms)
 
   Contract: Pool Manager: Sum-Product rounding errors
-    - Rounding errors: 100 deposits of 100LUSD into SP, then 200 liquidations of 49LUSD
+    - Rounding errors: 100 deposits of 100XBRL into SP, then 200 liquidations of 49XBRL
 
   Contract: StabilityPool - Withdrawal of stability deposit - Reward calculations
     Stability Pool Withdrawal
       ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after one liquidation (757ms)
       ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two identical liquidations (868ms)
       ✓ withdrawFromSP():  Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three identical liquidations (1051ms)
-      ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two liquidations of increasing LUSD (965ms)
-      ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three liquidations of increasing LUSD (1152ms)
+      ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two liquidations of increasing XBRL (965ms)
+      ✓ withdrawFromSP(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three liquidations of increasing XBRL (1152ms)
       ✓ withdrawFromSP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after two identical liquidations (934ms)
       ✓ withdrawFromSP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three identical liquidations (1130ms)
       ✓ withdrawFromSP(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three varying liquidations (1193ms)
 
-      ✓ withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 1 liquidation. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (1512ms)
-      ✓ withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (1637ms)
-      ✓ withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. Various deposit and liquidation vals.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (1645ms)
-      ✓ withdrawFromSP(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (1704ms)
-      ✓ withdrawFromSP(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. Various deposit and liquidation vals. A, B, C, D withdraw correct LUSD deposit and ETH Gain (1753ms)
-      ✓ withdrawFromSP(): A, B, D deposit -> 2 liquidations -> C makes deposit -> 1 liquidation -> D withdraws -> 1 liquidation. All deposits: 100 LUSD. Liquidations: 100,100,100,50.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (1537ms)
+      ✓ withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 1 liquidation. All deposits and liquidations = 100 XBRL.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (1512ms)
+      ✓ withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. All deposits and liquidations = 100 XBRL.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (1637ms)
+      ✓ withdrawFromSP(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. Various deposit and liquidation vals.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (1645ms)
+      ✓ withdrawFromSP(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. All deposits and liquidations = 100 XBRL.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (1704ms)
+      ✓ withdrawFromSP(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. Various deposit and liquidation vals. A, B, C, D withdraw correct XBRL deposit and ETH Gain (1753ms)
+      ✓ withdrawFromSP(): A, B, D deposit -> 2 liquidations -> C makes deposit -> 1 liquidation -> D withdraws -> 1 liquidation. All deposits: 100 XBRL. Liquidations: 100,100,100,50.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (1537ms)
       ✓ withdrawFromSP(): Depositor withdraws correct compounded deposit after liquidation empties the pool (3424ms)
       ✓ withdrawFromSP(): Pool-emptying liquidation increases epoch by one, resets scaleFactor to 0, and resets P to 1e18 (1678ms)
       ✓ withdrawFromSP(): Depositors withdraw correct compounded deposit after liquidation empties the pool (1100ms)
@@ -848,7 +848,7 @@ totalSTBLIssued_2: 30370113195977152000000
       ✓ withdrawFromSP(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation (3494ms)
 alice deposit: 0
       ✓ withdrawFromSP(): Deposit that decreases to less than 1e-9 of it's original value is reduced to 0 (365ms)
-      ✓ withdrawFromSP(): Several deposits of 10000 LUSD span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation (1676ms)
+      ✓ withdrawFromSP(): Several deposits of 10000 XBRL span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation (1676ms)
       ✓ withdrawFromSP(): 2 depositors can withdraw after each receiving half of a pool-emptying liquidation (1848ms)
       ✓ withdrawFromSP(): Depositor's ETH gain stops increasing after two scale changes (4134ms)
       ✓ withdrawFromSP(): Large liquidated coll/debt, deposits and ETH price (932ms)
@@ -859,18 +859,18 @@ alice deposit: 0
       ✓ withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after one liquidation (1227ms)
       ✓ withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two identical liquidations (1400ms)
       ✓ withdrawETHGainToTrove():  Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three identical liquidations (1827ms)
-      ✓ withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two liquidations of increasing LUSD (1597ms)
-      ✓ withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three liquidations of increasing LUSD (1711ms)
+      ✓ withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after two liquidations of increasing XBRL (1597ms)
+      ✓ withdrawETHGainToTrove(): Depositors with equal initial deposit withdraw correct compounded deposit and ETH Gain after three liquidations of increasing XBRL (1711ms)
       ✓ withdrawETHGainToTrove(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after two identical liquidations (1782ms)
       ✓ withdrawETHGainToTrove(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three identical liquidations (1798ms)
       ✓ withdrawETHGainToTrove(): Depositors with varying deposits withdraw correct compounded deposit and ETH Gain after three varying liquidations (4488ms)
 
-      ✓ withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 1 liquidation. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (2168ms)
-      ✓ withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (5085ms)
-      ✓ withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. Various deposit and liquidation vals.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (2304ms)
-      ✓ withdrawETHGainToTrove(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. All deposits and liquidations = 100 LUSD.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (2335ms)
-      ✓ withdrawETHGainToTrove(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. Various deposit and liquidation vals. A, B, C, D withdraw correct LUSD deposit and ETH Gain (2145ms)
-      ✓ withdrawETHGainToTrove(): A, B, D deposit -> 2 liquidations -> C makes deposit -> 1 liquidation -> D withdraws -> 1 liquidation. All deposits: 100 LUSD. Liquidations: 100,100,100,50.  A, B, C, D withdraw correct LUSD deposit and ETH Gain (2543ms)
+      ✓ withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 1 liquidation. All deposits and liquidations = 100 XBRL.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (2168ms)
+      ✓ withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. All deposits and liquidations = 100 XBRL.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (5085ms)
+      ✓ withdrawETHGainToTrove(): A, B, C Deposit -> 2 liquidations -> D deposits -> 2 liquidations. Various deposit and liquidation vals.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (2304ms)
+      ✓ withdrawETHGainToTrove(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. All deposits and liquidations = 100 XBRL.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (2335ms)
+      ✓ withdrawETHGainToTrove(): A, B, C, D deposit -> 2 liquidations -> D withdraws -> 2 liquidations. Various deposit and liquidation vals. A, B, C, D withdraw correct XBRL deposit and ETH Gain (2145ms)
+      ✓ withdrawETHGainToTrove(): A, B, D deposit -> 2 liquidations -> C makes deposit -> 1 liquidation -> D withdraws -> 1 liquidation. All deposits: 100 XBRL. Liquidations: 100,100,100,50.  A, B, C, D withdraw correct XBRL deposit and ETH Gain (2543ms)
       ✓ withdrawETHGainToTrove(): Depositor withdraws correct compounded deposit after liquidation empties the pool (1889ms)
       ✓ withdrawETHGainToTrove(): Pool-emptying liquidation increases epoch by one, resets scaleFactor to 0, and resets P to 1e18 (1891ms)
       ✓ withdrawETHGainToTrove(): Depositors withdraw correct compounded deposit after liquidation empties the pool (2324ms)
@@ -882,27 +882,27 @@ alice deposit: 0
       ✓ withdrawETHGainToTrove(): Several deposits of varying amounts span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation (1986ms)
 alice deposit: 0
       ✓ withdrawETHGainToTrove(): Deposit that decreases to less than 1e-9 of it's original value is reduced to 0 (3725ms)
-      ✓ withdrawETHGainToTrove(): Several deposits of 10000 LUSD span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation (2361ms)
+      ✓ withdrawETHGainToTrove(): Several deposits of 10000 XBRL span one scale factor change. Depositors withdraws correct compounded deposit and ETH Gain after one liquidation (2361ms)
       ✓ withdrawETHGainToTrove(): 2 depositors can withdraw after each receiving half of a pool-emptying liquidation (3814ms)
       ✓ withdrawETHGainToTrove(): Large liquidated coll/debt, deposits and ETH price (959ms)
       ✓ withdrawETHGainToTrove(): Small liquidated coll/debt, large deposits and ETH price (784ms)
 
   Contract: StabilityPool
     Stability Pool Mechanisms
-      ✓ provideToSP(): increases the Stability Pool LUSD balance (354ms)
+      ✓ provideToSP(): increases the Stability Pool XBRL balance (354ms)
       ✓ provideToSP(): updates the user's deposit record in StabilityPool (355ms)
-      ✓ provideToSP(): reduces the user's LUSD balance by the correct amount (321ms)
-      ✓ provideToSP(): increases totalLUSDDeposits by correct amount (283ms)
+      ✓ provideToSP(): reduces the user's XBRL balance by the correct amount (321ms)
+      ✓ provideToSP(): increases totalXBRLDeposits by correct amount (283ms)
       ✓ provideToSP(): Correctly updates user snapshots of accumulated rewards per unit staked (4003ms)
       ✓ provideToSP(), multiple deposits: updates user's deposit and snapshots (2543ms)
-      ✓ provideToSP(): reverts if user tries to provide more than their LUSD balance (1030ms)
-      ✓ provideToSP(): reverts if user tries to provide 2^256-1 LUSD, which exceeds their balance (508ms)
+      ✓ provideToSP(): reverts if user tries to provide more than their XBRL balance (1030ms)
+      ✓ provideToSP(): reverts if user tries to provide 2^256-1 XBRL, which exceeds their balance (508ms)
       ✓ provideToSP(): reverts if cannot receive ETH Gain (1073ms)
       ✓ provideToSP(): doesn't impact other users' deposits or ETH gains (1906ms)
       ✓ provideToSP(): doesn't impact system debt, collateral or TCR (2287ms)
       ✓ provideToSP(): doesn't impact any troves, including the caller's trove (1810ms)
       ✓ provideToSP(): doesn't protect the depositor's trove from liquidation (1082ms)
-      ✓ provideToSP(): providing 0 LUSD reverts (1091ms)
+      ✓ provideToSP(): providing 0 XBRL reverts (1091ms)
       ✓ provideToSP(), new deposit: when SP > 0, triggers STBL reward event - increases the sum G (1072ms)
       ✓ provideToSP(), new deposit: when SP is empty, doesn't update G (4734ms)
       ✓ provideToSP(), new deposit: sets the correct front end tag (1128ms)
@@ -924,22 +924,22 @@ alice deposit: 0
       ✓ provideToSP(): reverts if provided tag is not a registered front end (587ms)
       ✓ withdrawFromSP(): reverts when user has no active deposit (597ms)
       ✓ withdrawFromSP(): reverts when amount > 0 and system has an undercollateralized trove (453ms)
-      ✓ withdrawFromSP(): partial retrieval - retrieves correct LUSD amount and the entire ETH Gain, and updates deposit (1102ms)
-      ✓ withdrawFromSP(): partial retrieval - leaves the correct amount of LUSD in the Stability Pool (1128ms)
-      ✓ withdrawFromSP(): full retrieval - leaves the correct amount of LUSD in the Stability Pool (1091ms)
+      ✓ withdrawFromSP(): partial retrieval - retrieves correct XBRL amount and the entire ETH Gain, and updates deposit (1102ms)
+      ✓ withdrawFromSP(): partial retrieval - leaves the correct amount of XBRL in the Stability Pool (1128ms)
+      ✓ withdrawFromSP(): full retrieval - leaves the correct amount of XBRL in the Stability Pool (1091ms)
       ✓ withdrawFromSP(): Subsequent deposit and withdrawal attempt from same account, with no intermediate liquidations, withdraws zero ETH (1494ms)
-      ✓ withdrawFromSP(): it correctly updates the user's LUSD and ETH snapshots of entitled reward per unit staked (1049ms)
+      ✓ withdrawFromSP(): it correctly updates the user's XBRL and ETH snapshots of entitled reward per unit staked (1049ms)
       ✓ withdrawFromSP(): decreases StabilityPool ETH (3952ms)
       ✓ withdrawFromSP(): All depositors are able to withdraw from the SP to their account (2393ms)
-      ✓ withdrawFromSP(): increases depositor's LUSD token balance by the expected amount (2098ms)
+      ✓ withdrawFromSP(): increases depositor's XBRL token balance by the expected amount (2098ms)
       ✓ withdrawFromSP(): doesn't impact other users Stability deposits or ETH gains (4954ms)
       ✓ withdrawFromSP(): doesn't impact system debt, collateral or TCR  (1500ms)
       ✓ withdrawFromSP(): doesn't impact any troves, including the caller's trove (1085ms)
       ✓ withdrawFromSP(): succeeds when amount is 0 and system has an undercollateralized trove (933ms)
-      ✓ withdrawFromSP(): withdrawing 0 LUSD doesn't alter the caller's deposit or the total LUSD in the Stability Pool (993ms)
+      ✓ withdrawFromSP(): withdrawing 0 XBRL doesn't alter the caller's deposit or the total XBRL in the Stability Pool (993ms)
       ✓ withdrawFromSP(): withdrawing 0 ETH Gain does not alter the caller's ETH balance, their trove collateral, or the ETH  in the Stability Pool (1139ms)
       ✓ withdrawFromSP(): Request to withdraw > caller's deposit only withdraws the caller's compounded deposit (1260ms)
-      ✓ withdrawFromSP(): Request to withdraw 2^256-1 LUSD only withdraws the caller's compounded deposit (1229ms)
+      ✓ withdrawFromSP(): Request to withdraw 2^256-1 XBRL only withdraws the caller's compounded deposit (1229ms)
       ✓ withdrawFromSP(): caller can withdraw full deposit and ETH gain during Recovery Mode (4371ms)
       ✓ getDepositorETHGain(): depositor does not earn further ETH gains from liquidations while their compounded deposit == 0:  (1831ms)
       ✓ withdrawFromSP(): triggers STBL reward event - increases the sum G (982ms)
@@ -953,7 +953,7 @@ alice deposit: 0
       ✓ withdrawFromSP(), full withdrawal that reduces front end stake to 0: zero’s the front end’s snapshots (1248ms)
       ✓ withdrawFromSP(), reverts when initial deposit value is 0 (1037ms)
       ✓ withdrawETHGainToTrove(): reverts when user has no active deposit (1043ms)
-      ✓ withdrawETHGainToTrove(): Applies LUSDLoss to user's deposit, and redirects ETH reward to user's Trove (932ms)
+      ✓ withdrawETHGainToTrove(): Applies XBRLLoss to user's deposit, and redirects ETH reward to user's Trove (932ms)
       ✓ withdrawETHGainToTrove(): reverts if it would leave trove with ICR < MCR (3920ms)
       ✓ withdrawETHGainToTrove(): Subsequent deposit and withdrawal attempt from same account, with no intermediate liquidations, withdraws zero ETH (976ms)
       ✓ withdrawETHGainToTrove(): decreases StabilityPool ETH and increases activePool ETH (976ms)
@@ -1044,19 +1044,19 @@ B stake after A11: 39999999999999999998008332745
     ✓ liquidate(), with 100% < ICR < 110%: closes the Trove and removes it from the Trove array (965ms)
     ✓ liquidate(), with 100% < ICR < 110%: offsets as much debt as possible with the Stability Pool, then redistributes the remainder coll and debt (1034ms)
     ✓ liquidate(), with ICR > 110%, trove has lowest ICR, and StabilityPool is empty: does nothing (1245ms)
-    ✓ liquidate(), with 110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: offsets the trove entirely with the pool (1265ms)
-    ✓ liquidate(), with ICR% = 110 < TCR, and StabilityPool LUSD > debt to liquidate: offsets the trove entirely with the pool, there’s no collateral surplus (1382ms)
-    ✓ liquidate(), with  110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: removes stake and updates totalStakes (1361ms)
-    ✓ liquidate(), with  110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: updates system snapshots (1287ms)
-    ✓ liquidate(), with 110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: closes the Trove (6532ms)
-    ✓ liquidate(), with 110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: can liquidate troves out of order (2667ms)
-    ✓ liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: Trove remains active (985ms)
-    ✓ liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: Trove remains in TroveOwners array (1134ms)
-    ✓ liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: nothing happens (1146ms)
-    ✓ liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: updates system shapshots (1284ms)
-    ✓ liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: causes correct Pool offset and ETH gain, and doesn't redistribute to active troves (1266ms)
-    ✓ liquidate(), with ICR > 110%, and StabilityPool LUSD < liquidated debt: ICR of non liquidated trove does not change (2161ms)
-    ✓ liquidate() with ICR > 110%, and StabilityPool LUSD < liquidated debt: total liquidated coll and debt is correct (1912ms)
+    ✓ liquidate(), with 110% < ICR < TCR, and StabilityPool XBRL > debt to liquidate: offsets the trove entirely with the pool (1265ms)
+    ✓ liquidate(), with ICR% = 110 < TCR, and StabilityPool XBRL > debt to liquidate: offsets the trove entirely with the pool, there’s no collateral surplus (1382ms)
+    ✓ liquidate(), with  110% < ICR < TCR, and StabilityPool XBRL > debt to liquidate: removes stake and updates totalStakes (1361ms)
+    ✓ liquidate(), with  110% < ICR < TCR, and StabilityPool XBRL > debt to liquidate: updates system snapshots (1287ms)
+    ✓ liquidate(), with 110% < ICR < TCR, and StabilityPool XBRL > debt to liquidate: closes the Trove (6532ms)
+    ✓ liquidate(), with 110% < ICR < TCR, and StabilityPool XBRL > debt to liquidate: can liquidate troves out of order (2667ms)
+    ✓ liquidate(), with ICR > 110%, and StabilityPool XBRL < liquidated debt: Trove remains active (985ms)
+    ✓ liquidate(), with ICR > 110%, and StabilityPool XBRL < liquidated debt: Trove remains in TroveOwners array (1134ms)
+    ✓ liquidate(), with ICR > 110%, and StabilityPool XBRL < liquidated debt: nothing happens (1146ms)
+    ✓ liquidate(), with ICR > 110%, and StabilityPool XBRL < liquidated debt: updates system shapshots (1284ms)
+    ✓ liquidate(), with ICR > 110%, and StabilityPool XBRL < liquidated debt: causes correct Pool offset and ETH gain, and doesn't redistribute to active troves (1266ms)
+    ✓ liquidate(), with ICR > 110%, and StabilityPool XBRL < liquidated debt: ICR of non liquidated trove does not change (2161ms)
+    ✓ liquidate() with ICR > 110%, and StabilityPool XBRL < liquidated debt: total liquidated coll and debt is correct (1912ms)
     ✓ liquidate(): Doesn't liquidate undercollateralized trove if it is the only trove in the system (652ms)
     ✓ liquidate(): Liquidates undercollateralized trove if there are two troves in the system (997ms)
     ✓ liquidate(): does nothing if trove has >= 110% ICR and the Stability Pool is empty (1019ms)
@@ -1104,7 +1104,7 @@ gasUsed:  636956
     ✓ batchLiquidateTroves() with a non fullfilled liquidation: total liquidated coll and debt is correct (1320ms)
     ✓ batchLiquidateTroves() with a non fullfilled liquidation: emits correct liquidation event values (1238ms)
     ✓ batchLiquidateTroves() with a non fullfilled liquidation: ICR of non liquidated trove does not change (1416ms)
-    ✓ batchLiquidateTroves(), with 110% < ICR < TCR, and StabilityPool LUSD > debt to liquidate: can liquidate troves out of order (1357ms)
+    ✓ batchLiquidateTroves(), with 110% < ICR < TCR, and StabilityPool XBRL > debt to liquidate: can liquidate troves out of order (1357ms)
     ✓ batchLiquidateTroves(), with 110% < ICR < TCR, and StabilityPool empty: doesn't liquidate any troves (1161ms)
     ✓ batchLiquidateTroves(): skips liquidation of troves with ICR > TCR, regardless of Stability Pool size (2686ms)
     ✓ batchLiquidateTroves(): emits liquidation event with correct values when all troves have ICR > 110% and Stability Pool covers a subset of troves (1530ms)
@@ -1112,12 +1112,12 @@ gasUsed:  636956
 
   Contract: TroveManager
     ✓ liquidate(): closes a Trove that has ICR < MCR (573ms)
-    ✓ liquidate(): decreases ActivePool ETH and LUSDDebt by correct amounts (567ms)
-    ✓ liquidate(): increases DefaultPool ETH and LUSD debt by correct amounts (553ms)
+    ✓ liquidate(): decreases ActivePool ETH and XBRLDebt by correct amounts (567ms)
+    ✓ liquidate(): increases DefaultPool ETH and XBRL debt by correct amounts (553ms)
     ✓ liquidate(): removes the Trove's stake from the total stakes (608ms)
     ✓ liquidate(): Removes the correct trove from the TroveOwners array, and moves the last array element to the new empty slot (1276ms)
     ✓ liquidate(): updates the snapshots of total stakes and total collateral (422ms)
-    ✓ liquidate(): updates the L_ETH and L_LUSDDebt reward-per-unit-staked totals (984ms)
+    ✓ liquidate(): updates the L_ETH and L_XBRLDebt reward-per-unit-staked totals (984ms)
     ✓ liquidate(): Liquidates undercollateralized trove if there are two troves in the system (503ms)
     ✓ liquidate(): reverts if trove is non-existent (303ms)
     ✓ liquidate(): reverts if trove has been closed (745ms)
@@ -1156,7 +1156,7 @@ gasUsed:  636956
     ✓ batchLiquidateTroves(): when SP is empty, doesn't update G (1655ms)
     ✓ getRedemptionHints(): gets the address of the first Trove and the final ICR of the last Trove involved in a redemption (621ms)
     ✓ getRedemptionHints(): returns 0 as partialRedemptionHintNICR when reaching _maxIterations (715ms)
-    ✓ redeemCollateral(): cancels the provided LUSD with debt from Troves with the lowest ICRs and sends an equivalent amount of Ether (838ms)
+    ✓ redeemCollateral(): cancels the provided XBRL with debt from Troves with the lowest ICRs and sends an equivalent amount of Ether (838ms)
     ✓ redeemCollateral(): with invalid first hint, zero address (991ms)
     ✓ redeemCollateral(): with invalid first hint, non-existent trove (1003ms)
     ✓ redeemCollateral(): with invalid first hint, trove below MCR (1392ms)
@@ -1175,9 +1175,9 @@ gasUsed:  636956
     ✓ redeemCollateral(): reverts if fee exceeds max fee percentage (2899ms)
     ✓ redeemCollateral(): succeeds if fee is less than max fee percentage (3127ms)
     ✓ redeemCollateral(): doesn't affect the Stability Pool deposits or ETH gain of redeemed-from troves (2311ms)
-    ✓ redeemCollateral(): caller can redeem their entire LUSDToken balance (1086ms)
-    ✓ redeemCollateral(): reverts when requested redemption amount exceeds caller's LUSD token balance (1320ms)
-    ✓ redeemCollateral(): value of issued ETH == face value of redeemed LUSD (assuming 1 LUSD has value of $1) (1353ms)
+    ✓ redeemCollateral(): caller can redeem their entire XBRLToken balance (1086ms)
+    ✓ redeemCollateral(): reverts when requested redemption amount exceeds caller's XBRL token balance (1320ms)
+    ✓ redeemCollateral(): value of issued ETH == face value of redeemed XBRL (assuming 1 XBRL has value of $1) (1353ms)
     ✓ redeemCollateral(): reverts if there is zero outstanding system debt (66ms)
     ✓ redeemCollateral(): reverts if caller's tries to redeem more than the outstanding system debt (367ms)
     ✓ redeemCollateral(): a redemption made when base rate is zero increases the base rate (1187ms)
@@ -1193,13 +1193,13 @@ gasUsed:  636956
     ✓ redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner to claim (5373ms)
     ✓ redeemCollateral(): a redemption that closes a trove leaves the trove's ETH surplus (collateral - ETH drawn) available for the trove owner after re-opening trove (2154ms)
     ✓ redeemCollateral(): reverts if fee eats up all returned collateral (1412ms)
-    ✓ getPendingLUSDDebtReward(): Returns 0 if there is no pending LUSDDebt reward (618ms)
+    ✓ getPendingXBRLDebtReward(): Returns 0 if there is no pending XBRLDebt reward (618ms)
     ✓ getPendingETHReward(): Returns 0 if there is no pending ETH reward (620ms)
     ✓ computeICR(): Returns 0 if trove's coll is worth 0
-    ✓ computeICR(): Returns 2^256-1 for ETH:USD = 100, coll = 1 ETH, debt = 100 LUSD
-    ✓ computeICR(): returns correct ICR for ETH:USD = 100, coll = 200 ETH, debt = 30 LUSD
-    ✓ computeICR(): returns correct ICR for ETH:USD = 250, coll = 1350 ETH, debt = 127 LUSD
-    ✓ computeICR(): returns correct ICR for ETH:USD = 100, coll = 1 ETH, debt = 54321 LUSD
+    ✓ computeICR(): Returns 2^256-1 for ETH:USD = 100, coll = 1 ETH, debt = 100 XBRL
+    ✓ computeICR(): returns correct ICR for ETH:USD = 100, coll = 200 ETH, debt = 30 XBRL
+    ✓ computeICR(): returns correct ICR for ETH:USD = 250, coll = 1350 ETH, debt = 127 XBRL
+    ✓ computeICR(): returns correct ICR for ETH:USD = 100, coll = 1 ETH, debt = 54321 XBRL
     ✓ computeICR(): Returns 2^256-1 if trove has non-zero coll and zero debt
     ✓ checkRecoveryMode(): Returns true when TCR < 150% (351ms)
     ✓ checkRecoveryMode(): Returns false when TCR == 150% (366ms)

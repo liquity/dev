@@ -6,7 +6,7 @@ const DefaultPool = artifacts.require("./DefaultPool.sol")
 const StabilityPool = artifacts.require("./StabilityPool.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeed = artifacts.require("./PriceFeed.sol")
-const LUSDToken = artifacts.require("./LUSDToken.sol")
+const XBRLToken = artifacts.require("./XBRLToken.sol")
 const FunctionCaller = artifacts.require("./FunctionCaller.sol")
 const BorrowerOperations = artifacts.require("./BorrowerOperations.sol")
 
@@ -24,7 +24,7 @@ module.exports = async () => {
   const stabilityPool = await StabilityPool.new()
   const defaultPool = await DefaultPool.new()
   const functionCaller = await FunctionCaller.new()
-  const lusdToken = await LUSDToken.new(
+  const xbrlToken = await XBRLToken.new(
     troveManager.address,
     stabilityPool.address,
     borrowerOperations.address
@@ -37,12 +37,12 @@ module.exports = async () => {
   StabilityPool.setAsDeployed(stabilityPool)
   DefaultPool.setAsDeployed(defaultPool)
   FunctionCaller.setAsDeployed(functionCaller)
-  LUSDToken.setAsDeployed(lusdToken)
+  XBRLToken.setAsDeployed(xbrlToken)
 
   const contracts = {
     borrowerOperations,
     priceFeed,
-    lusdToken,
+    xbrlToken,
     sortedTroves,
     troveManager,
     activePool,

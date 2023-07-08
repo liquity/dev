@@ -24,7 +24,7 @@ The constructor for this class is marked as internal. Third-party code should no
 |  --- | --- | --- | --- |
 |  [collateralGain](./lib-base.stblstake.collateralgain.md) |  | [Decimal](./lib-base.decimal.md) | Collateral gain available to withdraw. |
 |  [isEmpty](./lib-base.stblstake.isempty.md) |  | boolean |  |
-|  [lusdGain](./lib-base.stblstake.lusdgain.md) |  | [Decimal](./lib-base.decimal.md) | LUSD gain available to withdraw. |
+|  [xbrlGain](./lib-base.stblstake.xbrlgain.md) |  | [Decimal](./lib-base.decimal.md) | XBRL gain available to withdraw. |
 |  [stakedSTBL](./lib-base.stblstake.stakedstbl.md) |  | [Decimal](./lib-base.decimal.md) | The amount of STBL that's staked. |
 
 ## Methods

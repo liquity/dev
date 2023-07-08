@@ -101,15 +101,15 @@ export class Fees {
    * By default, the fee is calculated at the time of the latest block. This can be overridden using
    * the `when` parameter.
    *
-   * To calculate the borrowing fee in LUSD, multiply the borrowed LUSD amount by the borrowing rate.
+   * To calculate the borrowing fee in XBRL, multiply the borrowed XBRL amount by the borrowing rate.
    *
    * @example
    * ```typescript
    * const fees = await liquity.getFees();
    *
-   * const borrowedLUSDAmount = 100;
+   * const borrowedXBRLAmount = 100;
    * const borrowingRate = fees.borrowingRate();
-   * const borrowingFeeLUSD = borrowingRate.mul(borrowedLUSDAmount);
+   * const borrowingFeeXBRL = borrowingRate.mul(borrowedXBRLAmount);
    * ```
    */
   borrowingRate(when?: Date): Decimal {
@@ -121,7 +121,7 @@ export class Fees {
   /**
    * Calculate the current redemption rate.
    *
-   * @param redeemedFractionOfSupply - The amount of LUSD being redeemed divided by the total supply.
+   * @param redeemedFractionOfSupply - The amount of XBRL being redeemed divided by the total supply.
    * @param when - Optional timestamp that can be used to calculate what the redemption rate would
    *               decay to at a point of time in the future.
    *
@@ -130,10 +130,10 @@ export class Fees {
    * the `when` parameter.
 
    * Unlike the borrowing rate, the redemption rate depends on the amount being redeemed. To be more
-   * precise, it depends on the fraction of the redeemed amount compared to the total LUSD supply,
+   * precise, it depends on the fraction of the redeemed amount compared to the total XBRL supply,
    * which must be passed as a parameter.
    *
-   * To calculate the redemption fee in LUSD, multiply the redeemed LUSD amount with the redemption
+   * To calculate the redemption fee in XBRL, multiply the redeemed XBRL amount with the redemption
    * rate.
    *
    * @example
@@ -141,10 +141,10 @@ export class Fees {
    * const fees = await liquity.getFees();
    * const total = await liquity.getTotal();
    *
-   * const redeemedLUSDAmount = Decimal.from(100);
-   * const redeemedFractionOfSupply = redeemedLUSDAmount.div(total.debt);
+   * const redeemedXBRLAmount = Decimal.from(100);
+   * const redeemedFractionOfSupply = redeemedXBRLAmount.div(total.debt);
    * const redemptionRate = fees.redemptionRate(redeemedFractionOfSupply);
-   * const redemptionFeeLUSD = redemptionRate.mul(redeemedLUSDAmount);
+   * const redemptionFeeXBRL = redemptionRate.mul(redeemedXBRLAmount);
    * ```
    */
   redemptionRate(redeemedFractionOfSupply: Decimalish = Decimal.ZERO, when?: Date): Decimal {

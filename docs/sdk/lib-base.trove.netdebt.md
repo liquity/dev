@@ -4,7 +4,7 @@
 
 ## Trove.netDebt property
 
-Amount of LUSD that must be repaid to close this Trove.
+Amount of XBRL that must be repaid to close this Trove.
 
 <b>Signature:</b>
 

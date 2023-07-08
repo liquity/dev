@@ -15,11 +15,11 @@ Using previously deployed collSurplusPool contract at address 0x4428EF2Edc5f091e
 Using previously deployed borrowerOperations contract at address 0x4E4E2eC25B1F591bb591d42A944eCc1CB9C79d8A
 Using previously deployed hintHelpers contract at address 0xAB1b14AfAE47054ca29A23858A7850E859aE6E31
 Using previously deployed tellorCaller contract at address 0x093FA46A3FC715B65E9A6d37ACD92d99F48B81F6
-Using previously deployed lusdToken contract at address 0xaa052d8b915c9311e5EA234dd24105d6208087A5
+Using previously deployed xbrlToken contract at address 0xaa052d8b915c9311e5EA234dd24105d6208087A5
 No Etherscan Url defined, skipping verification
 Contract objects addresses:
 priceFeed: 0x891d882fDACd2cB8DAeA5289f6019676E797EE5F
-lusdToken: 0xaa052d8b915c9311e5EA234dd24105d6208087A5
+xbrlToken: 0xaa052d8b915c9311e5EA234dd24105d6208087A5
 sortedTroves: 0xb8493cD0E7135462502DF048deeFc9b650fa789F
 troveManager: 0x111Bf64dA957C55601C6D0f9DB2Eb1aef4dDEE23
 activePool: 0x741d21A9dd5dcc14cc5cd84cD91fd74638AFA313
@@ -68,7 +68,7 @@ General Safe balance       : 2000000.000000000000000000
 Community Issuance balance: 31951864.655992765250031575
 PriceFeed first stored price: 2096.630546500000000000
 PriceFeed initial status: 0
-Unipool's stored LUSD-ETH Uniswap Pair address: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
+Unipool's stored XBRL-ETH Uniswap Pair address: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 system liquidation reserve: 200.000000000000000000
 system min net debt      : 1800.000000000000000000
 Deployer already has an active trove
@@ -77,19 +77,19 @@ deployer debt: 3215.000000000000000000
 deployer coll: 3.000000000000000000
 deployer stake: 3.000000000000000000
 deployer's trove status: 1
-deployer's LUSD balance: 2273.674452917999958289
-LUSD-ETH Pair token 0: 0xaa05...87A5,
-      LUSDToken contract addr: 0xaa05...87A5
-LUSD-ETH Pair token 1: 0xC02a...6Cc2,
+deployer's XBRL balance: 2273.674452917999958289
+XBRL-ETH Pair token 0: 0xaa05...87A5,
+      XBRLToken contract addr: 0xaa05...87A5
+XBRL-ETH Pair token 1: 0xC02a...6Cc2,
       WETH ERC20 contract addr: 0xc02a...6cc2
-LUSD-ETH Pair's LUSD reserves before provision: 40.036378355965833891
-LUSD-ETH Pair's ETH reserves before provision: .188993756164807541
+XBRL-ETH Pair's XBRL reserves before provision: 40.036378355965833891
+XBRL-ETH Pair's ETH reserves before provision: .188993756164807541
 Liquidity already provided to Uniswap
-LUSD-ETH Pair's LUSD reserves after provision: 40.036378355965833891
-LUSD-ETH Pair's ETH reserves after provision: .188993756164807541
+XBRL-ETH Pair's XBRL reserves after provision: 40.036378355965833891
+XBRL-ETH Pair's ETH reserves after provision: .188993756164807541
 CHECK LP STAKING
 deployer's LP token balance: 2.194601866876996844
-LUSDETHPair addr: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
+XBRLETHPair addr: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 Pair addr stored in Unipool: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 Already staked in Unipool
 wait 90 seconds before checking earnings... 
@@ -97,7 +97,7 @@ deployer's earned STBL from Unipool after ~1.5mins: .000000000000000707
 deployer STBL Balance Before SP deposit: 1986.702254180435641327
 CHECK DEPLOYER MAKING DEPOSIT AND EARNING STBL
 deployer SP deposit before making deposit: 30.000000000000000000
-deployer SP deposit after depositing 15 LUSD: 45.000000000000000000
+deployer SP deposit after depositing 15 XBRL: 45.000000000000000000
 wait 90 seconds before withdrawing...
 deployer SP deposit after full withdrawal: .000000000000000000
 deployer STBL Balance after SP deposit withdrawal: 2156.497045159803174982

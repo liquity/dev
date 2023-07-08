@@ -8,14 +8,14 @@ import { useTransactionFunction } from "../Transaction";
 type RedemptionActionProps = {
   transactionId: string;
   disabled?: boolean;
-  lusdAmount: Decimal;
+  xbrlAmount: Decimal;
   maxRedemptionRate: Decimal;
 };
 
 export const RedemptionAction: React.FC<RedemptionActionProps> = ({
   transactionId,
   disabled,
-  lusdAmount,
+  xbrlAmount,
   maxRedemptionRate
 }) => {
   const {
@@ -24,7 +24,7 @@ export const RedemptionAction: React.FC<RedemptionActionProps> = ({
 
   const [sendTransaction] = useTransactionFunction(
     transactionId,
-    liquity.redeemLUSD.bind(liquity, lusdAmount, maxRedemptionRate)
+    liquity.redeemXBRL.bind(liquity, xbrlAmount, maxRedemptionRate)
   );
 
   return (

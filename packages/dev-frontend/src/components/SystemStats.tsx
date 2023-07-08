@@ -8,20 +8,20 @@ import { useLiquity } from "../hooks/LiquityContext";
 import { COIN, GT } from "../strings";
 import { Statistic } from "./Statistic";
 
-const selectBalances = ({ accountBalance, lusdBalance, stblBalance }: LiquityStoreState) => ({
+const selectBalances = ({ accountBalance, xbrlBalance, stblBalance }: LiquityStoreState) => ({
   accountBalance,
-  lusdBalance,
+  xbrlBalance,
   stblBalance
 });
 
 const Balances: React.FC = () => {
-  const { accountBalance, lusdBalance, stblBalance } = useLiquitySelector(selectBalances);
+  const { accountBalance, xbrlBalance, stblBalance } = useLiquitySelector(selectBalances);
 
   return (
     <Box sx={{ mb: 3 }}>
       <Heading>My Account Balances</Heading>
       <Statistic name="ETH"> {accountBalance.prettify(4)}</Statistic>
-      <Statistic name={COIN}> {lusdBalance.prettify()}</Statistic>
+      <Statistic name={COIN}> {xbrlBalance.prettify()}</Statistic>
       <Statistic name={GT}>{stblBalance.prettify()}</Statistic>
     </Box>
   );
@@ -43,7 +43,7 @@ const select = ({
   numberOfTroves,
   price,
   total,
-  lusdInStabilityPool,
+  xbrlInStabilityPool,
   borrowingRate,
   redemptionRate,
   totalStakedSTBL,
@@ -52,7 +52,7 @@ const select = ({
   numberOfTroves,
   price,
   total,
-  lusdInStabilityPool,
+  xbrlInStabilityPool,
   borrowingRate,
   redemptionRate,
   totalStakedSTBL,
@@ -69,15 +69,15 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
   const {
     numberOfTroves,
     price,
-    lusdInStabilityPool,
+    xbrlInStabilityPool,
     total,
     borrowingRate,
     totalStakedSTBL,
     kickbackRate
   } = useLiquitySelector(select);
 
-  const lusdInStabilityPoolPct =
-    total.debt.nonZero && new Percent(lusdInStabilityPool.div(total.debt));
+  const xbrlInStabilityPoolPct =
+    total.debt.nonZero && new Percent(xbrlInStabilityPool.div(total.debt));
   const totalCollateralRatioPct = new Percent(total.collateralRatio(price));
   const borrowingFeePct = new Percent(borrowingRate);
   const kickbackRatePct = frontendTag === AddressZero ? "100" : kickbackRate?.mul(100).prettify();
@@ -94,7 +94,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
 
       <Statistic
         name="Borrowing Fee"
-        tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in LUSD) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on LUSD redemption volumes."
+        tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in XBRL) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on XBRL redemption volumes."
       >
         {borrowingFeePct.toString(2)}
       </Statistic>
@@ -111,17 +111,17 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Statistic name="Troves" tooltip="The total number of active Troves in the system.">
         {Decimal.from(numberOfTroves).prettify(0)}
       </Statistic>
-      <Statistic name="LUSD supply" tooltip="The total LUSD minted by the Liquity Protocol.">
+      <Statistic name="XBRL supply" tooltip="The total XBRL minted by the Liquity Protocol.">
         {total.debt.shorten()}
       </Statistic>
-      {lusdInStabilityPoolPct && (
+      {xbrlInStabilityPoolPct && (
         <Statistic
-          name="LUSD in Stability Pool"
-          tooltip="The total LUSD currently held in the Stability Pool, expressed as an amount and a fraction of the LUSD supply.
+          name="XBRL in Stability Pool"
+          tooltip="The total XBRL currently held in the Stability Pool, expressed as an amount and a fraction of the XBRL supply.
         "
         >
-          {lusdInStabilityPool.shorten()}
-          <Text sx={{ fontSize: 1 }}>&nbsp;({lusdInStabilityPoolPct.toString(1)})</Text>
+          {xbrlInStabilityPool.shorten()}
+          <Text sx={{ fontSize: 1 }}>&nbsp;({xbrlInStabilityPoolPct.toString(1)})</Text>
         </Statistic>
       )}
       <Statistic

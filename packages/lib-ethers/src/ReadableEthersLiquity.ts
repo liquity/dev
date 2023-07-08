@@ -152,7 +152,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
 
     const [collateral, debt] = await Promise.all([
       troveManager.L_ETH({ ...overrides }).then(decimalify),
-      troveManager.L_LUSDDebt({ ...overrides }).then(decimalify)
+      troveManager.L_XBRLDebt({ ...overrides }).then(decimalify)
     ]);
 
     return new Trove(collateral, debt);
@@ -178,7 +178,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
         decimalify(trove.coll),
         decimalify(trove.debt),
         decimalify(trove.stake),
-        new Trove(decimalify(snapshot.ETH), decimalify(snapshot.LUSDDebt))
+        new Trove(decimalify(snapshot.ETH), decimalify(snapshot.XBRLDebt))
       );
     } else {
       return new TroveWithPendingRedistribution(address, userTroveStatusFrom(trove.status));
@@ -216,7 +216,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     const [activeCollateral, activeDebt] = await Promise.all(
       [
         activePool.getETH({ ...overrides }),
-        activePool.getLUSDDebt({ ...overrides })
+        activePool.getXBRLDebt({ ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
@@ -230,7 +230,7 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     const [liquidatedCollateral, closedDebt] = await Promise.all(
       [
         defaultPool.getETH({ ...overrides }),
-        defaultPool.getLUSDDebt({ ...overrides })
+        defaultPool.getXBRLDebt({ ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
@@ -257,19 +257,19 @@ export class ReadableEthersLiquity implements ReadableLiquity {
 
     const [
       { frontEndTag, initialValue },
-      currentLUSD,
+      currentXBRL,
       collateralGain,
       stblReward
     ] = await Promise.all([
       stabilityPool.deposits(address, { ...overrides }),
-      stabilityPool.getCompoundedLUSDDeposit(address, { ...overrides }),
+      stabilityPool.getCompoundedXBRLDeposit(address, { ...overrides }),
       stabilityPool.getDepositorETHGain(address, { ...overrides }),
       stabilityPool.getDepositorSTBLGain(address, { ...overrides })
     ]);
 
     return new StabilityDeposit(
       decimalify(initialValue),
-      decimalify(currentLUSD),
+      decimalify(currentXBRL),
       decimalify(collateralGain),
       decimalify(stblReward),
       frontEndTag
@@ -287,19 +287,19 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     return issuanceCap.sub(totalSTBLIssued);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLUSDInStabilityPool} */
-  getLUSDInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal> {
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getXBRLInStabilityPool} */
+  getXBRLInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal> {
     const { stabilityPool } = _getContracts(this.connection);
 
-    return stabilityPool.getTotalLUSDDeposits({ ...overrides }).then(decimalify);
+    return stabilityPool.getTotalXBRLDeposits({ ...overrides }).then(decimalify);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLUSDBalance} */
-  getLUSDBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getXBRLBalance} */
+  getXBRLBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     address ??= _requireAddress(this.connection);
-    const { lusdToken } = _getContracts(this.connection);
+    const { xbrlToken } = _getContracts(this.connection);
 
-    return lusdToken.balanceOf(address, { ...overrides }).then(decimalify);
+    return xbrlToken.balanceOf(address, { ...overrides }).then(decimalify);
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getSTBLBalance} */
@@ -474,15 +474,15 @@ export class ReadableEthersLiquity implements ReadableLiquity {
     address ??= _requireAddress(this.connection);
     const { stblStaking } = _getContracts(this.connection);
 
-    const [stakedSTBL, collateralGain, lusdGain] = await Promise.all(
+    const [stakedSTBL, collateralGain, xbrlGain] = await Promise.all(
       [
         stblStaking.stakes(address, { ...overrides }),
         stblStaking.getPendingETHGain(address, { ...overrides }),
-        stblStaking.getPendingLUSDGain(address, { ...overrides })
+        stblStaking.getPendingXBRLGain(address, { ...overrides })
       ].map(getBigNumber => getBigNumber.then(decimalify))
     );
 
-    return new STBLStake(stakedSTBL, collateralGain, lusdGain);
+    return new STBLStake(stakedSTBL, collateralGain, xbrlGain);
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotalStakedSTBL} */
@@ -520,7 +520,7 @@ const mapBackendTroves = (troves: BackendTroves): TroveWithPendingRedistribution
         decimalify(trove.coll),
         decimalify(trove.debt),
         decimalify(trove.stake),
-        new Trove(decimalify(trove.snapshotETH), decimalify(trove.snapshotLUSDDebt))
+        new Trove(decimalify(trove.snapshotETH), decimalify(trove.snapshotXBRLDebt))
       )
   );
 
@@ -626,16 +626,16 @@ class _BlockPolledReadableEthersLiquity
       : this._readable.getRemainingStabilityPoolSTBLReward(overrides);
   }
 
-  async getLUSDInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal> {
+  async getXBRLInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._blockHit(overrides)
-      ? this.store.state.lusdInStabilityPool
-      : this._readable.getLUSDInStabilityPool(overrides);
+      ? this.store.state.xbrlInStabilityPool
+      : this._readable.getXBRLInStabilityPool(overrides);
   }
 
-  async getLUSDBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+  async getXBRLBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._userHit(address, overrides)
-      ? this.store.state.lusdBalance
-      : this._readable.getLUSDBalance(address, overrides);
+      ? this.store.state.xbrlBalance
+      : this._readable.getXBRLBalance(address, overrides);
   }
 
   async getSTBLBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {

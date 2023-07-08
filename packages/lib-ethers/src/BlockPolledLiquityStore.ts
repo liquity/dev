@@ -104,7 +104,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       numberOfTroves: this._readable.getNumberOfTroves({ blockTag }),
       totalRedistributed: this._readable.getTotalRedistributed({ blockTag }),
       total: this._readable.getTotal({ blockTag }),
-      lusdInStabilityPool: this._readable.getLUSDInStabilityPool({ blockTag }),
+      xbrlInStabilityPool: this._readable.getXBRLInStabilityPool({ blockTag }),
       totalStakedSTBL: this._readable.getTotalStakedSTBL({ blockTag }),
       _riskiestTroveBeforeRedistribution: this._getRiskiestTroveBeforeRedistribution({ blockTag }),
       totalStakedUniTokens: this._readable.getTotalStakedUniTokens({ blockTag }),
@@ -119,7 +119,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       ...(userAddress
         ? {
             accountBalance: this._provider.getBalance(userAddress, blockTag).then(decimalify),
-            lusdBalance: this._readable.getLUSDBalance(userAddress, { blockTag }),
+            xbrlBalance: this._readable.getXBRLBalance(userAddress, { blockTag }),
             stblBalance: this._readable.getSTBLBalance(userAddress, { blockTag }),
             uniTokenBalance: this._readable.getUniTokenBalance(userAddress, { blockTag }),
             uniTokenAllowance: this._readable.getUniTokenAllowance(userAddress, { blockTag }),
@@ -139,7 +139,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
           }
         : {
             accountBalance: Decimal.ZERO,
-            lusdBalance: Decimal.ZERO,
+            xbrlBalance: Decimal.ZERO,
             stblBalance: Decimal.ZERO,
             uniTokenBalance: Decimal.ZERO,
             uniTokenAllowance: Decimal.ZERO,

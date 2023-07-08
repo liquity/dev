@@ -54,7 +54,7 @@
     "txHash": "0x16d9c9260d0d63af85847860738f8a9df3a5cb9d574ea2ac81f56d28441a8371",
     "verification": "https://etherscan.io/address/0xAd430500ECDa11E38C9bCB08a702274b94641112#code"
   },
-  "lusdToken": {
+  "xbrlToken": {
     "address": "0x5f98805A4E8be255a32880FDeC7F6728C6568bA0",
     "txHash": "0x85cc9a6626ed080c909f768036c80bd02455c5dbd32a03aa1f16ba9575227599",
     "verification": "https://etherscan.io/address/0x5f98805A4E8be255a32880FDeC7F6728C6568bA0#code"

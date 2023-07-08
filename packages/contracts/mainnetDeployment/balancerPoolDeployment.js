@@ -22,14 +22,14 @@ const DELEGATE_OWNER = '0xBA1BA1ba1BA1bA1bA1Ba1BA1ba1BA1bA1ba1ba1B';
 // Mainnet addresses; adjust for testnets
 
 const WETH = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
-const LUSD = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
+const XBRL = '0x5f98805A4E8be255a32880FDeC7F6728C6568bA0';
 const CHAINLINK_ETHUSD_PROXY = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419';
 
-const tokens = [LUSD, WETH];
+const tokens = [XBRL, WETH];
 const weights = [toBigNum(dec(4, 17)), toBigNum(dec(6, 17))];
 
-const NAME = 'WETH/LUSD Pool';
-const SYMBOL = '60WETH-40LUSD';
+const NAME = 'WETH/XBRL Pool';
+const SYMBOL = '60WETH-40XBRL';
 const swapFeePercentage = toBigNum(dec(5, 15)); // 0.5%
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -110,9 +110,9 @@ async function main() {
   // Tokens must be in the same order
   // Values must be decimal-normalized!
   const weth_balance = INITIAL_FUNDING.mul(weights[1]).div(eth_price);
-  const lusd_balance = INITIAL_FUNDING.mul(weights[0]).div(toBigNum(dec(1, 18)));
-  const initialBalances = [lusd_balance, weth_balance];
-  th.logBN('Initial LUSD', lusd_balance);
+  const xbrl_balance = INITIAL_FUNDING.mul(weights[0]).div(toBigNum(dec(1, 18)));
+  const initialBalances = [xbrl_balance, weth_balance];
+  th.logBN('Initial XBRL', xbrl_balance);
   th.logBN('Initial WETH', weth_balance);
 
   const JOIN_KIND_INIT = 0;
@@ -153,15 +153,15 @@ async function main() {
   const approveWethReceipt = await txApproveWeth.wait();
   console.log('Approve WETH gas: ', approveWethReceipt.gasUsed.toString());
 
-  // Approve LUSD
-  const lusd = new ethers.Contract(
-    LUSD,
+  // Approve XBRL
+  const xbrl = new ethers.Contract(
+    XBRL,
     ERC20.abi,
     deployerWallet
   );
-  const txApproveLusd = await lusd.approve(VAULT, lusd_balance);
-  const approveLusdReceipt = await txApproveLusd.wait();
-  console.log('Approve LUSD gas: ', approveLusdReceipt.gasUsed.toString());
+  const txApproveXbrl = await xbrl.approve(VAULT, xbrl_balance);
+  const approveXbrlReceipt = await txApproveXbrl.wait();
+  console.log('Approve XBRL gas: ', approveXbrlReceipt.gasUsed.toString());
 
   // joins and exits are done on the Vault, not the pool
   const tx2 = await vault.joinPool(poolId, deployerWalletAddress, deployerWalletAddress, joinPoolRequest);
@@ -171,7 +171,7 @@ async function main() {
   console.log('Join Pool gas: ', receipt2.gasUsed.toString());
   th.logBN('Pool BPT tokens', await pool.totalSupply());
 
-  console.log('Total gas: ', receipt1.gasUsed.add(depositWethReceipt.gasUsed).add(approveWethReceipt.gasUsed).add(approveLusdReceipt.gasUsed).add(receipt2.gasUsed).toString());
+  console.log('Total gas: ', receipt1.gasUsed.add(depositWethReceipt.gasUsed).add(approveWethReceipt.gasUsed).add(approveXbrlReceipt.gasUsed).add(receipt2.gasUsed).toString());
 }
 
 main()

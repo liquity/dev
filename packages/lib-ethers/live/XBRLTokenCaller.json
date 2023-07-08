@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "LUSDTokenCaller",
-  "sourceName": "contracts/TestContracts/LUSDTokenCaller.sol",
+  "contractName": "XBRLTokenCaller",
+  "sourceName": "contracts/TestContracts/XBRLTokenCaller.sol",
   "abi": [
     {
       "inputs": [
@@ -16,7 +16,7 @@
           "type": "uint256"
         }
       ],
-      "name": "lusdBurn",
+      "name": "xbrlBurn",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -34,7 +34,7 @@
           "type": "uint256"
         }
       ],
-      "name": "lusdMint",
+      "name": "xbrlMint",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -57,7 +57,7 @@
           "type": "uint256"
         }
       ],
-      "name": "lusdReturnFromPool",
+      "name": "xbrlReturnFromPool",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -80,7 +80,7 @@
           "type": "uint256"
         }
       ],
-      "name": "lusdSendToPool",
+      "name": "xbrlSendToPool",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -88,12 +88,12 @@
     {
       "inputs": [
         {
-          "internalType": "contract ILUSDToken",
-          "name": "_LUSD",
+          "internalType": "contract IXBRLToken",
+          "name": "_XBRL",
           "type": "address"
         }
       ],
-      "name": "setLUSD",
+      "name": "setXBRL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

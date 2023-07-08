@@ -7,25 +7,25 @@ interface ISTBLStaking {
     // --- Events --
     
     event STBLTokenAddressSet(address _stblTokenAddress);
-    event LUSDTokenAddressSet(address _lusdTokenAddress);
+    event XBRLTokenAddressSet(address _xbrlTokenAddress);
     event TroveManagerAddressSet(address _troveManager);
     event BorrowerOperationsAddressSet(address _borrowerOperationsAddress);
     event ActivePoolAddressSet(address _activePoolAddress);
 
     event StakeChanged(address indexed staker, uint newStake);
-    event StakingGainsWithdrawn(address indexed staker, uint LUSDGain, uint ETHGain);
+    event StakingGainsWithdrawn(address indexed staker, uint XBRLGain, uint ETHGain);
     event F_ETHUpdated(uint _F_ETH);
-    event F_LUSDUpdated(uint _F_LUSD);
+    event F_XBRLUpdated(uint _F_XBRL);
     event TotalSTBLStakedUpdated(uint _totalSTBLStaked);
     event EtherSent(address _account, uint _amount);
-    event StakerSnapshotsUpdated(address _staker, uint _F_ETH, uint _F_LUSD);
+    event StakerSnapshotsUpdated(address _staker, uint _F_ETH, uint _F_XBRL);
 
     // --- Functions ---
 
     function setAddresses
     (
         address _stblTokenAddress,
-        address _lusdTokenAddress,
+        address _xbrlTokenAddress,
         address _troveManagerAddress, 
         address _borrowerOperationsAddress,
         address _activePoolAddress
@@ -37,9 +37,9 @@ interface ISTBLStaking {
 
     function increaseF_ETH(uint _ETHFee) external; 
 
-    function increaseF_LUSD(uint _STBLFee) external;  
+    function increaseF_XBRL(uint _STBLFee) external;  
 
     function getPendingETHGain(address _user) external view returns (uint);
 
-    function getPendingLUSDGain(address _user) external view returns (uint);
+    function getPendingXBRLGain(address _user) external view returns (uint);
 }

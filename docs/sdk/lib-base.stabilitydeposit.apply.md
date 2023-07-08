@@ -22,5 +22,5 @@ apply(change: StabilityDepositChange<Decimalish> | undefined): Decimal;
 
 [Decimal](./lib-base.decimal.md)
 
-The new deposited LUSD amount.
+The new deposited XBRL amount.
 

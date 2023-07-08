@@ -28,5 +28,5 @@ Throws [TransactionFailedError](./lib-base.transactionfailederror.md) in case of
 
 ## Remarks
 
-As a side-effect, the transaction will also pay out the STBL stake's [collateral gain](./lib-base.stblstake.collateralgain.md) and [LUSD gain](./lib-base.stblstake.lusdgain.md)<!-- -->.
+As a side-effect, the transaction will also pay out the STBL stake's [collateral gain](./lib-base.stblstake.collateralgain.md) and [XBRL gain](./lib-base.stblstake.xbrlgain.md)<!-- -->.
 

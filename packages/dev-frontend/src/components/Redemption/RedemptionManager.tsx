@@ -18,24 +18,24 @@ import { InfoIcon } from "../InfoIcon";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 
-const select = ({ price, fees, total, lusdBalance }: LiquityStoreState) => ({
+const select = ({ price, fees, total, xbrlBalance }: LiquityStoreState) => ({
   price,
   fees,
   total,
-  lusdBalance
+  xbrlBalance
 });
 
 const transactionId = "redemption";
 
 export const RedemptionManager: React.FC = () => {
-  const { price, fees, total, lusdBalance } = useLiquitySelector(select);
-  const [lusdAmount, setLUSDAmount] = useState(Decimal.ZERO);
+  const { price, fees, total, xbrlBalance } = useLiquitySelector(select);
+  const [xbrlAmount, setXBRLAmount] = useState(Decimal.ZERO);
   const [changePending, setChangePending] = useState(false);
   const editingState = useState<string>();
 
-  const dirty = !lusdAmount.isZero;
-  const ethAmount = lusdAmount.div(price);
-  const redemptionRate = fees.redemptionRate(lusdAmount.div(total.debt));
+  const dirty = !xbrlAmount.isZero;
+  const ethAmount = xbrlAmount.div(price);
+  const redemptionRate = fees.redemptionRate(xbrlAmount.div(total.debt));
   const feePct = new Percent(redemptionRate);
   const ethFee = ethAmount.mul(redemptionRate);
   const maxRedemptionRate = redemptionRate.add(0.001); // TODO slippage tolerance
@@ -51,26 +51,26 @@ export const RedemptionManager: React.FC = () => {
     } else if (myTransactionState.type === "failed" || myTransactionState.type === "cancelled") {
       setChangePending(false);
     } else if (myTransactionState.type === "confirmed") {
-      setLUSDAmount(Decimal.ZERO);
+      setXBRLAmount(Decimal.ZERO);
       setChangePending(false);
     }
-  }, [myTransactionState.type, setChangePending, setLUSDAmount]);
+  }, [myTransactionState.type, setChangePending, setXBRLAmount]);
 
   const [canRedeem, description] = total.collateralRatioIsBelowMinimum(price)
     ? [
         false,
         <ErrorDescription>
-          You can't redeem LUSD when the total collateral ratio is less than{" "}
+          You can't redeem XBRL when the total collateral ratio is less than{" "}
           <Amount>{mcrPercent}</Amount>. Please try again later.
         </ErrorDescription>
       ]
-    : lusdAmount.gt(lusdBalance)
+    : xbrlAmount.gt(xbrlBalance)
     ? [
         false,
         <ErrorDescription>
           The amount you're trying to redeem exceeds your balance by{" "}
           <Amount>
-            {lusdAmount.sub(lusdBalance).prettify()} {COIN}
+            {xbrlAmount.sub(xbrlBalance).prettify()} {COIN}
           </Amount>
           .
         </ErrorDescription>
@@ -80,7 +80,7 @@ export const RedemptionManager: React.FC = () => {
         <ActionDescription>
           You will receive <Amount>{ethAmount.sub(ethFee).prettify(4)} ETH</Amount> in exchange for{" "}
           <Amount>
-            {lusdAmount.prettify()} {COIN}
+            {xbrlAmount.prettify()} {COIN}
           </Amount>
           .
         </ActionDescription>
@@ -94,7 +94,7 @@ export const RedemptionManager: React.FC = () => {
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setLUSDAmount(Decimal.ZERO)}
+            onClick={() => setXBRLAmount(Decimal.ZERO)}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -104,14 +104,14 @@ export const RedemptionManager: React.FC = () => {
       <Box sx={{ p: [2, 3] }}>
         <EditableRow
           label="Redeem"
-          inputId="redeem-lusd"
-          amount={lusdAmount.prettify()}
-          maxAmount={lusdBalance.toString()}
-          maxedOut={lusdAmount.eq(lusdBalance)}
+          inputId="redeem-xbrl"
+          amount={xbrlAmount.prettify()}
+          maxAmount={xbrlBalance.toString()}
+          maxedOut={xbrlAmount.eq(xbrlBalance)}
           unit={COIN}
           {...{ editingState }}
-          editedAmount={lusdAmount.toString(2)}
-          setEditedAmount={amount => setLUSDAmount(Decimal.from(amount))}
+          editedAmount={xbrlAmount.toString(2)}
+          setEditedAmount={amount => setXBRLAmount(Decimal.from(amount))}
         />
 
         <StaticRow
@@ -125,7 +125,7 @@ export const RedemptionManager: React.FC = () => {
               tooltip={
                 <Card variant="tooltip" sx={{ minWidth: "240px" }}>
                   The Redemption Fee is charged as a percentage of the redeemed Ether. The Redemption
-                  Fee depends on LUSD redemption volumes and is 0.5% at minimum.
+                  Fee depends on XBRL redemption volumes and is 0.5% at minimum.
                 </Card>
               }
             />
@@ -140,7 +140,7 @@ export const RedemptionManager: React.FC = () => {
           <RedemptionAction
             transactionId={transactionId}
             disabled={!dirty || !canRedeem}
-            lusdAmount={lusdAmount}
+            xbrlAmount={xbrlAmount}
             maxRedemptionRate={maxRedemptionRate}
           />
         </Flex>

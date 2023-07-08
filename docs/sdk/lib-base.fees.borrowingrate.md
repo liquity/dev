@@ -26,7 +26,7 @@ borrowingRate(when?: Date): Decimal;
 
 By default, the fee is calculated at the time of the latest block. This can be overridden using the `when` parameter.
 
-To calculate the borrowing fee in LUSD, multiply the borrowed LUSD amount by the borrowing rate.
+To calculate the borrowing fee in XBRL, multiply the borrowed XBRL amount by the borrowing rate.
 
 ## Example
 
@@ -34,9 +34,9 @@ To calculate the borrowing fee in LUSD, multiply the borrowed LUSD amount by the
 ```typescript
 const fees = await liquity.getFees();
 
-const borrowedLUSDAmount = 100;
+const borrowedXBRLAmount = 100;
 const borrowingRate = fees.borrowingRate();
-const borrowingFeeLUSD = borrowingRate.mul(borrowedLUSDAmount);
+const borrowingFeeXBRL = borrowingRate.mul(borrowedXBRLAmount);
 
 ```
 

@@ -164,46 +164,46 @@ export class ObservableEthersLiquity implements ObservableLiquity {
     };
   }
 
-  watchLUSDInStabilityPool(
-    onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void
+  watchXBRLInStabilityPool(
+    onXBRLInStabilityPoolChanged: (xbrlInStabilityPool: Decimal) => void
   ): () => void {
-    const { lusdToken, stabilityPool } = _getContracts(this._readable.connection);
-    const { Transfer } = lusdToken.filters;
+    const { xbrlToken, stabilityPool } = _getContracts(this._readable.connection);
+    const { Transfer } = xbrlToken.filters;
 
-    const transferLUSDFromStabilityPool = Transfer(stabilityPool.address);
-    const transferLUSDToStabilityPool = Transfer(null, stabilityPool.address);
+    const transferXBRLFromStabilityPool = Transfer(stabilityPool.address);
+    const transferXBRLToStabilityPool = Transfer(null, stabilityPool.address);
 
-    const stabilityPoolLUSDFilters = [transferLUSDFromStabilityPool, transferLUSDToStabilityPool];
+    const stabilityPoolXBRLFilters = [transferXBRLFromStabilityPool, transferXBRLToStabilityPool];
 
-    const stabilityPoolLUSDListener = debounce((blockTag: number) => {
-      this._readable.getLUSDInStabilityPool({ blockTag }).then(onLUSDInStabilityPoolChanged);
+    const stabilityPoolXBRLListener = debounce((blockTag: number) => {
+      this._readable.getXBRLInStabilityPool({ blockTag }).then(onXBRLInStabilityPoolChanged);
     });
 
-    stabilityPoolLUSDFilters.forEach(filter => lusdToken.on(filter, stabilityPoolLUSDListener));
+    stabilityPoolXBRLFilters.forEach(filter => xbrlToken.on(filter, stabilityPoolXBRLListener));
 
     return () =>
-      stabilityPoolLUSDFilters.forEach(filter =>
-        lusdToken.removeListener(filter, stabilityPoolLUSDListener)
+      stabilityPoolXBRLFilters.forEach(filter =>
+        xbrlToken.removeListener(filter, stabilityPoolXBRLListener)
       );
   }
 
-  watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
+  watchXBRLBalance(onXBRLBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
     address ??= _requireAddress(this._readable.connection);
 
-    const { lusdToken } = _getContracts(this._readable.connection);
-    const { Transfer } = lusdToken.filters;
-    const transferLUSDFromUser = Transfer(address);
-    const transferLUSDToUser = Transfer(null, address);
+    const { xbrlToken } = _getContracts(this._readable.connection);
+    const { Transfer } = xbrlToken.filters;
+    const transferXBRLFromUser = Transfer(address);
+    const transferXBRLToUser = Transfer(null, address);
 
-    const lusdTransferFilters = [transferLUSDFromUser, transferLUSDToUser];
+    const xbrlTransferFilters = [transferXBRLFromUser, transferXBRLToUser];
 
-    const lusdTransferListener = debounce((blockTag: number) => {
-      this._readable.getLUSDBalance(address, { blockTag }).then(onLUSDBalanceChanged);
+    const xbrlTransferListener = debounce((blockTag: number) => {
+      this._readable.getXBRLBalance(address, { blockTag }).then(onXBRLBalanceChanged);
     });
 
-    lusdTransferFilters.forEach(filter => lusdToken.on(filter, lusdTransferListener));
+    xbrlTransferFilters.forEach(filter => xbrlToken.on(filter, xbrlTransferListener));
 
     return () =>
-      lusdTransferFilters.forEach(filter => lusdToken.removeListener(filter, lusdTransferListener));
+      xbrlTransferFilters.forEach(filter => xbrlToken.removeListener(filter, xbrlTransferListener));
   }
 }

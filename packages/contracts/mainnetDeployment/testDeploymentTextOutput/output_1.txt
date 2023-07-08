@@ -5,7 +5,7 @@ Uniswap Factory number of pairs: 31966
 deployer's ETH balance before deployments: 24798501997000000000
 Contract objects addresses:
 priceFeed: 0x891d882fDACd2cB8DAeA5289f6019676E797EE5F
-lusdToken: 0xaa052d8b915c9311e5EA234dd24105d6208087A5
+xbrlToken: 0xaa052d8b915c9311e5EA234dd24105d6208087A5
 sortedTroves: 0xb8493cD0E7135462502DF048deeFc9b650fa789F
 troveManager: 0x111Bf64dA957C55601C6D0f9DB2Eb1aef4dDEE23
 activePool: 0x741d21A9dd5dcc14cc5cd84cD91fd74638AFA313
@@ -16,7 +16,7 @@ collSurplusPool: 0x4428EF2Edc5f091e166e197C4c4915eBc04B2d3C
 borrowerOperations: 0x4E4E2eC25B1F591bb591d42A944eCc1CB9C79d8A
 hintHelpers: 0xAB1b14AfAE47054ca29A23858A7850E859aE6E31
 tellorCaller: 0x093FA46A3FC715B65E9A6d37ACD92d99F48B81F6
-LUSD-WETH pair contract address after Uniswap pair creation: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
+XBRL-WETH pair contract address after Uniswap pair creation: 0x01365a50da15e38e9Fcc5Ee193E67D4845ff118E
 Contract objects addresses:
 stblStaking: 0x3d130ccbabe9b3561bb1f45f9605EDF2944C9Ee5
 lockupContractFactory: 0xe6dEcadA1d49466F09c5bfb69F6C14f376B2Eece

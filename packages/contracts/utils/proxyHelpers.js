@@ -103,12 +103,12 @@ class BorrowerOperationsProxy extends Proxy {
     return this.forwardFunction(params, 'withdrawColl(uint256,address,address)')
   }
 
-  async withdrawLUSD(...params) {
-    return this.forwardFunction(params, 'withdrawLUSD(uint256,uint256,address,address)')
+  async withdrawXBRL(...params) {
+    return this.forwardFunction(params, 'withdrawXBRL(uint256,uint256,address,address)')
   }
 
-  async repayLUSD(...params) {
-    return this.forwardFunction(params, 'repayLUSD(uint256,address,address)')
+  async repayXBRL(...params) {
+    return this.forwardFunction(params, 'repayXBRL(uint256,address,address)')
   }
 
   async closeTrove(...params) {
@@ -135,8 +135,8 @@ class BorrowerOperationsProxy extends Proxy {
     return this.proxyFunction('getCompositeDebt', params)
   }
 
-  async LUSD_GAS_COMPENSATION(...params) {
-    return this.proxyFunction('LUSD_GAS_COMPENSATION', params)
+  async XBRL_GAS_COMPENSATION(...params) {
+    return this.proxyFunction('XBRL_GAS_COMPENSATION', params)
   }
 
   async MIN_NET_DEBT(...params) {
@@ -199,8 +199,8 @@ class TroveManagerProxy extends Proxy {
     return this.proxyFunction('getPendingETHReward', params)
   }
 
-  async getPendingLUSDDebtReward(...params) {
-    return this.proxyFunction('getPendingLUSDDebtReward', params)
+  async getPendingXBRLDebtReward(...params) {
+    return this.proxyFunction('getPendingXBRLDebtReward', params)
   }
 
   async liquidate(user) {
@@ -231,8 +231,8 @@ class TroveManagerProxy extends Proxy {
     return this.proxyFunction('L_ETH', [])
   }
 
-  async L_LUSDDebt() {
-    return this.proxyFunction('L_LUSDDebt', [])
+  async L_XBRLDebt() {
+    return this.proxyFunction('L_XBRLDebt', [])
   }
 
   async rewardSnapshots(user) {
@@ -285,8 +285,8 @@ class StabilityPoolProxy extends Proxy {
     return this.forwardFunction(params, 'provideToSP(uint256,address)')
   }
 
-  async getCompoundedLUSDDeposit(user) {
-    return this.proxyFunctionWithUser('getCompoundedLUSDDeposit', user)
+  async getCompoundedXBRLDeposit(user) {
+    return this.proxyFunctionWithUser('getCompoundedXBRLDeposit', user)
   }
 
   async deposits(user) {
@@ -394,8 +394,8 @@ class STBLStakingProxy extends Proxy {
     return this.proxyFunctionWithUser('stakes', user)
   }
 
-  async F_LUSD(user) {
-    return this.proxyFunctionWithUser('F_LUSD', user)
+  async F_XBRL(user) {
+    return this.proxyFunctionWithUser('F_XBRL', user)
   }
 }
 

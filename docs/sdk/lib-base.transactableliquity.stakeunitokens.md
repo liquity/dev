@@ -4,7 +4,7 @@
 
 ## TransactableLiquity.stakeUniTokens() method
 
-Stake Uniswap ETH/LUSD LP tokens to participate in liquidity mining and earn STBL.
+Stake Uniswap ETH/XBRL LP tokens to participate in liquidity mining and earn STBL.
 
 <b>Signature:</b>
 

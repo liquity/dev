@@ -53,7 +53,7 @@
     "txHash": "0xd20991c3a48b75fd6a3375206f3c9c789b0ac42f455b38398fd6be98c41226b5",
     "verification": "https://rinkeby.etherscan.io/address/0xFF048Ce9D57C52d45CFBae1641Ce2F516AcC3539#code"
   },
-  "lusdToken": {
+  "xbrlToken": {
     "address": "0xaf844BBaD90fB27ae949376338F7c9DA1251acFf",
     "txHash": "0xa1bda13e81a49172db4ecf720b332ad7f3d74d85d59f085e7d67fa0528b0844f",
     "verification": "https://rinkeby.etherscan.io/address/0xaf844BBaD90fB27ae949376338F7c9DA1251acFf#code"

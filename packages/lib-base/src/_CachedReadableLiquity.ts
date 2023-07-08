@@ -108,17 +108,17 @@ export class _CachedReadableLiquity<T extends unknown[]>
     );
   }
 
-  async getLUSDInStabilityPool(...extraParams: T): Promise<Decimal> {
+  async getXBRLInStabilityPool(...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getLUSDInStabilityPool(...extraParams) ??
-      this._readable.getLUSDInStabilityPool(...extraParams)
+      this._cache.getXBRLInStabilityPool(...extraParams) ??
+      this._readable.getXBRLInStabilityPool(...extraParams)
     );
   }
 
-  async getLUSDBalance(address?: string, ...extraParams: T): Promise<Decimal> {
+  async getXBRLBalance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getLUSDBalance(address, ...extraParams) ??
-      this._readable.getLUSDBalance(address, ...extraParams)
+      this._cache.getXBRLBalance(address, ...extraParams) ??
+      this._readable.getXBRLBalance(address, ...extraParams)
     );
   }
 

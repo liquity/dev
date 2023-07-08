@@ -20,10 +20,10 @@ The constructor for this class is marked as internal. Third-party code should no
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [collateralGain](./lib-base.stabilitydeposit.collateralgain.md) |  | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) received in exchange for the used-up LUSD. |
-|  [currentLUSD](./lib-base.stabilitydeposit.currentlusd.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD left in the Stability Deposit. |
+|  [collateralGain](./lib-base.stabilitydeposit.collateralgain.md) |  | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) received in exchange for the used-up XBRL. |
+|  [currentXBRL](./lib-base.stabilitydeposit.currentxbrl.md) |  | [Decimal](./lib-base.decimal.md) | Amount of XBRL left in the Stability Deposit. |
 |  [frontendTag](./lib-base.stabilitydeposit.frontendtag.md) |  | string | Address of frontend through which this Stability Deposit was made. |
-|  [initialLUSD](./lib-base.stabilitydeposit.initiallusd.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD in the Stability Deposit at the time of the last direct modification. |
+|  [initialXBRL](./lib-base.stabilitydeposit.initialxbrl.md) |  | [Decimal](./lib-base.decimal.md) | Amount of XBRL in the Stability Deposit at the time of the last direct modification. |
 |  [isEmpty](./lib-base.stabilitydeposit.isempty.md) |  | boolean |  |
 |  [stblReward](./lib-base.stabilitydeposit.stblreward.md) |  | [Decimal](./lib-base.decimal.md) | Amount of STBL rewarded since the last modification of the Stability Deposit. |
 
@@ -33,5 +33,5 @@ The constructor for this class is marked as internal. Third-party code should no
 |  --- | --- | --- |
 |  [apply(change)](./lib-base.stabilitydeposit.apply.md) |  | Apply a [StabilityDepositChange](./lib-base.stabilitydepositchange.md) to this Stability Deposit. |
 |  [equals(that)](./lib-base.stabilitydeposit.equals.md) |  | Compare to another instance of <code>StabilityDeposit</code>. |
-|  [whatChanged(thatLUSD)](./lib-base.stabilitydeposit.whatchanged.md) |  | Calculate the difference between the <code>currentLUSD</code> in this Stability Deposit and <code>thatLUSD</code>. |
+|  [whatChanged(thatXBRL)](./lib-base.stabilitydeposit.whatchanged.md) |  | Calculate the difference between the <code>currentXBRL</code> in this Stability Deposit and <code>thatXBRL</code>. |
 

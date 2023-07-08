@@ -16,11 +16,11 @@ Using previously deployed collSurplusPool contract at address 0x3D32e8b97Ed58813
 Using previously deployed borrowerOperations contract at address 0x24179CD81c9e782A4096035f7eC97fB8B783e007
 Using previously deployed hintHelpers contract at address 0xE84251b93D9524E0d2e621Ba7dc7cb3579F997C0
 Using previously deployed tellorCaller contract at address 0xAd430500ECDa11E38C9bCB08a702274b94641112
-Using previously deployed lusdToken contract at address 0x5f98805A4E8be255a32880FDeC7F6728C6568bA0
+Using previously deployed xbrlToken contract at address 0x5f98805A4E8be255a32880FDeC7F6728C6568bA0
 No Etherscan Url defined, skipping verification
 Contract objects addresses:
 priceFeed: 0x4c517D4e2C851CA76d7eC94B805269Df0f2201De
-lusdToken: 0x5f98805A4E8be255a32880FDeC7F6728C6568bA0
+xbrlToken: 0x5f98805A4E8be255a32880FDeC7F6728C6568bA0
 sortedTroves: 0x8FdD3fbFEb32b28fb73555518f8b361bCeA741A6
 troveManager: 0xA39739EF8b0231DbFA0DcdA07d7e29faAbCf4bb2
 activePool: 0xDf9Eb223bAFBE5c5271415C75aeCD68C21fE3D7F
@@ -58,8 +58,8 @@ account2 STBL bal before withdrawal attempt: .000000000000000000
 account2's LC STBL bal before withdrawal attempt: 21.000000000000000000
 account2's STBL bal after LC withdrawal attempt: .000000000000000000
 account2's LC STBL bal LC withdrawal attempt: 21.000000000000000000
-LUSD-ETH Pair's current LUSD reserves: 1890.941734972325910671
-LUSD-ETH Pair's current ETH reserves: 1.089530474048812502
+XBRL-ETH Pair's current XBRL reserves: 1890.941734972325910671
+XBRL-ETH Pair's current ETH reserves: 1.089530474048812502
 number of troves: 2 
 Trove list size: 2 
 Entire system debt: 4415.000000000000000000
@@ -67,15 +67,15 @@ Entire system coll: 6.500000000000000000
 TCR: 303834911
 Base rate: .000000000000000000
 Current borrowing rate: .005000000000000000
-Total LUSD SP deposits: 34.959359097674089329
+Total XBRL SP deposits: 34.959359097674089329
 Total STBL staked: 26.000000000000000000
-Total LP (LUSD-ETH) tokens staked in unipool: .000000000000000001
+Total LP (XBRL-ETH) tokens staked in unipool: .000000000000000001
 TroveManager state variables:
 Total trove stakes: 6.500000000000000000
 Snapshot of total trove stakes before last liq. : .000000000000000000
 Snapshot of total trove collateral before last liq. : .000000000000000000
 L_ETH: .000000000000000000
-L_LUSDDebt: .000000000000000000
+L_XBRLDebt: .000000000000000000
 StabilityPool state variables:
 Product P: 1.000000000000000000
 Current epoch: .000000000000000000
@@ -83,7 +83,7 @@ Current scale: .000000000000000000
 Sum S, at current epoch and scale: .000000000000000000
 Sum G, at current epoch and scale: 28132143341608533333.000000000000000000
 STBLStaking state variables:
-F_LUSD: 1.113662456946039034
+F_XBRL: 1.113662456946039034
 F_ETH: .000000000000000000
 CommunityIssuance state variables:
 Total STBL issued to depositors / front ends: 2405.351864068448000000

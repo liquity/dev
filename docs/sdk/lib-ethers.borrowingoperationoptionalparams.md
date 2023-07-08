@@ -4,7 +4,7 @@
 
 ## BorrowingOperationOptionalParams interface
 
-Optional parameters of a transaction that borrows LUSD.
+Optional parameters of a transaction that borrows XBRL.
 
 <b>Signature:</b>
 

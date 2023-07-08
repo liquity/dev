@@ -9,9 +9,9 @@ import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
 /*
- * The Active Pool holds the ETH collateral and LUSD debt (but not LUSD tokens) for all active troves.
+ * The Active Pool holds the ETH collateral and XBRL debt (but not XBRL tokens) for all active troves.
  *
- * When a trove is liquidated, it's ETH and LUSD debt are transferred from the Active Pool, to either the
+ * When a trove is liquidated, it's ETH and XBRL debt are transferred from the Active Pool, to either the
  * Stability Pool, the Default Pool, or both, depending on the liquidation conditions.
  *
  */
@@ -25,13 +25,13 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
     address public stabilityPoolAddress;
     address public defaultPoolAddress;
     uint256 internal ETH;  // deposited ether tracker
-    uint256 internal LUSDDebt;
+    uint256 internal XBRLDebt;
 
     // --- Events ---
 
     event BorrowerOperationsAddressChanged(address _newBorrowerOperationsAddress);
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
-    event ActivePoolLUSDDebtUpdated(uint _LUSDDebt);
+    event ActivePoolXBRLDebtUpdated(uint _XBRLDebt);
     event ActivePoolETHBalanceUpdated(uint _ETH);
 
     // --- Contract setters ---
@@ -74,8 +74,8 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
         return ETH;
     }
 
-    function getLUSDDebt() external view override returns (uint) {
-        return LUSDDebt;
+    function getXBRLDebt() external view override returns (uint) {
+        return XBRLDebt;
     }
 
     // --- Pool functionality ---
@@ -90,16 +90,16 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
         require(success, "ActivePool: sending ETH failed");
     }
 
-    function increaseLUSDDebt(uint _amount) external override {
+    function increaseXBRLDebt(uint _amount) external override {
         _requireCallerIsBOorTroveM();
-        LUSDDebt  = LUSDDebt.add(_amount);
-        ActivePoolLUSDDebtUpdated(LUSDDebt);
+        XBRLDebt  = XBRLDebt.add(_amount);
+        ActivePoolXBRLDebtUpdated(XBRLDebt);
     }
 
-    function decreaseLUSDDebt(uint _amount) external override {
+    function decreaseXBRLDebt(uint _amount) external override {
         _requireCallerIsBOorTroveMorSP();
-        LUSDDebt = LUSDDebt.sub(_amount);
-        ActivePoolLUSDDebtUpdated(LUSDDebt);
+        XBRLDebt = XBRLDebt.sub(_amount);
+        ActivePoolXBRLDebtUpdated(XBRLDebt);
     }
 
     // --- 'require' functions ---

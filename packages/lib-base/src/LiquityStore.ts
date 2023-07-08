@@ -25,25 +25,25 @@ export interface LiquityStoreBaseState {
   /** User's native currency balance (e.g. Ether). */
   accountBalance: Decimal;
 
-  /** User's LUSD token balance. */
-  lusdBalance: Decimal;
+  /** User's XBRL token balance. */
+  xbrlBalance: Decimal;
 
   /** User's STBL token balance. */
   stblBalance: Decimal;
 
-  /** User's Uniswap ETH/LUSD LP token balance. */
+  /** User's Uniswap ETH/XBRL LP token balance. */
   uniTokenBalance: Decimal;
 
-  /** The liquidity mining contract's allowance of user's Uniswap ETH/LUSD LP tokens. */
+  /** The liquidity mining contract's allowance of user's Uniswap ETH/XBRL LP tokens. */
   uniTokenAllowance: Decimal;
 
   /** Remaining STBL that will be collectively rewarded to liquidity miners. */
   remainingLiquidityMiningSTBLReward: Decimal;
 
-  /** Amount of Uniswap ETH/LUSD LP tokens the user has staked in liquidity mining. */
+  /** Amount of Uniswap ETH/XBRL LP tokens the user has staked in liquidity mining. */
   liquidityMiningStake: Decimal;
 
-  /** Total amount of Uniswap ETH/LUSD LP tokens currently staked in liquidity mining. */
+  /** Total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. */
   totalStakedUniTokens: Decimal;
 
   /** Amount of STBL the user has earned through mining liquidity. */
@@ -61,8 +61,8 @@ export interface LiquityStoreBaseState {
   /** Current price of the native currency (e.g. Ether) in USD. */
   price: Decimal;
 
-  /** Total amount of LUSD currently deposited in the Stability Pool. */
-  lusdInStabilityPool: Decimal;
+  /** Total amount of XBRL currently deposited in the Stability Pool. */
+  xbrlInStabilityPool: Decimal;
 
   /** Total collateral and debt in the Liquity system. */
   total: Trove;
@@ -130,7 +130,7 @@ export interface LiquityStoreDerivedState {
    * Current redemption rate.
    *
    * @remarks
-   * Note that the actual rate paid by a redemption transaction will depend on the amount of LUSD
+   * Note that the actual rate paid by a redemption transaction will depend on the amount of XBRL
    * being redeemed.
    *
    * Use {@link Fees.redemptionRate} to calculate a precise redemption rate.
@@ -352,11 +352,11 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.accountBalance
       ),
 
-      lusdBalance: this._updateIfChanged(
+      xbrlBalance: this._updateIfChanged(
         eq,
-        "lusdBalance",
-        baseState.lusdBalance,
-        baseStateUpdate.lusdBalance
+        "xbrlBalance",
+        baseState.xbrlBalance,
+        baseStateUpdate.xbrlBalance
       ),
 
       stblBalance: this._updateIfChanged(
@@ -415,11 +415,11 @@ export abstract class LiquityStore<T = unknown> {
 
       price: this._updateIfChanged(eq, "price", baseState.price, baseStateUpdate.price),
 
-      lusdInStabilityPool: this._updateIfChanged(
+      xbrlInStabilityPool: this._updateIfChanged(
         eq,
-        "lusdInStabilityPool",
-        baseState.lusdInStabilityPool,
-        baseStateUpdate.lusdInStabilityPool
+        "xbrlInStabilityPool",
+        baseState.xbrlInStabilityPool,
+        baseStateUpdate.xbrlInStabilityPool
       ),
 
       total: this._updateIfChanged(equals, "total", baseState.total, baseStateUpdate.total),

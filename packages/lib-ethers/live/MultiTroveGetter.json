@@ -63,7 +63,7 @@
             },
             {
               "internalType": "uint256",
-              "name": "snapshotLUSDDebt",
+              "name": "snapshotXBRLDebt",
               "type": "uint256"
             }
           ],

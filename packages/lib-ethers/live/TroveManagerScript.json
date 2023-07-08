@@ -31,7 +31,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_LUSDAmount",
+          "name": "_XBRLAmount",
           "type": "uint256"
         },
         {

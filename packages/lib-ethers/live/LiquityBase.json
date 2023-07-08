@@ -44,7 +44,7 @@
     },
     {
       "inputs": [],
-      "name": "LUSD_GAS_COMPENSATION",
+      "name": "XBRL_GAS_COMPENSATION",
       "outputs": [
         {
           "internalType": "uint256",

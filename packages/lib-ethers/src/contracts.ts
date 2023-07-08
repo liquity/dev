@@ -15,7 +15,7 @@ import {
 import activePoolAbi from "../abi/ActivePool.json";
 import borrowerOperationsAbi from "../abi/BorrowerOperations.json";
 import troveManagerAbi from "../abi/TroveManager.json";
-import lusdTokenAbi from "../abi/LUSDToken.json";
+import xbrlTokenAbi from "../abi/XBRLToken.json";
 import collSurplusPoolAbi from "../abi/CollSurplusPool.json";
 import communityIssuanceAbi from "../abi/CommunityIssuance.json";
 import defaultPoolAbi from "../abi/DefaultPool.json";
@@ -37,7 +37,7 @@ import {
   ActivePool,
   BorrowerOperations,
   TroveManager,
-  LUSDToken,
+  XBRLToken,
   CollSurplusPool,
   CommunityIssuance,
   DefaultPool,
@@ -168,7 +168,7 @@ export interface _LiquityContracts {
   activePool: ActivePool;
   borrowerOperations: BorrowerOperations;
   troveManager: TroveManager;
-  lusdToken: LUSDToken;
+  xbrlToken: XBRLToken;
   collSurplusPool: CollSurplusPool;
   communityIssuance: CommunityIssuance;
   defaultPool: DefaultPool;
@@ -205,7 +205,7 @@ const getAbi = (priceFeedIsTestnet: boolean, uniTokenIsMock: boolean): LiquityCo
   activePool: activePoolAbi,
   borrowerOperations: borrowerOperationsAbi,
   troveManager: troveManagerAbi,
-  lusdToken: lusdTokenAbi,
+  xbrlToken: xbrlTokenAbi,
   communityIssuance: communityIssuanceAbi,
   defaultPool: defaultPoolAbi,
   stblToken: stblTokenAbi,

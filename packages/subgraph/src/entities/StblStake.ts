@@ -108,10 +108,10 @@ export function updateStake(event: ethereum.Event, address: Address, newStake: B
 export function withdrawStakeGains(
   event: ethereum.Event,
   address: Address,
-  LUSDGain: BigInt,
+  XBRLGain: BigInt,
   ETHGain: BigInt
 ): void {
-  if (LUSDGain == BIGINT_ZERO && ETHGain == BIGINT_ZERO) {
+  if (XBRLGain == BIGINT_ZERO && ETHGain == BIGINT_ZERO) {
     return;
   }
 
@@ -119,7 +119,7 @@ export function withdrawStakeGains(
   let stakeChange: StblStakeChange = startSTBLStakeChange(event);
   stakeChange.stake = stake.id;
   stakeChange.stakeOperation = "gainsWithdrawn";
-  stakeChange.issuanceGain = decimalize(LUSDGain);
+  stakeChange.issuanceGain = decimalize(XBRLGain);
   stakeChange.redemptionGain = decimalize(ETHGain);
   stakeChange.stakedAmountBefore = stake.amount;
   stakeChange.stakedAmountChange = DECIMAL_ZERO;

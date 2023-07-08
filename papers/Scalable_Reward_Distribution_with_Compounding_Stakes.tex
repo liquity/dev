@@ -23,7 +23,7 @@
 \end{abstract}
 
 \section{Introduction}
-The Liquity protocol uses a Stability Pool as its primary mechanism to liquidate collateralized debt positions (called ``troves'') that fall below the minimum collateralization ratio of 110$\%$ $\cite{Whitepaper}$. Stability deposits (provided in LUSD) absorb and cancel the debt (in LUSD) from defaulted troves: an amount of LUSD in the Stability Pool corresponding to the debt of the liquidated trove is burned from the pool’s balance, offsetting the debt. In return, Stability Pool depositors are rewarded with the acquisition of collateral (in ETH) from liquidated positions at a significant discount. The proportion of a stability depositor’s current deposit to the total LUSD in the pool determines the collateral share it receives from the liquidation. 
+The Liquity protocol uses a Stability Pool as its primary mechanism to liquidate collateralized debt positions (called ``troves'') that fall below the minimum collateralization ratio of 110$\%$ $\cite{Whitepaper}$. Stability deposits (provided in XBRL) absorb and cancel the debt (in XBRL) from defaulted troves: an amount of XBRL in the Stability Pool corresponding to the debt of the liquidated trove is burned from the pool’s balance, offsetting the debt. In return, Stability Pool depositors are rewarded with the acquisition of collateral (in ETH) from liquidated positions at a significant discount. The proportion of a stability depositor’s current deposit to the total XBRL in the pool determines the collateral share it receives from the liquidation. 
 
 The fact that liquidated troves decrease all deposits in the Stability Pool leads to an implementation challenge: Due to Ethereum's block gas limit, it becomes impossible to iterate over all deposits in the Stability Pool for a large number of deposits. Such an operation has computational complexity of $O(n)$ and does not scale. 
 
@@ -32,28 +32,28 @@ This paper presents a method to perform liquidations against the Stability Pool 
 The methods presented in this paper are generalizable and can be used for other dApps running on Ethereum.
 
 \section{Derivation}
-For a pull-based implementation in Liquity’s Stability Pool, we must factor out the initial deposit, and track reward terms that are independent from the individual deposit values. We derive formulas for a compounding LUSD deposit and corresponding ETH gain as functions of the initial deposit, and involving a product $P$ and a sum $S$: the former is a function of the LUSD losses, and the latter is a function of $P$, the ETH rewards, and the total deposits.
+For a pull-based implementation in Liquity’s Stability Pool, we must factor out the initial deposit, and track reward terms that are independent from the individual deposit values. We derive formulas for a compounding XBRL deposit and corresponding ETH gain as functions of the initial deposit, and involving a product $P$ and a sum $S$: the former is a function of the XBRL losses, and the latter is a function of $P$, the ETH rewards, and the total deposits.
 
 \bigskip
 \raggedright %align to the left side
 
 \textbf{Terms}
 \begin{terms}
-    \item $d_i:$ A given user’s LUSD deposit at liquidation event \textit{i}\\
-    \item $Q_i:$ The LUSD debt absorbed by the Stability Pool from liquidation \textit{i}\\
+    \item $d_i:$ A given user’s XBRL deposit at liquidation event \textit{i}\\
+    \item $Q_i:$ The XBRL debt absorbed by the Stability Pool from liquidation \textit{i}\\
     \item $E_i:$ The ETH sent to the Stability Pool from liquidation \textit{i}\\
-    \item $D_i:$ Total LUSD deposits at liquidation \textit{i}
+    \item $D_i:$ Total XBRL deposits at liquidation \textit{i}
 \end{terms}
 
 \bigskip
 Let $d_0$ represent the user’s initial Stability Pool deposit. After the first liquidation, their new
 deposit $d_0$ is given by:\\
 \begin{equation} 
-    d_1=d_0-LUSDLoss
+    d_1=d_0-XBRLLoss
 \end{equation}
 
 \bigskip
-Liquidation assigns an LUSD loss to the deposit proportional to the prior share of total deposits:
+Liquidation assigns an XBRL loss to the deposit proportional to the prior share of total deposits:
 \begin{equation} \label{eq:2}
     d_1=d_0-Q_1\frac{d_0}{D_0}
 \end{equation}
@@ -111,8 +111,8 @@ Where $P_n$ is the product at liquidation $n$, and $P_t$ is the snapshot of the 
 \subsection{Corresponding ETH Gain}
 
 \bigskip
-The LUSD deposit earns an ETH gain at each liquidation.
-At each liquidation $i$, the user’s LUSD deposit effectively decreases. Thus we can write the
+The XBRL deposit earns an ETH gain at each liquidation.
+At each liquidation $i$, the user’s XBRL deposit effectively decreases. Thus we can write the
 user’s cumulative ETH gain $e_{n}$, from a series of \textit{n} liquidations, as:
 \begin{equation} 
 e_n=d_0\left(\frac{E_1}{D_0}\right)+d_1\left(\frac{E_2}{D_1}\right)+d_2\left(\frac{E_3}{D_2}\right)+...+d_{n-1}\left(\frac{E_n}{D_{n-1}}\right)
@@ -167,7 +167,7 @@ Record product snapshot: $P_t = P$\\
 Record sum snapshot: $S_t = S$
 
 \bigskip
-\underline{Upon each liquidation yielding LUSD debt ‘Q’ offset with the Stability Pool and ETH gain ‘E’:}
+\underline{Upon each liquidation yielding XBRL debt ‘Q’ offset with the Stability Pool and ETH gain ‘E’:}
 
 Update $S$: $S = S + \frac{E}{D}P$ (\textit{intuition: a deposit’s marginal ETH gain is equal to the deposit $\times$ ETH per unit staked $\times$ current correction factor)}\\
 Update $P$: $P = P(1 - \frac{Q}{D})$\\
@@ -176,7 +176,7 @@ Update total deposits: $D = D - Q$
 \bigskip
 \underline{Withdrawing the deposit and ETH gain:}
 
-Compute final compounded LUSD deposit $d$: $d = d_t\frac{P}{P_t}$\\
+Compute final compounded XBRL deposit $d$: $d = d_t\frac{P}{P_t}$\\
 Compute final corresponding cumulative ETH gain $e$: $e = d_t\frac{S - S_t}{P_t}$\\
 Send $d$ and $e$ to user\\
 Update deposit: deposit[user] = 0\\
@@ -284,7 +284,7 @@ This allows us to track the ETH reward terms at each scale and epoch.Thus we can
 All implementation logic above is combined in PoolManager.sol, in the functions:
 
 \bigskip
-$\_getCompoundedLUSDDeposit()$
+$\_getCompoundedXBRLDeposit()$
 
 $\_getDepositorETHGain()$
 

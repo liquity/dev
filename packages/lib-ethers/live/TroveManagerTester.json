@@ -119,7 +119,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_L_LUSDDebt",
+          "name": "_L_XBRLDebt",
           "type": "uint256"
         }
       ],
@@ -132,11 +132,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_newLUSDTokenAddress",
+          "name": "_newXBRLTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressChanged",
+      "name": "XBRLTokenAddressChanged",
       "type": "event"
     },
     {
@@ -176,7 +176,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_LUSDGasCompensation",
+          "name": "_XBRLGasCompensation",
           "type": "uint256"
         }
       ],
@@ -221,13 +221,13 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_attemptedLUSDAmount",
+          "name": "_attemptedXBRLAmount",
           "type": "uint256"
         },
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_actualLUSDAmount",
+          "name": "_actualXBRLAmount",
           "type": "uint256"
         },
         {
@@ -366,7 +366,7 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_L_LUSDDebt",
+          "name": "_L_XBRLDebt",
           "type": "uint256"
         }
       ],
@@ -477,7 +477,7 @@
     },
     {
       "inputs": [],
-      "name": "LUSD_GAS_COMPENSATION",
+      "name": "XBRL_GAS_COMPENSATION",
       "outputs": [
         {
           "internalType": "uint256",
@@ -503,7 +503,7 @@
     },
     {
       "inputs": [],
-      "name": "L_LUSDDebt",
+      "name": "L_XBRLDebt",
       "outputs": [
         {
           "internalType": "uint256",
@@ -957,7 +957,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_LUSDDebt",
+          "name": "_XBRLDebt",
           "type": "uint256"
         }
       ],
@@ -976,7 +976,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_LUSDDebt",
+          "name": "_XBRLDebt",
           "type": "uint256"
         }
       ],
@@ -1101,7 +1101,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "pendingLUSDDebtReward",
+          "name": "pendingXBRLDebtReward",
           "type": "uint256"
         },
         {
@@ -1141,7 +1141,7 @@
     },
     {
       "inputs": [],
-      "name": "getLUSDGasCompensation",
+      "name": "getXBRLGasCompensation",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1198,7 +1198,7 @@
           "type": "address"
         }
       ],
-      "name": "getPendingLUSDDebtReward",
+      "name": "getPendingXBRLDebtReward",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1489,7 +1489,7 @@
     },
     {
       "inputs": [],
-      "name": "lastLUSDDebtError_Redistribution",
+      "name": "lastXBRLDebtError_Redistribution",
       "outputs": [
         {
           "internalType": "uint256",
@@ -1554,10 +1554,10 @@
     },
     {
       "inputs": [],
-      "name": "lusdToken",
+      "name": "xbrlToken",
       "outputs": [
         {
-          "internalType": "contract ILUSDToken",
+          "internalType": "contract IXBRLToken",
           "name": "",
           "type": "address"
         }
@@ -1608,7 +1608,7 @@
       "inputs": [
         {
           "internalType": "uint256",
-          "name": "_LUSDamount",
+          "name": "_XBRLamount",
           "type": "uint256"
         },
         {
@@ -1677,7 +1677,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "LUSDDebt",
+          "name": "XBRLDebt",
           "type": "uint256"
         }
       ],
@@ -1723,7 +1723,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_xbrlTokenAddress",
           "type": "address"
         },
         {

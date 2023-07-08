@@ -109,7 +109,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "_LUSDAmount",
+          "name": "_XBRLAmount",
           "type": "uint256"
         },
         {
@@ -190,7 +190,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "_LUSDAmount",
+          "name": "_XBRLAmount",
           "type": "uint256"
         },
         {
@@ -227,7 +227,7 @@
           "type": "address"
         }
       ],
-      "name": "repayLUSD",
+      "name": "repayXBRL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -315,7 +315,7 @@
           "type": "address"
         }
       ],
-      "name": "withdrawLUSD",
+      "name": "withdrawXBRL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

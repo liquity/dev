@@ -1,7 +1,7 @@
 const SortedTroves = artifacts.require("./SortedTroves.sol")
 const TroveManager = artifacts.require("./TroveManager.sol")
 const PriceFeedTestnet = artifacts.require("./PriceFeedTestnet.sol")
-const LUSDToken = artifacts.require("./LUSDToken.sol")
+const XBRLToken = artifacts.require("./XBRLToken.sol")
 const ActivePool = artifacts.require("./ActivePool.sol");
 const DefaultPool = artifacts.require("./DefaultPool.sol");
 const StabilityPool = artifacts.require("./StabilityPool.sol")
@@ -26,7 +26,7 @@ const DefaultPoolTester = artifacts.require("./DefaultPoolTester.sol")
 const LiquityMathTester = artifacts.require("./LiquityMathTester.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 const TroveManagerTester = artifacts.require("./TroveManagerTester.sol")
-const LUSDTokenTester = artifacts.require("./LUSDTokenTester.sol")
+const XBRLTokenTester = artifacts.require("./XBRLTokenTester.sol")
 
 // Proxy scripts
 const BorrowerOperationsScript = artifacts.require('BorrowerOperationsScript')
@@ -97,12 +97,12 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-    const lusdToken = await LUSDToken.new(
+    const xbrlToken = await XBRLToken.new(
       troveManager.address,
       stabilityPool.address,
       borrowerOperations.address
     )
-    LUSDToken.setAsDeployed(lusdToken)
+    XBRLToken.setAsDeployed(xbrlToken)
     DefaultPool.setAsDeployed(defaultPool)
     PriceFeedTestnet.setAsDeployed(priceFeedTestnet)
     SortedTroves.setAsDeployed(sortedTroves)
@@ -117,7 +117,7 @@ class DeploymentHelper {
 
     const coreContracts = {
       priceFeedTestnet,
-      lusdToken,
+      xbrlToken,
       sortedTroves,
       troveManager,
       activePool,
@@ -150,7 +150,7 @@ class DeploymentHelper {
     testerContracts.troveManager = await TroveManagerTester.new()
     testerContracts.functionCaller = await FunctionCaller.new()
     testerContracts.hintHelpers = await HintHelpers.new()
-    testerContracts.lusdToken =  await LUSDTokenTester.new(
+    testerContracts.xbrlToken =  await XBRLTokenTester.new(
       testerContracts.troveManager.address,
       testerContracts.stabilityPool.address,
       testerContracts.borrowerOperations.address
@@ -228,14 +228,14 @@ class DeploymentHelper {
     const functionCaller = await FunctionCaller.new()
     const borrowerOperations = await BorrowerOperations.new()
     const hintHelpers = await HintHelpers.new()
-    const lusdToken = await LUSDToken.new(
+    const xbrlToken = await XBRLToken.new(
       troveManager.address,
       stabilityPool.address,
       borrowerOperations.address
     )
     const coreContracts = {
       priceFeedTestnet,
-      lusdToken,
+      xbrlToken,
       sortedTroves,
       troveManager,
       activePool,
@@ -275,8 +275,8 @@ class DeploymentHelper {
     return STBLContracts
   }
 
-  static async deployLUSDToken(contracts) {
-    contracts.lusdToken = await LUSDToken.new(
+  static async deployXBRLToken(contracts) {
+    contracts.xbrlToken = await XBRLToken.new(
       contracts.troveManager.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
@@ -284,8 +284,8 @@ class DeploymentHelper {
     return contracts
   }
 
-  static async deployLUSDTokenTester(contracts) {
-    contracts.lusdToken = await LUSDTokenTester.new(
+  static async deployXBRLTokenTester(contracts) {
+    contracts.xbrlToken = await XBRLTokenTester.new(
       contracts.troveManager.address,
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
@@ -314,8 +314,8 @@ class DeploymentHelper {
 
     contracts.sortedTroves = new SortedTrovesProxy(owner, proxies, contracts.sortedTroves)
 
-    const lusdTokenScript = await TokenScript.new(contracts.lusdToken.address)
-    contracts.lusdToken = new TokenProxy(owner, proxies, lusdTokenScript.address, contracts.lusdToken)
+    const xbrlTokenScript = await TokenScript.new(contracts.xbrlToken.address)
+    contracts.xbrlToken = new TokenProxy(owner, proxies, xbrlTokenScript.address, contracts.xbrlToken)
 
     const stblTokenScript = await TokenScript.new(STBLContracts.stblToken.address)
     STBLContracts.stblToken = new TokenProxy(owner, proxies, stblTokenScript.address, STBLContracts.stblToken)
@@ -347,7 +347,7 @@ class DeploymentHelper {
       contracts.gasPool.address,
       contracts.collSurplusPool.address,
       contracts.priceFeedTestnet.address,
-      contracts.lusdToken.address,
+      contracts.xbrlToken.address,
       contracts.sortedTroves.address,
       STBLContracts.stblToken.address,
       STBLContracts.stblStaking.address
@@ -363,7 +363,7 @@ class DeploymentHelper {
       contracts.collSurplusPool.address,
       contracts.priceFeedTestnet.address,
       contracts.sortedTroves.address,
-      contracts.lusdToken.address,
+      contracts.xbrlToken.address,
       STBLContracts.stblStaking.address
     )
 
@@ -372,7 +372,7 @@ class DeploymentHelper {
       contracts.borrowerOperations.address,
       contracts.troveManager.address,
       contracts.activePool.address,
-      contracts.lusdToken.address,
+      contracts.xbrlToken.address,
       contracts.sortedTroves.address,
       contracts.priceFeedTestnet.address,
       STBLContracts.communityIssuance.address
@@ -411,7 +411,7 @@ class DeploymentHelper {
   static async connectSTBLContractsToCore(STBLContracts, coreContracts) {
     await STBLContracts.stblStaking.setAddresses(
       STBLContracts.stblToken.address,
-      coreContracts.lusdToken.address,
+      coreContracts.xbrlToken.address,
       coreContracts.troveManager.address, 
       coreContracts.borrowerOperations.address,
       coreContracts.activePool.address

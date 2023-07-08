@@ -21,9 +21,9 @@ The constructor for this class is marked as internal. Third-party code should no
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [collateral](./lib-base.trove.collateral.md) |  | [Decimal](./lib-base.decimal.md) | Amount of native currency (e.g. Ether) collateralized. |
-|  [debt](./lib-base.trove.debt.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD owed. |
+|  [debt](./lib-base.trove.debt.md) |  | [Decimal](./lib-base.decimal.md) | Amount of XBRL owed. |
 |  [isEmpty](./lib-base.trove.isempty.md) |  | boolean |  |
-|  [netDebt](./lib-base.trove.netdebt.md) |  | [Decimal](./lib-base.decimal.md) | Amount of LUSD that must be repaid to close this Trove. |
+|  [netDebt](./lib-base.trove.netdebt.md) |  | [Decimal](./lib-base.decimal.md) | Amount of XBRL that must be repaid to close this Trove. |
 
 ## Methods
 

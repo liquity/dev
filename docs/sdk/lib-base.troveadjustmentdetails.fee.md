@@ -4,7 +4,7 @@
 
 ## TroveAdjustmentDetails.fee property
 
-Amount of LUSD added to the Trove's debt as borrowing fee.
+Amount of XBRL added to the Trove's debt as borrowing fee.
 
 <b>Signature:</b>
 

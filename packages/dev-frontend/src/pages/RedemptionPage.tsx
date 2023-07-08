@@ -6,8 +6,8 @@ import { InfoMessage } from "../components/InfoMessage";
 import { useLiquity } from "../hooks/LiquityContext";
 import { Icon } from "../components/Icon";
 
-const uniLink = (lusdAddress: string) =>
-  `https://app.uniswap.org/#/swap?inputCurrency=${lusdAddress}&outputCurrency=ETH`;
+const uniLink = (xbrlAddress: string) =>
+  `https://app.uniswap.org/#/swap?inputCurrency=${xbrlAddress}&outputCurrency=ETH`;
 
 export const RedemptionPage: React.FC = () => {
   const {
@@ -27,8 +27,8 @@ export const RedemptionPage: React.FC = () => {
                 emerge.
               </Paragraph>
               <Paragraph sx={{ mt: 2 }}>
-                Most of the time you will get a better rate for converting LUSD to ETH on{" "}
-                <Link href={uniLink(addresses["lusdToken"])} target="_blank">
+                Most of the time you will get a better rate for converting XBRL to ETH on{" "}
+                <Link href={uniLink(addresses["xbrlToken"])} target="_blank">
                   Uniswap <Icon name="external-link-alt" size="xs" />
                 </Link>{" "}
                 or other exchanges.

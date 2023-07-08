@@ -26,7 +26,7 @@ def setAddresses(contracts):
         contracts.gasPool.address,
         contracts.collSurplusPool.address,
         contracts.priceFeedTestnet.address,
-        contracts.lusdToken.address,
+        contracts.xbrlToken.address,
         contracts.sortedTroves.address,
         contracts.stblToken.address,
         contracts.stblStaking.address,
@@ -42,7 +42,7 @@ def setAddresses(contracts):
         contracts.collSurplusPool.address,
         contracts.priceFeedTestnet.address,
         contracts.sortedTroves.address,
-        contracts.lusdToken.address,
+        contracts.xbrlToken.address,
         contracts.stblStaking.address,
         { 'from': accounts[0] }
     )
@@ -51,7 +51,7 @@ def setAddresses(contracts):
         contracts.borrowerOperations.address,
         contracts.troveManager.address,
         contracts.activePool.address,
-        contracts.lusdToken.address,
+        contracts.xbrlToken.address,
         contracts.sortedTroves.address,
         contracts.priceFeedTestnet.address,
         contracts.communityIssuance.address,
@@ -88,7 +88,7 @@ def setAddresses(contracts):
     # STBL
     contracts.stblStaking.setAddresses(
         contracts.stblToken.address,
-        contracts.lusdToken.address,
+        contracts.xbrlToken.address,
         contracts.troveManager.address,
         contracts.borrowerOperations.address,
         contracts.activePool.address,
@@ -121,7 +121,7 @@ def contracts():
     contracts.collSurplusPool = CollSurplusPool.deploy({ 'from': accounts[0] })
     contracts.borrowerOperations = BorrowerOperationsTester.deploy({ 'from': accounts[0] })
     contracts.hintHelpers = HintHelpers.deploy({ 'from': accounts[0] })
-    contracts.lusdToken = LUSDToken.deploy(
+    contracts.xbrlToken = XBRLToken.deploy(
         contracts.troveManager.address,
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address,
@@ -181,15 +181,15 @@ def _test_test(contracts):
 * open troves
 * issuance fee
 * trove pool formed
-* LUSD supply determined
-* LUSD stability pool demand determined
-* LUSD liquidity pool demand determined
-* LUSD price determined
+* XBRL supply determined
+* XBRL stability pool demand determined
+* XBRL liquidity pool demand determined
+* XBRL price determined
 * redemption & redemption fee
 * STBL pool return determined
 """
 def test_run_simulation(add_accounts, contracts, print_expectations):
-    LUSD_GAS_COMPENSATION = contracts.troveManager.LUSD_GAS_COMPENSATION() / 1e18
+    XBRL_GAS_COMPENSATION = contracts.troveManager.XBRL_GAS_COMPENSATION() / 1e18
     MIN_NET_DEBT = contracts.troveManager.MIN_NET_DEBT() / 1e18
 
     contracts.priceFeedTestnet.setPrice(floatToWei(price_ether[0]), { 'from': accounts[0] })
@@ -202,11 +202,11 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
     active_accounts = []
     inactive_accounts = [*range(1, len(accounts))]
 
-    price_LUSD = 1
+    price_XBRL = 1
     price_STBL_current = price_STBL_initial
 
     data = {"airdrop_gain": [0] * n_sim, "liquidation_gain": [0] * n_sim, "issuance_fee": [0] * n_sim, "redemption_fee": [0] * n_sim}
-    total_lusd_redempted = 0
+    total_xbrl_redempted = 0
     total_coll_added = whale_coll
     total_coll_liquidated = 0
 
@@ -217,7 +217,7 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
 
     with open('tests/simulation.csv', 'w', newline='') as csvfile:
         datawriter = csv.writer(csvfile, delimiter=',')
-        datawriter.writerow(['iteration', 'ETH_price', 'price_LUSD', 'price_STBL', 'num_troves', 'total_coll', 'total_debt', 'TCR', 'recovery_mode', 'last_ICR', 'SP_LUSD', 'SP_ETH', 'total_coll_added', 'total_coll_liquidated', 'total_lusd_redempted'])
+        datawriter.writerow(['iteration', 'ETH_price', 'price_XBRL', 'price_STBL', 'num_troves', 'total_coll', 'total_debt', 'TCR', 'recovery_mode', 'last_ICR', 'SP_XBRL', 'SP_ETH', 'total_coll_added', 'total_coll_liquidated', 'total_xbrl_redempted'])
 
         #Simulation Process
         for index in range(1, n_sim):
@@ -228,18 +228,18 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             contracts.priceFeedTestnet.setPrice(floatToWei(price_ether_current), { 'from': accounts[0] })
 
             #trove liquidation & return of stability pool
-            result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, price_STBL_current, data, index)
+            result_liquidation = liquidate_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_XBRL, price_STBL_current, data, index)
             total_coll_liquidated = total_coll_liquidated + result_liquidation[0]
             return_stability = result_liquidation[1]
 
             #close troves
-            result_close = close_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
+            result_close = close_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_XBRL, index)
 
             #adjust troves
-            [coll_added_adjust, issuance_LUSD_adjust] = adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, index)
+            [coll_added_adjust, issuance_XBRL_adjust] = adjust_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, index)
 
             #open troves
-            [coll_added_open, issuance_LUSD_open] = open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
+            [coll_added_open, issuance_XBRL_open] = open_troves(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_XBRL, index)
             total_coll_added = total_coll_added + coll_added_adjust + coll_added_open
             #active_accounts.sort(key=lambda a : a.get('CR_initial'))
 
@@ -247,12 +247,12 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             stability_update(accounts, contracts, active_accounts, return_stability, index)
 
             #Calculating Price, Liquidity Pool, and Redemption
-            [price_LUSD, redemption_pool, redemption_fee, issuance_LUSD_stabilizer] = price_stabilizer(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_LUSD, index)
-            total_lusd_redempted = total_lusd_redempted + redemption_pool
-            print('LUSD price', price_LUSD)
+            [price_XBRL, redemption_pool, redemption_fee, issuance_XBRL_stabilizer] = price_stabilizer(accounts, contracts, active_accounts, inactive_accounts, price_ether_current, price_XBRL, index)
+            total_xbrl_redempted = total_xbrl_redempted + redemption_pool
+            print('XBRL price', price_XBRL)
             print('STBL price', price_STBL_current)
 
-            issuance_fee = price_LUSD * (issuance_LUSD_adjust + issuance_LUSD_open + issuance_LUSD_stabilizer)
+            issuance_fee = price_XBRL * (issuance_XBRL_adjust + issuance_XBRL_open + issuance_XBRL_stabilizer)
             data['issuance_fee'][index] = issuance_fee
             data['redemption_fee'][index] = redemption_fee
 
@@ -262,13 +262,13 @@ def test_run_simulation(add_accounts, contracts, print_expectations):
             #annualized_earning = result_STBL[1]
             #MC_STBL_current = result_STBL[2]
 
-            [ETH_price, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_LUSD, SP_ETH] = logGlobalState(contracts)
-            print('Total redempted ', total_lusd_redempted)
+            [ETH_price, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_XBRL, SP_ETH] = logGlobalState(contracts)
+            print('Total redempted ', total_xbrl_redempted)
             print('Total ETH added ', total_coll_added)
             print('Total ETH liquid', total_coll_liquidated)
             print(f'Ratio ETH liquid {100 * total_coll_liquidated / total_coll_added}%')
             print(' ----------------------\n')
 
-            datawriter.writerow([index, ETH_price, price_LUSD, price_STBL_current, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_LUSD, SP_ETH, total_coll_added, total_coll_liquidated, total_lusd_redempted])
+            datawriter.writerow([index, ETH_price, price_XBRL, price_STBL_current, num_troves, total_coll, total_debt, TCR, recovery_mode, last_ICR, SP_XBRL, SP_ETH, total_coll_added, total_coll_liquidated, total_xbrl_redempted])
 
-            assert price_LUSD > 0
+            assert price_XBRL > 0

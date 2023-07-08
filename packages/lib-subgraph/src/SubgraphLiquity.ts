@@ -262,19 +262,19 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     throw new Error("Method not implemented.");
   }
 
-  getLUSDInStabilityPool() {
+  getXBRLInStabilityPool() {
     return tokensInStabilityPool.get(this.client, undefined);
   }
 
-  watchLUSDInStabilityPool(onLUSDInStabilityPoolChanged: (lusdInStabilityPool: Decimal) => void) {
-    return tokensInStabilityPool.watch(this.client, onLUSDInStabilityPoolChanged, undefined);
+  watchXBRLInStabilityPool(onXBRLInStabilityPoolChanged: (xbrlInStabilityPool: Decimal) => void) {
+    return tokensInStabilityPool.watch(this.client, onXBRLInStabilityPoolChanged, undefined);
   }
 
-  getLUSDBalance(address?: string): Promise<Decimal> {
+  getXBRLBalance(address?: string): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 
-  watchLUSDBalance(onLUSDBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
+  watchXBRLBalance(onXBRLBalanceChanged: (balance: Decimal) => void, address?: string): () => void {
     throw new Error("Method not implemented.");
   }
 

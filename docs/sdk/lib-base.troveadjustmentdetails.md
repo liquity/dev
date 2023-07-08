@@ -16,7 +16,7 @@ export interface TroveAdjustmentDetails
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [fee](./lib-base.troveadjustmentdetails.fee.md) | [Decimal](./lib-base.decimal.md) | Amount of LUSD added to the Trove's debt as borrowing fee. |
+|  [fee](./lib-base.troveadjustmentdetails.fee.md) | [Decimal](./lib-base.decimal.md) | Amount of XBRL added to the Trove's debt as borrowing fee. |
 |  [newTrove](./lib-base.troveadjustmentdetails.newtrove.md) | [Trove](./lib-base.trove.md) | New state of the adjusted Trove directly after the transaction. |
 |  [params](./lib-base.troveadjustmentdetails.params.md) | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimal](./lib-base.decimal.md)<!-- -->&gt; | Parameters of the adjustment. |
 

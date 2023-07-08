@@ -14,5 +14,5 @@ readonly frontendTag?: string;
 
 ## Remarks
 
-For example [depositLUSDInStabilityPool(amount, frontendTag?)](./lib-ethers.ethersliquity.depositlusdinstabilitypool.md) will tag newly made Stability Deposits with this address when its `frontendTag` parameter is omitted.
+For example [depositXBRLInStabilityPool(amount, frontendTag?)](./lib-ethers.ethersliquity.depositxbrlinstabilitypool.md) will tag newly made Stability Deposits with this address when its `frontendTag` parameter is omitted.
 

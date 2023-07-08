@@ -24,18 +24,18 @@ export class STBLStake {
   /** Collateral gain available to withdraw. */
   readonly collateralGain: Decimal;
 
-  /** LUSD gain available to withdraw. */
-  readonly lusdGain: Decimal;
+  /** XBRL gain available to withdraw. */
+  readonly xbrlGain: Decimal;
 
   /** @internal */
-  constructor(stakedSTBL = Decimal.ZERO, collateralGain = Decimal.ZERO, lusdGain = Decimal.ZERO) {
+  constructor(stakedSTBL = Decimal.ZERO, collateralGain = Decimal.ZERO, xbrlGain = Decimal.ZERO) {
     this.stakedSTBL = stakedSTBL;
     this.collateralGain = collateralGain;
-    this.lusdGain = lusdGain;
+    this.xbrlGain = xbrlGain;
   }
 
   get isEmpty(): boolean {
-    return this.stakedSTBL.isZero && this.collateralGain.isZero && this.lusdGain.isZero;
+    return this.stakedSTBL.isZero && this.collateralGain.isZero && this.xbrlGain.isZero;
   }
 
   /** @internal */
@@ -43,7 +43,7 @@ export class STBLStake {
     return (
       `{ stakedSTBL: ${this.stakedSTBL}` +
       `, collateralGain: ${this.collateralGain}` +
-      `, lusdGain: ${this.lusdGain} }`
+      `, xbrlGain: ${this.xbrlGain} }`
     );
   }
 
@@ -54,7 +54,7 @@ export class STBLStake {
     return (
       this.stakedSTBL.eq(that.stakedSTBL) &&
       this.collateralGain.eq(that.collateralGain) &&
-      this.lusdGain.eq(that.lusdGain)
+      this.xbrlGain.eq(that.xbrlGain)
     );
   }
 

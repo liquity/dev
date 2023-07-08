@@ -17,7 +17,7 @@ adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decima
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  params | [TroveAdjustmentParams](./lib-base.troveadjustmentparams.md)<!-- -->&lt;[Decimalish](./lib-base.decimalish.md)<!-- -->&gt; | Parameters of the adjustment. |
-|  maxBorrowingRate | [Decimalish](./lib-base.decimalish.md) | Maximum acceptable [borrowing rate](./lib-base.fees.borrowingrate.md) if <code>params</code> includes <code>borrowLUSD</code>. |
+|  maxBorrowingRate | [Decimalish](./lib-base.decimalish.md) | Maximum acceptable [borrowing rate](./lib-base.fees.borrowingrate.md) if <code>params</code> includes <code>borrowXBRL</code>. |
 
 <b>Returns:</b>
 
@@ -25,7 +25,7 @@ Promise&lt;[SentLiquityTransaction](./lib-base.sentliquitytransaction.md)<!-- --
 
 ## Remarks
 
-The transaction will fail if the Trove's debt would fall below [LUSD\_MINIMUM\_DEBT](./lib-base.lusd_minimum_debt.md)<!-- -->.
+The transaction will fail if the Trove's debt would fall below [XBRL\_MINIMUM\_DEBT](./lib-base.xbrl_minimum_debt.md)<!-- -->.
 
 If `maxBorrowingRate` is omitted, the current borrowing rate plus 0.5% is used as maximum acceptable rate.
 

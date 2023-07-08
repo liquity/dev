@@ -80,11 +80,11 @@
         {
           "indexed": false,
           "internalType": "uint256",
-          "name": "_LUSDFee",
+          "name": "_XBRLFee",
           "type": "uint256"
         }
       ],
-      "name": "LUSDBorrowingFeePaid",
+      "name": "XBRLBorrowingFeePaid",
       "type": "event"
     },
     {
@@ -93,11 +93,11 @@
         {
           "indexed": false,
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_xbrlTokenAddress",
           "type": "address"
         }
       ],
-      "name": "LUSDTokenAddressChanged",
+      "name": "XBRLTokenAddressChanged",
       "type": "event"
     },
     {
@@ -329,7 +329,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "_LUSDAmount",
+          "name": "_XBRLAmount",
           "type": "uint256"
         },
         {
@@ -366,7 +366,7 @@
           "type": "address"
         }
       ],
-      "name": "repayLUSD",
+      "name": "repayXBRL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -415,7 +415,7 @@
         },
         {
           "internalType": "address",
-          "name": "_lusdTokenAddress",
+          "name": "_xbrlTokenAddress",
           "type": "address"
         },
         {
@@ -475,7 +475,7 @@
           "type": "address"
         }
       ],
-      "name": "withdrawLUSD",
+      "name": "withdrawXBRL",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
