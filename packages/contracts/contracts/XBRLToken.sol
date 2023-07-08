@@ -225,8 +225,8 @@ contract XBRLToken is CheckContract, IXBRLToken {
     function _mint(address account, uint256 amount) internal {
         assert(account != address(0));
 
-        totalSupply = _totalSupply + amount;
-        _balances[account] = _balances[account] + amount;
+        _totalSupply += amount;
+        _balances[account] += amount;
         emit Transfer(address(0), account, amount);
     }
 

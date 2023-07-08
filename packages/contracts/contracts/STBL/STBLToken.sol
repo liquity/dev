@@ -3,7 +3,6 @@
 pragma solidity ^0.8.17;
 
 import "../Dependencies/CheckContract.sol";
-import "../Dependencies/SafeMath.sol";
 import "../Interfaces/ISTBLToken.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "../Dependencies/console.sol";
@@ -48,7 +47,6 @@ import "../Dependencies/console.sol";
 */
 
 contract STBLToken is CheckContract, ISTBLToken {
-    using SafeMath for uint256;
 
     // --- ERC20 Data ---
 
@@ -219,8 +217,8 @@ contract STBLToken is CheckContract, ISTBLToken {
         if (_isFirstYear()) { _requireCallerIsNotMultisig(); }
         
         uint256 currentAllowance = _allowances[msg.sender][spender];
-        require(currentAllowance >= amount, "ERC20: decreased allowance below zero");
-        _approve(spender, msg.sender, currentAllowance - subtractedValue);
+        require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
+        _approve(msg.sender, spender, currentAllowance - subtractedValue);
         return true;
     }
 
@@ -282,12 +280,13 @@ contract STBLToken is CheckContract, ISTBLToken {
     function _transfer(address sender, address recipient, uint256 amount) internal {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
+        require(_balances[sender] >= amount, "ERC20: transfer amount exceeds balance");
 
-        _balances[sender] -= amount, "ERC20: transfer amount exceeds balance";
+        _balances[sender] -= amount;
         _balances[recipient] += amount;
         emit Transfer(sender, recipient, amount);
     }
-
+    
     function _mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
 

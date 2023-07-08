@@ -57,10 +57,10 @@ contract TellorCaller is ITellorCaller {
             // Check that the data is not too old
             if(block.timestamp - _ethUsdTime < 24 hours && block.timestamp - _brlUsdTime < 24 hours) {
                 // Use the helper function _sliceUint to parse the bytes to uint256
-                return(true, _sliceUint(_ethUsdValue), _sliceUint(_brlUsdValue), _time);
+                return(true, _sliceUint(_ethUsdValue), _sliceUint(_brlUsdValue), _brlUsdTime);
             }
         }
-        return (false, 0, 0, _time);
+        return (false, 0, 0, _brlUsdTime);
     }
 
     // Internal functions

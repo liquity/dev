@@ -8,12 +8,9 @@ import "../Dependencies/BaseMath.sol";
 import "../Dependencies/LiquityMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Dependencies/CheckContract.sol";
-import "../Dependencies/SafeMath.sol";
 
 
 contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMath {
-    using SafeMath for uint;
-
     // --- Data ---
 
     string constant public NAME = "CommunityIssuance";

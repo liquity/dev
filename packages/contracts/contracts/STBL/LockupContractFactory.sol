@@ -3,7 +3,6 @@
 pragma solidity ^0.8.17;
 
 import "../Dependencies/CheckContract.sol";
-import "../Dependencies/SafeMath.sol";
 import "../Dependencies/Ownable.sol";
 import "../Interfaces/ILockupContractFactory.sol";
 import "./LockupContract.sol";
@@ -24,7 +23,6 @@ import "../Dependencies/console.sol";
 */
 
 contract LockupContractFactory is ILockupContractFactory, Ownable, CheckContract {
-    using SafeMath for uint;
 
     // --- Data ---
     string constant public NAME = "LockupContractFactory";

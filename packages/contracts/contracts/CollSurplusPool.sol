@@ -85,7 +85,7 @@ contract CollSurplusPool is Ownable, CheckContract, ICollSurplusPool {
         balances[_account] = 0;
         emit CollBalanceUpdated(_account, 0);
 
-        ETH = -= claimableColl;
+        ETH -= claimableColl;
         emit EtherSent(_account, claimableColl);
 
         (bool success, ) = _account.call{ value: claimableColl }("");

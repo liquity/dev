@@ -449,7 +449,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         *  - Send a fraction of the trove's collateral to the Stability Pool, equal to the fraction of its offset debt
         *
         */
-            debtToOffset = LiquityMath * _debt, _XBRLInStabPool;
+            debtToOffset = LiquityMath._min(_debt, _XBRLInStabPool);
             collToSendToSP = _coll * debtToOffset / _debt;
             debtToRedistribute = _debt - debtToOffset;
             collToRedistribute = _coll - collToSendToSP;
@@ -582,7 +582,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
                 vars.entireSystemDebt -= singleLiquidation.debtToOffset;
                 vars.entireSystemColl -= singleLiquidation.collToSendToSP
                     + singleLiquidation.collGasCompensation
-                    + singleLiquidation.collSurplus
+                    + singleLiquidation.collSurplus;
 
                 // Add liquidation values to their respective running totals
                 totals = _addLiquidationValuesToTotals(totals, singleLiquidation);
