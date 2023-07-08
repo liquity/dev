@@ -16,7 +16,7 @@ module.exports = {
         // artifacts: "./artifacts"
     },
     solc: {
-        version: "0.6.11",
+        version: "0.8.17",
         optimizer: {
             enabled: true,
             runs: 100
