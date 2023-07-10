@@ -23,7 +23,7 @@
     "eth-mutants": "^0.1.1",
     "ethereumjs-util": "^7.0.9",
     "ethers": "^5.4.3",
-    "solc": "^0.8.17",
+    "solc": "^0.6.11",
     "xmlhttprequest": "^1.8.0"
   },
   "devDependencies": {
@@ -31,7 +31,7 @@
     "@nomiclabs/hardhat-etherscan": "^2.1.2",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/contracts": "^4.3.2",
+    "@openzeppelin/contracts": "^4.9.2",
     "usingtellor": "^5.0.4",
     "@openzeppelin/hardhat-upgrades": "^1.12.0",
     "@openzeppelin/test-helpers": "^0.5.13",

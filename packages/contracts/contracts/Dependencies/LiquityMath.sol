@@ -93,7 +93,7 @@ library LiquityMath {
         }
         // Return the maximal value for uint256 if the Trove has a debt of 0. Represents "infinite" CR.
         else { // if (_debt == 0)
-            return 2**256 - 1;
+            return type(uint256).max;
         }
     }
 
@@ -105,7 +105,7 @@ library LiquityMath {
         }
         // Return the maximal value for uint256 if the Trove has a debt of 0. Represents "infinite" CR.
         else { // if (_debt == 0)
-            return 2**256 - 1; 
+            return type(uint256).max;
         }
     }
 }

@@ -6,7 +6,7 @@ import "../Dependencies/AggregatorV3Interface.sol";
 import "../Dependencies/console.sol";
 
 contract MockAggregator is AggregatorV3Interface {
-    
+
     // storage variables to hold the mock data
     uint8 private decimalsVal = 8;
     int private price;
@@ -62,7 +62,7 @@ contract MockAggregator is AggregatorV3Interface {
       function setPrevRoundId(uint80 _prevRoundId) external {
         prevRoundId = _prevRoundId;
     }
-    
+
 
     // --- Getters that adhere to the AggregatorV3 interface ---
 
@@ -82,16 +82,16 @@ contract MockAggregator is AggregatorV3Interface {
         uint256 startedAt,
         uint256 updatedAt,
         uint80 answeredInRound
-    ) 
-    {    
+    )
+    {
         if (latestRevert) { require(1== 0, "latestRoundData reverted");}
 
-        return (latestRoundId, price, 0, updateTime, 0); 
+        return (latestRoundId, price, 0, updateTime, 0);
     }
 
     function getRoundData(uint80)
     external
-    override 
+    override
     view
     returns (
       uint80 roundId,

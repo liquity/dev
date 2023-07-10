@@ -24,18 +24,16 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
     AggregatorV3Interface public brlUsdPriceAggregator;  // Mainnet Chainlink aggregator for BRL / USD price feed pair
     AggregatorV3Interface public ethUsdPriceAggregator;  // Mainnet Chainlink aggregator for ETH / USD price feed pair
-    ITellorCaller public tellorCaller;  // Wrapper contract that calls the Tellor system
+    ITellorCaller public brlUsdTellorCaller;  // Wrapper contract that calls the Tellor system for BRL / USD  price feed pair
+    ITellorCaller public ethUsdTellorCaller;  // Wrapper contract that calls the Tellor system for BRL / USD  price feed pair
 
-    // Core Liquity contracts
-    address borrowerOperationsAddress;
-    address troveManagerAddress;
+    uint256 public immutable tellorDigits;
 
     // Use to convert a price answer to an 18-digit precision uint
     uint256 constant public TARGET_DIGITS = 18;  
-    uint256 constant public TELLOR_DIGITS = 6;
 
-    // Maximum time period allowed since Chainlink's latest round data timestamp, beyond which Chainlink is considered frozen.
-    uint256 constant public TIMEOUT = 14400;  // 4 hours: 60 * 60 * 4
+    // Maximum time period allowed since Chainlink/Tellor's latest round data timestamp, beyond which Chainlink is considered frozen.
+    uint256 constant public TIMEOUT = 28800;  // 8 hours: 60 * 60 * 8
     
     // Maximum deviation allowed between two consecutive Chainlink oracle prices. 18-digit precision.
     uint256 constant public MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND =  5e17; // 50%
@@ -63,11 +61,14 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     struct TellorResponse {
-        bool ifRetrieve;
-        uint256 ethUsdValue;
+        bool brlUsdIfRetrieve;
         uint256 brlUsdValue;
-        uint256 timestamp;
-        bool success;
+        uint256 brlUsdTimestamp;
+        bool brlUsdSuccess;
+        bool ethUsdIfRetrieve;
+        uint256 ethUsdValue;
+        uint256 ethUsdTimestamp;
+        bool ethUsdSuccess;
     }
 
     enum Status {
@@ -83,23 +84,34 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
     event PriceFeedStatusChanged(Status newStatus);
 
+    constructor (uint256 _tellorDigits) {
+        require(_tellorDigits > 0 && _tellorDigits <= TARGET_DIGITS, "PriceFeed: wrong decimals for Tellor");
+        tellorDigits = _tellorDigits;
+    }
+
     // --- Dependency setters ---
     
     function setAddresses(
         address _brlUsdPriceAggregatorAddress,
         address _ethUsdPriceAggregatorAddress,
-        address _tellorCallerAddress
+        address _brlUsdTellorCallerAddress,
+        address _ethUsdTellorCallerAddress
     )
         external
         onlyOwner
     {
+        require(address(ethUsdPriceAggregator) == address(0), "PriceFeed: contacts already set");
+        require(address(brlUsdPriceAggregator) == address(0), "PriceFeed: contacts already set");
+
         checkContract(_brlUsdPriceAggregatorAddress);
         checkContract(_ethUsdPriceAggregatorAddress);
-        checkContract(_tellorCallerAddress);
+        checkContract(_brlUsdTellorCallerAddress);
+        checkContract(_ethUsdTellorCallerAddress);
        
         brlUsdPriceAggregator = AggregatorV3Interface(_brlUsdPriceAggregatorAddress);
         ethUsdPriceAggregator = AggregatorV3Interface(_ethUsdPriceAggregatorAddress);
-        tellorCaller = ITellorCaller(_tellorCallerAddress);
+        brlUsdTellorCaller = ITellorCaller(_brlUsdTellorCallerAddress);
+        ethUsdTellorCaller = ITellorCaller(_ethUsdTellorCallerAddress);
 
         // Explicitly set initial system status
         status = Status.chainlinkWorking;
@@ -112,8 +124,6 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             "PriceFeed: Chainlink must be working and current");
 
         _storeChainlinkPrice(chainlinkResponse);
-
-        _renounceOwnership();
     }
 
     // --- Functions ---
@@ -352,22 +362,16 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     }
 
     function _badChainlinkResponse(ChainlinkResponse memory _response) internal view returns (bool) {
-         // Check for ETH / USD response call reverted
-        if (!_response.ethUsdSuccess) {return true;}
-        // Check for response call reverted
-        if (!_response.brlUsdSuccess) {return true;}
-        // Check for an invalid roundId that is 0
-        if (_response.ethUsdRoundId == 0) {return true;}
-        // Check for an invalid roundId that is 0
-        if (_response.brlUsdRoundId == 0) {return true;}
+         // Check for ETH / USD or BRL / USD responses call reverted
+        if (!_response.ethUsdSuccess || !_response.brlUsdSuccess) {return true;}
+        // Check for an invalid roundIds that is 0
+        if (_response.ethUsdRoundId == 0 || _response.brlUsdRoundId == 0) {return true;}
         // Check for an invalid timeStamp that is 0, or in the future
         if (_response.ethUsdTimestamp == 0 || _response.ethUsdTimestamp > block.timestamp) {return true;}
         // Check for an invalid timeStamp that is 0, or in the future
         if (_response.brlUsdTimestamp == 0 || _response.brlUsdTimestamp > block.timestamp) {return true;}
-        // Check for non-positive price
-        if (_response.ethUsdAnswer <= 0) {return true;}
-        // Check for non-positive price
-        if (_response.brlUsdAnswer <= 0) {return true;}
+        // Check for non-positive ETH / USD or BRL / USD price
+        if (_response.ethUsdAnswer <= 0 || _response.brlUsdAnswer <= 0) {return true;}
 
         return false;
     }
@@ -401,19 +405,19 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
     function _tellorIsBroken(TellorResponse memory _response) internal view returns (bool) {
         // Check for response call reverted
-        if (!_response.success) {return true;}
-        // Check for an invalid timeStamp that is 0, or in the future
-        if (_response.timestamp == 0 || _response.timestamp > block.timestamp) {return true;}
-        // Check for ETH: USD zero price
-        if (_response.ethUsdValue == 0) {return true;}
-        // Check for ETH: USD zero price
-        if (_response.brlUsdValue == 0) {return true;}
+        if (!_response.ethUsdSuccess || !_response.brlUsdSuccess) {return true;}
+        // Check for an invalid ETH / USD timestamp that is 0, or in the future
+        if (_response.ethUsdTimestamp == 0 || _response.ethUsdTimestamp > block.timestamp) {return true;}
+        // Check for an invalid BRL / USD timestamp that is 0, or in the future
+        if (_response.brlUsdTimestamp == 0 || _response.brlUsdTimestamp > block.timestamp) {return true;}
+        // Check for ETH  / USD and BRL / USD zero prices
+        if (_response.ethUsdValue == 0 || _response.brlUsdValue == 0) {return true;}
 
         return false;
     }
 
      function _tellorIsFrozen(TellorResponse  memory _tellorResponse) internal view returns (bool) {
-        return block.timestamp - _tellorResponse.timestamp > TIMEOUT;
+        return block.timestamp - _tellorResponse.ethUsdTimestamp > TIMEOUT || block.timestamp - _tellorResponse.brlUsdTimestamp > TIMEOUT;
     }
 
     function _bothOraclesLiveAndUnbrokenAndSimilarPrice
@@ -441,7 +445,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return _bothOraclesSimilarPrice(_chainlinkResponse, _tellorResponse);
     }
 
-    function _bothOraclesSimilarPrice( ChainlinkResponse memory _chainlinkResponse, TellorResponse memory _tellorResponse) internal pure returns (bool) {
+    function _bothOraclesSimilarPrice( ChainlinkResponse memory _chainlinkResponse, TellorResponse memory _tellorResponse) internal view returns (bool) {
         uint256 scaledChainlinkEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.ethUsdAnswer), _chainlinkResponse.ethUsdDecimals);
         uint256 scaledChainlinkBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.brlUsdAnswer), _chainlinkResponse.brlUsdDecimals);
         uint256 scaledTellorEthUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.ethUsdValue);
@@ -481,8 +485,8 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         return price;
     }
 
-    function _scaleTellorPriceByDigits(uint256 _price) internal pure returns (uint) {
-        return _price * (10**(TARGET_DIGITS - TELLOR_DIGITS));
+    function _scaleTellorPriceByDigits(uint256 _price) internal view returns (uint) {
+        return _price * (10 ** (TARGET_DIGITS - tellorDigits));
     }
 
     function _changeStatus(Status _status) internal {
@@ -498,7 +502,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
      function _storeTellorPrice(TellorResponse memory _tellorResponse) internal returns (uint) {
         uint256 scaledTellorBrlUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.brlUsdValue);
         uint256 scaledTellorEthUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.ethUsdValue);
-        uint256 calculatedEthBrlPrice = scaledTellorEthUsdPrice / scaledTellorBrlUsdPrice;
+        uint256 calculatedEthBrlPrice = (scaledTellorEthUsdPrice * DECIMAL_PRECISION) / scaledTellorBrlUsdPrice;
         _storePrice(calculatedEthBrlPrice);
 
         return calculatedEthBrlPrice;
@@ -507,7 +511,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     function _storeChainlinkPrice(ChainlinkResponse memory _chainlinkResponse) internal returns (uint) {
         uint256 scaledChainlinkEthUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.ethUsdAnswer), _chainlinkResponse.ethUsdDecimals);
         uint256 scaledChainlinkBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_chainlinkResponse.brlUsdAnswer), _chainlinkResponse.brlUsdDecimals);
-        uint256 calculatedEthBrlPrice = scaledChainlinkEthUsdPrice / scaledChainlinkBrlUsdPrice;
+        uint256 calculatedEthBrlPrice = (scaledChainlinkEthUsdPrice * DECIMAL_PRECISION) / scaledChainlinkBrlUsdPrice;
         _storePrice(calculatedEthBrlPrice);
 
         return calculatedEthBrlPrice;
@@ -515,24 +519,39 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
     // --- Oracle response wrapper functions ---
 
-    function _getCurrentTellorResponse() internal view returns (TellorResponse memory tellorResponse) {
-        try tellorCaller.getTellorCurrentValue() returns
+    function _getCurrentTellorResponse() internal returns (TellorResponse memory tellorResponse) {
+        try brlUsdTellorCaller.getTellorCurrentValue() returns
         (
             bool ifRetrieve,
-            uint256 ethUsdValue,
-            uint256 brlUsdValue,
+            uint256 value,
+            uint256 timestampRetrieved
+        )
+        {
+            // If call to Tellor succeeds, return the response and success = true
+            tellorResponse.brlUsdIfRetrieve = ifRetrieve;
+            tellorResponse.brlUsdValue = value;
+            tellorResponse.brlUsdTimestamp = timestampRetrieved;
+            tellorResponse.brlUsdSuccess = true;
+        } catch {
+             // If call to Tellor reverts, return a zero response with success = false
+            return (tellorResponse);
+        }
+
+        try ethUsdTellorCaller.getTellorCurrentValue() returns
+        (
+            bool ifRetrieve,
+            uint256 value,
             uint256 _timestampRetrieved
         )
         {
             // If call to Tellor succeeds, return the response and success = true
-            tellorResponse.ifRetrieve = ifRetrieve;
-            tellorResponse.ethUsdValue = ethUsdValue;
-            tellorResponse.brlUsdValue = brlUsdValue;
-            tellorResponse.timestamp = _timestampRetrieved;
-            tellorResponse.success = true;
+            tellorResponse.ethUsdIfRetrieve = ifRetrieve;
+            tellorResponse.ethUsdValue = value;
+            tellorResponse.ethUsdTimestamp = _timestampRetrieved;
+            tellorResponse.ethUsdSuccess = true;
 
             return (tellorResponse);
-        }catch {
+        } catch {
              // If call to Tellor reverts, return a zero response with success = false
             return (tellorResponse);
         }
@@ -577,7 +596,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             return chainlinkResponse;
         }
 
-                // Secondly, try to get latest price data:
+        // Secondly, try to get latest price data:
         try brlUsdPriceAggregator.latestRoundData() returns
         (
             uint80 roundId,
@@ -606,9 +625,12 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         uint8 _ethUsdCurrentDecimals
     ) internal view returns (ChainlinkResponse memory prevChainlinkResponse) {
         /*
-        * NOTE: Chainlink only offers a current decimals() value - there is no way to obtain the decimal precision used in a 
+        * NOTE: Chainlink only offers a current decimals() value - there is no way to obtain the decimal precision used in a
         * previous round.  We assume the decimals used in the previous round are the same as the current round.
         */
+        if (_brlUsdCurrentRoundId == 0 || _ethUsdCurrentRoundId == 0) {
+      			return prevChainlinkResponse;
+    		}
 
         // Try to get the price data from the previous round:
         try brlUsdPriceAggregator.getRoundData(_brlUsdCurrentRoundId - 1) returns 
@@ -651,6 +673,79 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             // If call to Chainlink aggregator reverts, return a zero response with success = false
             return prevChainlinkResponse;
         }
+    }
+
+    /*
+    * forceExitBothUntrustedStatus()
+    * DAO can help one oracle return back online only if previously both were untrusted.
+    * Function reverts if both oracles are still broken.
+    * In case when both oracles are online but have different prices then caller can control 
+    * which will be checked first: ChainLink if tryTellorFirst==false, Tellor otherwise
+    */ 
+    function forceExitBothUntrustedStatus(bool tryTellorFirst) external onlyOwner {
+        require(status == Status.bothOraclesUntrusted, "PriceFeed: at least one oracle is working");
+
+        ChainlinkResponse memory chainlinkResponse = _getCurrentChainlinkResponse();
+        ChainlinkResponse memory prevChainlinkResponse = _getPrevChainlinkResponse(chainlinkResponse.brlUsdRoundId, chainlinkResponse.brlUsdDecimals, chainlinkResponse.ethUsdRoundId, chainlinkResponse.ethUsdDecimals);
+        TellorResponse memory tellorResponse = _getCurrentTellorResponse();
+
+        // check Tellor first only if flag was true, exit function in case of success
+        if
+        (
+            tryTellorFirst &&
+            _changeStatusIfTellorLiveAndUnbroken(tellorResponse)
+        )
+        {
+            return;
+        }
+
+        // check ChainLink feed
+        if 
+        (
+            !_chainlinkIsBroken(chainlinkResponse, prevChainlinkResponse) &&
+            !_chainlinkIsFrozen(chainlinkResponse) &&
+            !_chainlinkPriceChangeAboveMax(chainlinkResponse, prevChainlinkResponse)
+        ) 
+        {
+            _changeStatus(Status.usingChainlinkTellorUntrusted);
+            _storeChainlinkPrice(chainlinkResponse);
+            return;
+        }
+
+        // if Tellor was already checked or check is false then revert transaction
+        if
+        (
+            !tryTellorFirst &&
+            _changeStatusIfTellorLiveAndUnbroken(tellorResponse)
+        )
+        {
+            return;
+        }
+
+        // Transaction is successful only if one oracle returned back online
+        revert("PriceFeed: both oracles are still untrusted");
+    }
+
+    function _changeStatusIfTellorLiveAndUnbroken
+    (
+        TellorResponse memory _tellorResponse
+    )
+        internal
+        returns (bool)
+    {
+        // Return true if Tellor is back online
+        if
+        (
+            !_tellorIsBroken(_tellorResponse) &&
+            !_tellorIsFrozen(_tellorResponse)
+        )
+        {
+            _changeStatus(Status.usingTellorChainlinkUntrusted);
+            _storeTellorPrice(_tellorResponse);
+            return true;
+        }
+
+        return false;
     }
 }
 

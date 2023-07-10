@@ -6,6 +6,8 @@ import "../PriceFeed.sol";
 
 contract PriceFeedTester is PriceFeed {
 
+    constructor (uint256 _tellorDigits) PriceFeed(_tellorDigits) {}
+    
     function setLastGoodPrice(uint256 _lastGoodPrice) external {
         lastGoodPrice = _lastGoodPrice;
     }

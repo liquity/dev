@@ -153,7 +153,7 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       
         // Check it gives the expected error message for a failed Solidity 'assert'
       } catch (err) {
-        assert.include(err.message, "invalid opcode")
+        assert.include(err.message, "reverted with panic code 0x1 (Assertion error)")
       }
     })
   })

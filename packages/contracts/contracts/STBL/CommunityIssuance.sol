@@ -50,7 +50,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
 
     // --- Functions ---
 
-    constructor() public {
+    constructor() {
         deploymentTime = block.timestamp;
     }
 
@@ -97,7 +97,7 @@ contract CommunityIssuance is ICommunityIssuance, Ownable, CheckContract, BaseMa
     t:  time passed since last STBL issuance event  */
     function _getCumulativeIssuanceFraction() internal view returns (uint) {
         // Get the time passed since deployment
-        uint256 timePassedInMinutes = block.timestamp - deploymentTime / SECONDS_IN_ONE_MINUTE;
+        uint256 timePassedInMinutes = (block.timestamp - deploymentTime) / SECONDS_IN_ONE_MINUTE;
 
         // f^t
         uint256 power = LiquityMath._decPow(ISSUANCE_FACTOR, timePassedInMinutes);

@@ -122,12 +122,12 @@ contract('XBRLToken', async accounts => {
 
     it("name(): returns the token's name", async () => {
       const name = await xbrlTokenTester.name()
-      assert.equal(name, "XBRL Stablecoin")
+      assert.equal(name, "xBRL Stablecoin")
     })
 
     it("symbol(): returns the token's symbol", async () => {
       const symbol = await xbrlTokenTester.symbol()
-      assert.equal(symbol, "XBRL")
+      assert.equal(symbol, "xBRL")
     })
 
     it("decimal(): returns the number of decimal digits used", async () => {

@@ -62,6 +62,10 @@ export class Decimal {
     return new Decimal(BigNumber.from(bigNumberString));
   }
 
+  static fromBigNumber(bigNumber: BigNumber): Decimal {
+    return new Decimal(bigNumber);
+  }
+
   private static _fromString(representation: string): Decimal {
     if (!representation || !representation.match(stringRepresentationFormat)) {
       throw new Error(`bad decimal format: "${representation}"`);
@@ -375,6 +379,14 @@ export class Difference {
     }
 
     return this._number.sign + this._number.absoluteValue.prettify(precision);
+  }
+
+  nonZeroish(precision: number): this | undefined {
+    const zeroish = `0.${"0".repeat(precision)}5`;
+
+    if (this._number?.absoluteValue.gte(zeroish)) {
+      return this;
+    }
   }
 
   mul(multiplier: Decimalish): Difference {
