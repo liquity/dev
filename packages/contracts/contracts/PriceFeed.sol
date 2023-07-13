@@ -463,7 +463,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         * Return true if the relative price difference is <= 3%: if so, we assume both oracles are probably reporting
         * the honest market price, as it is unlikely that both have been broken/hacked and are still in-sync.
         */
-        return percentEthUsdPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES || percentBrlUsdPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
+        return percentEthUsdPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES && percentBrlUsdPriceDifference <= MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES;
     }
 
     function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits) internal pure returns (uint) {
