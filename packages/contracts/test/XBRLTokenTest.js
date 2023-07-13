@@ -47,7 +47,7 @@ const getPermitDigest = ( name, address, chainId, version,
 contract('XBRLToken', async accounts => {
   const [owner, alice, bob, carol, dennis] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
 
   // the second account our hardhatenv creates (for Alice)
   // from https://github.com/liquity/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
@@ -69,7 +69,7 @@ contract('XBRLToken', async accounts => {
       const contracts = await deploymentHelper.deployTesterContractsHardhat()
 
 
-      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
       await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
       await deploymentHelper.connectSTBLContracts(STBLContracts)
