@@ -22,7 +22,7 @@ contract('StabilityPool - STBL Rewards', async accounts => {
     frontEnd_1, frontEnd_2, frontEnd_3
   ] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
 
   let contracts
 
@@ -58,7 +58,7 @@ contract('StabilityPool - STBL Rewards', async accounts => {
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address
       )
-      const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
+      const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
       priceFeed = contracts.priceFeedTestnet
       xbrlToken = contracts.xbrlToken

@@ -49,7 +49,7 @@ contract('SortedTroves', async accounts => {
   let borrowerOperations
   let xbrlToken
 
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
 
   let contracts
 
@@ -65,7 +65,7 @@ contract('SortedTroves', async accounts => {
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address
       )
-      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
       priceFeed = contracts.priceFeedTestnet
       sortedTroves = contracts.sortedTroves

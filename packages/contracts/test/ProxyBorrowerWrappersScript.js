@@ -37,7 +37,7 @@ contract('BorrowerWrappers', async accounts => {
     // frontEnd_1, frontEnd_2, frontEnd_3
   ] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
 
   let priceFeed
   let xbrlToken
@@ -67,7 +67,7 @@ contract('BorrowerWrappers', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts = await deploymentHelper.deployXBRLToken(contracts)
-    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
+    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     await deploymentHelper.connectSTBLContracts(STBLContracts)
     await deploymentHelper.connectCoreContracts(contracts, STBLContracts)

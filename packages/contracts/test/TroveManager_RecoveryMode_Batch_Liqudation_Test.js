@@ -6,7 +6,7 @@ const TroveManagerTester = artifacts.require("./TroveManagerTester")
 const XBRLToken = artifacts.require("./XBRLToken.sol")
 
 contract('TroveManager - in Recovery Mode - back to normal mode in 1 tx', async accounts => {
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
   const [
     owner,
     alice, bob, carol, dennis, erin, freddy, greta, harry, ida,
@@ -30,7 +30,7 @@ contract('TroveManager - in Recovery Mode - back to normal mode in 1 tx', async 
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
     )
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     troveManager = contracts.troveManager
     stabilityPool = contracts.stabilityPool

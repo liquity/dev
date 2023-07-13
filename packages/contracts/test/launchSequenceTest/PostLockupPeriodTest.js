@@ -16,7 +16,7 @@ contract('After the initial lockup period has passed', async accounts => {
     investor_3,
     A, B, C, D, E, F, G, H, I, J, K] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
 
   const SECONDS_IN_ONE_DAY = timeValues.SECONDS_IN_ONE_DAY
   const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
@@ -62,7 +62,7 @@ contract('After the initial lockup period has passed', async accounts => {
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
+    STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     coreContracts = await deploymentHelper.deployLiquityCore()
 
     stblStaking = STBLContracts.stblStaking

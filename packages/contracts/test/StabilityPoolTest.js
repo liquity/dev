@@ -30,7 +30,7 @@ contract('StabilityPool', async accounts => {
     frontEnd_1, frontEnd_2, frontEnd_3,
   ] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
 
   const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
   let contracts
@@ -65,7 +65,7 @@ contract('StabilityPool', async accounts => {
         contracts.stabilityPool.address,
         contracts.borrowerOperations.address
       )
-      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
       priceFeed = contracts.priceFeedTestnet
       xbrlToken = contracts.xbrlToken

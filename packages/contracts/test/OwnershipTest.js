@@ -8,7 +8,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
 
   const [owner, alice, bob] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
   
   let contracts
   let xbrlToken
@@ -28,7 +28,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
     contracts = await deploymentHelper.deployLiquityCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
     contracts = await deploymentHelper.deployXBRLToken(contracts)
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     xbrlToken = contracts.xbrlToken
     sortedTroves = contracts.sortedTroves

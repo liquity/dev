@@ -25,7 +25,7 @@ contract('During the initial lockup period', async accounts => {
     I
   ] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
 
   const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
   const SECONDS_IN_364_DAYS = timeValues.SECONDS_IN_ONE_DAY * 364
@@ -63,7 +63,7 @@ contract('During the initial lockup period', async accounts => {
   beforeEach(async () => {
     // Deploy all contracts from the first account
     coreContracts = await deploymentHelper.deployLiquityCore()
-    STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, multisig)
+    STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     stblStaking = STBLContracts.stblStaking
     stblToken = STBLContracts.stblToken

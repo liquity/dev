@@ -11,7 +11,7 @@ const dec = th.dec
 
 contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', async accounts => {
   const [liquityAG, A, B] = accounts;
-  const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
 
   let STBLContracts
 
@@ -22,7 +22,7 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
+    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     await deploymentHelper.connectSTBLContracts(STBLContracts)
 
     stblStaking = STBLContracts.stblStaking

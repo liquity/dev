@@ -18,7 +18,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
     A, B, C, D, E,
     whale, defaulter_1, defaulter_2, defaulter_3, defaulter_4] = accounts;
 
-    const [bountyAddress, lpRewardsAddress, multisig] = accounts.slice(997, 1000)
+    const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
 
   let priceFeed
   let xbrlToken
@@ -45,7 +45,7 @@ contract('TroveManager - Redistribution reward calculations', async accounts => 
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
     )
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, multisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     priceFeed = contracts.priceFeedTestnet
     xbrlToken = contracts.xbrlToken
