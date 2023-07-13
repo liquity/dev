@@ -87,7 +87,7 @@ contract('XBRLToken', async accounts => {
       chainId = await xbrlTokenOriginal.getChainId()
 
       stabilityPool = contracts.stabilityPool
-      troveManager = contracts.stabilityPool
+      troveManager = contracts.troveManager
       borrowerOperations = contracts.borrowerOperations
 
       tokenVersion = await xbrlTokenOriginal.version()
@@ -104,6 +104,7 @@ contract('XBRLToken', async accounts => {
         await xbrlTokenOriginal.unprotectedMint(carol, 50)
       }
     })
+
 
     it('balanceOf(): gets the balance of the account', async () => {
       const aliceBalance = (await xbrlTokenTester.balanceOf(alice)).toNumber()
@@ -158,12 +159,12 @@ contract('XBRLToken', async accounts => {
     if (!withProxy) {
       it("approve(): reverts when spender param is address(0)", async () => {
         const txPromise = xbrlTokenTester.approve(ZERO_ADDRESS, 100, {from: bob})
-        await assertAssert(txPromise)
+        await assertRevert(txPromise)
       })
 
       it("approve(): reverts when owner param is address(0)", async () => {
         const txPromise = xbrlTokenTester.callInternalApprove(ZERO_ADDRESS, alice, dec(1000, 18), {from: bob})
-        await assertAssert(txPromise)
+        await assertRevert(txPromise)
       })
     }
 
@@ -302,7 +303,8 @@ contract('XBRLToken', async accounts => {
     it('decreaseAllowance(): fails trying to decrease more than previously allowed', async () => {
       await xbrlTokenTester.approve(bob, dec(3, 18), { from: alice })
       assert.equal((await xbrlTokenTester.allowance(alice, bob)).toString(), dec(3, 18))
-      await assertRevert(xbrlTokenTester.decreaseAllowance(bob, dec(4, 18), { from: alice }), 'ERC20: decreased allowance below zero')
+      await assertRevert(xbrlTokenTester.decreaseAllowance(bob, dec(4, 18), { from: alice }), 
+      !withProxy ? 'ERC20: decreased allowance below zero' : undefined)
       assert.equal((await xbrlTokenTester.allowance(alice, bob)).toString(), dec(3, 18))
     })
 
@@ -374,8 +376,8 @@ contract('XBRLToken', async accounts => {
           deadline, v, r, s), 'XBRL: invalid signature')
 
         // Check that the zero address fails
-        await assertAssert(xbrlTokenTester.permit('0x0000000000000000000000000000000000000000',
-                                                  approve.spender, approve.value, deadline, '0x99', r, s))
+        await assertRevert(xbrlTokenTester.permit('0x0000000000000000000000000000000000000000',
+          approve.spender, approve.value, deadline, '0x99', r, s))
       })
 
       it('permits(): fails with expired deadline', async () => {

@@ -12,7 +12,9 @@ contract STBLTokenTester is STBLToken {
         address _lockupFactoryAddress,
         address _bountyAddress,
         address _lpRewardsAddress,
-        address _multisigAddress
+        address _momentZeroMultisigAddress,
+        address _sixMonthsMultisigAddress,
+        address _oneYearMultisigAddress
     ) 
         public 
         STBLToken 
@@ -22,7 +24,9 @@ contract STBLTokenTester is STBLToken {
         _lockupFactoryAddress,
         _bountyAddress,
         _lpRewardsAddress,
-        _multisigAddress
+        _momentZeroMultisigAddress,
+        _sixMonthsMultisigAddress,
+        _oneYearMultisigAddress
     )
     {} 
 
@@ -35,7 +39,8 @@ contract STBLTokenTester is STBLToken {
     function unprotectedSendToSTBLStaking(address _sender, uint256 _amount) external {
         // No check for the caller here
         
-        if (_isFirstYear()) {_requireSenderIsNotMultisig(_sender);}
+        if (_isFirstSixMonths()) {_requireSenderIsNotSixMonthsMultisig(_sender);}
+        if (_isFirstYear()) {_requireSenderIsNotOneYearMultisig(_sender);}
         _transfer(_sender, stblStakingAddress, _amount);
     }
 

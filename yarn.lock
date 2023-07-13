@@ -3245,7 +3245,7 @@
     find-up "^4.1.0"
     fs-extra "^8.1.0"
 
-"@openzeppelin/contracts@^4.3.2":
+"@openzeppelin/contracts@^4.9.2":
   version "4.9.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.2.tgz#1cb2d5e4d3360141a17dbc45094a8cad6aac16c1"
   integrity sha512-mO+y6JaqXjWeMh9glYVzVu8HYPGknAAnWyxTRhGeckOruyXQMNnlcW6w/Dx9ftLeIQk6N+ZJFuVmTwF7lEIFrg==
@@ -7476,11 +7476,6 @@ commander@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/commander/-/commander-4.1.1.tgz#9fd602bd936294e9e9ef46a3f4d6964044b18068"
   integrity sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==
-
-commander@^8.1.0:
-  version "8.3.0"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-8.3.0.tgz#4837ea1b2da67b9c616a67afbb0fafee567bca66"
-  integrity sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==
 
 common-tags@^1.5.1, common-tags@^1.8.0:
   version "1.8.0"
@@ -19557,16 +19552,17 @@ solc@0.7.3:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solc@^0.8.17:
-  version "0.8.20"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.8.20.tgz#b49151cf5ecc8de088d3d32b0afb607b3522ba8d"
-  integrity sha512-fPRnGspIEqmhu63RFO3pc79sLA7ZmzO0Uy0L5l6hEt2wAsq0o7UV6pXkAp3Mfv9IBhg7Px/oTu3a+y4gs3BWrQ==
+solc@^0.6.11:
+  version "0.6.12"
+  resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.12.tgz#48ac854e0c729361b22a7483645077f58cba080e"
+  integrity sha512-Lm0Ql2G9Qc7yPP2Ba+WNmzw2jwsrd3u4PobHYlSOxaut3TtUbj9+5ZrT6f4DUpNPEoBaFUOEg9Op9C0mk7ge9g==
   dependencies:
     command-exists "^1.2.8"
-    commander "^8.1.0"
-    follow-redirects "^1.12.1"
+    commander "3.0.2"
+    fs-extra "^0.30.0"
     js-sha3 "0.8.0"
     memorystream "^0.3.1"
+    require-from-string "^2.0.0"
     semver "^5.5.0"
     tmp "0.0.33"
 

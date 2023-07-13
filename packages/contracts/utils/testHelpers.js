@@ -1,6 +1,8 @@
 
 const BN = require('bn.js')
-const LockupContract = artifacts.require(("./LockupContract.sol"))
+const TwoMonthsLockupContract = artifacts.require(("./TwoMonthsLockupContract.sol"))
+const SixMonthsLockupContract = artifacts.require(("./SixMonthsLockupContract.sol"))
+const OneYearLockupContract = artifacts.require(("./OneYearLockupContract.sol"))
 const Destructible = artifacts.require("./TestContracts/Destructible.sol")
 
 const MoneyValues = {
@@ -32,9 +34,13 @@ const TimeValues = {
   SECONDS_IN_ONE_WEEK:    60 * 60 * 24 * 7,
   SECONDS_IN_SIX_WEEKS:   60 * 60 * 24 * 7 * 6,
   SECONDS_IN_ONE_MONTH:   60 * 60 * 24 * 30,
+  SECONDS_IN_TWO_MONTHS:  60 * 60 * 24 * 30 * 2,
+  SECONDS_IN_SIX_MONTHS:  60 * 60 * 24 * 30 * 6,
   SECONDS_IN_ONE_YEAR:    60 * 60 * 24 * 365,
   MINUTES_IN_ONE_WEEK:    60 * 24 * 7,
   MINUTES_IN_ONE_MONTH:   60 * 24 * 30,
+  MINUTES_IN_TWO_MONTHS:  60 * 24 * 30 * 2,
+  MINUTES_IN_SIX_MONTHS:  60 * 24 * 30 * 6,
   MINUTES_IN_ONE_YEAR:    60 * 24 * 365
 }
 
@@ -1088,10 +1094,19 @@ class TestHelper {
   }
 
   static async getLCFromAddress(LCAddress) {
-    const LC = await LockupContract.at(LCAddress)
+    const LC = await TwoMonthsLockupContract.at(LCAddress)
     return LC
   }
 
+  static async getLCFromAddress(LCAddress) {
+    const LC = await SixMonthsLockupContract.at(LCAddress)
+    return LC
+  }
+
+  static async getLCFromAddress(LCAddress) {
+    const LC = await OneYearLockupContract.at(LCAddress)
+    return LC
+  }
 
   static async registerFrontEnds(frontEnds, stabilityPool) {
     for (const frontEnd of frontEnds) {
