@@ -78,13 +78,17 @@ contract STBLToken is CheckContract, ISTBLToken {
 
     // --- STBLToken specific data ---
 
+    uint256 public constant SIX_MONTHS_IN_SECONDS = 15552000;  // 60 * 60 * 24 * 180
+
     uint256 public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
 
     // uint256 for use with SafeMath
     uint256 internal _1_MILLION = 1e24;    // 1e6 * 1e18 = 1e24
 
     uint256 internal immutable deploymentStartTime;
-    address public immutable multisigAddress;
+    address public immutable momentZeroMultisigAddress;
+    address public immutable sixMonthsMultisigAddress;
+    address public immutable oneYearMultisigAddress;
 
     address public immutable communityIssuanceAddress;
     address public immutable stblStakingAddress;
@@ -102,7 +106,9 @@ contract STBLToken is CheckContract, ISTBLToken {
         address _lockupFactoryAddress,
         address _bountyAddress,
         address _lpRewardsAddress,
-        address _multisigAddress
+        address _momentZeroMultisigAddress,
+        address _sixMonthsMultisigAddress,
+        address _oneYearMultisigAddress
     ) 
         public 
     {
@@ -110,7 +116,9 @@ contract STBLToken is CheckContract, ISTBLToken {
         checkContract(_stblStakingAddress);
         checkContract(_lockupFactoryAddress);
 
-        multisigAddress = _multisigAddress;
+        momentZeroMultisigAddress = _momentZeroMultisigAddress;
+        sixMonthsMultisigAddress = _sixMonthsMultisigAddress;
+        oneYearMultisigAddress = _oneYearMultisigAddress;
         deploymentStartTime  = block.timestamp;
         
         communityIssuanceAddress = _communityIssuanceAddress;
@@ -127,7 +135,7 @@ contract STBLToken is CheckContract, ISTBLToken {
         
         // --- Initial STBL allocations ---
      
-        uint256 bountyEntitlement = _1_MILLION * 2; // Allocate 2 million for bounties/hackathons
+        uint256 bountyEntitlement = _1_MILLION * 2; // Allocate 2 million for bounties/hackathons/community activies
         _mint(_bountyAddress, bountyEntitlement);
 
         uint256 depositorsAndFrontEndsEntitlement = _1_MILLION * 32; // Allocate 32 million to the algorithmic issuance schedule
@@ -136,14 +144,24 @@ contract STBLToken is CheckContract, ISTBLToken {
         uint256 _lpRewardsEntitlement = _1_MILLION * 4 / 3;  // Allocate 1.33 million for LP rewards
         lpRewardsEntitlement = _lpRewardsEntitlement;
         _mint(_lpRewardsAddress, _lpRewardsEntitlement);
+
+        uint256 momentZeroMultisigEntitlement = _1_MILLION * 15; // Allocate 15 million for multisig address - (Team/Investors)
+        _mint(_momentZeroMultisigAddress, momentZeroMultisigEntitlement);
+
+        // Allocate 25 million for Multisig in six months - (Team/Investors)
+        uint256 sixMonthsMultisigEntitlement = _1_MILLION * 20;
+
+        _mint(_sixMonthsMultisigAddress, sixMonthsMultisigEntitlement);
         
-        // Allocate the remainder to the STBL Multisig: (100 - 2 - 32 - 1.33) million = 64.66 million
-        uint256 multisigEntitlement = _1_MILLION * 100
+        // Allocate the remainder to the Multisig in one year - (Team/Investors): (100 - 2 - 32 - 1.33 - 15 - 10 - 20) million = 29.67 million
+        uint256 oneYearMultisigEntitlement = _1_MILLION * 100
             - bountyEntitlement
             - depositorsAndFrontEndsEntitlement
-            - _lpRewardsEntitlement;
+            - _lpRewardsEntitlement
+            - momentZeroMultisigEntitlement
+            - sixMonthsMultisigEntitlement;
 
-        _mint(_multisigAddress, multisigEntitlement);
+        _mint(_oneYearMultisigAddress, oneYearMultisigEntitlement);
     }
 
     // --- External functions ---
@@ -165,10 +183,8 @@ contract STBLToken is CheckContract, ISTBLToken {
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
-        // Restrict the multisig's transfers in first year
-        if (_callerIsMultisig() && _isFirstYear()) {
-            _requireRecipientIsRegisteredLC(recipient);
-        }
+        if (_callerIsSixMonthsMultisig() && _isFirstSixMonths()) { _requireRecipientIsRegisteredSixMonthsLC(recipient); }
+        if (_callerIsOneYearMultisig() && _isFirstYear()) { _requireRecipientIsRegisteredOneYearLC(recipient); }
 
         _requireValidRecipient(recipient);
 
@@ -182,14 +198,16 @@ contract STBLToken is CheckContract, ISTBLToken {
     }
 
     function approve(address spender, uint256 amount) external override returns (bool) {
-        if (_isFirstYear()) { _requireCallerIsNotMultisig(); }
+        if (_isFirstSixMonths()) { _requireCallerIsNotSixMonthsMultisig(); }
+        if (_isFirstYear()) { _requireCallerIsNotOneYearMultisig(); }
 
         _approve(msg.sender, spender, amount);
         return true;
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) external override returns (bool) {
-        if (_isFirstYear()) { _requireSenderIsNotMultisig(sender); }
+        if (_isFirstSixMonths()) { _requireSenderIsNotSixMonthsMultisig(sender); }
+        if (_isFirstYear()) { _requireSenderIsNotOneYearMultisig(sender); }
         
         _requireValidRecipient(recipient);
 
@@ -201,14 +219,16 @@ contract STBLToken is CheckContract, ISTBLToken {
     }
 
     function increaseAllowance(address spender, uint256 addedValue) external override returns (bool) {
-        if (_isFirstYear()) { _requireCallerIsNotMultisig(); }
+        if (_isFirstSixMonths()) { _requireCallerIsNotSixMonthsMultisig(); }
+        if (_isFirstYear()) { _requireCallerIsNotOneYearMultisig(); }
         
         _approve(msg.sender, spender, _allowances[msg.sender][spender] + addedValue);
         return true;
     }
 
     function decreaseAllowance(address spender, uint256 subtractedValue) external override returns (bool) {
-        if (_isFirstYear()) { _requireCallerIsNotMultisig(); }
+        if (_isFirstSixMonths()) { _requireCallerIsNotSixMonthsMultisig(); }
+        if (_isFirstYear()) { _requireCallerIsNotOneYearMultisig(); }
         
         uint256 currentAllowance = _allowances[msg.sender][spender];
         require(currentAllowance >= subtractedValue, "ERC20: decreased allowance below zero");
@@ -218,7 +238,10 @@ contract STBLToken is CheckContract, ISTBLToken {
 
     function sendToSTBLStaking(address _sender, uint256 _amount) external override {
         _requireCallerIsSTBLStaking();
-        if (_isFirstYear()) { _requireSenderIsNotMultisig(_sender); }  // Prevent the multisig from staking STBL
+        
+        if (_isFirstSixMonths()) { _requireSenderIsNotSixMonthsMultisig(_sender); }
+        if (_isFirstYear()) { _requireSenderIsNotOneYearMultisig(_sender); }
+
         _transfer(_sender, stblStakingAddress, _amount);
     }
 
@@ -299,8 +322,16 @@ contract STBLToken is CheckContract, ISTBLToken {
     
     // --- Helper functions ---
 
-    function _callerIsMultisig() internal view returns (bool) {
-        return (msg.sender == multisigAddress);
+    function _callerIsSixMonthsMultisig() internal view returns (bool) {
+        return (msg.sender == sixMonthsMultisigAddress);
+    }
+
+    function _callerIsOneYearMultisig() internal view returns (bool) {
+        return (msg.sender == oneYearMultisigAddress);
+    }
+
+    function _isFirstSixMonths() internal view returns (bool) {
+        return ((block.timestamp - deploymentStartTime) < SIX_MONTHS_IN_SECONDS);
     }
 
     function _isFirstYear() internal view returns (bool) {
@@ -322,17 +353,30 @@ contract STBLToken is CheckContract, ISTBLToken {
         );
     }
 
-    function _requireRecipientIsRegisteredLC(address _recipient) internal view {
-        require(lockupContractFactory.isRegisteredLockup(_recipient), 
+    function _requireRecipientIsRegisteredSixMonthsLC(address _recipient) internal view {
+        require(lockupContractFactory.isRegisteredSixMonthsLockup(_recipient), 
         "STBLToken: recipient must be a LockupContract registered in the Factory");
     }
 
-    function _requireSenderIsNotMultisig(address _sender) internal view {
-        require(_sender != multisigAddress, "STBLToken: sender must not be the multisig");
+    function _requireRecipientIsRegisteredOneYearLC(address _recipient) internal view {
+        require(lockupContractFactory.isRegisteredOneYearLockup(_recipient), 
+        "STBLToken: recipient must be a LockupContract registered in the Factory");
     }
 
-    function _requireCallerIsNotMultisig() internal view {
-        require(!_callerIsMultisig(), "STBLToken: caller must not be the multisig");
+    function _requireSenderIsNotSixMonthsMultisig(address _sender) internal view {
+        require(_sender != sixMonthsMultisigAddress, "STBLToken: sender must not be the multisig");
+    }
+
+    function _requireSenderIsNotOneYearMultisig(address _sender) internal view {
+        require(_sender != oneYearMultisigAddress, "STBLToken: sender must not be the multisig");
+    }
+
+    function _requireCallerIsNotSixMonthsMultisig() internal view {
+        require(!_callerIsSixMonthsMultisig(), "STBLToken: caller must not be the multisig");
+    }
+
+    function _requireCallerIsNotOneYearMultisig() internal view {
+        require(!_callerIsOneYearMultisig(), "STBLToken: caller must not be the multisig");
     }
 
     function _requireCallerIsSTBLStaking() internal view {

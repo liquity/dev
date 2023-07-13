@@ -7,13 +7,24 @@ interface ILockupContractFactory {
     // --- Events ---
 
     event STBLTokenAddressSet(address _stblTokenAddress);
-    event LockupContractDeployedThroughFactory(address _lockupContractAddress, address _beneficiary, uint256 _unlockTime, address _deployer);
+
+    event TwoMonthsLockupContractDeployedThroughFactory(address _lockupContractAddress, address _beneficiary, uint256 _unlockTime, address _deployer);
+    event SixMonthsLockupContractDeployedThroughFactory(address _lockupContractAddress, address _beneficiary, uint256 _unlockTime, address _deployer);
+    event OneYearLockupContractDeployedThroughFactory(address _lockupContractAddress, address _beneficiary, uint256 _unlockTime, address _deployer);
 
     // --- Functions ---
 
     function setSTBLTokenAddress(address _stblTokenAddress) external;
 
-    function deployLockupContract(address _beneficiary, uint256 _unlockTime) external;
+    function deployTwoMonthsLockupContract(address _beneficiary, uint256 _unlockTime) external;
 
-    function isRegisteredLockup(address _addr) external view returns (bool);
+    function deploySixMonthsLockupContract(address _beneficiary, uint256 _unlockTime) external;
+
+    function deployOneYearLockupContract(address _beneficiary, uint256 _unlockTime) external;
+
+    function isRegisteredTwoMonthsLockup(address _addr) external view returns (bool);
+
+    function isRegisteredSixMonthsLockup(address _addr) external view returns (bool);
+
+    function isRegisteredOneYearLockup(address _addr) external view returns (bool);
 }

@@ -5,8 +5,8 @@ pragma solidity ^0.8.17;
 import "../Interfaces/ISTBLToken.sol";
 
 /*
-* The lockup contract architecture utilizes a single LockupContract, with an unlockTime. The unlockTime is passed as an argument 
-* to the LockupContract's constructor. The contract's balance can be withdrawn by the beneficiary when block.timestamp > unlockTime. 
+* The lockup contract architecture utilizes a single OneYearLockupContract, with an unlockTime. The unlockTime is passed as an argument 
+* to the OneYearLockupContract's constructor. The contract's balance can be withdrawn by the beneficiary when block.timestamp > unlockTime. 
 * At construction, the contract checks that unlockTime is at least one year later than the Liquity system's deployment time. 
 
 * Within the first year from deployment, the deployer of the STBLToken (Liquity AG's address) may transfer STBL only to valid 
@@ -15,12 +15,12 @@ import "../Interfaces/ISTBLToken.sol";
 * The above two restrictions ensure that until one year after system deployment, STBL tokens originating from Liquity AG cannot 
 * enter circulating supply and cannot be staked to earn system revenue.
 */
-contract LockupContract {
+contract OneYearLockupContract {
     
     // --- Data ---
-    string constant public NAME = "LockupContract";
+    string constant public NAME = "OneYearLockupContract";
 
-    uint256 constant public SECONDS_IN_ONE_YEAR = 31536000; 
+    uint256 public constant ONE_YEAR_IN_SECONDS = 31536000;  // 60 * 60 * 24 * 365
 
     address public immutable beneficiary;
 
@@ -31,8 +31,8 @@ contract LockupContract {
 
     // --- Events ---
 
-    event LockupContractCreated(address _beneficiary, uint256 _unlockTime);
-    event LockupContractEmptied(uint256 _STBLwithdrawal);
+    event OneYearLockupContractCreated(address _beneficiary, uint256 _unlockTime);
+    event OneYearLockupContractEmptied(uint256 _STBLwithdrawal);
 
     // --- Functions ---
 
@@ -54,7 +54,7 @@ contract LockupContract {
         unlockTime = _unlockTime;
         
         beneficiary =  _beneficiary;
-        emit LockupContractCreated(_beneficiary, _unlockTime);
+        emit OneYearLockupContractCreated(_beneficiary, _unlockTime);
     }
 
     function withdrawSTBL() external {
@@ -64,21 +64,21 @@ contract LockupContract {
         ISTBLToken stblTokenCached = stblToken;
         uint256 STBLBalance = stblTokenCached.balanceOf(address(this));
         stblTokenCached.transfer(beneficiary, STBLBalance);
-        emit LockupContractEmptied(STBLBalance);
+        emit OneYearLockupContractEmptied(STBLBalance);
     }
 
     // --- 'require' functions ---
 
     function _requireCallerIsBeneficiary() internal view {
-        require(msg.sender == beneficiary, "LockupContract: caller is not the beneficiary");
+        require(msg.sender == beneficiary, "OneYearLockupContract: caller is not the beneficiary");
     }
 
     function _requireLockupDurationHasPassed() internal view {
-        require(block.timestamp >= unlockTime, "LockupContract: The lockup duration must have passed");
+        require(block.timestamp >= unlockTime, "OneYearLockupContract: The lockup duration must have passed");
     }
 
     function _requireUnlockTimeIsAtLeastOneYearAfterSystemDeployment(uint256 _unlockTime) internal view {
         uint256 systemDeploymentTime = stblToken.getDeploymentStartTime();
-        require(_unlockTime >= systemDeploymentTime + SECONDS_IN_ONE_YEAR, "LockupContract: unlock time must be at least one year after system deployment");
+        require(_unlockTime >= systemDeploymentTime + ONE_YEAR_IN_SECONDS, "OneYearLockupContract: unlock time must be at least one year after system deployment");
     }
 }
