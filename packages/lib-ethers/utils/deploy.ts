@@ -128,7 +128,9 @@ const deployContracts = async (
         addresses.lockupContractFactory,
         Wallet.createRandom().address, // _bountyAddress (TODO: parameterize this)
         addresses.unipool, // _lpRewardsAddress
-        Wallet.createRandom().address, // _multisigAddress (TODO: parameterize this)
+        Wallet.createRandom().address, // _zeroMomentMultisigAddress (TODO: parameterize this)
+        Wallet.createRandom().address, // _sixMonthsMultisigAddress (TODO: parameterize this)
+        Wallet.createRandom().address, // _oneYearMultisigAddress (TODO: parameterize this)
         { ...overrides }
       ),
 
@@ -150,9 +152,10 @@ export const deployTellorCaller = (
   deployer: Signer,
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   tellorAddress: string,
+  queryID: string,
   overrides?: Overrides
 ): Promise<string> =>
-  deployContract(deployer, getContractFactory, "TellorCaller", tellorAddress, { ...overrides });
+  deployContract(deployer, getContractFactory, "TellorCaller", tellorAddress, queryID, { ...overrides });
 
 const connectContracts = async (
   {

@@ -51,6 +51,9 @@ const generateRandomAccounts = (numberOfAccounts: number) => {
 };
 
 const deployerAccount = process.env.DEPLOYER_PRIVATE_KEY || Wallet.createRandom().privateKey;
+const ethUsdQueryID = process.env.ETH_USD_QUERY_ID || ""
+const brlUsdQueryID = process.env.BRL_USD_QUERY_ID || "";
+
 const devChainRichAccount = "0x4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7";
 
 const infuraApiKey = "ad9cef41c9c844a7b54d10be24d416e5";
@@ -67,16 +70,9 @@ const infuraNetwork = (name: string): { [name: string]: NetworkUserConfig } => (
 
 const oracleAddresses = {
   mainnet: {
-    chainlink: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
-    tellor: "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
-  },
-  rinkeby: {
-    chainlink: "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
-    tellor: "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0" // Core
-  },
-  kovan: {
-    chainlink: "0x9326BFA02ADD2366b30bacB125260Af641031331",
-    tellor: "0x20374E579832859f180536A69093A126Db1c8aE9" // Playground
+    brlUsdChainlink: "0x971E8F1B779A5F1C36e1cd7ef44Ba1Cc2F5EeE0f",
+    ethUsdChainlink: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    tellor: "0xD9157453E2668B2fc45b7A803D3FEF3642430cC0"
   }
 };
 
@@ -226,18 +222,29 @@ task("deploy", "Deploys the contracts to the network")
         assert(!_priceFeedIsTestnet(contracts.priceFeed));
 
         if (hasOracles(env.network.name)) {
-          const tellorCallerAddress = await deployTellorCaller(
+          const brlUsdTellorCallerAddress = await deployTellorCaller(
             deployer,
             getContractFactory(env),
             oracleAddresses[env.network.name].tellor,
+            brlUsdQueryID,
             overrides
           );
+
+          const ethUsdTellorCallerAddress = await deployTellorCaller(
+            deployer,
+            getContractFactory(env),
+            oracleAddresses[env.network.name].tellor,
+            ethUsdQueryID,
+            overrides
+          ); 
 
           console.log(`Hooking up PriceFeed with oracles ...`);
 
           const tx = await contracts.priceFeed.setAddresses(
-            oracleAddresses[env.network.name].chainlink,
-            tellorCallerAddress,
+            oracleAddresses[env.network.name].brlUsdChainlink,
+            oracleAddresses[env.network.name].ethUsdChainlink,
+            brlUsdTellorCallerAddress,
+            ethUsdTellorCallerAddress,
             overrides
           );
 
