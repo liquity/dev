@@ -1427,7 +1427,7 @@ In addition, some package scripts require Docker to be installed (Docker Desktop
 You'll need to install the following:
 
 - [Git](https://help.github.com/en/github/getting-started-with-github/set-up-git) (of course)
-- [Node v12.x](https://nodejs.org/dist/latest-v12.x/)
+- [Node v16.x](https://nodejs.org/dist/latest-v16.x/)
 - [Docker](https://docs.docker.com/get-docker/)
 - [Yarn](https://classic.yarnpkg.com/en/docs/install)
 
