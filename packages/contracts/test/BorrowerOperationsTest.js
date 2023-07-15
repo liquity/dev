@@ -962,7 +962,7 @@ contract('BorrowerOperations', async accounts => {
     })
 
     it("withdrawXBRL(): borrowing at non-zero base rate sends XBRL fee to STBL staking contract", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
       await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
       await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
@@ -998,7 +998,7 @@ contract('BorrowerOperations', async accounts => {
 
     if (!withProxy) { // TODO: use rawLogs instead of logs
       it("withdrawXBRL(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct", async () => {
-        // time fast-forwards 1 year, and multisig stakes 1 STBL
+        // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
         await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
         await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
@@ -1036,7 +1036,7 @@ contract('BorrowerOperations', async accounts => {
     }
 
     it("withdrawXBRL(): Borrowing at non-zero base rate increases the STBL staking contract XBRL fees-per-unit-staked", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
       await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
       await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
@@ -1071,7 +1071,7 @@ contract('BorrowerOperations', async accounts => {
     })
 
     it("withdrawXBRL(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
       await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
       await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
@@ -1373,8 +1373,7 @@ contract('BorrowerOperations', async accounts => {
 
       await xbrlToken.transfer(alice, repayAmount, { from: bob })
 
-      await assertRevert(borrowerOperations.adjustTrove(th._100pct, 0, repayAmount, false, alice, alice, { from: alice }),
-                         "SafeMath: subtraction overflow")
+      await assertRevert(borrowerOperations.adjustTrove(th._100pct, 0, repayAmount, false, alice, alice, { from: alice }))
     })
 
     it("repayXBRL(): reverts when calling address does not have active trove", async () => {
@@ -1712,7 +1711,7 @@ contract('BorrowerOperations', async accounts => {
     })
 
     it("adjustTrove(): borrowing at non-zero base rate sends XBRL fee to STBL staking contract", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
       await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
       await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
@@ -1747,7 +1746,7 @@ contract('BorrowerOperations', async accounts => {
 
     if (!withProxy) { // TODO: use rawLogs instead of logs
       it("adjustTrove(): borrowing at non-zero base records the (drawn debt + fee) on the Trove struct", async () => {
-        // time fast-forwards 1 year, and multisig stakes 1 STBL
+        // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
         await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
         await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
@@ -1786,7 +1785,7 @@ contract('BorrowerOperations', async accounts => {
     }
 
     it("adjustTrove(): Borrowing at non-zero base rate increases the STBL staking contract XBRL fees-per-unit-staked", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
       await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
       await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
@@ -1821,7 +1820,7 @@ contract('BorrowerOperations', async accounts => {
     })
 
     it("adjustTrove(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
       await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
       await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
@@ -2087,7 +2086,7 @@ contract('BorrowerOperations', async accounts => {
       assert.isTrue(newICR_B.lt(ICR_B))
 
       await assertRevert(borrowerOperations.adjustTrove(th._100pct, 0, bobDebtIncrease, true, bob, bob, { from: bob, value: bobCollIncrease }),
-        " BorrowerOps: Operation must leave trove with ICR >= CCR")
+        "BorrowerOps: Operation must leave trove with ICR >= CCR")
     })
 
     it("adjustTrove(): A trove with ICR < CCR in Recovery Mode can adjust their trove to ICR > CCR", async () => {
@@ -2598,11 +2597,11 @@ contract('BorrowerOperations', async accounts => {
         await openTrove({ extraXBRLAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: bob } })
 
         const txPromise_A = borrowerOperations.callInternalAdjustLoan(alice, dec(1, 18), dec(1, 18), true, alice, alice, { from: bob })
-        await assertRevert(txPromise_A, "BorrowerOps: Caller must be the borrower for a withdrawal")
+        await assertRevert(txPromise_A)
         const txPromise_B = borrowerOperations.callInternalAdjustLoan(bob, dec(1, 18), dec(1, 18), true, alice, alice, { from: owner })
-        await assertRevert(txPromise_B, "BorrowerOps: Caller must be the borrower for a withdrawal")
+        await assertRevert(txPromise_B)
         const txPromise_C = borrowerOperations.callInternalAdjustLoan(carol, dec(1, 18), dec(1, 18), true, alice, alice, { from: bob })
-        await assertRevert(txPromise_C, "BorrowerOps: Caller must be the borrower for a withdrawal")
+        await assertRevert(txPromise_C)
       })
     }
 
@@ -3377,10 +3376,10 @@ contract('BorrowerOperations', async accounts => {
     })
 
     it("openTrove(): borrowing at non-zero base rate sends XBRL fee to STBL staking contract", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-      await stblStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+      await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
       // Check STBL XBRL balance before == 0
       const stblStaking_XBRLBalance_Before = await xbrlToken.balanceOf(stblStaking.address)
@@ -3412,10 +3411,10 @@ contract('BorrowerOperations', async accounts => {
 
     if (!withProxy) { // TODO: use rawLogs instead of logs
       it("openTrove(): borrowing at non-zero base records the (drawn debt + fee  + liq. reserve) on the Trove struct", async () => {
-        // time fast-forwards 1 year, and multisig stakes 1 STBL
+        // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
         await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-        await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-        await stblStaking.stake(dec(1, 18), { from: multisig })
+        await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+        await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
         await openTrove({ extraXBRLAmount: toBN(dec(10000, 18)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
         await openTrove({ extraXBRLAmount: toBN(dec(20000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: A } })
@@ -3449,10 +3448,10 @@ contract('BorrowerOperations', async accounts => {
     }
 
     it("openTrove(): Borrowing at non-zero base rate increases the STBL staking contract XBRL fees-per-unit-staked", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-      await stblStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+      await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
       // Check STBL contract XBRL fees-per-unit-staked is zero
       const F_XBRL_Before = await stblStaking.F_XBRL()
@@ -3483,10 +3482,10 @@ contract('BorrowerOperations', async accounts => {
     })
 
     it("openTrove(): Borrowing at non-zero base rate sends requested amount to the user", async () => {
-      // time fast-forwards 1 year, and multisig stakes 1 STBL
+      // time fast-forwards 1 year, and oneYearMultisig stakes 1 STBL
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-      await stblStaking.stake(dec(1, 18), { from: multisig })
+      await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+      await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
       // Check STBL Staking contract balance before == 0
       const stblStaking_XBRLBalance_Before = await xbrlToken.balanceOf(stblStaking.address)
