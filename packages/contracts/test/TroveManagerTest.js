@@ -3125,9 +3125,9 @@ contract('TroveManager', async accounts => {
   })
 
   it("redeemCollateral(): reverts if fee exceeds max fee percentage", async () => {
-    const { totalDebt: A_totalDebt } = await openTrove({ ICR: toBN(dec(400, 16)), extraXBRLAmount: dec(80, 18), extraParams: { from: A } })
-    const { totalDebt: B_totalDebt } = await openTrove({ ICR: toBN(dec(400, 16)), extraXBRLAmount: dec(90, 18), extraParams: { from: B } })
-    const { totalDebt: C_totalDebt } = await openTrove({ ICR: toBN(dec(400, 16)), extraXBRLAmount: dec(100, 18), extraParams: { from: C } })
+    const { totalDebt: A_totalDebt } = await openTrove({ ICR: toBN(dec(400, 16)), extraXBRLAmount: dec(8000, 18), extraParams: { from: A } })
+    const { totalDebt: B_totalDebt } = await openTrove({ ICR: toBN(dec(400, 16)), extraXBRLAmount: dec(9000, 18), extraParams: { from: B } })
+    const { totalDebt: C_totalDebt } = await openTrove({ ICR: toBN(dec(400, 16)), extraXBRLAmount: dec(10000, 18), extraParams: { from: C } })
     const expectedTotalSupply = A_totalDebt.add(B_totalDebt).add(C_totalDebt)
 
     // Check total XBRL supply
@@ -3738,8 +3738,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): a redemption made when base rate is non-zero increases the base rate, for negligible time passed", async () => {
     // time fast-forwards 1 year, and multisig stakes 1 STBL
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-    await stblStaking.stake(dec(1, 18), { from: multisig })
+    await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+    await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
     await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })
 
@@ -3754,7 +3754,7 @@ contract('TroveManager', async accounts => {
     const B_balanceBefore = await xbrlToken.balanceOf(B)
 
     // A redeems 10 XBRL
-    const redemptionTx_A = await th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18), GAS_PRICE)
+    const redemptionTx_A = await th.redeemCollateralAndGetTxObject(A, contracts, dec(10, 18))
     const timeStamp_A = await th.getTimestampFromTx(redemptionTx_A, web3)
 
     // Check A's balance has decreased by 10 XBRL
@@ -3765,7 +3765,7 @@ contract('TroveManager', async accounts => {
     assert.isTrue(baseRate_1.gt(toBN('0')))
 
     // B redeems 10 XBRL
-    const redemptionTx_B = await th.redeemCollateralAndGetTxObject(B, contracts, dec(10, 18), GAS_PRICE)
+    const redemptionTx_B = await th.redeemCollateralAndGetTxObject(B, contracts, dec(10, 18))
     const timeStamp_B = await th.getTimestampFromTx(redemptionTx_B, web3)
 
     // Check B's balance has decreased by 10 XBRL
@@ -3836,8 +3836,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): a redemption made at zero base rate send a non-zero ETHFee to STBL staking contract", async () => {
     // time fast-forwards 1 year, and multisig stakes 1 STBL
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-    await stblStaking.stake(dec(1, 18), { from: multisig })
+    await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+    await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
     await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })
 
@@ -3872,8 +3872,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): a redemption made at zero base increases the ETH-fees-per-STBL-staked in STBL Staking contract", async () => {
     // time fast-forwards 1 year, and multisig stakes 1 STBL
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-    await stblStaking.stake(dec(1, 18), { from: multisig })
+    await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+    await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
     await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })
 
@@ -3908,8 +3908,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): a redemption made at a non-zero base rate send a non-zero ETHFee to STBL staking contract", async () => {
     // time fast-forwards 1 year, and multisig stakes 1 STBL
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-    await stblStaking.stake(dec(1, 18), { from: multisig })
+    await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+    await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
     await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })
 
@@ -3950,8 +3950,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): a redemption made at a non-zero base rate increases ETH-per-STBL-staked in the staking contract", async () => {
     // time fast-forwards 1 year, and multisig stakes 1 STBL
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-    await stblStaking.stake(dec(1, 18), { from: multisig })
+    await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+    await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
     await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })
 
@@ -3993,8 +3993,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): a redemption sends the ETH remainder (ETHDrawn - ETHFee) to the redeemer", async () => {
     // time fast-forwards 1 year, and multisig stakes 1 STBL
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-    await stblStaking.stake(dec(1, 18), { from: multisig })
+    await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+    await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
     const { totalDebt: W_totalDebt } = await openTrove({ ICR: toBN(dec(20, 18)), extraParams: { from: whale } })
 
@@ -4045,8 +4045,8 @@ contract('TroveManager', async accounts => {
   it("redeemCollateral(): a full redemption (leaving trove with 0 debt), closes the trove", async () => {
     // time fast-forwards 1 year, and multisig stakes 1 STBL
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-    await stblStaking.stake(dec(1, 18), { from: multisig })
+    await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+    await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
     const { netDebt: W_netDebt } = await openTrove({ ICR: toBN(dec(20, 18)), extraXBRLAmount: dec(10000, 18), extraParams: { from: whale } })
 
@@ -4075,8 +4075,8 @@ contract('TroveManager', async accounts => {
   const redeemCollateral3Full1Partial = async () => {
     // time fast-forwards 1 year, and multisig stakes 1 STBL
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-    await stblToken.approve(stblStaking.address, dec(1, 18), { from: multisig })
-    await stblStaking.stake(dec(1, 18), { from: multisig })
+    await stblToken.approve(stblStaking.address, dec(1, 18), { from: oneYearMultisig })
+    await stblStaking.stake(dec(1, 18), { from: oneYearMultisig })
 
     const { netDebt: W_netDebt } = await openTrove({ ICR: toBN(dec(20, 18)), extraXBRLAmount: dec(10000, 18), extraParams: { from: whale } })
 
@@ -4166,7 +4166,7 @@ contract('TroveManager', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
 
     // whale redeems XBRL.  Expect this to fully redeem A, B, C, and partially redeem 15 XBRL from D.
-    const redemptionTx = await th.redeemCollateralAndGetTxObject(whale, contracts, redemptionAmount, GAS_PRICE, th._100pct)
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(whale, contracts, redemptionAmount, th._100pct, { gasPrice: 0 })
 
     // Check A, B, C have been closed
     assert.isFalse(await sortedTroves.contains(A))
