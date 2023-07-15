@@ -25,7 +25,7 @@ const assertRevert = th.assertRevert
 contract('STBL Token', async accounts => {
   const [owner, A, B, C, D] = accounts
 
-  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
 
   // Create the approval tx data, for use in permit()
   const approve = {

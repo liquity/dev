@@ -49,7 +49,7 @@ contract('SortedTroves', async accounts => {
   let borrowerOperations
   let xbrlToken
 
-  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
 
   let contracts
 

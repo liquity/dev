@@ -11,7 +11,7 @@ const dec = th.dec
 
 contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', async accounts => {
   const [liquityAG, A, B] = accounts;
-  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
 
   let STBLContracts
 
@@ -53,9 +53,21 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
 
   describe('STBLToken deployment', async accounts => {
     it("Stores the multisig's address", async () => {
-      const storedMultisigAddress = await stblToken.multisigAddress()
+      const storedMultisigAddress = await stblToken.momentZeroMultisigAddress()
 
-      assert.equal(multisig, storedMultisigAddress)
+      assert.equal(momentZeroMultisig, storedMultisigAddress)
+    })
+    
+    it("Stores the multisig's address", async () => {
+      const storedMultisigAddress = await stblToken.sixMonthsMultisigAddress()
+
+      assert.equal(sixMonthsMultisig, storedMultisigAddress)
+    })
+
+    it("Stores the multisig's address", async () => {
+      const storedMultisigAddress = await stblToken.oneYearMultisigAddress()
+
+      assert.equal(oneYearMultisig, storedMultisigAddress)
     })
 
     it("Stores the CommunityIssuance address", async () => {
@@ -70,11 +82,27 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       assert.equal(lockupContractFactory.address, storedLCFAddress)
     })
 
-    it("Mints the correct STBL amount to the multisig's address: (64.66 million)", async () => {
-      const multisigSTBLEntitlement = await stblToken.balanceOf(multisig)
+    it("Mints the correct STBL amount to the multisig's address: (15 million)", async () => {
+      const multisigSTBLEntitlement = await stblToken.balanceOf(momentZeroMultisig)
 
-     const twentyThreeSixes = "6".repeat(23)
-      const expectedMultisigEntitlement = "64".concat(twentyThreeSixes).concat("7")
+      const twentyFourZeros = "0".repeat(24)
+      const expectedMultisigEntitlement = "15".concat(twentyFourZeros)
+      assert.equal(multisigSTBLEntitlement, expectedMultisigEntitlement)
+    })
+
+    it("Mints the correct STBL amount to the multisig's address: (20 million)", async () => {
+      const multisigSTBLEntitlement = await stblToken.balanceOf(sixMonthsMultisig)
+
+      const twentyFourZeros = "0".repeat(24)
+      const expectedMultisigEntitlement = "20".concat(twentyFourZeros)
+      assert.equal(multisigSTBLEntitlement, expectedMultisigEntitlement)
+    })
+
+    it("Mints the correct STBL amount to the multisig's address: (29.67 million)", async () => {
+      const multisigSTBLEntitlement = await stblToken.balanceOf(oneYearMultisig)
+
+      const twentyFourSixes = "6".repeat(23)
+      const expectedMultisigEntitlement = "29".concat(twentyFourSixes).concat("7")
       assert.equal(multisigSTBLEntitlement, expectedMultisigEntitlement)
     })
 
@@ -117,7 +145,7 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       assert.isTrue(expectedCISupplyCap.eq(supplyCap))
     })
 
-    it("Liquity AG can set addresses if CI's STBL balance is equal or greater than 32 million ", async () => {
+    it("Liquity AG can set addresses if CI's STBL balance is equal or greater than 32 million", async () => {
       const STBLBalance = await stblToken.balanceOf(communityIssuance.address)
       assert.isTrue(STBLBalance.eq(expectedCISupplyCap))
 
@@ -132,6 +160,56 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       assert.isTrue(tx.receipt.status)
     })
 
+    it("Liquity AG can't set addresses if CI's STBL balance is < 32 million", async () => {
+      const newCI = await CommunityIssuance.new()
+
+      const STBLBalance = await stblToken.balanceOf(newCI.address)
+      assert.equal(STBLBalance, '0')
+
+      // Deploy core contracts, just to get the Stability Pool address
+      const coreContracts = await deploymentHelper.deployLiquityCore()
+
+      await th.fastForwardTime(timeValues.SECONDS_IN_TWO_MONTHS, web3.currentProvider)
+      await stblToken.transfer(newCI.address, '14999999999999999999999999', {from: momentZeroMultisig}) // 1e-18 less than CI expects (15 million)
+
+      try {
+        const tx = await newCI.setAddresses(
+          stblToken.address,
+          coreContracts.stabilityPool.address,
+          { from: liquityAG }
+        );
+      
+        // Check it gives the expected error message for a failed Solidity 'assert'
+      } catch (err) {
+        assert.include(err.message, "reverted with panic code 0x1 (Assertion error)")
+      }
+    })
+
+    it("Liquity AG can't set addresses if CI's STBL balance is < 32 million ", async () => {
+      const newCI = await CommunityIssuance.new()
+
+      const STBLBalance = await stblToken.balanceOf(newCI.address)
+      assert.equal(STBLBalance, '0')
+
+      // Deploy core contracts, just to get the Stability Pool address
+      const coreContracts = await deploymentHelper.deployLiquityCore()
+
+      await th.fastForwardTime(timeValues.SECONDS_IN_SIX_MONTHS, web3.currentProvider)
+      await stblToken.transfer(newCI.address, '19999999999999999999999999', {from: sixMonthsMultisig}) // 1e-18 less than CI expects (20 million)
+
+      try {
+        const tx = await newCI.setAddresses(
+          stblToken.address,
+          coreContracts.stabilityPool.address,
+          { from: liquityAG }
+        );
+      
+        // Check it gives the expected error message for a failed Solidity 'assert'
+      } catch (err) {
+        assert.include(err.message, "reverted with panic code 0x1 (Assertion error)")
+      }
+    })
+
     it("Liquity AG can't set addresses if CI's STBL balance is < 32 million ", async () => {
       const newCI = await CommunityIssuance.new()
 
@@ -142,7 +220,7 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       const coreContracts = await deploymentHelper.deployLiquityCore()
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
-      await stblToken.transfer(newCI.address, '31999999999999999999999999', {from: multisig}) // 1e-18 less than CI expects (32 million)
+      await stblToken.transfer(newCI.address, '29666666666666666666666667', {from: oneYearMultisig}) // 1e-18 less than CI expects (29.67 million)
 
       try {
         const tx = await newCI.setAddresses(

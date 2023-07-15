@@ -31,7 +31,7 @@ contract('TroveManager', async accounts => {
     defaulter_1, defaulter_2, defaulter_3, defaulter_4, whale,
     A, B, C, D, E] = accounts;
 
-    const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
+    const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
 
   let priceFeed
   let xbrlToken

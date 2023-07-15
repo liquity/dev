@@ -32,7 +32,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     F
   ] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
 
   let contracts
 

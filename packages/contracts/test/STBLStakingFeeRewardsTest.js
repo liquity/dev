@@ -28,7 +28,7 @@ const GAS_PRICE = 10000000
 
 contract('STBLStaking revenue share tests', async accounts => {
 
-  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(997, 1000)
+  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
   
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 

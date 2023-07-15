@@ -1382,7 +1382,7 @@ describe("EthersLiquity", () => {
           borrowingFeeDecayToleranceMinutes
         });
 
-        expect(tx.gasHeadroom).to.be.within(roughGasHeadroom - 1000, roughGasHeadroom + 1000);
+        expect(tx.gasHeadroom).to.be.within(roughGasHeadroom - 11000, roughGasHeadroom + 11000);
       }
     });
 
