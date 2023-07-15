@@ -57,7 +57,7 @@ const UnsupportedMainnetFallback: React.FC = () => (
     </Heading>
 
     <Paragraph sx={{ mb: 3 }}>
-      Please change your network to Ropsten, Rinkeby, Kovan, Görli or Kiln.
+      Please change your network to Sepolia.
     </Paragraph>
 
     <Paragraph>
@@ -92,7 +92,7 @@ const App = () => {
         <Icon name="exclamation-triangle" /> Liquity is not yet deployed to{" "}
         {chainId === 1 ? "mainnet" : "this network"}.
       </Heading>
-      Please switch to Ropsten, Rinkeby, Kovan, Görli or Kiln.
+      Please switch to Sepolia.
     </Flex>
   );
 

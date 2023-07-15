@@ -25,7 +25,7 @@ export const LiquidatedTrove: React.FC = () => {
         <InfoMessage title="Your Trove has been liquidated.">
           {hasSurplusCollateral
             ? "Please reclaim your remaining collateral before opening a new Trove."
-            : "You can borrow XBRL by opening a Trove."}
+            : "You can borrow xBRL by opening a Trove."}
         </InfoMessage>
 
         <Flex variant="layout.actions">
