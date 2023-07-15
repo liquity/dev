@@ -449,7 +449,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       const LC = await th.getLCFromDeploymentTx(deployedLCtx)
 
       // STBL Multisig funds the LC
-      await stblToken.transfer(LC.address, dec(100, 18), { from: multisig })
+      await stblToken.transfer(LC.address, dec(100, 18), { from: oneYearMultisig })
 
       // Fast-forward one year, so that beneficiary can withdraw
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
@@ -486,7 +486,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
 
       // multisig tries to call it
       try {
-        const tx = await stblToken.sendToSTBLStaking(multisig, 1, { from: multisig })
+        const tx = await stblToken.sendToSTBLStaking(multisig, 1, { from: oneYearMultisig })
       } catch (err) {
         assert.include(err.message, "revert")
       }

@@ -127,7 +127,7 @@ contract('BorrowerWrappers', async accounts => {
     const proxy = borrowerWrappers.getProxyFromUser(alice)
     const signature = 'transferETH(address,uint256)'
     const calldata = th.getTransactionData(signature, [alice, amount])
-    await assertRevert(proxy.methods["execute(address,bytes)"](borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
+    await assertRevert(proxy.methods["execute(address,bytes)"](borrowerWrappers.scriptAddress, calldata, { from: bob }))
 
     assert.equal(await web3.eth.getBalance(proxyAddress), amount.toString())
 

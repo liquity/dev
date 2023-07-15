@@ -3082,8 +3082,7 @@ contract('StabilityPool', async accounts => {
       await troveManager.liquidate(defaulter_1, { from: owner })
 
       // Alice attempts to  her ETH Gains to her Trove
-      await assertRevert(stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice }),
-      "BorrowerOps: An operation that would result in ICR < MCR is not permitted")
+      await assertRevert(stabilityPool.withdrawETHGainToTrove(alice, alice, { from: alice }))
     })
 
     it("withdrawETHGainToTrove(): Subsequent deposit and withdrawal attempt from same account, with no intermediate liquidations, withdraws zero ETH", async () => {

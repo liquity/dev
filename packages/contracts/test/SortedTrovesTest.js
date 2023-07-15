@@ -286,7 +286,7 @@ contract('SortedTroves', async accounts => {
 
     context('when params are wrongly set', () => {
       it('setParams(): reverts if size is zero', async () => {
-        await th.assertRevert(sortedTroves.setParams(0, sortedTrovesTester.address, sortedTrovesTester.address), 'SortedTroves: Size can’t be zero')
+        await th.assertRevert(sortedTroves.setParams(0, sortedTrovesTester.address, sortedTrovesTester.address), 'SortedTroves: Size cant be zero')
       })
     })
 

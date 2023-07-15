@@ -77,7 +77,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
 
     // console.log(`A stbl bal: ${await stblToken.balanceOf(A)}`)
 
@@ -96,7 +96,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig, gasPrice: GAS_PRICE})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig, gasPrice: GAS_PRICE})
 
     // console.log(`A stbl bal: ${await stblToken.balanceOf(A)}`)
 
@@ -139,7 +139,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig, gasPrice: GAS_PRICE})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig, gasPrice: GAS_PRICE})
 
     // Check ETH fee per unit staked is zero
     const F_ETH_Before = await stblStaking.F_ETH()
@@ -172,7 +172,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
 
     // A makes stake
     await stblToken.approve(stblStaking.address, dec(100, 18), {from: A})
@@ -220,7 +220,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
 
     // Check XBRL fee per unit staked is zero
     const F_XBRL_Before = await stblStaking.F_ETH()
@@ -260,7 +260,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
 
     // A makes stake
     await stblToken.approve(stblStaking.address, dec(100, 18), {from: A})
@@ -333,7 +333,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
 
     // A makes stake
     await stblToken.approve(stblStaking.address, dec(100, 18), {from: A})
@@ -405,7 +405,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
 
     // A makes stake
     await stblToken.approve(stblStaking.address, dec(100, 18), {from: A})
@@ -451,7 +451,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
 
     // A makes stake
     await stblToken.approve(stblStaking.address, dec(100, 18), {from: A})
@@ -514,9 +514,9 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A, B, C
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
-    await stblToken.transfer(B, dec(200, 18), {from: multisig})
-    await stblToken.transfer(C, dec(300, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
+    await stblToken.transfer(B, dec(200, 18), {from: oneYearMultisig})
+    await stblToken.transfer(C, dec(300, 18), {from: oneYearMultisig})
 
     // A, B, C make stake
     await stblToken.approve(stblStaking.address, dec(100, 18), {from: A})
@@ -552,7 +552,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     assert.isTrue(emittedXBRLFee_2.gt(toBN('0')))
 
     // D obtains STBL from owner and makes a stake
-    await stblToken.transfer(D, dec(50, 18), {from: multisig})
+    await stblToken.transfer(D, dec(50, 18), {from: oneYearMultisig})
     await stblToken.approve(stblStaking.address, dec(50, 18), {from: D})
     await stblStaking.stake(dec(50, 18), {from: D})
 
@@ -677,8 +677,8 @@ contract('STBLStaking revenue share tests', async accounts => {
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
     // multisig transfers STBL to staker A and the non-payable proxy
-    await stblToken.transfer(A, dec(100, 18), {from: multisig})
-    await stblToken.transfer(nonPayable.address, dec(100, 18), {from: multisig})
+    await stblToken.transfer(A, dec(100, 18), {from: oneYearMultisig})
+    await stblToken.transfer(nonPayable.address, dec(100, 18), {from: oneYearMultisig})
 
     //  A makes stake
     const A_stakeTx = await stblStaking.stake(dec(100, 18), {from: A})
