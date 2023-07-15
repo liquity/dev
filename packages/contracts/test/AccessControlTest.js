@@ -441,7 +441,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("withdrawSTBL(): reverts when caller is not beneficiary", async () => {
       // deploy new LC with Carol as beneficiary
       const unlockTime = (await stblToken.getDeploymentStartTime()).add(toBN(timeValues.SECONDS_IN_ONE_YEAR))
-      const deployedLCtx = await lockupContractFactory.deployLockupContract(
+      const deployedLCtx = await lockupContractFactory.deployOneYearLockupContract(
         carol, 
         unlockTime,
         { from: owner })
@@ -482,11 +482,11 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   describe('STBLToken', async accounts => {
     it("sendToSTBLStaking(): reverts when caller is not the STBLSstaking", async () => {
       // Check multisig has some STBL
-      assert.isTrue((await stblToken.balanceOf(multisig)).gt(toBN('0')))
+      assert.isTrue((await stblToken.balanceOf(oneYearMultisig)).gt(toBN('0')))
 
       // multisig tries to call it
       try {
-        const tx = await stblToken.sendToSTBLStaking(multisig, 1, { from: oneYearMultisig })
+        const tx = await stblToken.sendToSTBLStaking(oneYearMultisig, 1, { from: oneYearMultisig })
       } catch (err) {
         assert.include(err.message, "revert")
       }
@@ -495,7 +495,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
 
       // Owner transfers 1 STBL to bob
-      await stblToken.transfer(bob, dec(1, 18), { from: multisig })
+      await stblToken.transfer(bob, dec(1, 18), { from: oneYearMultisig })
       assert.equal((await stblToken.balanceOf(bob)), dec(1, 18))
 
       // Bob tries to call it

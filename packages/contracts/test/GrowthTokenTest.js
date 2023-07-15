@@ -356,7 +356,7 @@ contract('STBL Token', async accounts => {
       approve.owner, approve.spender, approve.value,
       deadline, v, r, s), 'STBL: invalid signature')
 
-    await assertRevert(xbrlTokenTester.permit('0x0000000000000000000000000000000000000000',
+    await assertRevert(stblTokenTester.permit('0x0000000000000000000000000000000000000000',
       approve.spender, approve.value, deadline, '0x99', r, s))
   })
 

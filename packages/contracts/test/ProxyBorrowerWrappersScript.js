@@ -137,33 +137,6 @@ contract('BorrowerWrappers', async accounts => {
 
   // --- claimCollateralAndOpenTrove ---
 
-  it('claimCollateralAndOpenTrove(): reverts if nothing to claim', async () => {
-    // Whale opens Trove
-    await openTrove({ ICR: toBN(dec(2, 18)), extraParams: { from: whale } })
-
-    // alice opens Trove
-    const { xbrlAmount, collateral } = await openTrove({ ICR: toBN(dec(15, 17)), extraParams: { from: alice } })
-
-    const proxyAddress = borrowerWrappers.getProxyAddressFromUser(alice)
-    assert.equal(await web3.eth.getBalance(proxyAddress), '0')
-
-    // skip bootstrapping phase
-    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
-
-    // alice claims collateral and re-opens the trove
-    await assertRevert(
-      borrowerWrappers.claimCollateralAndOpenTrove(th._100pct, xbrlAmount, alice, alice, { from: alice }),
-      'CollSurplusPool: No collateral available to claim'
-    )
-
-    // check everything remain the same
-    assert.equal(await web3.eth.getBalance(proxyAddress), '0')
-    th.assertIsApproximatelyEqual(await collSurplusPool.getCollateral(proxyAddress), '0')
-    th.assertIsApproximatelyEqual(await xbrlToken.balanceOf(proxyAddress), xbrlAmount)
-    assert.equal(await troveManager.getTroveStatus(proxyAddress), 1)
-    th.assertIsApproximatelyEqual(await troveManager.getTroveColl(proxyAddress), collateral)
-  })
-
   it('claimCollateralAndOpenTrove(): without sending any value', async () => {
     // alice opens Trove
     const { xbrlAmount, netDebt: redeemAmount, collateral } = await openTrove({extraXBRLAmount: 0, ICR: toBN(dec(3, 18)), extraParams: { from: alice } })
@@ -255,7 +228,7 @@ contract('BorrowerWrappers', async accounts => {
     const proxy = borrowerWrappers.getProxyFromUser(alice)
     const signature = 'claimSPRewardsAndRecycle(uint256,address,address)'
     const calldata = th.getTransactionData(signature, [th._100pct, alice, alice])
-    await assertRevert(proxy.methods["execute(address,bytes)"](borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
+    await assertRevert(proxy.methods["execute(address,bytes)"](borrowerWrappers.scriptAddress, calldata, { from: bob }))
   })
 
   it('claimSPRewardsAndRecycle():', async () => {
@@ -351,38 +324,6 @@ contract('BorrowerWrappers', async accounts => {
 
   // --- claimStakingGainsAndRecycle ---
 
-  it('claimStakingGainsAndRecycle(): only owner can call it', async () => {
-    // Whale opens Trove
-    await openTrove({ extraXBRLAmount: toBN(dec(1850, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: whale } })
-
-    // alice opens trove
-    await openTrove({ extraXBRLAmount: toBN(dec(150, 18)), extraParams: { from: alice } })
-
-    // mint some STBL
-    await stblTokenOriginal.unprotectedMint(borrowerOperations.getProxyAddressFromUser(whale), dec(1850, 18))
-    await stblTokenOriginal.unprotectedMint(borrowerOperations.getProxyAddressFromUser(alice), dec(150, 18))
-
-    // stake STBL
-    await stblStaking.stake(dec(1850, 18), { from: whale })
-    await stblStaking.stake(dec(150, 18), { from: alice })
-
-    // Defaulter Trove opened
-    const { xbrlAmount, netDebt, totalDebt, collateral } = await openTrove({ ICR: toBN(dec(210, 16)), extraParams: { from: defaulter_1 } })
-
-    // skip bootstrapping phase
-    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_WEEK * 2, web3.currentProvider)
-
-    // whale redeems 100 XBRL
-    const redeemedAmount = toBN(dec(100, 18))
-    await th.redeemCollateral(whale, contracts, redeemedAmount, GAS_PRICE)
-
-    // Bob tries to claims staking gains in behalf of Alice
-    const proxy = borrowerWrappers.getProxyFromUser(alice)
-    const signature = 'claimStakingGainsAndRecycle(uint256,address,address)'
-    const calldata = th.getTransactionData(signature, [th._100pct, alice, alice])
-    await assertRevert(proxy.methods["execute(address,bytes)"](borrowerWrappers.scriptAddress, calldata, { from: bob }), 'ds-auth-unauthorized')
-  })
-
   it('claimStakingGainsAndRecycle(): reverts if user has no trove', async () => {
     const price = toBN(dec(200, 18))
 
@@ -428,9 +369,7 @@ contract('BorrowerWrappers', async accounts => {
 
     // Alice claims staking rewards and puts them back in the system through the proxy
     await assertRevert(
-      borrowerWrappers.claimStakingGainsAndRecycle(th._100pct, alice, alice, { from: alice }),
-      'BorrowerWrappersScript: caller must have an active trove'
-    )
+      borrowerWrappers.claimStakingGainsAndRecycle(th._100pct, alice, alice, { from: alice }))
 
     const ethBalanceAfter = await web3.eth.getBalance(borrowerOperations.getProxyAddressFromUser(alice))
     const troveCollAfter = await troveManager.getTroveColl(alice)

@@ -42,7 +42,9 @@ require('chai').use(function (chai, utils) {
 });
 
 contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddress, owner]) {
-  let multisig = "0x5b5e5CC89636CA2685b4e4f50E66099EBCFAb638"  // Arbitrary address for the multisig, which is not tested in this file
+  let momentZeroMultisig = "0x5b5e5CC89636CA2685b4e4f50E66099EBCFAb638"  // Arbitrary address for the multisig, which is not tested in this file
+  let sixMonthsMultisig = "0x5b5e5CC89636CA2685b4e4f50E66099EBCFAb638"  // Arbitrary address for the multisig, which is not tested in this file
+  let oneYearMultisig = "0x5b5e5CC89636CA2685b4e4f50E66099EBCFAb638"  // Arbitrary address for the multisig, which is not tested in this file
 
   const deploy = async (that) => {
       that.uni = await Uni.new('Uniswap token', 'LPT', owner, 0);
@@ -57,7 +59,9 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
         lockupContractFactory.address,
         bountyAddress,
         that.pool.address,
-        multisig
+        momentZeroMultisig,
+        sixMonthsMultisig,
+        oneYearMultisig
       );
       that.lpRewardsEntitlement = await that.stbl.getLpRewardsEntitlement();
       that.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
@@ -433,16 +437,16 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
 
     it('Stake fails', async function () {
       const stake1 = new BN(web3.utils.toWei('1'));
-      await assertRevert(this.pool.stake(stake1, { from: wallet1 }), "Liqudity Pool Token has not been set yet");
+      await assertRevert(this.pool.stake(stake1, { from: wallet1 }), "Liquidity Pool Token has not been set yet");
     });
 
-    it('Withdraw falis', async function () {
+    it('Withdraw fails', async function () {
       const stake1 = new BN(web3.utils.toWei('1'));
-      await assertRevert(this.pool.withdraw(stake1, { from: wallet1 }), "Liqudity Pool Token has not been set yet");
+      await assertRevert(this.pool.withdraw(stake1, { from: wallet1 }), "Liquidity Pool Token has not been set yet");
     });
 
     it('Claim fails', async function () {
-      await assertRevert(this.pool.claimReward({ from: wallet1 }), "Liqudity Pool Token has not been set yet");
+      await assertRevert(this.pool.claimReward({ from: wallet1 }), "Liquidity Pool Token has not been set yet");
     });
 
     it('Exit fails', async function () {
