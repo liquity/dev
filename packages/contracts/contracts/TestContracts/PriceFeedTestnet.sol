@@ -3,12 +3,13 @@
 pragma solidity ^0.8.17;
 
 import "../Interfaces/IPriceFeed.sol";
+import "./Dependencies/Ownable.sol";
 
 /*
 * PriceFeed placeholder for testnet and development. The price is simply set manually and saved in a state 
 * variable. The contract does not connect to a live Chainlink price feed. 
 */
-contract PriceFeedTestnet is IPriceFeed {
+contract PriceFeedTestnet is Ownable, IPriceFeed {
     
     uint256 private _price = 200 * 1e18;
 
@@ -27,7 +28,7 @@ contract PriceFeedTestnet is IPriceFeed {
     }
 
     // Manual external price setter.
-    function setPrice(uint256 price) external returns (bool) {
+    function setPrice(uint256 price) external onlyOwner returns (bool) {
         _price = price;
         return true;
     }
