@@ -70,7 +70,7 @@ export const validateStabilityDepositChange = (
     return [
       undefined,
       <ErrorDescription>
-        You're not allowed to withdraw XBRL from your Stability Deposit when there are
+        You're not allowed to withdraw xBRL from your Stability Deposit when there are
         undercollateralized Troves. Please liquidate those Troves or try again later.
       </ErrorDescription>
     ];

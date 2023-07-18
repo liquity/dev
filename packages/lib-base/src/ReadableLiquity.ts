@@ -130,38 +130,38 @@ export interface ReadableLiquity {
    *
    * @param address - Address whose balance should be retrieved.
    */
-  getUniTokenBalance(address?: string): Promise<Decimal>;
+  getXbrlWethUniTokenBalance(address?: string): Promise<Decimal>;
 
   /**
    * Get the liquidity mining contract's allowance of a holder's Uniswap ETH/XBRL LP tokens.
    *
    * @param address - Address holding the Uniswap ETH/XBRL LP tokens.
    */
-  getUniTokenAllowance(address?: string): Promise<Decimal>;
+  getXbrlWethUniTokenAllowance(address?: string): Promise<Decimal>;
 
   /**
    * Get the remaining STBL that will be collectively rewarded to liquidity miners.
    */
-  getRemainingLiquidityMiningSTBLReward(): Promise<Decimal>;
+  getRemainingXbrlWethLiquidityMiningSTBLReward(): Promise<Decimal>;
 
   /**
    * Get the amount of Uniswap ETH/XBRL LP tokens currently staked by an address in liquidity mining.
    *
    * @param address - Address whose LP stake should be retrieved.
    */
-  getLiquidityMiningStake(address?: string): Promise<Decimal>;
+  getXbrlWethLiquidityMiningStake(address?: string): Promise<Decimal>;
 
   /**
    * Get the total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining.
    */
-  getTotalStakedUniTokens(): Promise<Decimal>;
+  getTotalStakedXbrlWethUniTokens(): Promise<Decimal>;
 
   /**
    * Get the amount of STBL earned by an address through mining liquidity.
    *
    * @param address - Address whose STBL reward should be retrieved.
    */
-  getLiquidityMiningSTBLReward(address?: string): Promise<Decimal>;
+  getXbrlWethLiquidityMiningSTBLReward(address?: string): Promise<Decimal>;
 
   /**
    * Get the amount of leftover collateral available for withdrawal by an address.

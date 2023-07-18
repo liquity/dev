@@ -273,28 +273,28 @@ export interface PopulatableLiquity<R = unknown, S = unknown, P = unknown>
     PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>
   >;
 
-  /** {@inheritDoc TransactableLiquity.approveUniTokens} */
-  approveUniTokens(
+  /** {@inheritDoc TransactableLiquity.approveXbrlWethUniTokens} */
+  approveXbrlWethUniTokens(
     allowance?: Decimalish
   ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
 
-  /** {@inheritDoc TransactableLiquity.stakeUniTokens} */
-  stakeUniTokens(
+  /** {@inheritDoc TransactableLiquity.stakeXbrlWethUniTokens} */
+  stakeXbrlWethUniTokens(
     amount: Decimalish
   ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
 
-  /** {@inheritDoc TransactableLiquity.unstakeUniTokens} */
-  unstakeUniTokens(
+  /** {@inheritDoc TransactableLiquity.unstakeXbrlWethUniTokens} */
+  unstakeXbrlWethUniTokens(
     amount: Decimalish
   ): Promise<PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>>;
 
-  /** {@inheritDoc TransactableLiquity.withdrawSTBLRewardFromLiquidityMining} */
-  withdrawSTBLRewardFromLiquidityMining(): Promise<
+  /** {@inheritDoc TransactableLiquity.withdrawSTBLRewardFromXbrlWethLiquidityMining} */
+  withdrawSTBLRewardFromXbrlWethLiquidityMining(): Promise<
     PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>
   >;
 
-  /** {@inheritDoc TransactableLiquity.exitLiquidityMining} */
-  exitLiquidityMining(): Promise<
+  /** {@inheritDoc TransactableLiquity.exitXbrlWethLiquidityMining} */
+  exitXbrlWethLiquidityMining(): Promise<
     PopulatedLiquityTransaction<P, SentLiquityTransaction<S, LiquityReceipt<R, void>>>
   >;
 

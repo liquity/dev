@@ -15,15 +15,15 @@ import { Approve } from "../Approve";
 import { Validation } from "../Validation";
 
 const selector = ({
-  liquidityMiningStake,
-  liquidityMiningSTBLReward,
-  uniTokenBalance,
-  totalStakedUniTokens
+  xbrlWethLiquidityMiningStake,
+  xbrlWethLiquidityMiningSTBLReward,
+  xbrlWethUniTokenBalance,
+  totalStakedXbrlWethUniTokens
 }: LiquityStoreState) => ({
-  liquidityMiningStake,
-  liquidityMiningSTBLReward,
-  uniTokenBalance,
-  totalStakedUniTokens
+  xbrlWethLiquidityMiningStake,
+  xbrlWethLiquidityMiningSTBLReward,
+  xbrlWethUniTokenBalance,
+  totalStakedXbrlWethUniTokens
 });
 
 const transactionId = /farm-/;
@@ -31,20 +31,20 @@ const transactionId = /farm-/;
 export const Adjusting: React.FC = () => {
   const { dispatchEvent } = useFarmView();
   const {
-    liquidityMiningStake,
-    liquidityMiningSTBLReward,
-    uniTokenBalance,
-    totalStakedUniTokens
+    xbrlWethLiquidityMiningStake,
+    xbrlWethLiquidityMiningSTBLReward,
+    xbrlWethUniTokenBalance,
+    totalStakedXbrlWethUniTokens
   } = useLiquitySelector(selector);
-  const [amount, setAmount] = useState<Decimal>(liquidityMiningStake);
+  const [amount, setAmount] = useState<Decimal>(xbrlWethLiquidityMiningStake);
   const editingState = useState<string>();
 
   const transactionState = useMyTransactionState(transactionId);
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
-  const isDirty = !amount.eq(liquidityMiningStake);
-  const maximumAmount = liquidityMiningStake.add(uniTokenBalance);
+  const isDirty = !amount.eq(xbrlWethLiquidityMiningStake);
+  const maximumAmount = xbrlWethLiquidityMiningStake.add(xbrlWethUniTokenBalance);
   const hasSetMaximumAmount = amount.eq(maximumAmount);
 
   const handleCancelPressed = useCallback(() => {
@@ -52,14 +52,14 @@ export const Adjusting: React.FC = () => {
   }, [dispatchEvent]);
 
   const nextTotalStakedUniTokens = isDirty
-    ? totalStakedUniTokens.sub(liquidityMiningStake).add(amount)
-    : totalStakedUniTokens;
+    ? totalStakedXbrlWethUniTokens.sub(xbrlWethLiquidityMiningStake).add(amount)
+    : totalStakedXbrlWethUniTokens;
 
-  const originalPoolShare = liquidityMiningStake.mulDiv(100, totalStakedUniTokens);
+  const originalPoolShare = xbrlWethLiquidityMiningStake.mulDiv(100, totalStakedXbrlWethUniTokens);
   const poolShare = amount.mulDiv(100, nextTotalStakedUniTokens);
 
   const poolShareChange =
-    liquidityMiningStake.nonZero && Difference.between(poolShare, originalPoolShare).nonZero;
+  xbrlWethLiquidityMiningStake.nonZero && Difference.between(poolShare, originalPoolShare).nonZero;
 
   return (
     <Card>
@@ -69,7 +69,7 @@ export const Adjusting: React.FC = () => {
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setAmount(liquidityMiningStake)}
+            onClick={() => setAmount(xbrlWethLiquidityMiningStake)}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -80,7 +80,7 @@ export const Adjusting: React.FC = () => {
         <EditableRow
           label="Stake"
           inputId="farm-stake-amount"
-          amount={isDirty ? amount.prettify(4) : liquidityMiningStake.prettify(4)}
+          amount={isDirty ? amount.prettify(4) : xbrlWethLiquidityMiningStake.prettify(4)}
           unit={LP}
           editingState={editingState}
           editedAmount={amount.toString(4)}
@@ -105,8 +105,8 @@ export const Adjusting: React.FC = () => {
         <StaticRow
           label="Reward"
           inputId="farm-reward-amount"
-          amount={liquidityMiningSTBLReward.prettify(4)}
-          color={liquidityMiningSTBLReward.nonZero && "success"}
+          amount={xbrlWethLiquidityMiningSTBLReward.prettify(4)}
+          color={xbrlWethLiquidityMiningSTBLReward.nonZero && "success"}
           unit={GT}
         />
 

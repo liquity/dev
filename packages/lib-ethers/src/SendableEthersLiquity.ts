@@ -228,49 +228,49 @@ export class SendableEthersLiquity
   }
 
   /** @internal */
-  _mintUniToken(
+  _mintXbrlWethUniToken(
     amount: Decimalish,
     address?: string,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<void>> {
-    return this._populate._mintUniToken(amount, address, overrides).then(sendTransaction);
+    return this._populate._mintXbrlWethUniToken(amount, address, overrides).then(sendTransaction);
   }
 
-  /** {@inheritDoc @liquity/lib-base#SendableLiquity.approveUniTokens} */
-  approveUniTokens(
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.approveXbrlWethUniTokens} */
+  approveXbrlWethUniTokens(
     allowance?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<void>> {
-    return this._populate.approveUniTokens(allowance, overrides).then(sendTransaction);
+    return this._populate.approveXbrlWethUniTokens(allowance, overrides).then(sendTransaction);
   }
 
-  /** {@inheritDoc @liquity/lib-base#SendableLiquity.stakeUniTokens} */
-  stakeUniTokens(
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.stakeXbrlWethUniTokens} */
+  stakeXbrlWethUniTokens(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<void>> {
-    return this._populate.stakeUniTokens(amount, overrides).then(sendTransaction);
+    return this._populate.stakeXbrlWethUniTokens(amount, overrides).then(sendTransaction);
   }
 
-  /** {@inheritDoc @liquity/lib-base#SendableLiquity.unstakeUniTokens} */
-  unstakeUniTokens(
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.unstakeXbrlWethUniTokens} */
+  unstakeXbrlWethUniTokens(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<void>> {
-    return this._populate.unstakeUniTokens(amount, overrides).then(sendTransaction);
+    return this._populate.unstakeXbrlWethUniTokens(amount, overrides).then(sendTransaction);
   }
 
-  /** {@inheritDoc @liquity/lib-base#SendableLiquity.withdrawSTBLRewardFromLiquidityMining} */
-  withdrawSTBLRewardFromLiquidityMining(
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.withdrawSTBLRewardFromXbrlWethLiquidityMining} */
+  withdrawSTBLRewardFromXbrlWethLiquidityMining(
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<void>> {
-    return this._populate.withdrawSTBLRewardFromLiquidityMining(overrides).then(sendTransaction);
+    return this._populate.withdrawSTBLRewardFromXbrlWethLiquidityMining(overrides).then(sendTransaction);
   }
 
-  /** {@inheritDoc @liquity/lib-base#SendableLiquity.exitLiquidityMining} */
-  exitLiquidityMining(
+  /** {@inheritDoc @liquity/lib-base#SendableLiquity.exitXbrlWethLiquidityMining} */
+  exitXbrlWethLiquidityMining(
     overrides?: EthersTransactionOverrides
   ): Promise<SentEthersLiquityTransaction<void>> {
-    return this._populate.exitLiquidityMining(overrides).then(sendTransaction);
+    return this._populate.exitXbrlWethLiquidityMining(overrides).then(sendTransaction);
   }
 }

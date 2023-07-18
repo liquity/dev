@@ -24,7 +24,7 @@ export const ClaimReward: React.FC = () => {
   return (
     <Transaction
       id={transactionId}
-      send={liquity.withdrawSTBLRewardFromLiquidityMining.bind(liquity)}
+      send={liquity.withdrawSTBLRewardFromXbrlWethLiquidityMining.bind(liquity)}
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >

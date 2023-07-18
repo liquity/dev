@@ -25,7 +25,7 @@ export const DisabledRedemption: React.FC<DisabledRedemptionProps> = ({
         }
       >
         <Paragraph>
-          XBRL redemption is disabled for the first {disabledDays} days after launch.
+          xBRL redemption is disabled for the first {disabledDays} days after launch.
         </Paragraph>
 
         <Paragraph sx={{ mt: 3 }}>

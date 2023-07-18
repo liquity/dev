@@ -94,7 +94,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
 
       <Statistic
         name="Borrowing Fee"
-        tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in XBRL) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on XBRL redemption volumes."
+        tooltip="The Borrowing Fee is a one-off fee charged as a percentage of the borrowed amount (in xBRL) and is part of a Trove's debt. The fee varies between 0.5% and 5% depending on xBRL redemption volumes."
       >
         {borrowingFeePct.toString(2)}
       </Statistic>
@@ -111,13 +111,13 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Statistic name="Troves" tooltip="The total number of active Troves in the system.">
         {Decimal.from(numberOfTroves).prettify(0)}
       </Statistic>
-      <Statistic name="XBRL supply" tooltip="The total XBRL minted by the Liquity Protocol.">
+      <Statistic name="xBRL supply" tooltip="The total xBRL minted by the Liquity Protocol.">
         {total.debt.shorten()}
       </Statistic>
       {xbrlInStabilityPoolPct && (
         <Statistic
-          name="XBRL in Stability Pool"
-          tooltip="The total XBRL currently held in the Stability Pool, expressed as an amount and a fraction of the XBRL supply.
+          name="xBRL in Stability Pool"
+          tooltip="The total xBRL currently held in the Stability Pool, expressed as an amount and a fraction of the xBRL supply.
         "
         >
           {xbrlInStabilityPool.shorten()}

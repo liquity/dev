@@ -8,27 +8,27 @@ import { Badge } from "../../Badge";
 import { fetchPrices } from "../context/fetchPrices";
 
 const selector = ({
-  remainingLiquidityMiningSTBLReward,
-  totalStakedUniTokens
+  remainingXbrlWethLiquidityMiningSTBLReward,
+  totalStakedXbrlWethUniTokens
 }: LiquityStoreState) => ({
-  remainingLiquidityMiningSTBLReward,
-  totalStakedUniTokens
+  remainingXbrlWethLiquidityMiningSTBLReward,
+  totalStakedXbrlWethUniTokens
 });
 
 export const Yield: React.FC = () => {
   const {
     liquity: {
-      connection: { addresses, liquidityMiningSTBLRewardRate }
+      connection: { addresses, xbrlWethLiquidityMiningSTBLRewardRate }
     }
   } = useLiquity();
 
-  const { remainingLiquidityMiningSTBLReward, totalStakedUniTokens } = useLiquitySelector(selector);
+  const { remainingXbrlWethLiquidityMiningSTBLReward, totalStakedXbrlWethUniTokens } = useLiquitySelector(selector);
   const [stblPrice, setStblPrice] = useState<Decimal | undefined>(undefined);
   const [uniLpPrice, setUniLpPrice] = useState<Decimal | undefined>(undefined);
-  const hasZeroValue = remainingLiquidityMiningSTBLReward.isZero || totalStakedUniTokens.isZero;
+  const hasZeroValue = remainingXbrlWethLiquidityMiningSTBLReward.isZero || totalStakedXbrlWethUniTokens.isZero;
   const stblTokenAddress = addresses["stblToken"];
   const uniTokenAddress = addresses["uniToken"];
-  const secondsRemaining = remainingLiquidityMiningSTBLReward.div(liquidityMiningSTBLRewardRate);
+  const secondsRemaining = remainingXbrlWethLiquidityMiningSTBLReward.div(xbrlWethLiquidityMiningSTBLRewardRate);
   const daysRemaining = secondsRemaining.div(60 * 60 * 24);
 
   useEffect(() => {
@@ -45,8 +45,8 @@ export const Yield: React.FC = () => {
 
   if (hasZeroValue || stblPrice === undefined || uniLpPrice === undefined) return null;
 
-  const remainingStblInUSD = remainingLiquidityMiningSTBLReward.mul(stblPrice);
-  const totalStakedUniLpInUSD = totalStakedUniTokens.mul(uniLpPrice);
+  const remainingStblInUSD = remainingXbrlWethLiquidityMiningSTBLReward.mul(stblPrice);
+  const totalStakedUniLpInUSD = totalStakedXbrlWethUniTokens.mul(uniLpPrice);
   const yieldPercentage = remainingStblInUSD.div(totalStakedUniLpInUSD).mul(100);
 
   if (yieldPercentage.isZero) return null;

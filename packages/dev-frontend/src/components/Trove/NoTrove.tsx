@@ -14,7 +14,7 @@ export const NoTrove: React.FC = props => {
     <Card>
       <Heading>Trove</Heading>
       <Box sx={{ p: [2, 3] }}>
-        <InfoMessage title="You haven't borrowed any XBRL yet.">
+        <InfoMessage title="You haven't borrowed any xBRL yet.">
           You can borrow xBRL by opening a Trove.
         </InfoMessage>
 

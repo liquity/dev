@@ -29,7 +29,8 @@ import priceFeedTestnetAbi from "../abi/PriceFeedTestnet.json";
 import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 import gasPoolAbi from "../abi/GasPool.json";
-import unipoolAbi from "../abi/Unipool.json";
+import xbrlWethUnipoolAbi from "../abi/XBRLWETHUnipool.json";
+import stblWethUnipoolAbi from "../abi/STBLWETHUnipool.json";
 import iERC20Abi from "../abi/IERC20.json";
 import erc20MockAbi from "../abi/ERC20Mock.json";
 
@@ -51,7 +52,8 @@ import {
   SortedTroves,
   StabilityPool,
   GasPool,
-  Unipool,
+  XBRLWETHUnipool,
+  STBLWETHUnipool,
   ERC20Mock,
   IERC20
 } from "../types";
@@ -181,8 +183,10 @@ export interface _LiquityContracts {
   sortedTroves: SortedTroves;
   stabilityPool: StabilityPool;
   gasPool: GasPool;
-  unipool: Unipool;
-  uniToken: IERC20 | ERC20Mock;
+  xbrlWethUnipool: XBRLWETHUnipool;
+  stblWethUnipool: STBLWETHUnipool;
+  xbrlWethUniToken: IERC20 | ERC20Mock;
+  stblWethUniToken: IERC20 | ERC20Mock;
 }
 
 /** @internal */
@@ -218,8 +222,10 @@ const getAbi = (priceFeedIsTestnet: boolean, uniTokenIsMock: boolean): LiquityCo
   stabilityPool: stabilityPoolAbi,
   gasPool: gasPoolAbi,
   collSurplusPool: collSurplusPoolAbi,
-  unipool: unipoolAbi,
-  uniToken: uniTokenIsMock ? erc20MockAbi : iERC20Abi
+  xbrlWethUnipool: xbrlWethUnipoolAbi,
+  stblWethUnipool: stblWethUnipoolAbi,
+  xbrlWethUniToken: uniTokenIsMock ? erc20MockAbi : iERC20Abi,
+  stblWethUniToken: uniTokenIsMock ? erc20MockAbi : iERC20Abi
 });
 
 const mapLiquityContracts = <T, U>(
@@ -239,7 +245,8 @@ export interface _LiquityDeploymentJSON {
   readonly startBlock: number;
   readonly bootstrapPeriod: number;
   readonly totalStabilityPoolSTBLReward: string;
-  readonly liquidityMiningSTBLRewardRate: string;
+  readonly xbrlWethLiquidityMiningSTBLRewardRate: string;
+  readonly stblWethLiquidityMiningSTBLRewardRate: string;
   readonly _priceFeedIsTestnet: boolean;
   readonly _uniTokenIsMock: boolean;
   readonly _isDev: boolean;

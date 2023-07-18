@@ -460,19 +460,19 @@ export interface TransactableLiquity {
 
   /**
    * Allow the liquidity mining contract to use Uniswap ETH/XBRL LP tokens for
-   * {@link @liquity/lib-base#TransactableLiquity.stakeUniTokens | staking}.
+   * {@link @liquity/lib-base#TransactableLiquity.stakeXbrlWethUniTokens | staking}.
    *
    * @param allowance - Maximum amount of LP tokens that will be transferrable to liquidity mining
    *                    (`2^256 - 1` by default).
    *
    * @remarks
    * Must be performed before calling
-   * {@link @liquity/lib-base#TransactableLiquity.stakeUniTokens | stakeUniTokens()}.
+   * {@link @liquity/lib-base#TransactableLiquity.stakeXbrlWethUniTokens | stakeXbrlWethUniTokens()}.
    *
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
-  approveUniTokens(allowance?: Decimalish): Promise<void>;
+  approveXbrlWethUniTokens(allowance?: Decimalish): Promise<void>;
 
   /**
    * Stake Uniswap ETH/XBRL LP tokens to participate in liquidity mining and earn STBL.
@@ -482,7 +482,7 @@ export interface TransactableLiquity {
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
-  stakeUniTokens(amount: Decimalish): Promise<void>;
+  stakeXbrlWethUniTokens(amount: Decimalish): Promise<void>;
 
   /**
    * Withdraw Uniswap ETH/XBRL LP tokens from liquidity mining.
@@ -492,7 +492,7 @@ export interface TransactableLiquity {
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
-  unstakeUniTokens(amount: Decimalish): Promise<void>;
+  unstakeXbrlWethUniTokens(amount: Decimalish): Promise<void>;
 
   /**
    * Withdraw STBL that has been earned by mining liquidity.
@@ -500,7 +500,7 @@ export interface TransactableLiquity {
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
-  withdrawSTBLRewardFromLiquidityMining(): Promise<void>;
+  withdrawSTBLRewardFromXbrlWethLiquidityMining(): Promise<void>;
 
   /**
    * Withdraw all staked LP tokens from liquidity mining and claim reward.
@@ -508,7 +508,7 @@ export interface TransactableLiquity {
    * @throws
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
-  exitLiquidityMining(): Promise<void>;
+  exitXbrlWethLiquidityMining(): Promise<void>;
 
   /**
    * Register current wallet address as a Liquity frontend.

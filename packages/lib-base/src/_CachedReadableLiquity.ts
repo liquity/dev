@@ -129,45 +129,45 @@ export class _CachedReadableLiquity<T extends unknown[]>
     );
   }
 
-  async getUniTokenBalance(address?: string, ...extraParams: T): Promise<Decimal> {
+  async getXbrlWethUniTokenBalance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getUniTokenBalance(address, ...extraParams) ??
-      this._readable.getUniTokenBalance(address, ...extraParams)
+      this._cache.getXbrlWethUniTokenBalance(address, ...extraParams) ??
+      this._readable.getXbrlWethUniTokenBalance(address, ...extraParams)
     );
   }
 
-  async getUniTokenAllowance(address?: string, ...extraParams: T): Promise<Decimal> {
+  async getXbrlWethUniTokenAllowance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getUniTokenAllowance(address, ...extraParams) ??
-      this._readable.getUniTokenAllowance(address, ...extraParams)
+      this._cache.getXbrlWethUniTokenAllowance(address, ...extraParams) ??
+      this._readable.getXbrlWethUniTokenAllowance(address, ...extraParams)
     );
   }
 
-  async getRemainingLiquidityMiningSTBLReward(...extraParams: T): Promise<Decimal> {
+  async getRemainingXbrlWethLiquidityMiningSTBLReward(...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getRemainingLiquidityMiningSTBLReward(...extraParams) ??
-      this._readable.getRemainingLiquidityMiningSTBLReward(...extraParams)
+      this._cache.getRemainingXbrlWethLiquidityMiningSTBLReward(...extraParams) ??
+      this._readable.getRemainingXbrlWethLiquidityMiningSTBLReward(...extraParams)
     );
   }
 
-  async getLiquidityMiningStake(address?: string, ...extraParams: T): Promise<Decimal> {
+  async getXbrlWethLiquidityMiningStake(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getLiquidityMiningStake(address, ...extraParams) ??
-      this._readable.getLiquidityMiningStake(address, ...extraParams)
+      this._cache.getXbrlWethLiquidityMiningStake(address, ...extraParams) ??
+      this._readable.getXbrlWethLiquidityMiningStake(address, ...extraParams)
     );
   }
 
-  async getTotalStakedUniTokens(...extraParams: T): Promise<Decimal> {
+  async getTotalStakedXbrlWethUniTokens(...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getTotalStakedUniTokens(...extraParams) ??
-      this._readable.getTotalStakedUniTokens(...extraParams)
+      this._cache.getTotalStakedXbrlWethUniTokens(...extraParams) ??
+      this._readable.getTotalStakedXbrlWethUniTokens(...extraParams)
     );
   }
 
-  async getLiquidityMiningSTBLReward(address?: string, ...extraParams: T): Promise<Decimal> {
+  async getXbrlWethLiquidityMiningSTBLReward(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
-      this._cache.getLiquidityMiningSTBLReward(address, ...extraParams) ??
-      this._readable.getLiquidityMiningSTBLReward(address, ...extraParams)
+      this._cache.getXbrlWethLiquidityMiningSTBLReward(address, ...extraParams) ??
+      this._readable.getXbrlWethLiquidityMiningSTBLReward(address, ...extraParams)
     );
   }
 

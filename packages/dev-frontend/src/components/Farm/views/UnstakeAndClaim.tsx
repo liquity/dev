@@ -24,7 +24,7 @@ export const UnstakeAndClaim: React.FC = () => {
   return (
     <Transaction
       id={transactionId}
-      send={liquity.exitLiquidityMining.bind(liquity)}
+      send={liquity.exitXbrlWethLiquidityMining.bind(liquity)}
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >

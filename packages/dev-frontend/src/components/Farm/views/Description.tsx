@@ -34,14 +34,14 @@ export const Description: React.FC<DescriptionProps> = ({ amount }) => {
   return (
     <ActionDescription>
       {isWithdrawing && (
-        <Transaction id={transactionId} send={liquity.unstakeUniTokens.bind(liquity, amountChanged)}>
+        <Transaction id={transactionId} send={liquity.unstakeXbrlWethUniTokens.bind(liquity, amountChanged)}>
           <Text>
             You are unstaking {amountChanged.prettify(4)} {LP}
           </Text>
         </Transaction>
       )}
       {!isWithdrawing && (
-        <Transaction id={transactionId} send={liquity.stakeUniTokens.bind(liquity, amountChanged)}>
+        <Transaction id={transactionId} send={liquity.stakeXbrlWethUniTokens.bind(liquity, amountChanged)}>
           <Text>
             You are staking {amountChanged.prettify(4)} {LP}
           </Text>

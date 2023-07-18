@@ -15,11 +15,11 @@ import { useValidationState } from "../../context/useValidationState";
 import { useLiquitySelector } from "@liquity/lib-react";
 
 const transactionId = /farm-/;
-const selector = ({ totalStakedUniTokens }: LiquityStoreState) => ({ totalStakedUniTokens });
+const selector = ({ totalStakedXbrlWethUniTokens }: LiquityStoreState) => ({ totalStakedXbrlWethUniTokens });
 
 export const Staking: React.FC = () => {
   const { dispatchEvent } = useFarmView();
-  const { totalStakedUniTokens } = useLiquitySelector(selector);
+  const { totalStakedXbrlWethUniTokens } = useLiquitySelector(selector);
 
   const [amount, setAmount] = useState<Decimal>(Decimal.from(0));
   const editingState = useState<string>();
@@ -36,7 +36,7 @@ export const Staking: React.FC = () => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
 
-  const nextTotalStakedUniTokens = totalStakedUniTokens.add(amount);
+  const nextTotalStakedUniTokens = totalStakedXbrlWethUniTokens.add(amount);
 
   const poolShare = amount.mulDiv(100, nextTotalStakedUniTokens);
 

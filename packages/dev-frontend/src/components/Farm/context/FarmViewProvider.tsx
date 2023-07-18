@@ -11,38 +11,38 @@ const transition = (view: FarmView, event: FarmEvent): FarmView => {
 };
 
 const getInitialView = (
-  liquidityMiningStake: Decimal,
-  remainingLiquidityMiningSTBLReward: Decimal,
-  liquidityMiningSTBLReward: Decimal
+  xbrlWethLiquidityMiningStake: Decimal,
+  remainingXbrlWethLiquidityMiningSTBLReward: Decimal,
+  xbrlWethLiquidityMiningSTBLReward: Decimal
 ): FarmView => {
-  if (remainingLiquidityMiningSTBLReward.isZero) return "DISABLED";
-  if (liquidityMiningStake.isZero && liquidityMiningSTBLReward.isZero) return "INACTIVE";
+  if (remainingXbrlWethLiquidityMiningSTBLReward.isZero) return "DISABLED";
+  if (xbrlWethLiquidityMiningStake.isZero && xbrlWethLiquidityMiningSTBLReward.isZero) return "INACTIVE";
   return "ACTIVE";
 };
 
 const selector = ({
-  liquidityMiningStake,
-  remainingLiquidityMiningSTBLReward,
-  liquidityMiningSTBLReward
+  xbrlWethLiquidityMiningStake,
+  remainingXbrlWethLiquidityMiningSTBLReward,
+  xbrlWethLiquidityMiningSTBLReward
 }: LiquityStoreState) => ({
-  liquidityMiningStake,
-  remainingLiquidityMiningSTBLReward,
-  liquidityMiningSTBLReward
+  xbrlWethLiquidityMiningStake,
+  remainingXbrlWethLiquidityMiningSTBLReward,
+  xbrlWethLiquidityMiningSTBLReward
 });
 
 export const FarmViewProvider: React.FC = props => {
   const { children } = props;
   const {
-    liquidityMiningStake,
-    remainingLiquidityMiningSTBLReward,
-    liquidityMiningSTBLReward
+    xbrlWethLiquidityMiningStake,
+    remainingXbrlWethLiquidityMiningSTBLReward,
+    xbrlWethLiquidityMiningSTBLReward
   } = useLiquitySelector(selector);
 
   const [view, setView] = useState<FarmView>(
     getInitialView(
-      liquidityMiningStake,
-      remainingLiquidityMiningSTBLReward,
-      liquidityMiningSTBLReward
+      xbrlWethLiquidityMiningStake,
+      remainingXbrlWethLiquidityMiningSTBLReward,
+      xbrlWethLiquidityMiningSTBLReward
     )
   );
   const viewRef = useRef<FarmView>(view);
@@ -64,12 +64,12 @@ export const FarmViewProvider: React.FC = props => {
   }, [view]);
 
   useEffect(() => {
-    if (liquidityMiningStake.isZero && liquidityMiningSTBLReward.isZero) {
+    if (xbrlWethLiquidityMiningStake.isZero && xbrlWethLiquidityMiningSTBLReward.isZero) {
       dispatchEvent("UNSTAKE_AND_CLAIM_CONFIRMED");
-    } else if (liquidityMiningStake.isZero && !liquidityMiningSTBLReward.isZero) {
+    } else if (xbrlWethLiquidityMiningStake.isZero && !xbrlWethLiquidityMiningSTBLReward.isZero) {
       dispatchEvent("UNSTAKE_CONFIRMED");
     }
-  }, [liquidityMiningStake.isZero, liquidityMiningSTBLReward.isZero, dispatchEvent]);
+  }, [xbrlWethLiquidityMiningStake.isZero, xbrlWethLiquidityMiningSTBLReward.isZero, dispatchEvent]);
 
   const provider = {
     view,

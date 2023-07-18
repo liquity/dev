@@ -32,22 +32,22 @@ export interface LiquityStoreBaseState {
   stblBalance: Decimal;
 
   /** User's Uniswap ETH/XBRL LP token balance. */
-  uniTokenBalance: Decimal;
+  xbrlWethUniTokenBalance: Decimal;
 
   /** The liquidity mining contract's allowance of user's Uniswap ETH/XBRL LP tokens. */
-  uniTokenAllowance: Decimal;
+  xbrlWethUniTokenAllowance: Decimal;
 
   /** Remaining STBL that will be collectively rewarded to liquidity miners. */
-  remainingLiquidityMiningSTBLReward: Decimal;
+  remainingXbrlWethLiquidityMiningSTBLReward: Decimal;
 
   /** Amount of Uniswap ETH/XBRL LP tokens the user has staked in liquidity mining. */
-  liquidityMiningStake: Decimal;
+  xbrlWethLiquidityMiningStake: Decimal;
 
   /** Total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. */
-  totalStakedUniTokens: Decimal;
+  totalStakedXbrlWethUniTokens: Decimal;
 
   /** Amount of STBL the user has earned through mining liquidity. */
-  liquidityMiningSTBLReward: Decimal;
+  xbrlWethLiquidityMiningSTBLReward: Decimal;
 
   /**
    * Amount of leftover collateral available for withdrawal to the user.
@@ -366,44 +366,44 @@ export abstract class LiquityStore<T = unknown> {
         baseStateUpdate.stblBalance
       ),
 
-      uniTokenBalance: this._updateIfChanged(
+      xbrlWethUniTokenBalance: this._updateIfChanged(
         eq,
-        "uniTokenBalance",
-        baseState.uniTokenBalance,
-        baseStateUpdate.uniTokenBalance
+        "xbrlWethUniTokenBalance",
+        baseState.xbrlWethUniTokenBalance,
+        baseStateUpdate.xbrlWethUniTokenBalance
       ),
 
-      uniTokenAllowance: this._updateIfChanged(
+      xbrlWethUniTokenAllowance: this._updateIfChanged(
         eq,
-        "uniTokenAllowance",
-        baseState.uniTokenAllowance,
-        baseStateUpdate.uniTokenAllowance
+        "xbrlWethUniTokenAllowance",
+        baseState.xbrlWethUniTokenAllowance,
+        baseStateUpdate.xbrlWethUniTokenAllowance
       ),
 
-      remainingLiquidityMiningSTBLReward: this._silentlyUpdateIfChanged(
+      remainingXbrlWethLiquidityMiningSTBLReward: this._silentlyUpdateIfChanged(
         eq,
-        baseState.remainingLiquidityMiningSTBLReward,
-        baseStateUpdate.remainingLiquidityMiningSTBLReward
+        baseState.remainingXbrlWethLiquidityMiningSTBLReward,
+        baseStateUpdate.remainingXbrlWethLiquidityMiningSTBLReward
       ),
 
-      liquidityMiningStake: this._updateIfChanged(
+      xbrlWethLiquidityMiningStake: this._updateIfChanged(
         eq,
-        "liquidityMiningStake",
-        baseState.liquidityMiningStake,
-        baseStateUpdate.liquidityMiningStake
+        "xbrlWethLiquidityMiningStake",
+        baseState.xbrlWethLiquidityMiningStake,
+        baseStateUpdate.xbrlWethLiquidityMiningStake
       ),
 
-      totalStakedUniTokens: this._updateIfChanged(
+      totalStakedXbrlWethUniTokens: this._updateIfChanged(
         eq,
-        "totalStakedUniTokens",
-        baseState.totalStakedUniTokens,
-        baseStateUpdate.totalStakedUniTokens
+        "totalStakedXbrlWethUniTokens",
+        baseState.totalStakedXbrlWethUniTokens,
+        baseStateUpdate.totalStakedXbrlWethUniTokens
       ),
 
-      liquidityMiningSTBLReward: this._silentlyUpdateIfChanged(
+      xbrlWethLiquidityMiningSTBLReward: this._silentlyUpdateIfChanged(
         eq,
-        baseState.liquidityMiningSTBLReward,
-        baseStateUpdate.liquidityMiningSTBLReward
+        baseState.xbrlWethLiquidityMiningSTBLReward,
+        baseStateUpdate.xbrlWethLiquidityMiningSTBLReward
       ),
 
       collateralSurplusBalance: this._updateIfChanged(

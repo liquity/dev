@@ -173,11 +173,11 @@ export const Opening: React.FC = () => {
             <InfoIcon
               tooltip={
                 <Card variant="tooltip" sx={{ width: "240px" }}>
-                  The total amount of XBRL your Trove will hold.{" "}
+                  The total amount of xBRL your Trove will hold.{" "}
                   {isDirty && (
                     <>
                       You will need to repay {totalDebt.sub(XBRL_LIQUIDATION_RESERVE).prettify(2)}{" "}
-                      XBRL to reclaim your collateral ({XBRL_LIQUIDATION_RESERVE.toString()} XBRL
+                      xBRL to reclaim your collateral ({XBRL_LIQUIDATION_RESERVE.toString()} xBRL
                       Liquidation Reserve excluded).
                     </>
                   )}

@@ -17,7 +17,6 @@ import {
 } from "./contracts";
 
 import { _connectToMulticall, _Multicall } from "./_Multicall";
-
 const dev = devOrNull as _LiquityDeploymentJSON | null;
 
 const deployments: {
@@ -68,7 +67,10 @@ export interface EthersLiquityConnection extends EthersLiquityConnectionOptional
   readonly totalStabilityPoolSTBLReward: Decimal;
 
   /** Amount of STBL collectively rewarded to stakers of the liquidity mining pool per second. */
-  readonly liquidityMiningSTBLRewardRate: Decimal;
+  readonly xbrlWethLiquidityMiningSTBLRewardRate: Decimal;
+  
+  /** Amount of STBL collectively rewarded to stakers of the liquidity mining pool per second. */
+  readonly stblWethLiquidityMiningSTBLRewardRate: Decimal;
 
   /** A mapping of Liquity contracts' names to their addresses. */
   readonly addresses: Record<string, string>;
@@ -98,7 +100,8 @@ const connectionFrom = (
   {
     deploymentDate,
     totalStabilityPoolSTBLReward,
-    liquidityMiningSTBLRewardRate,
+    xbrlWethLiquidityMiningSTBLRewardRate,
+    stblWethLiquidityMiningSTBLRewardRate,
     ...deployment
   }: _LiquityDeploymentJSON,
   optionalParams?: EthersLiquityConnectionOptionalParams
@@ -118,7 +121,8 @@ const connectionFrom = (
     _multicall,
     deploymentDate: new Date(deploymentDate),
     totalStabilityPoolSTBLReward: Decimal.from(totalStabilityPoolSTBLReward),
-    liquidityMiningSTBLRewardRate: Decimal.from(liquidityMiningSTBLRewardRate),
+    xbrlWethLiquidityMiningSTBLRewardRate: Decimal.from(xbrlWethLiquidityMiningSTBLRewardRate),
+    stblWethLiquidityMiningSTBLRewardRate: Decimal.from(stblWethLiquidityMiningSTBLRewardRate),
     ...deployment,
     ...optionalParams
   });

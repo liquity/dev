@@ -14,22 +14,22 @@ import { UnstakeAndClaim } from "../UnstakeAndClaim";
 import { Yield } from "../Yield";
 
 const selector = ({
-  liquidityMiningStake,
-  liquidityMiningSTBLReward,
-  totalStakedUniTokens
+  xbrlWethLiquidityMiningStake,
+  xbrlWethLiquidityMiningSTBLReward,
+  totalStakedXbrlWethUniTokens
 }: LiquityStoreState) => ({
-  liquidityMiningStake,
-  liquidityMiningSTBLReward,
-  totalStakedUniTokens
+  xbrlWethLiquidityMiningStake,
+  xbrlWethLiquidityMiningSTBLReward,
+  totalStakedXbrlWethUniTokens
 });
 const transactionId = /farm-/i;
 
 export const Active: React.FC = () => {
   const { dispatchEvent } = useFarmView();
   const {
-    liquidityMiningStake,
-    liquidityMiningSTBLReward,
-    totalStakedUniTokens
+    xbrlWethLiquidityMiningStake,
+    xbrlWethLiquidityMiningSTBLReward,
+    totalStakedXbrlWethUniTokens
   } = useLiquitySelector(selector);
 
   const handleAdjustPressed = useCallback(() => {
@@ -41,8 +41,8 @@ export const Active: React.FC = () => {
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
 
-  const poolShare = liquidityMiningStake.mulDiv(100, totalStakedUniTokens);
-  const hasStakeAndRewards = !liquidityMiningStake.isZero && !liquidityMiningSTBLReward.isZero;
+  const poolShare = xbrlWethLiquidityMiningStake.mulDiv(100, totalStakedXbrlWethUniTokens);
+  const hasStakeAndRewards = !xbrlWethLiquidityMiningStake.isZero && !xbrlWethLiquidityMiningSTBLReward.isZero;
 
   return (
     <Card>
@@ -59,7 +59,7 @@ export const Active: React.FC = () => {
           <DisabledEditableRow
             label="Stake"
             inputId="farm-stake"
-            amount={liquidityMiningStake.prettify(4)}
+            amount={xbrlWethLiquidityMiningStake.prettify(4)}
             unit={LP}
           />
           {poolShare.infinite ? (
@@ -76,8 +76,8 @@ export const Active: React.FC = () => {
             <StaticRow
               label="Reward"
               inputId="farm-reward"
-              amount={liquidityMiningSTBLReward.prettify(4)}
-              color={liquidityMiningSTBLReward.nonZero && "success"}
+              amount={xbrlWethLiquidityMiningSTBLReward.prettify(4)}
+              color={xbrlWethLiquidityMiningSTBLReward.nonZero && "success"}
               unit={GT}
             />
             <Flex sx={{ justifyContent: "flex-end", flex: 1 }}>
@@ -88,13 +88,13 @@ export const Active: React.FC = () => {
 
         <Flex variant="layout.actions">
           <Button
-            variant={!liquidityMiningSTBLReward.isZero ? "outline" : "primary"}
+            variant={!xbrlWethLiquidityMiningSTBLReward.isZero ? "outline" : "primary"}
             onClick={handleAdjustPressed}
           >
             <Icon name="pen" size="sm" />
             &nbsp;Adjust
           </Button>
-          {!liquidityMiningSTBLReward.isZero && <ClaimReward />}
+          {!xbrlWethLiquidityMiningSTBLReward.isZero && <ClaimReward />}
         </Flex>
         <Flex>{hasStakeAndRewards && <UnstakeAndClaim />}</Flex>
       </Box>

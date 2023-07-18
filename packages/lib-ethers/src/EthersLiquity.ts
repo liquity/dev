@@ -225,41 +225,41 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
     return this._readable.getSTBLBalance(address, overrides);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getUniTokenBalance} */
-  getUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
-    return this._readable.getUniTokenBalance(address, overrides);
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getXbrlWethUniTokenBalance} */
+  getXbrlWethUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getXbrlWethUniTokenBalance(address, overrides);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getUniTokenAllowance} */
-  getUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
-    return this._readable.getUniTokenAllowance(address, overrides);
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getXbrlWethUniTokenAllowance} */
+  getXbrlWethUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getXbrlWethUniTokenAllowance(address, overrides);
   }
 
   /** @internal */
-  _getRemainingLiquidityMiningSTBLRewardCalculator(
+  _getRemainingXbrlWethLiquidityMiningSTBLRewardCalculator(
     overrides?: EthersCallOverrides
   ): Promise<(blockTimestamp: number) => Decimal> {
-    return this._readable._getRemainingLiquidityMiningSTBLRewardCalculator(overrides);
+    return this._readable._getRemainingXbrlWethLiquidityMiningSTBLRewardCalculator(overrides);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingLiquidityMiningSTBLReward} */
-  getRemainingLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal> {
-    return this._readable.getRemainingLiquidityMiningSTBLReward(overrides);
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getRemainingXbrlWethLiquidityMiningSTBLReward} */
+  getRemainingXbrlWethLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getRemainingXbrlWethLiquidityMiningSTBLReward(overrides);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLiquidityMiningStake} */
-  getLiquidityMiningStake(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
-    return this._readable.getLiquidityMiningStake(address, overrides);
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getXbrlWethLiquidityMiningStake} */
+  getXbrlWethLiquidityMiningStake(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getXbrlWethLiquidityMiningStake(address, overrides);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotalStakedUniTokens} */
-  getTotalStakedUniTokens(overrides?: EthersCallOverrides): Promise<Decimal> {
-    return this._readable.getTotalStakedUniTokens(overrides);
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getTotalStakedXbrlWethUniTokens} */
+  getTotalStakedXbrlWethUniTokens(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getTotalStakedXbrlWethUniTokens(overrides);
   }
 
-  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getLiquidityMiningSTBLReward} */
-  getLiquidityMiningSTBLReward(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
-    return this._readable.getLiquidityMiningSTBLReward(address, overrides);
+  /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getXbrlWethLiquidityMiningSTBLReward} */
+  getXbrlWethLiquidityMiningSTBLReward(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getXbrlWethLiquidityMiningSTBLReward(address, overrides);
   }
 
   /** {@inheritDoc @liquity/lib-base#ReadableLiquity.getCollateralSurplusBalance} */
@@ -603,67 +603,67 @@ export class EthersLiquity implements ReadableEthersLiquity, TransactableLiquity
   }
 
   /** @internal */
-  _mintUniToken(
+  _mintXbrlWethUniToken(
     amount: Decimalish,
     address?: string,
     overrides?: EthersTransactionOverrides
   ): Promise<void> {
-    return this.send._mintUniToken(amount, address, overrides).then(waitForSuccess);
+    return this.send._mintXbrlWethUniToken(amount, address, overrides).then(waitForSuccess);
   }
 
   /**
-   * {@inheritDoc @liquity/lib-base#TransactableLiquity.approveUniTokens}
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.approveXbrlWethUniTokens}
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
    * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
-  approveUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
-    return this.send.approveUniTokens(allowance, overrides).then(waitForSuccess);
+  approveXbrlWethUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.approveXbrlWethUniTokens(allowance, overrides).then(waitForSuccess);
   }
 
   /**
-   * {@inheritDoc @liquity/lib-base#TransactableLiquity.stakeUniTokens}
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.stakeXbrlWethUniTokens}
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
    * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
-  stakeUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
-    return this.send.stakeUniTokens(amount, overrides).then(waitForSuccess);
+  stakeXbrlWethUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.stakeXbrlWethUniTokens(amount, overrides).then(waitForSuccess);
   }
 
   /**
-   * {@inheritDoc @liquity/lib-base#TransactableLiquity.unstakeUniTokens}
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.unstakeXbrlWethUniTokens}
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
    * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
-  unstakeUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
-    return this.send.unstakeUniTokens(amount, overrides).then(waitForSuccess);
+  unstakeXbrlWethUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.unstakeXbrlWethUniTokens(amount, overrides).then(waitForSuccess);
   }
 
   /**
-   * {@inheritDoc @liquity/lib-base#TransactableLiquity.withdrawSTBLRewardFromLiquidityMining}
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.withdrawSTBLRewardFromXbrlWethLiquidityMining}
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
    * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
-  withdrawSTBLRewardFromLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
-    return this.send.withdrawSTBLRewardFromLiquidityMining(overrides).then(waitForSuccess);
+  withdrawSTBLRewardFromXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.withdrawSTBLRewardFromXbrlWethLiquidityMining(overrides).then(waitForSuccess);
   }
 
   /**
-   * {@inheritDoc @liquity/lib-base#TransactableLiquity.exitLiquidityMining}
+   * {@inheritDoc @liquity/lib-base#TransactableLiquity.exitXbrlWethLiquidityMining}
    *
    * @throws
    * Throws {@link EthersTransactionFailedError} in case of transaction failure.
    * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
    */
-  exitLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
-    return this.send.exitLiquidityMining(overrides).then(waitForSuccess);
+  exitXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.exitXbrlWethLiquidityMining(overrides).then(waitForSuccess);
   }
 }
 

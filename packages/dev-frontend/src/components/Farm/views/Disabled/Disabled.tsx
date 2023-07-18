@@ -8,14 +8,14 @@ import { RemainingSTBL } from "../RemainingSTBL";
 import { StaticRow } from "../../../Trove/Editor";
 import { GT, LP } from "../../../../strings";
 
-const selector = ({ liquidityMiningStake, liquidityMiningSTBLReward }: LiquityStoreState) => ({
-  liquidityMiningStake,
-  liquidityMiningSTBLReward
+const selector = ({ xbrlWethLiquidityMiningStake, xbrlWethLiquidityMiningSTBLReward }: LiquityStoreState) => ({
+  xbrlWethLiquidityMiningStake,
+  xbrlWethLiquidityMiningSTBLReward
 });
 
 export const Disabled: React.FC = () => {
-  const { liquidityMiningStake, liquidityMiningSTBLReward } = useLiquitySelector(selector);
-  const hasStake = !liquidityMiningStake.isZero;
+  const { xbrlWethLiquidityMiningStake, xbrlWethLiquidityMiningSTBLReward } = useLiquitySelector(selector);
+  const hasStake = !xbrlWethLiquidityMiningStake.isZero;
 
   return (
     <Card>
@@ -35,14 +35,14 @@ export const Disabled: React.FC = () => {
               <StaticRow
                 label="Stake"
                 inputId="farm-deposit"
-                amount={liquidityMiningStake.prettify(4)}
+                amount={xbrlWethLiquidityMiningStake.prettify(4)}
                 unit={LP}
               />
               <StaticRow
                 label="Reward"
                 inputId="farm-reward"
-                amount={liquidityMiningSTBLReward.prettify(4)}
-                color={liquidityMiningSTBLReward.nonZero && "success"}
+                amount={xbrlWethLiquidityMiningSTBLReward.prettify(4)}
+                color={xbrlWethLiquidityMiningSTBLReward.nonZero && "success"}
                 unit={GT}
               />
             </Box>

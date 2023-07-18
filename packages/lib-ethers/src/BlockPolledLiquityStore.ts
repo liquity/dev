@@ -91,12 +91,12 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
     const {
       blockTimestamp,
       _feesFactory,
-      calculateRemainingSTBL,
+      calculateRemainingSTBLInXbrlWethLiquidityPool,
       ...baseState
     } = await promiseAllValues({
       blockTimestamp: this._readable._getBlockTimestamp(blockTag),
       _feesFactory: this._readable._getFeesFactory({ blockTag }),
-      calculateRemainingSTBL: this._readable._getRemainingLiquidityMiningSTBLRewardCalculator({
+      calculateRemainingSTBLInXbrlWethLiquidityPool: this._readable._getRemainingXbrlWethLiquidityMiningSTBLRewardCalculator({
         blockTag
       }),
 
@@ -107,7 +107,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       xbrlInStabilityPool: this._readable.getXBRLInStabilityPool({ blockTag }),
       totalStakedSTBL: this._readable.getTotalStakedSTBL({ blockTag }),
       _riskiestTroveBeforeRedistribution: this._getRiskiestTroveBeforeRedistribution({ blockTag }),
-      totalStakedUniTokens: this._readable.getTotalStakedUniTokens({ blockTag }),
+      totalStakedXbrlWethUniTokens: this._readable.getTotalStakedXbrlWethUniTokens({ blockTag }),
       remainingStabilityPoolSTBLReward: this._readable.getRemainingStabilityPoolSTBLReward({
         blockTag
       }),
@@ -121,10 +121,10 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
             accountBalance: this._provider.getBalance(userAddress, blockTag).then(decimalify),
             xbrlBalance: this._readable.getXBRLBalance(userAddress, { blockTag }),
             stblBalance: this._readable.getSTBLBalance(userAddress, { blockTag }),
-            uniTokenBalance: this._readable.getUniTokenBalance(userAddress, { blockTag }),
-            uniTokenAllowance: this._readable.getUniTokenAllowance(userAddress, { blockTag }),
-            liquidityMiningStake: this._readable.getLiquidityMiningStake(userAddress, { blockTag }),
-            liquidityMiningSTBLReward: this._readable.getLiquidityMiningSTBLReward(userAddress, {
+            xbrlWethUniTokenBalance: this._readable.getXbrlWethUniTokenBalance(userAddress, { blockTag }),
+            xbrlWethUniTokenAllowance: this._readable.getXbrlWethUniTokenAllowance(userAddress, { blockTag }),
+            xbrlWethLiquidityMiningStake: this._readable.getXbrlWethLiquidityMiningStake(userAddress, { blockTag }),
+            xbrlWethLiquidityMiningSTBLReward: this._readable.getXbrlWethLiquidityMiningSTBLReward(userAddress, {
               blockTag
             }),
             collateralSurplusBalance: this._readable.getCollateralSurplusBalance(userAddress, {
@@ -141,10 +141,10 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
             accountBalance: Decimal.ZERO,
             xbrlBalance: Decimal.ZERO,
             stblBalance: Decimal.ZERO,
-            uniTokenBalance: Decimal.ZERO,
-            uniTokenAllowance: Decimal.ZERO,
-            liquidityMiningStake: Decimal.ZERO,
-            liquidityMiningSTBLReward: Decimal.ZERO,
+            xbrlWethUniTokenBalance: Decimal.ZERO,
+            xbrlWethUniTokenAllowance: Decimal.ZERO,
+            xbrlWethLiquidityMiningStake: Decimal.ZERO,
+            xbrlWethLiquidityMiningSTBLReward: Decimal.ZERO,
             collateralSurplusBalance: Decimal.ZERO,
             troveBeforeRedistribution: new TroveWithPendingRedistribution(
               AddressZero,
@@ -166,7 +166,7 @@ export class BlockPolledLiquityStore extends LiquityStore<BlockPolledLiquityStor
       {
         ...baseState,
         _feesInNormalMode: _feesFactory(blockTimestamp, false),
-        remainingLiquidityMiningSTBLReward: calculateRemainingSTBL(blockTimestamp)
+        remainingXbrlWethLiquidityMiningSTBLReward: calculateRemainingSTBLInXbrlWethLiquidityPool(blockTimestamp)
       },
       {
         blockTag,

@@ -1321,20 +1321,20 @@ export class PopulatableEthersLiquity
   }
 
   /** @internal */
-  async _mintUniToken(
+  async _mintXbrlWethUniToken(
     amount: Decimalish,
     address?: string,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
     address ??= _requireAddress(this._readable.connection, overrides);
-    const { uniToken } = _getContracts(this._readable.connection);
+    const { xbrlWethUniToken } = _getContracts(this._readable.connection);
 
-    if (!_uniTokenIsMock(uniToken)) {
-      throw new Error("_mintUniToken() unavailable on this deployment of Liquity");
+    if (!_uniTokenIsMock(xbrlWethUniToken)) {
+      throw new Error("_mintXbrlWethUniToken() unavailable on this deployment of Liquity");
     }
 
     return this._wrapSimpleTransaction(
-      await uniToken.estimateAndPopulate.mint(
+      await xbrlWethUniToken.estimateAndPopulate.mint(
         { ...overrides },
         id,
         address,
@@ -1343,32 +1343,32 @@ export class PopulatableEthersLiquity
     );
   }
 
-  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.approveUniTokens} */
-  async approveUniTokens(
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.approveXbrlWethUniTokens} */
+  async approveXbrlWethUniTokens(
     allowance?: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    const { uniToken, unipool } = _getContracts(this._readable.connection);
+    const { xbrlWethUniToken, xbrlWethUnipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
-      await uniToken.estimateAndPopulate.approve(
+      await xbrlWethUniToken.estimateAndPopulate.approve(
         { ...overrides },
         id,
-        unipool.address,
+        xbrlWethUnipool.address,
         Decimal.from(allowance ?? Decimal.INFINITY).hex
       )
     );
   }
 
-  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.stakeUniTokens} */
-  async stakeUniTokens(
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.stakeXbrlWethUniTokens} */
+  async stakeXbrlWethUniTokens(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    const { unipool } = _getContracts(this._readable.connection);
+    const { xbrlWethUnipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
-      await unipool.estimateAndPopulate.stake(
+      await xbrlWethUnipool.estimateAndPopulate.stake(
         { ...overrides },
         addGasForUnipoolRewardUpdate,
         Decimal.from(amount).hex
@@ -1376,15 +1376,15 @@ export class PopulatableEthersLiquity
     );
   }
 
-  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.unstakeUniTokens} */
-  async unstakeUniTokens(
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.unstakeXbrlWethUniTokens} */
+  async unstakeXbrlWethUniTokens(
     amount: Decimalish,
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    const { unipool } = _getContracts(this._readable.connection);
+    const { xbrlWethUnipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
-      await unipool.estimateAndPopulate.withdraw(
+      await xbrlWethUnipool.estimateAndPopulate.withdraw(
         { ...overrides },
         addGasForUnipoolRewardUpdate,
         Decimal.from(amount).hex
@@ -1392,25 +1392,25 @@ export class PopulatableEthersLiquity
     );
   }
 
-  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawSTBLRewardFromLiquidityMining} */
-  async withdrawSTBLRewardFromLiquidityMining(
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.withdrawSTBLRewardFromXbrlWethLiquidityMining} */
+  async withdrawSTBLRewardFromXbrlWethLiquidityMining(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    const { unipool } = _getContracts(this._readable.connection);
+    const { xbrlWethUnipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
-      await unipool.estimateAndPopulate.claimReward({ ...overrides }, addGasForUnipoolRewardUpdate)
+      await xbrlWethUnipool.estimateAndPopulate.claimReward({ ...overrides }, addGasForUnipoolRewardUpdate)
     );
   }
 
-  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.exitLiquidityMining} */
-  async exitLiquidityMining(
+  /** {@inheritDoc @liquity/lib-base#PopulatableLiquity.exitXbrlWethLiquidityMining} */
+  async exitXbrlWethLiquidityMining(
     overrides?: EthersTransactionOverrides
   ): Promise<PopulatedEthersLiquityTransaction<void>> {
-    const { unipool } = _getContracts(this._readable.connection);
+    const { xbrlWethUnipool } = _getContracts(this._readable.connection);
 
     return this._wrapSimpleTransaction(
-      await unipool.estimateAndPopulate.withdrawAndClaim(
+      await xbrlWethUnipool.estimateAndPopulate.withdrawAndClaim(
         { ...overrides },
         addGasForUnipoolRewardUpdate
       )
