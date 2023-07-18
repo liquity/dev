@@ -340,27 +340,27 @@ export class SubgraphLiquity implements ReadableLiquity, ObservableLiquity {
     throw new Error("Method not implemented.");
   }
 
-  getUniTokenBalance(address?: string): Promise<Decimal> {
+  getXbrlWethUniTokenBalance(address?: string): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 
-  getUniTokenAllowance(address?: string): Promise<Decimal> {
+  getXbrlWethUniTokenAllowance(address?: string): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 
-  getRemainingLiquidityMiningSTBLReward(): Promise<Decimal> {
+  getRemainingXbrlWethLiquidityMiningSTBLReward(): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 
-  getLiquidityMiningStake(address?: string): Promise<Decimal> {
+  getXbrlWethLiquidityMiningStake(address?: string): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 
-  getLiquidityMiningSTBLReward(address?: string): Promise<Decimal> {
+  getXbrlWethLiquidityMiningSTBLReward(address?: string): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 
-  getTotalStakedUniTokens(): Promise<Decimal> {
+  getTotalStakedXbrlWethUniTokens(): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }
 

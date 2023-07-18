@@ -182,7 +182,7 @@ task("deploy", "Deploys the contracts to the network")
   )
   .addOptionalParam(
     "createUniswapPair",
-    "Create a real Uniswap v2 WETH-XBRL pair instead of a mock ERC20 token",
+    "Create a real Uniswap v3 WETH-XBRL pair instead of a mock ERC20 token",
     undefined,
     types.boolean
   )

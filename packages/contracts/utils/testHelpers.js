@@ -953,13 +953,9 @@ class TestHelper {
     return gas
   }
 
-  static async redeemCollateralAndGetTxObject(redeemer, contracts, XBRLAmount, gasPrice, maxFee = this._100pct) {
-    // console.log("GAS PRICE:  " + gasPrice)
-    if (gasPrice == undefined){
-      gasPrice = 0;
-    }
+  static async redeemCollateralAndGetTxObject(redeemer, contracts, XBRLAmount, maxFee = this._100pct) {
     const price = await contracts.priceFeedTestnet.getPrice()
-    const tx = await this.performRedemptionTx(redeemer, price, contracts, XBRLAmount, maxFee, gasPrice)
+    const tx = await this.performRedemptionTx(redeemer, price, contracts, XBRLAmount, maxFee)
     return tx
   }
 

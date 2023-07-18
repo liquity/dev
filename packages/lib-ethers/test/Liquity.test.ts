@@ -951,31 +951,31 @@ describe("EthersLiquity", () => {
     const someUniTokens = 1000;
 
     it("should obtain some UNI LP tokens", async () => {
-      await liquity._mintUniToken(someUniTokens);
+      await liquity._mintXbrlWethUniToken(someUniTokens);
 
-      const uniTokenBalance = await liquity.getUniTokenBalance();
+      const uniTokenBalance = await liquity.getXbrlWethUniTokenBalance();
       expect(`${uniTokenBalance}`).to.equal(`${someUniTokens}`);
     });
 
     it("should fail to stake UNI LP before approving the spend", async () => {
-      await expect(liquity.stakeUniTokens(someUniTokens)).to.eventually.be.rejected;
+      await expect(liquity.stakeXbrlWethUniTokens(someUniTokens)).to.eventually.be.rejected;
     });
 
     it("should stake UNI LP after approving the spend", async () => {
-      const initialAllowance = await liquity.getUniTokenAllowance();
+      const initialAllowance = await liquity.getXbrlWethUniTokenAllowance();
       expect(`${initialAllowance}`).to.equal("0");
 
-      await liquity.approveUniTokens();
+      await liquity.approveXbrlWethUniTokens();
 
-      const newAllowance = await liquity.getUniTokenAllowance();
+      const newAllowance = await liquity.getXbrlWethUniTokenAllowance();
       expect(newAllowance.isZero).to.be.false;
 
-      await liquity.stakeUniTokens(someUniTokens);
+      await liquity.stakeXbrlWethUniTokens(someUniTokens);
 
-      const uniTokenBalance = await liquity.getUniTokenBalance();
+      const uniTokenBalance = await liquity.getXbrlWethUniTokenBalance();
       expect(`${uniTokenBalance}`).to.equal("0");
 
-      const stake = await liquity.getLiquidityMiningStake();
+      const stake = await liquity.getXbrlWethLiquidityMiningStake();
       expect(`${stake}`).to.equal(`${someUniTokens}`);
     });
 
@@ -988,39 +988,39 @@ describe("EthersLiquity", () => {
       await new Promise(resolve => setTimeout(resolve, 4000));
 
       // Trigger a new block with a dummy TX.
-      await liquity._mintUniToken(0);
+      await liquity._mintXbrlWethUniToken(0);
 
-      const stblReward = Number(await liquity.getLiquidityMiningSTBLReward());
+      const stblReward = Number(await liquity.getXbrlWethLiquidityMiningSTBLReward());
       expect(stblReward).to.be.at.least(1); // ~0.2572 per second [(4e6/3) / (60*24*60*60)]
 
-      await liquity.withdrawSTBLRewardFromLiquidityMining();
+      await liquity.withdrawSTBLRewardFromXbrlWethLiquidityMining();
       const stblBalance = Number(await liquity.getSTBLBalance());
       expect(stblBalance).to.be.at.least(stblReward); // may have increased since checking
     });
 
     it("should partially unstake", async () => {
-      await liquity.unstakeUniTokens(someUniTokens / 2);
+      await liquity.unstakeXbrlWethUniTokens(someUniTokens / 2);
 
-      const uniTokenStake = await liquity.getLiquidityMiningStake();
-      expect(`${uniTokenStake}`).to.equal(`${someUniTokens / 2}`);
+      const xbrlWethUniTokenStake = await liquity.getXbrlWethLiquidityMiningStake();
+      expect(`${xbrlWethUniTokenStake}`).to.equal(`${someUniTokens / 2}`);
 
-      const uniTokenBalance = await liquity.getUniTokenBalance();
-      expect(`${uniTokenBalance}`).to.equal(`${someUniTokens / 2}`);
+      const xbrlWethUniTokenBalance = await liquity.getXbrlWethUniTokenBalance();
+      expect(`${xbrlWethUniTokenBalance}`).to.equal(`${someUniTokens / 2}`);
     });
 
     it("should unstake remaining tokens and withdraw remaining STBL reward", async () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      await liquity._mintUniToken(0); // dummy block
-      await liquity.exitLiquidityMining();
+      await liquity._mintXbrlWethUniToken(0); // dummy block
+      await liquity.exitXbrlWethLiquidityMining();
 
-      const uniTokenStake = await liquity.getLiquidityMiningStake();
-      expect(`${uniTokenStake}`).to.equal("0");
+      const xbrlWethUniTokenStake = await liquity.getXbrlWethLiquidityMiningStake();
+      expect(`${xbrlWethUniTokenStake}`).to.equal("0");
 
-      const stblReward = await liquity.getLiquidityMiningSTBLReward();
-      expect(`${stblReward}`).to.equal("0");
+      const stblRewardForXbrlWethLiquidityPool = await liquity.getXbrlWethLiquidityMiningSTBLReward();
+      expect(`${stblRewardForXbrlWethLiquidityPool}`).to.equal("0");
 
-      const uniTokenBalance = await liquity.getUniTokenBalance();
-      expect(`${uniTokenBalance}`).to.equal(`${someUniTokens}`);
+      const xbrlWethUniTokenBalance = await liquity.getXbrlWethUniTokenBalance();
+      expect(`${xbrlWethUniTokenBalance}`).to.equal(`${someUniTokens}`);
     });
 
     it("should have no more rewards after the mining period is over", async function () {
@@ -1029,11 +1029,11 @@ describe("EthersLiquity", () => {
         this.skip();
       }
 
-      await liquity.stakeUniTokens(someUniTokens);
+      await liquity.stakeXbrlWethUniTokens(someUniTokens);
       await increaseTime(2 * 30 * 24 * 60 * 60);
-      await liquity.exitLiquidityMining();
+      await liquity.exitXbrlWethLiquidityMining();
 
-      const remainingSTBLReward = await liquity.getRemainingLiquidityMiningSTBLReward();
+      const remainingSTBLReward = await liquity.getRemainingXbrlWethLiquidityMiningSTBLReward();
       expect(`${remainingSTBLReward}`).to.equal("0");
 
       const stblBalance = Number(await liquity.getSTBLBalance());

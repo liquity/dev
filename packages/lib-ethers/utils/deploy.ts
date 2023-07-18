@@ -13,6 +13,8 @@ import {
 
 import { createUniswapV2Pair } from "./UniswapV2Factory";
 
+type OmittedKeys = "xbrlWethUniToken" | "stblWethUniToken";
+
 let silent = true;
 
 export const log = (...args: unknown[]): void => {
@@ -57,7 +59,7 @@ const deployContracts = async (
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   priceFeedIsTestnet = true,
   overrides?: Overrides
-): Promise<[addresses: Omit<_LiquityContractAddresses, "uniToken">, startBlock: number]> => {
+): Promise<[addresses: Omit<_LiquityContractAddresses, OmittedKeys>, startBlock: number]> => {
   const [activePoolAddress, startBlock] = await deployContractAndGetBlockNumber(
     deployer,
     getContractFactory,
@@ -103,7 +105,8 @@ const deployContracts = async (
     gasPool: await deployContract(deployer, getContractFactory, "GasPool", {
       ...overrides
     }),
-    unipool: await deployContract(deployer, getContractFactory, "Unipool", { ...overrides })
+    xbrlWethUnipool: await deployContract(deployer, getContractFactory, "XBRLWETHUnipool", { ...overrides }),
+    stblWethUnipool: await deployContract(deployer, getContractFactory, "STBLWETHUnipool", { ...overrides }),
   };
 
   return [
@@ -127,7 +130,8 @@ const deployContracts = async (
         addresses.stblStaking,
         addresses.lockupContractFactory,
         Wallet.createRandom().address, // _bountyAddress (TODO: parameterize this)
-        addresses.unipool, // _lpRewardsAddress
+        addresses.xbrlWethUnipool, // xBRL : WETH _lpRewardsAddress
+        addresses.stblWethUnipool, // STBL : WETH _lpRewardsAddress
         Wallet.createRandom().address, // _momentZeroMultisigAddress (TODO: parameterize this)
         Wallet.createRandom().address, // _sixMonthsMultisigAddress (TODO: parameterize this)
         Wallet.createRandom().address, // _oneYearMultisigAddress (TODO: parameterize this)
@@ -174,8 +178,10 @@ const connectContracts = async (
     sortedTroves,
     stabilityPool,
     gasPool,
-    unipool,
-    uniToken
+    xbrlWethUnipool,
+    stblWethUnipool,
+    xbrlWethUniToken,
+    stblWethUniToken
   }: _LiquityContracts,
   deployer: Signer,
   overrides?: Overrides
@@ -288,7 +294,13 @@ const connectContracts = async (
       }),
 
     nonce =>
-      unipool.setParams(stblToken.address, uniToken.address, 2 * 30 * 24 * 60 * 60, {
+      xbrlWethUnipool.setParams(stblToken.address, xbrlWethUniToken.address, 2 * 30 * 24 * 60 * 60, {
+        ...overrides,
+        nonce
+      }),
+
+    nonce =>
+      stblWethUnipool.setParams(stblToken.address, stblWethUniToken.address, 2 * 30 * 24 * 60 * 60, {
         ...overrides,
         nonce
       })
@@ -337,7 +349,8 @@ export const deployAndSetupContracts = async (
     deploymentDate: new Date().getTime(),
     bootstrapPeriod: 0,
     totalStabilityPoolSTBLReward: "0",
-    liquidityMiningSTBLRewardRate: "0",
+    xbrlWethLiquidityMiningSTBLRewardRate: "0",
+    stblWethLiquidityMiningSTBLRewardRate: "0",
     _priceFeedIsTestnet,
     _uniTokenIsMock: !wethAddress,
     _isDev,
@@ -349,9 +362,12 @@ export const deployAndSetupContracts = async (
         addresses: {
           ...addresses,
 
-          uniToken: await (wethAddress
+          xbrlWethUniToken: await (wethAddress
             ? createUniswapV2Pair(deployer, wethAddress, addresses.xbrlToken, overrides)
-            : deployMockUniToken(deployer, getContractFactory, overrides))
+            : deployMockUniToken(deployer, getContractFactory, overrides)),
+          stblWethUniToken: await (wethAddress
+            ? createUniswapV2Pair(deployer, wethAddress, addresses.stblToken, overrides)
+            : deployMockUniToken(deployer, getContractFactory, overrides)),
         }
       })
     ))
@@ -365,7 +381,8 @@ export const deployAndSetupContracts = async (
   const stblTokenDeploymentTime = await contracts.stblToken.getDeploymentStartTime();
   const bootstrapPeriod = await contracts.troveManager.BOOTSTRAP_PERIOD();
   const totalStabilityPoolSTBLReward = await contracts.communityIssuance.STBLSupplyCap();
-  const liquidityMiningSTBLRewardRate = await contracts.unipool.rewardRate();
+  const xbrlWethLiquidityMiningSTBLRewardRate = await contracts.xbrlWethUnipool.rewardRate();
+  const stblWethLiquidityMiningSTBLRewardRate = await contracts.stblWethUnipool.rewardRate();
 
   return {
     ...deployment,
@@ -374,8 +391,11 @@ export const deployAndSetupContracts = async (
     totalStabilityPoolSTBLReward: `${Decimal.fromBigNumberString(
       totalStabilityPoolSTBLReward.toHexString()
     )}`,
-    liquidityMiningSTBLRewardRate: `${Decimal.fromBigNumberString(
-      liquidityMiningSTBLRewardRate.toHexString()
+    xbrlWethLiquidityMiningSTBLRewardRate: `${Decimal.fromBigNumberString(
+      xbrlWethLiquidityMiningSTBLRewardRate.toHexString()
+    )}`,
+    stblWethLiquidityMiningSTBLRewardRate: `${Decimal.fromBigNumberString(
+      stblWethLiquidityMiningSTBLRewardRate.toHexString()
     )}`
   };
 };
