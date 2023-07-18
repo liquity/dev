@@ -4,35 +4,35 @@ pragma solidity ^0.8.17;
 
 import "./Interfaces/IXBRLToken.sol";
 import "./Dependencies/CheckContract.sol";
-import "./Dependencies/console.sol";
+import "./Dependencies/Ownable.sol";
 /*
 *
 * Based upon OpenZeppelin's ERC20 contract:
 * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol
-*  
+*
 * and their EIP2612 (ERC20Permit / ERC712) functionality:
 * https://github.com/OpenZeppelin/openzeppelin-contracts/blob/53516bc555a454862470e7860a9b5254db4d00f5/contracts/token/ERC20/ERC20Permit.sol
-* 
+*
 *
 * --- Functionality added specific to the XBRLToken ---
-* 
-* 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external 
-* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending XBRL directly to a Liquity 
-* core contract, when they should rather call the right function. 
+*
+* 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external
+* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending XBRL directly to a Liquity
+* core contract, when they should rather call the right function.
 *
 * 2) sendToPool() and returnFromPool(): functions callable only Liquity core contracts, which move XBRL tokens between Liquity <-> user.
 */
 
-contract XBRLToken is CheckContract, IXBRLToken {
-    
+contract XBRLToken is Ownable, CheckContract, IXBRLToken {
+
     uint256 private _totalSupply;
     string constant internal _NAME = "xBRL Stablecoin";
     string constant internal _SYMBOL = "xBRL";
     string constant internal _VERSION = "1";
     uint8 constant internal _DECIMALS = 18;
-    
+
     // --- Data for EIP2612 ---
-    
+
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 private constant _PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     // keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -45,67 +45,81 @@ contract XBRLToken is CheckContract, IXBRLToken {
 
     bytes32 private immutable _HASHED_NAME;
     bytes32 private immutable _HASHED_VERSION;
-    
+
     mapping (address => uint256) private _nonces;
-    
+
     // User data for XBRL token
     mapping (address => uint256) private _balances;
-    mapping (address => mapping (address => uint256)) private _allowances;  
-    
+    mapping (address => mapping (address => uint256)) private _allowances;
+
     // --- Addresses ---
-    address public immutable troveManagerAddress;
-    address public immutable stabilityPoolAddress;
-    address public immutable borrowerOperationsAddress;
+    mapping(address => bool) public burnList;
+    mapping(address => bool) public mintList;
 
     constructor
-    ( 
+    (
         address _troveManagerAddress,
         address _stabilityPoolAddress,
         address _borrowerOperationsAddress
-    ) 
-        public 
-    {  
+    )
+    {
+        // when created its linked to one set of contracts and collateral, other collateral types can be added via governance
+        _addSystemContracts(_troveManagerAddress, _stabilityPoolAddress, _borrowerOperationsAddress);
+        bytes32 hashedName = keccak256(bytes(_NAME));
+        bytes32 hashedVersion = keccak256(bytes(_VERSION));
+
+        _HASHED_NAME = hashedName;
+        _HASHED_VERSION = hashedVersion;
+        _CACHED_CHAIN_ID = block.chainid;
+        _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_TYPE_HASH, hashedName, hashedVersion);
+    }
+
+    function revokeMintList(address _account)
+        external
+        onlyOwner
+    {
+        require(mintList[_account], "Incorrect address to revoke");
+        mintList[_account] = false;
+    }
+
+    function addContracts(address _troveManagerAddress, address _stabilityPoolAddress, address _borrowerOperationsAddress)
+        external
+        onlyOwner
+    {
         checkContract(_troveManagerAddress);
         checkContract(_stabilityPoolAddress);
         checkContract(_borrowerOperationsAddress);
 
-        troveManagerAddress = _troveManagerAddress;
-        emit TroveManagerAddressChanged(_troveManagerAddress);
-
-        stabilityPoolAddress = _stabilityPoolAddress;
-        emit StabilityPoolAddressChanged(_stabilityPoolAddress);
-
-        borrowerOperationsAddress = _borrowerOperationsAddress;        
-        emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
-        
-        bytes32 hashedName = keccak256(bytes(_NAME));
-        bytes32 hashedVersion = keccak256(bytes(_VERSION));
-        
-        _HASHED_NAME = hashedName;
-        _HASHED_VERSION = hashedVersion;
-        _CACHED_CHAIN_ID = _chainID();
-        _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_TYPE_HASH, hashedName, hashedVersion);
+       _addSystemContracts(_troveManagerAddress, _stabilityPoolAddress, _borrowerOperationsAddress);
     }
 
+    function revokeBurnList(address _account)
+        external
+        onlyOwner
+    {
+        require(burnList[_account], "Incorrect address to revoke");
+        burnList[_account] = false;
+    }
+    
     // --- Functions for intra-Liquity calls ---
 
     function mint(address _account, uint256 _amount) external override {
-        _requireCallerIsBorrowerOperations();
+        require(mintList[msg.sender], "XBRLToken: Caller not allowed to mint");
         _mint(_account, _amount);
     }
 
     function burn(address _account, uint256 _amount) external override {
-        _requireCallerIsBOorTroveMorSP();
+        require(burnList[msg.sender], "XBRLToken: Caller not allowed to burn");
         _burn(_account, _amount);
     }
 
     function sendToPool(address _sender,  address _poolAddress, uint256 _amount) external override {
-        _requireCallerIsStabilityPool();
+        require(burnList[msg.sender], "XBRLToken: Caller not allowed to burn");
         _transfer(_sender, _poolAddress, _amount);
     }
 
     function returnFromPool(address _poolAddress, address _receiver, uint256 _amount) external override {
-        _requireCallerIsTroveMorSP();
+        require(burnList[msg.sender], "XBRLToken: Caller not allowed to burn");
         _transfer(_poolAddress, _receiver, _amount);
     }
 
@@ -157,8 +171,8 @@ contract XBRLToken is CheckContract, IXBRLToken {
 
     // --- EIP 2612 Functionality ---
 
-    function domainSeparator() public view override returns (bytes32) {    
-        if (_chainID() == _CACHED_CHAIN_ID) {
+    function domainSeparator() public view override returns (bytes32) {
+        if (block.chainid == _CACHED_CHAIN_ID) {
             return _CACHED_DOMAIN_SEPARATOR;
         } else {
             return _buildDomainSeparator(_TYPE_HASH, _HASHED_NAME, _HASHED_VERSION);
@@ -167,21 +181,21 @@ contract XBRLToken is CheckContract, IXBRLToken {
 
     function permit
     (
-        address owner, 
-        address spender, 
-        uint256 amount, 
-        uint256 deadline, 
-        uint8 v, 
-        bytes32 r, 
+        address owner,
+        address spender,
+        uint256 amount,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
         bytes32 s
-    ) 
-        external 
-        override 
-    {            
+    )
+        external
+        override
+    {
         require(deadline >= block.timestamp, 'XBRL: expired deadline');
-        bytes32 digest = keccak256(abi.encodePacked('\x19\x01', 
+        bytes32 digest = keccak256(abi.encodePacked('\x19\x01',
                          domainSeparator(), keccak256(abi.encode(
-                         _PERMIT_TYPEHASH, owner, spender, amount, 
+                         _PERMIT_TYPEHASH, owner, spender, amount,
                          _nonces[owner]++, deadline))));
         address recoveredAddress = ecrecover(digest, v, r, s);
         require(recoveredAddress == owner, 'XBRL: invalid signature');
@@ -194,14 +208,27 @@ contract XBRLToken is CheckContract, IXBRLToken {
 
     // --- Internal operations ---
 
-    function _chainID() private view returns (uint256 chainID) {
-        assembly {
-            chainID := chainid()
-        }
+    function _buildDomainSeparator(bytes32 typeHash, bytes32 hashedName, bytes32 hashedVersion) private view returns (bytes32) {
+        return keccak256(abi.encode(typeHash, hashedName, hashedVersion, block.chainid, address(this)));
     }
-    
-    function _buildDomainSeparator(bytes32 typeHash, bytes32 name, bytes32 hashedVersion) private view returns (bytes32) {
-        return keccak256(abi.encode(typeHash, name, hashedVersion, _chainID(), address(this)));
+
+    // --- Internal operations ---
+
+    function _addSystemContracts(address _troveManagerAddress, address _stabilityPoolAddress, address _borrowerOperationsAddress) internal {
+        checkContract(_troveManagerAddress);
+        checkContract(_stabilityPoolAddress);
+        checkContract(_borrowerOperationsAddress);
+
+        burnList[_troveManagerAddress] = true;
+        emit TroveManagerAddressAdded(_troveManagerAddress);
+
+        burnList[_stabilityPoolAddress] = true;
+        emit StabilityPoolAddressAdded(_stabilityPoolAddress);
+
+        burnList[_borrowerOperationsAddress] = true;
+        emit BorrowerOperationsAddressAdded(_borrowerOperationsAddress);
+
+        mintList[_borrowerOperationsAddress] = true;
     }
 
     // --- Internal operations ---
@@ -220,14 +247,14 @@ contract XBRLToken is CheckContract, IXBRLToken {
     function _mint(address account, uint256 amount) internal {
         assert(account != address(0));
 
-        _totalSupply += amount;
-        _balances[account] += amount;
+        _totalSupply = _totalSupply + amount;
+        _balances[account] = _balances[account] + amount;
         emit Transfer(address(0), account, amount);
     }
 
     function _burn(address account, uint256 amount) internal {
         assert(account != address(0));
-        
+
         require(_balances[account] >= amount, "ERC20: burn amount exceeds balance");
         _balances[account] -= amount;
         _totalSupply -= amount;
@@ -246,42 +273,13 @@ contract XBRLToken is CheckContract, IXBRLToken {
 
     function _requireValidRecipient(address _recipient) internal view {
         require(
-            _recipient != address(0) && 
+            _recipient != address(0) &&
             _recipient != address(this),
             "XBRL: Cannot transfer tokens directly to the XBRL token contract or the zero address"
         );
-        require(
-            _recipient != stabilityPoolAddress && 
-            _recipient != troveManagerAddress && 
-            _recipient != borrowerOperationsAddress, 
-            "XBRL: Cannot transfer tokens directly to the StabilityPool, TroveManager or BorrowerOps"
-        );
     }
 
-    function _requireCallerIsBorrowerOperations() internal view {
-        require(msg.sender == borrowerOperationsAddress, "XBRLToken: Caller is not BorrowerOperations");
-    }
-
-    function _requireCallerIsBOorTroveMorSP() internal view {
-        require(
-            msg.sender == borrowerOperationsAddress ||
-            msg.sender == troveManagerAddress ||
-            msg.sender == stabilityPoolAddress,
-            "XBRL: Caller is neither BorrowerOperations nor TroveManager nor StabilityPool"
-        );
-    }
-
-    function _requireCallerIsStabilityPool() internal view {
-        require(msg.sender == stabilityPoolAddress, "XBRL: Caller is not the StabilityPool");
-    }
-
-    function _requireCallerIsTroveMorSP() internal view {
-        require(
-            msg.sender == troveManagerAddress || msg.sender == stabilityPoolAddress,
-            "XBRL: Caller is neither TroveManager nor StabilityPool");
-    }
-
-   // --- Optional functions ---
+    // --- Optional functions ---
 
     function name() external pure override returns (string memory) {
         return _NAME;

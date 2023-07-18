@@ -11,7 +11,8 @@ contract STBLTokenTester is STBLToken {
         address _stblStakingAddress,
         address _lockupFactoryAddress,
         address _bountyAddress,
-        address _lpRewardsAddress,
+        address _xbrlWethLpRewardsAddress,
+        address _stblWethLpRewardsAddress,
         address _momentZeroMultisigAddress,
         address _sixMonthsMultisigAddress,
         address _oneYearMultisigAddress
@@ -23,7 +24,8 @@ contract STBLTokenTester is STBLToken {
         _stblStakingAddress,
         _lockupFactoryAddress,
         _bountyAddress,
-        _lpRewardsAddress,
+        _xbrlWethLpRewardsAddress,
+        _stblWethLpRewardsAddress,
         _momentZeroMultisigAddress,
         _sixMonthsMultisigAddress,
         _oneYearMultisigAddress

@@ -309,10 +309,13 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         ITroveManager troveManagerCached = troveManager;
         IActivePool activePoolCached = activePool;
         IXBRLToken xbrlTokenCached = xbrlToken;
+        bool canMint = xbrlTokenCached.mintList(address(this));
 
         _requireTroveisActive(troveManagerCached, msg.sender);
         uint256 price = priceFeed.fetchPrice();
-        _requireNotInRecoveryMode(price);
+        if (canMint) {
+            _requireNotInRecoveryMode(price);
+        }
 
         troveManagerCached.applyPendingRewards(msg.sender);
 
@@ -320,10 +323,10 @@ contract BorrowerOperations is LiquityBase, Ownable, CheckContract, IBorrowerOpe
         uint256 debt = troveManagerCached.getTroveDebt(msg.sender);
 
         _requireSufficientXBRLBalance(xbrlTokenCached, msg.sender, debt - XBRL_GAS_COMPENSATION);
-
-        uint256 newTCR = _getNewTCRFromTroveChange(coll, false, debt, false, price);
-        _requireNewTCRisAboveCCR(newTCR);
-
+        if (canMint) {
+            uint256 newTCR = _getNewTCRFromTroveChange(coll, false, debt, false, price);
+            _requireNewTCRisAboveCCR(newTCR);
+        }
         troveManagerCached.removeStake(msg.sender);
         troveManagerCached.closeTrove(msg.sender);
 

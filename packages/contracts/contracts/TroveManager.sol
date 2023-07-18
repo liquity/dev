@@ -1220,7 +1220,9 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         assert(closedStatus != Status.nonExistent && closedStatus != Status.active);
 
         uint256 TroveOwnersArrayLength = TroveOwners.length;
-        _requireMoreThanOneTroveInSystem(TroveOwnersArrayLength);
+        if (xbrlToken.mintList(borrowerOperationsAddress)) {
+            _requireMoreThanOneTroveInSystem(TroveOwnersArrayLength);
+         }
 
         Troves[_borrower].status = closedStatus;
         Troves[_borrower].coll = 0;

@@ -69,8 +69,8 @@ contract LPTokenWrapper is ILPTokenWrapper {
  * either STBL token contract is deployed, and therefore STBL tokens are minted to Unipool contract,
  * or first liquidity provider stakes UNIv2 LP tokens into it.
  */
-contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
-    string constant public NAME = "Unipool";
+contract STBLWETHUnipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
+    string constant public NAME = "STBLWETHUnipool";
 
     uint256 public duration;
     ISTBLToken public stblToken;
@@ -106,7 +106,7 @@ contract Unipool is LPTokenWrapper, Ownable, CheckContract, IUnipool {
         stblToken = ISTBLToken(_stblTokenAddress);
         duration = _duration;
 
-        _notifyRewardAmount(stblToken.getLpRewardsEntitlement(), _duration);
+        _notifyRewardAmount(stblToken.getStblWethLpRewardsEntitlement(), _duration);
 
         emit STBLTokenAddressChanged(_stblTokenAddress);
         emit UniTokenAddressChanged(_uniTokenAddress);

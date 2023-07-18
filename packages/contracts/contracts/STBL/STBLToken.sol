@@ -27,15 +27,17 @@ import "../Dependencies/console.sol";
 *
 * 4) CommunityIssuance and LockupContractFactory addresses are set at deployment
 *
-* 5) The bug bounties / hackathons allocation of 2 million tokens is minted at deployment to an EOA
+* 5) The bug bounties / hackathons allocation of 1 million tokens is minted at deployment to an EOA
 
 * 6) 32 million tokens are minted at deployment to the CommunityIssuance contract
 *
-* 7) The LP rewards allocation of (1 + 1/3) million tokens is minted at deployent to a Staking contract
+* 7) The xBRL:WETH LP rewards allocation of (1 + 1/3) million tokens is minted at deployent to a Staking contract
 *
-* 8) (64 + 2/3) million tokens are minted at deployment to the Liquity multisig
+* 8) The STBL:WETH LP rewards allocation of 1 million tokens is minted at deployent to a Staking contract
 *
-* 9) Until one year from deployment:
+* 9) (64 + 2/3) million tokens are minted at deployment to the Liquity multisig
+*
+* 10) Until one year from deployment:
 * -Liquity multisig may only transfer() tokens to LockupContracts that have been deployed via & registered in the 
 *  LockupContractFactory 
 * -approve(), increaseAllowance(), decreaseAllowance() revert when called by the multisig
@@ -93,7 +95,8 @@ contract STBLToken is CheckContract, ISTBLToken {
     address public immutable communityIssuanceAddress;
     address public immutable stblStakingAddress;
 
-    uint256 internal immutable lpRewardsEntitlement;
+    uint256 internal immutable xbrlWethLpRewardsEntitlement;
+    uint256 internal immutable stblWethLpRewardsEntitlement;
 
     ILockupContractFactory public immutable lockupContractFactory;
 
@@ -105,7 +108,8 @@ contract STBLToken is CheckContract, ISTBLToken {
         address _stblStakingAddress,
         address _lockupFactoryAddress,
         address _bountyAddress,
-        address _lpRewardsAddress,
+        address _xbrlWethLpRewardsAddress,
+        address _stblWethLpRewardsAddress,
         address _momentZeroMultisigAddress,
         address _sixMonthsMultisigAddress,
         address _oneYearMultisigAddress
@@ -134,30 +138,40 @@ contract STBLToken is CheckContract, ISTBLToken {
         _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_TYPE_HASH, hashedName, hashedVersion);
         
         // --- Initial STBL allocations ---
-     
-        uint256 bountyEntitlement = _1_MILLION * 2; // Allocate 2 million for bounties/hackathons/community activies
+
+        // Allocate 1 million for bounties/hackathons/community activities
+        uint256 bountyEntitlement = _1_MILLION; 
         _mint(_bountyAddress, bountyEntitlement);
 
-        uint256 depositorsAndFrontEndsEntitlement = _1_MILLION * 32; // Allocate 32 million to the algorithmic issuance schedule
+        // Allocate 32 million to the algorithmic issuance schedule
+        uint256 depositorsAndFrontEndsEntitlement = _1_MILLION * 32; 
         _mint(_communityIssuanceAddress, depositorsAndFrontEndsEntitlement);
 
-        uint256 _lpRewardsEntitlement = _1_MILLION * 4 / 3;  // Allocate 1.33 million for LP rewards
-        lpRewardsEntitlement = _lpRewardsEntitlement;
-        _mint(_lpRewardsAddress, _lpRewardsEntitlement);
+        // Allocate 1.33 million for XBRL : ETH LP rewards
+        uint256 _xbrlWethLpRewardsEntitlement = _1_MILLION * 4 / 3;  
+        xbrlWethLpRewardsEntitlement = _xbrlWethLpRewardsEntitlement;
+        _mint(_xbrlWethLpRewardsAddress, _xbrlWethLpRewardsEntitlement);
 
-        uint256 momentZeroMultisigEntitlement = _1_MILLION * 15; // Allocate 15 million for multisig address - (Team/Investors)
+        // Allocate 1 million for STBL : ETH LP rewards
+        uint256 _stblWethLpRewardsEntitlement = _1_MILLION;  
+        stblWethLpRewardsEntitlement = _stblWethLpRewardsEntitlement;
+        _mint(_stblWethLpRewardsAddress, _stblWethLpRewardsEntitlement);
+
+        // Allocate 15 million for multisig address - (Team/Investors)
+        uint256 momentZeroMultisigEntitlement = _1_MILLION * 15;
         _mint(_momentZeroMultisigAddress, momentZeroMultisigEntitlement);
 
-        // Allocate 25 million for Multisig in six months - (Team/Investors)
+        // Allocate 20 million for Multisig in six months - (Team/Investors)
         uint256 sixMonthsMultisigEntitlement = _1_MILLION * 20;
 
         _mint(_sixMonthsMultisigAddress, sixMonthsMultisigEntitlement);
         
-        // Allocate the remainder to the Multisig in one year - (Team/Investors): (100 - 2 - 32 - 1.33 - 15 - 10 - 20) million = 29.67 million
+        // Allocate the remainder to the Multisig in one year - (Team/Investors): (100 - 1 - 32 - 1.33 - 1 - 15 - 10 - 20) million = 29.67 million
         uint256 oneYearMultisigEntitlement = _1_MILLION * 100
             - bountyEntitlement
             - depositorsAndFrontEndsEntitlement
-            - _lpRewardsEntitlement
+            - _xbrlWethLpRewardsEntitlement
+            - _stblWethLpRewardsEntitlement
             - momentZeroMultisigEntitlement
             - sixMonthsMultisigEntitlement;
 
@@ -178,8 +192,12 @@ contract STBLToken is CheckContract, ISTBLToken {
         return deploymentStartTime;
     }
 
-    function getLpRewardsEntitlement() external view override returns (uint256) {
-        return lpRewardsEntitlement;
+    function getXbrlWethLpRewardsEntitlement() external view override returns (uint256) {
+        return xbrlWethLpRewardsEntitlement;
+    }
+
+    function getStblWethLpRewardsEntitlement() external view override returns (uint256) {
+        return stblWethLpRewardsEntitlement;
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {

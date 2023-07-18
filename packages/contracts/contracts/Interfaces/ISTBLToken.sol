@@ -19,5 +19,7 @@ interface ISTBLToken is IERC20, IERC2612 {
 
     function getDeploymentStartTime() external view returns (uint256);
 
-    function getLpRewardsEntitlement() external view returns (uint256);
+    function getXbrlWethLpRewardsEntitlement() external view returns (uint256);
+
+    function getStblWethLpRewardsEntitlement() external view returns (uint256);
 }
