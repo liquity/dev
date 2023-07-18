@@ -82,6 +82,7 @@ const hasOracles = (network: string): network is keyof typeof oracleAddresses =>
 const wethAddresses = {
   mainnet: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
   sepolia: "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+  goerli: "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
 };
 
 const hasWETH = (network: string): network is keyof typeof wethAddresses => network in wethAddresses;
@@ -106,6 +107,7 @@ const config: HardhatUserConfig = {
     },
 
     ...infuraNetwork("sepolia"),
+    ...infuraNetwork("goerli"),
 
     kiln: {
       url: "https://rpc.kiln.themerge.dev",

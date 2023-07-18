@@ -34,7 +34,7 @@ const wsParams = (network: string, infuraApiKey: string): [string, string] => [
   network
 ];
 
-const webSocketSupportedNetworks = ["homestead", "sepolia"];
+const webSocketSupportedNetworks = ["homestead", "sepolia", "goerli"];
 
 export const LiquityProvider: React.FC<LiquityProviderProps> = ({
   children,

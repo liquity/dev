@@ -5,6 +5,7 @@ import { Decimal } from "@liquity/lib-base";
 
 import devOrNull from "../deployments/dev.json";
 import sepolia from "../deployments/sepolia.json";
+import goerli from "../deployments/goerli.json";
 
 import { numberify, panic } from "./_utils";
 import { EthersProvider, EthersSigner } from "./types";
@@ -23,6 +24,7 @@ const deployments: {
   [chainId: number]: _LiquityDeploymentJSON | undefined;
 } = {
   [sepolia.chainId]: sepolia,
+  [goerli.chainId]: goerli,
 
   ...(dev !== null ? { [dev.chainId]: dev } : {})
 };
