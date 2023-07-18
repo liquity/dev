@@ -71,6 +71,10 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     stblToken = STBLContracts.stblToken
     stblStaking = STBLContracts.stblStaking
+
+    XBRL_GAS_COMPENSATION = await borrowerOperations.XBRL_GAS_COMPENSATION()
+    MIN_NET_DEBT = await borrowerOperations.MIN_NET_DEBT()
+    BORROWING_FEE_FLOOR = await borrowerOperations.BORROWING_FEE_FLOOR()
   })
 
   it('stake(): reverts if amount is zero', async () => {
@@ -111,7 +115,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const B_BalBeforeREdemption = await xbrlToken.balanceOf(B)
     // B redeems
-    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18), GAS_PRICE)
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
     
     const B_BalAfterRedemption = await xbrlToken.balanceOf(B)
     assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
@@ -148,7 +152,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const B_BalBeforeREdemption = await xbrlToken.balanceOf(B)
     // B redeems
-    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18), GAS_PRICE)
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
     
     const B_BalAfterRedemption = await xbrlToken.balanceOf(B)
     assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
@@ -185,7 +189,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const B_BalBeforeREdemption = await xbrlToken.balanceOf(B)
     // B redeems
-    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18), gasPrice= GAS_PRICE)
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
     
     const B_BalAfterRedemption = await xbrlToken.balanceOf(B)
     assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
@@ -229,7 +233,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const B_BalBeforeREdemption = await xbrlToken.balanceOf(B)
     // B redeems
-    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
     
     const B_BalAfterRedemption = await xbrlToken.balanceOf(B)
     assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
@@ -269,7 +273,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const B_BalBeforeREdemption = await xbrlToken.balanceOf(B)
     // B redeems
-    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
     
     const B_BalAfterRedemption = await xbrlToken.balanceOf(B)
     assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
@@ -280,7 +284,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const C_BalBeforeREdemption = await xbrlToken.balanceOf(C)
     // C redeems
-    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
     
     const C_BalAfterRedemption = await xbrlToken.balanceOf(C)
     assert.isTrue(C_BalAfterRedemption.lt(C_BalBeforeREdemption))
@@ -342,7 +346,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const B_BalBeforeREdemption = await xbrlToken.balanceOf(B)
     // B redeems
-    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
     
     const B_BalAfterRedemption = await xbrlToken.balanceOf(B)
     assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
@@ -353,7 +357,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const C_BalBeforeREdemption = await xbrlToken.balanceOf(C)
     // C redeems
-    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
     
     const C_BalAfterRedemption = await xbrlToken.balanceOf(C)
     assert.isTrue(C_BalAfterRedemption.lt(C_BalBeforeREdemption))
@@ -414,7 +418,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const B_BalBeforeREdemption = await xbrlToken.balanceOf(B)
     // B redeems
-    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
     
     const B_BalAfterRedemption = await xbrlToken.balanceOf(B)
     assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
@@ -425,7 +429,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const C_BalBeforeREdemption = await xbrlToken.balanceOf(C)
     // C redeems
-    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
     
     const C_BalAfterRedemption = await xbrlToken.balanceOf(C)
     assert.isTrue(C_BalAfterRedemption.lt(C_BalBeforeREdemption))
@@ -460,7 +464,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const B_BalBeforeREdemption = await xbrlToken.balanceOf(B)
     // B redeems
-    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(100, 18))
     
     const B_BalAfterRedemption = await xbrlToken.balanceOf(B)
     assert.isTrue(B_BalAfterRedemption.lt(B_BalBeforeREdemption))
@@ -471,7 +475,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
     const C_BalBeforeREdemption = await xbrlToken.balanceOf(C)
     // C redeems
-    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(100, 18))
     
     const C_BalAfterRedemption = await xbrlToken.balanceOf(C)
     assert.isTrue(C_BalAfterRedemption.lt(C_BalBeforeREdemption))
@@ -533,12 +537,12 @@ contract('STBLStaking revenue share tests', async accounts => {
     assert.equal(await stblStaking.totalSTBLStaked(), dec(600, 18))
 
     // F redeems
-    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(F, contracts, dec(45, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(F, contracts, dec(45, 18))
     const emittedETHFee_1 = toBN((await th.getEmittedRedemptionValues(redemptionTx_1))[3])
     assert.isTrue(emittedETHFee_1.gt(toBN('0')))
 
      // G redeems
-     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(G, contracts, dec(197, 18), gasPrice = GAS_PRICE)
+     const redemptionTx_2 = await th.redeemCollateralAndGetTxObject(G, contracts, dec(197, 18))
      const emittedETHFee_2 = toBN((await th.getEmittedRedemptionValues(redemptionTx_2))[3])
      assert.isTrue(emittedETHFee_2.gt(toBN('0')))
 
@@ -562,7 +566,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     assert.equal(await stblStaking.totalSTBLStaked(), dec(650, 18))
 
      // G redeems
-     const redemptionTx_3 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(197, 18), gasPrice = GAS_PRICE)
+     const redemptionTx_3 = await th.redeemCollateralAndGetTxObject(C, contracts, dec(197, 18))
      const emittedETHFee_3 = toBN((await th.getEmittedRedemptionValues(redemptionTx_3))[3])
      assert.isTrue(emittedETHFee_3.gt(toBN('0')))
 
@@ -691,7 +695,7 @@ contract('STBLStaking revenue share tests', async accounts => {
 
 
     // B makes a redemption, creating ETH gain for proxy
-    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(45, 18), gasPrice = GAS_PRICE)
+    const redemptionTx_1 = await th.redeemCollateralAndGetTxObject(B, contracts, dec(45, 18))
     
     const proxy_ETHGain = await stblStaking.getPendingETHGain(nonPayable.address)
     assert.isTrue(proxy_ETHGain.gt(toBN('0')))
