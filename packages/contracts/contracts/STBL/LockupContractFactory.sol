@@ -14,8 +14,8 @@ import "../Dependencies/console.sol";
 * The LockupContractFactory deploys LockupContracts - its main purpose is to keep a registry of valid deployed 
 * LockupContracts. 
 * 
-* This registry is checked by STBLToken when the Liquity deployer attempts to transfer STBL tokens. During the first two months, six months or one year
-* since system deployment, the Liquity deployer is only allowed to transfer STBL to valid LockupContracts that have been 
+* This registry is checked by STBLToken when the Stabilio deployer attempts to transfer STBL tokens. During the first two months, six months or one year
+* since system deployment, the Stabilio deployer is only allowed to transfer STBL to valid LockupContracts that have been 
 * deployed by and recorded in the LockupContractFactory. This ensures the deployer's STBL can't be traded or staked in the
 * first two, six months and one year, and can only be sent to a verified TwoMonthsLockupContract, SixMonthsLockupContract or OneYearLockupContract which unlocks at least two motnhs, six months or one year after system deployment.
 *

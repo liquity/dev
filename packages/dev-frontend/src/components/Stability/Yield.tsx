@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Card, Paragraph, Text } from "theme-ui";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 import { InfoIcon } from "../InfoIcon";
 import { Badge } from "../Badge";
 import { fetchStblPrice } from "./context/fetchStblPrice";
 
-const selector = ({ xbrlInStabilityPool, remainingStabilityPoolSTBLReward }: LiquityStoreState) => ({
+const selector = ({ xbrlInStabilityPool, remainingStabilityPoolSTBLReward }: StabilioStoreState) => ({
   xbrlInStabilityPool,
   remainingStabilityPoolSTBLReward
 });
@@ -16,7 +16,7 @@ const dailyIssuanceFraction = Decimal.from(1 - yearlyIssuanceFraction ** (1 / 36
 const dailyIssuancePercentage = dailyIssuanceFraction.mul(100);
 
 export const Yield: React.FC = () => {
-  const { xbrlInStabilityPool, remainingStabilityPoolSTBLReward } = useLiquitySelector(selector);
+  const { xbrlInStabilityPool, remainingStabilityPoolSTBLReward } = useStabilioSelector(selector);
 
   const [stblPrice, setStblPrice] = useState<Decimal | undefined>(undefined);
   const hasZeroValue = remainingStabilityPoolSTBLReward.isZero || xbrlInStabilityPool.isZero;

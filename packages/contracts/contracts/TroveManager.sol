@@ -9,12 +9,12 @@ import "./Interfaces/IXBRLToken.sol";
 import "./Interfaces/ISortedTroves.sol";
 import "./Interfaces/ISTBLToken.sol";
 import "./Interfaces/ISTBLStaking.sol";
-import "./Dependencies/LiquityBase.sol";
+import "./Dependencies/StabilioBase.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
 
-contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
+contract TroveManager is StabilioBase, Ownable, CheckContract, ITroveManager {
     string constant public NAME = "TroveManager";
 
     // --- Connected contract declarations ---
@@ -426,7 +426,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         *  - Send a fraction of the trove's collateral to the Stability Pool, equal to the fraction of its offset debt
         *
         */
-            debtToOffset = LiquityMath._min(_debt, _XBRLInStabPool);
+            debtToOffset = StabilioMath._min(_debt, _XBRLInStabPool);
             collToSendToSP = _coll * debtToOffset / _debt;
             debtToRedistribute = _debt - debtToOffset;
             collToRedistribute = _coll - collToSendToSP;
@@ -550,7 +550,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
                 // Break the loop if ICR is greater than MCR and Stability Pool is empty
                 if (vars.ICR >= MCR && vars.remainingXBRLInStabPool == 0) { break; }
 
-                uint256 TCR = LiquityMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
+                uint256 TCR = StabilioMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
 
                 singleLiquidation = _liquidateRecoveryMode(_contractsCache.activePool, _contractsCache.defaultPool, vars.user, vars.ICR, vars.remainingXBRLInStabPool, TCR, _price);
 
@@ -691,7 +691,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
                 // Skip this trove if ICR is greater than MCR and Stability Pool is empty
                 if (vars.ICR >= MCR && vars.remainingXBRLInStabPool == 0) { continue; }
 
-                uint256 TCR = LiquityMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
+                uint256 TCR = StabilioMath._computeCR(vars.entireSystemColl, vars.entireSystemDebt, _price);
 
                 singleLiquidation = _liquidateRecoveryMode(_activePool, _defaultPool, vars.user, vars.ICR, vars.remainingXBRLInStabPool, TCR, _price);
 
@@ -800,7 +800,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         internal returns (SingleRedemptionValues memory singleRedemption)
     {
         // Determine the remaining amount (lot) to be redeemed, capped by the entire debt of the Trove minus the liquidation reserve
-        singleRedemption.XBRLLot = LiquityMath._min(_maxXBRLamount, Troves[_borrower].debt - XBRL_GAS_COMPENSATION);
+        singleRedemption.XBRLLot = StabilioMath._min(_maxXBRLamount, Troves[_borrower].debt - XBRL_GAS_COMPENSATION);
 
         // Get the ETHLot of equivalent value in USD
         singleRedemption.ETHLot = singleRedemption.XBRLLot * DECIMAL_PRECISION / _price;
@@ -817,7 +817,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             emit TroveUpdated(_borrower, 0, 0, 0, TroveManagerOperation.redeemCollateral);
 
         } else {
-            uint256 newNICR = LiquityMath._computeNominalCR(newColl, newDebt);
+            uint256 newNICR = StabilioMath._computeNominalCR(newColl, newDebt);
 
             /*
             * If the provided hint is out of date, we bail since trying to reinsert without a good hint will almost
@@ -1003,7 +1003,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     function getNominalICR(address _borrower) public view override returns (uint) {
         (uint256 currentETH, uint256 currentXBRLDebt) = _getCurrentTroveAmounts(_borrower);
 
-        uint256 NICR = LiquityMath._computeNominalCR(currentETH, currentXBRLDebt);
+        uint256 NICR = StabilioMath._computeNominalCR(currentETH, currentXBRLDebt);
         return NICR;
     }
 
@@ -1011,7 +1011,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     function getCurrentICR(address _borrower, uint256 _price) public view override returns (uint) {
         (uint256 currentETH, uint256 currentXBRLDebt) = _getCurrentTroveAmounts(_borrower);
 
-        uint256 ICR = LiquityMath._computeCR(currentETH, currentXBRLDebt, _price);
+        uint256 ICR = StabilioMath._computeCR(currentETH, currentXBRLDebt, _price);
         return ICR;
     }
 
@@ -1319,7 +1319,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         pure
     returns (bool)
     {
-        uint256 TCR = LiquityMath._computeCR(_entireSystemColl, _entireSystemDebt, _price);
+        uint256 TCR = StabilioMath._computeCR(_entireSystemColl, _entireSystemDebt, _price);
 
         return TCR < CCR;
     }
@@ -1340,7 +1340,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         uint256 redeemedXBRLFraction = _ETHDrawn * _price / _totalXBRLSupply;
 
         uint256 newBaseRate = decayedBaseRate + (redeemedXBRLFraction / BETA);
-        newBaseRate = LiquityMath._min(newBaseRate, DECIMAL_PRECISION); // cap baseRate at a maximum of 100%
+        newBaseRate = StabilioMath._min(newBaseRate, DECIMAL_PRECISION); // cap baseRate at a maximum of 100%
         //assert(newBaseRate <= DECIMAL_PRECISION); // This is already enforced in the line above
         assert(newBaseRate > 0); // Base rate is always non-zero after redemption
 
@@ -1362,7 +1362,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function _calcRedemptionRate(uint256 _baseRate) internal pure returns (uint) {
-        return LiquityMath._min(
+        return StabilioMath._min(
             REDEMPTION_FEE_FLOOR + _baseRate,
             DECIMAL_PRECISION // cap at a maximum of 100%
         );
@@ -1393,7 +1393,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     }
 
     function _calcBorrowingRate(uint256 _baseRate) internal pure returns (uint) {
-        return LiquityMath._min(
+        return StabilioMath._min(
             BORROWING_FEE_FLOOR + _baseRate,
             MAX_BORROWING_FEE
         );
@@ -1439,7 +1439,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     function _calcDecayedBaseRate() internal view returns (uint) {
         uint256 minutesPassed = _minutesPassedSinceLastFeeOp();
-        uint256 decayFactor = LiquityMath._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
+        uint256 decayFactor = StabilioMath._decPow(MINUTE_DECAY_FACTOR, minutesPassed);
 
         return baseRate * decayFactor / DECIMAL_PRECISION;
     }

@@ -1,19 +1,19 @@
 {
-  "name": "@liquity/lib-react",
+  "name": "@stabilio/lib-react",
   "version": "0.0.0-semantic-release",
-  "description": "Components and hooks for React-based Liquity frontends",
+  "description": "Components and hooks for React-based Stabilio frontends",
   "keywords": [
-    "Liquity",
+    "Stabilio",
     "protocol",
     "DeFi",
     "Ethereum"
   ],
-  "homepage": "https://github.com/liquity/liquity#readme",
+  "homepage": "https://github.com/stabilio/stabilio#readme",
   "license": "MIT",
-  "author": "Daniel Simon <dani@liquity.org>",
+  "author": "Daniel Simon <dani@stabilio.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/liquity/dev",
+  "repository": "https://github.com/stabiliofi/dev",
   "scripts": {
     "eslint": "eslint",
     "prepare": "run-s prepare:*",
@@ -21,7 +21,7 @@
     "prepare:tsc": "tsc --project tsconfig.dist.json"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^3.0.0",
+    "@stabilio/lib-base": "^3.0.0",
     "react": "^16.13.1"
   },
   "devDependencies": {

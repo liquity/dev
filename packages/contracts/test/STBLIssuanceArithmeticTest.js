@@ -49,7 +49,7 @@ contract('STBL community issuance arithmetic tests', async accounts => {
   })
 
   beforeEach(async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployStabilioCore()
     const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     contracts.stabilityPool = await StabilityPool.new()
     contracts = await deploymentHelper.deployXBRLToken(contracts)

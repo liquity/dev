@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { Heading, Box, Flex, Card, Button } from "theme-ui";
-import { Decimal, Difference, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, Difference, StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { LP, GT } from "../../../../strings";
 import { Icon } from "../../../Icon";
@@ -19,7 +19,7 @@ const selector = ({
   xbrlWethLiquidityMiningSTBLReward,
   xbrlWethUniTokenBalance,
   totalStakedXbrlWethUniTokens
-}: LiquityStoreState) => ({
+}: StabilioStoreState) => ({
   xbrlWethLiquidityMiningStake,
   xbrlWethLiquidityMiningSTBLReward,
   xbrlWethUniTokenBalance,
@@ -35,7 +35,7 @@ export const Adjusting: React.FC = () => {
     xbrlWethLiquidityMiningSTBLReward,
     xbrlWethUniTokenBalance,
     totalStakedXbrlWethUniTokens
-  } = useLiquitySelector(selector);
+  } = useStabilioSelector(selector);
   const [amount, setAmount] = useState<Decimal>(xbrlWethLiquidityMiningStake);
   const editingState = useState<string>();
 

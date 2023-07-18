@@ -16,11 +16,11 @@ import "./Dependencies/Ownable.sol";
 *
 * --- Functionality added specific to the XBRLToken ---
 *
-* 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external
-* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending XBRL directly to a Liquity
+* 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Stabilio contracts) in external
+* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending XBRL directly to a Stabilio
 * core contract, when they should rather call the right function.
 *
-* 2) sendToPool() and returnFromPool(): functions callable only Liquity core contracts, which move XBRL tokens between Liquity <-> user.
+* 2) sendToPool() and returnFromPool(): functions callable only Stabilio core contracts, which move XBRL tokens between Stabilio <-> user.
 */
 
 contract XBRLToken is Ownable, CheckContract, IXBRLToken {
@@ -101,7 +101,7 @@ contract XBRLToken is Ownable, CheckContract, IXBRLToken {
         burnList[_account] = false;
     }
     
-    // --- Functions for intra-Liquity calls ---
+    // --- Functions for intra-Stabilio calls ---
 
     function mint(address _account, uint256 _amount) external override {
         require(mintList[msg.sender], "XBRLToken: Caller not allowed to mint");

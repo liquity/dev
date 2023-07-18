@@ -1,5 +1,5 @@
-export * from "./src/components/LiquityStoreProvider";
+export * from "./src/components/StabilioStoreProvider";
 
-export * from "./src/hooks/useLiquityStore";
-export * from "./src/hooks/useLiquityReducer";
-export * from "./src/hooks/useLiquitySelector";
+export * from "./src/hooks/useStabilioStore";
+export * from "./src/hooks/useStabilioReducer";
+export * from "./src/hooks/useStabilioSelector";

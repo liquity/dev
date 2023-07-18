@@ -6,12 +6,12 @@ import {
   STBLStake,
   XBRL_MINIMUM_DEBT,
   StabilityDeposit,
-  TransactableLiquity,
+  TransactableStabilio,
   Trove,
   TroveAdjustmentParams
-} from "@liquity/lib-base";
+} from "@stabilio/lib-base";
 
-import { EthersLiquity as Liquity } from "@liquity/lib-ethers";
+import { EthersStabilio as Stabilio } from "@stabilio/lib-ethers";
 
 import {
   createRandomTrove,
@@ -32,7 +32,7 @@ type _GasHistogramsFrom<T> = {
 };
 
 type GasHistograms = Pick<
-  _GasHistogramsFrom<TransactableLiquity>,
+  _GasHistogramsFrom<TransactableStabilio>,
   | "openTrove"
   | "adjustTrove"
   | "closeTrove"
@@ -44,9 +44,9 @@ type GasHistograms = Pick<
 >;
 
 export class Fixture {
-  private readonly deployerLiquity: Liquity;
+  private readonly deployerStabilio: Stabilio;
   private readonly funder: Signer;
-  private readonly funderLiquity: Liquity;
+  private readonly funderStabilio: Stabilio;
   private readonly funderAddress: string;
   private readonly frontendAddress: string;
   private readonly gasHistograms: GasHistograms;
@@ -56,16 +56,16 @@ export class Fixture {
   totalNumberOfLiquidations = 0;
 
   private constructor(
-    deployerLiquity: Liquity,
+    deployerStabilio: Stabilio,
     funder: Signer,
-    funderLiquity: Liquity,
+    funderStabilio: Stabilio,
     funderAddress: string,
     frontendAddress: string,
     price: Decimal
   ) {
-    this.deployerLiquity = deployerLiquity;
+    this.deployerStabilio = deployerStabilio;
     this.funder = funder;
-    this.funderLiquity = funderLiquity;
+    this.funderStabilio = funderStabilio;
     this.funderAddress = funderAddress;
     this.frontendAddress = frontendAddress;
     this.price = price;
@@ -83,21 +83,21 @@ export class Fixture {
   }
 
   static async setup(
-    deployerLiquity: Liquity,
+    deployerStabilio: Stabilio,
     funder: Signer,
-    funderLiquity: Liquity,
+    funderStabilio: Stabilio,
     frontendAddress: string,
-    frontendLiquity: Liquity
+    frontendStabilio: Stabilio
   ) {
     const funderAddress = await funder.getAddress();
-    const price = await deployerLiquity.getPrice();
+    const price = await deployerStabilio.getPrice();
 
-    await frontendLiquity.registerFrontend(Decimal.from(10).div(11));
+    await frontendStabilio.registerFrontend(Decimal.from(10).div(11));
 
     return new Fixture(
-      deployerLiquity,
+      deployerStabilio,
       funder,
-      funderLiquity,
+      funderStabilio,
       funderAddress,
       frontendAddress,
       price
@@ -107,12 +107,12 @@ export class Fixture {
   private async sendXBRLFromFunder(toAddress: string, amount: Decimalish) {
     amount = Decimal.from(amount);
 
-    const xbrlBalance = await this.funderLiquity.getXBRLBalance();
+    const xbrlBalance = await this.funderStabilio.getXBRLBalance();
 
     if (xbrlBalance.lt(amount)) {
-      const trove = await this.funderLiquity.getTrove();
-      const total = await this.funderLiquity.getTotal();
-      const fees = await this.funderLiquity.getFees();
+      const trove = await this.funderStabilio.getTrove();
+      const total = await this.funderStabilio.getTotal();
+      const fees = await this.funderStabilio.getFees();
 
       const targetCollateralRatio =
         trove.isEmpty || !total.collateralRatioIsBelowCritical(this.price)
@@ -131,7 +131,7 @@ export class Fixture {
       if (trove.isEmpty) {
         const params = Trove.recreate(newTrove, fees.borrowingRate());
         console.log(`[funder] openTrove(${objToString(params)})`);
-        await this.funderLiquity.openTrove(params);
+        await this.funderStabilio.openTrove(params);
       } else {
         let newTotal = total.add(newTrove).subtract(trove);
 
@@ -145,26 +145,26 @@ export class Fixture {
 
         const params = trove.adjustTo(newTrove, fees.borrowingRate());
         console.log(`[funder] adjustTrove(${objToString(params)})`);
-        await this.funderLiquity.adjustTrove(params);
+        await this.funderStabilio.adjustTrove(params);
       }
     }
 
-    await this.funderLiquity.sendXBRL(toAddress, amount);
+    await this.funderStabilio.sendXBRL(toAddress, amount);
   }
 
   async setRandomPrice() {
     this.price = this.price.add(200 * Math.random() + 100).div(2);
     console.log(`[deployer] setPrice(${this.price})`);
-    await this.deployerLiquity.setPrice(this.price);
+    await this.deployerStabilio.setPrice(this.price);
 
     return this.price;
   }
 
   async liquidateRandomNumberOfTroves(price: Decimal) {
-    const xbrlInStabilityPoolBefore = await this.deployerLiquity.getXBRLInStabilityPool();
+    const xbrlInStabilityPoolBefore = await this.deployerStabilio.getXBRLInStabilityPool();
     console.log(`// Stability Pool balance: ${xbrlInStabilityPoolBefore}`);
 
-    const trovesBefore = await getListOfTroves(this.deployerLiquity);
+    const trovesBefore = await getListOfTroves(this.deployerStabilio);
 
     if (trovesBefore.length === 0) {
       console.log("// No Troves to liquidate");
@@ -181,9 +181,9 @@ export class Fixture {
 
     const maximumNumberOfTrovesToLiquidate = Math.floor(50 * Math.random()) + 1;
     console.log(`[deployer] liquidateUpTo(${maximumNumberOfTrovesToLiquidate})`);
-    await this.deployerLiquity.liquidateUpTo(maximumNumberOfTrovesToLiquidate);
+    await this.deployerStabilio.liquidateUpTo(maximumNumberOfTrovesToLiquidate);
 
-    const troveOwnersAfter = await getListOfTroveOwners(this.deployerLiquity);
+    const troveOwnersAfter = await getListOfTroveOwners(this.deployerStabilio);
     const liquidatedTroves = listDifference(troveOwnersBefore, troveOwnersAfter);
 
     if (liquidatedTroves.length > 0) {
@@ -194,13 +194,13 @@ export class Fixture {
 
     this.totalNumberOfLiquidations += liquidatedTroves.length;
 
-    const xbrlInStabilityPoolAfter = await this.deployerLiquity.getXBRLInStabilityPool();
+    const xbrlInStabilityPoolAfter = await this.deployerStabilio.getXBRLInStabilityPool();
     console.log(`// Stability Pool balance: ${xbrlInStabilityPoolAfter}`);
   }
 
-  async openRandomTrove(userAddress: string, liquity: Liquity) {
-    const total = await liquity.getTotal();
-    const fees = await liquity.getFees();
+  async openRandomTrove(userAddress: string, stabilio: Stabilio) {
+    const total = await stabilio.getTotal();
+    const fees = await stabilio.getFees();
 
     let newTrove: Trove;
 
@@ -228,20 +228,20 @@ export class Fixture {
       );
 
       await this.gasHistograms.openTrove.expectFailure(() =>
-        liquity.openTrove(params, undefined, { gasPrice: 0 })
+        stabilio.openTrove(params, undefined, { gasPrice: 0 })
       );
     } else {
       console.log(`[${shortenAddress(userAddress)}] openTrove(${objToString(params)})`);
 
       await this.gasHistograms.openTrove.expectSuccess(() =>
-        liquity.send.openTrove(params, undefined, { gasPrice: 0 })
+        stabilio.send.openTrove(params, undefined, { gasPrice: 0 })
       );
     }
   }
 
-  async randomlyAdjustTrove(userAddress: string, liquity: Liquity, trove: Trove) {
-    const total = await liquity.getTotal();
-    const fees = await liquity.getFees();
+  async randomlyAdjustTrove(userAddress: string, stabilio: Stabilio, trove: Trove) {
+    const total = await stabilio.getTotal();
+    const fees = await stabilio.getFees();
     const x = Math.random();
 
     const params: TroveAdjustmentParams<Decimal> =
@@ -287,19 +287,19 @@ export class Fixture {
       );
 
       await this.gasHistograms.adjustTrove.expectFailure(() =>
-        liquity.adjustTrove(params, undefined, { gasPrice: 0 })
+        stabilio.adjustTrove(params, undefined, { gasPrice: 0 })
       );
     } else {
       console.log(`[${shortenAddress(userAddress)}] adjustTrove(${objToString(params)})`);
 
       await this.gasHistograms.adjustTrove.expectSuccess(() =>
-        liquity.send.adjustTrove(params, undefined, { gasPrice: 0 })
+        stabilio.send.adjustTrove(params, undefined, { gasPrice: 0 })
       );
     }
   }
 
-  async closeTrove(userAddress: string, liquity: Liquity, trove: Trove) {
-    const total = await liquity.getTotal();
+  async closeTrove(userAddress: string, stabilio: Stabilio, trove: Trove) {
+    const total = await stabilio.getTotal();
 
     if (total.collateralRatioIsBelowCritical(this.price)) {
       // Cannot close Trove during recovery mode
@@ -312,12 +312,12 @@ export class Fixture {
     console.log(`[${shortenAddress(userAddress)}] closeTrove()`);
 
     await this.gasHistograms.closeTrove.expectSuccess(() =>
-      liquity.send.closeTrove({ gasPrice: 0 })
+      stabilio.send.closeTrove({ gasPrice: 0 })
     );
   }
 
-  async redeemRandomAmount(userAddress: string, liquity: Liquity) {
-    const total = await liquity.getTotal();
+  async redeemRandomAmount(userAddress: string, stabilio: Stabilio) {
+    const total = await stabilio.getTotal();
 
     if (total.collateralRatioIsBelowMinimum(this.price)) {
       console.log("// Skipping redeemXBRL() when TCR < MCR");
@@ -331,7 +331,7 @@ export class Fixture {
 
     try {
       await this.gasHistograms.redeemXBRL.expectSuccess(() =>
-        liquity.send.redeemXBRL(amount, undefined, { gasPrice: 0 })
+        stabilio.send.redeemXBRL(amount, undefined, { gasPrice: 0 })
       );
     } catch (error) {
       if (error instanceof Error && error.message.includes("amount too low to redeem")) {
@@ -342,7 +342,7 @@ export class Fixture {
     }
   }
 
-  async depositRandomAmountInStabilityPool(userAddress: string, liquity: Liquity) {
+  async depositRandomAmountInStabilityPool(userAddress: string, stabilio: Stabilio) {
     const amount = benford(20000);
 
     await this.sendXBRLFromFunder(userAddress, amount);
@@ -350,7 +350,7 @@ export class Fixture {
     console.log(`[${shortenAddress(userAddress)}] depositXBRLInStabilityPool(${amount})`);
 
     await this.gasHistograms.depositXBRLInStabilityPool.expectSuccess(() =>
-      liquity.send.depositXBRLInStabilityPool(amount, this.frontendAddress, {
+      stabilio.send.depositXBRLInStabilityPool(amount, this.frontendAddress, {
         gasPrice: 0
       })
     );
@@ -358,10 +358,10 @@ export class Fixture {
 
   async withdrawRandomAmountFromStabilityPool(
     userAddress: string,
-    liquity: Liquity,
+    stabilio: Stabilio,
     deposit: StabilityDeposit
   ) {
-    const [lastTrove] = await liquity.getTroves({
+    const [lastTrove] = await stabilio.getTroves({
       first: 1,
       sortedBy: "ascendingCollateralRatio"
     });
@@ -378,61 +378,61 @@ export class Fixture {
       );
 
       await this.gasHistograms.withdrawXBRLFromStabilityPool.expectFailure(() =>
-        liquity.withdrawXBRLFromStabilityPool(amount, { gasPrice: 0 })
+        stabilio.withdrawXBRLFromStabilityPool(amount, { gasPrice: 0 })
       );
     } else {
       console.log(`[${shortenAddress(userAddress)}] withdrawXBRLFromStabilityPool(${amount})`);
 
       await this.gasHistograms.withdrawXBRLFromStabilityPool.expectSuccess(() =>
-        liquity.send.withdrawXBRLFromStabilityPool(amount, { gasPrice: 0 })
+        stabilio.send.withdrawXBRLFromStabilityPool(amount, { gasPrice: 0 })
       );
     }
   }
 
-  async stakeRandomAmount(userAddress: string, liquity: Liquity) {
-    const stblBalance = await this.funderLiquity.getSTBLBalance();
+  async stakeRandomAmount(userAddress: string, stabilio: Stabilio) {
+    const stblBalance = await this.funderStabilio.getSTBLBalance();
     const amount = stblBalance.mul(Math.random() / 2);
 
-    await this.funderLiquity.sendSTBL(userAddress, amount);
+    await this.funderStabilio.sendSTBL(userAddress, amount);
 
     if (amount.eq(0)) {
       console.log(`// [${shortenAddress(userAddress)}] stakeSTBL(${amount}) expected to fail`);
 
       await this.gasHistograms.stakeSTBL.expectFailure(() =>
-        liquity.stakeSTBL(amount, { gasPrice: 0 })
+        stabilio.stakeSTBL(amount, { gasPrice: 0 })
       );
     } else {
       console.log(`[${shortenAddress(userAddress)}] stakeSTBL(${amount})`);
 
       await this.gasHistograms.stakeSTBL.expectSuccess(() =>
-        liquity.send.stakeSTBL(amount, { gasPrice: 0 })
+        stabilio.send.stakeSTBL(amount, { gasPrice: 0 })
       );
     }
   }
 
-  async unstakeRandomAmount(userAddress: string, liquity: Liquity, stake: STBLStake) {
+  async unstakeRandomAmount(userAddress: string, stabilio: Stabilio, stake: STBLStake) {
     const amount = stake.stakedSTBL.mul(1.1 * Math.random()).add(10 * Math.random());
 
     console.log(`[${shortenAddress(userAddress)}] unstakeSTBL(${amount})`);
 
     await this.gasHistograms.unstakeSTBL.expectSuccess(() =>
-      liquity.send.unstakeSTBL(amount, { gasPrice: 0 })
+      stabilio.send.unstakeSTBL(amount, { gasPrice: 0 })
     );
   }
 
-  async sweepXBRL(liquity: Liquity) {
-    const xbrlBalance = await liquity.getXBRLBalance();
+  async sweepXBRL(stabilio: Stabilio) {
+    const xbrlBalance = await stabilio.getXBRLBalance();
 
     if (xbrlBalance.nonZero) {
-      await liquity.sendXBRL(this.funderAddress, xbrlBalance, { gasPrice: 0 });
+      await stabilio.sendXBRL(this.funderAddress, xbrlBalance, { gasPrice: 0 });
     }
   }
 
-  async sweepSTBL(liquity: Liquity) {
-    const stblBalance = await liquity.getSTBLBalance();
+  async sweepSTBL(stabilio: Stabilio) {
+    const stblBalance = await stabilio.getSTBLBalance();
 
     if (stblBalance.nonZero) {
-      await liquity.sendSTBL(this.funderAddress, stblBalance, { gasPrice: 0 });
+      await stabilio.sendSTBL(this.funderAddress, stblBalance, { gasPrice: 0 });
     }
   }
 

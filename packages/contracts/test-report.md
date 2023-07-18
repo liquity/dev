@@ -5,21 +5,21 @@ To check test coverage you can run:
 yarn coverage
 ```
 
-You can see the coverage status at mainnet deployment [here](https://codecov.io/gh/liquity/dev/tree/8f52f2906f99414c0b1c3a84c95c74c319b7a8c6).
+You can see the coverage status at mainnet deployment [here](https://codecov.io/gh/stabiliofi/dev/tree/8f52f2906f99414c0b1c3a84c95c74c319b7a8c6).
 
-![Impacted file tree graph](https://codecov.io/gh/liquity/dev/pull/707/graphs/tree.svg?width=650&height=150&src=pr&token=7AJPQ3TW0O&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=liquity)
+![Impacted file tree graph](https://codecov.io/gh/stabiliofi/dev/pull/707/graphs/tree.svg?width=650&height=150&src=pr&token=7AJPQ3TW0O&utm_medium=referral&utm_source=github&utm_content=comment&utm_campaign=pr+comments&utm_term=stabilio)
 
-There’s also a [pull request](https://github.com/liquity/dev/pull/515) to increase the coverage, but it hasn’t been merged yet because it modifies some smart contracts (mostly removing unnecessary checks).
+There’s also a [pull request](https://github.com/stabiliofi/dev/pull/515) to increase the coverage, but it hasn’t been merged yet because it modifies some smart contracts (mostly removing unnecessary checks).
 
 # Test output
-The following is the output of a complete test run, made on commit [`a1824dd8`](https://github.com/liquity/dev/tree/a1824dd88f4928b424cae372d59c4455d5c9a2c2), from April 16th, 2021.
+The following is the output of a complete test run, made on commit [`a1824dd8`](https://github.com/stabiliofi/dev/tree/a1824dd88f4928b424cae372d59c4455d5c9a2c2), from April 16th, 2021.
 
 ```
 yarn run v1.22.11
 $ hardhat test
 
 
-  Contract: Access Control: Liquity functions with the caller restricted to Liquity contract(s)
+  Contract: Access Control: Stabilio functions with the caller restricted to Stabilio contract(s)
     BorrowerOperations
       ✓ moveETHGainToTrove(): reverts when called by an account that is not StabilityPool
     TroveManager
@@ -416,8 +416,8 @@ TCR: 11.892415157517211309
     Community Issuance deployment
       ✓ Stores the deployer's address
       ✓ Has a supply cap of 32 million
-      ✓ Liquity AG can set addresses if CI's STBL balance is equal or greater than 32 million  (393ms)
-      ✓ Liquity AG can't set addresses if CI's STBL balance is < 32 million  (367ms)
+      ✓ Stabilio AG can set addresses if CI's STBL balance is equal or greater than 32 million  (393ms)
+      ✓ Stabilio AG can't set addresses if CI's STBL balance is < 32 million  (367ms)
     Connecting STBLToken to LCF, CI and STBLStaking
       ✓ sets the correct STBLToken address in STBLStaking (1866ms)
       ✓ sets the correct STBLToken address in LockupContractFactory
@@ -425,39 +425,39 @@ TCR: 11.892415157517211309
 
   Contract: During the initial lockup period
     STBL transfer during first year after STBL deployment
-      ✓ Liquity multisig can not transfer STBL to a LC that was deployed directly (105ms)
-      ✓ Liquity multisig can not transfer to an EOA or Liquity system contracts (302ms)
-      ✓ Liquity multisig can not approve any EOA or Liquity system contract to spend their STBL (546ms)
-      ✓ Liquity multisig can not increaseAllowance for any EOA or Liquity contract (285ms)
-      ✓ Liquity multisig can not decreaseAllowance for any EOA or Liquity contract (338ms)
-      ✓ Liquity multisig can not be the sender in a transferFrom() call
-      ✓ Liquity multisig can not stake their STBL in the staking contract
-      ✓ Anyone (other than Liquity multisig) can transfer STBL to LCs deployed by anyone through the Factory (359ms)
-      ✓ Anyone (other than Liquity multisig) can transfer STBL to LCs deployed by anyone directly (141ms)
-      ✓ Anyone (other than liquity multisig) can transfer to an EOA (106ms)
-      ✓ Anyone (other than liquity multisig) can approve any EOA or to spend their STBL
-      ✓ Anyone (other than liquity multisig) can increaseAllowance for any EOA or Liquity contract (244ms)
-      ✓ Anyone (other than liquity multisig) can decreaseAllowance for any EOA or Liquity contract (693ms)
-      ✓ Anyone (other than liquity multisig) can be the sender in a transferFrom() call (62ms)
-      ✓ Anyone (other than liquity AG) can stake their STBL in the staking contract
+      ✓ Stabilio multisig can not transfer STBL to a LC that was deployed directly (105ms)
+      ✓ Stabilio multisig can not transfer to an EOA or Stabilio system contracts (302ms)
+      ✓ Stabilio multisig can not approve any EOA or Stabilio system contract to spend their STBL (546ms)
+      ✓ Stabilio multisig can not increaseAllowance for any EOA or Stabilio contract (285ms)
+      ✓ Stabilio multisig can not decreaseAllowance for any EOA or Stabilio contract (338ms)
+      ✓ Stabilio multisig can not be the sender in a transferFrom() call
+      ✓ Stabilio multisig can not stake their STBL in the staking contract
+      ✓ Anyone (other than Stabilio multisig) can transfer STBL to LCs deployed by anyone through the Factory (359ms)
+      ✓ Anyone (other than Stabilio multisig) can transfer STBL to LCs deployed by anyone directly (141ms)
+      ✓ Anyone (other than stabilio multisig) can transfer to an EOA (106ms)
+      ✓ Anyone (other than stabilio multisig) can approve any EOA or to spend their STBL
+      ✓ Anyone (other than stabilio multisig) can increaseAllowance for any EOA or Stabilio contract (244ms)
+      ✓ Anyone (other than stabilio multisig) can decreaseAllowance for any EOA or Stabilio contract (693ms)
+      ✓ Anyone (other than stabilio multisig) can be the sender in a transferFrom() call (62ms)
+      ✓ Anyone (other than stabilio AG) can stake their STBL in the staking contract
     Lockup Contract Factory negative tests
       ✓ deployLockupContract(): reverts when STBL token address is not set (197ms)
     Transferring STBL to LCs
-      ✓ Liquity multisig can transfer STBL (vesting) to lockup contracts they deployed (198ms)
-      ✓ Liquity multisig can transfer STBL to lockup contracts deployed by anyone (1798ms)
+      ✓ Stabilio multisig can transfer STBL (vesting) to lockup contracts they deployed (198ms)
+      ✓ Stabilio multisig can transfer STBL to lockup contracts deployed by anyone (1798ms)
     Deploying new LCs
       ✓ STBL Deployer can deploy LCs through the Factory (46ms)
-      ✓ Liquity multisig can deploy LCs through the Factory
+      ✓ Stabilio multisig can deploy LCs through the Factory
       ✓ Anyone can deploy LCs through the Factory (80ms)
       ✓ STBL Deployer can deploy LCs directly (44ms)
-      ✓ Liquity multisig can deploy LCs directly (45ms)
+      ✓ Stabilio multisig can deploy LCs directly (45ms)
       ✓ Anyone can deploy LCs directly (46ms)
       ✓ Anyone can deploy LCs with unlockTime = one year from deployment, directly and through factory (102ms)
       ✓ Anyone can deploy LCs with unlockTime > one year from deployment, directly and through factory (187ms)
       ✓ No one can deploy LCs with unlockTime < one year from deployment, directly or through factory (100ms)
       Withdrawal Attempts on LCs before unlockTime has passed 
-        ✓ Liquity multisig can't withdraw from a funded LC they deployed for another beneficiary through the Factory before the unlockTime
-        ✓ Liquity multisig can't withdraw from a funded LC that someone else deployed before the unlockTime (52ms)
+        ✓ Stabilio multisig can't withdraw from a funded LC they deployed for another beneficiary through the Factory before the unlockTime
+        ✓ Stabilio multisig can't withdraw from a funded LC that someone else deployed before the unlockTime (52ms)
         ✓ Beneficiary can't withdraw from their funded LC before the unlockTime (219ms)
         ✓ No one can withdraw from a beneficiary's funded LC before the unlockTime (475ms)
 
@@ -482,8 +482,8 @@ TCR: 11.892415157517211309
       ✓ Anyone can transfer STBL to LCs deployed by anyone (179ms)
       ✓ Anyone can transfer to an EOA (421ms)
       ✓ Anyone can approve any EOA to spend their STBL
-      ✓ Anyone can increaseAllowance for any EOA or Liquity contract (2441ms)
-      ✓ Anyone can decreaseAllowance for any EOA or Liquity contract (1034ms)
+      ✓ Anyone can increaseAllowance for any EOA or Stabilio contract (2441ms)
+      ✓ Anyone can decreaseAllowance for any EOA or Stabilio contract (1034ms)
       ✓ Anyone can be the sender in a transferFrom() call (101ms)
       ✓ Anyone can stake their STBL in the staking contract (55ms)
     Withdrawal Attempts on new LCs before unlockTime has passed
@@ -497,12 +497,12 @@ TCR: 11.892415157517211309
       ✓ Beneficiary can withdraw from their funded LC, after the unlockTime (97ms)
       ✓ Non-beneficiaries can't withdraw from a beneficiary's funded LC, after the unlockTime (226ms)
 
-  Contract: LiquityMath
+  Contract: StabilioMath
     ✓ max works if a > b
     ✓ max works if a = b
     ✓ max works if a < b
 
-  Contract: LiquitySafeMath128Tester
+  Contract: StabilioSafeMath128Tester
     ✓ add(): reverts if overflows
     ✓ sub(): reverts if underflows
 
@@ -606,7 +606,7 @@ issuance fraction after: 949066037374286
       ✓ decreaseAllowance(): decreases allowance by the expected amount
       ✓ decreaseAllowance(): fails trying to decrease more than previously allowed (49ms)
 
-  Contract: All Liquity functions with onlyOwner modifier
+  Contract: All Stabilio functions with onlyOwner modifier
     TroveManager
       ✓ setAddresses(): reverts when called by non-owner, with wrong addresses, or twice (857ms)
     BorrowerOperations

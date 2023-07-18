@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { LiquityStoreState, Decimal } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState, Decimal } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 import { FarmViewContext } from "./FarmViewContext";
 import { transitions } from "./transitions";
 import type { FarmView, FarmEvent } from "./transitions";
@@ -24,7 +24,7 @@ const selector = ({
   xbrlWethLiquidityMiningStake,
   remainingXbrlWethLiquidityMiningSTBLReward,
   xbrlWethLiquidityMiningSTBLReward
-}: LiquityStoreState) => ({
+}: StabilioStoreState) => ({
   xbrlWethLiquidityMiningStake,
   remainingXbrlWethLiquidityMiningSTBLReward,
   xbrlWethLiquidityMiningSTBLReward
@@ -36,7 +36,7 @@ export const FarmViewProvider: React.FC = props => {
     xbrlWethLiquidityMiningStake,
     remainingXbrlWethLiquidityMiningSTBLReward,
     xbrlWethLiquidityMiningSTBLReward
-  } = useLiquitySelector(selector);
+  } = useStabilioSelector(selector);
 
   const [view, setView] = useState<FarmView>(
     getInitialView(

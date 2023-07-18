@@ -167,7 +167,7 @@ contract('PriceFeed', async accounts => {
 
     await priceFeed.fetchPrice()
     let price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 10, with 18 digit precision
+    // Check Stabilio PriceFeed gives 10, with 18 digit precision
     assert.equal(price, dec(2, 18))
 
     // ETH : USD Oracle price is 2e9
@@ -182,7 +182,7 @@ contract('PriceFeed', async accounts => {
 
     await priceFeed.fetchPrice()
     price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 2e8, with 18 digit precision
+    // Check Stabilio PriceFeed gives 2e8, with 18 digit precision
     assert.isTrue(price.eq(toBN(dec(2, 18))))
 
     // ETH : USD Oracle price is 0.0002
@@ -199,7 +199,7 @@ contract('PriceFeed', async accounts => {
 
     await priceFeed.fetchPrice()
     price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 0.2 with 18 digit precision
+    // Check Stabilio PriceFeed gives 0.2 with 18 digit precision
     assert.isTrue(price.eq(toBN(dec(2, 17))))
 
     // ETH : USD Oracle price is 9876.54321
@@ -214,7 +214,7 @@ contract('PriceFeed', async accounts => {
 
     await priceFeed.fetchPrice()
     price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
+    // Check Stabilio PriceFeed gives 0.0001 with 18 digit precision
     assert.equal(price, '8000000072900000663')
   })
 
@@ -252,7 +252,7 @@ contract('PriceFeed', async accounts => {
 
     await priceFeed.fetchPrice()
     price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 5, with 18 digit precision (10 / 2)
+    // Check Stabilio PriceFeed gives 5, with 18 digit precision (10 / 2)
     assert.equal(price, dec(5, 18))
 
     // ETH : USD Tellor price is 2e9 at 6-digit precision
@@ -263,7 +263,7 @@ contract('PriceFeed', async accounts => {
 
     await priceFeed.fetchPrice()
     price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 10 with 18 digit precision
+    // Check Stabilio PriceFeed gives 10 with 18 digit precision
     assert.equal(price, dec(2, 19))
 
     // Tellor price is 0.0001 at 6-digit precision
@@ -274,7 +274,7 @@ contract('PriceFeed', async accounts => {
 
     await priceFeed.fetchPrice()
     price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
+    // Check Stabilio PriceFeed gives 0.0001 with 18 digit precision
 
     assert.equal(price, dec(5, 18))
 
@@ -286,7 +286,7 @@ contract('PriceFeed', async accounts => {
 
     await priceFeed.fetchPrice()
     price = await priceFeed.lastGoodPrice()
-    // Check Liquity PriceFeed gives 0.0001 with 18 digit precision
+    // Check Stabilio PriceFeed gives 0.0001 with 18 digit precision
     assert.equal(price, '8000000072900000663')
   })
 

@@ -94,7 +94,7 @@ contract('During the initial lockup period', async accounts => {
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    coreContracts = await deploymentHelper.deployLiquityCore()
+    coreContracts = await deploymentHelper.deployStabilioCore()
     STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     stblStaking = STBLContracts.stblStaking
@@ -201,9 +201,9 @@ contract('During the initial lockup period', async accounts => {
   })
 
   describe('STBL transfer during first year after STBL deployment', async accounts => {
-    // --- Liquity AG transfer restriction, 1st year ---
-    it("Liquity multisig can not transfer STBL to a LC that was deployed directly", async () => {
-      // Liquity multisig deploys LC_A
+    // --- Stabilio AG transfer restriction, 1st year ---
+    it("Stabilio multisig can not transfer STBL to a LC that was deployed directly", async () => {
+      // Stabilio multisig deploys LC_A
       const LC_D = await SixMonthsLockupContract.new(stblToken.address, D, sixMonthsFromSystemDeployment, { from: sixMonthsMultisig })
 
       // Account F deploys LC_B
@@ -212,7 +212,7 @@ contract('During the initial lockup period', async accounts => {
       // STBL deployer deploys LC_C
       const LC_F = await SixMonthsLockupContract.new(stblToken.address, K, sixMonthsFromSystemDeployment, { from: liquityAG })
 
-      // Liquity multisig deploys LC_A
+      // Stabilio multisig deploys LC_A
       const LC_G = await OneYearLockupContract.new(stblToken.address, G, oneYearFromSystemDeployment, { from: oneYearMultisig })
 
       // Account F deploys LC_B
@@ -224,7 +224,7 @@ contract('During the initial lockup period', async accounts => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
-      // Liquity multisig attempts STBL transfer to LC_A
+      // Stabilio multisig attempts STBL transfer to LC_A
       try {
         const STBLtransferTx_D = await stblToken.transfer(LC_D.address, dec(1, 18), { from: sixMonthsMultisig })
         assert.isFalse(STBLtransferTx_D.receipt.status)
@@ -232,7 +232,7 @@ contract('During the initial lockup period', async accounts => {
         assert.include(error.message, "STBLToken: recipient must be a LockupContract registered in the Factory")
       }
 
-      // Liquity multisig attempts STBL transfer to LC_B
+      // Stabilio multisig attempts STBL transfer to LC_B
       try {
         const STBLtransferTx_E = await stblToken.transfer(LC_E.address, dec(1, 18), { from: sixMonthsMultisig })
         assert.isFalse(STBLtransferTx_E.receipt.status)
@@ -250,7 +250,7 @@ contract('During the initial lockup period', async accounts => {
       // Fast forward more almost six months (Almost one year in total)
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
-      // Liquity multisig attempts STBL transfer to LC_A
+      // Stabilio multisig attempts STBL transfer to LC_A
       try {
         const STBLtransferTx_G = await stblToken.transfer(LC_G.address, dec(1, 18), { from: oneYearMultisig })
         assert.isFalse(STBLtransferTx_G.receipt.status)
@@ -258,7 +258,7 @@ contract('During the initial lockup period', async accounts => {
         assert.include(error.message, "STBLToken: recipient must be a LockupContract registered in the Factory")
       }
 
-      // Liquity multisig attempts STBL transfer to LC_B
+      // Stabilio multisig attempts STBL transfer to LC_B
       try {
         const STBLtransferTx_H = await stblToken.transfer(LC_H.address, dec(1, 18), { from: oneYearMultisig })
         assert.isFalse(STBLtransferTx_H.receipt.status)
@@ -274,7 +274,7 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    it("Liquity multisig can not transfer to an EOA or Liquity system contracts", async () => {
+    it("Stabilio multisig can not transfer to an EOA or Stabilio system contracts", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -285,7 +285,7 @@ contract('During the initial lockup period', async accounts => {
       await assertRevert(STBLtransferTxPromise_1)
       await assertRevert(STBLtransferTxPromise_2)
 
-      // Multisig attempts STBL transfer to core Liquity contracts
+      // Multisig attempts STBL transfer to core Stabilio contracts
       for (const contract of Object.keys(coreContracts)) {
         const STBLtransferTxPromise = stblToken.transfer(coreContracts[contract].address, dec(1, 18), { from: sixMonthsMultisig })
         await assertRevert(STBLtransferTxPromise, "STBLToken: recipient must be a LockupContract registered in the Factory")
@@ -306,7 +306,7 @@ contract('During the initial lockup period', async accounts => {
       await assertRevert(STBLtransferTxPromise_3)
       await assertRevert(STBLtransferTxPromise_4)
 
-      // Multisig attempts STBL transfer to core Liquity contracts
+      // Multisig attempts STBL transfer to core Stabilio contracts
       for (const contract of Object.keys(coreContracts)) {
         const STBLtransferTxPromise = stblToken.transfer(coreContracts[contract].address, dec(1, 18), { from: oneYearMultisig })
         await assertRevert(STBLtransferTxPromise, "STBLToken: recipient must be a LockupContract registered in the Factory")
@@ -319,8 +319,8 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    // --- Liquity AG approval restriction, 1st year ---
-    it("Liquity multisig can not approve any EOA or Liquity system contract to spend their STBL", async () => {
+    // --- Stabilio AG approval restriction, 1st year ---
+    it("Stabilio multisig can not approve any EOA or Stabilio system contract to spend their STBL", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -331,7 +331,7 @@ contract('During the initial lockup period', async accounts => {
       await assertRevert(STBLApproveTxPromise_1, "STBLToken: caller must not be the multisig")
       await assertRevert(STBLApproveTxPromise_2, "STBLToken: caller must not be the multisig")
 
-      // Multisig attempts to approve Liquity contracts to spend STBL
+      // Multisig attempts to approve Stabilio contracts to spend STBL
       for (const contract of Object.keys(coreContracts)) {
         const STBLApproveTxPromise = stblToken.approve(coreContracts[contract].address, dec(1, 18), { from: sixMonthsMultisig })
         await assertRevert(STBLApproveTxPromise, "STBLToken: caller must not be the multisig")
@@ -351,7 +351,7 @@ contract('During the initial lockup period', async accounts => {
       await assertRevert(STBLApproveTxPromise_3, "STBLToken: caller must not be the multisig")
       await assertRevert(STBLApproveTxPromise_4, "STBLToken: caller must not be the multisig")
 
-      // Multisig attempts to approve Liquity contracts to spend STBL
+      // Multisig attempts to approve Stabilio contracts to spend STBL
       for (const contract of Object.keys(coreContracts)) {
         const STBLApproveTxPromise = stblToken.approve(coreContracts[contract].address, dec(1, 18), { from: oneYearMultisig })
         await assertRevert(STBLApproveTxPromise, "STBLToken: caller must not be the multisig")
@@ -364,8 +364,8 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    // --- Liquity AG increaseAllowance restriction, 1st year ---
-    it("Liquity multisig can not increaseAllowance for any EOA or Liquity contract", async () => {
+    // --- Stabilio AG increaseAllowance restriction, 1st year ---
+    it("Stabilio multisig can not increaseAllowance for any EOA or Stabilio contract", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -375,7 +375,7 @@ contract('During the initial lockup period', async accounts => {
       await assertRevert(STBLIncreaseAllowanceTxPromise_1, "STBLToken: caller must not be the multisig")
       await assertRevert(STBLIncreaseAllowanceTxPromise_2, "STBLToken: caller must not be the multisig")
 
-      // Multisig attempts to approve Liquity contracts to spend STBL
+      // Multisig attempts to approve Stabilio contracts to spend STBL
       for (const contract of Object.keys(coreContracts)) {
         const STBLIncreaseAllowanceTxPromise = stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: sixMonthsMultisig })
         await assertRevert(STBLIncreaseAllowanceTxPromise, "STBLToken: caller must not be the multisig")
@@ -396,7 +396,7 @@ contract('During the initial lockup period', async accounts => {
       await assertRevert(STBLIncreaseAllowanceTxPromise_3, "STBLToken: caller must not be the multisig")
       await assertRevert(STBLIncreaseAllowanceTxPromise_4, "STBLToken: caller must not be the multisig")
 
-      // Multisig attempts to approve Liquity contracts to spend STBL
+      // Multisig attempts to approve Stabilio contracts to spend STBL
       for (const contract of Object.keys(coreContracts)) {
         const STBLIncreaseAllowanceTxPromise = stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: oneYearMultisig })
         await assertRevert(STBLIncreaseAllowanceTxPromise, "STBLToken: caller must not be the multisig")
@@ -409,8 +409,8 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    // --- Liquity AG decreaseAllowance restriction, 1st year ---
-    it("Liquity multisig can not decreaseAllowance for any EOA or Liquity contract", async () => {
+    // --- Stabilio AG decreaseAllowance restriction, 1st year ---
+    it("Stabilio multisig can not decreaseAllowance for any EOA or Stabilio contract", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -420,7 +420,7 @@ contract('During the initial lockup period', async accounts => {
       await assertRevert(STBLDecreaseAllowanceTxPromise_1, "STBLToken: caller must not be the multisig")
       await assertRevert(STBLDecreaseAllowanceTxPromise_2, "STBLToken: caller must not be the multisig")
 
-      // Multisig attempts to decrease allowance on Liquity contracts
+      // Multisig attempts to decrease allowance on Stabilio contracts
       for (const contract of Object.keys(coreContracts)) {
         const STBLDecreaseAllowanceTxPromise = stblToken.decreaseAllowance(coreContracts[contract].address, dec(1, 18), { from: sixMonthsMultisig })
         await assertRevert(STBLDecreaseAllowanceTxPromise, "STBLToken: caller must not be the multisig")
@@ -441,7 +441,7 @@ contract('During the initial lockup period', async accounts => {
       await assertRevert(STBLDecreaseAllowanceTxPromise_3, "STBLToken: caller must not be the multisig")
       await assertRevert(STBLDecreaseAllowanceTxPromise_4, "STBLToken: caller must not be the multisig")
 
-      // Multisig attempts to decrease allowance on Liquity contracts
+      // Multisig attempts to decrease allowance on Stabilio contracts
       for (const contract of Object.keys(coreContracts)) {
         const STBLDecreaseAllowanceTxPromise = stblToken.decreaseAllowance(coreContracts[contract].address, dec(1, 18), { from: oneYearMultisig })
         await assertRevert(STBLDecreaseAllowanceTxPromise, "STBLToken: caller must not be the multisig")
@@ -454,8 +454,8 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    // --- Liquity multisig transferFrom restriction, 1st year ---
-    it("Liquity multisig can not be the sender in a transferFrom() call", async () => {
+    // --- Stabilio multisig transferFrom restriction, 1st year ---
+    it("Stabilio multisig can not be the sender in a transferFrom() call", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -476,7 +476,7 @@ contract('During the initial lockup period', async accounts => {
     })
 
     //  --- staking, 1st year ---
-    it("Liquity multisig can not stake their STBL in the staking contract", async () => {
+    it("Stabilio multisig can not stake their STBL in the staking contract", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -492,7 +492,7 @@ contract('During the initial lockup period', async accounts => {
 
     // --- Anyone else ---
 
-    it("Anyone (other than Liquity multisig) can transfer STBL to LCs deployed by anyone through the Factory", async () => {
+    it("Anyone (other than Stabilio multisig) can transfer STBL to LCs deployed by anyone through the Factory", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -502,7 +502,7 @@ contract('During the initial lockup period', async accounts => {
       await stblToken.unprotectedMint(F, dec(3, 24))
       await stblToken.unprotectedMint(G, dec(4, 24))
 
-      // H, I, and Liquity AG deploy lockup contracts with A, B, C as beneficiaries, respectively
+      // H, I, and Stabilio AG deploy lockup contracts with A, B, C as beneficiaries, respectively
       const deployedLCtx_A = await lockupContractFactory.deploySixMonthsLockupContract(A, oneYearFromSystemDeployment, { from: H })
       const deployedLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, oneYearFromSystemDeployment, { from: I })
       const deployedLCtx_C = await lockupContractFactory.deploySixMonthsLockupContract(C, oneYearFromSystemDeployment, { from: sixMonthsMultisig })
@@ -538,7 +538,7 @@ contract('During the initial lockup period', async accounts => {
       assert.equal(await stblToken.balanceOf(LCAddress_E), dec(5, 24))
     })
 
-    it("Anyone (other than Liquity multisig) can transfer STBL to LCs deployed by anyone directly", async () => {
+    it("Anyone (other than Stabilio multisig) can transfer STBL to LCs deployed by anyone directly", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -582,7 +582,7 @@ contract('During the initial lockup period', async accounts => {
       assert.equal(await stblToken.balanceOf(LC_F.address), dec(5, 24))
     })
 
-    it("Anyone (other than liquity multisig) can transfer to an EOA", async () => {
+    it("Anyone (other than stabilio multisig) can transfer to an EOA", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -607,7 +607,7 @@ contract('During the initial lockup period', async accounts => {
       assert.isTrue(STBLtransferTx_5.receipt.status)
     })
 
-    it("Anyone (other than liquity multisig) can approve any EOA or to spend their STBL", async () => {
+    it("Anyone (other than stabilio multisig) can approve any EOA or to spend their STBL", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
             
@@ -618,14 +618,14 @@ contract('During the initial lockup period', async accounts => {
       await assert.isTrue(STBLapproveTx_2.receipt.status)
     })
 
-    it("Anyone (other than liquity multisig) can increaseAllowance for any EOA or Liquity contract", async () => {
+    it("Anyone (other than stabilio multisig) can increaseAllowance for any EOA or Stabilio contract", async () => {
       // Anyone can increaseAllowance of EOAs to spend STBL
       const STBLIncreaseAllowanceTx_1 = await stblToken.increaseAllowance(A, dec(1, 18), { from: F })
       const STBLIncreaseAllowanceTx_2 = await stblToken.increaseAllowance(B, dec(1, 18), { from: G })
       await assert.isTrue(STBLIncreaseAllowanceTx_1.receipt.status)
       await assert.isTrue(STBLIncreaseAllowanceTx_2.receipt.status)
 
-      // Increase allowance of core Liquity contracts
+      // Increase allowance of core Stabilio contracts
       for (const contract of Object.keys(coreContracts)) {
         const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
         await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
@@ -638,7 +638,7 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    it("Anyone (other than liquity multisig) can decreaseAllowance for any EOA or Liquity contract", async () => {
+    it("Anyone (other than stabilio multisig) can decreaseAllowance for any EOA or Stabilio contract", async () => {
       //First, increase allowance of A, B and coreContracts and STBL contracts
       const STBLIncreaseAllowanceTx_1 = await stblToken.increaseAllowance(A, dec(1, 18), { from: F })
       const STBLIncreaseAllowanceTx_2 = await stblToken.increaseAllowance(B, dec(1, 18), { from: G })
@@ -674,7 +674,7 @@ contract('During the initial lockup period', async accounts => {
       }
     })
 
-    it("Anyone (other than liquity multisig) can be the sender in a transferFrom() call", async () => {
+    it("Anyone (other than stabilio multisig) can be the sender in a transferFrom() call", async () => {
       // Fund A, B
       await stblToken.unprotectedMint(A, dec(1, 18))
       await stblToken.unprotectedMint(B, dec(1, 18))
@@ -689,7 +689,7 @@ contract('During the initial lockup period', async accounts => {
       await assert.isTrue(STBLtransferFromTx_2.receipt.status)
     })
 
-    it("Anyone (other than liquity AG) can stake their STBL in the staking contract", async () => {
+    it("Anyone (other than stabilio AG) can stake their STBL in the staking contract", async () => {
       // Fund F
       await stblToken.unprotectedMint(F, dec(1, 18))
 
@@ -725,7 +725,7 @@ contract('During the initial lockup period', async accounts => {
 
   // --- LCs ---
   describe('Transferring STBL to LCs', async accounts => {
-    it("Liquity multisig can transfer STBL (vesting) to lockup contracts they deployed", async () => {
+    it("Stabilio multisig can transfer STBL (vesting) to lockup contracts they deployed", async () => {
       // Fast forward almost six months
       await th.fastForwardTime(SECONDS_IN_ALMOST_SIX_MONTHS, web3.currentProvider)
 
@@ -755,7 +755,7 @@ contract('During the initial lockup period', async accounts => {
       // One month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // Liquity multisig transfers vesting amount
+      // Stabilio multisig transfers vesting amount
       await stblToken.transfer(LC_T1.address, dec(1, 24), { from: sixMonthsMultisig })
       await stblToken.transfer(LC_T2.address, dec(1, 24), { from: sixMonthsMultisig })
       await stblToken.transfer(LC_T3.address, dec(1, 24), { from: sixMonthsMultisig })
@@ -773,7 +773,7 @@ contract('During the initial lockup period', async accounts => {
       // Another month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // Liquity multisig transfers vesting amount
+      // Stabilio multisig transfers vesting amount
       await stblToken.transfer(LC_T1.address, dec(1, 24), { from: sixMonthsMultisig })
       await stblToken.transfer(LC_T2.address, dec(1, 24), { from: sixMonthsMultisig })
       await stblToken.transfer(LC_T3.address, dec(1, 24), { from: sixMonthsMultisig })
@@ -789,7 +789,7 @@ contract('During the initial lockup period', async accounts => {
       assert.isTrue(STBLBalanceOfLC_T3_2.eq(STBLBalanceOfLC_T3_1.add(th.toBN(dec(1, 24)))))
     })
 
-    it("Liquity multisig can transfer STBL to lockup contracts deployed by anyone", async () => {
+    it("Stabilio multisig can transfer STBL to lockup contracts deployed by anyone", async () => {
       // A, B, C each deploy a lockup contract with themself as beneficiary
       const deployedLCtx_A = await lockupContractFactory.deploySixMonthsLockupContract(A, sixMonthsFromSystemDeployment, { from: A })
       const deployedLCtx_B = await lockupContractFactory.deploySixMonthsLockupContract(B, oneYearFromSystemDeployment, { from: B })
@@ -819,7 +819,7 @@ contract('During the initial lockup period', async accounts => {
       // One month passes
       await th.fastForwardTime(SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      // Liquity multisig transfers STBL to LCs deployed by other accounts
+      // Stabilio multisig transfers STBL to LCs deployed by other accounts
       await stblToken.transfer(LC_A.address, dec(1, 24), { from: sixMonthsMultisig })
       await stblToken.transfer(LC_B.address, dec(2, 24), { from: sixMonthsMultisig })
       await stblToken.transfer(LC_C.address, dec(3, 24), { from: sixMonthsMultisig })
@@ -861,7 +861,7 @@ contract('During the initial lockup period', async accounts => {
       assert.isTrue(LCDeploymentTx_I.receipt.status)
     })
 
-    it("Liquity multisig can deploy LCs through the Factory", async () => {
+    it("Stabilio multisig can deploy LCs through the Factory", async () => {
       // STBL deployer deploys LCs
       const LCDeploymentTx_A = await lockupContractFactory.deployTwoMonthsLockupContract(A, twoMonthsFromSystemDeployment, { from: momentZeroMultisig })
       const LCDeploymentTx_B = await lockupContractFactory.deployTwoMonthsLockupContract(B, sixMonthsFromSystemDeployment, { from: momentZeroMultisig })
@@ -962,7 +962,7 @@ contract('During the initial lockup period', async accounts => {
       assert.isTrue(LC_I_txReceipt.status)
     })
 
-    it("Liquity multisig can deploy LCs directly", async () => {
+    it("Stabilio multisig can deploy LCs directly", async () => {
       // STBL multisig deploys LCs
       const LC_A = await TwoMonthsLockupContract.new(stblToken.address, A, twoMonthsFromSystemDeployment, { from: momentZeroMultisig })
       const LC_A_txReceipt = await web3.eth.getTransactionReceipt(LC_A.transactionHash)
@@ -1185,14 +1185,14 @@ contract('During the initial lockup period', async accounts => {
 
 
     describe('Withdrawal Attempts on LCs before unlockTime has passed ', async accounts => {
-      it("Liquity multisig can't withdraw from a funded LC they deployed for another beneficiary through the Factory before the unlockTime", async () => {
+      it("Stabilio multisig can't withdraw from a funded LC they deployed for another beneficiary through the Factory before the unlockTime", async () => {
 
         // Check currentTime < unlockTime
         const currentTime = toBN(await th.getLatestBlockTimestamp(web3))
         const unlockTime = await LC_T1.unlockTime()
         assert.isTrue(currentTime.lt(unlockTime))
 
-        // Liquity multisig attempts withdrawal from LC they deployed through the Factory
+        // Stabilio multisig attempts withdrawal from LC they deployed through the Factory
         try {
           const withdrawalAttempt = await LC_T1.withdrawSTBL({ from: momentZeroMultisig })
           assert.isFalse(withdrawalAttempt.receipt.status)
@@ -1201,7 +1201,7 @@ contract('During the initial lockup period', async accounts => {
         }
       })
 
-      it("Liquity multisig can't withdraw from a funded LC that someone else deployed before the unlockTime", async () => {
+      it("Stabilio multisig can't withdraw from a funded LC that someone else deployed before the unlockTime", async () => {
         // Account D deploys a new LC via the Factory
         const deployedLCtx_B = await lockupContractFactory.deployTwoMonthsLockupContract(B, oneYearFromSystemDeployment, { from: D })
         const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
@@ -1214,7 +1214,7 @@ contract('During the initial lockup period', async accounts => {
         const unlockTime = await LC_B.unlockTime()
         assert.isTrue(currentTime.lt(unlockTime))
 
-        // Liquity multisig attempts withdrawal from LCs
+        // Stabilio multisig attempts withdrawal from LCs
         try {
           const withdrawalAttempt_B = await LC_B.withdrawSTBL({ from: momentZeroMultisig })
           assert.isFalse(withdrawalAttempt_B.receipt.status)
@@ -1228,7 +1228,7 @@ contract('During the initial lockup period', async accounts => {
         const deployedLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, oneYearFromSystemDeployment, { from: D })
         const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-        // Liquity multisig funds contracts
+        // Stabilio multisig funds contracts
         await stblToken.transfer(LC_B.address, dec(2, 18), { from: momentZeroMultisig })
 
         // Check currentTime < unlockTime
@@ -1264,7 +1264,7 @@ contract('During the initial lockup period', async accounts => {
         const deployedLCtx_B = await lockupContractFactory.deployOneYearLockupContract(B, oneYearFromSystemDeployment, { from: D })
         const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
 
-        // Liquity multisig funds contract
+        // Stabilio multisig funds contract
         await stblToken.transfer(LC_B.address, dec(2, 18), { from: momentZeroMultisig })
 
         // Check currentTime < unlockTime

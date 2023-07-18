@@ -11,7 +11,7 @@ services:
       - PGID=1011 # see https://github.com/linuxserver/docker-swag#user--group-identifiers
       - TZ=Europe/Berlin # customize this
       - URL=example.com # customize this
-      - SUBDOMAINS=liquity # customize this
+      - SUBDOMAINS=stabilio # customize this
       - VALIDATION=http
       - ONLY_SUBDOMAINS=true
     volumes:
@@ -30,8 +30,8 @@ services:
     restart: unless-stopped
 
   dev-frontend:
-    image: liquity/dev-frontend:latest
-    container_name: liquity-dev-frontend
+    image: stabilio/dev-frontend:latest
+    container_name: stabilio-dev-frontend
     environment:
       - FRONTEND_TAG= # customize this
       - INFURA_API_KEY= # (optional) customize this

@@ -23,12 +23,27 @@
       },
       {
         "internalType": "address",
-        "name": "_lpRewardsAddress",
+        "name": "_xbrlWethLpRewardsAddress",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "_multisigAddress",
+        "name": "_stblWethLpRewardsAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_momentZeroMultisigAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_sixMonthsMultisigAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_oneYearMultisigAddress",
         "type": "address"
       }
     ],
@@ -79,11 +94,11 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_stblStakingAddress",
+        "name": "_lockupContractFactoryAddress",
         "type": "address"
       }
     ],
-    "name": "STBLStakingAddressSet",
+    "name": "LockupContractFactoryAddressSet",
     "type": "event"
   },
   {
@@ -92,11 +107,11 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "_lockupContractFactoryAddress",
+        "name": "_stblStakingAddress",
         "type": "address"
       }
     ],
-    "name": "LockupContractFactoryAddressSet",
+    "name": "STBLStakingAddressSet",
     "type": "event"
   },
   {
@@ -127,6 +142,19 @@
   {
     "inputs": [],
     "name": "ONE_YEAR_IN_SECONDS",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "SIX_MONTHS_IN_SECONDS",
     "outputs": [
       {
         "internalType": "uint256",
@@ -282,7 +310,20 @@
   },
   {
     "inputs": [],
-    "name": "getLpRewardsEntitlement",
+    "name": "getStblWethLpRewardsEntitlement",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getXbrlWethLpRewardsEntitlement",
     "outputs": [
       {
         "internalType": "uint256",
@@ -332,20 +373,7 @@
   },
   {
     "inputs": [],
-    "name": "stblStakingAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "multisigAddress",
+    "name": "momentZeroMultisigAddress",
     "outputs": [
       {
         "internalType": "address",
@@ -383,6 +411,19 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "oneYearMultisigAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -460,6 +501,32 @@
     "name": "sendToSTBLStaking",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sixMonthsMultisigAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stblStakingAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

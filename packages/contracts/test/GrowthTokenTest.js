@@ -10,7 +10,7 @@ const { ecsign } = require('ethereumjs-util');
 
 
 // the second account our hardhatenv creates (for EOA A)
-// from https://github.com/liquity/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
+// from https://github.com/stabiliofi/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
 
 
 const th = testHelpers.TestHelper
@@ -108,7 +108,7 @@ contract('STBL Token', async accounts => {
   }
 
   beforeEach(async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployStabilioCore()
     const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     stblStaking = STBLContracts.stblStaking

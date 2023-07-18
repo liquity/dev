@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect } from "react";
 import { Card, Heading, Box, Flex, Button } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { COIN, GT } from "../../strings";
 import { Icon } from "../Icon";
@@ -16,7 +16,7 @@ import { RemainingSTBL } from "./RemainingSTBL";
 import { Yield } from "./Yield";
 import { InfoIcon } from "../InfoIcon";
 
-const selector = ({ stabilityDeposit, trove, xbrlInStabilityPool }: LiquityStoreState) => ({
+const selector = ({ stabilityDeposit, trove, xbrlInStabilityPool }: StabilioStoreState) => ({
   stabilityDeposit,
   trove,
   xbrlInStabilityPool
@@ -24,7 +24,7 @@ const selector = ({ stabilityDeposit, trove, xbrlInStabilityPool }: LiquityStore
 
 export const ActiveDeposit: React.FC = () => {
   const { dispatchEvent } = useStabilityView();
-  const { stabilityDeposit, trove, xbrlInStabilityPool } = useLiquitySelector(selector);
+  const { stabilityDeposit, trove, xbrlInStabilityPool } = useStabilioSelector(selector);
 
   const poolShare = stabilityDeposit.currentXBRL.mulDiv(100, xbrlInStabilityPool);
 

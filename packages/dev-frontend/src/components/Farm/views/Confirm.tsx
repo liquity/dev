@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Button } from "theme-ui";
-import { Decimal } from "@liquity/lib-base";
-import { useLiquity } from "../../../hooks/LiquityContext";
+import { Decimal } from "@stabilio/lib-base";
+import { useStabilio } from "../../../hooks/StabilioContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
 import { useValidationState } from "../context/useValidationState";
 import { useFarmView } from "../context/FarmViewContext";
@@ -15,15 +15,15 @@ const transactionId = "farm-confirm";
 export const Confirm: React.FC<ConfirmProps> = ({ amount }) => {
   const { dispatchEvent } = useFarmView();
   const {
-    liquity: { send: liquity }
-  } = useLiquity();
+    stabilio: { send: stabilio }
+  } = useStabilio();
 
   const transactionState = useMyTransactionState(transactionId);
   const { isValid, isWithdrawing, amountChanged } = useValidationState(amount);
 
   const transactionAction = isWithdrawing
-    ? liquity.unstakeXbrlWethUniTokens.bind(liquity, amountChanged)
-    : liquity.stakeXbrlWethUniTokens.bind(liquity, amountChanged);
+    ? stabilio.unstakeXbrlWethUniTokens.bind(stabilio, amountChanged)
+    : stabilio.stakeXbrlWethUniTokens.bind(stabilio, amountChanged);
 
   const shouldDisable = amountChanged.isZero || !isValid;
 

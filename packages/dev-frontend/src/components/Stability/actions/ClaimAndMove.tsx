@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "theme-ui";
-import { useLiquity } from "../../../hooks/LiquityContext";
+import { useStabilio } from "../../../hooks/StabilioContext";
 import { useTransactionFunction } from "../../Transaction";
 
 type ClaimAndMoveProps = {
@@ -8,11 +8,11 @@ type ClaimAndMoveProps = {
 };
 
 export const ClaimAndMove: React.FC<ClaimAndMoveProps> = ({ disabled, children }) => {
-  const { liquity } = useLiquity();
+  const { stabilio } = useStabilio();
 
   const [sendTransaction] = useTransactionFunction(
     "stability-deposit",
-    liquity.send.transferCollateralGainToTrove.bind(liquity.send)
+    stabilio.send.transferCollateralGainToTrove.bind(stabilio.send)
   );
 
   return (

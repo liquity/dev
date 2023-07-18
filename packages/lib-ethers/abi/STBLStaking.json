@@ -74,32 +74,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_stblTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "STBLTokenAddressSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_xbrlTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "XBRLTokenAddressSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -113,6 +87,19 @@
       }
     ],
     "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_stblTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "STBLTokenAddressSet",
     "type": "event"
   },
   {
@@ -208,6 +195,19 @@
       }
     ],
     "name": "TroveManagerAddressSet",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_xbrlTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "XBRLTokenAddressSet",
     "type": "event"
   },
   {
@@ -367,32 +367,6 @@
   },
   {
     "inputs": [],
-    "name": "stblToken",
-    "outputs": [
-      {
-        "internalType": "contract ISTBLToken",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "xbrlToken",
-    "outputs": [
-      {
-        "internalType": "contract IXBRLToken",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "owner",
     "outputs": [
       {
@@ -495,6 +469,19 @@
   },
   {
     "inputs": [],
+    "name": "stblToken",
+    "outputs": [
+      {
+        "internalType": "contract ISTBLToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "totalSTBLStaked",
     "outputs": [
       {
@@ -530,6 +517,19 @@
     "name": "unstake",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "xbrlToken",
+    "outputs": [
+      {
+        "internalType": "contract IXBRLToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

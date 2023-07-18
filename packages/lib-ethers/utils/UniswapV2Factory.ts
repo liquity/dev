@@ -4,7 +4,7 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { Overrides } from "@ethersproject/contracts";
 import { Event } from "ethers";
 
-import { _LiquityContract, _TypedLiquityContract, _TypedLogDescription } from "../src/contracts";
+import { _StabilioContract, _TypedStabilioContract, _TypedLogDescription } from "../src/contracts";
 import { log } from "./deploy";
 
 const factoryAbi = [
@@ -21,7 +21,7 @@ const factoryAddresses: Record<number, string> = {
 const hasFactory = (chainId: number) => factoryAddresses[chainId] != undefined;
 
 interface UniswapV2Factory
-  extends _TypedLiquityContract<
+  extends _TypedStabilioContract<
     unknown,
     { createPair(tokenA: string, tokenB: string, _overrides?: Overrides): Promise<string> }
   > {
@@ -43,7 +43,7 @@ export const createUniswapV2Pair = async (
     throw new Error(`UniswapV2Factory is not deployed on this network (chainId = ${chainId})`);
   }
 
-  const factory = (new _LiquityContract(
+  const factory = (new _StabilioContract(
     factoryAddresses[chainId],
     factoryAbi,
     signer

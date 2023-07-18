@@ -54,7 +54,7 @@ contract('TroveManager', async accounts => {
   const withdrawXBRL = async (params) => th.withdrawXBRL(contracts, params)
 
   beforeEach(async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployStabilioCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.xbrlToken = await XBRLTokenTester.new(
       contracts.troveManager.address,

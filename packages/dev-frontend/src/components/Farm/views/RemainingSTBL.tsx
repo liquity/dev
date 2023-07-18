@@ -1,15 +1,15 @@
 import React from "react";
 import { Flex } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
-const selector = ({ remainingXbrlWethLiquidityMiningSTBLReward }: LiquityStoreState) => ({
+const selector = ({ remainingXbrlWethLiquidityMiningSTBLReward }: StabilioStoreState) => ({
   remainingXbrlWethLiquidityMiningSTBLReward
 });
 
 export const RemainingSTBL: React.FC = () => {
-  const { remainingXbrlWethLiquidityMiningSTBLReward } = useLiquitySelector(selector);
+  const { remainingXbrlWethLiquidityMiningSTBLReward } = useStabilioSelector(selector);
 
   return (
     <Flex sx={{ mr: 2, fontSize: 2, fontWeight: "medium" }}>

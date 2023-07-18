@@ -1,28 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { Card, Paragraph, Text } from "theme-ui";
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 import { InfoIcon } from "../../InfoIcon";
-import { useLiquity } from "../../../hooks/LiquityContext";
+import { useStabilio } from "../../../hooks/StabilioContext";
 import { Badge } from "../../Badge";
 import { fetchPrices } from "../context/fetchPrices";
 
 const selector = ({
   remainingXbrlWethLiquidityMiningSTBLReward,
   totalStakedXbrlWethUniTokens
-}: LiquityStoreState) => ({
+}: StabilioStoreState) => ({
   remainingXbrlWethLiquidityMiningSTBLReward,
   totalStakedXbrlWethUniTokens
 });
 
 export const Yield: React.FC = () => {
   const {
-    liquity: {
+    stabilio: {
       connection: { addresses, xbrlWethLiquidityMiningSTBLRewardRate }
     }
-  } = useLiquity();
+  } = useStabilio();
 
-  const { remainingXbrlWethLiquidityMiningSTBLReward, totalStakedXbrlWethUniTokens } = useLiquitySelector(selector);
+  const { remainingXbrlWethLiquidityMiningSTBLReward, totalStakedXbrlWethUniTokens } = useStabilioSelector(selector);
   const [stblPrice, setStblPrice] = useState<Decimal | undefined>(undefined);
   const [uniLpPrice, setUniLpPrice] = useState<Decimal | undefined>(undefined);
   const hasZeroValue = remainingXbrlWethLiquidityMiningSTBLReward.isZero || totalStakedXbrlWethUniTokens.isZero;

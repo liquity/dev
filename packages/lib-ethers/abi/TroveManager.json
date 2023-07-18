@@ -82,32 +82,6 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "_stblStakingAddress",
-        "type": "address"
-      }
-    ],
-    "name": "STBLStakingAddressChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_stblTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "STBLTokenAddressChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
         "internalType": "uint256",
         "name": "_L_ETH",
         "type": "uint256"
@@ -120,19 +94,6 @@
       }
     ],
     "name": "LTermsUpdated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_newXBRLTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "XBRLTokenAddressChanged",
     "type": "event"
   },
   {
@@ -240,6 +201,32 @@
       }
     ],
     "name": "Redemption",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_stblStakingAddress",
+        "type": "address"
+      }
+    ],
+    "name": "STBLStakingAddressChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_stblTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "STBLTokenAddressChanged",
     "type": "event"
   },
   {
@@ -407,6 +394,19 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_newXBRLTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "XBRLTokenAddressChanged",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "BETA",
     "outputs": [
@@ -461,19 +461,6 @@
   {
     "inputs": [],
     "name": "DECIMAL_PRECISION",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "XBRL_GAS_COMPENSATION",
     "outputs": [
       {
         "internalType": "uint256",
@@ -667,6 +654,19 @@
         "internalType": "uint128",
         "name": "arrayIndex",
         "type": "uint128"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "XBRL_GAS_COMPENSATION",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1393,45 +1393,6 @@
   },
   {
     "inputs": [],
-    "name": "stblStaking",
-    "outputs": [
-      {
-        "internalType": "contract ISTBLStaking",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stblToken",
-    "outputs": [
-      {
-        "internalType": "contract ISTBLToken",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "xbrlToken",
-    "outputs": [
-      {
-        "internalType": "contract IXBRLToken",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "owner",
     "outputs": [
       {
@@ -1645,6 +1606,32 @@
   },
   {
     "inputs": [],
+    "name": "stblStaking",
+    "outputs": [
+      {
+        "internalType": "contract ISTBLStaking",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stblToken",
+    "outputs": [
+      {
+        "internalType": "contract ISTBLToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "totalCollateralSnapshot",
     "outputs": [
       {
@@ -1712,6 +1699,19 @@
     "name": "updateTroveRewardSnapshots",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "xbrlToken",
+    "outputs": [
+      {
+        "internalType": "contract IXBRLToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   }
 ]

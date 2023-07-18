@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { Flex, Button, Box, Card, Heading } from "theme-ui";
 import {
-  LiquityStoreState,
+  StabilioStoreState,
   Decimal,
   Trove,
   XBRL_LIQUIDATION_RESERVE,
   Percent,
   Difference
-} from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+} from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { useStableTroveChange } from "../../hooks/useStableTroveChange";
 import { ActionDescription } from "../ActionDescription";
@@ -27,7 +27,7 @@ import {
   validateTroveChange
 } from "./validation/validateTroveChange";
 
-const selector = (state: LiquityStoreState) => {
+const selector = (state: StabilioStoreState) => {
   const { trove, fees, price, accountBalance } = state;
   return {
     trove,
@@ -83,7 +83,7 @@ const applyUnsavedNetDebtChanges = (unsavedChanges: Difference, trove: Trove) =>
 
 export const Adjusting: React.FC = () => {
   const { dispatchEvent } = useTroveView();
-  const { trove, fees, price, accountBalance, validationContext } = useLiquitySelector(selector);
+  const { trove, fees, price, accountBalance, validationContext } = useStabilioSelector(selector);
   const editingState = useState<string>();
   const previousTrove = useRef<Trove>(trove);
   const [collateral, setCollateral] = useState<Decimal>(trove.collateral);

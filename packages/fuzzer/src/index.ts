@@ -31,7 +31,7 @@ yargs
 
   .command(
     "chaos",
-    "Try to break Liquity by randomly interacting with it.",
+    "Try to break Stabilio by randomly interacting with it.",
     {
       users: {
         alias: "u",
@@ -41,7 +41,7 @@ yargs
       rounds: {
         alias: "n",
         default: 25,
-        description: "How many times each user should interact with Liquity"
+        description: "How many times each user should interact with Stabilio"
       },
       subgraph: {
         alias: "g",

@@ -4,7 +4,7 @@ const { TestHelper: th, MoneyValues: mv } = require("../utils/testHelpers.js")
 const GasPool = artifacts.require("./GasPool.sol")
 const BorrowerOperationsTester = artifacts.require("./BorrowerOperationsTester.sol")
 
-contract('All Liquity functions with onlyOwner modifier', async accounts => {
+contract('All Stabilio functions with onlyOwner modifier', async accounts => {
 
   const [owner, alice, bob] = accounts;
 
@@ -25,7 +25,7 @@ contract('All Liquity functions with onlyOwner modifier', async accounts => {
   let lockupContractFactory
 
   before(async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployStabilioCore()
     contracts.borrowerOperations = await BorrowerOperationsTester.new()
     contracts = await deploymentHelper.deployXBRLToken(contracts)
     const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)

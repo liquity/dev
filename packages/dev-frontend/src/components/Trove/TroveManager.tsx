@@ -1,9 +1,9 @@
 import { useCallback, useEffect } from "react";
 import { Flex, Button } from "theme-ui";
 
-import { LiquityStoreState, Decimal, Trove, Decimalish, XBRL_MINIMUM_DEBT } from "@liquity/lib-base";
+import { StabilioStoreState, Decimal, Trove, Decimalish, XBRL_MINIMUM_DEBT } from "@stabilio/lib-base";
 
-import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreUpdate, useStabilioReducer, useStabilioSelector } from "@stabilio/lib-react";
 
 import { ActionDescription } from "../ActionDescription";
 import { useMyTransactionState } from "../Transaction";
@@ -17,7 +17,7 @@ import {
   validateTroveChange
 } from "./validation/validateTroveChange";
 
-const init = ({ trove }: LiquityStoreState) => ({
+const init = ({ trove }: StabilioStoreState) => ({
   original: trove,
   edited: new Trove(trove.collateral, trove.debt),
   changePending: false,
@@ -27,7 +27,7 @@ const init = ({ trove }: LiquityStoreState) => ({
 
 type TroveManagerState = ReturnType<typeof init>;
 type TroveManagerAction =
-  | LiquityStoreUpdate
+  | StabilioStoreUpdate
   | { type: "startChange" | "finishChange" | "revert" | "addMinimumDebt" | "removeMinimumDebt" }
   | { type: "setCollateral" | "setDebt"; newValue: Decimalish };
 
@@ -142,7 +142,7 @@ const feeFrom = (original: Trove, edited: Trove, borrowingRate: Decimal): Decima
   }
 };
 
-const select = (state: LiquityStoreState) => ({
+const select = (state: StabilioStoreState) => ({
   fees: state.fees,
   validationContext: selectForTroveChangeValidation(state)
 });
@@ -156,8 +156,8 @@ type TroveManagerProps = {
 };
 
 export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) => {
-  const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
-  const { fees, validationContext } = useLiquitySelector(select);
+  const [{ original, edited, changePending }, dispatch] = useStabilioReducer(reduce, init);
+  const { fees, validationContext } = useStabilioSelector(select);
 
   useEffect(() => {
     if (collateral !== undefined) {

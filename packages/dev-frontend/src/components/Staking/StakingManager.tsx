@@ -4,12 +4,12 @@ import { Button, Flex } from "theme-ui";
 import {
   Decimal,
   Decimalish,
-  LiquityStoreState,
+  StabilioStoreState,
   STBLStake,
   STBLStakeChange
-} from "@liquity/lib-base";
+} from "@stabilio/lib-base";
 
-import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreUpdate, useStabilioReducer, useStabilioSelector } from "@stabilio/lib-react";
 
 import { GT, COIN } from "../../strings";
 
@@ -19,14 +19,14 @@ import { StakingManagerAction } from "./StakingManagerAction";
 import { ActionDescription, Amount } from "../ActionDescription";
 import { ErrorDescription } from "../ErrorDescription";
 
-const init = ({ stblStake }: LiquityStoreState) => ({
+const init = ({ stblStake }: StabilioStoreState) => ({
   originalStake: stblStake,
   editedSTBL: stblStake.stakedSTBL
 });
 
 type StakeManagerState = ReturnType<typeof init>;
 type StakeManagerAction =
-  | LiquityStoreUpdate
+  | StabilioStoreUpdate
   | { type: "revert" }
   | { type: "setStake"; newValue: Decimalish };
 
@@ -60,7 +60,7 @@ const reduce = (state: StakeManagerState, action: StakeManagerAction): StakeMana
   return state;
 };
 
-const selectSTBLBalance = ({ stblBalance }: LiquityStoreState) => stblBalance;
+const selectSTBLBalance = ({ stblBalance }: StabilioStoreState) => stblBalance;
 
 type StakingManagerActionDescriptionProps = {
   originalStake: STBLStake;
@@ -118,8 +118,8 @@ const StakingManagerActionDescription: React.FC<StakingManagerActionDescriptionP
 
 export const StakingManager: React.FC = () => {
   const { dispatch: dispatchStakingViewAction } = useStakingView();
-  const [{ originalStake, editedSTBL }, dispatch] = useLiquityReducer(reduce, init);
-  const stblBalance = useLiquitySelector(selectSTBLBalance);
+  const [{ originalStake, editedSTBL }, dispatch] = useStabilioReducer(reduce, init);
+  const stblBalance = useStabilioSelector(selectSTBLBalance);
 
   const change = originalStake.whatChanged(editedSTBL);
   const [validChange, description] = !change

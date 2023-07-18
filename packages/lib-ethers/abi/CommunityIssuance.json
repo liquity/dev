@@ -8,19 +8,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_stblTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "STBLTokenAddressSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -34,6 +21,19 @@
       }
     ],
     "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_stblTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "STBLTokenAddressSet",
     "type": "event"
   },
   {
@@ -90,19 +90,6 @@
   },
   {
     "inputs": [],
-    "name": "STBLSupplyCap",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "NAME",
     "outputs": [
       {
@@ -117,6 +104,19 @@
   {
     "inputs": [],
     "name": "SECONDS_IN_ONE_MINUTE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "STBLSupplyCap",
     "outputs": [
       {
         "internalType": "uint256",
@@ -164,19 +164,6 @@
       }
     ],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "stblToken",
-    "outputs": [
-      {
-        "internalType": "contract ISTBLToken",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -234,6 +221,19 @@
     "outputs": [
       {
         "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "stblToken",
+    "outputs": [
+      {
+        "internalType": "contract ISTBLToken",
         "name": "",
         "type": "address"
       }

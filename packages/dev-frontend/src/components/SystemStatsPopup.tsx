@@ -1,16 +1,16 @@
 import React, { useState, useRef } from "react";
 import { Container, Flex, Button } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { Icon } from "./Icon";
 import { SystemStats } from "./SystemStats";
 
-const select = ({ total, price }: LiquityStoreState) => ({ total, price });
+const select = ({ total, price }: StabilioStoreState) => ({ total, price });
 
 export const SystemStatsPopup: React.FC = () => {
-  const { price, total } = useLiquitySelector(select);
+  const { price, total } = useStabilioSelector(select);
 
   const [systemStatsOpen, setSystemStatsOpen] = useState(false);
   const systemStatsOverlayRef = useRef<HTMLDivElement>(null);

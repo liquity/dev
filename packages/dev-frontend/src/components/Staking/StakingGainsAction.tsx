@@ -1,20 +1,20 @@
 import { Button } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
-import { useLiquity } from "../../hooks/LiquityContext";
+import { useStabilio } from "../../hooks/StabilioContext";
 import { useTransactionFunction } from "../Transaction";
 
-const selectSTBLStake = ({ stblStake }: LiquityStoreState) => stblStake;
+const selectSTBLStake = ({ stblStake }: StabilioStoreState) => stblStake;
 
 export const StakingGainsAction: React.FC = () => {
-  const { liquity } = useLiquity();
-  const { collateralGain, xbrlGain } = useLiquitySelector(selectSTBLStake);
+  const { stabilio } = useStabilio();
+  const { collateralGain, xbrlGain } = useStabilioSelector(selectSTBLStake);
 
   const [sendTransaction] = useTransactionFunction(
     "stake",
-    liquity.send.withdrawGainsFromStaking.bind(liquity.send)
+    stabilio.send.withdrawGainsFromStaking.bind(stabilio.send)
   );
 
   return (

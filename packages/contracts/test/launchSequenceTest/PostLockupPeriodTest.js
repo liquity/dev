@@ -123,7 +123,7 @@ contract('After the initial lockup period has passed', async accounts => {
   beforeEach(async () => {
     // Deploy all contracts from the first account
     STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
-    coreContracts = await deploymentHelper.deployLiquityCore()
+    coreContracts = await deploymentHelper.deployStabilioCore()
 
     stblStaking = STBLContracts.stblStaking
     stblToken = STBLContracts.stblToken
@@ -818,7 +818,7 @@ contract('After the initial lockup period has passed', async accounts => {
       await assert.isTrue(STBLapproveTx_5.receipt.status)
     })
 
-    it("Anyone can increaseAllowance for any EOA or Liquity contract", async () => {
+    it("Anyone can increaseAllowance for any EOA or Stabilio contract", async () => {
       // Anyone can increaseAllowance of EOAs to spend STBL
       const STBLIncreaseAllowanceTx_1 = await stblToken.increaseAllowance(A, dec(1, 18), { from: momentZeroMultisig })
       const STBLIncreaseAllowanceTx_2 = await stblToken.increaseAllowance(A, dec(1, 18), { from: sixMonthsMultisig })
@@ -835,25 +835,25 @@ contract('After the initial lockup period has passed', async accounts => {
       await assert.isTrue(STBLIncreaseAllowanceTx_6.receipt.status)
       await assert.isTrue(STBLIncreaseAllowanceTx_7.receipt.status)
 
-      // Increase allowance of Liquity contracts from F
+      // Increase allowance of Stabilio contracts from F
       for (const contract of Object.keys(coreContracts)) {
         const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: F })
         await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
-      // Increase allowance of Liquity contracts from multisig
+      // Increase allowance of Stabilio contracts from multisig
       for (const contract of Object.keys(coreContracts)) {
         const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: momentZeroMultisig })
         await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
-      // Increase allowance of Liquity contracts from multisig
+      // Increase allowance of Stabilio contracts from multisig
       for (const contract of Object.keys(coreContracts)) {
         const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: sixMonthsMultisig })
         await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
       }
 
-      // Increase allowance of Liquity contracts from multisig
+      // Increase allowance of Stabilio contracts from multisig
       for (const contract of Object.keys(coreContracts)) {
         const STBLIncreaseAllowanceTx = await stblToken.increaseAllowance(coreContracts[contract].address, dec(1, 18), { from: oneYearMultisig })
         await assert.isTrue(STBLIncreaseAllowanceTx.receipt.status)
@@ -882,7 +882,7 @@ contract('After the initial lockup period has passed', async accounts => {
       }
     })
 
-    it("Anyone can decreaseAllowance for any EOA or Liquity contract", async () => {
+    it("Anyone can decreaseAllowance for any EOA or Stabilio contract", async () => {
       //First, increase allowance of A, B LiqAG and core contracts
       const STBLapproveTx_1 = await stblToken.approve(A, dec(1, 18), { from: momentZeroMultisig })
       const STBLapproveTx_2 = await stblToken.approve(B, dec(1, 18), { from: sixMonthsMultisig })

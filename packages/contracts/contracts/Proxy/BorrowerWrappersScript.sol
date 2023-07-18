@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.17;
 
-import "../Dependencies/LiquityMath.sol";
+import "../Dependencies/StabilioMath.sol";
 import "../Dependencies/IERC20.sol";
 import "../Interfaces/IBorrowerOperations.sol";
 import "../Interfaces/ITroveManager.sol";
@@ -145,7 +145,7 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
 
         uint256 XBRLAmount = _collateral * price / ICR;
         uint256 borrowingRate = troveManager.getBorrowingRateWithDecay();
-        uint256 netDebt = XBRLAmount * LiquityMath.DECIMAL_PRECISION / (LiquityMath.DECIMAL_PRECISION + borrowingRate);
+        uint256 netDebt = XBRLAmount * StabilioMath.DECIMAL_PRECISION / (StabilioMath.DECIMAL_PRECISION + borrowingRate);
 
         return netDebt;
     }

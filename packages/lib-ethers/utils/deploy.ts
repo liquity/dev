@@ -2,12 +2,12 @@ import { Signer } from "@ethersproject/abstract-signer";
 import { ContractTransaction, ContractFactory, Overrides } from "@ethersproject/contracts";
 import { Wallet } from "@ethersproject/wallet";
 
-import { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@stabilio/lib-base";
 
 import {
-  _LiquityContractAddresses,
-  _LiquityContracts,
-  _LiquityDeploymentJSON,
+  _StabilioContractAddresses,
+  _StabilioContracts,
+  _StabilioDeploymentJSON,
   _connectToContracts
 } from "../src/contracts";
 
@@ -59,7 +59,7 @@ const deployContracts = async (
   getContractFactory: (name: string, signer: Signer) => Promise<ContractFactory>,
   priceFeedIsTestnet = true,
   overrides?: Overrides
-): Promise<[addresses: Omit<_LiquityContractAddresses, OmittedKeys>, startBlock: number]> => {
+): Promise<[addresses: Omit<_StabilioContractAddresses, OmittedKeys>, startBlock: number]> => {
   const [activePoolAddress, startBlock] = await deployContractAndGetBlockNumber(
     deployer,
     getContractFactory,
@@ -182,7 +182,7 @@ const connectContracts = async (
     stblWethUnipool,
     xbrlWethUniToken,
     stblWethUniToken
-  }: _LiquityContracts,
+  }: _StabilioContracts,
   deployer: Signer,
   overrides?: Overrides
 ) => {
@@ -335,7 +335,7 @@ export const deployAndSetupContracts = async (
   _isDev = true,
   wethAddress?: string,
   overrides?: Overrides
-): Promise<_LiquityDeploymentJSON> => {
+): Promise<_StabilioDeploymentJSON> => {
   if (!deployer.provider) {
     throw new Error("Signer must have a provider.");
   }
@@ -343,7 +343,7 @@ export const deployAndSetupContracts = async (
   log("Deploying contracts...");
   log();
 
-  const deployment: _LiquityDeploymentJSON = {
+  const deployment: _StabilioDeploymentJSON = {
     chainId: await deployer.getChainId(),
     version: "unknown",
     deploymentDate: new Date().getTime(),

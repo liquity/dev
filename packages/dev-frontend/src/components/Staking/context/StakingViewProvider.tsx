@@ -1,14 +1,14 @@
 import { useEffect } from "react";
 
-import { LiquityStoreState, STBLStake } from "@liquity/lib-base";
-import { LiquityStoreUpdate, useLiquityReducer } from "@liquity/lib-react";
+import { StabilioStoreState, STBLStake } from "@stabilio/lib-base";
+import { StabilioStoreUpdate, useStabilioReducer } from "@stabilio/lib-react";
 
 import { useMyTransactionState } from "../../Transaction";
 
 import { StakingViewAction, StakingViewContext } from "./StakingViewContext";
 
 type StakingViewProviderAction =
-  | LiquityStoreUpdate
+  | StabilioStoreUpdate
   | StakingViewAction
   | { type: "startChange" | "abortChange" };
 
@@ -18,7 +18,7 @@ type StakingViewProviderState = {
   adjusting: boolean;
 };
 
-const init = ({ stblStake }: LiquityStoreState): StakingViewProviderState => ({
+const init = ({ stblStake }: StabilioStoreState): StakingViewProviderState => ({
   stblStake,
   changePending: false,
   adjusting: false
@@ -71,7 +71,7 @@ const reduce = (
 
 export const StakingViewProvider: React.FC = ({ children }) => {
   const stakingTransactionState = useMyTransactionState("stake");
-  const [{ adjusting, changePending, stblStake }, dispatch] = useLiquityReducer(reduce, init);
+  const [{ adjusting, changePending, stblStake }, dispatch] = useStabilioReducer(reduce, init);
 
   useEffect(() => {
     if (

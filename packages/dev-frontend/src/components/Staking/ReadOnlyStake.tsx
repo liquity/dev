@@ -1,7 +1,7 @@
 import { Heading, Box, Card, Flex, Button } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { COIN, GT } from "../../strings";
 
@@ -12,14 +12,14 @@ import { Icon } from "../Icon";
 import { useStakingView } from "./context/StakingViewContext";
 import { StakingGainsAction } from "./StakingGainsAction";
 
-const select = ({ stblStake, totalStakedSTBL }: LiquityStoreState) => ({
+const select = ({ stblStake, totalStakedSTBL }: StabilioStoreState) => ({
   stblStake,
   totalStakedSTBL
 });
 
 export const ReadOnlyStake: React.FC = () => {
   const { changePending, dispatch } = useStakingView();
-  const { stblStake, totalStakedSTBL } = useLiquitySelector(select);
+  const { stblStake, totalStakedSTBL } = useStabilioSelector(select);
 
   const poolShare = stblStake.stakedSTBL.mulDiv(100, totalStakedSTBL);
 

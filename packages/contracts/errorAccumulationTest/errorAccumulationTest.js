@@ -23,7 +23,7 @@ contract('TroveManager', async accounts => {
   let borrowerOperations
   
   beforeEach(async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployStabilioCore()
     const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress)
     
     xbrlToken = contracts.xbrlToken

@@ -1,8 +1,8 @@
 import { Button } from "theme-ui";
 
-import { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@stabilio/lib-base";
 
-import { useLiquity } from "../../hooks/LiquityContext";
+import { useStabilio } from "../../hooks/StabilioContext";
 import { useTransactionFunction } from "../Transaction";
 
 type RedemptionActionProps = {
@@ -19,12 +19,12 @@ export const RedemptionAction: React.FC<RedemptionActionProps> = ({
   maxRedemptionRate
 }) => {
   const {
-    liquity: { send: liquity }
-  } = useLiquity();
+    stabilio: { send: stabilio }
+  } = useStabilio();
 
   const [sendTransaction] = useTransactionFunction(
     transactionId,
-    liquity.redeemXBRL.bind(liquity, xbrlAmount, maxRedemptionRate)
+    stabilio.redeemXBRL.bind(stabilio, xbrlAmount, maxRedemptionRate)
   );
 
   return (

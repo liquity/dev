@@ -36,7 +36,7 @@ export type _DebtChange<T> =
 export type _NoDebtChange = _NoXBRLBorrowing & _NoXBRLRepayment;
 
 /**
- * Parameters of an {@link TransactableLiquity.openTrove | openTrove()} transaction.
+ * Parameters of an {@link TransactableStabilio.openTrove | openTrove()} transaction.
  *
  * @remarks
  * The type parameter `T` specifies the allowed value type(s) of the particular `TroveCreationParams`
@@ -74,7 +74,7 @@ export type TroveCreationParams<T = unknown> = _CollateralDeposit<T> &
   _NoXBRLRepayment;
 
 /**
- * Parameters of a {@link TransactableLiquity.closeTrove | closeTrove()} transaction.
+ * Parameters of a {@link TransactableStabilio.closeTrove | closeTrove()} transaction.
  *
  * @remarks
  * The type parameter `T` specifies the allowed value type(s) of the particular `TroveClosureParams`
@@ -112,7 +112,7 @@ export type TroveClosureParams<T> = _CollateralWithdrawal<T> &
   _NoXBRLBorrowing;
 
 /**
- * Parameters of an {@link TransactableLiquity.adjustTrove | adjustTrove()} transaction.
+ * Parameters of an {@link TransactableStabilio.adjustTrove | adjustTrove()} transaction.
  *
  * @remarks
  * The type parameter `T` specifies the allowed value type(s) of the particular
@@ -463,12 +463,12 @@ export class Trove {
    * given price.
    *
    * @example
-   * Can be used to check whether the Liquity protocol is in recovery mode by using it on the return
-   * value of {@link ReadableLiquity.getTotal | getTotal()}. For example:
+   * Can be used to check whether the Stabilio protocol is in recovery mode by using it on the return
+   * value of {@link ReadableStabilio.getTotal | getTotal()}. For example:
    *
    * ```typescript
-   * const total = await liquity.getTotal();
-   * const price = await liquity.getPrice();
+   * const total = await stabilio.getTotal();
+   * const price = await stabilio.getPrice();
    *
    * if (total.collateralRatioIsBelowCritical(price)) {
    *   // Recovery mode is active
@@ -665,7 +665,7 @@ export class Trove {
   }
 
   /**
-   * Calculate the result of an {@link TransactableLiquity.openTrove | openTrove()} transaction.
+   * Calculate the result of an {@link TransactableStabilio.openTrove | openTrove()} transaction.
    *
    * @param params - Parameters of the transaction.
    * @param borrowingRate - Borrowing rate to use when calculating the Trove's debt.
@@ -675,7 +675,7 @@ export class Trove {
   }
 
   /**
-   * Calculate the parameters of an {@link TransactableLiquity.openTrove | openTrove()} transaction
+   * Calculate the parameters of an {@link TransactableStabilio.openTrove | openTrove()} transaction
    * that will result in the given Trove.
    *
    * @param that - The Trove to recreate.
@@ -688,7 +688,7 @@ export class Trove {
   }
 
   /**
-   * Calculate the result of an {@link TransactableLiquity.adjustTrove | adjustTrove()} transaction
+   * Calculate the result of an {@link TransactableStabilio.adjustTrove | adjustTrove()} transaction
    * on this Trove.
    *
    * @param params - Parameters of the transaction.
@@ -699,7 +699,7 @@ export class Trove {
   }
 
   /**
-   * Calculate the parameters of an {@link TransactableLiquity.adjustTrove | adjustTrove()}
+   * Calculate the parameters of an {@link TransactableStabilio.adjustTrove | adjustTrove()}
    * transaction that will change this Trove into the given Trove.
    *
    * @param that - The desired result of the transaction.
@@ -732,7 +732,7 @@ export type UserTroveStatus =
  *
  * @remarks
  * The SDK uses the base {@link Trove} class as a generic container of collateral and debt, for
- * example to represent the {@link ReadableLiquity.getTotal | total collateral and debt} locked up
+ * example to represent the {@link ReadableStabilio.getTotal | total collateral and debt} locked up
  * in the protocol.
  *
  * The `UserTrove` class extends `Trove` with extra information that's only available for Troves

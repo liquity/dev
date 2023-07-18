@@ -1,8 +1,8 @@
 import { Button } from "theme-ui";
-import { Decimal, LiquityStoreState, StabilityDepositChange } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, StabilioStoreState, StabilityDepositChange } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
-import { useLiquity } from "../../hooks/LiquityContext";
+import { useStabilio } from "../../hooks/StabilioContext";
 import { useTransactionFunction } from "../Transaction";
 
 type StabilityDepositActionProps = {
@@ -10,7 +10,7 @@ type StabilityDepositActionProps = {
   change: StabilityDepositChange<Decimal>;
 };
 
-const selectFrontendRegistered = ({ frontend }: LiquityStoreState) =>
+const selectFrontendRegistered = ({ frontend }: StabilioStoreState) =>
   frontend.status === "registered";
 
 export const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
@@ -18,16 +18,16 @@ export const StabilityDepositAction: React.FC<StabilityDepositActionProps> = ({
   transactionId,
   change
 }) => {
-  const { config, liquity } = useLiquity();
-  const frontendRegistered = useLiquitySelector(selectFrontendRegistered);
+  const { config, stabilio } = useStabilio();
+  const frontendRegistered = useStabilioSelector(selectFrontendRegistered);
 
   const frontendTag = frontendRegistered ? config.frontendTag : undefined;
 
   const [sendTransaction] = useTransactionFunction(
     transactionId,
     change.depositXBRL
-      ? liquity.send.depositXBRLInStabilityPool.bind(liquity.send, change.depositXBRL, frontendTag)
-      : liquity.send.withdrawXBRLFromStabilityPool.bind(liquity.send, change.withdrawXBRL)
+      ? stabilio.send.depositXBRLInStabilityPool.bind(stabilio.send, change.depositXBRL, frontendTag)
+      : stabilio.send.withdrawXBRLFromStabilityPool.bind(stabilio.send, change.withdrawXBRL)
   );
 
   return <Button onClick={sendTransaction}>{children}</Button>;

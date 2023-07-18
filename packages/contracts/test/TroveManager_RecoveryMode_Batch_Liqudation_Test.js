@@ -23,7 +23,7 @@ contract('TroveManager - in Recovery Mode - back to normal mode in 1 tx', async 
   const openTrove = async (params) => th.openTrove(contracts, params)
 
   beforeEach(async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployStabilioCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.xbrlToken = await XBRLToken.new(
       contracts.troveManager.address,

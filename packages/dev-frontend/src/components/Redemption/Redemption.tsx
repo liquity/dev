@@ -1,22 +1,22 @@
-import { BlockPolledLiquityStoreState } from "@liquity/lib-ethers";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { BlockPolledStabilioStoreState } from "@stabilio/lib-ethers";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
-import { useLiquity } from "../../hooks/LiquityContext";
+import { useStabilio } from "../../hooks/StabilioContext";
 import { DisabledRedemption } from "./DisabledRedemption";
 import { RedemptionManager } from "./RedemptionManager";
 
 const SECONDS_IN_ONE_DAY = 24 * 60 * 60;
 
-const selectBlockTimestamp = ({ blockTimestamp }: BlockPolledLiquityStoreState) => blockTimestamp;
+const selectBlockTimestamp = ({ blockTimestamp }: BlockPolledStabilioStoreState) => blockTimestamp;
 
 export const Redemption: React.FC = () => {
   const {
-    liquity: {
+    stabilio: {
       connection: { deploymentDate, bootstrapPeriod }
     }
-  } = useLiquity();
+  } = useStabilio();
 
-  const blockTimestamp = useLiquitySelector(selectBlockTimestamp);
+  const blockTimestamp = useStabilioSelector(selectBlockTimestamp);
 
   const bootstrapPeriodDays = Math.round(bootstrapPeriod / SECONDS_IN_ONE_DAY);
   const deploymentTime = deploymentDate.getTime() / 1000;

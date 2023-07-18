@@ -7,12 +7,12 @@ import "../Interfaces/ISTBLToken.sol";
 /*
 * The lockup contract architecture utilizes a single SixMonthsLockupContract, with an unlockTime. The unlockTime is passed as an argument 
 * to the SixMonthsLockupContract's constructor. The contract's balance can be withdrawn by the beneficiary when block.timestamp > unlockTime. 
-* At construction, the contract checks that unlockTime is at least six months later than the Liquity system's deployment time. 
+* At construction, the contract checks that unlockTime is at least six months later than the Stabilio system's deployment time. 
 
-* Within the six months from deployment, the deployer of the STBLToken (Liquity AG's address) may transfer STBL only to valid 
+* Within the six months from deployment, the deployer of the STBLToken (Stabilio AG's address) may transfer STBL only to valid 
 * SixMonthsLockupContract, and no other addresses (this is enforced in STBLToken.sol's transfer() function).
 * 
-* The above two restrictions ensure that until six months after system deployment, STBL tokens originating from Liquity AG cannot 
+* The above two restrictions ensure that until six months after system deployment, STBL tokens originating from Stabilio AG cannot 
 * enter circulating supply and cannot be staked to earn system revenue.
 */
 contract SixMonthsLockupContract {

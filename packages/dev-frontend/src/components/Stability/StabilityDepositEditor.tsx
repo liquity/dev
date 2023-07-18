@@ -5,11 +5,11 @@ import {
   Decimal,
   Decimalish,
   StabilityDeposit,
-  LiquityStoreState,
+  StabilioStoreState,
   Difference
-} from "@liquity/lib-base";
+} from "@stabilio/lib-base";
 
-import { useLiquitySelector } from "@liquity/lib-react";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { COIN, GT } from "../../strings";
 
@@ -18,7 +18,7 @@ import { EditableRow, StaticRow } from "../Trove/Editor";
 import { LoadingOverlay } from "../LoadingOverlay";
 import { InfoIcon } from "../InfoIcon";
 
-const select = ({ xbrlBalance, xbrlInStabilityPool }: LiquityStoreState) => ({
+const select = ({ xbrlBalance, xbrlInStabilityPool }: StabilioStoreState) => ({
   xbrlBalance,
   xbrlInStabilityPool
 });
@@ -37,7 +37,7 @@ export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   dispatch,
   children
 }) => {
-  const { xbrlBalance, xbrlInStabilityPool } = useLiquitySelector(select);
+  const { xbrlBalance, xbrlInStabilityPool } = useStabilioSelector(select);
   const editingState = useState<string>();
 
   const edited = !editedXBRL.eq(originalDeposit.currentXBRL);

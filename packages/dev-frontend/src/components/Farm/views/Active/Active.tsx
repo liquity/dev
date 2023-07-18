@@ -1,8 +1,8 @@
 import React, { useCallback } from "react";
 import { Card, Heading, Box, Flex, Button } from "theme-ui";
 import { LP, GT } from "../../../../strings";
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 import { Icon } from "../../../Icon";
 import { LoadingOverlay } from "../../../LoadingOverlay";
 import { useMyTransactionState } from "../../../Transaction";
@@ -17,7 +17,7 @@ const selector = ({
   xbrlWethLiquidityMiningStake,
   xbrlWethLiquidityMiningSTBLReward,
   totalStakedXbrlWethUniTokens
-}: LiquityStoreState) => ({
+}: StabilioStoreState) => ({
   xbrlWethLiquidityMiningStake,
   xbrlWethLiquidityMiningSTBLReward,
   totalStakedXbrlWethUniTokens
@@ -30,7 +30,7 @@ export const Active: React.FC = () => {
     xbrlWethLiquidityMiningStake,
     xbrlWethLiquidityMiningSTBLReward,
     totalStakedXbrlWethUniTokens
-  } = useLiquitySelector(selector);
+  } = useStabilioSelector(selector);
 
   const handleAdjustPressed = useCallback(() => {
     dispatchEvent("ADJUST_PRESSED");

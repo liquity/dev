@@ -1,8 +1,8 @@
 import { Button } from "theme-ui";
 
-import { Decimal, STBLStakeChange } from "@liquity/lib-base";
+import { Decimal, STBLStakeChange } from "@stabilio/lib-base";
 
-import { useLiquity } from "../../hooks/LiquityContext";
+import { useStabilio } from "../../hooks/StabilioContext";
 import { useTransactionFunction } from "../Transaction";
 
 type StakingActionProps = {
@@ -10,13 +10,13 @@ type StakingActionProps = {
 };
 
 export const StakingManagerAction: React.FC<StakingActionProps> = ({ change, children }) => {
-  const { liquity } = useLiquity();
+  const { stabilio } = useStabilio();
 
   const [sendTransaction] = useTransactionFunction(
     "stake",
     change.stakeSTBL
-      ? liquity.send.stakeSTBL.bind(liquity.send, change.stakeSTBL)
-      : liquity.send.unstakeSTBL.bind(liquity.send, change.unstakeSTBL)
+      ? stabilio.send.stakeSTBL.bind(stabilio.send, change.stakeSTBL)
+      : stabilio.send.unstakeSTBL.bind(stabilio.send, change.unstakeSTBL)
   );
 
   return <Button onClick={sendTransaction}>{children}</Button>;

@@ -3,7 +3,7 @@ import { Box, Card, Container, Link, Paragraph } from "theme-ui";
 import { SystemStats } from "../components/SystemStats";
 import { Redemption } from "../components/Redemption/Redemption";
 import { InfoMessage } from "../components/InfoMessage";
-import { useLiquity } from "../hooks/LiquityContext";
+import { useStabilio } from "../hooks/StabilioContext";
 import { Icon } from "../components/Icon";
 
 const uniLink = (xbrlAddress: string) =>
@@ -11,10 +11,10 @@ const uniLink = (xbrlAddress: string) =>
 
 export const RedemptionPage: React.FC = () => {
   const {
-    liquity: {
+    stabilio: {
       connection: { addresses }
     }
-  } = useLiquity();
+  } = useStabilio();
 
   return (
     <Container variant="columns">

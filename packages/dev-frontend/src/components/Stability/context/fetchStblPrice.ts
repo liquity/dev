@@ -1,4 +1,4 @@
-import { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@stabilio/lib-base";
 
 type CoinGeckoSimplePriceResponse<T extends string, U extends string> = {
   [P in T]: {
@@ -67,9 +67,9 @@ export interface StblPriceResponse {
 }
 
 export const fetchStblPrice = async (): Promise<StblPriceResponse> => {
-  const response = await fetchCoinGeckoSimplePrice(["liquity"] as const, ["usd"] as const);
+  const response = await fetchCoinGeckoSimplePrice(["stabilio"] as const, ["usd"] as const);
 
   return {
-    stblPriceUSD: Decimal.from(response.liquity.usd)
+    stblPriceUSD: Decimal.from(response.stabilio.usd)
   };
 };

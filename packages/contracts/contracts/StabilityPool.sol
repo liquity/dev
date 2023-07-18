@@ -9,7 +9,7 @@ import './Interfaces/ITroveManager.sol';
 import './Interfaces/IXBRLToken.sol';
 import './Interfaces/ISortedTroves.sol';
 import "./Interfaces/ICommunityIssuance.sol";
-import "./Dependencies/LiquityBase.sol";
+import "./Dependencies/StabilioBase.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
@@ -43,7 +43,7 @@ import "./Dependencies/console.sol";
  * Stability Pool, they get a snapshot of the latest P and S: P_t and S_t, respectively.
  *
  * The formula for a depositor's accumulated ETH gain is derived here:
- * https://github.com/liquity/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf
+ * https://github.com/stabiliofi/dev/blob/main/packages/contracts/mathProofs/Scalable%20Compounding%20Stability%20Pool%20Deposits.pdf
  *
  * For a given deposit d_t, the ratio P/P_t tells us the factor by which a deposit has decreased since it joined the Stability Pool,
  * and the term d_t * (S - S_t)/P_t gives us the deposit's total accumulated ETH gain.
@@ -124,7 +124,7 @@ import "./Dependencies/console.sol";
  * --- UPDATING P WHEN A LIQUIDATION OCCURS ---
  *
  * Please see the implementation spec in the proof document, which closely follows on from the compounded deposit / ETH gain derivations:
- * https://github.com/liquity/liquity/blob/master/papers/Scalable_Reward_Distribution_with_Compounding_Stakes.pdf
+ * https://github.com/stabilio/stabilio/blob/master/papers/Scalable_Reward_Distribution_with_Compounding_Stakes.pdf
  *
  *
  * --- STBL ISSUANCE TO STABILITY POOL DEPOSITORS ---
@@ -137,13 +137,13 @@ import "./Dependencies/console.sol";
  * by a given deposit, is split between the depositor and the front end through which the deposit was made, based on the front end's kickbackRate.
  *
  * Please see the system Readme for an overview:
- * https://github.com/liquity/dev/blob/main/README.md#stbl-issuance-to-stability-providers
+ * https://github.com/stabiliofi/dev/blob/main/README.md#stbl-issuance-to-stability-providers
  *
  * We use the same mathematical product-sum approach to track STBL gains for depositors, where 'G' is the sum corresponding to STBL gains.
  * The product P (and snapshot P_t) is re-used, as the ratio P/P_t tracks a deposit's depletion due to liquidations.
  *
  */
-contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
+contract StabilityPool is StabilioBase, Ownable, CheckContract, IStabilityPool {
 
     string constant public NAME = "StabilityPool";
 
@@ -352,7 +352,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint256 depositorETHGain = getDepositorETHGain(msg.sender);
 
         uint256 compoundedXBRLDeposit = getCompoundedXBRLDeposit(msg.sender);
-        uint256 XBRLtoWithdraw = LiquityMath._min(_amount, compoundedXBRLDeposit);
+        uint256 XBRLtoWithdraw = StabilioMath._min(_amount, compoundedXBRLDeposit);
         uint256 XBRLLoss = initialDeposit - compoundedXBRLDeposit; // Needed only for event log
 
         // First pay out any STBL gains

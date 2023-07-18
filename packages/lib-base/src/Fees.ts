@@ -12,7 +12,7 @@ import {
  * Calculator for fees.
  *
  * @remarks
- * Returned by the {@link ReadableLiquity.getFees | getFees()} function.
+ * Returned by the {@link ReadableStabilio.getFees | getFees()} function.
  *
  * @public
  */
@@ -105,7 +105,7 @@ export class Fees {
    *
    * @example
    * ```typescript
-   * const fees = await liquity.getFees();
+   * const fees = await stabilio.getFees();
    *
    * const borrowedXBRLAmount = 100;
    * const borrowingRate = fees.borrowingRate();
@@ -138,8 +138,8 @@ export class Fees {
    *
    * @example
    * ```typescript
-   * const fees = await liquity.getFees();
-   * const total = await liquity.getTotal();
+   * const fees = await stabilio.getFees();
+   * const total = await stabilio.getTotal();
    *
    * const redeemedXBRLAmount = Decimal.from(100);
    * const redeemedFractionOfSupply = redeemedXBRLAmount.div(total.debt);

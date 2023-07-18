@@ -38,7 +38,7 @@ async function mainnetDeploy(configParams) {
   console.log(`deployer's ETH balance before deployments: ${deployerETHBalance}`)
 
   // Deploy core logic contracts
-  const liquityCore = await mdh.deployLiquityCoreMainnet(configParams.externalAddrs.TELLOR_MASTER, deploymentState)
+  const liquityCore = await mdh.deployStabilioCoreMainnet(configParams.externalAddrs.TELLOR_MASTER, deploymentState)
   await mdh.logContractObjects(liquityCore)
 
   // Check Uniswap Pair XBRL-ETH pair before pair creation

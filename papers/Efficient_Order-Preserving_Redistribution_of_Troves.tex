@@ -23,9 +23,9 @@
 
 \begin{document}
 \title{\textbf{Efficient Order-Preserving Redistribution of Troves}}
-\author{Richard Pardoe \thanks{rick@liquity.org}\\[1ex]
-  Robert Lauko \thanks{robert@liquity.org} \hspace{2cm}
-  Bingen Eguzkitza \thanks{bingen@liquity.org}
+\author{Richard Pardoe \thanks{rick@stabilio.org}\\[1ex]
+  Robert Lauko \thanks{robert@stabilio.org} \hspace{2cm}
+  Bingen Eguzkitza \thanks{bingen@stabilio.org}
 }
 \date{December 2020\\v1.0}
 \maketitle
@@ -35,17 +35,17 @@
 \section{Introduction}
 
 
-The Liquity protocol $\cite{Whitepaper}$ issues a USD-pegged stablecoin XBRL that is redeemable at face value against ETH: any owner of XBRL can exchange their stablecoins for equivalent value in the underlying collateral at any time. The ETH paid to the redeemer is taken from the borrowers' collateralized debt positions (“troves”) in ascending order of collateral ratio. In other words, the system uses the redeemed XBRL to repay the debt on the riskiest trove with the currently lowest individual collateral ratio (ICR), and transfers a corresponding amount of ETH from the trove to the redeemer. If the redeemed XBRL is larger than the debt on the riskiest trove, the system proceeds with the second riskiest trove, and so on. \\
+The Stabilio protocol $\cite{Whitepaper}$ issues a USD-pegged stablecoin XBRL that is redeemable at face value against ETH: any owner of XBRL can exchange their stablecoins for equivalent value in the underlying collateral at any time. The ETH paid to the redeemer is taken from the borrowers' collateralized debt positions (“troves”) in ascending order of collateral ratio. In other words, the system uses the redeemed XBRL to repay the debt on the riskiest trove with the currently lowest individual collateral ratio (ICR), and transfers a corresponding amount of ETH from the trove to the redeemer. If the redeemed XBRL is larger than the debt on the riskiest trove, the system proceeds with the second riskiest trove, and so on. \\
 
 To allow for efficient redemptions despite Ethereum's gas constraints, the system keeps troves ordered by ICR, so that it can iterate over the linked list starting from the bottom. It is not feasible to sort the list after every operation. \\
 
-Troves with an insufficient ICR are subject to liquidation. Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be ensured that redistributions do not break trove ordering. \\
+Troves with an insufficient ICR are subject to liquidation. Given that Stabilio's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be ensured that redistributions do not break trove ordering. \\
 
 Redistribution in proportion to the collateral size of active troves maintains ordering, as can be easily shown (see \ref{sec:appendix} Appendix). However, in practice, it is clear that redistributing in a “push” based manner - iterating over all troves and updating their collateral and debt - does not scale, and has computational complexity of $O(n)$, where $n$ is the number of troves. \\
 
 Previous work by Batog et al $\cite{Batog}$ derived a scalable $O(1)$ method to assign proportional rewards to a large number of recipients, as long as the basis for their rewards (“stakes”) do not change over time. The method is “pull” based: instead of adjusting all recipient positions upon every reward event, the update is deferred to the moment at which an owner changes their position. In the described approach rewards are stored separately from the initial stakes, and do not compound. That is to say, past accumulated rewards are not included in future reward calculations. \\
 
-It turns out that this approach thus cannot be applied to Liquity as is. As the system undergoes reward events, a given trove’s ratio of initial collateral to its total collateral shrinks. Rewards are based on a smaller and smaller share of the total collateral. This is fine, as long as all active troves have experienced all reward events - in this case, ordering is maintained since all troves are affected by the same change. \\
+It turns out that this approach thus cannot be applied to Stabilio as is. As the system undergoes reward events, a given trove’s ratio of initial collateral to its total collateral shrinks. Rewards are based on a smaller and smaller share of the total collateral. This is fine, as long as all active troves have experienced all reward events - in this case, ordering is maintained since all troves are affected by the same change. \\
 
 However, a problem arises when a new trove is created after active troves have received reward shares.  Such “fresh” troves (with no accumulated rewards) would thus gain an advantage in redistributions over older troves whose stakes may be smaller than their actual collateral due to the liquidations that have taken place in the meantime. In other words, a “fresh” trove that has experienced fewer rewards than the earlier troves would receive a disproportionate share of subsequent rewards relative to its collateral. Though, a trove's collateral ratio must always be based on its entire collateral, which does include accumulated rewards.  \\
 
@@ -133,7 +133,7 @@ To compute the total (accumulated) reward for participant $i$, we can then use f
 \bigskip
 
 \subsection{Corrected Stake Approach for Variable Stakes}
-In Liquity, collateral and debt shares from liquidations are proportional to the entire collateral of the recipient troves. The redistribution must cope with the fact that some fraction of a trove's entire collateral is the accumulated reward from prior liquidations, and this fraction varies across troves. \\
+In Stabilio, collateral and debt shares from liquidations are proportional to the entire collateral of the recipient troves. The redistribution must cope with the fact that some fraction of a trove's entire collateral is the accumulated reward from prior liquidations, and this fraction varies across troves. \\
 
 The “strawman” approach in \ref{sec:strawman}, with rewards proportional to the initial stake, neglects this: it over-rewards fresh troves, and under-rewards older troves. \\
 
@@ -171,7 +171,7 @@ The intuition behind the choice of corrected stake is that the corrected stake e
 
 As mentioned above, we aim to prove that the corrected stake approach leaves the ordering of the troves by collateral ratio unchanged throughout all liquidations, regardless of any borrowers that change their troves' collateral between liquidation events.
 
-Given that Liquity's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be  ensured that redistributions do not break trove ordering.
+Given that Stabilio's fallback liquidation mechanism $\cite{Whitepaper}$ redistributes the collateral and debt of a liquidated trove between all remaining active troves, it must be  ensured that redistributions do not break trove ordering.
 
 To break up the proof, we introduce the notion of \textit{system order}. 
 
@@ -866,7 +866,7 @@ We would like to thank Daniel Simon for the helpful discussion on trove ordering
 
 \bibitem{Whitepaper} 
 R. Lauko, R. Pardoe. 
-\textit{Liquity: Decentralized Borrowing Protocol (Whitepaper), 2020}. 
+\textit{Stabilio: Decentralized Borrowing Protocol (Whitepaper), 2020}. 
 https://docsend.com/view/bwiczmy
 
 \bibitem{Batog} 

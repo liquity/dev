@@ -1,19 +1,19 @@
 {
-  "name": "@liquity/lib-base",
+  "name": "@stabilio/lib-base",
   "version": "0.0.0-semantic-release",
-  "description": "Liquity SDK shared interfaces",
+  "description": "Stabilio SDK shared interfaces",
   "keywords": [
-    "Liquity",
+    "Stabilio",
     "protocol",
     "DeFi",
     "Ethereum"
   ],
-  "homepage": "https://github.com/liquity/liquity#readme",
+  "homepage": "https://github.com/stabilio/stabilio#readme",
   "license": "MIT",
-  "author": "Daniel Simon <dani@liquity.org>",
+  "author": "Daniel Simon <dani@stabilio.org>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "repository": "https://github.com/liquity/dev",
+  "repository": "https://github.com/stabiliofi/dev",
   "scripts": {
     "prepare": "run-s prepare:*",
     "prepare:eslint": "eslint src",

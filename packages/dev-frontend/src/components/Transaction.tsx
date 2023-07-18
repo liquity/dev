@@ -7,10 +7,10 @@ import { defaultAbiCoder } from "@ethersproject/abi";
 import { buildStyles, CircularProgressbarWithChildren } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-import { EthersTransactionOverrides, EthersTransactionCancelledError } from "@liquity/lib-ethers";
-import { SentLiquityTransaction, LiquityReceipt } from "@liquity/lib-base";
+import { EthersTransactionOverrides, EthersTransactionCancelledError } from "@stabilio/lib-ethers";
+import { SentStabilioTransaction, StabilioReceipt } from "@stabilio/lib-base";
 
-import { useLiquity } from "../hooks/LiquityContext";
+import { useStabilio } from "../hooks/StabilioContext";
 
 import { Icon } from "./Icon";
 import { Tooltip, TooltipProps, Hoverable } from "./Tooltip";
@@ -126,9 +126,9 @@ type ButtonlikeProps = {
   onClick?: () => void;
 };
 
-type SentTransaction = SentLiquityTransaction<
+type SentTransaction = SentStabilioTransaction<
   TransactionResponse,
-  LiquityReceipt<TransactionReceipt>
+  StabilioReceipt<TransactionReceipt>
 >;
 
 export type TransactionFunction = (
@@ -286,7 +286,7 @@ const TransactionProgressDonut: React.FC<TransactionProgressDonutProps> = ({ sta
 };
 
 export const TransactionMonitor: React.FC = () => {
-  const { provider } = useLiquity();
+  const { provider } = useStabilio();
   const [transactionState, setTransactionState] = useTransactionState();
 
   const id = transactionState.type !== "idle" ? transactionState.id : undefined;

@@ -1,5 +1,5 @@
 {
-  "name": "@liquity/contracts",
+  "name": "@stabilio/contracts",
   "version": "1.0.0",
   "description": "",
   "main": "truffle-config.js",

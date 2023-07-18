@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import "colors";
 
-import { _LiquityDeploymentJSON } from "../src/contracts";
+import { _StabilioDeploymentJSON } from "../src/contracts";
 
 const compareDeployedVersionsTo = (version: string) => {
   let match = true;
@@ -23,7 +23,7 @@ const compareDeployedVersionsTo = (version: string) => {
   for (const deploymentJson of deployments) {
     const deployment = JSON.parse(
       fs.readFileSync(deploymentJson).toString()
-    ) as _LiquityDeploymentJSON;
+    ) as _StabilioDeploymentJSON;
 
     if (deployment.version !== version) {
       console.error(`${deploymentJson} has version ${deployment.version}`.red);

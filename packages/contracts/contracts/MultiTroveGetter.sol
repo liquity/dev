@@ -6,7 +6,7 @@ pragma experimental ABIEncoderV2;
 import "./TroveManager.sol";
 import "./SortedTroves.sol";
 
-/*  Helper contract for grabbing Trove data for the front end. Not part of the core Liquity system. */
+/*  Helper contract for grabbing Trove data for the front end. Not part of the core Stabilio system. */
 contract MultiTroveGetter {
     struct CombinedTroveData {
         address owner;

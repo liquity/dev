@@ -1,6 +1,6 @@
 ## Math proofs and derivations
 
-The Liquity implementation relies on some important system properties and mathematical derivations, available here as PDFs.
+The Stabilio implementation relies on some important system properties and mathematical derivations, available here as PDFs.
 
 In particular, we have:
 

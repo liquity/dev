@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.17;
 
-import "./ILiquityBase.sol";
+import "./IStabilioBase.sol";
 import "./IStabilityPool.sol";
 import "./IXBRLToken.sol";
 import "./ISTBLToken.sol";
@@ -10,7 +10,7 @@ import "./ISTBLStaking.sol";
 
 
 // Common interface for the Trove Manager.
-interface ITroveManager is ILiquityBase {
+interface ITroveManager is IStabilioBase {
     
     // --- Events ---
 

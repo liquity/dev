@@ -11,9 +11,9 @@ import "usingtellor/contracts/interface/ITellor.sol";
 * this function will revert, and PriceFeed will catch the failure and handle it accordingly.
 *
 * The function comes from Tellor's own wrapper contract, 'UsingTellor.sol' and 
-* an example of how to integrate the Tellor oracle into a Liquity-like system `TellorCaller.col`:
+* an example of how to integrate the Tellor oracle into a Stabilio-like system `TellorCaller.col`:
 * https://github.com/tellor-io/usingtellor/blob/master/contracts/UsingTellor.sol
-* https://github.com/tellor-io/tellor-caller-liquity/blob/main/contracts/TellorCaller.sol
+* https://github.com/tellor-io/tellor-caller-stabilio/blob/main/contracts/TellorCaller.sol
 *
 */
 contract TellorCaller is ITellorCaller {

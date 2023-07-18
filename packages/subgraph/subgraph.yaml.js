@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 const network = process.argv[2] || "mainnet";
-const { addresses, startBlock } = require(`@liquity/lib-ethers/deployments/${network}.json`);
+const { addresses, startBlock } = require(`@stabilio/lib-ethers/deployments/${network}.json`);
 
 console.log(`Preparing subgraph manifest for network "${network}"`);
 
@@ -13,8 +13,8 @@ const yaml = (strings, ...keys) =>
 
 const manifest = yaml`
 specVersion: 0.0.2
-description: Liquity is a decentralized borrowing protocol offering interest-free liquidity against collateral in Ether.
-repository: https://github.com/liquity/dev/tree/main/packages/subgraph
+description: Stabilio is a decentralized borrowing protocol offering interest-free liquidity against collateral in Ether.
+repository: https://github.com/stabiliofi/dev/tree/main/packages/subgraph
 schema:
   file: ./schema.graphql
 dataSources:

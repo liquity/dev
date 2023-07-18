@@ -8,7 +8,7 @@ import "./Dependencies/AggregatorV3Interface.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/BaseMath.sol";
-import "./Dependencies/LiquityMath.sol";
+import "./Dependencies/StabilioMath.sol";
 import "./Dependencies/console.sol";
 
 /*
@@ -44,7 +44,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     */
     uint256 constant public MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
 
-    // The last good price seen from an oracle by Liquity
+    // The last good price seen from an oracle by Stabilio
     uint256 public lastGoodPrice;
 
     struct ChainlinkResponse {
@@ -130,14 +130,14 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
     /*
     * fetchPrice():
-    * Returns the latest price obtained from the Oracle. Called by Liquity functions that require a current price.
+    * Returns the latest price obtained from the Oracle. Called by Stabilio functions that require a current price.
     *
     * Also callable by anyone externally.
     *
-    * Non-view function - it stores the last good price seen by Liquity.
+    * Non-view function - it stores the last good price seen by Stabilio.
     *
     * Uses a main oracle (Chainlink) and a fallback oracle (Tellor) in case Chainlink fails. If both fail, 
-    * it uses the last good price seen by Liquity.
+    * it uses the last good price seen by Stabilio.
     *
     */
     function fetchPrice() external override returns (uint) {
@@ -386,10 +386,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         uint256 currentScaledBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_currentResponse.brlUsdAnswer), _currentResponse.brlUsdDecimals);
         uint256 prevScaledBrlUsdPrice = _scaleChainlinkPriceByDigits(uint256(_prevResponse.brlUsdAnswer), _prevResponse.brlUsdDecimals);
 
-        uint256 minEthUsdPrice = LiquityMath._min(currentScaledEthUsdPrice, prevScaledEthUsdPrice);
-        uint256 maxEthUsdPrice = LiquityMath._max(currentScaledEthUsdPrice, prevScaledEthUsdPrice);
-        uint256 minBrlUsdPrice = LiquityMath._min(currentScaledBrlUsdPrice, prevScaledBrlUsdPrice);
-        uint256 maxBrlUsdPrice = LiquityMath._max(currentScaledBrlUsdPrice, prevScaledBrlUsdPrice);
+        uint256 minEthUsdPrice = StabilioMath._min(currentScaledEthUsdPrice, prevScaledEthUsdPrice);
+        uint256 maxEthUsdPrice = StabilioMath._max(currentScaledEthUsdPrice, prevScaledEthUsdPrice);
+        uint256 minBrlUsdPrice = StabilioMath._min(currentScaledBrlUsdPrice, prevScaledBrlUsdPrice);
+        uint256 maxBrlUsdPrice = StabilioMath._max(currentScaledBrlUsdPrice, prevScaledBrlUsdPrice);
 
         /*
         * Use the larger price as the denominator:
@@ -452,10 +452,10 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
         uint256 scaledTellorBrlUsdPrice = _scaleTellorPriceByDigits(_tellorResponse.brlUsdValue);
 
         // Get the relative price difference between the oracles. Use the lower price as the denominator, i.e. the reference for the calculation.
-        uint256 minEthUsdPrice = LiquityMath._min(scaledTellorEthUsdPrice, scaledChainlinkEthUsdPrice);
-        uint256 maxEthUsdPrice = LiquityMath._max(scaledTellorEthUsdPrice, scaledChainlinkEthUsdPrice);
-        uint256 minBrlUsdPrice = LiquityMath._min(scaledTellorBrlUsdPrice, scaledChainlinkBrlUsdPrice);
-        uint256 maxBrlUsdPrice = LiquityMath._max(scaledTellorBrlUsdPrice, scaledChainlinkBrlUsdPrice);
+        uint256 minEthUsdPrice = StabilioMath._min(scaledTellorEthUsdPrice, scaledChainlinkEthUsdPrice);
+        uint256 maxEthUsdPrice = StabilioMath._max(scaledTellorEthUsdPrice, scaledChainlinkEthUsdPrice);
+        uint256 minBrlUsdPrice = StabilioMath._min(scaledTellorBrlUsdPrice, scaledChainlinkBrlUsdPrice);
+        uint256 maxBrlUsdPrice = StabilioMath._max(scaledTellorBrlUsdPrice, scaledChainlinkBrlUsdPrice);
         uint256 percentEthUsdPriceDifference = (maxEthUsdPrice - minEthUsdPrice) * DECIMAL_PRECISION / minEthUsdPrice;
         uint256 percentBrlUsdPriceDifference = (maxBrlUsdPrice - minBrlUsdPrice) * DECIMAL_PRECISION / minBrlUsdPrice;
 
@@ -468,18 +468,18 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
 
     function _scaleChainlinkPriceByDigits(uint256 _price, uint256 _answerDigits) internal pure returns (uint) {
         /*
-        * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Liquity.
-        * At date of Liquity launch, Chainlink uses an 8-digit price, but we also handle the possibility of
+        * Convert the price returned by the Chainlink oracle to an 18-digit decimal for use by Stabilio.
+        * At date of Stabilio launch, Chainlink uses an 8-digit price, but we also handle the possibility of
         * future changes.
         *
         */
         uint256 price;
         if (_answerDigits >= TARGET_DIGITS) {
-            // Scale the returned price value down to Liquity's target precision
+            // Scale the returned price value down to Stabilio's target precision
             price = _price / (10 ** (_answerDigits - TARGET_DIGITS));
         }
         else if (_answerDigits < TARGET_DIGITS) {
-            // Scale the returned price value up to Liquity's target precision
+            // Scale the returned price value up to Stabilio's target precision
             price = _price * (10 ** (TARGET_DIGITS - _answerDigits));
         }
         return price;

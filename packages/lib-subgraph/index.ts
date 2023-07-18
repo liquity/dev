@@ -1,1 +1,1 @@
-export * from "./src/SubgraphLiquity";
+export * from "./src/SubgraphStabilio";

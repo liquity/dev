@@ -1,24 +1,24 @@
 import React from "react";
 import { Text, Flex, Box, Heading } from "theme-ui";
 
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { COIN, GT } from "../strings";
-import { useLiquity } from "../hooks/LiquityContext";
+import { useStabilio } from "../hooks/StabilioContext";
 import { shortenAddress } from "../utils/shortenAddress";
 
 import { Icon } from "./Icon";
 
-const select = ({ accountBalance, xbrlBalance, stblBalance }: LiquityStoreState) => ({
+const select = ({ accountBalance, xbrlBalance, stblBalance }: StabilioStoreState) => ({
   accountBalance,
   xbrlBalance,
   stblBalance
 });
 
 export const UserAccount: React.FC = () => {
-  const { account } = useLiquity();
-  const { accountBalance, xbrlBalance, stblBalance } = useLiquitySelector(select);
+  const { account } = useStabilio();
+  const { accountBalance, xbrlBalance, stblBalance } = useStabilioSelector(select);
 
   return (
     <Box sx={{ display: ["none", "flex"] }}>

@@ -8,10 +8,10 @@ import {
   Percent,
   MINIMUM_COLLATERAL_RATIO,
   CRITICAL_COLLATERAL_RATIO,
-  LiquityStoreState,
+  StabilioStoreState,
   TroveClosureParams,
   TroveCreationParams
-} from "@liquity/lib-base";
+} from "@stabilio/lib-base";
 
 import { COIN } from "../../../strings";
 
@@ -89,7 +89,7 @@ export const selectForTroveChangeValidation = ({
   accountBalance,
   xbrlBalance,
   numberOfTroves
-}: LiquityStoreState) => ({ price, total, accountBalance, xbrlBalance, numberOfTroves });
+}: StabilioStoreState) => ({ price, total, accountBalance, xbrlBalance, numberOfTroves });
 
 type TroveChangeValidationSelectedState = ReturnType<typeof selectForTroveChangeValidation>;
 

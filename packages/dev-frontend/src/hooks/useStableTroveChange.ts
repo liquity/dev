@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Decimal, TroveChange } from "@liquity/lib-base";
+import { Decimal, TroveChange } from "@stabilio/lib-base";
 
 type ValidTroveChange = Exclude<TroveChange<Decimal>, { type: "invalidCreation" }>;
 

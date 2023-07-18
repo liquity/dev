@@ -72,7 +72,7 @@ contract('HintHelpers', async accounts => {
   }
 
   before(async () => {
-    contracts = await deploymentHelper.deployLiquityCore()
+    contracts = await deploymentHelper.deployStabilioCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts.xbrlToken = await XBRLToken.new(
       contracts.troveManager.address,

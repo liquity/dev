@@ -146,7 +146,7 @@ contract EchidnaTester {
         uint256 price = priceFeedTestnet.getPrice();
         uint256 XBRLAmount = _XBRLAmount;
         uint256 compositeDebt = XBRLAmount + XBRL_GAS_COMPENSATION;
-        uint256 ICR = LiquityMath._computeCR(ETH, compositeDebt, price);
+        uint256 ICR = StabilioMath._computeCR(ETH, compositeDebt, price);
         if (ICR < ratio) {
             compositeDebt = ETH * price / ratio;
             XBRLAmount = compositeDebt - XBRL_GAS_COMPENSATION;

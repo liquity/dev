@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Flex, Button, Box, Card, Heading, Spinner } from "theme-ui";
 import {
-  LiquityStoreState,
+  StabilioStoreState,
   Decimal,
   Trove,
   XBRL_LIQUIDATION_RESERVE,
   XBRL_MINIMUM_NET_DEBT,
   Percent
-} from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+} from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { useStableTroveChange } from "../../hooks/useStableTroveChange";
 import { ActionDescription } from "../ActionDescription";
@@ -27,7 +27,7 @@ import {
   validateTroveChange
 } from "./validation/validateTroveChange";
 
-const selector = (state: LiquityStoreState) => {
+const selector = (state: StabilioStoreState) => {
   const { fees, price, accountBalance } = state;
   return {
     fees,
@@ -43,7 +43,7 @@ const GAS_ROOM_ETH = Decimal.from(0.1);
 
 export const Opening: React.FC = () => {
   const { dispatchEvent } = useTroveView();
-  const { fees, price, accountBalance, validationContext } = useLiquitySelector(selector);
+  const { fees, price, accountBalance, validationContext } = useStabilioSelector(selector);
   const borrowingRate = fees.borrowingRate();
   const editingState = useState<string>();
 

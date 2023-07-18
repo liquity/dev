@@ -115,7 +115,7 @@ def get_new_token_supply(trove_issuance, redeemed):
     else: 
         return new_supply
 
-# Given Liquity's hard price ceiling of 1.10, 
+# Given Stabilio's hard price ceiling of 1.10, 
 # compute the excess trove issuance needed to maintain the price at 1.1, according to QTM.
 def get_excess_issuance(token_price, token_supply):
     if token_price > 1.1:

@@ -10,11 +10,11 @@ const toBN = th.toBN
 const assertRevert = th.assertRevert
 
 /* The majority of access control tests are contained in this file. However, tests for restrictions 
-on the Liquity admin address's capabilities during the first year are found in:
+on the Stabilio admin address's capabilities during the first year are found in:
 
 test/launchSequenceTest/DuringLockupPeriodTest.js */
 
-contract('Access Control: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
+contract('Access Control: Stabilio functions with the caller restricted to Stabilio contract(s)', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
   const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
@@ -38,7 +38,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
   let lockupContractFactory
 
   before(async () => {
-    coreContracts = await deploymentHelper.deployLiquityCore()
+    coreContracts = await deploymentHelper.deployStabilioCore()
     coreContracts.troveManager = await TroveManagerTester.new()
     coreContracts = await deploymentHelper.deployXBRLTokenTester(coreContracts)
     const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)

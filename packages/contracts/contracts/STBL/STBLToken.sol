@@ -17,11 +17,11 @@ import "../Dependencies/console.sol";
 *
 *  --- Functionality added specific to the STBLToken ---
 * 
-* 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Liquity contracts) in external 
-* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending STBL directly to a Liquity
+* 1) Transfer protection: blacklist of addresses that are invalid recipients (i.e. core Stabilio contracts) in external 
+* transfer() and transferFrom() calls. The purpose is to protect users from losing tokens by mistakenly sending STBL directly to a Stabilio
 * core contract, when they should rather call the right function.
 *
-* 2) sendToSTBLStaking(): callable only by Liquity core contracts, which move STBL tokens from user -> STBLStaking contract.
+* 2) sendToSTBLStaking(): callable only by Stabilio core contracts, which move STBL tokens from user -> STBLStaking contract.
 *
 * 3) Supply hard-capped at 100 million
 *
@@ -35,10 +35,10 @@ import "../Dependencies/console.sol";
 *
 * 8) The STBL:WETH LP rewards allocation of 1 million tokens is minted at deployent to a Staking contract
 *
-* 9) (64 + 2/3) million tokens are minted at deployment to the Liquity multisig
+* 9) (64 + 2/3) million tokens are minted at deployment to the Stabilio multisig
 *
 * 10) Until one year from deployment:
-* -Liquity multisig may only transfer() tokens to LockupContracts that have been deployed via & registered in the 
+* -Stabilio multisig may only transfer() tokens to LockupContracts that have been deployed via & registered in the 
 *  LockupContractFactory 
 * -approve(), increaseAllowance(), decreaseAllowance() revert when called by the multisig
 * -transferFrom() reverts when the multisig is the sender

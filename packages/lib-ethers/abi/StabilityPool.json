@@ -258,57 +258,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_depositor",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_STBL",
-        "type": "uint256"
-      }
-    ],
-    "name": "STBLPaidToDepositor",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_frontEnd",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_STBL",
-        "type": "uint256"
-      }
-    ],
-    "name": "STBLPaidToFrontEnd",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_newXBRLTokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "XBRLTokenAddressChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "previousOwner",
         "type": "address"
       },
@@ -346,6 +295,44 @@
       }
     ],
     "name": "PriceFeedAddressChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_depositor",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_STBL",
+        "type": "uint256"
+      }
+    ],
+    "name": "STBLPaidToDepositor",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "_frontEnd",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_STBL",
+        "type": "uint256"
+      }
+    ],
+    "name": "STBLPaidToFrontEnd",
     "type": "event"
   },
   {
@@ -458,6 +445,19 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_newXBRLTokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "XBRLTokenAddressChanged",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "BORROWING_FEE_FLOOR",
     "outputs": [
@@ -486,19 +486,6 @@
   {
     "inputs": [],
     "name": "DECIMAL_PRECISION",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "XBRL_GAS_COMPENSATION",
     "outputs": [
       {
         "internalType": "uint256",
@@ -577,6 +564,19 @@
   {
     "inputs": [],
     "name": "SCALE_FACTOR",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "XBRL_GAS_COMPENSATION",
     "outputs": [
       {
         "internalType": "uint256",
@@ -1071,19 +1071,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "xbrlToken",
-    "outputs": [
-      {
-        "internalType": "contract IXBRLToken",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -1256,6 +1243,19 @@
     "name": "withdrawFromSP",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "xbrlToken",
+    "outputs": [
+      {
+        "internalType": "contract IXBRLToken",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

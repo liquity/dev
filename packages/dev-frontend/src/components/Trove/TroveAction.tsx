@@ -1,8 +1,8 @@
 import { Button } from "theme-ui";
 
-import { Decimal, TroveChange } from "@liquity/lib-base";
+import { Decimal, TroveChange } from "@stabilio/lib-base";
 
-import { useLiquity } from "../../hooks/LiquityContext";
+import { useStabilio } from "../../hooks/StabilioContext";
 import { useTransactionFunction } from "../Transaction";
 
 type TroveActionProps = {
@@ -19,18 +19,18 @@ export const TroveAction: React.FC<TroveActionProps> = ({
   maxBorrowingRate,
   borrowingFeeDecayToleranceMinutes
 }) => {
-  const { liquity } = useLiquity();
+  const { stabilio } = useStabilio();
 
   const [sendTransaction] = useTransactionFunction(
     transactionId,
     change.type === "creation"
-      ? liquity.send.openTrove.bind(liquity.send, change.params, {
+      ? stabilio.send.openTrove.bind(stabilio.send, change.params, {
           maxBorrowingRate,
           borrowingFeeDecayToleranceMinutes
         })
       : change.type === "closure"
-      ? liquity.send.closeTrove.bind(liquity.send)
-      : liquity.send.adjustTrove.bind(liquity.send, change.params, {
+      ? stabilio.send.closeTrove.bind(stabilio.send)
+      : stabilio.send.adjustTrove.bind(stabilio.send, change.params, {
           maxBorrowingRate,
           borrowingFeeDecayToleranceMinutes
         })

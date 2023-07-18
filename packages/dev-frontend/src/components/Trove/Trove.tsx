@@ -7,13 +7,13 @@ import { Adjusting } from "./Adjusting";
 import { RedeemedTrove } from "./RedeemedTrove";
 import { useTroveView } from "./context/TroveViewContext";
 import { LiquidatedTrove } from "./LiquidatedTrove";
-import { Decimal } from "@liquity/lib-base";
+import { Decimal } from "@stabilio/lib-base";
 
 export const Trove: React.FC = props => {
   const { view } = useTroveView();
 
   switch (view) {
-    // loading state not needed, as main app has a loading spinner that blocks render until the liquity backend data is available
+    // loading state not needed, as main app has a loading spinner that blocks render until the stabilio backend data is available
     case "ACTIVE": {
       return <ReadOnlyTrove {...props} />;
     }

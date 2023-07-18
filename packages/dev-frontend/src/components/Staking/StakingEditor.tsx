@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Heading, Box, Card, Button } from "theme-ui";
 
-import { Decimal, Decimalish, Difference, LiquityStoreState, STBLStake } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, Decimalish, Difference, StabilioStoreState, STBLStake } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { COIN, GT } from "../../strings";
 
@@ -12,7 +12,7 @@ import { LoadingOverlay } from "../LoadingOverlay";
 
 import { useStakingView } from "./context/StakingViewContext";
 
-const select = ({ stblBalance, totalStakedSTBL }: LiquityStoreState) => ({
+const select = ({ stblBalance, totalStakedSTBL }: StabilioStoreState) => ({
   stblBalance,
   totalStakedSTBL
 });
@@ -31,7 +31,7 @@ export const StakingEditor: React.FC<StakingEditorProps> = ({
   editedSTBL,
   dispatch
 }) => {
-  const { stblBalance, totalStakedSTBL } = useLiquitySelector(select);
+  const { stblBalance, totalStakedSTBL } = useStabilioSelector(select);
   const { changePending } = useStakingView();
   const editingState = useState<string>();
 

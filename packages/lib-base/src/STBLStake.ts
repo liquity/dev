@@ -13,7 +13,7 @@ export type STBLStakeChange<T> =
  * Represents a user's STBL stake and accrued gains.
  * 
  * @remarks
- * Returned by the {@link ReadableLiquity.getSTBLStake | getSTBLStake()} function.
+ * Returned by the {@link ReadableStabilio.getSTBLStake | getSTBLStake()} function.
 
  * @public
  */

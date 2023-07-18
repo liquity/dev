@@ -8,7 +8,7 @@ import "../Dependencies/CheckContract.sol";
 import "../Dependencies/console.sol";
 import "../Interfaces/ISTBLToken.sol";
 import "../Interfaces/ISTBLStaking.sol";
-import "../Dependencies/LiquityMath.sol";
+import "../Dependencies/StabilioMath.sol";
 import "../Interfaces/IXBRLToken.sol";
 
 contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
@@ -121,7 +121,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
         _updateUserSnapshots(msg.sender);
 
         if (_STBLamount > 0) {
-            uint256 STBLToWithdraw = LiquityMath._min(_STBLamount, currentStake);
+            uint256 STBLToWithdraw = StabilioMath._min(_STBLamount, currentStake);
 
             uint256 newStake = currentStake - STBLToWithdraw;
 
@@ -143,7 +143,7 @@ contract STBLStaking is ISTBLStaking, Ownable, CheckContract, BaseMath {
         _sendETHGainToUser(ETHGain);
     }
 
-    // --- Reward-per-unit-staked increase functions. Called by Liquity core contracts ---
+    // --- Reward-per-unit-staked increase functions. Called by Stabilio core contracts ---
 
     function increaseF_ETH(uint256 _ETHFee) external override {
         _requireCallerIsTroveManager();

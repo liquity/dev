@@ -27,7 +27,7 @@ export type Decimalish = Decimal | number | string;
  * Fixed-point decimal bignumber with 18 digits of precision.
  *
  * @remarks
- * Used by Liquity libraries to precisely represent native currency (e.g. Ether), XBRL and STBL
+ * Used by Stabilio libraries to precisely represent native currency (e.g. Ether), XBRL and STBL
  * amounts, as well as derived metrics like collateral ratios.
  *
  * @public

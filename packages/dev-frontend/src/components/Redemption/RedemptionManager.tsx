@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Button, Box, Flex, Card, Heading } from "theme-ui";
 
-import { Decimal, Percent, LiquityStoreState, MINIMUM_COLLATERAL_RATIO } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, Percent, StabilioStoreState, MINIMUM_COLLATERAL_RATIO } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 import { COIN } from "../../strings";
 
@@ -18,7 +18,7 @@ import { InfoIcon } from "../InfoIcon";
 
 const mcrPercent = new Percent(MINIMUM_COLLATERAL_RATIO).toString(0);
 
-const select = ({ price, fees, total, xbrlBalance }: LiquityStoreState) => ({
+const select = ({ price, fees, total, xbrlBalance }: StabilioStoreState) => ({
   price,
   fees,
   total,
@@ -28,7 +28,7 @@ const select = ({ price, fees, total, xbrlBalance }: LiquityStoreState) => ({
 const transactionId = "redemption";
 
 export const RedemptionManager: React.FC = () => {
-  const { price, fees, total, xbrlBalance } = useLiquitySelector(select);
+  const { price, fees, total, xbrlBalance } = useStabilioSelector(select);
   const [xbrlAmount, setXBRLAmount] = useState(Decimal.ZERO);
   const [changePending, setChangePending] = useState(false);
   const editingState = useState<string>();

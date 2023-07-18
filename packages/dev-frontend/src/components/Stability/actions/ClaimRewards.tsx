@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "theme-ui";
 
-import { useLiquity } from "../../../hooks/LiquityContext";
+import { useStabilio } from "../../../hooks/StabilioContext";
 import { useTransactionFunction } from "../../Transaction";
 
 type ClaimRewardsProps = {
@@ -9,11 +9,11 @@ type ClaimRewardsProps = {
 };
 
 export const ClaimRewards: React.FC<ClaimRewardsProps> = ({ disabled, children }) => {
-  const { liquity } = useLiquity();
+  const { stabilio } = useStabilio();
 
   const [sendTransaction] = useTransactionFunction(
     "stability-deposit",
-    liquity.send.withdrawGainsFromStabilityPool.bind(liquity.send)
+    stabilio.send.withdrawGainsFromStabilityPool.bind(stabilio.send)
   );
 
   return (

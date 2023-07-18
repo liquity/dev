@@ -1,21 +1,21 @@
 import React from "react";
 import { Card, Heading, Link, Box, Text } from "theme-ui";
 import { AddressZero } from "@ethersproject/constants";
-import { Decimal, Percent, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, Percent, StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
-import { useLiquity } from "../hooks/LiquityContext";
+import { useStabilio } from "../hooks/StabilioContext";
 import { COIN, GT } from "../strings";
 import { Statistic } from "./Statistic";
 
-const selectBalances = ({ accountBalance, xbrlBalance, stblBalance }: LiquityStoreState) => ({
+const selectBalances = ({ accountBalance, xbrlBalance, stblBalance }: StabilioStoreState) => ({
   accountBalance,
   xbrlBalance,
   stblBalance
 });
 
 const Balances: React.FC = () => {
-  const { accountBalance, xbrlBalance, stblBalance } = useLiquitySelector(selectBalances);
+  const { accountBalance, xbrlBalance, stblBalance } = useStabilioSelector(selectBalances);
 
   return (
     <Box sx={{ mb: 3 }}>
@@ -29,7 +29,7 @@ const Balances: React.FC = () => {
 
 const GitHubCommit: React.FC<{ children?: string }> = ({ children }) =>
   children?.match(/[0-9a-f]{40}/) ? (
-    <Link href={`https://github.com/liquity/dev/commit/${children}`}>{children.substr(0, 7)}</Link>
+    <Link href={`https://github.com/stabiliofi/dev/commit/${children}`}>{children.substr(0, 7)}</Link>
   ) : (
     <>unknown</>
   );
@@ -48,7 +48,7 @@ const select = ({
   redemptionRate,
   totalStakedSTBL,
   frontend
-}: LiquityStoreState) => ({
+}: StabilioStoreState) => ({
   numberOfTroves,
   price,
   total,
@@ -61,10 +61,10 @@ const select = ({
 
 export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", showBalances }) => {
   const {
-    liquity: {
+    stabilio: {
       connection: { version: contractsVersion, deploymentDate, frontendTag }
     }
-  } = useLiquity();
+  } = useStabilio();
 
   const {
     numberOfTroves,
@@ -74,7 +74,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     borrowingRate,
     totalStakedSTBL,
     kickbackRate
-  } = useLiquitySelector(select);
+  } = useStabilioSelector(select);
 
   const xbrlInStabilityPoolPct =
     total.debt.nonZero && new Percent(xbrlInStabilityPool.div(total.debt));
@@ -86,7 +86,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
     <Card {...{ variant }}>
       {showBalances && <Balances />}
 
-      <Heading>Liquity statistics</Heading>
+      <Heading>Stabilio statistics</Heading>
 
       <Heading as="h2" sx={{ mt: 3, fontWeight: "body" }}>
         Protocol
@@ -111,7 +111,7 @@ export const SystemStats: React.FC<SystemStatsProps> = ({ variant = "info", show
       <Statistic name="Troves" tooltip="The total number of active Troves in the system.">
         {Decimal.from(numberOfTroves).prettify(0)}
       </Statistic>
-      <Statistic name="xBRL supply" tooltip="The total xBRL minted by the Liquity Protocol.">
+      <Statistic name="xBRL supply" tooltip="The total xBRL minted by the Stabilio Protocol.">
         {total.debt.shorten()}
       </Statistic>
       {xbrlInStabilityPoolPct && (

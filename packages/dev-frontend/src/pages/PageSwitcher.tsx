@@ -1,25 +1,25 @@
 import { useEffect, useState } from "react";
 import { AddressZero } from "@ethersproject/constants";
 
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
-import { useLiquity } from "../hooks/LiquityContext";
+import { useStabilio } from "../hooks/StabilioContext";
 
 import { Dashboard } from "./Dashboard";
 import { UnregisteredFrontend } from "./UnregisteredFrontend";
 import { FrontendRegistration } from "./FrontendRegistration";
 import { FrontendRegistrationSuccess } from "./FrontendRegistrationSuccess";
 
-const selectFrontend = ({ frontend }: LiquityStoreState) => frontend;
+const selectFrontend = ({ frontend }: StabilioStoreState) => frontend;
 
 export const PageSwitcher: React.FC = () => {
   const {
     account,
     config: { frontendTag }
-  } = useLiquity();
+  } = useStabilio();
 
-  const frontend = useLiquitySelector(selectFrontend);
+  const frontend = useStabilioSelector(selectFrontend);
   const unregistered = frontendTag !== AddressZero && frontend.status === "unregistered";
 
   const [registering, setRegistering] = useState(false);

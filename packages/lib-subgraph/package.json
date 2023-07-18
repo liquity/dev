@@ -1,5 +1,5 @@
 {
-  "name": "@liquity/lib-subgraph",
+  "name": "@stabilio/lib-subgraph",
   "version": "0.0.1",
   "private": true,
   "main": "dist/index.js",
@@ -12,7 +12,7 @@
     "prepare": "tsc --project tsconfig.dist.json"
   },
   "peerDependencies": {
-    "@liquity/lib-base": "^3.0.0"
+    "@stabilio/lib-base": "^3.0.0"
   },
   "devDependencies": {
     "apollo": "^2.30.3",

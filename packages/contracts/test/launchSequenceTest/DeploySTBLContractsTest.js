@@ -153,12 +153,12 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       assert.isTrue(expectedCISupplyCap.eq(supplyCap))
     })
 
-    it("Liquity AG can set addresses if CI's STBL balance is equal or greater than 32 million", async () => {
+    it("Stabilio AG can set addresses if CI's STBL balance is equal or greater than 32 million", async () => {
       const STBLBalance = await stblToken.balanceOf(communityIssuance.address)
       assert.isTrue(STBLBalance.eq(expectedCISupplyCap))
 
       // Deploy core contracts, just to get the Stability Pool address
-      const coreContracts = await deploymentHelper.deployLiquityCore()
+      const coreContracts = await deploymentHelper.deployStabilioCore()
 
       const tx = await communityIssuance.setAddresses(
         stblToken.address,
@@ -168,14 +168,14 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       assert.isTrue(tx.receipt.status)
     })
 
-    it("Liquity AG can't set addresses if CI's STBL balance is < 32 million", async () => {
+    it("Stabilio AG can't set addresses if CI's STBL balance is < 32 million", async () => {
       const newCI = await CommunityIssuance.new()
 
       const STBLBalance = await stblToken.balanceOf(newCI.address)
       assert.equal(STBLBalance, '0')
 
       // Deploy core contracts, just to get the Stability Pool address
-      const coreContracts = await deploymentHelper.deployLiquityCore()
+      const coreContracts = await deploymentHelper.deployStabilioCore()
 
       await th.fastForwardTime(timeValues.SECONDS_IN_TWO_MONTHS, web3.currentProvider)
       await stblToken.transfer(newCI.address, '14999999999999999999999999', {from: momentZeroMultisig}) // 1e-18 less than CI expects (15 million)
@@ -193,14 +193,14 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       }
     })
 
-    it("Liquity AG can't set addresses if CI's STBL balance is < 32 million ", async () => {
+    it("Stabilio AG can't set addresses if CI's STBL balance is < 32 million ", async () => {
       const newCI = await CommunityIssuance.new()
 
       const STBLBalance = await stblToken.balanceOf(newCI.address)
       assert.equal(STBLBalance, '0')
 
       // Deploy core contracts, just to get the Stability Pool address
-      const coreContracts = await deploymentHelper.deployLiquityCore()
+      const coreContracts = await deploymentHelper.deployStabilioCore()
 
       await th.fastForwardTime(timeValues.SECONDS_IN_SIX_MONTHS, web3.currentProvider)
       await stblToken.transfer(newCI.address, '19999999999999999999999999', {from: sixMonthsMultisig}) // 1e-18 less than CI expects (20 million)
@@ -218,14 +218,14 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       }
     })
 
-    it("Liquity AG can't set addresses if CI's STBL balance is < 32 million ", async () => {
+    it("Stabilio AG can't set addresses if CI's STBL balance is < 32 million ", async () => {
       const newCI = await CommunityIssuance.new()
 
       const STBLBalance = await stblToken.balanceOf(newCI.address)
       assert.equal(STBLBalance, '0')
 
       // Deploy core contracts, just to get the Stability Pool address
-      const coreContracts = await deploymentHelper.deployLiquityCore()
+      const coreContracts = await deploymentHelper.deployStabilioCore()
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_YEAR, web3.currentProvider)
       await stblToken.transfer(newCI.address, '29666666666666666666666667', {from: oneYearMultisig}) // 1e-18 less than CI expects (29.67 million)
@@ -247,7 +247,7 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
   describe('Connecting STBLToken to LCF, CI and STBLStaking', async accounts => {
     it('sets the correct STBLToken address in STBLStaking', async () => {
       // Deploy core contracts and set the STBLToken address in the CI and STBLStaking
-      const coreContracts = await deploymentHelper.deployLiquityCore()
+      const coreContracts = await deploymentHelper.deployStabilioCore()
       await deploymentHelper.connectSTBLContractsToCore(STBLContracts, coreContracts)
 
       const stblTokenAddress = stblToken.address
@@ -265,7 +265,7 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
 
     it('sets the correct STBLToken address in CommunityIssuance', async () => {
       // Deploy core contracts and set the STBLToken address in the CI and STBLStaking
-      const coreContracts = await deploymentHelper.deployLiquityCore()
+      const coreContracts = await deploymentHelper.deployStabilioCore()
       await deploymentHelper.connectSTBLContractsToCore(STBLContracts, coreContracts)
 
       const stblTokenAddress = stblToken.address

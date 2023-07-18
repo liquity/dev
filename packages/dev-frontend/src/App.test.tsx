@@ -1,7 +1,7 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react";
 
-import { Decimal, XBRL_MINIMUM_NET_DEBT, Trove } from "@liquity/lib-base";
+import { Decimal, XBRL_MINIMUM_NET_DEBT, Trove } from "@stabilio/lib-base";
 
 import App from "./App";
 

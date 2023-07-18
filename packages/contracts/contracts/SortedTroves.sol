@@ -33,7 +33,7 @@ import "./Dependencies/console.sol";
 * https://github.com/livepeer/protocol/blob/master/contracts/libraries/SortedDoublyLL.sol
 *
 *
-* Changes made in the Liquity implementation:
+* Changes made in the Stabilio implementation:
 *
 * - Keys have been removed from nodes
 *

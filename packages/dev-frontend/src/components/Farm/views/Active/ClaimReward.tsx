@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Button } from "theme-ui";
-import { useLiquity } from "../../../../hooks/LiquityContext";
+import { useStabilio } from "../../../../hooks/StabilioContext";
 import { Transaction, useMyTransactionState } from "../../../Transaction";
 import { useFarmView } from "../../context/FarmViewContext";
 
@@ -10,8 +10,8 @@ export const ClaimReward: React.FC = () => {
   const { dispatchEvent } = useFarmView();
 
   const {
-    liquity: { send: liquity }
-  } = useLiquity();
+    stabilio: { send: stabilio }
+  } = useStabilio();
 
   const transactionState = useMyTransactionState(transactionId);
 
@@ -24,7 +24,7 @@ export const ClaimReward: React.FC = () => {
   return (
     <Transaction
       id={transactionId}
-      send={liquity.withdrawSTBLRewardFromXbrlWethLiquidityMining.bind(liquity)}
+      send={stabilio.withdrawSTBLRewardFromXbrlWethLiquidityMining.bind(stabilio)}
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >

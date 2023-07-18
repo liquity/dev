@@ -68,7 +68,7 @@ contract('BorrowerOperations', async accounts => {
 
   const testCorpus = ({ withProxy = false }) => {
     beforeEach(async () => {
-      contracts = await deploymentHelper.deployLiquityCore()
+      contracts = await deploymentHelper.deployStabilioCore()
       contracts.borrowerOperations = await BorrowerOperationsTester.new()
       contracts.troveManager = await TroveManagerTester.new()
       contracts = await deploymentHelper.deployXBRLTokenTester(contracts)
@@ -4027,7 +4027,7 @@ contract('BorrowerOperations', async accounts => {
 
       // 0, 0
       it("collChange = 0, debtChange = 0", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)
@@ -4057,7 +4057,7 @@ contract('BorrowerOperations', async accounts => {
 
       // 0, +ve
       it("collChange = 0, debtChange is positive", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)
@@ -4087,7 +4087,7 @@ contract('BorrowerOperations', async accounts => {
 
       // 0, -ve
       it("collChange = 0, debtChange is negative", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)
@@ -4116,7 +4116,7 @@ contract('BorrowerOperations', async accounts => {
 
       // +ve, 0
       it("collChange is positive, debtChange is 0", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)
@@ -4145,7 +4145,7 @@ contract('BorrowerOperations', async accounts => {
 
       // -ve, 0
       it("collChange is negative, debtChange is 0", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)
@@ -4175,7 +4175,7 @@ contract('BorrowerOperations', async accounts => {
 
       // -ve, -ve
       it("collChange is negative, debtChange is negative", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)
@@ -4205,7 +4205,7 @@ contract('BorrowerOperations', async accounts => {
 
       // +ve, +ve 
       it("collChange is positive, debtChange is positive", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)
@@ -4235,7 +4235,7 @@ contract('BorrowerOperations', async accounts => {
 
       // +ve, -ve
       it("collChange is positive, debtChange is negative", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)
@@ -4265,7 +4265,7 @@ contract('BorrowerOperations', async accounts => {
 
       // -ve, +ve
       it("collChange is negative, debtChange is positive", async () => {
-        // --- SETUP --- Create a Liquity instance with an Active Pool and pending rewards (Default Pool)
+        // --- SETUP --- Create a Stabilio instance with an Active Pool and pending rewards (Default Pool)
         const troveColl = toBN(dec(1000, 'ether'))
         const troveTotalDebt = toBN(dec(100000, 18))
         const troveXBRLAmount = await getOpenTroveXBRLAmount(troveTotalDebt)

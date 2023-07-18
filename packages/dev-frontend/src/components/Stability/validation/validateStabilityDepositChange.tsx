@@ -1,9 +1,9 @@
 import {
   Decimal,
-  LiquityStoreState,
+  StabilioStoreState,
   StabilityDeposit,
   StabilityDepositChange
-} from "@liquity/lib-base";
+} from "@stabilio/lib-base";
 
 import { COIN } from "../../../strings";
 import { Amount } from "../../ActionDescription";
@@ -15,7 +15,7 @@ export const selectForStabilityDepositChangeValidation = ({
   xbrlBalance,
   ownFrontend,
   haveUndercollateralizedTroves
-}: LiquityStoreState) => ({
+}: StabilioStoreState) => ({
   trove,
   xbrlBalance,
   haveOwnFrontend: ownFrontend.status === "registered",

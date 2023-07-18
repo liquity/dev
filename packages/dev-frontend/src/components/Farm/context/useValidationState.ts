@@ -1,11 +1,11 @@
-import { Decimal, LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { Decimal, StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 
 const selector = ({
   xbrlWethUniTokenBalance,
   xbrlWethUniTokenAllowance,
   xbrlWethLiquidityMiningStake
-}: LiquityStoreState) => ({
+}: StabilioStoreState) => ({
   xbrlWethUniTokenBalance,
   xbrlWethUniTokenAllowance,
   xbrlWethLiquidityMiningStake
@@ -22,7 +22,7 @@ type FarmStakeValidation = {
 };
 
 export const useValidationState = (amount: Decimal): FarmStakeValidation => {
-  const { xbrlWethUniTokenBalance, xbrlWethUniTokenAllowance, xbrlWethLiquidityMiningStake } = useLiquitySelector(selector);
+  const { xbrlWethUniTokenBalance, xbrlWethUniTokenAllowance, xbrlWethLiquidityMiningStake } = useStabilioSelector(selector);
   const isWithdrawing = xbrlWethLiquidityMiningStake.gt(amount);
   const amountChanged = isWithdrawing
     ? xbrlWethLiquidityMiningStake.sub(amount)

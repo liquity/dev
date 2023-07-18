@@ -17,7 +17,7 @@ cd output
 git filter-repo --paths-from-file ../2-excluded-paths --invert-paths
 
 # Set up origin and tracking information for pushing to the public repo
-git remote add origin git@github.com:liquity/liquity.git
+git remote add origin git@github.com:stabilio/stabilio.git
 git fetch
 git branch -u origin/master
 

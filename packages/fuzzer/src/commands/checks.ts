@@ -1,4 +1,4 @@
-import { EthersLiquity } from "@liquity/lib-ethers";
+import { EthersStabilio } from "@stabilio/lib-ethers";
 
 import { deployer, subgraph } from "../globals";
 
@@ -10,10 +10,10 @@ import {
 } from "../utils";
 
 export const checkSorting = async () => {
-  const deployerLiquity = await EthersLiquity.connect(deployer);
-  const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
-  const totalRedistributed = await deployerLiquity.getTotalRedistributed();
-  const price = await deployerLiquity.getPrice();
+  const deployerStabilio = await EthersStabilio.connect(deployer);
+  const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerStabilio);
+  const totalRedistributed = await deployerStabilio.getTotalRedistributed();
+  const price = await deployerStabilio.getPrice();
 
   checkTroveOrdering(listOfTroves, totalRedistributed, price);
 
@@ -21,18 +21,18 @@ export const checkSorting = async () => {
 };
 
 export const checkSubgraphCmd = async () => {
-  const deployerLiquity = await EthersLiquity.connect(deployer);
+  const deployerStabilio = await EthersStabilio.connect(deployer);
 
-  await checkSubgraph(subgraph, deployerLiquity);
+  await checkSubgraph(subgraph, deployerStabilio);
 
   console.log("Subgraph looks fine.");
 };
 
 export const dumpTrovesCmd = async () => {
-  const deployerLiquity = await EthersLiquity.connect(deployer);
-  const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerLiquity);
-  const totalRedistributed = await deployerLiquity.getTotalRedistributed();
-  const price = await deployerLiquity.getPrice();
+  const deployerStabilio = await EthersStabilio.connect(deployer);
+  const listOfTroves = await getListOfTrovesBeforeRedistribution(deployerStabilio);
+  const totalRedistributed = await deployerStabilio.getTotalRedistributed();
+  const price = await deployerStabilio.getPrice();
 
   dumpTroves(listOfTroves, totalRedistributed, price);
 };

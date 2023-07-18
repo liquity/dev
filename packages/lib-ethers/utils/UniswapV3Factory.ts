@@ -4,7 +4,7 @@ import { Log } from "@ethersproject/abstract-provider";
 import { Signer } from "@ethersproject/abstract-signer";
 import { Overrides } from "@ethersproject/contracts";
 
-import { _LiquityContract, _TypedLiquityContract, _TypedLogDescription } from "../src/contracts";
+import { _StabilioContract, _TypedStabilioContract, _TypedLogDescription } from "../src/contracts";
 import { log } from "./deploy";
 import { BigNumberish } from "ethers";
 
@@ -22,7 +22,7 @@ const factoryAddresses: Record<number, string> = {
 const hasFactory = (chainId: number) => factoryAddresses[chainId] != undefined;
 
 interface UniswapV3Factory
-  extends _TypedLiquityContract<
+  extends _TypedStabilioContract<
     unknown,
     { createPool(tokenA: string, tokenB: string, fee: number, _overrides?: Overrides): Promise<string> }
   > {
@@ -45,7 +45,7 @@ export const createUniswapV3Pool = async (
     throw new Error(`UniswapV3Factory is not deployed on this network (chainId = ${chainId})`);
   }
 
-  const factory = (new _LiquityContract(
+  const factory = (new _StabilioContract(
     factoryAddresses[chainId],
     factoryAbi,
     signer

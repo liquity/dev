@@ -987,7 +987,7 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
       const LC_B = await th.getLCFromDeploymentTx(deployedLCtx_B)
       const LC_C = await th.getLCFromDeploymentTx(deployedLCtx_C)
 
-      // LiquityAG transfers STBL to the LC
+      // StabilioAG transfers STBL to the LC
       await stblToken.transfer(LC_A.address, STBLEntitlement_A, { from: momentZeroMultisig })
       await stblToken.transfer(LC_B.address, STBLEntitlement_B, { from: sixMonthsMultisig })
       await stblToken.transfer(LC_C.address, STBLEntitlement_C, { from: oneYearMultisig })

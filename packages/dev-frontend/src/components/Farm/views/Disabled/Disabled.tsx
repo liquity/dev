@@ -1,20 +1,20 @@
 import React from "react";
 import { Card, Heading, Box, Flex } from "theme-ui";
-import { LiquityStoreState } from "@liquity/lib-base";
-import { useLiquitySelector } from "@liquity/lib-react";
+import { StabilioStoreState } from "@stabilio/lib-base";
+import { useStabilioSelector } from "@stabilio/lib-react";
 import { InfoMessage } from "../../../InfoMessage";
 import { UnstakeAndClaim } from "../UnstakeAndClaim";
 import { RemainingSTBL } from "../RemainingSTBL";
 import { StaticRow } from "../../../Trove/Editor";
 import { GT, LP } from "../../../../strings";
 
-const selector = ({ xbrlWethLiquidityMiningStake, xbrlWethLiquidityMiningSTBLReward }: LiquityStoreState) => ({
+const selector = ({ xbrlWethLiquidityMiningStake, xbrlWethLiquidityMiningSTBLReward }: StabilioStoreState) => ({
   xbrlWethLiquidityMiningStake,
   xbrlWethLiquidityMiningSTBLReward
 });
 
 export const Disabled: React.FC = () => {
-  const { xbrlWethLiquidityMiningStake, xbrlWethLiquidityMiningSTBLReward } = useLiquitySelector(selector);
+  const { xbrlWethLiquidityMiningStake, xbrlWethLiquidityMiningSTBLReward } = useStabilioSelector(selector);
   const hasStake = !xbrlWethLiquidityMiningStake.isZero;
 
   return (
