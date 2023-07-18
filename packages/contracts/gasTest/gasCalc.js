@@ -24,8 +24,9 @@ contract('Gas cost tests', async accounts => {
   const _100_Accounts = accounts.slice(0, 100)
 
   const whale = accounts[999]
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const bountyAddress = accounts[999]
+  const xbrlWethLpRewardsAddress = accounts[998]
+  const stblWethLpRewardsAddress = accounts[997]
 
   const address_0 = '0x0000000000000000000000000000000000000000'
 
@@ -47,7 +48,7 @@ contract('Gas cost tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployTesterContractsHardhat()
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
     xbrlToken = contracts.xbrlToken

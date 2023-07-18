@@ -11,7 +11,7 @@ const dec = th.dec
 
 contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', async accounts => {
   const [liquityAG, A, B] = accounts;
-  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   let STBLContracts
 
@@ -22,7 +22,7 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     await deploymentHelper.connectSTBLContracts(STBLContracts)
 
     stblStaking = STBLContracts.stblStaking
@@ -114,20 +114,28 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       assert.equal(communitySTBLEntitlement, _32Million)
     })
 
-    it("Mints the correct STBL amount to the bountyAddress EOA: 2 million", async () => {
+    it("Mints the correct STBL amount to the bountyAddress EOA: 1 million", async () => {
       const bountyAddressBal = await stblToken.balanceOf(bountyAddress)
       // 2 million as 18-digit decimal
-      const _2Million = dec(2, 24)
+      const _1Million = dec(1, 24)
 
-      assert.equal(bountyAddressBal, _2Million)
+      assert.equal(bountyAddressBal, _1Million)
     })
 
-    it("Mints the correct STBL amount to the lpRewardsAddress EOA: 1.33 million", async () => {
-      const lpRewardsAddressBal = await stblToken.balanceOf(lpRewardsAddress)
+    it("Mints the correct STBL amount to the XBRL : WETH lpRewardsAddress EOA: 1.33 million", async () => {
+      const lpRewardsAddressBal = await stblToken.balanceOf(xbrlWethLpRewardsAddress)
       // 1.3 million as 18-digit decimal
       const _1pt33Million = "1".concat("3".repeat(24))
 
       assert.equal(lpRewardsAddressBal, _1pt33Million)
+    })
+
+    it("Mints the correct STBL amount to the STBL : WETH lpRewardsAddress EOA: 1 million", async () => {
+      const lpRewardsAddressBal = await stblToken.balanceOf(stblWethLpRewardsAddress)
+      // 1.3 million as 18-digit decimal
+      const _1Million = dec(1, 24)
+
+      assert.equal(lpRewardsAddressBal, _1Million)
     })
   })
 

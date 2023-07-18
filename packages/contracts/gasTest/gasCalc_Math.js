@@ -11,8 +11,9 @@ const timeValues = testHelpers.TimeValues
 /* Script that logs gas costs for Liquity math functions. */
 contract('Gas costs for math functions', async accounts => {
   
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const bountyAddress = accounts[999]
+  const xbrlWethLpRewardsAddress = accounts[998]
+  const stblWethLpRewardsAddress = accounts[997]
 
   let contracts
   let troveManagerTester
@@ -28,7 +29,7 @@ contract('Gas costs for math functions', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress)
 
     priceFeed = contracts.priceFeedTestnet
     xbrlToken = contracts.xbrlToken

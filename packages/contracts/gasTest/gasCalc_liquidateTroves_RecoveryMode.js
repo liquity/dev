@@ -18,9 +18,12 @@ const ZERO_ADDRESS = th.ZERO_ADDRESS
 
 contract('Gas cost tests', async accounts => {
   const [owner] = accounts;
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
-  const multisig = accounts[1000]
+  const bountyAddress = accounts[999]
+  const xbrlWethLpRewardsAddress = accounts[998]
+  const stblWethLpRewardsAddress = accounts[997]
+  const momentZeroMultisig = accounts[996]
+  const sixMonthsMultisig = accounts[995]
+  const oneYearMultisig = accounts[994]
 
   let priceFeed
   let xbrlToken
@@ -37,7 +40,7 @@ contract('Gas cost tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployLiquityCore()
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     priceFeed = contracts.priceFeedTestnet
     xbrlToken = contracts.xbrlToken

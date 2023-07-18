@@ -8,7 +8,8 @@ const { assertRevert } = TestHelper;
 
 const Uni = artifacts.require('ERC20Mock');
 const Stbl = artifacts.require('STBLToken');
-const Unipool = artifacts.require('Unipool');
+const StblWethUnipool = artifacts.require('STBLWETHUnipool');
+const Unipool = artifacts.require('XBRLWETHUnipool');
 const NonPayable = artifacts.require('NonPayable');
 
 const _1e18 = new BN('10').pow(new BN('18'));
@@ -48,6 +49,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
 
   const deploy = async (that) => {
       that.uni = await Uni.new('Uniswap token', 'LPT', owner, 0);
+      that.stblPool = await StblWethUnipool.new();
       that.pool = await Unipool.new();
 
       const communityIssuance = await NonPayable.new();
@@ -59,11 +61,12 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
         lockupContractFactory.address,
         bountyAddress,
         that.pool.address,
+        that.stblPool.address,
         momentZeroMultisig,
         sixMonthsMultisig,
         oneYearMultisig
       );
-      that.lpRewardsEntitlement = await that.stbl.getLpRewardsEntitlement();
+      that.lpRewardsEntitlement = await that.stbl.getXbrlWethLpRewardsEntitlement();
       that.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
       that.rewardRate = that.lpRewardsEntitlement.div(that.DURATION);
 

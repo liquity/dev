@@ -19,8 +19,9 @@ const ZERO = toBN('0')
 contract("PoolManager - random liquidations/deposits, then check all depositors can withdraw", async accounts => {
 
   const whale = accounts[accounts.length - 1]
-  const bountyAddress = accounts[998]
-  const lpRewardsAddress = accounts[999]
+  const bountyAddress = accounts[999]
+  const xbrlWethLpRewardsAddress = accounts[998]
+  const stblWethLpRewardsAddress = accounts[997]
 
   let priceFeed
   let xbrlToken
@@ -215,7 +216,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployLiquityCore()
-      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress)
 
       stabilityPool = contracts.stabilityPool
       priceFeed = contracts.priceFeedTestnet

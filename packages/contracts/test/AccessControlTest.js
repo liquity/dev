@@ -17,7 +17,7 @@ test/launchSequenceTest/DuringLockupPeriodTest.js */
 contract('Access Control: Liquity functions with the caller restricted to Liquity contract(s)', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
-  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   let coreContracts
 
@@ -41,7 +41,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     coreContracts = await deploymentHelper.deployLiquityCore()
     coreContracts.troveManager = await TroveManagerTester.new()
     coreContracts = await deploymentHelper.deployXBRLTokenTester(coreContracts)
-    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     
     priceFeed = coreContracts.priceFeed
     xbrlToken = coreContracts.xbrlToken
@@ -356,7 +356,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
     it("mint(): reverts when called by an account that is not BorrowerOperations", async () => {
       // Attempt call from alice
       const txAlice = xbrlToken.mint(bob, 100, { from: alice })
-      await th.assertRevert(txAlice, "Caller is not BorrowerOperations")
+      await th.assertRevert(txAlice, "XBRLToken: Caller not allowed to mint")
     })
 
     // burn
@@ -379,7 +379,7 @@ contract('Access Control: Liquity functions with the caller restricted to Liquit
         
       } catch (err) {
         assert.include(err.message, "revert")
-        assert.include(err.message, "Caller is not the StabilityPool")
+        assert.include(err.message, "XBRLToken: Caller not allowed to burn")
       }
     })
 

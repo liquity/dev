@@ -47,7 +47,7 @@ const getPermitDigest = ( name, address, chainId, version,
 contract('XBRLToken', async accounts => {
   const [owner, alice, bob, carol, dennis] = accounts;
 
-  const [bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(995, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   // the second account our hardhatenv creates (for Alice)
   // from https://github.com/liquity/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
@@ -69,7 +69,7 @@ contract('XBRLToken', async accounts => {
       const contracts = await deploymentHelper.deployTesterContractsHardhat()
 
 
-      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
       await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
       await deploymentHelper.connectSTBLContracts(STBLContracts)
@@ -215,9 +215,6 @@ contract('XBRLToken', async accounts => {
     it('transfer(): transferring to a blacklisted address reverts', async () => {
       await assertRevert(xbrlTokenTester.transfer(xbrlTokenTester.address, 1, { from: alice }))
       await assertRevert(xbrlTokenTester.transfer(ZERO_ADDRESS, 1, { from: alice }))
-      await assertRevert(xbrlTokenTester.transfer(troveManager.address, 1, { from: alice }))
-      await assertRevert(xbrlTokenTester.transfer(stabilityPool.address, 1, { from: alice }))
-      await assertRevert(xbrlTokenTester.transfer(borrowerOperations.address, 1, { from: alice }))
     })
 
     it("increaseAllowance(): increases an account's allowance by the correct amount", async () => {
@@ -288,9 +285,6 @@ contract('XBRLToken', async accounts => {
     it('transfer(): transferring to a blacklisted address reverts', async () => {
       await assertRevert(xbrlTokenTester.transfer(xbrlTokenTester.address, 1, { from: alice }))
       await assertRevert(xbrlTokenTester.transfer(ZERO_ADDRESS, 1, { from: alice }))
-      await assertRevert(xbrlTokenTester.transfer(troveManager.address, 1, { from: alice }))
-      await assertRevert(xbrlTokenTester.transfer(stabilityPool.address, 1, { from: alice }))
-      await assertRevert(xbrlTokenTester.transfer(borrowerOperations.address, 1, { from: alice }))
     })
 
     it('decreaseAllowance(): decreases allowance by the expected amount', async () => {

@@ -12,7 +12,7 @@ const { dec, toBN, assertRevert } = th
 contract('Deploying and funding One Year Lockup Contracts', async accounts => {
   const [liquityAG, A, B, C, D, E, F, G, H, I, J, K, L, M, N, O] = accounts;
 
-  const [ bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig ] = accounts.slice(995, 1000)
+  const [ bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig ] = accounts.slice(994, 1000)
 
   const { SECONDS_IN_ONE_MONTH, SECONDS_IN_TWO_MONTHS, SECONDS_IN_SIX_MONTHS, SECONDS_IN_ONE_YEAR } = timeValues
 
@@ -50,7 +50,7 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, lpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     await deploymentHelper.connectSTBLContracts(STBLContracts)
 
     stblStaking = STBLContracts.stblStaking
@@ -62,7 +62,7 @@ contract('Deploying and funding One Year Lockup Contracts', async accounts => {
     sixMonthsFromSystemDeployment = await th.getTimeFromSystemDeployment(stblToken, web3, SECONDS_IN_SIX_MONTHS)
     oneYearFromSystemDeployment = await th.getTimeFromSystemDeployment(stblToken, web3, SECONDS_IN_ONE_YEAR)
   })
-''
+
   // --- LCs ---
 
   describe('Deploying LCs', async accounts => {
