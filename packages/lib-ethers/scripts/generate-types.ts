@@ -23,7 +23,7 @@ import SortedTroves from "../../contracts/artifacts/contracts/SortedTroves.sol/S
 import StabilityPool from "../../contracts/artifacts/contracts/StabilityPool.sol/StabilityPool.json";
 import TroveManager from "../../contracts/artifacts/contracts/TroveManager.sol/TroveManager.json";
 import XBRLWETHUnipool from "../../contracts/artifacts/contracts/LPRewards/XBRLWETHUnipool.sol/XBRLWETHUnipool.json";
-import STBLWETHUnipool from "../../contracts/artifacts/contracts/LPRewards/STBLWETHUnipool.sol/STBLWETHUnipool.json";
+import XBRLSTBLUnipool from "../../contracts/artifacts/contracts/LPRewards/XBRLSTBLUnipool.sol/XBRLSTBLUnipool.json";
 
 const getTupleType = (components: ParamType[], flexible: boolean) => {
   if (components.every(component => component.name)) {
@@ -164,7 +164,7 @@ const contractArtifacts = [
   StabilityPool,
   TroveManager,
   XBRLWETHUnipool,
-  STBLWETHUnipool
+  XBRLSTBLUnipool
 ];
 
 const contracts = contractArtifacts.map(({ contractName, abi }) => ({

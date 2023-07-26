@@ -5,7 +5,7 @@
   "bootstrapPeriod": 1209600,
   "totalStabilityPoolSTBLReward": "32000000",
   "xbrlWethLiquidityMiningSTBLRewardRate": "0.257201646090534979",
-  "stblWethLiquidityMiningSTBLRewardRate": "0.192901234567901234",
+  "xbrlStblLiquidityMiningSTBLRewardRate": "0.192901234567901234",
   "_priceFeedIsTestnet": true,
   "_uniTokenIsMock": false,
   "_isDev": false,
@@ -25,11 +25,11 @@
     "stabilityPool": "0x1C3706fF88Cca1a831F53FCDB223C7A12edf1B45",
     "gasPool": "0xF06Dd084aB288476255C4b629c83c812a78703d3",
     "xbrlWethUnipool": "0xd1ac3d415E0cfC913029209a2AF79c039D1644B1",
-    "stblWethUnipool": "0x1C5F78977E207cD4cf9d5c3E487F0c55743C03C1",
+    "xbrlStblUnipool": "0x1C5F78977E207cD4cf9d5c3E487F0c55743C03C1",
     "xbrlToken": "0x7eE8cFc82b12cFFf480b6EE8b8eE3A03851fB2A3",
     "stblToken": "0xa580Cc3Aaf39A32d3AfAfcf5dFC5682AdfD10Ed3",
     "multiTroveGetter": "0xc1fEDabE35aC6455eDb0Bf94FbA75a2c477d4b74",
     "xbrlWethUniToken": "0xa922Ccf510575d85429dF73E4A9d73afC94447Bd",
-    "stblWethUniToken": "0xeB48D8ac15f139D76b6931D970269CDdfc2aDf8c"
+    "xbrlStblUniToken": "0xeB48D8ac15f139D76b6931D970269CDdfc2aDf8c"
   }
 }

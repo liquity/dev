@@ -37,7 +37,7 @@ contract('BorrowerWrappers', async accounts => {
     // frontEnd_1, frontEnd_2, frontEnd_3
   ] = accounts;
 
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   let priceFeed
   let xbrlToken
@@ -67,7 +67,7 @@ contract('BorrowerWrappers', async accounts => {
     contracts = await deploymentHelper.deployStabilioCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts = await deploymentHelper.deployXBRLToken(contracts)
-    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     await deploymentHelper.connectSTBLContracts(STBLContracts)
     await deploymentHelper.connectCoreContracts(contracts, STBLContracts)

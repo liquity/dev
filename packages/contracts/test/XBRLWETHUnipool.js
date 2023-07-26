@@ -8,7 +8,7 @@ const { assertRevert } = TestHelper;
 
 const Uni = artifacts.require('ERC20Mock');
 const Stbl = artifacts.require('STBLToken');
-const StblWethUnipool = artifacts.require('STBLWETHUnipool');
+const XbrlStblUnipool = artifacts.require('XBRLSTBLUnipool');
 const Unipool = artifacts.require('XBRLWETHUnipool');
 const NonPayable = artifacts.require('NonPayable');
 
@@ -49,7 +49,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
 
   const deploy = async (that) => {
       that.uni = await Uni.new('Uniswap token', 'LPT', owner, 0);
-      that.stblPool = await StblWethUnipool.new();
+      that.stblPool = await XbrlStblUnipool.new();
       that.pool = await Unipool.new();
 
       const communityIssuance = await NonPayable.new();

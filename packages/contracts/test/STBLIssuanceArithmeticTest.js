@@ -42,7 +42,7 @@ contract('STBL community issuance arithmetic tests', async accounts => {
 
   const [owner, alice, frontEnd_1] = accounts;
 
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   before(async () => {
 
@@ -50,7 +50,7 @@ contract('STBL community issuance arithmetic tests', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployStabilioCore()
-    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     contracts.stabilityPool = await StabilityPool.new()
     contracts = await deploymentHelper.deployXBRLToken(contracts)
 

@@ -28,7 +28,7 @@
       },
       {
         "internalType": "address",
-        "name": "_stblWethLpRewardsAddress",
+        "name": "_xbrlStblLpRewardsAddress",
         "type": "address"
       },
       {
@@ -255,7 +255,7 @@
         "type": "uint8"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -310,7 +310,7 @@
   },
   {
     "inputs": [],
-    "name": "getStblWethLpRewardsEntitlement",
+    "name": "getXbrlStblLpRewardsEntitlement",
     "outputs": [
       {
         "internalType": "uint256",
@@ -394,7 +394,7 @@
         "type": "string"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -482,7 +482,7 @@
         "type": "bytes32"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -539,7 +539,7 @@
         "type": "string"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -618,7 +618,7 @@
         "type": "string"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
     "type": "function"
   }
 ]

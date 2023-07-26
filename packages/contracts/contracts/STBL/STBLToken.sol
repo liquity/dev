@@ -33,7 +33,7 @@ import "../Dependencies/console.sol";
 *
 * 7) The xBRL:WETH LP rewards allocation of (1 + 1/3) million tokens is minted at deployent to a Staking contract
 *
-* 8) The STBL:WETH LP rewards allocation of 1 million tokens is minted at deployent to a Staking contract
+* 8) The XBRL:STBL LP rewards allocation of 1 million tokens is minted at deployent to a Staking contract
 *
 * 9) (64 + 2/3) million tokens are minted at deployment to the Stabilio multisig
 *
@@ -96,7 +96,7 @@ contract STBLToken is CheckContract, ISTBLToken {
     address public immutable stblStakingAddress;
 
     uint256 internal immutable xbrlWethLpRewardsEntitlement;
-    uint256 internal immutable stblWethLpRewardsEntitlement;
+    uint256 internal immutable xbrlStblLpRewardsEntitlement;
 
     ILockupContractFactory public immutable lockupContractFactory;
 
@@ -109,12 +109,11 @@ contract STBLToken is CheckContract, ISTBLToken {
         address _lockupFactoryAddress,
         address _bountyAddress,
         address _xbrlWethLpRewardsAddress,
-        address _stblWethLpRewardsAddress,
+        address _xbrlStblLpRewardsAddress,
         address _momentZeroMultisigAddress,
         address _sixMonthsMultisigAddress,
         address _oneYearMultisigAddress
-    ) 
-        public 
+    )  
     {
         checkContract(_communityIssuanceAddress);
         checkContract(_stblStakingAddress);
@@ -134,7 +133,7 @@ contract STBLToken is CheckContract, ISTBLToken {
 
         _HASHED_NAME = hashedName;
         _HASHED_VERSION = hashedVersion;
-        _CACHED_CHAIN_ID = _chainID();
+        _CACHED_CHAIN_ID = block.chainid;
         _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(_TYPE_HASH, hashedName, hashedVersion);
         
         // --- Initial STBL allocations ---
@@ -153,9 +152,9 @@ contract STBLToken is CheckContract, ISTBLToken {
         _mint(_xbrlWethLpRewardsAddress, _xbrlWethLpRewardsEntitlement);
 
         // Allocate 1 million for STBL : ETH LP rewards
-        uint256 _stblWethLpRewardsEntitlement = _1_MILLION;  
-        stblWethLpRewardsEntitlement = _stblWethLpRewardsEntitlement;
-        _mint(_stblWethLpRewardsAddress, _stblWethLpRewardsEntitlement);
+        uint256 _xbrlStblLpRewardsEntitlement = _1_MILLION;  
+        xbrlStblLpRewardsEntitlement = _xbrlStblLpRewardsEntitlement;
+        _mint(_xbrlStblLpRewardsAddress, _xbrlStblLpRewardsEntitlement);
 
         // Allocate 15 million for multisig address - (Team/Investors)
         uint256 momentZeroMultisigEntitlement = _1_MILLION * 15;
@@ -171,7 +170,7 @@ contract STBLToken is CheckContract, ISTBLToken {
             - bountyEntitlement
             - depositorsAndFrontEndsEntitlement
             - _xbrlWethLpRewardsEntitlement
-            - _stblWethLpRewardsEntitlement
+            - _xbrlStblLpRewardsEntitlement
             - momentZeroMultisigEntitlement
             - sixMonthsMultisigEntitlement;
 
@@ -196,8 +195,8 @@ contract STBLToken is CheckContract, ISTBLToken {
         return xbrlWethLpRewardsEntitlement;
     }
 
-    function getStblWethLpRewardsEntitlement() external view override returns (uint256) {
-        return stblWethLpRewardsEntitlement;
+    function getXbrlStblLpRewardsEntitlement() external view override returns (uint256) {
+        return xbrlStblLpRewardsEntitlement;
     }
 
     function transfer(address recipient, uint256 amount) external override returns (bool) {
@@ -266,7 +265,7 @@ contract STBLToken is CheckContract, ISTBLToken {
     // --- EIP 2612 functionality ---
 
     function domainSeparator() public view override returns (bytes32) {    
-        if (_chainID() == _CACHED_CHAIN_ID) {
+        if (block.chainid == _CACHED_CHAIN_ID) {
             return _CACHED_DOMAIN_SEPARATOR;
         } else {
             return _buildDomainSeparator(_TYPE_HASH, _HASHED_NAME, _HASHED_VERSION);
@@ -302,14 +301,8 @@ contract STBLToken is CheckContract, ISTBLToken {
 
     // --- Internal operations ---
 
-    function _chainID() private view returns (uint256 chainID) {
-        assembly {
-            chainID := chainid()
-        }
-    }
-
-    function _buildDomainSeparator(bytes32 typeHash, bytes32 name, bytes32 version) private view returns (bytes32) {
-        return keccak256(abi.encode(typeHash, name, version, _chainID(), address(this)));
+    function _buildDomainSeparator(bytes32 typeHash, bytes32 hashedName, bytes32 hashedVersion) private view returns (bytes32) {
+        return keccak256(abi.encode(typeHash, hashedName, hashedVersion, block.chainid, address(this)));
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal {
@@ -403,23 +396,23 @@ contract STBLToken is CheckContract, ISTBLToken {
 
     // --- Optional functions ---
 
-    function name() external view override returns (string memory) {
+    function name() external pure override returns (string memory) {
         return _NAME;
     }
 
-    function symbol() external view override returns (string memory) {
+    function symbol() external pure override returns (string memory) {
         return _SYMBOL;
     }
 
-    function decimals() external view override returns (uint8) {
+    function decimals() external pure override returns (uint8) {
         return _DECIMALS;
     }
 
-    function version() external view override returns (string memory) {
+    function version() external pure override returns (string memory) {
         return _VERSION;
     }
 
-    function permitTypeHash() external view override returns (bytes32) {
+    function permitTypeHash() external pure override returns (bytes32) {
         return _PERMIT_TYPEHASH;
     }
 }

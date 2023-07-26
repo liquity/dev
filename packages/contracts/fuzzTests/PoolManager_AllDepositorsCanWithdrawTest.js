@@ -21,7 +21,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
   const whale = accounts[accounts.length - 1]
   const bountyAddress = accounts[999]
   const xbrlWethLpRewardsAddress = accounts[998]
-  const stblWethLpRewardsAddress = accounts[997]
+  const xbrlStblLpRewardsAddress = accounts[997]
 
   let priceFeed
   let xbrlToken
@@ -216,7 +216,7 @@ contract("PoolManager - random liquidations/deposits, then check all depositors 
 
     beforeEach(async () => {
       contracts = await deploymentHelper.deployStabilioCore()
-      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress)
 
       stabilityPool = contracts.stabilityPool
       priceFeed = contracts.priceFeedTestnet

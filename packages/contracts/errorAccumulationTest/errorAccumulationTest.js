@@ -12,7 +12,7 @@ contract('TroveManager', async accounts => {
   
   const bountyAddress = accounts[999]
   const xbrlWethLpRewardsAddress = accounts[998]
-  const stblWethLpRewardsAddress = accounts[997]
+  const xbrlStblLpRewardsAddress = accounts[997]
 
   let contracts 
   let priceFeed
@@ -24,7 +24,7 @@ contract('TroveManager', async accounts => {
   
   beforeEach(async () => {
     contracts = await deploymentHelper.deployStabilioCore()
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress)
     
     xbrlToken = contracts.xbrlToken
     priceFeed = contracts.priceFeedTestnet

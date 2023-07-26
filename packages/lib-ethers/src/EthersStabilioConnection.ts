@@ -72,7 +72,7 @@ export interface EthersStabilioConnection extends EthersStabilioConnectionOption
   readonly xbrlWethLiquidityMiningSTBLRewardRate: Decimal;
   
   /** Amount of STBL collectively rewarded to stakers of the liquidity mining pool per second. */
-  readonly stblWethLiquidityMiningSTBLRewardRate: Decimal;
+  readonly xbrlStblLiquidityMiningSTBLRewardRate: Decimal;
 
   /** A mapping of Stabilio contracts' names to their addresses. */
   readonly addresses: Record<string, string>;
@@ -103,7 +103,7 @@ const connectionFrom = (
     deploymentDate,
     totalStabilityPoolSTBLReward,
     xbrlWethLiquidityMiningSTBLRewardRate,
-    stblWethLiquidityMiningSTBLRewardRate,
+    xbrlStblLiquidityMiningSTBLRewardRate,
     ...deployment
   }: _StabilioDeploymentJSON,
   optionalParams?: EthersStabilioConnectionOptionalParams
@@ -124,7 +124,7 @@ const connectionFrom = (
     deploymentDate: new Date(deploymentDate),
     totalStabilityPoolSTBLReward: Decimal.from(totalStabilityPoolSTBLReward),
     xbrlWethLiquidityMiningSTBLRewardRate: Decimal.from(xbrlWethLiquidityMiningSTBLRewardRate),
-    stblWethLiquidityMiningSTBLRewardRate: Decimal.from(stblWethLiquidityMiningSTBLRewardRate),
+    xbrlStblLiquidityMiningSTBLRewardRate: Decimal.from(xbrlStblLiquidityMiningSTBLRewardRate),
     ...deployment,
     ...optionalParams
   });

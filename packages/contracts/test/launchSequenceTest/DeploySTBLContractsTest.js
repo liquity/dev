@@ -11,7 +11,7 @@ const dec = th.dec
 
 contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', async accounts => {
   const [liquityAG, A, B] = accounts;
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   let STBLContracts
 
@@ -22,7 +22,7 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
 
   beforeEach(async () => {
     // Deploy all contracts from the first account
-    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     await deploymentHelper.connectSTBLContracts(STBLContracts)
 
     stblStaking = STBLContracts.stblStaking
@@ -130,8 +130,8 @@ contract('Deploying the STBL contracts: LCF, CI, STBLStaking, and STBLToken ', a
       assert.equal(lpRewardsAddressBal, _1pt33Million)
     })
 
-    it("Mints the correct STBL amount to the STBL : WETH lpRewardsAddress EOA: 1 million", async () => {
-      const lpRewardsAddressBal = await stblToken.balanceOf(stblWethLpRewardsAddress)
+    it("Mints the correct STBL amount to the XBRL : STBL lpRewardsAddress EOA: 1 million", async () => {
+      const lpRewardsAddressBal = await stblToken.balanceOf(xbrlStblLpRewardsAddress)
       // 1.3 million as 18-digit decimal
       const _1Million = dec(1, 24)
 

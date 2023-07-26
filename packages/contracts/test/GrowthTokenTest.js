@@ -25,7 +25,7 @@ const assertRevert = th.assertRevert
 contract('STBL Token', async accounts => {
   const [owner, A, B, C, D] = accounts
 
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   // Create the approval tx data, for use in permit()
   const approve = {
@@ -109,7 +109,7 @@ contract('STBL Token', async accounts => {
 
   beforeEach(async () => {
     contracts = await deploymentHelper.deployStabilioCore()
-    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     stblStaking = STBLContracts.stblStaking
     stblTokenTester = STBLContracts.stblToken

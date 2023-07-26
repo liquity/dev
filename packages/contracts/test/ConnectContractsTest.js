@@ -3,7 +3,7 @@ const deploymentHelper = require("../utils/deploymentHelpers.js")
 contract('Deployment script - Sets correct contract addresses dependencies after deployment', async accounts => {
   const [owner] = accounts;
 
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
   
   let priceFeed
   let xbrlToken
@@ -21,7 +21,7 @@ contract('Deployment script - Sets correct contract addresses dependencies after
 
   before(async () => {
     const coreContracts = await deploymentHelper.deployStabilioCore()
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     priceFeed = coreContracts.priceFeedTestnet
     xbrlToken = coreContracts.xbrlToken

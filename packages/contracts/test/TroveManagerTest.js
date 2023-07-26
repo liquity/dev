@@ -31,7 +31,7 @@ contract('TroveManager', async accounts => {
     defaulter_1, defaulter_2, defaulter_3, defaulter_4, whale,
     A, B, C, D, E] = accounts;
 
-    const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+    const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   let priceFeed
   let xbrlToken
@@ -61,7 +61,7 @@ contract('TroveManager', async accounts => {
       contracts.stabilityPool.address,
       contracts.borrowerOperations.address
     )
-    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     priceFeed = contracts.priceFeedTestnet
     xbrlToken = contracts.xbrlToken

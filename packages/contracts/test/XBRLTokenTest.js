@@ -47,7 +47,7 @@ const getPermitDigest = ( name, address, chainId, version,
 contract('XBRLToken', async accounts => {
   const [owner, alice, bob, carol, dennis] = accounts;
 
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   // the second account our hardhatenv creates (for Alice)
   // from https://github.com/stabiliofi/dev/blob/main/packages/contracts/hardhatAccountsList2k.js#L3
@@ -69,7 +69,7 @@ contract('XBRLToken', async accounts => {
       const contracts = await deploymentHelper.deployTesterContractsHardhat()
 
 
-      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+      const STBLContracts = await deploymentHelper.deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
       await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
       await deploymentHelper.connectSTBLContracts(STBLContracts)

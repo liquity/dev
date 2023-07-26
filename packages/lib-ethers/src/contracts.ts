@@ -30,7 +30,7 @@ import sortedTrovesAbi from "../abi/SortedTroves.json";
 import stabilityPoolAbi from "../abi/StabilityPool.json";
 import gasPoolAbi from "../abi/GasPool.json";
 import xbrlWethUnipoolAbi from "../abi/XBRLWETHUnipool.json";
-import stblWethUnipoolAbi from "../abi/STBLWETHUnipool.json";
+import xbrlStblUnipoolAbi from "../abi/XBRLSTBLUnipool.json";
 import iERC20Abi from "../abi/IERC20.json";
 import erc20MockAbi from "../abi/ERC20Mock.json";
 
@@ -53,7 +53,7 @@ import {
   StabilityPool,
   GasPool,
   XBRLWETHUnipool,
-  STBLWETHUnipool,
+  XBRLSTBLUnipool,
   ERC20Mock,
   IERC20
 } from "../types";
@@ -184,9 +184,9 @@ export interface _StabilioContracts {
   stabilityPool: StabilityPool;
   gasPool: GasPool;
   xbrlWethUnipool: XBRLWETHUnipool;
-  stblWethUnipool: STBLWETHUnipool;
+  xbrlStblUnipool: XBRLSTBLUnipool;
   xbrlWethUniToken: IERC20 | ERC20Mock;
-  stblWethUniToken: IERC20 | ERC20Mock;
+  xbrlStblUniToken: IERC20 | ERC20Mock;
 }
 
 /** @internal */
@@ -223,9 +223,9 @@ const getAbi = (priceFeedIsTestnet: boolean, uniTokenIsMock: boolean): StabilioC
   gasPool: gasPoolAbi,
   collSurplusPool: collSurplusPoolAbi,
   xbrlWethUnipool: xbrlWethUnipoolAbi,
-  stblWethUnipool: stblWethUnipoolAbi,
+  xbrlStblUnipool: xbrlStblUnipoolAbi,
   xbrlWethUniToken: uniTokenIsMock ? erc20MockAbi : iERC20Abi,
-  stblWethUniToken: uniTokenIsMock ? erc20MockAbi : iERC20Abi
+  xbrlStblUniToken: uniTokenIsMock ? erc20MockAbi : iERC20Abi
 });
 
 const mapStabilioContracts = <T, U>(
@@ -246,7 +246,7 @@ export interface _StabilioDeploymentJSON {
   readonly bootstrapPeriod: number;
   readonly totalStabilityPoolSTBLReward: string;
   readonly xbrlWethLiquidityMiningSTBLRewardRate: string;
-  readonly stblWethLiquidityMiningSTBLRewardRate: string;
+  readonly xbrlStblLiquidityMiningSTBLRewardRate: string;
   readonly _priceFeedIsTestnet: boolean;
   readonly _uniTokenIsMock: boolean;
   readonly _isDev: boolean;

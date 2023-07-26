@@ -506,7 +506,7 @@ interface STBLTokenCalls {
   decimals(_overrides?: CallOverrides): Promise<number>;
   domainSeparator(_overrides?: CallOverrides): Promise<string>;
   getDeploymentStartTime(_overrides?: CallOverrides): Promise<BigNumber>;
-  getStblWethLpRewardsEntitlement(_overrides?: CallOverrides): Promise<BigNumber>;
+  getXbrlStblLpRewardsEntitlement(_overrides?: CallOverrides): Promise<BigNumber>;
   getXbrlWethLpRewardsEntitlement(_overrides?: CallOverrides): Promise<BigNumber>;
   lockupContractFactory(_overrides?: CallOverrides): Promise<string>;
   momentZeroMultisigAddress(_overrides?: CallOverrides): Promise<string>;
@@ -960,7 +960,7 @@ export interface XBRLWETHUnipool
   extractEvents(logs: Log[], name: "Withdrawn"): _TypedLogDescription<{ user: string; amount: BigNumber }>[];
 }
 
-interface STBLWETHUnipoolCalls {
+interface XBRLSTBLUnipoolCalls {
   NAME(_overrides?: CallOverrides): Promise<string>;
   balanceOf(account: string, _overrides?: CallOverrides): Promise<BigNumber>;
   duration(_overrides?: CallOverrides): Promise<BigNumber>;
@@ -980,7 +980,7 @@ interface STBLWETHUnipoolCalls {
   userRewardPerTokenPaid(arg0: string, _overrides?: CallOverrides): Promise<BigNumber>;
 }
 
-interface STBLWETHUnipoolTransactions {
+interface XBRLSTBLUnipoolTransactions {
   claimReward(_overrides?: Overrides): Promise<void>;
   setParams(_stblTokenAddress: string, _uniTokenAddress: string, _duration: BigNumberish, _overrides?: Overrides): Promise<void>;
   stake(amount: BigNumberish, _overrides?: Overrides): Promise<void>;
@@ -988,8 +988,8 @@ interface STBLWETHUnipoolTransactions {
   withdrawAndClaim(_overrides?: Overrides): Promise<void>;
 }
 
-export interface STBLWETHUnipool
-  extends _TypedStabilioContract<STBLWETHUnipoolCalls, STBLWETHUnipoolTransactions> {
+export interface XBRLSTBLUnipool
+  extends _TypedStabilioContract<XBRLSTBLUnipoolCalls, XBRLSTBLUnipoolTransactions> {
   readonly filters: {
     OwnershipTransferred(previousOwner?: string | null, newOwner?: string | null): EventFilter;
     RewardAdded(reward?: null): EventFilter;

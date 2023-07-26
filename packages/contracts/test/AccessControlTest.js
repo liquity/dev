@@ -17,7 +17,7 @@ test/launchSequenceTest/DuringLockupPeriodTest.js */
 contract('Access Control: Stabilio functions with the caller restricted to Stabilio contract(s)', async accounts => {
 
   const [owner, alice, bob, carol] = accounts;
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   let coreContracts
 
@@ -41,7 +41,7 @@ contract('Access Control: Stabilio functions with the caller restricted to Stabi
     coreContracts = await deploymentHelper.deployStabilioCore()
     coreContracts.troveManager = await TroveManagerTester.new()
     coreContracts = await deploymentHelper.deployXBRLTokenTester(coreContracts)
-    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     
     priceFeed = coreContracts.priceFeed
     xbrlToken = coreContracts.xbrlToken

@@ -33,7 +33,7 @@ contract('During the initial lockup period', async accounts => {
     O
   ] = accounts;
 
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   const SECONDS_IN_ONE_MONTH = timeValues.SECONDS_IN_ONE_MONTH
   const { SECONDS_IN_TWO_MONTHS, SECONDS_IN_SIX_MONTHS, SECONDS_IN_ONE_YEAR } = timeValues
@@ -95,7 +95,7 @@ contract('During the initial lockup period', async accounts => {
   beforeEach(async () => {
     // Deploy all contracts from the first account
     coreContracts = await deploymentHelper.deployStabilioCore()
-    STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
     stblStaking = STBLContracts.stblStaking
     stblToken = STBLContracts.stblToken

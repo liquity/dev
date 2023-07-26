@@ -33,7 +33,7 @@ contract('BorrowerOperations', async accounts => {
     // defaulter_1, defaulter_2,
     frontEnd_1, frontEnd_2, frontEnd_3] = accounts;
 
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
 
   // const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
 
@@ -72,7 +72,7 @@ contract('BorrowerOperations', async accounts => {
       contracts.borrowerOperations = await BorrowerOperationsTester.new()
       contracts.troveManager = await TroveManagerTester.new()
       contracts = await deploymentHelper.deployXBRLTokenTester(contracts)
-      const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+      const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
 
       await deploymentHelper.connectSTBLContracts(STBLContracts)
       await deploymentHelper.connectCoreContracts(contracts, STBLContracts)

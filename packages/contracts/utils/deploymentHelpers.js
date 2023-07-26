@@ -17,7 +17,7 @@ const LockupContractFactory = artifacts.require("./LockupContractFactory.sol")
 const CommunityIssuance = artifacts.require("./CommunityIssuance.sol")
 
 const XBRLWETHUnipool =  artifacts.require("./XBRLWETHUnipool.sol")
-const STBLWETHUnipool =  artifacts.require("./STBLWETHUnipool.sol")
+const XBRLSTBLUnipool =  artifacts.require("./XBRLSTBLUnipool.sol")
 
 const STBLTokenTester = artifacts.require("./STBLTokenTester.sol")
 const CommunityIssuanceTester = artifacts.require("./CommunityIssuanceTester.sol")
@@ -74,15 +74,15 @@ class DeploymentHelper {
     }
   }
 
-  static async deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig) {
+  static async deploySTBLContracts(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig) {
     const cmdLineArgs = process.argv
     const frameworkPath = cmdLineArgs[1]
     // console.log(`Framework used:  ${frameworkPath}`)
 
     if (frameworkPath.includes("hardhat")) {
-      return this.deploySTBLContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+      return this.deploySTBLContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     } else if (frameworkPath.includes("truffle")) {
-      return this.deploySTBLContractsTruffle(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+      return this.deploySTBLContractsTruffle(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     }
   }
 
@@ -159,7 +159,7 @@ class DeploymentHelper {
     return testerContracts
   }
 
-  static async deploySTBLContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig) {
+  static async deploySTBLContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig) {
     const stblStaking = await STBLStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
@@ -175,7 +175,7 @@ class DeploymentHelper {
       lockupContractFactory.address,
       bountyAddress,
       xbrlWethLpRewardsAddress,
-      stblWethLpRewardsAddress,
+      xbrlStblLpRewardsAddress,
       momentZeroMultisig,
       sixMonthsMultisig,
       oneYearMultisig
@@ -191,7 +191,7 @@ class DeploymentHelper {
     return STBLContracts
   }
 
-  static async deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig) {
+  static async deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig) {
     const stblStaking = await STBLStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuanceTester.new()
@@ -207,7 +207,7 @@ class DeploymentHelper {
       lockupContractFactory.address,
       bountyAddress,
       xbrlWethLpRewardsAddress,
-      stblWethLpRewardsAddress,
+      xbrlStblLpRewardsAddress,
       momentZeroMultisig, 
       sixMonthsMultisig, 
       oneYearMultisig
@@ -257,7 +257,7 @@ class DeploymentHelper {
     return coreContracts
   }
 
-  static async deploySTBLContractsTruffle(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig) {
+  static async deploySTBLContractsTruffle(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig) {
     const stblStaking = await stblStaking.new()
     const lockupContractFactory = await LockupContractFactory.new()
     const communityIssuance = await CommunityIssuance.new()
@@ -270,7 +270,7 @@ class DeploymentHelper {
       lockupContractFactory.address,
       bountyAddress,
       xbrlWethLpRewardsAddress, 
-      stblWethLpRewardsAddress,
+      xbrlStblLpRewardsAddress,
       momentZeroMultisig, 
       sixMonthsMultisig, 
       oneYearMultisig

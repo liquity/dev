@@ -9,7 +9,7 @@ const { assertRevert } = TestHelper;
 const Uni = artifacts.require('ERC20Mock');
 const Stbl = artifacts.require('STBLToken');
 const XbrlWethUnipool = artifacts.require('XBRLWETHUnipool');
-const Unipool = artifacts.require('STBLWETHUnipool');
+const Unipool = artifacts.require('XBRLSTBLUnipool');
 const NonPayable = artifacts.require('NonPayable');
 
 const _1e18 = new BN('10').pow(new BN('18'));
@@ -66,7 +66,7 @@ contract('Unipool', function ([_, wallet1, wallet2, wallet3, wallet4, bountyAddr
         sixMonthsMultisig,
         oneYearMultisig
       );
-      that.lpRewardsEntitlement = await that.stbl.getStblWethLpRewardsEntitlement();
+      that.lpRewardsEntitlement = await that.stbl.getXbrlStblLpRewardsEntitlement();
       that.DURATION = new BN(6 * 7 * 24 * 60 * 60); // 6 weeks
       that.rewardRate = that.lpRewardsEntitlement.div(that.DURATION);
 

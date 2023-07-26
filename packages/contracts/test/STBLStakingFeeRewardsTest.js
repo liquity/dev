@@ -28,7 +28,7 @@ const GAS_PRICE = 10000000
 
 contract('STBLStaking revenue share tests', async accounts => {
 
-  const [bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
+  const [bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig] = accounts.slice(994, 1000)
   
   const [owner, A, B, C, D, E, F, G, whale] = accounts;
 
@@ -52,7 +52,7 @@ contract('STBLStaking revenue share tests', async accounts => {
     contracts = await deploymentHelper.deployStabilioCore()
     contracts.troveManager = await TroveManagerTester.new()
     contracts = await deploymentHelper.deployXBRLTokenTester(contracts)
-    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, stblWethLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
+    const STBLContracts = await deploymentHelper.deploySTBLTesterContractsHardhat(bountyAddress, xbrlWethLpRewardsAddress, xbrlStblLpRewardsAddress, momentZeroMultisig, sixMonthsMultisig, oneYearMultisig)
     
     await deploymentHelper.connectSTBLContracts(STBLContracts)
     await deploymentHelper.connectCoreContracts(contracts, STBLContracts)
