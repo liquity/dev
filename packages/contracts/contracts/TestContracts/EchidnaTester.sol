@@ -42,7 +42,7 @@ contract EchidnaTester {
 
     uint256 private numberOfTroves;
 
-    constructor() public payable {
+    constructor() payable {
         troveManager = new TroveManager();
         borrowerOperations = new BorrowerOperations();
         activePool = new ActivePool();
@@ -250,27 +250,27 @@ contract EchidnaTester {
 
     function transferExt(uint256 _i, address recipient, uint256 amount) external returns (bool) {
         uint256 actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].transferPrx(recipient, amount);
+        return echidnaProxies[actor].transferPrx(recipient, amount);
     }
 
     function approveExt(uint256 _i, address spender, uint256 amount) external returns (bool) {
         uint256 actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].approvePrx(spender, amount);
+        return echidnaProxies[actor].approvePrx(spender, amount);
     }
 
     function transferFromExt(uint256 _i, address sender, address recipient, uint256 amount) external returns (bool) {
         uint256 actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].transferFromPrx(sender, recipient, amount);
+        return echidnaProxies[actor].transferFromPrx(sender, recipient, amount);
     }
 
     function increaseAllowanceExt(uint256 _i, address spender, uint256 addedValue) external returns (bool) {
         uint256 actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].increaseAllowancePrx(spender, addedValue);
+        return echidnaProxies[actor].increaseAllowancePrx(spender, addedValue);
     }
 
     function decreaseAllowanceExt(uint256 _i, address spender, uint256 subtractedValue) external returns (bool) {
         uint256 actor = _i % NUMBER_OF_ACTORS;
-        echidnaProxies[actor].decreaseAllowancePrx(spender, subtractedValue);
+        return echidnaProxies[actor].decreaseAllowancePrx(spender, subtractedValue);
     }
 
     // PriceFeed

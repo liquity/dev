@@ -42,7 +42,6 @@ contract TwoMonthsLockupContract {
         address _beneficiary, 
         uint256 _unlockTime
     )
-        public 
     {
         stblToken = ISTBLToken(_stblTokenAddress);
 

@@ -9,7 +9,7 @@ import "../Interfaces/ISTBLStaking.sol";
 contract STBLStakingScript is CheckContract {
     ISTBLStaking immutable STBLStaking;
 
-    constructor(address _stblStakingAddress) public {
+    constructor(address _stblStakingAddress) {
         checkContract(_stblStakingAddress);
         STBLStaking = ISTBLStaking(_stblStakingAddress);
     }

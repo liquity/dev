@@ -21,5 +21,5 @@ interface ISTBLToken is IERC20, IERC2612 {
 
     function getXbrlWethLpRewardsEntitlement() external view returns (uint256);
 
-    function getStblWethLpRewardsEntitlement() external view returns (uint256);
+    function getXbrlStblLpRewardsEntitlement() external view returns (uint256);
 }

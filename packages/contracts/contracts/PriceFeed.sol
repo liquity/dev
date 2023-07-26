@@ -345,6 +345,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
             // return Chainlink price (no status change)
             return _storeChainlinkPrice(chainlinkResponse);
         }
+        return lastGoodPrice;
     }
 
     // --- Helper functions ---

@@ -12,12 +12,11 @@ contract STBLTokenTester is STBLToken {
         address _lockupFactoryAddress,
         address _bountyAddress,
         address _xbrlWethLpRewardsAddress,
-        address _stblWethLpRewardsAddress,
+        address _xbrlStblLpRewardsAddress,
         address _momentZeroMultisigAddress,
         address _sixMonthsMultisigAddress,
         address _oneYearMultisigAddress
-    ) 
-        public 
+    )  
         STBLToken 
     (
         _communityIssuanceAddress,
@@ -25,7 +24,7 @@ contract STBLTokenTester is STBLToken {
         _lockupFactoryAddress,
         _bountyAddress,
         _xbrlWethLpRewardsAddress,
-        _stblWethLpRewardsAddress,
+        _xbrlStblLpRewardsAddress,
         _momentZeroMultisigAddress,
         _sixMonthsMultisigAddress,
         _oneYearMultisigAddress
@@ -46,11 +45,11 @@ contract STBLTokenTester is STBLToken {
         _transfer(_sender, stblStakingAddress, _amount);
     }
 
-    function callInternalApprove(address owner, address spender, uint256 amount) external returns (bool) {
+    function callInternalApprove(address owner, address spender, uint256 amount) external {
         _approve(owner, spender, amount);
     }
 
-    function callInternalTransfer(address sender, address recipient, uint256 amount) external returns (bool) {
+    function callInternalTransfer(address sender, address recipient, uint256 amount) external {
         _transfer(sender, recipient, amount);
     }
 

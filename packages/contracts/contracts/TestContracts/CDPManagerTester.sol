@@ -46,7 +46,7 @@ contract TroveManagerTester is TroveManager {
     }
 
     function callGetRedemptionFee(uint256 _ETHDrawn) external view returns (uint) {
-        _getRedemptionFee(_ETHDrawn);
+        return _getRedemptionFee(_ETHDrawn);
     }  
 
     function getActualDebtFromComposite(uint256 _debtVal) external pure returns (uint) {

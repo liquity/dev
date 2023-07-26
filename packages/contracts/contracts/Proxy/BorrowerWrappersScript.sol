@@ -33,7 +33,6 @@ contract BorrowerWrappersScript is BorrowerOperationsScript, ETHTransferScript, 
     )
         BorrowerOperationsScript(IBorrowerOperations(_borrowerOperationsAddress))
         STBLStakingScript(_stblStakingAddress)
-        public
     {
         checkContract(_troveManagerAddress);
         ITroveManager troveManagerCached = ITroveManager(_troveManagerAddress);

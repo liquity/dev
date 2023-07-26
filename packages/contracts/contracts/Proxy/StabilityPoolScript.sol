@@ -11,7 +11,7 @@ contract StabilityPoolScript is CheckContract {
 
     IStabilityPool immutable stabilityPool;
 
-    constructor(IStabilityPool _stabilityPool) public {
+    constructor(IStabilityPool _stabilityPool) {
         checkContract(address(_stabilityPool));
         stabilityPool = _stabilityPool;
     }
