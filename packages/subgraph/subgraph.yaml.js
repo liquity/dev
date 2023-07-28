@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-const network = process.argv[2] || "mainnet";
+const network = process.argv[2] || "goerli";
 const { addresses, startBlock } = require(`@stabilio/lib-ethers/deployments/${network}.json`);
 
 console.log(`Preparing subgraph manifest for network "${network}"`);
@@ -20,7 +20,7 @@ schema:
 dataSources:
   - name: TroveManager
     kind: ethereum/contract
-    network: mainnet
+    network: goerli
     source:
       abi: TroveManager
       address: "${addresses.troveManager}"
@@ -55,7 +55,7 @@ dataSources:
           handler: handleLTermsUpdated
   - name: BorrowerOperations
     kind: ethereum/contract
-    network: mainnet
+    network: goerli
     source:
       abi: BorrowerOperations
       address: "${addresses.borrowerOperations}"
@@ -82,7 +82,7 @@ dataSources:
           handler: handleXBRLBorrowingFeePaid
   - name: PriceFeed
     kind: ethereum/contract
-    network: mainnet
+    network: goerli
     source:
       abi: PriceFeed
       address: "${addresses.priceFeed}"
@@ -105,7 +105,7 @@ dataSources:
           handler: handleLastGoodPriceUpdated
   - name: StabilityPool
     kind: ethereum/contract
-    network: mainnet
+    network: goerli
     source:
       abi: StabilityPool
       address: "${addresses.stabilityPool}"
@@ -137,7 +137,7 @@ dataSources:
           handler: handleFrontendTagSet
   - name: CollSurplusPool
     kind: ethereum/contract
-    network: mainnet
+    network: goerli
     source:
       abi: CollSurplusPool
       address: "${addresses.collSurplusPool}"
@@ -162,7 +162,7 @@ dataSources:
           handler: handleCollSurplusBalanceUpdated
   - name: STBLStaking
     kind: ethereum/contract
-    network: mainnet
+    network: goerli
     source:
       abi: STBLStaking
       address: "${addresses.stblStaking}"
@@ -193,7 +193,7 @@ ${[
   ([name, address]) => yaml`
   - name: ${name}
     kind: ethereum/contract
-    network: mainnet
+    network: goerli
     source:
       abi: ERC20
       address: "${address}"
