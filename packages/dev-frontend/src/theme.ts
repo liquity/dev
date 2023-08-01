@@ -492,9 +492,8 @@ const theme: Theme = {
     nav: {
       px: 2,
       py: 1,
-      fontSize: 1,
-      textTransform: "uppercase",
-      letterSpacing: "1px",
+      fontSize: 2,
+      textTransform: "capitalize",
       width: ["100%", "auto"],
       mt: [3, "auto"]
     }
