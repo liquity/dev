@@ -273,4 +273,51 @@ export class SendableEthersStabilio
   ): Promise<SentEthersStabilioTransaction<void>> {
     return this._populate.exitXbrlWethLiquidityMining(overrides).then(sendTransaction);
   }
+
+  /** @internal */
+  _mintXbrlStblUniToken(
+    amount: Decimalish,
+    address?: string,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersStabilioTransaction<void>> {
+    return this._populate._mintXbrlStblUniToken(amount, address, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#SendableStabilio.approveXbrlStblUniTokens} */
+  approveXbrlStblUniTokens(
+    allowance?: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersStabilioTransaction<void>> {
+    return this._populate.approveXbrlStblUniTokens(allowance, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#SendableStabilio.stakeXbrlStblUniTokens} */
+  stakeXbrlStblUniTokens(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersStabilioTransaction<void>> {
+    return this._populate.stakeXbrlStblUniTokens(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#SendableStabilio.unstakeXbrlStblUniTokens} */
+  unstakeXbrlStblUniTokens(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersStabilioTransaction<void>> {
+    return this._populate.unstakeXbrlStblUniTokens(amount, overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#SendableStabilio.withdrawSTBLRewardFromXbrlStblLiquidityMining} */
+  withdrawSTBLRewardFromXbrlStblLiquidityMining(
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersStabilioTransaction<void>> {
+    return this._populate.withdrawSTBLRewardFromXbrlStblLiquidityMining(overrides).then(sendTransaction);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#SendableStabilio.exitXbrlStblLiquidityMining} */
+  exitXbrlStblLiquidityMining(
+    overrides?: EthersTransactionOverrides
+  ): Promise<SentEthersStabilioTransaction<void>> {
+    return this._populate.exitXbrlStblLiquidityMining(overrides).then(sendTransaction);
+  }
 }

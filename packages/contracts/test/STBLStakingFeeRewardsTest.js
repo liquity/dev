@@ -20,7 +20,7 @@ const GAS_PRICE = 10000000
 /* NOTE: These tests do not test for specific ETH and XBRL gain values. They only test that the 
  * gains are non-zero, occur when they should, and are in correct proportion to the user's stake. 
  *
- * Specific ETH/XBRL gain values will depend on the final fee schedule used, and the final choices for
+ * Specific XBRL/ETH gain values will depend on the final fee schedule used, and the final choices for
  * parameters BETA and MINUTE_DECAY_FACTOR in the TroveManager, which are still TBD based on economic
  * modelling.
  * 

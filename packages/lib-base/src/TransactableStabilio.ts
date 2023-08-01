@@ -459,7 +459,7 @@ export interface TransactableStabilio {
   withdrawGainsFromStaking(): Promise<void>;
 
   /**
-   * Allow the liquidity mining contract to use Uniswap ETH/XBRL LP tokens for
+   * Allow the liquidity mining contract to use Uniswap XBRL/ETH LP tokens for
    * {@link @stabilio/lib-base#TransactableStabilio.stakeXbrlWethUniTokens | staking}.
    *
    * @param allowance - Maximum amount of LP tokens that will be transferrable to liquidity mining
@@ -475,7 +475,7 @@ export interface TransactableStabilio {
   approveXbrlWethUniTokens(allowance?: Decimalish): Promise<void>;
 
   /**
-   * Stake Uniswap ETH/XBRL LP tokens to participate in liquidity mining and earn STBL.
+   * Stake Uniswap XBRL/ETH LP tokens to participate in liquidity mining and earn STBL.
    *
    * @param amount - Amount of LP tokens to add to new or existing stake.
    *
@@ -485,7 +485,7 @@ export interface TransactableStabilio {
   stakeXbrlWethUniTokens(amount: Decimalish): Promise<void>;
 
   /**
-   * Withdraw Uniswap ETH/XBRL LP tokens from liquidity mining.
+   * Withdraw Uniswap XBRL/ETH LP tokens from liquidity mining.
    *
    * @param amount - Amount of LP tokens to withdraw.
    *
@@ -509,6 +509,58 @@ export interface TransactableStabilio {
    * Throws {@link TransactionFailedError} in case of transaction failure.
    */
   exitXbrlWethLiquidityMining(): Promise<void>;
+
+  /**
+ * Allow the liquidity mining contract to use Uniswap XBRL/STBL LP tokens for
+ * {@link @stabilio/lib-base#TransactableStabilio.stakeXbrlStblUniTokens | staking}.
+ *
+ * @param allowance - Maximum amount of LP tokens that will be transferrable to liquidity mining
+ *                    (`2^256 - 1` by default).
+ *
+ * @remarks
+ * Must be performed before calling
+ * {@link @stabilio/lib-base#TransactableStabilio.stakeXbrlStblUniTokens | stakeXbrlStblUniTokens()}.
+ *
+ * @throws
+ * Throws {@link TransactionFailedError} in case of transaction failure.
+ */
+  approveXbrlStblUniTokens(allowance?: Decimalish): Promise<void>;
+
+  /**
+   * Stake Uniswap XBRL/STBL LP tokens to participate in liquidity mining and earn STBL.
+   *
+   * @param amount - Amount of LP tokens to add to new or existing stake.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  stakeXbrlStblUniTokens(amount: Decimalish): Promise<void>;
+
+  /**
+   * Withdraw Uniswap XBRL/STBL LP tokens from liquidity mining.
+   *
+   * @param amount - Amount of LP tokens to withdraw.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  unstakeXbrlStblUniTokens(amount: Decimalish): Promise<void>;
+
+  /**
+   * Withdraw STBL that has been earned by mining liquidity.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  withdrawSTBLRewardFromXbrlStblLiquidityMining(): Promise<void>;
+
+  /**
+   * Withdraw all staked LP tokens from liquidity mining and claim reward.
+   *
+   * @throws
+   * Throws {@link TransactionFailedError} in case of transaction failure.
+   */
+  exitXbrlStblLiquidityMining(): Promise<void>;
 
   /**
    * Register current wallet address as a Stabilio frontend.

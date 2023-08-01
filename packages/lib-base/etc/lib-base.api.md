@@ -22,6 +22,8 @@ export class _CachedReadableStabilio<T extends unknown[]> implements _ReadableSt
     // (undocumented)
     getRemainingStabilityPoolSTBLReward(...extraParams: T): Promise<Decimal>;
     // (undocumented)
+    getRemainingXbrlStblLiquidityMiningSTBLReward(...extraParams: T): Promise<Decimal>;
+    // (undocumented)
     getRemainingXbrlWethLiquidityMiningSTBLReward(...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getStabilityDeposit(address?: string, ...extraParams: T): Promise<StabilityDeposit>;
@@ -35,6 +37,8 @@ export class _CachedReadableStabilio<T extends unknown[]> implements _ReadableSt
     getTotalRedistributed(...extraParams: T): Promise<Trove>;
     // (undocumented)
     getTotalStakedSTBL(...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getTotalStakedXbrlStblUniTokens(...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getTotalStakedXbrlWethUniTokens(...extraParams: T): Promise<Decimal>;
     // (undocumented)
@@ -51,6 +55,14 @@ export class _CachedReadableStabilio<T extends unknown[]> implements _ReadableSt
     getXBRLBalance(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getXBRLInStabilityPool(...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblLiquidityMiningStake(address?: string, ...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblLiquidityMiningSTBLReward(address?: string, ...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblUniTokenAllowance(address?: string, ...extraParams: T): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblUniTokenBalance(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
     getXbrlWethLiquidityMiningStake(address?: string, ...extraParams: T): Promise<Decimal>;
     // (undocumented)
@@ -320,12 +332,14 @@ export type _PopulatableFrom<T, P> = {
 // @public
 export interface PopulatableStabilio<R = unknown, S = unknown, P = unknown> extends _PopulatableFrom<SendableStabilio<R, S>, P> {
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, TroveAdjustmentDetails>>>>;
+    approveXbrlStblUniTokens(allowance?: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     approveXbrlWethUniTokens(allowance?: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     borrowXBRL(amount: Decimalish, maxBorrowingRate?: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, TroveAdjustmentDetails>>>>;
     claimCollateralSurplus(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     closeTrove(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, TroveClosureDetails>>>>;
     depositCollateral(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, TroveAdjustmentDetails>>>>;
     depositXBRLInStabilityPool(amount: Decimalish, frontendTag?: string): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, StabilityDepositChangeDetails>>>>;
+    exitXbrlStblLiquidityMining(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     exitXbrlWethLiquidityMining(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     liquidate(address: string | string[]): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, LiquidationDetails>>>>;
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, LiquidationDetails>>>>;
@@ -338,13 +352,16 @@ export interface PopulatableStabilio<R = unknown, S = unknown, P = unknown> exte
     // @internal (undocumented)
     setPrice(price: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     stakeSTBL(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
+    stakeXbrlStblUniTokens(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     stakeXbrlWethUniTokens(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     transferCollateralGainToTrove(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, CollateralGainTransferDetails>>>>;
     unstakeSTBL(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
+    unstakeXbrlStblUniTokens(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     unstakeXbrlWethUniTokens(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     withdrawCollateral(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, TroveAdjustmentDetails>>>>;
     withdrawGainsFromStabilityPool(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, StabilityPoolGainsWithdrawalDetails>>>>;
     withdrawGainsFromStaking(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
+    withdrawSTBLRewardFromXbrlStblLiquidityMining(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     withdrawSTBLRewardFromXbrlWethLiquidityMining(): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
     withdrawXBRLFromStabilityPool(amount: Decimalish): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, StabilityDepositChangeDetails>>>>;
 }
@@ -371,6 +388,7 @@ export interface ReadableStabilio {
     getNumberOfTroves(): Promise<number>;
     getPrice(): Promise<Decimal>;
     getRemainingStabilityPoolSTBLReward(): Promise<Decimal>;
+    getRemainingXbrlStblLiquidityMiningSTBLReward(): Promise<Decimal>;
     getRemainingXbrlWethLiquidityMiningSTBLReward(): Promise<Decimal>;
     getStabilityDeposit(address?: string): Promise<StabilityDeposit>;
     getSTBLBalance(address?: string): Promise<Decimal>;
@@ -378,6 +396,7 @@ export interface ReadableStabilio {
     getTotal(): Promise<Trove>;
     getTotalRedistributed(): Promise<Trove>;
     getTotalStakedSTBL(): Promise<Decimal>;
+    getTotalStakedXbrlStblUniTokens(): Promise<Decimal>;
     getTotalStakedXbrlWethUniTokens(): Promise<Decimal>;
     getTrove(address?: string): Promise<UserTrove>;
     getTroveBeforeRedistribution(address?: string): Promise<TroveWithPendingRedistribution>;
@@ -388,6 +407,10 @@ export interface ReadableStabilio {
     getTroves(params: TroveListingParams): Promise<UserTrove[]>;
     getXBRLBalance(address?: string): Promise<Decimal>;
     getXBRLInStabilityPool(): Promise<Decimal>;
+    getXbrlStblLiquidityMiningStake(address?: string): Promise<Decimal>;
+    getXbrlStblLiquidityMiningSTBLReward(address?: string): Promise<Decimal>;
+    getXbrlStblUniTokenAllowance(address?: string): Promise<Decimal>;
+    getXbrlStblUniTokenBalance(address?: string): Promise<Decimal>;
     getXbrlWethLiquidityMiningStake(address?: string): Promise<Decimal>;
     getXbrlWethLiquidityMiningSTBLReward(address?: string): Promise<Decimal>;
     getXbrlWethUniTokenAllowance(address?: string): Promise<Decimal>;
@@ -427,12 +450,14 @@ export type _SendableFrom<T, R, S> = {
 // @public
 export interface SendableStabilio<R = unknown, S = unknown> extends _SendableFrom<TransactableStabilio, R, S> {
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, TroveAdjustmentDetails>>>;
+    approveXbrlStblUniTokens(allowance?: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     approveXbrlWethUniTokens(allowance?: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     borrowXBRL(amount: Decimalish, maxBorrowingRate?: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, TroveAdjustmentDetails>>>;
     claimCollateralSurplus(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     closeTrove(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, TroveClosureDetails>>>;
     depositCollateral(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, TroveAdjustmentDetails>>>;
     depositXBRLInStabilityPool(amount: Decimalish, frontendTag?: string): Promise<SentStabilioTransaction<S, StabilioReceipt<R, StabilityDepositChangeDetails>>>;
+    exitXbrlStblLiquidityMining(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     exitXbrlWethLiquidityMining(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     liquidate(address: string | string[]): Promise<SentStabilioTransaction<S, StabilioReceipt<R, LiquidationDetails>>>;
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<SentStabilioTransaction<S, StabilioReceipt<R, LiquidationDetails>>>;
@@ -445,13 +470,16 @@ export interface SendableStabilio<R = unknown, S = unknown> extends _SendableFro
     // @internal (undocumented)
     setPrice(price: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     stakeSTBL(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
+    stakeXbrlStblUniTokens(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     stakeXbrlWethUniTokens(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     transferCollateralGainToTrove(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, CollateralGainTransferDetails>>>;
     unstakeSTBL(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
+    unstakeXbrlStblUniTokens(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     unstakeXbrlWethUniTokens(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     withdrawCollateral(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, TroveAdjustmentDetails>>>;
     withdrawGainsFromStabilityPool(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, StabilityPoolGainsWithdrawalDetails>>>;
     withdrawGainsFromStaking(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
+    withdrawSTBLRewardFromXbrlStblLiquidityMining(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     withdrawSTBLRewardFromXbrlWethLiquidityMining(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
     withdrawXBRLFromStabilityPool(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, StabilityDepositChangeDetails>>>;
 }
@@ -511,6 +539,7 @@ export interface StabilioStoreBaseState {
     ownFrontend: FrontendStatus;
     price: Decimal;
     remainingStabilityPoolSTBLReward: Decimal;
+    remainingXbrlStblLiquidityMiningSTBLReward: Decimal;
     remainingXbrlWethLiquidityMiningSTBLReward: Decimal;
     // @internal (undocumented)
     _riskiestTroveBeforeRedistribution: TroveWithPendingRedistribution;
@@ -520,10 +549,15 @@ export interface StabilioStoreBaseState {
     total: Trove;
     totalRedistributed: Trove;
     totalStakedSTBL: Decimal;
+    totalStakedXbrlStblUniTokens: Decimal;
     totalStakedXbrlWethUniTokens: Decimal;
     troveBeforeRedistribution: TroveWithPendingRedistribution;
     xbrlBalance: Decimal;
     xbrlInStabilityPool: Decimal;
+    xbrlStblLiquidityMiningStake: Decimal;
+    xbrlStblLiquidityMiningSTBLReward: Decimal;
+    xbrlStblUniTokenAllowance: Decimal;
+    xbrlStblUniTokenBalance: Decimal;
     xbrlWethLiquidityMiningStake: Decimal;
     xbrlWethLiquidityMiningSTBLReward: Decimal;
     xbrlWethUniTokenAllowance: Decimal;
@@ -629,12 +663,14 @@ export const _successfulReceipt: <R, D>(rawReceipt: R, details: D, toString?: ((
 // @public
 export interface TransactableStabilio {
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRate?: Decimalish): Promise<TroveAdjustmentDetails>;
+    approveXbrlStblUniTokens(allowance?: Decimalish): Promise<void>;
     approveXbrlWethUniTokens(allowance?: Decimalish): Promise<void>;
     borrowXBRL(amount: Decimalish, maxBorrowingRate?: Decimalish): Promise<TroveAdjustmentDetails>;
     claimCollateralSurplus(): Promise<void>;
     closeTrove(): Promise<TroveClosureDetails>;
     depositCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
     depositXBRLInStabilityPool(amount: Decimalish, frontendTag?: string): Promise<StabilityDepositChangeDetails>;
+    exitXbrlStblLiquidityMining(): Promise<void>;
     exitXbrlWethLiquidityMining(): Promise<void>;
     liquidate(address: string | string[]): Promise<LiquidationDetails>;
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number): Promise<LiquidationDetails>;
@@ -647,13 +683,16 @@ export interface TransactableStabilio {
     // @internal (undocumented)
     setPrice(price: Decimalish): Promise<void>;
     stakeSTBL(amount: Decimalish): Promise<void>;
+    stakeXbrlStblUniTokens(amount: Decimalish): Promise<void>;
     stakeXbrlWethUniTokens(amount: Decimalish): Promise<void>;
     transferCollateralGainToTrove(): Promise<CollateralGainTransferDetails>;
     unstakeSTBL(amount: Decimalish): Promise<void>;
+    unstakeXbrlStblUniTokens(amount: Decimalish): Promise<void>;
     unstakeXbrlWethUniTokens(amount: Decimalish): Promise<void>;
     withdrawCollateral(amount: Decimalish): Promise<TroveAdjustmentDetails>;
     withdrawGainsFromStabilityPool(): Promise<StabilityPoolGainsWithdrawalDetails>;
     withdrawGainsFromStaking(): Promise<void>;
+    withdrawSTBLRewardFromXbrlStblLiquidityMining(): Promise<void>;
     withdrawSTBLRewardFromXbrlWethLiquidityMining(): Promise<void>;
     withdrawXBRLFromStabilityPool(amount: Decimalish): Promise<StabilityDepositChangeDetails>;
 }

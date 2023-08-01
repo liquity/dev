@@ -198,7 +198,7 @@ contract('Gas cost tests', async accounts => {
   // --- adjustTrove ---
 
   // it("", async () => {
-  //   const message = 'adjustTrove(). ETH/XBRL Increase/Increase. 10 accounts, each account adjusts up -  1 ether and 100 XBRL'
+  //   const message = 'adjustTrove(). XBRL/ETH Increase/Increase. 10 accounts, each account adjusts up -  1 ether and 100 XBRL'
   //   await borrowerOperations.openTrove(_100pct, 0, accounts[999], ZERO_ADDRESS, { from: accounts[999], value: dec(100, 'ether') })
 
   //   const amountETH = dec(10, 'ether')
@@ -217,7 +217,7 @@ contract('Gas cost tests', async accounts => {
   // })
 
   // it("", async () => {
-  //   const message = 'adjustTrove(). ETH/XBRL Decrease/Decrease. 10 accounts, each account adjusts down by 0.1 ether and 10 XBRL'
+  //   const message = 'adjustTrove(). XBRL/ETH Decrease/Decrease. 10 accounts, each account adjusts down by 0.1 ether and 10 XBRL'
   //   await borrowerOperations.openTrove(_100pct, 0, accounts[999], ZERO_ADDRESS, { from: accounts[999], value: dec(100, 'ether') })
 
   //   const amountETH = dec(10, 'ether')
@@ -235,7 +235,7 @@ contract('Gas cost tests', async accounts => {
   // })
 
   // it("", async () => {
-  //   const message = 'adjustTrove(). ETH/XBRL Increase/Decrease. 10 accounts, each account adjusts up by 0.1 ether and down by 10 XBRL'
+  //   const message = 'adjustTrove(). XBRL/ETH Increase/Decrease. 10 accounts, each account adjusts up by 0.1 ether and down by 10 XBRL'
   //   await borrowerOperations.openTrove(_100pct, 0, accounts[999], ZERO_ADDRESS, { from: accounts[999], value: dec(100, 'ether') })
 
   //   const amountETH = dec(10, 'ether')

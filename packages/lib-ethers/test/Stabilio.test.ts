@@ -1039,7 +1039,98 @@ describe("EthersStabilio", () => {
       const stblBalance = Number(await stabilio.getSTBLBalance());
       expect(stblBalance).to.be.within(1333333, 1333334);
     });
+
+    it("should obtain some XBRL/STBL UNI LP tokens", async () => {
+      await stabilio._mintXbrlStblUniToken(someUniTokens);
+
+      const uniTokenBalance = await stabilio.getXbrlStblUniTokenBalance();
+      expect(`${uniTokenBalance}`).to.equal(`${someUniTokens}`);
+    });
+
+    it("should fail to stake XBRL/STBL UNI LP before approving the spend", async () => {
+      await expect(stabilio.stakeXbrlStblUniTokens(someUniTokens)).to.eventually.be.rejected;
+    });
+
+    it("should stake XBRL/STBL UNI LP after approving the spend", async () => {
+      const initialAllowance = await stabilio.getXbrlStblUniTokenAllowance();
+      expect(`${initialAllowance}`).to.equal("0");
+
+      await stabilio.approveXbrlStblUniTokens();
+
+      const newAllowance = await stabilio.getXbrlStblUniTokenAllowance();
+      expect(newAllowance.isZero).to.be.false;
+
+      await stabilio.stakeXbrlStblUniTokens(someUniTokens);
+
+      const uniTokenBalance = await stabilio.getXbrlStblUniTokenBalance();
+      expect(`${uniTokenBalance}`).to.equal("0");
+
+      const stake = await stabilio.getXbrlStblLiquidityMiningStake();
+      expect(`${stake}`).to.equal(`${someUniTokens}`);
+    });
+
+    it("should have an STBL reward after some time has passed to XBRL/STBL pool", async function () {
+      this.timeout("20s");
+
+      // Liquidity mining rewards are seconds-based, so we don't need to wait long.
+      // By actually waiting in real time, we avoid using increaseTime(), which only works on
+      // Hardhat EVM.
+      await new Promise(resolve => setTimeout(resolve, 4000));
+
+      // Trigger a new block with a dummy TX.
+      await stabilio._mintXbrlStblUniToken(0);
+
+      const stblReward = Number(await stabilio.getXbrlStblLiquidityMiningSTBLReward());
+      expect(stblReward).to.be.at.least(1); // ~0.2572 per second [(4e6/3) / (60*24*60*60)]
+
+      await stabilio.withdrawSTBLRewardFromXbrlStblLiquidityMining();
+      const stblBalance = Number(await stabilio.getSTBLBalance());
+      expect(stblBalance).to.be.at.least(stblReward); // may have increased since checking
+    });
+
+    it("should partially unstake XBRL/STBL tokens", async () => {
+      await stabilio.unstakeXbrlStblUniTokens(someUniTokens / 2);
+
+      const xbrlStblUniTokenStake = await stabilio.getXbrlStblLiquidityMiningStake();
+      expect(`${xbrlStblUniTokenStake}`).to.equal(`${someUniTokens / 2}`);
+
+      const xbrlStblUniTokenBalance = await stabilio.getXbrlStblUniTokenBalance();
+      expect(`${xbrlStblUniTokenBalance}`).to.equal(`${someUniTokens / 2}`);
+    });
+
+    it("should unstake remaining XBRL/STBL tokens and withdraw remaining STBL reward", async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      await stabilio._mintXbrlStblUniToken(0); // dummy block
+      await stabilio.exitXbrlStblLiquidityMining();
+
+      const xbrlStblUniTokenStake = await stabilio.getXbrlStblLiquidityMiningStake();
+      expect(`${xbrlStblUniTokenStake}`).to.equal("0");
+
+      const stblRewardForXbrlStblLiquidityPool = await stabilio.getXbrlStblLiquidityMiningSTBLReward();
+      expect(`${stblRewardForXbrlStblLiquidityPool}`).to.equal("0");
+
+      const xbrlStblUniTokenBalance = await stabilio.getXbrlStblUniTokenBalance();
+      expect(`${xbrlStblUniTokenBalance}`).to.equal(`${someUniTokens}`);
+    });
+
+    it("should have no more rewards for XBRL/STBL pool after the mining period is over", async function () {
+      if (network.name !== "hardhat") {
+        // increaseTime() only works on Hardhat EVM
+        this.skip();
+      }
+
+      await stabilio.stakeXbrlStblUniTokens(someUniTokens);
+      await increaseTime(2 * 30 * 24 * 60 * 60);
+      await stabilio.exitXbrlStblLiquidityMining();
+
+      const remainingSTBLReward = await stabilio.getRemainingXbrlStblLiquidityMiningSTBLReward();
+      expect(`${remainingSTBLReward}`).to.equal("0");
+
+      const stblBalance = Number(await stabilio.getSTBLBalance());
+      expect(stblBalance).to.be.within(1333333, 1333334);
+    });
   });
+  
 
   // Test workarounds related to https://github.com/stabilio/dev/issues/600
   describe("Hints (adjustTrove)", () => {

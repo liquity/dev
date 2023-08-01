@@ -9,7 +9,7 @@ import { StabilioLogo } from "./StabilioLogo";
 import { Nav } from "./Nav";
 import { SideNav } from "./SideNav";
 
-const logoHeight = "28px";
+const logoHeight = "26px";
 
 const select = ({ frontend }: StabilioStoreState) => ({
   frontend
@@ -29,10 +29,10 @@ export const Header: React.FC = ({ children }) => {
 
         <Box
           sx={{
-            mx: [2, 3],
+            mx: [2, 4],
             width: "0px",
             height: "100%",
-            borderLeft: ["none", "1px solid lightgrey"]
+            borderLeft: ["none", "1px solid #333"]
           }}
         />
         {isFrontendRegistered && (

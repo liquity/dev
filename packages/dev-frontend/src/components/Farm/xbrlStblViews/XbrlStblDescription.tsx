@@ -5,24 +5,24 @@ import { LP } from "../../../strings";
 import { Transaction } from "../../Transaction";
 import { Decimal } from "@stabilio/lib-base";
 import { ActionDescription } from "../../ActionDescription";
-import { useValidationState } from "../context/useValidationState";
+import { useXbrlStblValidationState } from "../context/useXbrlStblValidationState";
 
-type DescriptionProps = {
+type XbrlStblDescriptionProps = {
   amount: Decimal;
 };
 
 const transactionId = "farm-stake";
 
-export const Description: React.FC<DescriptionProps> = ({ amount }) => {
+export const XbrlStblDescription: React.FC<XbrlStblDescriptionProps> = ({ amount }) => {
   const {
     stabilio: { send: stabilio }
   } = useStabilio();
-  const { isValid, hasApproved, isWithdrawing, amountChanged } = useValidationState(amount);
+  const { isValid, hasApproved, isWithdrawing, amountChanged } = useXbrlStblValidationState(amount);
 
   if (!hasApproved) {
     return (
       <ActionDescription>
-        <Text>To stake your ETH/xBRL {LP} tokens you need to allow Stabilio to stake them for you</Text>
+        <Text>To stake your STBL/xBRL {LP} tokens you need to allow Stabilio to stake them for you</Text>
       </ActionDescription>
     );
   }
@@ -34,16 +34,16 @@ export const Description: React.FC<DescriptionProps> = ({ amount }) => {
   return (
     <ActionDescription>
       {isWithdrawing && (
-        <Transaction id={transactionId} send={stabilio.unstakeXbrlWethUniTokens.bind(stabilio, amountChanged)}>
+        <Transaction id={transactionId} send={stabilio.unstakeXbrlStblUniTokens.bind(stabilio, amountChanged)}>
           <Text>
-            You are unstaking {amountChanged.prettify(4)} ETH/xBRL {LP}
+            You are unstaking {amountChanged.prettify(4)} STBL/xBRL {LP}
           </Text>
         </Transaction>
       )}
       {!isWithdrawing && (
-        <Transaction id={transactionId} send={stabilio.stakeXbrlWethUniTokens.bind(stabilio, amountChanged)}>
+        <Transaction id={transactionId} send={stabilio.stakeXbrlStblUniTokens.bind(stabilio, amountChanged)}>
           <Text>
-            You are staking {amountChanged.prettify(4)} ETH/xBRL {LP}
+            You are staking {amountChanged.prettify(4)} STBL/xBRL {LP}
           </Text>
         </Transaction>
       )}

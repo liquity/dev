@@ -31,23 +31,41 @@ export interface StabilioStoreBaseState {
   /** User's STBL token balance. */
   stblBalance: Decimal;
 
-  /** User's Uniswap ETH/XBRL LP token balance. */
+  /** User's Uniswap XBRL/ETH LP token balance. */
   xbrlWethUniTokenBalance: Decimal;
 
-  /** The liquidity mining contract's allowance of user's Uniswap ETH/XBRL LP tokens. */
+  /** The liquidity mining contract's allowance of user's Uniswap XBRL/ETH LP tokens. */
   xbrlWethUniTokenAllowance: Decimal;
 
   /** Remaining STBL that will be collectively rewarded to liquidity miners. */
   remainingXbrlWethLiquidityMiningSTBLReward: Decimal;
 
-  /** Amount of Uniswap ETH/XBRL LP tokens the user has staked in liquidity mining. */
+  /** Amount of Uniswap XBRL/ETH LP tokens the user has staked in liquidity mining. */
   xbrlWethLiquidityMiningStake: Decimal;
 
-  /** Total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. */
+  /** Total amount of Uniswap XBRL/ETH LP tokens currently staked in liquidity mining. */
   totalStakedXbrlWethUniTokens: Decimal;
 
   /** Amount of STBL the user has earned through mining liquidity. */
   xbrlWethLiquidityMiningSTBLReward: Decimal;
+
+  /** User's Uniswap XBRL/STBL LP token balance. */
+  xbrlStblUniTokenBalance: Decimal;
+
+  /** The liquidity mining contract's allowance of user's Uniswap XBRL/STBL LP tokens. */
+  xbrlStblUniTokenAllowance: Decimal;
+
+  /** Remaining STBL that will be collectively rewarded to liquidity miners. */
+  remainingXbrlStblLiquidityMiningSTBLReward: Decimal;
+
+  /** Amount of Uniswap XBRL/STBL LP tokens the user has staked in liquidity mining. */
+  xbrlStblLiquidityMiningStake: Decimal;
+
+  /** Total amount of Uniswap XBRL/STBL LP tokens currently staked in liquidity mining. */
+  totalStakedXbrlStblUniTokens: Decimal;
+
+  /** Amount of STBL the user has earned through mining liquidity. */
+  xbrlStblLiquidityMiningSTBLReward: Decimal;
 
   /**
    * Amount of leftover collateral available for withdrawal to the user.
@@ -404,6 +422,46 @@ export abstract class StabilioStore<T = unknown> {
         eq,
         baseState.xbrlWethLiquidityMiningSTBLReward,
         baseStateUpdate.xbrlWethLiquidityMiningSTBLReward
+      ),
+
+      xbrlStblUniTokenBalance: this._updateIfChanged(
+        eq,
+        "xbrlStblUniTokenBalance",
+        baseState.xbrlStblUniTokenBalance,
+        baseStateUpdate.xbrlStblUniTokenBalance
+      ),
+
+      xbrlStblUniTokenAllowance: this._updateIfChanged(
+        eq,
+        "xbrlStblUniTokenAllowance",
+        baseState.xbrlStblUniTokenAllowance,
+        baseStateUpdate.xbrlStblUniTokenAllowance
+      ),
+
+      remainingXbrlStblLiquidityMiningSTBLReward: this._silentlyUpdateIfChanged(
+        eq,
+        baseState.remainingXbrlStblLiquidityMiningSTBLReward,
+        baseStateUpdate.remainingXbrlStblLiquidityMiningSTBLReward
+      ),
+
+      xbrlStblLiquidityMiningStake: this._updateIfChanged(
+        eq,
+        "xbrlStblLiquidityMiningStake",
+        baseState.xbrlStblLiquidityMiningStake,
+        baseStateUpdate.xbrlStblLiquidityMiningStake
+      ),
+
+      totalStakedXbrlStblUniTokens: this._updateIfChanged(
+        eq,
+        "totalStakedXbrlStblUniTokens",
+        baseState.totalStakedXbrlStblUniTokens,
+        baseStateUpdate.totalStakedXbrlStblUniTokens
+      ),
+
+      xbrlStblLiquidityMiningSTBLReward: this._silentlyUpdateIfChanged(
+        eq,
+        baseState.xbrlStblLiquidityMiningSTBLReward,
+        baseStateUpdate.xbrlStblLiquidityMiningSTBLReward
       ),
 
       collateralSurplusBalance: this._updateIfChanged(

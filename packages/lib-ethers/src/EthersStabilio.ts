@@ -262,6 +262,43 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     return this._readable.getXbrlWethLiquidityMiningSTBLReward(address, overrides);
   }
 
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getXbrlStblUniTokenBalance} */
+  getXbrlStblUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getXbrlStblUniTokenBalance(address, overrides);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getXbrlStblUniTokenAllowance} */
+  getXbrlStblUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getXbrlStblUniTokenAllowance(address, overrides);
+  }
+
+  /** @internal */
+  _getRemainingXbrlStblLiquidityMiningSTBLRewardCalculator(
+    overrides?: EthersCallOverrides
+  ): Promise<(blockTimestamp: number) => Decimal> {
+    return this._readable._getRemainingXbrlStblLiquidityMiningSTBLRewardCalculator(overrides);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getRemainingXbrlStblLiquidityMiningSTBLReward} */
+  getRemainingXbrlStblLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getRemainingXbrlStblLiquidityMiningSTBLReward(overrides);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getXbrlStblLiquidityMiningStake} */
+  getXbrlStblLiquidityMiningStake(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getXbrlStblLiquidityMiningStake(address, overrides);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getTotalStakedXbrlStblUniTokens} */
+  getTotalStakedXbrlStblUniTokens(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getTotalStakedXbrlStblUniTokens(overrides);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getXbrlStblLiquidityMiningSTBLReward} */
+  getXbrlStblLiquidityMiningSTBLReward(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._readable.getXbrlStblLiquidityMiningSTBLReward(address, overrides);
+  }
+
   /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getCollateralSurplusBalance} */
   getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     return this._readable.getCollateralSurplusBalance(address, overrides);
@@ -664,6 +701,70 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
    */
   exitXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
     return this.send.exitXbrlWethLiquidityMining(overrides).then(waitForSuccess);
+  }
+
+  /** @internal */
+  _mintXbrlStblUniToken(
+    amount: Decimalish,
+    address?: string,
+    overrides?: EthersTransactionOverrides
+  ): Promise<void> {
+    return this.send._mintXbrlStblUniToken(amount, address, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @stabilio/lib-base#TransactableStabilio.approveXbrlStblUniTokens}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
+   */
+  approveXbrlStblUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.approveXbrlStblUniTokens(allowance, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @stabilio/lib-base#TransactableStabilio.stakeXbrlStblUniTokens}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
+   */
+  stakeXbrlStblUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.stakeXbrlStblUniTokens(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @stabilio/lib-base#TransactableStabilio.unstakeXbrlStblUniTokens}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
+   */
+  unstakeXbrlStblUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.unstakeXbrlStblUniTokens(amount, overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @stabilio/lib-base#TransactableStabilio.withdrawSTBLRewardFromXbrlStblLiquidityMining}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
+   */
+  withdrawSTBLRewardFromXbrlStblLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.withdrawSTBLRewardFromXbrlStblLiquidityMining(overrides).then(waitForSuccess);
+  }
+
+  /**
+   * {@inheritDoc @stabilio/lib-base#TransactableStabilio.exitXbrlStblLiquidityMining}
+   *
+   * @throws
+   * Throws {@link EthersTransactionFailedError} in case of transaction failure.
+   * Throws {@link EthersTransactionCancelledError} if the transaction is cancelled or replaced.
+   */
+  exitXbrlStblLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void> {
+    return this.send.exitXbrlStblLiquidityMining(overrides).then(waitForSuccess);
   }
 }
 

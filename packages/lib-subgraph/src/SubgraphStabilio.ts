@@ -364,6 +364,30 @@ export class SubgraphStabilio implements ReadableStabilio, ObservableStabilio {
     throw new Error("Method not implemented.");
   }
 
+  getXbrlStblUniTokenBalance(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getXbrlStblUniTokenAllowance(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getRemainingXbrlStblLiquidityMiningSTBLReward(): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getXbrlStblLiquidityMiningStake(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getXbrlStblLiquidityMiningSTBLReward(address?: string): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  getTotalStakedXbrlStblUniTokens(): Promise<Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
   getRemainingStabilityPoolSTBLReward(): Promise<Decimal> {
     throw new Error("Method not implemented.");
   }

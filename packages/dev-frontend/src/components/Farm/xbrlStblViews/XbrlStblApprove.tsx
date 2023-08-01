@@ -3,8 +3,8 @@ import { Button } from "theme-ui";
 import { Decimal } from "@stabilio/lib-base";
 import { useStabilio } from "../../../hooks/StabilioContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
-import { useFarmView } from "../context/FarmViewContext";
-import { useValidationState } from "../context/useValidationState";
+import { useXbrlStblFarmView } from "../context/XbrlStblFarmViewContext";
+import { useXbrlStblValidationState } from "../context/useXbrlStblValidationState";
 
 type ApproveProps = {
   amount: Decimal;
@@ -12,13 +12,13 @@ type ApproveProps = {
 
 const transactionId = "farm-approve";
 
-export const Approve: React.FC<ApproveProps> = ({ amount }) => {
-  const { dispatchEvent } = useFarmView();
+export const XbrlStblApprove: React.FC<ApproveProps> = ({ amount }) => {
+  const { dispatchEvent } = useXbrlStblFarmView();
   const {
     stabilio: { send: stabilio }
   } = useStabilio();
 
-  const { hasApproved } = useValidationState(amount);
+  const { hasApproved } = useXbrlStblValidationState(amount);
   const transactionState = useMyTransactionState(transactionId);
 
   useEffect(() => {
@@ -34,11 +34,11 @@ export const Approve: React.FC<ApproveProps> = ({ amount }) => {
   return (
     <Transaction
       id={transactionId}
-      send={stabilio.approveXbrlWethUniTokens.bind(stabilio, undefined)}
+      send={stabilio.approveXbrlStblUniTokens.bind(stabilio, undefined)}
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
-      <Button>Approve ETH/xBRL UNI LP</Button>
+      <Button>Approve STBL/xBRL UNI LP</Button>
     </Transaction>
   );
 };

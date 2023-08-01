@@ -7,44 +7,44 @@ import { LP, GT } from "../../../../strings";
 import { Icon } from "../../../Icon";
 import { EditableRow, StaticRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
-import { useFarmView } from "../../context/FarmViewContext";
+import { useXbrlStblFarmView } from "../../context/XbrlStblFarmViewContext";
 import { useMyTransactionState } from "../../../Transaction";
-import { Confirm } from "../Confirm";
-import { Description } from "../Description";
-import { Approve } from "../Approve";
-import { Validation } from "../Validation";
+import { XbrlStblConfirm } from "../XbrlStblConfirm";
+import { XbrlStblDescription } from "../XbrlStblDescription";
+import { XbrlStblApprove } from "../XbrlStblApprove";
+import { XbrlStblValidation } from "../XbrlStblValidation";
 
 const selector = ({
-  xbrlWethLiquidityMiningStake,
-  xbrlWethLiquidityMiningSTBLReward,
-  xbrlWethUniTokenBalance,
-  totalStakedXbrlWethUniTokens
+  xbrlStblLiquidityMiningStake,
+  xbrlStblLiquidityMiningSTBLReward,
+  xbrlStblUniTokenBalance,
+  totalStakedXbrlStblUniTokens
 }: StabilioStoreState) => ({
-  xbrlWethLiquidityMiningStake,
-  xbrlWethLiquidityMiningSTBLReward,
-  xbrlWethUniTokenBalance,
-  totalStakedXbrlWethUniTokens
+  xbrlStblLiquidityMiningStake,
+  xbrlStblLiquidityMiningSTBLReward,
+  xbrlStblUniTokenBalance,
+  totalStakedXbrlStblUniTokens
 });
 
 const transactionId = /farm-/;
 
-export const Adjusting: React.FC = () => {
-  const { dispatchEvent } = useFarmView();
+export const XbrlStblAdjusting: React.FC = () => {
+  const { dispatchEvent } = useXbrlStblFarmView();
   const {
-    xbrlWethLiquidityMiningStake,
-    xbrlWethLiquidityMiningSTBLReward,
-    xbrlWethUniTokenBalance,
-    totalStakedXbrlWethUniTokens
+    xbrlStblLiquidityMiningStake,
+    xbrlStblLiquidityMiningSTBLReward,
+    xbrlStblUniTokenBalance,
+    totalStakedXbrlStblUniTokens
   } = useStabilioSelector(selector);
-  const [amount, setAmount] = useState<Decimal>(xbrlWethLiquidityMiningStake);
+  const [amount, setAmount] = useState<Decimal>(xbrlStblLiquidityMiningStake);
   const editingState = useState<string>();
 
   const transactionState = useMyTransactionState(transactionId);
   const isTransactionPending =
     transactionState.type === "waitingForApproval" ||
     transactionState.type === "waitingForConfirmation";
-  const isDirty = !amount.eq(xbrlWethLiquidityMiningStake);
-  const maximumAmount = xbrlWethLiquidityMiningStake.add(xbrlWethUniTokenBalance);
+  const isDirty = !amount.eq(xbrlStblLiquidityMiningStake);
+  const maximumAmount = xbrlStblLiquidityMiningStake.add(xbrlStblUniTokenBalance);
   const hasSetMaximumAmount = amount.eq(maximumAmount);
 
   const handleCancelPressed = useCallback(() => {
@@ -52,26 +52,26 @@ export const Adjusting: React.FC = () => {
   }, [dispatchEvent]);
 
   const nextTotalStakedUniTokens = isDirty
-    ? totalStakedXbrlWethUniTokens.sub(xbrlWethLiquidityMiningStake).add(amount)
-    : totalStakedXbrlWethUniTokens;
+    ? totalStakedXbrlStblUniTokens.sub(xbrlStblLiquidityMiningStake).add(amount)
+    : totalStakedXbrlStblUniTokens;
 
-  const originalPoolShare = xbrlWethLiquidityMiningStake.mulDiv(100, totalStakedXbrlWethUniTokens);
+  const originalPoolShare = xbrlStblLiquidityMiningStake.mulDiv(100, totalStakedXbrlStblUniTokens);
   const poolShare = amount.mulDiv(100, nextTotalStakedUniTokens);
 
   const poolShareChange =
-  xbrlWethLiquidityMiningStake.nonZero && Difference.between(poolShare, originalPoolShare).nonZero;
+  xbrlStblLiquidityMiningStake.nonZero && Difference.between(poolShare, originalPoolShare).nonZero;
 
   return (
     <Card>
       <Flex sx={{ justifyContent: "space-between", width: "100%", px: [2, 3], pt: 3, pb: 2 }}>
         <Heading sx={{ fontSize: 16  }}>
-          ETH/xBRL Uniswap LP
+          STBL/xBRL Uniswap LP
         </Heading>
         {isDirty && !isTransactionPending && (
           <Button
             variant="titleIcon"
             sx={{ ":enabled:hover": { color: "danger" } }}
-            onClick={() => setAmount(xbrlWethLiquidityMiningStake)}
+            onClick={() => setAmount(xbrlStblLiquidityMiningStake)}
           >
             <Icon name="history" size="lg" />
           </Button>
@@ -82,7 +82,7 @@ export const Adjusting: React.FC = () => {
         <EditableRow
           label="Stake"
           inputId="farm-stake-amount"
-          amount={isDirty ? amount.prettify(4) : xbrlWethLiquidityMiningStake.prettify(4)}
+          amount={isDirty ? amount.prettify(4) : xbrlStblLiquidityMiningStake.prettify(4)}
           unit={LP}
           editingState={editingState}
           editedAmount={amount.toString(4)}
@@ -107,20 +107,20 @@ export const Adjusting: React.FC = () => {
         <StaticRow
           label="Reward"
           inputId="farm-reward-amount"
-          amount={xbrlWethLiquidityMiningSTBLReward.prettify(4)}
-          color={xbrlWethLiquidityMiningSTBLReward.nonZero && "success"}
+          amount={xbrlStblLiquidityMiningSTBLReward.prettify(4)}
+          color={xbrlStblLiquidityMiningSTBLReward.nonZero && "success"}
           unit={GT}
         />
 
-        {isDirty && <Validation amount={amount} />}
-        {isDirty && <Description amount={amount} />}
+        {isDirty && <XbrlStblValidation amount={amount} />}
+        {isDirty && <XbrlStblDescription amount={amount} />}
 
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
-          <Approve amount={amount} />
-          <Confirm amount={amount} />
+          <XbrlStblApprove amount={amount} />
+          <XbrlStblConfirm amount={amount} />
         </Flex>
       </Box>
       {isTransactionPending && <LoadingOverlay />}

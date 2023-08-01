@@ -107,6 +107,8 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     // (undocumented)
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
     // (undocumented)
+    approveXbrlStblUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
     approveXbrlWethUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
     borrowXBRL(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
@@ -124,6 +126,8 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     depositCollateral(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<TroveAdjustmentDetails>;
     // (undocumented)
     depositXBRLInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<StabilityDepositChangeDetails>;
+    // (undocumented)
+    exitXbrlStblLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
     exitXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void>;
     // @internal (undocumented)
@@ -153,6 +157,10 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     // (undocumented)
     getRemainingStabilityPoolSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
+    getRemainingXbrlStblLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal>;
+    // @internal (undocumented)
+    _getRemainingXbrlStblLiquidityMiningSTBLRewardCalculator(overrides?: EthersCallOverrides): Promise<(blockTimestamp: number) => Decimal>;
+    // (undocumented)
     getRemainingXbrlWethLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal>;
     // @internal (undocumented)
     _getRemainingXbrlWethLiquidityMiningSTBLRewardCalculator(overrides?: EthersCallOverrides): Promise<(blockTimestamp: number) => Decimal>;
@@ -168,6 +176,8 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     getTotalRedistributed(overrides?: EthersCallOverrides): Promise<Trove>;
     // (undocumented)
     getTotalStakedSTBL(overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getTotalStakedXbrlStblUniTokens(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getTotalStakedXbrlWethUniTokens(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
@@ -185,6 +195,14 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     // (undocumented)
     getXBRLInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
+    getXbrlStblLiquidityMiningStake(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblLiquidityMiningSTBLReward(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
     getXbrlWethLiquidityMiningStake(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getXbrlWethLiquidityMiningSTBLReward(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
@@ -198,6 +216,8 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<LiquidationDetails>;
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<LiquidationDetails>;
+    // @internal (undocumented)
+    _mintXbrlStblUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<void>;
     // @internal (undocumented)
     _mintXbrlWethUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
@@ -219,11 +239,15 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     // (undocumented)
     stakeSTBL(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
+    stakeXbrlStblUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
     stakeXbrlWethUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
     transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<CollateralGainTransferDetails>;
     // (undocumented)
     unstakeSTBL(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    unstakeXbrlStblUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
     unstakeXbrlWethUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
@@ -232,6 +256,8 @@ export class EthersStabilio implements ReadableEthersStabilio, TransactableStabi
     withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<StabilityPoolGainsWithdrawalDetails>;
     // (undocumented)
     withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<void>;
+    // (undocumented)
+    withdrawSTBLRewardFromXbrlStblLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
     withdrawSTBLRewardFromXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<void>;
     // (undocumented)
@@ -253,9 +279,9 @@ export interface EthersStabilioConnection extends EthersStabilioConnectionOption
     readonly provider: EthersProvider;
     readonly signer?: EthersSigner;
     readonly startBlock: number;
-    readonly stblWethLiquidityMiningSTBLRewardRate: Decimal;
     readonly totalStabilityPoolSTBLReward: Decimal;
     readonly version: string;
+    readonly xbrlStblLiquidityMiningSTBLRewardRate: Decimal;
     readonly xbrlWethLiquidityMiningSTBLRewardRate: Decimal;
 }
 
@@ -334,6 +360,8 @@ export class PopulatableEthersStabilio implements PopulatableStabilio<EthersTran
     // (undocumented)
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
+    approveXbrlStblUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
+    // (undocumented)
     approveXbrlWethUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
     borrowXBRL(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<TroveAdjustmentDetails>>;
@@ -346,11 +374,15 @@ export class PopulatableEthersStabilio implements PopulatableStabilio<EthersTran
     // (undocumented)
     depositXBRLInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<StabilityDepositChangeDetails>>;
     // (undocumented)
+    exitXbrlStblLiquidityMining(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
+    // (undocumented)
     exitXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
     liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<LiquidationDetails>>;
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<LiquidationDetails>>;
+    // @internal (undocumented)
+    _mintXbrlStblUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // @internal (undocumented)
     _mintXbrlWethUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
@@ -370,11 +402,15 @@ export class PopulatableEthersStabilio implements PopulatableStabilio<EthersTran
     // (undocumented)
     stakeSTBL(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
+    stakeXbrlStblUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
+    // (undocumented)
     stakeXbrlWethUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
     transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<CollateralGainTransferDetails>>;
     // (undocumented)
     unstakeSTBL(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
+    // (undocumented)
+    unstakeXbrlStblUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
     unstakeXbrlWethUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
@@ -383,6 +419,8 @@ export class PopulatableEthersStabilio implements PopulatableStabilio<EthersTran
     withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<StabilityPoolGainsWithdrawalDetails>>;
     // (undocumented)
     withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
+    // (undocumented)
+    withdrawSTBLRewardFromXbrlStblLiquidityMining(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
     withdrawSTBLRewardFromXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<PopulatedEthersStabilioTransaction<void>>;
     // (undocumented)
@@ -480,6 +518,10 @@ export class ReadableEthersStabilio implements ReadableStabilio {
     // (undocumented)
     getRemainingStabilityPoolSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
+    getRemainingXbrlStblLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal>;
+    // @internal (undocumented)
+    _getRemainingXbrlStblLiquidityMiningSTBLRewardCalculator(overrides?: EthersCallOverrides): Promise<(blockTimestamp: number) => Decimal>;
+    // (undocumented)
     getRemainingXbrlWethLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal>;
     // @internal (undocumented)
     _getRemainingXbrlWethLiquidityMiningSTBLRewardCalculator(overrides?: EthersCallOverrides): Promise<(blockTimestamp: number) => Decimal>;
@@ -496,6 +538,8 @@ export class ReadableEthersStabilio implements ReadableStabilio {
     // (undocumented)
     getTotalStakedSTBL(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
+    getTotalStakedXbrlStblUniTokens(overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
     getTotalStakedXbrlWethUniTokens(overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getTrove(address?: string, overrides?: EthersCallOverrides): Promise<UserTrove>;
@@ -511,6 +555,14 @@ export class ReadableEthersStabilio implements ReadableStabilio {
     getXBRLBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getXBRLInStabilityPool(overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblLiquidityMiningStake(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblLiquidityMiningSTBLReward(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
+    // (undocumented)
+    getXbrlStblUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
     getXbrlWethLiquidityMiningStake(address?: string, overrides?: EthersCallOverrides): Promise<Decimal>;
     // (undocumented)
@@ -537,6 +589,8 @@ export class SendableEthersStabilio implements SendableStabilio<EthersTransactio
     // (undocumented)
     adjustTrove(params: TroveAdjustmentParams<Decimalish>, maxBorrowingRateOrOptionalParams?: Decimalish | BorrowingOperationOptionalParams, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<TroveAdjustmentDetails>>;
     // (undocumented)
+    approveXbrlStblUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
+    // (undocumented)
     approveXbrlWethUniTokens(allowance?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)
     borrowXBRL(amount: Decimalish, maxBorrowingRate?: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<TroveAdjustmentDetails>>;
@@ -549,11 +603,15 @@ export class SendableEthersStabilio implements SendableStabilio<EthersTransactio
     // (undocumented)
     depositXBRLInStabilityPool(amount: Decimalish, frontendTag?: string, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<StabilityDepositChangeDetails>>;
     // (undocumented)
+    exitXbrlStblLiquidityMining(overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
+    // (undocumented)
     exitXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)
     liquidate(address: string | string[], overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<LiquidationDetails>>;
     // (undocumented)
     liquidateUpTo(maximumNumberOfTrovesToLiquidate: number, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<LiquidationDetails>>;
+    // @internal (undocumented)
+    _mintXbrlStblUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // @internal (undocumented)
     _mintXbrlWethUniToken(amount: Decimalish, address?: string, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)
@@ -573,11 +631,15 @@ export class SendableEthersStabilio implements SendableStabilio<EthersTransactio
     // (undocumented)
     stakeSTBL(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)
+    stakeXbrlStblUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
+    // (undocumented)
     stakeXbrlWethUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)
     transferCollateralGainToTrove(overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<CollateralGainTransferDetails>>;
     // (undocumented)
     unstakeSTBL(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
+    // (undocumented)
+    unstakeXbrlStblUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)
     unstakeXbrlWethUniTokens(amount: Decimalish, overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)
@@ -586,6 +648,8 @@ export class SendableEthersStabilio implements SendableStabilio<EthersTransactio
     withdrawGainsFromStabilityPool(overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<StabilityPoolGainsWithdrawalDetails>>;
     // (undocumented)
     withdrawGainsFromStaking(overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
+    // (undocumented)
+    withdrawSTBLRewardFromXbrlStblLiquidityMining(overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)
     withdrawSTBLRewardFromXbrlWethLiquidityMining(overrides?: EthersTransactionOverrides): Promise<SentEthersStabilioTransaction<void>>;
     // (undocumented)

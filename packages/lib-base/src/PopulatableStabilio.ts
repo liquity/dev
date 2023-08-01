@@ -273,7 +273,32 @@ export interface PopulatableStabilio<R = unknown, S = unknown, P = unknown>
     PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>
   >;
 
-  /** {@inheritDoc TransactableStabilio.approveXbrlWethUniTokens} */
+  /** {@inheritDoc TransactableStabilio.approveXbrlStblUniTokens} */
+  approveXbrlStblUniTokens(
+    allowance?: Decimalish
+  ): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
+
+  /** {@inheritDoc TransactableStabilio.stakeXbrlStblUniTokens} */
+  stakeXbrlStblUniTokens(
+    amount: Decimalish
+  ): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
+
+  /** {@inheritDoc TransactableStabilio.unstakeXbrlStblUniTokens} */
+  unstakeXbrlStblUniTokens(
+    amount: Decimalish
+  ): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;
+
+  /** {@inheritDoc TransactableStabilio.withdrawSTBLRewardFromXbrlStblLiquidityMining} */
+  withdrawSTBLRewardFromXbrlStblLiquidityMining(): Promise<
+    PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>
+  >;
+
+  /** {@inheritDoc TransactableStabilio.exitXbrlStblLiquidityMining} */
+  exitXbrlStblLiquidityMining(): Promise<
+    PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>
+  >;
+
+  /** {@inheritDoc TransactableStabilio.approveXbrlStblUniTokens} */
   approveXbrlWethUniTokens(
     allowance?: Decimalish
   ): Promise<PopulatedStabilioTransaction<P, SentStabilioTransaction<S, StabilioReceipt<R, void>>>>;

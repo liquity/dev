@@ -263,6 +263,25 @@ export interface SendableStabilio<R = unknown, S = unknown>
   /** {@inheritDoc TransactableStabilio.exitXbrlWethLiquidityMining} */
   exitXbrlWethLiquidityMining(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
 
+  /** {@inheritDoc TransactableStabilio.approveXbrlStblUniTokens} */
+  approveXbrlStblUniTokens(
+    allowance?: Decimalish
+  ): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
+
+  /** {@inheritDoc TransactableStabilio.stakeXbrlStblUniTokens} */
+  stakeXbrlStblUniTokens(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
+
+  /** {@inheritDoc TransactableStabilio.unstakeXbrlStblUniTokens} */
+  unstakeXbrlStblUniTokens(amount: Decimalish): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
+
+  /** {@inheritDoc TransactableStabilio.withdrawSTBLRewardFromXbrlStblLiquidityMining} */
+  withdrawSTBLRewardFromXbrlStblLiquidityMining(): Promise<
+    SentStabilioTransaction<S, StabilioReceipt<R, void>>
+  >;
+
+  /** {@inheritDoc TransactableStabilio.exitXbrlStblLiquidityMining} */
+  exitXbrlStblLiquidityMining(): Promise<SentStabilioTransaction<S, StabilioReceipt<R, void>>>;
+
   /** {@inheritDoc TransactableStabilio.registerFrontend} */
   registerFrontend(
     kickbackRate: Decimalish

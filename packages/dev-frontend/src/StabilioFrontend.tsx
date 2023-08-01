@@ -21,6 +21,7 @@ import { TroveViewProvider } from "./components/Trove/context/TroveViewProvider"
 import { StabilityViewProvider } from "./components/Stability/context/StabilityViewProvider";
 import { StakingViewProvider } from "./components/Staking/context/StakingViewProvider";
 import { FarmViewProvider } from "./components/Farm/context/FarmViewProvider";
+import { XbrlStblFarmViewProvider } from "./components/Farm/context/XbrlStblFarmViewProvider";
 
 type StabilioFrontendProps = {
   loader?: React.ReactNode;
@@ -45,39 +46,41 @@ export const StabilioFrontend: React.FC<StabilioFrontendProps> = ({ loader }) =>
         <TroveViewProvider>
           <StabilityViewProvider>
             <StakingViewProvider>
-              <FarmViewProvider>
-                <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
-                  <Header>
-                    <UserAccount />
-                    <SystemStatsPopup />
-                  </Header>
+              <XbrlStblFarmViewProvider>
+                <FarmViewProvider>
+                  <Flex sx={{ flexDirection: "column", minHeight: "100%" }}>
+                    <Header>
+                      <UserAccount />
+                      <SystemStatsPopup />
+                    </Header>
 
-                  <Container
-                    variant="main"
-                    sx={{
-                      display: "flex",
-                      flexGrow: 1,
-                      flexDirection: "column",
-                      alignItems: "center"
-                    }}
-                  >
-                    <Switch>
-                      <Route path="/" exact>
-                        <PageSwitcher />
-                      </Route>
-                      <Route path="/farm">
-                        <Farm />
-                      </Route>
-                      <Route path="/risky-troves">
-                        <RiskyTrovesPage />
-                      </Route>
-                      <Route path="/redemption">
-                        <RedemptionPage />
-                      </Route>
-                    </Switch>
-                  </Container>
-                </Flex>
-              </FarmViewProvider>
+                    <Container
+                      variant="main"
+                      sx={{
+                        display: "flex",
+                        flexGrow: 1,
+                        flexDirection: "column",
+                        alignItems: "center"
+                      }}
+                    >
+                      <Switch>
+                        <Route path="/" exact>
+                          <PageSwitcher />
+                        </Route>
+                        <Route path="/farm">
+                          <Farm />
+                        </Route>
+                        <Route path="/risky-troves">
+                          <RiskyTrovesPage />
+                        </Route>
+                        <Route path="/redemption">
+                          <RedemptionPage />
+                        </Route>
+                      </Switch>
+                    </Container>
+                  </Flex>
+                </FarmViewProvider>
+              </XbrlStblFarmViewProvider>
             </StakingViewProvider>
           </StabilityViewProvider>
         </TroveViewProvider>

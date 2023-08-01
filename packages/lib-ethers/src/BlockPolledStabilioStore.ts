@@ -92,6 +92,7 @@ export class BlockPolledStabilioStore extends StabilioStore<BlockPolledStabilioS
       blockTimestamp,
       _feesFactory,
       calculateRemainingSTBLInXbrlWethLiquidityPool,
+      calculateRemainingSTBLInXbrlStblLiquidityPool,
       ...baseState
     } = await promiseAllValues({
       blockTimestamp: this._readable._getBlockTimestamp(blockTag),
@@ -99,7 +100,9 @@ export class BlockPolledStabilioStore extends StabilioStore<BlockPolledStabilioS
       calculateRemainingSTBLInXbrlWethLiquidityPool: this._readable._getRemainingXbrlWethLiquidityMiningSTBLRewardCalculator({
         blockTag
       }),
-
+      calculateRemainingSTBLInXbrlStblLiquidityPool: this._readable._getRemainingXbrlStblLiquidityMiningSTBLRewardCalculator({
+        blockTag
+      }),
       price: this._readable.getPrice({ blockTag }),
       numberOfTroves: this._readable.getNumberOfTroves({ blockTag }),
       totalRedistributed: this._readable.getTotalRedistributed({ blockTag }),
@@ -108,6 +111,7 @@ export class BlockPolledStabilioStore extends StabilioStore<BlockPolledStabilioS
       totalStakedSTBL: this._readable.getTotalStakedSTBL({ blockTag }),
       _riskiestTroveBeforeRedistribution: this._getRiskiestTroveBeforeRedistribution({ blockTag }),
       totalStakedXbrlWethUniTokens: this._readable.getTotalStakedXbrlWethUniTokens({ blockTag }),
+      totalStakedXbrlStblUniTokens: this._readable.getTotalStakedXbrlStblUniTokens({ blockTag }),
       remainingStabilityPoolSTBLReward: this._readable.getRemainingStabilityPoolSTBLReward({
         blockTag
       }),
@@ -125,6 +129,12 @@ export class BlockPolledStabilioStore extends StabilioStore<BlockPolledStabilioS
             xbrlWethUniTokenAllowance: this._readable.getXbrlWethUniTokenAllowance(userAddress, { blockTag }),
             xbrlWethLiquidityMiningStake: this._readable.getXbrlWethLiquidityMiningStake(userAddress, { blockTag }),
             xbrlWethLiquidityMiningSTBLReward: this._readable.getXbrlWethLiquidityMiningSTBLReward(userAddress, {
+              blockTag
+            }),
+            xbrlStblUniTokenBalance: this._readable.getXbrlStblUniTokenBalance(userAddress, { blockTag }),
+            xbrlStblUniTokenAllowance: this._readable.getXbrlStblUniTokenAllowance(userAddress, { blockTag }),
+            xbrlStblLiquidityMiningStake: this._readable.getXbrlStblLiquidityMiningStake(userAddress, { blockTag }),
+            xbrlStblLiquidityMiningSTBLReward: this._readable.getXbrlStblLiquidityMiningSTBLReward(userAddress, {
               blockTag
             }),
             collateralSurplusBalance: this._readable.getCollateralSurplusBalance(userAddress, {
@@ -145,6 +155,10 @@ export class BlockPolledStabilioStore extends StabilioStore<BlockPolledStabilioS
             xbrlWethUniTokenAllowance: Decimal.ZERO,
             xbrlWethLiquidityMiningStake: Decimal.ZERO,
             xbrlWethLiquidityMiningSTBLReward: Decimal.ZERO,
+            xbrlStblUniTokenBalance: Decimal.ZERO,
+            xbrlStblUniTokenAllowance: Decimal.ZERO,
+            xbrlStblLiquidityMiningStake: Decimal.ZERO,
+            xbrlStblLiquidityMiningSTBLReward: Decimal.ZERO,
             collateralSurplusBalance: Decimal.ZERO,
             troveBeforeRedistribution: new TroveWithPendingRedistribution(
               AddressZero,
@@ -166,7 +180,8 @@ export class BlockPolledStabilioStore extends StabilioStore<BlockPolledStabilioS
       {
         ...baseState,
         _feesInNormalMode: _feesFactory(blockTimestamp, false),
-        remainingXbrlWethLiquidityMiningSTBLReward: calculateRemainingSTBLInXbrlWethLiquidityPool(blockTimestamp)
+        remainingXbrlWethLiquidityMiningSTBLReward: calculateRemainingSTBLInXbrlWethLiquidityPool(blockTimestamp),
+        remainingXbrlStblLiquidityMiningSTBLReward: calculateRemainingSTBLInXbrlStblLiquidityPool(blockTimestamp)
       },
       {
         blockTag,

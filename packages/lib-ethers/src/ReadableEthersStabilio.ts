@@ -378,6 +378,74 @@ export class ReadableEthersStabilio implements ReadableStabilio {
     return xbrlWethUnipool.earned(address, { ...overrides }).then(decimalify);
   }
 
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getXbrlStblUniTokenBalance} */
+  getXbrlStblUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    address ??= _requireAddress(this.connection);
+    const { xbrlStblUniToken } = _getContracts(this.connection);
+
+    return xbrlStblUniToken.balanceOf(address, { ...overrides }).then(decimalify);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getXbrlStblUniTokenAllowance} */
+  getXbrlStblUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    address ??= _requireAddress(this.connection);
+    const { xbrlStblUniToken, xbrlStblUnipool } = _getContracts(this.connection);
+
+    return xbrlStblUniToken.allowance(address, xbrlStblUnipool.address, { ...overrides }).then(decimalify);
+  }
+
+  /** @internal */
+  async _getRemainingXbrlStblLiquidityMiningSTBLRewardCalculator(
+    overrides?: EthersCallOverrides
+  ): Promise<(blockTimestamp: number) => Decimal> {
+    const { xbrlStblUnipool } = _getContracts(this.connection);
+
+    const [totalSupply, rewardRate, periodFinish, lastUpdateTime] = await Promise.all([
+      xbrlStblUnipool.totalSupply({ ...overrides }),
+      xbrlStblUnipool.rewardRate({ ...overrides }).then(decimalify),
+      xbrlStblUnipool.periodFinish({ ...overrides }).then(numberify),
+      xbrlStblUnipool.lastUpdateTime({ ...overrides }).then(numberify)
+    ]);
+
+    return (blockTimestamp: number) =>
+      rewardRate.mul(
+        Math.max(0, periodFinish - (totalSupply.isZero() ? lastUpdateTime : blockTimestamp))
+      );
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getRemainingXbrlStblLiquidityMiningSTBLReward} */
+  async getRemainingXbrlStblLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal> {
+    const [calculateRemainingSTBLInXbrlStblLiquidityPool, blockTimestamp] = await Promise.all([
+      this._getRemainingXbrlStblLiquidityMiningSTBLRewardCalculator(overrides),
+      this._getBlockTimestamp(overrides?.blockTag)
+    ]);
+
+    return calculateRemainingSTBLInXbrlStblLiquidityPool(blockTimestamp);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getXbrlStblLiquidityMiningStake} */
+  getXbrlStblLiquidityMiningStake(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    address ??= _requireAddress(this.connection);
+    const { xbrlStblUnipool } = _getContracts(this.connection);
+
+    return xbrlStblUnipool.balanceOf(address, { ...overrides }).then(decimalify);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getTotalStakedXbrlStblUniTokens} */
+  getTotalStakedXbrlStblUniTokens(overrides?: EthersCallOverrides): Promise<Decimal> {
+    const { xbrlStblUnipool } = _getContracts(this.connection);
+
+    return xbrlStblUnipool.totalSupply({ ...overrides }).then(decimalify);
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getXbrlStblLiquidityMiningSTBLReward} */
+  getXbrlStblLiquidityMiningSTBLReward(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    address ??= _requireAddress(this.connection);
+    const { xbrlStblUnipool } = _getContracts(this.connection);
+
+    return xbrlStblUnipool.earned(address, { ...overrides }).then(decimalify);
+  }
+
   /** {@inheritDoc @stabilio/lib-base#ReadableStabilio.getCollateralSurplusBalance} */
   getCollateralSurplusBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
     address ??= _requireAddress(this.connection);
@@ -686,6 +754,48 @@ class _BlockPolledReadableEthersStabilio
       : this._readable.getXbrlWethLiquidityMiningSTBLReward(address, overrides);
   }
 
+  async getXbrlStblUniTokenBalance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._userHit(address, overrides)
+      ? this.store.state.xbrlStblUniTokenBalance
+      : this._readable.getXbrlStblUniTokenBalance(address, overrides);
+  }
+
+  async getXbrlStblUniTokenAllowance(address?: string, overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._userHit(address, overrides)
+      ? this.store.state.xbrlStblUniTokenAllowance
+      : this._readable.getXbrlStblUniTokenAllowance(address, overrides);
+  }
+
+  async getRemainingXbrlStblLiquidityMiningSTBLReward(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._blockHit(overrides)
+      ? this.store.state.remainingXbrlStblLiquidityMiningSTBLReward
+      : this._readable.getRemainingXbrlStblLiquidityMiningSTBLReward(overrides);
+  }
+
+  async getXbrlStblLiquidityMiningStake(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): Promise<Decimal> {
+    return this._userHit(address, overrides)
+      ? this.store.state.xbrlStblLiquidityMiningStake
+      : this._readable.getXbrlStblLiquidityMiningStake(address, overrides);
+  }
+
+  async getTotalStakedXbrlStblUniTokens(overrides?: EthersCallOverrides): Promise<Decimal> {
+    return this._blockHit(overrides)
+      ? this.store.state.totalStakedXbrlStblUniTokens
+      : this._readable.getTotalStakedXbrlStblUniTokens(overrides);
+  }
+
+  async getXbrlStblLiquidityMiningSTBLReward(
+    address?: string,
+    overrides?: EthersCallOverrides
+  ): Promise<Decimal> {
+    return this._userHit(address, overrides)
+      ? this.store.state.xbrlStblLiquidityMiningSTBLReward
+      : this._readable.getXbrlStblLiquidityMiningSTBLReward(address, overrides);
+  }
+
   async getCollateralSurplusBalance(
     address?: string,
     overrides?: EthersCallOverrides
@@ -754,6 +864,10 @@ class _BlockPolledReadableEthersStabilio
   }
 
   _getRemainingXbrlWethLiquidityMiningSTBLRewardCalculator(): Promise<(blockTimestamp: number) => Decimal> {
+    throw new Error("Method not implemented.");
+  }
+
+  _getRemainingXbrlStblLiquidityMiningSTBLRewardCalculator(): Promise<(blockTimestamp: number) => Decimal> {
     throw new Error("Method not implemented.");
   }
 }

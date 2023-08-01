@@ -129,6 +129,48 @@ export class _CachedReadableStabilio<T extends unknown[]>
     );
   }
 
+  async getXbrlStblUniTokenBalance(address?: string, ...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getXbrlStblUniTokenBalance(address, ...extraParams) ??
+      this._readable.getXbrlStblUniTokenBalance(address, ...extraParams)
+    );
+  }
+
+  async getXbrlStblUniTokenAllowance(address?: string, ...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getXbrlStblUniTokenAllowance(address, ...extraParams) ??
+      this._readable.getXbrlStblUniTokenAllowance(address, ...extraParams)
+    );
+  }
+
+  async getRemainingXbrlStblLiquidityMiningSTBLReward(...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getRemainingXbrlStblLiquidityMiningSTBLReward(...extraParams) ??
+      this._readable.getRemainingXbrlStblLiquidityMiningSTBLReward(...extraParams)
+    );
+  }
+
+  async getXbrlStblLiquidityMiningStake(address?: string, ...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getXbrlStblLiquidityMiningStake(address, ...extraParams) ??
+      this._readable.getXbrlStblLiquidityMiningStake(address, ...extraParams)
+    );
+  }
+
+  async getTotalStakedXbrlStblUniTokens(...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getTotalStakedXbrlStblUniTokens(...extraParams) ??
+      this._readable.getTotalStakedXbrlStblUniTokens(...extraParams)
+    );
+  }
+
+  async getXbrlStblLiquidityMiningSTBLReward(address?: string, ...extraParams: T): Promise<Decimal> {
+    return (
+      this._cache.getXbrlStblLiquidityMiningSTBLReward(address, ...extraParams) ??
+      this._readable.getXbrlStblLiquidityMiningSTBLReward(address, ...extraParams)
+    );
+  }
+
   async getXbrlWethUniTokenBalance(address?: string, ...extraParams: T): Promise<Decimal> {
     return (
       this._cache.getXbrlWethUniTokenBalance(address, ...extraParams) ??

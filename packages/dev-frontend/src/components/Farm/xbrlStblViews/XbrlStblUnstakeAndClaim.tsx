@@ -1,44 +1,36 @@
 import React, { useEffect } from "react";
 import { Button } from "theme-ui";
-import { Decimal } from "@stabilio/lib-base";
 import { useStabilio } from "../../../hooks/StabilioContext";
 import { Transaction, useMyTransactionState } from "../../Transaction";
-import { useFarmView } from "../context/FarmViewContext";
-import { useValidationState } from "../context/useValidationState";
+import { useXbrlStblFarmView } from "../context/XbrlStblFarmViewContext";
 
-type ApproveProps = {
-  amount: Decimal;
-};
+const transactionId = "farm-unstake-and-claim";
 
-const transactionId = "farm-approve";
+export const XbrlStblUnstakeAndClaim: React.FC = () => {
+  const { dispatchEvent } = useXbrlStblFarmView();
 
-export const Approve: React.FC<ApproveProps> = ({ amount }) => {
-  const { dispatchEvent } = useFarmView();
   const {
     stabilio: { send: stabilio }
   } = useStabilio();
 
-  const { hasApproved } = useValidationState(amount);
   const transactionState = useMyTransactionState(transactionId);
 
   useEffect(() => {
     if (transactionState.type === "confirmedOneShot") {
-      dispatchEvent("STAKE_APPROVED");
+      dispatchEvent("UNSTAKE_AND_CLAIM_CONFIRMED");
     }
   }, [transactionState.type, dispatchEvent]);
-
-  if (hasApproved) {
-    return null;
-  }
 
   return (
     <Transaction
       id={transactionId}
-      send={stabilio.approveXbrlWethUniTokens.bind(stabilio, undefined)}
+      send={stabilio.exitXbrlStblLiquidityMining.bind(stabilio)}
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
-      <Button>Approve ETH/xBRL UNI LP</Button>
+      <Button variant="outline" sx={{ mt: 3, width: "100%" }}>
+        Unstake and claim reward
+      </Button>
     </Transaction>
   );
 };

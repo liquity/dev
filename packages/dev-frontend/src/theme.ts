@@ -80,7 +80,7 @@ const iconButton: ThemeUIStyleObject = {
   }
 };
 
-const cardHeadingFontSize = 16.7167;
+const cardHeadingFontSize = 16;
 
 const cardGapX = [0, 3, 4];
 const cardGapY = [3, 3, 4];
@@ -102,7 +102,6 @@ const infoCard: ThemeUIStyleObject = {
   borderColor: "secondary",
 
   h2: {
-    mb: 2,
     fontSize: cardHeadingFontSize
   }
 };
@@ -131,7 +130,8 @@ const overlay: ThemeUIStyleObject = {
   left: 0,
   top: 0,
   width: "100%",
-  height: "100%"
+  height: "100%",
+  borderRadius: 12
 };
 
 const modalOverlay: ThemeUIStyleObject = {
@@ -256,7 +256,8 @@ const theme: Theme = {
       ...card,
 
       pl: 3,
-      py: 3,
+      pt: 2,
+      pb: 3,
       pr: 3,
 
       borderColor: "muted",
@@ -270,7 +271,6 @@ const theme: Theme = {
 
         height: "56px",
         pl: 3,
-        py: 3,
         pr: 3,
 
         bg: "muted",
@@ -408,7 +408,7 @@ const theme: Theme = {
     disabledOverlay: {
       ...overlay,
 
-      bg: "rgba(255, 255, 255, 0.5)"
+      bg: "rgba(255, 255, 255, 0.15)"
     },
 
     modalOverlay: {

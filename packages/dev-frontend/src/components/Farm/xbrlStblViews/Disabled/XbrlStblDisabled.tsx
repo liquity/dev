@@ -3,28 +3,28 @@ import { Card, Heading, Box, Flex } from "theme-ui";
 import { StabilioStoreState } from "@stabilio/lib-base";
 import { useStabilioSelector } from "@stabilio/lib-react";
 import { InfoMessage } from "../../../InfoMessage";
-import { UnstakeAndClaim } from "../UnstakeAndClaim";
-import { RemainingSTBL } from "../RemainingSTBL";
+import { XbrlStblUnstakeAndClaim } from "../XbrlStblUnstakeAndClaim";
+import { XbrlStblRemainingSTBL } from "../XbrlStblRemainingSTBL";
 import { StaticRow } from "../../../Trove/Editor";
 import { GT, LP } from "../../../../strings";
 
-const selector = ({ xbrlWethLiquidityMiningStake, xbrlWethLiquidityMiningSTBLReward }: StabilioStoreState) => ({
-  xbrlWethLiquidityMiningStake,
-  xbrlWethLiquidityMiningSTBLReward
+const selector = ({ xbrlStblLiquidityMiningStake, xbrlStblLiquidityMiningSTBLReward }: StabilioStoreState) => ({
+  xbrlStblLiquidityMiningStake,
+  xbrlStblLiquidityMiningSTBLReward
 });
 
-export const Disabled: React.FC = () => {
-  const { xbrlWethLiquidityMiningStake, xbrlWethLiquidityMiningSTBLReward } = useStabilioSelector(selector);
-  const hasStake = !xbrlWethLiquidityMiningStake.isZero;
+export const XbrlStblDisabled: React.FC = () => {
+  const { xbrlStblLiquidityMiningStake, xbrlStblLiquidityMiningSTBLReward } = useStabilioSelector(selector);
+  const hasStake = !xbrlStblLiquidityMiningStake.isZero;
 
   return (
     <Card>
       <Flex sx={{ justifyContent: "space-between", width: "100%", px: [2, 3], pt: 3, pb: 2 }}>
         <Heading sx={{ fontSize: 16  }}>
-          ETH/xBRL Uniswap LP
+          STBL/xBRL Uniswap LP
         </Heading>
         <Flex sx={{ justifyContent: "flex-end" }}>
-          <RemainingSTBL />
+          <XbrlStblRemainingSTBL />
         </Flex>
       </Flex>
       <Box sx={{ p: [2, 3] }}>
@@ -37,18 +37,18 @@ export const Disabled: React.FC = () => {
               <StaticRow
                 label="Stake"
                 inputId="farm-deposit"
-                amount={xbrlWethLiquidityMiningStake.prettify(4)}
+                amount={xbrlStblLiquidityMiningStake.prettify(4)}
                 unit={LP}
               />
               <StaticRow
                 label="Reward"
                 inputId="farm-reward"
-                amount={xbrlWethLiquidityMiningSTBLReward.prettify(4)}
-                color={xbrlWethLiquidityMiningSTBLReward.nonZero && "success"}
+                amount={xbrlStblLiquidityMiningSTBLReward.prettify(4)}
+                color={xbrlStblLiquidityMiningSTBLReward.nonZero && "success"}
                 unit={GT}
               />
             </Box>
-            <UnstakeAndClaim />
+            <XbrlStblUnstakeAndClaim />
           </>
         )}
       </Box>

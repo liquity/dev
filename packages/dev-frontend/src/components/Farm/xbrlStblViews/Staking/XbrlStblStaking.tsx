@@ -5,27 +5,27 @@ import { LP } from "../../../../strings";
 import { Icon } from "../../../Icon";
 import { EditableRow, StaticRow } from "../../../Trove/Editor";
 import { LoadingOverlay } from "../../../LoadingOverlay";
-import { useFarmView } from "../../context/FarmViewContext";
+import { useXbrlStblFarmView } from "../../context/XbrlStblFarmViewContext";
 import { useMyTransactionState } from "../../../Transaction";
-import { Confirm } from "../Confirm";
-import { Description } from "../Description";
-import { Approve } from "../Approve";
-import { Validation } from "../Validation";
-import { useValidationState } from "../../context/useValidationState";
+import { XbrlStblConfirm } from "../XbrlStblConfirm";
+import { XbrlStblDescription } from "../XbrlStblDescription";
+import { XbrlStblApprove } from "../XbrlStblApprove";
+import { XbrlStblValidation } from "../XbrlStblValidation";
+import { useXbrlStblValidationState } from "../../context/useXbrlStblValidationState";
 import { useStabilioSelector } from "@stabilio/lib-react";
 
 const transactionId = /farm-/;
-const selector = ({ totalStakedXbrlWethUniTokens }: StabilioStoreState) => ({ totalStakedXbrlWethUniTokens });
+const selector = ({ totalStakedXbrlStblUniTokens }: StabilioStoreState) => ({ totalStakedXbrlStblUniTokens });
 
-export const Staking: React.FC = () => {
-  const { dispatchEvent } = useFarmView();
-  const { totalStakedXbrlWethUniTokens } = useStabilioSelector(selector);
+export const XbrlStblStaking: React.FC = () => {
+  const { dispatchEvent } = useXbrlStblFarmView();
+  const { totalStakedXbrlStblUniTokens } = useStabilioSelector(selector);
 
   const [amount, setAmount] = useState<Decimal>(Decimal.from(0));
   const editingState = useState<string>();
   const isDirty = !amount.isZero;
 
-  const { maximumStake, hasSetMaximumStake } = useValidationState(amount);
+  const { maximumStake, hasSetMaximumStake } = useXbrlStblValidationState(amount);
 
   const transactionState = useMyTransactionState(transactionId);
   const isTransactionPending =
@@ -36,7 +36,7 @@ export const Staking: React.FC = () => {
     dispatchEvent("CANCEL_PRESSED");
   }, [dispatchEvent]);
 
-  const nextTotalStakedUniTokens = totalStakedXbrlWethUniTokens.add(amount);
+  const nextTotalStakedUniTokens = totalStakedXbrlStblUniTokens.add(amount);
 
   const poolShare = amount.mulDiv(100, nextTotalStakedUniTokens);
 
@@ -44,7 +44,7 @@ export const Staking: React.FC = () => {
     <Card>
       <Flex sx={{ justifyContent: "space-between", width: "100%", px: [2, 3], pt: 3, pb: 2 }}>
         <Heading sx={{ fontSize: 16  }}>
-          ETH/xBRL Uniswap LP
+          STBL/xBRL Uniswap LP
         </Heading>
         {isDirty && !isTransactionPending && (
           <Button
@@ -81,15 +81,15 @@ export const Staking: React.FC = () => {
           />
         )}
 
-        {isDirty && <Validation amount={amount} />}
-        <Description amount={amount} />
+        {isDirty && <XbrlStblValidation amount={amount} />}
+        <XbrlStblDescription amount={amount} />
 
         <Flex variant="layout.actions">
           <Button variant="cancel" onClick={handleCancelPressed}>
             Cancel
           </Button>
-          <Approve amount={amount} />
-          <Confirm amount={amount} />
+          <XbrlStblApprove amount={amount} />
+          <XbrlStblConfirm amount={amount} />
         </Flex>
       </Box>
       {isTransactionPending && <LoadingOverlay />}

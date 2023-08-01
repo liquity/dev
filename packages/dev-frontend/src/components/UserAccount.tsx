@@ -8,8 +8,6 @@ import { COIN, GT } from "../strings";
 import { useStabilio } from "../hooks/StabilioContext";
 import { shortenAddress } from "../utils/shortenAddress";
 
-import { Icon } from "./Icon";
-
 const select = ({ accountBalance, xbrlBalance, stblBalance }: StabilioStoreState) => ({
   accountBalance,
   xbrlBalance,

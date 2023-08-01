@@ -1416,4 +1416,101 @@ export class PopulatableEthersStabilio
       )
     );
   }
+
+  /** @internal */
+  async _mintXbrlStblUniToken(
+    amount: Decimalish,
+    address?: string,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersStabilioTransaction<void>> {
+    address ??= _requireAddress(this._readable.connection, overrides);
+    const { xbrlStblUniToken } = _getContracts(this._readable.connection);
+
+    if (!_uniTokenIsMock(xbrlStblUniToken)) {
+      throw new Error("_mintXbrlWethUniToken() unavailable on this deployment of Stabilio");
+    }
+
+    return this._wrapSimpleTransaction(
+      await xbrlStblUniToken.estimateAndPopulate.mint(
+        { ...overrides },
+        id,
+        address,
+        Decimal.from(amount).hex
+      )
+    );
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#PopulatableStabilio.approveXbrlStblUniTokens} */
+  async approveXbrlStblUniTokens(
+    allowance?: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersStabilioTransaction<void>> {
+    const { xbrlStblUniToken, xbrlStblUnipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await xbrlStblUniToken.estimateAndPopulate.approve(
+        { ...overrides },
+        id,
+        xbrlStblUnipool.address,
+        Decimal.from(allowance ?? Decimal.INFINITY).hex
+      )
+    );
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#PopulatableStabilio.stakeXbrlStblUniTokens} */
+  async stakeXbrlStblUniTokens(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersStabilioTransaction<void>> {
+    const { xbrlStblUnipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await xbrlStblUnipool.estimateAndPopulate.stake(
+        { ...overrides },
+        addGasForUnipoolRewardUpdate,
+        Decimal.from(amount).hex
+      )
+    );
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#PopulatableStabilio.unstakeXbrlStblUniTokens} */
+  async unstakeXbrlStblUniTokens(
+    amount: Decimalish,
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersStabilioTransaction<void>> {
+    const { xbrlStblUnipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await xbrlStblUnipool.estimateAndPopulate.withdraw(
+        { ...overrides },
+        addGasForUnipoolRewardUpdate,
+        Decimal.from(amount).hex
+      )
+    );
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#PopulatableStabilio.withdrawSTBLRewardFromXbrlStblLiquidityMining} */
+  async withdrawSTBLRewardFromXbrlStblLiquidityMining(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersStabilioTransaction<void>> {
+    const { xbrlStblUnipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await xbrlStblUnipool.estimateAndPopulate.claimReward({ ...overrides }, addGasForUnipoolRewardUpdate)
+    );
+  }
+
+  /** {@inheritDoc @stabilio/lib-base#PopulatableStabilio.exitXbrlStblLiquidityMining} */
+  async exitXbrlStblLiquidityMining(
+    overrides?: EthersTransactionOverrides
+  ): Promise<PopulatedEthersStabilioTransaction<void>> {
+    const { xbrlStblUnipool } = _getContracts(this._readable.connection);
+
+    return this._wrapSimpleTransaction(
+      await xbrlStblUnipool.estimateAndPopulate.withdrawAndClaim(
+        { ...overrides },
+        addGasForUnipoolRewardUpdate
+      )
+    );
+  }
 }

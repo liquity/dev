@@ -1,24 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Card, Box, Heading, Flex, Button, Label, Input } from "theme-ui";
+import { Card, Box, Heading, Flex, Label, Input } from "theme-ui";
 
-import { Decimal, StabilioStoreState } from "@stabilio/lib-base";
+import { StabilioStoreState } from "@stabilio/lib-base";
 import { useStabilioSelector } from "@stabilio/lib-react";
-
-import { useStabilio } from "../hooks/StabilioContext";
-
-import { Icon } from "./Icon";
-import { Transaction } from "./Transaction";
 
 const selectPrice = ({ price }: StabilioStoreState) => price;
 
 export const PriceManager: React.FC = () => {
-  const {
-    stabilio: {
-      send: stabilio,
-      connection: { _priceFeedIsTestnet: canSetPrice }
-    }
-  } = useStabilio();
-
   const price = useStabilioSelector(selectPrice);
   const [editedPrice, setEditedPrice] = useState(price.toString(2));
 
