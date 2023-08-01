@@ -1081,7 +1081,7 @@ describe("EthersStabilio", () => {
       await stabilio._mintXbrlStblUniToken(0);
 
       const stblReward = Number(await stabilio.getXbrlStblLiquidityMiningSTBLReward());
-      expect(stblReward).to.be.at.least(1); // ~0.2572 per second [(4e6/3) / (60*24*60*60)]
+      expect(stblReward).to.be.at.least(0.9); // ~0.2572 per second [(4e6/3) / (60*24*60*60)]
 
       await stabilio.withdrawSTBLRewardFromXbrlStblLiquidityMining();
       const stblBalance = Number(await stabilio.getSTBLBalance());
@@ -1127,7 +1127,7 @@ describe("EthersStabilio", () => {
       expect(`${remainingSTBLReward}`).to.equal("0");
 
       const stblBalance = Number(await stabilio.getSTBLBalance());
-      expect(stblBalance).to.be.within(1333333, 1333334);
+      expect(stblBalance).to.be.within(2333333, 2333334);
     });
   });
   

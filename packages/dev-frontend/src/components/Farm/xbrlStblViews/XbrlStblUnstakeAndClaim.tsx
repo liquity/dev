@@ -28,7 +28,7 @@ export const XbrlStblUnstakeAndClaim: React.FC = () => {
       showFailure="asTooltip"
       tooltipPlacement="bottom"
     >
-      <Button variant="outline" sx={{ mt: 3, width: "100%" }}>
+      <Button variant="outline" sx={{ mt: 3, width: "100%", ml: 2 }}>
         Unstake and claim reward
       </Button>
     </Transaction>

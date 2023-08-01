@@ -54,14 +54,15 @@ const button: ThemeUIStyleObject = {
 };
 
 const buttonOutline = (color: string, hoverColor: string): ThemeUIStyleObject => ({
-  color,
-  borderColor: color,
+  color: "white",
+  borderColor: "white",
   background: "none",
+  border: 1,
 
   ":enabled:hover": {
     color: "background",
-    bg: hoverColor,
-    borderColor: hoverColor
+    bg: "white",
+    borderColor: "white"
   }
 });
 
