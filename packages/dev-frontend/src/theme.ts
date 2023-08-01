@@ -34,6 +34,7 @@ const buttonBase: ThemeUIStyleObject = {
   alignItems: "center",
   justifyContent: "center",
   borderRadius: 10,
+  fontSize: 14,
 
   ":enabled": { cursor: "pointer" }
 };

@@ -26,7 +26,6 @@ export const Header: React.FC = ({ children }) => {
     <Container variant="header">
       <Flex sx={{ alignItems: "center", flex: 1 }}>
         <StabilioLogo height={logoHeight} />
-
         <Box
           sx={{
             mx: [2, 4],
