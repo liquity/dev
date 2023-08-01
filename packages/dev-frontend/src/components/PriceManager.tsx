@@ -37,13 +37,14 @@ export const PriceManager: React.FC = () => {
           <Label variant="unit">$</Label>
 
           <Input
-            type={canSetPrice ? "number" : "text"}
+            type="text"
             step="any"
             value={editedPrice}
             onChange={e => setEditedPrice(e.target.value)}
-            disabled={!canSetPrice}
+            disabled={true}
+            sx={{ borderRadius: 8 }}
           />
-
+        {/*
           {canSetPrice && (
             <Flex sx={{ ml: 2, alignItems: "center" }}>
               <Transaction
@@ -63,6 +64,7 @@ export const PriceManager: React.FC = () => {
               </Transaction>
             </Flex>
           )}
+        */}
         </Flex>
       </Box>
     </Card>

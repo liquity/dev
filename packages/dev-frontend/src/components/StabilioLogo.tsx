@@ -7,6 +7,6 @@ type StabilioLogoProps = React.ComponentProps<typeof Box> & {
 
 export const StabilioLogo: React.FC<StabilioLogoProps> = ({ height, ...boxProps }) => (
   <Box sx={{ lineHeight: 0 }} {...boxProps}>
-    <Image src="./xbrl-icon.png" sx={{ height }} />
+    <Image src="./stabilio-logo.svg" sx={{ height }} />
   </Box>
 );

@@ -3,3 +3,26 @@
 html {
   height: 100%;
 }
+
+::-webkit-scrollbar {
+  width: 12px;
+}
+.scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px #0a0c1b; 
+  border-radius: 10px;
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #313131; 
+  border-radius: 10px;
+}
+
+::selection {
+  background: #00FFBD;
+  color: black;
+}

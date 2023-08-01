@@ -23,7 +23,6 @@ export const UserAccount: React.FC = () => {
   return (
     <Box sx={{ display: ["none", "flex"] }}>
       <Flex sx={{ alignItems: "center" }}>
-        <Icon name="user-circle" size="lg" />
         <Flex sx={{ ml: 3, mr: 4, flexDirection: "column" }}>
           <Heading sx={{ fontSize: 1 }}>Connected as</Heading>
           <Text as="span" sx={{ fontSize: 1 }}>
@@ -33,8 +32,6 @@ export const UserAccount: React.FC = () => {
       </Flex>
 
       <Flex sx={{ alignItems: "center" }}>
-        <Icon name="wallet" size="lg" />
-
         {([
           ["ETH", accountBalance],
           [COIN, xbrlBalance],

@@ -9,7 +9,7 @@ import { StabilioLogo } from "./StabilioLogo";
 import { Nav } from "./Nav";
 import { SideNav } from "./SideNav";
 
-const logoHeight = "32px";
+const logoHeight = "28px";
 
 const select = ({ frontend }: StabilioStoreState) => ({
   frontend

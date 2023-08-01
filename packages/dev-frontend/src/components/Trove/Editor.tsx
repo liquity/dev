@@ -139,7 +139,8 @@ const staticStyle: ThemeUICSSProperties = {
   fontSize: 3,
 
   border: 1,
-  borderColor: "transparent"
+  borderColor: "transparent",
+  borderRadius: 10
 };
 
 const editableStyle: ThemeUICSSProperties = {
@@ -155,7 +156,9 @@ const editableStyle: ThemeUICSSProperties = {
 
   boxShadow: [1, 2],
   border: 1,
-  borderColor: "muted"
+  borderColor: "muted",
+  borderRadius: 10,
+  outline: "none"
 };
 
 type StaticRowProps = RowProps & StaticAmountsProps;

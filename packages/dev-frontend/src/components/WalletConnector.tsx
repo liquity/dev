@@ -131,7 +131,6 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({ children, load
             </>
           ) : (
             <>
-              <Icon name="plug" size="lg" />
               <Box sx={{ ml: 2 }}>Connect wallet</Box>
             </>
           )}
