@@ -4,7 +4,7 @@
 
 ## ReadableEthersStabilio.getXbrlWethLiquidityMiningStake() method
 
-Get the amount of Uniswap ETH/XBRL LP tokens currently staked by an address in liquidity mining.
+Get the amount of Uniswap XBRL/ETH LP tokens currently staked by an address in liquidity mining.
 
 <b>Signature:</b>
 

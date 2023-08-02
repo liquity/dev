@@ -4,7 +4,7 @@
 
 ## StabilioStoreBaseState.xbrlWethUniTokenAllowance property
 
-The liquidity mining contract's allowance of user's Uniswap ETH/XBRL LP tokens.
+The liquidity mining contract's allowance of user's Uniswap XBRL/ETH LP tokens.
 
 <b>Signature:</b>
 

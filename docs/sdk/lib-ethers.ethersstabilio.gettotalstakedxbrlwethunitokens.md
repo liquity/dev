@@ -4,7 +4,7 @@
 
 ## EthersStabilio.getTotalStakedXbrlWethUniTokens() method
 
-Get the total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining.
+Get the total amount of Uniswap XBRL/ETH LP tokens currently staked in liquidity mining.
 
 <b>Signature:</b>
 

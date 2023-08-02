@@ -23,6 +23,7 @@ export interface StabilioStoreBaseState
 |  [ownFrontend](./lib-base.stabiliostorebasestate.ownfrontend.md) | [FrontendStatus](./lib-base.frontendstatus.md) | Status of user's own frontend. |
 |  [price](./lib-base.stabiliostorebasestate.price.md) | [Decimal](./lib-base.decimal.md) | Current price of the native currency (e.g. Ether) in USD. |
 |  [remainingStabilityPoolSTBLReward](./lib-base.stabiliostorebasestate.remainingstabilitypoolstblreward.md) | [Decimal](./lib-base.decimal.md) | Remaining STBL that will be collectively rewarded to stability depositors. |
+|  [remainingXbrlStblLiquidityMiningSTBLReward](./lib-base.stabiliostorebasestate.remainingxbrlstblliquidityminingstblreward.md) | [Decimal](./lib-base.decimal.md) | Remaining STBL that will be collectively rewarded to liquidity miners. |
 |  [remainingXbrlWethLiquidityMiningSTBLReward](./lib-base.stabiliostorebasestate.remainingxbrlwethliquidityminingstblreward.md) | [Decimal](./lib-base.decimal.md) | Remaining STBL that will be collectively rewarded to liquidity miners. |
 |  [stabilityDeposit](./lib-base.stabiliostorebasestate.stabilitydeposit.md) | [StabilityDeposit](./lib-base.stabilitydeposit.md) | User's stability deposit. |
 |  [stblBalance](./lib-base.stabiliostorebasestate.stblbalance.md) | [Decimal](./lib-base.decimal.md) | User's STBL token balance. |
@@ -30,12 +31,17 @@ export interface StabilioStoreBaseState
 |  [total](./lib-base.stabiliostorebasestate.total.md) | [Trove](./lib-base.trove.md) | Total collateral and debt in the Stabilio system. |
 |  [totalRedistributed](./lib-base.stabiliostorebasestate.totalredistributed.md) | [Trove](./lib-base.trove.md) | Total collateral and debt per stake that has been liquidated through redistribution. |
 |  [totalStakedSTBL](./lib-base.stabiliostorebasestate.totalstakedstbl.md) | [Decimal](./lib-base.decimal.md) | Total amount of STBL currently staked. |
-|  [totalStakedXbrlWethUniTokens](./lib-base.stabiliostorebasestate.totalstakedxbrlwethunitokens.md) | [Decimal](./lib-base.decimal.md) | Total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. |
+|  [totalStakedXbrlStblUniTokens](./lib-base.stabiliostorebasestate.totalstakedxbrlstblunitokens.md) | [Decimal](./lib-base.decimal.md) | Total amount of Uniswap XBRL/STBL LP tokens currently staked in liquidity mining. |
+|  [totalStakedXbrlWethUniTokens](./lib-base.stabiliostorebasestate.totalstakedxbrlwethunitokens.md) | [Decimal](./lib-base.decimal.md) | Total amount of Uniswap XBRL/ETH LP tokens currently staked in liquidity mining. |
 |  [troveBeforeRedistribution](./lib-base.stabiliostorebasestate.trovebeforeredistribution.md) | [TroveWithPendingRedistribution](./lib-base.trovewithpendingredistribution.md) | User's Trove in its state after the last direct modification. |
 |  [xbrlBalance](./lib-base.stabiliostorebasestate.xbrlbalance.md) | [Decimal](./lib-base.decimal.md) | User's XBRL token balance. |
 |  [xbrlInStabilityPool](./lib-base.stabiliostorebasestate.xbrlinstabilitypool.md) | [Decimal](./lib-base.decimal.md) | Total amount of XBRL currently deposited in the Stability Pool. |
-|  [xbrlWethLiquidityMiningStake](./lib-base.stabiliostorebasestate.xbrlwethliquidityminingstake.md) | [Decimal](./lib-base.decimal.md) | Amount of Uniswap ETH/XBRL LP tokens the user has staked in liquidity mining. |
+|  [xbrlStblLiquidityMiningStake](./lib-base.stabiliostorebasestate.xbrlstblliquidityminingstake.md) | [Decimal](./lib-base.decimal.md) | Amount of Uniswap XBRL/STBL LP tokens the user has staked in liquidity mining. |
+|  [xbrlStblLiquidityMiningSTBLReward](./lib-base.stabiliostorebasestate.xbrlstblliquidityminingstblreward.md) | [Decimal](./lib-base.decimal.md) | Amount of STBL the user has earned through mining liquidity. |
+|  [xbrlStblUniTokenAllowance](./lib-base.stabiliostorebasestate.xbrlstblunitokenallowance.md) | [Decimal](./lib-base.decimal.md) | The liquidity mining contract's allowance of user's Uniswap XBRL/STBL LP tokens. |
+|  [xbrlStblUniTokenBalance](./lib-base.stabiliostorebasestate.xbrlstblunitokenbalance.md) | [Decimal](./lib-base.decimal.md) | User's Uniswap XBRL/STBL LP token balance. |
+|  [xbrlWethLiquidityMiningStake](./lib-base.stabiliostorebasestate.xbrlwethliquidityminingstake.md) | [Decimal](./lib-base.decimal.md) | Amount of Uniswap XBRL/ETH LP tokens the user has staked in liquidity mining. |
 |  [xbrlWethLiquidityMiningSTBLReward](./lib-base.stabiliostorebasestate.xbrlwethliquidityminingstblreward.md) | [Decimal](./lib-base.decimal.md) | Amount of STBL the user has earned through mining liquidity. |
-|  [xbrlWethUniTokenAllowance](./lib-base.stabiliostorebasestate.xbrlwethunitokenallowance.md) | [Decimal](./lib-base.decimal.md) | The liquidity mining contract's allowance of user's Uniswap ETH/XBRL LP tokens. |
-|  [xbrlWethUniTokenBalance](./lib-base.stabiliostorebasestate.xbrlwethunitokenbalance.md) | [Decimal](./lib-base.decimal.md) | User's Uniswap ETH/XBRL LP token balance. |
+|  [xbrlWethUniTokenAllowance](./lib-base.stabiliostorebasestate.xbrlwethunitokenallowance.md) | [Decimal](./lib-base.decimal.md) | The liquidity mining contract's allowance of user's Uniswap XBRL/ETH LP tokens. |
+|  [xbrlWethUniTokenBalance](./lib-base.stabiliostorebasestate.xbrlwethunitokenbalance.md) | [Decimal](./lib-base.decimal.md) | User's Uniswap XBRL/ETH LP token balance. |
 

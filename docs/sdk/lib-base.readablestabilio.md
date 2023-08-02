@@ -26,6 +26,7 @@ Implemented by [EthersStabilio](./lib-ethers.ethersstabilio.md)<!-- -->.
 |  [getNumberOfTroves()](./lib-base.readablestabilio.getnumberoftroves.md) | Get number of Troves that are currently open. |
 |  [getPrice()](./lib-base.readablestabilio.getprice.md) | Get the current price of the native currency (e.g. Ether) in USD. |
 |  [getRemainingStabilityPoolSTBLReward()](./lib-base.readablestabilio.getremainingstabilitypoolstblreward.md) | Get the remaining STBL that will be collectively rewarded to stability depositors. |
+|  [getRemainingXbrlStblLiquidityMiningSTBLReward()](./lib-base.readablestabilio.getremainingxbrlstblliquidityminingstblreward.md) | Get the remaining STBL that will be collectively rewarded to liquidity miners. |
 |  [getRemainingXbrlWethLiquidityMiningSTBLReward()](./lib-base.readablestabilio.getremainingxbrlwethliquidityminingstblreward.md) | Get the remaining STBL that will be collectively rewarded to liquidity miners. |
 |  [getStabilityDeposit(address)](./lib-base.readablestabilio.getstabilitydeposit.md) | Get the current state of a Stability Deposit. |
 |  [getSTBLBalance(address)](./lib-base.readablestabilio.getstblbalance.md) | Get the amount of STBL held by an address. |
@@ -33,14 +34,19 @@ Implemented by [EthersStabilio](./lib-ethers.ethersstabilio.md)<!-- -->.
 |  [getTotal()](./lib-base.readablestabilio.gettotal.md) | Get the total amount of collateral and debt in the Stabilio system. |
 |  [getTotalRedistributed()](./lib-base.readablestabilio.gettotalredistributed.md) | Get the total collateral and debt per stake that has been liquidated through redistribution. |
 |  [getTotalStakedSTBL()](./lib-base.readablestabilio.gettotalstakedstbl.md) | Get the total amount of STBL currently staked. |
-|  [getTotalStakedXbrlWethUniTokens()](./lib-base.readablestabilio.gettotalstakedxbrlwethunitokens.md) | Get the total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. |
+|  [getTotalStakedXbrlStblUniTokens()](./lib-base.readablestabilio.gettotalstakedxbrlstblunitokens.md) | Get the total amount of Uniswap XBRL/STBL LP tokens currently staked in liquidity mining. |
+|  [getTotalStakedXbrlWethUniTokens()](./lib-base.readablestabilio.gettotalstakedxbrlwethunitokens.md) | Get the total amount of Uniswap XBRL/ETH LP tokens currently staked in liquidity mining. |
 |  [getTrove(address)](./lib-base.readablestabilio.gettrove.md) | Get the current state of a Trove. |
 |  [getTroveBeforeRedistribution(address)](./lib-base.readablestabilio.gettrovebeforeredistribution.md) | Get a Trove in its state after the last direct modification. |
 |  [getTroves(params)](./lib-base.readablestabilio.gettroves_1.md) | Get a slice from the list of Troves. |
 |  [getXBRLBalance(address)](./lib-base.readablestabilio.getxbrlbalance.md) | Get the amount of XBRL held by an address. |
 |  [getXBRLInStabilityPool()](./lib-base.readablestabilio.getxbrlinstabilitypool.md) | Get the total amount of XBRL currently deposited in the Stability Pool. |
-|  [getXbrlWethLiquidityMiningStake(address)](./lib-base.readablestabilio.getxbrlwethliquidityminingstake.md) | Get the amount of Uniswap ETH/XBRL LP tokens currently staked by an address in liquidity mining. |
+|  [getXbrlStblLiquidityMiningStake(address)](./lib-base.readablestabilio.getxbrlstblliquidityminingstake.md) | Get the amount of Uniswap XBRL/STBL LP tokens currently staked by an address in liquidity mining. |
+|  [getXbrlStblLiquidityMiningSTBLReward(address)](./lib-base.readablestabilio.getxbrlstblliquidityminingstblreward.md) | Get the amount of STBL earned by an address through mining liquidity. |
+|  [getXbrlStblUniTokenAllowance(address)](./lib-base.readablestabilio.getxbrlstblunitokenallowance.md) | Get the liquidity mining contract's allowance of a holder's Uniswap XBRL/STBL LP tokens. |
+|  [getXbrlStblUniTokenBalance(address)](./lib-base.readablestabilio.getxbrlstblunitokenbalance.md) | Get the amount of Uniswap XBRL/STBL LP tokens held by an address. |
+|  [getXbrlWethLiquidityMiningStake(address)](./lib-base.readablestabilio.getxbrlwethliquidityminingstake.md) | Get the amount of Uniswap XBRL/ETH LP tokens currently staked by an address in liquidity mining. |
 |  [getXbrlWethLiquidityMiningSTBLReward(address)](./lib-base.readablestabilio.getxbrlwethliquidityminingstblreward.md) | Get the amount of STBL earned by an address through mining liquidity. |
-|  [getXbrlWethUniTokenAllowance(address)](./lib-base.readablestabilio.getxbrlwethunitokenallowance.md) | Get the liquidity mining contract's allowance of a holder's Uniswap ETH/XBRL LP tokens. |
-|  [getXbrlWethUniTokenBalance(address)](./lib-base.readablestabilio.getxbrlwethunitokenbalance.md) | Get the amount of Uniswap ETH/XBRL LP tokens held by an address. |
+|  [getXbrlWethUniTokenAllowance(address)](./lib-base.readablestabilio.getxbrlwethunitokenallowance.md) | Get the liquidity mining contract's allowance of a holder's Uniswap XBRL/ETH LP tokens. |
+|  [getXbrlWethUniTokenBalance(address)](./lib-base.readablestabilio.getxbrlwethunitokenbalance.md) | Get the amount of Uniswap XBRL/ETH LP tokens held by an address. |
 

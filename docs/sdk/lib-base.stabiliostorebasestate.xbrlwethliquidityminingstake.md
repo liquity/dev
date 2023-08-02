@@ -4,7 +4,7 @@
 
 ## StabilioStoreBaseState.xbrlWethLiquidityMiningStake property
 
-Amount of Uniswap ETH/XBRL LP tokens the user has staked in liquidity mining.
+Amount of Uniswap XBRL/ETH LP tokens the user has staked in liquidity mining.
 
 <b>Signature:</b>
 

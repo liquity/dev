@@ -4,7 +4,7 @@
 
 ## StabilioStoreBaseState.xbrlWethUniTokenBalance property
 
-User's Uniswap ETH/XBRL LP token balance.
+User's Uniswap XBRL/ETH LP token balance.
 
 <b>Signature:</b>
 

@@ -4,7 +4,7 @@
 
 ## TransactableStabilio.approveXbrlWethUniTokens() method
 
-Allow the liquidity mining contract to use Uniswap ETH/XBRL LP tokens for [staking](./lib-base.transactablestabilio.stakexbrlwethunitokens.md)<!-- -->.
+Allow the liquidity mining contract to use Uniswap XBRL/ETH LP tokens for [staking](./lib-base.transactablestabilio.stakexbrlwethunitokens.md)<!-- -->.
 
 <b>Signature:</b>
 

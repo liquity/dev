@@ -4,7 +4,7 @@
 
 ## StabilioStoreBaseState.totalStakedXbrlWethUniTokens property
 
-Total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining.
+Total amount of Uniswap XBRL/ETH LP tokens currently staked in liquidity mining.
 
 <b>Signature:</b>
 

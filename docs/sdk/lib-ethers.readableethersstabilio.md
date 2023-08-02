@@ -34,6 +34,7 @@ The constructor for this class is marked as internal. Third-party code should no
 |  [getNumberOfTroves(overrides)](./lib-ethers.readableethersstabilio.getnumberoftroves.md) |  | Get number of Troves that are currently open. |
 |  [getPrice(overrides)](./lib-ethers.readableethersstabilio.getprice.md) |  | Get the current price of the native currency (e.g. Ether) in USD. |
 |  [getRemainingStabilityPoolSTBLReward(overrides)](./lib-ethers.readableethersstabilio.getremainingstabilitypoolstblreward.md) |  | Get the remaining STBL that will be collectively rewarded to stability depositors. |
+|  [getRemainingXbrlStblLiquidityMiningSTBLReward(overrides)](./lib-ethers.readableethersstabilio.getremainingxbrlstblliquidityminingstblreward.md) |  | Get the remaining STBL that will be collectively rewarded to liquidity miners. |
 |  [getRemainingXbrlWethLiquidityMiningSTBLReward(overrides)](./lib-ethers.readableethersstabilio.getremainingxbrlwethliquidityminingstblreward.md) |  | Get the remaining STBL that will be collectively rewarded to liquidity miners. |
 |  [getStabilityDeposit(address, overrides)](./lib-ethers.readableethersstabilio.getstabilitydeposit.md) |  | Get the current state of a Stability Deposit. |
 |  [getSTBLBalance(address, overrides)](./lib-ethers.readableethersstabilio.getstblbalance.md) |  | Get the amount of STBL held by an address. |
@@ -41,16 +42,21 @@ The constructor for this class is marked as internal. Third-party code should no
 |  [getTotal(overrides)](./lib-ethers.readableethersstabilio.gettotal.md) |  | Get the total amount of collateral and debt in the Stabilio system. |
 |  [getTotalRedistributed(overrides)](./lib-ethers.readableethersstabilio.gettotalredistributed.md) |  | Get the total collateral and debt per stake that has been liquidated through redistribution. |
 |  [getTotalStakedSTBL(overrides)](./lib-ethers.readableethersstabilio.gettotalstakedstbl.md) |  | Get the total amount of STBL currently staked. |
-|  [getTotalStakedXbrlWethUniTokens(overrides)](./lib-ethers.readableethersstabilio.gettotalstakedxbrlwethunitokens.md) |  | Get the total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. |
+|  [getTotalStakedXbrlStblUniTokens(overrides)](./lib-ethers.readableethersstabilio.gettotalstakedxbrlstblunitokens.md) |  | Get the total amount of Uniswap XBRL/STBL LP tokens currently staked in liquidity mining. |
+|  [getTotalStakedXbrlWethUniTokens(overrides)](./lib-ethers.readableethersstabilio.gettotalstakedxbrlwethunitokens.md) |  | Get the total amount of Uniswap XBRL/ETH LP tokens currently staked in liquidity mining. |
 |  [getTrove(address, overrides)](./lib-ethers.readableethersstabilio.gettrove.md) |  | Get the current state of a Trove. |
 |  [getTroveBeforeRedistribution(address, overrides)](./lib-ethers.readableethersstabilio.gettrovebeforeredistribution.md) |  | Get a Trove in its state after the last direct modification. |
 |  [getTroves(params, overrides)](./lib-ethers.readableethersstabilio.gettroves_1.md) |  | Get a slice from the list of Troves. |
 |  [getXBRLBalance(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlbalance.md) |  | Get the amount of XBRL held by an address. |
 |  [getXBRLInStabilityPool(overrides)](./lib-ethers.readableethersstabilio.getxbrlinstabilitypool.md) |  | Get the total amount of XBRL currently deposited in the Stability Pool. |
-|  [getXbrlWethLiquidityMiningStake(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlwethliquidityminingstake.md) |  | Get the amount of Uniswap ETH/XBRL LP tokens currently staked by an address in liquidity mining. |
+|  [getXbrlStblLiquidityMiningStake(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlstblliquidityminingstake.md) |  | Get the amount of Uniswap XBRL/STBL LP tokens currently staked by an address in liquidity mining. |
+|  [getXbrlStblLiquidityMiningSTBLReward(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlstblliquidityminingstblreward.md) |  | Get the amount of STBL earned by an address through mining liquidity. |
+|  [getXbrlStblUniTokenAllowance(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlstblunitokenallowance.md) |  | Get the liquidity mining contract's allowance of a holder's Uniswap XBRL/STBL LP tokens. |
+|  [getXbrlStblUniTokenBalance(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlstblunitokenbalance.md) |  | Get the amount of Uniswap XBRL/STBL LP tokens held by an address. |
+|  [getXbrlWethLiquidityMiningStake(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlwethliquidityminingstake.md) |  | Get the amount of Uniswap XBRL/ETH LP tokens currently staked by an address in liquidity mining. |
 |  [getXbrlWethLiquidityMiningSTBLReward(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlwethliquidityminingstblreward.md) |  | Get the amount of STBL earned by an address through mining liquidity. |
-|  [getXbrlWethUniTokenAllowance(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlwethunitokenallowance.md) |  | Get the liquidity mining contract's allowance of a holder's Uniswap ETH/XBRL LP tokens. |
-|  [getXbrlWethUniTokenBalance(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlwethunitokenbalance.md) |  | Get the amount of Uniswap ETH/XBRL LP tokens held by an address. |
+|  [getXbrlWethUniTokenAllowance(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlwethunitokenallowance.md) |  | Get the liquidity mining contract's allowance of a holder's Uniswap XBRL/ETH LP tokens. |
+|  [getXbrlWethUniTokenBalance(address, overrides)](./lib-ethers.readableethersstabilio.getxbrlwethunitokenbalance.md) |  | Get the amount of Uniswap XBRL/ETH LP tokens held by an address. |
 |  [hasStore()](./lib-ethers.readableethersstabilio.hasstore.md) |  | Check whether this <code>ReadableEthersStabilio</code> is a [ReadableEthersStabilioWithStore](./lib-ethers.readableethersstabiliowithstore.md)<!-- -->. |
 |  [hasStore(store)](./lib-ethers.readableethersstabilio.hasstore_1.md) |  | Check whether this <code>ReadableEthersStabilio</code> is a [ReadableEthersStabilioWithStore](./lib-ethers.readableethersstabiliowithstore.md)<!-- -->&lt;[BlockPolledStabilioStore](./lib-ethers.blockpolledstabiliostore.md)<!-- -->&gt;<!-- -->. |
 

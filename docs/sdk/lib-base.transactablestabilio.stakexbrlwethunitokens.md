@@ -4,7 +4,7 @@
 
 ## TransactableStabilio.stakeXbrlWethUniTokens() method
 
-Stake Uniswap ETH/XBRL LP tokens to participate in liquidity mining and earn STBL.
+Stake Uniswap XBRL/ETH LP tokens to participate in liquidity mining and earn STBL.
 
 <b>Signature:</b>
 

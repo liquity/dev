@@ -4,7 +4,7 @@
 
 ## ReadableEthersStabilio.getXbrlWethUniTokenBalance() method
 
-Get the amount of Uniswap ETH/XBRL LP tokens held by an address.
+Get the amount of Uniswap XBRL/ETH LP tokens held by an address.
 
 <b>Signature:</b>
 

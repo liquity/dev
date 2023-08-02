@@ -30,13 +30,15 @@ The constructor for this class is marked as internal. Third-party code should no
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [adjustTrove(params, maxBorrowingRateOrOptionalParams, overrides)](./lib-ethers.ethersstabilio.adjusttrove.md) |  | Adjust existing Trove by changing its collateral, debt, or both. |
-|  [approveXbrlWethUniTokens(allowance, overrides)](./lib-ethers.ethersstabilio.approvexbrlwethunitokens.md) |  | Allow the liquidity mining contract to use Uniswap ETH/XBRL LP tokens for [staking](./lib-base.transactablestabilio.stakexbrlwethunitokens.md)<!-- -->. |
+|  [approveXbrlStblUniTokens(allowance, overrides)](./lib-ethers.ethersstabilio.approvexbrlstblunitokens.md) |  | Allow the liquidity mining contract to use Uniswap XBRL/STBL LP tokens for [staking](./lib-base.transactablestabilio.stakexbrlstblunitokens.md)<!-- -->. |
+|  [approveXbrlWethUniTokens(allowance, overrides)](./lib-ethers.ethersstabilio.approvexbrlwethunitokens.md) |  | Allow the liquidity mining contract to use Uniswap XBRL/ETH LP tokens for [staking](./lib-base.transactablestabilio.stakexbrlwethunitokens.md)<!-- -->. |
 |  [borrowXBRL(amount, maxBorrowingRate, overrides)](./lib-ethers.ethersstabilio.borrowxbrl.md) |  | Adjust existing Trove by borrowing more XBRL. |
 |  [claimCollateralSurplus(overrides)](./lib-ethers.ethersstabilio.claimcollateralsurplus.md) |  | Claim leftover collateral after a liquidation or redemption. |
 |  [closeTrove(overrides)](./lib-ethers.ethersstabilio.closetrove.md) |  | Close existing Trove by repaying all debt and withdrawing all collateral. |
 |  [connect(signerOrProvider, optionalParams)](./lib-ethers.ethersstabilio.connect_1.md) | <code>static</code> | Connect to the Stabilio protocol and create an <code>EthersStabilio</code> object. |
 |  [depositCollateral(amount, overrides)](./lib-ethers.ethersstabilio.depositcollateral.md) |  | Adjust existing Trove by depositing more collateral. |
 |  [depositXBRLInStabilityPool(amount, frontendTag, overrides)](./lib-ethers.ethersstabilio.depositxbrlinstabilitypool.md) |  | Make a new Stability Deposit, or top up existing one. |
+|  [exitXbrlStblLiquidityMining(overrides)](./lib-ethers.ethersstabilio.exitxbrlstblliquiditymining.md) |  | Withdraw all staked LP tokens from liquidity mining and claim reward. |
 |  [exitXbrlWethLiquidityMining(overrides)](./lib-ethers.ethersstabilio.exitxbrlwethliquiditymining.md) |  | Withdraw all staked LP tokens from liquidity mining and claim reward. |
 |  [getCollateralSurplusBalance(address, overrides)](./lib-ethers.ethersstabilio.getcollateralsurplusbalance.md) |  | Get the amount of leftover collateral available for withdrawal by an address. |
 |  [getFees(overrides)](./lib-ethers.ethersstabilio.getfees.md) |  | Get a calculator for current fees. |
@@ -44,6 +46,7 @@ The constructor for this class is marked as internal. Third-party code should no
 |  [getNumberOfTroves(overrides)](./lib-ethers.ethersstabilio.getnumberoftroves.md) |  | Get number of Troves that are currently open. |
 |  [getPrice(overrides)](./lib-ethers.ethersstabilio.getprice.md) |  | Get the current price of the native currency (e.g. Ether) in USD. |
 |  [getRemainingStabilityPoolSTBLReward(overrides)](./lib-ethers.ethersstabilio.getremainingstabilitypoolstblreward.md) |  | Get the remaining STBL that will be collectively rewarded to stability depositors. |
+|  [getRemainingXbrlStblLiquidityMiningSTBLReward(overrides)](./lib-ethers.ethersstabilio.getremainingxbrlstblliquidityminingstblreward.md) |  | Get the remaining STBL that will be collectively rewarded to liquidity miners. |
 |  [getRemainingXbrlWethLiquidityMiningSTBLReward(overrides)](./lib-ethers.ethersstabilio.getremainingxbrlwethliquidityminingstblreward.md) |  | Get the remaining STBL that will be collectively rewarded to liquidity miners. |
 |  [getStabilityDeposit(address, overrides)](./lib-ethers.ethersstabilio.getstabilitydeposit.md) |  | Get the current state of a Stability Deposit. |
 |  [getSTBLBalance(address, overrides)](./lib-ethers.ethersstabilio.getstblbalance.md) |  | Get the amount of STBL held by an address. |
@@ -51,16 +54,21 @@ The constructor for this class is marked as internal. Third-party code should no
 |  [getTotal(overrides)](./lib-ethers.ethersstabilio.gettotal.md) |  | Get the total amount of collateral and debt in the Stabilio system. |
 |  [getTotalRedistributed(overrides)](./lib-ethers.ethersstabilio.gettotalredistributed.md) |  | Get the total collateral and debt per stake that has been liquidated through redistribution. |
 |  [getTotalStakedSTBL(overrides)](./lib-ethers.ethersstabilio.gettotalstakedstbl.md) |  | Get the total amount of STBL currently staked. |
-|  [getTotalStakedXbrlWethUniTokens(overrides)](./lib-ethers.ethersstabilio.gettotalstakedxbrlwethunitokens.md) |  | Get the total amount of Uniswap ETH/XBRL LP tokens currently staked in liquidity mining. |
+|  [getTotalStakedXbrlStblUniTokens(overrides)](./lib-ethers.ethersstabilio.gettotalstakedxbrlstblunitokens.md) |  | Get the total amount of Uniswap XBRL/STBL LP tokens currently staked in liquidity mining. |
+|  [getTotalStakedXbrlWethUniTokens(overrides)](./lib-ethers.ethersstabilio.gettotalstakedxbrlwethunitokens.md) |  | Get the total amount of Uniswap XBRL/ETH LP tokens currently staked in liquidity mining. |
 |  [getTrove(address, overrides)](./lib-ethers.ethersstabilio.gettrove.md) |  | Get the current state of a Trove. |
 |  [getTroveBeforeRedistribution(address, overrides)](./lib-ethers.ethersstabilio.gettrovebeforeredistribution.md) |  | Get a Trove in its state after the last direct modification. |
 |  [getTroves(params, overrides)](./lib-ethers.ethersstabilio.gettroves_1.md) |  | Get a slice from the list of Troves. |
 |  [getXBRLBalance(address, overrides)](./lib-ethers.ethersstabilio.getxbrlbalance.md) |  | Get the amount of XBRL held by an address. |
 |  [getXBRLInStabilityPool(overrides)](./lib-ethers.ethersstabilio.getxbrlinstabilitypool.md) |  | Get the total amount of XBRL currently deposited in the Stability Pool. |
-|  [getXbrlWethLiquidityMiningStake(address, overrides)](./lib-ethers.ethersstabilio.getxbrlwethliquidityminingstake.md) |  | Get the amount of Uniswap ETH/XBRL LP tokens currently staked by an address in liquidity mining. |
+|  [getXbrlStblLiquidityMiningStake(address, overrides)](./lib-ethers.ethersstabilio.getxbrlstblliquidityminingstake.md) |  | Get the amount of Uniswap XBRL/STBL LP tokens currently staked by an address in liquidity mining. |
+|  [getXbrlStblLiquidityMiningSTBLReward(address, overrides)](./lib-ethers.ethersstabilio.getxbrlstblliquidityminingstblreward.md) |  | Get the amount of STBL earned by an address through mining liquidity. |
+|  [getXbrlStblUniTokenAllowance(address, overrides)](./lib-ethers.ethersstabilio.getxbrlstblunitokenallowance.md) |  | Get the liquidity mining contract's allowance of a holder's Uniswap XBRL/STBL LP tokens. |
+|  [getXbrlStblUniTokenBalance(address, overrides)](./lib-ethers.ethersstabilio.getxbrlstblunitokenbalance.md) |  | Get the amount of Uniswap XBRL/STBL LP tokens held by an address. |
+|  [getXbrlWethLiquidityMiningStake(address, overrides)](./lib-ethers.ethersstabilio.getxbrlwethliquidityminingstake.md) |  | Get the amount of Uniswap XBRL/ETH LP tokens currently staked by an address in liquidity mining. |
 |  [getXbrlWethLiquidityMiningSTBLReward(address, overrides)](./lib-ethers.ethersstabilio.getxbrlwethliquidityminingstblreward.md) |  | Get the amount of STBL earned by an address through mining liquidity. |
-|  [getXbrlWethUniTokenAllowance(address, overrides)](./lib-ethers.ethersstabilio.getxbrlwethunitokenallowance.md) |  | Get the liquidity mining contract's allowance of a holder's Uniswap ETH/XBRL LP tokens. |
-|  [getXbrlWethUniTokenBalance(address, overrides)](./lib-ethers.ethersstabilio.getxbrlwethunitokenbalance.md) |  | Get the amount of Uniswap ETH/XBRL LP tokens held by an address. |
+|  [getXbrlWethUniTokenAllowance(address, overrides)](./lib-ethers.ethersstabilio.getxbrlwethunitokenallowance.md) |  | Get the liquidity mining contract's allowance of a holder's Uniswap XBRL/ETH LP tokens. |
+|  [getXbrlWethUniTokenBalance(address, overrides)](./lib-ethers.ethersstabilio.getxbrlwethunitokenbalance.md) |  | Get the amount of Uniswap XBRL/ETH LP tokens held by an address. |
 |  [hasStore()](./lib-ethers.ethersstabilio.hasstore.md) |  | Check whether this <code>EthersStabilio</code> is an [EthersStabilioWithStore](./lib-ethers.ethersstabiliowithstore.md)<!-- -->. |
 |  [hasStore(store)](./lib-ethers.ethersstabilio.hasstore_1.md) |  | Check whether this <code>EthersStabilio</code> is an [EthersStabilioWithStore](./lib-ethers.ethersstabiliowithstore.md)<!-- -->&lt;[BlockPolledStabilioStore](./lib-ethers.blockpolledstabiliostore.md)<!-- -->&gt;<!-- -->. |
 |  [liquidate(address, overrides)](./lib-ethers.ethersstabilio.liquidate.md) |  | Liquidate one or more undercollateralized Troves. |
@@ -72,13 +80,16 @@ The constructor for this class is marked as internal. Third-party code should no
 |  [sendSTBL(toAddress, amount, overrides)](./lib-ethers.ethersstabilio.sendstbl.md) |  | Send STBL tokens to an address. |
 |  [sendXBRL(toAddress, amount, overrides)](./lib-ethers.ethersstabilio.sendxbrl.md) |  | Send XBRL tokens to an address. |
 |  [stakeSTBL(amount, overrides)](./lib-ethers.ethersstabilio.stakestbl.md) |  | Stake STBL to start earning fee revenue or increase existing stake. |
-|  [stakeXbrlWethUniTokens(amount, overrides)](./lib-ethers.ethersstabilio.stakexbrlwethunitokens.md) |  | Stake Uniswap ETH/XBRL LP tokens to participate in liquidity mining and earn STBL. |
+|  [stakeXbrlStblUniTokens(amount, overrides)](./lib-ethers.ethersstabilio.stakexbrlstblunitokens.md) |  | Stake Uniswap XBRL/STBL LP tokens to participate in liquidity mining and earn STBL. |
+|  [stakeXbrlWethUniTokens(amount, overrides)](./lib-ethers.ethersstabilio.stakexbrlwethunitokens.md) |  | Stake Uniswap XBRL/ETH LP tokens to participate in liquidity mining and earn STBL. |
 |  [transferCollateralGainToTrove(overrides)](./lib-ethers.ethersstabilio.transfercollateralgaintotrove.md) |  | Transfer [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) from Stability Deposit to Trove. |
 |  [unstakeSTBL(amount, overrides)](./lib-ethers.ethersstabilio.unstakestbl.md) |  | Withdraw STBL from staking. |
-|  [unstakeXbrlWethUniTokens(amount, overrides)](./lib-ethers.ethersstabilio.unstakexbrlwethunitokens.md) |  | Withdraw Uniswap ETH/XBRL LP tokens from liquidity mining. |
+|  [unstakeXbrlStblUniTokens(amount, overrides)](./lib-ethers.ethersstabilio.unstakexbrlstblunitokens.md) |  | Withdraw Uniswap XBRL/STBL LP tokens from liquidity mining. |
+|  [unstakeXbrlWethUniTokens(amount, overrides)](./lib-ethers.ethersstabilio.unstakexbrlwethunitokens.md) |  | Withdraw Uniswap XBRL/ETH LP tokens from liquidity mining. |
 |  [withdrawCollateral(amount, overrides)](./lib-ethers.ethersstabilio.withdrawcollateral.md) |  | Adjust existing Trove by withdrawing some of its collateral. |
 |  [withdrawGainsFromStabilityPool(overrides)](./lib-ethers.ethersstabilio.withdrawgainsfromstabilitypool.md) |  | Withdraw [collateral gain](./lib-base.stabilitydeposit.collateralgain.md) and [STBL reward](./lib-base.stabilitydeposit.stblreward.md) from Stability Deposit. |
 |  [withdrawGainsFromStaking(overrides)](./lib-ethers.ethersstabilio.withdrawgainsfromstaking.md) |  | Withdraw [collateral gain](./lib-base.stblstake.collateralgain.md) and [XBRL gain](./lib-base.stblstake.xbrlgain.md) from STBL stake. |
+|  [withdrawSTBLRewardFromXbrlStblLiquidityMining(overrides)](./lib-ethers.ethersstabilio.withdrawstblrewardfromxbrlstblliquiditymining.md) |  | Withdraw STBL that has been earned by mining liquidity. |
 |  [withdrawSTBLRewardFromXbrlWethLiquidityMining(overrides)](./lib-ethers.ethersstabilio.withdrawstblrewardfromxbrlwethliquiditymining.md) |  | Withdraw STBL that has been earned by mining liquidity. |
 |  [withdrawXBRLFromStabilityPool(amount, overrides)](./lib-ethers.ethersstabilio.withdrawxbrlfromstabilitypool.md) |  | Withdraw XBRL from Stability Deposit. |
 

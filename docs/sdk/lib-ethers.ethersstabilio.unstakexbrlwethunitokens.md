@@ -4,7 +4,7 @@
 
 ## EthersStabilio.unstakeXbrlWethUniTokens() method
 
-Withdraw Uniswap ETH/XBRL LP tokens from liquidity mining.
+Withdraw Uniswap XBRL/ETH LP tokens from liquidity mining.
 
 <b>Signature:</b>
 

@@ -4,7 +4,7 @@
 
 ## ReadableStabilio.getXbrlWethUniTokenAllowance() method
 
-Get the liquidity mining contract's allowance of a holder's Uniswap ETH/XBRL LP tokens.
+Get the liquidity mining contract's allowance of a holder's Uniswap XBRL/ETH LP tokens.
 
 <b>Signature:</b>
 
@@ -16,7 +16,7 @@ getXbrlWethUniTokenAllowance(address?: string): Promise<Decimal>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  address | string | Address holding the Uniswap ETH/XBRL LP tokens. |
+|  address | string | Address holding the Uniswap XBRL/ETH LP tokens. |
 
 <b>Returns:</b>
 
