@@ -33,7 +33,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     uint256 constant public TARGET_DIGITS = 18;  
 
     // Maximum time period allowed since Chainlink/Tellor's latest round data timestamp, beyond which Chainlink is considered frozen.
-    uint256 constant public TIMEOUT = 172800;  // 48 hours: 60 * 60 * 8
+    uint256 constant public TIMEOUT = 259200;  // 72 hours: 60 * 60 * 72
     
     // Maximum deviation allowed between two consecutive Chainlink oracle prices. 18-digit precision.
     uint256 constant public MAX_PRICE_DEVIATION_FROM_PREVIOUS_ROUND =  5e17; // 50%
