@@ -7965,9 +7965,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"concat-stream@github:hugomrdias/concat-stream#feat/smaller":
+"concat-stream@github:maxogden/concat-stream#feat/smaller":
   version: 2.0.0
-  resolution: "concat-stream@https://github.com/hugomrdias/concat-stream.git#commit=057bc7b5d6d8df26c8cf00a3f151b6721a0a8034"
+  resolution: "concat-stream@https://github.com/maxogden/concat-stream.git#commit=057bc7b5d6d8df26c8cf00a3f151b6721a0a8034"
   dependencies:
     inherits: ^2.0.3
     readable-stream: ^3.0.2
@@ -12976,7 +12976,7 @@ __metadata:
     bs58: ^4.0.1
     buffer: ^5.4.2
     cids: ~0.7.1
-    concat-stream: "github:hugomrdias/concat-stream#feat/smaller"
+    concat-stream: "github:maxogden/concat-stream#feat/smaller"
     debug: ^4.1.0
     detect-node: ^2.0.4
     end-of-stream: ^1.4.1
@@ -13005,7 +13005,7 @@ __metadata:
     multibase: ~0.6.0
     multicodec: ~0.5.1
     multihashes: ~0.4.14
-    ndjson: "github:hugomrdias/ndjson#feat/readable-stream3"
+    ndjson: "github:maxogden/ndjson#feat/readable-stream3"
     once: ^1.4.0
     peer-id: ~0.12.3
     peer-info: ~0.15.1
@@ -16363,9 +16363,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ndjson@github:hugomrdias/ndjson#feat/readable-stream3":
+"ndjson@github:maxogden/ndjson#feat/readable-stream3":
   version: 1.5.0
-  resolution: "ndjson@https://github.com/hugomrdias/ndjson.git#commit=4db16da6b42e5b39bf300c3a7cde62abb3fa3a11"
+  resolution: "ndjson@https://github.com/maxogden/ndjson.git#commit=4db16da6b42e5b39bf300c3a7cde62abb3fa3a11"
   dependencies:
     json-stringify-safe: ^5.0.1
     minimist: ^1.2.0
