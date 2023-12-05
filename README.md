@@ -1739,6 +1739,8 @@ In case of a redemption, the “last” trove affected by the transaction may en
 
 An attacker trying to DoS redemptions could be bypassed by redeeming an amount that exactly corresponds to the debt of the affected trove(s).
 
+The attack can be aggravated if a big trove is placed first in the queue, so that any incoming redemption is smaller than its debt, as no LUSD would be redeemed if the hint for that trove fails. But that attack would be very expensive and quite risky (risk of being redeemed if the strategy fails and of being liquidated as it may have a low CR).
+
 Finally, this DoS could be avoided if the initial transaction avoids the public gas auction entirely and is sent direct-to-miner, via (for example) Flashbots.
 
 
