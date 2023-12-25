@@ -45,7 +45,6 @@
   "scripts": {
     "build": "run-s 'build:*'",
     "build:dev-frontend": "yarn workspace @liquity/dev-frontend build",
-    "build:subgraph": "yarn workspace @liquity/subgraph build",
     "deploy": "yarn workspace @liquity/lib-ethers hardhat deploy",
     "deploy:chicken-bonds": "yarn --cwd ../ChickenBond deploy-fork compile publish:local",
     "watch:chicken-bonds": "yarn --cwd ../ChickenBond watch",
