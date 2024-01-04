@@ -1,10 +1,10 @@
 import React from "react";
 import { createClient, WagmiConfig } from "wagmi";
 import { mainnet, goerli, sepolia, localhost } from "wagmi/chains";
-import { ConnectKitProvider, getDefaultClient } from "connectkit";
+import { ConnectKitProvider } from "connectkit";
 import { Flex, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
 
-// import { BatchedWebSocketAugmentedWeb3Provider } from "@liquity/providers";
+import getDefaultClient from "./connectkit/defaultClient";
 import { LiquityProvider } from "./hooks/LiquityContext";
 import { WalletConnector } from "./components/WalletConnector";
 import { TransactionProvider } from "./components/Transaction";
