@@ -197,7 +197,7 @@ const cacheYearnVaultApys = async (): Promise<void> => {
     if (cachedApys.lusd3Crv !== undefined) return;
 
     const yearnResponse = (await (
-      await window.fetch("https://api.yearn.finance/v1/chains/1/vaults/all")
+      await window.fetch("https://api.yexporter.io/v1/chains/1/vaults/all")
     ).json()) as YearnVault[];
 
     const lusd3CrvVault = yearnResponse.find(
