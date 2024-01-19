@@ -57,3 +57,13 @@ jobs:
         working-directory: ./packages/dev-frontend
         env:
           TAG: ${{ fromJSON('{ "refs/heads/master":"latest", "refs/heads/main":"next" }')[github.ref] }}
+
+      - name: Release Github build artifact
+        uses: softprops/action-gh-release@v1
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          ln -s packages/dev-frontend/dist dapp
+          zip -r dapp.zip dapp/*
+          rm dapp
+        with:
+          files: dapp.zip
