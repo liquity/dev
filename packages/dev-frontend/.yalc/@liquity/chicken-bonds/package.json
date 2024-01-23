@@ -1,0 +1,19 @@
+{
+  "name": "@liquity/chicken-bonds",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "compile:lusd": "yarn --cwd lusd compile",
+    "deploy-fork:lusd": "yarn --cwd lusd deploy-fork",
+    "generate-types:lusd": "yarn --cwd lusd generate-types",
+    "deploy-fork": "run-s deploy-fork:*",
+    "generate-types": "run-s generate-types:*",
+    "compile": "run-s compile:*",
+    "prepare-publish": "./scripts/prepare.sh",
+    "publish:local": "./scripts/publish-local.sh",
+    "watch:lusd": "yarn --cwd lusd watch",
+    "watch:publish": "./scripts/watch-publish.sh",
+    "watch": "run-p watch:*"
+  },
+  "yalcSig": "007bbe44375983ab942770ca53a2039e"
+}

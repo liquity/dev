@@ -9,6 +9,10 @@ services:
     environment:
       # Ethereum address that shall receive LQTY rewards
       - FRONTEND_TAG=0x0000000000000000000000000000000000000000
-      # Optional Infura API key to enable snappier blockchain events using WebSockets
+      # Optional Infura API key, if Infura is to be used as an additional API provider
       - INFURA_API_KEY=
+      # Optional Alchemy API key, if Alchemy is to be used as an additional API provider
+      - ALCHEMY_API_KEY=
+      # Optional WalletConnect project ID. If omitted, a shared default project ID will be used
+      - WALLET_CONNECT_PROJECT_ID=
     restart: always

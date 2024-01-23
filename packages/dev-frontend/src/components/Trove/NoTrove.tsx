@@ -3,7 +3,7 @@ import { Card, Heading, Box, Flex, Button } from "theme-ui";
 import { InfoMessage } from "../InfoMessage";
 import { useTroveView } from "./context/TroveViewContext";
 
-export const NoTrove: React.FC = props => {
+export const NoTrove: React.FC = () => {
   const { dispatchEvent } = useTroveView();
 
   const handleOpenTrove = useCallback(() => {

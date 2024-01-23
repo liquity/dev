@@ -1,5 +1,6 @@
 import { hexlify } from "@ethersproject/bytes";
 import { Wallet } from "@ethersproject/wallet";
+import { signTypedData, SignTypedDataVersion } from "@metamask/eth-sig-util";
 
 import { Decimal, Decimalish } from "@liquity/lib-base";
 
@@ -25,6 +26,8 @@ export class DisposableWalletProvider {
       wallet => wallet.address.toLowerCase() === address.toLowerCase()
     );
 
+    // console.log(address, this.wallet, this.funderWallet);
+
     if (!wallet) {
       throw new Error(`Unknow account ${address}`);
     }
@@ -42,7 +45,7 @@ export class DisposableWalletProvider {
       }
     ]);
 
-    // TODO maybe wait for tx to be mined (not a problem on devchains though)
+    // WONT-FIX maybe wait for tx to be mined (not a problem on devchains though)
   }
 
   async send(method: string, params: any[]): Promise<any> {
@@ -55,6 +58,16 @@ export class DisposableWalletProvider {
       case "eth_accounts":
       case "eth_requestAccounts":
         return [this.wallet.address];
+      case "eth_signTypedData_v4": {
+        const privateKeyWithout0xPrefix = this.findWallet(params[0]).privateKey.slice(2);
+        const privateKey = Buffer.from(privateKeyWithout0xPrefix, "hex");
+        const signature = await signTypedData({
+          privateKey,
+          data: JSON.parse(params[1]),
+          version: SignTypedDataVersion.V4
+        });
+        return signature;
+      }
 
       case "eth_sendTransaction":
         return this.send(

@@ -38,9 +38,8 @@ export const SideNav: React.FC = () => {
         <LiquityLogo height={logoHeight} p={2} />
         <Box as="nav" sx={{ m: 3, mt: 1, p: 0 }} onClick={() => setIsVisible(false)}>
           <Link to="/">Dashboard</Link>
-          <Link to="/farm">Farm</Link>
+          <Link to="/bonds">Bonds</Link>
           <Link to="/risky-troves">Risky Troves</Link>
-          <Link to="/redemption">Redemption</Link>
         </Box>
       </Flex>
     </Container>
