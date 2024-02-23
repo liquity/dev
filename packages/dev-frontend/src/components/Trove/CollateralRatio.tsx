@@ -7,7 +7,8 @@ import { Icon } from "../Icon";
 
 import { StaticRow } from "./Editor";
 import { InfoIcon } from "../InfoIcon";
-import { ActionDescription } from "../ActionDescription";
+import { InfoBubble } from "../InfoBubble";
+import { LearnMoreLink } from "../Tooltip";
 
 type CollateralRatioProps = {
   value?: Decimal;
@@ -60,10 +61,29 @@ export const CollateralRatio: React.FC<CollateralRatioProps> = ({ value, change 
           }
         />
       </Flex>
+    </>
+  );
+};
+
+type CollateralRatioInfoBubbleProps = {
+  value?: Decimal;
+  change?: Difference;
+};
+
+export const CollateralRatioInfoBubble: React.FC<CollateralRatioInfoBubbleProps> = ({ value }) => {
+  return (
+    <>
       {value?.lt(1.5) && (
-        <ActionDescription>
-          Keeping your CR above 150% can help avoid liquidation under Recovery Mode.
-        </ActionDescription>
+        <InfoBubble>
+          Keep your collateral ratio above 150% to avoid being{" "}
+          <LearnMoreLink link="https://docs.liquity.org/faq/stability-pool-and-liquidations#what-are-liquidations">
+            liquidated
+          </LearnMoreLink>{" "}
+          under{" "}
+          <LearnMoreLink link="https://docs.liquity.org/faq/recovery-mode">
+            Recovery Mode.
+          </LearnMoreLink>
+        </InfoBubble>
       )}
     </>
   );

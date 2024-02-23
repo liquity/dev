@@ -1,7 +1,5 @@
 import { Box, Flex, Text } from "theme-ui";
 
-import { Icon } from "./Icon";
-
 export const ActionDescription: React.FC = ({ children }) => (
   <Box
     sx={{
@@ -13,15 +11,11 @@ export const ActionDescription: React.FC = ({ children }) => (
       p: 3,
 
       border: 1,
-      borderRadius: "8px",
-      borderColor: "accent",
-      boxShadow: 2,
-      bg: "rgba(46, 182, 234, 0.05)"
+      borderColor: "transparent"
     }}
   >
     <Flex sx={{ alignItems: "center" }}>
-      <Icon name="info-circle" size="lg" />
-      <Text sx={{ ml: 2 }}>{children}</Text>
+      <Text>{children}</Text>
     </Flex>
   </Box>
 );

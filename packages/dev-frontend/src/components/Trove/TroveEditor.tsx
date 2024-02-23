@@ -32,6 +32,7 @@ type TroveEditorProps = {
 
 const select = ({ price }: LiquityStoreState) => ({ price });
 
+// XXX Only used for closing Troves now
 export const TroveEditor: React.FC<TroveEditorProps> = ({
   children,
   original,
