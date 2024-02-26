@@ -198,7 +198,7 @@ export const Opening: React.FC = () => {
             riskiest Troves
           </Link>{" "}
           to avoid being{" "}
-          <LearnMoreLink link="https://docs.liquity.org/faq/lusd-redemptions#what-are-redemptions">
+          <LearnMoreLink link="https://docs.liquity.org/faq/lusd-redemptions#how-can-i-avoid-being-redeemed-against">
             redeemed.
           </LearnMoreLink>
         </InfoBubble>
