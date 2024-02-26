@@ -6,7 +6,7 @@ import { DisabledEditableRow } from "./Editor";
 import { useTroveView } from "./context/TroveViewContext";
 import { Icon } from "../Icon";
 import { COIN } from "../../strings";
-import { CollateralRatio } from "./CollateralRatio";
+import { CollateralRatio, CollateralRatioInfoBubble } from "./CollateralRatio";
 
 const select = ({ trove, price }: LiquityStoreState) => ({ trove, price });
 
@@ -42,6 +42,7 @@ export const ReadOnlyTrove: React.FC = () => {
           />
 
           <CollateralRatio value={trove.collateralRatio(price)} />
+          <CollateralRatioInfoBubble value={trove.collateralRatio(price)} />
         </Box>
 
         <Flex variant="layout.actions">

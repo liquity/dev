@@ -6,7 +6,7 @@ import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liqu
 
 import { COIN } from "../../strings";
 
-import { ActionDescription } from "../ActionDescription";
+import { InfoBubble } from "../InfoBubble";
 import { useMyTransactionState } from "../Transaction";
 
 import { StabilityDepositEditor } from "./StabilityDepositEditor";
@@ -132,9 +132,9 @@ export const StabilityDepositManager: React.FC = () => {
     >
       {description ??
         (makingNewDeposit ? (
-          <ActionDescription>Enter the amount of {COIN} you'd like to deposit.</ActionDescription>
+          <InfoBubble>Enter the amount of {COIN} you'd like to deposit.</InfoBubble>
         ) : (
-          <ActionDescription>Adjust the {COIN} amount to deposit or withdraw.</ActionDescription>
+          <InfoBubble>Adjust the {COIN} amount to deposit or withdraw.</InfoBubble>
         ))}
 
       <Flex variant="layout.actions">

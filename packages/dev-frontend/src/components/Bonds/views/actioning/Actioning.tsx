@@ -8,7 +8,7 @@ import type { EventType } from "../../../HorizontalTimeline";
 import * as l from "../../lexicon";
 import { Cancel } from "./actions/cancel/Cancel";
 import { Claim } from "./actions/claim/Claim";
-import { Warning } from "../../../Warning";
+import { WarningBubble } from "../../../WarningBubble";
 import { ReactModal } from "../../../ReactModal";
 import { percentify } from "../../utils";
 import { Decimal } from "@liquity/lib-base";
@@ -144,10 +144,14 @@ export const Actioning: React.FC = () => {
 
       <Box mt={3}>
         {view === "CLAIMING" && bond.claimNowReturn < 0 && (
-          <Warning>You are claiming a bond which currently has a negative return</Warning>
+          <WarningBubble>
+            You are claiming a bond which currently has a negative return
+          </WarningBubble>
         )}
         {view === "CANCELLING" && bond.accrued.gte(bond.breakEvenAccrual) && (
-          <Warning>Your are cancelling a bond which has accrued a positive return</Warning>
+          <WarningBubble>
+            Your are cancelling a bond which has accrued a positive return
+          </WarningBubble>
         )}
       </Box>
 

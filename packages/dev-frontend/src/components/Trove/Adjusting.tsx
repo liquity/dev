@@ -11,7 +11,7 @@ import {
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useStableTroveChange } from "../../hooks/useStableTroveChange";
-import { ActionDescription } from "../ActionDescription";
+import { InfoBubble } from "../InfoBubble";
 import { useMyTransactionState } from "../Transaction";
 import { TroveAction } from "./TroveAction";
 import { useTroveView } from "./context/TroveViewContext";
@@ -19,7 +19,7 @@ import { COIN } from "../../strings";
 import { Icon } from "../Icon";
 import { InfoIcon } from "../InfoIcon";
 import { LoadingOverlay } from "../LoadingOverlay";
-import { CollateralRatio } from "./CollateralRatio";
+import { CollateralRatio, CollateralRatioInfoBubble } from "./CollateralRatio";
 import { EditableRow, StaticRow } from "./Editor";
 import { ExpensiveTroveChangeWarning, GasEstimationState } from "./ExpensiveTroveChangeWarning";
 import {
@@ -253,11 +253,10 @@ export const Adjusting: React.FC = () => {
         />
 
         <CollateralRatio value={collateralRatio} change={collateralRatioChange} />
+        <CollateralRatioInfoBubble value={collateralRatio} />
 
         {description ?? (
-          <ActionDescription>
-            Adjust your Trove by modifying its collateral, debt, or both.
-          </ActionDescription>
+          <InfoBubble>Adjust your Trove by modifying its collateral, debt, or both.</InfoBubble>
         )}
 
         <ExpensiveTroveChangeWarning

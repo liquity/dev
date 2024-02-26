@@ -18,6 +18,7 @@ import { StakingEditor } from "./StakingEditor";
 import { StakingManagerAction } from "./StakingManagerAction";
 import { ActionDescription, Amount } from "../ActionDescription";
 import { ErrorDescription } from "../ErrorDescription";
+import { InfoBubble } from "../InfoBubble";
 
 const init = ({ lqtyStake }: LiquityStoreState) => ({
   originalStake: lqtyStake,
@@ -143,9 +144,9 @@ export const StakingManager: React.FC = () => {
     <StakingEditor title={"Staking"} {...{ originalStake, editedLQTY, dispatch }}>
       {description ??
         (makingNewStake ? (
-          <ActionDescription>Enter the amount of {GT} you'd like to stake.</ActionDescription>
+          <InfoBubble>Enter the amount of {GT} you'd like to stake.</InfoBubble>
         ) : (
-          <ActionDescription>Adjust the {GT} amount to stake or withdraw.</ActionDescription>
+          <InfoBubble>Adjust the {GT} amount to stake or withdraw.</InfoBubble>
         ))}
 
       <Flex variant="layout.actions">

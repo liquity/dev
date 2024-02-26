@@ -2,7 +2,6 @@ import Tippy from "@tippyjs/react";
 import type { TippyProps } from "@tippyjs/react";
 import React from "react";
 import { Box, Card, Link } from "theme-ui";
-import { Icon } from "./Icon";
 
 export type TooltipProps = Pick<TippyProps, "placement"> & {
   message: React.ReactNode;
@@ -11,10 +10,10 @@ export type TooltipProps = Pick<TippyProps, "placement"> & {
 
 export type LearnMoreLinkProps = Pick<TooltipProps, "link">;
 
-export const LearnMoreLink: React.FC<LearnMoreLinkProps> = ({ link }) => {
+export const LearnMoreLink: React.FC<LearnMoreLinkProps> = ({ link, children }) => {
   return (
     <Link href={link} target="_blank">
-      Learn more <Icon size="xs" name="external-link-alt" />
+      {children ?? <>Learn more</>}
     </Link>
   );
 };

@@ -1,5 +1,7 @@
+/** @jsxImportSource theme-ui */
 import React, { useCallback, useEffect, useState } from "react";
 import { Flex, Button, Box, Card, Heading, Spinner } from "theme-ui";
+import { Link } from "react-router-dom";
 import {
   LiquityStoreState,
   Decimal,
@@ -11,7 +13,7 @@ import {
 import { useLiquitySelector } from "@liquity/lib-react";
 
 import { useStableTroveChange } from "../../hooks/useStableTroveChange";
-import { ActionDescription } from "../ActionDescription";
+import { InfoBubble } from "../InfoBubble";
 import { useMyTransactionState } from "../Transaction";
 import { TroveAction } from "./TroveAction";
 import { useTroveView } from "./context/TroveViewContext";
@@ -19,13 +21,14 @@ import { COIN } from "../../strings";
 import { Icon } from "../Icon";
 import { InfoIcon } from "../InfoIcon";
 import { LoadingOverlay } from "../LoadingOverlay";
-import { CollateralRatio } from "./CollateralRatio";
+import { CollateralRatio, CollateralRatioInfoBubble } from "./CollateralRatio";
 import { EditableRow, StaticRow } from "./Editor";
 import { ExpensiveTroveChangeWarning, GasEstimationState } from "./ExpensiveTroveChangeWarning";
 import {
   selectForTroveChangeValidation,
   validateTroveChange
 } from "./validation/validateTroveChange";
+import { LearnMoreLink } from "../Tooltip";
 
 const selector = (state: LiquityStoreState) => {
   const { fees, price, accountBalance } = state;
@@ -189,10 +192,23 @@ export const Opening: React.FC = () => {
 
         <CollateralRatio value={collateralRatio} />
 
+        <InfoBubble>
+          Keep your collateral ratio above the{" "}
+          <Link sx={{ variant: "styles.a" }} to="/risky-troves">
+            riskiest Troves
+          </Link>{" "}
+          to avoid being{" "}
+          <LearnMoreLink link="https://docs.liquity.org/faq/lusd-redemptions#what-are-redemptions">
+            redeemed.
+          </LearnMoreLink>
+        </InfoBubble>
+
+        <CollateralRatioInfoBubble value={collateralRatio} />
+
         {description ?? (
-          <ActionDescription>
+          <InfoBubble>
             Start by entering the amount of ETH you'd like to deposit as collateral.
-          </ActionDescription>
+          </InfoBubble>
         )}
 
         <ExpensiveTroveChangeWarning

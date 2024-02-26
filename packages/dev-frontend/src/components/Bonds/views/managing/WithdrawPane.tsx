@@ -5,7 +5,7 @@ import { Amount } from "../../../ActionDescription";
 import { ErrorDescription } from "../../../ErrorDescription";
 import { Icon } from "../../../Icon";
 import { DisabledEditableAmounts, DisabledEditableRow, EditableRow } from "../../../Trove/Editor";
-import { Warning } from "../../../Warning";
+import { WarningBubble } from "../../../WarningBubble";
 import { useBondView } from "../../context/BondViewContext";
 import { ApprovePressedPayload, BLusdAmmTokenIndex } from "../../context/transitions";
 import { PoolDetails } from "./PoolDetails";
@@ -135,10 +135,10 @@ export const WithdrawPane: React.FC = () => {
   return (
     <>
       {stakedLpTokenBalance?.nonZero && (
-        <Warning>
+        <WarningBubble>
           You {lpTokenBalance?.nonZero && " also "} have {stakedLpTokenBalance.shorten()} staked LP
           tokens. Unstake them to withdraw liquidity from them.
-        </Warning>
+        </WarningBubble>
       )}
       <EditableRow
         label="Burn LP Tokens"
@@ -236,4 +236,4 @@ export const WithdrawPane: React.FC = () => {
       </Flex>
     </>
   );
-};;
+};
