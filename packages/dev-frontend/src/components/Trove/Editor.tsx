@@ -3,12 +3,13 @@ import { Text, Flex, Label, Input, SxProp, Button, ThemeUICSSProperties } from "
 
 import { Icon } from "../Icon";
 
-type RowProps = SxProp & {
-  label: string | React.ReactNode;
-  labelId?: string;
-  labelFor?: string;
-  infoIcon?: React.ReactNode;
-};
+type RowProps = SxProp &
+  React.PropsWithChildren<{
+    label: string | React.ReactNode;
+    labelId?: string;
+    labelFor?: string;
+    infoIcon?: React.ReactNode;
+  }>;
 
 export const Row: React.FC<RowProps> = ({ sx, label, labelId, labelFor, children, infoIcon }) => {
   return (
@@ -36,12 +37,12 @@ export const Row: React.FC<RowProps> = ({ sx, label, labelId, labelFor, children
   );
 };
 
-type PendingAmountProps = {
+type PendingAmountProps = SxProp & {
   value: string;
 };
 
-const PendingAmount: React.FC<PendingAmountProps & SxProp> = ({ sx, value }) => (
-  <Text {...{ sx }}>
+const PendingAmount: React.FC<PendingAmountProps> = ({ sx, value }) => (
+  <Text sx={{ ...sx }}>
     (
     {value === "++" ? (
       <Icon name="angle-double-up" />
@@ -62,7 +63,7 @@ const PendingAmount: React.FC<PendingAmountProps & SxProp> = ({ sx, value }) => 
   </Text>
 );
 
-type StaticAmountsProps = {
+type StaticAmountsProps = React.PropsWithChildren<{
   inputId?: string;
   labelledBy?: string;
   amount?: string;
@@ -71,7 +72,7 @@ type StaticAmountsProps = {
   pendingAmount?: string;
   pendingColor?: string;
   onClick?: () => void;
-};
+}>;
 
 export const StaticAmounts: React.FC<StaticAmountsProps & SxProp> = ({
   sx,

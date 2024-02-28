@@ -3,9 +3,9 @@ import { Button } from "theme-ui";
 import { useLiquity } from "../../../hooks/LiquityContext";
 import { useTransactionFunction } from "../../Transaction";
 
-type ClaimAndMoveProps = {
+type ClaimAndMoveProps = React.PropsWithChildren<{
   disabled?: boolean;
-};
+}>;
 
 export const ClaimAndMove: React.FC<ClaimAndMoveProps> = ({ disabled, children }) => {
   const { liquity } = useLiquity();

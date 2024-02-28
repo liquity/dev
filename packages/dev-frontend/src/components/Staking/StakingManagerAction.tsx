@@ -5,9 +5,9 @@ import { Decimal, LQTYStakeChange } from "@liquity/lib-base";
 import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";
 
-type StakingActionProps = {
+type StakingActionProps = React.PropsWithChildren<{
   change: LQTYStakeChange<Decimal>;
-};
+}>;
 
 export const StakingManagerAction: React.FC<StakingActionProps> = ({ change, children }) => {
   const { liquity } = useLiquity();

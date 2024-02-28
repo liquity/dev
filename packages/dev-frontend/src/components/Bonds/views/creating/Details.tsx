@@ -313,14 +313,14 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
           <Button onClick={handleApprovePressed} disabled={isApprovingOrConfirming}>
             {!isApprovingOrConfirming && <>Approve</>}
             {isApprovingOrConfirming && (
-              <Spinner size="28px" sx={{ color: "white", position: "absolute" }} />
+              <Spinner size={28} sx={{ color: "white", position: "absolute" }} />
             )}
           </Button>
         )}
         {isInfiniteBondApproved && (
           <Button onClick={handleConfirmPressed} disabled={isApprovingOrConfirming}>
             {!isApprovingOrConfirming && <>Confirm</>}
-            {isApprovingOrConfirming && <Spinner size="28px" sx={{ color: "white" }} />}
+            {isApprovingOrConfirming && <Spinner size={28} sx={{ color: "white" }} />}
           </Button>
         )}
       </Flex>

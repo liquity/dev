@@ -1,10 +1,10 @@
 import React from "react";
-import { createClient, WagmiConfig } from "wagmi";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { WagmiProvider, createConfig, fallback, http } from "wagmi";
 import { mainnet, goerli, sepolia, localhost } from "wagmi/chains";
-import { ConnectKitProvider } from "connectkit";
-import { Flex, Heading, ThemeProvider, Paragraph, Link } from "theme-ui";
+import { ConnectKitProvider, getDefaultConfig } from "connectkit";
+import { Flex, Heading, ThemeUIProvider, Paragraph, Link } from "theme-ui";
 
-import getDefaultClient from "./connectkit/defaultClient";
 import { LiquityProvider } from "./hooks/LiquityContext";
 import { WalletConnector } from "./components/WalletConnector";
 import { TransactionProvider } from "./components/Transaction";
@@ -78,45 +78,61 @@ const UnsupportedNetworkFallback: React.FC = () => (
   </Flex>
 );
 
+const queryClient = new QueryClient();
+
 const App = () => {
   const config = useAsyncValue(getConfig);
   const loader = <AppLoader />;
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeUIProvider theme={theme}>
       {config.loaded && (
-        <WagmiConfig
-          client={createClient(
-            getDefaultClient({
+        <WagmiProvider
+          config={createConfig(
+            getDefaultConfig({
               appName: "Liquity",
+
               chains:
                 isDemoMode || import.meta.env.MODE === "test"
                   ? [localhost]
                   : config.value.testnetOnly
                   ? [goerli, sepolia]
                   : [mainnet, goerli, sepolia],
+
               walletConnectProjectId: config.value.walletConnectProjectId,
-              infuraId: config.value.infuraApiKey,
-              alchemyId: config.value.alchemyApiKey
+
+              transports: {
+                [mainnet.id]: fallback([
+                  ...(config.value.infuraApiKey
+                    ? [http(`https://mainnet.infura.io/v3/${config.value.infuraApiKey}`)]
+                    : []),
+                  ...(config.value.alchemyApiKey
+                    ? [http(`https://eth-mainnet.g.alchemy.com/v2/${config.value.alchemyApiKey}`)]
+                    : []),
+                  http()
+                ])
+              }
             })
           )}
         >
-          <ConnectKitProvider options={{ hideBalance: true }}>
-            <WalletConnector loader={loader}>
-              <LiquityProvider
-                loader={loader}
-                unsupportedNetworkFallback={<UnsupportedNetworkFallback />}
-                unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
-              >
-                <TransactionProvider>
-                  <LiquityFrontend loader={loader} />
-                </TransactionProvider>
-              </LiquityProvider>
-            </WalletConnector>
-          </ConnectKitProvider>
-        </WagmiConfig>
+          <QueryClientProvider client={queryClient}>
+            <ConnectKitProvider options={{ hideBalance: true }}>
+              <WalletConnector loader={loader}>
+                <LiquityProvider
+                  loader={loader}
+                  unsupportedNetworkFallback={<UnsupportedNetworkFallback />}
+                  unsupportedMainnetFallback={<UnsupportedMainnetFallback />}
+                >
+                  <TransactionProvider>
+                    <LiquityFrontend loader={loader} />
+                  </TransactionProvider>
+                </LiquityProvider>
+              </WalletConnector>
+            </ConnectKitProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
       )}
-    </ThemeProvider>
+    </ThemeUIProvider>
   );
 };
 

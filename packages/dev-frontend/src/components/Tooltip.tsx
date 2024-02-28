@@ -4,10 +4,11 @@ import React from "react";
 import { Box, Card, Link } from "theme-ui";
 import { Icon } from "./Icon";
 
-export type TooltipProps = Pick<TippyProps, "placement"> & {
-  message: React.ReactNode;
-  link?: string;
-};
+export type TooltipProps = Pick<TippyProps, "placement"> &
+  React.PropsWithChildren<{
+    message: React.ReactNode;
+    link?: string;
+  }>;
 
 export type LearnMoreLinkProps = Pick<TooltipProps, "link">;
 

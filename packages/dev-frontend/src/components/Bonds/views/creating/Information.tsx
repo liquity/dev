@@ -16,7 +16,7 @@ import { useWizard } from "../../../Wizard/Context";
 import { useBondView } from "../../context/BondViewContext";
 import { Details } from "./Details";
 
-const InformationContainer: React.FC = ({ children }) => {
+const InformationContainer: React.FC<React.PropsWithChildren> = ({ children }) => {
   const { dispatchEvent } = useBondView();
   const handleDismiss = () => dispatchEvent("ABORT_PRESSED");
 

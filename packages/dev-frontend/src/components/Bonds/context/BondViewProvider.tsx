@@ -40,7 +40,7 @@ const transition = (view: BondView, event: BondEvent): BondView => {
 
 export const EXAMPLE_NFT = "./bonds/egg-nft.png";
 
-export const BondViewProvider: React.FC = props => {
+export const BondViewProvider: React.FC<React.PropsWithChildren> = props => {
   const { children } = props;
   const [view, setView] = useState<BondView>("IDLE");
   const viewRef = useRef<BondView>(view);

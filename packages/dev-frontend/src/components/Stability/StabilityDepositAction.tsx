@@ -5,10 +5,10 @@ import { useLiquitySelector } from "@liquity/lib-react";
 import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";
 
-type StabilityDepositActionProps = {
+type StabilityDepositActionProps = React.PropsWithChildren<{
   transactionId: string;
   change: StabilityDepositChange<Decimal>;
-};
+}>;
 
 const selectFrontendRegistered = ({ frontend }: LiquityStoreState) =>
   frontend.status === "registered";

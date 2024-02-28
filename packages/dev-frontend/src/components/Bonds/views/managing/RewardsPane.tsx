@@ -41,7 +41,7 @@ export const RewardsPane: React.FC = () => {
 
         <Button variant="primary" onClick={handleConfirmPressed} disabled={!hasRewards}>
           {isManageLiquidityPending ? (
-            <Spinner size="28px" sx={{ color: "white" }} />
+            <Spinner size={28} sx={{ color: "white" }} />
           ) : (
             <>Claim all rewards</>
           )}

@@ -2,10 +2,10 @@ import { Box, Flex, Heading, Text } from "theme-ui";
 
 import { Icon } from "./Icon";
 
-type InfoMessageProps = {
+type InfoMessageProps = React.PropsWithChildren<{
   title: string;
   icon?: React.ReactNode;
-};
+}>;
 
 export const InfoMessage: React.FC<InfoMessageProps> = ({ title, children, icon }) => (
   <Box sx={{ mx: 1, mb: 3 }}>

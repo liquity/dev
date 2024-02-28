@@ -352,11 +352,11 @@ export const SwapPane: React.FC = () => {
               isSwapPending
             }
           >
-            {isSwapPending ? <Spinner size="28px" sx={{ color: "white" }} /> : <>Confirm</>}
+            {isSwapPending ? <Spinner size={28} sx={{ color: "white" }} /> : <>Confirm</>}
           </Button>
         ) : (
           <Button variant="primary" onClick={handleApprovePressed} disabled={isApprovePending}>
-            {isApprovePending ? <Spinner size="28px" sx={{ color: "white" }} /> : <>Approve</>}
+            {isApprovePending ? <Spinner size={28} sx={{ color: "white" }} /> : <>Approve</>}
           </Button>
         )}
       </Flex>

@@ -33,7 +33,7 @@ export const useBondAddresses = (): Addresses => {
   return context;
 };
 
-export const BondAddressesProvider: React.FC = ({ children }) => {
+export const BondAddressesProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const chainId = useChainId();
 
   const addresses: Addresses =
