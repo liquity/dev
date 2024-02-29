@@ -2,7 +2,7 @@ import { Box, Flex, Text } from "theme-ui";
 
 import { Icon } from "./Icon";
 
-export const InfoBubble: React.FC = ({ children }) => (
+export const InfoBubble: React.FC<React.PropsWithChildren> = ({ children }) => (
   <Box
     sx={{
       display: "flex",

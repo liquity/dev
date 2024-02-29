@@ -9,7 +9,7 @@ export type TooltipProps = Pick<TippyProps, "placement"> &
     link?: string;
   }>;
 
-export type LearnMoreLinkProps = Pick<TooltipProps, "link">;
+export type LearnMoreLinkProps = React.PropsWithChildren<Pick<TooltipProps, "link">>;
 
 export const LearnMoreLink: React.FC<LearnMoreLinkProps> = ({ link, children }) => {
   return (
