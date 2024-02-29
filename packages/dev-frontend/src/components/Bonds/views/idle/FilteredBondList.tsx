@@ -3,7 +3,7 @@ import { useBondView } from "../../context/BondViewContext";
 import type { BondStatus, Bond as BondType } from "../../context/transitions";
 import { Bond } from "./Bond";
 import { OptimisticBond } from "./OptimisticBond";
-import { ActionDescription } from "../../../ActionDescription";
+import { InfoBubble } from "../../../InfoBubble";
 import { Box } from "theme-ui";
 
 type BondFilter = "pending" | "claimed" | "cancelled";
@@ -45,9 +45,9 @@ export const FilteredBondList = () => {
 
       {!showOptimisticBond && filteredBonds.length === 0 && (
         <Box mt={2}>
-          <ActionDescription>
+          <InfoBubble>
             You don't have any {bondFilter !== "all" ? bondFilter : null} bonds
-          </ActionDescription>
+          </InfoBubble>
         </Box>
       )}
     </>

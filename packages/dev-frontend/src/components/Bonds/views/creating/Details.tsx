@@ -7,11 +7,11 @@ import { Record } from "../../Record";
 import { InfoIcon } from "../../../InfoIcon";
 import { useBondView } from "../../context/BondViewContext";
 import { HorizontalTimeline, Label, SubLabel, UNKNOWN_DATE } from "../../../HorizontalTimeline";
-import { ActionDescription } from "../../../ActionDescription";
+import { ActionDescription, Amount } from "../../../ActionDescription";
 import { EXAMPLE_NFT } from "../../context/BondViewProvider";
 import * as l from "../../lexicon";
 import { useWizard } from "../../../Wizard/Context";
-import { Warning } from "../../../Warning";
+import { WarningBubble } from "../../../WarningBubble";
 import type { CreateBondPayload } from "../../context/transitions";
 import {
   dateWithoutHours,
@@ -25,7 +25,6 @@ import {
 } from "../../utils";
 import { HorizontalSlider } from "../../../HorizontalSlider";
 import { ErrorDescription } from "../../../ErrorDescription";
-import { Amount } from "../../../ActionDescription";
 import { InfiniteEstimate } from "../InfiniteEstimation";
 import { LearnMoreLink } from "../../../Tooltip";
 
@@ -269,11 +268,11 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       />
 
       {!protocolInfo.hasMarketPremium && (
-        <Warning>
+        <WarningBubble>
           When the bLUSD market price is less than 3% above the floor price, it's not profitable to
           bond. Buying bLUSD from the market currently generates a higher return than bonding.{" "}
           <LearnMoreLink link={l.INFINITE_ESTIMATION.link} />
-        </Warning>
+        </WarningBubble>
       )}
 
       {!isInfiniteBondApproved && (
@@ -283,14 +282,16 @@ export const Details: React.FC<DetailsProps> = ({ onBack }) => {
       )}
 
       {statuses.APPROVE === "FAILED" && (
-        <Warning>Failed to approve spend of LUSD. Please try again.</Warning>
+        <WarningBubble>Failed to approve spend of LUSD. Please try again.</WarningBubble>
       )}
 
-      {statuses.CREATE === "FAILED" && <Warning>Failed to create bond. Please try again.</Warning>}
+      {statuses.CREATE === "FAILED" && (
+        <WarningBubble>Failed to create bond. Please try again.</WarningBubble>
+      )}
 
       {isInfiniteBondApproved && (
         <ActionDescription>
-          You are bonding <Text sx={{ fontWeight: "bold" }}>{deposit.prettify(2)} LUSD</Text>
+          You are bonding <Amount>{deposit.prettify(2)} LUSD</Amount>
         </ActionDescription>
       )}
 

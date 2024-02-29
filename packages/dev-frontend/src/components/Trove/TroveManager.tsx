@@ -5,7 +5,7 @@ import { LiquityStoreState, Decimal, Trove, Decimalish, LUSD_MINIMUM_DEBT } from
 
 import { LiquityStoreUpdate, useLiquityReducer, useLiquitySelector } from "@liquity/lib-react";
 
-import { ActionDescription } from "../ActionDescription";
+import { InfoBubble } from "../InfoBubble";
 import { useMyTransactionState } from "../Transaction";
 
 import { TroveEditor } from "./TroveEditor";
@@ -155,6 +155,7 @@ type TroveManagerProps = {
   debt?: Decimalish;
 };
 
+// XXX Only used for closing Troves now
 export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) => {
   const [{ original, edited, changePending }, dispatch] = useLiquityReducer(reduce, init);
   const { fees, validationContext } = useLiquitySelector(select);
@@ -216,13 +217,11 @@ export const TroveManager: React.FC<TroveManagerProps> = ({ collateral, debt }) 
     >
       {description ??
         (openingNewTrove ? (
-          <ActionDescription>
+          <InfoBubble>
             Start by entering the amount of ETH you'd like to deposit as collateral.
-          </ActionDescription>
+          </InfoBubble>
         ) : (
-          <ActionDescription>
-            Adjust your Trove by modifying its collateral, debt, or both.
-          </ActionDescription>
+          <InfoBubble>Adjust your Trove by modifying its collateral, debt, or both.</InfoBubble>
         ))}
 
       <Flex variant="layout.actions">

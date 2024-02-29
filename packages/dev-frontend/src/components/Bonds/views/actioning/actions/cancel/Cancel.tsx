@@ -1,6 +1,6 @@
 import React from "react";
-import { Flex, Button, Text, Spinner } from "theme-ui";
-import { ActionDescription } from "../../../../../ActionDescription";
+import { Flex, Button, Spinner } from "theme-ui";
+import { ActionDescription, Amount } from "../../../../../ActionDescription";
 import { useBondView } from "../../../../context/BondViewContext";
 
 export const Cancel: React.FC = () => {
@@ -21,9 +21,8 @@ export const Cancel: React.FC = () => {
   return (
     <>
       <ActionDescription>
-        You will receive your bonded{" "}
-        <Text sx={{ fontWeight: "bold" }}>{bond.deposit.prettify(2)} LUSD</Text> back and forgo{" "}
-        <Text sx={{ fontWeight: "bold" }}>{bond.accrued.shorten()} bLUSD</Text>
+        You will receive your bonded <Amount>{bond.deposit.prettify(2)} LUSD</Amount> back and forgo{" "}
+        <Amount>{bond.accrued.shorten()} bLUSD</Amount>
       </ActionDescription>
 
       <Flex variant="layout.actions">

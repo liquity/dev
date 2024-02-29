@@ -4,7 +4,7 @@ import { Decimal, TroveChange } from "@liquity/lib-base";
 import { PopulatedEthersLiquityTransaction } from "@liquity/lib-ethers";
 
 import { useLiquity } from "../../hooks/LiquityContext";
-import { Warning } from "../Warning";
+import { WarningBubble } from "../WarningBubble";
 
 export type GasEstimationState =
   | { type: "idle" | "inProgress" }
@@ -70,15 +70,15 @@ export const ExpensiveTroveChangeWarning: React.FC<ExpensiveTroveChangeWarningPa
     gasEstimationState.populatedTx.gasHeadroom >= 200000
   ) {
     return troveChange.type === "creation" ? (
-      <Warning>
+      <WarningBubble>
         The cost of opening a Trove in this collateral ratio range is rather high. To lower it,
         choose a slightly different collateral ratio.
-      </Warning>
+      </WarningBubble>
     ) : (
-      <Warning>
+      <WarningBubble>
         The cost of adjusting a Trove into this collateral ratio range is rather high. To lower it,
         choose a slightly different collateral ratio.
-      </Warning>
+      </WarningBubble>
     );
   }
 
