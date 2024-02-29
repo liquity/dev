@@ -6,6 +6,7 @@ export const LiquityStoreContext = createContext<LiquityStore | undefined>(undef
 type LiquityStoreProviderProps = {
   store: LiquityStore;
   loader?: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 export const LiquityStoreProvider: React.FC<LiquityStoreProviderProps> = ({
