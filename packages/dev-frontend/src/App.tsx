@@ -1,8 +1,9 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, fallback, http } from "wagmi";
+import { injected } from "wagmi/connectors";
 import { mainnet, goerli, sepolia, localhost } from "wagmi/chains";
-import { ConnectKitProvider, getDefaultConfig } from "connectkit";
+import { ConnectKitProvider, getDefaultConfig, getDefaultConnectors } from "connectkit";
 import { Flex, Heading, ThemeUIProvider, Paragraph, Link } from "theme-ui";
 
 import { LiquityProvider } from "./hooks/LiquityContext";
@@ -80,6 +81,9 @@ const UnsupportedNetworkFallback: React.FC = () => (
 
 const queryClient = new QueryClient();
 
+const appName = "Liquity";
+const appDescription = "Decentralized borrowing protocol";
+
 const App = () => {
   const config = useAsyncValue(getConfig);
   const loader = <AppLoader />;
@@ -90,7 +94,9 @@ const App = () => {
         <WagmiProvider
           config={createConfig(
             getDefaultConfig({
-              appName: "Liquity",
+              appName,
+              appDescription,
+              walletConnectProjectId: config.value.walletConnectProjectId,
 
               chains:
                 isDemoMode || import.meta.env.MODE === "test"
@@ -99,7 +105,16 @@ const App = () => {
                   ? [goerli, sepolia]
                   : [mainnet, goerli, sepolia],
 
-              walletConnectProjectId: config.value.walletConnectProjectId,
+              connectors:
+                isDemoMode || import.meta.env.MODE === "test"
+                  ? [injected()]
+                  : getDefaultConnectors({
+                      app: {
+                        name: appName,
+                        description: appDescription
+                      },
+                      walletConnectProjectId: config.value.walletConnectProjectId
+                    }),
 
               transports: {
                 [mainnet.id]: fallback([
@@ -110,7 +125,29 @@ const App = () => {
                     ? [http(`https://eth-mainnet.g.alchemy.com/v2/${config.value.alchemyApiKey}`)]
                     : []),
                   http()
-                ])
+                ]),
+
+                [goerli.id]: fallback([
+                  ...(config.value.infuraApiKey
+                    ? [http(`https://goerli.infura.io/v3/${config.value.infuraApiKey}`)]
+                    : []),
+                  ...(config.value.alchemyApiKey
+                    ? [http(`https://eth-goerli.g.alchemy.com/v2/${config.value.alchemyApiKey}`)]
+                    : []),
+                  http()
+                ]),
+
+                [sepolia.id]: fallback([
+                  ...(config.value.infuraApiKey
+                    ? [http(`https://sepolia.infura.io/v3/${config.value.infuraApiKey}`)]
+                    : []),
+                  ...(config.value.alchemyApiKey
+                    ? [http(`https://eth-sepolia.g.alchemy.com/v2/${config.value.alchemyApiKey}`)]
+                    : []),
+                  http()
+                ]),
+
+                [localhost.id]: http()
               }
             })
           )}

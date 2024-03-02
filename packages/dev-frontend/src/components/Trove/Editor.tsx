@@ -259,7 +259,6 @@ export const EditableRow: React.FC<EditableRowProps> = ({
         type="number"
         step="any"
         defaultValue={editedAmount}
-        {...{ invalid }}
         onChange={e => {
           try {
             setEditedAmount(e.target.value);
@@ -289,7 +288,12 @@ export const EditableRow: React.FC<EditableRowProps> = ({
         }}
         labelledBy={`${inputId}-label`}
         onClick={() => setEditing(inputId)}
-        {...{ inputId, amount, unit, color, pendingAmount, pendingColor, invalid }}
+        inputId={inputId}
+        amount={amount}
+        unit={unit}
+        color={color}
+        pendingAmount={pendingAmount}
+        pendingColor={pendingColor}
       >
         {maxAmount && (
           <Button

@@ -61,7 +61,7 @@ export class DisposableWalletProvider {
       case "eth_signTypedData_v4": {
         const privateKeyWithout0xPrefix = this.findWallet(params[0]).privateKey.slice(2);
         const privateKey = Buffer.from(privateKeyWithout0xPrefix, "hex");
-        const signature = await signTypedData({
+        const signature = signTypedData({
           privateKey,
           data: JSON.parse(params[1]),
           version: SignTypedDataVersion.V4
@@ -89,35 +89,56 @@ export class DisposableWalletProvider {
         );
     }
 
-    //console.log({ method, params });
-
-    const response = await fetch(this.url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+    try {
+      const request = {
         method: method,
         params: params,
         id: this.id++,
         jsonrpc: "2.0"
-      })
-    });
+      };
 
-    const json = await response.json();
+      // console.log("[JSON-RPC] >", request);
 
-    //console.log(json);
+      const response = await fetch(this.url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(request)
+      });
 
-    if (json.error) {
-      const { message, ...rest } = json.error;
-      const error = new Error(`${message} ${JSON.stringify(rest)}`);
-      throw Object.assign(error, rest);
+      const json = await response.json();
+
+      // console.log("[JSON-RPC] <", json);
+
+      if (json.error) {
+        const { message, ...rest } = json.error;
+        const error = new Error(`${message} ${JSON.stringify(rest)}`);
+        throw Object.assign(error, rest);
+      }
+
+      return json.result;
+    } catch (error) {
+      // Log error, as wagmi will just swallow it in some cases
+      console.error(error);
+      throw error;
     }
-
-    return json.result;
   }
 
-  request({ method, params }: { method: string; params: any[] }) {
-    return this.send(method, params);
+  async request({ method, params }: { method: string; params: any[] }) {
+    // console.log("[DisposableWalletProvider] > method", method, "params", params);
+    const ret = await this.send(method, params);
+    // console.log("[DisposableWalletProvider] < method", method, "return", ret);
+    return ret;
+  }
+
+  on(_eventName: string, _listener: () => void) {
+    // console.log("[DisposableWalletProvider] on", _eventName, _listener);
+    return this;
+  }
+
+  removeListener(_eventName: string, _listener: () => void) {
+    // console.log("[DisposableWalletProvider] removeListener", _eventName, _listener);
+    return this;
   }
 }

@@ -25,6 +25,7 @@ import { BondsProvider } from "./components/Bonds/context/BondsProvider";
 type LiquityFrontendProps = {
   loader?: React.ReactNode;
 };
+
 export const LiquityFrontend: React.FC<LiquityFrontendProps> = ({ loader }) => {
   const { account, provider, liquity } = useLiquity();
 
