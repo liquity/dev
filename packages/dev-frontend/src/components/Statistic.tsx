@@ -3,9 +3,9 @@ import { Flex } from "theme-ui";
 import { InfoIcon } from "./InfoIcon";
 import type { Lexicon } from "../lexicon";
 
-type StatisticProps = {
+type StatisticProps = React.PropsWithChildren<{
   lexicon: Lexicon;
-};
+}>;
 
 export const Statistic: React.FC<StatisticProps> = ({ lexicon, children }) => {
   return (

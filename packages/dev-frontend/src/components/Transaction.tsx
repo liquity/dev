@@ -64,7 +64,7 @@ const TransactionContext = React.createContext<
   [TransactionState, (state: TransactionState) => void] | undefined
 >(undefined);
 
-export const TransactionProvider: React.FC = ({ children }) => {
+export const TransactionProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const transactionState = useState<TransactionState>({ type: "idle" });
   return (
     <TransactionContext.Provider value={transactionState}>{children}</TransactionContext.Provider>

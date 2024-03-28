@@ -17,12 +17,12 @@ const select = ({ lqtyBalance, totalStakedLQTY }: LiquityStoreState) => ({
   totalStakedLQTY
 });
 
-type StakingEditorProps = {
+type StakingEditorProps = React.PropsWithChildren<{
   title: string;
   originalStake: LQTYStake;
   editedLQTY: Decimal;
   dispatch: (action: { type: "setStake"; newValue: Decimalish } | { type: "revert" }) => void;
-};
+}>;
 
 export const StakingEditor: React.FC<StakingEditorProps> = ({
   children,

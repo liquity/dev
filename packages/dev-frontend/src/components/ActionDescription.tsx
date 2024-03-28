@@ -1,6 +1,6 @@
 import { Box, Flex, Text } from "theme-ui";
 
-export const ActionDescription: React.FC = ({ children }) => (
+export const ActionDescription: React.FC<React.PropsWithChildren> = ({ children }) => (
   <Box
     sx={{
       display: "flex",
@@ -20,6 +20,6 @@ export const ActionDescription: React.FC = ({ children }) => (
   </Box>
 );
 
-export const Amount: React.FC = ({ children }) => (
+export const Amount: React.FC<React.PropsWithChildren> = ({ children }) => (
   <Text sx={{ fontWeight: "bold", whiteSpace: "nowrap" }}>{children}</Text>
 );

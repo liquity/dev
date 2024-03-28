@@ -23,12 +23,12 @@ const select = ({ lusdBalance, lusdInStabilityPool }: LiquityStoreState) => ({
   lusdInStabilityPool
 });
 
-type StabilityDepositEditorProps = {
+type StabilityDepositEditorProps = React.PropsWithChildren<{
   originalDeposit: StabilityDeposit;
   editedLUSD: Decimal;
   changePending: boolean;
   dispatch: (action: { type: "setDeposit"; newValue: Decimalish } | { type: "revert" }) => void;
-};
+}>;
 
 export const StabilityDepositEditor: React.FC<StabilityDepositEditorProps> = ({
   originalDeposit,

@@ -1,6 +1,10 @@
 import { Text } from "theme-ui";
 
-export const PoolBalance: React.FC<{ symbol: string }> = ({ symbol, children }) => (
+type PoolBalanceProps = React.PropsWithChildren<{
+  symbol: string;
+}>;
+
+export const PoolBalance: React.FC<PoolBalanceProps> = ({ symbol, children }) => (
   <>
     <Text sx={{ fontWeight: "medium" }}>{children}</Text>
     &nbsp;

@@ -19,7 +19,7 @@ import { LoadingOverlay } from "../LoadingOverlay";
 import { CollateralRatio } from "./CollateralRatio";
 import { InfoIcon } from "../InfoIcon";
 
-type TroveEditorProps = {
+type TroveEditorProps = React.PropsWithChildren<{
   original: Trove;
   edited: Trove;
   fee: Decimal;
@@ -28,7 +28,7 @@ type TroveEditorProps = {
   dispatch: (
     action: { type: "setCollateral" | "setDebt"; newValue: Decimalish } | { type: "revert" }
   ) => void;
-};
+}>;
 
 const select = ({ price }: LiquityStoreState) => ({ price });
 

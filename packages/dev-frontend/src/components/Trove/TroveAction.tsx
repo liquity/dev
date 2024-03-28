@@ -5,12 +5,12 @@ import { Decimal, TroveChange } from "@liquity/lib-base";
 import { useLiquity } from "../../hooks/LiquityContext";
 import { useTransactionFunction } from "../Transaction";
 
-type TroveActionProps = {
+type TroveActionProps = React.PropsWithChildren<{
   transactionId: string;
   change: Exclude<TroveChange<Decimal>, { type: "invalidCreation" }>;
   maxBorrowingRate: Decimal;
   borrowingFeeDecayToleranceMinutes: number;
-};
+}>;
 
 export const TroveAction: React.FC<TroveActionProps> = ({
   children,

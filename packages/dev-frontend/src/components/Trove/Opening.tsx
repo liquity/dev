@@ -226,7 +226,7 @@ export const Opening: React.FC = () => {
 
           {gasEstimationState.type === "inProgress" ? (
             <Button disabled>
-              <Spinner size="24px" sx={{ color: "background" }} />
+              <Spinner size={24} sx={{ color: "background" }} />
             </Button>
           ) : stableTroveChange ? (
             <TroveAction

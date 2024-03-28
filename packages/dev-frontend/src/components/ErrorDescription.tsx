@@ -2,7 +2,7 @@ import { Box, Flex, Text } from "theme-ui";
 
 import { Icon } from "./Icon";
 
-export const ErrorDescription: React.FC = ({ children }) => (
+export const ErrorDescription: React.FC<React.PropsWithChildren> = ({ children }) => (
   <Box
     sx={{
       display: "flex",

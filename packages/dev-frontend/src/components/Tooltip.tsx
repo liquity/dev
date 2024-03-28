@@ -3,12 +3,13 @@ import type { TippyProps } from "@tippyjs/react";
 import React from "react";
 import { Box, Card, Link } from "theme-ui";
 
-export type TooltipProps = Pick<TippyProps, "placement"> & {
-  message: React.ReactNode;
-  link?: string;
-};
+export type TooltipProps = Pick<TippyProps, "placement"> &
+  React.PropsWithChildren<{
+    message: React.ReactNode;
+    link?: string;
+  }>;
 
-export type LearnMoreLinkProps = Pick<TooltipProps, "link">;
+export type LearnMoreLinkProps = React.PropsWithChildren<Pick<TooltipProps, "link">>;
 
 export const LearnMoreLink: React.FC<LearnMoreLinkProps> = ({ link, children }) => {
   return (

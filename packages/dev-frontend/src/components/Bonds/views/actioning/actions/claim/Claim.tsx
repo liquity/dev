@@ -31,7 +31,7 @@ export const Claim: React.FC = () => {
         </Button>
         <Button variant="primary" onClick={handleConfirmPressed} disabled={isProcessingTransaction}>
           {!isProcessingTransaction && <>Confirm</>}
-          {isProcessingTransaction && <Spinner size="28px" sx={{ color: "white" }} />}
+          {isProcessingTransaction && <Spinner size={28} sx={{ color: "white" }} />}
         </Button>
       </Flex>
     </>

@@ -69,7 +69,7 @@ const reduce = (
   return state;
 };
 
-export const StakingViewProvider: React.FC = ({ children }) => {
+export const StakingViewProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const stakingTransactionState = useMyTransactionState("stake");
   const [{ adjusting, changePending, lqtyStake }, dispatch] = useLiquityReducer(reduce, init);
 

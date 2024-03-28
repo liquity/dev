@@ -6,6 +6,6 @@ export const LoadingOverlay: React.FC = () => (
     variant="disabledOverlay"
     sx={{ p: "14px", display: "flex", justifyContent: "flex-end" }}
   >
-    <Spinner size="28px" sx={{ color: "text" }} />
+    <Spinner size={28} sx={{ color: "text" }} />
   </Container>
 );
