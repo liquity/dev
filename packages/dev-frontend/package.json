@@ -15,7 +15,7 @@
     "@metamask/eth-sig-util": "5.0.1",
     "@tanstack/react-query": "^5.24.1",
     "@tippyjs/react": "^4.2.6",
-    "connectkit": "^1.7.2",
+    "connectkit": "^1.7.3",
     "ethers": "5.7.2",
     "lambert-w-function": "3.0.0",
     "react": "^18.2.0",
