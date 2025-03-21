@@ -117,9 +117,9 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     assert.equal(await troveManager.getTroveStatus(B), 3) // status: closed by liq
     await priceFeed.setPrice(dec(200, 18))
 
-    // Check P reduced by factor of 1e9
+    // Check P reduced by factor of 1e9, it’s now re-scaled up
     const P_2 = await stabilityPool.P() 
-    assert.isTrue(P_2.eq(th.toBN(1)))
+    assert.isTrue(P_2.eq(th.toBN(1e9)))
     console.log("P2:")
     console.log(P_2.toString())
 
@@ -178,9 +178,9 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     assert.equal(await troveManager.getTroveStatus(B), 3) // status: closed by liq
     await priceFeed.setPrice(dec(200, 18))
 
-     // Check P reduced by factor of 1e9
+    // Check P reduced by factor of 1e9, it’s now re-scaled up
     const P_2 = await stabilityPool.P() 
-    assert.equal(P_2, dec(1,0))
+    assert.isTrue(P_2.eq(th.toBN(1e9)))
     console.log("P2:")
     console.log(P_2.toString())
 
@@ -252,13 +252,13 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     assert.equal(await troveManager.getTroveStatus(B), 3) // status: closed by liq
     await priceFeed.setPrice(dec(200, 18))
     
-    // Check P reduced by factor of 1e9
+    // Check P reduced by factor of 1e9, it’s now re-scaled up
     const P_2 = await stabilityPool.P() 
-    assert.isTrue(P_2.eq(th.toBN(1)))
+    assert.isTrue(P_2.eq(th.toBN(1e9)))
     console.log("P2:")
     console.log(P_2.toString())
     scale = (await stabilityPool.currentScale()).toString()
-    assert.equal(scale, "2")
+    assert.equal(scale, "3")
     console.log("scale:")
     console.log(scale)
 
@@ -277,13 +277,13 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     // Check P remains the same. Pool depletes to 1 billion'th of prior size, so newProductFactor is 1e9. 
     // Due to scale change, raw value of P should equal (1 * 1e9 * 1e9 / 1e18) = 1, i.e. should not change.
     const P_3 = await stabilityPool.P() 
-    assert.isTrue(P_3.eq(th.toBN(1)))
+    scale = (await stabilityPool.currentScale()).toString()
     console.log("P_3:")
     console.log(P_3.toString())
-    scale = (await stabilityPool.currentScale()).toString()
-    assert.equal(scale, "3")
     console.log("scale:")
     console.log(scale)
+    assert.isTrue(P_3.eq(th.toBN(1e9)))
+    assert.equal(scale, "4")
   })
 
   it("4. Liquidation succeeds when P == 1 and liquidation has newProductFactor > 1e9", async () => {
@@ -338,13 +338,13 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     assert.equal(await troveManager.getTroveStatus(B), 3) // status: closed by liq
     await priceFeed.setPrice(dec(200, 18))
     
-    // Check P reduced by factor of 1e9
+    // Check P reduced by factor of 1e9, it’s now re-scaled up
     const P_2 = await stabilityPool.P() 
-    assert.isTrue(P_2.eq(th.toBN(1)))
+    assert.isTrue(P_2.eq(th.toBN(1e9)))
     console.log("P2:")
     console.log(P_2.toString())
     scale = (await stabilityPool.currentScale()).toString()
-    assert.equal(scale, "2")
+    assert.equal(scale, "3")
     console.log("scale:")
     console.log(scale)
 
@@ -363,13 +363,13 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     // Check P increases: 50% of the pool is liquidated, and there is a scale change. Pool depletion is 50%, so newProductFactor is 5e17.
     // Raw value of P should change from 1 to (1 * 5e17 * 1e9 / 1e18)= 5e8.
     const P_3 = await stabilityPool.P() 
-    assert.isTrue(P_3.eq(th.toBN(dec(5, 8)))) 
+    scale = (await stabilityPool.currentScale()).toString()
     console.log("P_3:")
     console.log(P_3.toString())
-    scale = (await stabilityPool.currentScale()).toString()
-    assert.equal(scale, "3")
     console.log("scale:")
     console.log(scale)
+    assert.isTrue(P_3.eq(th.toBN(dec(5, 17))))
+    assert.equal(scale, "4")
   })
 
   // --- Check depositors have correct stakes after experiencing scale change from depositing when P is tiny  ---
@@ -426,13 +426,13 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     assert.equal(await troveManager.getTroveStatus(B), 3) // status: closed by liq
     await priceFeed.setPrice(dec(200, 18))
     
-    // Check P reduced by factor of 1e9
+    // Check P reduced by factor of 1e9, it’s now re-scaled up
     const P_2 = await stabilityPool.P() 
-    assert.isTrue(P_2.eq(th.toBN(1)))
+    assert.isTrue(P_2.eq(th.toBN(1e9)))
     console.log("P2:")
     console.log(P_2.toString())
     scale = (await stabilityPool.currentScale()).toString()
-    assert.equal(scale, "2")
+    assert.equal(scale, "3")
     console.log("scale:")
     console.log(scale)
 
@@ -456,14 +456,14 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     // Check liq succeeds and P remains the same. // Pool depletes to 1 billion'th of prior size, so newProductFactor is 1e9. 
     // Due to scale change, raw value of P should equal (1 * 1e9 * 1e9 / 1e18) = 1, i.e. should not change.
     const P_3 = await stabilityPool.P() 
-    assert.isTrue(P_3.eq(th.toBN(1)))
+    scale = (await stabilityPool.currentScale()).toString()
     console.log("P_3:")
     console.log(P_3.toString())
-    scale = (await stabilityPool.currentScale()).toString()
-    assert.equal(scale, "3")
     console.log("scale:")
     console.log(scale)
-    
+    assert.isTrue(P_3.eq(th.toBN(1e9)))
+    assert.equal(scale, "4")
+
     // Check D's deposit has depleted to a billion'th of their initial deposit. That is, from 1e21 to 1e(21-9) = 1e12
     const D_depletedDeposit = await stabilityPool.getCompoundedLUSDDeposit(D)
     assert.isTrue(D_depletedDeposit.eq(th.toBN(dec(1,12))))
@@ -523,13 +523,13 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     assert.equal(await troveManager.getTroveStatus(B), 3) // status: closed by liq
     await priceFeed.setPrice(dec(200, 18))
     
-     // Check P reduced by factor of 1e9
+    // Check P reduced by factor of 1e9, it’s now re-scaled up
     const P_2 = await stabilityPool.P() 
-    assert.isTrue(P_2.eq(th.toBN(1)))
+    assert.isTrue(P_2.eq(th.toBN(1e9)))
     console.log("P2:")
     console.log(P_2.toString())
     scale = (await stabilityPool.currentScale()).toString()
-    assert.equal(scale, "2")
+    assert.equal(scale, "3")
     console.log("scale:")
     console.log(scale)
 
@@ -553,13 +553,13 @@ contract('StabilityPool Scale Factor issue tests', async accounts => {
     // Check P increases: 50% of the pool is liquidated, and there is a scale change. Pool depletion is 50%, so newProductFactor is 5e17.
     // Raw value of P should change from 1 to (1 * 5e17 * 1e9 / 1e18)= 5e8.
     const P_3 = await stabilityPool.P() 
-    assert.isTrue(P_3.eq(th.toBN(dec(5, 8)))) 
+    scale = (await stabilityPool.currentScale()).toString()
     console.log("P_3:")
     console.log(P_3.toString())
-    scale = (await stabilityPool.currentScale()).toString()
-    assert.equal(scale, "3")
     console.log("scale:")
     console.log(scale)
+    assert.isTrue(P_3.eq(th.toBN(dec(5, 17)))) 
+    assert.equal(scale, "4")
 
      // Check D's deposit has depleted to 50% their initial deposit. That is, from 1e21 to 5e20.
      const D_depletedDeposit = await stabilityPool.getCompoundedLUSDDeposit(D)

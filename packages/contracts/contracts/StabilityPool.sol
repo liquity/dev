@@ -608,9 +608,16 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
         // If multiplying P by a non-zero product factor would reduce P below the scale boundary, increment the scale
         } else if (currentP.mul(newProductFactor).div(DECIMAL_PRECISION) < SCALE_FACTOR) {
-            newP = currentP.mul(newProductFactor).mul(SCALE_FACTOR).div(DECIMAL_PRECISION); 
-            currentScale = currentScaleCached.add(1);
-            emit ScaleUpdated(currentScale);
+            newP = currentP.mul(newProductFactor).mul(SCALE_FACTOR).div(DECIMAL_PRECISION);
+            currentScaleCached = currentScaleCached.add(1);
+            // If it’s still smaller than the SCALE_FACTOR, increment scale again.
+            // Afterwards it couldn’t happen again, as DECIMAL_PRECISION = SCALE_FACTOR^2
+            if (newP < SCALE_FACTOR) {
+                newP = newP.mul(SCALE_FACTOR);
+                currentScaleCached = currentScaleCached.add(1);
+            }
+            currentScale = currentScaleCached;
+            emit ScaleUpdated(currentScaleCached);
         } else {
             newP = currentP.mul(newProductFactor).div(DECIMAL_PRECISION);
         }
