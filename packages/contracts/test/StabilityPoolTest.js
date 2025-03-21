@@ -181,8 +181,8 @@ contract('StabilityPool', async accounts => {
 
       // --- TEST ---
       const P_Before = (await stabilityPool.P())
-      const S_Before = (await stabilityPool.epochToScaleToSum(0, 0))
-      const G_Before = (await stabilityPool.epochToScaleToG(0, 0))
+      const S_Before = (await stabilityPool.scaleToSum(0, 0))
+      const G_Before = (await stabilityPool.scaleToG(0))
       assert.isTrue(P_Before.gt(toBN('0')))
       assert.isTrue(S_Before.gt(toBN('0')))
 
@@ -251,7 +251,7 @@ contract('StabilityPool', async accounts => {
 
       // get system reward terms
       const P_1 = await stabilityPool.P()
-      const S_1 = await stabilityPool.epochToScaleToSum(0, 0)
+      const S_1 = await stabilityPool.scaleToSum(0, 0)
       assert.isTrue(P_1.lt(toBN(dec(1, 18))))
       assert.isTrue(S_1.gt(toBN('0')))
 
@@ -272,7 +272,7 @@ contract('StabilityPool', async accounts => {
       const alice_compoundedDeposit_2 = await stabilityPool.getCompoundedLUSDDeposit(alice)
 
       const P_2 = await stabilityPool.P()
-      const S_2 = await stabilityPool.epochToScaleToSum(0, 0)
+      const S_2 = await stabilityPool.scaleToSum(0, 0)
       assert.isTrue(P_2.lt(P_1))
       assert.isTrue(S_2.gt(S_1))
 
@@ -621,18 +621,16 @@ contract('StabilityPool', async accounts => {
       // A provides to SP
       await stabilityPool.provideToSP(dec(1000, 18), frontEnd_1, { from: A })
 
-      let currentEpoch = await stabilityPool.currentEpoch()
       let currentScale = await stabilityPool.currentScale()
-      const G_Before = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_Before = await stabilityPool.scaleToG(currentScale)
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // B provides to SP
       await stabilityPool.provideToSP(dec(1000, 18), frontEnd_1, { from: B })
 
-      currentEpoch = await stabilityPool.currentEpoch()
       currentScale = await stabilityPool.currentScale()
-      const G_After = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_After = await stabilityPool.scaleToG(currentScale)
 
       // Expect G has increased from the LQTY reward event triggered
       assert.isTrue(G_After.gt(G_Before))
@@ -658,9 +656,8 @@ contract('StabilityPool', async accounts => {
       assert.equal((await stabilityPool.getTotalLUSDDeposits()), '0')
 
       // Check G is non-zero
-      let currentEpoch = await stabilityPool.currentEpoch()
       let currentScale = await stabilityPool.currentScale()
-      const G_Before = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_Before = await stabilityPool.scaleToG(currentScale)
 
       assert.isTrue(G_Before.gt(toBN('0')))
 
@@ -669,9 +666,8 @@ contract('StabilityPool', async accounts => {
       // B provides to SP
       await stabilityPool.provideToSP(dec(1000, 18), frontEnd_1, { from: B })
 
-      currentEpoch = await stabilityPool.currentEpoch()
       currentScale = await stabilityPool.currentScale()
-      const G_After = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_After = await stabilityPool.scaleToG(currentScale)
 
       // Expect G has not changed
       assert.isTrue(G_After.eq(G_Before))
@@ -918,12 +914,11 @@ contract('StabilityPool', async accounts => {
 
       await troveManager.liquidate(defaulter_1)
 
-      const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
 
-      const S_Before = await stabilityPool.epochToScaleToSum(currentEpoch, currentScale)
+      const S_Before = await stabilityPool.scaleToSum(currentScale)
       const P_Before = await stabilityPool.P()
-      const G_Before = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_Before = await stabilityPool.scaleToG(currentScale)
 
       // Confirm 0 < P < 1
       assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
@@ -949,13 +944,13 @@ contract('StabilityPool', async accounts => {
       // --- TEST ---
 
       // A, B, C provide to SP
-      const G1 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G1 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.provideToSP(deposit_A, frontEnd_1, { from: A })
 
-      const G2 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G2 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.provideToSP(deposit_B, frontEnd_2, { from: B })
 
-      const G3 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G3 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.provideToSP(deposit_C, frontEnd_3, { from: C })
 
       const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
@@ -1112,14 +1107,14 @@ contract('StabilityPool', async accounts => {
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-      const G_Before = await stabilityPool.epochToScaleToG(0, 0)
+      const G_Before = await stabilityPool.scaleToG(0)
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // B tops up
       await stabilityPool.provideToSP(dec(100, 18), frontEnd_1, { from: B })
 
-      const G_After = await stabilityPool.epochToScaleToG(0, 0)
+      const G_After = await stabilityPool.scaleToG(0)
 
       // Expect G has increased from the LQTY reward event triggered by B's topup
       assert.isTrue(G_After.gt(G_Before))
@@ -1317,12 +1312,11 @@ contract('StabilityPool', async accounts => {
 
       await troveManager.liquidate(defaulter_1)
 
-      const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
 
-      const S_Before = await stabilityPool.epochToScaleToSum(currentEpoch, currentScale)
+      const S_Before = await stabilityPool.scaleToSum(currentScale)
       const P_Before = await stabilityPool.P()
-      const G_Before = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_Before = await stabilityPool.scaleToG(currentScale)
 
       // Confirm 0 < P < 1
       assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
@@ -1345,13 +1339,13 @@ contract('StabilityPool', async accounts => {
 
       // A, B, C top up their deposits. Grab G at each stage, as it can increase a bit
       // between topups, because some block.timestamp time passes (and LQTY is issued) between ops
-      const G1 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G1 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.provideToSP(deposit_A, frontEnd_1, { from: A })
 
-      const G2 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G2 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.provideToSP(deposit_B, frontEnd_2, { from: B })
 
-      const G3 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G3 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.provideToSP(deposit_C, frontEnd_3, { from: C })
 
       const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
@@ -1704,7 +1698,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.withdrawFromSP(dec(9000, 18), { from: alice })
 
       const P = (await stabilityPool.P()).toString()
-      const S = (await stabilityPool.epochToScaleToSum(0, 0)).toString()
+      const S = (await stabilityPool.scaleToSum(0, 0)).toString()
       // check 'After' snapshots
       const alice_snapshot_After = await stabilityPool.depositSnapshots(alice)
       const alice_snapshot_S_After = alice_snapshot_After[0].toString()
@@ -2450,14 +2444,14 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.provideToSP(dec(10000, 18), frontEnd_1, { from: A })
       await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: B })
 
-      const G_Before = await stabilityPool.epochToScaleToG(0, 0)
+      const G_Before = await stabilityPool.scaleToG(0)
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
       // A withdraws from SP
       await stabilityPool.withdrawFromSP(dec(5000, 18), { from: A })
 
-      const G_1 = await stabilityPool.epochToScaleToG(0, 0)
+      const G_1 = await stabilityPool.scaleToG(0)
 
       // Expect G has increased from the LQTY reward event triggered
       assert.isTrue(G_1.gt(G_Before))
@@ -2467,7 +2461,7 @@ contract('StabilityPool', async accounts => {
       // A withdraws from SP
       await stabilityPool.withdrawFromSP(dec(5000, 18), { from: B })
 
-      const G_2 = await stabilityPool.epochToScaleToG(0, 0)
+      const G_2 = await stabilityPool.scaleToG(0)
 
       // Expect G has increased from the LQTY reward event triggered
       assert.isTrue(G_2.gt(G_1))
@@ -2664,12 +2658,11 @@ contract('StabilityPool', async accounts => {
 
       await troveManager.liquidate(defaulter_1)
 
-      const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
 
-      const S_Before = await stabilityPool.epochToScaleToSum(currentEpoch, currentScale)
+      const S_Before = await stabilityPool.scaleToSum(currentScale)
       const P_Before = await stabilityPool.P()
-      const G_Before = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_Before = await stabilityPool.scaleToG(currentScale)
 
       // Confirm 0 < P < 1
       assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
@@ -2694,13 +2687,13 @@ contract('StabilityPool', async accounts => {
 
       // A, B, C top withdraw part of their deposits. Grab G at each stage, as it can increase a bit
       // between topups, because some block.timestamp time passes (and LQTY is issued) between ops
-      const G1 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G1 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.withdrawFromSP(dec(1, 18), { from: A })
 
-      const G2 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G2 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.withdrawFromSP(dec(2, 18), { from: B })
 
-      const G3 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G3 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.withdrawFromSP(dec(3, 18), { from: C })
 
       const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]
@@ -2789,12 +2782,11 @@ contract('StabilityPool', async accounts => {
 
       await troveManager.liquidate(defaulter_1)
 
-      const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
 
-      const S_Before = await stabilityPool.epochToScaleToSum(currentEpoch, currentScale)
+      const S_Before = await stabilityPool.scaleToSum(currentScale)
       const P_Before = await stabilityPool.P()
-      const G_Before = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_Before = await stabilityPool.scaleToG(currentScale)
 
       // Confirm 0 < P < 1
       assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
@@ -2874,12 +2866,11 @@ contract('StabilityPool', async accounts => {
 
       await troveManager.liquidate(defaulter_1)
 
-      const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
 
-      const S_Before = await stabilityPool.epochToScaleToSum(currentEpoch, currentScale)
+      const S_Before = await stabilityPool.scaleToSum(currentScale)
       const P_Before = await stabilityPool.P()
-      const G_Before = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_Before = await stabilityPool.scaleToG(currentScale)
 
       // Confirm 0 < P < 1
       assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
@@ -3391,7 +3382,7 @@ contract('StabilityPool', async accounts => {
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
-      const G_Before = await stabilityPool.epochToScaleToG(0, 0)
+      const G_Before = await stabilityPool.scaleToG(0)
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
@@ -3400,7 +3391,7 @@ contract('StabilityPool', async accounts => {
       // A withdraws from SP
       await stabilityPool.withdrawFromSP(dec(50, 18), { from: A })
 
-      const G_1 = await stabilityPool.epochToScaleToG(0, 0)
+      const G_1 = await stabilityPool.scaleToG(0)
 
       // Expect G has increased from the LQTY reward event triggered
       assert.isTrue(G_1.gt(G_Before))
@@ -3413,7 +3404,7 @@ contract('StabilityPool', async accounts => {
       // B withdraws to trove
       await stabilityPool.withdrawETHGainToTrove(B, B, { from: B })
 
-      const G_2 = await stabilityPool.epochToScaleToG(0, 0)
+      const G_2 = await stabilityPool.scaleToG(0)
 
       // Expect G has increased from the LQTY reward event triggered
       assert.isTrue(G_2.gt(G_1))
@@ -3654,12 +3645,11 @@ contract('StabilityPool', async accounts => {
 
       await troveManager.liquidate(defaulter_1)
 
-      const currentEpoch = await stabilityPool.currentEpoch()
       const currentScale = await stabilityPool.currentScale()
 
-      const S_Before = await stabilityPool.epochToScaleToSum(currentEpoch, currentScale)
+      const S_Before = await stabilityPool.scaleToSum(currentScale)
       const P_Before = await stabilityPool.P()
-      const G_Before = await stabilityPool.epochToScaleToG(currentEpoch, currentScale)
+      const G_Before = await stabilityPool.scaleToG(currentScale)
 
       // Confirm 0 < P < 1
       assert.isTrue(P_Before.gt(toBN('0')) && P_Before.lt(toBN(dec(1, 18))))
@@ -3689,13 +3679,13 @@ contract('StabilityPool', async accounts => {
 
       // A, B, C withdraw ETH gain to troves. Grab G at each stage, as it can increase a bit
       // between topups, because some block.timestamp time passes (and LQTY is issued) between ops
-      const G1 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G1 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.withdrawETHGainToTrove(A, A, { from: A })
 
-      const G2 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G2 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.withdrawETHGainToTrove(B, B, { from: B })
 
-      const G3 = await stabilityPool.epochToScaleToG(currentScale, currentEpoch)
+      const G3 = await stabilityPool.scaleToG(currentScale)
       await stabilityPool.withdrawETHGainToTrove(C, C, { from: C })
 
       const frontEnds = [frontEnd_1, frontEnd_2, frontEnd_3]

@@ -169,7 +169,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       // Get G and communityIssuance before
-      const G_Before = await stabilityPool.epochToScaleToG(0, 0)
+      const G_Before = await stabilityPool.scaleToG(0)
       const LQTYIssuedBefore = await communityIssuanceTester.totalLQTYIssued()
 
       //  A withdraws some deposit. Triggers issuance.
@@ -177,7 +177,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       assert.isTrue(tx.receipt.status)
 
       // Check G and LQTYIssued do not increase, since <1 minute has passed between issuance triggers
-      const G_After = await stabilityPool.epochToScaleToG(0, 0)
+      const G_After = await stabilityPool.scaleToG(0)
       const LQTYIssuedAfter = await communityIssuanceTester.totalLQTYIssued()
 
       assert.isTrue(G_After.eq(G_Before))
@@ -617,7 +617,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(16000, 18), C, C, { from: C, value: dec(200, 'ether') })
 
       const totalLQTYissuance_0 = await communityIssuanceTester.totalLQTYIssued()
-      const G_0 = await stabilityPool.epochToScaleToG(0, 0)  // epochs and scales will not change in this test: no liquidations
+      const G_0 = await stabilityPool.scaleToG(0)  // epochs and scales will not change in this test: no liquidations
       assert.equal(totalLQTYissuance_0, '0')
       assert.equal(G_0, '0')
 
@@ -628,7 +628,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: A })
 
       // Check G is not updated, since SP was empty prior to A's deposit
-      const G_1 = await stabilityPool.epochToScaleToG(0, 0)
+      const G_1 = await stabilityPool.scaleToG(0)
       assert.isTrue(G_1.eq(G_0))
 
       // Check total LQTY issued is updated
@@ -642,7 +642,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.withdrawFromSP(dec(10000, 18), { from: A })
 
       // Check G is updated, since SP was not empty prior to A's withdrawal
-      const G_2 = await stabilityPool.epochToScaleToG(0, 0)
+      const G_2 = await stabilityPool.scaleToG(0)
       assert.isTrue(G_2.gt(G_1))
 
       // Check total LQTY issued is updated
@@ -656,7 +656,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.provideToSP(dec(10000, 18), ZERO_ADDRESS, { from: C })
 
       // Check G is not updated, since SP was empty prior to C's deposit
-      const G_3 = await stabilityPool.epochToScaleToG(0, 0)
+      const G_3 = await stabilityPool.scaleToG(0)
       assert.isTrue(G_3.eq(G_2))
 
       // Check total LQTY issued is updated
@@ -670,7 +670,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await stabilityPool.withdrawFromSP(dec(10000, 18), { from: C })
 
       // Check G is increased, since SP was not empty prior to C's withdrawal
-      const G_4 = await stabilityPool.epochToScaleToG(0, 0)
+      const G_4 = await stabilityPool.scaleToG(0)
       assert.isTrue(G_4.gt(G_3))
 
       // Check total LQTY issued is increased

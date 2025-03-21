@@ -974,7 +974,7 @@ contract('TroveManager', async accounts => {
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
     assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(100, 18))
 
-    const G_Before = await stabilityPool.epochToScaleToG(0, 0)
+    const G_Before = await stabilityPool.scaleToG(0)
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
@@ -987,13 +987,13 @@ contract('TroveManager', async accounts => {
     await troveManager.liquidate(defaulter_1)
     assert.isFalse(await sortedTroves.contains(defaulter_1))
 
-    const G_After = await stabilityPool.epochToScaleToG(0, 0)
+    const G_After = await stabilityPool.scaleToG(0)
 
     // Expect G has increased from the LQTY reward event triggered
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it("liquidate(): when SP is empty, doesn't update G", async () => {
+  it("liquidate(): SP cannot be emptied by withdrawing", async () => {
     await openTrove({ ICR: toBN(dec(100, 18)), extraParams: { from: whale } })
 
     // A, B, C open troves 
@@ -1008,31 +1008,11 @@ contract('TroveManager', async accounts => {
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    // B withdraws
-    await stabilityPool.withdrawFromSP(dec(100, 18), { from: B })
+    // B tries to fully withdraw
+    await assertRevert(stabilityPool.withdrawFromSP(dec(100, 18), { from: B }), "Withdrawal must leave totalBoldDeposits >= MIN_LUSD_IN_SP")
 
-    // Check SP is empty
-    assert.equal((await stabilityPool.getTotalLUSDDeposits()), '0')
-
-    // Check G is non-zero
-    const G_Before = await stabilityPool.epochToScaleToG(0, 0)
-    assert.isTrue(G_Before.gt(toBN('0')))
-
-    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-    // Price drops to 1ETH:100LUSD, reducing defaulters to below MCR
-    await priceFeed.setPrice(dec(100, 18));
-    const price = await priceFeed.getPrice()
-    assert.isFalse(await th.checkRecoveryMode(contracts))
-
-    // liquidate trove
-    await troveManager.liquidate(defaulter_1)
-    assert.isFalse(await sortedTroves.contains(defaulter_1))
-
-    const G_After = await stabilityPool.epochToScaleToG(0, 0)
-
-    // Expect G has not changed
-    assert.isTrue(G_After.eq(G_Before))
+    // Check SP is not empty
+    assert.isTrue((await stabilityPool.getTotalLUSDDeposits()).gt(toBN('0')))
   })
 
   // --- liquidateTroves() ---
@@ -1525,8 +1505,8 @@ contract('TroveManager', async accounts => {
     // Liquidate troves
     await troveManager.liquidateTroves(10)
 
-    // Check pool has been emptied by the liquidations
-    assert.equal((await stabilityPool.getTotalLUSDDeposits()).toString(), '0')
+    // Check pool has been almost emptied by the liquidations
+    assert.equal((await stabilityPool.getTotalLUSDDeposits()).toString(), dec(1, 18))
 
     // Check all defaulters have been liquidated
     assert.isFalse((await sortedTroves.contains(defaulter_1)))
@@ -1709,7 +1689,7 @@ contract('TroveManager', async accounts => {
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
     assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(100, 18))
 
-    const G_Before = await stabilityPool.epochToScaleToG(0, 0)
+    const G_Before = await stabilityPool.scaleToG(0)
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
@@ -1723,13 +1703,13 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await sortedTroves.contains(defaulter_1))
     assert.isFalse(await sortedTroves.contains(defaulter_2))
 
-    const G_After = await stabilityPool.epochToScaleToG(0, 0)
+    const G_After = await stabilityPool.scaleToG(0)
 
     // Expect G has increased from the LQTY reward event triggered
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it("liquidateTroves(): when SP is empty, doesn't update G", async () => {
+  it("liquidateTroves(): SP cannot be emptied by withdrawing", async () => {
     await openTrove({ ICR: toBN(dec(100, 18)), extraParams: { from: whale } })
 
     // A, B, C open troves
@@ -1745,32 +1725,11 @@ contract('TroveManager', async accounts => {
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    // B withdraws
-    await stabilityPool.withdrawFromSP(dec(100, 18), { from: B })
+    // B tries to fully withdraw
+    await assertRevert(stabilityPool.withdrawFromSP(dec(100, 18), { from: B }), "Withdrawal must leave totalBoldDeposits >= MIN_LUSD_IN_SP")
 
-    // Check SP is empty
-    assert.equal((await stabilityPool.getTotalLUSDDeposits()), '0')
-
-    // Check G is non-zero
-    const G_Before = await stabilityPool.epochToScaleToG(0, 0)
-    assert.isTrue(G_Before.gt(toBN('0')))
-
-    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-    // Price drops to 1ETH:100LUSD, reducing defaulters to below MCR
-    await priceFeed.setPrice(dec(100, 18));
-    const price = await priceFeed.getPrice()
-    assert.isFalse(await th.checkRecoveryMode(contracts))
-
-    // liquidate troves
-    await troveManager.liquidateTroves(2)
-    assert.isFalse(await sortedTroves.contains(defaulter_1))
-    assert.isFalse(await sortedTroves.contains(defaulter_2))
-
-    const G_After = await stabilityPool.epochToScaleToG(0, 0)
-
-    // Expect G has not changed
-    assert.isTrue(G_After.eq(G_Before))
+    // Check SP is not empty
+    assert.isTrue((await stabilityPool.getTotalLUSDDeposits()).gt(toBN('0')))
   })
 
 
@@ -2210,7 +2169,7 @@ contract('TroveManager', async accounts => {
     await stabilityPool.provideToSP(dec(100, 18), ZERO_ADDRESS, { from: B })
     assert.equal(await stabilityPool.getTotalLUSDDeposits(), dec(100, 18))
 
-    const G_Before = await stabilityPool.epochToScaleToG(0, 0)
+    const G_Before = await stabilityPool.scaleToG(0)
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
@@ -2224,13 +2183,13 @@ contract('TroveManager', async accounts => {
     assert.isFalse(await sortedTroves.contains(defaulter_1))
     assert.isFalse(await sortedTroves.contains(defaulter_2))
 
-    const G_After = await stabilityPool.epochToScaleToG(0, 0)
+    const G_After = await stabilityPool.scaleToG(0)
 
     // Expect G has increased from the LQTY reward event triggered
     assert.isTrue(G_After.gt(G_Before))
   })
 
-  it("batchLiquidateTroves(): when SP is empty, doesn't update G", async () => {
+  it("batchLiquidateTroves(): SP cannot be emptied by withdrawing", async () => {
     await openTrove({ ICR: toBN(dec(100, 18)), extraParams: { from: whale } })
 
     // A, B, C open troves
@@ -2246,32 +2205,11 @@ contract('TroveManager', async accounts => {
 
     await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-    // B withdraws
-    await stabilityPool.withdrawFromSP(dec(100, 18), { from: B })
+    // B tries to fully withdraw
+    await assertRevert(stabilityPool.withdrawFromSP(dec(100, 18), { from: B }), "Withdrawal must leave totalBoldDeposits >= MIN_LUSD_IN_SP")
 
-    // Check SP is empty
-    assert.equal((await stabilityPool.getTotalLUSDDeposits()), '0')
-
-    // Check G is non-zero
-    const G_Before = await stabilityPool.epochToScaleToG(0, 0)
-    assert.isTrue(G_Before.gt(toBN('0')))
-
-    await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-    // Price drops to 1ETH:100LUSD, reducing defaulters to below MCR
-    await priceFeed.setPrice(dec(100, 18));
-    const price = await priceFeed.getPrice()
-    assert.isFalse(await th.checkRecoveryMode(contracts))
-
-    // liquidate troves
-    await troveManager.batchLiquidateTroves([defaulter_1, defaulter_2])
-    assert.isFalse(await sortedTroves.contains(defaulter_1))
-    assert.isFalse(await sortedTroves.contains(defaulter_2))
-
-    const G_After = await stabilityPool.epochToScaleToG(0, 0)
-
-    // Expect G has not changed
-    assert.isTrue(G_After.eq(G_Before))
+    // Check SP is not empty
+    assert.isTrue((await stabilityPool.getTotalLUSDDeposits()).gt(toBN('0')))
   })
 
   // --- redemptions ---
@@ -4345,7 +4283,7 @@ contract('TroveManager', async accounts => {
     await openTrove({ ICR: toBN(dec(3, 18)), extraLUSDAmount: dec(20, 18), extraParams: { from: carol } })
 
     await openTrove({ ICR: toBN(dec(20, 18)), extraLUSDAmount: totalDebt, extraParams: { from: whale } })
-    await stabilityPool.provideToSP(totalDebt, ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(totalDebt.add(toBN(dec(1, 18))), ZERO_ADDRESS, { from: whale })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))
@@ -4373,7 +4311,7 @@ contract('TroveManager', async accounts => {
     await openTrove({ ICR: toBN(dec(3, 18)), extraLUSDAmount: dec(20, 18), extraParams: { from: carol } })
 
     await openTrove({ ICR: toBN(dec(20, 18)), extraLUSDAmount: totalDebt, extraParams: { from: whale } })
-    await stabilityPool.provideToSP(totalDebt, ZERO_ADDRESS, { from: whale })
+    await stabilityPool.provideToSP(totalDebt.add(toBN(dec(1, 18))), ZERO_ADDRESS, { from: whale })
 
     // Price drops
     await priceFeed.setPrice(dec(100, 18))

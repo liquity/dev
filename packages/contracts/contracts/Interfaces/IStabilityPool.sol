@@ -50,10 +50,9 @@ interface IStabilityPool {
     event CommunityIssuanceAddressChanged(address _newCommunityIssuanceAddress);
 
     event P_Updated(uint _P);
-    event S_Updated(uint _S, uint128 _epoch, uint128 _scale);
-    event G_Updated(uint _G, uint128 _epoch, uint128 _scale);
-    event EpochUpdated(uint128 _currentEpoch);
-    event ScaleUpdated(uint128 _currentScale);
+    event S_Updated(uint _S, uint _scale);
+    event G_Updated(uint _G, uint _scale);
+    event ScaleUpdated(uint _currentScale);
 
     event FrontEndRegistered(address indexed _frontEnd, uint _kickbackRate);
     event FrontEndTagSet(address indexed _depositor, address indexed _frontEnd);
