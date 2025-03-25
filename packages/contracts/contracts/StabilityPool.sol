@@ -613,7 +613,7 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
             // If it’s still smaller than the SCALE_FACTOR, increment scale again.
             // Afterwards it couldn’t happen again, as DECIMAL_PRECISION = SCALE_FACTOR^2
             if (newP < SCALE_FACTOR) {
-                newP = newP.mul(SCALE_FACTOR);
+                newP = currentP.mul(newProductFactor).mul(SCALE_FACTOR ** 2).div(DECIMAL_PRECISION);
                 currentScaleCached = currentScaleCached.add(1);
             }
             currentScale = currentScaleCached;
