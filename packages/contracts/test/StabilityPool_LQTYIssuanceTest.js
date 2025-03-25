@@ -604,9 +604,6 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
         const LQTYBalance = await lqtyToken.balanceOf(depositor)
         assert.isAtMost(getDifference(LQTYBalance, expectedLQTYGain_M4), 1e15)
       }
-
-      const finalEpoch = (await stabilityPool.currentEpoch()).toString()
-      assert.equal(finalEpoch, 4)
     })
 
     it('LQTY issuance for a given period is not obtainable if the SP was empty during the period', async () => {
@@ -617,7 +614,7 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       await borrowerOperations.openTrove(th._100pct, dec(16000, 18), C, C, { from: C, value: dec(200, 'ether') })
 
       const totalLQTYissuance_0 = await communityIssuanceTester.totalLQTYIssued()
-      const G_0 = await stabilityPool.scaleToG(0)  // epochs and scales will not change in this test: no liquidations
+      const G_0 = await stabilityPool.scaleToG(0)  // scales will not change in this test: no liquidations
       assert.equal(totalLQTYissuance_0, '0')
       assert.equal(G_0, '0')
 
@@ -830,16 +827,13 @@ contract('StabilityPool - LQTY Rewards', async accounts => {
       // 1 month passes
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_MONTH, web3.currentProvider)
 
-      assert.equal(await stabilityPool.currentEpoch(), '0')
-
       // Defaulter 6 liquidated
       const txL6 = await troveManager.liquidate(defaulter_6, { from: owner });
       assert.isFalse(await sortedTroves.contains(defaulter_6))
       assert.isTrue(txL6.receipt.status)
 
-      // Check scale is 0, epoch is 1
+      // Check scale is 0
       assert.equal(await stabilityPool.currentScale(), '0')
-      assert.equal(await stabilityPool.currentEpoch(), '1')
       assert.equal(await stabilityPool.P(), dec(1, 18)) // P resets to 1e18 after pool-emptying
 
       // price doubles

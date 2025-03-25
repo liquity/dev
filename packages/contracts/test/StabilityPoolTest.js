@@ -181,7 +181,7 @@ contract('StabilityPool', async accounts => {
 
       // --- TEST ---
       const P_Before = (await stabilityPool.P())
-      const S_Before = (await stabilityPool.scaleToSum(0, 0))
+      const S_Before = (await stabilityPool.scaleToSum(0))
       const G_Before = (await stabilityPool.scaleToG(0))
       assert.isTrue(P_Before.gt(toBN('0')))
       assert.isTrue(S_Before.gt(toBN('0')))
@@ -251,7 +251,7 @@ contract('StabilityPool', async accounts => {
 
       // get system reward terms
       const P_1 = await stabilityPool.P()
-      const S_1 = await stabilityPool.scaleToSum(0, 0)
+      const S_1 = await stabilityPool.scaleToSum(0)
       assert.isTrue(P_1.lt(toBN(dec(1, 18))))
       assert.isTrue(S_1.gt(toBN('0')))
 
@@ -272,7 +272,7 @@ contract('StabilityPool', async accounts => {
       const alice_compoundedDeposit_2 = await stabilityPool.getCompoundedLUSDDeposit(alice)
 
       const P_2 = await stabilityPool.P()
-      const S_2 = await stabilityPool.scaleToSum(0, 0)
+      const S_2 = await stabilityPool.scaleToSum(0)
       assert.isTrue(P_2.lt(P_1))
       assert.isTrue(S_2.gt(S_1))
 
@@ -636,7 +636,7 @@ contract('StabilityPool', async accounts => {
       assert.isTrue(G_After.gt(G_Before))
     })
 
-    it("provideToSP(), new deposit: when SP is empty, doesn't update G", async () => {
+    it("withdraFromSP(): cannot empty SP", async () => {
       await openTrove({ extraLUSDAmount: toBN(dec(10000, 18)), ICR: toBN(dec(2, 18)), extraParams: { from: whale, value: dec(50, 'ether') } })
 
       // A, B, C open troves and make Stability Pool deposits
@@ -649,28 +649,11 @@ contract('StabilityPool', async accounts => {
 
       await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
 
-      // A withdraws
-      await stabilityPool.withdrawFromSP(dec(1000, 18), { from: A })
+      // A tries to fully withdraw
+      await assertRevert(stabilityPool.withdrawFromSP(dec(1000, 18), { from: A }), "Withdrawal must leave totalBoldDeposits >= MIN_LUSD_IN_SP")
 
-      // Check SP is empty
-      assert.equal((await stabilityPool.getTotalLUSDDeposits()), '0')
-
-      // Check G is non-zero
-      let currentScale = await stabilityPool.currentScale()
-      const G_Before = await stabilityPool.scaleToG(currentScale)
-
-      assert.isTrue(G_Before.gt(toBN('0')))
-
-      await th.fastForwardTime(timeValues.SECONDS_IN_ONE_HOUR, web3.currentProvider)
-
-      // B provides to SP
-      await stabilityPool.provideToSP(dec(1000, 18), frontEnd_1, { from: B })
-
-      currentScale = await stabilityPool.currentScale()
-      const G_After = await stabilityPool.scaleToG(currentScale)
-
-      // Expect G has not changed
-      assert.isTrue(G_After.eq(G_Before))
+      // Check SP is not empty
+      assert.isTrue((await stabilityPool.getTotalLUSDDeposits()).gt(toBN('0')))
     })
 
     it("provideToSP(), new deposit: sets the correct front end tag", async () => {
@@ -934,7 +917,6 @@ contract('StabilityPool', async accounts => {
         assert.equal(snapshot[1], '0')  // P 
         assert.equal(snapshot[2], '0')  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
 
       const deposit_A = dec(1000, 18)
@@ -968,7 +950,6 @@ contract('StabilityPool', async accounts => {
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].eq(G))  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
     })
 
@@ -1052,6 +1033,9 @@ contract('StabilityPool', async accounts => {
 
       // Price bounces back
       await priceFeed.setPrice(dec(200, 18))
+
+      // whale deposits 1 LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: whale })
 
       // A B,C, D fully withdraw from the pool
       await stabilityPool.withdrawFromSP(dec(105, 18), { from: A })
@@ -1332,7 +1316,6 @@ contract('StabilityPool', async accounts => {
         assert.equal(snapshot[1], dec(1, 18))  // P 
         assert.equal(snapshot[2], '0')  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
 
       // --- TEST ---
@@ -1363,7 +1346,6 @@ contract('StabilityPool', async accounts => {
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].eq(G))  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
     })
 
@@ -1440,6 +1422,10 @@ contract('StabilityPool', async accounts => {
 
       assert.equal(alice_initialDeposit, dec(100, 18))
       assert.equal(bob_initialDeposit, '0')
+
+      // whale deposits 1 LUSD so A can exit
+      await openTrove({ extraLUSDAmount: toBN(dec(1, 24)), ICR: toBN(dec(10, 18)), extraParams: { from: whale } })
+      await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: whale })
 
       const txAlice = await stabilityPool.withdrawFromSP(dec(100, 18), { from: alice })
       assert.isTrue(txAlice.receipt.status)
@@ -1698,7 +1684,7 @@ contract('StabilityPool', async accounts => {
       await stabilityPool.withdrawFromSP(dec(9000, 18), { from: alice })
 
       const P = (await stabilityPool.P()).toString()
-      const S = (await stabilityPool.scaleToSum(0, 0)).toString()
+      const S = (await stabilityPool.scaleToSum(0)).toString()
       // check 'After' snapshots
       const alice_snapshot_After = await stabilityPool.depositSnapshots(alice)
       const alice_snapshot_S_After = alice_snapshot_After[0].toString()
@@ -1772,6 +1758,9 @@ contract('StabilityPool', async accounts => {
 
       await priceFeed.setPrice(dec(200, 18))
 
+      // whale deposits 1 LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: whale })
+
       // All depositors attempt to withdraw
       await stabilityPool.withdrawFromSP(dec(10000, 18), { from: alice })
       assert.equal(((await stabilityPool.deposits(alice))[0]).toString(), '0')
@@ -1788,7 +1777,7 @@ contract('StabilityPool', async accounts => {
 
       const totalDeposits = (await stabilityPool.getTotalLUSDDeposits()).toString()
 
-      assert.isAtMost(th.getDifference(totalDeposits, '0'), 100000)
+      assert.isAtMost(th.getDifference(totalDeposits, dec(1, 18)), 100000)
     })
 
     it("withdrawFromSP(): increases depositor's LUSD token balance by the expected amount", async () => {
@@ -2137,6 +2126,9 @@ contract('StabilityPool', async accounts => {
 
       await priceFeed.setPrice(dec(200, 18))
 
+      // whale deposits 1 LUSD so A can exit
+      await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: whale })
+
       // Dennis withdraws his full deposit and ETHGain to his account
       await stabilityPool.withdrawFromSP(dec(100, 18), { from: dennis, gasPrice: GAS_PRICE  })
 
@@ -2245,6 +2237,9 @@ contract('StabilityPool', async accounts => {
       // Price drops
       await priceFeed.setPrice(dec(200, 18))
 
+      // whale deposits 1 LUSD so Bob can exit
+      await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: whale })
+
       // Bob attempts to withdraws maxBytes32 LUSD from the Stability Pool
       await stabilityPool.withdrawFromSP(maxBytes32, { from: bob })
 
@@ -2254,7 +2249,7 @@ contract('StabilityPool', async accounts => {
       assert.equal(bob_LUSD_Balance_After, bob_expectedLUSDBalance)
 
       // Check LUSD in Stability Pool has been reduced by only  Bob's compounded deposit
-      const expectedLUSDinSP = (LUSDinSP_Before.sub(bob_Deposit_Before)).toString()
+      const expectedLUSDinSP = (LUSDinSP_Before.sub(bob_Deposit_Before)).add(toBN(dec(1, 18))).toString()
       const LUSDinSP_After = (await stabilityPool.getTotalLUSDDeposits()).toString()
       assert.equal(LUSDinSP_After, expectedLUSDinSP)
     })
@@ -2313,6 +2308,9 @@ contract('StabilityPool', async accounts => {
 
       assert.isTrue(await th.checkRecoveryMode(contracts))
 
+      // whale deposits 1 LUSD so A can exit
+      await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: whale })
+
       // A, B, C withdraw their full deposits from the Stability Pool
       const A_GAS_Deposit = th.gasUsed(await stabilityPool.withdrawFromSP(dec(10000, 18), { from: alice, gasPrice: GAS_PRICE  }))
       const B_GAS_Deposit = th.gasUsed(await stabilityPool.withdrawFromSP(dec(5000, 18), { from: bob, gasPrice: GAS_PRICE  }))
@@ -2357,7 +2355,8 @@ contract('StabilityPool', async accounts => {
       const expectedLUSDinSP = (LUSDinSP_Before
         .sub(alice_Deposit_Before)
         .sub(bob_Deposit_Before)
-        .sub(carol_Deposit_Before))
+        .sub(carol_Deposit_Before)
+        .add(toBN(dec(1, 18))))
         .toString()
       const LUSDinSP_After = (await stabilityPool.getTotalLUSDDeposits()).toString()
       assert.equal(LUSDinSP_After, expectedLUSDinSP)
@@ -2387,23 +2386,23 @@ contract('StabilityPool', async accounts => {
       //price drops
       await priceFeed.setPrice(dec(105, 18))
 
-      // Liquidate defaulter 1. Empties the Pool
+      // Liquidate defaulter 1. Almost empties the Pool
       await troveManager.liquidate(defaulter_1)
       assert.isFalse(await sortedTroves.contains(defaulter_1))
 
       const LUSDinSP = (await stabilityPool.getTotalLUSDDeposits()).toString()
-      assert.equal(LUSDinSP, '0')
+      assert.equal(LUSDinSP, dec(1, 18))
 
-      // Check Stability deposits have been fully cancelled with debt, and are now all zero
+      // Check Stability deposits, Alice has 2/3 of the remaining 1 LUSD, Bob has 1/3
       const alice_Deposit = (await stabilityPool.getCompoundedLUSDDeposit(alice)).toString()
       const bob_Deposit = (await stabilityPool.getCompoundedLUSDDeposit(bob)).toString()
 
-      assert.equal(alice_Deposit, '0')
-      assert.equal(bob_Deposit, '0')
+      assert.equal(alice_Deposit, '666666666666660000')
+      assert.equal(bob_Deposit, '333333333333330000')
 
       // Get ETH gain for A and B
-      const alice_ETHGain_1 = (await stabilityPool.getDepositorETHGain(alice)).toString()
-      const bob_ETHGain_1 = (await stabilityPool.getDepositorETHGain(bob)).toString()
+      const alice_ETHGain_1 = await stabilityPool.getDepositorETHGain(alice)
+      const bob_ETHGain_1 = await stabilityPool.getDepositorETHGain(bob)
 
       // Whale deposits 10000 LUSD to Stability Pool
       await stabilityPool.provideToSP(dec(1, 24), frontEnd_1, { from: whale })
@@ -2412,23 +2411,27 @@ contract('StabilityPool', async accounts => {
       await troveManager.liquidate(defaulter_2)
       assert.isFalse(await sortedTroves.contains(defaulter_2))
 
-      // Check Alice and Bob have not received ETH gain from liquidation 2 while their deposit was 0
-      const alice_ETHGain_2 = (await stabilityPool.getDepositorETHGain(alice)).toString()
-      const bob_ETHGain_2 = (await stabilityPool.getDepositorETHGain(bob)).toString()
+      // Check Alice and Bob have received little ETH gain from liquidation 2 while their deposit was below 1 
+      const alice_ETHGain_2 = await stabilityPool.getDepositorETHGain(alice)
+      const bob_ETHGain_2 = await stabilityPool.getDepositorETHGain(bob)
 
-      assert.equal(alice_ETHGain_1, alice_ETHGain_2)
-      assert.equal(bob_ETHGain_1, bob_ETHGain_2)
+      assert.isTrue(alice_ETHGain_1.lt(alice_ETHGain_2))
+      assert.isTrue(alice_ETHGain_1.add(toBN(dec(2, 14))).gt(alice_ETHGain_2))
+      assert.isTrue(bob_ETHGain_1.lt(bob_ETHGain_2))
+      assert.isTrue(bob_ETHGain_1.add(toBN(dec(2, 14))).gt(bob_ETHGain_2))
 
       // Liquidation 3
       await troveManager.liquidate(defaulter_3)
       assert.isFalse(await sortedTroves.contains(defaulter_3))
 
-      // Check Alice and Bob have not received ETH gain from liquidation 3 while their deposit was 0
-      const alice_ETHGain_3 = (await stabilityPool.getDepositorETHGain(alice)).toString()
-      const bob_ETHGain_3 = (await stabilityPool.getDepositorETHGain(bob)).toString()
+      // Check Alice and Bob have received little ETH gain from liquidation 3 while their deposit was below 1
+      const alice_ETHGain_3 = await stabilityPool.getDepositorETHGain(alice)
+      const bob_ETHGain_3 = await stabilityPool.getDepositorETHGain(bob)
 
-      assert.equal(alice_ETHGain_1, alice_ETHGain_3)
-      assert.equal(bob_ETHGain_1, bob_ETHGain_3)
+      assert.isTrue(alice_ETHGain_2.lt(alice_ETHGain_3))
+      assert.isTrue(alice_ETHGain_2.add(toBN(dec(2, 14))).gt(alice_ETHGain_3))
+      assert.isTrue(bob_ETHGain_2.lt(bob_ETHGain_3))
+      assert.isTrue(bob_ETHGain_2.add(toBN(dec(2, 14))).gt(bob_ETHGain_3))
     })
 
     // --- LQTY functionality ---
@@ -2678,7 +2681,6 @@ contract('StabilityPool', async accounts => {
         assert.equal(snapshot[1], dec(1, 18))  // P 
         assert.equal(snapshot[2], '0')  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
 
       // --- TEST ---
@@ -2711,7 +2713,6 @@ contract('StabilityPool', async accounts => {
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].eq(G))  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
     })
 
@@ -2743,6 +2744,8 @@ contract('StabilityPool', async accounts => {
       assert.equal(C_tagBefore, frontEnd_2)
       assert.equal(D_tagBefore, ZERO_ADDRESS)
 
+      // whale deposits 1 LUSD so all can exit
+      await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: whale })
       // All depositors make full withdrawal
       await stabilityPool.withdrawFromSP(dec(10000, 18), { from: A })
       await stabilityPool.withdrawFromSP(dec(20000, 18), { from: B })
@@ -2823,7 +2826,6 @@ contract('StabilityPool', async accounts => {
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].gt(ZERO))  // GL increases a bit between each depositor op, so just check it is non-zero
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
 
       // All depositors make full withdrawal
@@ -2841,7 +2843,6 @@ contract('StabilityPool', async accounts => {
         assert.equal(snapshot[1], '0')  // P 
         assert.equal(snapshot[2], '0')  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
     })
 
@@ -2898,7 +2899,6 @@ contract('StabilityPool', async accounts => {
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].gt(ZERO))  // GL increases a bit between each depositor op, so just check it is non-zero
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
 
       await priceFeed.setPrice(dec(200, 18))
@@ -2916,7 +2916,6 @@ contract('StabilityPool', async accounts => {
         assert.equal(snapshot[1], '0')  // P 
         assert.equal(snapshot[2], '0')  // G 
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
     })
 
@@ -2944,6 +2943,8 @@ contract('StabilityPool', async accounts => {
 
       await priceFeed.setPrice(dec(200, 18))
 
+      // whale deposits 1 LUSD so A can exit
+      await stabilityPool.provideToSP(dec(1, 18), frontEnd_1, { from: whale })
       // A successfully withraws deposit and all gains
       await stabilityPool.withdrawFromSP(dec(10100, 18), { from: A })
 
@@ -3665,7 +3666,6 @@ contract('StabilityPool', async accounts => {
         assert.equal(snapshot[1], dec(1, 18))  // P 
         assert.equal(snapshot[2], '0')  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
 
       // --- TEST ---
@@ -3703,7 +3703,6 @@ contract('StabilityPool', async accounts => {
         assert.isTrue(snapshot[1].eq(P_Before))  // P 
         assert.isTrue(snapshot[2].eq(G))  // G
         assert.equal(snapshot[3], '0')  // scale
-        assert.equal(snapshot[4], '0')  // epoch
       }
     })
 

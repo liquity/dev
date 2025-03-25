@@ -959,7 +959,7 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
     // C, D deposit 10000
     // L3 cancels 10000, 1 
     // L2 20000, 200 empties Pool
-    it("withdrawETHGainToTrove(): Pool-emptying liquidation increases epoch by one, resets scaleFactor to 0, and resets P to 1e18", async () => {
+    it("withdrawETHGainToTrove(): Almost pool-emptying liquidation resets scaleFactor to 0, and resets P to 1e18", async () => {
       // Whale opens Trove with 100k ETH
       await borrowerOperations.openTrove(th._100pct, await getOpenTroveLUSDAmount(dec(100000, 18)), whale, whale, { from: whale, value: dec(100000, 'ether') })
 
@@ -985,35 +985,29 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // price drops by 50%: defaulter ICR falls to 100%
       await priceFeed.setPrice(dec(100, 18));
 
-      const epoch_0 = (await stabilityPool.currentEpoch()).toString()
       const scale_0 = (await stabilityPool.currentScale()).toString()
       const P_0 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_0, '0')
       assert.equal(scale_0, '0')
       assert.equal(P_0, dec(1, 18))
 
       // Defaulter 1 liquidated. 10--0 LUSD fully offset, Pool remains non-zero
       await troveManager.liquidate(defaulter_1, { from: owner });
 
-      //Check epoch, scale and sum
-      const epoch_1 = (await stabilityPool.currentEpoch()).toString()
+      // Check scale and sum
       const scale_1 = (await stabilityPool.currentScale()).toString()
       const P_1 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_1, '0')
       assert.equal(scale_1, '0')
       assert.isAtMost(th.getDifference(P_1, dec(5, 17)), 1000)
 
       // Defaulter 2 liquidated. 1--00 LUSD, empties pool
       await troveManager.liquidate(defaulter_2, { from: owner });
 
-      //Check epoch, scale and sum
-      const epoch_2 = (await stabilityPool.currentEpoch()).toString()
+      //Check scale and sum
       const scale_2 = (await stabilityPool.currentScale()).toString()
       const P_2 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_2, '1')
       assert.equal(scale_2, '0')
       assert.equal(P_2, dec(1, 18))
 
@@ -1027,24 +1021,20 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       // Defaulter 3 liquidated. 10000 LUSD fully offset, Pool remains non-zero
       await troveManager.liquidate(defaulter_3, { from: owner });
 
-      //Check epoch, scale and sum
-      const epoch_3 = (await stabilityPool.currentEpoch()).toString()
+      //Check scale and sum
       const scale_3 = (await stabilityPool.currentScale()).toString()
       const P_3 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_3, '1')
       assert.equal(scale_3, '0')
       assert.isAtMost(th.getDifference(P_3, dec(5, 17)), 1000)
 
       // Defaulter 4 liquidated. 10000 LUSD, empties pool
       await troveManager.liquidate(defaulter_4, { from: owner });
 
-      //Check epoch, scale and sum
-      const epoch_4 = (await stabilityPool.currentEpoch()).toString()
+      //Check scale and sum
       const scale_4 = (await stabilityPool.currentScale()).toString()
       const P_4 = (await stabilityPool.P()).toString()
 
-      assert.equal(epoch_4, '2')
       assert.equal(scale_4, '0')
       assert.equal(P_4, dec(1, 18))
     })
@@ -1280,9 +1270,6 @@ contract('StabilityPool - Withdrawal of stability deposit - Reward calculations'
       assert.isAtMost(th.getDifference(flyn_ETHWithdrawn, dec(995, 17)), 100000)
       assert.isAtMost(th.getDifference(graham_ETHWithdrawn, dec(995, 17)), 100000)
       assert.isAtMost(th.getDifference(harriet_ETHWithdrawn, dec(995, 17)), 100000)
-
-      const finalEpoch = (await stabilityPool.currentEpoch()).toString()
-      assert.equal(finalEpoch, 4)
     })
 
     // --- Scale factor tests ---
