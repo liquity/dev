@@ -356,6 +356,8 @@ contract('Gas compensation tests', async accounts => {
     // D, E each provide LUSD to SP
     await stabilityPool.provideToSP(A_totalDebt, ZERO_ADDRESS, { from: dennis, gasPrice: GAS_PRICE })
     await stabilityPool.provideToSP(B_totalDebt.add(C_totalDebt), ZERO_ADDRESS, { from: erin, gasPrice: GAS_PRICE })
+    // whale deposits LUSD so all debt can be offset
+    await stabilityPool.provideToSP(dec(1, 18), ZERO_ADDRESS, { from: whale })
 
     const LUSDinSP_0 = await stabilityPool.getTotalLUSDDeposits()
 
@@ -448,8 +450,10 @@ contract('Gas compensation tests', async accounts => {
     const LUSDinSP_C = await stabilityPool.getTotalLUSDDeposits()
     assert.isTrue(LUSDinSP_C.lt(LUSDinSP_B))
 
-    // Check ETH in SP has not changed due to the lquidation of C
+    // Check ETH in SP has not changed due to the liquidation of C
     const ETHinSP_C = await stabilityPool.getETH()
+    console.log('ETHinSP_C.toString(): ', ETHinSP_C.toString())
+    console.log('aliceColl.sub(_0pt5percent_aliceColl).add(bobColl).sub(_0pt5percent_bobColl).add(carolColl).sub(_0pt5percent_carolColl).toString(): ', aliceColl.sub(_0pt5percent_aliceColl).add(bobColl).sub(_0pt5percent_bobColl).add(carolColl).sub(_0pt5percent_carolColl).toString())
     assert.equal(ETHinSP_C.toString(), aliceColl.sub(_0pt5percent_aliceColl).add(bobColl).sub(_0pt5percent_bobColl).add(carolColl).sub(_0pt5percent_carolColl)) // (1+2+3 ETH) * 0.995
   })
 
