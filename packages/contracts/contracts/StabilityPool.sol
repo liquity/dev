@@ -535,19 +535,14 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         */
         uint ETHNumerator = _collToAdd.mul(DECIMAL_PRECISION).add(lastETHError_Offset);
 
-        assert(_debtToOffset <= _totalLUSDDeposits);
-        if (_debtToOffset == _totalLUSDDeposits) {
-            LUSDLossPerUnitStaked = DECIMAL_PRECISION;  // When the Pool depletes to 0, so does each deposit 
-            lastLUSDLossError_Offset = 0;
-        } else {
-            uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
-            /*
-            * Add 1 to make error in quotient positive. We want "slightly too much" LUSD loss,
-            * which ensures the error in any given compoundedLUSDDeposit favors the Stability Pool.
-            */
-            LUSDLossPerUnitStaked = (LUSDLossNumerator.div(_totalLUSDDeposits)).add(1);
-            lastLUSDLossError_Offset = (LUSDLossPerUnitStaked.mul(_totalLUSDDeposits)).sub(LUSDLossNumerator);
-        }
+        assert(_debtToOffset < _totalLUSDDeposits);
+        uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
+        /*
+         * Add 1 to make error in quotient positive. We want "slightly too much" LUSD loss,
+         * which ensures the error in any given compoundedLUSDDeposit favors the Stability Pool.
+         */
+        LUSDLossPerUnitStaked = (LUSDLossNumerator.div(_totalLUSDDeposits)).add(1);
+        lastLUSDLossError_Offset = (LUSDLossPerUnitStaked.mul(_totalLUSDDeposits)).sub(LUSDLossNumerator);
 
         ETHGainPerUnitStaked = ETHNumerator.div(_totalLUSDDeposits);
         lastETHError_Offset = ETHNumerator.sub(ETHGainPerUnitStaked.mul(_totalLUSDDeposits));
