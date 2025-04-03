@@ -159,6 +159,13 @@ interface IStabilityPool {
     function getTotalLUSDDeposits() external view returns (uint);
 
     /*
+     * Returns the max amount of LUSD held in the pool that can be used for liquidations.
+     * It makes sure that at least 1 LUSD remains.
+     * If the max amount is used, it makes sure it won’t revert by underflow due to the accumulated offset error.
+     */
+    function getMaxAmountToOffset() external view returns (uint);
+
+    /*
      * Calculates the ETH gain earned by the deposit since its last snapshots were taken.
      */
     function getDepositorETHGain(address _depositor) external view returns (uint);

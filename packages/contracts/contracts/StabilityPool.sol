@@ -492,6 +492,20 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
 
     // --- Liquidation functions ---
 
+    function getMaxAmountToOffset() external view override returns (uint) {
+        uint totalLUSD = totalLUSDDeposits; // cache
+        // - If the SP has total deposits >= 1e18, we leave 1e18 in it untouched.
+        // - If it has 0 < x < 1e18 total deposits, we leave x in it.
+        uint256 lusdToLeaveInSP = LiquityMath._min(MIN_LUSD_IN_SP, totalLUSD);
+        uint LUSDInSPForOffsets = totalLUSD - lusdToLeaveInSP; // safe, for the line above
+        // Let’s avoid underflow in case of a tiny offset
+        if (LUSDInSPForOffsets.mul(DECIMAL_PRECISION) <= lastLUSDLossError_Offset) {
+            LUSDInSPForOffsets = 0;
+        }
+
+        return LUSDInSPForOffsets;
+    }
+
     /*
     * Cancels out the specified debt against the LUSD contained in the Stability Pool (as far as possible)
     * and transfers the Trove's ETH collateral from ActivePool to StabilityPool.
@@ -536,7 +550,19 @@ contract StabilityPool is LiquityBase, Ownable, CheckContract, IStabilityPool {
         uint ETHNumerator = _collToAdd.mul(DECIMAL_PRECISION).add(lastETHError_Offset);
 
         assert(_debtToOffset < _totalLUSDDeposits);
-        uint LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
+        uint LUSDLossNumerator;
+        /* Let’s avoid underflow in case of a small offset
+         * Per getMaxAmountToOffset, if the max used, this will never happen.
+         * If the max is not used, then offset value is at least MN_NET_DEBT,
+         * which means that total LUSD deposits when error was produced was around 2e21 LUSD.
+         * See: https://github.com/liquity/dev/pull/417#issuecomment-805721292
+         * As we are doing floor + 1 in the division, it will still offset something
+         */
+        if (_debtToOffset.mul(DECIMAL_PRECISION) <= lastLUSDLossError_Offset) {
+            LUSDLossNumerator = 0;
+        } else {
+            LUSDLossNumerator = _debtToOffset.mul(DECIMAL_PRECISION).sub(lastLUSDLossError_Offset);
+        }
         /*
          * Add 1 to make error in quotient positive. We want "slightly too much" LUSD loss,
          * which ensures the error in any given compoundedLUSDDeposit favors the Stability Pool.

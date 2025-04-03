@@ -38,9 +38,6 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
 
     // --- Data structures ---
 
-    // From StabilityPool
-    uint constant internal MIN_LUSD_IN_SP = 1e18;
-
     uint constant public SECONDS_IN_ONE_MINUTE = 60;
     /*
      * Half-life of 12h. 12h = 720 min
@@ -512,11 +509,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         LiquidationTotals memory totals;
 
         vars.price = priceFeed.fetchPrice();
-        // - If the SP has total deposits >= 1e18, we leave 1e18 in it untouched.
-        // - If it has 0 < x < 1e18 total deposits, we leave x in it.
-        uint256 totalLUSDDeposits = stabilityPoolCached.getTotalLUSDDeposits();
-        uint256 lusdToLeaveInSP = LiquityMath._min(MIN_LUSD_IN_SP, totalLUSDDeposits);
-        vars.LUSDInSPForOffsets = totalLUSDDeposits - lusdToLeaveInSP; // safe, for the line above
+        vars.LUSDInSPForOffsets = stabilityPoolCached.getMaxAmountToOffset();
         vars.recoveryModeAtStart = _checkRecoveryMode(vars.price);
 
         // Perform the appropriate liquidation sequence - tally the values, and obtain their totals
@@ -658,11 +651,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         LiquidationTotals memory totals;
 
         vars.price = priceFeed.fetchPrice();
-        // - If the SP has total deposits >= 1e18, we leave 1e18 in it untouched.
-        // - If it has 0 < x < 1e18 total deposits, we leave x in it.
-        uint256 totalLUSDDeposits = stabilityPoolCached.getTotalLUSDDeposits();
-        uint256 lusdToLeaveInSP = LiquityMath._min(MIN_LUSD_IN_SP, totalLUSDDeposits);
-        vars.LUSDInSPForOffsets = totalLUSDDeposits - lusdToLeaveInSP; // safe, for the line above
+        vars.LUSDInSPForOffsets = stabilityPoolCached.getMaxAmountToOffset();
         vars.recoveryModeAtStart = _checkRecoveryMode(vars.price);
 
         // Perform the appropriate liquidation sequence - tally values and obtain their totals.
